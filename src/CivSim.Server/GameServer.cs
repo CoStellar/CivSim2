@@ -223,6 +223,7 @@ public sealed class GameServer
             client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, client.Player.Value.Value, WelcomeMessage.NoCiv));
             SendContent(client);
             client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
+            client.JustJoined = true;
             SendAllChunks(client);
             return;
         }
@@ -252,6 +253,7 @@ public sealed class GameServer
         client.Known = KnownCells(civ);
         SendContent(client);
         client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
+        client.JustJoined = true;
         SendAllChunks(client);
     }
 
@@ -332,11 +334,11 @@ public sealed class GameServer
     }
 
     // A joining client gets the whole kept history; later views carry only the new lines.
-    private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false)
+    private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false, bool skipChronicle = false)
     {
         GameViewMessage view = ViewBuilder.Build(snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv));
         long micros = (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
-        return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = (joining ? _history : _chronicle).ToArray() };
+        return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = joining ? _history.ToArray() : skipChronicle ? [] : _chronicle.ToArray() };
     }
 
     private void HandleSubmit(Client client, SubmitCommandMessage submit)
@@ -377,7 +379,8 @@ public sealed class GameServer
                 continue;
             }
 
-            client.Connection.Send(BuildView(client, snapshot));
+            client.Connection.Send(BuildView(client, snapshot, skipChronicle: client.JustJoined));
+            client.JustJoined = false;
             for (int w = 0; w < _pendingChunks.Length; w++)
             {
                 for (int chunk = 0; chunk < _pendingChunks[w].Length; chunk++)
@@ -422,6 +425,9 @@ public sealed class GameServer
         public bool IsObserver { get; set; }
 
         public bool[]? Known { get; set; }
+
+        // Got the whole history on joining, so the lines still waiting to be sent are not new to it.
+        public bool JustJoined { get; set; }
 
         public void RememberSequence(long serverSequence, long clientSequence) => _clientSequences[serverSequence] = clientSequence;
 
