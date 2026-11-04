@@ -21,13 +21,43 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>Share of water in percent.</summary>
     public int WaterPercent { get; init; } = 60;
 
+    /// <summary>Average temperature of the planet.</summary>
+    public WorldClimate Climate { get; init; }
+
+    /// <summary>How much rain the planet gets.</summary>
+    public WorldMoisture Moisture { get; init; }
+
+    /// <summary>Share of hills and mountains.</summary>
+    public WorldRelief Relief { get; init; }
+
+    /// <summary>How many deposits there are.</summary>
+    public WorldResources Resources { get; init; }
+
+    /// <summary>Number of civilizations, or null for the map size default.</summary>
+    public int? Civilizations { get; init; }
+
     /// <summary>Game settings for these options.</summary>
-    public GameSettings ToSettings() => MapSizes.Settings(MapSize, Seed) with { WorldType = WorldType, WaterPercent = WaterPercent };
+    public GameSettings ToSettings()
+    {
+        GameSettings s = MapSizes.Settings(MapSize, Seed);
+        return s with
+        {
+            CivilizationCount = Civilizations ?? s.CivilizationCount,
+            WorldType = WorldType,
+            WaterPercent = WaterPercent,
+            Climate = Climate,
+            Moisture = Moisture,
+            Relief = Relief,
+            Resources = Resources,
+        };
+    }
 
     /// <summary>Usage text.</summary>
     public const string Usage =
         "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--quiet]\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
+        "       [--climate temperate|cold|hot] [--moisture normal|dry|wet] [--relief normal|flat|mountainous]\n" +
+        "       [--resources normal|scarce|rich] [--civs 1-64]\n" +
         "       --turns 0 only generates the world.";
 
     /// <summary>Parses arguments. Returns null and an error message when they are invalid.</summary>
@@ -42,6 +72,11 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         int pngScale = 3;
         WorldType worldType = WorldType.Continents;
         int water = 60;
+        WorldClimate climate = WorldClimate.Temperate;
+        WorldMoisture moisture = WorldMoisture.Normal;
+        WorldRelief relief = WorldRelief.Normal;
+        WorldResources resources = WorldResources.Normal;
+        int? civs = null;
         error = null;
 
         for (int i = 0; i < args.Count; i++)
@@ -130,6 +165,47 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     }
 
                     break;
+                case "--climate":
+                    if (!TryEnum(Next(), out climate))
+                    {
+                        error = "--climate must be temperate, cold or hot.";
+                        return null;
+                    }
+
+                    break;
+                case "--moisture":
+                    if (!TryEnum(Next(), out moisture))
+                    {
+                        error = "--moisture must be normal, dry or wet.";
+                        return null;
+                    }
+
+                    break;
+                case "--relief":
+                    if (!TryEnum(Next(), out relief))
+                    {
+                        error = "--relief must be normal, flat or mountainous.";
+                        return null;
+                    }
+
+                    break;
+                case "--resources":
+                    if (!TryEnum(Next(), out resources))
+                    {
+                        error = "--resources must be normal, scarce or rich.";
+                        return null;
+                    }
+
+                    break;
+                case "--civs":
+                    if (!int.TryParse(Next(), NumberStyles.None, CultureInfo.InvariantCulture, out int c) || c is < 1 or > 64)
+                    {
+                        error = "--civs must be 1 to 64.";
+                        return null;
+                    }
+
+                    civs = c;
+                    break;
                 case "--quiet":
                     quiet = true;
                     break;
@@ -148,7 +224,20 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             PngScale = pngScale,
             WorldType = worldType,
             WaterPercent = water,
+            Climate = climate,
+            Moisture = moisture,
+            Relief = relief,
+            Resources = resources,
+            Civilizations = civs,
         };
+    }
+
+    // Parses a lower-case enum name; numbers are rejected so only the documented words work.
+    private static bool TryEnum<T>(string? text, out T value)
+        where T : struct, Enum
+    {
+        value = default;
+        return !string.IsNullOrEmpty(text) && !char.IsDigit(text[0]) && Enum.TryParse(text, ignoreCase: true, out value) && Enum.IsDefined(value);
     }
 }
 

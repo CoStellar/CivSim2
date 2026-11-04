@@ -24,7 +24,7 @@ public class WorldGeneratorTests
     private static List<string> Validate(GameState state, WorldGenReport report)
     {
         GameSettings s = state.Settings;
-        return WorldValidator.Validate(Content, state.Worlds[0].Map, report, new WorldGenOptions(s.WorldType, s.WaterPercent, s.CivilizationCount));
+        return WorldValidator.Validate(Content, state.Worlds[0].Map, report, WorldGenOptions.From(s));
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    private const ulong GoldenWorldHash = 18191642694635137060UL;
+    private const ulong GoldenWorldHash = 12075115992158537892UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]
@@ -155,5 +155,117 @@ public class WorldGeneratorTests
         }
 
         Assert.True(rivers > 0);
+    }
+
+    private static GameSettings Medium => new(21, 128, 80, 8);
+
+    private static int CountBiomes(WorldGenReport r, params string[] keys)
+    {
+        int n = 0;
+        foreach (string k in keys)
+        {
+            n += r.BiomeCounts[Content.Biome(k).Id];
+        }
+
+        return n;
+    }
+
+    private static int CountRelief(GameState state, Relief relief)
+    {
+        int n = 0;
+        foreach (byte v in state.Worlds[0].Map.Relief.Values)
+        {
+            n += v == (byte)relief ? 1 : 0;
+        }
+
+        return n;
+    }
+
+    private static int Sum(int[] counts)
+    {
+        int n = 0;
+        foreach (int c in counts)
+        {
+            n += c;
+        }
+
+        return n;
+    }
+
+    [Theory]
+    [InlineData(WorldClimate.Cold, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce)]
+    [InlineData(WorldClimate.Hot, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich)]
+    [InlineData(WorldClimate.Cold, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich)]
+    [InlineData(WorldClimate.Hot, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal)]
+    public void EveryWorldSettingIsValid(WorldClimate climate, WorldMoisture moisture, WorldRelief relief, WorldResources resources)
+    {
+        GameSettings settings = Medium with { Climate = climate, Moisture = moisture, Relief = relief, Resources = resources };
+        (GameState state, WorldGenReport report) = Generate(settings);
+        Assert.Empty(Validate(state, report));
+    }
+
+    [Fact]
+    public void ColdWorldsHaveMoreIceAndTundraThanHotOnes()
+    {
+        WorldGenReport cold = Generate(Medium with { Climate = WorldClimate.Cold }).Report;
+        WorldGenReport hot = Generate(Medium with { Climate = WorldClimate.Hot }).Report;
+        Assert.True(CountBiomes(cold, "ice", "tundra") > CountBiomes(hot, "ice", "tundra") * 3 / 2);
+        Assert.True(CountBiomes(hot, "jungle", "savanna", "desert") > CountBiomes(cold, "jungle", "savanna", "desert") * 3 / 2);
+    }
+
+    [Fact]
+    public void WetWorldsHaveMoreRiversAndForestThanDryOnes()
+    {
+        WorldGenReport dry = Generate(Medium with { Moisture = WorldMoisture.Dry }).Report;
+        WorldGenReport wet = Generate(Medium with { Moisture = WorldMoisture.Wet }).Report;
+        Assert.True(wet.RiverEdges > dry.RiverEdges * 3 / 2, $"wet {wet.RiverEdges}, dry {dry.RiverEdges}");
+        Assert.True(CountBiomes(dry, "desert", "steppe") > CountBiomes(wet, "desert", "steppe"));
+    }
+
+    [Fact]
+    public void MountainousWorldsHaveMoreMountains()
+    {
+        int flat = CountRelief(Generate(Medium with { Relief = WorldRelief.Flat }).State, Relief.Mountains);
+        int normal = CountRelief(Generate(Medium).State, Relief.Mountains);
+        int high = CountRelief(Generate(Medium with { Relief = WorldRelief.Mountainous }).State, Relief.Mountains);
+        Assert.True(flat < normal && normal < high, $"{flat} / {normal} / {high}");
+    }
+
+    [Fact]
+    public void RichWorldsHaveMoreDeposits()
+    {
+        int scarce = Sum(Generate(Medium with { Resources = WorldResources.Scarce }).Report.DepositCounts);
+        int rich = Sum(Generate(Medium with { Resources = WorldResources.Rich }).Report.DepositCounts);
+        Assert.True(rich > scarce * 2, $"scarce {scarce}, rich {rich}");
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(7)]
+    [InlineData(20)]
+    public void CivilizationCountIsIndependentOfMapSize(int civs)
+    {
+        (GameState state, WorldGenReport report) = Generate(Medium with { CivilizationCount = civs });
+        Assert.Equal(civs, state.Civilizations.Count);
+        Assert.Empty(Validate(state, report));
+    }
+
+    [Fact]
+    public void WorldSettingsSurviveSaveAndLoad()
+    {
+        GameSettings settings = GameSettings.Test(8) with
+        {
+            Climate = WorldClimate.Hot,
+            Moisture = WorldMoisture.Wet,
+            Relief = WorldRelief.Mountainous,
+            Resources = WorldResources.Scarce,
+        };
+        GameState state = Generate(settings).State;
+        using var ms = new MemoryStream();
+        SaveGameSerializer.Save(state, ms);
+        ms.Position = 0;
+        GameState loaded = SaveGameSerializer.Load(ms);
+        Assert.Equal(state.Settings, loaded.Settings);
+        Assert.Equal(GameStateHash.Compute(state), GameStateHash.Compute(loaded));
     }
 }

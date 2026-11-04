@@ -23,6 +23,10 @@ public static class GameStateHash
         h.Add(state.Settings.CivilizationCount);
         h.Add((int)state.Settings.WorldType);
         h.Add(state.Settings.WaterPercent);
+        h.Add((int)state.Settings.Climate);
+        h.Add((int)state.Settings.Moisture);
+        h.Add((int)state.Settings.Relief);
+        h.Add((int)state.Settings.Resources);
         h.Add(state.Turn);
 
         Span<RandomState> rng = stackalloc RandomState[RandomStreams.Count];

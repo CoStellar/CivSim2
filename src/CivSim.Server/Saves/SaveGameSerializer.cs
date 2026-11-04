@@ -57,7 +57,7 @@ public static class SaveGameSerializer
         }
 
         GameSettings s = state.Settings;
-        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent);
+        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, (int)s.Climate, (int)s.Moisture, (int)s.Relief, (int)s.Resources);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -97,6 +97,10 @@ public static class SaveGameSerializer
         {
             WorldType = (Core.WorldGen.WorldType)data.WorldType,
             WaterPercent = data.WaterPercent,
+            Climate = (Core.WorldGen.WorldClimate)data.Climate,
+            Moisture = (Core.WorldGen.WorldMoisture)data.Moisture,
+            Relief = (Core.WorldGen.WorldRelief)data.Relief,
+            Resources = (Core.WorldGen.WorldResources)data.Resources,
         };
         GameState state = GameState.CreateForLoad(settings, data.Turn);
 

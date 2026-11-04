@@ -15,7 +15,11 @@ public sealed record SaveData(
     [property: Key(6)] IReadOnlyList<WorldSaveData> Worlds,
     [property: Key(7)] IReadOnlyList<CivilizationSaveData> Civilizations,
     [property: Key(8)] int WorldType,
-    [property: Key(9)] int WaterPercent);
+    [property: Key(9)] int WaterPercent,
+    [property: Key(10)] int Climate,
+    [property: Key(11)] int Moisture,
+    [property: Key(12)] int Relief,
+    [property: Key(13)] int Resources);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]

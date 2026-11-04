@@ -84,7 +84,12 @@ dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --
 - `--world-type`: `continents` (domyślnie), `pangea` albo `archipelago`,
 - `--water`: procent wody, 30–80 (domyślnie 60),
 - `--png <folder>`: zapisuje podgląd mapy jako 6 obrazów PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża),
-- `--png-scale`: wielkość heksa na obrazie (1–12, domyślnie 3, czyli heks szeroki na 12 px).
+- `--png-scale`: wielkość heksa na obrazie (1–12, domyślnie 3, czyli heks szeroki na 12 px),
+- `--climate`: `temperate` (domyślnie), `cold` albo `hot`,
+- `--moisture`: `normal` (domyślnie), `dry` albo `wet`,
+- `--relief`: `normal` (domyślnie), `flat` albo `mountainous`,
+- `--resources`: `normal` (domyślnie), `scarce` albo `rich`,
+- `--civs`: liczba cywilizacji 1–64 (domyślnie zależna od rozmiaru mapy).
 
 Sam podgląd mapy, bez liczenia tur:
 

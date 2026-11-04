@@ -47,7 +47,7 @@ public static class HeadlessRun
         GameState state = GameState.CreateNew(options.ToSettings(), content, out WorldGenReport world);
         GameSettings settings = state.Settings;
         List<string> problems = WorldValidator.Validate(
-            content, state.Worlds[0].Map, world, new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.CivilizationCount));
+            content, state.Worlds[0].Map, world, WorldGenOptions.From(settings));
         IReadOnlyList<string> pngs = [];
         if (options.PngFolder is not null)
         {

@@ -4,6 +4,7 @@ using CivSim.Core.Content;
 using CivSim.Core.Map;
 using CivSim.Core.Numerics;
 using CivSim.Core.Random;
+using CivSim.Core.State;
 
 namespace CivSim.Core.WorldGen;
 
@@ -194,8 +195,14 @@ public sealed class WorldGenerator
         }
 
         landHeights.Sort();
-        int hills = landHeights[landHeights.Count * 72 / 100];
-        int mountains = landHeights[Math.Min(landHeights.Count - 1, landHeights.Count * 92 / 100)];
+        (int mountainPercent, int hillPercent) = _options.Relief switch
+        {
+            WorldRelief.Flat => (4, 12),
+            WorldRelief.Mountainous => (14, 26),
+            _ => (8, 20),
+        };
+        int hills = landHeights[landHeights.Count * (100 - mountainPercent - hillPercent) / 100];
+        int mountains = landHeights[Math.Min(landHeights.Count - 1, landHeights.Count * (100 - mountainPercent) / 100)];
         Span<byte> relief = _map.Relief.Raw;
         for (int i = 0; i < _water.Length; i++)
         {
@@ -231,6 +238,13 @@ public sealed class WorldGenerator
             {
                 temp -= (e - SeaLevel) * 20 / (255 - SeaLevel);
             }
+
+            temp += _options.Climate switch
+            {
+                WorldClimate.Cold => -6,
+                WorldClimate.Hot => 6,
+                _ => 0,
+            };
 
             (long x, long y) = Position(c, 16, 10);
             temp += ((IntNoise.Sample(_seed ^ 0x7E4D, 0, 16, 10, x, y) - 32768) * 4) / 32768;
@@ -291,6 +305,12 @@ public sealed class WorldGenerator
 
             (long x, long y) = Position(c, 24, 14);
             value += ((IntNoise.Sample(_seed ^ 0x4A11D, 0, 24, 14, x, y) - 32768) * 12) / 32768;
+            value += _options.Moisture switch
+            {
+                WorldMoisture.Dry => -15,
+                WorldMoisture.Wet => 15,
+                _ => 0,
+            };
             hum[i] = (byte)Math.Clamp(value, 0, 100);
         }
     }
@@ -610,6 +630,12 @@ public sealed class WorldGenerator
         Span<int> richness = _map.DepositRichness.Raw;
         Span<byte> depth = _map.DepositDepth.Raw;
         var allowed = new bool[_content.Biomes.Count];
+        int resourcePercent = _options.Resources switch
+        {
+            WorldResources.Scarce => 60,
+            WorldResources.Rich => 160,
+            _ => 100,
+        };
         foreach (DepositDefinition d in _content.Deposits)
         {
             Array.Clear(allowed);
@@ -624,6 +650,7 @@ public sealed class WorldGenerator
                 reliefMask |= 1 << (int)r;
             }
 
+            int chance = Math.Min(1000, d.PerThousandCells * resourcePercent / 100);
             for (int i = 0; i < deposit.Length; i++)
             {
                 if (deposit[i] != 0 || !allowed[_map.Biome[i]] || (reliefMask & (1 << _map.Relief[i])) == 0)
@@ -631,7 +658,7 @@ public sealed class WorldGenerator
                     continue;
                 }
 
-                if (_rng.Chance(d.PerThousandCells, 1000))
+                if (_rng.Chance(chance, 1000))
                 {
                     deposit[i] = (ushort)d.Id;
                     richness[i] = _rng.NextInt(d.MinRichness, d.MaxRichness + 1);
@@ -896,6 +923,31 @@ public sealed class WorldGenerator
 /// <summary>Options for <see cref="WorldGenerator"/>.</summary>
 public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int CivilizationCount)
 {
+    /// <summary>Average temperature of the planet.</summary>
+    public WorldClimate Climate { get; init; }
+
+    /// <summary>How much rain the planet gets.</summary>
+    public WorldMoisture Moisture { get; init; }
+
+    /// <summary>Share of hills and mountains.</summary>
+    public WorldRelief Relief { get; init; }
+
+    /// <summary>How many natural deposits there are.</summary>
+    public WorldResources Resources { get; init; }
+
+    /// <summary>Options matching the world settings of a game.</summary>
+    public static WorldGenOptions From(GameSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.CivilizationCount)
+        {
+            Climate = settings.Climate,
+            Moisture = settings.Moisture,
+            Relief = settings.Relief,
+            Resources = settings.Resources,
+        };
+    }
+
     /// <summary>Rain (sum of humidity of the cells upstream) an edge needs to carry a river; 3× and 8× give bigger rivers.</summary>
     public int RiverRain { get; init; } = 2500;
 
