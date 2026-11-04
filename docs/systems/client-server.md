@@ -5,9 +5,10 @@
 **Faza tury:** poza turą. Serwer zbiera komendy między turami, uruchamia turę, gdy wszyscy gracze skończyli, i rozsyła widoki po fazie 11.
 
 ## Dane wejściowe i wyjściowe
-- Czyta: wiadomości od klientów (`HelloMessage`, `SubmitCommandMessage`, `EndTurnMessage`).
+- Czyta: wiadomości od klientów (`HelloMessage` z rolą gracz/obserwator, `SubmitCommandMessage`, `EndTurnMessage`, `SetSpeedMessage`).
 - Zmienia: kolejkę komend, przypisanie cywilizacji do graczy, stan gry (tylko przez turę).
-- Publikuje: `WelcomeMessage`, `GameViewMessage` (widok gracza po każdej turze), `CommandRejectedMessage`, `ConnectionRejectedMessage`.
+- Publikuje: `WelcomeMessage`, `ContentMessage` (nazwy i kolory z `data/`, raz przy powitaniu), `GameViewMessage` (tura, prędkość, czas tury, nowe wpisy kroniki),
+  `MapChunkMessage` (fragment 32×32 mapy: przy powitaniu wszystkie znane, potem tylko zmienione), `CommandRejectedMessage`, `ConnectionRejectedMessage`.
 
 ## Przepływ
 
@@ -44,7 +45,13 @@ sequenceDiagram
 - **Rozłączenie:** cywilizację przejmuje AI (GDD 2.1).
 - **Koniec tury:** gdy wszyscy przywitani gracze wysłali `EndTurn` dla bieżącej tury. Limit czasu tury dojdzie razem z grą sieciową;
   `AdvanceTurn()` pozwala uruchomić turę bez graczy (obserwator, Headless).
-- **Widok:** dziś zawiera światy i nazwy wszystkich cywilizacji. Mgła wojny i pamięć mapy (etap 3) będą filtrować w `ViewBuilder`, na serwerze.
+- **Widok:** zawiera światy, nazwy cywilizacji i fragmenty mapy (`MapViewBuilder`). Pola, których klient nie zna, są wyzerowane;
+  fragment bez żadnego znanego pola w ogóle nie jest wysyłany. Mgła wojny i pamięć mapy (etap 3) zastąpią dzisiejszy promień 4 od startu.
+- **Obserwator** (protokół v2): nie rządzi cywilizacją (`WelcomeMessage.NoCiv = -1`), widzi całą mapę i jako jedyny może zmieniać
+  prędkość symulacji. Gracz, który wyśle `SetSpeed`, dostaje odmowę.
+- **Kronika:** serwer pamięta ostatnie 500 wpisów; nowy klient dostaje je raz, przy powitaniu.
+- **`LocalServerHost`:** uruchamia serwer w osobnym wątku i daje klientowi połączenie w pamięci (ADR 0010). Tury idą
+  w tempie wybranej prędkości, tylko gdy podłączony jest obserwator; przy maks. widok wychodzi najwyżej co 250 ms.
 
 **Zapis gry** (`SaveGameSerializer`, po stronie serwera):
 - Plik: `CS2S` + wersja formatu (4 bajty) + MessagePack skompresowany LZ4.
@@ -57,9 +64,11 @@ Brak.
 
 ## Testy
 - `ProtocolSerializerTests`: każda wiadomość w obie strony, wersja w ramce, zła wersja, śmieci, stały format bajtów, połączenie w pamięci.
+- `LocalServerHostTests`: obserwator i gracz przez wątek serwera (zawartość, mapa, znane pola, prędkość).
 - `GameServerTests`: powitanie, zła wersja, koniec tury, odrzucanie cudzych i nieznanych komend, odrzucenia z numerem komendy,
   rozłączenie, oraz **komenda przez protokół daje ten sam hash co komenda podana bezpośrednio** (21 tur).
 - `SaveGameTests`: zapis i odczyt dają ten sam hash; wczytana gra po 70 kolejnych turach jest identyczna z oryginałem; zapis do pliku; obce i nowsze pliki.
 
 ## Wydajność
-Widoki i ramki są dziś małe. Pomiar razem z benchmarkiem w `CivSim.Headless`.
+Fragment mapy 32×32 to kilkanaście tablic po 1024 liczby; cała mapa standardowa (40 fragmentów) idzie raz, przy powitaniu.
+Potem, do etapu 3, tury nie zmieniają mapy, więc widoki są małe. Pomiar razem z benchmarkiem w `CivSim.Headless`.

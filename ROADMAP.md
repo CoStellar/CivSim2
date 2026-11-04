@@ -50,12 +50,15 @@ Gotowe, gdy: 100 map na różnych seedach generuje się bez błędów walidatora
 
 Gotowe, gdy: podgląd działa w 60 FPS na mapie ogromnej przy symulacji w tle.
 
-- [ ] Projekt Godota 4 (.NET) w `game/`, pełny ekran, kamera, zoom, zawijanie mapy przy przewijaniu
-- [ ] Podgląd łączy się z lokalnym serwerem przez `CivSim.Protocol` (nie czyta rdzenia bezpośrednio)
-- [ ] Rysowanie kolorowych heksów z widoku od serwera, tylko widoczne fragmenty
-- [ ] Inspektor pola, prędkości symulacji (pauza, ×1, ×2, ×5, maks.), kronika, proste wykresy
-- [ ] Nakładki: biomy, żyzność, złoża, właściciel, strefa wpływów
-- [ ] `docs/systems/viewer.md`
+Stan: wszystko zrobione; bez karty graficznej klient potrzebuje ok. 3 ms na klatkę na mapie ogromnej.
+Został pomiar FPS na komputerze Patryka. Nakładki właściciela i strefy wpływów zapełnią się w etapie 3.
+
+- [x] Projekt Godota 4 (.NET) w `game/`, pełny ekran, kamera, zoom, zawijanie mapy przy przewijaniu
+- [x] Podgląd łączy się z lokalnym serwerem przez `CivSim.Protocol` (nie czyta rdzenia bezpośrednio)
+- [x] Rysowanie kolorowych heksów z widoku od serwera, tylko widoczne fragmenty
+- [x] Inspektor pola, prędkości symulacji (pauza, ×1, ×2, ×5, maks.), kronika, proste wykresy
+- [x] Nakładki: biomy, żyzność, złoża, właściciel, strefa wpływów
+- [x] `docs/systems/viewer.md`
 
 ## Etap 3 — Gospodarka i ludność (ery 1–2)
 
