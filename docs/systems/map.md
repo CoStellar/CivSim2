@@ -44,10 +44,13 @@ flowchart LR
 - **Fragmenty 32×32:** mapa testowa ma 2×2 fragmenty (dolne są niepełne, 32×8), standardowa 8×5, duża 12×8, ogromna 16×10.
 - Po każdej turze migawka dostaje listę zmienionych fragmentów, a flagi są czyszczone. Nowa albo wczytana mapa ma wszystkie fragmenty zmienione,
   więc pierwszy widok zawsze dostaje całość.
-- Mapa wchodzi do hasha stanu i do zapisu gry (warstwa po warstwie, po nazwie). Format zapisu: wersja 2.
+- Mapa wchodzi do hasha stanu i do zapisu gry (warstwa po warstwie, po nazwie). Format zapisu: wersja 3 (od generatora świata dochodzą typ świata, procent wody i pole startowe każdej cywilizacji).
 
 ## Pliki danych
-Brak.
+Sama siatka nie ma plików danych. Wartości pól (biomy, złoża) pochodzą z `data/biomes.json` i `data/resources.json`; zob. `worldgen.md`.
+
+**Narożniki** (`HexCorners`): rzeki płyną po krawędziach, więc generator potrzebuje grafu narożników. Każde pole ma 2 narożniki (prawy górny i wschodni),
+każdy narożnik styka się z 3 polami i ma 3 sąsiednie narożniki połączone krawędziami.
 
 ## Testy
 `WorldMapTests`: siatka fragmentów dla wszystkich rozmiarów z GDD, niepełne fragmenty brzegowe, flagi zmian, `Set` zaznacza tylko swój fragment

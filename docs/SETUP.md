@@ -80,6 +80,16 @@ dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --
 - `--seed`: liczba startowa gry (ten sam seed = ta sama gra),
 - `--turns`: ile tur policzyć,
 - `--map-size`: `test`, `standard`, `large` albo `huge`,
-- `--report`: plik CSV z czasem każdej fazy każdej tury (otworzysz go w Excelu albo LibreOffice).
+- `--report`: plik CSV z czasem każdej fazy każdej tury (otworzysz go w Excelu albo LibreOffice),
+- `--world-type`: `continents` (domyślnie), `pangea` albo `archipelago`,
+- `--water`: procent wody, 30–80 (domyślnie 60),
+- `--png <folder>`: zapisuje podgląd mapy jako 6 obrazów PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża),
+- `--png-scale`: wielkość heksa na obrazie (1–12, domyślnie 3, czyli heks szeroki na 12 px).
 
-Na końcu program wypisuje hash stanu (dwa uruchomienia z tym samym seedem muszą dać ten sam), czasy tur i zużycie pamięci.
+Sam podgląd mapy, bez liczenia tur:
+
+```
+dotnet run -c Release --project src/CivSim.Headless -- --seed 7 --turns 0 --map-size standard --png maps
+```
+
+Na końcu program wypisuje podsumowanie świata (woda, rzeki, jeziora, starty, wynik walidatora), hash stanu (dwa uruchomienia z tym samym seedem muszą dać ten sam), czasy tur i zużycie pamięci.

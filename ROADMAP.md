@@ -37,14 +37,14 @@ Gotowe, gdy: 100 map na różnych seedach generuje się bez błędów walidatora
 
 - [x] Moduł `HexTorus`: współrzędne osiowe, flat-top, zawijanie w obu osiach, sąsiedzi, odległość, linia, okręgi
 - [x] Fragmenty 32×32 i flagi zmian
-- [ ] Generator: kontynenty, wysokość, poziom morza, temperatura (równik w środku, bieguny na szwie), wilgotność, biomy
-- [ ] Rzeki na krawędziach heksów, jeziora, żyzność
-- [ ] Złoża z głębokością, cuda natury, pozycje startowe z testem uczciwości
-- [ ] Biomy i surowce w `data/` (JSON) + walidator
-- [ ] Rozmiary map: testowa, standard, duża, ogromna
-- [ ] Eksport mapy do PNG z `CivSim.Headless` (kolorowe heksy, rzeki, złoża), żeby Patryk oceniał mapy bez Godota
-- [ ] Test 100 seedów + benchmark generowania mapy ogromnej
-- [ ] `docs/systems/map.md`, `docs/systems/worldgen.md`
+- [x] Generator: kontynenty, wysokość, poziom morza, temperatura (równik w środku, bieguny na szwie), wilgotność, biomy
+- [x] Rzeki na krawędziach heksów, jeziora, żyzność
+- [x] Złoża z głębokością, pozycje startowe z testem uczciwości (cuda natury pominięte: w GDD 16 to „Moduł”)
+- [x] Biomy i surowce w `data/` (JSON) + walidator
+- [x] Rozmiary map: testowa, standard, duża, ogromna
+- [x] Eksport mapy do PNG z `CivSim.Headless` (kolorowe heksy, rzeki, złoża), żeby Patryk oceniał mapy bez Godota
+- [x] Test 100 seedów + benchmark generowania mapy ogromnej
+- [x] `docs/systems/map.md`, `docs/systems/worldgen.md`
 
 ## Etap 2 — Podgląd symulacji (Godot)
 
