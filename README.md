@@ -13,11 +13,16 @@ The simulation comes first. Every civilization is run by AI on the same rules a 
 
 Early development. See [`ROADMAP.md`](ROADMAP.md).
 
+## Getting started
+
+Install Git, the .NET 10 SDK and Godot 4.7.2 (.NET edition), then open `game/project.godot` in Godot.
+Step-by-step guide (Polish): [`docs/SETUP.md`](docs/SETUP.md).
+
 ## Tech
 
-- Simulation core: C# / .NET, no engine dependencies, deterministic, runs headless
+- Simulation core: C# / .NET 10 (LTS), no engine dependencies, deterministic, runs headless
 - Client–server from day one: authoritative server (also runs locally in single player), Godot client
-- Viewer and game: Godot 4 (.NET)
+- Viewer and game: Godot 4.7.2 (.NET)
 - Content: JSON data files in `data/`
 - Platforms: Windows, Linux, macOS
 

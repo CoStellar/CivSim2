@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>CivSim.Server</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
+    <ProjectReference Include="..\CivSim.Data\CivSim.Data.csproj" />
+    <ProjectReference Include="..\CivSim.Protocol\CivSim.Protocol.csproj" />
+  </ItemGroup>
+</Project>
