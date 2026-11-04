@@ -149,6 +149,7 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 | Procent wody | 30–80% | 60% | poziom morza |
 | Temperatura | zimna, umiarkowana, gorąca | umiarkowana | −6 / 0 / +6 °C: czapy lodowe, tundra, pustynie, dżungle |
 | Wilgotność | sucha, normalna, mokra | normalna | −15 / 0 / +15 wilgotności: pustynie, lasy, liczba rzek |
+| Wilgotność w głębi lądu | sucha, normalna, wilgotna | normalna | spadek wilgotności z odległością od morza: −4 za pole do −60 / −3 do −36 / −2 do −20 (pola mapy standardowej, więc duże mapy nie mają suchszych środków kontynentów) |
 | Górzystość | płaska, normalna, górzysta | normalna | góry i wzgórza: 4+12%, 8+20%, 14+26% lądu |
 | Złoża | skąpe, normalne, bogate | normalne | 60% / 100% / 160% liczby złóż |
 
@@ -159,7 +160,7 @@ Te same ustawienia opisują w przyszłości inne planety (temperatura, woda).
 1. Kontynenty i płyty z szumu wielooktawowego, z ustawieniem typu świata (pangea, kontynenty, archipelag).
 2. Wysokość i poziom morza według zadanego procentu wody (domyślnie 60%).
 3. Temperatura z szerokości geograficznej i wysokości.
-4. Wilgotność z odległości od morza i przeważających wiatrów (cień opadowy za górami).
+4. Wilgotność z odległości od morza (według ustawienia „wilgotność w głębi lądu”), pasów szerokości geograficznej i przeważających wiatrów (cień opadowy za górami).
 5. Biomy z tabeli temperatura × wilgotność (diagram Whittakera).
 6. Rzeki płyną po krawędziach heksów, od źródeł w górach do morza; jeziora powstają w zagłębieniach. Pola przylegające do rzeki mają słodką wodę i wyższą żyzność.
 7. Cechy terenu i żyzność (najwyższa w dolinach rzek).

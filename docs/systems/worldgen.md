@@ -5,7 +5,7 @@
 **Faza tury:** żadna. Działa raz, przy tworzeniu nowej gry (`GameState.CreateNew(settings, content, out report)`), przed pierwszą turą.
 
 ## Dane wejściowe i wyjściowe
-- Czyta: `GameSettings` (seed, wymiary, liczba cywilizacji, `WorldType`, `WaterPercent`, `Climate`, `Moisture`, `Relief`, `Resources`; tabela w GDD 3), zawartość z `data/biomes.json` i `data/resources.json`.
+- Czyta: `GameSettings` (seed, wymiary, liczba cywilizacji, `WorldType`, `WaterPercent`, `Climate`, `Moisture`, `Inland`, `Relief`, `Resources`; tabela w GDD 3), zawartość z `data/biomes.json` i `data/resources.json`.
 - Zmienia: wszystkie warstwy mapy Ziemi (`WorldMap`), strumień losowy `World`, pole `StartCell` każdej cywilizacji.
 - Zwraca: `WorldGenReport` (procent wody, liczba rzek i jezior, liczba pól każdego biomu i złoża, starty, ich odległość i uczciwość, czas).
 - Publikuje w migawce: nic nowego. Mapa idzie do widoku przez zwykłe fragmenty 32×32 (wszystkie oznaczone jako zmienione).
@@ -36,7 +36,10 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 3. **Rzeźba.** 8% najwyższego lądu to góry, kolejne 20% to wzgórza (ustawienie górzystości: płaska 4+12%, górzysta 14+26%).
 4. **Temperatura** (−30…+40 °C): `28 − 55 · szerokość²` (równik w środku mapy, bieguny na szwie). Szerokość jest „wygięta” szumem
    (do ±15% odległości od równika), więc strefy klimatu biegną falistymi liniami, a nie wzdłuż rzędów mapy. Dalej: minus do 20 °C za wysokość, plus mały szum ±4 °C, plus ustawienie temperatury (zimna −6 °C, gorąca +6 °C).
-5. **Wilgotność** (0–100): blisko wody jest wilgotniej (−4 za każde pole od wody, najwyżej 15 pól), do tego pasy klimatu (mokry równik +20, suche zwrotniki −22, wilgotniejsze średnie szerokości +5, suche bieguny −10), liczone z tej samej wygiętej szerokości
+5. **Wilgotność** (0–100): bazowo 90, minus wysychanie w głębi lądu (`InlandDrying`): za każde pole od wody ubywa wilgotności, aż do limitu.
+   Odległość liczymy w polach mapy standardowej (`odległość · 256 / szerokość mapy`), więc na mapie ogromnej środek kontynentu nie jest suchszy tylko dlatego,
+   że ma więcej pól. Ustawienie „wilgotność w głębi lądu” (`--inland`): normalna −3 za pole, najwyżej 12 pól (−36); sucha −4, najwyżej 15 pól (−60, jak przed tym ustawieniem);
+   wilgotna −2, najwyżej 10 pól (−20, lasy sięgają głęboko w ląd). Do tego pasy klimatu (mokry równik +20, suche zwrotniki −22, wilgotniejsze średnie szerokości +5, suche bieguny −10), liczone z tej samej wygiętej szerokości
    i przechodzące płynnie jeden w drugi (bez skoków), oraz **cień opadowy**: jeśli w 5 polach pod wiatr stoją góry, od −31 (tuż obok) do −11 (5 pól dalej);
    wiatr patrzy po lekko ukośnej linii. Szum wilgotności ma dwie skale: ±14 (duże plamy) i ±8 (drobne). Wiatr wieje ze wschodu w tropikach i przy biegunach, z zachodu w średnich szerokościach. Ustawienie wilgotności dodaje −15 (sucha) albo +15 (mokra); mokry świat ma też więcej rzek, bo więcej wody spływa.
 6. **Biomy.** Woda: wybrzeże (1 pole od lądu), płytkie morze (2–3 pola), głęboki ocean (dalej). Ląd: pierwszy biom z `data/biomes.json`, którego zakres temperatury i wilgotności pasuje (kolejność w pliku ma znaczenie). Bagno tylko na płaskim. Gdy nic nie pasuje: łąka.
@@ -60,7 +63,8 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 - `ContentLoaderTests`: domyślne dane się wczytują; zepsute dane zgłaszają każdy błąd.
 - `WorldGeneratorTests`:
   - ten sam seed daje ten sam świat, inny seed inny; „złoty” hash mapy;
-  - każdy typ świata i różne procenty wody przechodzą walidator;
+  - każdy typ świata i różne procenty wody przechodzą walidator; różne kombinacje temperatury, wilgotności, wilgotności w głębi lądu, górzystości i złóż też;
+  - świat z suchym wnętrzem lądu ma mniej wilgotności niż normalny, a normalny mniej niż wilgotny;
   - **100 seedów** na mapie testowej bez błędów walidatora;
   - mapa standard ma rzeki, jeziora, ≥ 18 rodzajów złóż, ≥ 9 biomów lądowych i rozrzucone, uczciwe starty;
   - zapis i odczyt zachowuje mapę, ustawienia i starty;

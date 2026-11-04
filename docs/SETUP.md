@@ -110,6 +110,7 @@ dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --
 - `--png-scale`: wielkość heksa na obrazie (1–12, domyślnie 3, czyli heks szeroki na 12 px),
 - `--climate`: `temperate` (domyślnie), `cold` albo `hot`,
 - `--moisture`: `normal` (domyślnie), `dry` albo `wet`,
+- `--inland`: wilgotność w głębi lądu, `normal` (domyślnie), `dry` (suche wnętrza kontynentów) albo `humid` (lasy daleko od morza); działa też w podglądzie w Godocie,
 - `--relief`: `normal` (domyślnie), `flat` albo `mountainous`,
 - `--resources`: `normal` (domyślnie), `scarce` albo `rich`,
 - `--civs`: liczba cywilizacji 1–64 (domyślnie zależna od rozmiaru mapy).

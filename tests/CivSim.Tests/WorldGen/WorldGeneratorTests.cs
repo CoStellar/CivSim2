@@ -193,13 +193,14 @@ public class WorldGeneratorTests
     }
 
     [Theory]
-    [InlineData(WorldClimate.Cold, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce)]
-    [InlineData(WorldClimate.Hot, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich)]
-    [InlineData(WorldClimate.Cold, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich)]
-    [InlineData(WorldClimate.Hot, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal)]
-    public void EveryWorldSettingIsValid(WorldClimate climate, WorldMoisture moisture, WorldRelief relief, WorldResources resources)
+    [InlineData(WorldClimate.Cold, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce, WorldInland.Dry)]
+    [InlineData(WorldClimate.Hot, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich, WorldInland.Humid)]
+    [InlineData(WorldClimate.Cold, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich, WorldInland.Normal)]
+    [InlineData(WorldClimate.Hot, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal, WorldInland.Dry)]
+    [InlineData(WorldClimate.Temperate, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Normal, WorldInland.Humid)]
+    public void EveryWorldSettingIsValid(WorldClimate climate, WorldMoisture moisture, WorldRelief relief, WorldResources resources, WorldInland inland)
     {
-        GameSettings settings = Medium with { Climate = climate, Moisture = moisture, Relief = relief, Resources = resources };
+        GameSettings settings = Medium with { Climate = climate, Moisture = moisture, Relief = relief, Resources = resources, Inland = inland };
         (GameState state, WorldGenReport report) = Generate(settings);
         Assert.Empty(Validate(state, report));
     }
@@ -220,6 +221,26 @@ public class WorldGeneratorTests
         WorldGenReport wet = Generate(Medium with { Moisture = WorldMoisture.Wet }).Report;
         Assert.True(wet.RiverEdges > dry.RiverEdges * 3 / 2, $"wet {wet.RiverEdges}, dry {dry.RiverEdges}");
         Assert.True(CountBiomes(dry, "desert", "steppe") > CountBiomes(wet, "desert", "steppe"));
+    }
+
+    [Fact]
+    public void DryInlandWorldsHaveLessHumidityThanHumidOnes()
+    {
+        long dry = TotalHumidity(Generate(Medium with { Inland = WorldInland.Dry }).State);
+        long normal = TotalHumidity(Generate(Medium).State);
+        long humid = TotalHumidity(Generate(Medium with { Inland = WorldInland.Humid }).State);
+        Assert.True(dry < normal && normal < humid, $"{dry} / {normal} / {humid}");
+    }
+
+    private static long TotalHumidity(GameState state)
+    {
+        long sum = 0;
+        foreach (byte v in state.Worlds[0].Map.Humidity.Values)
+        {
+            sum += v;
+        }
+
+        return sum;
     }
 
     [Fact]
@@ -259,6 +280,7 @@ public class WorldGeneratorTests
             Moisture = WorldMoisture.Wet,
             Relief = WorldRelief.Mountainous,
             Resources = WorldResources.Scarce,
+            Inland = WorldInland.Humid,
         };
         GameState state = Generate(settings).State;
         using var ms = new MemoryStream();
