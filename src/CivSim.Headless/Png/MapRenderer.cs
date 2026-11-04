@@ -96,7 +96,7 @@ public sealed class MapRenderer
                 {
                     (int cx, int cy) = Center(geo.FromIndex(i));
                     uint color = _content.Deposit(d).Color;
-                    int r = Math.Max(1, _k / 2);
+                    int r = Math.Max(1, _k - 1);
                     FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, _world.Map.DepositDepth[i] == 0 ? color : Darken(color, 50));
                 }
             }
