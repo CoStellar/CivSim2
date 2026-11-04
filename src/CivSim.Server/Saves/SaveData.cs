@@ -19,7 +19,8 @@ public sealed record SaveData(
     [property: Key(10)] int Climate,
     [property: Key(11)] int Moisture,
     [property: Key(12)] int Relief,
-    [property: Key(13)] int Resources);
+    [property: Key(13)] int Resources,
+    [property: Key(14)] int Inland);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]

@@ -17,6 +17,9 @@ public sealed record GameSettings(ulong Seed, int MapWidth, int MapHeight, int C
     /// <summary>How much rain the planet gets.</summary>
     public WorldMoisture Moisture { get; init; } = WorldMoisture.Normal;
 
+    /// <summary>How fast humidity falls away from the sea (world setting).</summary>
+    public WorldInland Inland { get; init; } = WorldInland.Normal;
+
     /// <summary>Share of hills and mountains.</summary>
     public WorldRelief Relief { get; init; } = WorldRelief.Normal;
 

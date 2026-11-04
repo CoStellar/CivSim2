@@ -360,6 +360,7 @@ public partial class Main : Node2D
         string? worldType = null;
         string? climate = null;
         string? moisture = null;
+        string? inland = null;
         string? relief = null;
         string? resources = null;
         int? water = null;
@@ -387,6 +388,9 @@ public partial class Main : Node2D
                 case "--climate":
                     climate = v;
                     break;
+                case "--inland":
+                    inland = v;
+                    break;
                 case "--moisture":
                     moisture = v;
                     break;
@@ -413,6 +417,7 @@ public partial class Main : Node2D
             WaterPercent = water ?? o.WaterPercent,
             Climate = climate ?? o.Climate,
             Moisture = moisture ?? o.Moisture,
+            Inland = inland ?? o.Inland,
             Relief = relief ?? o.Relief,
             Resources = resources ?? o.Resources,
         };

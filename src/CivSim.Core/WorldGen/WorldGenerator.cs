@@ -240,6 +240,20 @@ public sealed class WorldGenerator
     private static readonly (int Lat, int Change)[] HumidityBelts =
         [(0, 20), (120, 18), (330, -22), (560, 5), (720, 2), (900, -10), (1000, -10)];
 
+    // Humidity lost with distance from water. Distance is measured in standard-map cells (256 columns),
+    // so continents on bigger maps are not drier just because they are wider in cells.
+    private int InlandDrying(int distance)
+    {
+        (int perCell, int maxCells) = _options.Inland switch
+        {
+            WorldInland.Dry => (4, 15),
+            WorldInland.Humid => (2, 10),
+            _ => (3, 12),
+        };
+        int scaled = distance * 256 / _geo.Width;
+        return perCell * Math.Min(scaled, maxCells);
+    }
+
     private static int HumidityBelt(int lat)
     {
         for (int k = 1; k < HumidityBelts.Length; k++)
@@ -297,7 +311,7 @@ public sealed class WorldGenerator
 
             HexCoord c = _geo.FromIndex(i);
             int lat = ClimateLatitude(c);
-            int value = 90 - (4 * Math.Min(distToWater[i], 15)) + HumidityBelt(lat);
+            int value = 90 - InlandDrying(distToWater[i]) + HumidityBelt(lat);
 
             // Rain shadow: mountains upwind take the rain, more when they are close. Trade winds and polar easterlies
             // come from the east, westerlies from the west. The wind looks along a slanted line, so shadows are not
@@ -944,6 +958,9 @@ public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int 
     /// <summary>How much rain the planet gets.</summary>
     public WorldMoisture Moisture { get; init; }
 
+    /// <summary>How fast humidity falls away from the sea.</summary>
+    public WorldInland Inland { get; init; }
+
     /// <summary>Share of hills and mountains.</summary>
     public WorldRelief Relief { get; init; }
 
@@ -958,6 +975,7 @@ public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int 
         {
             Climate = settings.Climate,
             Moisture = settings.Moisture,
+            Inland = settings.Inland,
             Relief = settings.Relief,
             Resources = settings.Resources,
         };

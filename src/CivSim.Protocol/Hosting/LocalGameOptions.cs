@@ -19,6 +19,9 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     /// <summary>normal, dry or wet.</summary>
     public string Moisture { get; init; } = "normal";
 
+    /// <summary>How fast humidity falls away from the sea: normal, dry or humid.</summary>
+    public string Inland { get; init; } = "normal";
+
     /// <summary>normal, flat or mountainous.</summary>
     public string Relief { get; init; } = "normal";
 
