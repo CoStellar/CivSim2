@@ -1,0 +1,12 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <PropertyGroup>
+    <RootNamespace>CivSim.Game</RootNamespace>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <!-- The client may only see CivSim.Protocol, never CivSim.Core (CLAUDE.md, rule 10). -->
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\CivSim.Protocol\CivSim.Protocol.csproj" />
+  </ItemGroup>
+</Project>
