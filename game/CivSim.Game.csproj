@@ -2,11 +2,22 @@
   <PropertyGroup>
     <RootNamespace>CivSim.Game</RootNamespace>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <!-- The client may only see CivSim.Protocol, never CivSim.Core (CLAUDE.md, rule 10). -->
+    <!--
+      The client may only see CivSim.Protocol and the protocol-only entry point of CivSim.Server
+      (LocalServerHost), never CivSim.Core (CLAUDE.md rule 10, ADR 0010). Transitive references are off,
+      so any use of a core type in game/ fails to compile.
+    -->
     <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\CivSim.Protocol\CivSim.Protocol.csproj" />
+    <ProjectReference Include="..\src\CivSim.Server\CivSim.Server.csproj" />
+    <!-- Needed at run time by the local server, but not visible to client code. -->
+    <ProjectReference Include="..\src\CivSim.Core\CivSim.Core.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\src\CivSim.Data\CivSim.Data.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\data\**\*.json" Link="data\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

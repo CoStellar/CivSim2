@@ -34,10 +34,33 @@ Albo w GitHub Desktop: **File → Clone repository → CoStellar/CivSim2**.
 2. Kliknij **Import** i wskaż plik `game/project.godot` z pobranego repo.
 3. Kliknij **Import & Edit**. Za pierwszym razem Godot chwilę indeksuje pliki.
 4. Naciśnij **F5** (albo trójkąt „Run Project” w prawym górnym rogu).
-   Godot sam zbuduje kod C# i otworzy okno z napisem:
-   **„CivSim 2 - client ready (protocol v1)”**.
+   Godot sam zbuduje kod C# i otworzy okno z mapą świata. U góry jest numer tury i przyciski prędkości,
+   po lewej inspektor wybranego pola, po prawej kronika, na dole wykres czasu tury.
 
-Jeśli widzisz ten napis, wszystko działa: Godot, .NET i połączenie klienta z biblioteką protokołu.
+Jeśli widzisz mapę, wszystko działa: Godot, .NET, lokalny serwer i połączenie klienta z serwerem.
+
+### Sterowanie podglądem
+
+| Klawisz / mysz | Działanie |
+| --- | --- |
+| WASD, strzałki, przeciąganie prawym lub środkowym przyciskiem | przesuwanie mapy (zawija się w obu kierunkach) |
+| kółko myszy, `+` / `-` | zoom |
+| lewy przycisk | wybór pola |
+| Spacja | pauza / ×1 |
+| 1–5 | pauza, ×1, ×2, ×5, maks. |
+| Tab | następna nakładka (biomy, wysokość, temperatura, wilgotność, żyzność, złoża, właściciel, wpływy) |
+
+### Inny świat w podglądzie
+
+W Godocie: **Project → Project Settings → Application → Run → Main Run Args**, np.:
+
+```
+-- --seed 42 --map-size huge --climate cold --relief mountainous --civs 20
+```
+
+Te same ustawienia co w trybie bez okna (niżej): `--seed`, `--map-size` (test, standard, large, huge), `--world-type`,
+`--water`, `--climate`, `--moisture`, `--relief`, `--resources`, `--civs`, oraz `--speed` (paused, x1, x2, x5, max).
+`--benchmark 600` przelatuje kamerą nad mapą przez 600 klatek, wypisuje w panelu Output średni czas klatki i zamyka grę.
 
 ## Co jest gdzie
 
@@ -68,3 +91,33 @@ dotnet test CivSim2.sln
 Projekt Godota (`game/CivSim.Game.csproj`) jest częścią solucji, więc `dotnet build` buduje też klienta.
 Klient odwołuje się tylko do `CivSim.Protocol` (`DisableTransitiveProjectReferences`), więc użycie typów z `CivSim.Core`
 w `game/` kończy się błędem kompilacji.
+
+## Uruchomienie symulacji bez okna
+
+W katalogu repo, w terminalu:
+
+```
+dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --map-size standard --report reports/bench.csv
+```
+
+- `--seed`: liczba startowa gry (ten sam seed = ta sama gra),
+- `--turns`: ile tur policzyć,
+- `--map-size`: `test`, `standard`, `large` albo `huge`,
+- `--report`: plik CSV z czasem każdej fazy każdej tury (otworzysz go w Excelu albo LibreOffice),
+- `--world-type`: `continents` (domyślnie), `pangea` albo `archipelago`,
+- `--water`: procent wody, 30–80 (domyślnie 60),
+- `--png <folder>`: zapisuje podgląd mapy jako 6 obrazów PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża),
+- `--png-scale`: wielkość heksa na obrazie (1–12, domyślnie 3, czyli heks szeroki na 12 px),
+- `--climate`: `temperate` (domyślnie), `cold` albo `hot`,
+- `--moisture`: `normal` (domyślnie), `dry` albo `wet`,
+- `--relief`: `normal` (domyślnie), `flat` albo `mountainous`,
+- `--resources`: `normal` (domyślnie), `scarce` albo `rich`,
+- `--civs`: liczba cywilizacji 1–64 (domyślnie zależna od rozmiaru mapy).
+
+Sam podgląd mapy, bez liczenia tur:
+
+```
+dotnet run -c Release --project src/CivSim.Headless -- --seed 7 --turns 0 --map-size standard --png maps
+```
+
+Na końcu program wypisuje podsumowanie świata (woda, rzeki, jeziora, starty, wynik walidatora), hash stanu (dwa uruchomienia z tym samym seedem muszą dać ten sam), czasy tur i zużycie pamięci.

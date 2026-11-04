@@ -5,4 +5,8 @@
   <ItemGroup>
     <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
   </ItemGroup>
+  <!-- Ship the data folder next to every program that uses CivSim.Data. -->
+  <ItemGroup>
+    <Content Include="..\..\data\**\*.json" Link="data\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

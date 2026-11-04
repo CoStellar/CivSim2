@@ -7,7 +7,7 @@ Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. 
 wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
-**Aktualny etap: 0**
+**Aktualny etap: 1**
 
 ---
 
@@ -17,45 +17,48 @@ Gotowe, gdy: 10 000 pustych tur przechodzi bez okna, ten sam seed daje ten sam h
 
 - [x] Solucja .NET `CivSim2.sln` z projektami: `CivSim.Core`, `CivSim.Data`, `CivSim.Protocol`, `CivSim.Server`, `CivSim.Headless`, `CivSim.Tests`
 - [x] `Directory.Build.props`: nullable, ostrzeżenia jako błędy, deterministyczny build, wspólna wersja .NET (aktualny LTS)
-- [ ] Deterministyczny PRNG z nazwanymi strumieniami + testy (rozkład, powtarzalność, niezależność strumieni)
-- [ ] Typ `Amount` (liczby całkowite w setnych częściach) + testy arytmetyki i zaokrągleń
-- [ ] Szkielet komend: `ICommand`, kolejka, rozstrzyganie w stałej kolejności z rotacją cywilizacji co turę
-- [ ] Szkielet tury: 11 faz z `docs/GDD.md` (rozdz. 11.1), na razie puste, z pomiarem czasu każdej fazy
-- [ ] Stan gry z listą światów (świat 0 = Ziemia) i publikacją niezmiennych migawek (double buffer)
-- [ ] Hash stanu gry do testów determinizmu
-- [ ] Granica klient–serwer: `CivSim.Protocol` (wersjonowane wiadomości, interfejs transportu, transport w pamięci), `CivSim.Server` uruchamiany lokalnie, komendy z identyfikatorem gracza + test „komenda przez protokół = ten sam stan co bezpośrednio”
-- [ ] Zapis i odczyt (MessagePack) z wersją formatu + test „zapisz, wczytaj, porównaj hash”
-- [ ] `CivSim.Headless`: `--seed --turns --map-size --report out.csv`
-- [ ] Benchmark 10 000 pustych tur: czas tury i pamięć w raporcie
-- [ ] GitHub Actions: build + testy na Ubuntu, Windows, macOS; benchmark na Ubuntu
+- [x] Deterministyczny PRNG z nazwanymi strumieniami + testy (rozkład, powtarzalność, niezależność strumieni)
+- [x] Typ `Amount` (liczby całkowite w setnych częściach) + testy arytmetyki i zaokrągleń
+- [x] Szkielet komend: `ICommand`, kolejka, rozstrzyganie w stałej kolejności z rotacją cywilizacji co turę
+- [x] Szkielet tury: 11 faz z `docs/GDD.md` (rozdz. 11.1), na razie puste, z pomiarem czasu każdej fazy
+- [x] Stan gry z listą światów (świat 0 = Ziemia) i publikacją niezmiennych migawek (double buffer)
+- [x] Hash stanu gry do testów determinizmu
+- [x] Granica klient–serwer: `CivSim.Protocol` (wersjonowane wiadomości, interfejs transportu, transport w pamięci), `CivSim.Server` uruchamiany lokalnie, komendy z identyfikatorem gracza + test „komenda przez protokół = ten sam stan co bezpośrednio”
+- [x] Zapis i odczyt (MessagePack) z wersją formatu + test „zapisz, wczytaj, porównaj hash”
+- [x] `CivSim.Headless`: `--seed --turns --map-size --report out.csv`
+- [x] Benchmark 10 000 pustych tur: czas tury i pamięć w raporcie
+- [x] GitHub Actions: build + testy na Ubuntu, Windows, macOS; benchmark na Ubuntu
 - [ ] Understand Anything: instalacja, pierwszy `/understand`, `--auto-update`, graf w repo
-- [ ] `docs/systems/turn-loop.md`, `docs/systems/determinism.md`, `docs/systems/client-server.md`
+- [x] `docs/systems/turn-loop.md`, `docs/systems/determinism.md`, `docs/systems/client-server.md`
 
 ## Etap 1 — Mapa
 
 Gotowe, gdy: 100 map na różnych seedach generuje się bez błędów walidatora, a Patryk obejrzał je jako PNG.
 
-- [ ] Moduł `HexTorus`: współrzędne osiowe, flat-top, zawijanie w obu osiach, sąsiedzi, odległość, linia, okręgi
-- [ ] Fragmenty 32×32 i flagi zmian
-- [ ] Generator: kontynenty, wysokość, poziom morza, temperatura (równik w środku, bieguny na szwie), wilgotność, biomy
-- [ ] Rzeki na krawędziach heksów, jeziora, żyzność
-- [ ] Złoża z głębokością, cuda natury, pozycje startowe z testem uczciwości
-- [ ] Biomy i surowce w `data/` (JSON) + walidator
-- [ ] Rozmiary map: testowa, standard, duża, ogromna
-- [ ] Eksport mapy do PNG z `CivSim.Headless` (kolorowe heksy, rzeki, złoża), żeby Patryk oceniał mapy bez Godota
-- [ ] Test 100 seedów + benchmark generowania mapy ogromnej
-- [ ] `docs/systems/map.md`, `docs/systems/worldgen.md`
+- [x] Moduł `HexTorus`: współrzędne osiowe, flat-top, zawijanie w obu osiach, sąsiedzi, odległość, linia, okręgi
+- [x] Fragmenty 32×32 i flagi zmian
+- [x] Generator: kontynenty, wysokość, poziom morza, temperatura (równik w środku, bieguny na szwie), wilgotność, biomy
+- [x] Rzeki na krawędziach heksów, jeziora, żyzność
+- [x] Złoża z głębokością, pozycje startowe z testem uczciwości (cuda natury pominięte: w GDD 16 to „Moduł”)
+- [x] Biomy i surowce w `data/` (JSON) + walidator
+- [x] Rozmiary map: testowa, standard, duża, ogromna
+- [x] Eksport mapy do PNG z `CivSim.Headless` (kolorowe heksy, rzeki, złoża), żeby Patryk oceniał mapy bez Godota
+- [x] Test 100 seedów + benchmark generowania mapy ogromnej
+- [x] `docs/systems/map.md`, `docs/systems/worldgen.md`
 
 ## Etap 2 — Podgląd symulacji (Godot)
 
 Gotowe, gdy: podgląd działa w 60 FPS na mapie ogromnej przy symulacji w tle.
 
-- [ ] Projekt Godota 4 (.NET) w `game/`, pełny ekran, kamera, zoom, zawijanie mapy przy przewijaniu
-- [ ] Podgląd łączy się z lokalnym serwerem przez `CivSim.Protocol` (nie czyta rdzenia bezpośrednio)
-- [ ] Rysowanie kolorowych heksów z widoku od serwera, tylko widoczne fragmenty
-- [ ] Inspektor pola, prędkości symulacji (pauza, ×1, ×2, ×5, maks.), kronika, proste wykresy
-- [ ] Nakładki: biomy, żyzność, złoża, właściciel, strefa wpływów
-- [ ] `docs/systems/viewer.md`
+Stan: wszystko zrobione; bez karty graficznej klient potrzebuje ok. 3 ms na klatkę na mapie ogromnej.
+Został pomiar FPS na komputerze Patryka. Nakładki właściciela i strefy wpływów zapełnią się w etapie 3.
+
+- [x] Projekt Godota 4 (.NET) w `game/`, pełny ekran, kamera, zoom, zawijanie mapy przy przewijaniu
+- [x] Podgląd łączy się z lokalnym serwerem przez `CivSim.Protocol` (nie czyta rdzenia bezpośrednio)
+- [x] Rysowanie kolorowych heksów z widoku od serwera, tylko widoczne fragmenty
+- [x] Inspektor pola, prędkości symulacji (pauza, ×1, ×2, ×5, maks.), kronika, proste wykresy
+- [x] Nakładki: biomy, żyzność, złoża, właściciel, strefa wpływów
+- [x] `docs/systems/viewer.md`
 
 ## Etap 3 — Gospodarka i ludność (ery 1–2)
 

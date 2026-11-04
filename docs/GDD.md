@@ -139,6 +139,21 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 
 **Biomy (14):** głęboki ocean, płytkie morze, wybrzeże, jezioro, łąka, step, pustynia, tundra, lód, las liściasty, tajga, dżungla, bagno, sawanna. Do tego modyfikator rzeźby: płasko / wzgórza / góry.
 
+**Ustawienia świata** (wybierane przy tworzeniu gry, stałe przez całą grę):
+
+| Ustawienie | Wartości | Domyślnie | Co zmienia |
+| --- | --- | --- | --- |
+| Rozmiar mapy | testowa, standard, duża, ogromna | standard | wymiary (tabela wyżej) |
+| Liczba cywilizacji | 1–64 | zależna od rozmiaru (4/12/20/32) | ile plemion startuje |
+| Typ świata | kontynenty, pangea, archipelag | kontynenty | kształt lądów |
+| Procent wody | 30–80% | 60% | poziom morza |
+| Temperatura | zimna, umiarkowana, gorąca | umiarkowana | −6 / 0 / +6 °C: czapy lodowe, tundra, pustynie, dżungle |
+| Wilgotność | sucha, normalna, mokra | normalna | −15 / 0 / +15 wilgotności: pustynie, lasy, liczba rzek |
+| Górzystość | płaska, normalna, górzysta | normalna | góry i wzgórza: 4+12%, 8+20%, 14+26% lądu |
+| Złoża | skąpe, normalne, bogate | normalne | 60% / 100% / 160% liczby złóż |
+
+Te same ustawienia opisują w przyszłości inne planety (temperatura, woda).
+
 **Kolejność generowania:**
 
 1. Kontynenty i płyty z szumu wielooktawowego, z ustawieniem typu świata (pangea, kontynenty, archipelag).
