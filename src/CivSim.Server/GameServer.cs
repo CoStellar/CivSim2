@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using CivSim.Core.Commands;
+using CivSim.Core.Content;
+using CivSim.Core.Map;
 using CivSim.Core.Simulation;
 using CivSim.Core.State;
+using CivSim.Core.WorldGen;
 using CivSim.Protocol;
 using CivSim.Protocol.Messages;
 using CivSim.Protocol.Transport;
@@ -16,21 +20,62 @@ namespace CivSim.Server;
 /// </summary>
 public sealed class GameServer
 {
+    /// <summary>Start cells within this radius are known to a player until fog of war arrives (Stage 3).</summary>
+    public const int StartKnowledgeRadius = 4;
+
     private readonly List<Client> _clients = [];
+    private readonly GameContent? _content;
+    private readonly List<ChronicleEntry> _chronicle = [];
+    private readonly List<ChronicleEntry> _history = [];
+    private readonly bool[][] _pendingChunks;
+    private long _lastTurnTicks;
     private int _nextPlayerId = 1;
 
-    /// <summary>Creates a server for a new game.</summary>
+    /// <summary>Creates a server for a new game with an empty map (tests, benchmarks).</summary>
     public GameServer(GameSettings settings)
         : this(GameState.CreateNew(settings))
     {
     }
 
     /// <summary>Creates a server for an existing (e.g. loaded) game.</summary>
-    public GameServer(GameState state)
+    public GameServer(GameState state, GameContent? content = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         Runner = new TurnRunner(state);
+        _content = content;
+        _pendingChunks = new bool[state.Worlds.Count][];
+        for (int w = 0; w < state.Worlds.Count; w++)
+        {
+            _pendingChunks[w] = new bool[state.Worlds[w].Map.Chunks.Count];
+        }
     }
+
+    /// <summary>Creates a new game and generates its world (GDD 3).</summary>
+    public static GameServer CreateNew(GameSettings settings, GameContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        GameState state = GameState.CreateNew(settings, content, out WorldGenReport report);
+        var server = new GameServer(state, content);
+        server.AddChronicle(string.Create(
+            System.Globalization.CultureInfo.InvariantCulture,
+            $"World generated from seed {settings.Seed}: {settings.MapWidth}x{settings.MapHeight}, {settings.WorldType}, {report.WaterPercent}% water, {report.Rivers} rivers, {report.Lakes} lakes."));
+        server.AddChronicle(string.Create(
+            System.Globalization.CultureInfo.InvariantCulture,
+            $"{report.Starts.Count} tribes start at least {report.MinStartDistance} cells apart (fairness {report.StartFairnessPercent}%)."));
+        return server;
+    }
+
+    /// <summary>Speed chosen by an observer. The host uses it to pace turns.</summary>
+    public SimulationSpeed Speed { get; private set; } = SimulationSpeed.Paused;
+
+    /// <summary>True when chronicle lines wait to be sent (for example after a speed change while paused).</summary>
+    public bool HasUnsentChronicle => _chronicle.Count > 0 && _clients.Exists(c => c.Player is not null);
+
+    /// <summary>Chronicle lines kept for clients that join later.</summary>
+    public const int ChronicleHistory = 500;
+
+    /// <summary>Number of connected observers.</summary>
+    public int ConnectedObservers => _clients.FindAll(c => c.IsObserver).Count;
 
     /// <summary>The turn runner (systems and AI register here).</summary>
     public TurnRunner Runner { get; }
@@ -80,10 +125,26 @@ public sealed class GameServer
         return false;
     }
 
-    /// <summary>Runs one turn now (observer mode, headless, or a turn timer) and sends views to all players.</summary>
-    public TurnReport AdvanceTurn()
+    /// <summary>
+    /// Runs one turn now (observer mode, headless, or a turn timer). With <paramref name="sendViews"/> false the
+    /// changed chunks are remembered and sent by the next <see cref="SendViews"/> (used at maximum speed).
+    /// </summary>
+    public TurnReport AdvanceTurn(bool sendViews = true)
     {
         TurnReport report = Runner.RunTurn();
+        _lastTurnTicks = report.TotalTicks;
+        GameSnapshot? snapshot = Runner.Snapshots.Latest;
+        if (snapshot is not null)
+        {
+            for (int w = 0; w < snapshot.Worlds.Length && w < _pendingChunks.Length; w++)
+            {
+                foreach (int chunk in snapshot.Worlds[w].ChangedChunks)
+                {
+                    _pendingChunks[w][chunk] = true;
+                }
+            }
+        }
+
         foreach (RejectedCommand rejected in report.Rejected)
         {
             Client? owner = _clients.Find(c => c.Player == rejected.Envelope.Player);
@@ -95,7 +156,11 @@ public sealed class GameServer
             client.ForgetSequences();
         }
 
-        SendViews();
+        if (sendViews)
+        {
+            SendViews();
+        }
+
         return report;
     }
 
@@ -108,6 +173,21 @@ public sealed class GameServer
                 break;
             case SubmitCommandMessage submit:
                 HandleSubmit(client, submit);
+                break;
+            case SetSpeedMessage speed:
+                if (client.IsObserver)
+                {
+                    if (speed.Speed != Speed)
+                    {
+                        Speed = speed.Speed;
+                        AddChronicle($"Speed set to {Speed}.");
+                    }
+                }
+                else
+                {
+                    client.Connection.Send(new ConnectionRejectedMessage("Only observers can change the speed."));
+                }
+
                 break;
             case EndTurnMessage end:
                 if (client.Civ is not null && end.Turn == State.Turn)
@@ -136,6 +216,17 @@ public sealed class GameServer
             return;
         }
 
+        if (hello.Role == ClientRole.Observer)
+        {
+            client.Player = new PlayerId(_nextPlayerId++);
+            client.IsObserver = true;
+            client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, client.Player.Value.Value, WelcomeMessage.NoCiv));
+            SendContent(client);
+            client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
+            SendAllChunks(client);
+            return;
+        }
+
         CivilizationState? civ = null;
         foreach (CivilizationState c in State.Civilizations)
         {
@@ -158,7 +249,94 @@ public sealed class GameServer
         civ.Controller = client.Player.Value;
         client.ReadyForTurn = -1;
         client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, client.Player.Value.Value, civ.Id.Value));
-        client.Connection.Send(ViewBuilder.Build(Runner.Snapshots.Latest ?? GameSnapshot.From(State), civ.Id));
+        client.Known = KnownCells(civ);
+        SendContent(client);
+        client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
+        SendAllChunks(client);
+    }
+
+    // Until perception (Stage 3), a player knows the cells around its start.
+    private bool[] KnownCells(CivilizationState civ)
+    {
+        WorldState earth = State.Worlds[0];
+        var known = new bool[earth.Geometry.CellCount];
+        int radius = Math.Min(StartKnowledgeRadius, earth.Geometry.MaxUniqueRadius);
+        var area = new HexCoord[HexTorus.RangeSize(radius)];
+        int count = earth.Geometry.Range(civ.StartCell, radius, area);
+        for (int k = 0; k < count; k++)
+        {
+            known[earth.Geometry.Index(area[k])] = true;
+        }
+
+        return known;
+    }
+
+    private void SendContent(Client client)
+    {
+        if (_content is null)
+        {
+            return;
+        }
+
+        var biomes = new List<BiomeInfo>(_content.Biomes.Count);
+        foreach (BiomeDefinition b in _content.Biomes)
+        {
+            biomes.Add(new BiomeInfo(b.Id, b.Key, b.Name, b.IsWater, b.Color));
+        }
+
+        var deposits = new List<DepositInfo>(_content.Deposits.Count);
+        foreach (DepositDefinition d in _content.Deposits)
+        {
+            deposits.Add(new DepositInfo(d.Id, d.Key, d.Name, d.Color));
+        }
+
+        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>()));
+    }
+
+    private void SendAllChunks(Client client)
+    {
+        foreach (WorldState world in State.Worlds)
+        {
+            for (int chunk = 0; chunk < world.Map.Chunks.Count; chunk++)
+            {
+                SendChunk(client, world, chunk);
+            }
+        }
+    }
+
+    private void SendChunk(Client client, WorldState world, int chunk)
+    {
+        // Players only see Earth until space travel.
+        if (!client.IsObserver && world.Id != WorldId.Earth)
+        {
+            return;
+        }
+
+        MapChunkMessage? message = MapViewBuilder.Build(world, chunk, State.Turn, client.IsObserver ? null : client.Known);
+        if (message is not null)
+        {
+            client.Connection.Send(message);
+        }
+    }
+
+    /// <summary>Adds a line to the chronicle; it is sent with the next views.</summary>
+    public void AddChronicle(string text)
+    {
+        var entry = new ChronicleEntry(State.Turn, text);
+        _chronicle.Add(entry);
+        _history.Add(entry);
+        if (_history.Count > ChronicleHistory)
+        {
+            _history.RemoveRange(0, _history.Count - ChronicleHistory);
+        }
+    }
+
+    // A joining client gets the whole kept history; later views carry only the new lines.
+    private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false)
+    {
+        GameViewMessage view = ViewBuilder.Build(snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv));
+        long micros = (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
+        return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = (joining ? _history : _chronicle).ToArray() };
     }
 
     private void HandleSubmit(Client client, SubmitCommandMessage submit)
@@ -186,16 +364,38 @@ public sealed class GameServer
         client.RememberSequence(envelope.Sequence, submit.ClientSequence);
     }
 
-    private void SendViews()
+    /// <summary>
+    /// Sends every client its view, the chronicle lines since the last send and the map chunks that changed.
+    /// </summary>
+    public void SendViews()
     {
         GameSnapshot snapshot = Runner.Snapshots.Latest ?? GameSnapshot.From(State);
         foreach (Client client in _clients)
         {
-            if (client.Civ is { } civ && client.Connection.IsOpen)
+            if (client.Player is null || !client.Connection.IsOpen)
             {
-                client.Connection.Send(ViewBuilder.Build(snapshot, civ));
+                continue;
+            }
+
+            client.Connection.Send(BuildView(client, snapshot));
+            for (int w = 0; w < _pendingChunks.Length; w++)
+            {
+                for (int chunk = 0; chunk < _pendingChunks[w].Length; chunk++)
+                {
+                    if (_pendingChunks[w][chunk])
+                    {
+                        SendChunk(client, State.Worlds[w], chunk);
+                    }
+                }
             }
         }
+
+        foreach (bool[] world in _pendingChunks)
+        {
+            Array.Clear(world);
+        }
+
+        _chronicle.Clear();
     }
 
     private void Disconnect(Client client)
@@ -218,6 +418,10 @@ public sealed class GameServer
         public CivId? Civ { get; set; }
 
         public long ReadyForTurn { get; set; } = -1;
+
+        public bool IsObserver { get; set; }
+
+        public bool[]? Known { get; set; }
 
         public void RememberSequence(long serverSequence, long clientSequence) => _clientSequences[serverSequence] = clientSequence;
 

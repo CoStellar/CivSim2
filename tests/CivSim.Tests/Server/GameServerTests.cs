@@ -72,8 +72,12 @@ public class GameServerTests
         Assert.True(server.Pump());
 
         Assert.Equal(1, server.State.Turn);
-        GameViewMessage view = Assert.IsType<GameViewMessage>(Assert.Single(Drain(client)));
+        List<IProtocolMessage> after = Drain(client);
+        GameViewMessage view = Assert.IsType<GameViewMessage>(after[0]);
         Assert.Equal(1, view.Turn);
+
+        // A new map starts with every chunk changed, so the first turn resends what the player knows.
+        Assert.All(after.GetRange(1, after.Count - 1), m => Assert.IsType<MapChunkMessage>(m));
     }
 
     [Fact]
