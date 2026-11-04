@@ -62,6 +62,9 @@ public static class HeadlessRun
             sum += ms;
         }
 
+        long managed = GC.GetTotalMemory(forceFullCollection: true);
+        GC.KeepAlive(runner); // measure memory while the game is still alive
+
         return new HeadlessResult(
             runner.State.Turn,
             GameStateHash.Compute(runner.State),
@@ -69,7 +72,7 @@ public static class HeadlessRun
             sorted[Math.Min(sorted.Length - 1, (int)Math.Ceiling(sorted.Length * 0.95) - 1)],
             sorted[^1],
             totalAllocated / options.Turns,
-            GC.GetTotalMemory(forceFullCollection: true),
+            managed,
             Environment.WorkingSet);
     }
 

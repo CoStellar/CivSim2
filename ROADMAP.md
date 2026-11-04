@@ -36,7 +36,7 @@ Gotowe, gdy: 10 000 pustych tur przechodzi bez okna, ten sam seed daje ten sam h
 Gotowe, gdy: 100 map na różnych seedach generuje się bez błędów walidatora, a Patryk obejrzał je jako PNG.
 
 - [x] Moduł `HexTorus`: współrzędne osiowe, flat-top, zawijanie w obu osiach, sąsiedzi, odległość, linia, okręgi
-- [ ] Fragmenty 32×32 i flagi zmian
+- [x] Fragmenty 32×32 i flagi zmian
 - [ ] Generator: kontynenty, wysokość, poziom morza, temperatura (równik w środku, bieguny na szwie), wilgotność, biomy
 - [ ] Rzeki na krawędziach heksów, jeziora, żyzność
 - [ ] Złoża z głębokością, cuda natury, pozycje startowe z testem uczciwości

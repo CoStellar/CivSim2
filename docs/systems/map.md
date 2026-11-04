@@ -1,13 +1,13 @@
-# Mapa (geometria)
+# Mapa
 
-**W jednym zdaniu:** `HexTorus` odpowiada na wszystkie pytania „gdzie”: sąsiedzi, odległości, linie i obszary na mapie z heksów, która zawija się w obu kierunkach.
+**W jednym zdaniu:** `HexTorus` odpowiada na wszystkie pytania „gdzie” (sąsiedzi, odległości, linie, obszary), a `WorldMap` przechowuje dane każdego pola w płaskich tablicach podzielonych na fragmenty 32×32.
 
 **Faza tury:** wszystkie. To biblioteka geometrii, z której korzystają generator świata, ruch, widoczność, strefy wpływów i AI.
 
 ## Dane wejściowe i wyjściowe
-- Czyta: tylko szerokość i wysokość mapy.
-- Zmienia: nic (nie ma stanu).
-- Publikuje w migawce: nic.
+- Czyta: szerokość i wysokość mapy.
+- Zmienia: warstwy `WorldMap` (zmieniają je systemy i generator świata) i flagi zmian fragmentów.
+- Publikuje w migawce: listę fragmentów zmienionych w turze (`WorldSnapshot.ChangedChunks`).
 
 ## Przepływ
 
@@ -35,13 +35,30 @@ flowchart LR
   polami jest zapisana raz, a mapa ma dokładnie 3 krawędzie na pole.
 - Metody nie alokują pamięci (piszą wyniki do podanego bufora), poza wygodną wersją `Line`, która zwraca listę.
 
+**Dane pól** (`WorldMap`):
+- Każda wartość z GDD 3 („Dane jednego pola”) to osobna tablica (warstwa): wysokość, temperatura, wilgotność, biom, rzeźba,
+  cecha terenu, żyzność, złoże (typ, zasobność, głębokość), właściciel, zanieczyszczenie oraz rzeki na krawędziach (3 na pole).
+  Osady, ulepszenia i efekty dojdą w etapie 3.
+- Zmiana wartości przez `Set` zaznacza jej fragment jako zmieniony, ale tylko wtedy, gdy wartość naprawdę się zmieniła.
+  Generator i wczytywanie piszą hurtowo (`Raw`) i zaznaczają całą mapę.
+- **Fragmenty 32×32:** mapa testowa ma 2×2 fragmenty (dolne są niepełne, 32×8), standardowa 8×5, duża 12×8, ogromna 16×10.
+- Po każdej turze migawka dostaje listę zmienionych fragmentów, a flagi są czyszczone. Nowa albo wczytana mapa ma wszystkie fragmenty zmienione,
+  więc pierwszy widok zawsze dostaje całość.
+- Mapa wchodzi do hasha stanu i do zapisu gry (warstwa po warstwie, po nazwie). Format zapisu: wersja 2.
+
 ## Pliki danych
 Brak.
 
 ## Testy
+`WorldMapTests`: siatka fragmentów dla wszystkich rozmiarów z GDD, niepełne fragmenty brzegowe, flagi zmian, `Set` zaznacza tylko swój fragment
+i tylko przy zmianie, migawka z listą zmian, mapa w hashu i w zapisie.
+
 `HexTorusTests`: złe rozmiary, indeksy, zawijanie, zgodność układu z szablonem grafiki, wzajemność sąsiadów, odległość = BFS dla wszystkich par,
 linia (ciągła, właściwa długość, 2000 losowych par), pierścienie, obszar, unikalność do `MaxUniqueRadius`, krawędzie.
 
 ## Wydajność
+Pamięć danych mapy: ok. 20 bajtów na pole, czyli 3,3 MB dla mapy ogromnej (pomiar `CivSim.Headless`).
+Pusta tura na mapie ogromnej: średnio 0,0057 ms (wcześniej 0,0049 ms; dochodzi lista zmienionych fragmentów w migawce).
+
 Każda operacja to kilka działań na liczbach całkowitych. Odległość sprawdza 9 kopii pola za szwami; jeśli kiedyś będzie wąskim gardłem,
 da się to zredukować do jednego przypadku.

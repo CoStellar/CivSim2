@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using CivSim.Core.Map;
 using CivSim.Core.Random;
 using CivSim.Core.State;
 using MessagePack;
@@ -15,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 1;
+    public const int FormatVersion = 2;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -40,7 +41,13 @@ public static class SaveGameSerializer
         var worlds = new List<WorldSaveData>(state.Worlds.Count);
         foreach (WorldState w in state.Worlds)
         {
-            worlds.Add(new WorldSaveData(w.Id.Value, w.Name, w.Width, w.Height));
+            var layers = new List<MapLayerSaveData>(w.Map.Layers.Count);
+            foreach (IMapLayerInfo layer in w.Map.Layers)
+            {
+                layers.Add(new MapLayerSaveData(layer.Name, layer.AsBytes().ToArray()));
+            }
+
+            worlds.Add(new WorldSaveData(w.Id.Value, w.Name, w.Width, w.Height, layers));
         }
 
         var civs = new List<CivilizationSaveData>(state.Civilizations.Count);
@@ -100,7 +107,9 @@ public static class SaveGameSerializer
 
         foreach (WorldSaveData w in data.Worlds)
         {
-            state.AddWorldForLoad(new WorldState(new WorldId(w.Id), w.Name, w.Width, w.Height));
+            var world = new WorldState(new WorldId(w.Id), w.Name, w.Width, w.Height);
+            LoadLayers(world.Map, w.Layers);
+            state.AddWorldForLoad(world);
         }
 
         foreach (CivilizationSaveData c in data.Civilizations)
@@ -109,6 +118,34 @@ public static class SaveGameSerializer
         }
 
         return state;
+    }
+
+    private static void LoadLayers(WorldMap map, IReadOnlyList<MapLayerSaveData> saved)
+    {
+        if (saved.Count != map.Layers.Count)
+        {
+            throw new InvalidDataException($"Save has {saved.Count} map layers, this build expects {map.Layers.Count}.");
+        }
+
+        for (int i = 0; i < saved.Count; i++)
+        {
+            IMapLayerInfo layer = map.Layers[i];
+            if (saved[i].Name != layer.Name)
+            {
+                throw new InvalidDataException($"Map layer {i} is '{saved[i].Name}', expected '{layer.Name}'.");
+            }
+
+            try
+            {
+                layer.LoadBytes(saved[i].Bytes);
+            }
+            catch (System.ArgumentException ex)
+            {
+                throw new InvalidDataException(ex.Message, ex);
+            }
+        }
+
+        map.MarkAllDirty();
     }
 
     /// <summary>Saves to a file, writing a temporary file first so a crash never leaves a half-written save.</summary>

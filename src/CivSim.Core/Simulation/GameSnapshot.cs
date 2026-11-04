@@ -13,9 +13,12 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
     public static GameSnapshot From(GameState state)
     {
         var worlds = ImmutableArray.CreateBuilder<WorldSnapshot>(state.Worlds.Count);
+        var changed = new System.Collections.Generic.List<int>();
         foreach (WorldState w in state.Worlds)
         {
-            worlds.Add(new WorldSnapshot(w.Id, w.Name, w.Width, w.Height));
+            changed.Clear();
+            w.Map.Dirty.CopyTo(changed);
+            worlds.Add(new WorldSnapshot(w.Id, w.Name, w.Width, w.Height, [.. changed]));
         }
 
         var civs = ImmutableArray.CreateBuilder<CivilizationSnapshot>(state.Civilizations.Count);
@@ -28,8 +31,11 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
     }
 }
 
-/// <summary>Immutable copy of a world's public data.</summary>
-public sealed record WorldSnapshot(WorldId Id, string Name, int Width, int Height);
+/// <summary>
+/// Immutable copy of a world's public data. <paramref name="ChangedChunks"/> lists the map chunks that changed
+/// in the turn (ascending ids), so readers can redraw or resend only those.
+/// </summary>
+public sealed record WorldSnapshot(WorldId Id, string Name, int Width, int Height, ImmutableArray<int> ChangedChunks);
 
 /// <summary>Immutable copy of a civilization's public data.</summary>
 public sealed record CivilizationSnapshot(CivId Id, string Name, PlayerId Controller, bool IsAlive);

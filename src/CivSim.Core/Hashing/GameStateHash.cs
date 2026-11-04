@@ -40,6 +40,11 @@ public static class GameStateHash
             h.Add(w.Name);
             h.Add(w.Width);
             h.Add(w.Height);
+            foreach (Map.IMapLayerInfo layer in w.Map.Layers)
+            {
+                h.Add(layer.Name);
+                h.Add(layer.AsBytes());
+            }
         }
 
         h.Add(state.Civilizations.Count);

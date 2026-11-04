@@ -21,7 +21,16 @@ public sealed record RandomStateData([property: Key(0)] ulong S0, [property: Key
 
 /// <summary>Saved world.</summary>
 [MessagePackObject]
-public sealed record WorldSaveData([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] int Width, [property: Key(3)] int Height);
+public sealed record WorldSaveData(
+    [property: Key(0)] int Id,
+    [property: Key(1)] string Name,
+    [property: Key(2)] int Width,
+    [property: Key(3)] int Height,
+    [property: Key(4)] IReadOnlyList<MapLayerSaveData> Layers);
+
+/// <summary>Raw bytes of one map layer, identified by name.</summary>
+[MessagePackObject]
+public sealed record MapLayerSaveData([property: Key(0)] string Name, [property: Key(1)] byte[] Bytes);
 
 /// <summary>Saved civilization. Controllers are not saved: on load every civilization starts AI-controlled until players rejoin.</summary>
 [MessagePackObject]

@@ -55,6 +55,16 @@ public struct StateHasher
     /// <summary>Adds a boolean.</summary>
     public void Add(bool value) => Add(value ? (byte)1 : (byte)0);
 
+    /// <summary>Adds raw bytes (length-prefixed).</summary>
+    public void Add(ReadOnlySpan<byte> bytes)
+    {
+        Add(bytes.Length);
+        foreach (byte b in bytes)
+        {
+            Add(b);
+        }
+    }
+
     /// <summary>Adds a string (length-prefixed UTF-8, so "ab"+"c" differs from "a"+"bc").</summary>
     public void Add(string value)
     {
