@@ -91,7 +91,7 @@ public sealed class WorldGenerator
         {
             WorldType.Pangea => 2,
             WorldType.Archipelago => 10,
-            _ => 4,
+            _ => 5,
         };
 
         int octaves = 5;
@@ -109,7 +109,7 @@ public sealed class WorldGenerator
             for (int o = 0; o < octaves; o++)
             {
                 int cellsX = Math.Max(1, baseCellsX << o);
-                int cellsY = Math.Max(1, (int)((long)cellsX * h * 1155 / (w * 1000L)));
+                int cellsY = Math.Max(1, (int)(((long)cellsX * h * 1155 + (w * 500L)) / (w * 1000L)));
                 (long x, long y) = Position(c, cellsX, cellsY);
                 sum += (long)IntNoise.Sample(_seed, o, cellsX, cellsY, x, y) * (16 >> o);
             }
@@ -253,7 +253,7 @@ public sealed class WorldGenerator
 
             HexCoord c = _geo.FromIndex(i);
             int lat = Latitude(c);
-            int value = 95 - (7 * Math.Min(distToWater[i], 13));
+            int value = 90 - (4 * Math.Min(distToWater[i], 15));
 
             // Climate belts: wet equator, dry subtropics, wetter mid-latitudes, dry poles.
             if (lat < 150)
@@ -672,11 +672,17 @@ public sealed class WorldGenerator
         return food + water + resources;
     }
 
-    private bool IsStartCandidate(int i)
+    // Level 0: the normal rules. Level 1 (too few places): any land outside mountains. Level 2: any land.
+    private bool IsStartCandidate(int i, int level)
     {
-        if (_water[i] || _map.Relief[i] == (byte)Content.Relief.Mountains)
+        if (_water[i] || (level < 2 && _map.Relief[i] == (byte)Content.Relief.Mountains))
         {
             return false;
+        }
+
+        if (level > 0)
+        {
+            return true;
         }
 
         int t = _map.Temperature[i];
@@ -697,57 +703,60 @@ public sealed class WorldGenerator
         for (int i = 0; i < _water.Length; i++)
         {
             land += _water[i] ? 0 : 1;
-            if (IsStartCandidate(i))
-            {
-                candidates.Add((StartScore(_geo.FromIndex(i), area), i));
-            }
         }
 
-        // Best score first; ties broken by cell index so the order is total (deterministic).
-        candidates.Sort((a, b) => a.Score != b.Score ? b.Score.CompareTo(a.Score) : a.Index.CompareTo(b.Index));
-
-        // Fairness first: only places at least `fair`% as good as the best one. Among those, spread the tribes
-        // out: each next start is the candidate farthest from all starts chosen so far.
         // A good spread: about half the side of the land area each tribe would get on its own.
         int wantedDistance = Math.Max(4, (int)IntMath.Sqrt(land / civs) / 2);
         var chosen = new List<(int Score, int Index)>();
         var attempt = new List<(int Score, int Index)>();
         int chosenSpread = -1;
-        foreach (int fair in (int[])[80, 70, 60, 50, 0])
+
+        // Level 0 uses the normal start rules; when they leave too few or too crowded places, the rules relax.
+        for (int level = 0; level <= 2 && chosenSpread < wantedDistance; level++)
         {
-            if (candidates.Count == 0)
+            candidates.Clear();
+            for (int i = 0; i < _water.Length; i++)
             {
-                break;
+                if (IsStartCandidate(i, level))
+                {
+                    candidates.Add((StartScore(_geo.FromIndex(i), area), i));
+                }
             }
 
-            int bar = candidates[0].Score * fair / 100;
-            int pool = 0;
-            while (pool < candidates.Count && candidates[pool].Score >= bar)
+            if (candidates.Count < civs)
             {
-                pool++;
+                continue;
             }
 
-            attempt.Clear();
-            PickStarts(candidates, pool, civs, attempt);
-            int spread = attempt.Count == civs ? MinDistance(attempt) : -1;
-            if (spread > chosenSpread)
-            {
-                chosen.Clear();
-                chosen.AddRange(attempt);
-                chosenSpread = spread;
-            }
+            // Best score first; ties broken by cell index so the order is total (deterministic).
+            candidates.Sort((a, b) => a.Score != b.Score ? b.Score.CompareTo(a.Score) : a.Index.CompareTo(b.Index));
 
-            if (spread >= wantedDistance)
+            // Fairness first: only places at least `fair`% as good as the best one. Among those, spread the tribes
+            // out: each next start is the candidate farthest from all starts chosen so far.
+            foreach (int fair in (int[])[80, 70, 60, 50, 0])
             {
-                break;
-            }
-        }
+                int bar = candidates[0].Score * fair / 100;
+                int pool = 0;
+                while (pool < candidates.Count && candidates[pool].Score >= bar)
+                {
+                    pool++;
+                }
 
-        if (chosen.Count < civs)
-        {
-            // Not enough good land for everyone: give the best places we have.
-            chosen.Clear();
-            PickStarts(candidates, candidates.Count, civs, chosen);
+                attempt.Clear();
+                PickStarts(candidates, pool, civs, attempt);
+                int spread = attempt.Count == civs ? MinDistance(attempt) : -1;
+                if (spread > chosenSpread)
+                {
+                    chosen.Clear();
+                    chosen.AddRange(attempt);
+                    chosenSpread = spread;
+                }
+
+                if (spread >= wantedDistance)
+                {
+                    break;
+                }
+            }
         }
 
         foreach ((int score, int index) in chosen)
@@ -797,6 +806,11 @@ public sealed class WorldGenerator
     // Farthest-point sampling over the first `pool` candidates (already sorted best first).
     private void PickStarts(List<(int Score, int Index)> candidates, int pool, int civs, List<(int Score, int Index)> chosen)
     {
+        if (pool == 0)
+        {
+            return;
+        }
+
         var nearest = new int[pool];
         Array.Fill(nearest, int.MaxValue);
         int pick = 0;
@@ -883,7 +897,7 @@ public sealed class WorldGenerator
 public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int CivilizationCount)
 {
     /// <summary>Rain (sum of humidity of the cells upstream) an edge needs to carry a river; 3× and 8× give bigger rivers.</summary>
-    public int RiverRain { get; init; } = 1500;
+    public int RiverRain { get; init; } = 2500;
 
     /// <summary>A hollow must be at least this much below its spill point to hold a lake.</summary>
     public int MinLakeDepth { get; init; } = 2;
