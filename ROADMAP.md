@@ -25,11 +25,11 @@ Gotowe, gdy: 10 000 pustych tur przechodzi bez okna, ten sam seed daje ten sam h
 - [x] Hash stanu gry do testów determinizmu
 - [x] Granica klient–serwer: `CivSim.Protocol` (wersjonowane wiadomości, interfejs transportu, transport w pamięci), `CivSim.Server` uruchamiany lokalnie, komendy z identyfikatorem gracza + test „komenda przez protokół = ten sam stan co bezpośrednio”
 - [x] Zapis i odczyt (MessagePack) z wersją formatu + test „zapisz, wczytaj, porównaj hash”
-- [ ] `CivSim.Headless`: `--seed --turns --map-size --report out.csv`
-- [ ] Benchmark 10 000 pustych tur: czas tury i pamięć w raporcie
-- [ ] GitHub Actions: build + testy na Ubuntu, Windows, macOS; benchmark na Ubuntu
+- [x] `CivSim.Headless`: `--seed --turns --map-size --report out.csv`
+- [x] Benchmark 10 000 pustych tur: czas tury i pamięć w raporcie
+- [x] GitHub Actions: build + testy na Ubuntu, Windows, macOS; benchmark na Ubuntu
 - [ ] Understand Anything: instalacja, pierwszy `/understand`, `--auto-update`, graf w repo
-- [ ] `docs/systems/turn-loop.md`, `docs/systems/determinism.md`, `docs/systems/client-server.md`
+- [x] `docs/systems/turn-loop.md`, `docs/systems/determinism.md`, `docs/systems/client-server.md`
 
 ## Etap 1 — Mapa
 

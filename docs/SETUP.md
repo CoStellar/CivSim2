@@ -68,3 +68,18 @@ dotnet test CivSim2.sln
 Projekt Godota (`game/CivSim.Game.csproj`) jest częścią solucji, więc `dotnet build` buduje też klienta.
 Klient odwołuje się tylko do `CivSim.Protocol` (`DisableTransitiveProjectReferences`), więc użycie typów z `CivSim.Core`
 w `game/` kończy się błędem kompilacji.
+
+## Uruchomienie symulacji bez okna
+
+W katalogu repo, w terminalu:
+
+```
+dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --map-size standard --report reports/bench.csv
+```
+
+- `--seed`: liczba startowa gry (ten sam seed = ta sama gra),
+- `--turns`: ile tur policzyć,
+- `--map-size`: `test`, `standard`, `large` albo `huge`,
+- `--report`: plik CSV z czasem każdej fazy każdej tury (otworzysz go w Excelu albo LibreOffice).
+
+Na końcu program wypisuje hash stanu (dwa uruchomienia z tym samym seedem muszą dać ten sam), czasy tur i zużycie pamięci.

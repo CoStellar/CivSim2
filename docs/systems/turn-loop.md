@@ -45,5 +45,15 @@ Brak.
   „złoty” hash po 100 turach musi być identyczny na Windowsie, Linuksie i macOS.
 
 ## Wydajność
-Migawka jest na razie tworzona od nowa co turę (mało danych). Gdy dojdzie mapa, migawka będzie wysyłać tylko
-zmienione fragmenty 32×32. Pomiar czasu tury: w PR z benchmarkiem `CivSim.Headless`.
+
+Pomiar z 4 listopada 2026, `CivSim.Headless`, seed 1, 10 000 pustych tur (fazy bez systemów), build Release, Linux w chmurze:
+
+| Mapa | Średnia tura | 95% tur szybciej niż | Najwolniejsza (tura 1) | Alokacja na turę | Pamięć zarządzana na końcu |
+| --- | --- | --- | --- | --- | --- |
+| Standard 256×160, 12 cyw. | 0,0035 ms | 0,0072 ms | 3,7 ms | 888 B | 0,1 MB |
+| Ogromna 512×320, 32 cyw. | 0,0049 ms | 0,0086 ms | 3,0 ms | 1 848 B | 0,1 MB |
+
+- Pierwsza tura jest wolniejsza, bo .NET wtedy kompiluje kod (JIT).
+- Jedyna alokacja w turze to nowa migawka. Zasada „zero alokacji w pętli tury” będzie wymagać migawek ze zmianami
+  (tylko zmienione fragmenty mapy) albo puli migawek; zrobimy to razem z mapą w etapie 1.
+- CI uruchamia ten benchmark w każdym PR (Ubuntu) i pokazuje wynik w podsumowaniu zadania. Pełne CSV są w artefakcie `benchmark-reports`.
