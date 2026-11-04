@@ -2,7 +2,8 @@
   <PropertyGroup>
     <RootNamespace>CivSim.Protocol</RootNamespace>
   </PropertyGroup>
+  <!-- No reference to CivSim.Core: the Godot client sees only this assembly, so its public types must not expose Core. -->
   <ItemGroup>
-    <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
+    <PackageReference Include="MessagePack" Version="3.1.12" />
   </ItemGroup>
 </Project>

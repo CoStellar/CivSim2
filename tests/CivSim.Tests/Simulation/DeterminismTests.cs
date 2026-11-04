@@ -64,5 +64,5 @@ public class DeterminismTests
         Assert.Equal(GoldenHash, RunAndHash(2026, 100));
     }
 
-    private const ulong GoldenHash = 17771683439238768304UL;
+    private const ulong GoldenHash = 17978791580723808080UL;
 }

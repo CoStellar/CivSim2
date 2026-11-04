@@ -9,7 +9,8 @@ public static class GameStateHash
 {
     /// <summary>
     /// Hashes every piece of state that affects the future of the game, in id order. Two runs with the same
-    /// seed and commands must produce the same value on every platform.
+    /// seed and commands must produce the same value on every platform. Who controls a civilization (AI or a
+    /// player) is session data, not game state, so it is not hashed.
     /// </summary>
     public static ulong Compute(GameState state)
     {
@@ -46,7 +47,6 @@ public static class GameStateHash
         {
             h.Add(c.Id.Value);
             h.Add(c.Name);
-            h.Add(c.Controller.Value);
             h.Add(c.IsAlive);
         }
 
