@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using CivSim.Core.Map;
 using CivSim.Core.Random;
 using CivSim.Core.State;
 using MessagePack;
@@ -15,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 1;
+    public const int FormatVersion = 3;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -40,17 +41,23 @@ public static class SaveGameSerializer
         var worlds = new List<WorldSaveData>(state.Worlds.Count);
         foreach (WorldState w in state.Worlds)
         {
-            worlds.Add(new WorldSaveData(w.Id.Value, w.Name, w.Width, w.Height));
+            var layers = new List<MapLayerSaveData>(w.Map.Layers.Count);
+            foreach (IMapLayerInfo layer in w.Map.Layers)
+            {
+                layers.Add(new MapLayerSaveData(layer.Name, layer.AsBytes().ToArray()));
+            }
+
+            worlds.Add(new WorldSaveData(w.Id.Value, w.Name, w.Width, w.Height, layers));
         }
 
         var civs = new List<CivilizationSaveData>(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
-            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive));
+            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row));
         }
 
         GameSettings s = state.Settings;
-        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs);
+        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, (int)s.Climate, (int)s.Moisture, (int)s.Relief, (int)s.Resources);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -86,7 +93,15 @@ public static class SaveGameSerializer
             throw new InvalidDataException("The save file is damaged.", ex);
         }
 
-        var settings = new GameSettings(data.Seed, data.MapWidth, data.MapHeight, data.CivilizationCount);
+        var settings = new GameSettings(data.Seed, data.MapWidth, data.MapHeight, data.CivilizationCount)
+        {
+            WorldType = (Core.WorldGen.WorldType)data.WorldType,
+            WaterPercent = data.WaterPercent,
+            Climate = (Core.WorldGen.WorldClimate)data.Climate,
+            Moisture = (Core.WorldGen.WorldMoisture)data.Moisture,
+            Relief = (Core.WorldGen.WorldRelief)data.Relief,
+            Resources = (Core.WorldGen.WorldResources)data.Resources,
+        };
         GameState state = GameState.CreateForLoad(settings, data.Turn);
 
         var rng = new RandomState[data.RandomStreams.Count];
@@ -100,15 +115,48 @@ public static class SaveGameSerializer
 
         foreach (WorldSaveData w in data.Worlds)
         {
-            state.AddWorldForLoad(new WorldState(new WorldId(w.Id), w.Name, w.Width, w.Height));
+            var world = new WorldState(new WorldId(w.Id), w.Name, w.Width, w.Height);
+            LoadLayers(world.Map, w.Layers);
+            state.AddWorldForLoad(world);
         }
 
         foreach (CivilizationSaveData c in data.Civilizations)
         {
-            state.AddCivilizationForLoad(new CivilizationState(new CivId(c.Id), c.Name, PlayerId.Ai) { IsAlive = c.IsAlive });
+            state.AddCivilizationForLoad(new CivilizationState(new CivId(c.Id), c.Name, PlayerId.Ai) {
+                IsAlive = c.IsAlive,
+                StartCell = new HexCoord(c.StartCol, c.StartRow),
+            });
         }
 
         return state;
+    }
+
+    private static void LoadLayers(WorldMap map, IReadOnlyList<MapLayerSaveData> saved)
+    {
+        if (saved.Count != map.Layers.Count)
+        {
+            throw new InvalidDataException($"Save has {saved.Count} map layers, this build expects {map.Layers.Count}.");
+        }
+
+        for (int i = 0; i < saved.Count; i++)
+        {
+            IMapLayerInfo layer = map.Layers[i];
+            if (saved[i].Name != layer.Name)
+            {
+                throw new InvalidDataException($"Map layer {i} is '{saved[i].Name}', expected '{layer.Name}'.");
+            }
+
+            try
+            {
+                layer.LoadBytes(saved[i].Bytes);
+            }
+            catch (System.ArgumentException ex)
+            {
+                throw new InvalidDataException(ex.Message, ex);
+            }
+        }
+
+        map.MarkAllDirty();
     }
 
     /// <summary>Saves to a file, writing a temporary file first so a crash never leaves a half-written save.</summary>

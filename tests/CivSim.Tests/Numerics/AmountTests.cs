@@ -138,3 +138,18 @@ public class AmountTests
         Assert.Equal(1, a.CompareTo(Amount.Zero));
     }
 }
+
+public class IntMathSqrtTests
+{
+    [Theory]
+    [InlineData(0L, 0L)]
+    [InlineData(1L, 1L)]
+    [InlineData(15L, 3L)]
+    [InlineData(16L, 4L)]
+    [InlineData(1400L, 37L)]
+    [InlineData(long.MaxValue, 3037000499L)]
+    public void SqrtRoundsDown(long value, long expected)
+    {
+        Assert.Equal(expected, CivSim.Core.Numerics.IntMath.Sqrt(value));
+    }
+}

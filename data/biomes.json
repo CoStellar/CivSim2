@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "comment": "Land biomes are chosen by the FIRST land entry (in this order) whose temperature (deg C) and humidity (0-100) ranges contain the cell. Fallback: grassland.",
+  "biomes": [
+    { "key": "deep_ocean",       "name": "Deep Ocean",       "kind": "deep_ocean",  "movementCost": 1, "baseFertility": 0,  "food": 1, "color": "#0a2647" },
+    { "key": "shallow_sea",      "name": "Shallow Sea",      "kind": "shallow_sea", "movementCost": 1, "baseFertility": 0,  "food": 2, "color": "#0e3f6b" },
+    { "key": "coast",            "name": "Coast",            "kind": "coast",       "movementCost": 1, "baseFertility": 0,  "food": 3, "color": "#1977d0" },
+    { "key": "lake",             "name": "Lake",             "kind": "lake",        "movementCost": 1, "baseFertility": 0,  "food": 3, "color": "#3fa7c9" },
+    { "key": "ice",              "name": "Ice",              "kind": "land", "temperature": [-30, -12], "humidity": [0, 100], "movementCost": 3, "baseFertility": 0,  "food": 0, "color": "#e4f1f7" },
+    { "key": "tundra",           "name": "Tundra",           "kind": "land", "temperature": [-11, -3],  "humidity": [0, 100], "movementCost": 2, "baseFertility": 10, "food": 1, "color": "#938a82" },
+    { "key": "desert",           "name": "Desert",           "kind": "land", "temperature": [6, 40],    "humidity": [0, 19],  "movementCost": 2, "baseFertility": 5,  "food": 0, "color": "#e5a862" },
+    { "key": "swamp",            "name": "Swamp",            "kind": "land", "temperature": [4, 40],    "humidity": [88, 100],"movementCost": 3, "baseFertility": 35, "food": 2, "color": "#455e30" },
+    { "key": "jungle",           "name": "Jungle",           "kind": "land", "temperature": [22, 40],   "humidity": [65, 100],"movementCost": 3, "baseFertility": 45, "food": 2, "color": "#244514" },
+    { "key": "savanna",          "name": "Savanna",          "kind": "land", "temperature": [20, 40],   "humidity": [20, 64], "movementCost": 1, "baseFertility": 45, "food": 2, "color": "#b6a823" },
+    { "key": "taiga",            "name": "Taiga",            "kind": "land", "temperature": [-2, 8],    "humidity": [40, 100],"movementCost": 2, "baseFertility": 25, "food": 1, "color": "#2d4d1d" },
+    { "key": "deciduous_forest", "name": "Deciduous Forest", "kind": "land", "temperature": [9, 22],    "humidity": [55, 100],"movementCost": 2, "baseFertility": 60, "food": 2, "color": "#396325" },
+    { "key": "grassland",        "name": "Grassland",        "kind": "land", "temperature": [6, 22],    "humidity": [35, 54], "movementCost": 1, "baseFertility": 70, "food": 3, "color": "#7ba154" },
+    { "key": "steppe",           "name": "Steppe",           "kind": "land", "temperature": [-2, 22],   "humidity": [0, 39],  "movementCost": 1, "baseFertility": 40, "food": 2, "color": "#e4bf44" }
+  ]
+}

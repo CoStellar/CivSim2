@@ -63,4 +63,37 @@ public static class IntMath
                 throw new ArgumentOutOfRangeException(nameof(rounding));
         }
     }
+
+    /// <summary>Integer square root: the largest r with r*r &lt;= value. Exact, no floating point.</summary>
+    public static long Sqrt(long value)
+    {
+        if (value < 0)
+        {
+            throw new System.ArgumentOutOfRangeException(nameof(value));
+        }
+
+        long r = 0;
+        long bit = 1L << 62;
+        while (bit > value)
+        {
+            bit >>= 2;
+        }
+
+        while (bit != 0)
+        {
+            if (value >= r + bit)
+            {
+                value -= r + bit;
+                r = (r >> 1) + bit;
+            }
+            else
+            {
+                r >>= 1;
+            }
+
+            bit >>= 2;
+        }
+
+        return r;
+    }
 }

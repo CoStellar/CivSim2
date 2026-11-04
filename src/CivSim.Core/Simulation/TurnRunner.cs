@@ -84,6 +84,11 @@ public sealed class TurnRunner
                     State.Turn++;
                     RunSystems(phase);
                     Snapshots.Publish(GameSnapshot.From(State));
+                    foreach (WorldState world in State.Worlds)
+                    {
+                        world.Map.Dirty.Clear();
+                    }
+
                     break;
                 default:
                     RunSystems(phase);

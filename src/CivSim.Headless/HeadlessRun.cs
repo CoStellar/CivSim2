@@ -1,10 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using CivSim.Core.Content;
 using CivSim.Core.Hashing;
 using CivSim.Core.Simulation;
 using CivSim.Core.State;
+using CivSim.Core.WorldGen;
+using CivSim.Data;
+using CivSim.Headless.Png;
 
 namespace CivSim.Headless;
 
@@ -17,7 +22,17 @@ public sealed record HeadlessResult(
     double MaxTurnMs,
     long AllocatedBytesPerTurn,
     long ManagedMemoryBytes,
-    long WorkingSetBytes);
+    long WorkingSetBytes)
+{
+    /// <summary>Summary of the generated world.</summary>
+    public WorldGenReport? World { get; init; }
+
+    /// <summary>PNG files written.</summary>
+    public IReadOnlyList<string> PngFiles { get; init; } = [];
+
+    /// <summary>Rule violations found by the world validator (empty = valid).</summary>
+    public IReadOnlyList<string> WorldProblems { get; init; } = [];
+}
 
 /// <summary>Runs a game without a window and writes the optional CSV report.</summary>
 public static class HeadlessRun
@@ -28,8 +43,20 @@ public static class HeadlessRun
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(log);
 
-        var runner = new TurnRunner(GameState.CreateNew(MapSizes.Settings(options.MapSize, options.Seed)));
-        var turnMs = new double[options.Turns];
+        GameContent content = ContentLoader.Load(ContentLoader.DefaultDirectory);
+        GameState state = GameState.CreateNew(options.ToSettings(), content, out WorldGenReport world);
+        GameSettings settings = state.Settings;
+        List<string> problems = WorldValidator.Validate(
+            content, state.Worlds[0].Map, world, WorldGenOptions.From(settings));
+        IReadOnlyList<string> pngs = [];
+        if (options.PngFolder is not null)
+        {
+            var renderer = new MapRenderer(state.Worlds[0], content, world.Starts, options.PngScale);
+            pngs = renderer.SaveAll(options.PngFolder, string.Create(CultureInfo.InvariantCulture, $"seed{options.Seed}_{options.MapSize.ToString().ToLowerInvariant()}"));
+        }
+
+        var runner = new TurnRunner(state);
+        var turnMs = new double[Math.Max(1, options.Turns)];
         long totalAllocated = 0;
 
         using StreamWriter? csv = options.ReportPath is null ? null : CreateReport(options.ReportPath);
@@ -54,6 +81,11 @@ public static class HeadlessRun
             }
         }
 
+        if (options.Turns == 0)
+        {
+            turnMs = [];
+        }
+
         double[] sorted = (double[])turnMs.Clone();
         Array.Sort(sorted);
         double sum = 0;
@@ -62,15 +94,24 @@ public static class HeadlessRun
             sum += ms;
         }
 
+        long managed = GC.GetTotalMemory(forceFullCollection: true);
+        GC.KeepAlive(runner); // measure memory while the game is still alive
+
+        int n = turnMs.Length;
         return new HeadlessResult(
             runner.State.Turn,
             GameStateHash.Compute(runner.State),
-            sum / turnMs.Length,
-            sorted[Math.Min(sorted.Length - 1, (int)Math.Ceiling(sorted.Length * 0.95) - 1)],
-            sorted[^1],
-            totalAllocated / options.Turns,
-            GC.GetTotalMemory(forceFullCollection: true),
-            Environment.WorkingSet);
+            n == 0 ? 0 : sum / n,
+            n == 0 ? 0 : sorted[Math.Min(n - 1, (int)Math.Ceiling(n * 0.95) - 1)],
+            n == 0 ? 0 : sorted[^1],
+            n == 0 ? 0 : totalAllocated / n,
+            managed,
+            Environment.WorkingSet)
+        {
+            World = world,
+            PngFiles = pngs,
+            WorldProblems = problems,
+        };
     }
 
     /// <summary>The CSV header line.</summary>
