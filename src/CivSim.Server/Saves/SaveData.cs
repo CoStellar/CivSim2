@@ -13,7 +13,9 @@ public sealed record SaveData(
     [property: Key(4)] long Turn,
     [property: Key(5)] IReadOnlyList<RandomStateData> RandomStreams,
     [property: Key(6)] IReadOnlyList<WorldSaveData> Worlds,
-    [property: Key(7)] IReadOnlyList<CivilizationSaveData> Civilizations);
+    [property: Key(7)] IReadOnlyList<CivilizationSaveData> Civilizations,
+    [property: Key(8)] int WorldType,
+    [property: Key(9)] int WaterPercent);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]
@@ -34,4 +36,6 @@ public sealed record MapLayerSaveData([property: Key(0)] string Name, [property:
 
 /// <summary>Saved civilization. Controllers are not saved: on load every civilization starts AI-controlled until players rejoin.</summary>
 [MessagePackObject]
-public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive);
+public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive,
+    [property: Key(3)] int StartCol,
+    [property: Key(4)] int StartRow);

@@ -21,6 +21,8 @@ public static class GameStateHash
         h.Add(state.Settings.MapWidth);
         h.Add(state.Settings.MapHeight);
         h.Add(state.Settings.CivilizationCount);
+        h.Add((int)state.Settings.WorldType);
+        h.Add(state.Settings.WaterPercent);
         h.Add(state.Turn);
 
         Span<RandomState> rng = stackalloc RandomState[RandomStreams.Count];
@@ -53,6 +55,8 @@ public static class GameStateHash
             h.Add(c.Id.Value);
             h.Add(c.Name);
             h.Add(c.IsAlive);
+            h.Add(c.StartCell.Col);
+            h.Add(c.StartCell.Row);
         }
 
         return h.Value;

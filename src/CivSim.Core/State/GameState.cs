@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using CivSim.Core.Content;
 using CivSim.Core.Random;
+using CivSim.Core.WorldGen;
 
 namespace CivSim.Core.State;
 
@@ -48,6 +50,25 @@ public sealed class GameState
         for (int i = 0; i < settings.CivilizationCount; i++)
         {
             state._civilizations.Add(new CivilizationState(new CivId(i), $"Civilization {i + 1}", PlayerId.Ai));
+        }
+
+        return state;
+    }
+
+    /// <summary>
+    /// Creates a new game and generates Earth from <paramref name="content"/> (GDD 3). Each civilization gets
+    /// a start cell. <paramref name="report"/> describes the generated world.
+    /// </summary>
+    public static GameState CreateNew(GameSettings settings, GameContent content, out WorldGenReport report)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        GameState state = CreateNew(settings);
+        WorldState earth = state._worlds[0];
+        var options = new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.CivilizationCount);
+        report = WorldGenerator.Generate(content, earth.Map, state.Random[RandomStreamId.World], settings.Seed, options);
+        for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)
+        {
+            state._civilizations[i].StartCell = report.Starts[i];
         }
 
         return state;

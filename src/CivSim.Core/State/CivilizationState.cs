@@ -1,3 +1,5 @@
+using CivSim.Core.Map;
+
 namespace CivSim.Core.State;
 
 /// <summary>One civilization. Economy, population and AI state are added in later stages.</summary>
@@ -23,4 +25,7 @@ public sealed class CivilizationState
 
     /// <summary>False once the civilization has been destroyed.</summary>
     public bool IsAlive { get; set; }
+
+    /// <summary>Cell on Earth where the tribe starts (chosen by the world generator).</summary>
+    public HexCoord StartCell { get; set; }
 }

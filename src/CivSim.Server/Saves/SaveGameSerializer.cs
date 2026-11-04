@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 2;
+    public const int FormatVersion = 3;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -53,11 +53,11 @@ public static class SaveGameSerializer
         var civs = new List<CivilizationSaveData>(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
-            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive));
+            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row));
         }
 
         GameSettings s = state.Settings;
-        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs);
+        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -93,7 +93,11 @@ public static class SaveGameSerializer
             throw new InvalidDataException("The save file is damaged.", ex);
         }
 
-        var settings = new GameSettings(data.Seed, data.MapWidth, data.MapHeight, data.CivilizationCount);
+        var settings = new GameSettings(data.Seed, data.MapWidth, data.MapHeight, data.CivilizationCount)
+        {
+            WorldType = (Core.WorldGen.WorldType)data.WorldType,
+            WaterPercent = data.WaterPercent,
+        };
         GameState state = GameState.CreateForLoad(settings, data.Turn);
 
         var rng = new RandomState[data.RandomStreams.Count];
@@ -114,7 +118,10 @@ public static class SaveGameSerializer
 
         foreach (CivilizationSaveData c in data.Civilizations)
         {
-            state.AddCivilizationForLoad(new CivilizationState(new CivId(c.Id), c.Name, PlayerId.Ai) { IsAlive = c.IsAlive });
+            state.AddCivilizationForLoad(new CivilizationState(new CivId(c.Id), c.Name, PlayerId.Ai) {
+                IsAlive = c.IsAlive,
+                StartCell = new HexCoord(c.StartCol, c.StartRow),
+            });
         }
 
         return state;
