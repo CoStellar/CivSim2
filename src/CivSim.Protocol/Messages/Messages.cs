@@ -13,17 +13,40 @@ namespace CivSim.Protocol.Messages;
 [Union(4, typeof(CommandRejectedMessage))]
 [Union(5, typeof(EndTurnMessage))]
 [Union(6, typeof(GameViewMessage))]
+[Union(7, typeof(ContentMessage))]
+[Union(8, typeof(MapChunkMessage))]
+[Union(9, typeof(SetSpeedMessage))]
 public interface IProtocolMessage
 {
 }
 
 /// <summary>Client → server: first message after connecting.</summary>
 [MessagePackObject]
-public sealed record HelloMessage([property: Key(0)] int ProtocolVersion, [property: Key(1)] string PlayerName) : IProtocolMessage;
+public sealed record HelloMessage(
+    [property: Key(0)] int ProtocolVersion,
+    [property: Key(1)] string PlayerName,
+    [property: Key(2)] ClientRole Role = ClientRole.Player) : IProtocolMessage;
 
-/// <summary>Server → client: connection accepted; tells the client who it is and which civilization it leads.</summary>
+/// <summary>What a client wants to be.</summary>
+public enum ClientRole
+{
+    /// <summary>Leads one civilization and sees only what it has discovered.</summary>
+    Player = 0,
+
+    /// <summary>Simulator mode (GDD 13): every civilization is AI, the observer sees the whole world and sets the speed.</summary>
+    Observer = 1,
+}
+
+/// <summary>
+/// Server → client: connection accepted; tells the client who it is and which civilization it leads
+/// (<see cref="NoCiv"/> for an observer).
+/// </summary>
 [MessagePackObject]
-public sealed record WelcomeMessage([property: Key(0)] int ProtocolVersion, [property: Key(1)] int PlayerId, [property: Key(2)] int CivId) : IProtocolMessage;
+public sealed record WelcomeMessage([property: Key(0)] int ProtocolVersion, [property: Key(1)] int PlayerId, [property: Key(2)] int CivId) : IProtocolMessage
+{
+    /// <summary>Civilization id sent to observers.</summary>
+    public const int NoCiv = -1;
+}
 
 /// <summary>Server → client: connection refused (wrong version, game full...).</summary>
 [MessagePackObject]
@@ -49,7 +72,14 @@ public sealed record GameViewMessage(
     [property: Key(0)] long Turn,
     [property: Key(1)] int ViewerCivId,
     [property: Key(2)] IReadOnlyList<WorldView> Worlds,
-    [property: Key(3)] IReadOnlyList<CivilizationView> Civilizations) : IProtocolMessage;
+    [property: Key(3)] IReadOnlyList<CivilizationView> Civilizations,
+    [property: Key(4)] long TurnMicroseconds = 0,
+    [property: Key(5)] SimulationSpeed Speed = SimulationSpeed.Paused,
+    [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null) : IProtocolMessage;
+
+/// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
+[MessagePackObject]
+public sealed record ChronicleEntry([property: Key(0)] long Turn, [property: Key(1)] string Text);
 
 /// <summary>Public data about one world.</summary>
 [MessagePackObject]
@@ -58,3 +88,86 @@ public sealed record WorldView([property: Key(0)] int Id, [property: Key(1)] str
 /// <summary>What the viewer knows about one civilization.</summary>
 [MessagePackObject]
 public sealed record CivilizationView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive);
+
+/// <summary>Observer speeds (GDD 11.2).</summary>
+public enum SimulationSpeed
+{
+    /// <summary>No turns run.</summary>
+    Paused = 0,
+
+    /// <summary>One turn every 2 seconds.</summary>
+    X1 = 1,
+
+    /// <summary>One turn every second.</summary>
+    X2 = 2,
+
+    /// <summary>One turn every 0.4 seconds.</summary>
+    X5 = 5,
+
+    /// <summary>As fast as possible; the map is refreshed every few turns.</summary>
+    Max = 100,
+}
+
+/// <summary>Observer → server: change the simulation speed. Players cannot do this.</summary>
+[MessagePackObject]
+public sealed record SetSpeedMessage([property: Key(0)] SimulationSpeed Speed) : IProtocolMessage;
+
+/// <summary>
+/// Server → client, once after Welcome: the content the client needs to draw the map (names and preview colours).
+/// Ids match the values in <see cref="MapChunkMessage"/>.
+/// </summary>
+[MessagePackObject]
+public sealed record ContentMessage(
+    [property: Key(0)] IReadOnlyList<BiomeInfo> Biomes,
+    [property: Key(1)] IReadOnlyList<DepositInfo> Deposits,
+    [property: Key(2)] IReadOnlyList<string> Features,
+    [property: Key(3)] IReadOnlyList<string> Reliefs) : IProtocolMessage;
+
+/// <summary>A biome as the client sees it.</summary>
+[MessagePackObject]
+public sealed record BiomeInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] bool IsWater, [property: Key(4)] uint Color);
+
+/// <summary>A deposit type as the client sees it. Deposit id 0 on the map means "none".</summary>
+[MessagePackObject]
+public sealed record DepositInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] uint Color);
+
+/// <summary>
+/// Server → client: the cells of one 32×32 map chunk (edge chunks can be smaller), row by row inside the chunk.
+/// Sent for every chunk after Welcome and for changed chunks after each turn. Cells the viewer has never seen
+/// have <see cref="Visibility"/> 0 and all other values zeroed: the client never receives hidden data.
+/// </summary>
+[MessagePackObject]
+public sealed record MapChunkMessage(
+    [property: Key(0)] int WorldId,
+    [property: Key(1)] long Turn,
+    [property: Key(2)] int ChunkIndex,
+    [property: Key(3)] int X0,
+    [property: Key(4)] int Y0,
+    [property: Key(5)] int Width,
+    [property: Key(6)] int Height,
+    [property: Key(7)] byte[] Visibility,
+    [property: Key(8)] byte[] Elevation,
+    [property: Key(9)] sbyte[] Temperature,
+    [property: Key(10)] byte[] Humidity,
+    [property: Key(11)] byte[] Biome,
+    [property: Key(12)] byte[] Relief,
+    [property: Key(13)] byte[] Feature,
+    [property: Key(14)] byte[] Fertility,
+    [property: Key(15)] ushort[] Deposit,
+    [property: Key(16)] int[] DepositRichness,
+    [property: Key(17)] byte[] DepositDepth,
+    [property: Key(18)] short[] Owner,
+    [property: Key(19)] byte[] River) : IProtocolMessage
+{
+    /// <summary>Visibility: never seen.</summary>
+    public const byte Unknown = 0;
+
+    /// <summary>Visibility: seen before (values are what the viewer remembers).</summary>
+    public const byte Remembered = 1;
+
+    /// <summary>Visibility: visible now.</summary>
+    public const byte Visible = 2;
+
+    /// <summary>River edges per cell (N, NE, SE sides; the other three belong to neighbours).</summary>
+    public const int RiverEdgesPerCell = 3;
+}

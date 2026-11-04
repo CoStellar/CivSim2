@@ -34,10 +34,33 @@ Albo w GitHub Desktop: **File → Clone repository → CoStellar/CivSim2**.
 2. Kliknij **Import** i wskaż plik `game/project.godot` z pobranego repo.
 3. Kliknij **Import & Edit**. Za pierwszym razem Godot chwilę indeksuje pliki.
 4. Naciśnij **F5** (albo trójkąt „Run Project” w prawym górnym rogu).
-   Godot sam zbuduje kod C# i otworzy okno z napisem:
-   **„CivSim 2 - client ready (protocol v1)”**.
+   Godot sam zbuduje kod C# i otworzy okno z mapą świata. U góry jest numer tury i przyciski prędkości,
+   po lewej inspektor wybranego pola, po prawej kronika, na dole wykres czasu tury.
 
-Jeśli widzisz ten napis, wszystko działa: Godot, .NET i połączenie klienta z biblioteką protokołu.
+Jeśli widzisz mapę, wszystko działa: Godot, .NET, lokalny serwer i połączenie klienta z serwerem.
+
+### Sterowanie podglądem
+
+| Klawisz / mysz | Działanie |
+| --- | --- |
+| WASD, strzałki, przeciąganie prawym lub środkowym przyciskiem | przesuwanie mapy (zawija się w obu kierunkach) |
+| kółko myszy, `+` / `-` | zoom |
+| lewy przycisk | wybór pola |
+| Spacja | pauza / ×1 |
+| 1–5 | pauza, ×1, ×2, ×5, maks. |
+| Tab | następna nakładka (biomy, wysokość, temperatura, wilgotność, żyzność, złoża, właściciel, wpływy) |
+
+### Inny świat w podglądzie
+
+W Godocie: **Project → Project Settings → Application → Run → Main Run Args**, np.:
+
+```
+-- --seed 42 --map-size huge --climate cold --relief mountainous --civs 20
+```
+
+Te same ustawienia co w trybie bez okna (niżej): `--seed`, `--map-size` (test, standard, large, huge), `--world-type`,
+`--water`, `--climate`, `--moisture`, `--relief`, `--resources`, `--civs`, oraz `--speed` (paused, x1, x2, x5, max).
+`--benchmark 600` przelatuje kamerą nad mapą przez 600 klatek, wypisuje w panelu Output średni czas klatki i zamyka grę.
 
 ## Co jest gdzie
 
