@@ -7,7 +7,7 @@ Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. 
 wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
-**Aktualny etap: 0**
+**Aktualny etap: 1**
 
 ---
 
@@ -35,7 +35,7 @@ Gotowe, gdy: 10 000 pustych tur przechodzi bez okna, ten sam seed daje ten sam h
 
 Gotowe, gdy: 100 map na różnych seedach generuje się bez błędów walidatora, a Patryk obejrzał je jako PNG.
 
-- [ ] Moduł `HexTorus`: współrzędne osiowe, flat-top, zawijanie w obu osiach, sąsiedzi, odległość, linia, okręgi
+- [x] Moduł `HexTorus`: współrzędne osiowe, flat-top, zawijanie w obu osiach, sąsiedzi, odległość, linia, okręgi
 - [ ] Fragmenty 32×32 i flagi zmian
 - [ ] Generator: kontynenty, wysokość, poziom morza, temperatura (równik w środku, bieguny na szwie), wilgotność, biomy
 - [ ] Rzeki na krawędziach heksów, jeziora, żyzność
