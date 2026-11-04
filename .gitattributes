@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+*.cs text diff=csharp
+*.sln text eol=crlf
+*.csproj text
+*.md text
+*.json text
+*.gpl text
+*.hex text
+
+*.png binary
+*.aseprite binary
+*.ase binary
+*.wav binary
+*.ogg binary
+
+# If the knowledge graph grows past ~10 MB, track it with Git LFS:
+# .understand-anything/*.json filter=lfs diff=lfs merge=lfs -text

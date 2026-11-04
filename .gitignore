@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.DotSettings.user
+TestResults/
+BenchmarkDotNet.Artifacts/
+
+# Godot
+game/.godot/
+game/.import/
+game/export_presets.cfg
+game/mono_crash.*
+*.translation
+
+# Headless output
+out/
+reports/
+*.civsave
+
+# Understand Anything (commit the graph, not the scratch files)
+.understand-anything/intermediate/
+.understand-anything/diff-overlay.json
+
+# OS
+.DS_Store
+Thumbs.db
