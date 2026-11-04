@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, development]
   pull_request:
 
 jobs:
@@ -23,3 +23,41 @@ jobs:
         run: dotnet build CivSim2.sln --configuration Release --no-restore
       - name: Test
         run: dotnet test CivSim2.sln --configuration Release --no-build
+
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build src/CivSim.Headless --configuration Release
+      - name: 10,000 turns (standard and huge maps)
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          for size in standard huge; do
+            dotnet run --project src/CivSim.Headless --configuration Release --no-build -- \
+              --seed 1 --turns 10000 --map-size "$size" --report "reports/benchmark-$size.csv" --quiet \
+              | tee "reports/summary-$size.txt"
+          done
+      - name: Same seed gives the same hash
+        run: |
+          set -euo pipefail
+          a=$(grep 'state hash' reports/summary-standard.txt)
+          b=$(dotnet run --project src/CivSim.Headless --configuration Release --no-build -- --seed 1 --turns 10000 --map-size standard --quiet | grep 'state hash')
+          echo "first:  $a"; echo "second: $b"
+          test "$a" = "$b"
+      - name: Job summary
+        run: |
+          {
+            echo "## Benchmark: 10,000 turns, seed 1"
+            for size in standard huge; do
+              echo "### $size"; echo '```'; cat "reports/summary-$size.txt"; echo '```'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-reports
+          path: reports/
