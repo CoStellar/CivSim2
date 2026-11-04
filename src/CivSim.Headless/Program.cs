@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using CivSim.Core;
 
 namespace CivSim.Headless;
@@ -37,11 +38,29 @@ public static class Program
         Console.WriteLine(string.Create(inv, $"allocated per turn: {r.AllocatedBytesPerTurn} bytes"));
         Console.WriteLine(string.Create(inv, $"managed memory:     {r.ManagedMemoryBytes / 1024.0 / 1024.0:F1} MB"));
         Console.WriteLine(string.Create(inv, $"working set:        {r.WorkingSetBytes / 1024.0 / 1024.0:F1} MB"));
+        if (r.World is { } w)
+        {
+            Console.WriteLine(string.Create(inv, $"world gen time:     {w.ElapsedMs:F1} ms"));
+            Console.WriteLine(string.Create(inv, $"water:              {w.WaterPercent}%"));
+            Console.WriteLine(string.Create(inv, $"rivers / lakes:     {w.Rivers} / {w.Lakes} ({w.RiverEdges} river edges)"));
+            Console.WriteLine(string.Create(inv, $"starts:             {w.Starts.Count}, min distance {w.MinStartDistance}, fairness {w.StartFairnessPercent}%"));
+            Console.WriteLine(string.Create(inv, $"world validator:    {(r.WorldProblems.Count == 0 ? "ok" : $"{r.WorldProblems.Count} problems")}"));
+            foreach (string p in r.WorldProblems.Take(20))
+            {
+                Console.WriteLine($"  - {p}");
+            }
+        }
+
+        foreach (string png in r.PngFiles)
+        {
+            Console.WriteLine($"png:                {png}");
+        }
+
         if (options.ReportPath is not null)
         {
             Console.WriteLine($"report:             {options.ReportPath}");
         }
 
-        return 0;
+        return r.WorldProblems.Count == 0 ? 0 : 1;
     }
 }
