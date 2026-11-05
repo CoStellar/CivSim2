@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <!-- The simulation is always compiled with optimizations: the Godot editor runs the Debug build, and an unoptimized core made turns about 10 times slower. -->
+    <Optimize>true</Optimize>
     <RootNamespace>CivSim.Core</RootNamespace>
   </PropertyGroup>
 </Project>
