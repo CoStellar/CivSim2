@@ -7,7 +7,7 @@ Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. 
 wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
-**Aktualny etap: 3 (gospodarka i ludność), następny: osiedlanie się (rolnictwo, wioski), potem 3g**
+**Aktualny etap: 3 (gospodarka i ludność), następny 3g (zwiad, pamięć mapy, dalekie wędrówki)**
 
 ---
 
@@ -96,7 +96,7 @@ Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemno
 - [x] Koczownicy, obozy, strefa wpływów, migracje (sezonowe, odłam, całkowita, z podbojem)
 - [x] Osady jako majątek: porzucanie, dwa stany (opuszczona, ruiny), przejmowanie, odbudowa, roszczenia (odbudowa budynków razem z budynkami)
 - [x] Technologie er 1–2 w danych, badania, dyfuzja, inspiracje (3f, `docs/systems/research.md`)
-- [ ] Osiedlanie się: pola uprawne z rolnictwa, obozy stają się wioskami, wioski rosną ponad 150 osób (warunek „Gotowe” etapu 3)
+- [x] Osiedlanie się: pola uprawne z rolnictwa, obozy stają się wioskami, wioski rosną ponad 150 osób, ziemia jałowieje (`docs/systems/farming.md`)
 - [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze; wędrówki trwające kilka tur do znanych dalekich miejsc, także po lodzie morskim i pomostach lądowych z epok lodowych (żeby na planetach leżących na boku plemiona mogły iść za latem na drugą półkulę)
 - [ ] Mechanizm efektów + zdarzenia: susza, pożar, powódź, epidemia
 

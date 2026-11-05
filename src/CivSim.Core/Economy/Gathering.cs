@@ -137,7 +137,8 @@ public sealed class GatheringSystem : ITurnSystem
         int months = state.MonthsPerTurn(_content);
         foreach (SettlementState s in state.Settlements)
         {
-            s.FoodGathered = 0;
+            long farmed = s.Farmers > 0 ? s.FoodGathered : 0; // farming ran first this turn
+            s.FoodGathered = farmed;
             WorldState world = state.Worlds[s.World.Value];
             _current = Benefits(state, s.Owner);
             CollectCells(state, world, s);
@@ -422,7 +423,7 @@ public sealed class GatheringSystem : ITurnSystem
             }
         }
 
-        s.FoodGathered = food;
+        s.FoodGathered += food;
     }
 
     // perYear × scale × worked, where scale and worked are fractions of Full (worked already counts the years).
@@ -452,6 +453,6 @@ public sealed class GatheringSystem : ITurnSystem
             }
         }
 
-        return workers;
+        return Math.Max(0, workers - s.Farmers);
     }
 }

@@ -97,6 +97,7 @@ public static class SeaLevel
                 map.Humidity.Set(i, (byte)(count == 0 ? 70 : humidity / count));
                 map.Relief.Set(i, (byte)Relief.Flat);
                 map.Fertility.Set(i, (byte)content.Biomes[landId].BaseFertility);
+                map.NaturalFertility.Set(i, (byte)content.Biomes[landId].BaseFertility);
                 map.Continentality.Set(i, 35);
                 map.WildFood.Set(i, WorldMap.FullWildFood);
                 exposed++;
@@ -107,6 +108,7 @@ public static class SeaLevel
                 map.Humidity.Set(i, 100);
                 map.Feature.Set(i, 0);
                 map.Fertility.Set(i, 0);
+                map.NaturalFertility.Set(i, 0);
                 map.Continentality.Set(i, 25);
                 map.Owner.Set(i, WorldMap.NoOwner);
                 map.Influence.Set(i, 0);
