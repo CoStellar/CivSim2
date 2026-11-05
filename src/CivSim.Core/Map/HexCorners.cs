@@ -11,10 +11,10 @@ public sealed class HexCorners
     /// <summary>Corners owned by each cell.</summary>
     public const int PerCell = 2;
 
-    private readonly HexTorus _map;
+    private readonly HexGlobe _map;
 
     /// <summary>Creates the corner graph of <paramref name="map"/>.</summary>
-    public HexCorners(HexTorus map)
+    public HexCorners(HexGlobe map)
     {
         ArgumentNullException.ThrowIfNull(map);
         _map = map;
@@ -28,6 +28,25 @@ public sealed class HexCorners
 
     /// <summary>East corner of a cell (between its NE and SE edges).</summary>
     public int East(HexCoord c) => (_map.Index(c) * PerCell) + 1;
+
+    /// <summary>
+    /// True for corners of the top and bottom rows. A hex grid cannot cover a sphere exactly, so around the poles the
+    /// corner graph is only approximate; rivers never use these corners (the poles are ice anyway).
+    /// </summary>
+    public bool IsPolar(int corner)
+    {
+        Span<HexCoord> cells = stackalloc HexCoord[3];
+        Cells(corner, cells);
+        foreach (HexCoord c in cells)
+        {
+            if (c.Row == 0 || c.Row == _map.Height - 1)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>Writes the 3 cells that meet at <paramref name="corner"/>.</summary>
     public void Cells(int corner, Span<HexCoord> destination)

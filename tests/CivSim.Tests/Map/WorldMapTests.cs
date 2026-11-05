@@ -12,13 +12,13 @@ namespace CivSim.Tests.Map;
 public class WorldMapTests
 {
     [Theory]
-    [InlineData(64, 40, 2, 2)]
-    [InlineData(256, 160, 8, 5)]
-    [InlineData(512, 320, 16, 10)]
-    [InlineData(384, 240, 12, 8)]
+    [InlineData(66, 40, 3, 2)]
+    [InlineData(258, 160, 9, 5)]
+    [InlineData(514, 320, 17, 10)]
+    [InlineData(386, 240, 13, 8)]
     public void ChunkGridCoversTheMap(int w, int h, int cx, int cy)
     {
-        var chunks = new MapChunks(new HexTorus(w, h));
+        var chunks = new MapChunks(new HexGlobe(w, h));
         Assert.Equal(cx, chunks.ChunksX);
         Assert.Equal(cy, chunks.ChunksY);
 
@@ -41,8 +41,9 @@ public class WorldMapTests
     [Fact]
     public void BorderChunksArePartialWhenSizeIsNotAMultipleOf32()
     {
-        var chunks = new MapChunks(new HexTorus(64, 40));
-        Assert.Equal((0, 32, 32, 8), chunks.Bounds(2));
+        var chunks = new MapChunks(new HexGlobe(66, 40));
+        Assert.Equal((64, 0, 2, 32), chunks.Bounds(2));
+        Assert.Equal((0, 32, 32, 8), chunks.Bounds(3));
     }
 
     [Fact]
@@ -69,26 +70,26 @@ public class WorldMapTests
     [Fact]
     public void SettingAValueMarksOnlyItsChunkAndOnlyWhenItChanges()
     {
-        var map = new WorldMap(new HexTorus(64, 40));
+        var map = new WorldMap(new HexGlobe(66, 40));
         map.Dirty.Clear();
 
         map.Elevation.Set(0, 0); // unchanged
         Assert.True(map.Dirty.IsEmpty);
 
-        int cell = map.Geometry.Index(new HexCoord(40, 35)); // chunk 3
+        int cell = map.Geometry.Index(new HexCoord(40, 35)); // chunk 4 (3 chunks per row)
         map.Elevation.Set(cell, 120);
         Assert.Equal(1, map.Dirty.DirtyCount);
-        Assert.True(map.Dirty.IsDirty(3));
+        Assert.True(map.Dirty.IsDirty(4));
 
         map.Dirty.Clear();
         map.River.Set((cell * HexEdge.PerCell) + 2, 1); // edge layer marks the owning cell's chunk
-        Assert.True(map.Dirty.IsDirty(3));
+        Assert.True(map.Dirty.IsDirty(4));
     }
 
     [Fact]
     public void NewMapStartsAllDirtyWithNoOwners()
     {
-        var map = new WorldMap(new HexTorus(64, 40));
+        var map = new WorldMap(new HexGlobe(66, 40));
         Assert.Equal(map.Chunks.Count, map.Dirty.DirtyCount);
         Assert.Equal(WorldMap.NoOwner, map.Owner[123]);
     }
@@ -98,7 +99,7 @@ public class WorldMapTests
     {
         var runner = new TurnRunner(GameState.CreateNew(GameSettings.Test(1)));
         runner.RunTurn();
-        Assert.Equal([0, 1, 2, 3], runner.Snapshots.Latest!.Worlds[0].ChangedChunks.AsSpan().ToArray());
+        Assert.Equal([0, 1, 2, 3, 4, 5], runner.Snapshots.Latest!.Worlds[0].ChangedChunks.AsSpan().ToArray());
 
         runner.RunTurn();
         Assert.Empty(runner.Snapshots.Latest!.Worlds[0].ChangedChunks);

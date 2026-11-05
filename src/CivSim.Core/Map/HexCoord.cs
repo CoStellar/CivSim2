@@ -2,7 +2,7 @@ namespace CivSim.Core.Map;
 
 /// <summary>
 /// A cell position as stored in memory: column and row of the flat-top "odd-q" layout, where odd columns are
-/// shifted half a hex down. Coordinates produced by <see cref="HexTorus"/> are always wrapped into the map.
+/// shifted half a hex down. Coordinates produced by <see cref="HexGlobe"/> are always wrapped into the map.
 /// </summary>
 public readonly record struct HexCoord(int Col, int Row)
 {
@@ -12,7 +12,7 @@ public readonly record struct HexCoord(int Col, int Row)
 
 /// <summary>
 /// Axial hex coordinates (q, r) for flat-top hexes, used for math (directions, distances, lines).
-/// Axial values of the same cell are not unique on a torus; use <see cref="HexTorus.FromAxial"/> to wrap them.
+/// Axial values of the same cell are not unique on the globe; use <see cref="HexGlobe.FromAxial"/> to wrap them.
 /// </summary>
 public readonly record struct AxialCoord(int Q, int R)
 {
