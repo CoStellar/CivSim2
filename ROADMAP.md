@@ -7,7 +7,7 @@ Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. 
 wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
-**Aktualny etap: 3 (gospodarka i ludność): wszystkie PR-y 3a–3h gotowe, zostaje próba 2000 tur bez załamań**
+**Aktualny etap: 3 (gospodarka i ludność): wszystkie PR-y 3a–3h gotowe, próba 2000 tur przeszła; następny etap 4 (AI i dyplomacja)**
 
 ---
 
@@ -88,6 +88,17 @@ Został pomiar FPS na komputerze Patryka. Nakładki właściciela i strefy wpły
 ## Etap 3 — Gospodarka i ludność (ery 1–2)
 
 Gotowe, gdy: plemiona same zbierają, wędrują, osiedlają się i rosną przez 2000 tur bez załamań.
+
+**Próba 2000 tur (2026-11-05, z 3h, mapa standard, 12 cywilizacji):**
+
+| Seed | Ludzie po 2000 turach | Żywe cywilizacje | Wioski | Średnia tura |
+| --- | --- | --- | --- | --- |
+| 7 | 110 tys. | 11 | 91 | 28 ms |
+| 11 | 68 tys. | 12 | 63 | 23 ms |
+| 23 | 153 tys. | 9 | 116 | 29 ms |
+| 42 | 105 tys. | 9 | 76 | 26 ms |
+
+We wszystkich przebiegach ludność rośnie skokowo po rolnictwie (tury 200–300), potem trzyma się stabilnie. Nie ma załamań ani wymierania; pojedyncze cywilizacje znikają po drodze. Wszystkie stoją w neolicie, bo technologie epoki brązu jeszcze nie istnieją w danych. Czas tury jest daleko poniżej celu 50 ms.
 
 Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemnością, psucie żywności na rok, receptury w danych, mechanizm efektów, czas gry w miesiącach), **3b** (3 warstwy ludności z potrzebami, zbieranie z okolicy osady, wzrost, głód, jedna wartość zdrowia, nastrój), **3c** (strefy wpływów, wyczerpywanie i odrastanie dzikiej żywności, lata dobre i złe, przenoszenie obozów, odłamy, prosta AI plemienna), **3d** (osady jako majątek), **3e** (sieć handlowa bez transportu, ceny wewnętrzne, produkcja z receptur, priorytety przy niedoborach, drewno, krzemień i kamień ze zbierania), **3f** (14 technologii er 1–2, nauka z ludności, inspiracje, dyfuzja od sąsiadów, ery z technologii), **3g** (pamięć mapy, zwiad, wędrówki), **3h** (susza, pożar, powódź, epidemia z danych). Podbój przy migracji przechodzi do 3d.
 
