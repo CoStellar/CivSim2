@@ -143,6 +143,11 @@ public static class SaveGameSerializer
         {
             var world = new WorldState(new WorldId(w.Id), w.Name, w.Width, w.Height);
             LoadLayers(world.Map, w.Layers);
+            if (world.Id.Value == 0)
+            {
+                world.Map.YearHundredths = settings.Planet.YearHundredths;
+            }
+
             state.AddWorldForLoad(world);
         }
 

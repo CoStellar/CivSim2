@@ -137,6 +137,9 @@ public sealed record PopulationRules
     /// <summary>New camps of the same civilization keep at least this many cells apart.</summary>
     public int MinDistanceBetweenOwnCamps { get; init; } = 4;
 
+    /// <summary>Longest dead season (no plant growth) gatherers live through without losing food, Earth years × 100 (stage 1b).</summary>
+    public int SurvivableDeadSeasonHundredths { get; init; } = 75;
+
     /// <summary>AI: a new camp needs land that feeds at least this share of the leaving group (instead of a fixed limit of camps).</summary>
     public int SplitNeedsFoodPercent { get; init; } = 100;
 

@@ -137,6 +137,24 @@ public sealed class WorldGenerator
             raw[i] = (int)(sum / totalWeight);
         }
 
+        // Continent seeds: land grows around a few centres on the sphere, with oceans between them; the noise only
+        // shapes the coasts and inland seas. Without them 3D noise joins almost all land into one mass.
+        (long X, long Y, long Z, long CosRadius)[] plates = PlateCentres();
+        for (int i = 0; i < raw.Length; i++)
+        {
+            long best = -FixedTrig.One;
+            foreach ((long x, long y, long z, long cosR) in plates)
+            {
+                long dot = ((x * _px[i]) + (y * _py[i]) + (z * _pz[i])) / FixedTrig.One;
+                best = Math.Max(best, (dot - cosR) * FixedTrig.One / (FixedTrig.One - cosR));
+            }
+
+            // Flat inside a continent, so its hills, basins and lakes still come from the noise.
+            long plate = Math.Clamp(best, -FixedTrig.One, PlateTop);
+            long plateValue = (plate + FixedTrig.One) * 65535 / (2 * FixedTrig.One);
+            raw[i] = (int)(((plateValue * PlateWeightPercent) + ((long)raw[i] * (100 - PlateWeightPercent))) / 100);
+        }
+
         // Archipelagos: sharpen the noise so land breaks into islands.
         if (_options.WorldType == WorldType.Archipelago)
         {
@@ -148,6 +166,12 @@ public sealed class WorldGenerator
         }
 
         int threshold = Percentile(raw, _options.WaterPercent);
+        int highest = threshold;
+        foreach (int v in raw)
+        {
+            highest = Math.Max(highest, v);
+        }
+
         _water = new bool[raw.Length];
         Span<byte> elevation = _map.Elevation.Raw;
         for (int i = 0; i < raw.Length; i++)
@@ -159,7 +183,7 @@ public sealed class WorldGenerator
             }
             else
             {
-                elevation[i] = (byte)(SeaLevel + ((long)(raw[i] - threshold) * (255 - SeaLevel) / Math.Max(1, 65535 - threshold)));
+                elevation[i] = (byte)(SeaLevel + ((long)(raw[i] - threshold) * (255 - SeaLevel) / Math.Max(1, highest - threshold)));
             }
         }
     }
@@ -185,6 +209,49 @@ public sealed class WorldGenerator
         }
 
         return 65535;
+    }
+
+    // Share of the land height that comes from the continent seeds; the rest is noise.
+    private const int PlateWeightPercent = 55;
+
+    // Highest value of a continent seed (in FixedTrig.One): beyond it the seed no longer raises the land.
+    private const long PlateTop = FixedTrig.One / 5;
+
+    // Centres and angular radii of the continent seeds, spread over the sphere and kept apart (deterministic from the seed).
+    private (long X, long Y, long Z, long CosRadius)[] PlateCentres()
+    {
+        (int count, int minRadius, int maxRadius, int minGap) = _options.WorldType switch
+        {
+            WorldType.Pangea => (1, 80, 100, 90),
+            WorldType.Archipelago => (18, 8, 16, 20),
+            _ => (5, 25, 40, 55),
+        };
+        var rng = new DeterministicRandom(SplitMix64.Combine(_seed, 0x91A7E5));
+        count += rng.NextInt(0, Math.Max(1, count / 3) + 1);
+        var plates = new List<(long X, long Y, long Z, long CosRadius)>();
+        long minDot = FixedTrig.Cos(FixedTrig.Degrees(minGap));
+        for (int attempt = 0; attempt < 400 && plates.Count < count; attempt++)
+        {
+            // Uniform on the sphere, but keep centres out of the polar caps (|latitude| < about 64°).
+            long z = (rng.NextInt(-900, 901) * FixedTrig.One) / 1000;
+            long r = FixedTrig.Complement(z);
+            int lon = rng.NextInt(0, FixedTrig.FullTurn);
+            long x = r * FixedTrig.Cos(lon) / FixedTrig.One;
+            long y = r * FixedTrig.Sin(lon) / FixedTrig.One;
+            bool apart = true;
+            foreach ((long px, long py, long pz, _) in plates)
+            {
+                apart &= ((px * x) + (py * y) + (pz * z)) / FixedTrig.One < minDot;
+            }
+
+            if (apart || attempt > 300)
+            {
+                long cosR = FixedTrig.Cos(FixedTrig.Degrees(rng.NextInt(minRadius, maxRadius + 1)));
+                plates.Add((x, y, z, cosR));
+            }
+        }
+
+        return [.. plates];
     }
 
     // Noise 0..65535 at a cell, with about `cellsAroundEquator` features around the globe.
@@ -741,8 +808,8 @@ public sealed class WorldGenerator
         for (int k = 0; k < n; k++)
         {
             int i = _geo.Index(area[k]);
-            // Land food counts only as far as the growing season allows (the same rule as gathering).
-            int season = Math.Min(100, 40 + _map.GrowingSeason[i]);
+            // Land food counts only as far as the seasons allow (the same rule as gathering).
+            int season = ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _options.Planet.YearHundredths, _content.Population.SurvivableDeadSeasonHundredths);
             food += _content.Biomes[_map.Biome[i]].Food * 2 * season / 100;
             food += _map.Fertility[i] / 25;
             if (!_water[i] && HasFreshWater(i))
@@ -777,7 +844,7 @@ public sealed class WorldGenerator
         }
 
         int t = _map.Temperature[i];
-        return t is >= 0 and <= 32 && _map.GrowingSeason[i] >= 40 && _content.Biomes[_map.Biome[i]].Food >= 2 && HasFreshWater(i);
+        return t is >= 0 and <= 32 && ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _options.Planet.YearHundredths, _content.Population.SurvivableDeadSeasonHundredths) >= 80 && _content.Biomes[_map.Biome[i]].Food >= 2 && HasFreshWater(i);
     }
 
     private void StartPositions(WorldGenReport report)

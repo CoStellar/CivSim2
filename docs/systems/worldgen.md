@@ -30,7 +30,10 @@ flowchart TD
 ## Zasady i wzory
 Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na liczbach całkowitych, więc ten sam seed daje tę samą mapę na każdym komputerze.
 
-1. **Ląd i morze.** Każde pole ma swój punkt na kuli (szerokość z równych powierzchniowo rzędów, długość z kolumny). Szum (`SphereNoise`, 3D, liczby stałoprzecinkowe) jest próbkowany w tym punkcie, więc kontynenty przechodzą przez szew i przez bieguny bez śladu (ADR 0012).
+1. **Ląd i morze.** Najpierw zarodki kontynentów: kilka losowych środków na kuli (kontynenty 5–6, pangea 1, archipelag 18–24), oddalonych od siebie,
+    każdy z losowym promieniem. Wysokość to w 55% bliskość najbliższego zarodka (płaska we wnętrzu lądu) i w 45% szum. Bez zarodków szum 3D
+    łączył prawie cały ląd w jedną masę (pomiar na 6 seedach: największy ląd miał 90–99% lądu); teraz typ „kontynenty” daje 2–5 osobnych lądów.
+    Każde pole ma swój punkt na kuli (szerokość z równych powierzchniowo rzędów, długość z kolumny). Szum (`SphereNoise`, 3D, liczby stałoprzecinkowe) jest próbkowany w tym punkcie, więc kontynenty przechodzą przez szew i przez bieguny bez śladu (ADR 0012).
     Wysokość to suma 5 oktaw szumu. Typ świata zmienia skalę pierwszej oktawy: pangea ma 2 duże „plamy” na szerokość mapy, kontynenty 5, archipelag 10 (i ostrzejszy kontrast).
 2. **Poziom morza.** Liczymy histogram wysokości i ustawiamy próg dokładnie tak, żeby woda zajęła zadany procent pól (domyślnie 60%). Woda dostaje wysokości 0–99, ląd 100–255 (poziom morza = 100, jak w GDD).
 3. **Rzeźba.** 8% najwyższego lądu to góry, kolejne 20% to wzgórza (ustawienie górzystości: płaska 4+12%, górzysta 14+26%).
@@ -43,6 +46,9 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
    - **Różnica lato–zima:** `121 °C × (najjaśniejszy − najciemniejszy punkt roku) × kontynentalność × współczynnik roku`, najwyżej 120 °C.
      Kontynentalność: 25% nad wodą, 35% na wybrzeżu, rośnie do 100% sześć pól standardowych w głąb lądu. Współczynnik roku: `rok · 1,5 / (rok + 0,5)` (Ziemia 1, Uran 1,49).
    - **Sezon wzrostu:** część roku (rok jak sinusoida wokół średniej) z temperaturą między 5 °C a 45 °C.
+   - **Długie zimy** (trudniejszy wariant symulacji, decyzja Patryka z 2026-11-05): martwa pora trwa `(100% − sezon wzrostu) × rok`. Gdy jest dłuższa niż
+     `survivableDeadSeasonYears` (0,75 roku, `data/population.json`), dzika żywność spada proporcjonalnie. Na Uranie (zimy po kilkadziesiąt lat)
+     plemiona ledwo przeżywają; technologie przechowywania podniosą ten próg.
    - Wyniki dla Ziemi: równik 28 °C, 45° ok. 14 °C, 60° ok. −4 °C, biegun −27 °C; Syberia (60°, w głębi lądu) waha się o ok. 40 °C.
      Uran: bieguny ok. 28 °C średnio, ale z wahaniem 120 °C i sezonem wzrostu ok. 22% roku; równik ok. 8 °C.
 5. **Wilgotność** (0–100): bazowo 90, minus wysychanie w głębi lądu (`InlandDrying`): za każde pole od wody ubywa wilgotności, aż do limitu.

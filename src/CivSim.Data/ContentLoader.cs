@@ -221,6 +221,7 @@ public static class ContentLoader
             PlantsGood = GoodOf("plantsGood"),
             MeatGood = GoodOf("meatGood"),
             HidesGood = GoodOf("hidesGood"),
+            SurvivableDeadSeasonHundredths = (int)gathering.Amount("survivableDeadSeasonYears", Amount.FromHundredths(1), Amount.FromUnits(1000)).Hundredths,
             WildDepletionPerMillePerYear = wild.Int("depletionPerMillePerYear", 0, 1000),
             WildRegrowthBasisPointsPerYear = (int)wild.Amount("regrowthPercentPerYear", Amount.Zero, Amount.FromUnits(100)).Hundredths,
             YieldSwingPercent = years.Int("yieldSwingPercent", 0, 90),

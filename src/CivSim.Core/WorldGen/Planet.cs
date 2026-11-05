@@ -172,6 +172,25 @@ public sealed class ClimateModel
         return (int)Math.Clamp(swing, 0, 120);
     }
 
+    /// <summary>
+    /// Share of the full wild food a cell gives (0–100%) for its growing season and the planet's year (decision of
+    /// 2026-11-05: long winters are a harder variant of the simulation). A growing season of 60% of the year or more
+    /// gives everything, none gives 40%. A dead season longer than <paramref name="survivableDeadSeasonHundredths"/>
+    /// (in Earth years × 100) cuts it further in proportion: gatherers cannot live through winters of many years
+    /// until technologies (storage) let them.
+    /// </summary>
+    public static int WildFoodPercent(int growingSeason, int yearHundredths, int survivableDeadSeasonHundredths)
+    {
+        long percent = Math.Min(100, 40 + growingSeason);
+        long dead = (long)(100 - growingSeason) * yearHundredths / 100;
+        if (dead > survivableDeadSeasonHundredths)
+        {
+            percent = percent * survivableDeadSeasonHundredths / dead;
+        }
+
+        return (int)percent;
+    }
+
     /// <summary>Temperature above which plants stop growing (heat), °C.</summary>
     public const int GrowingBelow = 45;
 

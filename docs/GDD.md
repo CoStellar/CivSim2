@@ -130,7 +130,9 @@ Mars w presecie to planeta podobna do Marsa w strefie zamieszkiwalnej (zimniejsz
 - **różnicę lato–zima** (większą w głębi lądu, małą nad wodą, większą przy długim roku),
 - **sezon wzrostu**: część roku między 5 °C a 45 °C, gdy rośliny rosną.
 
-Biomy biorą to pod uwagę: ląd, którego lato nie przekracza zera, jest lodem; ląd z sezonem wzrostu krótszym niż 15% roku jest tundrą; ogromne różnice lato–zima działają jak susza (lasy ustępują stepom i pustyniom). Dzika żywność rośnie tylko w sezonie wzrostu: sezon od 60% roku daje pełne plony, brak sezonu 40%. Plemiona startują tylko tam, gdzie sezon wzrostu trwa co najmniej 40% roku.
+Biomy biorą to pod uwagę: ląd, którego lato nie przekracza zera, jest lodem; ląd z sezonem wzrostu krótszym niż 15% roku jest tundrą; ogromne różnice lato–zima działają jak susza (lasy ustępują stepom i pustyniom). Dzika żywność rośnie tylko w sezonie wzrostu: sezon od 60% roku daje pełne plony, brak sezonu 40%. **Długie zimy** (decyzja Patryka z 2026-11-05: trudniejszy wariant symulacji): martwa pora dłuższa niż 0,75 roku zmniejsza dziką żywność proporcjonalnie, więc na planetach z długim rokiem plemiona ledwo przeżywają, dopóki technologie (przechowywanie) nie podniosą tego progu.
+
+**Kontynenty:** ląd rośnie wokół kilku losowych zarodków na kuli (kontynenty 5–6, pangea 1, archipelag 18–24), a szum rzeźbi wybrzeża i wnętrza. Plemiona startują tylko tam, gdzie sezon wzrostu trwa co najmniej 40% roku.
 
 **Żeby świat nie był odkryty po 2–3 erach:**
 

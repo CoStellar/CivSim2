@@ -199,7 +199,7 @@ public class PopulationTests
             runner.RunTurn();
         }
 
-        foreach (SettlementState s in runner.State.Settlements)
+        foreach (SettlementState s in runner.State.Settlements.Where(s => s.IsActive))
         {
             // Two rings of land around a camp feed a few hundred people at most.
             Assert.InRange(s.TotalPopulation(), 1, 1000);

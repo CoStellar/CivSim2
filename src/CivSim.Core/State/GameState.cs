@@ -169,6 +169,7 @@ public sealed class GameState
         ArgumentNullException.ThrowIfNull(content);
         GameState state = CreateNew(settings);
         WorldState earth = state._worlds[0];
+        earth.Map.YearHundredths = settings.Planet.YearHundredths;
         var options = WorldGenOptions.From(settings);
         report = WorldGenerator.Generate(content, earth.Map, state.Random[RandomStreamId.World], settings.Seed, options);
         for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)

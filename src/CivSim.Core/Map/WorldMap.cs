@@ -112,6 +112,12 @@ public sealed class WorldMap
     /// <summary>Share of the year warm enough for plants to grow, 0–100%.</summary>
     public MapLayer<byte> GrowingSeason { get; }
 
+    /// <summary>
+    /// Length of this planet's year in Earth years × 100. The dead season (no growth) lasts
+    /// <c>(100 − growing season)% × year</c>: a long year means winters of many years (stage 1b).
+    /// </summary>
+    public int YearHundredths { get; set; } = 100;
+
     /// <summary>All layers in their fixed order (for hashing and saving).</summary>
     public IReadOnlyList<IMapLayerInfo> Layers => _layers;
 

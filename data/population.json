@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Population growth, hunger, health, gathering, wild food, influence zones and migration (GDD 5.2, 5.4, 4.4). wildFood: gathering at full strength removes depletionPerMillePerYear of a cell stock every year; every year a cell grows back regrowthPercentPerYear of what is missing. influence: range in movement cost, baseRange plus one per warriorsPerRange warriors. migration: rules of the simple tribe AI used until Stage 4 (a new camp needs land that feeds splitNeedsFoodPercent of the leaving group; tiny camps below mergeBelowPeople join a camp of their own; attackAboveStrengthPercent: the AI attacks a camp in its way only with that much of the defenders' strength). conquest: migration with conquest, simplified until wars in Stage 4 (GDD 5.4): defenders' strength is their warriors plus defenderNonWarriorPercent of everyone else; the winners lose winnerWarriorLossPercent of their warriors, the losers loserWarriorLossPercent; expelled people lose fleeingLossPercent while fleeing. All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
+  "comment": "Population growth, hunger, health, gathering, wild food, influence zones and migration (GDD 5.2, 5.4, 4.4). wildFood: gathering at full strength removes depletionPerMillePerYear of a cell stock every year; every year a cell grows back regrowthPercentPerYear of what is missing. influence: range in movement cost, baseRange plus one per warriorsPerRange warriors. migration: rules of the simple tribe AI used until Stage 4 (a new camp needs land that feeds splitNeedsFoodPercent of the leaving group; tiny camps below mergeBelowPeople join a camp of their own; attackAboveStrengthPercent: the AI attacks a camp in its way only with that much of the defenders' strength). conquest: migration with conquest, simplified until wars in Stage 4 (GDD 5.4): defenders' strength is their warriors plus defenderNonWarriorPercent of everyone else; the winners lose winnerWarriorLossPercent of their warriors, the losers loserWarriorLossPercent; expelled people lose fleeingLossPercent while fleeing. gathering.survivableDeadSeasonYears: the longest dead season (no plant growth, in Earth years) gatherers live through without losing food; longer winters (long planet years) cut wild food in proportion, until technologies raise it. All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
   "growth": {
     "birthsPerMille": 35,
     "deathsPerMille": 32,
@@ -23,7 +23,8 @@
     "plantsPercent": 60,
     "hidesPerMeat": "0.2",
     "hillsPercent": 75,
-    "mountainsPercent": 25
+    "mountainsPercent": 25,
+    "survivableDeadSeasonYears": "0.75"
   },
   "wildFood": {
     "depletionPerMillePerYear": 10,

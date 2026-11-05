@@ -203,8 +203,8 @@ public sealed class GatheringSystem : ITurnSystem
         }
 
         // Biome food, better on fertile land: fertility 0 gives half, 50 gives the full value, 100 gives 150%.
-        // A short growing season (stage 1b) cuts it: 60% of the year or more gives everything, nothing gives 40%.
-        long season = Math.Min(100, 40 + map.GrowingSeason[cell]);
+        // A short growing season and long winters (stage 1b) cut it (ClimateModel.WildFoodPercent).
+        long season = WorldGen.ClimateModel.WildFoodPercent(map.GrowingSeason[cell], map.YearHundredths, _rules.SurvivableDeadSeasonHundredths);
         Amount food = (_rules.FoodPerBiomeFoodPerYear * biome.Food).MultiplyRatio((50L + map.Fertility[cell]) * season, 10_000, Rounding.Floor);
         int deposit = map.Deposit[cell];
         if (deposit != 0 && map.DepositDepth[cell] == 0)
