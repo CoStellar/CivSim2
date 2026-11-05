@@ -38,7 +38,7 @@ public class StorageTests
         Assert.Equal(6, Content.Recipes.Count);
         Assert.Equal(6, Content.SettlementLevels.Count);
         Assert.Equal(10, Content.Eras.Count);
-        Assert.Equal(7, Content.Effects.Count);
+        Assert.Equal(8, Content.Effects.Count);
         Assert.Equal(600, Content.Eras[0].MonthsPerTurn);
         Assert.Equal(100, Content.Good("grain").SpoilageBasisPointsPerYear);
         Assert.Equal("camp", Content.SettlementLevels[Content.NewTribeLevel].Key);

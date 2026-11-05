@@ -77,7 +77,25 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 - `data/resources.json`: 22 złoża z biomami, rzeźbą, częstością, zasobnością, głębokością i kolorem.
 - Oba pliki sprawdza `ContentLoader` przy starcie i zgłasza wszystkie błędy naraz (powtórzone klucze, złe zakresy, kolory, nieznane biomy, brak któregoś rodzaju wody, brak łąki).
 
+## Pory roku na żywo (ADR 0013)
+- `SeasonSystem` (faza 1, świat) działa tylko, gdy krok roku planety (`rok / stepsPerYear`) trwa co najmniej `minStepMonths` (dane: 8 kroków, 12 miesięcy).
+- Temperatura pola w kroku *k* roku: `średnia + wahanie × (nasłonecznienie_k − średnie) / (max − min)` na szerokości pola. Dzięki temu na planecie
+  leżącej na boku każda półkula ma po kolei długie lato i długą zimę.
+- Warstwy `season_temperature`, `season_growth` (bieżąca tura) i `next_season_temperature`, `next_season_growth` (następna, dla AI).
+- Zbieranie: `winterFoodPercent + (100 − winterFoodPercent) × wzrost_tury`; kara za długie zimy z trybu uśrednionego wtedy nie działa (zima jest prawdziwa).
+- AI plemion (`TribeAi.Comfort`): wartość miejsca = jedzenie (średnia z tej i następnej tury) × wygoda temperatury (granice −5 °C i 38 °C, 2% za stopień,
+  najmniej 5%; temperatura następnej pory roku albo zimowa przy porach uśrednionych; efekt `cold_tolerance` obniża granicę zimna).
+- Wynik na Uranie (seed 42, 2000 tur = 21 000 lat): ok. 6300 ludzi, wszyscy żyją; obozy trzymają się pasa wokół równika, a środek populacji
+  przesuwa się z każdym rokiem planety; w turach zmiany pory roku widać serie przeprowadzek. Wysokie półkule mają latem ponad 80 °C, a zimą −30 °C.
+- **Siła pór roku** (`seasonStrength`, 20–150%, `--seasons`): mnoży różnicę lato–zima. Pomiar na Uranie (seed 42, po 400 turach):
+  100% → ok. 6 100 ludzi, środek populacji 9–12°; 60% → ok. 9 500 ludzi, 21–24°, najwięcej przeprowadzek; 40% → ok. 11 900 ludzi.
+  Pełnych przejść między półkulami jeszcze nie ma: pas przy równiku jest znośny przez cały rok, a AI widzi tylko 10 pól wokół obozów
+  i przenosi się najwyżej o 10 pól. Dalekie wędrówki otworzą pamięć mapy (etap 3g) i wędrówki trwające kilka tur.
+- PNG: przebieg z `--png` na takiej planecie zapisuje `_year.png`, czyli 8 klatek ostatniego roku (temperatura pory roku i obozy), oraz widok `seasonnow`.
+
 ## Testy
+- `SeasonTests`: tylko długie lata są liczone na żywo (Uran tak, Ziemia i Mars nie), długość tury Urana 126 miesięcy, wolne decyzje raz na 50 lat,
+  półkule mają lato i zimę na zmianę, zima obcina dziką żywność do polowania, tolerancja zimna podnosi wartość zimnych terenów.
 - `PlanetTests` (etap 1b): trygonometria całkowitoliczbowa, nasłonecznienie Ziemi zgodne z podręcznikowym (ok. 417 i 173 W/m²), klimat Ziemi,
   Uran z cieplejszymi biegunami i skrajnymi porami roku, dłuższy rok = większe wahania, presety i poprawne światy dla każdego presetu.
 - `ContentLoaderTests`: domyślne dane się wczytują; zepsute dane zgłaszają każdy błąd.

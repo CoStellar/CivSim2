@@ -120,11 +120,14 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 | Długość roku | 0,1–500 lat ziemskich | 1 | 1,88 | 84 | tylko pory roku: dłuższy rok to większa różnica lato–zima; zegar gry zostaje w latach ziemskich |
 | Jasność gwiazdy | 80–120% | 100% | 85% | 100% | średnia temperatura (zastępuje dawne ustawienie zimna/umiarkowana/gorąca) |
 | Mimośród orbity | 0–0,3 | 0,017 | 0,093 | 0,046 | jedna półkula ma ostrzejsze pory roku |
+| Siła pór roku | 20–150% | 100% | 100% | 100% | gęsta atmosfera i oceany łagodzą lato i zimę (mniej niż 100%), rzadka je zaostrza; od tego zależy, czy na planecie leżącej na boku plemiona wędrują za latem (decyzja Patryka z 2026-11-05: wędrówki mają wynikać z ustawień świata) |
 | Woda, wilgotność, górzystość | jak niżej | 60%, normalna, normalna | 30%, sucha, górzysta | 60%, normalna, normalna | ląd planety |
 
 Mars w presecie to planeta podobna do Marsa w strefie zamieszkiwalnej (zimniejsza, suchsza i bardziej górzysta niż Ziemia), nie dzisiejszy Mars.
 
-**Pory roku są uśrednione** (nie zmieniają się z tury na turę, bo tura trwa dziś do 50 lat). Generator liczy dla każdej szerokości geograficznej nasłonecznienie w 48 punktach orbity (oś, mimośród, jasność gwiazdy) i z tego:
+**Pory roku na żywo przy długim roku** (ADR 0013, „dwa zegary”): gdy rok planety trwa co najmniej 8 lat ziemskich, tura trwa 1/8 roku planety (Uran: 10,5 roku) i pora roku zmienia się z tury na turę: zimą nic nie rośnie, polowanie daje 20% dzikiej żywności. Plemiona same przenoszą się tam, gdzie jest jedzenie i znośna temperatura; ogień, odzież i domy (efekt `cold_tolerance`) pozwolą później żyć w zimniejszych miejscach. Decyzje wolne (odłamy, łączenie) zapadają raz na długość tury ery.
+
+**Na pozostałych planetach pory roku są uśrednione** (tura trwa tam do 50 lat). Generator liczy dla każdej szerokości geograficznej nasłonecznienie w 48 punktach orbity (oś, mimośród, jasność gwiazdy) i z tego:
 
 - **średnią temperaturę** (Ziemia: 28 °C na równiku, ok. 14 °C na 45°, −27 °C na biegunach; wiatry i prądy przenoszą ciepło ku biegunom),
 - **różnicę lato–zima** (większą w głębi lądu, małą nad wodą, większą przy długim roku),

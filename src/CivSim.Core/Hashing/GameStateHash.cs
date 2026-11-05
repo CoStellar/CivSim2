@@ -27,6 +27,7 @@ public static class GameStateHash
         h.Add(state.Settings.Planet.YearHundredths);
         h.Add(state.Settings.Planet.StarBrightnessPercent);
         h.Add(state.Settings.Planet.EccentricityThousandths);
+        h.Add(state.Settings.Planet.SeasonStrengthPercent);
         h.Add(state.Settings.PlanetName);
         h.Add((int)state.Settings.Moisture);
         h.Add((int)state.Settings.Inland);

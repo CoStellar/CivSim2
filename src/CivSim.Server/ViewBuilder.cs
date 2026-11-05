@@ -56,6 +56,6 @@ public static class ViewBuilder
             });
         }
 
-        return new GameViewMessage(snapshot.Turn, viewer.Value, worlds, civs, Settlements: settlements, Month: snapshot.Month);
+        return new GameViewMessage(snapshot.Turn, viewer.Value, worlds, civs, Settlements: settlements, Month: snapshot.Month, LiveSeasons: snapshot.LiveSeasons);
     }
 }

@@ -36,6 +36,7 @@ public sealed class TribeAi : ICommandSource
     private long[] _nearOwnAt = [];
     private long _civStamp;
     private readonly List<long[]> _cellFood = [];
+    private long _cellFoodStamp;
     private long[] _siteFood = [];
     private long[] _siteStamp = [];
     private long _stamp;
@@ -163,19 +164,25 @@ public sealed class TribeAi : ICommandSource
         WorldState world = state.Worlds[s.World.Value];
         int people = s.TotalPopulation();
 
+        // Two clocks: survival moves are weighed every turn, slow choices (joining, splitting, plundering) once per
+        // era-length period. Without live seasons every turn is such a turn.
+        bool slowTurn = state.IsDecisionTurn(_content);
+
         // A handful of people does not survive on its own: they join the nearest camp of their own.
-        if (people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into)
+        if (slowTurn && people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into)
         {
             queue.Enqueue(PlayerId.Ai, civ.Id, new AbandonSettlementCommand(_content, s.Id, into.Id));
             _joined.Add(into.Id.Value);
             return;
         }
 
+        // A camp looks for a better place when it went hungry or when its place is getting too cold or too hot.
         bool hungry = s.FedPerMille < _rules.MoveWhenFedBelowPercent * 10;
-        bool rested = (state.Month - s.MovedMonth) >= _rules.MinYearsBetweenMoves * 12L;
-        if (hungry && rested)
+        bool uncomfortable = Comfort(state, world, civ, world.Geometry.Index(s.Cell)) < 100;
+        bool rested = (state.Month - s.MovedMonth) >= _rules.MinTurnsBetweenMoves * (long)state.MonthsPerTurn(_content);
+        if ((hungry || uncomfortable) && rested)
         {
-            long here = SiteFood(world, s.Cell);
+            long here = SiteValue(state, world, civ, s.Cell);
             (HexCoord best, long bestValue) = BestSite(state, world, civ, s, splitting: false);
             if (bestValue * 100 > here * (100 + _rules.MoveWhenBetterByPercent))
             {
@@ -183,6 +190,11 @@ public sealed class TribeAi : ICommandSource
                 Take(world, best);
                 return;
             }
+        }
+
+        if (!slowTurn)
+        {
+            return;
         }
 
         int max = _content.SettlementLevels[s.Level].MaxPopulation;
@@ -265,7 +277,7 @@ public sealed class TribeAi : ICommandSource
             }
 
             int distance = _ringOf[k];
-            long value = SiteFood(world, c) * Math.Max(0, 100 - (distance * _rules.DistancePenaltyPercentPerCell)) / 100;
+            long value = SiteValue(state, world, civ, c) * Math.Max(0, 100 - (distance * _rules.DistancePenaltyPercentPerCell)) / 100;
             if (there is { IsActive: false } && (there.Owner == civ.Id || there.ClaimCiv == civ.Id.Value))
             {
                 value = value * (100 + _rules.OwnCampsiteBonusPercent) / 100;
@@ -395,6 +407,31 @@ public sealed class TribeAi : ICommandSource
         return _siteFood[cell];
     }
 
+    // How good a place is to live in: the food its land gives, times how pleasant its temperature is for this
+    // civilization (GDD 8.3: the AI weighs places; nothing here is a fixed "flee the winter" rule).
+    private long SiteValue(GameState state, WorldState world, CivilizationState civ, HexCoord center) =>
+        SiteFood(world, center) * Comfort(state, world, civ, world.Geometry.Index(center)) / 100;
+
+    /// <summary>
+    /// Comfort of a cell, 0–100%: the coming season's temperature with live seasons, otherwise the winter temperature,
+    /// against the limits in <c>data/population.json</c>. The cold_tolerance effect (fire, clothing, houses) lowers the cold
+    /// limit, so better technology makes cold land worth more.
+    /// </summary>
+    public int Comfort(GameState state, WorldState world, CivilizationState civ, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(civ);
+        WorldMap map = world.Map;
+        int temperature = map.LiveSeasons ? map.NextSeasonTemperature[cell] : map.Temperature[cell] - (map.Seasonality[cell] / 2);
+        int tolerance = state.Effects.Count == 0
+            ? 0
+            : state.Effects.Total(_content.Effects, EffectStat.ColdToleranceDegrees, EffectTarget.Civilization, WorldId.Earth, civ.Id.Value);
+        int cold = Math.Max(0, _rules.ComfortColdBelow - tolerance - temperature);
+        int hot = Math.Max(0, temperature - _rules.ComfortHotAbove);
+        return Math.Max(_rules.ComfortMinPercent, 100 - ((cold + hot) * _rules.ComfortPercentPerDegree));
+    }
+
     private long ComputeSiteFood(WorldState world, HexCoord center)
     {
         WorldMap map = world.Map;
@@ -441,7 +478,7 @@ public sealed class TribeAi : ICommandSource
         return food;
     }
 
-    // Food of every cell when untouched; the map does not change in eras 1-2, so it is computed once per world.
+    // Food of every cell when untouched; computed once per world, or every turn when seasons are live.
     private long[] CellFood(WorldState world)
     {
         int w = world.Id.Value;
@@ -450,15 +487,20 @@ public sealed class TribeAi : ICommandSource
             _cellFood.Add([]);
         }
 
-        if (_cellFood[w].Length != world.Geometry.CellCount)
+        bool live = world.Map.LiveSeasons;
+        if (_cellFood[w].Length != world.Geometry.CellCount || (live && _cellFoodStamp != _stamp))
         {
-            var food = new long[world.Geometry.CellCount];
+            long[] food = _cellFood[w].Length == world.Geometry.CellCount ? _cellFood[w] : new long[world.Geometry.CellCount];
             for (int i = 0; i < food.Length; i++)
             {
-                food[i] = _yields.CellFoodPerYear(world.Map, i).Hundredths;
+                // With live seasons the AI plans for this turn and the next one.
+                food[i] = live
+                    ? (_yields.CellFoodPerYear(world.Map, i).Hundredths + _yields.CellFoodPerYear(world.Map, i, nextTurn: true).Hundredths) / 2
+                    : _yields.CellFoodPerYear(world.Map, i).Hundredths;
             }
 
             _cellFood[w] = food;
+            _cellFoodStamp = _stamp;
         }
 
         return _cellFood[w];

@@ -12,6 +12,9 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
     /// <summary>Game time in months since the start.</summary>
     public long Month { get; init; }
 
+    /// <summary>True when seasons are played turn by turn on the first world.</summary>
+    public bool LiveSeasons { get; init; }
+
     /// <summary>All settlements in id order.</summary>
     public ImmutableArray<SettlementSnapshot> Settlements { get; init; } = [];
 
@@ -61,6 +64,7 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
         return new GameSnapshot(state.Turn, worlds.MoveToImmutable(), civs.MoveToImmutable())
         {
             Month = state.Month,
+            LiveSeasons = state.Worlds[0].Map.LiveSeasons,
             Settlements = settlements.MoveToImmutable(),
         };
     }

@@ -116,8 +116,20 @@ public sealed record PopulationRules
     /// <summary>The tribe AI looks for a new place when less than this share of people was fed.</summary>
     public int MoveWhenFedBelowPercent { get; init; } = 95;
 
-    /// <summary>The tribe AI moves a camp at most once in this many years.</summary>
-    public int MinYearsBetweenMoves { get; init; } = 100;
+    /// <summary>AI: a camp waits at least this many turns between moves.</summary>
+    public int MinTurnsBetweenMoves { get; init; } = 2;
+
+    /// <summary>AI comfort: below this temperature (°C) a place is worth less to live in (cold tolerance effects lower it).</summary>
+    public int ComfortColdBelow { get; init; } = -5;
+
+    /// <summary>AI comfort: above this temperature (°C) a place is worth less to live in.</summary>
+    public int ComfortHotAbove { get; init; } = 38;
+
+    /// <summary>AI comfort: value lost per degree beyond the limits, percent.</summary>
+    public int ComfortPercentPerDegree { get; init; } = 2;
+
+    /// <summary>AI comfort: the lowest share of its value a place keeps, percent.</summary>
+    public int ComfortMinPercent { get; init; } = 5;
 
     /// <summary>A new place must give this much more food to be worth the move, in percent.</summary>
     public int MoveWhenBetterByPercent { get; init; } = 30;

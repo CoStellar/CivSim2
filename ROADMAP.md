@@ -55,7 +55,19 @@ Gotowe, gdy: mapa zachowuje się jak kula, a Patryk obejrzał presety Ziemia, Ma
 - [x] Parametry planety: nachylenie osi, długość roku, jasność gwiazdy, mimośród; presety Ziemia, Mars, Uran w `data/planets.json`
 - [x] Klimat, uśrednione pory roku i sezon wzrostu z nasłonecznienia; biomy i dzika żywność biorą je pod uwagę
 - [x] Eksport PNG (nowe widoki: pory roku, sezon wzrostu, globus) i podgląd (bez zawijania pionowego, nowe nakładki)
+- [x] Dwa zegary (ADR 0013): pory roku na żywo przy długim roku, wolne decyzje raz na turę ery, AI ocenia wygodę temperatury (efekt `cold_tolerance`)
 - [ ] Patryk ogląda mapy trzech presetów i własnych ustawień
+- Pomysł na później: „klocki pomocnicze” na biegunach (pola o innym kształcie i rozmiarze, które łączą wszystkie heksy polarnego rzędu), żeby przejście przez biegun było dokładne.
+
+## Etap 1c — Gwiazda, atmosfera i wahania klimatu (decyzje z 2026-11-05)
+
+Gotowe, gdy: Ziemia, Mars i Uran liczą się z prawdziwych wzorów (gwiazda, orbita, atmosfera), a w trakcie gry przychodzą epoki lodowe.
+Szczegóły i wzory: `docs/prompts/02-etap-1c-gwiazda-atmosfera.md`.
+
+- [ ] 1c-A: jasność gwiazdy, odległość i rok (Kepler, masa z jasności), strefa zamieszkiwalna z dopasowaniem do granicy
+- [ ] 1c-A: atmosfera (efekt cieplarniany, ciśnienie, domyślnie z cyklu węglanowo-krzemianowego) i model bilansu energii zamiast obecnego wzoru
+- [ ] 1c-B: cykle Milankovicia i zmienność gwiazdy: klimat zmienia się w trakcie gry
+- [ ] 1c-C: poziom morza zmienia się w trakcie gry (pomosty lądowe)
 
 ## Etap 2 — Podgląd symulacji (Godot)
 
@@ -82,7 +94,7 @@ Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemno
 - [x] Koczownicy, obozy, strefa wpływów, migracje (sezonowe, odłam, całkowita, z podbojem)
 - [x] Osady jako majątek: porzucanie, dwa stany (opuszczona, ruiny), przejmowanie, odbudowa, roszczenia (odbudowa budynków razem z budynkami)
 - [ ] Technologie er 1–2 w danych, badania, dyfuzja, inspiracje
-- [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze
+- [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze; wędrówki trwające kilka tur do znanych dalekich miejsc (żeby na planetach leżących na boku plemiona mogły iść za latem na drugą półkulę)
 - [ ] Mechanizm efektów + zdarzenia: susza, pożar, powódź, epidemia
 
 ## Etap 4 — AI i dyplomacja

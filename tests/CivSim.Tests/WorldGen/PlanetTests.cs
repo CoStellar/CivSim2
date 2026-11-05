@@ -75,6 +75,16 @@ public class PlanetTests
     }
 
     [Fact]
+    public void SofterSeasonsSwingLess()
+    {
+        long lat = FixedTrig.Sin(FixedTrig.Degrees(45));
+        int normal = new ClimateModel(PlanetParameters.Earth).SeasonalSwing(lat, 100);
+        int soft = new ClimateModel(PlanetParameters.Earth with { SeasonStrengthPercent = 50 }).SeasonalSwing(lat, 100);
+        Assert.InRange(soft, (normal / 2) - 1, (normal / 2) + 1);
+        Assert.Equal(100, Content.Planet("uranus").Planet.SeasonStrengthPercent);
+    }
+
+    [Fact]
     public void PresetsLoadAndSetTheWorld()
     {
         Assert.Equal(["earth", "mars", "uranus"], Content.Planets.Select(p => p.Key));

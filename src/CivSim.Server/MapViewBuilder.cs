@@ -38,6 +38,8 @@ public static class MapViewBuilder
         var wild = new ushort[n];
         var influence = new byte[n];
         var seasons = new byte[n];
+        var seasonTemperature = new sbyte[n];
+        var seasonGrowth = new byte[n];
         var growing = new byte[n];
         bool any = false;
         for (int r = 0; r < h; r++)
@@ -69,6 +71,8 @@ public static class MapViewBuilder
                 influence[k] = map.Influence[i];
                 seasons[k] = map.Seasonality[i];
                 growing[k] = map.GrowingSeason[i];
+                seasonTemperature[k] = map.LiveSeasons ? map.SeasonTemperature[i] : map.Temperature[i];
+                seasonGrowth[k] = map.LiveSeasons ? map.SeasonGrowth[i] : map.GrowingSeason[i];
                 for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)
                 {
                     river[(k * MapChunkMessage.RiverEdgesPerCell) + e] = map.River[(i * HexEdge.PerCell) + e];
@@ -83,6 +87,6 @@ public static class MapViewBuilder
 
         return new MapChunkMessage(
             world.Id.Value, turn, chunk, x0, y0, w, h, visibility, elevation, temperature, humidity, biome, relief, feature,
-            fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing);
+            fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing, seasonTemperature, seasonGrowth);
     }
 }

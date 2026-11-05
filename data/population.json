@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Population growth, hunger, health, gathering, wild food, influence zones and migration (GDD 5.2, 5.4, 4.4). wildFood: gathering at full strength removes depletionPerMillePerYear of a cell stock every year; every year a cell grows back regrowthPercentPerYear of what is missing. influence: range in movement cost, baseRange plus one per warriorsPerRange warriors. migration: rules of the simple tribe AI used until Stage 4 (a new camp needs land that feeds splitNeedsFoodPercent of the leaving group; tiny camps below mergeBelowPeople join a camp of their own; attackAboveStrengthPercent: the AI attacks a camp in its way only with that much of the defenders' strength). conquest: migration with conquest, simplified until wars in Stage 4 (GDD 5.4): defenders' strength is their warriors plus defenderNonWarriorPercent of everyone else; the winners lose winnerWarriorLossPercent of their warriors, the losers loserWarriorLossPercent; expelled people lose fleeingLossPercent while fleeing. gathering.survivableDeadSeasonYears: the longest dead season (no plant growth, in Earth years) gatherers live through without losing food; longer winters (long planet years) cut wild food in proportion, until technologies raise it. All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
+  "comment": "Population growth, hunger, health, gathering, wild food, influence zones and migration (GDD 5.2, 5.4, 4.4). wildFood: gathering at full strength removes depletionPerMillePerYear of a cell stock every year; every year a cell grows back regrowthPercentPerYear of what is missing. influence: range in movement cost, baseRange plus one per warriorsPerRange warriors. migration: rules of the simple tribe AI used until Stage 4 (moves at most every minTurnsBetweenMoves turns; a new camp needs land that feeds splitNeedsFoodPercent of the leaving group; tiny camps below mergeBelowPeople join a camp of their own; attackAboveStrengthPercent: the AI attacks a camp in its way only with that much of the defenders' strength). comfort: how pleasant a place is to live in, for the tribe AI: below coldBelow or above hotAbove (°C; the season's temperature when seasons are live, otherwise the winter temperature) a place loses percentPerDegree of its value per degree, down to minPercent; the cold_tolerance effect (fire, clothing, houses from technologies) moves the cold limit down. conquest: migration with conquest, simplified until wars in Stage 4 (GDD 5.4): defenders' strength is their warriors plus defenderNonWarriorPercent of everyone else; the winners lose winnerWarriorLossPercent of their warriors, the losers loserWarriorLossPercent; expelled people lose fleeingLossPercent while fleeing. gathering.survivableDeadSeasonYears: the longest dead season (no plant growth, in Earth years) gatherers live through without losing food; longer winters (long planet years) cut wild food in proportion, until technologies raise it. All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
   "growth": {
     "birthsPerMille": 35,
     "deathsPerMille": 32,
@@ -45,7 +45,7 @@
     "maxMoveCells": 10,
     "moveWhenFedBelowPercent": 95,
     "moveWhenBetterByPercent": 30,
-    "minYearsBetweenMoves": 100,
+    "minTurnsBetweenMoves": 2,
     "distancePenaltyPercentPerCell": 3,
     "splitAbovePercentOfLevel": 80,
     "splitPercent": 40,
@@ -55,6 +55,12 @@
     "mergeBelowPeople": 15,
     "ownCampsiteBonusPercent": 10,
     "attackAboveStrengthPercent": 150
+  },
+  "comfort": {
+    "coldBelow": -5,
+    "hotAbove": 38,
+    "percentPerDegree": 2,
+    "minPercent": 5
   },
   "conquest": {
     "defenderNonWarriorPercent": 25,

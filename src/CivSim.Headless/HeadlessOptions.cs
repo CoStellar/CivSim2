@@ -43,6 +43,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>Orbit eccentricity in thousandths, or null for the preset's.</summary>
     public int? EccentricityPerMille { get; init; }
 
+    /// <summary>Season strength in percent, or null for the preset's.</summary>
+    public int? SeasonStrengthPercent { get; init; }
+
     /// <summary>How much rain the planet gets, or null for the preset's.</summary>
     public WorldMoisture? Moisture { get; init; }
 
@@ -69,7 +72,10 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             AxialTiltTenths ?? preset.Planet.AxialTiltTenths,
             YearHundredths ?? preset.Planet.YearHundredths,
             StarBrightnessPercent ?? preset.Planet.StarBrightnessPercent,
-            EccentricityPerMille ?? preset.Planet.EccentricityThousandths);
+            EccentricityPerMille ?? preset.Planet.EccentricityThousandths)
+        {
+            SeasonStrengthPercent = SeasonStrengthPercent ?? preset.Planet.SeasonStrengthPercent,
+        };
         planet.Validate();
         return s with
         {
@@ -88,7 +94,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     public const string Usage =
         "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--quiet]\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
-        "       [--planet earth|mars|uranus] [--tilt DEGREES] [--year EARTH_YEARS] [--brightness 80-120] [--eccentricity 0-0.3]\n" +
+        "       [--planet earth|mars|uranus] [--tilt DEGREES] [--year EARTH_YEARS] [--brightness 80-120] [--eccentricity 0-0.3] [--seasons 20-150]\n" +
         "       [--moisture normal|dry|wet] [--inland normal|dry|humid] [--relief normal|flat|mountainous]\n" +
         "       [--resources normal|scarce|rich] [--civs 1-64]\n" +
         "       --turns 0 only generates the world.";
@@ -112,6 +118,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         int? year = null;
         int? brightness = null;
         int? eccentricity = null;
+        int? seasons = null;
         WorldMoisture? moisture = null;
         WorldInland inland = WorldInland.Normal;
         WorldRelief? relief = null;
@@ -271,6 +278,15 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     }
 
                     break;
+                case "--seasons":
+                    if (!TryScaled(Next(), 1, PlanetParameters.SeasonStrengthRange, out int ss))
+                    {
+                        error = "--seasons must be 20 to 150 (percent of Earth's season strength).";
+                        return null;
+                    }
+
+                    seasons = ss;
+                    break;
                 case "--moisture":
                     if (!TryEnum(Next(), out WorldMoisture m))
                     {
@@ -333,6 +349,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             YearHundredths = year,
             StarBrightnessPercent = brightness,
             EccentricityPerMille = eccentricity,
+            SeasonStrengthPercent = seasons,
             Moisture = moisture,
             Inland = inland,
             Relief = relief,
