@@ -49,7 +49,8 @@ public sealed record MapLayerSaveData([property: Key(0)] string Name, [property:
 public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive,
     [property: Key(3)] int StartCol,
     [property: Key(4)] int StartRow,
-    [property: Key(5)] int Era = 0);
+    [property: Key(5)] int Era = 0,
+    [property: Key(6)] long DiedOutMonth = 0);
 
 /// <summary>Saved settlement. <see cref="Stock"/> holds hundredths per good id.</summary>
 [MessagePackObject]
@@ -70,7 +71,11 @@ public sealed record SettlementSaveData(
     [property: Key(13)] long FoodNeeded = 0,
     [property: Key(14)] long FoodEaten = 0,
     [property: Key(15)] int HigherNeedsPerMille = 0,
-    [property: Key(16)] long MovedMonth = 0);
+    [property: Key(16)] long MovedMonth = 0,
+    [property: Key(17)] int Status = 0,
+    [property: Key(18)] long AbandonedMonth = 0,
+    [property: Key(19)] int ClaimCiv = -1,
+    [property: Key(20)] long ClaimUntilMonth = 0);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

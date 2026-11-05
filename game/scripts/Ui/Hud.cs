@@ -204,7 +204,18 @@ public partial class Hud : CanvasLayer
             }
 
             string level = c?.SettlementLevels is { } levels && s.Level < levels.Count ? levels[s.Level] : s.Level.ToString(inv);
-            sb.Append(inv, $"\n[b]{s.Name}[/b]\n{level} of {FindCiv(session, s.Owner)}\n");
+            string state = s.Status switch { 1 => "Abandoned ", 2 => "Ruins of a ", _ => string.Empty };
+            sb.Append(inv, $"\n[b]{s.Name}[/b]\n{state}{level} of {FindCiv(session, s.Owner)}\n");
+            if (s.Status != 0 && session.View is { } now)
+            {
+                sb.Append(inv, $"Empty for {(now.Month - s.AbandonedMonth) / 12} years\n");
+            }
+
+            if (s.ClaimCiv >= 0 && session.View is { } v && v.Month <= s.ClaimUntilMonth)
+            {
+                sb.Append(inv, $"Claimed by {FindCiv(session, s.ClaimCiv)} for {(s.ClaimUntilMonth - v.Month) / 12} more years\n");
+            }
+
             if (s.Stock is null)
             {
                 sb.Append("[color=gray]Warehouse not visible.[/color]\n");

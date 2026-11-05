@@ -1,7 +1,7 @@
 using System;
 using CivSim.Core.Content;
 using CivSim.Core.Map;
-using CivSim.Core.Numerics;
+using CivSim.Core.Population;
 using CivSim.Core.State;
 
 namespace CivSim.Core.Commands;
@@ -30,7 +30,35 @@ internal static class SettlementRules
             return CommandResult.Fail("You do not own that settlement.");
         }
 
-        return settlement.TotalPopulation() == 0 ? CommandResult.Fail("The settlement is empty.") : CommandResult.Ok;
+        return !settlement.IsActive || settlement.TotalPopulation() == 0 ? CommandResult.Fail("The settlement is empty.") : CommandResult.Ok;
+    }
+
+    // Another settlement on the same world within reach of a group from <paramref name="from"/>.
+    public static CommandResult CheckReach(GameContent content, GameState state, SettlementState from, SettlementId id, out SettlementState? other)
+    {
+        other = state.FindSettlement(id);
+        if (other is null || other.Id == from.Id || other.World != from.World)
+        {
+            return CommandResult.Fail("No such settlement.");
+        }
+
+        WorldState world = state.Worlds[from.World.Value];
+        return world.Geometry.Distance(from.Cell, other.Cell) > content.Population.MaxMoveCells
+            ? CommandResult.Fail($"The settlement is more than {content.Population.MaxMoveCells} cells away.")
+            : CommandResult.Ok;
+    }
+
+    // Abandoned settlements and ruins can be used by whoever holds the land, or on land nobody holds.
+    public static CommandResult CheckEmptyOnOpenLand(GameState state, CivId civ, SettlementState target)
+    {
+        if (target.IsActive)
+        {
+            return CommandResult.Fail("People still live there.");
+        }
+
+        WorldState world = state.Worlds[target.World.Value];
+        short owner = world.Map.Owner[world.Geometry.Index(target.Cell)];
+        return owner != WorldMap.NoOwner && owner != civ.Value ? CommandResult.Fail("Another civilization holds that land.") : CommandResult.Ok;
     }
 
     public static CommandResult CheckTarget(GameContent content, GameState state, SettlementState from, HexCoord target)
@@ -60,7 +88,7 @@ internal static class SettlementRules
 
         foreach (SettlementState other in state.Settlements)
         {
-            if (other.World == from.World && other.Cell == target && other.Id != from.Id && other.TotalPopulation() > 0)
+            if (other.World == from.World && other.Cell == target && other.Id != from.Id && other.IsActive)
             {
                 return CommandResult.Fail("Another settlement already stands there.");
             }
@@ -101,7 +129,8 @@ internal static class SettlementRules
 
 /// <summary>
 /// Moves a mobile settlement (a nomad camp) to another cell (GDD 5.4: seasonal or total migration). The people and
-/// the warehouse go with it. Settled villages cannot move.
+/// what they can carry go with it; anything heavier stays behind as an abandoned campsite (GDD 5.5). Settled villages
+/// cannot move.
 /// </summary>
 public sealed record MoveSettlementCommand(GameContent Content, SettlementId Settlement, HexCoord Target) : ICommand, IChronicledCommand
 {
@@ -138,8 +167,7 @@ public sealed record MoveSettlementCommand(GameContent Content, SettlementId Set
         ArgumentNullException.ThrowIfNull(state);
         SettlementState s = state.FindSettlement(Settlement)!;
         HexCoord from = s.Cell;
-        s.Cell = Target;
-        s.MovedMonth = state.Month;
+        SettlementAssets.Relocate(Content, state, s, Target);
         WorldState world = state.Worlds[s.World.Value];
         int distance = world.Geometry.Distance(from, Target);
         return distance < ChronicleDistance
@@ -151,7 +179,7 @@ public sealed record MoveSettlementCommand(GameContent Content, SettlementId Set
 /// <summary>
 /// Part of a settlement leaves and founds a new camp of the same civilization (GDD 5.4: split; decision of
 /// 2026-11-05: in Stage 3 the group stays with its civilization). People leave from every stratum in proportion
-/// and take the same share of the warehouse.
+/// and take the same share of the warehouse, as far as they can carry it.
 /// </summary>
 public sealed record SplitSettlementCommand(GameContent Content, SettlementId Settlement, HexCoord Target, int Percent) : ICommand, IChronicledCommand
 {
@@ -218,14 +246,7 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
             camp.Population[k] = leaving;
         }
 
-        Span<Amount> stock = from.Stock;
-        for (int g = 0; g < stock.Length; g++)
-        {
-            Amount taken = stock[g].MultiplyPercent(Percent, Rounding.Floor);
-            stock[g] -= taken;
-            camp.Stock[g] = taken;
-        }
-
+        SettlementAssets.Carry(from, camp, SettlementAssets.CarryCapacity(Content, state, civ, camp.TotalPopulation()), Percent);
         return $"{camp.TotalPopulation()} people left {from.Name} and founded {camp.Name}.";
     }
 }

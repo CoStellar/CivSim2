@@ -6,7 +6,7 @@ namespace CivSim.Game.Map;
 
 /// <summary>
 /// Developer markers for settlements (until pixel art in Stage 5): a square in the owner's colour, larger for
-/// higher levels. Drawn on every copy of the wrapped map that is on screen.
+/// higher levels; abandoned settlements are grey, ruins dark and smaller. Drawn on every copy of the wrapped map that is on screen.
 /// </summary>
 public partial class SettlementMarkers : Node2D
 {
@@ -58,8 +58,18 @@ public partial class SettlementMarkers : Node2D
             int ky0 = Mathf.FloorToInt((_view.Position.Y - c.Y) / _period.Y);
             int ky1 = Mathf.CeilToInt((_view.End.Y - c.Y) / _period.Y);
             float half = 7 + (3 * s.Level);
-            bool empty = s.Population is { } people && System.Array.TrueForAll(people, p => p == 0);
-            Color fill = empty ? new Color(0.35f, 0.35f, 0.35f) : OverlayColors.CivColor(s.Owner);
+            // Abandoned settlements grey, ruins darker and smaller (GDD 5.5).
+            Color fill = s.Status switch
+            {
+                1 => new Color(0.45f, 0.45f, 0.45f),
+                2 => new Color(0.25f, 0.22f, 0.2f),
+                _ => OverlayColors.CivColor(s.Owner),
+            };
+            if (s.Status == 2)
+            {
+                half -= 3;
+            }
+
             for (int ky = ky0; ky <= ky1; ky++)
             {
                 for (int kx = kx0; kx <= kx1; kx++)

@@ -20,6 +20,10 @@ public static class CommandMapper
             RenameCivilizationDto r => new RenameCivilizationCommand(r.NewName ?? string.Empty),
             MoveSettlementDto m when content is not null => new MoveSettlementCommand(content, new SettlementId(m.SettlementId), new HexCoord(m.Col, m.Row)),
             SplitSettlementDto s when content is not null => new SplitSettlementCommand(content, new SettlementId(s.SettlementId), new HexCoord(s.Col, s.Row), s.Percent),
+            AbandonSettlementDto a when content is not null => new AbandonSettlementCommand(content, new SettlementId(a.SettlementId), new SettlementId(a.IntoSettlementId)),
+            OccupySettlementDto o when content is not null => new OccupySettlementCommand(content, new SettlementId(o.SettlementId), new SettlementId(o.TargetSettlementId), o.Percent),
+            PlunderSettlementDto p when content is not null => new PlunderSettlementCommand(content, new SettlementId(p.SettlementId), new SettlementId(p.TargetSettlementId)),
+            ConquerSettlementDto c when content is not null => new ConquerSettlementCommand(content, new SettlementId(c.SettlementId), new SettlementId(c.TargetSettlementId)),
             _ => null,
         };
     }

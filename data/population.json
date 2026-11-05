@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Population growth, hunger, health, gathering, wild food, influence zones and migration (GDD 5.2, 5.4, 4.4). wildFood: gathering at full strength removes depletionPerMillePerYear of a cell stock every year; every year a cell grows back regrowthPercentPerYear of what is missing. influence: range in movement cost, baseRange plus one per warriorsPerRange warriors. migration: rules of the simple tribe AI used until Stage 4. All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
+  "comment": "Population growth, hunger, health, gathering, wild food, influence zones and migration (GDD 5.2, 5.4, 4.4). wildFood: gathering at full strength removes depletionPerMillePerYear of a cell stock every year; every year a cell grows back regrowthPercentPerYear of what is missing. influence: range in movement cost, baseRange plus one per warriorsPerRange warriors. migration: rules of the simple tribe AI used until Stage 4 (a new camp needs land that feeds splitNeedsFoodPercent of the leaving group; tiny camps below mergeBelowPeople join a camp of their own; attackAboveStrengthPercent: the AI attacks a camp in its way only with that much of the defenders' strength). conquest: migration with conquest, simplified until wars in Stage 4 (GDD 5.4): defenders' strength is their warriors plus defenderNonWarriorPercent of everyone else; the winners lose winnerWarriorLossPercent of their warriors, the losers loserWarriorLossPercent; expelled people lose fleeingLossPercent while fleeing. All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
   "growth": {
     "birthsPerMille": 35,
     "deathsPerMille": 32,
@@ -50,7 +50,16 @@
     "splitPercent": 40,
     "minSplitPeople": 60,
     "minDistanceBetweenOwnCamps": 4,
-    "maxSettlementsPerCivilization": 40
+    "splitNeedsFoodPercent": 100,
+    "mergeBelowPeople": 15,
+    "ownCampsiteBonusPercent": 10,
+    "attackAboveStrengthPercent": 150
+  },
+  "conquest": {
+    "defenderNonWarriorPercent": 25,
+    "winnerWarriorLossPercent": 10,
+    "loserWarriorLossPercent": 40,
+    "fleeingLossPercent": 20
   },
   "newTribe": { "producers": 40, "artisans": 0, "warriors": 10 }
 }

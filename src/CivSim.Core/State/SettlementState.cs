@@ -4,9 +4,22 @@ using CivSim.Core.Numerics;
 
 namespace CivSim.Core.State;
 
+/// <summary>What has become of a settlement (GDD 5.5, CORE simplified: two states after abandonment).</summary>
+public enum SettlementStatus
+{
+    /// <summary>People live here.</summary>
+    Active = 0,
+
+    /// <summary>Empty, buildings standing; anyone whose land it is can move in at once or take what was left.</summary>
+    Abandoned = 1,
+
+    /// <summary>Empty and falling apart; it can still be resettled or plundered, until it disappears.</summary>
+    Ruins = 2,
+}
+
 /// <summary>
 /// One settlement (GDD 5.3): a camp, village, town... with its own warehouse. Goods exist only here, never in a
-/// civilization-wide treasury (GDD 4). Population, buildings and abandonment are added in later stages.
+/// civilization-wide treasury (GDD 4). An empty settlement is property that decays (GDD 5.5): see <see cref="Status"/>.
 /// </summary>
 public sealed class SettlementState
 {
@@ -74,6 +87,30 @@ public sealed class SettlementState
 
         return total;
     }
+
+    /// <summary>Active, abandoned or ruins.</summary>
+    public SettlementStatus Status { get; set; }
+
+    /// <summary>True when people live here.</summary>
+    public bool IsActive => Status == SettlementStatus.Active;
+
+    /// <summary>Game month in which the settlement was abandoned (meaningful when not active).</summary>
+    public long AbandonedMonth { get; set; }
+
+    /// <summary>
+    /// Civilization with a claim on this settlement (its former owner), or <see cref="NoClaim"/>. The claim stays after
+    /// someone else takes the settlement over, until <see cref="ClaimUntilMonth"/>: that is a border dispute (GDD 8.5).
+    /// </summary>
+    public int ClaimCiv { get; set; } = NoClaim;
+
+    /// <summary>Last game month of the claim.</summary>
+    public long ClaimUntilMonth { get; set; }
+
+    /// <summary>Value of <see cref="ClaimCiv"/> when nobody has a claim.</summary>
+    public const int NoClaim = -1;
+
+    /// <summary>True when <see cref="ClaimCiv"/> has a claim at <paramref name="month"/>.</summary>
+    public bool HasClaim(long month) => ClaimCiv != NoClaim && month <= ClaimUntilMonth;
 
     /// <summary>Game month of the last move (or of founding); the tribe AI waits a while between moves.</summary>
     public long MovedMonth { get; set; }

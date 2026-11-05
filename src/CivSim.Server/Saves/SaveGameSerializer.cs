@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 7;
+    public const int FormatVersion = 8;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -53,7 +53,7 @@ public static class SaveGameSerializer
         var civs = new List<CivilizationSaveData>(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
-            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era));
+            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era, c.DiedOutMonth));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -68,7 +68,8 @@ public static class SaveGameSerializer
 
             settlements.Add(new SettlementSaveData(
                 st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
-                st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth));
+                st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
+                (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -149,6 +150,7 @@ public static class SaveGameSerializer
                 IsAlive = c.IsAlive,
                 StartCell = new HexCoord(c.StartCol, c.StartRow),
                 Era = c.Era,
+                DiedOutMonth = c.DiedOutMonth,
             });
         }
 
@@ -166,6 +168,10 @@ public static class SaveGameSerializer
                 FoodEaten = st.FoodEaten,
                 HigherNeedsPerMille = st.HigherNeedsPerMille,
                 MovedMonth = st.MovedMonth,
+                Status = (SettlementStatus)st.Status,
+                AbandonedMonth = st.AbandonedMonth,
+                ClaimCiv = st.ClaimCiv,
+                ClaimUntilMonth = st.ClaimUntilMonth,
             };
             for (int g = 0; g < st.Stock.Length; g++)
             {

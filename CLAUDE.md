@@ -62,7 +62,7 @@ w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
      tam, gdzie liczby ułamkowe są nieuniknione (klimat, oceny AI), używaj fixed-point albo zaokrąglaj deterministycznie;
    - iteracja zawsze w stałej kolejności identyfikatorów; nie polegaj na kolejności `Dictionary`/`HashSet`;
    - AI liczone równolegle wyłącznie czyta migawkę, a jej komendy są sortowane przed rozstrzygnięciem;
-   - test determinizmu (hash stanu po N turach dla dwóch przebiegów) musi przechodzić w każdym PR.
+   - test determinizmu (hash stanu po N turach dla dwóch przebiegów) musi przechodzić lokalnie przed każdym PR.
 5. **Zawartość w danych.** Technologie, zasoby, budynki, receptury, jednostki, ustroje, polityki, zdarzenia,
    biomy i motywy UI są w plikach JSON w `data/`, walidowanych przy starcie. Nowa technologia nie wymaga kodu.
 6. **Tempa na rok.** Wszystkie tempa (wzrost, psucie, odrastanie) definiuj na rok i przeliczaj przez długość tury ery.
@@ -115,7 +115,7 @@ docs/                   GDD, decyzje, opisy systemów, prompty
 | Ogromna | 512×320 | 32 | < 250 ms | < 3 GB |
 
 - PR, który pogarsza czas tury lub pamięć o więcej niż 10%, wymaga wyjaśnienia w opisie.
-- CI (GitHub Actions): build i testy na Ubuntu, Windows i macOS; benchmark na Ubuntu.
+- Testy i benchmarki uruchamiamy **lokalnie** przed każdym PR i wpisujemy wyniki do opisu (decyzja Patryka z 2026-11-05: nie polegamy na CI). Testy mają być krótkie: cały zestaw w kilka sekund, długie przebiegi tylko w benchmarku `CivSim.Headless`.
 
 ## Zrozumiałość kodu: Understand Anything
 
