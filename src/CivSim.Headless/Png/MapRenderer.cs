@@ -43,6 +43,9 @@ public enum MapView
 
     /// <summary>The biome map wrapped on a ball: four views (two sides, north pole, south pole), stage 1b.</summary>
     Globe,
+
+    /// <summary>Temperature of the current season (live seasons; the annual mean otherwise).</summary>
+    SeasonNow,
 }
 
 /// <summary>
@@ -129,7 +132,7 @@ public sealed class MapRenderer
             }
         }
 
-        if (view == MapView.Influence)
+        if (view is MapView.Influence or MapView.SeasonNow)
         {
             foreach ((HexCoord cell, bool inhabited) in Settlements)
             {
@@ -215,6 +218,13 @@ public sealed class MapRenderer
                 return water ? Darken(c, 35) : c;
             }
 
+            case MapView.SeasonNow:
+            {
+                int t = m.LiveSeasons ? m.SeasonTemperature[i] : m.Temperature[i];
+                uint c = t < 10 ? Lerp(0x2040C0, 0xE8E8E8, Math.Max(0, t + 30), 40) : Lerp(0xE8E8E8, 0xD02010, Math.Min(30, t - 10), 30);
+                return water ? Darken(c, 35) : c;
+            }
+
             case MapView.Growing:
                 return water ? 0x0A2647u : Lerp(0x6A5236, 0x2FA83A, m.GrowingSeason[i], 100);
             case MapView.Influence:
@@ -226,6 +236,35 @@ public sealed class MapRenderer
             default:
                 return 0;
         }
+    }
+
+    /// <summary>
+    /// The planet's year as a strip of frames: the temperature of each season, with the settlements as white dots
+    /// (live seasons). <paramref name="frames"/> are one per step of the year.
+    /// </summary>
+    public static RgbImage Strip(IReadOnlyList<RgbImage> frames)
+    {
+        ArgumentNullException.ThrowIfNull(frames);
+        int w = frames[0].Width;
+        int h = frames[0].Height;
+        int cols = Math.Min(4, frames.Count);
+        int rows = (frames.Count + cols - 1) / cols;
+        var strip = new RgbImage((w + 4) * cols, (h + 4) * rows);
+        for (int f = 0; f < frames.Count; f++)
+        {
+            int ox = (f % cols) * (w + 4);
+            int oy = (f / cols) * (h + 4);
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    int src = ((y * w) + x) * 3;
+                    strip.Set(ox + x, oy + y, ((uint)frames[f].Pixels[src] << 16) | ((uint)frames[f].Pixels[src + 1] << 8) | frames[f].Pixels[src + 2]);
+                }
+            }
+        }
+
+        return strip;
     }
 
     // Four orthographic views of the planet: from the equator at longitude 0° and 180°, and from above each pole.

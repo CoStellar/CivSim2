@@ -36,7 +36,7 @@ public static class ContentLoader
             LoadSettlements(Path.Combine(directory, "settlements.json"), goods, errors);
         List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
-        List<PlanetPreset> planets = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
+        (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
             throw new ContentException(errors);
@@ -55,6 +55,7 @@ public static class ContentLoader
             Population = population,
             Assets = assets,
             Planets = planets,
+            Seasons = seasons,
         };
     }
 
@@ -173,6 +174,7 @@ public static class ContentLoader
         var influence = new Reader(Section("influence"), $"{file}: influence", errors);
         var migration = new Reader(Section("migration"), $"{file}: migration", errors);
         var conquest = new Reader(Section("conquest"), $"{file}: conquest", errors);
+        var comfort = new Reader(Section("comfort"), $"{file}: comfort", errors);
         var tribe = new int[strata.Count];
         JsonElement tribeElement = Section("newTribe");
         var tribeReader = new Reader(tribeElement, $"{file}: newTribe", errors);
@@ -234,7 +236,11 @@ public static class ContentLoader
             MaxMoveCells = migration.Int("maxMoveCells", 0, 50),
             MoveWhenFedBelowPercent = migration.Int("moveWhenFedBelowPercent", 0, 100),
             MoveWhenBetterByPercent = migration.Int("moveWhenBetterByPercent", 0, 1000),
-            MinYearsBetweenMoves = migration.Int("minYearsBetweenMoves", 0, 100_000),
+            MinTurnsBetweenMoves = migration.Int("minTurnsBetweenMoves", 0, 1000),
+            ComfortColdBelow = comfort.Int("coldBelow", -60, 60),
+            ComfortHotAbove = comfort.Int("hotAbove", -60, 80),
+            ComfortPercentPerDegree = comfort.Int("percentPerDegree", 0, 100),
+            ComfortMinPercent = comfort.Int("minPercent", 0, 100),
             DistancePenaltyPercentPerCell = migration.Int("distancePenaltyPercentPerCell", 0, 100),
             SplitAbovePercentOfLevel = migration.Int("splitAbovePercentOfLevel", 1, 1000),
             SplitPercent = migration.Int("splitPercent", 1, 90),
@@ -435,13 +441,29 @@ public static class ContentLoader
         return result;
     }
 
-    private static List<PlanetPreset> LoadPlanets(string path, List<string> errors)
+    private static (List<PlanetPreset> Planets, Core.WorldGen.SeasonRules Seasons) LoadPlanets(string path, List<string> errors)
     {
         var result = new List<PlanetPreset>();
+        var seasons = new Core.WorldGen.SeasonRules();
         using JsonDocument? doc = Open(path, errors);
         if (doc is null || !TryArray(doc.RootElement, "planets", path, errors, out JsonElement array))
         {
-            return result;
+            return (result, seasons);
+        }
+
+        if (doc.RootElement.TryGetProperty("seasons", out JsonElement se) && se.ValueKind == JsonValueKind.Object)
+        {
+            var r = new Reader(se, $"{Path.GetFileName(path)}: seasons", errors);
+            seasons = new Core.WorldGen.SeasonRules
+            {
+                StepsPerYear = r.Int("stepsPerYear", 4, Core.WorldGen.Insolation.Steps),
+                MinStepMonths = r.Int("minStepMonths", 1, 1200),
+                WinterFoodPercent = r.Int("winterFoodPercent", 0, 100),
+            };
+        }
+        else
+        {
+            errors.Add($"{Path.GetFileName(path)}: missing object 'seasons'.");
         }
 
         var keys = new HashSet<string>(StringComparer.Ordinal);
@@ -472,7 +494,7 @@ public static class ContentLoader
             errors.Add($"{Path.GetFileName(path)}: the 'earth' preset is required.");
         }
 
-        return result;
+        return (result, seasons);
     }
 
     private static List<EffectDefinition> LoadEffects(string path, List<string> errors)

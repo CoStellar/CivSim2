@@ -70,6 +70,9 @@ public sealed class GameContent
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
 
+    /// <summary>When seasons are played turn by turn (data/planets.json, "seasons").</summary>
+    public WorldGen.SeasonRules Seasons { get; init; } = new();
+
     /// <summary>Planet presets (stage 1b).</summary>
     public IReadOnlyList<PlanetPreset> Planets { get; init; } = [];
 

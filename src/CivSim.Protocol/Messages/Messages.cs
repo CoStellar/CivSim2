@@ -77,7 +77,8 @@ public sealed record GameViewMessage(
     [property: Key(5)] SimulationSpeed Speed = SimulationSpeed.Paused,
     [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null,
     [property: Key(7)] IReadOnlyList<SettlementView>? Settlements = null,
-    [property: Key(8)] long Month = 0) : IProtocolMessage;
+    [property: Key(8)] long Month = 0,
+    [property: Key(9)] bool LiveSeasons = false) : IProtocolMessage;
 
 /// <summary>
 /// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per
@@ -198,7 +199,9 @@ public sealed record MapChunkMessage(
     [property: Key(20)] ushort[]? WildFood = null,
     [property: Key(21)] byte[]? Influence = null,
     [property: Key(22)] byte[]? Seasonality = null,
-    [property: Key(23)] byte[]? GrowingSeason = null) : IProtocolMessage
+    [property: Key(23)] byte[]? GrowingSeason = null,
+    [property: Key(24)] sbyte[]? SeasonTemperature = null,
+    [property: Key(25)] byte[]? SeasonGrowth = null) : IProtocolMessage
 {
     /// <summary>Visibility: never seen.</summary>
     public const byte Unknown = 0;

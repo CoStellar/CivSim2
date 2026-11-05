@@ -43,6 +43,10 @@ public sealed class WorldMap
         Influence = Add(new MapLayer<byte>("influence", this, 1, 0));
         Seasonality = Add(new MapLayer<byte>("seasonality", this, 1, 0));
         GrowingSeason = Add(new MapLayer<byte>("growing_season", this, 1, 100));
+        SeasonTemperature = Add(new MapLayer<sbyte>("season_temperature", this, 1, 0));
+        SeasonGrowth = Add(new MapLayer<byte>("season_growth", this, 1, 100));
+        NextSeasonTemperature = Add(new MapLayer<sbyte>("next_season_temperature", this, 1, 0));
+        NextSeasonGrowth = Add(new MapLayer<byte>("next_season_growth", this, 1, 100));
         MarkAllDirty();
     }
 
@@ -117,6 +121,21 @@ public sealed class WorldMap
     /// <c>(100 − growing season)% × year</c>: a long year means winters of many years (stage 1b).
     /// </summary>
     public int YearHundredths { get; set; } = 100;
+
+    /// <summary>True when seasons are played turn by turn on this world (long years, <see cref="WorldGen.SeasonRules"/>).</summary>
+    public bool LiveSeasons { get; set; }
+
+    /// <summary>Temperature in the middle of the current turn, °C (live seasons only).</summary>
+    public MapLayer<sbyte> SeasonTemperature { get; }
+
+    /// <summary>Share of the current turn in which plants grow, 0–100% (live seasons only).</summary>
+    public MapLayer<byte> SeasonGrowth { get; }
+
+    /// <summary>Temperature in the middle of the next turn, °C (live seasons only; what the AI expects).</summary>
+    public MapLayer<sbyte> NextSeasonTemperature { get; }
+
+    /// <summary>Share of the next turn in which plants grow, 0–100% (live seasons only).</summary>
+    public MapLayer<byte> NextSeasonGrowth { get; }
 
     /// <summary>All layers in their fixed order (for hashing and saving).</summary>
     public IReadOnlyList<IMapLayerInfo> Layers => _layers;

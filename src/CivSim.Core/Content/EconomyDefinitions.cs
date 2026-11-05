@@ -102,6 +102,9 @@ public enum EffectStat
 
     /// <summary>Change of how much people can carry when they leave or move, in percent (pack animals, carts, boats).</summary>
     CarryCapacityPercent = 6,
+
+    /// <summary>Degrees of cold a civilization bears without losing comfort (fire, clothing, houses from technologies).</summary>
+    ColdToleranceDegrees = 7,
 }
 
 /// <summary>How effects of the same type on the same target combine.</summary>

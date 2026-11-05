@@ -41,7 +41,7 @@ flowchart LR
 - **Rysowanie:** każdy fragment 32×32 to jeden `MultiMesh` heksów (1024 instancje) i jeden dla rzek. Rysowane są tylko
   fragmenty w kadrze. Zawijanie mapy: fragment przy krawędzi rysuje się drugi raz przesunięty o szerokość lub wysokość mapy.
   Pozycja kamery zawija się na boki (wschód–zachód), więc można przewijać w nieskończoność; na północy i południu zatrzymuje się na biegunach (ADR 0012).
-  Nakładki `Seasons` (różnica lato–zima) i `Growing` (sezon wzrostu); inspektor pokazuje temperaturę lata i zimy oraz sezon wzrostu.
+  Nakładki `Seasons` (różnica lato–zima), `Growing` (sezon wzrostu) i `SeasonNow` (temperatura bieżącej pory roku na planetach z porami na żywo); inspektor pokazuje temperaturę lata i zimy oraz sezon wzrostu.
   Planetę wybiera się z linii poleceń: `--planet earth|mars|uranus` oraz `--tilt`, `--year`, `--brightness`, `--eccentricity`.
 - **Heks:** flat-top 48×42 px, kolumny co 36 px, nieparzyste kolumny przesunięte o 21 px w dół (jak w pixel arcie z CLAUDE.md).
   Siatka (przerwy między heksami) jest widoczna od zoomu 0,6.

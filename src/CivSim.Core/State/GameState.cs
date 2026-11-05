@@ -71,17 +71,30 @@ public sealed class GameState
         return era;
     }
 
-    /// <summary>Months in the next turn (GDD 6.2); 600 (50 years) when no eras are loaded.</summary>
+    /// <summary>
+    /// Months in the next turn (GDD 6.2); 600 (50 years) when no eras are loaded. On planets with live seasons a turn is
+    /// one step of the planet's year when that is shorter than the era's turn.
+    /// </summary>
     public int MonthsPerTurn(GameContent content)
     {
         ArgumentNullException.ThrowIfNull(content);
-        if (content.Eras.Count == 0)
-        {
-            return 600;
-        }
-
-        return content.Eras[Math.Min(CalendarEra(), content.Eras.Count - 1)].MonthsPerTurn;
+        int months = EraMonthsPerTurn(content);
+        WorldGen.SeasonRules seasons = content.Seasons;
+        return seasons.Live(Settings.Planet) ? Math.Min(months, seasons.StepMonths(Settings.Planet)) : months;
     }
+
+    /// <summary>
+    /// Months of a turn of the current era (GDD 6.2), before live seasons shorten it. Slow decisions (splits, plans)
+    /// are taken once per this many months; survival moves every turn ("two clocks", decision of 2026-11-05).
+    /// </summary>
+    public int EraMonthsPerTurn(GameContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return content.Eras.Count == 0 ? 600 : content.Eras[Math.Min(CalendarEra(), content.Eras.Count - 1)].MonthsPerTurn;
+    }
+
+    /// <summary>True in the first turn of each era-length period: the turn for slow decisions.</summary>
+    public bool IsDecisionTurn(GameContent content) => Month % EraMonthsPerTurn(content) < MonthsPerTurn(content);
 
     /// <summary>Founds a settlement with an empty warehouse and returns it.</summary>
     public SettlementState FoundSettlement(CivId owner, WorldId world, HexCoord cell, string name, int level, int goodCount, int strataCount = 0)
@@ -170,6 +183,7 @@ public sealed class GameState
         GameState state = CreateNew(settings);
         WorldState earth = state._worlds[0];
         earth.Map.YearHundredths = settings.Planet.YearHundredths;
+        earth.Map.LiveSeasons = content.Seasons.Live(settings.Planet);
         var options = WorldGenOptions.From(settings);
         report = WorldGenerator.Generate(content, earth.Map, state.Random[RandomStreamId.World], settings.Seed, options);
         for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)

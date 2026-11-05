@@ -14,3 +14,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0010 Klient uruchamia serwer lokalny, ale nie widzi rdzenia](0010-klient-uruchamia-serwer-lokalny.md)
 - [0011 Czas gry w miesiącach, tempa na rok](0011-czas-gry-w-miesiacach.md)
 - [0012 Mapa jako kula: walec heksów z przejściem przez bieguny](0012-mapa-kula.md)
+- [0013 Dwa zegary: krok świata zależny od planety, wolne decyzje rzadziej](0013-dwa-zegary.md)

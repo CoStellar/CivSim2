@@ -39,6 +39,9 @@ public enum MapOverlay
 
     /// <summary>Share of the year plants can grow (stage 1b): brown = never, green = all year.</summary>
     Growing,
+
+    /// <summary>Temperature of the current season (live seasons; the annual mean elsewhere).</summary>
+    SeasonNow,
 }
 
 /// <summary>Colours of each overlay. Developer preview colours, not game art.</summary>
@@ -68,6 +71,7 @@ public static class OverlayColors
             MapOverlay.WildFood => water ? Water : Rgb(0x7A4A1E).Lerp(Rgb(0x2E8B3A), w.WildFood[i] / 1000f),
             MapOverlay.Influence => InfluenceColor(w.Owner[i], w.Influence[i], water),
             MapOverlay.Seasons => SeasonColor(w.Seasonality[i], water),
+            MapOverlay.SeasonNow => TemperatureColor(w.SeasonTemperature[i], water),
             MapOverlay.Growing => water ? Water : Rgb(0x6A5236).Lerp(Rgb(0x2FA83A), w.GrowingSeason[i] / 100f),
             _ => OwnerColor(w.Owner[i], water),
         };

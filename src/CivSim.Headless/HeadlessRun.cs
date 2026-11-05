@@ -86,6 +86,10 @@ public static class HeadlessRun
             WriteStats(stats, state, content);
         }
 
+        // With live seasons the last planet year of the run is drawn season by season.
+        bool live = runner.State.Worlds[0].Map.LiveSeasons || content.Seasons.Live(runner.State.Settings.Planet);
+        int yearFrames = live && options.PngFolder is not null ? content.Seasons.StepsPerYear : 0;
+        var frames = new List<RgbImage>();
         for (int i = 0; i < options.Turns; i++)
         {
             long allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
@@ -112,6 +116,20 @@ public static class HeadlessRun
                 }
             }
 
+            if (yearFrames > 0 && i >= options.Turns - yearFrames)
+            {
+                var camps = new List<(HexCoord, bool)>();
+                foreach (SettlementState s in runner.State.Settlements)
+                {
+                    if (s.IsActive)
+                    {
+                        camps.Add((s.Cell, true));
+                    }
+                }
+
+                frames.Add(new MapRenderer(runner.State.Worlds[0], content, [], 1) { Settlements = camps }.Render(MapView.SeasonNow));
+            }
+
             if (!options.Quiet && (i + 1) % 1000 == 0)
             {
                 log.WriteLine(string.Create(CultureInfo.InvariantCulture, $"  turn {i + 1}/{options.Turns}"));
@@ -133,7 +151,13 @@ public static class HeadlessRun
 
             var end = new MapRenderer(runner.State.Worlds[0], content, [], options.PngScale) { Settlements = camps };
             string prefix = string.Create(CultureInfo.InvariantCulture, $"seed{options.Seed}_{options.MapSize.ToString().ToLowerInvariant()}_turn{runner.State.Turn}");
-            pngs = [.. pngs, .. end.Save(options.PngFolder, prefix, [MapView.Influence, MapView.WildFood])];
+            pngs = [.. pngs, .. end.Save(options.PngFolder, prefix, [MapView.Influence, MapView.WildFood, MapView.SeasonNow])];
+            if (frames.Count > 0)
+            {
+                string path = Path.Combine(options.PngFolder, prefix + "_year.png");
+                PngWriter.Save(MapRenderer.Strip(frames), path);
+                pngs = [.. pngs, path];
+            }
         }
 
         double[] sorted = (double[])turnMs.Clone();

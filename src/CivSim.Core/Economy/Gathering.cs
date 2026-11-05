@@ -193,7 +193,13 @@ public sealed class GatheringSystem : ITurnSystem
     }
 
     /// <summary>Food a land cell gives per year when its wild food is untouched (biome, fertility, growing season, deposit).</summary>
-    public Amount CellFoodPerYear(WorldMap map, int cell)
+    public Amount CellFoodPerYear(WorldMap map, int cell) => CellFoodPerYear(map, cell, nextTurn: false);
+
+    /// <summary>
+    /// Like <see cref="CellFoodPerYear(WorldMap, int)"/>; with live seasons <paramref name="nextTurn"/> gives the food the
+    /// cell will give in the next turn's season (what the tribe AI expects).
+    /// </summary>
+    public Amount CellFoodPerYear(WorldMap map, int cell, bool nextTurn)
     {
         ArgumentNullException.ThrowIfNull(map);
         BiomeDefinition biome = _content.Biomes[map.Biome[cell]];
@@ -204,7 +210,10 @@ public sealed class GatheringSystem : ITurnSystem
 
         // Biome food, better on fertile land: fertility 0 gives half, 50 gives the full value, 100 gives 150%.
         // A short growing season and long winters (stage 1b) cut it (ClimateModel.WildFoodPercent).
-        long season = WorldGen.ClimateModel.WildFoodPercent(map.GrowingSeason[cell], map.YearHundredths, _rules.SurvivableDeadSeasonHundredths);
+        // Live seasons: what grows in this turn's season, hunting still gives a little in winter.
+        long season = map.LiveSeasons
+            ? _content.Seasons.WinterFoodPercent + ((100L - _content.Seasons.WinterFoodPercent) * (nextTurn ? map.NextSeasonGrowth[cell] : map.SeasonGrowth[cell]) / 100)
+            : WorldGen.ClimateModel.WildFoodPercent(map.GrowingSeason[cell], map.YearHundredths, _rules.SurvivableDeadSeasonHundredths);
         Amount food = (_rules.FoodPerBiomeFoodPerYear * biome.Food).MultiplyRatio((50L + map.Fertility[cell]) * season, 10_000, Rounding.Floor);
         int deposit = map.Deposit[cell];
         if (deposit != 0 && map.DepositDepth[cell] == 0)

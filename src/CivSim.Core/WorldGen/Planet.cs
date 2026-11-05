@@ -60,7 +60,13 @@ public static class Insolation
     public static readonly int PerihelionLongitude = FixedTrig.Degrees(270);
 
     /// <summary>Annual mean, the darkest and the brightest step at a latitude given by its sine.</summary>
-    public static (long Mean, long Min, long Max) At(long sinLatitude, PlanetParameters planet)
+    public static (long Mean, long Min, long Max) At(long sinLatitude, PlanetParameters planet) => At(sinLatitude, planet, []);
+
+    /// <summary>
+    /// Like <see cref="At(long, PlanetParameters)"/>, and writes the sunlight of every step into <paramref name="steps"/>
+    /// (when it has room for <see cref="Steps"/> values). Step 0 is the closest point to the star (northern winter).
+    /// </summary>
+    public static (long Mean, long Min, long Max) At(long sinLatitude, PlanetParameters planet, Span<long> steps)
     {
         ArgumentNullException.ThrowIfNull(planet);
         long one = FixedTrig.One;
@@ -91,6 +97,11 @@ public static class Insolation
             long daily = ((FixedTrig.ToRadians(sunset) * a / one) + (b * FixedTrig.Sin(sunset) / one)) * one / FixedTrig.Pi;
             long q = Math.Max(0, daily) * distance / one * planet.StarBrightnessPercent / 100;
             sum += q;
+            if (steps.Length >= Steps)
+            {
+                steps[k] = q;
+            }
+
             min = Math.Min(min, q);
             max = Math.Max(max, q);
         }
@@ -113,6 +124,7 @@ public sealed class ClimateModel
     private readonly long _poleMean;
     private readonly PlanetParameters _planet;
     private readonly (long Mean, long Min, long Max)[] _table = new (long, long, long)[TableSize + 1];
+    private readonly long[] _steps = new long[(TableSize + 1) * Insolation.Steps];
 
     private const int TableSize = 512;
 
@@ -133,9 +145,31 @@ public sealed class ClimateModel
         for (int k = 0; k <= TableSize; k++)
         {
             long sin = -FixedTrig.One + (2 * FixedTrig.One * k / TableSize);
-            _table[k] = Insolation.At(sin, planet);
+            _table[k] = Insolation.At(sin, planet, _steps.AsSpan(k * Insolation.Steps, Insolation.Steps));
         }
     }
+
+    /// <summary>
+    /// Temperature at one step of the year (0…<see cref="Insolation.Steps"/> − 1) for a place with this annual mean and
+    /// seasonal swing: the swing is spread over the year in the same shape as the sunlight at that latitude, so on a
+    /// planet lying on its side each hemisphere gets its long summer and its long winter in turn (live seasons).
+    /// </summary>
+    public int TemperatureAt(long sinLatitude, int step, int meanTemperature, int swing)
+    {
+        long s = Math.Clamp(sinLatitude, -FixedTrig.One, FixedTrig.One) + FixedTrig.One;
+        int k = (int)Math.Min(TableSize, s * TableSize / (2 * FixedTrig.One));
+        (long mean, long min, long max) = _table[k];
+        if (max <= min)
+        {
+            return meanTemperature;
+        }
+
+        long q = _steps[(k * Insolation.Steps) + (((step % Insolation.Steps) + Insolation.Steps) % Insolation.Steps)];
+        return meanTemperature + (int)((q - mean) * swing / (max - min));
+    }
+
+    /// <summary>True when a temperature lets plants grow (<see cref="GrowingAbove"/> to <see cref="GrowingBelow"/> °C).</summary>
+    public static bool Grows(int temperature) => temperature > GrowingAbove && temperature < GrowingBelow;
 
     /// <summary>Sunlight over the year at a latitude (looked up in a table of 513 latitudes).</summary>
     public (long Mean, long Min, long Max) Sunlight(long sinLatitude)
@@ -218,4 +252,32 @@ public sealed class ClimateModel
         long x = (long)(limit - mean) * FixedTrig.One / half;
         return FixedTrig.Acos(x) * 100 / (FixedTrig.FullTurn / 2);
     }
+}
+
+/// <summary>
+/// When the seasons are played turn by turn (decision of 2026-11-05, "two clocks"). On planets whose year is long enough
+/// that one step of <see cref="StepsPerYear"/> lasts at least <see cref="MinStepMonths"/>, a turn is one step of the
+/// planet's year (Uranus: 84 years / 8 = 10.5 years) unless the era's turn is already shorter, and the map shows the
+/// season of that step. Elsewhere (Earth, Mars) seasons are averaged into the climate.
+/// </summary>
+public sealed record SeasonRules
+{
+    /// <summary>Steps of the planet's year when seasons are live.</summary>
+    public int StepsPerYear { get; init; } = 8;
+
+    /// <summary>Shortest step that is played: shorter steps would mean far more turns for nothing visible.</summary>
+    public int MinStepMonths { get; init; } = 12;
+
+    /// <summary>Share of the full wild food that hunting still gives when nothing grows (winter), percent.</summary>
+    public int WinterFoodPercent { get; init; } = 20;
+
+    /// <summary>Months in one step of the planet's year.</summary>
+    public int StepMonths(PlanetParameters planet)
+    {
+        ArgumentNullException.ThrowIfNull(planet);
+        return (int)((long)planet.YearHundredths * 12 / 100 / StepsPerYear);
+    }
+
+    /// <summary>True when seasons are played turn by turn on this planet.</summary>
+    public bool Live(PlanetParameters planet) => StepMonths(planet) >= MinStepMonths;
 }

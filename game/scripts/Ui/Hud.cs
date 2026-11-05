@@ -156,7 +156,7 @@ public partial class Hud : CanvasLayer
         string relief = c is not null && w.Relief[i] < c.Reliefs.Count ? c.Reliefs[w.Relief[i]] : w.Relief[i].ToString(inv);
         string feature = c is not null && w.Feature[i] < c.Features.Count ? c.Features[w.Feature[i]] : w.Feature[i].ToString(inv);
         sb.Append(inv, $"Biome: {biome}\nRelief: {relief}\nFeature: {feature}\n");
-        sb.Append(inv, $"Elevation: {w.Elevation[i]} (sea level 100)\nTemperature: {w.Temperature[i]} °C (summer {w.Temperature[i] + (w.Seasonality[i] / 2)}, winter {w.Temperature[i] - (w.Seasonality[i] / 2)})\nGrowing season: {w.GrowingSeason[i]}% of the year\nHumidity: {w.Humidity[i]}\nFertility: {w.Fertility[i]}\n");
+        sb.Append(inv, $"Elevation: {w.Elevation[i]} (sea level 100)\nTemperature: {w.Temperature[i]} °C (summer {w.Temperature[i] + (w.Seasonality[i] / 2)}, winter {w.Temperature[i] - (w.Seasonality[i] / 2)})\nGrowing season: {w.GrowingSeason[i]}% of the year\n{(session.View?.LiveSeasons == true ? $"This season: {w.SeasonTemperature[i]} °C, plants grow {w.SeasonGrowth[i]}% of the turn\n" : string.Empty)}Humidity: {w.Humidity[i]}\nFertility: {w.Fertility[i]}\n");
         int d = w.Deposit[i];
         if (d != 0)
         {
