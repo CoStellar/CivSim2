@@ -11,7 +11,7 @@ namespace CivSim.Core.WorldGen;
 /// The climate changes during the game (stage 1c-B, decision of 2026-11-05). Every
 /// <see cref="ClimateCycleRules.UpdateYears"/> the orbit moves on its Milankovitch cycles, the ice sheets of both
 /// hemispheres grow or melt (<see cref="ClimateCycles"/>), the oceans take up CO₂ in glacials, and the energy balance is
-/// solved again with the sheets on the world's real land. Then every cell gets its new temperature, seasons and growing
+/// solved again with the sheets on the world's real land. The sea level follows the ice (<see cref="SeaLevel"/>). Then every cell gets its new temperature, seasons and growing
 /// season, and land cells their new biome, so wild food follows the climate. Runs first in the world phase.
 /// </summary>
 public sealed class ClimateSystem(GameContent content) : ITurnSystem
@@ -22,6 +22,9 @@ public sealed class ClimateSystem(GameContent content) : ITurnSystem
     private long _southPotential;
     private long[]? _landShare;
     private WorldMap? _landMap;
+
+    /// <summary>Annual mean temperature at and below which the sea freezes over, °C.</summary>
+    public const int SeaIceBelow = -8;
 
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.World;
@@ -41,6 +44,20 @@ public sealed class ClimateSystem(GameContent content) : ITurnSystem
 
         Prepare(state.Settings.Planet, world.Map);
         _cycles!.Advance(climate, year);
+
+        // Water locked in the ice lowers the sea (stage 1c-C); new or lost land changes where ice sheets can lie.
+        long melted = SeaLevel.MeltedShare(climate, SeaLevel.LandIce(content, world.Map));
+        int sea = SeaLevel.Target(content.ClimateCycles, _cycles.MeanSheet(climate, _northPotential, _southPotential), melted);
+        if (sea != climate.SeaLevel)
+        {
+            foreach (string line in SeaLevel.Apply(content, state, world, sea))
+            {
+                context.Chronicle(line);
+            }
+
+            _landShare = LandShare(content, world.Map);
+        }
+
         Apply(content, world, _cycles, _landShare!, _northPotential, _southPotential);
     }
 
@@ -80,7 +97,22 @@ public sealed class ClimateSystem(GameContent content) : ITurnSystem
                 map.GrowingSeason.Set(i, (byte)growing);
             }
 
-            if (content.Biomes[map.Biome[i]].Kind == BiomeKind.Land)
+            BiomeDefinition here = content.Biomes[map.Biome[i]];
+            if (here.IsWater && here.Kind != BiomeKind.Lake)
+            {
+                // Sea ice comes and goes with the climate (the generator's rule): it can join land masses in cold times.
+                bool frozen = t <= SeaIceBelow;
+                if (frozen && map.Feature[i] != (byte)TerrainFeature.IceField)
+                {
+                    map.Feature.Set(i, (byte)TerrainFeature.IceField);
+                }
+                else if (!frozen && map.Feature[i] == (byte)TerrainFeature.IceField)
+                {
+                    map.Feature.Set(i, 0);
+                }
+            }
+
+            if (here.Kind == BiomeKind.Land)
             {
                 int biome = CellClimate.LandBiome(content, t, map.Humidity[i], (Relief)map.Relief[i], swing, growing);
                 if (map.Biome[i] != biome)
@@ -141,7 +173,7 @@ public sealed class ClimateSystem(GameContent content) : ITurnSystem
             (_northPotential, _southPotential) = Potentials(_cycles);
         }
 
-        // The land does not move until the sea level changes (stage 1c-C), so it is measured once per map.
+        // The land moves only with the sea level, which re-measures it; otherwise it is measured once per map.
         if (_landShare is null || !ReferenceEquals(_landMap, map))
         {
             _landShare = LandShare(content, map);

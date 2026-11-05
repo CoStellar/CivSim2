@@ -101,7 +101,13 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
   temperaturę, wahanie, sezon wzrostu (`CellClimate`), a dla lądu biom. Warstwy `climate_sine`, `temperature_offset`, `continentality` zapisuje generator.
 - Wynik (seed 42, standard, 2220 tur = 111 000 lat): średnia 14,5 → 9,5 °C, lód północ 0,78, południe 0,86, CO₂ 203 ppm, ludzi ok. 10 500 → 7 700.
   Mars: −4,6 °C. Uran: brak epok lodowych.
-- Tryb bez okna: `--stats` ma kolumny `mean_temp_c`, `ice_north_permille`, `ice_south_permille`, `co2_ppm`; `--png` zapisuje biomy i temperaturę
+- **Poziom morza** (`SeaLevel`, etap 1c-C): cel `100 + round((70 m × stopiona część lodu lądowego ze startu − 120 m × średni udział lądolodu) / 40 m)`;
+  lód lądowy ze startu (`ClimateState.StartLandIce`) to liczba pól lądu z biomem lodu po wygenerowaniu świata; przy zmianie `SeaLevel.Apply` zamienia pola morza
+  z wysokością ≥ poziomu w ląd i pola lądu z wysokością < poziomu w morze, czyści rzeki, właściciela i cechy zalanych pól, liczy rodzaje wody
+  od nowa (BFS od lądu), przenosi osady z zalanych pól (`SettlementAssets.Relocate`, najbliższe suche pole w promieniu 30), zostawia ruiny pod wodą
+  i zapisuje wpis w kronice. Potem `ClimateSystem` mierzy udział lądu w pasach od nowa. Lód morski: `ClimateSystem.Apply` ustawia cechę
+  `IceField` na morzu przy średniej ≤ −8 °C i zdejmuje ją przy cieplejszej (ta sama reguła co w generatorze).
+- Tryb bez okna: `--stats` ma kolumny `mean_temp_c`, `ice_north_permille`, `ice_south_permille`, `co2_ppm`, `sea_level_m`; `--png` zapisuje biomy i temperaturę
   na końcu przebiegu (`_turnN_biomes.png`, `_turnN_temperature.png`); `--star-variability`, `--star-cycle`.
 
 ## Pory roku na żywo (ADR 0013)
@@ -123,6 +129,9 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 ## Testy
 - `SeasonTests`: tylko długie lata są liczone na żywo (Uran tak, Ziemia i Mars nie), długość tury Urana 126 miesięcy, wolne decyzje raz na 50 lat,
   półkule mają lato i zimę na zmianę, zima obcina dziką żywność do polowania, tolerancja zimna podnosi wartość zimnych terenów.
+- `SeaLevelTests` (etap 1c-C): poziom morza z lodu i ze stopionego lodu lądowego, szelfy wysychają i wracają do stanu ze startu, cieplejszy świat
+  zalewa niskie wybrzeża, lód morski rośnie w zlodowaceniu i wraca do stanu ze startu, rzeki tylko między lądem, mieszkańcy zalanej osady
+  przenoszą się na suchy ląd, a ruin pod wodą nie da się zająć ani ograbić.
 - `ClimateCycleTests` (etap 1c-B): start w ciepłym momencie, zakresy nachylenia i mimośrodu, precesja, epoka lodowa na Ziemi przychodzi i się kończy,
   Uran bez epok lodowych, ponowne przeliczenie klimatu startowego nic nie zmienia, pełny lądolód ochładza o 3,5–7 °C i rozszerza lód i tundrę,
   przeliczenia są deterministyczne i przechodzą przez zapis.

@@ -223,7 +223,7 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
         }
 
-        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm");
+        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -277,7 +277,7 @@ public static class HeadlessRun
 
         stats.WriteLine(string.Create(
             inv, $",{FoodUnits(state, content)},{(populated == 0 ? 0 : health / populated)},{(populated == 0 ? 0 : mood / populated)},{populated},{(landCells == 0 ? 0 : wild / landCells)}"
-            + $",{state.Worlds[0].Climate.GlobalMeanMillionths / 100_000 / 10.0:F1},{state.Worlds[0].Climate.NorthIce / 1000},{state.Worlds[0].Climate.SouthIce / 1000},{state.Worlds[0].Climate.Co2Microbar}"));
+            + $",{state.Worlds[0].Climate.GlobalMeanMillionths / 100_000 / 10.0:F1},{state.Worlds[0].Climate.NorthIce / 1000},{state.Worlds[0].Climate.SouthIce / 1000},{state.Worlds[0].Climate.Co2Microbar},{(state.Worlds[0].Climate.SeaLevel - Core.WorldGen.WorldGenerator.SeaLevel) * content.ClimateCycles.SeaMetersPerStep}"));
     }
 
     private static long FoodUnits(GameState state, GameContent content)

@@ -493,6 +493,9 @@ public static class ContentLoader
                 SheetEdgeDegrees = (startEdge, fullEdge),
                 GlacialCo2DropPercent = r.Int("glacialCo2DropPercent", 0, 90),
                 GlaciationSummerDegrees = (full, none),
+                GlacialSeaDropMeters = r.Int("glacialSeaDropMeters", 0, 1_000),
+                SeaMetersPerStep = r.Int("seaMetersPerStep", 1, 1_000),
+                MeltSeaRiseMeters = r.Int("meltSeaRiseMeters", 0, 1_000),
             };
             if (fullEdge >= startEdge || full >= none)
             {

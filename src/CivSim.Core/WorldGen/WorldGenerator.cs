@@ -675,7 +675,7 @@ public sealed class WorldGenerator
             int t = _map.Temperature[i];
             if (_water[i])
             {
-                if (t <= -8 && b != _lakeId)
+                if (t <= ClimateSystem.SeaIceBelow && b != _lakeId)
                 {
                     feature[i] = (byte)TerrainFeature.IceField;
                 }
