@@ -20,7 +20,12 @@ public sealed record SaveData(
     [property: Key(11)] int Moisture,
     [property: Key(12)] int Relief,
     [property: Key(13)] int Resources,
-    [property: Key(14)] int Inland);
+    [property: Key(14)] int Inland,
+    [property: Key(15)] long Month = 0,
+    [property: Key(16)] int NextSettlementId = 0,
+    [property: Key(17)] IReadOnlyList<SettlementSaveData>? Settlements = null,
+    [property: Key(18)] long NextEffectId = 0,
+    [property: Key(19)] IReadOnlyList<EffectSaveData>? Effects = null);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]
@@ -43,4 +48,29 @@ public sealed record MapLayerSaveData([property: Key(0)] string Name, [property:
 [MessagePackObject]
 public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive,
     [property: Key(3)] int StartCol,
-    [property: Key(4)] int StartRow);
+    [property: Key(4)] int StartRow,
+    [property: Key(5)] int Era = 0);
+
+/// <summary>Saved settlement. <see cref="Stock"/> holds hundredths per good id.</summary>
+[MessagePackObject]
+public sealed record SettlementSaveData(
+    [property: Key(0)] int Id,
+    [property: Key(1)] int Owner,
+    [property: Key(2)] int World,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] string Name,
+    [property: Key(6)] int Level,
+    [property: Key(7)] long FoundedTurn,
+    [property: Key(8)] long[] Stock);
+
+/// <summary>Saved active effect.</summary>
+[MessagePackObject]
+public sealed record EffectSaveData(
+    [property: Key(0)] long Id,
+    [property: Key(1)] int Definition,
+    [property: Key(2)] int Target,
+    [property: Key(3)] int World,
+    [property: Key(4)] int TargetId,
+    [property: Key(5)] int Strength,
+    [property: Key(6)] long EndMonth);

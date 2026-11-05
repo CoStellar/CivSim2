@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "comment": "Settlement levels (GDD 5.3) and how a new tribe starts. population: [min, max] people. storage: one shared warehouse capacity in units (CORE simplified, GDD 4.3); anything above it is lost. mobile: the settlement can move (nomad camp).",
+  "levels": [
+    { "key": "camp",        "name": "Tribal Camp", "population": [0, 150],             "storage": "300",     "mobile": true },
+    { "key": "village",     "name": "Village",     "population": [150, 1000],          "storage": "2000",    "mobile": false },
+    { "key": "town",        "name": "Town",        "population": [1000, 5000],         "storage": "8000",    "mobile": false },
+    { "key": "city",        "name": "City",        "population": [5000, 50000],        "storage": "40000",   "mobile": false },
+    { "key": "metropolis",  "name": "Metropolis",  "population": [50000, 1000000],     "storage": "250000",  "mobile": false },
+    { "key": "megalopolis", "name": "Megalopolis", "population": [1000000, 100000000], "storage": "2000000", "mobile": false }
+  ],
+  "newTribe": {
+    "level": "camp",
+    "stock": { "wild_plants": "40", "meat": "30", "hides": "10", "wood": "20", "flint": "10", "stone_tools": "5" }
+  }
+}

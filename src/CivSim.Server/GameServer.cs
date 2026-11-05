@@ -43,6 +43,10 @@ public sealed class GameServer
         ArgumentNullException.ThrowIfNull(state);
         Runner = new TurnRunner(state);
         _content = content;
+        if (content is not null)
+        {
+            CoreSystems.Register(Runner, content);
+        }
         _pendingChunks = new bool[state.Worlds.Count][];
         for (int w = 0; w < state.Worlds.Count; w++)
         {
@@ -292,7 +296,19 @@ public sealed class GameServer
             deposits.Add(new DepositInfo(d.Id, d.Key, d.Name, d.Color));
         }
 
-        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>()));
+        var goods = new List<GoodInfo>(_content.Goods.Count);
+        foreach (GoodDefinition g in _content.Goods)
+        {
+            goods.Add(new GoodInfo(g.Id, g.Key, g.Name, g.IsFood, g.Color));
+        }
+
+        var levels = new List<string>(_content.SettlementLevels.Count);
+        foreach (SettlementLevelDefinition l in _content.SettlementLevels)
+        {
+            levels.Add(l.Name);
+        }
+
+        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels));
     }
 
     private void SendAllChunks(Client client)
@@ -336,7 +352,8 @@ public sealed class GameServer
     // A joining client gets the whole kept history; later views carry only the new lines.
     private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false, bool skipChronicle = false)
     {
-        GameViewMessage view = ViewBuilder.Build(snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv));
+        GameViewMessage view = ViewBuilder.Build(
+            snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width);
         long micros = (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
         return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = joining ? _history.ToArray() : skipChronicle ? [] : _chronicle.ToArray() };
     }

@@ -28,4 +28,7 @@ public sealed class CivilizationState
 
     /// <summary>Cell on Earth where the tribe starts (chosen by the world generator).</summary>
     public HexCoord StartCell { get; set; }
+
+    /// <summary>Current era id (index into <c>GameContent.Eras</c>); everyone starts in the Stone Age (0).</summary>
+    public int Era { get; set; }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CivSim.Core.Content;
+using CivSim.Core.Map;
 using CivSim.Core.Random;
 using CivSim.Core.WorldGen;
 
@@ -14,6 +15,7 @@ public sealed class GameState
 {
     private readonly List<WorldState> _worlds = [];
     private readonly List<CivilizationState> _civilizations = [];
+    private readonly List<SettlementState> _settlements = [];
 
     private GameState(GameSettings settings, RandomStreams random)
     {
@@ -35,6 +37,106 @@ public sealed class GameState
 
     /// <summary>All civilizations, sorted by id.</summary>
     public IReadOnlyList<CivilizationState> Civilizations => _civilizations;
+
+    /// <summary>
+    /// Game time in months since the start. Every rate is defined per year (CLAUDE.md rule 6), so systems
+    /// convert with the current turn length instead of counting turns.
+    /// </summary>
+    public long Month { get; internal set; }
+
+    /// <summary>All settlements, sorted by id.</summary>
+    public IReadOnlyList<SettlementState> Settlements => _settlements;
+
+    /// <summary>Id the next settlement will get.</summary>
+    public int NextSettlementId { get; private set; }
+
+    /// <summary>Active effects (GDD 10.1).</summary>
+    public EffectBook Effects { get; } = new();
+
+    /// <summary>
+    /// Era that sets the turn length: the most advanced living civilization's era (provisional rule until
+    /// technologies and eras arrive in Stage 3f).
+    /// </summary>
+    public int CalendarEra()
+    {
+        int era = 0;
+        foreach (CivilizationState c in _civilizations)
+        {
+            if (c.IsAlive && c.Era > era)
+            {
+                era = c.Era;
+            }
+        }
+
+        return era;
+    }
+
+    /// <summary>Months in the next turn (GDD 6.2); 600 (50 years) when no eras are loaded.</summary>
+    public int MonthsPerTurn(GameContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        if (content.Eras.Count == 0)
+        {
+            return 600;
+        }
+
+        return content.Eras[Math.Min(CalendarEra(), content.Eras.Count - 1)].MonthsPerTurn;
+    }
+
+    /// <summary>Founds a settlement with an empty warehouse and returns it.</summary>
+    public SettlementState FoundSettlement(CivId owner, WorldId world, HexCoord cell, string name, int level, int goodCount)
+    {
+        var settlement = new SettlementState(new SettlementId(NextSettlementId++), owner, world, cell, name, level, Turn, goodCount);
+        _settlements.Add(settlement);
+        return settlement;
+    }
+
+    /// <summary>Finds a settlement by id, or null.</summary>
+    public SettlementState? FindSettlement(SettlementId id)
+    {
+        int lo = 0;
+        int hi = _settlements.Count - 1;
+        while (lo <= hi)
+        {
+            int mid = (lo + hi) >>> 1;
+            int cmp = _settlements[mid].Id.Value.CompareTo(id.Value);
+            if (cmp == 0)
+            {
+                return _settlements[mid];
+            }
+
+            if (cmp < 0)
+            {
+                lo = mid + 1;
+            }
+            else
+            {
+                hi = mid - 1;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Adds a settlement while loading. Ids must arrive in ascending order.</summary>
+    public void AddSettlementForLoad(SettlementState settlement, int nextSettlementId)
+    {
+        ArgumentNullException.ThrowIfNull(settlement);
+        if (_settlements.Count > 0 && _settlements[^1].Id.Value >= settlement.Id.Value)
+        {
+            throw new InvalidOperationException("Settlements must be added in ascending id order.");
+        }
+
+        _settlements.Add(settlement);
+        NextSettlementId = nextSettlementId;
+    }
+
+    /// <summary>Sets the time and the next settlement id while loading a save.</summary>
+    public void SetCountersForLoad(long month, int nextSettlementId)
+    {
+        Month = month;
+        NextSettlementId = nextSettlementId;
+    }
 
     /// <summary>Creates a new game: Earth plus <see cref="GameSettings.CivilizationCount"/> AI civilizations.</summary>
     public static GameState CreateNew(GameSettings settings)
@@ -68,7 +170,17 @@ public sealed class GameState
         report = WorldGenerator.Generate(content, earth.Map, state.Random[RandomStreamId.World], settings.Seed, options);
         for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)
         {
-            state._civilizations[i].StartCell = report.Starts[i];
+            CivilizationState civ = state._civilizations[i];
+            civ.StartCell = report.Starts[i];
+            if (content.Goods.Count > 0 && content.SettlementLevels.Count > 0)
+            {
+                // Every tribe starts with one camp and a little food and gear (GDD 5.3, data/settlements.json).
+                SettlementState camp = state.FoundSettlement(civ.Id, earth.Id, civ.StartCell, $"{civ.Name} Camp", content.NewTribeLevel, content.Goods.Count);
+                foreach (GoodQuantity q in content.NewTribeStock)
+                {
+                    camp.Add(q.GoodId, q.Amount);
+                }
+            }
         }
 
         return state;

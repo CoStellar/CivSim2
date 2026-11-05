@@ -62,6 +62,41 @@ public static class GameStateHash
             h.Add(c.IsAlive);
             h.Add(c.StartCell.Col);
             h.Add(c.StartCell.Row);
+            h.Add(c.Era);
+        }
+
+        h.Add(state.Month);
+        h.Add(state.NextSettlementId);
+        h.Add(state.Settlements.Count);
+        foreach (SettlementState s in state.Settlements)
+        {
+            h.Add(s.Id.Value);
+            h.Add(s.Owner.Value);
+            h.Add(s.World.Value);
+            h.Add(s.Cell.Col);
+            h.Add(s.Cell.Row);
+            h.Add(s.Name);
+            h.Add(s.Level);
+            h.Add(s.FoundedTurn);
+            ReadOnlySpan<Numerics.Amount> stock = s.StockView;
+            h.Add(stock.Length);
+            foreach (Numerics.Amount a in stock)
+            {
+                h.Add(a.Hundredths);
+            }
+        }
+
+        h.Add(state.Effects.NextId);
+        h.Add(state.Effects.Count);
+        foreach (EffectInstance e in state.Effects.All)
+        {
+            h.Add(e.Id.Value);
+            h.Add(e.DefinitionId);
+            h.Add((int)e.Target);
+            h.Add(e.World.Value);
+            h.Add(e.TargetId);
+            h.Add(e.Strength);
+            h.Add(e.EndMonth);
         }
 
         return h.Value;

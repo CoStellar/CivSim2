@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using CivSim.Core.Content;
+using CivSim.Core.Numerics;
 
 namespace CivSim.Data;
 
@@ -27,12 +28,209 @@ public static class ContentLoader
         List<BiomeDefinition> biomes = LoadBiomes(Path.Combine(directory, "biomes.json"), errors);
         List<DepositDefinition> deposits = LoadDeposits(Path.Combine(directory, "resources.json"), biomes, errors);
         ValidateBiomeSet(biomes, errors);
+        List<GoodDefinition> goods = LoadGoods(Path.Combine(directory, "goods.json"), errors);
+        List<RecipeDefinition> recipes = LoadRecipes(Path.Combine(directory, "recipes.json"), goods, errors);
+        (List<SettlementLevelDefinition> levels, int tribeLevel, List<GoodQuantity> tribeStock) =
+            LoadSettlements(Path.Combine(directory, "settlements.json"), goods, errors);
+        List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
+        List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
         if (errors.Count > 0)
         {
             throw new ContentException(errors);
         }
 
-        return new GameContent(biomes, deposits);
+        return new GameContent(biomes, deposits)
+        {
+            Goods = goods,
+            Recipes = recipes,
+            SettlementLevels = levels,
+            Eras = eras,
+            Effects = effects,
+            NewTribeLevel = tribeLevel,
+            NewTribeStock = tribeStock,
+        };
+    }
+
+    private static List<GoodDefinition> LoadGoods(string path, List<string> errors)
+    {
+        var result = new List<GoodDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "goods", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{Path.GetFileName(path)}: goods[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            int era = r.Int("era", 1, 10);
+            GoodCategory category = r.Enum<GoodCategory>("category");
+            Amount spoilage = r.Amount("spoilagePerYear", Amount.Zero, Amount.FromUnits(100));
+            uint color = r.Color("color");
+            if (category != GoodCategory.Food && spoilage > Amount.Zero)
+            {
+                // CORE simplified (GDD 16): only food spoils.
+                errors.Add($"{Path.GetFileName(path)}: goods[{i}].spoilagePerYear: only food may spoil.");
+            }
+
+            result.Add(new GoodDefinition(i, key, name, era, category, (int)spoilage.Hundredths, color));
+            i++;
+        }
+
+        if (result.Count == 0)
+        {
+            errors.Add($"{Path.GetFileName(path)}: at least one good is required.");
+        }
+
+        if (result.Count > 255)
+        {
+            errors.Add($"{Path.GetFileName(path)}: at most 255 goods are supported.");
+        }
+
+        return result;
+    }
+
+    private static List<RecipeDefinition> LoadRecipes(string path, List<GoodDefinition> goods, List<string> errors)
+    {
+        var result = new List<RecipeDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "recipes", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{Path.GetFileName(path)}: recipes[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            List<GoodQuantity> inputs = r.Goods("inputs", goods);
+            List<GoodQuantity> outputs = r.Goods("outputs", goods);
+            int workers = r.Int("workers", 1, 1000);
+            int years = r.Int("years", 1, 100);
+            result.Add(new RecipeDefinition(i, key, name, inputs, outputs, workers, years));
+            i++;
+        }
+
+        return result;
+    }
+
+    private static (List<SettlementLevelDefinition> Levels, int TribeLevel, List<GoodQuantity> TribeStock) LoadSettlements(
+        string path, List<GoodDefinition> goods, List<string> errors)
+    {
+        var levels = new List<SettlementLevelDefinition>();
+        var stock = new List<GoodQuantity>();
+        int tribeLevel = 0;
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "levels", path, errors, out JsonElement array))
+        {
+            return (levels, tribeLevel, stock);
+        }
+
+        string file = Path.GetFileName(path);
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{file}: levels[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            (int min, int max) = r.Range("population", 0, int.MaxValue);
+            Amount storage = r.Amount("storage", Amount.FromUnits(1), Amount.FromUnits(1_000_000_000));
+            bool mobile = r.Bool("mobile");
+            if (levels.Count > 0 && (min < levels[^1].MinPopulation || storage < levels[^1].StorageCapacity))
+            {
+                errors.Add($"{file}: levels[{i}] must not be smaller than the level before it.");
+            }
+
+            levels.Add(new SettlementLevelDefinition(i, key, name, min, max, storage, mobile));
+            i++;
+        }
+
+        if (levels.Count == 0)
+        {
+            errors.Add($"{file}: at least one level is required.");
+        }
+
+        if (doc.RootElement.TryGetProperty("newTribe", out JsonElement tribe) && tribe.ValueKind == JsonValueKind.Object)
+        {
+            var r = new Reader(tribe, $"{file}: newTribe", errors);
+            string level = r.String("level");
+            tribeLevel = levels.FindIndex(l => l.Key == level);
+            if (tribeLevel < 0 && level.Length > 0)
+            {
+                errors.Add($"{file}: newTribe.level: unknown level '{level}'.");
+            }
+
+            stock = r.Goods("stock", goods);
+        }
+        else
+        {
+            errors.Add($"{file}: missing object 'newTribe'.");
+        }
+
+        return (levels, Math.Max(0, tribeLevel), stock);
+    }
+
+    private static List<EraDefinition> LoadEras(string path, List<string> errors)
+    {
+        var result = new List<EraDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "eras", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{Path.GetFileName(path)}: eras[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            int months = r.Int("monthsPerTurn", 1, 1200);
+            result.Add(new EraDefinition(i, key, name, months));
+            i++;
+        }
+
+        if (result.Count == 0)
+        {
+            errors.Add($"{Path.GetFileName(path)}: at least one era is required.");
+        }
+
+        return result;
+    }
+
+    private static List<EffectDefinition> LoadEffects(string path, List<string> errors)
+    {
+        var result = new List<EffectDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "effects", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{Path.GetFileName(path)}: effects[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            EffectTarget target = r.Enum<EffectTarget>("target");
+            EffectStat stat = r.Enum<EffectStat>("stat");
+            EffectStacking stacking = r.Enum<EffectStacking>("stacking");
+            result.Add(new EffectDefinition(i, key, name, target, stat, stacking));
+            i++;
+        }
+
+        return result;
     }
 
     private static List<BiomeDefinition> LoadBiomes(string path, List<string> errors)
@@ -263,6 +461,64 @@ public static class ContentLoader
 
             errors.Add($"{at}.{name}: required whole number.");
             return min;
+        }
+
+        public Amount Amount(string name, Amount min, Amount max) =>
+            ParseAmount(name, element.TryGetProperty(name, out JsonElement v) ? v : default, min, max);
+
+        public List<GoodQuantity> Goods(string name, List<GoodDefinition> goods)
+        {
+            var list = new List<GoodQuantity>();
+            if (!element.TryGetProperty(name, out JsonElement v) || v.ValueKind != JsonValueKind.Object)
+            {
+                errors.Add($"{at}.{name}: required object of good keys and amounts.");
+                return list;
+            }
+
+            foreach (JsonProperty p in v.EnumerateObject())
+            {
+                int id = goods.FindIndex(g => g.Key == p.Name);
+                Amount amount = ParseAmount($"{name}.{p.Name}", p.Value, Core.Numerics.Amount.Epsilon, Core.Numerics.Amount.FromUnits(1_000_000));
+                if (id < 0)
+                {
+                    errors.Add($"{at}.{name}: unknown good '{p.Name}'.");
+                    continue;
+                }
+
+                if (list.Exists(q => q.GoodId == id))
+                {
+                    errors.Add($"{at}.{name}: good '{p.Name}' is listed twice.");
+                    continue;
+                }
+
+                list.Add(new GoodQuantity(id, amount));
+            }
+
+            // Fixed order by good id, so nothing depends on the order in the file.
+            list.Sort((a, b) => a.GoodId.CompareTo(b.GoodId));
+            return list;
+        }
+
+        private Amount ParseAmount(string name, JsonElement v, Amount min, Amount max)
+        {
+            string? text = v.ValueKind switch
+            {
+                JsonValueKind.String => v.GetString(),
+                JsonValueKind.Number => v.GetRawText(),
+                _ => null,
+            };
+            if (!Core.Numerics.Amount.TryParse(text, out Amount amount))
+            {
+                errors.Add($"{at}.{name}: required amount such as \"12\" or \"0.25\" (at most 2 decimal places).");
+                return min;
+            }
+
+            if (amount < min || amount > max)
+            {
+                errors.Add($"{at}.{name}: {amount} is outside {min}..{max}.");
+            }
+
+            return amount;
         }
 
         public bool Bool(string name)

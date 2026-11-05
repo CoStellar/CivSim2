@@ -23,6 +23,8 @@ public class ProtocolSerializerTests
         yield return [new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer)];
         yield return [new SetSpeedMessage(SimulationSpeed.Max)];
         yield return [new ContentMessage([new BiomeInfo(0, "deep_ocean", "Deep Ocean", true, 0x0a2647)], [new DepositInfo(1, "game", "Game", 0x8a562d)], ["None"], ["Flat"])];
+        yield return [new GameViewMessage(5, 2, [], [], Settlements: [new SettlementView(0, 2, 0, 10, 12, "Camp", 0, [4000, 0, 250]), new SettlementView(3, 1, 0, 4, 4, "Other", 1, null)], Month: 3000)];
+        yield return [new ContentMessage([], [], [], [], [new GoodInfo(0, "grain", "Grain", true, 0xead220)], ["Tribal Camp"])];
         yield return [new MapChunkMessage(0, 2, 5, 32, 0, 2, 1, [2, 0], [120, 0], [-3, 0], [50, 0], [12, 0], [1, 0], [0, 0], [70, 0], [3, 0], [500, 0], [0, 0], [-1, -1], [1, 0, 2, 0, 0, 0])];
     }
 
@@ -83,10 +85,11 @@ public class ProtocolSerializerTests
     [Fact]
     public void WireFormatIsStable()
     {
-        // Compatibility guard: version 2 frames must keep encoding the same way.
+        // Compatibility guard: version 3 frames must keep encoding the same way.
         // Version 2 added the client role to Hello (observer mode) and the map, content and speed messages.
+        // Version 3 added settlements and game time to the view and goods and settlement levels to the content.
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("02000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("03000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

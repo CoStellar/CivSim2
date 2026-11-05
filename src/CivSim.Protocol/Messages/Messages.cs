@@ -75,7 +75,24 @@ public sealed record GameViewMessage(
     [property: Key(3)] IReadOnlyList<CivilizationView> Civilizations,
     [property: Key(4)] long TurnMicroseconds = 0,
     [property: Key(5)] SimulationSpeed Speed = SimulationSpeed.Paused,
-    [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null) : IProtocolMessage;
+    [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null,
+    [property: Key(7)] IReadOnlyList<SettlementView>? Settlements = null,
+    [property: Key(8)] long Month = 0) : IProtocolMessage;
+
+/// <summary>
+/// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id) is filled only for the viewer's
+/// own settlements and for observers; foreign settlements show only where they are.
+/// </summary>
+[MessagePackObject]
+public sealed record SettlementView(
+    [property: Key(0)] int Id,
+    [property: Key(1)] int Owner,
+    [property: Key(2)] int World,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] string Name,
+    [property: Key(6)] int Level,
+    [property: Key(7)] long[]? Stock);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
@@ -121,7 +138,13 @@ public sealed record ContentMessage(
     [property: Key(0)] IReadOnlyList<BiomeInfo> Biomes,
     [property: Key(1)] IReadOnlyList<DepositInfo> Deposits,
     [property: Key(2)] IReadOnlyList<string> Features,
-    [property: Key(3)] IReadOnlyList<string> Reliefs) : IProtocolMessage;
+    [property: Key(3)] IReadOnlyList<string> Reliefs,
+    [property: Key(4)] IReadOnlyList<GoodInfo>? Goods = null,
+    [property: Key(5)] IReadOnlyList<string>? SettlementLevels = null) : IProtocolMessage;
+
+/// <summary>A good as the client sees it. Ids match the indexes of <see cref="SettlementView.Stock"/>.</summary>
+[MessagePackObject]
+public sealed record GoodInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] bool IsFood, [property: Key(4)] uint Color);
 
 /// <summary>A biome as the client sees it.</summary>
 [MessagePackObject]

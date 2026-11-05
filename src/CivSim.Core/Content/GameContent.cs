@@ -48,4 +48,47 @@ public sealed class GameContent
 
     /// <summary>The deposit with this map id (1-based).</summary>
     public DepositDefinition Deposit(int id) => Deposits[id - 1];
+
+    /// <summary>Goods, index = id (<c>data/goods.json</c>).</summary>
+    public IReadOnlyList<GoodDefinition> Goods { get; init; } = [];
+
+    /// <summary>Production recipes, index = id (<c>data/recipes.json</c>).</summary>
+    public IReadOnlyList<RecipeDefinition> Recipes { get; init; } = [];
+
+    /// <summary>Settlement levels from smallest to largest, index = id (<c>data/settlements.json</c>).</summary>
+    public IReadOnlyList<SettlementLevelDefinition> SettlementLevels { get; init; } = [];
+
+    /// <summary>Eras in order, index = id (<c>data/eras.json</c>).</summary>
+    public IReadOnlyList<EraDefinition> Eras { get; init; } = [];
+
+    /// <summary>Effect types, index = id (<c>data/effects.json</c>).</summary>
+    public IReadOnlyList<EffectDefinition> Effects { get; init; } = [];
+
+    /// <summary>Level of the camp a new tribe starts with.</summary>
+    public int NewTribeLevel { get; init; }
+
+    /// <summary>Goods in a new tribe's camp.</summary>
+    public IReadOnlyList<GoodQuantity> NewTribeStock { get; init; } = [];
+
+    /// <summary>Finds a good by key, e.g. "grain".</summary>
+    public GoodDefinition Good(string key) => Find(Goods, g => g.Key, key, "good");
+
+    /// <summary>Finds an effect type by key, e.g. "damage".</summary>
+    public EffectDefinition Effect(string key) => Find(Effects, e => e.Key, key, "effect");
+
+    /// <summary>Finds a settlement level by key, e.g. "camp".</summary>
+    public SettlementLevelDefinition SettlementLevel(string key) => Find(SettlementLevels, l => l.Key, key, "settlement level");
+
+    private static T Find<T>(IReadOnlyList<T> list, Func<T, string> key, string wanted, string what)
+    {
+        foreach (T item in list)
+        {
+            if (key(item) == wanted)
+            {
+                return item;
+            }
+        }
+
+        throw new KeyNotFoundException($"Unknown {what} '{wanted}'.");
+    }
 }

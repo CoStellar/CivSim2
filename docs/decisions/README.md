@@ -12,3 +12,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0008 Gotowość na multiplayer w modelu klient–serwer](0008-gotowosc-na-multiplayer.md)
 - [0009 Zakres CORE, moduły jako aktualizacje, gra bez kultury](0009-zakres-core.md)
 - [0010 Klient uruchamia serwer lokalny, ale nie widzi rdzenia](0010-klient-uruchamia-serwer-lokalny.md)
+- [0011 Czas gry w miesiącach, tempa na rok](0011-czas-gry-w-miesiacach.md)
