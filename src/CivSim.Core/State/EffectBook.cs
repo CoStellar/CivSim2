@@ -39,6 +39,47 @@ public sealed class EffectBook
     /// <summary>Number of active effects.</summary>
     public int Count => _effects.Count;
 
+    // Active effects of each target, so a total looks only at its own target (most cells and settlements have none).
+    // The main list stays the order of record (saves, hashes); these lists are only an index and are reused.
+    private readonly Dictionary<long, List<EffectInstance>> _byTarget = [];
+    private readonly Stack<List<EffectInstance>> _spare = new();
+
+    private static long Key(EffectTarget target, WorldId world, int targetId) => ((long)target << 48) | ((long)world.Value << 32) | (uint)targetId;
+
+    private void Track(EffectInstance e, int change)
+    {
+        long key = Key(e.Target, e.World, e.TargetId);
+        if (change > 0)
+        {
+            if (!_byTarget.TryGetValue(key, out List<EffectInstance>? list))
+            {
+                list = _spare.Count > 0 ? _spare.Pop() : [];
+                _byTarget[key] = list;
+            }
+
+            list.Add(e);
+            return;
+        }
+
+        if (_byTarget.TryGetValue(key, out List<EffectInstance>? own))
+        {
+            for (int i = 0; i < own.Count; i++)
+            {
+                if (own[i].Id == e.Id)
+                {
+                    own.RemoveAt(i);
+                    break;
+                }
+            }
+
+            if (own.Count == 0)
+            {
+                _byTarget.Remove(key);
+                _spare.Push(own);
+            }
+        }
+    }
+
     /// <summary>
     /// Adds an effect following the stacking rule of its type: <see cref="EffectStacking.Replace"/> removes older
     /// effects of the same type on the same target; <see cref="EffectStacking.Strongest"/> keeps only the one with the
@@ -62,12 +103,14 @@ public sealed class EffectBook
                     return null;
                 }
 
+                Track(_effects[i], -1);
                 _effects.RemoveAt(i);
             }
         }
 
         var effect = new EffectInstance(new EffectId(NextId++), definition.Id, definition.Target, world, targetId, strength, endMonth);
         _effects.Add(effect);
+        Track(effect, 1);
         return effect.Id;
     }
 
@@ -80,6 +123,7 @@ public sealed class EffectBook
             return false;
         }
 
+        Track(_effects[i], -1);
         _effects.RemoveAt(i);
         return true;
     }
@@ -93,6 +137,10 @@ public sealed class EffectBook
             if (_effects[read].EndMonth > month)
             {
                 _effects[write++] = _effects[read];
+            }
+            else
+            {
+                Track(_effects[read], -1);
             }
         }
 
@@ -111,10 +159,15 @@ public sealed class EffectBook
     /// </summary>
     public int Total(IReadOnlyList<EffectDefinition> definitions, EffectStat stat, EffectTarget target, WorldId world, int targetId)
     {
-        int total = 0;
-        foreach (EffectInstance e in _effects)
+        if (!_byTarget.TryGetValue(Key(target, world, targetId), out List<EffectInstance>? own))
         {
-            if (e.Target == target && e.TargetId == targetId && e.World == world && definitions[e.DefinitionId].Stat == stat)
+            return 0;
+        }
+
+        int total = 0;
+        foreach (EffectInstance e in own)
+        {
+            if (definitions[e.DefinitionId].Stat == stat)
             {
                 total += e.Strength;
             }
@@ -132,6 +185,7 @@ public sealed class EffectBook
         }
 
         _effects.Add(effect);
+        Track(effect, 1);
         NextId = nextId;
     }
 

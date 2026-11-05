@@ -58,6 +58,9 @@ public sealed class GameContent
     /// <summary>Technologies (data/technologies.json, stage 3f), index = id.</summary>
     public IReadOnlyList<TechnologyDefinition> Technologies { get; init; } = [];
 
+    /// <summary>Random events (data/events.json, stage 3h), index = id.</summary>
+    public IReadOnlyList<EventDefinition> Events { get; init; } = [];
+
     /// <summary>Sight, map memory and journeys (data/perception.json, stage 3g).</summary>
     public PerceptionRules Perception { get; init; } = new();
 

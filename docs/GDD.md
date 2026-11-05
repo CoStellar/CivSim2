@@ -688,6 +688,8 @@ Efekt to modyfikator z celem (pole, osada, armia, cywilizacja), siłą, czasem t
 
 Wszystkie zdarzenia są w plikach danych: warunki, szanse, efekty i komunikat do kroniki. Nowe zdarzenia dodajesz bez programowania.
 
+- **W CORE (etap 3h):** susza, pożar, powódź i epidemia. Szansa to „ile razy na 10 tys. lat”, mnożona przez warunki osady (wilgotność, rzeka, las w pobliżu, liczba ludzi, osiadłość). Technologie łagodzą skutki (nawadnianie i garncarstwo suszę, kamieniarstwo pożar). Skutki to efekty z 10.1 (redukcja wydobycia, uszkodzenie, depopulacja, spadek nastroju); gdy tura trwa dłużej niż efekt, jego siła jest przeliczana przez długość tury. Powódź zostawia żyźniejszą ziemię, epidemia przechodzi po sieci handlowej. Ulewa i spowolnienie ruchu przyjdą z armiami i drogami, zniszczenie z budynkami.
+
 ## 11. Pętla symulacji
 
 Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie tego samego stanu świata, a potem rdzeń rozstrzyga je w stałej kolejności. Dzięki temu AI każdej cywilizacji może liczyć się równolegle na osobnych rdzeniach procesora, a wynik i tak jest deterministyczny.

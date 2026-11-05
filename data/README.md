@@ -19,7 +19,7 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `buildings.json` | buildings and tile improvements | 3 |
 | `strata.json` | population strata, target shares and needs (3 at start, more per era) | 3b |
 | `population.json` | growth, hunger, health, mood and gathering rules, the new tribe's people | 3b |
-| `events.json` | random events: conditions, chances, effects, chronicle text | 3 |
+| `events.json` | random events: conditions, chances, softening technologies, effects, fertility, spreading, chronicle text | 3h |
 | `effects.json` | effect types: target, changed stat, stacking rule | 3a |
 | `governments.json` | governments: decision speed, stability decay | 4 |
 | `units.json` | units by era, strength, upkeep, tile capacity | 4 |

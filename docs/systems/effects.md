@@ -7,7 +7,7 @@
 ## Dane wejściowe i wyjściowe
 - Czyta: typy efektów z `data/effects.json`, czas gry `GameState.Month`.
 - Zmienia: listę aktywnych efektów `GameState.Effects` (dodawanie, usuwanie, wygasanie).
-- Publikuje w migawce: na razie nic. Efekty pokażemy w inspektorze razem ze zdarzeniami (etap 3h).
+- Publikuje w migawce: na razie nic. Efekty pokaże inspektor w etapie 5.
 
 ## Przepływ
 
@@ -21,7 +21,8 @@ flowchart LR
   S --> B["Lista efektów (kolejność id)"]
   P --> B
   M --> B
-  B --> Q["System pyta: Total(stat, cel)"]
+  B --> I["Indeks: efekty każdego celu"]
+  I --> Q["System pyta: Total(stat, cel)"]
   B --> W["Faza 1: wygasają efekty z końcem ≤ teraz"]
 ```
 
@@ -29,7 +30,7 @@ flowchart LR
 - **Efekt** = typ (z danych), cel (pole na danym świecie, osada albo cywilizacja), siła (liczba całkowita, np. −50 = połowa wydobycia) i miesiąc końca. Czas trwania podaje się w latach, więc nie zależy od długości tury.
 - **Statystyki** (co efekt zmienia): wydajność osady w %, zakaz wejścia na pole, dodatkowy koszt ruchu, wydobycie z pola w %, ubytek ludności w promilach na rok, nastrój. Nowy typ efektu dodajesz w danych; nowa statystyka wymaga kodu, bo ktoś musi ją czytać.
 - **Nakładanie:** `sum` dodaje siły; `replace` zostawia najnowszy; `strongest` zostawia ten o największej wartości bezwzględnej. Efekty różnych typów na tę samą statystykę zawsze się sumują.
-- **Zniszczenie** z GDD 10.1 nie jest trwałym efektem, tylko jednorazową akcją zdarzenia (etap 3h).
+- **Zniszczenie** z GDD 10.1 nie jest trwałym efektem, tylko jednorazową akcją zdarzenia; przyjdzie razem z budynkami. Zdarzenia (etap 3h, `docs/systems/events.md`) nakładają efekty z siłą przeliczoną przez długość tury.
 - Efekty mają rosnące id i są trzymane w tej kolejności, więc wynik nie zależy od kolejności słowników.
 
 ## Pliki danych
@@ -40,4 +41,4 @@ flowchart LR
 - `StorageTests.SettlementsAndEffectsSurviveSaveAndLoad`: efekty przechodzą przez zapis gry.
 
 ## Wydajność
-Pytanie o sumę przegląda całą listę. Przy kilkudziesięciu efektach to nic; gdy zdarzenia (etap 3h) dodadzą ich setki, dołożymy indeks po celu.
+Obok głównej listy (kolejność zapisu i hasza) jest indeks: lista efektów każdego celu. Pytanie o sumę patrzy tylko na efekty tego celu, a cel bez efektów (większość pól i osad) kosztuje jedno sprawdzenie słownika. Listy indeksu są używane ponownie, więc zdarzenia nie zwiększają alokacji przy każdym nowym efekcie.
