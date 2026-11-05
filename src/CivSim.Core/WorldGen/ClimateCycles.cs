@@ -67,6 +67,12 @@ public sealed record ClimateCycleRules
     /// </summary>
     public (int Full, int None) GlaciationSummerDegrees { get; init; } = (5, 15);
 
+    /// <summary>How far the sea falls when both hemispheres carry the full ice sheet, meters (Earth's last glacial: about 120).</summary>
+    public int GlacialSeaDropMeters { get; init; } = 120;
+
+    /// <summary>Meters of sea depth per step of map elevation below sea level (stage 1c-C).</summary>
+    public int SeaMetersPerStep { get; init; } = 40;
+
     /// <summary>Samples of summer sunlight (one per 1000 years) used to measure its average and spread.</summary>
     public int SpreadSamples { get; init; } = 400;
 }
@@ -107,6 +113,9 @@ public sealed class ClimateState
 
     /// <summary>Mean temperature of the planet at the last update, millionths of °C (for reports).</summary>
     public long GlobalMeanMillionths { get; set; }
+
+    /// <summary>Sea level in map elevation (100 at the start; lower while ice sheets hold water, stage 1c-C).</summary>
+    public int SeaLevel { get; set; } = WorldGenerator.SeaLevel;
 }
 
 /// <summary>
@@ -249,6 +258,13 @@ public sealed class ClimateCycles
     {
         ArgumentNullException.ThrowIfNull(state);
         return Math.Max(SheetShare(state.NorthIce, northPotential), SheetShare(state.SouthIce, southPotential));
+    }
+
+    /// <summary>Mean of the two hemispheres' sheets, millionths of the full sheet (for the sea level).</summary>
+    public long MeanSheet(ClimateState state, long northPotential, long southPotential)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return (SheetShare(state.NorthIce, northPotential) + SheetShare(state.SouthIce, southPotential)) / 2;
     }
 
     /// <summary>CO₂ with the oceans' glacial uptake for this sheet share, millionths of a bar.</summary>

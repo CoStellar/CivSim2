@@ -11,7 +11,7 @@ namespace CivSim.Core.WorldGen;
 /// The climate changes during the game (stage 1c-B, decision of 2026-11-05). Every
 /// <see cref="ClimateCycleRules.UpdateYears"/> the orbit moves on its Milankovitch cycles, the ice sheets of both
 /// hemispheres grow or melt (<see cref="ClimateCycles"/>), the oceans take up CO₂ in glacials, and the energy balance is
-/// solved again with the sheets on the world's real land. Then every cell gets its new temperature, seasons and growing
+/// solved again with the sheets on the world's real land. The sea level follows the ice (<see cref="SeaLevel"/>). Then every cell gets its new temperature, seasons and growing
 /// season, and land cells their new biome, so wild food follows the climate. Runs first in the world phase.
 /// </summary>
 public sealed class ClimateSystem(GameContent content) : ITurnSystem
@@ -41,6 +41,19 @@ public sealed class ClimateSystem(GameContent content) : ITurnSystem
 
         Prepare(state.Settings.Planet, world.Map);
         _cycles!.Advance(climate, year);
+
+        // Water locked in the ice lowers the sea (stage 1c-C); new or lost land changes where ice sheets can lie.
+        int sea = SeaLevel.Target(content.ClimateCycles, _cycles.MeanSheet(climate, _northPotential, _southPotential));
+        if (sea != climate.SeaLevel)
+        {
+            foreach (string line in SeaLevel.Apply(content, state, world, sea))
+            {
+                context.Chronicle(line);
+            }
+
+            _landShare = LandShare(content, world.Map);
+        }
+
         Apply(content, world, _cycles, _landShare!, _northPotential, _southPotential);
     }
 
@@ -141,7 +154,7 @@ public sealed class ClimateSystem(GameContent content) : ITurnSystem
             (_northPotential, _southPotential) = Potentials(_cycles);
         }
 
-        // The land does not move until the sea level changes (stage 1c-C), so it is measured once per map.
+        // The land moves only with the sea level, which re-measures it; otherwise it is measured once per map.
         if (_landShare is null || !ReferenceEquals(_landMap, map))
         {
             _landShare = LandShare(content, map);

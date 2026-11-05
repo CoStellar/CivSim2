@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 11;
+    public const int FormatVersion = 12;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -49,7 +49,7 @@ public static class SaveGameSerializer
 
             Core.WorldGen.ClimateState c = w.Climate;
             worlds.Add(new WorldSaveData(w.Id.Value, w.Name, w.Width, w.Height, layers,
-                new ClimateSaveData(c.Year, (int)c.NorthRegime, (int)c.SouthRegime, c.NorthIce, c.SouthIce, c.Co2Microbar, c.GlobalMeanMillionths)));
+                new ClimateSaveData(c.Year, (int)c.NorthRegime, (int)c.SouthRegime, c.NorthIce, c.SouthIce, c.Co2Microbar, c.GlobalMeanMillionths, c.SeaLevel)));
         }
 
         var civs = new List<CivilizationSaveData>(state.Civilizations.Count);
@@ -162,6 +162,7 @@ public static class SaveGameSerializer
                 world.Climate.SouthIce = c.SouthIce;
                 world.Climate.Co2Microbar = c.Co2Microbar;
                 world.Climate.GlobalMeanMillionths = c.GlobalMeanMillionths;
+                world.Climate.SeaLevel = c.SeaLevel;
             }
             if (world.Id.Value == 0)
             {

@@ -60,7 +60,8 @@ public sealed record ClimateSaveData(
     [property: Key(3)] long NorthIce,
     [property: Key(4)] long SouthIce,
     [property: Key(5)] int Co2Microbar,
-    [property: Key(6)] long GlobalMeanMillionths);
+    [property: Key(6)] long GlobalMeanMillionths,
+    [property: Key(7)] int SeaLevel = 100);
 
 /// <summary>Raw bytes of one map layer, identified by name.</summary>
 [MessagePackObject]

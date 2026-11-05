@@ -57,7 +57,13 @@ internal static class SettlementRules
         }
 
         WorldState world = state.Worlds[target.World.Value];
-        short owner = world.Map.Owner[world.Geometry.Index(target.Cell)];
+        int cell = world.Geometry.Index(target.Cell);
+        if (world.Map.Elevation[cell] < world.Climate.SeaLevel && world.Map.Elevation[cell] < WorldGen.WorldGenerator.SeaLevel)
+        {
+            return CommandResult.Fail("The ruins lie under the sea.");
+        }
+
+        short owner = world.Map.Owner[cell];
         return owner != WorldMap.NoOwner && owner != civ.Value ? CommandResult.Fail("Another civilization holds that land.") : CommandResult.Ok;
     }
 

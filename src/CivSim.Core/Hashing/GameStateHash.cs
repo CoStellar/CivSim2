@@ -69,6 +69,7 @@ public static class GameStateHash
             h.Add(w.Climate.SouthIce);
             h.Add(w.Climate.Co2Microbar);
             h.Add(w.Climate.GlobalMeanMillionths);
+            h.Add(w.Climate.SeaLevel);
         }
 
         h.Add(state.Civilizations.Count);

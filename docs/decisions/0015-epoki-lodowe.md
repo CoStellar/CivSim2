@@ -1,6 +1,6 @@
 # ADR 0015: Epoki lodowe: cykle Milankovicia, lądolody Paillarda, klimat zmienia się w trakcie gry
 
-**Status:** przyjęta, 2026-11-05 (decyzja Patryka: wariant A, start w ciepłym momencie).
+**Status:** przyjęta, 2026-11-05 (decyzje Patryka: wariant A, start w ciepłym momencie; osady na zalanych polach przenoszą się, zostają ruiny pod wodą).
 
 ## Kontekst
 
@@ -46,5 +46,20 @@ okresów ciepłych: zimne fazy precesji (co 23 tys. lat) są krótsze niż czas 
 
 - Format zapisu 11, nowe złote hashe (start w ciepłym momencie zmienia nachylenie na starcie: Ziemia 24,6° zamiast 23,4°).
 - Przeliczenie klimatu kosztuje ok. 20 ms co 500 lat (na mapie standard co 10 tur epoki kamienia) i przydziela pamięć na nowy model klimatu.
-- Poziom morza na razie się nie zmienia: lądolód leży tylko na lądzie. Zmiana poziomu morza (ok. 120 m przy pełnym lądolodzie) to etap 1c-C.
+- Poziom morza zmienia się razem z lodem od etapu 1c-C (niżej, „Poziom morza”).
 - Cywilizacje nie wpływają jeszcze na CO₂; miejsce na to jest w `ClimateState.Co2Microbar` (era przemysłowa, mechanizm efektów).
+
+## Poziom morza (etap 1c-C, decyzja Patryka z 2026-11-05)
+
+- Woda uwięziona w lądolodach obniża morze: `poziom = 100 − 120 m × średni udział lądolodu obu półkul / 40 m na stopień wysokości`
+  (dane: `glacialSeaDropMeters`, `seaMetersPerStep`). W pełni zlodowacenia morze leży 3 stopnie niżej (97): odsłania się ok. 6–7% oceanu,
+  czyli płytkie szelfy, jak w ostatnim zlodowaceniu. Morze nigdy nie wznosi się ponad poziom startowy.
+- Odsłonięte dno to nowy ląd (płaski, wilgotność sąsiadów, pełna dzika żywność); biom nadaje mu zaraz potem przeliczenie klimatu. Gdy lód topnieje,
+  morze zabiera ten ląd z powrotem: znikają rzeki na jego krawędziach, właściciel i cechy terenu. Rodzaje wody (wybrzeże, płytkie, głębokie) liczymy
+  na nowo; jeziora zostają.
+- **Osady na zalanych polach** (decyzja Patryka): mieszkańcy przenoszą się z tym, co uniosą, na najbliższe suche pole bez innej zamieszkanej osady
+  (do 30 pól), a to, co zostawili, i każda pusta osada na zalanym polu stają się ruinami pod wodą. Ruin pod wodą nie da się zająć ani ograbić;
+  rozpadają się jak zwykłe ruiny.
+- Po zmianie wybrzeża udział lądu w pasach (pod lądolody) mierzymy od nowa. Poziom morza jest w stanie klimatu świata (zapis, format 12, i hash).
+- Wynik (Ziemia, seed 42): w 59 tys. roku morze opada o 80 m (971 pól nowego lądu), w 107 tys. o 120 m (kolejne 865 pól), a po końcu zlodowacenia
+  (112–119 tys. lat) wraca. Między środkowymi kontynentami powstaje pomost lądowy, a na wschodzie wynurza się wyspa.
