@@ -35,6 +35,8 @@ public sealed class ClientWorld
         Array.Fill(Owner, (short)-1);
         WildFood = new ushort[n];
         Influence = new byte[n];
+        Seasonality = new byte[n];
+        GrowingSeason = new byte[n];
         River = new byte[n * MapChunkMessage.RiverEdgesPerCell];
         ChunksX = (width + ChunkSize - 1) / ChunkSize;
         ChunksY = (height + ChunkSize - 1) / ChunkSize;
@@ -104,6 +106,12 @@ public sealed class ClientWorld
     /// <summary>Influence strength of the owner, 0–255.</summary>
     public byte[] Influence { get; }
 
+    /// <summary>Difference between summer and winter, °C (stage 1b).</summary>
+    public byte[] Seasonality { get; }
+
+    /// <summary>Share of the year plants can grow, 0–100%.</summary>
+    public byte[] GrowingSeason { get; }
+
     /// <summary>River size on the N, NE and SE edge of each cell.</summary>
     public byte[] River { get; }
 
@@ -134,6 +142,8 @@ public sealed class ClientWorld
                 Owner[i] = m.Owner[k];
                 WildFood[i] = m.WildFood is { } wild ? wild[k] : (ushort)1000;
                 Influence[i] = m.Influence is { } inf ? inf[k] : (byte)0;
+                Seasonality[i] = m.Seasonality is { } sea ? sea[k] : (byte)0;
+                GrowingSeason[i] = m.GrowingSeason is { } gro ? gro[k] : (byte)100;
                 for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)
                 {
                     River[(i * MapChunkMessage.RiverEdgesPerCell) + e] = m.River[(k * MapChunkMessage.RiverEdgesPerCell) + e];

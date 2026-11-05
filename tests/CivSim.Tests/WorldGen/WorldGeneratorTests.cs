@@ -46,7 +46,7 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    private const ulong GoldenWorldHash = 2205344670942499559UL;
+    private const ulong GoldenWorldHash = 16204034893301686119UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]
@@ -55,7 +55,7 @@ public class WorldGeneratorTests
     [InlineData(WorldType.Continents, 30)]
     public void EveryWorldTypeIsValid(WorldType type, int water)
     {
-        var settings = new GameSettings(11, 128, 80, 8) { WorldType = type, WaterPercent = water };
+        var settings = new GameSettings(11, 130, 80, 8) { WorldType = type, WaterPercent = water };
         (GameState state, WorldGenReport report) = Generate(settings);
         Assert.Empty(Validate(state, report));
         Assert.InRange(report.WaterPercent, water - WorldValidator.WaterTolerance, water + WorldValidator.WaterTolerance);
@@ -85,7 +85,7 @@ public class WorldGeneratorTests
     [Fact]
     public void StandardMapHasRiversLakesDepositsAndFairStarts()
     {
-        (GameState state, WorldGenReport report) = Generate(new GameSettings(1, 256, 160, 12));
+        (GameState state, WorldGenReport report) = Generate(new GameSettings(1, 258, 160, 12));
         Assert.Empty(Validate(state, report));
         Assert.True(report.Rivers >= 20, $"only {report.Rivers} rivers");
         Assert.True(report.Lakes >= 1, "no lakes");
@@ -139,7 +139,7 @@ public class WorldGeneratorTests
     {
         (GameState state, _) = Generate(GameSettings.Test(4));
         WorldMap map = state.Worlds[0].Map;
-        HexTorus geo = map.Geometry;
+        HexGlobe geo = map.Geometry;
         int rivers = 0;
         for (int e = 0; e < geo.EdgeCount; e++)
         {
@@ -157,7 +157,7 @@ public class WorldGeneratorTests
         Assert.True(rivers > 0);
     }
 
-    private static GameSettings Medium => new(21, 128, 80, 8);
+    private static GameSettings Medium => new(21, 130, 80, 8);
 
     private static int CountBiomes(WorldGenReport r, params string[] keys)
     {
@@ -193,23 +193,23 @@ public class WorldGeneratorTests
     }
 
     [Theory]
-    [InlineData(WorldClimate.Cold, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce, WorldInland.Dry)]
-    [InlineData(WorldClimate.Hot, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich, WorldInland.Humid)]
-    [InlineData(WorldClimate.Cold, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich, WorldInland.Normal)]
-    [InlineData(WorldClimate.Hot, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal, WorldInland.Dry)]
-    [InlineData(WorldClimate.Temperate, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Normal, WorldInland.Humid)]
-    public void EveryWorldSettingIsValid(WorldClimate climate, WorldMoisture moisture, WorldRelief relief, WorldResources resources, WorldInland inland)
+    [InlineData(90, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce, WorldInland.Dry)]
+    [InlineData(110, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich, WorldInland.Humid)]
+    [InlineData(90, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich, WorldInland.Normal)]
+    [InlineData(110, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal, WorldInland.Dry)]
+    [InlineData(100, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Normal, WorldInland.Humid)]
+    public void EveryWorldSettingIsValid(int brightness, WorldMoisture moisture, WorldRelief relief, WorldResources resources, WorldInland inland)
     {
-        GameSettings settings = Medium with { Climate = climate, Moisture = moisture, Relief = relief, Resources = resources, Inland = inland };
+        GameSettings settings = Medium with { Planet = PlanetParameters.Earth with { StarBrightnessPercent = brightness }, Moisture = moisture, Relief = relief, Resources = resources, Inland = inland };
         (GameState state, WorldGenReport report) = Generate(settings);
         Assert.Empty(Validate(state, report));
     }
 
     [Fact]
-    public void ColdWorldsHaveMoreIceAndTundraThanHotOnes()
+    public void DimStarsGiveMoreIceAndTundraThanBrightOnes()
     {
-        WorldGenReport cold = Generate(Medium with { Climate = WorldClimate.Cold }).Report;
-        WorldGenReport hot = Generate(Medium with { Climate = WorldClimate.Hot }).Report;
+        WorldGenReport cold = Generate(Medium with { Planet = PlanetParameters.Earth with { StarBrightnessPercent = 90 } }).Report;
+        WorldGenReport hot = Generate(Medium with { Planet = PlanetParameters.Earth with { StarBrightnessPercent = 110 } }).Report;
         Assert.True(CountBiomes(cold, "ice", "tundra") > CountBiomes(hot, "ice", "tundra") * 3 / 2);
         Assert.True(CountBiomes(hot, "jungle", "savanna", "desert") > CountBiomes(cold, "jungle", "savanna", "desert") * 3 / 2);
     }
@@ -276,7 +276,8 @@ public class WorldGeneratorTests
     {
         GameSettings settings = GameSettings.Test(8) with
         {
-            Climate = WorldClimate.Hot,
+            Planet = new PlanetParameters(978, 8400, 105, 46),
+            PlanetName = "Uranus",
             Moisture = WorldMoisture.Wet,
             Relief = WorldRelief.Mountainous,
             Resources = WorldResources.Scarce,

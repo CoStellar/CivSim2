@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "comment": "Planet presets (stage 1b). Every planet is assumed to be in the habitable zone of its star. axialTilt: degrees between the spin axis and the orbit (0-180; Earth 23.4, Uranus 97.8: it lies on its side, so each pole has decades of day and then of night). yearLength: in Earth years; it changes only the seasons (longer years swing further between summer and winter), the game clock stays in Earth years. starBrightness: sunlight compared with Earth, percent (80-120). eccentricityPerMille: how stretched the orbit is (Earth 17, Mars 93); the planet is closest to its star at the northern winter solstice. water, moisture, relief: the land of the preset; any value can be changed after choosing a preset. Mars is a Mars-like planet in the habitable zone: colder, drier and more mountainous than Earth, not today's Mars.",
+  "planets": [
+    { "key": "earth",  "name": "Earth",  "axialTilt": "23.4", "yearLength": "1",    "starBrightness": 100, "eccentricityPerMille": 17, "water": 60, "moisture": "normal", "relief": "normal" },
+    { "key": "mars",   "name": "Mars",   "axialTilt": "25.2", "yearLength": "1.88", "starBrightness": 85,  "eccentricityPerMille": 93, "water": 30, "moisture": "dry",    "relief": "mountainous" },
+    { "key": "uranus", "name": "Uranus", "axialTilt": "97.8", "yearLength": "84",   "starBrightness": 100, "eccentricityPerMille": 46, "water": 60, "moisture": "normal", "relief": "normal" }
+  ]
+}

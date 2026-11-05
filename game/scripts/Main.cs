@@ -257,11 +257,12 @@ public partial class Main : Node2D
 
         _camera.Position += dir * PanSpeed * delta / _camera.Zoom.X;
 
-        // The planet wraps: keep the camera inside one copy of the map; the renderer draws the neighbours.
+        // The globe wraps east–west: keep the camera inside one copy of the map, the renderer draws the neighbours.
+        // North and south end at the poles, so the camera stops there.
         Vector2 p = _map.Period;
         if (p.X > 0 && p.Y > 0)
         {
-            _camera.Position = new Vector2(Mathf.PosMod(_camera.Position.X, p.X), Mathf.PosMod(_camera.Position.Y, p.Y));
+            _camera.Position = new Vector2(Mathf.PosMod(_camera.Position.X, p.X), Mathf.Clamp(_camera.Position.Y, 0, p.Y));
         }
     }
 
@@ -270,11 +271,11 @@ public partial class Main : Node2D
         Vector2 before = ScreenToWorld(screenPos);
         float z = Mathf.Clamp(_camera.Zoom.X * factor, MinZoom, MaxZoom);
 
-        // Never zoom out so far that more than two copies of the map fit on the screen.
+        // Never zoom out so far that more than two copies of the map fit side by side.
         Vector2 view = GetViewportRect().Size;
         if (_map.Period.X > 0)
         {
-            z = Mathf.Max(z, Mathf.Min(view.X / (2 * _map.Period.X), view.Y / (2 * _map.Period.Y)));
+            z = Mathf.Max(z, view.X / (2 * _map.Period.X));
         }
 
         _camera.Zoom = new Vector2(z, z);
@@ -369,7 +370,11 @@ public partial class Main : Node2D
         speed = SimulationSpeed.Paused;
         benchmark = 0;
         string? worldType = null;
-        string? climate = null;
+        string? planet = null;
+        int? tilt = null;
+        int? year = null;
+        int? brightness = null;
+        int? eccentricity = null;
         string? moisture = null;
         string? inland = null;
         string? relief = null;
@@ -396,8 +401,20 @@ public partial class Main : Node2D
                 case "--world-type":
                     worldType = v;
                     break;
-                case "--climate":
-                    climate = v;
+                case "--planet":
+                    planet = v;
+                    break;
+                case "--tilt":
+                    tilt = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 10);
+                    break;
+                case "--year":
+                    year = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 100);
+                    break;
+                case "--brightness":
+                    brightness = int.Parse(v, CultureInfo.InvariantCulture);
+                    break;
+                case "--eccentricity":
+                    eccentricity = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1000);
                     break;
                 case "--inland":
                     inland = v;
@@ -426,7 +443,11 @@ public partial class Main : Node2D
             Civilizations = civs ?? o.Civilizations,
             WorldType = worldType ?? o.WorldType,
             WaterPercent = water ?? o.WaterPercent,
-            Climate = climate ?? o.Climate,
+            Planet = planet ?? o.Planet,
+            AxialTiltTenths = tilt,
+            YearHundredths = year,
+            StarBrightnessPercent = brightness,
+            EccentricityPerMille = eccentricity,
             Moisture = moisture ?? o.Moisture,
             Inland = inland ?? o.Inland,
             Relief = relief ?? o.Relief,

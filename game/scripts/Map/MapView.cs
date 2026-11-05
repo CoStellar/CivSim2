@@ -37,7 +37,7 @@ public partial class MapView : Node2D
     /// <summary>Chunk copies drawn in the last frame (for the performance read-out).</summary>
     public int VisibleChunks { get; private set; }
 
-    /// <summary>Wrap period: the size of one full map copy in pixels.</summary>
+    /// <summary>Size of one full map copy in pixels; the map repeats every <c>Period.X</c> (east–west only).</summary>
     public Vector2 Period => _period;
 
     /// <summary>Currently selected cell (wrapped), if any.</summary>
@@ -125,7 +125,12 @@ public partial class MapView : Node2D
 
         (int col, int row) = HexLayout.CellAt(worldPos);
         int c = Mod(col, _world.Width);
-        int r = Mod(row, _world.Height);
+        if (row < 0 || row >= _world.Height)
+        {
+            return null; // above the north pole or below the south pole of the drawing
+        }
+
+        int r = row;
         _selected = (c, r);
         return _selected;
     }
@@ -160,9 +165,10 @@ public partial class MapView : Node2D
             Rect2 bounds = c.Bounds;
             int kx0 = (int)MathF.Floor((view.Position.X - bounds.End.X) / _period.X) + 1;
             int kx1 = (int)MathF.Floor((view.End.X - bounds.Position.X) / _period.X);
-            int ky0 = (int)MathF.Floor((view.Position.Y - bounds.End.Y) / _period.Y) + 1;
-            int ky1 = (int)MathF.Floor((view.End.Y - bounds.Position.Y) / _period.Y);
-            if (kx1 < kx0 || ky1 < ky0)
+            // The globe wraps only east–west (ADR 0012): copies side by side, never above or below.
+            const int ky0 = 0;
+            const int ky1 = 0;
+            if (kx1 < kx0 || bounds.End.Y < view.Position.Y || bounds.Position.Y > view.End.Y)
             {
                 continue;
             }
@@ -222,7 +228,6 @@ public partial class MapView : Node2D
         Vector2 center = HexLayout.Center(sel.Col, sel.Row);
         Vector2 screen = view.GetCenter();
         center.X += MathF.Round((screen.X - center.X) / _period.X) * _period.X;
-        center.Y += MathF.Round((screen.Y - center.Y) / _period.Y) * _period.Y;
         _outline.Position = center;
         _outline.Visible = true;
     }

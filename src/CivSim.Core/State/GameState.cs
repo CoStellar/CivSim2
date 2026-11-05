@@ -145,13 +145,13 @@ public sealed class GameState
     public static GameState CreateNew(GameSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        if (settings.MapHeight % 2 != 0)
+        if (!Map.HexGlobe.IsValidSize(settings.MapWidth, settings.MapHeight))
         {
-            throw new ArgumentException("Map height must be even for the hex torus.", nameof(settings));
+            throw new ArgumentException($"Map size {settings.MapWidth}×{settings.MapHeight} does not close into a globe: the width must be 2 more than a multiple of 4 and the height even.", nameof(settings));
         }
 
         var state = new GameState(settings, new RandomStreams(settings.Seed));
-        state._worlds.Add(new WorldState(WorldId.Earth, "Earth", settings.MapWidth, settings.MapHeight));
+        state._worlds.Add(new WorldState(WorldId.Earth, settings.PlanetName, settings.MapWidth, settings.MapHeight));
         for (int i = 0; i < settings.CivilizationCount; i++)
         {
             state._civilizations.Add(new CivilizationState(new CivId(i), $"Civilization {i + 1}", PlayerId.Ai));

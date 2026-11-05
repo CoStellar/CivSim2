@@ -120,7 +120,7 @@ public sealed class Influence
     private void Spread(WorldState world, SettlementState s)
     {
         WorldMap map = world.Map;
-        HexTorus geo = world.Geometry;
+        HexGlobe geo = world.Geometry;
         int range = RangeOf(s);
         int start = geo.Index(s.Cell);
         _reached.Clear();

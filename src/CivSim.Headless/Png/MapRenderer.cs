@@ -34,6 +34,15 @@ public enum MapView
 
     /// <summary>Wild food left: green = untouched, brown = eaten (Stage 3c).</summary>
     WildFood,
+
+    /// <summary>Difference between summer and winter, °C: blue = mild, purple = extreme (stage 1b).</summary>
+    Seasons,
+
+    /// <summary>Share of the year plants can grow: brown = never, green = all year (stage 1b).</summary>
+    Growing,
+
+    /// <summary>The biome map wrapped on a ball: four views (two sides, north pole, south pole), stage 1b.</summary>
+    Globe,
 }
 
 /// <summary>
@@ -87,7 +96,12 @@ public sealed class MapRenderer
     /// <summary>Renders one view.</summary>
     public RgbImage Render(MapView view)
     {
-        HexTorus geo = _world.Geometry;
+        if (view == MapView.Globe)
+        {
+            return RenderGlobe();
+        }
+
+        HexGlobe geo = _world.Geometry;
         var image = new RgbImage((geo.Width * 3 * _k) + _k, (geo.Height * 2 * _halfH) + _halfH);
         Array.Fill(image.Pixels, (byte)20);
         for (int i = 0; i < geo.CellCount; i++)
@@ -194,6 +208,15 @@ public sealed class MapRenderer
                 return water ? 0x16283Au : (Relief)m.Relief[i] == Relief.Mountains ? 0x5C5C5Cu : 0x3C3C3Cu;
             case MapView.WildFood:
                 return water ? 0x0A2647u : _content.Biomes[biome].Food == 0 ? 0x4A4A4Au : Lerp(0x7A4A1E, 0x2E8B3A, m.WildFood[i], WorldMap.FullWildFood);
+            case MapView.Seasons:
+            {
+                int sw = m.Seasonality[i];
+                uint c = sw < 40 ? Lerp(0x2E6FB8, 0xE8E8E8, sw, 40) : Lerp(0xE8E8E8, 0x8A1E8C, Math.Min(80, sw - 40), 80);
+                return water ? Darken(c, 35) : c;
+            }
+
+            case MapView.Growing:
+                return water ? 0x0A2647u : Lerp(0x6A5236, 0x2FA83A, m.GrowingSeason[i], 100);
             case MapView.Influence:
             {
                 uint ground = water ? 0x0A2647u : Darken(_content.Biomes[biome].Color, 45);
@@ -203,6 +226,48 @@ public sealed class MapRenderer
             default:
                 return 0;
         }
+    }
+
+    // Four orthographic views of the planet: from the equator at longitude 0° and 180°, and from above each pole.
+    // A preview only (doubles are fine here: nothing feeds back into the game).
+    private RgbImage RenderGlobe()
+    {
+        HexGlobe geo = _world.Geometry;
+        int r = Math.Max(60, geo.Height * _k * 3 / 4);
+        int size = (2 * r) + 8;
+        var image = new RgbImage(size * 4, size);
+        Array.Fill(image.Pixels, (byte)12);
+        (double Lat, double Lon)[] views = [(0, 0), (0, Math.PI), (Math.PI / 2, 0), (-Math.PI / 2, 0)];
+        for (int v = 0; v < views.Length; v++)
+        {
+            (double lat0, double lon0) = views[v];
+            for (int py = -r; py <= r; py++)
+            {
+                for (int px = -r; px <= r; px++)
+                {
+                    double x = px / (double)r;
+                    double y = -py / (double)r;
+                    double rho2 = (x * x) + (y * y);
+                    if (rho2 > 1)
+                    {
+                        continue;
+                    }
+
+                    // Inverse orthographic projection.
+                    double z = Math.Sqrt(1 - rho2);
+                    double sinLat = (y * Math.Cos(lat0)) + (z * Math.Sin(lat0));
+                    double lon = lon0 + Math.Atan2(x, (z * Math.Cos(lat0)) - (y * Math.Sin(lat0)));
+                    int row = Math.Clamp((int)((1 - sinLat) * geo.Height / 2), 0, geo.Height - 1);
+                    double turn = lon / (2 * Math.PI);
+                    int col = (int)Math.Floor((turn - Math.Floor(turn)) * geo.Width) % geo.Width;
+                    uint c = CellColor(MapView.Biomes, geo.Index(new HexCoord(col, row)));
+                    c = Darken(c, (int)((1 - z) * 45)); // light falls off towards the edge
+                    image.Set((v * size) + 4 + r + px, 4 + r + py, c);
+                }
+            }
+        }
+
+        return image;
     }
 
     // Same colours as the viewer: hues spaced by the golden ratio.
@@ -249,7 +314,7 @@ public sealed class MapRenderer
 
     private void DrawRivers(RgbImage image)
     {
-        HexTorus geo = _world.Geometry;
+        HexGlobe geo = _world.Geometry;
         int r = _halfW;
         int h = _halfH;
 

@@ -272,7 +272,7 @@ public sealed class GameServer
         WorldState earth = State.Worlds[0];
         var known = new bool[earth.Geometry.CellCount];
         int radius = Math.Min(StartKnowledgeRadius, earth.Geometry.MaxUniqueRadius);
-        var area = new HexCoord[HexTorus.RangeSize(radius)];
+        var area = new HexCoord[HexGlobe.RangeSize(radius)];
         int count = earth.Geometry.Range(civ.StartCell, radius, area);
         for (int k = 0; k < count; k++)
         {

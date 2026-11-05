@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 8;
+    public const int FormatVersion = 9;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -79,8 +79,9 @@ public static class SaveGameSerializer
         }
 
         GameSettings s = state.Settings;
-        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, (int)s.Climate, (int)s.Moisture, (int)s.Relief, (int)s.Resources, (int)s.Inland,
-            state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects);
+        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, 0, (int)s.Moisture, (int)s.Relief, (int)s.Resources, (int)s.Inland,
+            state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects,
+            s.Planet.AxialTiltTenths, s.Planet.YearHundredths, s.Planet.StarBrightnessPercent, s.Planet.EccentricityThousandths, s.PlanetName);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -120,7 +121,8 @@ public static class SaveGameSerializer
         {
             WorldType = (Core.WorldGen.WorldType)data.WorldType,
             WaterPercent = data.WaterPercent,
-            Climate = (Core.WorldGen.WorldClimate)data.Climate,
+            Planet = new Core.WorldGen.PlanetParameters(data.AxialTiltTenths, data.YearHundredths, data.StarBrightnessPercent, data.EccentricityThousandths),
+            PlanetName = data.PlanetName,
             Moisture = (Core.WorldGen.WorldMoisture)data.Moisture,
             Inland = (Core.WorldGen.WorldInland)data.Inland,
             Relief = (Core.WorldGen.WorldRelief)data.Relief,

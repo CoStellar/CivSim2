@@ -36,6 +36,7 @@ public static class ContentLoader
             LoadSettlements(Path.Combine(directory, "settlements.json"), goods, errors);
         List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
+        List<PlanetPreset> planets = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
             throw new ContentException(errors);
@@ -53,6 +54,7 @@ public static class ContentLoader
             Strata = strata,
             Population = population,
             Assets = assets,
+            Planets = planets,
         };
     }
 
@@ -427,6 +429,46 @@ public static class ContentLoader
         if (result.Count == 0)
         {
             errors.Add($"{Path.GetFileName(path)}: at least one era is required.");
+        }
+
+        return result;
+    }
+
+    private static List<PlanetPreset> LoadPlanets(string path, List<string> errors)
+    {
+        var result = new List<PlanetPreset>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "planets", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{Path.GetFileName(path)}: planets[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            (int tMin, int tMax) = Core.WorldGen.PlanetParameters.TiltRange;
+            (int yMin, int yMax) = Core.WorldGen.PlanetParameters.YearRange;
+            (int bMin, int bMax) = Core.WorldGen.PlanetParameters.BrightnessRange;
+            (int eMin, int eMax) = Core.WorldGen.PlanetParameters.EccentricityRange;
+            var planet = new Core.WorldGen.PlanetParameters(
+                (int)(r.Amount("axialTilt", Amount.FromHundredths(tMin * 10), Amount.FromHundredths(tMax * 10)).Hundredths / 10),
+                (int)r.Amount("yearLength", Amount.FromHundredths(yMin), Amount.FromHundredths(yMax)).Hundredths,
+                r.Int("starBrightness", bMin, bMax),
+                r.Int("eccentricityPerMille", eMin, eMax));
+            int water = r.Int("water", 30, 80);
+            Core.WorldGen.WorldMoisture moisture = r.Enum<Core.WorldGen.WorldMoisture>("moisture");
+            Core.WorldGen.WorldRelief relief = r.Enum<Core.WorldGen.WorldRelief>("relief");
+            result.Add(new PlanetPreset(key, name, planet, water, moisture, relief));
+            i++;
+        }
+
+        if (!result.Exists(p => p.Key == "earth"))
+        {
+            errors.Add($"{Path.GetFileName(path)}: the 'earth' preset is required.");
         }
 
         return result;

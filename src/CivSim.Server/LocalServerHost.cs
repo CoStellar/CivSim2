@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -49,14 +50,23 @@ public sealed class LocalServerHost : IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
         GameContent content = ContentLoader.Load(dataDirectory);
-        var settings = new GameSettings(options.Seed, options.Width, options.Height, options.Civilizations)
+        PlanetPreset preset = content.Planets.FirstOrDefault(p => p.Key == options.Planet)
+            ?? throw new ArgumentException($"Unknown planet '{options.Planet}'.", nameof(options));
+        GameSettings settings = new GameSettings(options.Seed, options.Width, options.Height, options.Civilizations).WithPreset(preset);
+        var planet = new PlanetParameters(
+            options.AxialTiltTenths ?? preset.Planet.AxialTiltTenths,
+            options.YearHundredths ?? preset.Planet.YearHundredths,
+            options.StarBrightnessPercent ?? preset.Planet.StarBrightnessPercent,
+            options.EccentricityPerMille ?? preset.Planet.EccentricityThousandths);
+        planet.Validate();
+        settings = settings with
         {
+            Planet = planet,
             WorldType = Parse<WorldType>(options.WorldType),
-            WaterPercent = Math.Clamp(options.WaterPercent, 30, 80),
-            Climate = Parse<WorldClimate>(options.Climate),
-            Moisture = Parse<WorldMoisture>(options.Moisture),
+            WaterPercent = Math.Clamp(options.WaterPercent ?? settings.WaterPercent, 30, 80),
+            Moisture = options.Moisture is null ? settings.Moisture : Parse<WorldMoisture>(options.Moisture),
             Inland = Parse<WorldInland>(options.Inland),
-            Relief = Parse<WorldRelief>(options.Relief),
+            Relief = options.Relief is null ? settings.Relief : Parse<WorldRelief>(options.Relief),
             Resources = Parse<WorldResources>(options.Resources),
         };
         var host = new LocalServerHost(GameServer.CreateNew(settings, content));

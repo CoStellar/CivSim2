@@ -1,3 +1,4 @@
+using System.Linq;
 using System.IO;
 using CivSim.Core.Content;
 using CivSim.Core.Economy;
@@ -126,8 +127,9 @@ public class PopulationTests
         TurnRunner runner = NewGame(3);
         int before = runner.State.Settlements[0].TotalPopulation();
         runner.RunTurn();
-        runner.RunTurn();
-        Assert.True(runner.State.Settlements[0].TotalPopulation() > before);
+        var fed = runner.State.Settlements.Where(s => s.FedPerMille == 1000).ToList();
+        Assert.NotEmpty(fed);
+        Assert.All(fed, s => Assert.True(s.TotalPopulation() > before, $"{s.Name} was fed but did not grow"));
     }
 
     [Fact]

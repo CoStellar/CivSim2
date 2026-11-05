@@ -16,7 +16,7 @@ public sealed record SaveData(
     [property: Key(7)] IReadOnlyList<CivilizationSaveData> Civilizations,
     [property: Key(8)] int WorldType,
     [property: Key(9)] int WaterPercent,
-    [property: Key(10)] int Climate,
+    [property: Key(10)] int UnusedClimate,
     [property: Key(11)] int Moisture,
     [property: Key(12)] int Relief,
     [property: Key(13)] int Resources,
@@ -25,7 +25,12 @@ public sealed record SaveData(
     [property: Key(16)] int NextSettlementId = 0,
     [property: Key(17)] IReadOnlyList<SettlementSaveData>? Settlements = null,
     [property: Key(18)] long NextEffectId = 0,
-    [property: Key(19)] IReadOnlyList<EffectSaveData>? Effects = null);
+    [property: Key(19)] IReadOnlyList<EffectSaveData>? Effects = null,
+    [property: Key(20)] int AxialTiltTenths = 234,
+    [property: Key(21)] int YearHundredths = 100,
+    [property: Key(22)] int StarBrightnessPercent = 100,
+    [property: Key(23)] int EccentricityThousandths = 17,
+    [property: Key(24)] string PlanetName = "Earth");
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]

@@ -47,9 +47,9 @@ public sealed class TribeAi : ICommandSource
         _content = content;
         _rules = content.Population;
         _yields = new GatheringSystem(content, new YieldYears(0));
-        _reach = new HexCoord[HexTorus.RangeSize(_rules.MaxMoveCells)];
+        _reach = new HexCoord[HexGlobe.RangeSize(_rules.MaxMoveCells)];
         _influence = new Influence(content);
-        _near = new HexCoord[HexTorus.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
+        _near = new HexCoord[HexGlobe.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
         _foodPerPerson = new long[content.Strata.Count];
         foreach (StratumDefinition stratum in content.Strata)
         {
@@ -66,7 +66,7 @@ public sealed class TribeAi : ICommandSource
         _ringOf = new int[_reach.Length];
         for (int r = 0, k = 0; r <= _rules.MaxMoveCells; r++)
         {
-            for (int n = 0; n < HexTorus.RingSize(r); n++)
+            for (int n = 0; n < HexGlobe.RingSize(r); n++)
             {
                 _ringOf[k++] = r;
             }
@@ -242,7 +242,7 @@ public sealed class TribeAi : ICommandSource
     // away from own camps and never attack.
     private (HexCoord Cell, long Value) BestSite(GameState state, WorldState world, CivilizationState civ, SettlementState from, bool splitting)
     {
-        HexTorus geo = world.Geometry;
+        HexGlobe geo = world.Geometry;
         int count = geo.Range(from.Cell, Math.Min(_rules.MaxMoveCells, geo.MaxUniqueRadius), _reach);
         HexCoord best = from.Cell;
         long bestValue = 0;
@@ -398,7 +398,7 @@ public sealed class TribeAi : ICommandSource
     private long ComputeSiteFood(WorldState world, HexCoord center)
     {
         WorldMap map = world.Map;
-        HexTorus geo = world.Geometry;
+        HexGlobe geo = world.Geometry;
         long[] full = CellFood(world);
         if (_costAt.Length != geo.CellCount)
         {

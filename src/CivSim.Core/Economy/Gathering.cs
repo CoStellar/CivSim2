@@ -117,7 +117,7 @@ public sealed class GatheringSystem : ITurnSystem
         _content = content;
         _rules = content.Population;
         _years = years ?? throw new ArgumentNullException(nameof(years));
-        _area = new HexCoord[HexTorus.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
+        _area = new HexCoord[HexGlobe.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
         _gathered = new Amount[content.Goods.Count];
     }
 
@@ -192,7 +192,7 @@ public sealed class GatheringSystem : ITurnSystem
         return percent;
     }
 
-    /// <summary>Food a land cell gives per year when its wild food is untouched (biome, fertility, deposit).</summary>
+    /// <summary>Food a land cell gives per year when its wild food is untouched (biome, fertility, growing season, deposit).</summary>
     public Amount CellFoodPerYear(WorldMap map, int cell)
     {
         ArgumentNullException.ThrowIfNull(map);
@@ -203,7 +203,9 @@ public sealed class GatheringSystem : ITurnSystem
         }
 
         // Biome food, better on fertile land: fertility 0 gives half, 50 gives the full value, 100 gives 150%.
-        Amount food = (_rules.FoodPerBiomeFoodPerYear * biome.Food).MultiplyRatio(50L + map.Fertility[cell], 100, Rounding.Floor);
+        // A short growing season (stage 1b) cuts it: 60% of the year or more gives everything, nothing gives 40%.
+        long season = Math.Min(100, 40 + map.GrowingSeason[cell]);
+        Amount food = (_rules.FoodPerBiomeFoodPerYear * biome.Food).MultiplyRatio((50L + map.Fertility[cell]) * season, 10_000, Rounding.Floor);
         int deposit = map.Deposit[cell];
         if (deposit != 0 && map.DepositDepth[cell] == 0)
         {

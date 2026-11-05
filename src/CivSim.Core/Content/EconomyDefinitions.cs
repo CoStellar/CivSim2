@@ -133,3 +133,6 @@ public sealed record AssetRules
     /// <summary>Units of goods one person carries when moving.</summary>
     public Amount CarryPerPerson { get; init; } = Amount.FromUnits(10);
 }
+
+/// <summary>A planet preset from <c>data/planets.json</c> (stage 1b): Earth, Mars, Uranus… Every value can be changed after choosing it.</summary>
+public sealed record PlanetPreset(string Key, string Name, WorldGen.PlanetParameters Planet, int WaterPercent, WorldGen.WorldMoisture Moisture, WorldGen.WorldRelief Relief);
