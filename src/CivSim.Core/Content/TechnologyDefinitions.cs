@@ -1,0 +1,100 @@
+using System.Collections.Generic;
+using CivSim.Core.Numerics;
+
+namespace CivSim.Core.Content;
+
+/// <summary>Field of a technology (GDD 6.1).</summary>
+public enum TechField
+{
+    /// <summary>Economy.</summary>
+    Economy = 0,
+
+    /// <summary>Science.</summary>
+    Science = 1,
+
+    /// <summary>Military.</summary>
+    Military = 2,
+
+    /// <summary>Society.</summary>
+    Society = 3,
+}
+
+/// <summary>Kind of situation that makes a technology cheaper (GDD 6.1, inspirations).</summary>
+public enum InspirationKind
+{
+    /// <summary>The civilization's warehouses hold at least <see cref="Inspiration.Amount"/> of a good.</summary>
+    GoodInNetwork = 0,
+
+    /// <summary>A deposit lies in the civilization's influence zone.</summary>
+    DepositInZone = 1,
+
+    /// <summary>A biome lies in the influence zone.</summary>
+    BiomeInZone = 2,
+
+    /// <summary>A river runs through the influence zone.</summary>
+    RiverInZone = 3,
+
+    /// <summary>One of its camps has a winter at least this cold (°C).</summary>
+    WinterBelow = 4,
+
+    /// <summary>The civilization has at least this many people.</summary>
+    PeopleAtLeast = 5,
+}
+
+/// <summary>A situation that cuts a technology's cost by <see cref="Percent"/>.</summary>
+/// <param name="Kind">What is checked.</param>
+/// <param name="Id">Good, deposit or biome id for the kinds that name one; otherwise -1.</param>
+/// <param name="Amount">Amount of the good (GoodInNetwork).</param>
+/// <param name="Value">Degrees (WinterBelow) or people (PeopleAtLeast).</param>
+/// <param name="Percent">Cost cut in percent.</param>
+public sealed record Inspiration(InspirationKind Kind, int Id, Amount Amount, int Value, int Percent);
+
+/// <summary>Goods a gathered cell gives per year on top of its base yield once a technology is known.</summary>
+/// <param name="DepositId">Deposit the bonus is for, or 0.</param>
+/// <param name="BiomeId">Biome the bonus is for, or -1.</param>
+/// <param name="Goods">Goods per year from an untouched cell.</param>
+public sealed record GatherBonus(int DepositId, int BiomeId, IReadOnlyList<GoodQuantity> Goods);
+
+/// <summary>A permanent effect on the civilization once a technology is known.</summary>
+public sealed record TechEffect(int EffectId, int Strength);
+
+/// <summary>A technology (GDD 6.1; stage 3f).</summary>
+public sealed record TechnologyDefinition(int Id, string Key, string Name, int Era, TechField Field, Amount Cost)
+{
+    /// <summary>Technologies that must all be known first.</summary>
+    public IReadOnlyList<int> Requires { get; init; } = [];
+
+    /// <summary>When not empty, at least one of these must be known too.</summary>
+    public IReadOnlyList<int> RequiresAny { get; init; } = [];
+
+    /// <summary>Situations that make the technology cheaper.</summary>
+    public IReadOnlyList<Inspiration> Inspirations { get; init; } = [];
+
+    /// <summary>Recipes the technology unlocks.</summary>
+    public IReadOnlyList<int> Recipes { get; init; } = [];
+
+    /// <summary>Extra gathering the technology brings.</summary>
+    public IReadOnlyList<GatherBonus> Gather { get; init; } = [];
+
+    /// <summary>Permanent effects on the civilization.</summary>
+    public IReadOnlyList<TechEffect> Effects { get; init; } = [];
+}
+
+/// <summary>Research rules (data/technologies.json, GDD 6; stage 3f).</summary>
+public sealed record ResearchRules
+{
+    /// <summary>Cost cut per neighbour that knows the technology, percent.</summary>
+    public int DiffusionPercent { get; init; } = 20;
+
+    /// <summary>Neighbours counted for diffusion at most.</summary>
+    public int MaxNeighbours { get; init; } = 2;
+
+    /// <summary>Another civilization is a neighbour when one of its settlements is this close to one of ours.</summary>
+    public int ContactCells { get; init; } = 12;
+
+    /// <summary>A technology never costs less than this share of its base cost, percent.</summary>
+    public int MinCostPercent { get; init; } = 25;
+
+    /// <summary>Share of the current era's technologies needed (with the threshold technology) to enter the next era.</summary>
+    public int EraSharePercent { get; init; } = 60;
+}

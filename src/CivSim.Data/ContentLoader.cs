@@ -37,6 +37,9 @@ public static class ContentLoader
         List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
         TradeRules trade = LoadTrade(Path.Combine(directory, "trade.json"), errors);
+        (List<TechnologyDefinition> technologies, ResearchRules research) =
+            LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
+        ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
         (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons, Core.WorldGen.ClimateCycleRules cycles) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
@@ -59,6 +62,8 @@ public static class ContentLoader
             Seasons = seasons,
             ClimateCycles = cycles,
             Trade = trade,
+            Technologies = technologies,
+            Research = research,
         };
     }
 
@@ -102,7 +107,8 @@ public static class ContentLoader
 
             bool fights = e.TryGetProperty("fights", out JsonElement f) && f.ValueKind == JsonValueKind.True;
             bool crafts = e.TryGetProperty("crafts", out JsonElement cr) && cr.ValueKind == JsonValueKind.True;
-            result.Add(new StratumDefinition(i, key, name, gathers, share, needs) { Fights = fights, Crafts = crafts });
+            int science = e.TryGetProperty("sciencePerThousandPerYear", out _) ? r.Int("sciencePerThousandPerYear", 0, 1_000_000) : 0;
+            result.Add(new StratumDefinition(i, key, name, gathers, share, needs) { Fights = fights, Crafts = crafts, SciencePerThousandPerYear = science });
             i++;
         }
 
@@ -575,6 +581,257 @@ public static class ContentLoader
         }
 
         return (result, seasons, cycles);
+    }
+
+    private static (List<TechnologyDefinition> Technologies, ResearchRules Rules) LoadTechnologies(
+        string path,
+        List<GoodDefinition> goods,
+        List<BiomeDefinition> biomes,
+        List<DepositDefinition> deposits,
+        List<RecipeDefinition> recipes,
+        List<EffectDefinition> effects,
+        List<string> errors)
+    {
+        var result = new List<TechnologyDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "technologies", path, errors, out JsonElement array))
+        {
+            return (result, new ResearchRules());
+        }
+
+        string file = Path.GetFileName(path);
+        var top = new Reader(doc.RootElement, file, errors);
+        var rules = new ResearchRules
+        {
+            DiffusionPercent = top.Int("diffusionPercent", 0, 100),
+            MaxNeighbours = top.Int("maxNeighbours", 0, 64),
+            ContactCells = top.Int("contactCells", 1, 200),
+            MinCostPercent = top.Int("minCostPercent", 1, 100),
+            EraSharePercent = top.Int("eraSharePercent", 0, 100),
+        };
+
+        // Keys first, so a technology may require one listed after it.
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        var ids = new Dictionary<string, int>(StringComparer.Ordinal);
+        int n = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            string key = new Reader(e, $"{file}: technologies[{n}]", errors).Key("key", keys);
+            ids.TryAdd(key, n);
+            n++;
+        }
+
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            string at = $"{file}: technologies[{i}]";
+            var r = new Reader(e, at, errors);
+            string key = r.String("key");
+            string name = r.String("name");
+            int era = r.Int("era", 1, 10);
+            TechField field = r.Enum<TechField>("field");
+            Amount cost = r.Amount("cost", Amount.FromUnits(1), Amount.FromUnits(100_000_000));
+            List<int> requires = TechList(e, "requires", ids, at, errors, required: true);
+            List<int> any = TechList(e, "requiresAny", ids, at, errors, required: false);
+            var inspirations = new List<Inspiration>();
+            if (e.TryGetProperty("inspirations", out JsonElement ins) && ins.ValueKind == JsonValueKind.Array)
+            {
+                int k = 0;
+                foreach (JsonElement x in ins.EnumerateArray())
+                {
+                    var ir = new Reader(x, $"{at}.inspirations[{k}]", errors);
+                    InspirationKind kind = ir.Enum<InspirationKind>("kind");
+                    int percent = ir.Int("percent", 1, 100);
+                    inspirations.Add(kind switch
+                    {
+                        InspirationKind.GoodInNetwork => new Inspiration(kind, IdOf(goods.FindIndex(g => g.Key == ir.String("good")), "good", at, errors), ir.Amount("amount", Amount.FromHundredths(1), Amount.FromUnits(1_000_000)), 0, percent),
+                        InspirationKind.DepositInZone => new Inspiration(kind, IdOf(deposits.Find(d => d.Key == ir.String("deposit"))?.Id ?? -1, "deposit", at, errors), Amount.Zero, 0, percent),
+                        InspirationKind.BiomeInZone => new Inspiration(kind, IdOf(biomes.FindIndex(b => b.Key == ir.String("biome")), "biome", at, errors), Amount.Zero, 0, percent),
+                        InspirationKind.WinterBelow => new Inspiration(kind, -1, Amount.Zero, ir.Int("degrees", -100, 100), percent),
+                        InspirationKind.PeopleAtLeast => new Inspiration(kind, -1, Amount.Zero, ir.Int("people", 1, 1_000_000_000), percent),
+                        _ => new Inspiration(kind, -1, Amount.Zero, 0, percent),
+                    });
+                    k++;
+                }
+            }
+
+            var recipeIds = new List<int>();
+            var gather = new List<GatherBonus>();
+            var techEffects = new List<TechEffect>();
+            if (e.TryGetProperty("unlocks", out JsonElement u) && u.ValueKind == JsonValueKind.Object)
+            {
+                if (u.TryGetProperty("recipes", out JsonElement rs) && rs.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (JsonElement x in rs.EnumerateArray())
+                    {
+                        recipeIds.Add(IdOf(recipes.FindIndex(rc => rc.Key == x.GetString()), "recipe", at, errors));
+                    }
+                }
+
+                if (u.TryGetProperty("gather", out JsonElement gs) && gs.ValueKind == JsonValueKind.Array)
+                {
+                    int k = 0;
+                    foreach (JsonElement x in gs.EnumerateArray())
+                    {
+                        var gr = new Reader(x, $"{at}.unlocks.gather[{k}]", errors);
+                        bool byDeposit = x.TryGetProperty("deposit", out _);
+                        int deposit = byDeposit ? IdOf(deposits.Find(d => d.Key == gr.String("deposit"))?.Id ?? -1, "deposit", at, errors) : 0;
+                        int biome = byDeposit ? -1 : IdOf(biomes.FindIndex(b => b.Key == gr.String("biome")), "biome", at, errors);
+                        gather.Add(new GatherBonus(deposit, biome, gr.Goods("goods", goods)));
+                        k++;
+                    }
+                }
+
+                if (u.TryGetProperty("effects", out JsonElement es) && es.ValueKind == JsonValueKind.Array)
+                {
+                    int k = 0;
+                    foreach (JsonElement x in es.EnumerateArray())
+                    {
+                        var er = new Reader(x, $"{at}.unlocks.effects[{k}]", errors);
+                        int effect = IdOf(effects.FindIndex(ef => ef.Key == er.String("effect")), "effect", at, errors);
+                        if (effect >= 0 && effects[effect].Target != EffectTarget.Civilization)
+                        {
+                            errors.Add($"{at}: effect '{effects[effect].Key}' must target a civilization.");
+                        }
+
+                        techEffects.Add(new TechEffect(effect, er.Int("strength", -1000, 1000)));
+                        k++;
+                    }
+                }
+            }
+
+            result.Add(new TechnologyDefinition(i, key, name, era, field, cost)
+            {
+                Requires = requires,
+                RequiresAny = any,
+                Inspirations = inspirations,
+                Recipes = recipeIds,
+                Gather = gather,
+                Effects = techEffects,
+            });
+            i++;
+        }
+
+        // Every recipe needs a technology, and the requirements must not loop.
+        for (int r = 0; r < recipes.Count; r++)
+        {
+            if (!result.Exists(t => System.Linq.Enumerable.Contains(t.Recipes, r)))
+            {
+                errors.Add($"{file}: recipe '{recipes[r].Key}' is not unlocked by any technology.");
+            }
+        }
+
+        var state = new int[result.Count];
+        foreach (TechnologyDefinition t in result)
+        {
+            if (Loops(result, t.Id, state))
+            {
+                errors.Add($"{file}: the requirements of '{t.Key}' form a loop.");
+                break;
+            }
+        }
+
+        return (result, rules);
+    }
+
+    private static List<int> TechList(JsonElement e, string name, Dictionary<string, int> ids, string at, List<string> errors, bool required)
+    {
+        var list = new List<int>();
+        if (!e.TryGetProperty(name, out JsonElement a) || a.ValueKind != JsonValueKind.Array)
+        {
+            if (required)
+            {
+                errors.Add($"{at}.{name}: required list of technology keys.");
+            }
+
+            return list;
+        }
+
+        foreach (JsonElement x in a.EnumerateArray())
+        {
+            if (x.GetString() is string k && ids.TryGetValue(k, out int id))
+            {
+                list.Add(id);
+            }
+            else
+            {
+                errors.Add($"{at}.{name}: unknown technology '{x}'.");
+            }
+        }
+
+        return list;
+    }
+
+    private static int IdOf(int id, string what, string at, List<string> errors)
+    {
+        if (id < 0)
+        {
+            errors.Add($"{at}: unknown {what}.");
+        }
+
+        return id;
+    }
+
+    // Depth-first search for a cycle (0 = unseen, 1 = on the path, 2 = done).
+    private static bool Loops(List<TechnologyDefinition> techs, int id, int[] state)
+    {
+        if (state[id] == 1)
+        {
+            return true;
+        }
+
+        if (state[id] == 2)
+        {
+            return false;
+        }
+
+        state[id] = 1;
+        foreach (int r in techs[id].Requires)
+        {
+            if (Loops(techs, r, state))
+            {
+                return true;
+            }
+        }
+
+        foreach (int r in techs[id].RequiresAny)
+        {
+            if (Loops(techs, r, state))
+            {
+                return true;
+            }
+        }
+
+        state[id] = 2;
+        return false;
+    }
+
+    private static void ResolveEraThresholds(string path, List<EraDefinition> eras, List<TechnologyDefinition> techs, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !doc.RootElement.TryGetProperty("eras", out JsonElement array))
+        {
+            return;
+        }
+
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            if (i < eras.Count && e.TryGetProperty("threshold", out JsonElement t))
+            {
+                int id = techs.FindIndex(x => x.Key == t.GetString());
+                if (id < 0)
+                {
+                    errors.Add($"{Path.GetFileName(path)}: eras[{i}].threshold: unknown technology '{t}'.");
+                }
+                else
+                {
+                    eras[i] = eras[i] with { ThresholdTechnology = id };
+                }
+            }
+
+            i++;
+        }
     }
 
     private static TradeRules LoadTrade(string path, List<string> errors)

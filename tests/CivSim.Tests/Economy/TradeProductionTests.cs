@@ -171,14 +171,25 @@ public class TradeProductionTests
         SettlementState s = Camp(state, state.Civilizations[0].Id, land[0], 80, artisans: 5, warriors: 15);
         s.Stock[Good("hides")] = Amount.FromUnits(50);
 
+        // Only recipes of known technologies count: tanning gives clothing, flint knapping gives tools.
+        Assert.Empty(Issue(state));
+        CivilizationState civ = state.Civilizations[0];
+        CivSim.Core.Research.Technologies.Learn(Content, state, civ, Content.Technology("tanning").Id);
+        CivSim.Core.Research.Technologies.Learn(Content, state, civ, Content.Technology("flint_knapping").Id);
+
+        SetRecipeCommand set = Assert.IsType<SetRecipeCommand>(Assert.Single(Issue(state)).Command);
+        Assert.Equal(Recipe("sew_hide_clothing"), set.RecipeId); // tools are wanted too, but there is no flint
+
+        Assert.False(new SetRecipeCommand(Content, s.Id, Recipe("fire_pottery")).Validate(state, s.Owner).Success); // needs pottery
+    }
+
+    private static System.Collections.Generic.List<CommandEnvelope> Issue(GameState state)
+    {
         var queue = new CommandQueue();
         new EconomyAi(Content).IssueCommands(state, queue);
         var commands = new System.Collections.Generic.List<CommandEnvelope>();
         queue.DrainSorted(state, 1, commands);
-        SetRecipeCommand set = Assert.IsType<SetRecipeCommand>(Assert.Single(commands).Command);
-        Assert.Equal(Recipe("sew_hide_clothing"), set.RecipeId); // tools are wanted too, but there is no flint
-
-        Assert.False(new SetRecipeCommand(Content, s.Id, Recipe("fire_pottery")).Validate(state, s.Owner).Success); // Neolithic
+        return commands;
     }
 
     [Fact]
@@ -203,7 +214,12 @@ public class TradeProductionTests
         GameState state = GameState.CreateNew(GameSettings.Test(38), Content, out _);
         WorldMap map = state.Worlds[0].Map;
         int flint = System.Linq.Enumerable.First(Content.Deposits, d => d.Key == "flint").Id;
-        Assert.Contains(Content.Deposit(flint).Gather, q => q.GoodId == Good("flint"));
+        Assert.Contains(Content.Technology("flint_knapping").Gather, g => g.DepositId == flint);
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            CivSim.Core.Research.Technologies.Learn(Content, state, c, Content.Technology("flint_knapping").Id);
+        }
+
         Assert.Contains(Content.Biome("deciduous_forest").Gather, q => q.GoodId == Good("wood"));
 
         var runner = new TurnRunner(state);

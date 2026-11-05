@@ -7,7 +7,7 @@ Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. 
 wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
-**Aktualny etap: 3 (gospodarka i ludność), następny 3f (technologie er 1–2)**
+**Aktualny etap: 3 (gospodarka i ludność), następny: osiedlanie się (rolnictwo, wioski), potem 3g**
 
 ---
 
@@ -89,13 +89,14 @@ Został pomiar FPS na komputerze Patryka. Nakładki właściciela i strefy wpły
 
 Gotowe, gdy: plemiona same zbierają, wędrują, osiedlają się i rosną przez 2000 tur bez załamań.
 
-Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemnością, psucie żywności na rok, receptury w danych, mechanizm efektów, czas gry w miesiącach), **3b** (3 warstwy ludności z potrzebami, zbieranie z okolicy osady, wzrost, głód, jedna wartość zdrowia, nastrój), **3c** (strefy wpływów, wyczerpywanie i odrastanie dzikiej żywności, lata dobre i złe, przenoszenie obozów, odłamy, prosta AI plemienna), **3d** (osady jako majątek), **3e** (sieć handlowa bez transportu, ceny wewnętrzne, produkcja z receptur, priorytety przy niedoborach, drewno, krzemień i kamień ze zbierania). Podbój przy migracji przechodzi do 3d.
+Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemnością, psucie żywności na rok, receptury w danych, mechanizm efektów, czas gry w miesiącach), **3b** (3 warstwy ludności z potrzebami, zbieranie z okolicy osady, wzrost, głód, jedna wartość zdrowia, nastrój), **3c** (strefy wpływów, wyczerpywanie i odrastanie dzikiej żywności, lata dobre i złe, przenoszenie obozów, odłamy, prosta AI plemienna), **3d** (osady jako majątek), **3e** (sieć handlowa bez transportu, ceny wewnętrzne, produkcja z receptur, priorytety przy niedoborach, drewno, krzemień i kamień ze zbierania), **3f** (14 technologii er 1–2, nauka z ludności, inspiracje, dyfuzja od sąsiadów, ery z technologii). Podbój przy migracji przechodzi do 3d.
 
 - [x] Zasoby, magazyny osad (jedna pojemność), psucie żywności, sieć handlowa bez fizycznego transportu (koszt zależny od odległości), receptury jednoetapowe, ceny wewnętrzne, priorytety przy niedoborach (3e, `docs/systems/economy-trade.md`)
 - [ ] Ludność: 3 warstwy (wytwórcy, rzemieślnicy, wojownicy), potrzeby, wzrost, głód, jedna wartość zdrowia, migracje
 - [x] Koczownicy, obozy, strefa wpływów, migracje (sezonowe, odłam, całkowita, z podbojem)
 - [x] Osady jako majątek: porzucanie, dwa stany (opuszczona, ruiny), przejmowanie, odbudowa, roszczenia (odbudowa budynków razem z budynkami)
-- [ ] Technologie er 1–2 w danych, badania, dyfuzja, inspiracje
+- [x] Technologie er 1–2 w danych, badania, dyfuzja, inspiracje (3f, `docs/systems/research.md`)
+- [ ] Osiedlanie się: pola uprawne z rolnictwa, obozy stają się wioskami, wioski rosną ponad 150 osób (warunek „Gotowe” etapu 3)
 - [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze; wędrówki trwające kilka tur do znanych dalekich miejsc, także po lodzie morskim i pomostach lądowych z epok lodowych (żeby na planetach leżących na boku plemiona mogły iść za latem na drugą półkulę)
 - [ ] Mechanizm efektów + zdarzenia: susza, pożar, powódź, epidemia
 

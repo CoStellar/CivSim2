@@ -20,6 +20,7 @@ public sealed class StorageSystem : ITurnSystem
     private readonly long[] _weights;
     private readonly Amount[] _losses;
     private int _cachedMonths = -1;
+    private readonly Dictionary<long, long[]> _modified = [];
 
     /// <summary>Creates the system.</summary>
     public StorageSystem(GameContent content)
@@ -50,12 +51,17 @@ public sealed class StorageSystem : ITurnSystem
         long overflow = 0;
         foreach (SettlementState s in state.Settlements)
         {
+            // Pots and granaries (spoilage_percent on the civilization) slow spoiling.
+            int slower = state.Effects.Count == 0
+                ? 0
+                : state.Effects.Total(_content.Effects, EffectStat.SpoilagePercent, EffectTarget.Civilization, WorldId.Earth, s.Owner.Value);
+            long[] kept = slower == 0 ? _keptShare : KeptShares(slower, state.MonthsPerTurn(_content));
             Span<Amount> stock = s.Stock;
             for (int g = 0; g < stock.Length; g++)
             {
-                if (stock[g] > Amount.Zero && _keptShare[g] != Spoilage.One)
+                if (stock[g] > Amount.Zero && kept[g] != Spoilage.One)
                 {
-                    Amount left = Spoilage.Apply(stock[g], _keptShare[g]);
+                    Amount left = Spoilage.Apply(stock[g], kept[g]);
                     spoiled += (stock[g] - left).Hundredths;
                     stock[g] = left;
                 }
@@ -189,6 +195,25 @@ public sealed class StorageSystem : ITurnSystem
         }
 
         return excess.Hundredths;
+    }
+
+    // Kept shares with spoilage changed by `percent`, cached per (percent, turn length).
+    private long[] KeptShares(int percent, int months)
+    {
+        long key = ((long)percent << 32) | (uint)months;
+        if (!_modified.TryGetValue(key, out long[]? kept))
+        {
+            kept = new long[_keptShare.Length];
+            for (int g = 0; g < kept.Length; g++)
+            {
+                long rate = Math.Max(0, (long)_content.Goods[g].SpoilageBasisPointsPerYear * (100 + percent) / 100);
+                kept[g] = Spoilage.KeptShare((int)rate, months);
+            }
+
+            _modified[key] = kept;
+        }
+
+        return kept;
     }
 
     private void RefreshShares(int months)
