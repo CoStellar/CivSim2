@@ -118,6 +118,9 @@ public sealed class SettlementState
     /// <summary>Value of <see cref="RecipeId"/> when nothing is made.</summary>
     public const int NoRecipe = -1;
 
+    /// <summary>Producers who farmed this turn (set by farming before gathering; the others gather).</summary>
+    public int Farmers { get; set; }
+
     /// <summary>Recipe runs done in the last turn, hundredths (for reports and the AI).</summary>
     public long RunsMade { get; set; }
 

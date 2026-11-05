@@ -40,6 +40,19 @@ public static class ContentLoader
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
+        for (int l = 0; l < levels.Count; l++)
+        {
+            if (levels[l].RequiresKey.Length > 0)
+            {
+                int tech = technologies.FindIndex(t => t.Key == levels[l].RequiresKey);
+                if (tech < 0)
+                {
+                    errors.Add($"settlements.json: levels[{l}].requires: unknown technology '{levels[l].RequiresKey}'.");
+                }
+
+                levels[l] = levels[l] with { RequiresTechnology = tech };
+            }
+        }
         (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons, Core.WorldGen.ClimateCycleRules cycles) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
@@ -185,6 +198,7 @@ public static class ContentLoader
         var migration = new Reader(Section("migration"), $"{file}: migration", errors);
         var conquest = new Reader(Section("conquest"), $"{file}: conquest", errors);
         var comfort = new Reader(Section("comfort"), $"{file}: comfort", errors);
+        var farming = new Reader(Section("farming"), $"{file}: farming", errors);
         var tribe = new int[strata.Count];
         JsonElement tribeElement = Section("newTribe");
         var tribeReader = new Reader(tribeElement, $"{file}: newTribe", errors);
@@ -198,6 +212,18 @@ public static class ContentLoader
         if (total == 0 && strata.Count > 0)
         {
             errors.Add($"{file}: newTribe must have at least one person.");
+        }
+
+        int GoodOfIn(Reader section, string name)
+        {
+            string key = section.String(name);
+            int id = goods.FindIndex(g => g.Key == key);
+            if (id < 0 && key.Length > 0)
+            {
+                errors.Add($"{file}: {name}: unknown good '{key}'.");
+            }
+
+            return id;
         }
 
         int GoodOf(string name)
@@ -233,6 +259,12 @@ public static class ContentLoader
             PlantsGood = GoodOf("plantsGood"),
             MeatGood = GoodOf("meatGood"),
             HidesGood = GoodOf("hidesGood"),
+            GrainGood = GoodOfIn(farming, "grainGood"),
+            GrainPerFarmerPerYear = farming.Amount("grainPerFarmerPerYear", Amount.Zero, Amount.FromUnits(1000)),
+            FarmersPerCell = farming.Int("farmersPerCell", 1, 100_000),
+            MinFarmFertility = farming.Int("minFertility", 0, 100),
+            ExhaustionHundredthsPerYear = (int)farming.Amount("exhaustionPerYear", Amount.Zero, Amount.FromUnits(100)).Hundredths,
+            RecoveryHundredthsPerYear = (int)farming.Amount("recoveryPerYear", Amount.Zero, Amount.FromUnits(100)).Hundredths,
             SurvivableDeadSeasonHundredths = (int)gathering.Amount("survivableDeadSeasonYears", Amount.FromHundredths(1), Amount.FromUnits(1000)).Hundredths,
             WildDepletionPerMillePerYear = wild.Int("depletionPerMillePerYear", 0, 1000),
             WildRegrowthBasisPointsPerYear = (int)wild.Amount("regrowthPercentPerYear", Amount.Zero, Amount.FromUnits(100)).Hundredths,
@@ -375,7 +407,8 @@ public static class ContentLoader
                 errors.Add($"{file}: levels[{i}] must not be smaller than the level before it.");
             }
 
-            levels.Add(new SettlementLevelDefinition(i, key, name, min, max, storage, mobile) { AbandonedYears = abandoned, RuinsUntilYears = ruins });
+            string requires = e.TryGetProperty("requires", out JsonElement rq) && rq.ValueKind == JsonValueKind.String ? rq.GetString()! : string.Empty;
+            levels.Add(new SettlementLevelDefinition(i, key, name, min, max, storage, mobile) { AbandonedYears = abandoned, RuinsUntilYears = ruins, RequiresKey = requires });
             i++;
         }
 
@@ -418,6 +451,7 @@ public static class ContentLoader
         {
             ClaimYears = claims.Int("claimYears", 0, 100_000),
             CarryPerPerson = carrying.Amount("perPerson", Amount.Zero, Amount.FromUnits(100_000)),
+            SettleMinPeople = new Reader(Object("settle"), $"{file}: settle", errors).Int("minPeople", 1, 1_000_000),
         };
 
         return (levels, Math.Max(0, tribeLevel), stock, assets);

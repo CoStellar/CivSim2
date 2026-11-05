@@ -75,6 +75,12 @@ public sealed record SettlementLevelDefinition(
     Amount StorageCapacity,
     bool Mobile)
 {
+    /// <summary>Key of the technology a camp needs to settle down as this level (GDD 5.3), or empty.</summary>
+    public string RequiresKey { get; init; } = string.Empty;
+
+    /// <summary>Technology id resolved from <see cref="RequiresKey"/>, or -1.</summary>
+    public int RequiresTechnology { get; init; } = -1;
+
     /// <summary>Years an empty settlement of this level stays abandoned (buildings standing) before it becomes ruins (GDD 5.5).</summary>
     public int AbandonedYears { get; init; } = 50;
 
@@ -156,6 +162,9 @@ public sealed record EffectDefinition(int Id, string Key, string Name, EffectTar
 /// </summary>
 public sealed record AssetRules
 {
+    /// <summary>People a camp needs to settle down as a village (stage 3f).</summary>
+    public int SettleMinPeople { get; init; } = 60;
+
     /// <summary>Years the former owner keeps a claim on a settlement it abandoned.</summary>
     public int ClaimYears { get; init; } = 100;
 

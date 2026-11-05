@@ -35,6 +35,24 @@ public sealed record StratumDefinition(int Id, string Key, string Name, bool Gat
 /// <summary>Growth, hunger, health and gathering rules from <c>data/population.json</c> (GDD 5.2, 4.4).</summary>
 public sealed record PopulationRules
 {
+    /// <summary>Good that farming grows (stage 3f).</summary>
+    public int GrainGood { get; init; } = -1;
+
+    /// <summary>Grain one farmer grows per year on land of fertility 50 in a full growing season.</summary>
+    public Amount GrainPerFarmerPerYear { get; init; } = Amount.FromUnits(3);
+
+    /// <summary>Farmers one cell can take.</summary>
+    public int FarmersPerCell { get; init; } = 40;
+
+    /// <summary>Land must be at least this fertile to farm.</summary>
+    public int MinFarmFertility { get; init; } = 20;
+
+    /// <summary>Fertility points a fully farmed cell loses per year, hundredths.</summary>
+    public int ExhaustionHundredthsPerYear { get; init; } = 10;
+
+    /// <summary>Fertility points land left alone regains per year, hundredths, up to its natural fertility.</summary>
+    public int RecoveryHundredthsPerYear { get; init; } = 5;
+
     /// <summary>Births per thousand people per year when everyone is fed.</summary>
     public int BirthsPerMille { get; init; } = 35;
 

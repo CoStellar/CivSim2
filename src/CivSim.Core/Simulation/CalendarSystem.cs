@@ -51,6 +51,7 @@ public static class CoreSystems
         runner.AddSystem(new Population.DecaySystem(content));
         runner.AddSystem(new Economy.WildFoodSystem(content, years));
         runner.AddSystem(new Population.InfluenceSystem(content, TurnPhase.Movement));
+        runner.AddSystem(new Economy.FarmingSystem(content));
         runner.AddSystem(new Economy.GatheringSystem(content, years));
         runner.AddSystem(new Economy.TradeSystem(content));
         runner.AddSystem(new Economy.ProductionSystem(content));

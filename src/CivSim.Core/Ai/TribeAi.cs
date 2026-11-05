@@ -25,7 +25,9 @@ public sealed class TribeAi : ICommandSource
     private readonly GameContent _content;
     private readonly PopulationRules _rules;
     private readonly GatheringSystem _yields;
+    private readonly FarmingSystem _farming;
     private readonly HexCoord[] _reach;
+    private readonly HexCoord[] _farmArea;
     private readonly int[] _ringOf;
     private readonly HexCoord[] _near;
     private long[] _occupiedAt = [];
@@ -49,7 +51,9 @@ public sealed class TribeAi : ICommandSource
         _content = content;
         _rules = content.Population;
         _yields = new GatheringSystem(content, new YieldYears(0));
+        _farming = new FarmingSystem(content);
         _reach = new HexCoord[HexGlobe.RangeSize(_rules.MaxMoveCells)];
+        _farmArea = new HexCoord[HexGlobe.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
         _influence = new Influence(content);
         _near = new HexCoord[HexGlobe.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
         _foodPerPerson = new long[content.Strata.Count];
@@ -181,7 +185,8 @@ public sealed class TribeAi : ICommandSource
         bool hungry = s.FedPerMille < _rules.MoveWhenFedBelowPercent * 10;
         bool uncomfortable = Comfort(state, world, civ, world.Geometry.Index(s.Cell)) < 100;
         bool rested = (state.Month - s.MovedMonth) >= _rules.MinTurnsBetweenMoves * (long)state.MonthsPerTurn(_content);
-        if ((hungry || uncomfortable) && rested)
+        bool mobile = _content.SettlementLevels[s.Level].Mobile;
+        if (mobile && (hungry || uncomfortable) && rested)
         {
             long here = SiteValue(state, world, civ, s.Cell);
             (HexCoord best, long bestValue) = BestSite(state, world, civ, s, splitting: false);
@@ -195,6 +200,14 @@ public sealed class TribeAi : ICommandSource
 
         if (!slowTurn)
         {
+            return;
+        }
+
+        // Agriculture: a camp whose land could feed half again as many people by farming settles down (GDD 5.3).
+        if (mobile && people >= _content.Assets.SettleMinPeople && CanSettle(civ, s.Level)
+            && FarmFood(world, s) * 2 >= GroupFoodNeed(s, 100) * 3)
+        {
+            queue.Enqueue(PlayerId.Ai, civ.Id, new SettleCommand(_content, s.Id));
             return;
         }
 
@@ -227,6 +240,36 @@ public sealed class TribeAi : ICommandSource
                 }
             }
         }
+    }
+
+    private bool CanSettle(CivilizationState civ, int level)
+    {
+        int village = SettleCommand.VillageLevel(_content, level);
+        if (village < 0)
+        {
+            return false;
+        }
+
+        int tech = _content.SettlementLevels[village].RequiresTechnology;
+        return tech < 0 || civ.Knows(tech);
+    }
+
+    // Grain per year the camp's zone would give if every cell were farmed in full, hundredths.
+    private long FarmFood(WorldState world, SettlementState s)
+    {
+        int claim = s.Id.Value + 1;
+        int count = world.Geometry.Range(s.Cell, Math.Min(_rules.InfluenceMaxRange, world.Geometry.MaxUniqueRadius), _farmArea);
+        long food = 0;
+        for (int k = 0; k < count; k++)
+        {
+            int i = world.Geometry.Index(_farmArea[k]);
+            if (world.Map.Claim[i] == claim)
+            {
+                food += _farming.GrainPerFarmer(world.Map, i) * _rules.FarmersPerCell;
+            }
+        }
+
+        return food;
     }
 
     // The command that brings people to the chosen cell: into an empty settlement there, against the camp living

@@ -716,6 +716,8 @@ public sealed class WorldGenerator
             f += _rng.NextInt(-8, 9);
             fertility[i] = (byte)Math.Clamp(f, 0, 100);
         }
+
+        fertility.CopyTo(_map.NaturalFertility.Raw);
     }
 
     // ---- 8. Deposits ---------------------------------------------------------------------------------------------

@@ -223,7 +223,7 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
         }
 
-        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg");
+        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg,villages,village_people,farmers");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -291,7 +291,10 @@ public static class HeadlessRun
             inv, $",{FoodUnits(state, content)},{(populated == 0 ? 0 : health / populated)},{(populated == 0 ? 0 : mood / populated)},{populated},{(landCells == 0 ? 0 : wild / landCells)}"
             + $",{state.Worlds[0].Climate.GlobalMeanMillionths / 100_000 / 10.0:F1},{state.Worlds[0].Climate.NorthIce / 1000},{state.Worlds[0].Climate.SouthIce / 1000},{state.Worlds[0].Climate.Co2Microbar},{(state.Worlds[0].Climate.SeaLevel - Core.WorldGen.WorldGenerator.SeaLevel) * content.ClimateCycles.SeaMetersPerStep}"
             + $",{(populated == 0 ? 0 : higher / populated)},{crafting},{valuables / 100},{materials / 100}"
-            + $",{TechAverage(state)},{TechMax(state)},{EraMax(state)},{ScienceAverage(state)}"));
+            + $",{TechAverage(state)},{TechMax(state)},{EraMax(state)},{ScienceAverage(state)}"
+            + $",{state.Settlements.Count(x => x.IsActive && !content.SettlementLevels[x.Level].Mobile)}"
+            + $",{state.Settlements.Where(x => x.IsActive && !content.SettlementLevels[x.Level].Mobile).Sum(x => x.TotalPopulation())}"
+            + $",{state.Settlements.Sum(x => x.Farmers)}"));
     }
 
     private static string TechAverage(GameState state)

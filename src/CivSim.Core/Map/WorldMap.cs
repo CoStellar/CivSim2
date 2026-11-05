@@ -50,6 +50,8 @@ public sealed class WorldMap
         ClimateSine = Add(new MapLayer<short>("climate_sine", this, 1, 0));
         TemperatureOffset = Add(new MapLayer<sbyte>("temperature_offset", this, 1, 0));
         Continentality = Add(new MapLayer<byte>("continentality", this, 1, 100));
+        NaturalFertility = Add(new MapLayer<byte>("natural_fertility", this, 1, 0));
+        FertilityRemainder = Add(new MapLayer<sbyte>("fertility_remainder", this, 1, 0));
         MarkAllDirty();
     }
 
@@ -130,6 +132,12 @@ public sealed class WorldMap
 
     /// <summary>How continental the climate is, percent: 25 over water, up to 100 deep inland (stage 1c-B).</summary>
     public MapLayer<byte> Continentality { get; }
+
+    /// <summary>Fertility the land returns to when nobody farms it (stage 3f: farmed land wears out, GDD 4.4).</summary>
+    public MapLayer<byte> NaturalFertility { get; }
+
+    /// <summary>Hundredths of a fertility point gained or lost but not yet a whole point (−99…99).</summary>
+    public MapLayer<sbyte> FertilityRemainder { get; }
 
     /// <summary>Value of <see cref="ClimateSine"/> at the poles.</summary>
     public const int ClimateSineOne = 32_767;
