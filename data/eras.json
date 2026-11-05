@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "comment": "Eras and turn length (GDD 6.2). monthsPerTurn: 600 = 50 years. Every rate in the game is defined per year and converted with this value.",
+  "eras": [
+    { "key": "stone_age",   "name": "Stone Age",              "monthsPerTurn": 600 },
+    { "key": "neolithic",   "name": "Neolithic",              "monthsPerTurn": 300 },
+    { "key": "bronze_age",  "name": "Bronze Age",             "monthsPerTurn": 240 },
+    { "key": "iron_age",    "name": "Iron Age and Antiquity", "monthsPerTurn": 120 },
+    { "key": "middle_ages", "name": "Middle Ages",            "monthsPerTurn": 60 },
+    { "key": "renaissance", "name": "Renaissance",            "monthsPerTurn": 24 },
+    { "key": "industrial",  "name": "Industrial Era",         "monthsPerTurn": 12 },
+    { "key": "modern",      "name": "Modern Era",             "monthsPerTurn": 12 },
+    { "key": "information", "name": "Information Era",        "monthsPerTurn": 6 },
+    { "key": "space",       "name": "Space Era",              "monthsPerTurn": 3 }
+  ]
+}

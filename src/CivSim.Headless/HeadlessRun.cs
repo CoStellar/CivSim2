@@ -32,6 +32,15 @@ public sealed record HeadlessResult(
 
     /// <summary>Rule violations found by the world validator (empty = valid).</summary>
     public IReadOnlyList<string> WorldProblems { get; init; } = [];
+
+    /// <summary>Number of settlements at the end of the run.</summary>
+    public int Settlements { get; init; }
+
+    /// <summary>Food in all warehouses at the end of the run, in whole units.</summary>
+    public long FoodUnits { get; init; }
+
+    /// <summary>Game time at the end of the run, in years.</summary>
+    public long Years { get; init; }
 }
 
 /// <summary>Runs a game without a window and writes the optional CSV report.</summary>
@@ -56,6 +65,7 @@ public static class HeadlessRun
         }
 
         var runner = new TurnRunner(state);
+        CoreSystems.Register(runner, content);
         var turnMs = new double[Math.Max(1, options.Turns)];
         long totalAllocated = 0;
 
@@ -111,7 +121,28 @@ public static class HeadlessRun
             World = world,
             PngFiles = pngs,
             WorldProblems = problems,
+            Settlements = runner.State.Settlements.Count,
+            FoodUnits = FoodUnits(runner.State, content),
+            Years = runner.State.Month / 12,
         };
+    }
+
+    private static long FoodUnits(GameState state, GameContent content)
+    {
+        long hundredths = 0;
+        foreach (SettlementState s in state.Settlements)
+        {
+            ReadOnlySpan<Core.Numerics.Amount> stock = s.StockView;
+            for (int g = 0; g < stock.Length; g++)
+            {
+                if (content.Goods[g].IsFood)
+                {
+                    hundredths += stock[g].Hundredths;
+                }
+            }
+        }
+
+        return hundredths / Core.Numerics.Amount.Scale;
     }
 
     /// <summary>The CSV header line.</summary>

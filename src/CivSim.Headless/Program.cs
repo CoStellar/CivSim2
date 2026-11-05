@@ -38,6 +38,8 @@ public static class Program
         Console.WriteLine(string.Create(inv, $"allocated per turn: {r.AllocatedBytesPerTurn} bytes"));
         Console.WriteLine(string.Create(inv, $"managed memory:     {r.ManagedMemoryBytes / 1024.0 / 1024.0:F1} MB"));
         Console.WriteLine(string.Create(inv, $"working set:        {r.WorkingSetBytes / 1024.0 / 1024.0:F1} MB"));
+        Console.WriteLine(string.Create(inv, $"game time:          {r.Years} years"));
+        Console.WriteLine(string.Create(inv, $"settlements:        {r.Settlements}, food in stock {r.FoodUnits}"));
         if (r.World is { } w)
         {
             Console.WriteLine(string.Create(inv, $"world gen time:     {w.ElapsedMs:F1} ms"));

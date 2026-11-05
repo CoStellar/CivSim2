@@ -9,6 +9,12 @@ namespace CivSim.Core.Simulation;
 /// </summary>
 public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> Worlds, ImmutableArray<CivilizationSnapshot> Civilizations)
 {
+    /// <summary>Game time in months since the start.</summary>
+    public long Month { get; init; }
+
+    /// <summary>All settlements in id order.</summary>
+    public ImmutableArray<SettlementSnapshot> Settlements { get; init; } = [];
+
     /// <summary>Copies the public parts of <paramref name="state"/>.</summary>
     public static GameSnapshot From(GameState state)
     {
@@ -27,7 +33,24 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
             civs.Add(new CivilizationSnapshot(c.Id, c.Name, c.Controller, c.IsAlive));
         }
 
-        return new GameSnapshot(state.Turn, worlds.MoveToImmutable(), civs.MoveToImmutable());
+        var settlements = ImmutableArray.CreateBuilder<SettlementSnapshot>(state.Settlements.Count);
+        foreach (SettlementState st in state.Settlements)
+        {
+            System.ReadOnlySpan<Numerics.Amount> view = st.StockView;
+            var stock = new long[view.Length];
+            for (int g = 0; g < stock.Length; g++)
+            {
+                stock[g] = view[g].Hundredths;
+            }
+
+            settlements.Add(new SettlementSnapshot(st.Id, st.Owner, st.World, st.Cell.Col, st.Cell.Row, st.Name, st.Level, ImmutableArray.Create(stock)));
+        }
+
+        return new GameSnapshot(state.Turn, worlds.MoveToImmutable(), civs.MoveToImmutable())
+        {
+            Month = state.Month,
+            Settlements = settlements.MoveToImmutable(),
+        };
     }
 }
 
@@ -39,3 +62,6 @@ public sealed record WorldSnapshot(WorldId Id, string Name, int Width, int Heigh
 
 /// <summary>Immutable copy of a civilization's public data.</summary>
 public sealed record CivilizationSnapshot(CivId Id, string Name, PlayerId Controller, bool IsAlive);
+
+/// <summary>Immutable copy of a settlement. <paramref name="Stock"/> holds hundredths per good id.</summary>
+public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId World, int Col, int Row, string Name, int Level, ImmutableArray<long> Stock);

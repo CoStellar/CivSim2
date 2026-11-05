@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "comment": "One-step production recipes for eras 1-2 (GDD 4.4; CORE simplified: no chains yet). A group of 'workers' turns the inputs into the outputs in 'years'. Amounts have at most 2 decimal places. The stratum that works and the technology that unlocks a recipe are added with population (3b) and technologies (3f).",
+  "recipes": [
+    { "key": "knap_stone_tools",  "name": "Knap Stone Tools",  "inputs": { "flint": "2", "wood": "1" }, "outputs": { "stone_tools": "1" },   "workers": 1, "years": 1 },
+    { "key": "sew_hide_clothing", "name": "Sew Hide Clothing", "inputs": { "hides": "2" },              "outputs": { "hide_clothing": "1" }, "workers": 1, "years": 1 },
+    { "key": "fire_pottery",      "name": "Fire Pottery",      "inputs": { "clay": "2", "wood": "1" },  "outputs": { "pottery": "1" },       "workers": 1, "years": 1 },
+    { "key": "weave_wool",        "name": "Weave Wool",        "inputs": { "wool": "2" },               "outputs": { "cloth": "1" },         "workers": 1, "years": 1 },
+    { "key": "weave_flax",        "name": "Weave Flax",        "inputs": { "flax": "3" },               "outputs": { "cloth": "1" },         "workers": 1, "years": 1 },
+    { "key": "bake_bread",        "name": "Bake Bread",        "inputs": { "grain": "2", "wood": "1" }, "outputs": { "bread": "2" },         "workers": 1, "years": 1 }
+  ]
+}

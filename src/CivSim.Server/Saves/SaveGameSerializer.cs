@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 4;
+    public const int FormatVersion = 5;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -53,11 +53,31 @@ public static class SaveGameSerializer
         var civs = new List<CivilizationSaveData>(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
-            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row));
+            civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era));
+        }
+
+        var settlements = new List<SettlementSaveData>(state.Settlements.Count);
+        foreach (SettlementState st in state.Settlements)
+        {
+            ReadOnlySpan<Core.Numerics.Amount> view = st.StockView;
+            var stock = new long[view.Length];
+            for (int g = 0; g < stock.Length; g++)
+            {
+                stock[g] = view[g].Hundredths;
+            }
+
+            settlements.Add(new SettlementSaveData(st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock));
+        }
+
+        var effects = new List<EffectSaveData>(state.Effects.Count);
+        foreach (EffectInstance e in state.Effects.All)
+        {
+            effects.Add(new EffectSaveData(e.Id.Value, e.DefinitionId, (int)e.Target, e.World.Value, e.TargetId, e.Strength, e.EndMonth));
         }
 
         GameSettings s = state.Settings;
-        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, (int)s.Climate, (int)s.Moisture, (int)s.Relief, (int)s.Resources, (int)s.Inland);
+        var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, (int)s.Climate, (int)s.Moisture, (int)s.Relief, (int)s.Resources, (int)s.Inland,
+            state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -126,7 +146,29 @@ public static class SaveGameSerializer
             state.AddCivilizationForLoad(new CivilizationState(new CivId(c.Id), c.Name, PlayerId.Ai) {
                 IsAlive = c.IsAlive,
                 StartCell = new HexCoord(c.StartCol, c.StartRow),
+                Era = c.Era,
             });
+        }
+
+        state.SetCountersForLoad(data.Month, data.NextSettlementId);
+        foreach (SettlementSaveData st in data.Settlements ?? [])
+        {
+            var settlement = new SettlementState(
+                new SettlementId(st.Id), new CivId(st.Owner), new WorldId(st.World), new HexCoord(st.Col, st.Row), st.Name, st.Level, st.FoundedTurn, st.Stock.Length);
+            for (int g = 0; g < st.Stock.Length; g++)
+            {
+                settlement.Stock[g] = Core.Numerics.Amount.FromHundredths(st.Stock[g]);
+            }
+
+            state.AddSettlementForLoad(settlement, data.NextSettlementId);
+        }
+
+        state.Effects.SetNextIdForLoad(data.NextEffectId);
+        foreach (EffectSaveData e in data.Effects ?? [])
+        {
+            state.Effects.AddForLoad(
+                new EffectInstance(new EffectId(e.Id), e.Definition, (Core.Content.EffectTarget)e.Target, new WorldId(e.World), e.TargetId, e.Strength, e.EndMonth),
+                data.NextEffectId);
         }
 
         return state;

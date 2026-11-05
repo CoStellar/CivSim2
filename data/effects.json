@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "comment": "Effect types (GDD 10.1). Events, buildings, technologies and policies apply them with a strength and a duration in years. target: cell, settlement or civilization. stat: what the effect changes (output_percent, movement_blocked, movement_cost, extraction_percent, depopulation_per_mille_per_year, mood). stacking: sum (strengths add up), replace (the newest wins) or strongest (the largest absolute strength wins). Destruction (GDD 10.1) is an instant action of an event, not a lasting effect.",
+  "effects": [
+    { "key": "damage",               "name": "Damage",               "target": "settlement", "stat": "output_percent",                  "stacking": "strongest" },
+    { "key": "movement_restriction", "name": "Movement Restriction", "target": "cell",       "stat": "movement_blocked",                "stacking": "strongest" },
+    { "key": "movement_slowdown",    "name": "Movement Slowdown",    "target": "cell",       "stat": "movement_cost",                   "stacking": "strongest" },
+    { "key": "extraction_reduction", "name": "Extraction Reduction", "target": "cell",       "stat": "extraction_percent",              "stacking": "strongest" },
+    { "key": "depopulation",         "name": "Depopulation",         "target": "settlement", "stat": "depopulation_per_mille_per_year", "stacking": "sum" },
+    { "key": "mood_drop",            "name": "Mood Drop",            "target": "settlement", "stat": "mood",                            "stacking": "sum" }
+  ]
+}

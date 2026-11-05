@@ -37,3 +37,23 @@ public readonly record struct WorldId(int Value) : IComparable<WorldId>
     /// <inheritdoc />
     public override string ToString() => $"world{Value}";
 }
+
+/// <summary>Identifies a settlement. Ids start at 0 and are never reused within a game.</summary>
+public readonly record struct SettlementId(int Value) : IComparable<SettlementId>
+{
+    /// <inheritdoc />
+    public int CompareTo(SettlementId other) => Value.CompareTo(other.Value);
+
+    /// <inheritdoc />
+    public override string ToString() => $"settlement{Value}";
+}
+
+/// <summary>Identifies an active effect. Ids start at 0 and are never reused within a game.</summary>
+public readonly record struct EffectId(long Value) : IComparable<EffectId>
+{
+    /// <inheritdoc />
+    public int CompareTo(EffectId other) => Value.CompareTo(other.Value);
+
+    /// <inheritdoc />
+    public override string ToString() => $"effect{Value}";
+}
