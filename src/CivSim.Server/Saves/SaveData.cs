@@ -78,7 +78,8 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(7)] bool[]? KnownTechnologies = null,
     [property: Key(8)] int Researching = -1,
     [property: Key(9)] long ResearchProgress = 0,
-    [property: Key(10)] long LastScience = 0);
+    [property: Key(10)] long LastScience = 0,
+    [property: Key(11)] int[]? SeenYear = null);
 
 /// <summary>Saved settlement. <see cref="Stock"/> holds hundredths per good id.</summary>
 [MessagePackObject]
@@ -105,7 +106,8 @@ public sealed record SettlementSaveData(
     [property: Key(19)] int ClaimCiv = -1,
     [property: Key(20)] long ClaimUntilMonth = 0,
     [property: Key(21)] int RecipeId = -1,
-    [property: Key(22)] long RunsMade = 0);
+    [property: Key(22)] long RunsMade = 0,
+    [property: Key(23)] int JourneyTarget = -1);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

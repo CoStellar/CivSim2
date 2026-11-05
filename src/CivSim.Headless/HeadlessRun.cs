@@ -223,7 +223,7 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
         }
 
-        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg,villages,village_people,farmers");
+        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg,villages,village_people,farmers,journeys,known_cells_avg");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -294,7 +294,27 @@ public static class HeadlessRun
             + $",{TechAverage(state)},{TechMax(state)},{EraMax(state)},{ScienceAverage(state)}"
             + $",{state.Settlements.Count(x => x.IsActive && !content.SettlementLevels[x.Level].Mobile)}"
             + $",{state.Settlements.Where(x => x.IsActive && !content.SettlementLevels[x.Level].Mobile).Sum(x => x.TotalPopulation())}"
-            + $",{state.Settlements.Sum(x => x.Farmers)}"));
+            + $",{state.Settlements.Sum(x => x.Farmers)}"
+            + $",{state.Settlements.Count(x => x.JourneyTarget >= 0)},{KnownAverage(state, content)}"));
+    }
+
+    private static long KnownAverage(GameState state, GameContent content)
+    {
+        long sum = 0;
+        int alive = 0;
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            if (c.IsAlive)
+            {
+                alive++;
+                for (int i = 0; i < c.SeenYear.Length; i++)
+                {
+                    sum += Core.Perception.MapMemory.Knows(content, state, c, i) ? 1 : 0;
+                }
+            }
+        }
+
+        return alive == 0 ? 0 : sum / alive;
     }
 
     private static string TechAverage(GameState state)

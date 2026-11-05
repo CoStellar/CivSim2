@@ -50,6 +50,12 @@ public sealed class CivilizationState
     /// <summary>Research points gained in the last turn, hundredths (for reports).</summary>
     public long LastScience { get; set; }
 
+    /// <summary>
+    /// Map memory of Earth (GDD 8.2, stage 3g): per cell the game year it was last seen plus one, 0 = never seen.
+    /// Grows to the number of cells on first use.
+    /// </summary>
+    public int[] SeenYear { get; set; } = [];
+
     /// <summary>Value of <see cref="Researching"/> when nothing is researched.</summary>
     public const int NoResearch = -1;
 

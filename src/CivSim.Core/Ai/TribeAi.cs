@@ -168,6 +168,10 @@ public sealed class TribeAi : ICommandSource
     {
         WorldState world = state.Worlds[s.World.Value];
         int people = s.TotalPopulation();
+        if (s.JourneyTarget != SettlementState.NoJourney)
+        {
+            return; // on the way: the journey system walks it
+        }
 
         // Two clocks: survival moves are weighed every turn, slow choices (joining, splitting, plundering) once per
         // era-length period. Without live seasons every turn is such a turn.
@@ -195,6 +199,18 @@ public sealed class TribeAi : ICommandSource
                 queue.Enqueue(PlayerId.Ai, civ.Id, MoveTo(state, world, s, best, 100));
                 Take(world, best);
                 return;
+            }
+
+            // Nothing good within one move: set out for the best known land farther away (stage 3g), once per era turn.
+            if (slowTurn && world.Id == WorldId.Earth)
+            {
+                (HexCoord far, long farValue) = FarSite(state, world, civ, s);
+                if (farValue * 100 > Math.Max(here, bestValue) * (100 + (2 * _rules.MoveWhenBetterByPercent)))
+                {
+                    queue.Enqueue(PlayerId.Ai, civ.Id, new Perception.JourneyCommand(_content, s.Id, far));
+                    Take(world, far);
+                    return;
+                }
             }
         }
 
@@ -241,6 +257,51 @@ public sealed class TribeAi : ICommandSource
             }
         }
     }
+
+    // Known free land beyond one move, on a sparse lattice (every third cell each way) to keep the search cheap;
+    // a small penalty per cell of distance.
+    private (HexCoord Cell, long Value) FarSite(GameState state, WorldState world, CivilizationState civ, SettlementState from)
+    {
+        HexGlobe geo = world.Geometry;
+        int radius = Math.Min(_content.Perception.JourneyCells, geo.MaxUniqueRadius);
+        if (_far.Length < HexGlobe.RangeSize(radius))
+        {
+            _far = new HexCoord[HexGlobe.RangeSize(radius)];
+        }
+
+        int count = geo.Range(from.Cell, radius, _far);
+        HexCoord best = from.Cell;
+        long bestValue = 0;
+        for (int k = 0; k < count; k++)
+        {
+            HexCoord c = _far[k];
+            if ((c.Col % 3) != 0 || (c.Row % 3) != 0)
+            {
+                continue;
+            }
+
+            int i = geo.Index(c);
+            int distance = geo.Distance(from.Cell, c);
+            if (distance <= _rules.MaxMoveCells || _content.Biomes[world.Map.Biome[i]].IsWater
+                || !Perception.MapMemory.Knows(_content, state, civ, i) || Math.Abs(_occupiedAt[i]) == _stamp || !OpenLand(world, civ, c))
+            {
+                continue;
+            }
+
+            long value = SiteValue(state, world, civ, c) * Math.Max(0, 100 - distance) / 100;
+            if (value > bestValue)
+            {
+                best = c;
+                bestValue = value;
+            }
+        }
+
+        // Only the winner needs a known way there.
+        return bestValue > 0 && _paths.Find(_content, state, civ, world, geo.Index(from.Cell), geo.Index(best)) is null ? (from.Cell, 0) : (best, bestValue);
+    }
+
+    private HexCoord[] _far = [];
+    private readonly Perception.PathFinder _paths = new();
 
     private bool CanSettle(CivilizationState civ, int level)
     {
@@ -308,7 +369,7 @@ public sealed class TribeAi : ICommandSource
         {
             HexCoord c = _reach[k];
             int i = geo.Index(c);
-            if (_content.Biomes[world.Map.Biome[i]].IsWater || c == from.Cell)
+            if (_content.Biomes[world.Map.Biome[i]].IsWater || c == from.Cell || (earth && !Perception.MapMemory.Knows(_content, state, civ, i)))
             {
                 continue;
             }

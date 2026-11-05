@@ -102,8 +102,8 @@ public class LocalServerHostTests
             }
         }
 
-        // Radius 4 around the start = 61 cells.
-        Assert.Equal(61, known);
+        // Map memory at the start: sight 6 around the starting camp = 127 cells (stage 3g).
+        Assert.Equal(127, known);
         Assert.True(total > known);
 
         // Players cannot change the speed.

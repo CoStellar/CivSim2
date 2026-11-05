@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 14;
+    public const int FormatVersion = 15;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -56,7 +56,7 @@ public static class SaveGameSerializer
         foreach (CivilizationState c in state.Civilizations)
         {
             civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era, c.DiedOutMonth,
-                c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience));
+                c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience, c.SeenYear));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -72,7 +72,7 @@ public static class SaveGameSerializer
             settlements.Add(new SettlementSaveData(
                 st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
-                (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade));
+                (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -186,6 +186,7 @@ public static class SaveGameSerializer
                 Researching = c.Researching,
                 ResearchProgress = c.ResearchProgress,
                 LastScience = c.LastScience,
+                SeenYear = c.SeenYear ?? [],
             });
         }
 
@@ -209,6 +210,7 @@ public static class SaveGameSerializer
                 ClaimUntilMonth = st.ClaimUntilMonth,
                 RecipeId = st.RecipeId,
                 RunsMade = st.RunsMade,
+                JourneyTarget = st.JourneyTarget,
             };
             for (int g = 0; g < st.Stock.Length; g++)
             {

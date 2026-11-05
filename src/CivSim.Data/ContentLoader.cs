@@ -37,6 +37,7 @@ public static class ContentLoader
         List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
         TradeRules trade = LoadTrade(Path.Combine(directory, "trade.json"), errors);
+        PerceptionRules perception = LoadPerception(Path.Combine(directory, "perception.json"), errors);
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
@@ -75,6 +76,7 @@ public static class ContentLoader
             Seasons = seasons,
             ClimateCycles = cycles,
             Trade = trade,
+            Perception = perception,
             Technologies = technologies,
             Research = research,
         };
@@ -866,6 +868,24 @@ public static class ContentLoader
 
             i++;
         }
+    }
+
+    private static PerceptionRules LoadPerception(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new PerceptionRules();
+        }
+
+        var r = new Reader(doc.RootElement, Path.GetFileName(path), errors);
+        return new PerceptionRules
+        {
+            SightCells = r.Int("sightCells", 0, 50),
+            OralMemoryYears = r.Int("oralMemoryYears", 1, 1_000_000),
+            JourneyCells = r.Int("journeyCells", 1, 200),
+            ScoutCells = r.Int("scoutCells", 0, 200),
+        };
     }
 
     private static TradeRules LoadTrade(string path, List<string> errors)

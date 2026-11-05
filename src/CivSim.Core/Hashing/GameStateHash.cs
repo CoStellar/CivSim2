@@ -89,6 +89,12 @@ public static class GameStateHash
                 h.Add(known);
             }
 
+            h.Add(c.SeenYear.Length);
+            foreach (int seen in c.SeenYear)
+            {
+                h.Add(seen);
+            }
+
             h.Add(c.Researching);
             h.Add(c.ResearchProgress);
             h.Add(c.LastScience);
@@ -115,6 +121,7 @@ public static class GameStateHash
             h.Add(s.HigherNeedsPerMille);
             h.Add(s.MovedMonth);
             h.Add(s.RecipeId);
+            h.Add(s.JourneyTarget);
             h.Add(s.RunsMade);
             h.Add((int)s.Status);
             h.Add(s.AbandonedMonth);

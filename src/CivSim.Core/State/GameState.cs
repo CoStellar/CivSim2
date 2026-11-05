@@ -216,6 +216,7 @@ public sealed class GameState
             new Population.Influence(content).Recompute(state);
         }
 
+        Perception.MapMemory.See(content, state);
         return state;
     }
 
