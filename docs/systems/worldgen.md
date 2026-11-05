@@ -1,11 +1,11 @@
 # Generator świata
 
-**W jednym zdaniu:** z seeda i kilku ustawień (rozmiar, typ świata, procent wody) buduje Ziemię: ląd i morze, klimat, biomy, rzeki, jeziora, żyzność, złoża i pozycje startowe plemion.
+**W jednym zdaniu:** z seeda, planety (oś, rok, gwiazda, orbita) i kilku ustawień buduje pierwszy świat na kuli: ląd i morze, klimat z porami roku, biomy, rzeki, jeziora, żyzność, złoża i pozycje startowe plemion.
 
 **Faza tury:** żadna. Działa raz, przy tworzeniu nowej gry (`GameState.CreateNew(settings, content, out report)`), przed pierwszą turą.
 
 ## Dane wejściowe i wyjściowe
-- Czyta: `GameSettings` (seed, wymiary, liczba cywilizacji, `WorldType`, `WaterPercent`, `Climate`, `Moisture`, `Inland`, `Relief`, `Resources`; tabela w GDD 3), zawartość z `data/biomes.json` i `data/resources.json`.
+- Czyta: `GameSettings` (seed, wymiary, liczba cywilizacji, `WorldType`, `WaterPercent`, `Planet`, `Moisture`, `Inland`, `Relief`, `Resources`; tabela w GDD 3), zawartość z `data/biomes.json`, `data/resources.json` i `data/planets.json` (presety).
 - Zmienia: wszystkie warstwy mapy Ziemi (`WorldMap`), strumień losowy `World`, pole `StartCell` każdej cywilizacji.
 - Zwraca: `WorldGenReport` (procent wody, liczba rzek i jezior, liczba pól każdego biomu i złoża, starty, ich odległość i uczciwość, czas).
 - Publikuje w migawce: nic nowego. Mapa idzie do widoku przez zwykłe fragmenty 32×32 (wszystkie oznaczone jako zmienione).
@@ -16,7 +16,7 @@
 flowchart TD
   S["Seed + ustawienia"] --> E["1–2. Wysokość z szumu<br/>+ poziom morza z % wody"]
   E --> R["Rzeźba: góry 8%, wzgórza 20% lądu"]
-  R --> T["3. Temperatura<br/>szerokość + wysokość"]
+  R --> T["3. Nasłonecznienie w 48 punktach orbity<br/>→ temperatura, lato–zima, sezon wzrostu"]
   T --> H["4. Wilgotność<br/>odległość od wody, pasy klimatu, cień opadowy"]
   H --> B["5. Biomy z tabeli w data/biomes.json"]
   B --> L["6a. Jeziora w zagłębieniach"]
@@ -30,19 +30,37 @@ flowchart TD
 ## Zasady i wzory
 Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na liczbach całkowitych, więc ten sam seed daje tę samą mapę na każdym komputerze.
 
-1. **Ląd i morze.** Siatka szumu ma proporcje zbliżone do prawdziwych proporcji mapy z heksów (wysokość rzędu heksa to ok. 1,15 szerokości kolumny), zaokrąglone do pełnych oczek, żeby szum się zawijał. Wcześniej ucinaliśmy zamiast zaokrąglać i kontynenty wychodziły rozciągnięte z północy na południe.
-    Wysokość to suma 5 oktaw szumu (`IntNoise`, liczby stałoprzecinkowe). Szum zawija się na krawędziach, więc kontynenty przechodzą przez szew mapy bez szwu. Typ świata zmienia skalę pierwszej oktawy: pangea ma 2 duże „plamy” na szerokość mapy, kontynenty 5, archipelag 10 (i ostrzejszy kontrast).
+1. **Ląd i morze.** Najpierw zarodki kontynentów: kilka losowych środków na kuli (kontynenty 5–6, pangea 1, archipelag 18–24), oddalonych od siebie,
+    każdy z losowym promieniem. Wysokość to w 55% bliskość najbliższego zarodka (płaska we wnętrzu lądu) i w 45% szum. Bez zarodków szum 3D
+    łączył prawie cały ląd w jedną masę (pomiar na 6 seedach: największy ląd miał 90–99% lądu); teraz typ „kontynenty” daje 2–5 osobnych lądów.
+    Każde pole ma swój punkt na kuli (szerokość z równych powierzchniowo rzędów, długość z kolumny). Szum (`SphereNoise`, 3D, liczby stałoprzecinkowe) jest próbkowany w tym punkcie, więc kontynenty przechodzą przez szew i przez bieguny bez śladu (ADR 0012).
+    Wysokość to suma 5 oktaw szumu. Typ świata zmienia skalę pierwszej oktawy: pangea ma 2 duże „plamy” na szerokość mapy, kontynenty 5, archipelag 10 (i ostrzejszy kontrast).
 2. **Poziom morza.** Liczymy histogram wysokości i ustawiamy próg dokładnie tak, żeby woda zajęła zadany procent pól (domyślnie 60%). Woda dostaje wysokości 0–99, ląd 100–255 (poziom morza = 100, jak w GDD).
 3. **Rzeźba.** 8% najwyższego lądu to góry, kolejne 20% to wzgórza (ustawienie górzystości: płaska 4+12%, górzysta 14+26%).
-4. **Temperatura** (−30…+40 °C): `28 − 55 · szerokość²` (równik w środku mapy, bieguny na szwie). Szerokość jest „wygięta” szumem
-   (do ±15% odległości od równika), więc strefy klimatu biegną falistymi liniami, a nie wzdłuż rzędów mapy. Dalej: minus do 20 °C za wysokość, plus mały szum ±4 °C, plus ustawienie temperatury (zimna −6 °C, gorąca +6 °C).
+4. **Temperatura i pory roku** (etap 1b, `ClimateModel`, `Insolation`): dla każdej szerokości liczymy dobowe nasłonecznienie w 48 równych
+   odstępach czasu na orbicie (deklinacja z nachylenia osi, odległość od gwiazdy z mimośrodu i prawa Keplera, jasność gwiazdy).
+   Trygonometria jest na liczbach całkowitych (`FixedTrig`, tablica sinusów z szeregu Taylora), więc mapa jest identyczna na każdym komputerze.
+   - **Średnia temperatura:** r = 0 przy nasłonecznieniu równika Ziemi, 1 przy biegunie Ziemi; `T = 28 − 55 · r · (0,3 + 0,7 r)` (wiatry i prądy
+     przenoszą ciepło ku biegunom). Szerokość jest „wygięta” szumem (do ok. 13°), więc strefy klimatu biegną falistymi liniami. Dalej: minus do 20 °C
+     za wysokość, plus mały szum ±4 °C.
+   - **Różnica lato–zima:** `121 °C × (najjaśniejszy − najciemniejszy punkt roku) × kontynentalność × współczynnik roku`, najwyżej 120 °C.
+     Kontynentalność: 25% nad wodą, 35% na wybrzeżu, rośnie do 100% sześć pól standardowych w głąb lądu. Współczynnik roku: `rok · 1,5 / (rok + 0,5)` (Ziemia 1, Uran 1,49).
+   - **Sezon wzrostu:** część roku (rok jak sinusoida wokół średniej) z temperaturą między 5 °C a 45 °C.
+   - **Długie zimy** (trudniejszy wariant symulacji, decyzja Patryka z 2026-11-05): martwa pora trwa `(100% − sezon wzrostu) × rok`. Gdy jest dłuższa niż
+     `survivableDeadSeasonYears` (0,75 roku, `data/population.json`), dzika żywność spada proporcjonalnie. Na Uranie (zimy po kilkadziesiąt lat)
+     plemiona ledwo przeżywają; technologie przechowywania podniosą ten próg.
+   - Wyniki dla Ziemi: równik 28 °C, 45° ok. 14 °C, 60° ok. −4 °C, biegun −27 °C; Syberia (60°, w głębi lądu) waha się o ok. 40 °C.
+     Uran: bieguny ok. 28 °C średnio, ale z wahaniem 120 °C i sezonem wzrostu ok. 22% roku; równik ok. 8 °C.
 5. **Wilgotność** (0–100): bazowo 90, minus wysychanie w głębi lądu (`InlandDrying`): za każde pole od wody ubywa wilgotności, aż do limitu.
-   Odległość liczymy w polach mapy standardowej (`odległość · 256 / szerokość mapy`), więc na mapie ogromnej środek kontynentu nie jest suchszy tylko dlatego,
+   Odległość liczymy w polach mapy standardowej (`odległość · 258 / szerokość mapy`), więc na mapie ogromnej środek kontynentu nie jest suchszy tylko dlatego,
    że ma więcej pól. Ustawienie „wilgotność w głębi lądu” (`--inland`): normalna −3 za pole, najwyżej 12 pól (−36); sucha −4, najwyżej 15 pól (−60, jak przed tym ustawieniem);
    wilgotna −2, najwyżej 10 pól (−20, lasy sięgają głęboko w ląd). Do tego pasy klimatu (mokry równik +20, suche zwrotniki −22, wilgotniejsze średnie szerokości +5, suche bieguny −10), liczone z tej samej wygiętej szerokości
    i przechodzące płynnie jeden w drugi (bez skoków), oraz **cień opadowy**: jeśli w 5 polach pod wiatr stoją góry, od −31 (tuż obok) do −11 (5 pól dalej);
    wiatr patrzy po lekko ukośnej linii. Szum wilgotności ma dwie skale: ±14 (duże plamy) i ±8 (drobne). Wiatr wieje ze wschodu w tropikach i przy biegunach, z zachodu w średnich szerokościach. Ustawienie wilgotności dodaje −15 (sucha) albo +15 (mokra); mokry świat ma też więcej rzek, bo więcej wody spływa.
 6. **Biomy.** Woda: wybrzeże (1 pole od lądu), płytkie morze (2–3 pola), głęboki ocean (dalej). Ląd: pierwszy biom z `data/biomes.json`, którego zakres temperatury i wilgotności pasuje (kolejność w pliku ma znaczenie). Bagno tylko na płaskim. Gdy nic nie pasuje: łąka.
+   Pory roku (etap 1b): ląd, którego lato nie przekracza 0 °C, jest lodem; sezon wzrostu poniżej 15% roku daje tundrę; wahanie lato–zima
+   ponad 40 °C obniża wilgotność branego biomu o połowę nadwyżki (lasy ustępują stepom i pustyniom). Rzeki nie zaczynają się na lodzie
+   i nie płyną przez narożniki rzędów polarnych.
 7. **Jeziora.** „Zalewamy” mapę od morza w górę (priority flood). Pole, które leży co najmniej 2 jednostki poniżej poziomu, z którego woda by się wylała, należy do zagłębienia. Zagłębienie do 40 pól staje się jeziorem; większe zostaje suchą niecką.
 8. **Rzeki** płyną po krawędziach heksów, czyli między narożnikami. Ten sam „zalew” na grafie narożników daje każdemu narożnikowi jeden kierunek w dół, który zawsze kończy się w morzu albo jeziorze. Każdy narożnik zbiera „deszcz” (średnią wilgotność swoich trzech pól), a woda spływa w dół i się sumuje. Krawędź, przez którą płynie co najmniej 2500 jednostek, ma rzekę: wielkość 1, od 3× tej ilości wielkość 2, od 8× wielkość 3. Rzeki zawsze leżą między dwoma polami lądu.
 9. **Cechy terenu.** Pole lodowe na wodzie o temperaturze ≤ −8 °C. Rafa na ciepłym (≥ 24 °C) wybrzeżu lub płytkim morzu (szansa 1/6). Oaza na płaskiej pustyni (1/40).
@@ -60,6 +78,8 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 - Oba pliki sprawdza `ContentLoader` przy starcie i zgłasza wszystkie błędy naraz (powtórzone klucze, złe zakresy, kolory, nieznane biomy, brak któregoś rodzaju wody, brak łąki).
 
 ## Testy
+- `PlanetTests` (etap 1b): trygonometria całkowitoliczbowa, nasłonecznienie Ziemi zgodne z podręcznikowym (ok. 417 i 173 W/m²), klimat Ziemi,
+  Uran z cieplejszymi biegunami i skrajnymi porami roku, dłuższy rok = większe wahania, presety i poprawne światy dla każdego presetu.
 - `ContentLoaderTests`: domyślne dane się wczytują; zepsute dane zgłaszają każdy błąd.
 - `WorldGeneratorTests`:
   - ten sam seed daje ten sam świat, inny seed inny; „złoty” hash mapy;

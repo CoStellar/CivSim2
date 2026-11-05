@@ -44,6 +44,9 @@ public static class HexDirections
     /// <summary>The direction pointing the other way.</summary>
     public static HexDirection Opposite(this HexDirection direction) => (HexDirection)(((int)direction + 3) % Count);
 
+    /// <summary>The direction mirrored north–south (N ↔ S, NE ↔ SE, NW ↔ SW), used where a path crosses a pole.</summary>
+    public static HexDirection Mirror(this HexDirection direction) => (HexDirection)((Count + 3 - (int)direction) % Count);
+
     /// <summary>The next direction clockwise.</summary>
     public static HexDirection Clockwise(this HexDirection direction) => (HexDirection)(((int)direction + 1) % Count);
 }

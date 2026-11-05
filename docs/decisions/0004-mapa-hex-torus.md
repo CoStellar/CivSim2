@@ -1,6 +1,6 @@
 # ADR 0004: Mapa: heksy flat-top na torusie
 
-**Status:** przyjęta, 2026-11-03
+**Status:** przyjęta, 2026-11-03; zawijanie zastąpione 2026-11-05 przez [ADR 0012](0012-mapa-kula.md)
 
 ## Kontekst
 

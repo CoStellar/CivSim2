@@ -55,8 +55,8 @@ public partial class SettlementMarkers : Node2D
             Vector2 c = HexLayout.Center(s.Col, s.Row);
             int kx0 = Mathf.FloorToInt((_view.Position.X - c.X) / _period.X);
             int kx1 = Mathf.CeilToInt((_view.End.X - c.X) / _period.X);
-            int ky0 = Mathf.FloorToInt((_view.Position.Y - c.Y) / _period.Y);
-            int ky1 = Mathf.CeilToInt((_view.End.Y - c.Y) / _period.Y);
+            const int ky0 = 0; // the globe wraps only east–west
+            const int ky1 = 0;
             float half = 7 + (3 * s.Level);
             // Abandoned settlements grey, ruins darker and smaller (GDD 5.5).
             Color fill = s.Status switch

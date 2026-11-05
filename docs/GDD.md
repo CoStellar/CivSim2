@@ -103,14 +103,36 @@ Wartości są robocze. Dostroimy je po pierwszych pomiarach na Twoim komputerze.
 
 Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem biomy, rzeki i surowce. Każde pole ma kilkanaście wartości, które zmieniają się w trakcie gry: żyzność spada, złoża się wyczerpują, lasy się wycina i odrastają.
 
-**Siatka:** heksy z płaskim bokiem na górze, współrzędne osiowe (q, r) w logice, tablica wierszy w pamięci. Mapa zawija się w obu kierunkach jak planeta: idąc na wschód albo na północ, wraca się do punktu wyjścia (torus). Równik biegnie przez środek mapy, a oba bieguny spotykają się na jej górnej i dolnej krawędzi, więc szew jest zawsze zimny i spójny klimatycznie. Liczba rzędów jest zawsze parzysta, żeby heksy łączyły się bez przerwy.
+**Siatka:** heksy z płaskim bokiem na górze, współrzędne osiowe (q, r) w logice, tablica wierszy w pamięci. **Mapa to kula** (ADR 0012, decyzja Patryka z 2026-11-05): wschód–zachód zawija się, górny rząd dotyka bieguna północnego, dolny południowego, a kto przejdzie przez biegun, schodzi po drugiej stronie planety (przesunięty o pół obwodu). Rzędy to pasy o równej powierzchni na kuli, więc okolice biegunów zajmują mniej rzędów niż równik. Równik biegnie przez środek mapy. Szerokość jest zawsze o 2 większa od wielokrotności 4, a wysokość parzysta, żeby heksy schodziły się nad biegunami bez przerwy.
 
 | Rozmiar | Wymiary | Pola | Cywilizacje (domyślnie) | Przeznaczenie |
 | --- | --- | --- | --- | --- |
-| Testowa | 64×40 | 2 560 | 4 | testy i debugowanie |
-| Standard | 256×160 | 40 960 | 12 | zwykła gra |
-| Duża | 384×240 | 92 160 | 20 | długa gra |
-| Ogromna | 512×320 | 163 840 | 32 | symulacja świata do ery kosmicznej |
+| Testowa | 66×40 | 2 640 | 4 | testy i debugowanie |
+| Standard | 258×160 | 41 280 | 12 | zwykła gra |
+| Duża | 386×240 | 92 640 | 20 | długa gra |
+| Ogromna | 514×320 | 164 480 | 32 | symulacja świata do ery kosmicznej |
+
+**Planeta** (etap 1b, decyzje Patryka z 2026-11-05): każda planeta leży w strefie zamieszkiwalnej swojej gwiazdy. Parametry planety ustawia się presetem (`data/planets.json`), a potem każdą wartość można zmienić:
+
+| Parametr | Zakres | Ziemia | Mars | Uran | Co zmienia |
+| --- | --- | --- | --- | --- | --- |
+| Nachylenie osi | 0–180° | 23,4° | 25,2° | 97,8° | pory roku; przy dużym nachyleniu bieguny są cieplejsze od równika, ale z dekadami dnia i nocy |
+| Długość roku | 0,1–500 lat ziemskich | 1 | 1,88 | 84 | tylko pory roku: dłuższy rok to większa różnica lato–zima; zegar gry zostaje w latach ziemskich |
+| Jasność gwiazdy | 80–120% | 100% | 85% | 100% | średnia temperatura (zastępuje dawne ustawienie zimna/umiarkowana/gorąca) |
+| Mimośród orbity | 0–0,3 | 0,017 | 0,093 | 0,046 | jedna półkula ma ostrzejsze pory roku |
+| Woda, wilgotność, górzystość | jak niżej | 60%, normalna, normalna | 30%, sucha, górzysta | 60%, normalna, normalna | ląd planety |
+
+Mars w presecie to planeta podobna do Marsa w strefie zamieszkiwalnej (zimniejsza, suchsza i bardziej górzysta niż Ziemia), nie dzisiejszy Mars.
+
+**Pory roku są uśrednione** (nie zmieniają się z tury na turę, bo tura trwa dziś do 50 lat). Generator liczy dla każdej szerokości geograficznej nasłonecznienie w 48 punktach orbity (oś, mimośród, jasność gwiazdy) i z tego:
+
+- **średnią temperaturę** (Ziemia: 28 °C na równiku, ok. 14 °C na 45°, −27 °C na biegunach; wiatry i prądy przenoszą ciepło ku biegunom),
+- **różnicę lato–zima** (większą w głębi lądu, małą nad wodą, większą przy długim roku),
+- **sezon wzrostu**: część roku między 5 °C a 45 °C, gdy rośliny rosną.
+
+Biomy biorą to pod uwagę: ląd, którego lato nie przekracza zera, jest lodem; ląd z sezonem wzrostu krótszym niż 15% roku jest tundrą; ogromne różnice lato–zima działają jak susza (lasy ustępują stepom i pustyniom). Dzika żywność rośnie tylko w sezonie wzrostu: sezon od 60% roku daje pełne plony, brak sezonu 40%. **Długie zimy** (decyzja Patryka z 2026-11-05: trudniejszy wariant symulacji): martwa pora dłuższa niż 0,75 roku zmniejsza dziką żywność proporcjonalnie, więc na planetach z długim rokiem plemiona ledwo przeżywają, dopóki technologie (przechowywanie) nie podniosą tego progu.
+
+**Kontynenty:** ląd rośnie wokół kilku losowych zarodków na kuli (kontynenty 5–6, pangea 1, archipelag 18–24), a szum rzeźbi wybrzeża i wnętrza. Plemiona startują tylko tam, gdzie sezon wzrostu trwa co najmniej 40% roku.
 
 **Żeby świat nie był odkryty po 2–3 erach:**
 
@@ -147,7 +169,7 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 | Liczba cywilizacji | 1–64 | zależna od rozmiaru (4/12/20/32) | ile plemion startuje |
 | Typ świata | kontynenty, pangea, archipelag | kontynenty | kształt lądów |
 | Procent wody | 30–80% | 60% | poziom morza |
-| Temperatura | zimna, umiarkowana, gorąca | umiarkowana | −6 / 0 / +6 °C: czapy lodowe, tundra, pustynie, dżungle |
+| Planeta | ziemia, mars, uran + nachylenie osi, rok, jasność gwiazdy, mimośród | ziemia | patrz tabela „Planeta” wyżej |
 | Wilgotność | sucha, normalna, mokra | normalna | −15 / 0 / +15 wilgotności: pustynie, lasy, liczba rzek |
 | Wilgotność w głębi lądu | sucha, normalna, wilgotna | normalna | spadek wilgotności z odległością od morza: −4 za pole do −60 / −3 do −36 / −2 do −20 (pola mapy standardowej, więc duże mapy nie mają suchszych środków kontynentów) |
 | Górzystość | płaska, normalna, górzysta | normalna | góry i wzgórza: 4+12%, 8+20%, 14+26% lądu |
@@ -159,7 +181,7 @@ Te same ustawienia opisują w przyszłości inne planety (temperatura, woda).
 
 1. Kontynenty i płyty z szumu wielooktawowego, z ustawieniem typu świata (pangea, kontynenty, archipelag).
 2. Wysokość i poziom morza według zadanego procentu wody (domyślnie 60%).
-3. Temperatura z szerokości geograficznej i wysokości.
+3. Temperatura, pory roku i sezon wzrostu z nasłonecznienia planety (oś, rok, orbita, gwiazda), wysokości i odległości od morza.
 4. Wilgotność z odległości od morza (według ustawienia „wilgotność w głębi lądu”), pasów szerokości geograficznej i przeważających wiatrów (cień opadowy za górami).
 5. Biomy z tabeli temperatura × wilgotność (diagram Whittakera).
 6. Rzeki płyną po krawędziach heksów, od źródeł w górach do morza; jeziora powstają w zagłębieniach. Pola przylegające do rzeki mają słodką wodę i wyższą żyzność.
@@ -170,7 +192,7 @@ Te same ustawienia opisują w przyszłości inne planety (temperatura, woda).
 
 **Ruch i widoczność:** każdy biom i rzeźba ma koszt ruchu (łąka 1, las 2, góry 3, przejście przez krawędź z rzeką +1 bez mostu). Drogi go obniżają. Każda cywilizacja ma własną mgłę wojny w trzech stanach: nieodkryte, zapamiętane (ostatni widziany stan) i widoczne.
 
-**Światy i kosmos.** Symulacja od początku obsługuje wiele światów. Każda planeta lub księżyc to osobna mapa-torus z własnym rozmiarem i parametrami (temperatura, atmosfera, woda, grawitacja), tworzona tym samym generatorem. Ziemia jest pierwszym światem, a w erze kosmicznej dochodzą kolejne. Widok przełącza się między powierzchnią wybranego świata a widokiem kosmosu (planety, orbity, statki). Decyzje są jednolite: te same komendy, doradcy, zasoby i sieci handlowe działają na wszystkich światach, a transport kosmiczny łączy ich gospodarki.
+**Światy i kosmos.** Symulacja od początku obsługuje wiele światów. Każda planeta lub księżyc to osobna mapa-kula z własnym rozmiarem i parametrami (temperatura, atmosfera, woda, grawitacja), tworzona tym samym generatorem. Ziemia jest pierwszym światem, a w erze kosmicznej dochodzą kolejne. Widok przełącza się między powierzchnią wybranego świata a widokiem kosmosu (planety, orbity, statki). Decyzje są jednolite: te same komendy, doradcy, zasoby i sieci handlowe działają na wszystkich światach, a transport kosmiczny łączy ich gospodarki.
 
 ## 4. Zasoby i ekonomia
 
@@ -824,7 +846,7 @@ Te punkty przyjąłem roboczo albo zostawiłem otwarte. Odznacz, gdy decyzja zap
 - [x] **Armie:** grupy oddziałów, mogą zajmować kilka pól, rysowane zgodnie z siłą.
 - [x] **Religia:** usunięta z projektu. Wróci jako osobny moduł.
 - [x] **Kosmos:** nowy etap gry, inne planety jako osobne światy z przełączanym widokiem i jednolitymi decyzjami.
-- [x] **Mapa:** zawija się w obu kierunkach jak planeta.
+- [x] **Mapa:** kula: zawija się wschód–zachód, przez bieguny przechodzi się na drugą stronę planety (ADR 0012).
 - [x] **Platformy:** Windows, Linux, macOS.
 - [x] **Język gry:** wyłącznie angielski.
 - [x] **Długość gry:** standardowa gra około 10 godzin, zapis w dowolnym momencie.
@@ -852,7 +874,8 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Gotowość klient–serwer (protokół, serwer lokalny) | 2.1 | CORE | tanio teraz, bardzo drogo później |
 | Gra w sieci (lobby, serwer dedykowany) | 2.1 | Moduł | dopiero gdy gra jednoosobowa jest fajna |
 | Understand Anything i opisy systemów | 14 | CORE | warunek, żebyś rozumiał kod |
-| Mapa hex na torusie, fragmenty 32×32 | 3 | CORE | baza wszystkiego |
+| Mapa hex na kuli (ADR 0012), fragmenty 32×32 | 3 | CORE | baza wszystkiego |
+| Planeta: nachylenie osi, rok, jasność gwiazdy, orbita, uśrednione pory roku, presety | 3 | CORE | decyzja Patryka z 2026-11-05 (etap 1b) |
 | Generator: klimat, biomy, rzeki na krawędziach, złoża | 3 | CORE | bez tego nie ma sytuacji, na które AI reaguje |
 | Mapy duża i ogromna | 3 | CORE (uproszczone) | architektura od razu, strojenie wydajności ogromnej dopiero przed etapem 5 |
 | Cuda natury | 3 | Moduł | ozdoba, nie zmienia symulacji |

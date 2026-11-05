@@ -114,6 +114,6 @@ public class LocalServerHostTests
     [Fact]
     public void UnknownSettingWordIsRefused()
     {
-        Assert.Throws<ArgumentException>(() => LocalServerHost.Start(LocalGameOptions.ForSize("test", 1) with { Climate = "lava" }));
+        Assert.Throws<ArgumentException>(() => LocalServerHost.Start(LocalGameOptions.ForSize("test", 1) with { Planet = "lava" }));
     }
 }

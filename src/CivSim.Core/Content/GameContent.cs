@@ -70,6 +70,12 @@ public sealed class GameContent
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
 
+    /// <summary>Planet presets (stage 1b).</summary>
+    public IReadOnlyList<PlanetPreset> Planets { get; init; } = [];
+
+    /// <summary>The planet preset with <paramref name="key"/>.</summary>
+    public PlanetPreset Planet(string key) => Find(Planets, p => p.Key, key, "planet");
+
     /// <summary>Claims and carrying (GDD 5.5).</summary>
     public AssetRules Assets { get; init; } = new();
 

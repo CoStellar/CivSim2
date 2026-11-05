@@ -92,8 +92,9 @@ public class ProtocolSerializerTests
         // Version 3 added settlements and game time to the view and goods and settlement levels to the content.
         // Version 4 added wild food and influence strength to map chunks.
         // Version 5 added settlement status and claims, the died-out month and the settlement asset commands.
+        // Version 6 added seasons and the growing season to map chunks (globe, stage 1b).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("05000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("06000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

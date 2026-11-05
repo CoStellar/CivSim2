@@ -270,9 +270,9 @@ public sealed record ConquerSettlementCommand(GameContent Content, SettlementId 
     private (string Text, SettlementState? Left) Flee(GameState state, SettlementState s)
     {
         WorldState world = state.Worlds[s.World.Value];
-        HexTorus geo = world.Geometry;
+        HexGlobe geo = world.Geometry;
         int radius = Math.Min(Content.Population.MaxMoveCells, geo.MaxUniqueRadius);
-        Span<HexCoord> cells = new HexCoord[HexTorus.RangeSize(radius)];
+        Span<HexCoord> cells = new HexCoord[HexGlobe.RangeSize(radius)];
         int count = geo.Range(s.Cell, radius, cells);
         for (int k = 1; k < count; k++)
         {

@@ -23,7 +23,7 @@ public sealed class WorldGenerator
 
     private readonly GameContent _content;
     private readonly WorldMap _map;
-    private readonly HexTorus _geo;
+    private readonly HexGlobe _geo;
     private readonly DeterministicRandom _rng;
     private readonly ulong _seed;
     private readonly WorldGenOptions _options;
@@ -33,7 +33,13 @@ public sealed class WorldGenerator
     private readonly int _coastId;
     private readonly int _lakeId;
     private readonly int _grasslandId;
+    private readonly int _iceId;
     private bool[] _water = [];
+    private readonly long[] _px;
+    private readonly long[] _py;
+    private readonly long[] _pz;
+    private readonly long[] _climateSin;
+    private readonly ClimateModel _climate;
 
     private WorldGenerator(GameContent content, WorldMap map, DeterministicRandom rng, ulong seed, WorldGenOptions options)
     {
@@ -48,6 +54,25 @@ public sealed class WorldGenerator
         _coastId = content.WaterBiome(BiomeKind.Coast).Id;
         _lakeId = content.WaterBiome(BiomeKind.Lake).Id;
         _grasslandId = content.Biome("grassland").Id;
+        _iceId = content.Biome("ice").Id;
+        _climate = new ClimateModel(options.Planet);
+
+        // Every cell's point on the unit sphere: noise is sampled there, so it has no seam around the globe or over the poles.
+        int n = _geo.CellCount;
+        _px = new long[n];
+        _py = new long[n];
+        _pz = new long[n];
+        _climateSin = new long[n];
+        for (int i = 0; i < n; i++)
+        {
+            HexCoord c = _geo.FromIndex(i);
+            long sinLat = _geo.SinLatitude(c, FixedTrig.One);
+            long cosLat = FixedTrig.Complement(sinLat);
+            int lon = (int)_geo.Longitude(c, FixedTrig.FullTurn);
+            _px[i] = cosLat * FixedTrig.Cos(lon) / FixedTrig.One;
+            _py[i] = cosLat * FixedTrig.Sin(lon) / FixedTrig.One;
+            _pz[i] = sinLat;
+        }
     }
 
     /// <summary>Fills <paramref name="map"/> and returns a report. <paramref name="rng"/> should be the World stream.</summary>
@@ -71,8 +96,8 @@ public sealed class WorldGenerator
     {
         Elevation();
         Relief();
-        Temperature();
         int[] distToWater = DistanceTo(isTarget: i => _water[i]);
+        Temperature(distToWater);
         Humidity(distToWater);
         Biomes();
         Rivers(report);
@@ -86,8 +111,6 @@ public sealed class WorldGenerator
 
     private void Elevation()
     {
-        int w = _geo.Width;
-        int h = _geo.Height;
         int baseCellsX = _options.WorldType switch
         {
             WorldType.Pangea => 2,
@@ -105,17 +128,31 @@ public sealed class WorldGenerator
 
         for (int i = 0; i < raw.Length; i++)
         {
-            HexCoord c = _geo.FromIndex(i);
             long sum = 0;
             for (int o = 0; o < octaves; o++)
             {
-                int cellsX = Math.Max(1, baseCellsX << o);
-                int cellsY = Math.Max(1, (int)(((long)cellsX * h * 1155 + (w * 500L)) / (w * 1000L)));
-                (long x, long y) = Position(c, cellsX, cellsY);
-                sum += (long)IntNoise.Sample(_seed, o, cellsX, cellsY, x, y) * (16 >> o);
+                sum += (long)Noise(_seed, o, baseCellsX << o, i) * (16 >> o);
             }
 
             raw[i] = (int)(sum / totalWeight);
+        }
+
+        // Continent seeds: land grows around a few centres on the sphere, with oceans between them; the noise only
+        // shapes the coasts and inland seas. Without them 3D noise joins almost all land into one mass.
+        (long X, long Y, long Z, long CosRadius)[] plates = PlateCentres();
+        for (int i = 0; i < raw.Length; i++)
+        {
+            long best = -FixedTrig.One;
+            foreach ((long x, long y, long z, long cosR) in plates)
+            {
+                long dot = ((x * _px[i]) + (y * _py[i]) + (z * _pz[i])) / FixedTrig.One;
+                best = Math.Max(best, (dot - cosR) * FixedTrig.One / (FixedTrig.One - cosR));
+            }
+
+            // Flat inside a continent, so its hills, basins and lakes still come from the noise.
+            long plate = Math.Clamp(best, -FixedTrig.One, PlateTop);
+            long plateValue = (plate + FixedTrig.One) * 65535 / (2 * FixedTrig.One);
+            raw[i] = (int)(((plateValue * PlateWeightPercent) + ((long)raw[i] * (100 - PlateWeightPercent))) / 100);
         }
 
         // Archipelagos: sharpen the noise so land breaks into islands.
@@ -129,6 +166,12 @@ public sealed class WorldGenerator
         }
 
         int threshold = Percentile(raw, _options.WaterPercent);
+        int highest = threshold;
+        foreach (int v in raw)
+        {
+            highest = Math.Max(highest, v);
+        }
+
         _water = new bool[raw.Length];
         Span<byte> elevation = _map.Elevation.Raw;
         for (int i = 0; i < raw.Length; i++)
@@ -140,7 +183,7 @@ public sealed class WorldGenerator
             }
             else
             {
-                elevation[i] = (byte)(SeaLevel + ((long)(raw[i] - threshold) * (255 - SeaLevel) / Math.Max(1, 65535 - threshold)));
+                elevation[i] = (byte)(SeaLevel + ((long)(raw[i] - threshold) * (255 - SeaLevel) / Math.Max(1, highest - threshold)));
             }
         }
     }
@@ -168,13 +211,52 @@ public sealed class WorldGenerator
         return 65535;
     }
 
-    // Cell position in lattice fixed-point units. Odd columns sit half a row lower (odd-q layout).
-    private (long X, long Y) Position(HexCoord c, int cellsX, int cellsY)
+    // Share of the land height that comes from the continent seeds; the rest is noise.
+    private const int PlateWeightPercent = 55;
+
+    // Highest value of a continent seed (in FixedTrig.One): beyond it the seed no longer raises the land.
+    private const long PlateTop = FixedTrig.One / 5;
+
+    // Centres and angular radii of the continent seeds, spread over the sphere and kept apart (deterministic from the seed).
+    private (long X, long Y, long Z, long CosRadius)[] PlateCentres()
     {
-        long x = ((2L * c.Col) + 1) * cellsX * IntNoise.One / (2L * _geo.Width);
-        long y = ((2L * c.Row) + 1 + (c.Col & 1)) * cellsY * IntNoise.One / (2L * _geo.Height);
-        return (x, y);
+        (int count, int minRadius, int maxRadius, int minGap) = _options.WorldType switch
+        {
+            WorldType.Pangea => (1, 80, 100, 90),
+            WorldType.Archipelago => (18, 8, 16, 20),
+            _ => (5, 25, 40, 55),
+        };
+        var rng = new DeterministicRandom(SplitMix64.Combine(_seed, 0x91A7E5));
+        count += rng.NextInt(0, Math.Max(1, count / 3) + 1);
+        var plates = new List<(long X, long Y, long Z, long CosRadius)>();
+        long minDot = FixedTrig.Cos(FixedTrig.Degrees(minGap));
+        for (int attempt = 0; attempt < 400 && plates.Count < count; attempt++)
+        {
+            // Uniform on the sphere, but keep centres out of the polar caps (|latitude| < about 64°).
+            long z = (rng.NextInt(-900, 901) * FixedTrig.One) / 1000;
+            long r = FixedTrig.Complement(z);
+            int lon = rng.NextInt(0, FixedTrig.FullTurn);
+            long x = r * FixedTrig.Cos(lon) / FixedTrig.One;
+            long y = r * FixedTrig.Sin(lon) / FixedTrig.One;
+            bool apart = true;
+            foreach ((long px, long py, long pz, _) in plates)
+            {
+                apart &= ((px * x) + (py * y) + (pz * z)) / FixedTrig.One < minDot;
+            }
+
+            if (apart || attempt > 300)
+            {
+                long cosR = FixedTrig.Cos(FixedTrig.Degrees(rng.NextInt(minRadius, maxRadius + 1)));
+                plates.Add((x, y, z, cosR));
+            }
+        }
+
+        return [.. plates];
     }
+
+    // Noise 0..65535 at a cell, with about `cellsAroundEquator` features around the globe.
+    private int Noise(ulong seed, int octave, int cellsAroundEquator, int i) =>
+        SphereNoise.Sample(seed, octave, cellsAroundEquator, _px[i], _py[i], _pz[i]);
 
     // ---- Relief from elevation rank of land cells ---------------------------------------------------------------
 
@@ -218,29 +300,28 @@ public sealed class WorldGenerator
 
     // ---- 3. Temperature ------------------------------------------------------------------------------------------
 
-    // 0 at the equator (middle row), 1000 at the poles (top/bottom seam).
-    private int Latitude(HexCoord c)
+    // Sine of the latitude bent by two octaves of noise (up to about 13°), so climate zones follow wavy lines
+    // instead of map rows. Computed once per cell.
+    private void ClimateLatitudes()
     {
-        int h = _geo.Height;
-        return Math.Min(1000, Math.Abs((2 * c.Row) + 1 + (c.Col & 1) - h) * 1000 / h);
+        for (int i = 0; i < _climateSin.Length; i++)
+        {
+            int wobble = ((Noise(_seed ^ 0xC11A7E, 0, 6, i) - 32768) * 1800) / 32768;
+            wobble += ((Noise(_seed ^ 0xC11A7E, 1, 14, i) - 32768) * 650) / 32768;
+            int angle = Math.Clamp(FixedTrig.Asin(_pz[i]) + wobble, -FixedTrig.QuarterTurn, FixedTrig.QuarterTurn);
+            _climateSin[i] = FixedTrig.Sin(angle);
+        }
     }
 
-    // Latitude bent by two octaves of noise (about ±150), so climate zones follow wavy lines instead of map rows.
-    private int ClimateLatitude(HexCoord c)
-    {
-        (long x, long y) = Position(c, 6, 4);
-        int wobble = ((IntNoise.Sample(_seed ^ 0xC11A7E, 0, 6, 4, x, y) - 32768) * 110) / 32768;
-        (x, y) = Position(c, 14, 9);
-        wobble += ((IntNoise.Sample(_seed ^ 0xC11A7E, 1, 14, 9, x, y) - 32768) * 40) / 32768;
-        return Math.Clamp(Latitude(c) + wobble, 0, 1000);
-    }
+    // 0 at the equator, 1000 at the poles: the bent latitude in parts of 90°.
+    private int ClimateLatitude(int i) => Math.Abs(FixedTrig.Asin(_climateSin[i])) * 1000 / FixedTrig.QuarterTurn;
 
     // Humidity change by latitude: wet equator, dry subtropics, wetter mid-latitudes, dry poles.
     // Straight lines between these points, so there are no sharp steps between belts.
     private static readonly (int Lat, int Change)[] HumidityBelts =
         [(0, 20), (120, 18), (330, -22), (560, 5), (720, 2), (900, -10), (1000, -10)];
 
-    // Humidity lost with distance from water. Distance is measured in standard-map cells (256 columns),
+    // Humidity lost with distance from water. Distance is measured in standard-map cells (258 columns),
     // so continents on bigger maps are not drier just because they are wider in cells.
     private int InlandDrying(int distance)
     {
@@ -250,7 +331,7 @@ public sealed class WorldGenerator
             WorldInland.Humid => (2, 10),
             _ => (3, 12),
         };
-        int scaled = distance * 256 / _geo.Width;
+        int scaled = distance * 258 / _geo.Width;
         return perCell * Math.Min(scaled, maxCells);
     }
 
@@ -269,30 +350,33 @@ public sealed class WorldGenerator
         return HumidityBelts[^1].Change;
     }
 
-    private void Temperature()
+    // Annual mean temperature from the planet's sunlight (GDD 3, stage 1b), cooler with height; the seasonal swing
+    // (bigger inland, small over water) and the growing season follow from it.
+    private void Temperature(int[] distToWater)
     {
+        ClimateLatitudes();
         Span<sbyte> t = _map.Temperature.Raw;
+        Span<byte> swing = _map.Seasonality.Raw;
+        Span<byte> growing = _map.GrowingSeason.Raw;
         for (int i = 0; i < t.Length; i++)
         {
-            HexCoord c = _geo.FromIndex(i);
-            int lat = ClimateLatitude(c);
-            int temp = 28 - (55 * lat * lat / 1_000_000);
+            int temp = _climate.MeanTemperature(_climateSin[i]);
             int e = _map.Elevation[i];
             if (e > SeaLevel)
             {
                 temp -= (e - SeaLevel) * 20 / (255 - SeaLevel);
             }
 
-            temp += _options.Climate switch
-            {
-                WorldClimate.Cold => -6,
-                WorldClimate.Hot => 6,
-                _ => 0,
-            };
+            temp += ((Noise(_seed ^ 0x7E4D, 0, 16, i) - 32768) * 4) / 32768;
+            temp = Math.Clamp(temp, -30, 40);
+            t[i] = (sbyte)temp;
 
-            (long x, long y) = Position(c, 16, 10);
-            temp += ((IntNoise.Sample(_seed ^ 0x7E4D, 0, 16, 10, x, y) - 32768) * 4) / 32768;
-            t[i] = (sbyte)Math.Clamp(temp, -30, 40);
+            // Continentality: 25% over water, 35% on the coast up to 100% six standard-map cells inland.
+            int inland = Math.Min(6, distToWater[i] * 258 / _geo.Width);
+            int continental = _water[i] ? 25 : 35 + (65 * inland / 6);
+            int s = _climate.SeasonalSwing(_climateSin[i], continental);
+            swing[i] = (byte)s;
+            growing[i] = (byte)ClimateModel.GrowingSeason(temp, s);
         }
     }
 
@@ -310,7 +394,7 @@ public sealed class WorldGenerator
             }
 
             HexCoord c = _geo.FromIndex(i);
-            int lat = ClimateLatitude(c);
+            int lat = ClimateLatitude(i);
             int value = 90 - InlandDrying(distToWater[i]) + HumidityBelt(lat);
 
             // Rain shadow: mountains upwind take the rain, more when they are close. Trade winds and polar easterlies
@@ -330,10 +414,8 @@ public sealed class WorldGenerator
                 }
             }
 
-            (long x, long y) = Position(c, 12, 7);
-            value += ((IntNoise.Sample(_seed ^ 0x4A11D, 0, 12, 7, x, y) - 32768) * 14) / 32768;
-            (x, y) = Position(c, 32, 20);
-            value += ((IntNoise.Sample(_seed ^ 0x4A11D, 1, 32, 20, x, y) - 32768) * 8) / 32768;
+            value += ((Noise(_seed ^ 0x4A11D, 0, 12, i) - 32768) * 14) / 32768;
+            value += ((Noise(_seed ^ 0x4A11D, 1, 32, i) - 32768) * 8) / 32768;
             value += _options.Moisture switch
             {
                 WorldMoisture.Dry => -15,
@@ -358,12 +440,24 @@ public sealed class WorldGenerator
                 continue;
             }
 
-            biome[i] = (byte)LandBiome(_map.Temperature[i], _map.Humidity[i], (Content.Relief)_map.Relief[i]);
+            biome[i] = (byte)LandBiome(_map.Temperature[i], _map.Humidity[i], (Content.Relief)_map.Relief[i], _map.Seasonality[i], _map.GrowingSeason[i]);
         }
     }
 
-    private int LandBiome(int temperature, int humidity, Content.Relief relief)
+    // Seasons (stage 1b): land whose summer stays below freezing is ice; land with almost no growing season is tundra;
+    // very large swings between summer and winter act like drought, so forests give way to steppe and desert.
+    private int LandBiome(int temperature, int humidity, Content.Relief relief, int swing, int growing)
     {
+        if (temperature + (swing / 2) < 0)
+        {
+            temperature = Math.Min(temperature, -12);
+        }
+        else if (growing < 15 && temperature > -11)
+        {
+            return _content.Biome("tundra").Id;
+        }
+
+        humidity = Math.Max(0, humidity - (Math.Max(0, swing - 40) / 2));
         foreach (BiomeDefinition b in _content.Biomes)
         {
             if (b.Kind != BiomeKind.Land)
@@ -498,17 +592,23 @@ public sealed class WorldGenerator
             int sum = 0;
             int humidity = 0;
             bool wet = false;
+            bool frozen = false;
             foreach (HexCoord c in three)
             {
                 int i = _geo.Index(c);
                 sum += _map.Elevation[i];
                 humidity += _map.Humidity[i];
                 wet |= _water[i];
+                frozen |= _map.Biome[i] == _iceId;
             }
 
             height[k] = sum;
-            rain[k] = wet ? 0 : humidity / 3;
-            if (wet)
+            rain[k] = wet || frozen ? 0 : humidity / 3; // ice caps hold their water
+            if (corners.IsPolar(k))
+            {
+                done[k] = true; // no rivers over the poles
+            }
+            else if (wet)
             {
                 isOutlet[k] = true;
                 done[k] = true;
@@ -708,7 +808,9 @@ public sealed class WorldGenerator
         for (int k = 0; k < n; k++)
         {
             int i = _geo.Index(area[k]);
-            food += _content.Biomes[_map.Biome[i]].Food * 2;
+            // Land food counts only as far as the seasons allow (the same rule as gathering).
+            int season = ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _options.Planet.YearHundredths, _content.Population.SurvivableDeadSeasonHundredths);
+            food += _content.Biomes[_map.Biome[i]].Food * 2 * season / 100;
             food += _map.Fertility[i] / 25;
             if (!_water[i] && HasFreshWater(i))
             {
@@ -742,7 +844,7 @@ public sealed class WorldGenerator
         }
 
         int t = _map.Temperature[i];
-        return t is >= 0 and <= 32 && _content.Biomes[_map.Biome[i]].Food >= 2 && HasFreshWater(i);
+        return t is >= 0 and <= 32 && ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _options.Planet.YearHundredths, _content.Population.SurvivableDeadSeasonHundredths) >= 80 && _content.Biomes[_map.Biome[i]].Food >= 2 && HasFreshWater(i);
     }
 
     private void StartPositions(WorldGenReport report)
@@ -753,7 +855,7 @@ public sealed class WorldGenerator
             return;
         }
 
-        var area = new HexCoord[HexTorus.RangeSize(StartRadius)];
+        var area = new HexCoord[HexGlobe.RangeSize(StartRadius)];
         var candidates = new List<(int Score, int Index)>();
         int land = 0;
         for (int i = 0; i < _water.Length; i++)
@@ -952,8 +1054,8 @@ public sealed class WorldGenerator
 /// <summary>Options for <see cref="WorldGenerator"/>.</summary>
 public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int CivilizationCount)
 {
-    /// <summary>Average temperature of the planet.</summary>
-    public WorldClimate Climate { get; init; }
+    /// <summary>The planet: axial tilt, year, star brightness, orbit (stage 1b).</summary>
+    public PlanetParameters Planet { get; init; } = PlanetParameters.Earth;
 
     /// <summary>How much rain the planet gets.</summary>
     public WorldMoisture Moisture { get; init; }
@@ -973,7 +1075,7 @@ public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int 
         ArgumentNullException.ThrowIfNull(settings);
         return new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.CivilizationCount)
         {
-            Climate = settings.Climate,
+            Planet = settings.Planet,
             Moisture = settings.Moisture,
             Inland = settings.Inland,
             Relief = settings.Relief,

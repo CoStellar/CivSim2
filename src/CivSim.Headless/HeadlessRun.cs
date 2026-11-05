@@ -61,7 +61,7 @@ public static class HeadlessRun
         ArgumentNullException.ThrowIfNull(log);
 
         GameContent content = ContentLoader.Load(ContentLoader.DefaultDirectory);
-        GameState state = GameState.CreateNew(options.ToSettings(), content, out WorldGenReport world);
+        GameState state = GameState.CreateNew(options.ToSettings(content), content, out WorldGenReport world);
         GameSettings settings = state.Settings;
         List<string> problems = WorldValidator.Validate(
             content, state.Worlds[0].Map, world, WorldGenOptions.From(settings));

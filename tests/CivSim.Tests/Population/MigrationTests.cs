@@ -211,7 +211,7 @@ public class MigrationTests
 
     private static HexCoord FindLand(GameState state, WorldState world, HexCoord from, int distance, CivId owner)
     {
-        var ring = new HexCoord[HexTorus.RingSize(distance)];
+        var ring = new HexCoord[HexGlobe.RingSize(distance)];
         world.Geometry.Ring(from, distance, ring);
         foreach (HexCoord c in ring)
         {

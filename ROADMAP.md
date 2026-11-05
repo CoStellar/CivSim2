@@ -50,11 +50,12 @@ Gotowe, gdy: 100 map na różnych seedach generuje się bez błędów walidatora
 
 Gotowe, gdy: mapa zachowuje się jak kula, a Patryk obejrzał presety Ziemia, Mars i Uran oraz własne ustawienia jako PNG.
 
-- [ ] Decyzja: siatka heksów na kuli (ADR, zmiana GDD 3 i zasady nr 8 w `CLAUDE.md`)
-- [ ] Topologia kuli zamiast torusa w `HexTorus` (jeden moduł geometrii)
-- [ ] Parametry planety: nachylenie osi, długość roku, pory roku; presety Ziemia, Mars, Uran; wszystko w danych
-- [ ] Klimat i biomy liczone z nasłonecznienia w ciągu roku (strefa zamieszkiwalna gwiazdy)
-- [ ] Eksport PNG i podgląd dla nowych map
+- [x] Decyzja: walec heksów z przejściem przez bieguny (ADR 0012, GDD 3, zasada nr 8 w `CLAUDE.md`)
+- [x] Topologia kuli w `HexGlobe` (dawniej `HexTorus`); rozmiary map 66×40, 258×160, 386×240, 514×320; rzędy o równej powierzchni
+- [x] Parametry planety: nachylenie osi, długość roku, jasność gwiazdy, mimośród; presety Ziemia, Mars, Uran w `data/planets.json`
+- [x] Klimat, uśrednione pory roku i sezon wzrostu z nasłonecznienia; biomy i dzika żywność biorą je pod uwagę
+- [x] Eksport PNG (nowe widoki: pory roku, sezon wzrostu, globus) i podgląd (bez zawijania pionowego, nowe nakładki)
+- [ ] Patryk ogląda mapy trzech presetów i własnych ustawień
 
 ## Etap 2 — Podgląd symulacji (Godot)
 

@@ -5,7 +5,7 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0001 Silnik: Godot 4 + C#](0001-silnik-godot-csharp.md)
 - [0002 Rdzeń symulacji oddzielony od wyświetlania](0002-rdzen-oddzielony-od-wyswietlania.md)
 - [0003 Determinizm symulacji](0003-determinizm.md)
-- [0004 Mapa: heksy flat-top na torusie](0004-mapa-hex-torus.md)
+- [0004 Mapa: heksy flat-top na torusie](0004-mapa-hex-torus.md) (zawijanie zastąpione przez 0012)
 - [0005 Zawartość gry w plikach JSON](0005-zawartosc-w-json.md)
 - [0006 Gra wyłącznie po angielsku](0006-jezyk-angielski.md)
 - [0007 Religia poza zakresem wersji podstawowej](0007-religia-poza-zakresem.md)
@@ -13,3 +13,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0009 Zakres CORE, moduły jako aktualizacje, gra bez kultury](0009-zakres-core.md)
 - [0010 Klient uruchamia serwer lokalny, ale nie widzi rdzenia](0010-klient-uruchamia-serwer-lokalny.md)
 - [0011 Czas gry w miesiącach, tempa na rok](0011-czas-gry-w-miesiacach.md)
+- [0012 Mapa jako kula: walec heksów z przejściem przez bieguny](0012-mapa-kula.md)

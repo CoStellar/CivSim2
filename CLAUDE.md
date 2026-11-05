@@ -5,7 +5,7 @@ Pełny projekt gry: `docs/GDD.md`. Plan prac i stan: `ROADMAP.md`. Decyzje archi
 
 ## Projekt w skrócie
 
-CivSim 2 to turowa gra 4X w pixel arcie na heksagonalnej mapie-planecie (zawija się w obu kierunkach).
+CivSim 2 to turowa gra 4X w pixel arcie na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się, przez bieguny przechodzi się na drugą stronę planety).
 Cywilizacje przechodzą od koczowniczych plemion do ery kosmicznej. **Najpierw powstaje symulator**
 (wszystkie cywilizacje prowadzi AI), dopiero potem tryb gracza na tych samych zasadach.
 
@@ -71,8 +71,9 @@ w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
    - zero alokacji w głównej pętli tury, pule obiektów;
    - mapa podzielona na fragmenty 32×32, przeliczane tylko przy zmianach (dirty flags);
    - historia i statystyki o stałej pamięci (próbkowanie coraz rzadsze z wiekiem).
-8. **Mapa:** heksy flat-top, współrzędne osiowe (q, r), torus (zawijanie w obu osiach, parzysta liczba rzędów).
-   Wszystkie odległości i sąsiedztwa idą przez jeden moduł `HexTorus`, nigdy ręcznie.
+8. **Mapa:** heksy flat-top, współrzędne osiowe (q, r), kula (ADR 0012): zawijanie wschód–zachód, przejście przez biegun
+   na drugą stronę planety, rzędy jako pasy o równej powierzchni. Szerokość = 4k + 2, wysokość parzysta.
+   Wszystkie odległości i sąsiedztwa idą przez jeden moduł `HexGlobe`, nigdy ręcznie.
 9. **Wiele światów:** stan gry od początku przechowuje listę światów (planet); Ziemia to świat 0.
 10. **Gotowość na multiplayer (klient–serwer).** Gry sieciowej nie budujemy (to przyszła aktualizacja), ale od etapu 0:
     - gra zawsze działa jako klient i serwer; w grze jednoosobowej serwer startuje lokalnie w tym samym procesie,

@@ -196,7 +196,9 @@ public sealed record MapChunkMessage(
     [property: Key(18)] short[] Owner,
     [property: Key(19)] byte[] River,
     [property: Key(20)] ushort[]? WildFood = null,
-    [property: Key(21)] byte[]? Influence = null) : IProtocolMessage
+    [property: Key(21)] byte[]? Influence = null,
+    [property: Key(22)] byte[]? Seasonality = null,
+    [property: Key(23)] byte[]? GrowingSeason = null) : IProtocolMessage
 {
     /// <summary>Visibility: never seen.</summary>
     public const byte Unknown = 0;

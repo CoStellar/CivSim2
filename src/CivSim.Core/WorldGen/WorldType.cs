@@ -29,19 +29,6 @@ public enum TerrainFeature : byte
     IceField = 3,
 }
 
-/// <summary>Average temperature of the planet (world setting).</summary>
-public enum WorldClimate
-{
-    /// <summary>Default: Earth-like.</summary>
-    Temperate = 0,
-
-    /// <summary>6 °C colder: bigger ice caps, more tundra and taiga.</summary>
-    Cold = 1,
-
-    /// <summary>6 °C warmer: small ice caps, more jungle, savanna and desert.</summary>
-    Hot = 2,
-}
-
 /// <summary>How much rain the planet gets (world setting).</summary>
 public enum WorldMoisture
 {

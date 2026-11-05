@@ -18,7 +18,7 @@ public sealed class WorldMap
     private readonly List<IMapLayerInfo> _layers = [];
 
     /// <summary>Creates an empty map (all zeros, no owners) for <paramref name="geometry"/>. Every chunk starts dirty.</summary>
-    public WorldMap(HexTorus geometry)
+    public WorldMap(HexGlobe geometry)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         Geometry = geometry;
@@ -41,11 +41,13 @@ public sealed class WorldMap
         WildFood = Add(new MapLayer<ushort>("wild_food", this, 1, FullWildFood));
         Claim = Add(new MapLayer<int>("claim", this, 1, 0));
         Influence = Add(new MapLayer<byte>("influence", this, 1, 0));
+        Seasonality = Add(new MapLayer<byte>("seasonality", this, 1, 0));
+        GrowingSeason = Add(new MapLayer<byte>("growing_season", this, 1, 100));
         MarkAllDirty();
     }
 
     /// <summary>Geometry (size, neighbours, distances).</summary>
-    public HexTorus Geometry { get; }
+    public HexGlobe Geometry { get; }
 
     /// <summary>Chunk grid.</summary>
     public MapChunks Chunks { get; }
@@ -103,6 +105,18 @@ public sealed class WorldMap
 
     /// <summary>Strength of the owner's influence on the cell, 0–255 (GDD 5.4); 0 where nobody owns it.</summary>
     public MapLayer<byte> Influence { get; }
+
+    /// <summary>Difference between the warmest and the coldest time of the year, °C (GDD 3, stage 1b).</summary>
+    public MapLayer<byte> Seasonality { get; }
+
+    /// <summary>Share of the year warm enough for plants to grow, 0–100%.</summary>
+    public MapLayer<byte> GrowingSeason { get; }
+
+    /// <summary>
+    /// Length of this planet's year in Earth years × 100. The dead season (no growth) lasts
+    /// <c>(100 − growing season)% × year</c>: a long year means winters of many years (stage 1b).
+    /// </summary>
+    public int YearHundredths { get; set; } = 100;
 
     /// <summary>All layers in their fixed order (for hashing and saving).</summary>
     public IReadOnlyList<IMapLayerInfo> Layers => _layers;

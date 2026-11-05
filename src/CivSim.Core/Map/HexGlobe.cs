@@ -4,27 +4,44 @@ using System.Collections.Generic;
 namespace CivSim.Core.Map;
 
 /// <summary>
-/// Geometry of one world: flat-top hexes on a torus (the map wraps east–west and north–south).
+/// Geometry of one world: flat-top hexes on a globe (ADR 0012). The map is a cylinder that wraps east–west; row 0
+/// touches the north pole and the last row the south pole. Walking north across the pole you come down on the other
+/// side of the planet: the cell beyond the top of column c is in column c + Width/2, and north and south swap there
+/// (a glide reflection of the hex lattice). Rows are equal-area latitude bands (<see cref="SinLatitude"/>).
 /// Every neighbour, distance, line and area on the map must go through this class (CLAUDE.md rule 8).
 /// Storage order is row-major: <c>index = row * Width + col</c>. Methods do not allocate unless they return a list.
 /// </summary>
-public sealed class HexTorus
+public sealed class HexGlobe
 {
-    /// <summary>Creates the geometry. Both dimensions must be even and at least 4.</summary>
+    /// <summary>Creates the geometry. The width must be 2 more than a multiple of 4 (6, 10…, 258) and the height even.</summary>
     /// <remarks>
-    /// Even height is required by the design (GDD 3). Even width is required because odd columns are shifted:
-    /// with an odd width, column 0 and the last column would both be "unshifted" and the seam would not close.
+    /// Even width is required because odd columns are shifted half a row down. Half the width must be odd so that
+    /// crossing a pole lands on a column of the other parity: only then do the shifted and unshifted columns meet
+    /// over the pole without a gap or overlap. Even height keeps the equator on a row boundary.
     /// </remarks>
-    public HexTorus(int width, int height)
+    public HexGlobe(int width, int height)
     {
-        if (width < 4 || height < 4 || width % 2 != 0 || height % 2 != 0)
+        if (!IsValidSize(width, height))
         {
-            throw new ArgumentException($"Map size {width}×{height} is invalid: both sides must be even and at least 4.");
+            throw new ArgumentException($"Map size {width}×{height} is invalid: the width must be 2 more than a multiple of 4 (at least 6) and the height even (at least 4).");
         }
 
         Width = width;
         Height = height;
     }
+
+    /// <summary>True when a map of this size can be built (see the constructor).</summary>
+    public static bool IsValidSize(int width, int height) => width >= 6 && width % 4 == 2 && height >= 4 && height % 2 == 0;
+
+    /// <summary>
+    /// Sine of the latitude of the cell centre in parts per <paramref name="one"/> (north positive). Rows split the
+    /// sphere into bands of equal area, so the sine of the latitude falls in equal steps from the north pole to the
+    /// south pole; odd columns sit half a row lower, like on the screen.
+    /// </summary>
+    public long SinLatitude(HexCoord c, long one) => one - ((((2L * c.Row) + 1 + (c.Col & 1)) * one) / Height);
+
+    /// <summary>Longitude of the cell centre as a share of the full circle, in parts per <paramref name="one"/>.</summary>
+    public long Longitude(HexCoord c, long one) => (((2L * c.Col) + 1) * one) / (2L * Width);
 
     /// <summary>Number of columns.</summary>
     public int Width { get; }
@@ -41,10 +58,37 @@ public sealed class HexTorus
     /// <summary>
     /// Largest radius for which <see cref="Ring"/> and <see cref="Range"/> never visit a cell twice.
     /// </summary>
-    public int MaxUniqueRadius => (Math.Min(Width, Height) - 1) / 2;
+    public int MaxUniqueRadius => Math.Min((Width - 2) / 4, Height - 1);
 
-    /// <summary>Wraps any column/row into the map.</summary>
-    public HexCoord Wrap(int col, int row) => new(Mod(col, Width), Mod(row, Height));
+    /// <summary>
+    /// Brings any column/row onto the map: east–west around the globe, and across a pole onto the other side of the
+    /// planet (column + Width/2, rows mirrored).
+    /// </summary>
+    public HexCoord Wrap(int col, int row)
+    {
+        while (row < 0 || row >= Height)
+        {
+            row = row < 0 ? -1 - row : (2 * Height) - 1 - row;
+            col += Width / 2;
+        }
+
+        return new(Mod(col, Width), row);
+    }
+
+    /// <summary>
+    /// True when the step from <paramref name="c"/> in <paramref name="direction"/> crosses a pole. Across a pole the
+    /// way back is the mirrored direction (north stays north), not the opposite one.
+    /// </summary>
+    public bool CrossesPole(HexCoord c, HexDirection direction)
+    {
+        AxialCoord a = ToAxial(c) + direction.Vector();
+        int row = a.R + ((a.Q - (a.Q & 1)) / 2);
+        return row < 0 || row >= Height;
+    }
+
+    /// <summary>The direction that leads from the neighbour in <paramref name="direction"/> back to <paramref name="c"/>.</summary>
+    public HexDirection Back(HexCoord c, HexDirection direction) =>
+        CrossesPole(c, direction) ? direction.Opposite().Mirror() : direction.Opposite();
 
     /// <summary>True when the coordinate is already inside the map.</summary>
     public bool Contains(HexCoord c) => (uint)c.Col < (uint)Width && (uint)c.Row < (uint)Height;
@@ -101,7 +145,7 @@ public sealed class HexTorus
     }
 
     /// <summary>
-    /// The shortest number of steps between two cells, going across the seams when that is shorter.
+    /// The shortest number of steps between two cells, going around the globe or over a pole when that is shorter.
     /// </summary>
     public int Distance(HexCoord a, HexCoord b) => AxialCoord.PlaneDistance(ToAxial(a), NearestImage(a, b));
 
@@ -210,20 +254,40 @@ public sealed class HexTorus
         return k;
     }
 
-    /// <summary>The canonical edge on <paramref name="side"/> of <paramref name="cell"/>.</summary>
+    /// <summary>
+    /// The canonical edge on <paramref name="side"/> of <paramref name="cell"/>: owned through an N, NE or SE side.
+    /// Over the north pole two N sides meet; the western cell (column &lt; Width/2) owns the edge. Over the south pole
+    /// two S sides meet; that edge is written as the western cell's S side.
+    /// </summary>
     public HexEdge Edge(HexCoord cell, HexDirection side)
     {
-        return (int)side < HexEdge.PerCell
-            ? new HexEdge(cell, side)
-            : new HexEdge(Neighbor(cell, side), side.Opposite());
+        HexCoord other = Neighbor(cell, side);
+        HexDirection back = Back(cell, side);
+        bool mine = (int)side < HexEdge.PerCell;
+        bool theirs = (int)back < HexEdge.PerCell;
+        if (mine == theirs)
+        {
+            // Both N (north pole) or both S (south pole): the cell in the western half owns it.
+            return cell.Col < Width / 2 ? new HexEdge(cell, side) : new HexEdge(other, back);
+        }
+
+        return mine ? new HexEdge(cell, side) : new HexEdge(other, back);
     }
 
-    /// <summary>Flat array index of a canonical edge.</summary>
+    /// <summary>
+    /// Flat array index of a canonical edge. There are exactly 3 edges per cell: the north-pole edges leave the N
+    /// slots of the eastern half of row 0 free, and the south-pole edges use them.
+    /// </summary>
     public int EdgeIndex(HexEdge edge)
     {
+        if (edge.Side == HexDirection.S && edge.Cell.Row == Height - 1 && edge.Cell.Col < Width / 2)
+        {
+            return (Index(new HexCoord(edge.Cell.Col + (Width / 2), 0)) * HexEdge.PerCell) + (int)HexDirection.N;
+        }
+
         if ((int)edge.Side >= HexEdge.PerCell)
         {
-            throw new ArgumentException("Edge is not canonical; create it with HexTorus.Edge.", nameof(edge));
+            throw new ArgumentException("Edge is not canonical; create it with HexGlobe.Edge.", nameof(edge));
         }
 
         return (Index(edge.Cell) * HexEdge.PerCell) + (int)edge.Side;
@@ -234,22 +298,25 @@ public sealed class HexTorus
 
     private static AxialCoord ToAxial(int col, int row) => new(col, row - ((col - (col & 1)) / 2));
 
-    // Axial position of the copy of b (b shifted by whole map widths/heights) closest to a.
+    // Axial position of the copy of b (around the globe, or mirrored over a pole) closest to a in the plane.
     private AxialCoord NearestImage(HexCoord a, HexCoord b)
     {
         AxialCoord origin = ToAxial(a);
         AxialCoord best = default;
         int bestDistance = int.MaxValue;
-        for (int dc = -1; dc <= 1; dc++)
+        int half = Width / 2;
+        ReadOnlySpan<int> cols = [b.Col, b.Col + half, b.Col + half, b.Col, b.Col];
+        ReadOnlySpan<int> rows = [b.Row, -1 - b.Row, (2 * Height) - 1 - b.Row, b.Row + (2 * Height), b.Row - (2 * Height)];
+        for (int image = 0; image < cols.Length; image++)
         {
-            for (int dr = -1; dr <= 1; dr++)
+            for (int k = -1; k <= 1; k++)
             {
-                AxialCoord image = ToAxial(b.Col + (dc * Width), b.Row + (dr * Height));
-                int d = AxialCoord.PlaneDistance(origin, image);
+                AxialCoord p = ToAxial(cols[image] + (k * Width), rows[image]);
+                int d = AxialCoord.PlaneDistance(origin, p);
                 if (d < bestDistance)
                 {
                     bestDistance = d;
-                    best = image;
+                    best = p;
                 }
             }
         }
