@@ -207,7 +207,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
         return geo.Range(center, radius, _area);
     }
 
-    private void Strike(TurnContext context, WorldState world, SettlementState s, EventDefinition ev, int months)
+    private void Strike(TurnContext context, WorldState world, SettlementState s, EventDefinition ev, int months, bool chronicle = true)
     {
         GameState state = context.State;
         CivilizationState? owner = state.FindCivilization(s.Owner);
@@ -259,9 +259,12 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             }
         }
 
-        context.Chronicle(ev.Chronicle
-            .Replace("{settlement}", s.Name, StringComparison.Ordinal)
-            .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal));
+        if (chronicle)
+        {
+            context.Chronicle(ev.Chronicle
+                .Replace("{settlement}", s.Name, StringComparison.Ordinal)
+                .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal));
+        }
     }
 
     // Events that spread (an epidemic) may strike the other settlements of the struck one's trade network, once a turn.
@@ -300,6 +303,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
                 continue;
             }
 
+            int reached = 0;
             foreach (int m in networks[networkOf[source]])
             {
                 if (_struck.Contains((m, e)) || rng.NextInt(100) >= ev.SpreadPercent)
@@ -308,8 +312,14 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
                 }
 
                 SettlementState target = state.Settlements[m];
-                Strike(context, WorldOf(state, target.World), target, ev, months);
+                Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
                 _struck.Add((m, e));
+                reached++;
+            }
+
+            if (reached > 0)
+            {
+                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {reached} more settlement{(reached == 1 ? string.Empty : "s")}.");
             }
         }
     }

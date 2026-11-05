@@ -39,22 +39,44 @@ public sealed class EffectBook
     /// <summary>Number of active effects.</summary>
     public int Count => _effects.Count;
 
-    // Number of active effects per target (index for Total: most cells and settlements have none).
-    private readonly Dictionary<long, int> _perTarget = [];
+    // Active effects of each target, so a total looks only at its own target (most cells and settlements have none).
+    // The main list stays the order of record (saves, hashes); these lists are only an index and are reused.
+    private readonly Dictionary<long, List<EffectInstance>> _byTarget = [];
+    private readonly Stack<List<EffectInstance>> _spare = new();
 
     private static long Key(EffectTarget target, WorldId world, int targetId) => ((long)target << 48) | ((long)world.Value << 32) | (uint)targetId;
 
     private void Track(EffectInstance e, int change)
     {
         long key = Key(e.Target, e.World, e.TargetId);
-        int n = (_perTarget.TryGetValue(key, out int c) ? c : 0) + change;
-        if (n <= 0)
+        if (change > 0)
         {
-            _perTarget.Remove(key);
+            if (!_byTarget.TryGetValue(key, out List<EffectInstance>? list))
+            {
+                list = _spare.Count > 0 ? _spare.Pop() : [];
+                _byTarget[key] = list;
+            }
+
+            list.Add(e);
+            return;
         }
-        else
+
+        if (_byTarget.TryGetValue(key, out List<EffectInstance>? own))
         {
-            _perTarget[key] = n;
+            for (int i = 0; i < own.Count; i++)
+            {
+                if (own[i].Id == e.Id)
+                {
+                    own.RemoveAt(i);
+                    break;
+                }
+            }
+
+            if (own.Count == 0)
+            {
+                _byTarget.Remove(key);
+                _spare.Push(own);
+            }
         }
     }
 
@@ -137,15 +159,15 @@ public sealed class EffectBook
     /// </summary>
     public int Total(IReadOnlyList<EffectDefinition> definitions, EffectStat stat, EffectTarget target, WorldId world, int targetId)
     {
-        if (!_perTarget.ContainsKey(Key(target, world, targetId)))
+        if (!_byTarget.TryGetValue(Key(target, world, targetId), out List<EffectInstance>? own))
         {
             return 0;
         }
 
         int total = 0;
-        foreach (EffectInstance e in _effects)
+        foreach (EffectInstance e in own)
         {
-            if (e.Target == target && e.TargetId == targetId && e.World == world && definitions[e.DefinitionId].Stat == stat)
+            if (definitions[e.DefinitionId].Stat == stat)
             {
                 total += e.Strength;
             }

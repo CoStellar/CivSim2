@@ -56,17 +56,17 @@
     {
       "key": "epidemic",
       "name": "Epidemic",
-      "timesPer10000Years": 3,
+      "timesPer10000Years": 2,
       "conditions": [
-        {"kind": "people_at_least", "value": 300, "percent": 300},
-        {"kind": "people_at_least", "value": 1000, "percent": 300},
-        {"kind": "settled", "percent": 300}
+        {"kind": "people_at_least", "value": 300, "percent": 150},
+        {"kind": "people_at_least", "value": 1000, "percent": 200},
+        {"kind": "settled", "percent": 200}
       ],
       "effects": [
-        {"effect": "depopulation", "strength": 120, "years": 3},
+        {"effect": "depopulation", "strength": 100, "years": 2},
         {"effect": "mood_drop", "strength": -15, "years": 3}
       ],
-      "spreadPercent": 40,
+      "spreadPercent": 15,
       "chronicle": "An epidemic broke out in {settlement} ({civilization})."
     }
   ]
