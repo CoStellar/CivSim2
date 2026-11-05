@@ -115,6 +115,8 @@ Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemno
 
 Gotowe, gdy: 100 gier AI kontra AI daje sensowne historie (wojny, sojusze, upadki) bez absurdów. **Brama: demo symulatora.**
 
+Punkt startu, proponowany podział na PR-y (4a–4g) i pytania do decyzji: `docs/prompts/03-etap-4-ai-dyplomacja.md`.
+
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
 - [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji
 - [ ] Ocena działań (utility AI) — dopracowanie na podstawie testów wsadowych

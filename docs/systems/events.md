@@ -49,4 +49,4 @@ flowchart LR
 
 ## Wydajność i strojenie
 - Seed 7, mapa standard, 1000 tur (ta sama maszyna): tura 18,7 ms (bez etapu 3h 19,6 ms; szybciej, bo `EffectBook.Total` ma teraz indeks po celu), faza świata 1,45 ms (było 0,79), alokacje 350 KB na turę (było 280 KB: teksty kroniki i budowa sieci handlowych, gdy epidemia się rozprzestrzenia).
-- Przebieg: ok. 5 susz, 2–3 pożary, 4 powodzie i 2 epidemie (plus ok. 1,6 rozprzestrzenienia) na turę na całym świecie. Ludność po 1000 turach ok. 89 tys. (bez zdarzeń ok. 111 tys.); żadna cywilizacja nie znika przez zdarzenia (11 z 12 żyje w obu przebiegach).
+- Przebieg: ok. 5 susz, 2–3 pożary, 4 powodzie i 2 epidemie (plus ok. 1,6 rozprzestrzenienia) na turę na całym świecie. Ludność po 1000 turach ok. 89 tys. (bez zdarzeń ok. 111 tys.; ten koszt ok. 20% Patryk zaakceptował 2026-11-05); żadna cywilizacja nie znika przez zdarzenia (11 z 12 żyje w obu przebiegach).
