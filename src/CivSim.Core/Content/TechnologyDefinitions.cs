@@ -98,3 +98,19 @@ public sealed record ResearchRules
     /// <summary>Share of the current era's technologies needed (with the threshold technology) to enter the next era.</summary>
     public int EraSharePercent { get; init; } = 60;
 }
+
+/// <summary>What civilizations see and remember (data/perception.json, GDD 8.2; stage 3g).</summary>
+public sealed record PerceptionRules
+{
+    /// <summary>Cells a lived-in settlement sees around it every turn.</summary>
+    public int SightCells { get; init; } = 6;
+
+    /// <summary>Years a seen cell stays known without being seen again (oral memory).</summary>
+    public int OralMemoryYears { get; init; } = 300;
+
+    /// <summary>Cells a camp's scout walks every turn.</summary>
+    public int ScoutCells { get; init; } = 15;
+
+    /// <summary>Farthest a camp may set out for in one journey.</summary>
+    public int JourneyCells { get; init; } = 40;
+}

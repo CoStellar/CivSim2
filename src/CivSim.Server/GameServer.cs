@@ -266,9 +266,14 @@ public sealed class GameServer
         SendAllChunks(client);
     }
 
-    // Until perception (Stage 3), a player knows the cells around its start.
+    // What the player's civilization knows (map memory, stage 3g); without content, the cells around its start.
     private bool[] KnownCells(CivilizationState civ)
     {
+        if (_content is not null && civ.SeenYear.Length > 0)
+        {
+            return Core.Perception.MapMemory.KnownCells(_content, State, civ);
+        }
+
         WorldState earth = State.Worlds[0];
         var known = new bool[earth.Geometry.CellCount];
         int radius = Math.Min(StartKnowledgeRadius, earth.Geometry.MaxUniqueRadius);
@@ -405,6 +410,22 @@ public sealed class GameServer
             if (client.Player is null || !client.Connection.IsOpen)
             {
                 continue;
+            }
+
+            // The fog of war follows the civilization's memory: newly known (or forgotten) cells go out with their chunks.
+            if (!client.IsObserver && client.Civ is CivId civId && State.FindCivilization(civId) is { } civ && client.Known is not null)
+            {
+                bool[] known = KnownCells(civ);
+                WorldState earth = State.Worlds[0];
+                for (int i = 0; i < known.Length && i < client.Known.Length; i++)
+                {
+                    if (known[i] != client.Known[i])
+                    {
+                        _pendingChunks[0][earth.Map.Chunks.ChunkOfIndex(i)] = true;
+                    }
+                }
+
+                client.Known = known;
             }
 
             client.Connection.Send(BuildView(client, snapshot, skipChronicle: client.JustJoined));

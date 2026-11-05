@@ -118,6 +118,12 @@ public sealed class SettlementState
     /// <summary>Value of <see cref="RecipeId"/> when nothing is made.</summary>
     public const int NoRecipe = -1;
 
+    /// <summary>Cell index a camp is walking to over several turns (stage 3g), or <see cref="NoJourney"/>.</summary>
+    public int JourneyTarget { get; set; } = NoJourney;
+
+    /// <summary>Value of <see cref="JourneyTarget"/> when the camp stays.</summary>
+    public const int NoJourney = -1;
+
     /// <summary>Producers who farmed this turn (set by farming before gathering; the others gather).</summary>
     public int Farmers { get; set; }
 

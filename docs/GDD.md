@@ -537,6 +537,7 @@ AI widzi tylko to, co odkryła jej cywilizacja. Z tego co turę buduje:
 | Nawigacja | Żegluga oceaniczna | wybrzeża, prądy, szlaki morskie | trwała |
 | Rozpoznanie z powietrza | Lotnictwo, potem satelity | aktualny obraz dużych obszarów, ruchy armii | stała aktualizacja |
 
+- **W CORE (etap 3g):** osada widzi 6 pól wokół, a co turę wysyła zwiadowcę na 15 pól w losowym kierunku; pamięć ustna trzyma pole 300 lat od ostatniej obserwacji. Obóz może wyruszyć w kilkuturową wędrówkę do znanego miejsca do 40 pól dalej, po lądzie, lodzie morskim i pomostach lądowych.
 - **Pewność informacji maleje z wiekiem.** Armia widziana 10 tur temu to dla AI już tylko przypuszczenie. Teren starzeje się wolno, ruchy wojsk szybko.
 - **Zobaczyć to nie wszystko.** Złoże trafia do pamięci tylko wtedy, gdy cywilizacja zna już ten surowiec (4.2). Ruda żelaza widziana w epoce kamienia to dla niej zwykłe wzgórze.
 - **Misje zwiadowcze:** dowódca ocenia wartość zwiadu jak każde inne działanie. Liczy się dużo nieznanych pól w kierunku rozwoju (7.6), przestarzałe informacje przy granicy i zagrożenie bez aktualnego rozpoznania.
