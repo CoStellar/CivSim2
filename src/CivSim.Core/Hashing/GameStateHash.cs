@@ -105,6 +105,8 @@ public static class GameStateHash
             h.Add(s.FoodEaten);
             h.Add(s.HigherNeedsPerMille);
             h.Add(s.MovedMonth);
+            h.Add(s.RecipeId);
+            h.Add(s.RunsMade);
             h.Add((int)s.Status);
             h.Add(s.AbandonedMonth);
             h.Add(s.ClaimCiv);

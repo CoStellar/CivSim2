@@ -55,6 +55,9 @@ public sealed class GameContent
     /// <summary>Production recipes, index = id (<c>data/recipes.json</c>).</summary>
     public IReadOnlyList<RecipeDefinition> Recipes { get; init; } = [];
 
+    /// <summary>Trade network and internal prices (data/trade.json, stage 3e).</summary>
+    public TradeRules Trade { get; init; } = new();
+
     /// <summary>Settlement levels from smallest to largest, index = id (<c>data/settlements.json</c>).</summary>
     public IReadOnlyList<SettlementLevelDefinition> SettlementLevels { get; init; } = [];
 

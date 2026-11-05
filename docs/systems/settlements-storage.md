@@ -29,14 +29,14 @@ flowchart LR
 - **Czas gry** liczymy w miesiącach (`GameState.Month`), bo w erze informacji tura trwa pół roku, a w kosmicznej kwartał. Rok w podglądzie = miesiące / 12.
 - **Długość tury** bierzemy z ery najbardziej zaawansowanej żywej cywilizacji. To zasada tymczasowa: ostatecznie ustalimy ją razem z erami w etapie 3f.
 - **Psucie** (GDD 4.3, zgoda Patryka z 2026-11-05: liczby są **na rok**): z zapasu zostaje `(1 − tempo)^lata`. Pełne lata liczymy jako procent składany, resztę roku proporcjonalnie. Przykład: zboże (1% na rok) po turze 50 lat ma 60,5% zapasu, ryby (8%) tylko 1,5%. Zapasy żywności są więc buforem na złe lata, nie oszczędnościami na stulecia. Według GDD 16 psuje się tylko żywność; walidator danych tego pilnuje.
-- **Pojemność** (CORE uproszczone): jedna liczba na osadę, z poziomu osady (obóz 300 jednostek, wioska 2000…). Nadwyżka znika ze wszystkich towarów proporcjonalnie do ich ilości. Sprzedaż nadwyżki z rabatem przyjdzie z siecią handlową (etap 3e).
+- **Pojemność** (CORE uproszczone): jedna liczba na osadę, z poziomu osady (obóz 300 jednostek, wioska 2000…). Nadwyżka znika ze wszystkich towarów proporcjonalnie do ich ilości. Od etapu 3e nadwyżka najpierw jedzie do osad sieci handlowej z wolnym miejscem (bez pieniędzy nie ma sprzedaży z rabatem); opis w [economy-trade.md](economy-trade.md).
 - Wszystko na liczbach całkowitych (`Amount` w setnych częściach, udział psucia w miliardowych), więc wynik jest identyczny na każdym komputerze.
 
 ## Pliki danych
 - `data/goods.json`: 16 towarów er 1–2, kategoria (żywność, masowe, cenne, płyny), psucie na rok, kolor.
 - `data/settlements.json`: 6 poziomów osad (ludność, pojemność, czy się przemieszcza) i start plemienia.
 - `data/eras.json`: 10 er i długość tury w miesiącach (GDD 6.2).
-- `data/recipes.json`: 6 receptur jednoetapowych. Na razie tylko wczytywane i sprawdzane; produkcja ruszy w etapie 3e.
+- `data/recipes.json`: 6 receptur jednoetapowych; od etapu 3e wykonują je rzemieślnicy ([economy-trade.md](economy-trade.md)).
 
 ## Testy
 - `StorageTests`: dane się wczytują; zepsute dane zgłaszają każdy błąd; psucie zgodne ze wzorem procentu składanego; każde plemię ma obóz z zapasami; zboże po turze ma 60,50 z 100, narzędzia się nie psują; nadwyżka znika proporcjonalnie; zapis i odczyt zachowuje osady i efekty; gra z gospodarką jest deterministyczna; gracz widzi tylko swój magazyn.

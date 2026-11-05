@@ -112,6 +112,15 @@ public sealed class SettlementState
     /// <summary>True when <see cref="ClaimCiv"/> has a claim at <paramref name="month"/>.</summary>
     public bool HasClaim(long month) => ClaimCiv != NoClaim && month <= ClaimUntilMonth;
 
+    /// <summary>Recipe the settlement's artisans work (index into <c>GameContent.Recipes</c>), or <see cref="NoRecipe"/> (stage 3e).</summary>
+    public int RecipeId { get; set; } = NoRecipe;
+
+    /// <summary>Value of <see cref="RecipeId"/> when nothing is made.</summary>
+    public const int NoRecipe = -1;
+
+    /// <summary>Recipe runs done in the last turn, hundredths (for reports and the AI).</summary>
+    public long RunsMade { get; set; }
+
     /// <summary>Game month of the last move (or of founding); the tribe AI waits a while between moves.</summary>
     public long MovedMonth { get; set; }
 

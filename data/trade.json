@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "comment": "Trade network without physical transport (GDD 4, CORE simplified; stage 3e). Settlements of one civilization on one world are in one network when a chain of settlements links them, each link at most linkCells apart. Goods passed between two settlements lose lossPercentPerCell percent for every cell of distance (at most 90%). Shortages are shared in the order of GDD 4.5: food for the people first (each settlement keeps foodReserveYears of its food needs), then the goods of higher needs, then the inputs of the recipes being worked; what is left over stays where it is. A warehouse that overflows first sends the surplus to settlements of its network with room. Internal prices: the good's value from goods.json times demand over supply (demand = a year of needs and recipe inputs), within priceRangePercent.",
+  "linkCells": 8,
+  "lossPercentPerCell": 2,
+  "foodReserveYears": "1",
+  "priceRangePercent": [
+    25,
+    400
+  ]
+}

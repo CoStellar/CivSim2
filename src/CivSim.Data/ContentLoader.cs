@@ -25,8 +25,8 @@ public static class ContentLoader
     {
         directory ??= DefaultDirectory;
         var errors = new List<string>();
-        List<BiomeDefinition> biomes = LoadBiomes(Path.Combine(directory, "biomes.json"), errors);
         List<GoodDefinition> goods = LoadGoods(Path.Combine(directory, "goods.json"), errors);
+        List<BiomeDefinition> biomes = LoadBiomes(Path.Combine(directory, "biomes.json"), goods, errors);
         List<DepositDefinition> deposits = LoadDeposits(Path.Combine(directory, "resources.json"), biomes, goods, errors);
         ValidateBiomeSet(biomes, errors);
         List<StratumDefinition> strata = LoadStrata(Path.Combine(directory, "strata.json"), goods, errors);
@@ -36,6 +36,7 @@ public static class ContentLoader
             LoadSettlements(Path.Combine(directory, "settlements.json"), goods, errors);
         List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
+        TradeRules trade = LoadTrade(Path.Combine(directory, "trade.json"), errors);
         (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons, Core.WorldGen.ClimateCycleRules cycles) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
@@ -57,6 +58,7 @@ public static class ContentLoader
             Planets = planets,
             Seasons = seasons,
             ClimateCycles = cycles,
+            Trade = trade,
         };
     }
 
@@ -99,7 +101,8 @@ public static class ContentLoader
             }
 
             bool fights = e.TryGetProperty("fights", out JsonElement f) && f.ValueKind == JsonValueKind.True;
-            result.Add(new StratumDefinition(i, key, name, gathers, share, needs) { Fights = fights });
+            bool crafts = e.TryGetProperty("crafts", out JsonElement cr) && cr.ValueKind == JsonValueKind.True;
+            result.Add(new StratumDefinition(i, key, name, gathers, share, needs) { Fights = fights, Crafts = crafts });
             i++;
         }
 
@@ -279,13 +282,14 @@ public static class ContentLoader
             GoodCategory category = r.Enum<GoodCategory>("category");
             Amount spoilage = r.Amount("spoilagePerYear", Amount.Zero, Amount.FromUnits(100));
             uint color = r.Color("color");
+            Amount value = r.Amount("value", Amount.FromHundredths(1), Amount.FromUnits(10_000));
             if (category != GoodCategory.Food && spoilage > Amount.Zero)
             {
                 // CORE simplified (GDD 16): only food spoils.
                 errors.Add($"{Path.GetFileName(path)}: goods[{i}].spoilagePerYear: only food may spoil.");
             }
 
-            result.Add(new GoodDefinition(i, key, name, era, category, (int)spoilage.Hundredths, color));
+            result.Add(new GoodDefinition(i, key, name, era, category, (int)spoilage.Hundredths, color) { Value = value });
             i++;
         }
 
@@ -573,6 +577,24 @@ public static class ContentLoader
         return (result, seasons, cycles);
     }
 
+    private static TradeRules LoadTrade(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new TradeRules();
+        }
+
+        var r = new Reader(doc.RootElement, Path.GetFileName(path), errors);
+        return new TradeRules
+        {
+            LinkCells = r.Int("linkCells", 1, 100),
+            LossPercentPerCell = r.Int("lossPercentPerCell", 0, 90),
+            FoodReserveYears = r.Amount("foodReserveYears", Amount.Zero, Amount.FromUnits(20)),
+            PriceRangePercent = r.Range("priceRangePercent", 1, 10_000),
+        };
+    }
+
     private static List<EffectDefinition> LoadEffects(string path, List<string> errors)
     {
         var result = new List<EffectDefinition>();
@@ -599,7 +621,7 @@ public static class ContentLoader
         return result;
     }
 
-    private static List<BiomeDefinition> LoadBiomes(string path, List<string> errors)
+    private static List<BiomeDefinition> LoadBiomes(string path, List<GoodDefinition> goods, List<string> errors)
     {
         var result = new List<BiomeDefinition>();
         using JsonDocument? doc = Open(path, errors);
@@ -623,7 +645,8 @@ public static class ContentLoader
             int fert = r.Int("baseFertility", 0, 100);
             int food = r.Int("food", 0, 10);
             uint color = r.Color("color");
-            result.Add(new BiomeDefinition(i, key, name, kind, tMin, tMax, hMin, hMax, move, fert, food, color));
+            List<GoodQuantity> gather = e.TryGetProperty("gather", out _) ? r.Goods("gather", goods) : [];
+            result.Add(new BiomeDefinition(i, key, name, kind, tMin, tMax, hMin, hMax, move, fert, food, color) { Gather = gather });
             i++;
         }
 

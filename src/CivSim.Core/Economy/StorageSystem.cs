@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CivSim.Core.Content;
 using CivSim.Core.Numerics;
 using CivSim.Core.Simulation;
@@ -9,7 +10,8 @@ namespace CivSim.Core.Economy;
 /// <summary>
 /// Last step of the economy phase (GDD 11.1, phase 7): goods spoil by their yearly rate converted to the turn
 /// length, then everything above the warehouse capacity is lost (GDD 4.3, CORE simplified: one capacity per
-/// settlement). Selling the surplus at a discount comes with the trade network (Stage 3e).
+/// settlement). A settlement in a trade network first sends the surplus to members with room, nearest first, losing
+/// the transport share on the way (stage 3e, decision of 2026-11-05: without money there is no selling at a discount).
 /// </summary>
 public sealed class StorageSystem : ITurnSystem
 {
@@ -59,11 +61,109 @@ public sealed class StorageSystem : ITurnSystem
                 }
             }
 
-            overflow += TrimToCapacity(s, _content.SettlementLevels[s.Level].StorageCapacity);
+        }
+
+        // Surplus first goes to members of the same network that have room.
+        var networkOf = new int[state.Settlements.Count];
+        Array.Fill(networkOf, -1);
+        List<List<int>> networks = TradeNetworks.Build(_content, state);
+        for (int n = 0; n < networks.Count; n++)
+        {
+            foreach (int m in networks[n])
+            {
+                networkOf[m] = n;
+            }
+        }
+
+        // Free room per network: when every member is full there is nowhere to send anything.
+        var room = new long[networks.Count];
+        for (int n = 0; n < networks.Count; n++)
+        {
+            foreach (int m in networks[n])
+            {
+                SettlementState member = state.Settlements[m];
+                room[n] += Math.Max(0, (_content.SettlementLevels[member.Level].StorageCapacity - member.TotalStock()).Hundredths);
+            }
+        }
+
+        for (int i = 0; i < state.Settlements.Count; i++)
+        {
+            SettlementState s = state.Settlements[i];
+            Amount capacity = _content.SettlementLevels[s.Level].StorageCapacity;
+            int net = networkOf[i];
+            if (net >= 0 && room[net] > 0 && networks[net].Count > 1 && s.TotalStock() > capacity)
+            {
+                room[net] -= SendSurplus(state, networks[net], i, capacity);
+            }
+
+            overflow += TrimToCapacity(s, capacity);
         }
 
         LastSpoiledHundredths = spoiled;
         LastOverflowHundredths = overflow;
+    }
+
+    // Sends the surplus, in proportion to what is stored, to network members with free room, nearest first.
+    // Returns the room used at the receivers, hundredths.
+    private long SendSurplus(GameState state, List<int> members, int from, Amount capacity)
+    {
+        long used = 0;
+        SettlementState s = state.Settlements[from];
+        WorldState world = state.Worlds[s.World.Value];
+        var order = new List<int>(members.Count);
+        foreach (int m in members)
+        {
+            if (m != from)
+            {
+                order.Add(m);
+            }
+        }
+
+        order.Sort((a, b) =>
+        {
+            int da = world.Geometry.Distance(s.Cell, state.Settlements[a].Cell);
+            int db = world.Geometry.Distance(s.Cell, state.Settlements[b].Cell);
+            return da != db ? da.CompareTo(db) : a.CompareTo(b);
+        });
+
+        foreach (int m in order)
+        {
+            Amount excess = s.TotalStock() - capacity;
+            if (excess <= Amount.Zero)
+            {
+                return used;
+            }
+
+            SettlementState to = state.Settlements[m];
+            Amount room = _content.SettlementLevels[to.Level].StorageCapacity - to.TotalStock();
+            if (room <= Amount.Zero)
+            {
+                continue;
+            }
+
+            int percent = TradeNetworks.ArrivingPercent(_content, world.Geometry.Distance(s.Cell, to.Cell));
+            long sendMax = room.Hundredths * 100 / Math.Max(1, percent);
+            Amount send = Amount.FromHundredths(Math.Min(excess.Hundredths, sendMax));
+            Span<Amount> stock = s.Stock;
+            for (int g = 0; g < stock.Length; g++)
+            {
+                _weights[g] = stock[g].Hundredths;
+            }
+
+            send.SplitProportionally(_weights, _losses);
+            for (int g = 0; g < stock.Length; g++)
+            {
+                if (_losses[g] > Amount.Zero)
+                {
+                    stock[g] -= _losses[g];
+                    long arrive = _losses[g].Hundredths * percent / 100;
+                    to.Add(g, Amount.FromHundredths(arrive));
+                    used += arrive;
+                }
+            }
+        }
+
+        return used;
     }
 
     // Removes the surplus from every good in proportion to how much of it is stored.
