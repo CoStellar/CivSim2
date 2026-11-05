@@ -23,7 +23,7 @@ flowchart TD
 ## Zasady i wzory
 - Kolejność faz z GDD 11.1 jest zapisana w `TurnPhase`. Każdy system (`ITurnSystem`) mówi, w której fazie działa;
   w obrębie fazy systemy idą w kolejności rejestracji. `CoreSystems.Register` dodaje systemy rdzenia w stałej kolejności
-  (serwer i Headless robią to tak samo): wygasanie efektów (faza 1), zbieranie, konsumpcja i magazyny (faza 7), ludność (faza 8), kalendarz (faza 11).
+  (serwer i Headless robią to tak samo): wygasanie efektów, lata dobre i złe i odrastanie dzikiej żywności (faza 1), strefy po ruchu (faza 5), zbieranie, konsumpcja i magazyny (faza 7), ludność (faza 8), strefy wpływów (faza 10), kalendarz (faza 11), a jako źródło komend prostą AI plemienną (faza 3).
   Systemy mogą dopisać zdanie do kroniki (`TurnContext.Chronicle`); serwer przekazuje je klientom.
 - **Komendy** (`ICommand`) to jedyny sposób zmiany stanu. Każda ma kategorię (dyplomacja, gospodarka, ruch),
   sprawdzenie zasad (`Validate`) i wykonanie (`Apply`). Każda komenda niesie gracza i cywilizację (`CommandEnvelope`).
