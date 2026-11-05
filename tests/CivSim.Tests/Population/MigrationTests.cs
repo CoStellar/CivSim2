@@ -205,7 +205,7 @@ public class MigrationTests
         }
 
         var queue = new CommandQueue();
-        new TribeAi(Content).IssueCommands(state, queue);
+        new GovernorAdvisor(Content).IssueCommands(state, queue);
         Assert.Equal(0, queue.Count);
     }
 

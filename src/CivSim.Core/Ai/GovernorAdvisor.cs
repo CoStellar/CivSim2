@@ -1,26 +1,29 @@
 using System;
 using System.Collections.Generic;
+using CivSim.Core.Ai.Utility;
 using CivSim.Core.Commands;
 using CivSim.Core.Content;
 using CivSim.Core.Economy;
 using CivSim.Core.Map;
 using CivSim.Core.Numerics;
 using CivSim.Core.Population;
+using CivSim.Core.Random;
 using CivSim.Core.Simulation;
 using CivSim.Core.State;
 
 namespace CivSim.Core.Ai;
 
 /// <summary>
-/// Simple rule-based tribe AI (decision of 2026-11-05, until the advisors of Stage 4). For every camp of an
+/// The governor advisor of tribes (GDD 8.1; rules of stage 3c-3g, on the shared evaluation since stage 4a). For every camp of an
 /// AI-controlled civilization it compares the food its land gives now with the best place within reach (GDD 5.4):
 /// a hungry camp moves when another place is clearly better (into an old campsite, onto free land, or by driving out
 /// a weaker camp); a crowded camp sends a group to land that can feed it; a tiny camp joins a camp of its own; an idle
 /// camp takes what was left in empty settlements nearby.
-/// It issues the same commands a player would. It only reads the state and only looks at cells within
-/// <see cref="PopulationRules.MaxMoveCells"/> of its own camps (a stand-in for map knowledge until Stage 3g).
+/// Places are scored as an <see cref="Evaluation"/>: the food of their land times comfort, nearness and an old-campsite
+/// boost, so every move records why. It issues the same commands a player would, reads only the state, and weighs
+/// only cells its civilization knows.
 /// </summary>
-public sealed class TribeAi : ICommandSource
+public sealed class GovernorAdvisor : Advisor
 {
     private readonly GameContent _content;
     private readonly PopulationRules _rules;
@@ -43,11 +46,13 @@ public sealed class TribeAi : ICommandSource
     private long[] _siteFood = [];
     private long[] _siteStamp = [];
     private long _stamp;
+    private readonly ResponseCurve _nearness;
+    private readonly ResponseCurve _farNearness = ResponseCurve.Linear(0, Factor.Neutral, 100, 0);
 
-    /// <summary>Creates the AI.</summary>
-    public TribeAi(GameContent content)
+    /// <summary>Creates the advisor.</summary>
+    public GovernorAdvisor(GameContent content)
+        : base(content, AdvisorKind.Governor)
     {
-        ArgumentNullException.ThrowIfNull(content);
         _content = content;
         _rules = content.Population;
         _yields = new GatheringSystem(content, new YieldYears(0));
@@ -56,6 +61,8 @@ public sealed class TribeAi : ICommandSource
         _farmArea = new HexCoord[HexGlobe.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
         _influence = new Influence(content);
         _near = new HexCoord[HexGlobe.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
+        // Nearness: 1.0 next door, falling by the distance penalty per cell (data/population.json), 0 from 100/penalty cells on.
+        _nearness = ResponseCurve.Linear(0, Factor.Neutral, 100, Factor.Neutral - (Factor.Neutral * _rules.DistancePenaltyPercentPerCell));
         _foodPerPerson = new long[content.Strata.Count];
         foreach (StratumDefinition stratum in content.Strata)
         {
@@ -89,7 +96,7 @@ public sealed class TribeAi : ICommandSource
     private long _costRun;
 
     /// <inheritdoc />
-    public void IssueCommands(GameState state, CommandQueue queue)
+    public override void IssueCommands(GameState state, CommandQueue queue)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(queue);
@@ -180,7 +187,9 @@ public sealed class TribeAi : ICommandSource
         // A handful of people does not survive on its own: they join the nearest camp of their own.
         if (slowTurn && people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into)
         {
-            queue.Enqueue(PlayerId.Ai, civ.Id, new AbandonSettlementCommand(_content, s.Id, into.Id));
+            Evaluation join = Evaluation.Of(people);
+            join.Note(FactorId.People, people);
+            Issue(state, queue, civ.Id, new AbandonSettlementCommand(_content, s.Id, into.Id), AiAction.JoinCamp, s.Id.Value, into.Id.Value, join);
             _joined.Add(into.Id.Value);
             return;
         }
@@ -192,11 +201,16 @@ public sealed class TribeAi : ICommandSource
         bool mobile = _content.SettlementLevels[s.Level].Mobile;
         if (mobile && (hungry || uncomfortable) && rested)
         {
-            long here = SiteValue(state, world, civ, s.Cell);
-            (HexCoord best, long bestValue) = BestSite(state, world, civ, s, splitting: false);
-            if (bestValue * 100 > here * (100 + _rules.MoveWhenBetterByPercent))
+            // Staying is the incumbent: another place must be better by a margin (GDD 8.6, hysteresis).
+            long here = SiteEvaluation(state, world, civ, s.Cell).Value;
+            DeterministicRandom? random = RandomFor(state, s.Id.Value);
+            (HexCoord best, Evaluation move) = BestSite(state, world, civ, s, splitting: false, random);
+            if (move.Value * 100 > here * (100 + _rules.MoveWhenBetterByPercent))
             {
-                queue.Enqueue(PlayerId.Ai, civ.Id, MoveTo(state, world, s, best, 100));
+                move.Note(FactorId.BetterThanHere, here);
+                move.Note(FactorId.Fed, s.FedPerMille);
+                (ICommand command, AiAction action) = MoveTo(state, world, s, best, 100);
+                Issue(state, queue, civ.Id, command, action, s.Id.Value, world.Geometry.Index(best), move);
                 Take(world, best);
                 return;
             }
@@ -204,10 +218,12 @@ public sealed class TribeAi : ICommandSource
             // Nothing good within one move: set out for the best known land farther away (stage 3g), once per era turn.
             if (slowTurn && world.Id == WorldId.Earth)
             {
-                (HexCoord far, long farValue) = FarSite(state, world, civ, s);
-                if (farValue * 100 > Math.Max(here, bestValue) * (100 + (2 * _rules.MoveWhenBetterByPercent)))
+                (HexCoord far, Evaluation journey) = FarSite(state, world, civ, s, random);
+                long incumbent = Math.Max(here, move.Value);
+                if (journey.Value * 100 > incumbent * (100 + (2 * _rules.MoveWhenBetterByPercent)))
                 {
-                    queue.Enqueue(PlayerId.Ai, civ.Id, new Perception.JourneyCommand(_content, s.Id, far));
+                    journey.Note(FactorId.BetterThanHere, incumbent);
+                    Issue(state, queue, civ.Id, new Perception.JourneyCommand(_content, s.Id, far), AiAction.Journey, s.Id.Value, world.Geometry.Index(far), journey);
                     Take(world, far);
                     return;
                 }
@@ -220,11 +236,18 @@ public sealed class TribeAi : ICommandSource
         }
 
         // Agriculture: a camp whose land could feed half again as many people by farming settles down (GDD 5.3).
-        if (mobile && people >= _content.Assets.SettleMinPeople && CanSettle(civ, s.Level)
-            && FarmFood(world, s) * 2 >= GroupFoodNeed(s, 100) * 3)
+        if (mobile && people >= _content.Assets.SettleMinPeople && CanSettle(civ, s.Level))
         {
-            queue.Enqueue(PlayerId.Ai, civ.Id, new SettleCommand(_content, s.Id));
-            return;
+            long farm = FarmFood(world, s);
+            long eat = GroupFoodNeed(s, 100);
+            if (farm * 2 >= eat * 3)
+            {
+                Evaluation settle = Evaluation.Of(farm);
+                settle.Note(FactorId.FarmYield, eat > 0 ? farm * 100 / eat : 0);
+                settle.Note(FactorId.People, people);
+                Issue(state, queue, civ.Id, new SettleCommand(_content, s.Id), AiAction.Settle, s.Id.Value, world.Geometry.Index(s.Cell), settle);
+                return;
+            }
         }
 
         int max = _content.SettlementLevels[s.Level].MaxPopulation;
@@ -233,10 +256,12 @@ public sealed class TribeAi : ICommandSource
         {
             // No fixed limit of camps: a group leaves only for land that can feed it.
             long need = GroupFoodNeed(s, _rules.SplitPercent) * _rules.SplitNeedsFoodPercent / 100;
-            (HexCoord site, long value) = BestSite(state, world, civ, s, splitting: true);
-            if (value > 0 && SiteFood(world, site) >= need)
+            (HexCoord site, Evaluation split) = BestSite(state, world, civ, s, splitting: true, RandomFor(state, s.Id.Value));
+            if (split.Value > 0 && SiteFood(world, site) >= need)
             {
-                queue.Enqueue(PlayerId.Ai, civ.Id, MoveTo(state, world, s, site, _rules.SplitPercent));
+                split.Note(FactorId.Crowding, people * 100L / Math.Max(1, max));
+                (ICommand command, AiAction action) = MoveTo(state, world, s, site, _rules.SplitPercent);
+                Issue(state, queue, civ.Id, command, action, s.Id.Value, world.Geometry.Index(site), split);
                 Take(world, site);
                 return;
             }
@@ -251,7 +276,9 @@ public sealed class TribeAi : ICommandSource
                 if (site.World == s.World && site.TotalStock() > Amount.Zero && world.Geometry.Distance(s.Cell, site.Cell) <= _rules.MaxMoveCells
                     && OpenLand(world, civ, site.Cell))
                 {
-                    queue.Enqueue(PlayerId.Ai, civ.Id, new PlunderSettlementCommand(_content, s.Id, site.Id));
+                    Evaluation plunder = Evaluation.Of(site.TotalStock().Hundredths);
+                    plunder.Note(FactorId.LeftGoods, site.TotalStock().Hundredths);
+                    Issue(state, queue, civ.Id, new PlunderSettlementCommand(_content, s.Id, site.Id), AiAction.Plunder, s.Id.Value, site.Id.Value, plunder);
                     return;
                 }
             }
@@ -260,7 +287,7 @@ public sealed class TribeAi : ICommandSource
 
     // Known free land beyond one move, on a sparse lattice (every third cell each way) to keep the search cheap;
     // a small penalty per cell of distance.
-    private (HexCoord Cell, long Value) FarSite(GameState state, WorldState world, CivilizationState civ, SettlementState from)
+    private (HexCoord Cell, Evaluation Why) FarSite(GameState state, WorldState world, CivilizationState civ, SettlementState from, DeterministicRandom? random)
     {
         HexGlobe geo = world.Geometry;
         int radius = Math.Min(_content.Perception.JourneyCells, geo.MaxUniqueRadius);
@@ -270,8 +297,7 @@ public sealed class TribeAi : ICommandSource
         }
 
         int count = geo.Range(from.Cell, radius, _far);
-        HexCoord best = from.Cell;
-        long bestValue = 0;
+        Chooser.Clear();
         for (int k = 0; k < count; k++)
         {
             HexCoord c = _far[k];
@@ -288,17 +314,28 @@ public sealed class TribeAi : ICommandSource
                 continue;
             }
 
-            long value = SiteValue(state, world, civ, c) * Math.Max(0, 100 - distance) / 100;
-            if (value > bestValue)
-            {
-                best = c;
-                bestValue = value;
-            }
+            Evaluation e = SiteEvaluation(state, world, civ, c);
+            e.Apply(FactorId.Distance, _farNearness, distance);
+            Weigh(ref e, civ);
+            Chooser.Offer(i, e);
         }
 
-        // Only the winner needs a known way there.
-        return bestValue > 0 && _paths.Find(_content, state, civ, world, geo.Index(from.Cell), geo.Index(best)) is null ? (from.Cell, 0) : (best, bestValue);
+        // Only the chosen place needs a known way there.
+        int pick = Chooser.Pick(random);
+        if (pick < 0)
+        {
+            return (from.Cell, default);
+        }
+
+        int target = Chooser.KeyAt(pick);
+        return _paths.Find(_content, state, civ, world, geo.Index(from.Cell), target) is null
+            ? (from.Cell, default)
+            : (geo.FromIndex(target), Chooser.EvaluationAt(pick));
     }
+
+    // Moving serves expansion: the strategist's weight and the character apply (both neutral until stage 4b).
+    private static void Weigh(ref Evaluation e, CivilizationState civ) =>
+        e.Weigh(GoalWeight(civ, Goal.Expansion), CharacterMultiplier(civ, Goal.Expansion));
 
     private HexCoord[] _far = [];
     private readonly Perception.PathFinder _paths = new();
@@ -335,7 +372,7 @@ public sealed class TribeAi : ICommandSource
 
     // The command that brings people to the chosen cell: into an empty settlement there, against the camp living
     // there, or a plain move or split.
-    private ICommand MoveTo(GameState state, WorldState world, SettlementState s, HexCoord cell, int percent)
+    private (ICommand Command, AiAction Action) MoveTo(GameState state, WorldState world, SettlementState s, HexCoord cell, int percent)
     {
         int i = world.Geometry.Index(cell);
         if (world.Id == WorldId.Earth && Math.Abs(_occupiedAt[i]) == _stamp && _settlementAt[i] >= 0)
@@ -343,26 +380,26 @@ public sealed class TribeAi : ICommandSource
             SettlementState there = state.Settlements[_settlementAt[i]];
             if (there.IsActive)
             {
-                return new ConquerSettlementCommand(_content, s.Id, there.Id);
+                return (new ConquerSettlementCommand(_content, s.Id, there.Id), AiAction.Conquer);
             }
 
-            return new OccupySettlementCommand(_content, s.Id, there.Id, percent);
+            return (new OccupySettlementCommand(_content, s.Id, there.Id, percent), AiAction.Occupy);
         }
 
         return percent >= 100
-            ? new MoveSettlementCommand(_content, s.Id, cell)
-            : new SplitSettlementCommand(_content, s.Id, cell, percent);
+            ? (new MoveSettlementCommand(_content, s.Id, cell), AiAction.MoveCamp)
+            : (new SplitSettlementCommand(_content, s.Id, cell, percent), AiAction.SplitCamp);
     }
 
     // Best place within reach: food of its land minus a penalty for distance. Old campsites of the tribe count a bit
     // more (known land); a hungry camp also weighs foreign camps it is strong enough to drive out. Split groups keep
     // away from own camps and never attack.
-    private (HexCoord Cell, long Value) BestSite(GameState state, WorldState world, CivilizationState civ, SettlementState from, bool splitting)
+    private (HexCoord Cell, Evaluation Why) BestSite(
+        GameState state, WorldState world, CivilizationState civ, SettlementState from, bool splitting, DeterministicRandom? random)
     {
         HexGlobe geo = world.Geometry;
         int count = geo.Range(from.Cell, Math.Min(_rules.MaxMoveCells, geo.MaxUniqueRadius), _reach);
-        HexCoord best = from.Cell;
-        long bestValue = 0;
+        Chooser.Clear();
         long attack = splitting ? 0 : SettlementAssets.Warriors(_content, from);
         bool earth = world.Id == WorldId.Earth;
         for (int k = 0; k < count; k++)
@@ -382,35 +419,41 @@ public sealed class TribeAi : ICommandSource
             }
 
             int distance = _ringOf[k];
-            long value = SiteValue(state, world, civ, c) * Math.Max(0, 100 - (distance * _rules.DistancePenaltyPercentPerCell)) / 100;
+            Evaluation e = SiteEvaluation(state, world, civ, c);
+            e.Apply(FactorId.Distance, _nearness, distance);
             if (there is { IsActive: false } && (there.Owner == civ.Id || there.ClaimCiv == civ.Id.Value))
             {
-                value = value * (100 + _rules.OwnCampsiteBonusPercent) / 100;
+                e.Apply(FactorId.OwnCampsite, (100 + _rules.OwnCampsiteBonusPercent) * 10, 1);
             }
 
-            // The costly checks run only for places that would be the new best.
-            if (value <= bestValue)
+            Weigh(ref e, civ);
+
+            // The costly checks run only for places the chooser would keep.
+            if (!Chooser.WouldKeep(e.Value))
             {
                 continue;
             }
 
             if (foreignCamp)
             {
-                if (attack > 0 && _content.SettlementLevels[there!.Level].Mobile
-                    && attack * 100 >= ConquerSettlementCommand.DefenceStrength(_content, there) * _rules.AttackAboveStrengthPercent)
+                if (attack > 0 && _content.SettlementLevels[there!.Level].Mobile)
                 {
-                    best = c;
-                    bestValue = value;
+                    long defence = ConquerSettlementCommand.DefenceStrength(_content, there);
+                    if (attack * 100 >= defence * _rules.AttackAboveStrengthPercent)
+                    {
+                        e.Note(FactorId.Strength, defence > 0 ? attack * 100 / defence : attack);
+                        Chooser.Offer(i, e);
+                    }
                 }
             }
             else if (Free(world, from, c, splitting))
             {
-                best = c;
-                bestValue = value;
+                Chooser.Offer(i, e);
             }
         }
 
-        return (best, bestValue);
+        int pick = Chooser.Pick(random);
+        return pick < 0 ? (from.Cell, default) : (geo.FromIndex(Chooser.KeyAt(pick)), Chooser.EvaluationAt(pick));
     }
 
     // Land the civilization holds or nobody holds.
@@ -514,8 +557,15 @@ public sealed class TribeAi : ICommandSource
 
     // How good a place is to live in: the food its land gives, times how pleasant its temperature is for this
     // civilization (GDD 8.3: the AI weighs places; nothing here is a fixed "flee the winter" rule).
-    private long SiteValue(GameState state, WorldState world, CivilizationState civ, HexCoord center) =>
-        SiteFood(world, center) * Comfort(state, world, civ, world.Geometry.Index(center)) / 100;
+    private Evaluation SiteEvaluation(GameState state, WorldState world, CivilizationState civ, HexCoord center)
+    {
+        long food = SiteFood(world, center);
+        int comfort = Comfort(state, world, civ, world.Geometry.Index(center));
+        Evaluation e = Evaluation.Of(food);
+        e.Note(FactorId.Food, food);
+        e.Apply(FactorId.Comfort, comfort * 10, comfort);
+        return e;
+    }
 
     /// <summary>
     /// Comfort of a cell, 0–100%: the coming season's temperature with live seasons, otherwise the winter temperature,

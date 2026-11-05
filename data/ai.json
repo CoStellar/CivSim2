@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "comment": "How the AI advisors decide (GDD 8.3; stage 4a). Every advisor scores its possible actions the same way: a base value times factors from response curves, times the goal weight and the character multiplier, minus the cost. pickAmongTop: how many of the best actions the AI draws among, with chances by score (GDD 8.3 says 3). It is 1 (always the best) until stage 4b, when the character decides how cautious a civilization is; 1 keeps the simulation exactly as in stage 3.",
+  "pickAmongTop": 1
+}

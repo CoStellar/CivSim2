@@ -2,7 +2,7 @@
 
 **W jednym zdaniu:** ludzie każdej cywilizacji wytwarzają punkty nauki, które idą na jedną wybraną technologię; technologia jest tańsza, gdy sytuacja jej sprzyja (inspiracje) albo zna ją sąsiad (dyfuzja), a po zbadaniu odblokowuje receptury, zbieranie nowych dóbr i stałe efekty, i może przenieść cywilizację w nową erę (etap 3f).
 
-**Faza tury:** 10. Nauka i wpływy (badanie, efekty, ery). Wybór technologii: faza decyzji (`ResearchAi`, komenda `SetResearchCommand`).
+**Faza tury:** 10. Nauka i wpływy (badanie, efekty, ery). Wybór technologii: faza decyzji (`ScholarAdvisor`, doradca uczony, komenda `SetResearchCommand`).
 
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/technologies.json` (graf, koszty, inspiracje, odblokowania, zasady dyfuzji), `data/eras.json` (`threshold`), `sciencePerThousandPerYear` warstw z `data/strata.json`, osady i ludność, warstwę `claim` mapy (strefy wpływów), rzeki, temperatury, zapasy.
@@ -23,7 +23,7 @@ flowchart LR
   K --> RC["Receptury"]
   K --> ER{"próg ery + 60% technologii ery?"}
   ER -->|tak| N["Nowa era → krótsza tura"]
-  AI["ResearchAi: najtańsza dostępna"] --> SR["SetResearchCommand"] --> R
+  AI["ScholarAdvisor: najtańsza dostępna"] --> SR["SetResearchCommand"] --> R
 ```
 
 ## Zasady i wzory
@@ -33,7 +33,7 @@ flowchart LR
 - **Koszt dziś** = koszt bazowy × max(25%, 100% − Σ inspiracji − dyfuzja). Inspiracje (GDD 6.1): towar w magazynach cywilizacji, złoże, biom albo rzeka w strefie wpływów (woda tuż przy strefie też się liczy), zima obozu co najmniej tak zimna, liczba ludzi. **Dyfuzja:** −20% za każdego sąsiada, który zna technologię, najwyżej 2 sąsiadów; sąsiad = inna cywilizacja z osadą w promieniu 12 pól od naszej.
 - **Odblokowania:** receptury (każda receptura musi mieć technologię, sprawdza to ładowanie danych); dodatkowe zbieranie według złoża albo biomu (łowienie ryb działa na wodzie przy strefie wpływów, bo strefy nie wchodzą na wodę); stałe efekty cywilizacji: `cooking` (+% plonów), `cold_tolerance`, `tradition` (+nastrój), `storage` (−% psucia), `carrying`.
 - **Ery** (GDD 6.2): cywilizacja wchodzi w następną erę, gdy zna jej technologię progową (neolit: rolnictwo) i 60% technologii obecnej ery. Długość tury wyznacza nadal najbardziej zaawansowana żywa cywilizacja.
-- **AI** (do doradcy uczonego w etapie 4): bierze najtańszą dostępną technologię po dzisiejszych zniżkach, więc sytuacja kieruje rozwojem (nad morzem tanie rybołówstwo, przy zwierzynie łowiectwo, w zimnie ogień i garbarstwo).
+- **AI** (doradca uczony `ScholarAdvisor`, od etapu 4a na wspólnej ocenie, `docs/systems/ai.md`): bierze najtańszą dostępną technologię po dzisiejszych zniżkach, więc sytuacja kieruje rozwojem (nad morzem tanie rybołówstwo, przy zwierzynie łowiectwo, w zimnie ogień i garbarstwo).
 - Odkrycia przypadkiem przez użytkowanie: w GDD 16 „Wytnij” (dubluje inspiracje).
 
 ## Pliki danych

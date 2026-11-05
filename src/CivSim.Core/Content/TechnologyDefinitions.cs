@@ -114,3 +114,12 @@ public sealed record PerceptionRules
     /// <summary>Farthest a camp may set out for in one journey.</summary>
     public int JourneyCells { get; init; } = 40;
 }
+
+/// <summary>How the AI advisors decide (data/ai.json, GDD 8.3; stage 4a).</summary>
+public sealed record AiRules
+{
+    /// <summary>
+    /// How many of the best actions an advisor draws among, chances by score (1-3). 1 always takes the best one.
+    /// </summary>
+    public int PickAmongTop { get; init; } = 1;
+}

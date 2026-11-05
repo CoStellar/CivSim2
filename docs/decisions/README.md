@@ -17,3 +17,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0013 Dwa zegary: krok świata zależny od planety, wolne decyzje rzadziej](0013-dwa-zegary.md)
 - [0014 Model klimatu: gwiazda i orbita z prawdziwych wzorów, bilans energii i cykl węglowy](0014-model-klimatu.md)
 - [0015 Epoki lodowe: cykle Milankovicia, lądolody Paillarda, klimat zmienia się w trakcie gry](0015-epoki-lodowe.md)
+- [0016 Wspólna ocena działań AI w liczbach całkowitych, dziennik „Dlaczego?” poza stanem gry](0016-ocena-dzialan-ai.md)
