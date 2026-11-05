@@ -211,6 +211,23 @@ public partial class Hud : CanvasLayer
                 continue;
             }
 
+            if (s.Population is { } people)
+            {
+                int headcount = 0;
+                var mix = new List<string>();
+                for (int k = 0; k < people.Length; k++)
+                {
+                    headcount += people[k];
+                    string stratum = c?.Strata is { } strata && k < strata.Count ? strata[k] : k.ToString(inv);
+                    mix.Add(string.Create(inv, $"{stratum} {people[k]}"));
+                }
+
+                int fed = s.FoodNeeded <= 0 ? 100 : (int)Math.Min(100, s.FoodEaten * 100 / s.FoodNeeded);
+                sb.Append(inv, $"People: {headcount} ({string.Join(", ", mix)})\n");
+                sb.Append(inv, $"Health: {s.Health}   Mood: {s.Mood}   Fed: {fed}%\n");
+                sb.Append(inv, $"Food last turn: gathered {s.FoodGathered / 100.0:F0}, needed {s.FoodNeeded / 100.0:F0}\n");
+            }
+
             long total = 0;
             var lines = new StringBuilder();
             for (int g = 0; g < s.Stock.Length; g++)
