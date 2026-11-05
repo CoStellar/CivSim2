@@ -25,6 +25,7 @@ public static class GameStateHash
         h.Add(state.Settings.WaterPercent);
         h.Add((int)state.Settings.Climate);
         h.Add((int)state.Settings.Moisture);
+        h.Add((int)state.Settings.Inland);
         h.Add((int)state.Settings.Relief);
         h.Add((int)state.Settings.Resources);
         h.Add(state.Turn);

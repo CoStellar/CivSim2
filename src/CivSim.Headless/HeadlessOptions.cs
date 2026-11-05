@@ -27,6 +27,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>How much rain the planet gets.</summary>
     public WorldMoisture Moisture { get; init; }
 
+    /// <summary>How fast humidity falls away from the sea.</summary>
+    public WorldInland Inland { get; init; }
+
     /// <summary>Share of hills and mountains.</summary>
     public WorldRelief Relief { get; init; }
 
@@ -47,6 +50,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             WaterPercent = WaterPercent,
             Climate = Climate,
             Moisture = Moisture,
+            Inland = Inland,
             Relief = Relief,
             Resources = Resources,
         };
@@ -56,7 +60,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     public const string Usage =
         "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--quiet]\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
-        "       [--climate temperate|cold|hot] [--moisture normal|dry|wet] [--relief normal|flat|mountainous]\n" +
+        "       [--climate temperate|cold|hot] [--moisture normal|dry|wet] [--inland normal|dry|humid] [--relief normal|flat|mountainous]\n" +
         "       [--resources normal|scarce|rich] [--civs 1-64]\n" +
         "       --turns 0 only generates the world.";
 
@@ -74,6 +78,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         int water = 60;
         WorldClimate climate = WorldClimate.Temperate;
         WorldMoisture moisture = WorldMoisture.Normal;
+        WorldInland inland = WorldInland.Normal;
         WorldRelief relief = WorldRelief.Normal;
         WorldResources resources = WorldResources.Normal;
         int? civs = null;
@@ -173,6 +178,14 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     }
 
                     break;
+                case "--inland":
+                    if (!TryEnum(Next(), out inland))
+                    {
+                        error = "--inland must be normal, dry or humid.";
+                        return null;
+                    }
+
+                    break;
                 case "--moisture":
                     if (!TryEnum(Next(), out moisture))
                     {
@@ -226,6 +239,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             WaterPercent = water,
             Climate = climate,
             Moisture = moisture,
+            Inland = inland,
             Relief = relief,
             Resources = resources,
             Civilizations = civs,

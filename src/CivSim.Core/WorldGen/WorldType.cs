@@ -55,6 +55,19 @@ public enum WorldMoisture
     Wet = 2,
 }
 
+/// <summary>How fast humidity falls away from the sea, inland (world setting).</summary>
+public enum WorldInland
+{
+    /// <summary>Default: −3 per cell from water, at most −36.</summary>
+    Normal = 0,
+
+    /// <summary>−4 per cell, at most −60: big deserts and steppes inside continents.</summary>
+    Dry = 1,
+
+    /// <summary>−2 per cell, at most −20: forests reach deep inland.</summary>
+    Humid = 2,
+}
+
 /// <summary>Share of hills and mountains on land (world setting).</summary>
 public enum WorldRelief
 {

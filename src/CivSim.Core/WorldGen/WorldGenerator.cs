@@ -225,13 +225,57 @@ public sealed class WorldGenerator
         return Math.Min(1000, Math.Abs((2 * c.Row) + 1 + (c.Col & 1) - h) * 1000 / h);
     }
 
+    // Latitude bent by two octaves of noise (about ±150), so climate zones follow wavy lines instead of map rows.
+    private int ClimateLatitude(HexCoord c)
+    {
+        (long x, long y) = Position(c, 6, 4);
+        int wobble = ((IntNoise.Sample(_seed ^ 0xC11A7E, 0, 6, 4, x, y) - 32768) * 110) / 32768;
+        (x, y) = Position(c, 14, 9);
+        wobble += ((IntNoise.Sample(_seed ^ 0xC11A7E, 1, 14, 9, x, y) - 32768) * 40) / 32768;
+        return Math.Clamp(Latitude(c) + wobble, 0, 1000);
+    }
+
+    // Humidity change by latitude: wet equator, dry subtropics, wetter mid-latitudes, dry poles.
+    // Straight lines between these points, so there are no sharp steps between belts.
+    private static readonly (int Lat, int Change)[] HumidityBelts =
+        [(0, 20), (120, 18), (330, -22), (560, 5), (720, 2), (900, -10), (1000, -10)];
+
+    // Humidity lost with distance from water. Distance is measured in standard-map cells (256 columns),
+    // so continents on bigger maps are not drier just because they are wider in cells.
+    private int InlandDrying(int distance)
+    {
+        (int perCell, int maxCells) = _options.Inland switch
+        {
+            WorldInland.Dry => (4, 15),
+            WorldInland.Humid => (2, 10),
+            _ => (3, 12),
+        };
+        int scaled = distance * 256 / _geo.Width;
+        return perCell * Math.Min(scaled, maxCells);
+    }
+
+    private static int HumidityBelt(int lat)
+    {
+        for (int k = 1; k < HumidityBelts.Length; k++)
+        {
+            (int lat1, int ch1) = HumidityBelts[k];
+            if (lat <= lat1)
+            {
+                (int lat0, int ch0) = HumidityBelts[k - 1];
+                return ch0 + ((ch1 - ch0) * (lat - lat0) / (lat1 - lat0));
+            }
+        }
+
+        return HumidityBelts[^1].Change;
+    }
+
     private void Temperature()
     {
         Span<sbyte> t = _map.Temperature.Raw;
         for (int i = 0; i < t.Length; i++)
         {
             HexCoord c = _geo.FromIndex(i);
-            int lat = Latitude(c);
+            int lat = ClimateLatitude(c);
             int temp = 28 - (55 * lat * lat / 1_000_000);
             int e = _map.Elevation[i];
             if (e > SeaLevel)
@@ -266,45 +310,30 @@ public sealed class WorldGenerator
             }
 
             HexCoord c = _geo.FromIndex(i);
-            int lat = Latitude(c);
-            int value = 90 - (4 * Math.Min(distToWater[i], 15));
+            int lat = ClimateLatitude(c);
+            int value = 90 - InlandDrying(distToWater[i]) + HumidityBelt(lat);
 
-            // Climate belts: wet equator, dry subtropics, wetter mid-latitudes, dry poles.
-            if (lat < 150)
-            {
-                value += 20;
-            }
-            else if (lat is >= 250 and < 420)
-            {
-                value -= 25;
-            }
-            else if (lat is >= 450 and < 700)
-            {
-                value += 5;
-            }
-            else if (lat >= 800)
-            {
-                value -= 10;
-            }
-
-            // Rain shadow: mountains upwind take the rain. Trade winds and polar easterlies come from the east,
-            // westerlies from the west.
+            // Rain shadow: mountains upwind take the rain, more when they are close. Trade winds and polar easterlies
+            // come from the east, westerlies from the west. The wind looks along a slanted line, so shadows are not
+            // drawn along map rows.
             int upwind = lat is >= 330 and < 660 ? -1 : 1;
             if (_map.Relief[i] != (byte)Content.Relief.Mountains)
             {
                 for (int k = 1; k <= 5; k++)
                 {
-                    int j = _geo.Index(_geo.Wrap(c.Col + (upwind * k), c.Row));
+                    int j = _geo.Index(_geo.Wrap(c.Col + (upwind * k), c.Row + ((k * (c.Col & 3)) / 6) - (k / 3)));
                     if (_map.Relief[j] == (byte)Content.Relief.Mountains)
                     {
-                        value -= 30;
+                        value -= 36 - (5 * k);
                         break;
                     }
                 }
             }
 
-            (long x, long y) = Position(c, 24, 14);
-            value += ((IntNoise.Sample(_seed ^ 0x4A11D, 0, 24, 14, x, y) - 32768) * 12) / 32768;
+            (long x, long y) = Position(c, 12, 7);
+            value += ((IntNoise.Sample(_seed ^ 0x4A11D, 0, 12, 7, x, y) - 32768) * 14) / 32768;
+            (x, y) = Position(c, 32, 20);
+            value += ((IntNoise.Sample(_seed ^ 0x4A11D, 1, 32, 20, x, y) - 32768) * 8) / 32768;
             value += _options.Moisture switch
             {
                 WorldMoisture.Dry => -15,
@@ -929,6 +958,9 @@ public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int 
     /// <summary>How much rain the planet gets.</summary>
     public WorldMoisture Moisture { get; init; }
 
+    /// <summary>How fast humidity falls away from the sea.</summary>
+    public WorldInland Inland { get; init; }
+
     /// <summary>Share of hills and mountains.</summary>
     public WorldRelief Relief { get; init; }
 
@@ -943,6 +975,7 @@ public sealed record WorldGenOptions(WorldType WorldType, int WaterPercent, int 
         {
             Climate = settings.Climate,
             Moisture = settings.Moisture,
+            Inland = settings.Inland,
             Relief = settings.Relief,
             Resources = settings.Resources,
         };

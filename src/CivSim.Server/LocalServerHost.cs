@@ -55,6 +55,7 @@ public sealed class LocalServerHost : IDisposable
             WaterPercent = Math.Clamp(options.WaterPercent, 30, 80),
             Climate = Parse<WorldClimate>(options.Climate),
             Moisture = Parse<WorldMoisture>(options.Moisture),
+            Inland = Parse<WorldInland>(options.Inland),
             Relief = Parse<WorldRelief>(options.Relief),
             Resources = Parse<WorldResources>(options.Resources),
         };
