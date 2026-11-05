@@ -43,6 +43,12 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     /// <summary>Volcanic activity in percent of Earth's, or null for the preset's.</summary>
     public int? VolcanismPercent { get; init; }
 
+    /// <summary>Swing of the star's brightness either way, per mille (0–100), or null for the preset's.</summary>
+    public int? StarVariabilityPerMille { get; init; }
+
+    /// <summary>Period of the star's brightness cycle in years, or null for the preset's.</summary>
+    public int? StarCycleYears { get; init; }
+
     /// <summary>Share of water, 30–80, or null for the preset's.</summary>
     public int? WaterPercent { get; init; }
 

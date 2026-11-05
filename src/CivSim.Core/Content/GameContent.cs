@@ -73,6 +73,9 @@ public sealed class GameContent
     /// <summary>When seasons are played turn by turn (data/planets.json, "seasons").</summary>
     public WorldGen.SeasonRules Seasons { get; init; } = new();
 
+    /// <summary>Milankovitch cycles and ice sheets (data/planets.json "climateCycles", stage 1c-B).</summary>
+    public WorldGen.ClimateCycleRules ClimateCycles { get; init; } = new();
+
     /// <summary>Planet presets (stage 1b).</summary>
     public IReadOnlyList<PlanetPreset> Planets { get; init; } = [];
 

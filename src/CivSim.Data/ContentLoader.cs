@@ -36,7 +36,7 @@ public static class ContentLoader
             LoadSettlements(Path.Combine(directory, "settlements.json"), goods, errors);
         List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
-        (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
+        (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons, Core.WorldGen.ClimateCycleRules cycles) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
             throw new ContentException(errors);
@@ -56,6 +56,7 @@ public static class ContentLoader
             Assets = assets,
             Planets = planets,
             Seasons = seasons,
+            ClimateCycles = cycles,
         };
     }
 
@@ -441,14 +442,14 @@ public static class ContentLoader
         return result;
     }
 
-    private static (List<PlanetPreset> Planets, Core.WorldGen.SeasonRules Seasons) LoadPlanets(string path, List<string> errors)
+    private static (List<PlanetPreset> Planets, Core.WorldGen.SeasonRules Seasons, Core.WorldGen.ClimateCycleRules Cycles) LoadPlanets(string path, List<string> errors)
     {
         var result = new List<PlanetPreset>();
         var seasons = new Core.WorldGen.SeasonRules();
         using JsonDocument? doc = Open(path, errors);
         if (doc is null || !TryArray(doc.RootElement, "planets", path, errors, out JsonElement array))
         {
-            return (result, seasons);
+            return (result, seasons, new Core.WorldGen.ClimateCycleRules());
         }
 
         if (doc.RootElement.TryGetProperty("seasons", out JsonElement se) && se.ValueKind == JsonValueKind.Object)
@@ -464,6 +465,43 @@ public static class ContentLoader
         else
         {
             errors.Add($"{Path.GetFileName(path)}: missing object 'seasons'.");
+        }
+
+        var cycles = new Core.WorldGen.ClimateCycleRules();
+        if (doc.RootElement.TryGetProperty("climateCycles", out JsonElement cy) && cy.ValueKind == JsonValueKind.Object)
+        {
+            var r = new Reader(cy, $"{Path.GetFileName(path)}: climateCycles", errors);
+            (int fullEdge, int startEdge) = r.Range("sheetEdgeDegrees", 0, 90);
+            (int full, int none) = r.Range("glaciationSummerDegrees", -50, 60);
+            cycles = new Core.WorldGen.ClimateCycleRules
+            {
+                UpdateYears = r.Int("updateYears", 10, 100_000),
+                TiltAmplitudeTenths = (int)(r.Amount("tiltAmplitude", Amount.Zero, Amount.FromUnits(20)).Hundredths / 10),
+                TiltPeriodYears = r.Int("tiltPeriodYears", 1_000, 10_000_000),
+                LongEccentricityThousandths = r.Int("longEccentricityPerMille", 0, 100),
+                LongEccentricityYears = r.Int("longEccentricityYears", 1_000, 10_000_000),
+                ShortEccentricityThousandths = r.Int("shortEccentricityPerMille", 0, 100),
+                ShortEccentricityYears = r.Int("shortEccentricityYears", 1_000, 10_000_000),
+                PrecessionYears = r.Int("precessionYears", 1_000, 10_000_000),
+                GlacialBelow = r.Int("glacialBelowPerMille", -5_000, 5_000) * 1000L,
+                FullGlacialVolume = r.Int("fullGlacialVolumePerMille", 1, 5_000) * 1000L,
+                WarmAbove = r.Int("warmAbovePerMille", -5_000, 5_000) * 1000L,
+                MeltYears = r.Int("meltYears", 100, 10_000_000),
+                GrowYears = r.Int("growYears", 100, 10_000_000),
+                SunlightYears = r.Int("sunlightYears", 100, 10_000_000),
+                FullSheetVolume = r.Int("fullSheetVolumePerMille", 1, 5_000) * 1000L,
+                SheetEdgeDegrees = (startEdge, fullEdge),
+                GlacialCo2DropPercent = r.Int("glacialCo2DropPercent", 0, 90),
+                GlaciationSummerDegrees = (full, none),
+            };
+            if (fullEdge >= startEdge || full >= none)
+            {
+                errors.Add($"{Path.GetFileName(path)}: climateCycles: sheetEdgeDegrees and glaciationSummerDegrees must be [low, high].");
+            }
+        }
+        else
+        {
+            errors.Add($"{Path.GetFileName(path)}: missing object 'climateCycles'.");
         }
 
         var keys = new HashSet<string>(StringComparer.Ordinal);
@@ -490,6 +528,8 @@ public static class ContentLoader
                 LightThousandths = r.OptionalThousandths("light", 1, 10_000),
                 Co2Microbar = co2 is long c ? (int)(c * 1000) : null,
                 VolcanismPercent = volcanism,
+                StarVariabilityPerMille = r.OptionalInt("starVariabilityPerMille", Core.WorldGen.PlanetParameters.StarVariabilityRange.Min, Core.WorldGen.PlanetParameters.StarVariabilityRange.Max),
+                StarCycleYears = r.OptionalInt("starCycleYears", Core.WorldGen.PlanetParameters.StarCycleRange.Min, Core.WorldGen.PlanetParameters.StarCycleRange.Max),
             };
             int given = (overrides.LuminosityThousandths is null ? 0 : 1) + (overrides.DistanceThousandths is null ? 0 : 1)
                 + (overrides.YearThousandths is null ? 0 : 1) + (overrides.LightThousandths is null ? 0 : 1);
@@ -527,7 +567,7 @@ public static class ContentLoader
             errors.Add($"{Path.GetFileName(path)}: the 'earth' preset is required.");
         }
 
-        return (result, seasons);
+        return (result, seasons, cycles);
     }
 
     private static List<EffectDefinition> LoadEffects(string path, List<string> errors)
@@ -770,6 +810,9 @@ public static class ContentLoader
 
             return key;
         }
+
+        /// <summary>An optional whole number; null when the property is missing.</summary>
+        public int? OptionalInt(string name, int min, int max) => element.TryGetProperty(name, out _) ? Int(name, min, max) : null;
 
         public int Int(string name, int min, int max)
         {

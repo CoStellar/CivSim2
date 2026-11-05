@@ -30,6 +30,8 @@ public static class GameStateHash
         h.Add(state.Settings.Planet.Co2Microbar);
         h.Add(state.Settings.Planet.BackgroundPressureHundredths);
         h.Add(state.Settings.Planet.VolcanismPercent);
+        h.Add(state.Settings.Planet.StarVariabilityPerMille);
+        h.Add(state.Settings.Planet.StarCycleYears);
         h.Add(state.Settings.PlanetName);
         h.Add((int)state.Settings.Moisture);
         h.Add((int)state.Settings.Inland);
@@ -59,6 +61,14 @@ public static class GameStateHash
                 h.Add(layer.Name);
                 h.Add(layer.AsBytes());
             }
+
+            h.Add(w.Climate.Year);
+            h.Add((int)w.Climate.NorthRegime);
+            h.Add((int)w.Climate.SouthRegime);
+            h.Add(w.Climate.NorthIce);
+            h.Add(w.Climate.SouthIce);
+            h.Add(w.Climate.Co2Microbar);
+            h.Add(w.Climate.GlobalMeanMillionths);
         }
 
         h.Add(state.Civilizations.Count);

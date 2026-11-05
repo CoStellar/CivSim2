@@ -33,4 +33,7 @@ public sealed class WorldState
 
     /// <summary>Per-cell data (elevation, biome, rivers...).</summary>
     public WorldMap Map { get; }
+
+    /// <summary>The slow climate: ice sheets and CO₂ (stage 1c-B).</summary>
+    public WorldGen.ClimateState Climate { get; } = new();
 }

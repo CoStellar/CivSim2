@@ -88,6 +88,22 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 - `data/resources.json`: 22 złoża z biomami, rzeźbą, częstością, zasobnością, głębokością i kolorem.
 - Oba pliki sprawdza `ContentLoader` przy starcie i zgłasza wszystkie błędy naraz (powtórzone klucze, złe zakresy, kolory, nieznane biomy, brak któregoś rodzaju wody, brak łąki).
 
+## Epoki lodowe i klimat w trakcie gry (etap 1c-B, ADR 0015)
+- `ClimateCycles`: orbita w roku gry *t*: nachylenie `nachylenie + 1,2° · cos(2πt / 41 000)`, mimośród `mimośród + 0,010 · (1 − cos(2πt / 405 000)) + 0,011 · (1 − cos(2πt / 100 000))`,
+  peryhelium `270° + 360° · t / 23 000`, jasność gwiazdy `L · (1 + zmienność · sin(2πt / okres))`. Gra zaczyna się w t = 0, czyli w ciepłym momencie.
+- Lądolód każdej półkuli (Paillard 1998): napęd `f` = słońce półrocza letniego na 65° w odchyleniach od średniej (400 próbek co 1000 lat);
+  stany ciepły → zlodowacenie (`f < −0,75`) → pełne (`objętość > 0,8`) → ciepły (`f > 0`); `dv/dt = (cel − v) / τ − f' / 25 000 lat`,
+  cel 0 i τ = 10 000 lat w okresie ciepłym, cel 1 i τ = 50 000 lat w zlodowaceniu, `f' = (f + √(4 + f²)) / 2 − 1`.
+- Udział lodu = `objętość / 0,9 × możliwość półkuli`; możliwość z lata na 65° na starcie (średnia + połowa wahania przy 70% kontynentalności):
+  100% przy 5 °C i mniej, 0% przy 15 °C i więcej. Brzeg lądolodu `70° − 30° × udział`, pokrycie pasa `ląd pasa × min(1, 3 × udział)`, albedo 0,75.
+  CO₂ = CO₂ planety × (1 − 0,32 × największy udział).
+- `ClimateSystem` (pierwszy w fazie świata) co `updateYears` (500): przesuwa lód, rozwiązuje bilans energii z lądolodami i dla każdego pola liczy
+  temperaturę, wahanie, sezon wzrostu (`CellClimate`), a dla lądu biom. Warstwy `climate_sine`, `temperature_offset`, `continentality` zapisuje generator.
+- Wynik (seed 42, standard, 2220 tur = 111 000 lat): średnia 14,5 → 9,5 °C, lód północ 0,78, południe 0,86, CO₂ 203 ppm, ludzi ok. 10 500 → 7 700.
+  Mars: −4,6 °C. Uran: brak epok lodowych.
+- Tryb bez okna: `--stats` ma kolumny `mean_temp_c`, `ice_north_permille`, `ice_south_permille`, `co2_ppm`; `--png` zapisuje biomy i temperaturę
+  na końcu przebiegu (`_turnN_biomes.png`, `_turnN_temperature.png`); `--star-variability`, `--star-cycle`.
+
 ## Pory roku na żywo (ADR 0013)
 - `SeasonSystem` (faza 1, świat) działa tylko, gdy krok roku planety (`rok / stepsPerYear`) trwa co najmniej `minStepMonths` (dane: 8 kroków, 12 miesięcy).
 - Temperatura pola w kroku *k* roku: `średnia + wahanie × (nasłonecznienie_k − średnie) / (max − min)` na szerokości pola. Dzięki temu na planecie
@@ -107,6 +123,9 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 ## Testy
 - `SeasonTests`: tylko długie lata są liczone na żywo (Uran tak, Ziemia i Mars nie), długość tury Urana 126 miesięcy, wolne decyzje raz na 50 lat,
   półkule mają lato i zimę na zmianę, zima obcina dziką żywność do polowania, tolerancja zimna podnosi wartość zimnych terenów.
+- `ClimateCycleTests` (etap 1c-B): start w ciepłym momencie, zakresy nachylenia i mimośrodu, precesja, epoka lodowa na Ziemi przychodzi i się kończy,
+  Uran bez epok lodowych, ponowne przeliczenie klimatu startowego nic nie zmienia, pełny lądolód ochładza o 3,5–7 °C i rozszerza lód i tundrę,
+  przeliczenia są deterministyczne i przechodzą przez zapis.
 - `StarAndAirTests` (etap 1c-A): logarytm i potęga stałoprzecinkowa, Kepler (Ziemia 1 rok, Mars 1,881), masa z jasności, strefa zamieszkiwalna,
   dowolne dwie wielkości dają trzecią, wyjście ze strefy stawia planetę na granicy, cykl węglowy (Ziemia ok. 280 ppm, dalej od gwiazdy więcej CO₂,
   więcej wulkanów cieplej, Uran inaczej niż Ziemia), gęsta atmosfera wyrównuje klimat, zasady `PlanetSetup`, stałe wartości klimatu Ziemi.

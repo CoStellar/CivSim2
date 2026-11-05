@@ -131,6 +131,8 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 
 **Temperatura** wynika z bilansu energii w pasach szerokości (Budyko–Sellers): słońce grzeje, planeta wypromieniowuje ciepło w kosmos, wiatry i prądy przenoszą je ku biegunom, a lód odbija więcej światła i dlatego czapy lodowe rosną. Ziemia: 27 °C na równiku, 10 °C na 45°, −22 °C na biegunach.
 
+**Epoki lodowe** (etap 1c-B, ADR 0015, decyzja Patryka z 2026-11-05): orbita planety powoli się chwieje (cykle Milankovicia): nachylenie osi o ±1,2° co 41 tys. lat, mimośród rośnie i maleje co 100 i 405 tys. lat, a pora roku najbliżej gwiazdy obiega rok co 23 tys. lat. Gdy lata na 65° szerokości słabną, rosną lądolody, ale tylko na lądzie i tylko na planetach, które mają dość zimne bieguny (planeta leżąca na boku epok lodowych nie ma). Lądolód rośnie wolno (dziesiątki tysięcy lat), a znika szybko, gdy lato wraca. W szczycie epoki lodowej brzeg lodu schodzi do 40° szerokości, oceany pochłaniają jedną trzecią CO₂, a Ziemia jest o ok. 5 °C chłodniejsza. Gra zaczyna się w ciepłym momencie cyklu; na Ziemi pierwsze zlodowacenie zaczyna się po ok. 15–20 tys. lat, a jego szczyt przychodzi po ok. 110 tys. lat. Klimat przeliczamy co 500 lat gry: temperatura, pory roku, sezon wzrostu, biomy lądu, a przez nie dzika żywność. Gwiazda może też zmieniać jasność (ustawienie: siła i okres; domyślnie stała). Poziom morza zmieni się razem z lodem w etapie 1c-C.
+
 Mars w presecie to planeta podobna do Marsa w odległości Marsa od Słońca (zimniejsza, suchsza i bardziej górzysta niż Ziemia, z bardzo aktywnymi wulkanami, dzięki którym gruba atmosfera CO₂ utrzymuje ją przy życiu), nie dzisiejszy Mars. Uran w presecie ma rok Urana przy świetle Ziemi; wymaga to jasnej, ciężkiej gwiazdy, która w rzeczywistości żyje tylko ok. 50 mln lat (w grze naginamy).
 
 **Pory roku na żywo przy długim roku** (ADR 0013, „dwa zegary”): gdy rok planety trwa co najmniej 8 lat ziemskich, tura trwa 1/8 roku planety (Uran: 10,5 roku) i pora roku zmienia się z tury na turę: zimą nic nie rośnie, polowanie daje 20% dzikiej żywności. Plemiona same przenoszą się tam, gdzie jest jedzenie i znośna temperatura; ogień, odzież i domy (efekt `cold_tolerance`) pozwolą później żyć w zimniejszych miejscach. Decyzje wolne (odłamy, łączenie) zapadają raz na długość tury ery.
@@ -159,7 +161,7 @@ Biomy biorą to pod uwagę: ląd, którego lato nie przekracza zera, jest lodem;
 | Wartość | Zakres | Zmienia się w grze? |
 | --- | --- | --- |
 | Wysokość | 0–255 (poziom morza ok. 100) | tylko przez kataklizmy |
-| Temperatura | −30…+40 °C (średnia roczna) | tak, zmiany klimatu w erze przemysłowej |
+| Temperatura | −30…+40 °C (średnia roczna) | tak: epoki lodowe co 500 lat gry, zmiany klimatu w erze przemysłowej |
 | Wilgotność | 0–100 | tak, susze, nawadnianie |
 | Biom | jeden z 14 | tak, np. las → równina po wycięciu, pustynnienie |
 | Cecha terenu | las, dżungla, bagno, oaza, rafa, pole lodowe | tak |

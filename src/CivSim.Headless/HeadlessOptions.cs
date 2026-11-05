@@ -92,7 +92,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
         "       [--luminosity SUNS] [--distance AU] [--year EARTH_YEARS] [--light 0.356-1.107] (at most two; the rest follows)\n" +
-        "       [--co2 BAR | --greenhouse DEGREES] [--pressure BAR] [--volcanism PERCENT]\n" +
+        "       [--co2 BAR | --greenhouse DEGREES] [--pressure BAR] [--volcanism PERCENT] [--star-variability PER_MILLE] [--star-cycle YEARS]\n" +
         "       [--moisture normal|dry|wet] [--inland normal|dry|humid] [--relief normal|flat|mountainous]\n" +
         "       [--resources normal|scarce|rich] [--civs 1-64]\n" +
         "       --turns 0 only generates the world.";
@@ -283,6 +283,24 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     }
 
                     values = values with { PressureHundredths = pr };
+                    break;
+                case "--star-variability":
+                    if (!TryScaled(Next(), 1, PlanetParameters.StarVariabilityRange, out int sv))
+                    {
+                        error = "--star-variability must be 0 to 100 (per mille either way).";
+                        return null;
+                    }
+
+                    values = values with { StarVariabilityPerMille = sv };
+                    break;
+                case "--star-cycle":
+                    if (!TryScaled(Next(), 1, PlanetParameters.StarCycleRange, out int sc))
+                    {
+                        error = "--star-cycle must be 1000 to 10000000 years.";
+                        return null;
+                    }
+
+                    values = values with { StarCycleYears = sc };
                     break;
                 case "--volcanism":
                     if (!TryScaled(Next(), 1, PlanetParameters.VolcanismRange, out int vol))
