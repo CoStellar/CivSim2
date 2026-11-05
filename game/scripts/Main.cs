@@ -372,10 +372,14 @@ public partial class Main : Node2D
         string? worldType = null;
         string? planet = null;
         int? tilt = null;
-        int? year = null;
-        int? brightness = null;
+        long? year = null;
+        long? luminosity = null;
+        long? distance = null;
+        long? light = null;
+        int? co2 = null;
+        int? pressure = null;
+        int? volcanism = null;
         int? eccentricity = null;
-        int? seasons = null;
         string? moisture = null;
         string? inland = null;
         string? relief = null;
@@ -409,13 +413,25 @@ public partial class Main : Node2D
                     tilt = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 10);
                     break;
                 case "--year":
-                    year = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 100);
+                    year = Thousandths(v);
                     break;
-                case "--brightness":
-                    brightness = int.Parse(v, CultureInfo.InvariantCulture);
+                case "--luminosity":
+                    luminosity = Thousandths(v);
                     break;
-                case "--seasons":
-                    seasons = int.Parse(v, CultureInfo.InvariantCulture);
+                case "--distance":
+                    distance = Thousandths(v);
+                    break;
+                case "--light":
+                    light = Thousandths(v);
+                    break;
+                case "--co2":
+                    co2 = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1_000_000);
+                    break;
+                case "--pressure":
+                    pressure = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 100);
+                    break;
+                case "--volcanism":
+                    volcanism = int.Parse(v, CultureInfo.InvariantCulture);
                     break;
                 case "--eccentricity":
                     eccentricity = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1000);
@@ -449,14 +465,20 @@ public partial class Main : Node2D
             WaterPercent = water ?? o.WaterPercent,
             Planet = planet ?? o.Planet,
             AxialTiltTenths = tilt,
-            YearHundredths = year,
-            StarBrightnessPercent = brightness,
             EccentricityPerMille = eccentricity,
-            SeasonStrengthPercent = seasons,
+            LuminosityThousandths = luminosity,
+            DistanceThousandths = distance,
+            YearThousandths = year,
+            LightThousandths = light,
+            Co2Microbar = co2,
+            PressureHundredths = pressure,
+            VolcanismPercent = volcanism,
             Moisture = moisture ?? o.Moisture,
             Inland = inland ?? o.Inland,
             Relief = relief ?? o.Relief,
             Resources = resources ?? o.Resources,
         };
     }
+
+    private static long Thousandths(string v) => (long)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1000);
 }

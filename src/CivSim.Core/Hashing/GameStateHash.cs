@@ -24,10 +24,12 @@ public static class GameStateHash
         h.Add((int)state.Settings.WorldType);
         h.Add(state.Settings.WaterPercent);
         h.Add(state.Settings.Planet.AxialTiltTenths);
-        h.Add(state.Settings.Planet.YearHundredths);
-        h.Add(state.Settings.Planet.StarBrightnessPercent);
         h.Add(state.Settings.Planet.EccentricityThousandths);
-        h.Add(state.Settings.Planet.SeasonStrengthPercent);
+        h.Add(state.Settings.Planet.LuminosityThousandths);
+        h.Add(state.Settings.Planet.DistanceThousandths);
+        h.Add(state.Settings.Planet.Co2Microbar);
+        h.Add(state.Settings.Planet.BackgroundPressureHundredths);
+        h.Add(state.Settings.Planet.VolcanismPercent);
         h.Add(state.Settings.PlanetName);
         h.Add((int)state.Settings.Moisture);
         h.Add((int)state.Settings.Inland);

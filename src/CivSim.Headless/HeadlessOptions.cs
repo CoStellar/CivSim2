@@ -34,17 +34,14 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>Axial tilt in tenths of a degree, or null for the preset's.</summary>
     public int? AxialTiltTenths { get; init; }
 
-    /// <summary>Year length in Earth years × 100, or null for the preset's.</summary>
-    public int? YearHundredths { get; init; }
-
-    /// <summary>Star brightness in percent, or null for the preset's.</summary>
-    public int? StarBrightnessPercent { get; init; }
-
     /// <summary>Orbit eccentricity in thousandths, or null for the preset's.</summary>
     public int? EccentricityPerMille { get; init; }
 
-    /// <summary>Season strength in percent, or null for the preset's.</summary>
-    public int? SeasonStrengthPercent { get; init; }
+    /// <summary>
+    /// Star, orbit and air on top of the preset (stage 1c-A): at most two of brightness, distance, year and light, and
+    /// the air values. Null values come from the preset (see <see cref="PlanetSetup.Build"/>).
+    /// </summary>
+    public PlanetOverrides PlanetValues { get; init; } = new();
 
     /// <summary>How much rain the planet gets, or null for the preset's.</summary>
     public WorldMoisture? Moisture { get; init; }
@@ -61,6 +58,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>Number of civilizations, or null for the map size default.</summary>
     public int? Civilizations { get; init; }
 
+    /// <summary>Notes on planet values that <see cref="ToSettings"/> had to adjust (for example to stay in the habitable zone).</summary>
+    public IReadOnlyList<string> PlanetNotes { get; private set; } = [];
+
     /// <summary>Game settings for these options: the planet preset first, then every value given on the command line.</summary>
     public GameSettings ToSettings(Core.Content.GameContent content)
     {
@@ -68,15 +68,11 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         Core.Content.PlanetPreset preset = content.Planets.FirstOrDefault(p => p.Key == Planet)
             ?? throw new ArgumentException($"Unknown planet '{Planet}'. Known: {string.Join(", ", content.Planets.Select(p => p.Key))}.");
         GameSettings s = MapSizes.Settings(MapSize, Seed).WithPreset(preset);
-        var planet = new PlanetParameters(
-            AxialTiltTenths ?? preset.Planet.AxialTiltTenths,
-            YearHundredths ?? preset.Planet.YearHundredths,
-            StarBrightnessPercent ?? preset.Planet.StarBrightnessPercent,
-            EccentricityPerMille ?? preset.Planet.EccentricityThousandths)
-        {
-            SeasonStrengthPercent = SeasonStrengthPercent ?? preset.Planet.SeasonStrengthPercent,
-        };
-        planet.Validate();
+        (PlanetParameters planet, IReadOnlyList<string> notes) = PlanetSetup.Build(
+            preset.Planet,
+            preset.AutoCo2,
+            PlanetValues with { AxialTiltTenths = AxialTiltTenths, EccentricityThousandths = EccentricityPerMille });
+        PlanetNotes = notes;
         return s with
         {
             Planet = planet,
@@ -94,7 +90,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     public const string Usage =
         "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--quiet]\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
-        "       [--planet earth|mars|uranus] [--tilt DEGREES] [--year EARTH_YEARS] [--brightness 80-120] [--eccentricity 0-0.3] [--seasons 20-150]\n" +
+        "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
+        "       [--luminosity SUNS] [--distance AU] [--year EARTH_YEARS] [--light 0.356-1.107] (at most two; the rest follows)\n" +
+        "       [--co2 BAR | --greenhouse DEGREES] [--pressure BAR] [--volcanism PERCENT]\n" +
         "       [--moisture normal|dry|wet] [--inland normal|dry|humid] [--relief normal|flat|mountainous]\n" +
         "       [--resources normal|scarce|rich] [--civs 1-64]\n" +
         "       --turns 0 only generates the world.";
@@ -115,10 +113,8 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         int? water = null;
         string planet = "earth";
         int? tilt = null;
-        int? year = null;
-        int? brightness = null;
         int? eccentricity = null;
-        int? seasons = null;
+        var values = new PlanetOverrides();
         WorldMoisture? moisture = null;
         WorldInland inland = WorldInland.Normal;
         WorldRelief? relief = null;
@@ -244,22 +240,58 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     tilt = t;
                     break;
                 case "--year":
-                    if (!TryScaled(Next(), 100, PlanetParameters.YearRange, out int y))
+                case "--luminosity":
+                case "--distance":
+                case "--light":
+                    if (!TryScaled(Next(), 1000, (1, 100_000_000), out int th))
                     {
-                        error = "--year must be 0.1 to 500 Earth years (two decimal places).";
+                        error = $"{arg} must be a positive number (three decimal places).";
                         return null;
                     }
 
-                    year = y;
+                    values = arg switch
+                    {
+                        "--year" => values with { YearThousandths = th },
+                        "--luminosity" => values with { LuminosityThousandths = th },
+                        "--distance" => values with { DistanceThousandths = th },
+                        _ => values with { LightThousandths = th },
+                    };
                     break;
-                case "--brightness":
-                    if (!TryScaled(Next(), 1, PlanetParameters.BrightnessRange, out int b))
+                case "--co2":
+                    if (!TryScaled(Next(), 1_000_000, PlanetParameters.Co2Range, out int co2))
                     {
-                        error = "--brightness must be 80 to 120 (percent of Earth's sunlight).";
+                        error = "--co2 must be 0.000001 to 10 bar.";
                         return null;
                     }
 
-                    brightness = b;
+                    values = values with { Co2Microbar = co2 };
+                    break;
+                case "--greenhouse":
+                    if (!TryScaled(Next(), 10, PlanetParameters.GreenhouseRange, out int gh))
+                    {
+                        error = "--greenhouse must be 0 to 150 degrees (one decimal place).";
+                        return null;
+                    }
+
+                    values = values with { GreenhouseTenths = gh };
+                    break;
+                case "--pressure":
+                    if (!TryScaled(Next(), 100, (10, 15_000), out int pr))
+                    {
+                        error = "--pressure must be 0.1 to 150 bar (two decimal places).";
+                        return null;
+                    }
+
+                    values = values with { PressureHundredths = pr };
+                    break;
+                case "--volcanism":
+                    if (!TryScaled(Next(), 1, PlanetParameters.VolcanismRange, out int vol))
+                    {
+                        error = "--volcanism must be 0 to 5000 (percent of Earth's).";
+                        return null;
+                    }
+
+                    values = values with { VolcanismPercent = vol };
                     break;
                 case "--eccentricity":
                     if (!TryScaled(Next(), 1000, PlanetParameters.EccentricityRange, out int e))
@@ -277,15 +309,6 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                         return null;
                     }
 
-                    break;
-                case "--seasons":
-                    if (!TryScaled(Next(), 1, PlanetParameters.SeasonStrengthRange, out int ss))
-                    {
-                        error = "--seasons must be 20 to 150 (percent of Earth's season strength).";
-                        return null;
-                    }
-
-                    seasons = ss;
                     break;
                 case "--moisture":
                     if (!TryEnum(Next(), out WorldMoisture m))
@@ -346,10 +369,8 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             WaterPercent = water,
             Planet = planet,
             AxialTiltTenths = tilt,
-            YearHundredths = year,
-            StarBrightnessPercent = brightness,
             EccentricityPerMille = eccentricity,
-            SeasonStrengthPercent = seasons,
+            PlanetValues = values,
             Moisture = moisture,
             Inland = inland,
             Relief = relief,

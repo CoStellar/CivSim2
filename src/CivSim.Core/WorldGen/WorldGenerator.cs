@@ -40,6 +40,7 @@ public sealed class WorldGenerator
     private readonly long[] _pz;
     private readonly long[] _climateSin;
     private readonly ClimateModel _climate;
+    private readonly int _yearHundredths;
 
     private WorldGenerator(GameContent content, WorldMap map, DeterministicRandom rng, ulong seed, WorldGenOptions options)
     {
@@ -56,6 +57,7 @@ public sealed class WorldGenerator
         _grasslandId = content.Biome("grassland").Id;
         _iceId = content.Biome("ice").Id;
         _climate = new ClimateModel(options.Planet);
+        _yearHundredths = options.Planet.YearHundredths;
 
         // Every cell's point on the unit sphere: noise is sampled there, so it has no seam around the globe or over the poles.
         int n = _geo.CellCount;
@@ -809,7 +811,7 @@ public sealed class WorldGenerator
         {
             int i = _geo.Index(area[k]);
             // Land food counts only as far as the seasons allow (the same rule as gathering).
-            int season = ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _options.Planet.YearHundredths, _content.Population.SurvivableDeadSeasonHundredths);
+            int season = ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _yearHundredths, _content.Population.SurvivableDeadSeasonHundredths);
             food += _content.Biomes[_map.Biome[i]].Food * 2 * season / 100;
             food += _map.Fertility[i] / 25;
             if (!_water[i] && HasFreshWater(i))
@@ -844,7 +846,7 @@ public sealed class WorldGenerator
         }
 
         int t = _map.Temperature[i];
-        return t is >= 0 and <= 32 && ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _options.Planet.YearHundredths, _content.Population.SurvivableDeadSeasonHundredths) >= 80 && _content.Biomes[_map.Biome[i]].Food >= 2 && HasFreshWater(i);
+        return t is >= 0 and <= 32 && ClimateModel.WildFoodPercent(_map.GrowingSeason[i], _yearHundredths, _content.Population.SurvivableDeadSeasonHundredths) >= 80 && _content.Biomes[_map.Biome[i]].Food >= 2 && HasFreshWater(i);
     }
 
     private void StartPositions(WorldGenReport report)

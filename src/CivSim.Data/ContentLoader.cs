@@ -474,21 +474,51 @@ public static class ContentLoader
             string key = r.Key("key", keys);
             string name = r.String("name");
             (int tMin, int tMax) = Core.WorldGen.PlanetParameters.TiltRange;
-            (int yMin, int yMax) = Core.WorldGen.PlanetParameters.YearRange;
-            (int bMin, int bMax) = Core.WorldGen.PlanetParameters.BrightnessRange;
             (int eMin, int eMax) = Core.WorldGen.PlanetParameters.EccentricityRange;
-            var planet = new Core.WorldGen.PlanetParameters(
-                (int)(r.Amount("axialTilt", Amount.FromHundredths(tMin * 10), Amount.FromHundredths(tMax * 10)).Hundredths / 10),
-                (int)r.Amount("yearLength", Amount.FromHundredths(yMin), Amount.FromHundredths(yMax)).Hundredths,
-                r.Int("starBrightness", bMin, bMax),
-                r.Int("eccentricityPerMille", eMin, eMax))
+            int tilt = (int)(r.Amount("axialTilt", Amount.FromHundredths(tMin * 10), Amount.FromHundredths(tMax * 10)).Hundredths / 10);
+            int eccentricity = r.Int("eccentricityPerMille", eMin, eMax);
+            int volcanism = r.Int("volcanism", Core.WorldGen.PlanetParameters.VolcanismRange.Min, Core.WorldGen.PlanetParameters.VolcanismRange.Max);
+            long? otherGases = r.OptionalThousandths("otherGases", 100, 50_000);
+            long? co2 = r.OptionalThousandths("co2", 1, 10_000_000 / 1000);
+            var overrides = new Core.WorldGen.PlanetOverrides
             {
-                SeasonStrengthPercent = r.Int("seasonStrength", Core.WorldGen.PlanetParameters.SeasonStrengthRange.Min, Core.WorldGen.PlanetParameters.SeasonStrengthRange.Max),
+                AxialTiltTenths = tilt,
+                EccentricityThousandths = eccentricity,
+                LuminosityThousandths = r.OptionalThousandths("luminosity", 1, 100_000_000),
+                DistanceThousandths = r.OptionalThousandths("distance", 1, 1_000_000),
+                YearThousandths = r.OptionalThousandths("yearLength", 1, 1_000_000),
+                LightThousandths = r.OptionalThousandths("light", 1, 10_000),
+                Co2Microbar = co2 is long c ? (int)(c * 1000) : null,
+                VolcanismPercent = volcanism,
             };
+            int given = (overrides.LuminosityThousandths is null ? 0 : 1) + (overrides.DistanceThousandths is null ? 0 : 1)
+                + (overrides.YearThousandths is null ? 0 : 1) + (overrides.LightThousandths is null ? 0 : 1);
+            Core.WorldGen.PlanetParameters planet = Core.WorldGen.PlanetParameters.Earth;
+            if (given != 2)
+            {
+                errors.Add($"{Path.GetFileName(path)}: planets[{i}]: give exactly two of luminosity, distance, yearLength and light.");
+            }
+            else
+            {
+                try
+                {
+                    var start = Core.WorldGen.PlanetParameters.Earth with { BackgroundPressureHundredths = (int)((otherGases ?? 1000) / 10) };
+                    (planet, IReadOnlyList<string> notes) = Core.WorldGen.PlanetSetup.Build(start, co2 is null, overrides);
+                    foreach (string note in notes)
+                    {
+                        errors.Add($"{Path.GetFileName(path)}: planets[{i}]: {note}");
+                    }
+                }
+                catch (ArgumentException ex)
+                {
+                    errors.Add($"{Path.GetFileName(path)}: planets[{i}]: {ex.Message}");
+                }
+            }
+
             int water = r.Int("water", 30, 80);
             Core.WorldGen.WorldMoisture moisture = r.Enum<Core.WorldGen.WorldMoisture>("moisture");
             Core.WorldGen.WorldRelief relief = r.Enum<Core.WorldGen.WorldRelief>("relief");
-            result.Add(new PlanetPreset(key, name, planet, water, moisture, relief));
+            result.Add(new PlanetPreset(key, name, planet, water, moisture, relief) { AutoCo2 = co2 is null });
             i++;
         }
 
@@ -755,6 +785,66 @@ public static class ContentLoader
 
             errors.Add($"{at}.{name}: required whole number.");
             return min;
+        }
+
+        /// <summary>
+        /// An optional decimal with up to 3 places ("1.524" or 84), in thousandths; null when the property is missing.
+        /// Parsed digit by digit, without floating point.
+        /// </summary>
+        public long? OptionalThousandths(string name, long min, long max)
+        {
+            if (!element.TryGetProperty(name, out JsonElement v))
+            {
+                return null;
+            }
+
+            string? text = v.ValueKind switch
+            {
+                JsonValueKind.String => v.GetString(),
+                JsonValueKind.Number => v.GetRawText(),
+                _ => null,
+            };
+            if (!TryThousandths(text, out long value))
+            {
+                errors.Add($"{at}.{name}: required number such as \"1.524\" (at most 3 decimal places).");
+                return null;
+            }
+
+            if (value < min || value > max)
+            {
+                errors.Add($"{at}.{name}: {value / 1000}.{value % 1000:D3} is outside {min / 1000}.{min % 1000:D3}..{max / 1000}.{max % 1000:D3}.");
+            }
+
+            return value;
+        }
+
+        private static bool TryThousandths(string? text, out long value)
+        {
+            value = 0;
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            int dot = text.IndexOf('.', StringComparison.Ordinal);
+            string whole = dot < 0 ? text : text[..dot];
+            string frac = dot < 0 ? string.Empty : text[(dot + 1)..];
+            if (whole.Length == 0 || whole.Length > 9 || frac.Length > 3)
+            {
+                return false;
+            }
+
+            foreach (char ch in whole + frac)
+            {
+                if (ch is < '0' or > '9')
+                {
+                    return false;
+                }
+            }
+
+            value = (long.Parse(whole, System.Globalization.CultureInfo.InvariantCulture) * 1000)
+                + (frac.Length == 0 ? 0 : long.Parse(frac.PadRight(3, '0'), System.Globalization.CultureInfo.InvariantCulture));
+            return true;
         }
 
         public Amount Amount(string name, Amount min, Amount max) =>

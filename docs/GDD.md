@@ -112,25 +112,33 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 | Duża | 386×240 | 92 640 | 20 | długa gra |
 | Ogromna | 514×320 | 164 480 | 32 | symulacja świata do ery kosmicznej |
 
-**Planeta** (etap 1b, decyzje Patryka z 2026-11-05): każda planeta leży w strefie zamieszkiwalnej swojej gwiazdy. Parametry planety ustawia się presetem (`data/planets.json`), a potem każdą wartość można zmienić:
+**Planeta** (etapy 1b i 1c-A, decyzje Patryka z 2026-11-05, ADR 0014): każda planeta leży w strefie zamieszkiwalnej swojej gwiazdy i na każdej jest życie. Gwiazda, odległość i rok są powiązane prawdziwymi wzorami: światło `S = L / d²`, masa gwiazdy z jasności (ciąg główny), rok z trzeciego prawa Keplera. Dowolne dwie z wielkości jasność, odległość, rok wyznaczają trzecią: gracz zmienia jedną, druga się dopasowuje, a gdy planeta wypadłaby ze strefy (S od 0,356 do 1,107), staje na jej granicy. Parametry ustawia się presetem (`data/planets.json`), a potem każdą wartość można zmienić:
 
 | Parametr | Zakres | Ziemia | Mars | Uran | Co zmienia |
 | --- | --- | --- | --- | --- | --- |
 | Nachylenie osi | 0–180° | 23,4° | 25,2° | 97,8° | pory roku; przy dużym nachyleniu bieguny są cieplejsze od równika, ale z dekadami dnia i nocy |
-| Długość roku | 0,1–500 lat ziemskich | 1 | 1,88 | 84 | tylko pory roku: dłuższy rok to większa różnica lato–zima; zegar gry zostaje w latach ziemskich |
-| Jasność gwiazdy | 80–120% | 100% | 85% | 100% | średnia temperatura (zastępuje dawne ustawienie zimna/umiarkowana/gorąca) |
+| Jasność gwiazdy | 0,04–7000 L☉ | 1 | 1 | 1365 (7,1 M☉) | światło, masa gwiazdy, rok |
+| Odległość od gwiazdy | w strefie zamieszkiwalnej | 1 AU | 1,524 AU | 36,9 AU | światło i rok |
+| Długość roku | 0,1–500 lat ziemskich (wynika z dwóch powyższych) | 1 | 1,88 | 84 | tylko pory roku: dłuższy rok to większa różnica lato–zima; zegar gry zostaje w latach ziemskich |
+| Światło na planecie | 0,356–1,107 Ziemi | 1 | 0,43 | 1 | średnia temperatura |
 | Mimośród orbity | 0–0,3 | 0,017 | 0,093 | 0,046 | jedna półkula ma ostrzejsze pory roku |
-| Siła pór roku | 20–150% | 100% | 100% | 100% | gęsta atmosfera i oceany łagodzą lato i zimę (mniej niż 100%), rzadka je zaostrza; od tego zależy, czy na planecie leżącej na boku plemiona wędrują za latem (decyzja Patryka z 2026-11-05: wędrówki mają wynikać z ustawień świata) |
+| Aktywność wulkaniczna | 0–5000% Ziemi | 100% | 1000% | 100% | ile CO₂ dają wulkany (cykl węglowy, niżej) |
+| Pozostałe gazy (azot, tlen) | 0,1–50 bar | 1 bar | 1 bar | 1 bar | ciśnienie razem z CO₂ |
+| CO₂ | z cyklu węglowego albo ręcznie | 280 ppm | ok. 9 bar | 756 ppm | efekt cieplarniany (Ziemia 33 °C) i ciśnienie |
 | Woda, wilgotność, górzystość | jak niżej | 60%, normalna, normalna | 30%, sucha, górzysta | 60%, normalna, normalna | ląd planety |
 
-Mars w presecie to planeta podobna do Marsa w strefie zamieszkiwalnej (zimniejsza, suchsza i bardziej górzysta niż Ziemia), nie dzisiejszy Mars.
+**Atmosfera z cyklu węglowego:** wulkany stale dodają CO₂, a deszcz i skały je zabierają (wietrzenie), szybciej tam, gdzie cieplej, i tylko tam, gdzie woda jest ciekła. Na starcie świata obie strony są w równowadze. Dlatego planety daleko od gwiazdy mają grubą atmosferę CO₂, a bliskie cienką; na planecie leżącej na boku (bez zimnych biegunów) wietrzeje cała powierzchnia. Gruba atmosfera przenosi więcej ciepła ku biegunom i łagodzi pory roku (siła pór roku = 100% · √(1 bar / ciśnienie)). CO₂ jest stanem świata, nie stałą: od etapu 1c-B zmienia się w trakcie gry, a w erze przemysłowej spalanie i wycinanie lasów będą je zwiększać, więc cywilizacje mogą wpływać na klimat.
+
+**Temperatura** wynika z bilansu energii w pasach szerokości (Budyko–Sellers): słońce grzeje, planeta wypromieniowuje ciepło w kosmos, wiatry i prądy przenoszą je ku biegunom, a lód odbija więcej światła i dlatego czapy lodowe rosną. Ziemia: 27 °C na równiku, 10 °C na 45°, −22 °C na biegunach.
+
+Mars w presecie to planeta podobna do Marsa w odległości Marsa od Słońca (zimniejsza, suchsza i bardziej górzysta niż Ziemia, z bardzo aktywnymi wulkanami, dzięki którym gruba atmosfera CO₂ utrzymuje ją przy życiu), nie dzisiejszy Mars. Uran w presecie ma rok Urana przy świetle Ziemi; wymaga to jasnej, ciężkiej gwiazdy, która w rzeczywistości żyje tylko ok. 50 mln lat (w grze naginamy).
 
 **Pory roku na żywo przy długim roku** (ADR 0013, „dwa zegary”): gdy rok planety trwa co najmniej 8 lat ziemskich, tura trwa 1/8 roku planety (Uran: 10,5 roku) i pora roku zmienia się z tury na turę: zimą nic nie rośnie, polowanie daje 20% dzikiej żywności. Plemiona same przenoszą się tam, gdzie jest jedzenie i znośna temperatura; ogień, odzież i domy (efekt `cold_tolerance`) pozwolą później żyć w zimniejszych miejscach. Decyzje wolne (odłamy, łączenie) zapadają raz na długość tury ery.
 
-**Na pozostałych planetach pory roku są uśrednione** (tura trwa tam do 50 lat). Generator liczy dla każdej szerokości geograficznej nasłonecznienie w 48 punktach orbity (oś, mimośród, jasność gwiazdy) i z tego:
+**Na pozostałych planetach pory roku są uśrednione** (tura trwa tam do 50 lat). Generator liczy dla każdej szerokości geograficznej nasłonecznienie w 48 punktach orbity (oś, mimośród, światło gwiazdy) i z tego:
 
-- **średnią temperaturę** (Ziemia: 28 °C na równiku, ok. 14 °C na 45°, −27 °C na biegunach; wiatry i prądy przenoszą ciepło ku biegunom),
-- **różnicę lato–zima** (większą w głębi lądu, małą nad wodą, większą przy długim roku),
+- **średnią temperaturę** z bilansu energii (wyżej),
+- **różnicę lato–zima** (większą w głębi lądu, małą nad wodą, większą przy długim roku, mniejszą pod grubą atmosferą),
 - **sezon wzrostu**: część roku między 5 °C a 45 °C, gdy rośliny rosną.
 
 Biomy biorą to pod uwagę: ląd, którego lato nie przekracza zera, jest lodem; ląd z sezonem wzrostu krótszym niż 15% roku jest tundrą; ogromne różnice lato–zima działają jak susza (lasy ustępują stepom i pustyniom). Dzika żywność rośnie tylko w sezonie wzrostu: sezon od 60% roku daje pełne plony, brak sezonu 40%. **Długie zimy** (decyzja Patryka z 2026-11-05: trudniejszy wariant symulacji): martwa pora dłuższa niż 0,75 roku zmniejsza dziką żywność proporcjonalnie, więc na planetach z długim rokiem plemiona ledwo przeżywają, dopóki technologie (przechowywanie) nie podniosą tego progu.
@@ -172,7 +180,7 @@ Biomy biorą to pod uwagę: ląd, którego lato nie przekracza zera, jest lodem;
 | Liczba cywilizacji | 1–64 | zależna od rozmiaru (4/12/20/32) | ile plemion startuje |
 | Typ świata | kontynenty, pangea, archipelag | kontynenty | kształt lądów |
 | Procent wody | 30–80% | 60% | poziom morza |
-| Planeta | ziemia, mars, uran + nachylenie osi, rok, jasność gwiazdy, mimośród | ziemia | patrz tabela „Planeta” wyżej |
+| Planeta | ziemia, mars, uran + nachylenie osi, mimośród, dwie z: jasność gwiazdy, odległość, rok, światło; wulkanizm, pozostałe gazy, CO₂ | ziemia | patrz tabela „Planeta” wyżej |
 | Wilgotność | sucha, normalna, mokra | normalna | −15 / 0 / +15 wilgotności: pustynie, lasy, liczba rzek |
 | Wilgotność w głębi lądu | sucha, normalna, wilgotna | normalna | spadek wilgotności z odległością od morza: −4 za pole do −60 / −3 do −36 / −2 do −20 (pola mapy standardowej, więc duże mapy nie mają suchszych środków kontynentów) |
 | Górzystość | płaska, normalna, górzysta | normalna | góry i wzgórza: 4+12%, 8+20%, 14+26% lądu |
@@ -184,7 +192,7 @@ Te same ustawienia opisują w przyszłości inne planety (temperatura, woda).
 
 1. Kontynenty i płyty z szumu wielooktawowego, z ustawieniem typu świata (pangea, kontynenty, archipelag).
 2. Wysokość i poziom morza według zadanego procentu wody (domyślnie 60%).
-3. Temperatura, pory roku i sezon wzrostu z nasłonecznienia planety (oś, rok, orbita, gwiazda), wysokości i odległości od morza.
+3. Atmosfera z cyklu węglowego, potem temperatura z bilansu energii, pory roku i sezon wzrostu z nasłonecznienia planety (oś, rok, orbita, gwiazda), wysokości i odległości od morza.
 4. Wilgotność z odległości od morza (według ustawienia „wilgotność w głębi lądu”), pasów szerokości geograficznej i przeważających wiatrów (cień opadowy za górami).
 5. Biomy z tabeli temperatura × wilgotność (diagram Whittakera).
 6. Rzeki płyną po krawędziach heksów, od źródeł w górach do morza; jeziora powstają w zagłębieniach. Pola przylegające do rzeki mają słodką wodę i wyższą żyzność.

@@ -63,6 +63,16 @@ public static class HeadlessRun
         GameContent content = ContentLoader.Load(ContentLoader.DefaultDirectory);
         GameState state = GameState.CreateNew(options.ToSettings(content), content, out WorldGenReport world);
         GameSettings settings = state.Settings;
+        foreach (string note in options.PlanetNotes)
+        {
+            log.WriteLine($"note:               {note}");
+        }
+
+        foreach (string line in PlanetSummary.Lines(settings.Planet))
+        {
+            log.WriteLine(line);
+        }
+
         List<string> problems = WorldValidator.Validate(
             content, state.Worlds[0].Map, world, WorldGenOptions.From(settings));
         IReadOnlyList<string> pngs = [];

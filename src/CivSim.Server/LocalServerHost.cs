@@ -53,15 +53,18 @@ public sealed class LocalServerHost : IDisposable
         PlanetPreset preset = content.Planets.FirstOrDefault(p => p.Key == options.Planet)
             ?? throw new ArgumentException($"Unknown planet '{options.Planet}'.", nameof(options));
         GameSettings settings = new GameSettings(options.Seed, options.Width, options.Height, options.Civilizations).WithPreset(preset);
-        var planet = new PlanetParameters(
-            options.AxialTiltTenths ?? preset.Planet.AxialTiltTenths,
-            options.YearHundredths ?? preset.Planet.YearHundredths,
-            options.StarBrightnessPercent ?? preset.Planet.StarBrightnessPercent,
-            options.EccentricityPerMille ?? preset.Planet.EccentricityThousandths)
+        (PlanetParameters planet, _) = PlanetSetup.Build(preset.Planet, preset.AutoCo2, new PlanetOverrides
         {
-            SeasonStrengthPercent = options.SeasonStrengthPercent ?? preset.Planet.SeasonStrengthPercent,
-        };
-        planet.Validate();
+            AxialTiltTenths = options.AxialTiltTenths,
+            EccentricityThousandths = options.EccentricityPerMille,
+            LuminosityThousandths = options.LuminosityThousandths,
+            DistanceThousandths = options.DistanceThousandths,
+            YearThousandths = options.YearThousandths,
+            LightThousandths = options.LightThousandths,
+            Co2Microbar = options.Co2Microbar,
+            PressureHundredths = options.PressureHundredths,
+            VolcanismPercent = options.VolcanismPercent,
+        });
         settings = settings with
         {
             Planet = planet,

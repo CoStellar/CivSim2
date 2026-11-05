@@ -9,7 +9,7 @@ using Xunit;
 
 namespace CivSim.Tests.WorldGen;
 
-/// <summary>Planets, sunlight and seasons (stage 1b).</summary>
+/// <summary>Planets, sunlight, climate and seasons (stages 1b and 1c-A).</summary>
 public class PlanetTests
 {
     private static readonly GameContent Content = ContentLoader.Load();
@@ -45,10 +45,12 @@ public class PlanetTests
     [Fact]
     public void EarthClimateHasWarmTropicsAndColdPoles()
     {
+        // Calibration of the energy balance model (ADR 0014): equator about 28 °C, poles −20 to −27 °C.
         var climate = new ClimateModel(PlanetParameters.Earth);
-        Assert.Equal(28, climate.MeanTemperature(0));
-        Assert.InRange(climate.MeanTemperature(FixedTrig.Sin(FixedTrig.Degrees(45))), 10, 18);
-        Assert.InRange(climate.MeanTemperature(FixedTrig.One), -28, -25);
+        Assert.InRange(climate.MeanTemperature(0), 26, 29);
+        Assert.InRange(climate.MeanTemperature(FixedTrig.Sin(FixedTrig.Degrees(45))), 8, 15);
+        Assert.InRange(climate.MeanTemperature(FixedTrig.One), -27, -20);
+        Assert.InRange(climate.GlobalMeanMillionths, 13_000_000, 16_000_000);
         Assert.True(climate.SeasonalSwing(FixedTrig.Sin(FixedTrig.Degrees(60)), 100) > 3 * climate.SeasonalSwing(FixedTrig.Sin(FixedTrig.Degrees(60)), 30) / 2);
         Assert.Equal(100, ClimateModel.GrowingSeason(28, 4));
         Assert.Equal(0, ClimateModel.GrowingSeason(-20, 30));
@@ -64,13 +66,17 @@ public class PlanetTests
         Assert.True(uranus.SeasonalSwing(pole, 100) > 2 * new ClimateModel(PlanetParameters.Earth).SeasonalSwing(pole, 100));
     }
 
+    // Earth's light and air with a year of this many thousandths (the star and distance follow).
+    private static PlanetParameters WithYear(long yearThousandths) =>
+        PlanetSetup.Build(PlanetParameters.Earth, autoCo2: false, new PlanetOverrides { YearThousandths = yearThousandths }).Planet;
+
     [Fact]
     public void LongerYearsSwingFurther()
     {
         long lat = FixedTrig.Sin(FixedTrig.Degrees(50));
         int earth = new ClimateModel(PlanetParameters.Earth).SeasonalSwing(lat, 100);
-        int slow = new ClimateModel(PlanetParameters.Earth with { YearHundredths = 1000 }).SeasonalSwing(lat, 100);
-        int fast = new ClimateModel(PlanetParameters.Earth with { YearHundredths = 25 }).SeasonalSwing(lat, 100);
+        int slow = new ClimateModel(WithYear(10_000)).SeasonalSwing(lat, 100);
+        int fast = new ClimateModel(WithYear(250)).SeasonalSwing(lat, 100);
         Assert.True(fast < earth && earth < slow, $"{fast} / {earth} / {slow}");
     }
 
@@ -79,7 +85,10 @@ public class PlanetTests
     {
         long lat = FixedTrig.Sin(FixedTrig.Degrees(45));
         int normal = new ClimateModel(PlanetParameters.Earth).SeasonalSwing(lat, 100);
-        int soft = new ClimateModel(PlanetParameters.Earth with { SeasonStrengthPercent = 50 }).SeasonalSwing(lat, 100);
+        // Seasons follow from the pressure: four times Earth's air gives half the seasons.
+        PlanetParameters thick = PlanetParameters.Earth with { BackgroundPressureHundredths = 400 };
+        Assert.Equal(50, thick.SeasonStrengthPercent);
+        int soft = new ClimateModel(thick).SeasonalSwing(lat, 100);
         Assert.InRange(soft, (normal / 2) - 1, (normal / 2) + 1);
         Assert.Equal(100, Content.Planet("uranus").Planet.SeasonStrengthPercent);
     }
@@ -89,12 +98,22 @@ public class PlanetTests
     {
         Assert.Equal(["earth", "mars", "uranus"], Content.Planets.Select(p => p.Key));
         PlanetPreset mars = Content.Planet("mars");
-        Assert.Equal(new PlanetParameters(252, 188, 85, 93), mars.Planet);
+        Assert.Equal(252, mars.Planet.AxialTiltTenths);
+        Assert.Equal(1524, mars.Planet.DistanceThousandths);
+        Assert.Equal(188, mars.Planet.YearHundredths);
+        Assert.Equal(431, (mars.Planet.LightMillionths + 500) / 1000);
+        Assert.True(mars.AutoCo2);
         GameSettings s = GameSettings.Test(1).WithPreset(mars);
         Assert.Equal(30, s.WaterPercent);
         Assert.Equal(WorldMoisture.Dry, s.Moisture);
         Assert.Equal("Mars", s.PlanetName);
-        Assert.Throws<ArgumentOutOfRangeException>(() => (PlanetParameters.Earth with { StarBrightnessPercent = 200 }).Validate());
+        Assert.Throws<ArgumentOutOfRangeException>(() => (PlanetParameters.Earth with { DistanceThousandths = 500 }).Validate());
+
+        // Uranus's preset gives only the year and the light: the star follows (about 7 Suns' mass, 1300 Suns' light).
+        PlanetParameters uranus = Content.Planet("uranus").Planet;
+        Assert.Equal(8400, uranus.YearHundredths);
+        Assert.InRange(uranus.StarMassThousandths, 6_800, 7_500);
+        Assert.InRange(uranus.LuminosityThousandths, 1_200_000, 1_500_000);
     }
 
     [Fact]
