@@ -323,6 +323,8 @@ Osada to majątek cywilizacji: pola uprawne, budynki, mury i zapasy. Można ją 
 - **Powroty koczowników:** plemiona koczownicze wracają sezonowo do tych samych obozowisk. Obozowisko, które stoi puste, nie niszczeje szybko, a doświadczenie z jego okolicy (znane łowiska, złoża) zostaje w pamięci plemienia.
 - **Ruiny jako źródło surowców:** rozbiórka daje kamień i cegły, a plądrowanie może dać zapasy lub skarby pozostawione w pośpiechu.
 
+**Wersja CORE (wdrożona w etapie 3d, zgoda Patryka z 2026-11-05):** dwa stany, opuszczona i ruiny, z czasami zależnymi od poziomu osady (obóz 50/100 lat, wioska 50/300, miasto 100/500, metropolia 100/1000; im bardziej rozwinięta osada, tym trwalsza). Ludzie niosą 10 jednostek na osobę; to ogólna zasada każdej wędrówki, którą technologie podnoszą efektem `carrying`. Roszczenie jest na razie tylko zapisane. Podbój przy migracji: atak wojowników na obronę (wojownicy + część pozostałych), pokonani uciekają, zwycięzcy zajmują pole; wcielenie i trybut później. Cywilizacja bez ludzi wymiera i zostaje na liście jako wymarła.
+
 **AI:** w ocenie migracji (5.4) opuszczona osada w celu podnosi jego wartość o zaoszczędzony koszt budowy. AI sama decyduje, czy zająć cudzą osadę mimo roszczenia, a jej charakter (ostrożność, agresja) waży ryzyko konfliktu z dawnym właścicielem.
 
 **Grafika:** każdy poziom osady potrzebuje dwóch dodatkowych wariantów: opuszczonej i zrujnowanej.

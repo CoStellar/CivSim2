@@ -201,7 +201,7 @@ public sealed class InfluenceSystem(GameContent content, TurnPhase phase = TurnP
     {
         foreach (Commands.CommandEnvelope e in context.Commands)
         {
-            if (e.Command is Commands.MoveSettlementCommand or Commands.SplitSettlementCommand)
+            if (e.Command.Category == Commands.CommandCategory.Movement)
             {
                 return true;
             }

@@ -82,7 +82,8 @@ public sealed record GameViewMessage(
 /// <summary>
 /// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per
 /// stratum id), health, mood and food (hundredths, last turn) are filled only for the viewer's own settlements and
-/// for observers; foreign settlements show only where they are.
+/// for observers; foreign settlements show only where they are. Status (0 active, 1 abandoned, 2 ruins) and the claim
+/// (civilization id or -1, last month) are public.
 /// </summary>
 [MessagePackObject]
 public sealed record SettlementView(
@@ -99,7 +100,11 @@ public sealed record SettlementView(
     [property: Key(10)] int Mood = 0,
     [property: Key(11)] long FoodGathered = 0,
     [property: Key(12)] long FoodNeeded = 0,
-    [property: Key(13)] long FoodEaten = 0);
+    [property: Key(13)] long FoodEaten = 0,
+    [property: Key(14)] int Status = 0,
+    [property: Key(15)] long AbandonedMonth = 0,
+    [property: Key(16)] int ClaimCiv = -1,
+    [property: Key(17)] long ClaimUntilMonth = 0);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
@@ -111,7 +116,8 @@ public sealed record WorldView([property: Key(0)] int Id, [property: Key(1)] str
 
 /// <summary>What the viewer knows about one civilization.</summary>
 [MessagePackObject]
-public sealed record CivilizationView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive);
+public sealed record CivilizationView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive,
+    [property: Key(3)] long DiedOutMonth = 0);
 
 /// <summary>Observer speeds (GDD 11.2).</summary>
 public enum SimulationSpeed

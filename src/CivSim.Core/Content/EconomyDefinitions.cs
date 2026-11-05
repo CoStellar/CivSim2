@@ -54,7 +54,14 @@ public sealed record SettlementLevelDefinition(
     int MinPopulation,
     int MaxPopulation,
     Amount StorageCapacity,
-    bool Mobile);
+    bool Mobile)
+{
+    /// <summary>Years an empty settlement of this level stays abandoned (buildings standing) before it becomes ruins (GDD 5.5).</summary>
+    public int AbandonedYears { get; init; } = 50;
+
+    /// <summary>Years after abandonment when the ruins are gone from the map (archaeology is a later module).</summary>
+    public int RuinsUntilYears { get; init; } = 300;
+}
 
 /// <summary>An era from <c>data/eras.json</c> (GDD 6.2).</summary>
 public sealed record EraDefinition(int Id, string Key, string Name, int MonthsPerTurn);
@@ -92,6 +99,9 @@ public enum EffectStat
 
     /// <summary>Change of mood (satisfaction).</summary>
     Mood = 5,
+
+    /// <summary>Change of how much people can carry when they leave or move, in percent (pack animals, carts, boats).</summary>
+    CarryCapacityPercent = 6,
 }
 
 /// <summary>How effects of the same type on the same target combine.</summary>
@@ -109,3 +119,17 @@ public enum EffectStacking
 
 /// <summary>An effect type from <c>data/effects.json</c> (GDD 10.1).</summary>
 public sealed record EffectDefinition(int Id, string Key, string Name, EffectTarget Target, EffectStat Stat, EffectStacking Stacking);
+
+/// <summary>
+/// Rules for settlements as property (GDD 5.5) from <c>data/settlements.json</c>: claims on abandoned settlements and
+/// how much people carry when they leave. Carrying is a general rule, not only for abandonment: every move, split and
+/// raid uses it, and technologies or animals raise it through the <see cref="EffectStat.CarryCapacityPercent"/> effect.
+/// </summary>
+public sealed record AssetRules
+{
+    /// <summary>Years the former owner keeps a claim on a settlement it abandoned.</summary>
+    public int ClaimYears { get; init; } = 100;
+
+    /// <summary>Units of goods one person carries when moving.</summary>
+    public Amount CarryPerPerson { get; init; } = Amount.FromUnits(10);
+}

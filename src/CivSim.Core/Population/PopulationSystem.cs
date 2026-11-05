@@ -59,6 +59,7 @@ public sealed class PopulationSystem : ITurnSystem
             if (civ.IsAlive && !HasPeople(state, civ.Id))
             {
                 civ.IsAlive = false;
+                civ.DiedOutMonth = state.Month;
                 context.Chronicle($"{civ.Name} has died out.");
             }
         }

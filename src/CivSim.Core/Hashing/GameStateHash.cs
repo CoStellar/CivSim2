@@ -63,6 +63,7 @@ public static class GameStateHash
             h.Add(c.StartCell.Col);
             h.Add(c.StartCell.Row);
             h.Add(c.Era);
+            h.Add(c.DiedOutMonth);
         }
 
         h.Add(state.Month);
@@ -85,6 +86,10 @@ public static class GameStateHash
             h.Add(s.FoodEaten);
             h.Add(s.HigherNeedsPerMille);
             h.Add(s.MovedMonth);
+            h.Add((int)s.Status);
+            h.Add(s.AbandonedMonth);
+            h.Add(s.ClaimCiv);
+            h.Add(s.ClaimUntilMonth);
             ReadOnlySpan<int> people = s.PopulationView;
             h.Add(people.Length);
             foreach (int p in people)

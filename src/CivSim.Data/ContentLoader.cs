@@ -32,7 +32,7 @@ public static class ContentLoader
         List<StratumDefinition> strata = LoadStrata(Path.Combine(directory, "strata.json"), goods, errors);
         PopulationRules population = LoadPopulation(Path.Combine(directory, "population.json"), strata, goods, errors);
         List<RecipeDefinition> recipes = LoadRecipes(Path.Combine(directory, "recipes.json"), goods, errors);
-        (List<SettlementLevelDefinition> levels, int tribeLevel, List<GoodQuantity> tribeStock) =
+        (List<SettlementLevelDefinition> levels, int tribeLevel, List<GoodQuantity> tribeStock, AssetRules assets) =
             LoadSettlements(Path.Combine(directory, "settlements.json"), goods, errors);
         List<EraDefinition> eras = LoadEras(Path.Combine(directory, "eras.json"), errors);
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
@@ -52,6 +52,7 @@ public static class ContentLoader
             NewTribeStock = tribeStock,
             Strata = strata,
             Population = population,
+            Assets = assets,
         };
     }
 
@@ -169,6 +170,7 @@ public static class ContentLoader
         var years = new Reader(Section("goodAndBadYears"), $"{file}: goodAndBadYears", errors);
         var influence = new Reader(Section("influence"), $"{file}: influence", errors);
         var migration = new Reader(Section("migration"), $"{file}: migration", errors);
+        var conquest = new Reader(Section("conquest"), $"{file}: conquest", errors);
         var tribe = new int[strata.Count];
         JsonElement tribeElement = Section("newTribe");
         var tribeReader = new Reader(tribeElement, $"{file}: newTribe", errors);
@@ -235,7 +237,14 @@ public static class ContentLoader
             SplitPercent = migration.Int("splitPercent", 1, 90),
             MinSplitPeople = migration.Int("minSplitPeople", 2, 1_000_000),
             MinDistanceBetweenOwnCamps = migration.Int("minDistanceBetweenOwnCamps", 1, 50),
-            MaxSettlementsPerCivilization = migration.Int("maxSettlementsPerCivilization", 1, 10_000),
+            SplitNeedsFoodPercent = migration.Int("splitNeedsFoodPercent", 0, 1000),
+            MergeBelowPeople = migration.Int("mergeBelowPeople", 0, 1_000_000),
+            OwnCampsiteBonusPercent = migration.Int("ownCampsiteBonusPercent", 0, 1000),
+            AttackAboveStrengthPercent = migration.Int("attackAboveStrengthPercent", 1, 10_000),
+            DefenderNonWarriorPercent = conquest.Int("defenderNonWarriorPercent", 0, 100),
+            WinnerWarriorLossPercent = conquest.Int("winnerWarriorLossPercent", 0, 100),
+            LoserWarriorLossPercent = conquest.Int("loserWarriorLossPercent", 0, 100),
+            FleeingLossPercent = conquest.Int("fleeingLossPercent", 0, 100),
             NewTribe = tribe,
         };
     }
@@ -310,16 +319,17 @@ public static class ContentLoader
         return result;
     }
 
-    private static (List<SettlementLevelDefinition> Levels, int TribeLevel, List<GoodQuantity> TribeStock) LoadSettlements(
+    private static (List<SettlementLevelDefinition> Levels, int TribeLevel, List<GoodQuantity> TribeStock, AssetRules Assets) LoadSettlements(
         string path, List<GoodDefinition> goods, List<string> errors)
     {
         var levels = new List<SettlementLevelDefinition>();
         var stock = new List<GoodQuantity>();
         int tribeLevel = 0;
+        var assets = new AssetRules();
         using JsonDocument? doc = Open(path, errors);
         if (doc is null || !TryArray(doc.RootElement, "levels", path, errors, out JsonElement array))
         {
-            return (levels, tribeLevel, stock);
+            return (levels, tribeLevel, stock, assets);
         }
 
         string file = Path.GetFileName(path);
@@ -333,12 +343,19 @@ public static class ContentLoader
             (int min, int max) = r.Range("population", 0, int.MaxValue);
             Amount storage = r.Amount("storage", Amount.FromUnits(1), Amount.FromUnits(1_000_000_000));
             bool mobile = r.Bool("mobile");
+            int abandoned = r.Int("abandonedYears", 0, 100_000);
+            int ruins = r.Int("ruinsUntilYears", 0, 1_000_000);
+            if (ruins < abandoned)
+            {
+                errors.Add($"{file}: levels[{i}].ruinsUntilYears must not be smaller than abandonedYears.");
+            }
+
             if (levels.Count > 0 && (min < levels[^1].MinPopulation || storage < levels[^1].StorageCapacity))
             {
                 errors.Add($"{file}: levels[{i}] must not be smaller than the level before it.");
             }
 
-            levels.Add(new SettlementLevelDefinition(i, key, name, min, max, storage, mobile));
+            levels.Add(new SettlementLevelDefinition(i, key, name, min, max, storage, mobile) { AbandonedYears = abandoned, RuinsUntilYears = ruins });
             i++;
         }
 
@@ -364,7 +381,26 @@ public static class ContentLoader
             errors.Add($"{file}: missing object 'newTribe'.");
         }
 
-        return (levels, Math.Max(0, tribeLevel), stock);
+        JsonElement Object(string name)
+        {
+            if (doc.RootElement.TryGetProperty(name, out JsonElement v) && v.ValueKind == JsonValueKind.Object)
+            {
+                return v;
+            }
+
+            errors.Add($"{file}: missing object '{name}'.");
+            return JsonDocument.Parse("{}").RootElement.Clone();
+        }
+
+        var claims = new Reader(Object("abandonment"), $"{file}: abandonment", errors);
+        var carrying = new Reader(Object("carrying"), $"{file}: carrying", errors);
+        assets = new AssetRules
+        {
+            ClaimYears = claims.Int("claimYears", 0, 100_000),
+            CarryPerPerson = carrying.Amount("perPerson", Amount.Zero, Amount.FromUnits(100_000)),
+        };
+
+        return (levels, Math.Max(0, tribeLevel), stock, assets);
     }
 
     private static List<EraDefinition> LoadEras(string path, List<string> errors)

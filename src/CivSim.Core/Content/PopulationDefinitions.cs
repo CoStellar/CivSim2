@@ -137,8 +137,29 @@ public sealed record PopulationRules
     /// <summary>New camps of the same civilization keep at least this many cells apart.</summary>
     public int MinDistanceBetweenOwnCamps { get; init; } = 4;
 
-    /// <summary>The tribe AI founds no more settlements once a civilization has this many.</summary>
-    public int MaxSettlementsPerCivilization { get; init; } = 12;
+    /// <summary>AI: a new camp needs land that feeds at least this share of the leaving group (instead of a fixed limit of camps).</summary>
+    public int SplitNeedsFoodPercent { get; init; } = 100;
+
+    /// <summary>AI: a camp with fewer people than this joins another camp of its civilization within reach.</summary>
+    public int MergeBelowPeople { get; init; } = 15;
+
+    /// <summary>AI: an abandoned camp of the tribe's own counts this much more when the tribe chooses where to go (known land).</summary>
+    public int OwnCampsiteBonusPercent { get; init; } = 10;
+
+    /// <summary>AI: a hungry camp attacks a camp in its way only with at least this much of the defenders' strength.</summary>
+    public int AttackAboveStrengthPercent { get; init; } = 150;
+
+    /// <summary>Conquest (GDD 5.4, simplified): share of non-warriors that count in the defence of their camp.</summary>
+    public int DefenderNonWarriorPercent { get; init; } = 25;
+
+    /// <summary>Conquest: share of the winners' warriors lost in the fight.</summary>
+    public int WinnerWarriorLossPercent { get; init; } = 10;
+
+    /// <summary>Conquest: share of the losers' warriors lost in the fight.</summary>
+    public int LoserWarriorLossPercent { get; init; } = 40;
+
+    /// <summary>Conquest: share of all expelled people lost while fleeing.</summary>
+    public int FleeingLossPercent { get; init; } = 20;
 
     /// <summary>People in a new tribe, per stratum id.</summary>
     public IReadOnlyList<int> NewTribe { get; init; } = [];

@@ -7,7 +7,7 @@ Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. 
 wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
-**Aktualny etap: 1**
+**Aktualny etap: 1b (świat), potem 3e**
 
 ---
 
@@ -46,6 +46,16 @@ Gotowe, gdy: 100 map na różnych seedach generuje się bez błędów walidatora
 - [x] Test 100 seedów + benchmark generowania mapy ogromnej
 - [x] `docs/systems/map.md`, `docs/systems/worldgen.md`
 
+## Etap 1b — Świat jak planeta (dodany 2026-11-05)
+
+Gotowe, gdy: mapa zachowuje się jak kula, a Patryk obejrzał presety Ziemia, Mars i Uran oraz własne ustawienia jako PNG.
+
+- [ ] Decyzja: siatka heksów na kuli (ADR, zmiana GDD 3 i zasady nr 8 w `CLAUDE.md`)
+- [ ] Topologia kuli zamiast torusa w `HexTorus` (jeden moduł geometrii)
+- [ ] Parametry planety: nachylenie osi, długość roku, pory roku; presety Ziemia, Mars, Uran; wszystko w danych
+- [ ] Klimat i biomy liczone z nasłonecznienia w ciągu roku (strefa zamieszkiwalna gwiazdy)
+- [ ] Eksport PNG i podgląd dla nowych map
+
 ## Etap 2 — Podgląd symulacji (Godot)
 
 Gotowe, gdy: podgląd działa w 60 FPS na mapie ogromnej przy symulacji w tle.
@@ -68,8 +78,8 @@ Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemno
 
 - [ ] Zasoby, magazyny osad (jedna pojemność), psucie żywności, sieć handlowa bez fizycznego transportu (koszt zależny od odległości), receptury jednoetapowe, ceny wewnętrzne, priorytety przy niedoborach
 - [ ] Ludność: 3 warstwy (wytwórcy, rzemieślnicy, wojownicy), potrzeby, wzrost, głód, jedna wartość zdrowia, migracje
-- [ ] Koczownicy, obozy, strefa wpływów, migracje (sezonowe, odłam, całkowita, z podbojem)
-- [ ] Osady jako majątek: porzucanie, dwa stany (opuszczona, ruiny), przejmowanie, odbudowa, roszczenia
+- [x] Koczownicy, obozy, strefa wpływów, migracje (sezonowe, odłam, całkowita, z podbojem)
+- [x] Osady jako majątek: porzucanie, dwa stany (opuszczona, ruiny), przejmowanie, odbudowa, roszczenia (odbudowa budynków razem z budynkami)
 - [ ] Technologie er 1–2 w danych, badania, dyfuzja, inspiracje
 - [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze
 - [ ] Mechanizm efektów + zdarzenia: susza, pożar, powódź, epidemia

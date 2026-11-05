@@ -30,7 +30,7 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
         var civs = ImmutableArray.CreateBuilder<CivilizationSnapshot>(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
-            civs.Add(new CivilizationSnapshot(c.Id, c.Name, c.Controller, c.IsAlive));
+            civs.Add(new CivilizationSnapshot(c.Id, c.Name, c.Controller, c.IsAlive) { DiedOutMonth = c.DiedOutMonth });
         }
 
         var settlements = ImmutableArray.CreateBuilder<SettlementSnapshot>(state.Settlements.Count);
@@ -51,6 +51,10 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
                 FoodGathered = st.FoodGathered,
                 FoodNeeded = st.FoodNeeded,
                 FoodEaten = st.FoodEaten,
+                Status = st.Status,
+                AbandonedMonth = st.AbandonedMonth,
+                ClaimCiv = st.ClaimCiv,
+                ClaimUntilMonth = st.ClaimUntilMonth,
             });
         }
 
@@ -69,7 +73,11 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
 public sealed record WorldSnapshot(WorldId Id, string Name, int Width, int Height, ImmutableArray<int> ChangedChunks);
 
 /// <summary>Immutable copy of a civilization's public data.</summary>
-public sealed record CivilizationSnapshot(CivId Id, string Name, PlayerId Controller, bool IsAlive);
+public sealed record CivilizationSnapshot(CivId Id, string Name, PlayerId Controller, bool IsAlive)
+{
+    /// <summary>Game month in which the civilization died out (when not alive).</summary>
+    public long DiedOutMonth { get; init; }
+}
 
 /// <summary>Immutable copy of a settlement. <paramref name="Stock"/> holds hundredths per good id.</summary>
 public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId World, int Col, int Row, string Name, int Level, ImmutableArray<long> Stock)
@@ -91,4 +99,16 @@ public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId Wo
 
     /// <summary>Food eaten in the last turn (hundredths).</summary>
     public long FoodEaten { get; init; }
+
+    /// <summary>Active, abandoned or ruins.</summary>
+    public SettlementStatus Status { get; init; }
+
+    /// <summary>Month of abandonment (when not active).</summary>
+    public long AbandonedMonth { get; init; }
+
+    /// <summary>Civilization with a claim, or <see cref="SettlementState.NoClaim"/>.</summary>
+    public int ClaimCiv { get; init; } = SettlementState.NoClaim;
+
+    /// <summary>Last month of the claim.</summary>
+    public long ClaimUntilMonth { get; init; }
 }

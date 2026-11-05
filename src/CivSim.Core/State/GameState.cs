@@ -91,6 +91,9 @@ public sealed class GameState
         return settlement;
     }
 
+    /// <summary>Removes every settlement that matches <paramref name="gone"/>, keeping the id order. Returns how many went.</summary>
+    public int RemoveSettlements(Predicate<SettlementState> gone) => _settlements.RemoveAll(gone);
+
     /// <summary>Finds a settlement by id, or null.</summary>
     public SettlementState? FindSettlement(SettlementId id)
     {

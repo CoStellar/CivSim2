@@ -26,6 +26,9 @@ public sealed class CivilizationState
     /// <summary>False once the civilization has been destroyed.</summary>
     public bool IsAlive { get; set; }
 
+    /// <summary>Game month in which the civilization died out (meaningful when not alive).</summary>
+    public long DiedOutMonth { get; set; }
+
     /// <summary>Cell on Earth where the tribe starts (chosen by the world generator).</summary>
     public HexCoord StartCell { get; set; }
 

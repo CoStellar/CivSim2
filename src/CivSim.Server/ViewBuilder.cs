@@ -27,7 +27,7 @@ public static class ViewBuilder
         var civs = new List<CivilizationView>(snapshot.Civilizations.Length);
         foreach (CivilizationSnapshot c in snapshot.Civilizations)
         {
-            civs.Add(new CivilizationView(c.Id.Value, c.Name, c.IsAlive));
+            civs.Add(new CivilizationView(c.Id.Value, c.Name, c.IsAlive, c.DiedOutMonth));
         }
 
         bool observer = knownEarthCells is null;
@@ -40,12 +40,20 @@ public static class ViewBuilder
                 continue;
             }
 
+            // Whether a settlement stands empty and who claims it can be seen from outside; the warehouse cannot.
             bool details = observer || own;
-            settlements.Add(details
+            SettlementView view = details
                 ? new SettlementView(
                     st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, [.. st.Stock],
                     [.. st.Population], st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten)
-                : new SettlementView(st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, null));
+                : new SettlementView(st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, null);
+            settlements.Add(view with
+            {
+                Status = (int)st.Status,
+                AbandonedMonth = st.AbandonedMonth,
+                ClaimCiv = st.ClaimCiv,
+                ClaimUntilMonth = st.ClaimUntilMonth,
+            });
         }
 
         return new GameViewMessage(snapshot.Turn, viewer.Value, worlds, civs, Settlements: settlements, Month: snapshot.Month);
