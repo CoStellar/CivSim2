@@ -383,7 +383,7 @@ public sealed class GameServer
             return;
         }
 
-        ICommand? command = CommandMapper.ToCore(submit.Command);
+        ICommand? command = CommandMapper.ToCore(submit.Command, _content);
         if (command is null)
         {
             client.Connection.Send(new CommandRejectedMessage(submit.ClientSequence, "Unknown command."));

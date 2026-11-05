@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Population growth, hunger, health and gathering (GDD 5.2, 4.4). All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
+  "comment": "Population growth, hunger, health, gathering, wild food, influence zones and migration (GDD 5.2, 5.4, 4.4). wildFood: gathering at full strength removes depletionPerMillePerYear of a cell stock every year; every year a cell grows back regrowthPercentPerYear of what is missing. influence: range in movement cost, baseRange plus one per warriorsPerRange warriors. migration: rules of the simple tribe AI used until Stage 4. All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
   "growth": {
     "birthsPerMille": 35,
     "deathsPerMille": 32,
@@ -15,7 +15,6 @@
     "lowHealthBelow": 60
   },
   "gathering": {
-    "radius": 2,
     "plantsGood": "wild_plants",
     "meatGood": "meat",
     "hidesGood": "hides",
@@ -25,6 +24,33 @@
     "hidesPerMeat": "0.2",
     "hillsPercent": 75,
     "mountainsPercent": 25
+  },
+  "wildFood": {
+    "depletionPerMillePerYear": 10,
+    "regrowthPercentPerYear": "1.5"
+  },
+  "goodAndBadYears": {
+    "yieldSwingPercent": 15
+  },
+  "influence": {
+    "baseRange": 3,
+    "warriorsPerRange": 20,
+    "maxRange": 8,
+    "hillsCost": 1,
+    "mountainsCost": 2,
+    "strengthPerStep": 30
+  },
+  "migration": {
+    "maxMoveCells": 10,
+    "moveWhenFedBelowPercent": 95,
+    "moveWhenBetterByPercent": 30,
+    "minYearsBetweenMoves": 100,
+    "distancePenaltyPercentPerCell": 3,
+    "splitAbovePercentOfLevel": 80,
+    "splitPercent": 40,
+    "minSplitPeople": 60,
+    "minDistanceBetweenOwnCamps": 4,
+    "maxSettlementsPerCivilization": 40
   },
   "newTribe": { "producers": 40, "artisans": 0, "warriors": 10 }
 }

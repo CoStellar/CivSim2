@@ -36,7 +36,7 @@ public sealed class EffectExpirySystem : ITurnSystem
     }
 }
 
-/// <summary>Registers the core simulation systems in their phases, in a fixed order.</summary>
+/// <summary>Registers the core simulation systems in their phases, in a fixed order, and the tribe AI.</summary>
 public static class CoreSystems
 {
     /// <summary>Adds every core system to <paramref name="runner"/>.</summary>
@@ -44,11 +44,16 @@ public static class CoreSystems
     {
         ArgumentNullException.ThrowIfNull(runner);
         ArgumentNullException.ThrowIfNull(content);
+        var years = new Economy.YieldYears(content.Population.YieldSwingPercent);
         runner.AddSystem(new EffectExpirySystem());
-        runner.AddSystem(new Economy.GatheringSystem(content));
+        runner.AddSystem(new Economy.WildFoodSystem(content, years));
+        runner.AddSystem(new Population.InfluenceSystem(content, TurnPhase.Movement));
+        runner.AddSystem(new Economy.GatheringSystem(content, years));
         runner.AddSystem(new Economy.ConsumptionSystem(content));
         runner.AddSystem(new Economy.StorageSystem(content));
         runner.AddSystem(new Population.PopulationSystem(content));
+        runner.AddSystem(new Population.InfluenceSystem(content));
+        runner.AddCommandSource(new Ai.TribeAi(content));
         runner.AddSystem(new CalendarSystem(content));
     }
 }

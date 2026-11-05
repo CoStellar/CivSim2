@@ -84,6 +84,7 @@ public static class GameStateHash
             h.Add(s.FoodNeeded);
             h.Add(s.FoodEaten);
             h.Add(s.HigherNeedsPerMille);
+            h.Add(s.MovedMonth);
             ReadOnlySpan<int> people = s.PopulationView;
             h.Add(people.Length);
             foreach (int p in people)

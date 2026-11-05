@@ -75,6 +75,9 @@ public sealed class SettlementState
         return total;
     }
 
+    /// <summary>Game month of the last move (or of founding); the tribe AI waits a while between moves.</summary>
+    public long MovedMonth { get; set; }
+
     /// <summary>Health 0–100 (GDD 5.2, CORE simplified: one value). Set by the population system.</summary>
     public int Health { get; set; } = 100;
 

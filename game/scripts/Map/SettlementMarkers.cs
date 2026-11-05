@@ -58,7 +58,8 @@ public partial class SettlementMarkers : Node2D
             int ky0 = Mathf.FloorToInt((_view.Position.Y - c.Y) / _period.Y);
             int ky1 = Mathf.CeilToInt((_view.End.Y - c.Y) / _period.Y);
             float half = 7 + (3 * s.Level);
-            Color fill = OverlayColors.CivColor(s.Owner);
+            bool empty = s.Population is { } people && System.Array.TrueForAll(people, p => p == 0);
+            Color fill = empty ? new Color(0.35f, 0.35f, 0.35f) : OverlayColors.CivColor(s.Owner);
             for (int ky = ky0; ky <= ky1; ky++)
             {
                 for (int kx = kx0; kx <= kx1; kx++)

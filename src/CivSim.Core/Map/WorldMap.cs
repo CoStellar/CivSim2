@@ -12,6 +12,9 @@ public sealed class WorldMap
     /// <summary>Value of <see cref="Owner"/> for a cell nobody owns.</summary>
     public const short NoOwner = -1;
 
+    /// <summary>Value of <see cref="WildFood"/> when game and wild plants are untouched (per mille).</summary>
+    public const ushort FullWildFood = 1000;
+
     private readonly List<IMapLayerInfo> _layers = [];
 
     /// <summary>Creates an empty map (all zeros, no owners) for <paramref name="geometry"/>. Every chunk starts dirty.</summary>
@@ -35,6 +38,9 @@ public sealed class WorldMap
         Owner = Add(new MapLayer<short>("owner", this, 1, NoOwner));
         Pollution = Add(new MapLayer<byte>("pollution", this, 1, 0));
         River = Add(new MapLayer<byte>("river", this, HexEdge.PerCell, 0));
+        WildFood = Add(new MapLayer<ushort>("wild_food", this, 1, FullWildFood));
+        Claim = Add(new MapLayer<int>("claim", this, 1, 0));
+        Influence = Add(new MapLayer<byte>("influence", this, 1, 0));
         MarkAllDirty();
     }
 
@@ -85,6 +91,18 @@ public sealed class WorldMap
 
     /// <summary>River size on each canonical edge (index = cell × 3 + side), 0 = no river.</summary>
     public MapLayer<byte> River { get; }
+
+    /// <summary>
+    /// What is left of the cell's game and wild plants, per mille of an untouched cell (GDD 4.4). Gathering eats it,
+    /// unused cells grow back.
+    /// </summary>
+    public MapLayer<ushort> WildFood { get; }
+
+    /// <summary>Settlement whose people work the cell: settlement id + 1, or 0 for none (GDD 5.4).</summary>
+    public MapLayer<int> Claim { get; }
+
+    /// <summary>Strength of the owner's influence on the cell, 0–255 (GDD 5.4); 0 where nobody owns it.</summary>
+    public MapLayer<byte> Influence { get; }
 
     /// <summary>All layers in their fixed order (for hashing and saving).</summary>
     public IReadOnlyList<IMapLayerInfo> Layers => _layers;

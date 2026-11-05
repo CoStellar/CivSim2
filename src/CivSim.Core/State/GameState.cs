@@ -189,6 +189,12 @@ public sealed class GameState
             }
         }
 
+        // Influence zones exist from the start, so the first turn's gathering knows its land (GDD 5.4).
+        if (content.Strata.Count > 0)
+        {
+            new Population.Influence(content).Recompute(state);
+        }
+
         return state;
     }
 

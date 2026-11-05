@@ -20,7 +20,11 @@ public sealed record NeedDefinition(int GoodId, GoodCategory Category, Amount Pe
 /// <param name="Gathers">True when the stratum works the land.</param>
 /// <param name="TargetSharePercent">Share of the population the stratum drifts towards (all add up to 100).</param>
 /// <param name="Needs">Needs per person per year, basic first as written in the file.</param>
-public sealed record StratumDefinition(int Id, string Key, string Name, bool Gathers, int TargetSharePercent, IReadOnlyList<NeedDefinition> Needs);
+public sealed record StratumDefinition(int Id, string Key, string Name, bool Gathers, int TargetSharePercent, IReadOnlyList<NeedDefinition> Needs)
+{
+    /// <summary>True when the stratum fights and so widens the settlement's influence zone (GDD 5.4).</summary>
+    public bool Fights { get; init; }
+}
 
 /// <summary>Growth, hunger, health and gathering rules from <c>data/population.json</c> (GDD 5.2, 4.4).</summary>
 public sealed record PopulationRules
@@ -52,9 +56,6 @@ public sealed record PopulationRules
     /// <summary>Health below which extra deaths start.</summary>
     public int LowHealthBelow { get; init; } = 60;
 
-    /// <summary>How far from the settlement people gather, in cells.</summary>
-    public int GatherRadius { get; init; } = 2;
-
     /// <summary>Most food one gathering worker brings in per year.</summary>
     public Amount FoodPerWorkerPerYear { get; init; } = Amount.FromUnits(2);
 
@@ -81,6 +82,63 @@ public sealed record PopulationRules
 
     /// <summary>Good id of the hides that come with meat (-1 = none).</summary>
     public int HidesGood { get; init; } = -1;
+
+    /// <summary>Wild food (per mille of a full cell) removed per year by gathering at full strength.</summary>
+    public int WildDepletionPerMillePerYear { get; init; } = 10;
+
+    /// <summary>Share of the missing wild food that grows back every year, in hundredths of a percent.</summary>
+    public int WildRegrowthBasisPointsPerYear { get; init; } = 150;
+
+    /// <summary>Largest change of yields from good and bad years, in percent up or down.</summary>
+    public int YieldSwingPercent { get; init; } = 15;
+
+    /// <summary>Influence range of a settlement without warriors, in movement cost.</summary>
+    public int InfluenceBaseRange { get; init; } = 3;
+
+    /// <summary>Warriors needed for every extra point of influence range.</summary>
+    public int WarriorsPerRange { get; init; } = 20;
+
+    /// <summary>Largest influence range.</summary>
+    public int InfluenceMaxRange { get; init; } = 8;
+
+    /// <summary>Extra movement cost of hills for influence.</summary>
+    public int HillsCost { get; init; } = 1;
+
+    /// <summary>Extra movement cost of mountains for influence.</summary>
+    public int MountainsCost { get; init; } = 2;
+
+    /// <summary>Influence strength per point of range left on a cell.</summary>
+    public int InfluencePerStep { get; init; } = 30;
+
+    /// <summary>Furthest a camp moves in one turn, in cells.</summary>
+    public int MaxMoveCells { get; init; } = 10;
+
+    /// <summary>The tribe AI looks for a new place when less than this share of people was fed.</summary>
+    public int MoveWhenFedBelowPercent { get; init; } = 95;
+
+    /// <summary>The tribe AI moves a camp at most once in this many years.</summary>
+    public int MinYearsBetweenMoves { get; init; } = 100;
+
+    /// <summary>A new place must give this much more food to be worth the move, in percent.</summary>
+    public int MoveWhenBetterByPercent { get; init; } = 30;
+
+    /// <summary>Value lost per cell of distance when the AI compares places, in percent.</summary>
+    public int DistancePenaltyPercentPerCell { get; init; } = 3;
+
+    /// <summary>A settlement sends out a split group above this share of its level's maximum population.</summary>
+    public int SplitAbovePercentOfLevel { get; init; } = 80;
+
+    /// <summary>Share of the people who leave with a split group, in percent.</summary>
+    public int SplitPercent { get; init; } = 40;
+
+    /// <summary>A settlement needs at least this many people to split.</summary>
+    public int MinSplitPeople { get; init; } = 60;
+
+    /// <summary>New camps of the same civilization keep at least this many cells apart.</summary>
+    public int MinDistanceBetweenOwnCamps { get; init; } = 4;
+
+    /// <summary>The tribe AI founds no more settlements once a civilization has this many.</summary>
+    public int MaxSettlementsPerCivilization { get; init; } = 12;
 
     /// <summary>People in a new tribe, per stratum id.</summary>
     public IReadOnlyList<int> NewTribe { get; init; } = [];
