@@ -375,6 +375,7 @@ public partial class Main : Node2D
         int? year = null;
         int? brightness = null;
         int? eccentricity = null;
+        int? seasons = null;
         string? moisture = null;
         string? inland = null;
         string? relief = null;
@@ -413,6 +414,9 @@ public partial class Main : Node2D
                 case "--brightness":
                     brightness = int.Parse(v, CultureInfo.InvariantCulture);
                     break;
+                case "--seasons":
+                    seasons = int.Parse(v, CultureInfo.InvariantCulture);
+                    break;
                 case "--eccentricity":
                     eccentricity = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1000);
                     break;
@@ -448,6 +452,7 @@ public partial class Main : Node2D
             YearHundredths = year,
             StarBrightnessPercent = brightness,
             EccentricityPerMille = eccentricity,
+            SeasonStrengthPercent = seasons,
             Moisture = moisture ?? o.Moisture,
             Inland = inland ?? o.Inland,
             Relief = relief ?? o.Relief,

@@ -120,6 +120,7 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 | Długość roku | 0,1–500 lat ziemskich | 1 | 1,88 | 84 | tylko pory roku: dłuższy rok to większa różnica lato–zima; zegar gry zostaje w latach ziemskich |
 | Jasność gwiazdy | 80–120% | 100% | 85% | 100% | średnia temperatura (zastępuje dawne ustawienie zimna/umiarkowana/gorąca) |
 | Mimośród orbity | 0–0,3 | 0,017 | 0,093 | 0,046 | jedna półkula ma ostrzejsze pory roku |
+| Siła pór roku | 20–150% | 100% | 100% | 100% | gęsta atmosfera i oceany łagodzą lato i zimę (mniej niż 100%), rzadka je zaostrza; od tego zależy, czy na planecie leżącej na boku plemiona wędrują za latem (decyzja Patryka z 2026-11-05: wędrówki mają wynikać z ustawień świata) |
 | Woda, wilgotność, górzystość | jak niżej | 60%, normalna, normalna | 30%, sucha, górzysta | 60%, normalna, normalna | ląd planety |
 
 Mars w presecie to planeta podobna do Marsa w strefie zamieszkiwalnej (zimniejsza, suchsza i bardziej górzysta niż Ziemia), nie dzisiejszy Mars.

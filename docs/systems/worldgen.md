@@ -87,6 +87,10 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
   najmniej 5%; temperatura następnej pory roku albo zimowa przy porach uśrednionych; efekt `cold_tolerance` obniża granicę zimna).
 - Wynik na Uranie (seed 42, 2000 tur = 21 000 lat): ok. 6300 ludzi, wszyscy żyją; obozy trzymają się pasa wokół równika, a środek populacji
   przesuwa się z każdym rokiem planety; w turach zmiany pory roku widać serie przeprowadzek. Wysokie półkule mają latem ponad 80 °C, a zimą −30 °C.
+- **Siła pór roku** (`seasonStrength`, 20–150%, `--seasons`): mnoży różnicę lato–zima. Pomiar na Uranie (seed 42, po 400 turach):
+  100% → ok. 6 100 ludzi, środek populacji 9–12°; 60% → ok. 9 500 ludzi, 21–24°, najwięcej przeprowadzek; 40% → ok. 11 900 ludzi.
+  Pełnych przejść między półkulami jeszcze nie ma: pas przy równiku jest znośny przez cały rok, a AI widzi tylko 10 pól wokół obozów
+  i przenosi się najwyżej o 10 pól. Dalekie wędrówki otworzą pamięć mapy (etap 3g) i wędrówki trwające kilka tur.
 - PNG: przebieg z `--png` na takiej planecie zapisuje `_year.png`, czyli 8 klatek ostatniego roku (temperatura pory roku i obozy), oraz widok `seasonnow`.
 
 ## Testy

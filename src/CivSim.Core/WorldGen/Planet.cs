@@ -16,6 +16,17 @@ public sealed record PlanetParameters(int AxialTiltTenths, int YearHundredths, i
     /// <summary>Earth.</summary>
     public static PlanetParameters Earth { get; } = new(234, 100, 100, 17);
 
+    /// <summary>
+    /// How strong the seasons are, in percent of an Earth-like atmosphere and ocean (decision of 2026-11-05). Thick air
+    /// and big oceans carry heat between summer and winter and soften the seasons (below 100); thin air sharpens them.
+    /// On a planet lying on its side, soft seasons make the middle latitudes livable in their summer, so tribes can follow
+    /// the summer from one hemisphere to the other.
+    /// </summary>
+    public int SeasonStrengthPercent { get; init; } = 100;
+
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) SeasonStrengthRange => (20, 150);
+
     /// <summary>Smallest and largest allowed values.</summary>
     public static (int Min, int Max) TiltRange => (0, 1800);
 
@@ -35,6 +46,7 @@ public sealed record PlanetParameters(int AxialTiltTenths, int YearHundredths, i
         Check(YearHundredths, YearRange, "year length");
         Check(StarBrightnessPercent, BrightnessRange, "star brightness");
         Check(EccentricityThousandths, EccentricityRange, "eccentricity");
+        Check(SeasonStrengthPercent, SeasonStrengthRange, "season strength");
     }
 
     private static void Check(int value, (int Min, int Max) range, string name)
@@ -202,7 +214,7 @@ public sealed class ClimateModel
         (_, long min, long max) = Sunlight(sinLatitude);
         long year = _planet.YearHundredths;
         long yearPercent = year * 150 / (year + 50); // 100 for Earth; long years let summers and winters go further
-        long swing = (max - min) * SwingPerSunlight / FixedTrig.One * continentalPercent / 100 * yearPercent / 100;
+        long swing = (max - min) * SwingPerSunlight / FixedTrig.One * continentalPercent / 100 * yearPercent / 100 * _planet.SeasonStrengthPercent / 100;
         return (int)Math.Clamp(swing, 0, 120);
     }
 

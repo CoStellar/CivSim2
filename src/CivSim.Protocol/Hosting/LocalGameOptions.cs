@@ -25,6 +25,9 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     /// <summary>Orbit eccentricity in thousandths (0–300), or null for the preset's.</summary>
     public int? EccentricityPerMille { get; init; }
 
+    /// <summary>Season strength in percent of Earth's (20–150), or null for the preset's.</summary>
+    public int? SeasonStrengthPercent { get; init; }
+
     /// <summary>Share of water, 30–80, or null for the preset's.</summary>
     public int? WaterPercent { get; init; }
 

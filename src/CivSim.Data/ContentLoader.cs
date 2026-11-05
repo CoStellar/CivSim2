@@ -481,7 +481,10 @@ public static class ContentLoader
                 (int)(r.Amount("axialTilt", Amount.FromHundredths(tMin * 10), Amount.FromHundredths(tMax * 10)).Hundredths / 10),
                 (int)r.Amount("yearLength", Amount.FromHundredths(yMin), Amount.FromHundredths(yMax)).Hundredths,
                 r.Int("starBrightness", bMin, bMax),
-                r.Int("eccentricityPerMille", eMin, eMax));
+                r.Int("eccentricityPerMille", eMin, eMax))
+            {
+                SeasonStrengthPercent = r.Int("seasonStrength", Core.WorldGen.PlanetParameters.SeasonStrengthRange.Min, Core.WorldGen.PlanetParameters.SeasonStrengthRange.Max),
+            };
             int water = r.Int("water", 30, 80);
             Core.WorldGen.WorldMoisture moisture = r.Enum<Core.WorldGen.WorldMoisture>("moisture");
             Core.WorldGen.WorldRelief relief = r.Enum<Core.WorldGen.WorldRelief>("relief");

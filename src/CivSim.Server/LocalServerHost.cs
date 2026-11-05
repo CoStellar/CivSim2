@@ -57,7 +57,10 @@ public sealed class LocalServerHost : IDisposable
             options.AxialTiltTenths ?? preset.Planet.AxialTiltTenths,
             options.YearHundredths ?? preset.Planet.YearHundredths,
             options.StarBrightnessPercent ?? preset.Planet.StarBrightnessPercent,
-            options.EccentricityPerMille ?? preset.Planet.EccentricityThousandths);
+            options.EccentricityPerMille ?? preset.Planet.EccentricityThousandths)
+        {
+            SeasonStrengthPercent = options.SeasonStrengthPercent ?? preset.Planet.SeasonStrengthPercent,
+        };
         planet.Validate();
         settings = settings with
         {

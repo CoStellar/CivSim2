@@ -84,7 +84,7 @@ Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemno
 - [x] Koczownicy, obozy, strefa wpływów, migracje (sezonowe, odłam, całkowita, z podbojem)
 - [x] Osady jako majątek: porzucanie, dwa stany (opuszczona, ruiny), przejmowanie, odbudowa, roszczenia (odbudowa budynków razem z budynkami)
 - [ ] Technologie er 1–2 w danych, badania, dyfuzja, inspiracje
-- [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze
+- [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze; wędrówki trwające kilka tur do znanych dalekich miejsc (żeby na planetach leżących na boku plemiona mogły iść za latem na drugą półkulę)
 - [ ] Mechanizm efektów + zdarzenia: susza, pożar, powódź, epidemia
 
 ## Etap 4 — AI i dyplomacja

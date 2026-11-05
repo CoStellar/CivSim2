@@ -30,7 +30,8 @@ public sealed record SaveData(
     [property: Key(21)] int YearHundredths = 100,
     [property: Key(22)] int StarBrightnessPercent = 100,
     [property: Key(23)] int EccentricityThousandths = 17,
-    [property: Key(24)] string PlanetName = "Earth");
+    [property: Key(24)] string PlanetName = "Earth",
+    [property: Key(25)] int SeasonStrengthPercent = 100);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]

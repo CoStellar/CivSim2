@@ -81,7 +81,7 @@ public static class SaveGameSerializer
         GameSettings s = state.Settings;
         var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, 0, (int)s.Moisture, (int)s.Relief, (int)s.Resources, (int)s.Inland,
             state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects,
-            s.Planet.AxialTiltTenths, s.Planet.YearHundredths, s.Planet.StarBrightnessPercent, s.Planet.EccentricityThousandths, s.PlanetName);
+            s.Planet.AxialTiltTenths, s.Planet.YearHundredths, s.Planet.StarBrightnessPercent, s.Planet.EccentricityThousandths, s.PlanetName, s.Planet.SeasonStrengthPercent);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -121,7 +121,10 @@ public static class SaveGameSerializer
         {
             WorldType = (Core.WorldGen.WorldType)data.WorldType,
             WaterPercent = data.WaterPercent,
-            Planet = new Core.WorldGen.PlanetParameters(data.AxialTiltTenths, data.YearHundredths, data.StarBrightnessPercent, data.EccentricityThousandths),
+            Planet = new Core.WorldGen.PlanetParameters(data.AxialTiltTenths, data.YearHundredths, data.StarBrightnessPercent, data.EccentricityThousandths)
+            {
+                SeasonStrengthPercent = data.SeasonStrengthPercent,
+            },
             PlanetName = data.PlanetName,
             Moisture = (Core.WorldGen.WorldMoisture)data.Moisture,
             Inland = (Core.WorldGen.WorldInland)data.Inland,
