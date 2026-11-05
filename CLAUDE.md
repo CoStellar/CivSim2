@@ -122,8 +122,9 @@ docs/                   GDD, decyzje, opisy systemów, prompty
 
 Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla Claude Code).
 
-- Instalacja (raz, w Claude Code):
-  `/plugin marketplace add Lum1104/Understand-Anything` i `/plugin install understand-anything`.
+- Instalacja: plugin jest wpisany w `.claude/settings.json` (marketplace `Egonex-AI/Understand-Anything`, dawniej `Lum1104`;
+  zatwierdzona wersja 2.9.8, 2026-11-05). Nowa sesja w tym folderze proponuje instalację. Ręcznie w terminalu:
+  `/plugin marketplace add Egonex-AI/Understand-Anything` i `/plugin install understand-anything`.
   To projekt społeczności, nie Anthropic. Przed instalacją pokaż Patrykowi wersję, którą instalujesz.
 - Pierwsza analiza: `/understand`. Zużywa sporo tokenów; kolejne analizują tylko zmienione pliki.
 - Włącz automatyczną aktualizację po commitach: `/understand --auto-update`.
