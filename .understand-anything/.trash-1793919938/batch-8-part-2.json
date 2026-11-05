@@ -1,0 +1,1966 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "file",
+   "name": "GameContent.cs",
+   "filePath": "src/CivSim.Core/Content/GameContent.cs",
+   "summary": "Kontener całej zawartości gry wczytanej z data/ przez CivSim.Data; rdzeń tylko go czyta, listy są indeksowane gęstymi identyfikatorami.",
+   "tags": [
+    "dane",
+    "content",
+    "rejestr",
+    "data-model"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/GameContent.cs:GameContent",
+   "type": "class",
+   "name": "GameContent",
+   "filePath": "src/CivSim.Core/Content/GameContent.cs",
+   "lineRange": [
+    10,
+    133
+   ],
+   "summary": "Niezmienny rejestr biomów, złóż, dóbr, receptur, technologii, zdarzeń, reguł i presetów planet z wyszukiwaniem po kluczu.",
+   "tags": [
+    "content",
+    "rejestr",
+    "data-model"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Content/GameContent.cs:WaterBiome",
+   "type": "function",
+   "name": "WaterBiome",
+   "filePath": "src/CivSim.Core/Content/GameContent.cs",
+   "lineRange": [
+    36,
+    47
+   ],
+   "summary": "Zwraca biom wody odpowiedniego rodzaju (ocean, morze, wybrzeże, jezioro).",
+   "tags": [
+    "biomy",
+    "lookup"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Content/GameContent.cs:Find",
+   "type": "function",
+   "name": "Find",
+   "filePath": "src/CivSim.Core/Content/GameContent.cs",
+   "lineRange": [
+    121,
+    132
+   ],
+   "summary": "Generyczne wyszukiwanie definicji po kluczu tekstowym.",
+   "tags": [
+    "lookup",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "type": "file",
+   "name": "PopulationDefinitions.cs",
+   "filePath": "src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "summary": "Definicje populacji: potrzeby i warstwy społeczne z JSON oraz obszerne reguły PopulationRules (rolnictwo, demografia, zbieractwo, wpływy, migracja, walka).",
+   "tags": [
+    "dane",
+    "populacja",
+    "type-definition",
+    "data-model"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:NeedDefinition",
+   "type": "class",
+   "name": "NeedDefinition",
+   "filePath": "src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "lineRange": [
+    10,
+    14
+   ],
+   "summary": "Potrzeba warstwy: konkretne dobro lub dowolne dobro z kategorii, na osobę na rok.",
+   "tags": [
+    "data-model",
+    "potrzeby"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:StratumDefinition",
+   "type": "class",
+   "name": "StratumDefinition",
+   "filePath": "src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "lineRange": [
+    23,
+    33
+   ],
+   "summary": "Warstwa społeczna z udziałem docelowym, potrzebami oraz rolą (walka, rzemiosło, nauka).",
+   "tags": [
+    "data-model",
+    "populacja"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:PopulationRules",
+   "type": "class",
+   "name": "PopulationRules",
+   "filePath": "src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "lineRange": [
+    36,
+    205
+   ],
+   "summary": "Zbiór liczbowych reguł populacji, rolnictwa, dzikiej żywności, wpływów, migracji, podziału i walki.",
+   "tags": [
+    "data-model",
+    "reguly",
+    "populacja"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "type": "file",
+   "name": "TechnologyDefinitions.cs",
+   "filePath": "src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "summary": "Definicje technologii (pola, inspiracje, premie zbieractwa, efekty) oraz reguły badań i percepcji cywilizacji.",
+   "tags": [
+    "dane",
+    "technologie",
+    "type-definition",
+    "data-model"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:Inspiration",
+   "type": "class",
+   "name": "Inspiration",
+   "filePath": "src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "lineRange": [
+    50,
+    50
+   ],
+   "summary": "Sytuacja obniżająca koszt technologii.",
+   "tags": [
+    "data-model",
+    "technologie"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:GatherBonus",
+   "type": "class",
+   "name": "GatherBonus",
+   "filePath": "src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "lineRange": [
+    56,
+    56
+   ],
+   "summary": "Premia do zbieractwa ze złoża lub biomu po poznaniu technologii.",
+   "tags": [
+    "data-model",
+    "zbieractwo"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:TechEffect",
+   "type": "class",
+   "name": "TechEffect",
+   "filePath": "src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "lineRange": [
+    59,
+    59
+   ],
+   "summary": "Efekt nadawany przez technologię z siłą.",
+   "tags": [
+    "data-model",
+    "efekty"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:TechnologyDefinition",
+   "type": "class",
+   "name": "TechnologyDefinition",
+   "filePath": "src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "lineRange": [
+    62,
+    81
+   ],
+   "summary": "Technologia z erą, polem, kosztem, wymaganiami, inspiracjami, recepturami i efektami.",
+   "tags": [
+    "data-model",
+    "technologie"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:ResearchRules",
+   "type": "class",
+   "name": "ResearchRules",
+   "filePath": "src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "lineRange": [
+    84,
+    100
+   ],
+   "summary": "Reguły badań: dyfuzja wiedzy od sąsiadów, kontakt i minimalny koszt.",
+   "tags": [
+    "data-model",
+    "badania"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:PerceptionRules",
+   "type": "class",
+   "name": "PerceptionRules",
+   "filePath": "src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "lineRange": [
+    103,
+    116
+   ],
+   "summary": "Reguły percepcji: zasięg widzenia, zwiadu, podróży i pamięć ustna.",
+   "tags": [
+    "data-model",
+    "mgla-wojny"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/CoreInfo.cs",
+   "type": "file",
+   "name": "CoreInfo.cs",
+   "filePath": "src/CivSim.Core/CoreInfo.cs",
+   "summary": "Statyczna informacja o rdzeniu symulacji (nazwa CivSim.Core), używana jako znacznik i test dymny.",
+   "tags": [
+    "metadata",
+    "utility",
+    "rdzen"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/CoreInfo.cs:CoreInfo",
+   "type": "class",
+   "name": "CoreInfo",
+   "filePath": "src/CivSim.Core/CoreInfo.cs",
+   "lineRange": [
+    4,
+    8
+   ],
+   "summary": "Statyczna klasa z nazwą rdzenia.",
+   "tags": [
+    "metadata",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "type": "file",
+   "name": "Consumption.cs",
+   "filePath": "src/CivSim.Core/Economy/Consumption.cs",
+   "summary": "System konsumpcji fazy ekonomii (GDD 11.1, faza 7): warstwy biorą potrzeby z magazynu własnej osady, najpierw najszybciej psującą się żywność.",
+   "tags": [
+    "ekonomia",
+    "system-tury",
+    "konsumpcja",
+    "potrzeby"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Consumption.cs:ConsumptionSystem",
+   "type": "class",
+   "name": "ConsumptionSystem",
+   "filePath": "src/CivSim.Core/Economy/Consumption.cs",
+   "lineRange": [
+    15,
+    158
+   ],
+   "summary": "System tury pobierający żywność i dobra potrzeb z magazynów osad i zapisujący stopień zaspokojenia dla fazy populacji.",
+   "tags": [
+    "system-tury",
+    "konsumpcja"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Consumption.cs:ConsumptionSystem",
+   "type": "function",
+   "name": "ConsumptionSystem",
+   "filePath": "src/CivSim.Core/Economy/Consumption.cs",
+   "lineRange": [
+    21,
+    47
+   ],
+   "summary": "Konstruktor: przygotowuje kolejność dóbr żywnościowych wg szybkości psucia i bufory.",
+   "tags": [
+    "konstruktor",
+    "inicjalizacja"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Consumption.cs:Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Economy/Consumption.cs",
+   "lineRange": [
+    53,
+    62
+   ],
+   "summary": "Wykonuje konsumpcję dla każdej żyjącej osady w kolejności identyfikatorów.",
+   "tags": [
+    "system-tury",
+    "petla"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Consumption.cs:Consume",
+   "type": "function",
+   "name": "Consume",
+   "filePath": "src/CivSim.Core/Economy/Consumption.cs",
+   "lineRange": [
+    64,
+    112
+   ],
+   "summary": "Zaspokaja potrzeby wszystkich warstw osady: najpierw żywność, potem potrzeby wyższe.",
+   "tags": [
+    "konsumpcja",
+    "potrzeby"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Consumption.cs:TakeCategory",
+   "type": "function",
+   "name": "TakeCategory",
+   "filePath": "src/CivSim.Core/Economy/Consumption.cs",
+   "lineRange": [
+    114,
+    145
+   ],
+   "summary": "Pobiera z magazynu dobra danej kategorii, zaczynając od najbardziej psujących się.",
+   "tags": [
+    "magazyn",
+    "konsumpcja"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Consumption.cs:TakeGood",
+   "type": "function",
+   "name": "TakeGood",
+   "filePath": "src/CivSim.Core/Economy/Consumption.cs",
+   "lineRange": [
+    147,
+    157
+   ],
+   "summary": "Pobiera konkretne dobro z magazynu do wysokości dostępnej ilości.",
+   "tags": [
+    "magazyn",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Economy/Farming.cs",
+   "type": "file",
+   "name": "Farming.cs",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "summary": "Rolnictwo osiadłych wiosek (GDD 4.4, 5.3): uprawa żyznych pól strefy, zbiory zboża, wyjaławianie i regeneracja gleby oraz komenda osiedlenia obozu jako wioski.",
+   "tags": [
+    "ekonomia",
+    "rolnictwo",
+    "system-tury",
+    "komendy"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Farming.cs:FarmingSystem",
+   "type": "class",
+   "name": "FarmingSystem",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    19,
+    185
+   ],
+   "summary": "System tury rozdzielający rolników na najlepsze pola, liczący zbiory zboża i zużycie żyzności.",
+   "tags": [
+    "system-tury",
+    "rolnictwo"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Farming.cs:SettleCommand",
+   "type": "class",
+   "name": "SettleCommand",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    192,
+    255
+   ],
+   "summary": "Komenda zamieniająca obóz koczowniczy w osiadłą wioskę po poznaniu rolnictwa.",
+   "tags": [
+    "komendy",
+    "osady",
+    "rolnictwo"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Farming.cs:Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    30,
+    56
+   ],
+   "summary": "Dla każdej wioski uprawia pola i aktualizuje żyzność całej mapy.",
+   "tags": [
+    "system-tury",
+    "rolnictwo"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Farming.cs:GrainPerFarmer",
+   "type": "function",
+   "name": "GrainPerFarmer",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    59,
+    70
+   ],
+   "summary": "Liczy roczny plon zboża rolnika na polu z żyzności i długości sezonu wegetacji.",
+   "tags": [
+    "rolnictwo",
+    "formula"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Farming.cs:Farm",
+   "type": "function",
+   "name": "Farm",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    72,
+    148
+   ],
+   "summary": "Wybiera najlepsze pola strefy osady, przydziela rolników i dodaje zbiory do magazynu.",
+   "tags": [
+    "rolnictwo",
+    "alokacja"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Farming.cs:Wear",
+   "type": "function",
+   "name": "Wear",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    151,
+    184
+   ],
+   "summary": "Wyjaławia uprawiane pola i przywraca żyzność odłogom zgodnie z tempem rocznym.",
+   "tags": [
+    "rolnictwo",
+    "gleba"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Farming.cs:VillageLevel",
+   "type": "function",
+   "name": "VillageLevel",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    198,
+    210
+   ],
+   "summary": "Znajduje poziom osady odpowiadający osiadłej wiosce.",
+   "tags": [
+    "lookup",
+    "osady"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Farming.cs:Validate",
+   "type": "function",
+   "name": "Validate",
+   "filePath": "src/CivSim.Core/Economy/Farming.cs",
+   "lineRange": [
+    213,
+    242
+   ],
+   "summary": "Sprawdza własność, mobilność obozu, wymaganą technologię i żyzność okolicy.",
+   "tags": [
+    "walidacja",
+    "komendy"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "type": "file",
+   "name": "Gathering.cs",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "summary": "Zbieractwo i dzika żywność: losowe dobre i złe lata na fragment mapy, odrastanie dzikich zasobów oraz system zbieractwa przydzielający pola osadom i dostarczający plony.",
+   "tags": [
+    "ekonomia",
+    "zbieractwo",
+    "system-tury",
+    "mapa"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Gathering.cs:YieldYears",
+   "type": "class",
+   "name": "YieldYears",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    16,
+    55
+   ],
+   "summary": "Tabela współczynników plonu na fragment 32x32 losowana co turę ze strumienia klimatu.",
+   "tags": [
+    "losowosc",
+    "plony",
+    "determinizm"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Gathering.cs:WildFoodSystem",
+   "type": "class",
+   "name": "WildFoodSystem",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    61,
+    91
+   ],
+   "summary": "System tury odnawiający i wyczerpujący dzikie zasoby żywności na polach.",
+   "tags": [
+    "system-tury",
+    "dzika-zywnosc"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem",
+   "type": "class",
+   "name": "GatheringSystem",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    99,
+    458
+   ],
+   "summary": "System tury zbieractwa: wybiera pola strefy osady, liczy plony z biomów, złóż i technologii, dostarcza dobra do magazynów.",
+   "tags": [
+    "system-tury",
+    "zbieractwo"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:Draw",
+   "type": "function",
+   "name": "Draw",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    36,
+    54
+   ],
+   "summary": "Losuje współczynniki plonu dla wszystkich fragmentów mapy w ustalonej kolejności.",
+   "tags": [
+    "losowosc",
+    "determinizm"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:WildFoodSystem.Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    70,
+    90
+   ],
+   "summary": "Odnawia dziką żywność pól w kierunku pojemności biomu.",
+   "tags": [
+    "system-tury",
+    "regeneracja"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem.Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    133,
+    159
+   ],
+   "summary": "Uruchamia zbieractwo dla każdej żyjącej osady w kolejności identyfikatorów.",
+   "tags": [
+    "system-tury",
+    "petla"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:Benefits",
+   "type": "function",
+   "name": "Benefits",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    162,
+    179
+   ],
+   "summary": "Sprawdza, czy osada korzysta z premii zbieractwa danej technologii.",
+   "tags": [
+    "technologie",
+    "zbieractwo"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:CollectCells",
+   "type": "function",
+   "name": "CollectCells",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    182,
+    219
+   ],
+   "summary": "Zbiera pola w strefie wpływów osady posortowane według wartości żywności.",
+   "tags": [
+    "mapa",
+    "alokacja"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:NextToClaim",
+   "type": "function",
+   "name": "NextToClaim",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    221,
+    233
+   ],
+   "summary": "Wybiera kolejne pole do zajęcia przez zbieraczy.",
+   "tags": [
+    "mapa",
+    "alokacja"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:CellPercent",
+   "type": "function",
+   "name": "CellPercent",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    236,
+    252
+   ],
+   "summary": "Liczy procent wydajności pola z rzeźby terenu i komfortu klimatu.",
+   "tags": [
+    "formula",
+    "mapa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:CellFoodPerYear",
+   "type": "function",
+   "name": "CellFoodPerYear",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    267,
+    292
+   ],
+   "summary": "Liczy roczną ilość żywności, jaką daje pole przy obecnym stanie dzikich zasobów.",
+   "tags": [
+    "formula",
+    "zbieractwo"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:FoodOf",
+   "type": "function",
+   "name": "FoodOf",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    294,
+    306
+   ],
+   "summary": "Zwraca żywność biomu pola w setnych.",
+   "tags": [
+    "lookup",
+    "biomy"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:WorkTheLand",
+   "type": "function",
+   "name": "WorkTheLand",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    309,
+    337
+   ],
+   "summary": "Rozdziela pracowników na najlepsze pola i wyczerpuje ich dzikie zasoby.",
+   "tags": [
+    "zbieractwo",
+    "alokacja"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:Deliver",
+   "type": "function",
+   "name": "Deliver",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    341,
+    427
+   ],
+   "summary": "Zamienia pracę na dobra (rośliny, mięso, skóry, surowce złóż) i dodaje je do magazynu osady.",
+   "tags": [
+    "zbieractwo",
+    "magazyn"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:Add",
+   "type": "function",
+   "name": "Add",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    431,
+    442
+   ],
+   "summary": "Dodaje dobro do magazynu osady ze współczynnikiem roku.",
+   "tags": [
+    "magazyn",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Gathering.cs:Workers",
+   "type": "function",
+   "name": "Workers",
+   "filePath": "src/CivSim.Core/Economy/Gathering.cs",
+   "lineRange": [
+    444,
+    457
+   ],
+   "summary": "Liczy pracujących zbieraczy osady z warstw zbierających.",
+   "tags": [
+    "populacja",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Economy/Production.cs",
+   "type": "file",
+   "name": "Production.cs",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "summary": "Podział dóbr w sieciach handlowych (TradeSystem: żywność, potrzeby wyższe, wejścia receptur, ze stratami na odległość) oraz produkcja według receptur (ProductionSystem).",
+   "tags": [
+    "ekonomia",
+    "handel",
+    "produkcja",
+    "system-tury"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Production.cs:TradeSystem",
+   "type": "class",
+   "name": "TradeSystem",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    17,
+    274
+   ],
+   "summary": "System tury dzielący nadwyżki dóbr między osadami jednej sieci według priorytetów, od najbliższego dostawcy.",
+   "tags": [
+    "system-tury",
+    "handel"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Production.cs:ProductionSystem",
+   "type": "class",
+   "name": "ProductionSystem",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    282,
+    351
+   ],
+   "summary": "System tury wykonujący wybrane receptury rzemieślników, o ile zostaje żywność na potrzeby.",
+   "tags": [
+    "system-tury",
+    "produkcja"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Production.cs:TradeSystem.Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    38,
+    93
+   ],
+   "summary": "Buduje sieci handlowe i w każdej rozdziela dobra w kolejności priorytetów.",
+   "tags": [
+    "handel",
+    "system-tury"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Production.cs:Prepare",
+   "type": "function",
+   "name": "Prepare",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    96,
+    181
+   ],
+   "summary": "Liczy zapotrzebowanie i nadwyżki każdej osady sieci (żywność, potrzeby, wejścia receptur).",
+   "tags": [
+    "handel",
+    "popyt"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Production.cs:Share",
+   "type": "function",
+   "name": "Share",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    184,
+    220
+   ],
+   "summary": "Przesyła dobra od osad z nadwyżką do potrzebujących, najbliżsi pierwsi.",
+   "tags": [
+    "handel",
+    "alokacja"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Production.cs:Have",
+   "type": "function",
+   "name": "Have",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    222,
+    237
+   ],
+   "summary": "Zwraca dostępną ilość dobra lub kategorii w magazynie osady.",
+   "tags": [
+    "magazyn",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Production.cs:Move",
+   "type": "function",
+   "name": "Move",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    240,
+    265
+   ],
+   "summary": "Przenosi dobro między magazynami z odliczeniem strat na odległość.",
+   "tags": [
+    "handel",
+    "transport"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Production.cs:ProductionSystem.Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    290,
+    338
+   ],
+   "summary": "Dla każdej osady z recepturą liczy liczbę cykli i przetwarza wejścia na wyjścia.",
+   "tags": [
+    "produkcja",
+    "receptury"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Production.cs:FoodStock",
+   "type": "function",
+   "name": "FoodStock",
+   "filePath": "src/CivSim.Core/Economy/Production.cs",
+   "lineRange": [
+    340,
+    350
+   ],
+   "summary": "Sumuje zapasy żywności w magazynie osady.",
+   "tags": [
+    "magazyn",
+    "zywnosc"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "type": "file",
+   "name": "Spoilage.cs",
+   "filePath": "src/CivSim.Core/Economy/Spoilage.cs",
+   "summary": "Statyczne przeliczenie rocznego tempa psucia na udział dobra zachowany w jednej turze, w arytmetyce stałoprzecinkowej (zasada 6 CLAUDE.md).",
+   "tags": [
+    "ekonomia",
+    "utility",
+    "fixed-point",
+    "psucie"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Economy/Spoilage.cs:Spoilage",
+   "type": "class",
+   "name": "Spoilage",
+   "filePath": "src/CivSim.Core/Economy/Spoilage.cs",
+   "lineRange": [
+    9,
+    43
+   ],
+   "summary": "Narzędzia psucia: KeptShare liczy udział zachowany po N miesiącach, Apply stosuje go do ilości.",
+   "tags": [
+    "utility",
+    "fixed-point"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Economy/Spoilage.cs:KeptShare",
+   "type": "function",
+   "name": "KeptShare",
+   "filePath": "src/CivSim.Core/Economy/Spoilage.cs",
+   "lineRange": [
+    18,
+    39
+   ],
+   "summary": "Liczy udział zachowany po danej liczbie miesięcy przy rocznej stracie w punktach bazowych, bez liczb zmiennoprzecinkowych.",
+   "tags": [
+    "fixed-point",
+    "formula",
+    "determinizm"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "class:src/CivSim.Core/Content/GameContent.cs:GameContent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "class:src/CivSim.Core/Content/GameContent.cs:GameContent",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "function:src/CivSim.Core/Content/GameContent.cs:WaterBiome",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "function:src/CivSim.Core/Content/GameContent.cs:Find",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:NeedDefinition",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:NeedDefinition",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:StratumDefinition",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:StratumDefinition",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:PopulationRules",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/PopulationDefinitions.cs:PopulationRules",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:Inspiration",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:Inspiration",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:GatherBonus",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:GatherBonus",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:TechEffect",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:TechEffect",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:TechnologyDefinition",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:TechnologyDefinition",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:ResearchRules",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:ResearchRules",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:PerceptionRules",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "class:src/CivSim.Core/Content/TechnologyDefinitions.cs:PerceptionRules",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/CoreInfo.cs",
+   "target": "class:src/CivSim.Core/CoreInfo.cs:CoreInfo",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/CoreInfo.cs",
+   "target": "class:src/CivSim.Core/CoreInfo.cs:CoreInfo",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "class:src/CivSim.Core/Economy/Consumption.cs:ConsumptionSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "class:src/CivSim.Core/Economy/Consumption.cs:ConsumptionSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Consumption.cs:ConsumptionSystem",
+   "target": "class:src/CivSim.Core/Simulation/ITurnSystem.cs:ITurnSystem",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:ConsumptionSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:Consume",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:TakeCategory",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:TakeGood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Consumption.cs:Execute",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:Consume",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Consumption.cs:Consume",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:TakeCategory",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Consumption.cs:Consume",
+   "target": "function:src/CivSim.Core/Economy/Consumption.cs:TakeGood",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "class:src/CivSim.Core/Economy/Farming.cs:FarmingSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "class:src/CivSim.Core/Economy/Farming.cs:FarmingSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Farming.cs:FarmingSystem",
+   "target": "class:src/CivSim.Core/Simulation/ITurnSystem.cs:ITurnSystem",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "class:src/CivSim.Core/Economy/Farming.cs:SettleCommand",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "class:src/CivSim.Core/Economy/Farming.cs:SettleCommand",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Farming.cs:SettleCommand",
+   "target": "class:src/CivSim.Core/Commands/ICommand.cs:ICommand",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Farming.cs:SettleCommand",
+   "target": "class:src/CivSim.Core/Commands/SettlementCommands.cs:IChronicledCommand",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:GrainPerFarmer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:Farm",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:Wear",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:VillageLevel",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:Validate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Farming.cs:Execute",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:Farm",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Farming.cs:Execute",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:Wear",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Farming.cs:Farm",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:GrainPerFarmer",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Farming.cs:Validate",
+   "target": "function:src/CivSim.Core/Economy/Farming.cs:VillageLevel",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Farming.cs:Validate",
+   "target": "function:src/CivSim.Core/Commands/SettlementCommands.cs:CheckOwn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "class:src/CivSim.Core/Economy/Gathering.cs:YieldYears",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "class:src/CivSim.Core/Economy/Gathering.cs:YieldYears",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "class:src/CivSim.Core/Economy/Gathering.cs:WildFoodSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "class:src/CivSim.Core/Economy/Gathering.cs:WildFoodSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Gathering.cs:WildFoodSystem",
+   "target": "class:src/CivSim.Core/Simulation/ITurnSystem.cs:ITurnSystem",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "class:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "class:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem",
+   "target": "class:src/CivSim.Core/Simulation/ITurnSystem.cs:ITurnSystem",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:Draw",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:WildFoodSystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:Benefits",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:CollectCells",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:NextToClaim",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:CellPercent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:CellFoodPerYear",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:FoodOf",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:WorkTheLand",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:Deliver",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:Add",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:Workers",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:CollectCells",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:WorkTheLand",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Gathering.cs:GatheringSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:Deliver",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Gathering.cs:Deliver",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:Add",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Gathering.cs:CellFoodPerYear",
+   "target": "function:src/CivSim.Core/Economy/Gathering.cs:FoodOf",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Gathering.cs:Deliver",
+   "target": "function:src/CivSim.Core/Economy/Spoilage.cs:KeptShare",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "class:src/CivSim.Core/Economy/Production.cs:TradeSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "class:src/CivSim.Core/Economy/Production.cs:TradeSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Production.cs:TradeSystem",
+   "target": "class:src/CivSim.Core/Simulation/ITurnSystem.cs:ITurnSystem",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "class:src/CivSim.Core/Economy/Production.cs:ProductionSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "class:src/CivSim.Core/Economy/Production.cs:ProductionSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Economy/Production.cs:ProductionSystem",
+   "target": "class:src/CivSim.Core/Simulation/ITurnSystem.cs:ITurnSystem",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:TradeSystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:Prepare",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:Share",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:Have",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:Move",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:ProductionSystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:FoodStock",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Production.cs:TradeSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Trade.cs:Build",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Production.cs:TradeSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:Prepare",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Production.cs:TradeSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:Share",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Production.cs:Share",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:Move",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Production.cs:Prepare",
+   "target": "function:src/CivSim.Core/Economy/Trade.cs:FoodPerYear",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Production.cs:ProductionSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Production.cs:FoodStock",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Economy/Production.cs:ProductionSystem.Execute",
+   "target": "function:src/CivSim.Core/Economy/Trade.cs:FoodPerYear",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "target": "class:src/CivSim.Core/Economy/Spoilage.cs:Spoilage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "target": "class:src/CivSim.Core/Economy/Spoilage.cs:Spoilage",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "target": "function:src/CivSim.Core/Economy/Spoilage.cs:KeptShare",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Commands/ICommand.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandResult.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Commands/SettlementCommands.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Farming.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "file:src/CivSim.Core/Content/BiomeDefinition.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "file:src/CivSim.Core/Content/EconomyDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "file:src/CivSim.Core/Content/EventDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/GameContent.cs",
+   "target": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "target": "file:src/CivSim.Core/Content/EconomyDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Content/TechnologyDefinitions.cs",
+   "target": "file:src/CivSim.Core/Content/EconomyDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "file:src/CivSim.Core/Economy/Trade.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

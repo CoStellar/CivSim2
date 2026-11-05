@@ -1,0 +1,1086 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "type": "file",
+   "name": "HexCorners.cs",
+   "filePath": "src/CivSim.Core/Map/HexCorners.cs",
+   "summary": "Graf narożników siatki heksów (punktów, w których stykają się trzy pola), po których płyną rzeki; daje sąsiednie narożniki i kanoniczne krawędzie między nimi.",
+   "tags": [
+    "mapa",
+    "hex-grid",
+    "rzeki",
+    "geometria"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Map/HexCorners.cs:HexCorners",
+   "type": "class",
+   "name": "HexCorners",
+   "filePath": "src/CivSim.Core/Map/HexCorners.cs",
+   "lineRange": [
+    9,
+    95
+   ],
+   "summary": "Graf narożników mapy: indeksy narożników pól, wykrywanie narożników polarnych, pola przy narożniku i sąsiednie narożniki z krawędziami.",
+   "tags": [
+    "mapa",
+    "rzeki",
+    "graf",
+    "map"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexCorners.cs:IsPolar",
+   "type": "function",
+   "name": "IsPolar",
+   "filePath": "src/CivSim.Core/Map/HexCorners.cs",
+   "lineRange": [
+    36,
+    49
+   ],
+   "summary": "Sprawdza, czy narożnik leży w górnym lub dolnym rzędzie, gdzie graf narożników jest tylko przybliżony.",
+   "tags": [
+    "map",
+    "hexcorners",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexCorners.cs:Cells",
+   "type": "function",
+   "name": "Cells",
+   "filePath": "src/CivSim.Core/Map/HexCorners.cs",
+   "lineRange": [
+    52,
+    66
+   ],
+   "summary": "Zapisuje trzy pola stykające się w narożniku.",
+   "tags": [
+    "map",
+    "hexcorners",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexCorners.cs:Neighbors",
+   "type": "function",
+   "name": "Neighbors",
+   "filePath": "src/CivSim.Core/Map/HexCorners.cs",
+   "lineRange": [
+    69,
+    94
+   ],
+   "summary": "Zapisuje trzy sąsiednie narożniki i kanoniczne krawędzie do nich prowadzące.",
+   "tags": [
+    "map",
+    "hexcorners",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "file",
+   "name": "HexDirection.cs",
+   "filePath": "src/CivSim.Core/Map/HexDirection.cs",
+   "summary": "Enum sześciu kierunków heksa flat-top (zgodnie z ruchem wskazówek zegara od północy) oraz pomocnicze operacje: wektor, kierunek przeciwny, odbicie i obrót.",
+   "tags": [
+    "mapa",
+    "hex-grid",
+    "type-definition",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Map/HexDirection.cs:HexDirections",
+   "type": "class",
+   "name": "HexDirections",
+   "filePath": "src/CivSim.Core/Map/HexDirection.cs",
+   "lineRange": [
+    26,
+    52
+   ],
+   "summary": "Statyczne operacje na kierunkach heksa: wektor przesunięcia, kierunek przeciwny, odbicie i obrót.",
+   "tags": [
+    "hex-grid",
+    "utility",
+    "map"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "type": "file",
+   "name": "HexEdge.cs",
+   "filePath": "src/CivSim.Core/Map/HexEdge.cs",
+   "summary": "Prosty typ wartości opisujący kanoniczną krawędź heksa (pole + strona), używany do rzek i krawędzi mapy.",
+   "tags": [
+    "mapa",
+    "hex-grid",
+    "type-definition",
+    "data-model"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "file",
+   "name": "HexGlobe.cs",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "summary": "Centralny moduł geometrii mapy-planety: zawijanie wschód–zachód, przejście przez biegun, sąsiedztwa, odległości, linie, pierścienie, zasięgi i indeksy krawędzi. Każda operacja przestrzenna w grze musi przechodzić przez tę klasę (zasada 8 z CLAUDE.md).",
+   "tags": [
+    "mapa",
+    "hex-grid",
+    "geometria",
+    "determinizm",
+    "core"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "type": "class",
+   "name": "HexGlobe",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    14,
+    371
+   ],
+   "summary": "Geometria mapy-planety z zawijaniem i przejściem przez bieguny; jedyne miejsce liczenia sąsiedztw, odległości, linii i obszarów.",
+   "tags": [
+    "mapa",
+    "geometria",
+    "hex-grid",
+    "core",
+    "map"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "type": "function",
+   "name": "HexGlobe",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    22,
+    31
+   ],
+   "summary": "Konstruktor geometrii sprawdzający szerokość 4k+2 i parzystą wysokość mapy.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:Wrap",
+   "type": "function",
+   "name": "Wrap",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    67,
+    76
+   ],
+   "summary": "Sprowadza dowolną kolumnę/rząd na mapę: zawija wschód–zachód i przenosi przez biegun na drugą stronę planety.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:GetNeighbors",
+   "type": "function",
+   "name": "GetNeighbors",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    133,
+    145
+   ],
+   "summary": "Zapisuje sześć sąsiadów pola w kolejności HexDirection z uwzględnieniem zawijania i biegunów.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:Line",
+   "type": "function",
+   "name": "Line",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    156,
+    184
+   ],
+   "summary": "Wyznacza pola na najkrótszej prostej między dwoma polami dokładną arytmetyką całkowitą.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:Ring",
+   "type": "function",
+   "name": "Ring",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    204,
+    233
+   ],
+   "summary": "Zapisuje pola w dokładnej odległości od środka, zgodnie z ruchem wskazówek zegara.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:Range",
+   "type": "function",
+   "name": "Range",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    239,
+    255
+   ],
+   "summary": "Zapisuje wszystkie pola w zasięgu: środek, potem kolejne pierścienie.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:Edge",
+   "type": "function",
+   "name": "Edge",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    262,
+    275
+   ],
+   "summary": "Zwraca kanoniczną krawędź dla strony pola, z regułą własności krawędzi przy biegunie.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:EdgeIndex",
+   "type": "function",
+   "name": "EdgeIndex",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    281,
+    294
+   ],
+   "summary": "Liczy płaski indeks kanonicznej krawędzi (dokładnie 3 krawędzie na pole).",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:NearestImage",
+   "type": "function",
+   "name": "NearestImage",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    302,
+    325
+   ],
+   "summary": "Znajduje najbliższy obraz drugiego pola przy zawijaniu i przejściu przez biegun, do liczenia odległości.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:CubeRound",
+   "type": "function",
+   "name": "CubeRound",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    327,
+    349
+   ],
+   "summary": "Zaokrągla współrzędne sześcienne w skali stałoprzecinkowej do najbliższego heksa.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/HexGlobe.cs:DivRound",
+   "type": "function",
+   "name": "DivRound",
+   "filePath": "src/CivSim.Core/Map/HexGlobe.cs",
+   "lineRange": [
+    351,
+    364
+   ],
+   "summary": "Dzielenie całkowite z zaokrągleniem do najbliższej, używane w obliczeniach linii.",
+   "tags": [
+    "map",
+    "hexglobe",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "type": "file",
+   "name": "MapChunks.cs",
+   "filePath": "src/CivSim.Core/Map/MapChunks.cs",
+   "summary": "Dzieli mapę na fragmenty 32×32 pól (identyfikatory wierszowo), wylicza fragment dla pola i granice fragmentu; podstawa dirty flags.",
+   "tags": [
+    "mapa",
+    "chunking",
+    "wydajnosc",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Map/MapChunks.cs:MapChunks",
+   "type": "class",
+   "name": "MapChunks",
+   "filePath": "src/CivSim.Core/Map/MapChunks.cs",
+   "lineRange": [
+    9,
+    57
+   ],
+   "summary": "Podział mapy na fragmenty 32×32 z odwzorowaniem pole→fragment i granicami fragmentów.",
+   "tags": [
+    "chunking",
+    "mapa",
+    "wydajnosc",
+    "map"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/MapChunks.cs:Bounds",
+   "type": "function",
+   "name": "Bounds",
+   "filePath": "src/CivSim.Core/Map/MapChunks.cs",
+   "lineRange": [
+    46,
+    56
+   ],
+   "summary": "Zwraca pierwszą kolumnę, pierwszy rząd, szerokość i wysokość fragmentu.",
+   "tags": [
+    "map",
+    "mapchunks",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "type": "file",
+   "name": "MapLayer.cs",
+   "filePath": "src/CivSim.Core/Map/MapLayer.cs",
+   "summary": "Generyczna warstwa danych mapy w płaskiej tablicy (struktura tablic); zapis pojedynczej wartości oznacza fragment jako zmieniony, a surowe bajty służą do haszowania i zapisów.",
+   "tags": [
+    "mapa",
+    "data-model",
+    "struktura-tablic",
+    "wydajnosc"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "type": "class",
+   "name": "MapLayer",
+   "filePath": "src/CivSim.Core/Map/MapLayer.cs",
+   "lineRange": [
+    11,
+    71
+   ],
+   "summary": "Generyczna warstwa wartości pól w płaskiej tablicy, oznaczająca zmienione fragmenty przy zapisie.",
+   "tags": [
+    "mapa",
+    "data-model",
+    "dirty-flags",
+    "map"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "type": "function",
+   "name": "MapLayer",
+   "filePath": "src/CivSim.Core/Map/MapLayer.cs",
+   "lineRange": [
+    18,
+    28
+   ],
+   "summary": "Konstruktor warstwy alokujący płaską tablicę wartości i rejestrujący właściciela mapy.",
+   "tags": [
+    "map",
+    "maplayer",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/MapLayer.cs:Set",
+   "type": "function",
+   "name": "Set",
+   "filePath": "src/CivSim.Core/Map/MapLayer.cs",
+   "lineRange": [
+    49,
+    58
+   ],
+   "summary": "Zmienia wartość pola i oznacza fragment jako zmieniony tylko przy rzeczywistej zmianie.",
+   "tags": [
+    "map",
+    "maplayer",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/MapLayer.cs:LoadBytes",
+   "type": "function",
+   "name": "LoadBytes",
+   "filePath": "src/CivSim.Core/Map/MapLayer.cs",
+   "lineRange": [
+    61,
+    70
+   ],
+   "summary": "Nadpisuje warstwę bajtami z zapisu gry.",
+   "tags": [
+    "map",
+    "maplayer",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "file",
+   "name": "WorldMap.cs",
+   "filePath": "src/CivSim.Core/Map/WorldMap.cs",
+   "summary": "Wszystkie dane pól jednego świata (biom, rzeźba, rzeki, właściciele wpływów itd.) jako warstwy w płaskich tablicach, wraz z flagami zmienionych fragmentów; definiuje też interfejs IMapLayerInfo do haszowania i zapisu.",
+   "tags": [
+    "mapa",
+    "data-model",
+    "stan-gry",
+    "dirty-flags"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "type": "class",
+   "name": "WorldMap",
+   "filePath": "src/CivSim.Core/Map/WorldMap.cs",
+   "lineRange": [
+    10,
+    191
+   ],
+   "summary": "Kontener warstw danych pól jednego świata z flagami zmienionych fragmentów i rejestrem warstw do haszowania.",
+   "tags": [
+    "mapa",
+    "stan-gry",
+    "data-model",
+    "map"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Map/WorldMap.cs:IMapLayerInfo",
+   "type": "class",
+   "name": "IMapLayerInfo",
+   "filePath": "src/CivSim.Core/Map/WorldMap.cs",
+   "lineRange": [
+    194,
+    204
+   ],
+   "summary": "Interfejs niezależnego od typu dostępu do warstwy mapy (bajty i ładowanie) dla haszowania i zapisu.",
+   "tags": [
+    "interface",
+    "serialization",
+    "mapa",
+    "map"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "type": "function",
+   "name": "WorldMap",
+   "filePath": "src/CivSim.Core/Map/WorldMap.cs",
+   "lineRange": [
+    21,
+    56
+   ],
+   "summary": "Tworzy pustą mapę świata z wszystkimi warstwami i oznacza wszystkie fragmenty jako zmienione.",
+   "tags": [
+    "map",
+    "worldmap",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "class:src/CivSim.Core/Map/HexCorners.cs:HexCorners",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "class:src/CivSim.Core/Map/HexCorners.cs:HexCorners",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "function:src/CivSim.Core/Map/HexCorners.cs:IsPolar",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexCorners.cs:HexCorners",
+   "target": "function:src/CivSim.Core/Map/HexCorners.cs:IsPolar",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "function:src/CivSim.Core/Map/HexCorners.cs:Cells",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexCorners.cs:HexCorners",
+   "target": "function:src/CivSim.Core/Map/HexCorners.cs:Cells",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "function:src/CivSim.Core/Map/HexCorners.cs:Neighbors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexCorners.cs:HexCorners",
+   "target": "function:src/CivSim.Core/Map/HexCorners.cs:Neighbors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "target": "class:src/CivSim.Core/Map/HexDirection.cs:HexDirections",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "target": "class:src/CivSim.Core/Map/HexDirection.cs:HexDirections",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "target": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Wrap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Wrap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:GetNeighbors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:GetNeighbors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Line",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Line",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Ring",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Ring",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Range",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Range",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Edge",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Edge",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:EdgeIndex",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:EdgeIndex",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:NearestImage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:NearestImage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:CubeRound",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:CubeRound",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:DivRound",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/HexGlobe.cs:HexGlobe",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:DivRound",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "target": "class:src/CivSim.Core/Map/MapChunks.cs:MapChunks",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "target": "class:src/CivSim.Core/Map/MapChunks.cs:MapChunks",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "target": "function:src/CivSim.Core/Map/MapChunks.cs:Bounds",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/MapChunks.cs:MapChunks",
+   "target": "function:src/CivSim.Core/Map/MapChunks.cs:Bounds",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "target": "class:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "target": "class:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "target": "function:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "target": "function:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "target": "function:src/CivSim.Core/Map/MapLayer.cs:Set",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "target": "function:src/CivSim.Core/Map/MapLayer.cs:Set",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "target": "function:src/CivSim.Core/Map/MapLayer.cs:LoadBytes",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "target": "function:src/CivSim.Core/Map/MapLayer.cs:LoadBytes",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "class:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "class:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "class:src/CivSim.Core/Map/WorldMap.cs:IMapLayerInfo",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "class:src/CivSim.Core/Map/WorldMap.cs:IMapLayerInfo",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "function:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "target": "function:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:src/CivSim.Core/Content/BiomeDefinition.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:src/CivSim.Core/Map/DirtyChunks.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:src/CivSim.Core/Map/MapLayer.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:src/CivSim.Core/Population/Influence.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:src/CivSim.Core/Map/MapLayer.cs:MapLayer",
+   "target": "class:src/CivSim.Core/Map/WorldMap.cs:WorldMap",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:src/CivSim.Core/Map/HexGlobe.cs:Line",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:CubeRound",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Map/HexGlobe.cs:Line",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:NearestImage",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Map/HexGlobe.cs:Range",
+   "target": "function:src/CivSim.Core/Map/HexGlobe.cs:Ring",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

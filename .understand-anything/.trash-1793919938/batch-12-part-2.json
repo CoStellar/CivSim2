@@ -1,0 +1,1820 @@
+{
+ "nodes": [
+  {
+   "id": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "type": "file",
+   "name": "StorageTests.cs",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "summary": "Testy magazynów i efektów: ładowanie danych ekonomii, psucie się zasobów jak procent składany, limity pojemności, determinizm, zapis/odczyt osad oraz widoczność magazynów tylko dla właściciela; zawiera też testy EffectBook.",
+   "tags": [
+    "test",
+    "economy",
+    "storage",
+    "effects",
+    "determinism"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Economy/StorageTests.cs:StorageTests",
+   "type": "class",
+   "name": "StorageTests",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    21,
+    246
+   ],
+   "summary": "Klasa testów xUnit (15 metod) — testy magazynów i efektów.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Economy/StorageTests.cs:EffectBookTests",
+   "type": "class",
+   "name": "EffectBookTests",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    248,
+    312
+   ],
+   "summary": "Testy księgi efektów: sumowanie, najsilniejszy efekt wygrywa, zastępowanie, wygasanie i usuwanie po id.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EconomyDataLoads",
+   "type": "function",
+   "name": "EconomyDataLoads",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    35,
+    55
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „economy data loads”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:BrokenEconomyDataReportsEveryError",
+   "type": "function",
+   "name": "BrokenEconomyDataReportsEveryError",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    57,
+    84
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „broken economy data reports every error”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:SpoilageMatchesCompoundInterest",
+   "type": "function",
+   "name": "SpoilageMatchesCompoundInterest",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    94,
+    103
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „spoilage matches compound interest”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EveryTribeStartsWithACampAndSupplies",
+   "type": "function",
+   "name": "EveryTribeStartsWithACampAndSupplies",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    115,
+    129
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „every tribe starts with acamp and supplies”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:FoodSpoilsByTheYearlyRateAndToolsDoNot",
+   "type": "function",
+   "name": "FoodSpoilsByTheYearlyRateAndToolsDoNot",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    131,
+    146
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „food spoils by the yearly rate and tools do not”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EverythingAboveCapacityIsLostInProportion",
+   "type": "function",
+   "name": "EverythingAboveCapacityIsLostInProportion",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    148,
+    163
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „everything above capacity is lost in proportion”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:GamesWithTheEconomyAreDeterministic",
+   "type": "function",
+   "name": "GamesWithTheEconomyAreDeterministic",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    175,
+    190
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „games with the economy are deterministic”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:SettlementsAndEffectsSurviveSaveAndLoad",
+   "type": "function",
+   "name": "SettlementsAndEffectsSurviveSaveAndLoad",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    192,
+    209
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „settlements and effects survive save and load”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:PlayersSeeOnlyTheirOwnWarehouses",
+   "type": "function",
+   "name": "PlayersSeeOnlyTheirOwnWarehouses",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    211,
+    232
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „players see only their own warehouses”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:FirstView",
+   "type": "function",
+   "name": "FirstView",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    234,
+    245
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „first view”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:SumEffectsAddUp",
+   "type": "function",
+   "name": "SumEffectsAddUp",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    252,
+    261
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „sum effects add up”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:StrongestEffectWinsAndWeakerOnesAreDropped",
+   "type": "function",
+   "name": "StrongestEffectWinsAndWeakerOnesAreDropped",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    263,
+    273
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „strongest effect wins and weaker ones are dropped”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EffectsExpireWithGameTime",
+   "type": "function",
+   "name": "EffectsExpireWithGameTime",
+   "filePath": "tests/CivSim.Tests/Economy/StorageTests.cs",
+   "lineRange": [
+    285,
+    301
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „effects expire with game time”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "type": "file",
+   "name": "TradeProductionTests.cs",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "summary": "Testy handlu i produkcji: sieci osad jednej cywilizacji, dystrybucja żywności do głodnych ze stratami, receptury rzemieślników, ceny wg podaży i popytu, decyzje EconomyAi oraz wyczerpywanie krzemienia i drewno z lasów.",
+   "tags": [
+    "test",
+    "economy",
+    "trade",
+    "production",
+    "ai"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Economy/TradeProductionTests.cs:TradeProductionTests",
+   "type": "class",
+   "name": "TradeProductionTests",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    15,
+    253
+   ],
+   "summary": "Klasa testów xUnit (16 metod) — testy handlu i produkcji.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Empty",
+   "type": "function",
+   "name": "Empty",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    24,
+    39
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „empty”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Apart",
+   "type": "function",
+   "name": "Apart",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    51,
+    65
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „apart”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Run",
+   "type": "function",
+   "name": "Run",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    67,
+    76
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „run”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:NetworksLinkOneCivilizationsSettlementsInChains",
+   "type": "function",
+   "name": "NetworksLinkOneCivilizationsSettlementsInChains",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    78,
+    96
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „networks link one civilizations settlements in chains”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:FoodGoesToTheHungryFirstAndLosesOnTheWay",
+   "type": "function",
+   "name": "FoodGoesToTheHungryFirstAndLosesOnTheWay",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    98,
+    121
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „food goes to the hungry first and loses on the way”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:ArtisansWorkTheirRecipeAsFarAsTheInputsGo",
+   "type": "function",
+   "name": "ArtisansWorkTheirRecipeAsFarAsTheInputsGo",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    123,
+    137
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „artisans work their recipe as far as the inputs go”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:ProductionNeverEatsThePeoplesFood",
+   "type": "function",
+   "name": "ProductionNeverEatsThePeoplesFood",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    139,
+    151
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „production never eats the peoples food”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:PricesFollowSupplyAndDemand",
+   "type": "function",
+   "name": "PricesFollowSupplyAndDemand",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    153,
+    165
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „prices follow supply and demand”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:TheAiMakesWhatIsNeededAndWhatItCanFeed",
+   "type": "function",
+   "name": "TheAiMakesWhatIsNeededAndWhatItCanFeed",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    167,
+    184
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „the ai makes what is needed and what it can feed”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:FullWarehousesSendTheirSurplusToNeighbours",
+   "type": "function",
+   "name": "FullWarehousesSendTheirSurplusToNeighbours",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    195,
+    209
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „full warehouses send their surplus to neighbours”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:FlintRunsOutAndForestsGiveWood",
+   "type": "function",
+   "name": "FlintRunsOutAndForestsGiveWood",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    211,
+    241
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „flint runs out and forests give wood”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Count",
+   "type": "function",
+   "name": "Count",
+   "filePath": "tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "lineRange": [
+    243,
+    252
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „count”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "type": "file",
+   "name": "EventTests.cs",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "summary": "Testy zdarzeń losowych: ładowanie z danych, szansa zależna od terenu i przeliczana z rocznej na turę, łagodzenie technologią, susza, powódź i epidemia rozchodząca się siecią handlu oraz determinizm.",
+   "tags": [
+    "test",
+    "events",
+    "determinism",
+    "xunit"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Events/EventTests.cs:EventTests",
+   "type": "class",
+   "name": "EventTests",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    16,
+    202
+   ],
+   "summary": "Klasa testów xUnit (13 metod) — testy zdarzeń losowych.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Events/EventTests.cs:Empty",
+   "type": "function",
+   "name": "Empty",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    23,
+    38
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „empty”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Events/EventTests.cs:ChanceFollowsTheLand",
+   "type": "function",
+   "name": "ChanceFollowsTheLand",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    66,
+    94
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „chance follows the land”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Events/EventTests.cs:TechnologySoftensAndLongTurnsDiluteEffects",
+   "type": "function",
+   "name": "TechnologySoftensAndLongTurnsDiluteEffects",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    106,
+    118
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „technology softens and long turns dilute effects”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Events/EventTests.cs:ADroughtLowersFarmingAroundTheVillage",
+   "type": "function",
+   "name": "ADroughtLowersFarmingAroundTheVillage",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    120,
+    142
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „adrought lowers farming around the village”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Events/EventTests.cs:AFloodLeavesRicherSoil",
+   "type": "function",
+   "name": "AFloodLeavesRicherSoil",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    144,
+    154
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „aflood leaves richer soil”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Events/EventTests.cs:AnEpidemicSpreadsAlongTheTradeNetwork",
+   "type": "function",
+   "name": "AnEpidemicSpreadsAlongTheTradeNetwork",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    156,
+    182
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „an epidemic spreads along the trade network”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Events/EventTests.cs:EventsAreDeterministic",
+   "type": "function",
+   "name": "EventsAreDeterministic",
+   "filePath": "tests/CivSim.Tests/Events/EventTests.cs",
+   "lineRange": [
+    184,
+    201
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „events are deterministic”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "type": "file",
+   "name": "HexCornersTests.cs",
+   "filePath": "tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "summary": "Test spójności grafu narożników heksów (HexCorners) względem krawędzi i geometrii HexGlobe.",
+   "tags": [
+    "test",
+    "map",
+    "hex-geometry",
+    "xunit"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Map/HexCornersTests.cs:HexCornersTests",
+   "type": "class",
+   "name": "HexCornersTests",
+   "filePath": "tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "lineRange": [
+    7,
+    56
+   ],
+   "summary": "Klasa testów xUnit (1 metod) — test spójności grafu narożników heksów (hexcorners) względem krawędzi i geometrii hexglobe..",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexCornersTests.cs:CornerGraphIsConsistent",
+   "type": "function",
+   "name": "CornerGraphIsConsistent",
+   "filePath": "tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "lineRange": [
+    9,
+    55
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „corner graph is consistent”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "type": "file",
+   "name": "HexGlobeTests.cs",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "summary": "Obszerne testy geometrii mapy-kuli HexGlobe: indeksowanie, zawijanie wschód–zachód i przez bieguny, pasy równej powierzchni, sąsiedztwa, odległości porównywane z BFS, linie, pierścienie, zasięgi i krawędzie.",
+   "tags": [
+    "test",
+    "map",
+    "hex-geometry",
+    "globe",
+    "xunit"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Map/HexGlobeTests.cs:HexGlobeTests",
+   "type": "class",
+   "name": "HexGlobeTests",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    8,
+    290
+   ],
+   "summary": "Klasa testów xUnit (16 metod) — obszerne testy geometrii mapy-kuli hexglobe.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:InvalidSizesAreRejected",
+   "type": "function",
+   "name": "InvalidSizesAreRejected",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    10,
+    19
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „invalid sizes are rejected”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:IndexRoundTripsForEveryCell",
+   "type": "function",
+   "name": "IndexRoundTripsForEveryCell",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    21,
+    31
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „index round trips for every cell”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:WrapGoesAroundTheGlobeAndOverThePoles",
+   "type": "function",
+   "name": "WrapGoesAroundTheGlobeAndOverThePoles",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    33,
+    49
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „wrap goes around the globe and over the poles”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:RowsAreEqualAreaLatitudeBands",
+   "type": "function",
+   "name": "RowsAreEqualAreaLatitudeBands",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    51,
+    61
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „rows are equal area latitude bands”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:AxialRoundTrips",
+   "type": "function",
+   "name": "AxialRoundTrips",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    63,
+    72
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „axial round trips”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:NeighborsMatchTheOddQLayoutInsideTheMap",
+   "type": "function",
+   "name": "NeighborsMatchTheOddQLayoutInsideTheMap",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    74,
+    91
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „neighbors match the odd qlayout inside the map”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:NeighborsWrapAroundAndOverThePoles",
+   "type": "function",
+   "name": "NeighborsWrapAroundAndOverThePoles",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    93,
+    107
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „neighbors wrap around and over the poles”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:EveryCellHasSixDistinctMutualNeighbors",
+   "type": "function",
+   "name": "EveryCellHasSixDistinctMutualNeighbors",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    109,
+    130
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „every cell has six distinct mutual neighbors”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:DistanceEqualsBreadthFirstSearchForAllPairs",
+   "type": "function",
+   "name": "DistanceEqualsBreadthFirstSearchForAllPairs",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    132,
+    170
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „distance equals breadth first search for all pairs”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:LineIsContinuousAndHasDistancePlusOneCells",
+   "type": "function",
+   "name": "LineIsContinuousAndHasDistancePlusOneCells",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    182,
+    203
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „line is continuous and has distance plus one cells”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:RingCellsAreAllAtTheRadiusAndUnique",
+   "type": "function",
+   "name": "RingCellsAreAllAtTheRadiusAndUnique",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    212,
+    230
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „ring cells are all at the radius and unique”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:RangeCoversExactlyTheCellsWithinTheRadius",
+   "type": "function",
+   "name": "RangeCoversExactlyTheCellsWithinTheRadius",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    232,
+    249
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „range covers exactly the cells within the radius”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:MaxUniqueRadiusIsReallyUnique",
+   "type": "function",
+   "name": "MaxUniqueRadiusIsReallyUnique",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    251,
+    265
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „max unique radius is really unique”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:EdgesAreSharedByBothCellsAndIndexedUniquely",
+   "type": "function",
+   "name": "EdgesAreSharedByBothCellsAndIndexedUniquely",
+   "filePath": "tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "lineRange": [
+    267,
+    289
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „edges are shared by both cells and indexed uniquely”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "class:tests/CivSim.Tests/Economy/StorageTests.cs:StorageTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "class:tests/CivSim.Tests/Economy/StorageTests.cs:StorageTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "class:tests/CivSim.Tests/Economy/StorageTests.cs:EffectBookTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "class:tests/CivSim.Tests/Economy/StorageTests.cs:EffectBookTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EconomyDataLoads",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:BrokenEconomyDataReportsEveryError",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:SpoilageMatchesCompoundInterest",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EveryTribeStartsWithACampAndSupplies",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:FoodSpoilsByTheYearlyRateAndToolsDoNot",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EverythingAboveCapacityIsLostInProportion",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:GamesWithTheEconomyAreDeterministic",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:SettlementsAndEffectsSurviveSaveAndLoad",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:PlayersSeeOnlyTheirOwnWarehouses",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:FirstView",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:SumEffectsAddUp",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:StrongestEffectWinsAndWeakerOnesAreDropped",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/StorageTests.cs:EffectsExpireWithGameTime",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/StorageSystem.cs",
+   "target": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "target": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/State/EffectBook.cs",
+   "target": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/Hashing/GameStateHash.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Core/WorldGen/WorldGenReport.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Data/ContentLoader.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Protocol/ProtocolInfo.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Protocol/Transport/IConnection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Protocol/Transport/InMemoryConnection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Server/GameServer.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/StorageTests.cs",
+   "target": "file:src/CivSim.Server/Saves/SaveGameSerializer.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "class:tests/CivSim.Tests/Economy/TradeProductionTests.cs:TradeProductionTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "class:tests/CivSim.Tests/Economy/TradeProductionTests.cs:TradeProductionTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Empty",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Apart",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Run",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:NetworksLinkOneCivilizationsSettlementsInChains",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:FoodGoesToTheHungryFirstAndLosesOnTheWay",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:ArtisansWorkTheirRecipeAsFarAsTheInputsGo",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:ProductionNeverEatsThePeoplesFood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:PricesFollowSupplyAndDemand",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:TheAiMakesWhatIsNeededAndWhatItCanFeed",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:FullWarehousesSendTheirSurplusToNeighbours",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:FlintRunsOutAndForestsGiveWood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "function:tests/CivSim.Tests/Economy/TradeProductionTests.cs:Count",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Trade.cs",
+   "target": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Production.cs",
+   "target": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Economy/StorageSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Numerics/Rounding.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Research/Technologies.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "target": "file:src/CivSim.Data/ContentLoader.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "class:tests/CivSim.Tests/Events/EventTests.cs:EventTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "class:tests/CivSim.Tests/Events/EventTests.cs:EventTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "function:tests/CivSim.Tests/Events/EventTests.cs:Empty",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "function:tests/CivSim.Tests/Events/EventTests.cs:ChanceFollowsTheLand",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "function:tests/CivSim.Tests/Events/EventTests.cs:TechnologySoftensAndLongTurnsDiluteEffects",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "function:tests/CivSim.Tests/Events/EventTests.cs:ADroughtLowersFarmingAroundTheVillage",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "function:tests/CivSim.Tests/Events/EventTests.cs:AFloodLeavesRicherSoil",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "function:tests/CivSim.Tests/Events/EventTests.cs:AnEpidemicSpreadsAlongTheTradeNetwork",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "function:tests/CivSim.Tests/Events/EventTests.cs:EventsAreDeterministic",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Events/EventSystem.cs",
+   "target": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Hashing/GameStateHash.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Research/Technologies.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnPhase.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Events/EventTests.cs",
+   "target": "file:src/CivSim.Data/ContentLoader.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "target": "class:tests/CivSim.Tests/Map/HexCornersTests.cs:HexCornersTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "target": "class:tests/CivSim.Tests/Map/HexCornersTests.cs:HexCornersTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexCornersTests.cs:CornerGraphIsConsistent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexCorners.cs",
+   "target": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexCornersTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "class:tests/CivSim.Tests/Map/HexGlobeTests.cs:HexGlobeTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "class:tests/CivSim.Tests/Map/HexGlobeTests.cs:HexGlobeTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:InvalidSizesAreRejected",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:IndexRoundTripsForEveryCell",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:WrapGoesAroundTheGlobeAndOverThePoles",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:RowsAreEqualAreaLatitudeBands",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:AxialRoundTrips",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:NeighborsMatchTheOddQLayoutInsideTheMap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:NeighborsWrapAroundAndOverThePoles",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:EveryCellHasSixDistinctMutualNeighbors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:DistanceEqualsBreadthFirstSearchForAllPairs",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:LineIsContinuousAndHasDistancePlusOneCells",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:RingCellsAreAllAtTheRadiusAndUnique",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:RangeCoversExactlyTheCellsWithinTheRadius",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:MaxUniqueRadiusIsReallyUnique",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/HexGlobeTests.cs:EdgesAreSharedByBothCellsAndIndexedUniquely",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "target": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "target": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

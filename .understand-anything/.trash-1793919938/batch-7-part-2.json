@@ -1,0 +1,1507 @@
+{
+ "nodes": [
+  {
+   "id": "file:game/scripts/Map/SelectionOutline.cs",
+   "type": "file",
+   "name": "SelectionOutline.cs",
+   "filePath": "game/scripts/Map/SelectionOutline.cs",
+   "summary": "Węzeł Godota rysujący białą obwódkę wokół zaznaczonego heksu.",
+   "tags": [
+    "rendering",
+    "component",
+    "godot",
+    "selection"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:game/scripts/Map/SettlementMarkers.cs",
+   "type": "file",
+   "name": "SettlementMarkers.cs",
+   "filePath": "game/scripts/Map/SettlementMarkers.cs",
+   "summary": "Deweloperskie znaczniki osad: kwadraty w kolorze właściciela, większe dla wyższych poziomów, szare dla opuszczonych i ciemne dla ruin, rysowane na każdej widocznej kopii zawiniętej mapy.",
+   "tags": [
+    "rendering",
+    "component",
+    "godot",
+    "settlements"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:game/scripts/Net/ClientSession.cs",
+   "type": "file",
+   "name": "ClientSession.cs",
+   "filePath": "game/scripts/Net/ClientSession.cs",
+   "summary": "Sesja klienta: łączy się z serwerem przez IConnection, przedstawia się w roli, a w Pump przetwarza wiadomości protokołu (Welcome, zawartość, widok, fragmenty mapy, kronika, czasy tur, odmowy) w ograniczonym budżecie na klatkę.",
+   "tags": [
+    "client",
+    "network",
+    "protocol",
+    "service",
+    "event-handler"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:game/scripts/Net/ClientWorld.cs",
+   "type": "file",
+   "name": "ClientWorld.cs",
+   "filePath": "game/scripts/Net/ClientWorld.cs",
+   "summary": "Kliencka kopia mapy jednego świata zbudowana wyłącznie z MapChunkMessage: płaskie tablice warstw (wysokość, klimat, biom, złoża, właściciel, wpływy, rzeki) i flagi zmienionych fragmentów.",
+   "tags": [
+    "data-model",
+    "client",
+    "map-cache",
+    "structure-of-arrays"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:game/scripts/Ui/Hud.cs",
+   "type": "file",
+   "name": "Hud.cs",
+   "filePath": "game/scripts/Ui/Hud.cs",
+   "summary": "Deweloperski HUD budowany w kodzie: górny pasek z turą, prędkością i widokiem, inspektor komórki po lewej, kronika po prawej i wykres czasu tury na dole.",
+   "tags": [
+    "component",
+    "ui",
+    "godot",
+    "hud",
+    "inspector"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:game/scripts/Ui/TurnChart.cs",
+   "type": "file",
+   "name": "TurnChart.cs",
+   "filePath": "game/scripts/Ui/TurnChart.cs",
+   "summary": "Prosty wykres słupkowy ostatnich czasów tur w milisekundach dla HUD-a deweloperskiego.",
+   "tags": [
+    "component",
+    "ui",
+    "chart",
+    "godot"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "type": "file",
+   "name": "EconomyAi.cs",
+   "filePath": "src/CivSim.Core/Ai/EconomyAi.cs",
+   "summary": "AI produkcji cywilizacji: raz na turę ery każda osada z rzemieślnikami wybiera recepturę o najwyższej wartości przy wewnętrznych cenach sieci, wydając te same komendy co gracz.",
+   "tags": [
+    "ai",
+    "economy",
+    "command-source",
+    "service"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "type": "file",
+   "name": "TribeAi.cs",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "summary": "Regułowe AI plemion: dla każdego obozu porównuje obecne jedzenie z najlepszym miejscem w zasięgu i decyduje o przeprowadzce, wysłaniu grupy, połączeniu obozów lub przejęciu porzuconych zasobów, wydając komendy jak gracz.",
+   "tags": [
+    "ai",
+    "population",
+    "settlement",
+    "command-source",
+    "service"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "config:src/CivSim.Core/CivSim.Core.csproj",
+   "type": "config",
+   "name": "CivSim.Core.csproj",
+   "filePath": "src/CivSim.Core/CivSim.Core.csproj",
+   "summary": "Minimalny projekt biblioteki CivSim.Core (logika symulacji bez Godota); wspólne ustawienia dziedziczy z Directory.Build.props.",
+   "tags": [
+    "configuration",
+    "build-system",
+    "core",
+    "dotnet"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Commands/CommandCategory.cs",
+   "type": "file",
+   "name": "CommandCategory.cs",
+   "filePath": "src/CivSim.Core/Commands/CommandCategory.cs",
+   "summary": "Enum grup rozstrzygania komend (dyplomacja, ekonomia, ruch), którego wartość liczbowa wyznacza kolejność w fazie tury.",
+   "tags": [
+    "type-definition",
+    "commands",
+    "determinism",
+    "enum"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "type": "file",
+   "name": "CommandEnvelope.cs",
+   "filePath": "src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "summary": "Niezmienny rekord-struktura łączący komendę z graczem, cywilizacją i numerem sekwencji nadanym przez kolejkę.",
+   "tags": [
+    "type-definition",
+    "commands",
+    "data-model",
+    "multiplayer-ready"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "file",
+   "name": "CommandQueue.cs",
+   "filePath": "src/CivSim.Core/Commands/CommandQueue.cs",
+   "summary": "Kolejka komend tury, która wydaje je w stałej, deterministycznej kolejności: kategoria, cywilizacja (rotowana co turę) i kolejność przybycia.",
+   "tags": [
+    "commands",
+    "determinism",
+    "service",
+    "queue"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:game/scripts/Map/SelectionOutline.cs:SelectionOutline",
+   "type": "class",
+   "name": "SelectionOutline",
+   "filePath": "game/scripts/Map/SelectionOutline.cs",
+   "lineRange": [
+    6,
+    20
+   ],
+   "summary": "Node2D rysujący białą obwódkę zaznaczonego heksu.",
+   "tags": [
+    "rendering",
+    "component",
+    "selection"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/SelectionOutline.cs:_Draw",
+   "type": "function",
+   "name": "_Draw",
+   "filePath": "game/scripts/Map/SelectionOutline.cs",
+   "lineRange": [
+    9,
+    19
+   ],
+   "summary": "Rysuje linię wzdłuż narożników heksu.",
+   "tags": [
+    "rendering",
+    "godot-lifecycle"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:game/scripts/Map/SettlementMarkers.cs:SettlementMarkers",
+   "type": "class",
+   "name": "SettlementMarkers",
+   "filePath": "game/scripts/Map/SettlementMarkers.cs",
+   "lineRange": [
+    11,
+    85
+   ],
+   "summary": "Node2D rysujący znaczniki osad na widocznych kopiach mapy.",
+   "tags": [
+    "rendering",
+    "component",
+    "settlements"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Map/SettlementMarkers.cs:Show",
+   "type": "function",
+   "name": "Show",
+   "filePath": "game/scripts/Map/SettlementMarkers.cs",
+   "lineRange": [
+    20,
+    38
+   ],
+   "summary": "Ustawia listę osad, świat i kadr; wymusza przerysowanie tylko przy zmianie.",
+   "tags": [
+    "rendering",
+    "change-detection"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/SettlementMarkers.cs:_Draw",
+   "type": "function",
+   "name": "_Draw",
+   "filePath": "game/scripts/Map/SettlementMarkers.cs",
+   "lineRange": [
+    41,
+    84
+   ],
+   "summary": "Rysuje kwadraty osad zależnie od poziomu i stanu (aktywna, opuszczona, ruiny) na każdej widocznej kopii.",
+   "tags": [
+    "rendering",
+    "godot-lifecycle",
+    "settlements"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:game/scripts/Net/ClientSession.cs:ClientSession",
+   "type": "class",
+   "name": "ClientSession",
+   "filePath": "game/scripts/Net/ClientSession.cs",
+   "lineRange": [
+    13,
+    128
+   ],
+   "summary": "Stan wiedzy klienta budowany wyłącznie z wiadomości serwera.",
+   "tags": [
+    "client",
+    "network",
+    "protocol",
+    "service"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Net/ClientSession.cs:Pump",
+   "type": "function",
+   "name": "Pump",
+   "filePath": "game/scripts/Net/ClientSession.cs",
+   "lineRange": [
+    61,
+    71
+   ],
+   "summary": "Przetwarza oczekujące wiadomości do wyczerpania budżetu, by duża aktualizacja nie zamroziła klatki.",
+   "tags": [
+    "network",
+    "message-loop",
+    "budget"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Net/ClientSession.cs:Handle",
+   "type": "function",
+   "name": "Handle",
+   "filePath": "game/scripts/Net/ClientSession.cs",
+   "lineRange": [
+    73,
+    127
+   ],
+   "summary": "Rozdziela wiadomości protokołu według typu i aktualizuje światy, widok, kronikę i czasy tur.",
+   "tags": [
+    "event-handler",
+    "protocol",
+    "dispatcher"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:game/scripts/Net/ClientWorld.cs:ClientWorld",
+   "type": "class",
+   "name": "ClientWorld",
+   "filePath": "game/scripts/Net/ClientWorld.cs",
+   "lineRange": [
+    10,
+    175
+   ],
+   "summary": "Kliencka pamięć podręczna mapy jednego świata w płaskich tablicach.",
+   "tags": [
+    "data-model",
+    "map-cache",
+    "client"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Net/ClientWorld.cs:ClientWorld",
+   "type": "function",
+   "name": "ClientWorld",
+   "filePath": "game/scripts/Net/ClientWorld.cs",
+   "lineRange": [
+    16,
+    46
+   ],
+   "summary": "Konstruktor alokujący tablice warstw mapy dla nieznanego jeszcze świata.",
+   "tags": [
+    "constructor",
+    "allocation",
+    "data-model"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Net/ClientWorld.cs:Apply",
+   "type": "function",
+   "name": "Apply",
+   "filePath": "game/scripts/Net/ClientWorld.cs",
+   "lineRange": [
+    130,
+    168
+   ],
+   "summary": "Kopiuje wiadomość fragmentu mapy do tablic i oznacza fragment jako zmieniony.",
+   "tags": [
+    "deserialization",
+    "dirty-flags",
+    "map-cache"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:game/scripts/Ui/Hud.cs:Hud",
+   "type": "class",
+   "name": "Hud",
+   "filePath": "game/scripts/Ui/Hud.cs",
+   "lineRange": [
+    16,
+    276
+   ],
+   "summary": "CanvasLayer z deweloperskim interfejsem: pasek, inspektor, kronika i wykres.",
+   "tags": [
+    "ui",
+    "component",
+    "hud"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:game/scripts/Ui/Hud.cs:_Ready",
+   "type": "function",
+   "name": "_Ready",
+   "filePath": "game/scripts/Ui/Hud.cs",
+   "lineRange": [
+    38,
+    102
+   ],
+   "summary": "Buduje w kodzie wszystkie kontrolki HUD-a i podpina zdarzenia wyboru prędkości i widoku.",
+   "tags": [
+    "ui",
+    "initialization",
+    "godot-lifecycle"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Ui/Hud.cs:UpdateStatus",
+   "type": "function",
+   "name": "UpdateStatus",
+   "filePath": "game/scripts/Ui/Hud.cs",
+   "lineRange": [
+    117,
+    135
+   ],
+   "summary": "Odświeża górny pasek, wykres czasu tur i inspektor.",
+   "tags": [
+    "ui",
+    "refresh"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Ui/Hud.cs:Inspect",
+   "type": "function",
+   "name": "Inspect",
+   "filePath": "game/scripts/Ui/Hud.cs",
+   "lineRange": [
+    137,
+    187
+   ],
+   "summary": "Opisuje zaznaczoną komórkę: współrzędne, klimat, biom, złoża, właściciela i wpływy.",
+   "tags": [
+    "ui",
+    "inspector",
+    "formatting"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Ui/Hud.cs:AppendSettlement",
+   "type": "function",
+   "name": "AppendSettlement",
+   "filePath": "game/scripts/Ui/Hud.cs",
+   "lineRange": [
+    190,
+    259
+   ],
+   "summary": "Dopisuje do inspektora szczegóły osady: ludność, magazyny, produkcję i stan.",
+   "tags": [
+    "ui",
+    "inspector",
+    "settlements"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Ui/Hud.cs:FindCiv",
+   "type": "function",
+   "name": "FindCiv",
+   "filePath": "game/scripts/Ui/Hud.cs",
+   "lineRange": [
+    261,
+    275
+   ],
+   "summary": "Wyszukuje widok cywilizacji po identyfikatorze.",
+   "tags": [
+    "utility",
+    "lookup"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:game/scripts/Ui/TurnChart.cs:TurnChart",
+   "type": "class",
+   "name": "TurnChart",
+   "filePath": "game/scripts/Ui/TurnChart.cs",
+   "lineRange": [
+    8,
+    52
+   ],
+   "summary": "Kontrolka rysująca wykres słupkowy czasów tur.",
+   "tags": [
+    "ui",
+    "chart",
+    "component"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Ui/TurnChart.cs:_Draw",
+   "type": "function",
+   "name": "_Draw",
+   "filePath": "game/scripts/Ui/TurnChart.cs",
+   "lineRange": [
+    20,
+    51
+   ],
+   "summary": "Rysuje słupki skalowane do maksimum wraz z podpisem.",
+   "tags": [
+    "rendering",
+    "chart",
+    "godot-lifecycle"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Ai/EconomyAi.cs:EconomyAi",
+   "type": "class",
+   "name": "EconomyAi",
+   "filePath": "src/CivSim.Core/Ai/EconomyAi.cs",
+   "lineRange": [
+    18,
+    114
+   ],
+   "summary": "Źródło komend wybierające receptury produkcji dla osad AI według wewnętrznych cen.",
+   "tags": [
+    "ai",
+    "economy",
+    "command-source"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/EconomyAi.cs:IssueCommands",
+   "type": "function",
+   "name": "IssueCommands",
+   "filePath": "src/CivSim.Core/Ai/EconomyAi.cs",
+   "lineRange": [
+    23,
+    60
+   ],
+   "summary": "Dla każdej osady z rzemieślnikami wydaje komendę wyboru najlepszej receptury raz na turę ery.",
+   "tags": [
+    "ai",
+    "commands",
+    "production"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/EconomyAi.cs:Best",
+   "type": "function",
+   "name": "Best",
+   "filePath": "src/CivSim.Core/Ai/EconomyAi.cs",
+   "lineRange": [
+    63,
+    98
+   ],
+   "summary": "Wybiera recepturę o największej wartości wyjść minus wejść przy cenach sieci.",
+   "tags": [
+    "ai",
+    "pricing",
+    "selection"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/EconomyAi.cs:Supply",
+   "type": "function",
+   "name": "Supply",
+   "filePath": "src/CivSim.Core/Ai/EconomyAi.cs",
+   "lineRange": [
+    100,
+    113
+   ],
+   "summary": "Sprawdza, czy sieć ma wejścia receptury.",
+   "tags": [
+    "ai",
+    "economy",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Ai/TribeAi.cs:TribeAi",
+   "type": "class",
+   "name": "TribeAi",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    23,
+    622
+   ],
+   "summary": "Regułowe źródło komend dla obozów plemiennych AI.",
+   "tags": [
+    "ai",
+    "population",
+    "command-source"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:TribeAi",
+   "type": "function",
+   "name": "TribeAi",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    48,
+    80
+   ],
+   "summary": "Konstruktor przygotowujący reguły ludności i bufory wielokrotnego użytku.",
+   "tags": [
+    "constructor",
+    "initialization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:IssueCommands",
+   "type": "function",
+   "name": "IssueCommands",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    92,
+    165
+   ],
+   "summary": "Przechodzi obozy cywilizacji AI w stałej kolejności i wydaje dla nich decyzje jako komendy.",
+   "tags": [
+    "ai",
+    "commands",
+    "determinism"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:Decide",
+   "type": "function",
+   "name": "Decide",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    167,
+    259
+   ],
+   "summary": "Decyduje dla obozu: przeprowadzka, wysłanie grupy, połączenie lub przejęcie zasobów.",
+   "tags": [
+    "ai",
+    "decision-making",
+    "population"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:FarSite",
+   "type": "function",
+   "name": "FarSite",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    263,
+    301
+   ],
+   "summary": "Szuka dalekiego miejsca, które wyżywi wysyłaną grupę.",
+   "tags": [
+    "ai",
+    "site-selection"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:CanSettle",
+   "type": "function",
+   "name": "CanSettle",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    306,
+    316
+   ],
+   "summary": "Sprawdza, czy można osiedlić się w komórce.",
+   "tags": [
+    "ai",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:FarmFood",
+   "type": "function",
+   "name": "FarmFood",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    319,
+    334
+   ],
+   "summary": "Szacuje jedzenie z rolnictwa na danym terenie.",
+   "tags": [
+    "ai",
+    "food",
+    "estimation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:MoveTo",
+   "type": "function",
+   "name": "MoveTo",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    338,
+    355
+   ],
+   "summary": "Wydaje komendę ruchu obozu do wybranej komórki.",
+   "tags": [
+    "ai",
+    "commands",
+    "movement"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:BestSite",
+   "type": "function",
+   "name": "BestSite",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    360,
+    414
+   ],
+   "summary": "Znajduje najlepsze miejsce w zasięgu obozu według wartości jedzenia i komfortu.",
+   "tags": [
+    "ai",
+    "site-selection",
+    "search"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:NearestOwnCamp",
+   "type": "function",
+   "name": "NearestOwnCamp",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    423,
+    442
+   ],
+   "summary": "Znajduje najbliższy obóz tej samej cywilizacji do połączenia.",
+   "tags": [
+    "ai",
+    "search",
+    "population"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:GroupFoodNeed",
+   "type": "function",
+   "name": "GroupFoodNeed",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    445,
+    455
+   ],
+   "summary": "Liczy zapotrzebowanie grupy na jedzenie.",
+   "tags": [
+    "ai",
+    "food",
+    "estimation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:Free",
+   "type": "function",
+   "name": "Free",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    458,
+    467
+   ],
+   "summary": "Sprawdza, czy komórka jest wolna od innych obozów i rezerwacji.",
+   "tags": [
+    "ai",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:Take",
+   "type": "function",
+   "name": "Take",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    469,
+    479
+   ],
+   "summary": "Rezerwuje komórkę w tej turze, by obozy nie wybrały tego samego miejsca.",
+   "tags": [
+    "ai",
+    "reservation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:SiteFood",
+   "type": "function",
+   "name": "SiteFood",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    492,
+    513
+   ],
+   "summary": "Zwraca jedzenie miejsca z pamięci podręcznej lub je oblicza.",
+   "tags": [
+    "ai",
+    "food",
+    "caching"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:Comfort",
+   "type": "function",
+   "name": "Comfort",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    525,
+    538
+   ],
+   "summary": "Komfort komórki 0–100% względem limitów temperatury, z uwzględnieniem efektu cold_tolerance.",
+   "tags": [
+    "ai",
+    "climate",
+    "evaluation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:ComputeSiteFood",
+   "type": "function",
+   "name": "ComputeSiteFood",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    540,
+    584
+   ],
+   "summary": "Sumuje jedzenie dostępne w okolicy miejsca.",
+   "tags": [
+    "ai",
+    "food",
+    "evaluation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Ai/TribeAi.cs:CellFood",
+   "type": "function",
+   "name": "CellFood",
+   "filePath": "src/CivSim.Core/Ai/TribeAi.cs",
+   "lineRange": [
+    587,
+    621
+   ],
+   "summary": "Jedzenie jednej komórki: dziczyzna, zbieractwo i rolnictwo zależnie od biomu i technologii.",
+   "tags": [
+    "ai",
+    "food",
+    "evaluation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Commands/CommandQueue.cs:CommandQueue",
+   "type": "class",
+   "name": "CommandQueue",
+   "filePath": "src/CivSim.Core/Commands/CommandQueue.cs",
+   "lineRange": [
+    11,
+    75
+   ],
+   "summary": "Kolejka komend z deterministycznym sortowaniem do rozstrzygnięcia tury.",
+   "tags": [
+    "commands",
+    "determinism",
+    "queue"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Commands/CommandQueue.cs:Enqueue",
+   "type": "function",
+   "name": "Enqueue",
+   "filePath": "src/CivSim.Core/Commands/CommandQueue.cs",
+   "lineRange": [
+    20,
+    26
+   ],
+   "summary": "Dodaje komendę i zwraca kopertę z nadanym numerem sekwencji.",
+   "tags": [
+    "commands",
+    "queue"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Commands/CommandQueue.cs:DrainSorted",
+   "type": "function",
+   "name": "DrainSorted",
+   "filePath": "src/CivSim.Core/Commands/CommandQueue.cs",
+   "lineRange": [
+    32,
+    40
+   ],
+   "summary": "Przenosi oczekujące komendy do listy docelowej posortowane według kategorii, cywilizacji i sekwencji.",
+   "tags": [
+    "commands",
+    "sorting",
+    "determinism"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Commands/CommandQueue.cs:CivOrder",
+   "type": "function",
+   "name": "CivOrder",
+   "filePath": "src/CivSim.Core/Commands/CommandQueue.cs",
+   "lineRange": [
+    43,
+    54
+   ],
+   "summary": "Pozycja cywilizacji w kolejności danej tury, rotowanej co turę.",
+   "tags": [
+    "determinism",
+    "fairness",
+    "ordering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Commands/CommandEnvelope.cs:CommandEnvelope",
+   "type": "class",
+   "name": "CommandEnvelope",
+   "filePath": "src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "lineRange": [
+    9,
+    9
+   ],
+   "summary": "Rekord-struktura: gracz, cywilizacja, sekwencja i komenda.",
+   "tags": [
+    "type-definition",
+    "commands",
+    "record"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:game/scripts/Map/SelectionOutline.cs",
+   "target": "class:game/scripts/Map/SelectionOutline.cs:SelectionOutline",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/SelectionOutline.cs",
+   "target": "class:game/scripts/Map/SelectionOutline.cs:SelectionOutline",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/SelectionOutline.cs",
+   "target": "function:game/scripts/Map/SelectionOutline.cs:_Draw",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/SettlementMarkers.cs",
+   "target": "class:game/scripts/Map/SettlementMarkers.cs:SettlementMarkers",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/SettlementMarkers.cs",
+   "target": "class:game/scripts/Map/SettlementMarkers.cs:SettlementMarkers",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/SettlementMarkers.cs",
+   "target": "function:game/scripts/Map/SettlementMarkers.cs:Show",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/SettlementMarkers.cs",
+   "target": "function:game/scripts/Map/SettlementMarkers.cs:Show",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/SettlementMarkers.cs",
+   "target": "function:game/scripts/Map/SettlementMarkers.cs:_Draw",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Net/ClientSession.cs",
+   "target": "class:game/scripts/Net/ClientSession.cs:ClientSession",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Net/ClientSession.cs",
+   "target": "class:game/scripts/Net/ClientSession.cs:ClientSession",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Net/ClientSession.cs",
+   "target": "function:game/scripts/Net/ClientSession.cs:Pump",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Net/ClientSession.cs",
+   "target": "function:game/scripts/Net/ClientSession.cs:Pump",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Net/ClientSession.cs",
+   "target": "function:game/scripts/Net/ClientSession.cs:Handle",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Net/ClientWorld.cs",
+   "target": "class:game/scripts/Net/ClientWorld.cs:ClientWorld",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Net/ClientWorld.cs",
+   "target": "class:game/scripts/Net/ClientWorld.cs:ClientWorld",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Net/ClientWorld.cs",
+   "target": "function:game/scripts/Net/ClientWorld.cs:ClientWorld",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Net/ClientWorld.cs",
+   "target": "function:game/scripts/Net/ClientWorld.cs:ClientWorld",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Net/ClientWorld.cs",
+   "target": "function:game/scripts/Net/ClientWorld.cs:Apply",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Net/ClientWorld.cs",
+   "target": "function:game/scripts/Net/ClientWorld.cs:Apply",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "class:game/scripts/Ui/Hud.cs:Hud",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "class:game/scripts/Ui/Hud.cs:Hud",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "function:game/scripts/Ui/Hud.cs:_Ready",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "function:game/scripts/Ui/Hud.cs:UpdateStatus",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "function:game/scripts/Ui/Hud.cs:UpdateStatus",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "function:game/scripts/Ui/Hud.cs:Inspect",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "function:game/scripts/Ui/Hud.cs:AppendSettlement",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "function:game/scripts/Ui/Hud.cs:FindCiv",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Ui/TurnChart.cs",
+   "target": "class:game/scripts/Ui/TurnChart.cs:TurnChart",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Ui/TurnChart.cs",
+   "target": "class:game/scripts/Ui/TurnChart.cs:TurnChart",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Ui/TurnChart.cs",
+   "target": "function:game/scripts/Ui/TurnChart.cs:_Draw",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "class:src/CivSim.Core/Ai/EconomyAi.cs:EconomyAi",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "class:src/CivSim.Core/Ai/EconomyAi.cs:EconomyAi",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "function:src/CivSim.Core/Ai/EconomyAi.cs:IssueCommands",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "function:src/CivSim.Core/Ai/EconomyAi.cs:IssueCommands",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "function:src/CivSim.Core/Ai/EconomyAi.cs:Best",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "function:src/CivSim.Core/Ai/EconomyAi.cs:Supply",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "class:src/CivSim.Core/Ai/TribeAi.cs:TribeAi",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "class:src/CivSim.Core/Ai/TribeAi.cs:TribeAi",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:TribeAi",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:TribeAi",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:IssueCommands",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:IssueCommands",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:Decide",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:FarSite",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:CanSettle",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:FarmFood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:MoveTo",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:BestSite",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:NearestOwnCamp",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:GroupFoodNeed",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:Free",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:Take",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:SiteFood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:Comfort",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:Comfort",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:ComputeSiteFood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "function:src/CivSim.Core/Ai/TribeAi.cs:CellFood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "class:src/CivSim.Core/Commands/CommandQueue.cs:CommandQueue",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "class:src/CivSim.Core/Commands/CommandQueue.cs:CommandQueue",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:Enqueue",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:Enqueue",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:DrainSorted",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:DrainSorted",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:CivOrder",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:CivOrder",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "target": "class:src/CivSim.Core/Commands/CommandEnvelope.cs:CommandEnvelope",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "target": "class:src/CivSim.Core/Commands/CommandEnvelope.cs:CommandEnvelope",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/SettlementMarkers.cs",
+   "target": "file:game/scripts/Map/HexLayout.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "file:game/scripts/Net/ClientSession.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "file:game/scripts/Map/MapView.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "file:game/scripts/Ui/TurnChart.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Ui/Hud.cs",
+   "target": "file:game/scripts/Map/MapOverlay.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Net/ClientSession.cs",
+   "target": "file:game/scripts/Net/ClientWorld.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandCategory.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:game/scripts/Net/ClientSession.cs:Handle",
+   "target": "function:game/scripts/Net/ClientWorld.cs:Apply",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Ai/TribeAi.cs:MoveTo",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:Enqueue",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Ai/EconomyAi.cs:IssueCommands",
+   "target": "function:src/CivSim.Core/Commands/CommandQueue.cs:Enqueue",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "config:src/CivSim.Core/CivSim.Core.csproj",
+   "target": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:src/CivSim.Core/CivSim.Core.csproj",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

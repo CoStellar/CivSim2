@@ -1,0 +1,184 @@
+{
+ "nodes": [
+  {
+   "id": "document:docs/prompts/01-pierwsza-sesja.md",
+   "type": "document",
+   "name": "01-pierwsza-sesja.md",
+   "filePath": "docs/prompts/01-pierwsza-sesja.md",
+   "summary": "Gotowy prompt na pierwszą sesję Claude Code: każe przeczytać CLAUDE.md, ROADMAP.md, GDD i ADR-y, a potem przedstawić streszczenie, plan etapu 0, wybór wersji .NET/Godota i pluginu Understand Anything, bez pisania kodu.",
+   "tags": [
+    "documentation",
+    "prompt",
+    "onboarding",
+    "etap-0"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "type": "document",
+   "name": "02-etap-1c-gwiazda-atmosfera.md",
+   "filePath": "docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "summary": "Dokument przekazania pracy dla etapu 1c: stan prac, zaakceptowane decyzje Patryka (gwiazda i orbita z praw Keplera, strefa zamieszkiwalna, atmosfera, model bilansu energii Budyko–Sellers, cykle Milankovicia, epoki lodowe), plan trzech PR-ów i prompt na nową sesję.",
+   "tags": [
+    "documentation",
+    "przekazanie-pracy",
+    "klimat",
+    "decyzje-projektowe",
+    "prompt"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Zawiera wzory fizyczne (S = L/d², P² = d³/M, równanie bilansu energii) z wymogiem liczenia na liczbach stałoprzecinkowych dla determinizmu."
+  },
+  {
+   "id": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "type": "document",
+   "name": "03-etap-4-ai-dyplomacja.md",
+   "filePath": "docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "summary": "Dokument przekazania pracy na start etapu 4 (AI i dyplomacja): co już działa, opis obecnej AI (TribeAi, EconomyAi, ResearchAi) i jej ograniczeń, proponowany podział na PR-y 4a–4g, pytania do Patryka z rekomendacjami, pułapki techniczne i prompt na nową sesję.",
+   "tags": [
+    "documentation",
+    "przekazanie-pracy",
+    "ai",
+    "dyplomacja",
+    "prompt"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "document:docs/prompts/01-pierwsza-sesja.md",
+   "target": "document:CLAUDE.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/01-pierwsza-sesja.md",
+   "target": "document:ROADMAP.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/01-pierwsza-sesja.md",
+   "target": "document:docs/GDD.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "target": "document:ROADMAP.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "target": "document:docs/decisions/0012-mapa-kula.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "target": "document:docs/decisions/0013-dwa-zegary.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "target": "document:docs/decisions/0014-model-klimatu.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "target": "document:docs/decisions/0015-epoki-lodowe.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+   "target": "config:global.json",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "file:src/CivSim.Core/Research/ResearchSystem.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "file:src/CivSim.Core/State/EffectBook.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "file:src/CivSim.Headless/Program.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "document:ROADMAP.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "document:CLAUDE.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+   "target": "document:docs/GDD.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  }
+ ]
+}

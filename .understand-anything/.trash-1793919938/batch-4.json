@@ -1,0 +1,669 @@
+{
+ "nodes": [
+  {
+   "id": "document:docs/decisions/0001-silnik-godot-csharp.md",
+   "type": "document",
+   "name": "0001-silnik-godot-csharp.md",
+   "filePath": "docs/decisions/0001-silnik-godot-csharp.md",
+   "summary": "ADR 0001: wybór silnika Godot 4 w wersji .NET i całej logiki w C#; uzasadnia odrzucenie Pythona, Javy, C++ i Unity oraz rezygnację z eksportu do przeglądarki.",
+   "tags": [
+    "documentation",
+    "adr",
+    "godot",
+    "csharp",
+    "architektura"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+   "type": "document",
+   "name": "0002-rdzen-oddzielony-od-wyswietlania.md",
+   "filePath": "docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+   "summary": "ADR 0002: rdzeń CivSim.Core nie zależy od Godota, działa na osobnym wątku, przyjmuje komendy i publikuje niezmienne migawki stanu rysowane przez klienta.",
+   "tags": [
+    "documentation",
+    "adr",
+    "architektura",
+    "migawki",
+    "separacja-warstw"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0003-determinizm.md",
+   "type": "document",
+   "name": "0003-determinizm.md",
+   "filePath": "docs/decisions/0003-determinizm.md",
+   "summary": "ADR 0003: determinizm symulacji przez własny PRNG ze strumieniami na system, ekonomię na liczbach całkowitych, stałą kolejność iteracji i test hasha stanu w każdym PR.",
+   "tags": [
+    "documentation",
+    "adr",
+    "determinizm",
+    "prng",
+    "testy"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0004-mapa-hex-torus.md",
+   "type": "document",
+   "name": "0004-mapa-hex-torus.md",
+   "filePath": "docs/decisions/0004-mapa-hex-torus.md",
+   "summary": "ADR 0004: mapa z heksów flat-top we współrzędnych osiowych, fragmenty 32×32 i wiele światów; część o zawijaniu na torusie zastąpiona przez ADR 0012.",
+   "tags": [
+    "documentation",
+    "adr",
+    "mapa",
+    "heksy",
+    "zastapiona"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0005-zawartosc-w-json.md",
+   "type": "document",
+   "name": "0005-zawartosc-w-json.md",
+   "filePath": "docs/decisions/0005-zawartosc-w-json.md",
+   "summary": "ADR 0005: cała zawartość gry (technologie, zasoby, budynki, zdarzenia) w plikach data/*.json walidowanych przy starcie, kod zna tylko mechanizmy.",
+   "tags": [
+    "documentation",
+    "adr",
+    "data-driven",
+    "json",
+    "walidacja"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0006-jezyk-angielski.md",
+   "type": "document",
+   "name": "0006-jezyk-angielski.md",
+   "filePath": "docs/decisions/0006-jezyk-angielski.md",
+   "summary": "ADR 0006: gra, dane, kod i commity wyłącznie po angielsku, dokumentacja projektowa po polsku; bez systemu tłumaczeń na start.",
+   "tags": [
+    "documentation",
+    "adr",
+    "jezyk",
+    "lokalizacja"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0007-religia-poza-zakresem.md",
+   "type": "document",
+   "name": "0007-religia-poza-zakresem.md",
+   "filePath": "docs/decisions/0007-religia-poza-zakresem.md",
+   "summary": "ADR 0007: usunięcie religii z wersji podstawowej (teokrację zastępuje oligarchia, technologię Wierzenia zastępują Tradycje); religia może wrócić jako moduł.",
+   "tags": [
+    "documentation",
+    "adr",
+    "zakres",
+    "religia"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "type": "document",
+   "name": "0008-gotowosc-na-multiplayer.md",
+   "filePath": "docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "summary": "ADR 0008: gra od etapu 0 działa jako klient i autorytatywny serwer z transportem w pamięci; klient zależy tylko od CivSim.Protocol i dostaje widok filtrowany mgłą wojny (odrzucony lockstep).",
+   "tags": [
+    "documentation",
+    "adr",
+    "multiplayer",
+    "klient-serwer",
+    "protokol"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0009-zakres-core.md",
+   "type": "document",
+   "name": "0009-zakres-core.md",
+   "filePath": "docs/decisions/0009-zakres-core.md",
+   "summary": "ADR 0009: bieżący plan obejmuje tylko funkcje CORE i CORE (uproszczone) z rozdziału 16 GDD; moduły to przyszłe aktualizacje, a kultura jest usunięta całkowicie.",
+   "tags": [
+    "documentation",
+    "adr",
+    "zakres",
+    "planowanie"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+   "type": "document",
+   "name": "0010-klient-uruchamia-serwer-lokalny.md",
+   "filePath": "docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+   "summary": "ADR 0010: klient Godota uruchamia serwer przez LocalServerHost i LocalGameOptions, a Core i Data są kopiowane bez referencji kompilacji, więc kompilator pilnuje granicy klient–serwer.",
+   "tags": [
+    "documentation",
+    "adr",
+    "klient-serwer",
+    "build-system",
+    "hosting"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0011-czas-gry-w-miesiacach.md",
+   "type": "document",
+   "name": "0011-czas-gry-w-miesiacach.md",
+   "filePath": "docs/decisions/0011-czas-gry-w-miesiacach.md",
+   "summary": "ADR 0011: czas gry jako liczba miesięcy (GameState.Month) zwiększana przez CalendarSystem o monthsPerTurn z eras.json; efekty mają miesiąc końca, a tempa są przeliczane z wartości rocznych.",
+   "tags": [
+    "documentation",
+    "adr",
+    "czas-gry",
+    "kalendarz",
+    "ekonomia"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0012-mapa-kula.md",
+   "type": "document",
+   "name": "0012-mapa-kula.md",
+   "filePath": "docs/decisions/0012-mapa-kula.md",
+   "summary": "ADR 0012: mapa jako walec heksów z przejściem przez bieguny na drugą stronę planety, szerokość 4k+2 i rzędy o równej powierzchni; wszystkie sąsiedztwa przez moduł HexGlobe.",
+   "tags": [
+    "documentation",
+    "adr",
+    "mapa",
+    "geometria",
+    "heksy"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "document:docs/decisions/0013-dwa-zegary.md",
+   "type": "document",
+   "name": "0013-dwa-zegary.md",
+   "filePath": "docs/decisions/0013-dwa-zegary.md",
+   "summary": "ADR 0013: krok świata zależny od długości roku planety (żywe pory roku w SeasonSystem, np. dla Urana) oraz rzadsze wolne decyzje AI (GameState.IsDecisionTurn) i ocena komfortu temperatury.",
+   "tags": [
+    "documentation",
+    "adr",
+    "pory-roku",
+    "ai",
+    "czas-gry"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:docs/decisions/0014-model-klimatu.md",
+   "type": "document",
+   "name": "0014-model-klimatu.md",
+   "filePath": "docs/decisions/0014-model-klimatu.md",
+   "summary": "ADR 0014: fizyczny model klimatu: gwiazda i orbita z praw Keplera (StarOrbit), bilans energii Budyko–Sellersa w pasach (EnergyBalance) i cykl węglanowo-krzemianowy (CarbonCycle) z kalibracją do Ziemi i presetami planet.",
+   "tags": [
+    "documentation",
+    "adr",
+    "klimat",
+    "fizyka",
+    "fixed-point"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "document:docs/decisions/0015-epoki-lodowe.md",
+   "type": "document",
+   "name": "0015-epoki-lodowe.md",
+   "filePath": "docs/decisions/0015-epoki-lodowe.md",
+   "summary": "ADR 0015: epoki lodowe z cykli Milankovicia (ClimateCycles) i modelu lądolodów Paillarda, przeliczanie klimatu co 500 lat (ClimateSystem), zmiany poziomu morza, lód morski i zalewanie osad.",
+   "tags": [
+    "documentation",
+    "adr",
+    "klimat",
+    "epoki-lodowe",
+    "poziom-morza"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "document:docs/decisions/README.md",
+   "type": "document",
+   "name": "README.md",
+   "filePath": "docs/decisions/README.md",
+   "summary": "Indeks decyzji architektonicznych (ADR) z zasadami ich prowadzenia: numerowane pliki, nowe decyzje zastępują stare bez ich usuwania; lista ADR 0001–0015.",
+   "tags": [
+    "documentation",
+    "adr",
+    "indeks",
+    "entry-point"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0001-silnik-godot-csharp.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0003-determinizm.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0004-mapa-hex-torus.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0005-zawartosc-w-json.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0006-jezyk-angielski.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0007-religia-poza-zakresem.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0009-zakres-core.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0011-czas-gry-w-miesiacach.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0012-mapa-kula.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0013-dwa-zegary.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0014-model-klimatu.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/README.md",
+   "target": "document:docs/decisions/0015-epoki-lodowe.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0001-silnik-godot-csharp.md",
+   "target": "config:game/CivSim.Game.csproj",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+   "target": "config:src/CivSim.Core/CivSim.Core.csproj",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+   "target": "file:src/CivSim.Core/Simulation/SnapshotBuffer.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+   "target": "file:src/CivSim.Core/Simulation/GameSnapshot.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+   "target": "file:src/CivSim.Core/Commands/ICommand.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0003-determinizm.md",
+   "target": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0003-determinizm.md",
+   "target": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0003-determinizm.md",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0003-determinizm.md",
+   "target": "file:tests/CivSim.Tests/Simulation/DeterminismTests.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0003-determinizm.md",
+   "target": "document:docs/systems/determinism.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0003-determinizm.md",
+   "target": "document:CLAUDE.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0004-mapa-hex-torus.md",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0004-mapa-hex-torus.md",
+   "target": "document:docs/decisions/0012-mapa-kula.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0005-zawartosc-w-json.md",
+   "target": "file:src/CivSim.Data/ContentLoader.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0006-jezyk-angielski.md",
+   "target": "document:CLAUDE.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0007-religia-poza-zakresem.md",
+   "target": "document:docs/GDD.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "target": "config:src/CivSim.Protocol/CivSim.Protocol.csproj",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "target": "file:src/CivSim.Protocol/Transport/InMemoryConnection.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "target": "file:src/CivSim.Protocol/Transport/IConnection.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "target": "config:src/CivSim.Server/CivSim.Server.csproj",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0009-zakres-core.md",
+   "target": "document:docs/GDD.md",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0009-zakres-core.md",
+   "target": "document:docs/decisions/0007-religia-poza-zakresem.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+   "target": "file:src/CivSim.Server/LocalServerHost.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+   "target": "file:src/CivSim.Protocol/Hosting/LocalGameOptions.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+   "target": "config:game/CivSim.Game.csproj",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+   "target": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0011-czas-gry-w-miesiacach.md",
+   "target": "file:src/CivSim.Core/Simulation/CalendarSystem.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0011-czas-gry-w-miesiacach.md",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0011-czas-gry-w-miesiacach.md",
+   "target": "config:data/eras.json",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0012-mapa-kula.md",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0012-mapa-kula.md",
+   "target": "file:tests/CivSim.Tests/Map/HexGlobeTests.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0013-dwa-zegary.md",
+   "target": "file:src/CivSim.Core/WorldGen/SeasonSystem.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0013-dwa-zegary.md",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0013-dwa-zegary.md",
+   "target": "config:data/planets.json",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0013-dwa-zegary.md",
+   "target": "config:data/population.json",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0013-dwa-zegary.md",
+   "target": "document:docs/decisions/0011-czas-gry-w-miesiacach.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0014-model-klimatu.md",
+   "target": "file:src/CivSim.Core/WorldGen/StarOrbit.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0014-model-klimatu.md",
+   "target": "file:src/CivSim.Core/WorldGen/EnergyBalance.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0014-model-klimatu.md",
+   "target": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0014-model-klimatu.md",
+   "target": "config:data/planets.json",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0015-epoki-lodowe.md",
+   "target": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0015-epoki-lodowe.md",
+   "target": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0015-epoki-lodowe.md",
+   "target": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0015-epoki-lodowe.md",
+   "target": "file:src/CivSim.Core/WorldGen/SeaLevel.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0015-epoki-lodowe.md",
+   "target": "config:data/planets.json",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/decisions/0015-epoki-lodowe.md",
+   "target": "document:docs/decisions/0014-model-klimatu.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  }
+ ]
+}

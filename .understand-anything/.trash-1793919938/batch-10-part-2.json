@@ -1,0 +1,1569 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "file",
+   "name": "GameSettings.cs",
+   "filePath": "src/CivSim.Core/State/GameSettings.cs",
+   "summary": "Ustawienia wybierane przy tworzeniu gry (seed, wymiary mapy, liczba cywilizacji, typ świata i planeta), stałe przez całą grę, z presetami.",
+   "tags": [
+    "configuration",
+    "state",
+    "data-model",
+    "settings"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "file",
+   "name": "GameState.cs",
+   "filePath": "src/CivSim.Core/State/GameState.cs",
+   "summary": "Pełny autorytatywny stan gry należący do serwera: światy, cywilizacje, osady, efekty, kalendarz i liczniki; tworzy nową grę i odtwarza ją z zapisu.",
+   "tags": [
+    "state",
+    "data-model",
+    "authoritative",
+    "factory",
+    "determinism"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "file",
+   "name": "Ids.cs",
+   "filePath": "src/CivSim.Core/State/Ids.cs",
+   "summary": "Silnie typowane identyfikatory (CivId, PlayerId, WorldId, SettlementId, EffectId) jako porównywalne record struct.",
+   "tags": [
+    "type-definition",
+    "ids",
+    "value-object",
+    "state"
+   ],
+   "complexity": "simple",
+   "languageNotes": "readonly record struct z IComparable daje lekkie, porównywalne identyfikatory bez alokacji."
+  },
+  {
+   "id": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "file",
+   "name": "SettlementState.cs",
+   "filePath": "src/CivSim.Core/State/SettlementState.cs",
+   "summary": "Stan pojedynczej osady (GDD 5.3) z własnym magazynem dóbr, populacją, roszczeniami do pól i statusem porzucenia (GDD 5.5).",
+   "tags": [
+    "state",
+    "data-model",
+    "settlement",
+    "economy"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "file",
+   "name": "WorldState.cs",
+   "filePath": "src/CivSim.Core/State/WorldState.cs",
+   "summary": "Stan jednego świata (planety): geometria HexGlobe, dane mapy na pola i wolny stan klimatu.",
+   "tags": [
+    "state",
+    "data-model",
+    "world",
+    "map"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "type": "file",
+   "name": "CarbonCycle.cs",
+   "filePath": "src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "summary": "Model obiegu węgla: efekt cieplarniany z CO2, ciśnienie atmosfery, wietrzenie skał i równowagowe stężenie CO2, skalibrowane na Ziemię (280 µbar daje 33 °C).",
+   "tags": [
+    "climate",
+    "carbon-cycle",
+    "fixed-point",
+    "world-gen"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "type": "file",
+   "name": "CellClimate.cs",
+   "filePath": "src/CivSim.Core/WorldGen/CellClimate.cs",
+   "summary": "Klimat pojedynczego pola z klimatu planety i danych pola (szerokość, wysokość, szum, kontynentalność) oraz wybór biomu lądowego.",
+   "tags": [
+    "climate",
+    "biome",
+    "world-gen",
+    "fixed-point"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "type": "file",
+   "name": "ClimateCycles.cs",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "summary": "Wolne cykle klimatyczne: reguły, stan lodu obu półkul i model cykli Milankovicia z narastaniem i topnieniem lądolodów (Paillard 1998).",
+   "tags": [
+    "climate",
+    "milankovitch",
+    "ice-sheets",
+    "world-gen",
+    "fixed-point"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "type": "file",
+   "name": "ClimateSystem.cs",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "summary": "System tury, który co UpdateYears przesuwa cykle klimatu, rozwiązuje bilans energii, podnosi lub obniża morze i przelicza temperaturę, sezony i biomy pól.",
+   "tags": [
+    "turn-system",
+    "climate",
+    "simulation",
+    "world-gen"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/GameSettings.cs:GameSettings",
+   "type": "class",
+   "name": "GameSettings",
+   "filePath": "src/CivSim.Core/State/GameSettings.cs",
+   "lineRange": [
+    6,
+    51
+   ],
+   "summary": "Niezmienny rekord ustawień gry z presetami rozmiaru mapy i ustawieniami testowymi.",
+   "tags": [
+    "configuration",
+    "settings",
+    "data-model"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/GameState.cs:GameState",
+   "type": "class",
+   "name": "GameState",
+   "filePath": "src/CivSim.Core/State/GameState.cs",
+   "lineRange": [
+    14,
+    285
+   ],
+   "summary": "Autorytatywny stan gry: listy światów, cywilizacji i osad posortowane po id, kalendarz er, zakładanie i wyszukiwanie osad, tworzenie gry i ładowanie zapisu.",
+   "tags": [
+    "state",
+    "authoritative",
+    "factory",
+    "determinism"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/Ids.cs:CivId",
+   "type": "class",
+   "name": "CivId",
+   "filePath": "src/CivSim.Core/State/Ids.cs",
+   "lineRange": [
+    6,
+    13
+   ],
+   "summary": "Identyfikator cywilizacji: gęsty, od 0, nigdy nie używany ponownie.",
+   "tags": [
+    "ids",
+    "value-object",
+    "type-definition"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/Ids.cs:PlayerId",
+   "type": "class",
+   "name": "PlayerId",
+   "filePath": "src/CivSim.Core/State/Ids.cs",
+   "lineRange": [
+    16,
+    26
+   ],
+   "summary": "Identyfikator gracza (człowieka lub kontrolera AI) podłączonego do serwera.",
+   "tags": [
+    "ids",
+    "value-object",
+    "multiplayer"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/Ids.cs:WorldId",
+   "type": "class",
+   "name": "WorldId",
+   "filePath": "src/CivSim.Core/State/Ids.cs",
+   "lineRange": [
+    29,
+    39
+   ],
+   "summary": "Identyfikator świata (planety); świat 0 to Ziemia.",
+   "tags": [
+    "ids",
+    "value-object",
+    "world"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/Ids.cs:SettlementId",
+   "type": "class",
+   "name": "SettlementId",
+   "filePath": "src/CivSim.Core/State/Ids.cs",
+   "lineRange": [
+    42,
+    49
+   ],
+   "summary": "Identyfikator osady, unikalny w obrębie gry.",
+   "tags": [
+    "ids",
+    "value-object",
+    "settlement"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/Ids.cs:EffectId",
+   "type": "class",
+   "name": "EffectId",
+   "filePath": "src/CivSim.Core/State/Ids.cs",
+   "lineRange": [
+    52,
+    59
+   ],
+   "summary": "Identyfikator aktywnego efektu (long), unikalny w obrębie gry.",
+   "tags": [
+    "ids",
+    "value-object",
+    "effects"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/SettlementState.cs:SettlementState",
+   "type": "class",
+   "name": "SettlementState",
+   "filePath": "src/CivSim.Core/State/SettlementState.cs",
+   "lineRange": [
+    24,
+    191
+   ],
+   "summary": "Osada z magazynem dóbr w typie Amount, populacją grup, roszczeniami do pól i operacjami Add/TryTake na zapasach.",
+   "tags": [
+    "settlement",
+    "economy",
+    "data-model",
+    "state"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/State/WorldState.cs:WorldState",
+   "type": "class",
+   "name": "WorldState",
+   "filePath": "src/CivSim.Core/State/WorldState.cs",
+   "lineRange": [
+    6,
+    39
+   ],
+   "summary": "Stan świata łączący HexGlobe, WorldMap i ClimateState.",
+   "tags": [
+    "world",
+    "map",
+    "data-model"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/WorldGen/CarbonCycle.cs:CarbonCycle",
+   "type": "class",
+   "name": "CarbonCycle",
+   "filePath": "src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "lineRange": [
+    21,
+    128
+   ],
+   "summary": "Statyczne reguły obiegu węgla: efekt cieplarniany, ciśnienie, wietrzenie i równowagowe CO2.",
+   "tags": [
+    "carbon-cycle",
+    "climate",
+    "fixed-point"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/WorldGen/CellClimate.cs:CellClimate",
+   "type": "class",
+   "name": "CellClimate",
+   "filePath": "src/CivSim.Core/WorldGen/CellClimate.cs",
+   "lineRange": [
+    13,
+    78
+   ],
+   "summary": "Statyczne reguły klimatu pola i wyboru biomu, wspólne dla generatora i aktualizacji klimatu w grze.",
+   "tags": [
+    "climate",
+    "biome",
+    "world-gen"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateCycleRules",
+   "type": "class",
+   "name": "ClimateCycleRules",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    11,
+    84
+   ],
+   "summary": "Rekord reguł wolnych cykli klimatu wczytywanych z data/planets.json (okres aktualizacji, progi lodu, wzrost morza).",
+   "tags": [
+    "configuration",
+    "climate",
+    "data-model"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateState",
+   "type": "class",
+   "name": "ClimateState",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    100,
+    128
+   ],
+   "summary": "Wolny stan klimatu świata: lód obu półkul i bieżące CO2; zapisywany i haszowany.",
+   "tags": [
+    "climate",
+    "state",
+    "data-model"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateCycles",
+   "type": "class",
+   "name": "ClimateCycles",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    134,
+    332
+   ],
+   "summary": "Model cykli Milankovicia i lądolodów: orbita w czasie, wymuszenie letnie, rozwój pokryw lodowych i CO2 w glacjałach.",
+   "tags": [
+    "milankovitch",
+    "ice-sheets",
+    "climate",
+    "fixed-point"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/WorldGen/ClimateSystem.cs:ClimateSystem",
+   "type": "class",
+   "name": "ClimateSystem",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "lineRange": [
+    17,
+    183
+   ],
+   "summary": "Implementacja ITurnSystem przeliczająca klimat świata w fazie świata: cykle, bilans energii, poziom morza i klimat pól.",
+   "tags": [
+    "turn-system",
+    "climate",
+    "simulation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/GameSettings.cs:WithPreset",
+   "type": "function",
+   "name": "WithPreset",
+   "filePath": "src/CivSim.Core/State/GameSettings.cs",
+   "lineRange": [
+    36,
+    47
+   ],
+   "summary": "Zwraca ustawienia z wymiarami mapy i liczbą cywilizacji z presetu rozmiaru.",
+   "tags": [
+    "configuration",
+    "presets"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/GameState.cs:CalendarEra",
+   "type": "function",
+   "name": "CalendarEra",
+   "filePath": "src/CivSim.Core/State/GameState.cs",
+   "lineRange": [
+    60,
+    72
+   ],
+   "summary": "Wyznacza erę kalendarza na podstawie stanu rozwoju cywilizacji.",
+   "tags": [
+    "calendar",
+    "era"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/GameState.cs:FindSettlement",
+   "type": "function",
+   "name": "FindSettlement",
+   "filePath": "src/CivSim.Core/State/GameState.cs",
+   "lineRange": [
+    111,
+    135
+   ],
+   "summary": "Wyszukuje osadę po id binarnie w posortowanej liście.",
+   "tags": [
+    "binary-search",
+    "settlement"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/GameState.cs:AddSettlementForLoad",
+   "type": "function",
+   "name": "AddSettlementForLoad",
+   "filePath": "src/CivSim.Core/State/GameState.cs",
+   "lineRange": [
+    138,
+    148
+   ],
+   "summary": "Dodaje osadę wczytaną z zapisu, pilnując rosnącej kolejności id.",
+   "tags": [
+    "save-load",
+    "settlement"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/GameState.cs:CreateNew",
+   "type": "function",
+   "name": "CreateNew",
+   "filePath": "src/CivSim.Core/State/GameState.cs",
+   "lineRange": [
+    180,
+    221
+   ],
+   "summary": "Tworzy nową grę: świat z generatora, strumienie losowe, cywilizacje i startowy lód lądowy.",
+   "tags": [
+    "factory",
+    "world-gen",
+    "initialization"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/GameState.cs:IndexOfCivilization",
+   "type": "function",
+   "name": "IndexOfCivilization",
+   "filePath": "src/CivSim.Core/State/GameState.cs",
+   "lineRange": [
+    260,
+    284
+   ],
+   "summary": "Wyszukiwanie binarne indeksu cywilizacji po CivId.",
+   "tags": [
+    "binary-search",
+    "civilization"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/SettlementState.cs:TotalPopulation",
+   "type": "function",
+   "name": "TotalPopulation",
+   "filePath": "src/CivSim.Core/State/SettlementState.cs",
+   "lineRange": [
+    80,
+    89
+   ],
+   "summary": "Sumuje populację wszystkich grup osady.",
+   "tags": [
+    "population",
+    "query"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/SettlementState.cs:TotalStock",
+   "type": "function",
+   "name": "TotalStock",
+   "filePath": "src/CivSim.Core/State/SettlementState.cs",
+   "lineRange": [
+    158,
+    167
+   ],
+   "summary": "Sumuje zapasy wszystkich dóbr w magazynie osady.",
+   "tags": [
+    "economy",
+    "storage"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/State/SettlementState.cs:TryTake",
+   "type": "function",
+   "name": "TryTake",
+   "filePath": "src/CivSim.Core/State/SettlementState.cs",
+   "lineRange": [
+    181,
+    190
+   ],
+   "summary": "Próbuje pobrać ilość dobra z magazynu; zwraca false przy niewystarczającym zapasie.",
+   "tags": [
+    "economy",
+    "storage"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:GreenhouseTenths",
+   "type": "function",
+   "name": "GreenhouseTenths",
+   "filePath": "src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "lineRange": [
+    47,
+    60
+   ],
+   "summary": "Liczy ocieplenie cieplarniane w dziesiątych stopnia z CO2 i ciśnienia.",
+   "tags": [
+    "greenhouse",
+    "climate"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:Co2ForGreenhouse",
+   "type": "function",
+   "name": "Co2ForGreenhouse",
+   "filePath": "src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "lineRange": [
+    63,
+    73
+   ],
+   "summary": "Odwraca model: CO2 potrzebne dla zadanego efektu cieplarnianego.",
+   "tags": [
+    "greenhouse",
+    "inverse"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:EquilibriumCo2Microbar",
+   "type": "function",
+   "name": "EquilibriumCo2Microbar",
+   "filePath": "src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "lineRange": [
+    79,
+    100
+   ],
+   "summary": "Szuka stężenia CO2, przy którym wietrzenie równoważy wulkanizm.",
+   "tags": [
+    "carbon-cycle",
+    "equilibrium"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:BandWeathering",
+   "type": "function",
+   "name": "BandWeathering",
+   "filePath": "src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "lineRange": [
+    115,
+    127
+   ],
+   "summary": "Liczy wietrzenie w pasach szerokości z temperatury pasa.",
+   "tags": [
+    "weathering",
+    "climate"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/CellClimate.cs:LandBiome",
+   "type": "function",
+   "name": "LandBiome",
+   "filePath": "src/CivSim.Core/WorldGen/CellClimate.cs",
+   "lineRange": [
+    42,
+    77
+   ],
+   "summary": "Wybiera biom lądowy pola z temperatury, wilgotności i okresu wegetacji według definicji biomów.",
+   "tags": [
+    "biome",
+    "classification"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:MeasureSunlight",
+   "type": "function",
+   "name": "MeasureSunlight",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    153,
+    174
+   ],
+   "summary": "Mierzy zakres letniego nasłonecznienia w cyklach orbity do skalowania wymuszenia.",
+   "tags": [
+    "insolation",
+    "calibration"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:OrbitAt",
+   "type": "function",
+   "name": "OrbitAt",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    177,
+    198
+   ],
+   "summary": "Zwraca nachylenie, mimośród i precesję orbity w danym roku.",
+   "tags": [
+    "orbit",
+    "milankovitch"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:Advance",
+   "type": "function",
+   "name": "Advance",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    215,
+    230
+   ],
+   "summary": "Przesuwa stan lodu obu półkul do zadanego roku krokami modelu.",
+   "tags": [
+    "ice-sheets",
+    "simulation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:SheetCover",
+   "type": "function",
+   "name": "SheetCover",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    238,
+    263
+   ],
+   "summary": "Rozkłada lądolód na pasy szerokości jako pokrycie lodem.",
+   "tags": [
+    "ice-sheets",
+    "bands"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:Step",
+   "type": "function",
+   "name": "Step",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    296,
+    311
+   ],
+   "summary": "Jeden krok modelu Paillarda: zmiana reżimu i objętości lodu półkuli.",
+   "tags": [
+    "ice-sheets",
+    "paillard"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:SummerSunlight",
+   "type": "function",
+   "name": "SummerSunlight",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "lineRange": [
+    314,
+    327
+   ],
+   "summary": "Liczy letnie nasłonecznienie na wysokiej szerokości dla danej orbity.",
+   "tags": [
+    "insolation",
+    "orbit"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "lineRange": [
+    33,
+    62
+   ],
+   "summary": "Co okres aktualizacji przesuwa cykle, aktualizuje CO2 i poziom morza, a potem przelicza klimat świata.",
+   "tags": [
+    "turn-system",
+    "climate"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Apply",
+   "type": "function",
+   "name": "Apply",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "lineRange": [
+    68,
+    124
+   ],
+   "summary": "Rozwiązuje bilans energii dla bieżącej orbity i lodu, po czym zapisuje temperaturę, sezony i biomy na polach.",
+   "tags": [
+    "climate",
+    "map-update"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:LandShare",
+   "type": "function",
+   "name": "LandShare",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "lineRange": [
+    127,
+    151
+   ],
+   "summary": "Liczy udział lądu w każdym pasie szerokości na podstawie mapy.",
+   "tags": [
+    "land",
+    "bands"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Prepare",
+   "type": "function",
+   "name": "Prepare",
+   "filePath": "src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "lineRange": [
+    167,
+    182
+   ],
+   "summary": "Przygotowuje model cykli i bufory dla świata przy pierwszym uruchomieniu.",
+   "tags": [
+    "initialization",
+    "climate"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/CivSim.Core/State/GameSettings.cs",
+   "target": "class:src/CivSim.Core/State/GameSettings.cs:GameSettings",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameSettings.cs",
+   "target": "class:src/CivSim.Core/State/GameSettings.cs:GameSettings",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "class:src/CivSim.Core/State/GameState.cs:GameState",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "class:src/CivSim.Core/State/GameState.cs:GameState",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:CivId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:CivId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:PlayerId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:PlayerId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:WorldId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:WorldId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:SettlementId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:SettlementId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:EffectId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/Ids.cs",
+   "target": "class:src/CivSim.Core/State/Ids.cs:EffectId",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "class:src/CivSim.Core/State/SettlementState.cs:SettlementState",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "class:src/CivSim.Core/State/SettlementState.cs:SettlementState",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/WorldState.cs",
+   "target": "class:src/CivSim.Core/State/WorldState.cs:WorldState",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/WorldState.cs",
+   "target": "class:src/CivSim.Core/State/WorldState.cs:WorldState",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "class:src/CivSim.Core/WorldGen/CarbonCycle.cs:CarbonCycle",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "class:src/CivSim.Core/WorldGen/CarbonCycle.cs:CarbonCycle",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "class:src/CivSim.Core/WorldGen/CellClimate.cs:CellClimate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "class:src/CivSim.Core/WorldGen/CellClimate.cs:CellClimate",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateCycleRules",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateCycleRules",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateState",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateState",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateCycles",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateCycles.cs:ClimateCycles",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateSystem.cs:ClimateSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "class:src/CivSim.Core/WorldGen/ClimateSystem.cs:ClimateSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameSettings.cs",
+   "target": "function:src/CivSim.Core/State/GameSettings.cs:WithPreset",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "function:src/CivSim.Core/State/GameState.cs:CalendarEra",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "function:src/CivSim.Core/State/GameState.cs:FindSettlement",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "function:src/CivSim.Core/State/GameState.cs:AddSettlementForLoad",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "function:src/CivSim.Core/State/GameState.cs:CreateNew",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "function:src/CivSim.Core/State/GameState.cs:IndexOfCivilization",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "function:src/CivSim.Core/State/SettlementState.cs:TotalPopulation",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "function:src/CivSim.Core/State/SettlementState.cs:TotalStock",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "function:src/CivSim.Core/State/SettlementState.cs:TryTake",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:GreenhouseTenths",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:Co2ForGreenhouse",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:EquilibriumCo2Microbar",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:BandWeathering",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "function:src/CivSim.Core/WorldGen/CellClimate.cs:LandBiome",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:MeasureSunlight",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:OrbitAt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:Advance",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:SheetCover",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:Step",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:SummerSunlight",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Apply",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:LandShare",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Prepare",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/WorldGen/ClimateSystem.cs:ClimateSystem",
+   "target": "class:src/CivSim.Core/Simulation/ITurnSystem.cs:ITurnSystem",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Apply",
+   "target": "function:src/CivSim.Core/WorldGen/CellClimate.cs:LandBiome",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Execute",
+   "target": "function:src/CivSim.Core/WorldGen/SeaLevel.cs:Apply",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Execute",
+   "target": "function:src/CivSim.Core/WorldGen/SeaLevel.cs:LandIce",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Apply",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:OrbitAt",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/WorldGen/ClimateSystem.cs:Apply",
+   "target": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:SheetCover",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/WorldGen/ClimateCycles.cs:SummerSunlight",
+   "target": "function:src/CivSim.Core/WorldGen/Planet.cs:At",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/WorldGen/CarbonCycle.cs:EquilibriumCo2Microbar",
+   "target": "function:src/CivSim.Core/WorldGen/EnergyBalance.cs:Forcing",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/State/GameState.cs:CreateNew",
+   "target": "function:src/CivSim.Core/WorldGen/SeaLevel.cs:LandIce",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameSettings.cs",
+   "target": "file:src/CivSim.Core/WorldGen/Planet.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameSettings.cs",
+   "target": "file:src/CivSim.Core/WorldGen/WorldType.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/State/EffectBook.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/WorldGen/SeaLevel.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/WorldGen/Planet.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/GameState.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/SettlementState.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/WorldState.cs",
+   "target": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/WorldState.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/WorldState.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/State/WorldState.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "file:src/CivSim.Core/WorldGen/EnergyBalance.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "file:src/CivSim.Core/WorldGen/Planet.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CarbonCycle.cs",
+   "target": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "file:src/CivSim.Core/WorldGen/Planet.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "file:src/CivSim.Core/Content/BiomeDefinition.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "file:src/CivSim.Core/WorldGen/EnergyBalance.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "file:src/CivSim.Core/WorldGen/Planet.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "file:src/CivSim.Core/WorldGen/SeaLevel.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnContext.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnPhase.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/WorldGen/CellClimate.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/WorldGen/ClimateCycles.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/WorldGen/EnergyBalance.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/WorldGen/Planet.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/WorldGen/SeaLevel.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "target": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

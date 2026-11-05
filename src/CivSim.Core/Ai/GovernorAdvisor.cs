@@ -199,10 +199,18 @@ public sealed class GovernorAdvisor : Advisor
         bool uncomfortable = Comfort(state, world, civ, world.Geometry.Index(s.Cell)) < 100;
         bool rested = (state.Month - s.MovedMonth) >= _rules.MinTurnsBetweenMoves * (long)state.MonthsPerTurn(_content);
         bool mobile = _content.SettlementLevels[s.Level].Mobile;
-        if (mobile && (hungry || uncomfortable) && rested)
+
+        // A camp that is not starving looks around every few turns (staggered by camp), not every turn: a search that
+        // found nothing rarely finds something the next turn. With live seasons it looks every turn to follow the summer.
+        bool starving = s.FedPerMille < _content.Ai.StarvingFedPercent * 10;
+        bool searchTurn = starving || world.Map.LiveSeasons || (state.Turn + s.Id.Value) % _content.Ai.SearchEveryTurns == 0;
+        if (mobile && (hungry || uncomfortable) && rested && searchTurn)
         {
             // Staying is the incumbent: another place must be better by a margin (GDD 8.6, hysteresis).
-            long here = SiteEvaluation(state, world, civ, s.Cell).Value;
+            // Both sides are weighed alike, so the goal weight never tips staying against moving; the direction does.
+            Evaluation stay = SiteEvaluation(state, world, civ, s.Cell);
+            Weigh(ref stay, civ, Goal.Expansion);
+            long here = stay.Value;
             DeterministicRandom? random = RandomFor(state, s.Id.Value);
             (HexCoord best, Evaluation move) = BestSite(state, world, civ, s, splitting: false, random);
             if (move.Value * 100 > here * (100 + _rules.MoveWhenBetterByPercent))
@@ -251,7 +259,10 @@ public sealed class GovernorAdvisor : Advisor
         }
 
         int max = _content.SettlementLevels[s.Level].MaxPopulation;
-        bool crowded = people >= _rules.MinSplitPeople && people * 100L >= (long)max * _rules.SplitAbovePercentOfLevel;
+        // An expansive civilization (strategist's weight times character) sends groups out of fuller camps earlier.
+        long drive = Math.Max(1, (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral);
+        long splitAbove = Math.Clamp(_rules.SplitAbovePercentOfLevel * Factor.Neutral / drive, _content.Ai.SplitMinPercentOfLevel, 100);
+        bool crowded = people >= _rules.MinSplitPeople && people * 100L >= max * splitAbove;
         if (crowded)
         {
             // No fixed limit of camps: a group leaves only for land that can feed it.
@@ -314,14 +325,25 @@ public sealed class GovernorAdvisor : Advisor
                 continue;
             }
 
-            Evaluation e = SiteEvaluation(state, world, civ, c);
-            e.Apply(FactorId.Distance, _farNearness, distance);
-            Weigh(ref e, civ);
+            int comfort = Comfort(state, world, civ, i);
+            long untouched = UntouchedSiteFood(world, c);
+            if (untouched != NoBound)
+            {
+                Evaluation bound = Rate(untouched, comfort);
+                Far(ref bound, world, civ, from.Cell, c, distance);
+                if (!Chooser.WouldKeep(bound.Value))
+                {
+                    continue;
+                }
+            }
+
+            Evaluation e = Rate(SiteFood(world, c), comfort);
+            Far(ref e, world, civ, from.Cell, c, distance);
             Chooser.Offer(i, e);
         }
 
         // Only the chosen place needs a known way there.
-        int pick = Chooser.Pick(random);
+        int pick = Pick(civ, random);
         if (pick < 0)
         {
             return (from.Cell, default);
@@ -333,9 +355,35 @@ public sealed class GovernorAdvisor : Advisor
             : (geo.FromIndex(target), Chooser.EvaluationAt(pick));
     }
 
-    // Moving serves expansion: the strategist's weight and the character apply (both neutral until stage 4b).
-    private static void Weigh(ref Evaluation e, CivilizationState civ) =>
-        e.Weigh(GoalWeight(civ, Goal.Expansion), CharacterMultiplier(civ, Goal.Expansion));
+    // Moving to free land serves expansion, driving out a foreign camp serves conquest: the strategist's weight and the
+    // character apply.
+    private static void Weigh(ref Evaluation e, CivilizationState civ, Goal goal) =>
+        e.Weigh(GoalWeight(civ, goal), CharacterMultiplier(civ, goal));
+
+    // GDD 7.6: a place closer to the strategist's expansion target than the camp is now gets a small boost.
+    private void Toward(ref Evaluation e, WorldState world, CivilizationState civ, HexCoord from, HexCoord to)
+    {
+        int target = civ.ExpansionTarget;
+        if (target < 0 || world.Id != WorldId.Earth || target >= world.Geometry.CellCount || _content.Ai.DirectionBonusPercent == 0)
+        {
+            return;
+        }
+
+        HexCoord goal = world.Geometry.FromIndex(target);
+        int now = world.Geometry.Distance(from, goal);
+        int then = world.Geometry.Distance(to, goal);
+        if (then < now)
+        {
+            e.Apply(FactorId.Direction, (100 + _content.Ai.DirectionBonusPercent) * 10, now - then);
+        }
+    }
+
+    /// <summary>
+    /// How good a place is to live in for <paramref name="civ"/> this turn: the food of its land times comfort.
+    /// Valid after this advisor's <see cref="IssueCommands"/> ran this turn (the strategist reads it).
+    /// </summary>
+    internal long SiteValue(GameState state, WorldState world, CivilizationState civ, HexCoord center) =>
+        SiteEvaluation(state, world, civ, center).Value;
 
     private HexCoord[] _far = [];
     private readonly Perception.PathFinder _paths = new();
@@ -419,14 +467,24 @@ public sealed class GovernorAdvisor : Advisor
             }
 
             int distance = _ringOf[k];
-            Evaluation e = SiteEvaluation(state, world, civ, c);
-            e.Apply(FactorId.Distance, _nearness, distance);
-            if (there is { IsActive: false } && (there.Owner == civ.Id || there.ClaimCiv == civ.Id.Value))
+            int comfort = Comfort(state, world, civ, i);
+            bool campsite = there is { IsActive: false } && (there.Owner == civ.Id || there.ClaimCiv == civ.Id.Value);
+
+            // First the same score from untouched land: an upper bound, since gathering only lowers the wild food.
+            // A place whose bound the chooser would not keep is skipped without counting its food now.
+            long untouched = UntouchedSiteFood(world, c);
+            if (untouched != NoBound)
             {
-                e.Apply(FactorId.OwnCampsite, (100 + _rules.OwnCampsiteBonusPercent) * 10, 1);
+                Evaluation bound = Rate(untouched, comfort);
+                Place(ref bound, world, civ, from.Cell, c, distance, campsite, foreignCamp);
+                if (!Chooser.WouldKeep(bound.Value))
+                {
+                    continue;
+                }
             }
 
-            Weigh(ref e, civ);
+            Evaluation e = Rate(SiteFood(world, c), comfort);
+            Place(ref e, world, civ, from.Cell, c, distance, campsite, foreignCamp);
 
             // The costly checks run only for places the chooser would keep.
             if (!Chooser.WouldKeep(e.Value))
@@ -452,8 +510,34 @@ public sealed class GovernorAdvisor : Advisor
             }
         }
 
-        int pick = Chooser.Pick(random);
+        int pick = Pick(civ, random);
         return pick < 0 ? (from.Cell, default) : (geo.FromIndex(Chooser.KeyAt(pick)), Chooser.EvaluationAt(pick));
+    }
+
+    // The factors of a place a journey away: nearness, the direction, goal and character.
+    private void Far(ref Evaluation e, WorldState world, CivilizationState civ, HexCoord from, HexCoord to, int distance)
+    {
+        e.Apply(FactorId.Distance, _farNearness, distance);
+        Toward(ref e, world, civ, from, to);
+        Weigh(ref e, civ, Goal.Expansion);
+    }
+
+    // The factors of a place within one move: nearness, an old campsite of the tribe, the direction, goal and character.
+    private void Place(ref Evaluation e, WorldState world, CivilizationState civ, HexCoord from, HexCoord to, int distance, bool campsite, bool foreignCamp)
+    {
+        e.Apply(FactorId.Distance, _nearness, distance);
+        if (campsite)
+        {
+            e.Apply(FactorId.OwnCampsite, (100 + _rules.OwnCampsiteBonusPercent) * 10, 1);
+        }
+
+        // The direction points to free land: it never makes a foreign camp look better.
+        if (!foreignCamp)
+        {
+            Toward(ref e, world, civ, from, to);
+        }
+
+        Weigh(ref e, civ, foreignCamp ? Goal.Conquest : Goal.Expansion);
     }
 
     // Land the civilization holds or nobody holds.
@@ -557,14 +641,46 @@ public sealed class GovernorAdvisor : Advisor
 
     // How good a place is to live in: the food its land gives, times how pleasant its temperature is for this
     // civilization (GDD 8.3: the AI weighs places; nothing here is a fixed "flee the winter" rule).
-    private Evaluation SiteEvaluation(GameState state, WorldState world, CivilizationState civ, HexCoord center)
+    private Evaluation SiteEvaluation(GameState state, WorldState world, CivilizationState civ, HexCoord center) =>
+        Rate(SiteFood(world, center), Comfort(state, world, civ, world.Geometry.Index(center)));
+
+    private static Evaluation Rate(long food, int comfort)
     {
-        long food = SiteFood(world, center);
-        int comfort = Comfort(state, world, civ, world.Geometry.Index(center));
         Evaluation e = Evaluation.Of(food);
         e.Note(FactorId.Food, food);
         e.Apply(FactorId.Comfort, comfort * 10, comfort);
         return e;
+    }
+
+    private const long NoBound = -1;
+    private long[] _untouched = [];
+    private long[] _untouchedVersion = [];
+    private long _cellFoodVersion;
+
+    // Food per year the land around a cell would give if nobody had gathered there: SiteFood never exceeds it. Kept
+    // until the climate changes the land; NoBound with live seasons (the land changes every turn) and off Earth.
+    private long UntouchedSiteFood(WorldState world, HexCoord center)
+    {
+        if (world.Id != WorldId.Earth || world.Map.LiveSeasons)
+        {
+            return NoBound;
+        }
+
+        _ = CellFood(world);
+        int cell = world.Geometry.Index(center);
+        if (_untouched.Length != world.Geometry.CellCount)
+        {
+            _untouched = new long[world.Geometry.CellCount];
+            _untouchedVersion = new long[world.Geometry.CellCount];
+        }
+
+        if (_untouchedVersion[cell] != _cellFoodVersion)
+        {
+            _untouched[cell] = ComputeSiteFood(world, center, wild: false);
+            _untouchedVersion[cell] = _cellFoodVersion;
+        }
+
+        return _untouched[cell];
     }
 
     /// <summary>
@@ -587,7 +703,7 @@ public sealed class GovernorAdvisor : Advisor
         return Math.Max(_rules.ComfortMinPercent, 100 - ((cold + hot) * _rules.ComfortPercentPerDegree));
     }
 
-    private long ComputeSiteFood(WorldState world, HexCoord center)
+    private long ComputeSiteFood(WorldState world, HexCoord center, bool wild = true)
     {
         WorldMap map = world.Map;
         HexGlobe geo = world.Geometry;
@@ -614,7 +730,7 @@ public sealed class GovernorAdvisor : Advisor
                 continue;
             }
 
-            food += full[cell] * map.WildFood[cell] / WorldMap.FullWildFood;
+            food += wild ? full[cell] * map.WildFood[cell] / WorldMap.FullWildFood : full[cell];
             geo.GetNeighbors(geo.FromIndex(cell), neighbours);
             foreach (HexCoord nc in neighbours)
             {
@@ -659,6 +775,7 @@ public sealed class GovernorAdvisor : Advisor
 
             _cellFood[w] = food;
             _cellFoodStamp = _stamp;
+            _cellFoodVersion++;
             while (_cellFoodClimate.Count <= w)
             {
                 _cellFoodClimate.Add(-1);

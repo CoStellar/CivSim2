@@ -170,6 +170,7 @@ public sealed class GameState
             state._civilizations.Add(new CivilizationState(new CivId(i), $"Civilization {i + 1}", PlayerId.Ai));
         }
 
+        Ai.Character.Roll(state);
         return state;
     }
 

@@ -1,0 +1,1663 @@
+{
+ "nodes": [
+  {
+   "id": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "type": "file",
+   "name": "WorldMapTests.cs",
+   "filePath": "tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "summary": "Testy mapy świata: siatka fragmentów 32×32, częściowe fragmenty brzegowe, flagi dirty, migawka zmienionych fragmentów oraz udział mapy w haszu stanu i w zapisie.",
+   "tags": [
+    "test",
+    "map",
+    "dirty-flags",
+    "chunks",
+    "xunit"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Map/WorldMapTests.cs:WorldMapTests",
+   "type": "class",
+   "name": "WorldMapTests",
+   "filePath": "tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "lineRange": [
+    12,
+    129
+   ],
+   "summary": "Klasa testów xUnit (7 metod) — testy mapy świata.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:ChunkGridCoversTheMap",
+   "type": "function",
+   "name": "ChunkGridCoversTheMap",
+   "filePath": "tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "lineRange": [
+    14,
+    39
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „chunk grid covers the map”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:DirtySetTracksAndListsInOrder",
+   "type": "function",
+   "name": "DirtySetTracksAndListsInOrder",
+   "filePath": "tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "lineRange": [
+    49,
+    68
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „dirty set tracks and lists in order”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:SettingAValueMarksOnlyItsChunkAndOnlyWhenItChanges",
+   "type": "function",
+   "name": "SettingAValueMarksOnlyItsChunkAndOnlyWhenItChanges",
+   "filePath": "tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "lineRange": [
+    70,
+    87
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „setting avalue marks only its chunk and only when it changes”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:SnapshotListsChangedChunksAndTheTurnClearsThem",
+   "type": "function",
+   "name": "SnapshotListsChangedChunksAndTheTurnClearsThem",
+   "filePath": "tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "lineRange": [
+    97,
+    106
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „snapshot lists changed chunks and the turn clears them”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:MapIsPartOfTheHashAndOfTheSave",
+   "type": "function",
+   "name": "MapIsPartOfTheHashAndOfTheSave",
+   "filePath": "tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "lineRange": [
+    108,
+    128
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „map is part of the hash and of the save”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "type": "file",
+   "name": "AmountTests.cs",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "summary": "Testy typu Amount (setne części jednostki): formatowanie, parsowanie, dokładna arytmetyka, przepełnienia, zaokrąglanie, MulDiv i podział proporcjonalny; plus test pierwiastka całkowitego IntMath.",
+   "tags": [
+    "test",
+    "numerics",
+    "fixed-point",
+    "determinism",
+    "xunit"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Numerics/AmountTests.cs:AmountTests",
+   "type": "class",
+   "name": "AmountTests",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    7,
+    140
+   ],
+   "summary": "Klasa testów xUnit (11 metod) — testy typu amount (setne części jednostki).",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Numerics/AmountTests.cs:IntMathSqrtTests",
+   "type": "class",
+   "name": "IntMathSqrtTests",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    142,
+    155
+   ],
+   "summary": "Test zaokrąglania w dół całkowitego pierwiastka IntMath.Sqrt.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:ParsesValidText",
+   "type": "function",
+   "name": "ParsesValidText",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    18,
+    27
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „parses valid text”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:RejectsInvalidText",
+   "type": "function",
+   "name": "RejectsInvalidText",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    29,
+    41
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „rejects invalid text”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:ArithmeticIsExact",
+   "type": "function",
+   "name": "ArithmeticIsExact",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    43,
+    57
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „arithmetic is exact”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:DivisionRoundsAsRequested",
+   "type": "function",
+   "name": "DivisionRoundsAsRequested",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    67,
+    82
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „division rounds as requested”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:PercentRatioAndProduct",
+   "type": "function",
+   "name": "PercentRatioAndProduct",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    84,
+    93
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „percent ratio and product”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:SplitAlwaysAddsUpExactly",
+   "type": "function",
+   "name": "SplitAlwaysAddsUpExactly",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    104,
+    116
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „split always adds up exactly”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:SplitRespectsWeightsAndZeros",
+   "type": "function",
+   "name": "SplitRespectsWeightsAndZeros",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    118,
+    129
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „split respects weights and zeros”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:SqrtRoundsDown",
+   "type": "function",
+   "name": "SqrtRoundsDown",
+   "filePath": "tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "lineRange": [
+    144,
+    154
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „sqrt rounds down”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "type": "file",
+   "name": "MapMemoryTests.cs",
+   "filePath": "tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "summary": "Testy pamięci mapy cywilizacji: początkowa znajomość otoczenia, zanikanie pamięci ustnej, zwiadowcy poszerzający wiedzę, wyprawy tylko na znany ląd oraz chodzenie po lodzie morskim.",
+   "tags": [
+    "test",
+    "perception",
+    "fog-of-war",
+    "map-memory",
+    "xunit"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Perception/MapMemoryTests.cs:MapMemoryTests",
+   "type": "class",
+   "name": "MapMemoryTests",
+   "filePath": "tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "lineRange": [
+    14,
+    127
+   ],
+   "summary": "Klasa testów xUnit (7 metod) — testy pamięci mapy cywilizacji.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:Known",
+   "type": "function",
+   "name": "Known",
+   "filePath": "tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "lineRange": [
+    20,
+    29
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „known”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:OralMemoryFadesUnlessTheTribeComesBack",
+   "type": "function",
+   "name": "OralMemoryFadesUnlessTheTribeComesBack",
+   "filePath": "tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "lineRange": [
+    40,
+    51
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „oral memory fades unless the tribe comes back”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:ScoutsWidenWhatACivilizationKnows",
+   "type": "function",
+   "name": "ScoutsWidenWhatACivilizationKnows",
+   "filePath": "tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "lineRange": [
+    53,
+    65
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „scouts widen what acivilization knows”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:JourneysGoOnlyToKnownLandAndWalkThereOverTurns",
+   "type": "function",
+   "name": "JourneysGoOnlyToKnownLandAndWalkThereOverTurns",
+   "filePath": "tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "lineRange": [
+    67,
+    110
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „journeys go only to known land and walk there over turns”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:SeaIceCanBeWalked",
+   "type": "function",
+   "name": "SeaIceCanBeWalked",
+   "filePath": "tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "lineRange": [
+    112,
+    126
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „sea ice can be walked”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "type": "file",
+   "name": "MigrationTests.cs",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "summary": "Testy migracji i stref wpływów: obozy zajmują okoliczną ziemię, wpływ maleje i zatrzymuje się na wodzie, zbieractwo i odrastanie, przenoszenie i dzielenie obozów, rozprzestrzenianie się plemion przez TribeAi i jej determinizm.",
+   "tags": [
+    "test",
+    "population",
+    "migration",
+    "influence",
+    "ai"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Population/MigrationTests.cs:MigrationTests",
+   "type": "class",
+   "name": "MigrationTests",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    16,
+    242
+   ],
+   "summary": "Klasa testów xUnit (14 metod) — testy migracji i stref wpływów.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:EveryCampClaimsTheLandAroundIt",
+   "type": "function",
+   "name": "EveryCampClaimsTheLandAroundIt",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    30,
+    44
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „every camp claims the land around it”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:InfluenceIsStrongestAtTheCampAndStopsAtWater",
+   "type": "function",
+   "name": "InfluenceIsStrongestAtTheCampAndStopsAtWater",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    46,
+    68
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „influence is strongest at the camp and stops at water”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:WarriorsWidenTheZone",
+   "type": "function",
+   "name": "WarriorsWidenTheZone",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    70,
+    80
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „warriors widen the zone”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:GatheringEatsWildFoodAndUnusedLandGrowsBack",
+   "type": "function",
+   "name": "GatheringEatsWildFoodAndUnusedLandGrowsBack",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    82,
+    108
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „gathering eats wild food and unused land grows back”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:CampsMoveWithTheirPeopleAndWarehouse",
+   "type": "function",
+   "name": "CampsMoveWithTheirPeopleAndWarehouse",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    110,
+    126
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „camps move with their people and warehouse”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:MovesAreCheckedOnTheServer",
+   "type": "function",
+   "name": "MovesAreCheckedOnTheServer",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    128,
+    141
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „moves are checked on the server”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:SplitGroupsTakeTheirShareOfPeopleAndGoods",
+   "type": "function",
+   "name": "SplitGroupsTakeTheirShareOfPeopleAndGoods",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    143,
+    165
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „split groups take their share of people and goods”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:TribesSpreadOverTheLandOnTheirOwn",
+   "type": "function",
+   "name": "TribesSpreadOverTheLandOnTheirOwn",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    167,
+    178
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „tribes spread over the land on their own”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:GamesWithTheTribeAiAreDeterministic",
+   "type": "function",
+   "name": "GamesWithTheTribeAiAreDeterministic",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    180,
+    195
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „games with the tribe ai are deterministic”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:TheAiLeavesPlayerCivilizationsAlone",
+   "type": "function",
+   "name": "TheAiLeavesPlayerCivilizationsAlone",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    197,
+    210
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „the ai leaves player civilizations alone”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:FindLand",
+   "type": "function",
+   "name": "FindLand",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    212,
+    228
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „find land”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/MigrationTests.cs:FindWater",
+   "type": "function",
+   "name": "FindWater",
+   "filePath": "tests/CivSim.Tests/Population/MigrationTests.cs",
+   "lineRange": [
+    230,
+    241
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „find water”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "type": "file",
+   "name": "PopulationTests.cs",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "summary": "Testy populacji: dane i walidacja, wzrost składany rocznie, start z 50 osobami, jedzenie i głód, zachowanie liczby ludzi przy zaokrągleniach, dryf warstw społecznych, nasycenie wzrostu, zapis/odczyt i niezależność od długości tury.",
+   "tags": [
+    "test",
+    "population",
+    "determinism",
+    "xunit"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:tests/CivSim.Tests/Population/PopulationTests.cs:PopulationTests",
+   "type": "class",
+   "name": "PopulationTests",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    17,
+    244
+   ],
+   "summary": "Klasa testów xUnit (16 metod) — testy populacji.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-class"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:FindStratum",
+   "type": "function",
+   "name": "FindStratum",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    31,
+    42
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „find stratum”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:PopulationDataLoads",
+   "type": "function",
+   "name": "PopulationDataLoads",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    44,
+    54
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „population data loads”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:BrokenPopulationDataReportsEveryError",
+   "type": "function",
+   "name": "BrokenPopulationDataReportsEveryError",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    56,
+    81
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „broken population data reports every error”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:EveryTribeStartsWithFiftyPeople",
+   "type": "function",
+   "name": "EveryTribeStartsWithFiftyPeople",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    100,
+    109
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „every tribe starts with fifty people”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:GatherersBringFoodHomeAndEveryoneEats",
+   "type": "function",
+   "name": "GatherersBringFoodHomeAndEveryoneEats",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    111,
+    122
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „gatherers bring food home and everyone eats”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:WellFedTribesGrow",
+   "type": "function",
+   "name": "WellFedTribesGrow",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    124,
+    133
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „well fed tribes grow”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:TribesWithoutFoodStarveAndDieOut",
+   "type": "function",
+   "name": "TribesWithoutFoodStarveAndDieOut",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    135,
+    154
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „tribes without food starve and die out”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:PeopleNeverAppearOrVanishThroughRounding",
+   "type": "function",
+   "name": "PeopleNeverAppearOrVanishThroughRounding",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    156,
+    173
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „people never appear or vanish through rounding”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:StrataDriftTowardsTheirTargetShares",
+   "type": "function",
+   "name": "StrataDriftTowardsTheirTargetShares",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    175,
+    191
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „strata drift towards their target shares”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:TribesLevelOffInsteadOfExploding",
+   "type": "function",
+   "name": "TribesLevelOffInsteadOfExploding",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    193,
+    207
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „tribes level off instead of exploding”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:tests/CivSim.Tests/Population/PopulationTests.cs:PopulationSurvivesSaveAndLoadAndStaysDeterministic",
+   "type": "function",
+   "name": "PopulationSurvivesSaveAndLoadAndStaysDeterministic",
+   "filePath": "tests/CivSim.Tests/Population/PopulationTests.cs",
+   "lineRange": [
+    209,
+    233
+   ],
+   "summary": "Test xUnit sprawdzający scenariusz „population survives save and load and stays deterministic”.",
+   "tags": [
+    "test",
+    "xunit",
+    "test-case"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "class:tests/CivSim.Tests/Map/WorldMapTests.cs:WorldMapTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "class:tests/CivSim.Tests/Map/WorldMapTests.cs:WorldMapTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:ChunkGridCoversTheMap",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:DirtySetTracksAndListsInOrder",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:SettingAValueMarksOnlyItsChunkAndOnlyWhenItChanges",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:SnapshotListsChangedChunksAndTheTurnClearsThem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "function:tests/CivSim.Tests/Map/WorldMapTests.cs:MapIsPartOfTheHashAndOfTheSave",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "target": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/DirtyChunks.cs",
+   "target": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Map/MapChunks.cs",
+   "target": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Core/Hashing/GameStateHash.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexEdge.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Map/WorldMapTests.cs",
+   "target": "file:src/CivSim.Server/Saves/SaveGameSerializer.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "class:tests/CivSim.Tests/Numerics/AmountTests.cs:AmountTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "class:tests/CivSim.Tests/Numerics/AmountTests.cs:AmountTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "class:tests/CivSim.Tests/Numerics/AmountTests.cs:IntMathSqrtTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "class:tests/CivSim.Tests/Numerics/AmountTests.cs:IntMathSqrtTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:ParsesValidText",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:RejectsInvalidText",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:ArithmeticIsExact",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:DivisionRoundsAsRequested",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:PercentRatioAndProduct",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:SplitAlwaysAddsUpExactly",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:SplitRespectsWeightsAndZeros",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "function:tests/CivSim.Tests/Numerics/AmountTests.cs:SqrtRoundsDown",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "target": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Numerics/AmountTests.cs",
+   "target": "file:src/CivSim.Core/Numerics/Rounding.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "class:tests/CivSim.Tests/Perception/MapMemoryTests.cs:MapMemoryTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "class:tests/CivSim.Tests/Perception/MapMemoryTests.cs:MapMemoryTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:Known",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:OralMemoryFadesUnlessTheTribeComesBack",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:ScoutsWidenWhatACivilizationKnows",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:JourneysGoOnlyToKnownLandAndWalkThereOverTurns",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "function:tests/CivSim.Tests/Perception/MapMemoryTests.cs:SeaIceCanBeWalked",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs",
+   "target": "file:src/CivSim.Data/ContentLoader.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "class:tests/CivSim.Tests/Population/MigrationTests.cs:MigrationTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "class:tests/CivSim.Tests/Population/MigrationTests.cs:MigrationTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:EveryCampClaimsTheLandAroundIt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:InfluenceIsStrongestAtTheCampAndStopsAtWater",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:WarriorsWidenTheZone",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:GatheringEatsWildFoodAndUnusedLandGrowsBack",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:CampsMoveWithTheirPeopleAndWarehouse",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:MovesAreCheckedOnTheServer",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:SplitGroupsTakeTheirShareOfPeopleAndGoods",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:TribesSpreadOverTheLandOnTheirOwn",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:GamesWithTheTribeAiAreDeterministic",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:TheAiLeavesPlayerCivilizationsAlone",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:FindLand",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/MigrationTests.cs:FindWater",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "target": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Gathering.cs",
+   "target": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Hashing/GameStateHash.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Core/WorldGen/WorldGenReport.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "target": "file:src/CivSim.Data/ContentLoader.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "class:tests/CivSim.Tests/Population/PopulationTests.cs:PopulationTests",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "class:tests/CivSim.Tests/Population/PopulationTests.cs:PopulationTests",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:FindStratum",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:PopulationDataLoads",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:BrokenPopulationDataReportsEveryError",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:EveryTribeStartsWithFiftyPeople",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:GatherersBringFoodHomeAndEveryoneEats",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:WellFedTribesGrow",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:TribesWithoutFoodStarveAndDieOut",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:PeopleNeverAppearOrVanishThroughRounding",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:StrataDriftTowardsTheirTargetShares",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:TribesLevelOffInsteadOfExploding",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "function:tests/CivSim.Tests/Population/PopulationTests.cs:PopulationSurvivesSaveAndLoadAndStaysDeterministic",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:src/CivSim.Core/Economy/Consumption.cs",
+   "target": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "type": "tested_by",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/Hashing/GameStateHash.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/State/GameSettings.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Core/WorldGen/WorldGenReport.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Data/ContentLoader.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:tests/CivSim.Tests/Population/PopulationTests.cs",
+   "target": "file:src/CivSim.Server/Saves/SaveGameSerializer.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

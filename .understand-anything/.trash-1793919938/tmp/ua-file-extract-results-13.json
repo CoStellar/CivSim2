@@ -1,0 +1,5078 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 11,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 11,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 11,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "tests/CivSim.Tests/Simulation/CommandQueueTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 59,
+      "nonEmptyLines": 51,
+      "functions": [
+        {
+          "name": "SortsByCategoryThenCivThenArrival",
+          "startLine": 12,
+          "endLine": 28,
+          "params": []
+        },
+        {
+          "name": "CivilizationOrderRotatesEveryTurn",
+          "startLine": 30,
+          "endLine": 39,
+          "params": []
+        },
+        {
+          "name": "EveryCivilizationGoesFirstEquallyOften",
+          "startLine": 41,
+          "endLine": 58,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "CommandQueueTests",
+          "startLine": 8,
+          "endLine": 59,
+          "methods": [
+            "SortsByCategoryThenCivThenArrival",
+            "CivilizationOrderRotatesEveryTurn",
+            "EveryCivilizationGoesFirstEquallyOften"
+          ],
+          "properties": [
+            "Log"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "SortsByCategoryThenCivThenArrival",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "CivilizationOrderRotatesEveryTurn",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "EveryCivilizationGoesFirstEquallyOften",
+          "line": 41,
+          "isDefault": false
+        },
+        {
+          "name": "CommandQueueTests",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 15
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "GameSettings.Test",
+          "lineNumber": 15
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new CommandQueue",
+          "lineNumber": 16
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "queue.Enqueue",
+          "lineNumber": 17
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new CivId",
+          "lineNumber": 17
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new LoggingCommand",
+          "lineNumber": 17
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "queue.Enqueue",
+          "lineNumber": 18
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new CivId",
+          "lineNumber": 18
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new LoggingCommand",
+          "lineNumber": 18
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "queue.Enqueue",
+          "lineNumber": 19
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new CivId",
+          "lineNumber": 19
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new LoggingCommand",
+          "lineNumber": 19
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "queue.Enqueue",
+          "lineNumber": 20
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new CivId",
+          "lineNumber": 20
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new LoggingCommand",
+          "lineNumber": 20
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "queue.Enqueue",
+          "lineNumber": 21
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new CivId",
+          "lineNumber": 21
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new LoggingCommand",
+          "lineNumber": 21
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "new List<CommandEnvelope>",
+          "lineNumber": 23
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "queue.DrainSorted",
+          "lineNumber": 24
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "Assert.Equal",
+          "lineNumber": 26
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "Assert.Equal",
+          "lineNumber": 27
+        },
+        {
+          "caller": "SortsByCategoryThenCivThenArrival",
+          "callee": "sorted.ConvertAll",
+          "lineNumber": 27
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 33
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "GameSettings.Test",
+          "lineNumber": 33
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "Assert.Equal",
+          "lineNumber": 34
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "CommandQueue.CivOrder",
+          "lineNumber": 34
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "new CivId",
+          "lineNumber": 34
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "Assert.Equal",
+          "lineNumber": 35
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "CommandQueue.CivOrder",
+          "lineNumber": 35
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "new CivId",
+          "lineNumber": 35
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "Assert.Equal",
+          "lineNumber": 36
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "CommandQueue.CivOrder",
+          "lineNumber": 36
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "new CivId",
+          "lineNumber": 36
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "Assert.Equal",
+          "lineNumber": 37
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "CommandQueue.CivOrder",
+          "lineNumber": 37
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "new CivId",
+          "lineNumber": 37
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "Assert.Equal",
+          "lineNumber": 38
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "CommandQueue.CivOrder",
+          "lineNumber": 38
+        },
+        {
+          "caller": "CivilizationOrderRotatesEveryTurn",
+          "callee": "new CivId",
+          "lineNumber": 38
+        },
+        {
+          "caller": "EveryCivilizationGoesFirstEquallyOften",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 44
+        },
+        {
+          "caller": "EveryCivilizationGoesFirstEquallyOften",
+          "callee": "GameSettings.Test",
+          "lineNumber": 44
+        },
+        {
+          "caller": "EveryCivilizationGoesFirstEquallyOften",
+          "callee": "CommandQueue.CivOrder",
+          "lineNumber": 50
+        },
+        {
+          "caller": "EveryCivilizationGoesFirstEquallyOften",
+          "callee": "new CivId",
+          "lineNumber": 50
+        },
+        {
+          "caller": "EveryCivilizationGoesFirstEquallyOften",
+          "callee": "Assert.Equal",
+          "lineNumber": 57
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/Simulation/DeterminismTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 68,
+      "nonEmptyLines": 58,
+      "functions": [
+        {
+          "name": "CreateRunner",
+          "startLine": 12,
+          "endLine": 18,
+          "params": [
+            "seed"
+          ]
+        },
+        {
+          "name": "RunAndHash",
+          "startLine": 20,
+          "endLine": 29,
+          "params": [
+            "seed",
+            "turns"
+          ]
+        },
+        {
+          "name": "TwoRunsWithTheSameSeedGiveTheSameHash",
+          "startLine": 31,
+          "endLine": 35,
+          "params": []
+        },
+        {
+          "name": "DifferentSeedsGiveDifferentHashes",
+          "startLine": 37,
+          "endLine": 41,
+          "params": []
+        },
+        {
+          "name": "HashChangesWithTurnAndWithState",
+          "startLine": 43,
+          "endLine": 58,
+          "params": []
+        },
+        {
+          "name": "HashIsStableAcrossVersionsAndPlatforms",
+          "startLine": 60,
+          "endLine": 65,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "DeterminismTests",
+          "startLine": 10,
+          "endLine": 68,
+          "methods": [
+            "CreateRunner",
+            "RunAndHash",
+            "TwoRunsWithTheSameSeedGiveTheSameHash",
+            "DifferentSeedsGiveDifferentHashes",
+            "HashChangesWithTurnAndWithState",
+            "HashIsStableAcrossVersionsAndPlatforms"
+          ],
+          "properties": [
+            "GoldenHash"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "TwoRunsWithTheSameSeedGiveTheSameHash",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "DifferentSeedsGiveDifferentHashes",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "HashChangesWithTurnAndWithState",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "HashIsStableAcrossVersionsAndPlatforms",
+          "line": 60,
+          "isDefault": false
+        },
+        {
+          "name": "DeterminismTests",
+          "line": 10,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CreateRunner",
+          "callee": "new TurnRunner",
+          "lineNumber": 14
+        },
+        {
+          "caller": "CreateRunner",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 14
+        },
+        {
+          "caller": "CreateRunner",
+          "callee": "GameSettings.Test",
+          "lineNumber": 14
+        },
+        {
+          "caller": "CreateRunner",
+          "callee": "runner.AddSystem",
+          "lineNumber": 15
+        },
+        {
+          "caller": "CreateRunner",
+          "callee": "new RandomConsumer",
+          "lineNumber": 15
+        },
+        {
+          "caller": "CreateRunner",
+          "callee": "runner.AddCommandSource",
+          "lineNumber": 16
+        },
+        {
+          "caller": "CreateRunner",
+          "callee": "new RandomRenamer",
+          "lineNumber": 16
+        },
+        {
+          "caller": "RunAndHash",
+          "callee": "CreateRunner",
+          "lineNumber": 22
+        },
+        {
+          "caller": "RunAndHash",
+          "callee": "runner.RunTurn",
+          "lineNumber": 25
+        },
+        {
+          "caller": "RunAndHash",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 28
+        },
+        {
+          "caller": "TwoRunsWithTheSameSeedGiveTheSameHash",
+          "callee": "Assert.Equal",
+          "lineNumber": 34
+        },
+        {
+          "caller": "TwoRunsWithTheSameSeedGiveTheSameHash",
+          "callee": "RunAndHash",
+          "lineNumber": 34
+        },
+        {
+          "caller": "TwoRunsWithTheSameSeedGiveTheSameHash",
+          "callee": "RunAndHash",
+          "lineNumber": 34
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentHashes",
+          "callee": "Assert.NotEqual",
+          "lineNumber": 40
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentHashes",
+          "callee": "RunAndHash",
+          "lineNumber": 40
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentHashes",
+          "callee": "RunAndHash",
+          "lineNumber": 40
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "CreateRunner",
+          "lineNumber": 46
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 47
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "runner.RunTurn",
+          "lineNumber": 48
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 49
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "Assert.NotEqual",
+          "lineNumber": 50
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "runner.Commands.Enqueue",
+          "lineNumber": 52
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "new CivId",
+          "lineNumber": 52
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "new RenameCivilizationCommand",
+          "lineNumber": 52
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "CreateRunner",
+          "lineNumber": 53
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "twin.RunTurn",
+          "lineNumber": 54
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "runner.RunTurn",
+          "lineNumber": 55
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "twin.RunTurn",
+          "lineNumber": 56
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "Assert.NotEqual",
+          "lineNumber": 57
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 57
+        },
+        {
+          "caller": "HashChangesWithTurnAndWithState",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 57
+        },
+        {
+          "caller": "HashIsStableAcrossVersionsAndPlatforms",
+          "callee": "Assert.Equal",
+          "lineNumber": 64
+        },
+        {
+          "caller": "HashIsStableAcrossVersionsAndPlatforms",
+          "callee": "RunAndHash",
+          "lineNumber": 64
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 5,
+        "functionCount": 6,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/Simulation/TestDoubles.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 55,
+      "nonEmptyLines": 47,
+      "functions": [
+        {
+          "name": "Execute",
+          "startLine": 14,
+          "endLine": 14,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 22,
+          "endLine": 30,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "IssueCommands",
+          "startLine": 36,
+          "endLine": 46,
+          "params": [
+            "state",
+            "queue"
+          ]
+        },
+        {
+          "name": "Validate",
+          "startLine": 52,
+          "endLine": 52,
+          "params": [
+            "state",
+            "civ"
+          ]
+        },
+        {
+          "name": "Apply",
+          "startLine": 54,
+          "endLine": 54,
+          "params": [
+            "state",
+            "civ"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "PhaseRecorder",
+          "startLine": 10,
+          "endLine": 15,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "Phase"
+          ]
+        },
+        {
+          "name": "RandomConsumer",
+          "startLine": 18,
+          "endLine": 31,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "Phase"
+          ]
+        },
+        {
+          "name": "RandomRenamer",
+          "startLine": 34,
+          "endLine": 47,
+          "methods": [
+            "IssueCommands"
+          ],
+          "properties": []
+        },
+        {
+          "name": "LoggingCommand",
+          "startLine": 50,
+          "endLine": 55,
+          "methods": [
+            "Validate",
+            "Apply"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Phase",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "IssueCommands",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "Validate",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "Apply",
+          "line": 54,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Execute",
+          "callee": "log.Add",
+          "lineNumber": 14
+        },
+        {
+          "caller": "Execute",
+          "callee": "rng.NextInt",
+          "lineNumber": 25
+        },
+        {
+          "caller": "Execute",
+          "callee": "rng.NextULong",
+          "lineNumber": 28
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "state.Random.Derive",
+          "lineNumber": 40
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "rng.ChancePercent",
+          "lineNumber": 41
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "queue.Enqueue",
+          "lineNumber": 43
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "new RenameCivilizationCommand",
+          "lineNumber": 43
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "rng.NextInt",
+          "lineNumber": 43
+        },
+        {
+          "caller": "Apply",
+          "callee": "Log.Add",
+          "lineNumber": 54
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 7,
+        "functionCount": 5,
+        "classCount": 4
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/Simulation/TurnRunnerTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 104,
+      "nonEmptyLines": 88,
+      "functions": [
+        {
+          "name": "NewGameHasEarthAndCivilizations",
+          "startLine": 11,
+          "endLine": 19,
+          "params": []
+        },
+        {
+          "name": "OddMapHeightIsRejected",
+          "startLine": 21,
+          "endLine": 25,
+          "params": []
+        },
+        {
+          "name": "PhasesRunInGddOrderEveryTurn",
+          "startLine": 27,
+          "endLine": 51,
+          "params": []
+        },
+        {
+          "name": "ReportMeasuresEveryPhase",
+          "startLine": 53,
+          "endLine": 67,
+          "params": []
+        },
+        {
+          "name": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "startLine": 69,
+          "endLine": 83,
+          "params": []
+        },
+        {
+          "name": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "startLine": 85,
+          "endLine": 103,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "TurnRunnerTests",
+          "startLine": 9,
+          "endLine": 104,
+          "methods": [
+            "NewGameHasEarthAndCivilizations",
+            "OddMapHeightIsRejected",
+            "PhasesRunInGddOrderEveryTurn",
+            "ReportMeasuresEveryPhase",
+            "ValidCommandsApplyAndInvalidOnesAreReported",
+            "SnapshotIsPublishedAfterEachTurnAndIsImmutable"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "NewGameHasEarthAndCivilizations",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "OddMapHeightIsRejected",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "PhasesRunInGddOrderEveryTurn",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "ReportMeasuresEveryPhase",
+          "line": 53,
+          "isDefault": false
+        },
+        {
+          "name": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "line": 69,
+          "isDefault": false
+        },
+        {
+          "name": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "line": 85,
+          "isDefault": false
+        },
+        {
+          "name": "TurnRunnerTests",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NewGameHasEarthAndCivilizations",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 14
+        },
+        {
+          "caller": "NewGameHasEarthAndCivilizations",
+          "callee": "GameSettings.Test",
+          "lineNumber": 14
+        },
+        {
+          "caller": "NewGameHasEarthAndCivilizations",
+          "callee": "Assert.Equal",
+          "lineNumber": 15
+        },
+        {
+          "caller": "NewGameHasEarthAndCivilizations",
+          "callee": "Assert.Single",
+          "lineNumber": 16
+        },
+        {
+          "caller": "NewGameHasEarthAndCivilizations",
+          "callee": "Assert.Equal",
+          "lineNumber": 17
+        },
+        {
+          "caller": "NewGameHasEarthAndCivilizations",
+          "callee": "Assert.Equal",
+          "lineNumber": 18
+        },
+        {
+          "caller": "OddMapHeightIsRejected",
+          "callee": "Assert.Throws<System.ArgumentException>",
+          "lineNumber": 24
+        },
+        {
+          "caller": "OddMapHeightIsRejected",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 24
+        },
+        {
+          "caller": "OddMapHeightIsRejected",
+          "callee": "new GameSettings",
+          "lineNumber": 24
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "new TurnRunner",
+          "lineNumber": 30
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 30
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "GameSettings.Test",
+          "lineNumber": 30
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "new List<TurnPhase>",
+          "lineNumber": 31
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "runner.AddSystem",
+          "lineNumber": 34
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "new PhaseRecorder",
+          "lineNumber": 34
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "runner.RunTurn",
+          "lineNumber": 37
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "runner.RunTurn",
+          "lineNumber": 38
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "new List<TurnPhase>",
+          "lineNumber": 40
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "expected.Add",
+          "lineNumber": 45
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "Assert.Equal",
+          "lineNumber": 49
+        },
+        {
+          "caller": "PhasesRunInGddOrderEveryTurn",
+          "callee": "Assert.Equal",
+          "lineNumber": 50
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "new TurnRunner",
+          "lineNumber": 56
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 56
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "GameSettings.Test",
+          "lineNumber": 56
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "runner.RunTurn",
+          "lineNumber": 57
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "Assert.True",
+          "lineNumber": 61
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "report.PhaseTicks",
+          "lineNumber": 61
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "report.PhaseTicks",
+          "lineNumber": 62
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "Assert.Equal",
+          "lineNumber": 65
+        },
+        {
+          "caller": "ReportMeasuresEveryPhase",
+          "callee": "Assert.True",
+          "lineNumber": 66
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new TurnRunner",
+          "lineNumber": 72
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 72
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "GameSettings.Test",
+          "lineNumber": 72
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "runner.Commands.Enqueue",
+          "lineNumber": 73
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new CivId",
+          "lineNumber": 73
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new RenameCivilizationCommand",
+          "lineNumber": 73
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "runner.Commands.Enqueue",
+          "lineNumber": 74
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new CivId",
+          "lineNumber": 74
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new RenameCivilizationCommand",
+          "lineNumber": 74
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "runner.Commands.Enqueue",
+          "lineNumber": 75
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new CivId",
+          "lineNumber": 75
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new RenameCivilizationCommand",
+          "lineNumber": 75
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "runner.RunTurn",
+          "lineNumber": 77
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "Assert.Equal",
+          "lineNumber": 79
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "runner.State.FindCivilization",
+          "lineNumber": 79
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "new CivId",
+          "lineNumber": 79
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "Assert.Equal",
+          "lineNumber": 80
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "Assert.Equal",
+          "lineNumber": 81
+        },
+        {
+          "caller": "ValidCommandsApplyAndInvalidOnesAreReported",
+          "callee": "Assert.Equal",
+          "lineNumber": 82
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "new TurnRunner",
+          "lineNumber": 88
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 88
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "GameSettings.Test",
+          "lineNumber": 88
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "Assert.Null",
+          "lineNumber": 89
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "runner.Commands.Enqueue",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "new CivId",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "new RenameCivilizationCommand",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "runner.RunTurn",
+          "lineNumber": 92
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "Assert.Equal",
+          "lineNumber": 94
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "Assert.Equal",
+          "lineNumber": 95
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "runner.Commands.Enqueue",
+          "lineNumber": 97
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "new CivId",
+          "lineNumber": 97
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "new RenameCivilizationCommand",
+          "lineNumber": 97
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "runner.RunTurn",
+          "lineNumber": 98
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "Assert.Equal",
+          "lineNumber": 100
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "Assert.Equal",
+          "lineNumber": 101
+        },
+        {
+          "caller": "SnapshotIsPublishedAfterEachTurnAndIsImmutable",
+          "callee": "Assert.Equal",
+          "lineNumber": 102
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 7,
+        "functionCount": 6,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/SmokeTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 53,
+      "nonEmptyLines": 47,
+      "functions": [
+        {
+          "name": "ProtocolVersionIsPositive",
+          "startLine": 10,
+          "endLine": 14,
+          "params": []
+        },
+        {
+          "name": "HeadlessRunnerExitsCleanly",
+          "startLine": 16,
+          "endLine": 20,
+          "params": []
+        },
+        {
+          "name": "HeadlessRejectsBadArguments",
+          "startLine": 22,
+          "endLine": 28,
+          "params": []
+        },
+        {
+          "name": "HeadlessIsDeterministicAndWritesTheReport",
+          "startLine": 30,
+          "endLine": 52,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "SmokeTests",
+          "startLine": 8,
+          "endLine": 53,
+          "methods": [
+            "ProtocolVersionIsPositive",
+            "HeadlessRunnerExitsCleanly",
+            "HeadlessRejectsBadArguments",
+            "HeadlessIsDeterministicAndWritesTheReport"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "ProtocolVersionIsPositive",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "HeadlessRunnerExitsCleanly",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "HeadlessRejectsBadArguments",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "HeadlessIsDeterministicAndWritesTheReport",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "SmokeTests",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ProtocolVersionIsPositive",
+          "callee": "Assert.True",
+          "lineNumber": 13
+        },
+        {
+          "caller": "HeadlessRunnerExitsCleanly",
+          "callee": "Assert.Equal",
+          "lineNumber": 19
+        },
+        {
+          "caller": "HeadlessRunnerExitsCleanly",
+          "callee": "Program.Main",
+          "lineNumber": 19
+        },
+        {
+          "caller": "HeadlessRejectsBadArguments",
+          "callee": "Assert.Equal",
+          "lineNumber": 25
+        },
+        {
+          "caller": "HeadlessRejectsBadArguments",
+          "callee": "Program.Main",
+          "lineNumber": 25
+        },
+        {
+          "caller": "HeadlessRejectsBadArguments",
+          "callee": "Assert.Equal",
+          "lineNumber": 26
+        },
+        {
+          "caller": "HeadlessRejectsBadArguments",
+          "callee": "Program.Main",
+          "lineNumber": 26
+        },
+        {
+          "caller": "HeadlessRejectsBadArguments",
+          "callee": "Assert.Equal",
+          "lineNumber": 27
+        },
+        {
+          "caller": "HeadlessRejectsBadArguments",
+          "callee": "Program.Main",
+          "lineNumber": 27
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Path.Combine",
+          "lineNumber": 33
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Path.GetTempPath",
+          "lineNumber": 33
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "new HeadlessOptions",
+          "lineNumber": 36
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "HeadlessRun.Execute",
+          "lineNumber": 37
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "HeadlessRun.Execute",
+          "lineNumber": 38
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Assert.Equal",
+          "lineNumber": 40
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Assert.Equal",
+          "lineNumber": 41
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "File.ReadAllLines",
+          "lineNumber": 42
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Assert.Equal",
+          "lineNumber": 43
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Assert.Equal",
+          "lineNumber": 44
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "HeadlessRun.CsvHeader",
+          "lineNumber": 44
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Assert.StartsWith",
+          "lineNumber": 45
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "Assert.Equal",
+          "lineNumber": 46
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "lines[1].Split",
+          "lineNumber": 46
+        },
+        {
+          "caller": "HeadlessIsDeterministicAndWritesTheReport",
+          "callee": "File.Delete",
+          "lineNumber": 50
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 5,
+        "functionCount": 4,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/WorldGen/ClimateCycleTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 143,
+      "nonEmptyLines": 125,
+      "functions": [
+        {
+          "name": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "startLine": 18,
+          "endLine": 37,
+          "params": []
+        },
+        {
+          "name": "EarthGetsIceAgesThatEndAbruptly",
+          "startLine": 39,
+          "endLine": 59,
+          "params": []
+        },
+        {
+          "name": "APlanetLyingOnItsSideHasNoIceAges",
+          "startLine": 61,
+          "endLine": 70,
+          "params": []
+        },
+        {
+          "name": "SolvingTheStartingClimateAgainChangesNothing",
+          "startLine": 72,
+          "endLine": 82,
+          "params": []
+        },
+        {
+          "name": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "startLine": 84,
+          "endLine": 101,
+          "params": []
+        },
+        {
+          "name": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "startLine": 103,
+          "endLine": 116,
+          "params": []
+        },
+        {
+          "name": "Run",
+          "startLine": 118,
+          "endLine": 129,
+          "params": [
+            "turns"
+          ]
+        },
+        {
+          "name": "CountCold",
+          "startLine": 131,
+          "endLine": 142,
+          "params": [
+            "world"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ClimateCycleTests",
+          "startLine": 14,
+          "endLine": 143,
+          "methods": [
+            "TheGameStartsAtAWarmMomentOfTheCycles",
+            "EarthGetsIceAgesThatEndAbruptly",
+            "APlanetLyingOnItsSideHasNoIceAges",
+            "SolvingTheStartingClimateAgainChangesNothing",
+            "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+            "ClimateUpdatesAreDeterministicAndSurviveSaving",
+            "Run",
+            "CountCold"
+          ],
+          "properties": [
+            "Content"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "EarthGetsIceAgesThatEndAbruptly",
+          "line": 39,
+          "isDefault": false
+        },
+        {
+          "name": "APlanetLyingOnItsSideHasNoIceAges",
+          "line": 61,
+          "isDefault": false
+        },
+        {
+          "name": "SolvingTheStartingClimateAgainChangesNothing",
+          "line": 72,
+          "isDefault": false
+        },
+        {
+          "name": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "line": 84,
+          "isDefault": false
+        },
+        {
+          "name": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "line": 103,
+          "isDefault": false
+        },
+        {
+          "name": "ClimateCycleTests",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "new ClimateCycles",
+          "lineNumber": 21
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "cycles.OrbitAt",
+          "lineNumber": 22
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "Assert.Equal",
+          "lineNumber": 23
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "Assert.Equal",
+          "lineNumber": 24
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "Assert.Equal",
+          "lineNumber": 25
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "Assert.Equal",
+          "lineNumber": 28
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "cycles.OrbitAt",
+          "lineNumber": 28
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "System.Math.Max",
+          "lineNumber": 32
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "cycles.OrbitAt",
+          "lineNumber": 32
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "Assert.InRange",
+          "lineNumber": 35
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "Assert.Equal",
+          "lineNumber": 36
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "cycles.OrbitAt",
+          "lineNumber": 36
+        },
+        {
+          "caller": "TheGameStartsAtAWarmMomentOfTheCycles",
+          "callee": "cycles.OrbitAt",
+          "lineNumber": 36
+        },
+        {
+          "caller": "EarthGetsIceAgesThatEndAbruptly",
+          "callee": "new ClimateCycles",
+          "lineNumber": 42
+        },
+        {
+          "caller": "EarthGetsIceAgesThatEndAbruptly",
+          "callee": "new ClimateState",
+          "lineNumber": 43
+        },
+        {
+          "caller": "EarthGetsIceAgesThatEndAbruptly",
+          "callee": "cycles.Advance",
+          "lineNumber": 48
+        },
+        {
+          "caller": "EarthGetsIceAgesThatEndAbruptly",
+          "callee": "Assert.Equal",
+          "lineNumber": 53
+        },
+        {
+          "caller": "EarthGetsIceAgesThatEndAbruptly",
+          "callee": "Assert.True",
+          "lineNumber": 57
+        },
+        {
+          "caller": "EarthGetsIceAgesThatEndAbruptly",
+          "callee": "Assert.True",
+          "lineNumber": 58
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "new ClimateCycles",
+          "lineNumber": 64
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "Content.Planet",
+          "lineNumber": 64
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "ClimateSystem.Potentials",
+          "lineNumber": 65
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "Assert.Equal",
+          "lineNumber": 66
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "Assert.Equal",
+          "lineNumber": 67
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "ClimateSystem.Potentials",
+          "lineNumber": 68
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "new ClimateCycles",
+          "lineNumber": 68
+        },
+        {
+          "caller": "APlanetLyingOnItsSideHasNoIceAges",
+          "callee": "Assert.True",
+          "lineNumber": 69
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 75
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "GameSettings.Test",
+          "lineNumber": 75
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 77
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "new ClimateCycles",
+          "lineNumber": 78
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "ClimateSystem.Potentials",
+          "lineNumber": 79
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "ClimateSystem.Apply",
+          "lineNumber": 80
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "ClimateSystem.LandShare",
+          "lineNumber": 80
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "Assert.Equal",
+          "lineNumber": 81
+        },
+        {
+          "caller": "SolvingTheStartingClimateAgainChangesNothing",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 81
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 87
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "GameSettings.Test",
+          "lineNumber": 87
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "CountCold",
+          "lineNumber": 89
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "new ClimateCycles",
+          "lineNumber": 93
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "ClimateSystem.Potentials",
+          "lineNumber": 94
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "ClimateSystem.Apply",
+          "lineNumber": 95
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "ClimateSystem.LandShare",
+          "lineNumber": 95
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "Assert.InRange",
+          "lineNumber": 98
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "Assert.True",
+          "lineNumber": 99
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "Assert.True",
+          "lineNumber": 100
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "CountCold",
+          "lineNumber": 100
+        },
+        {
+          "caller": "AnIceAgeCoolsThePlanetAndSpreadsIceAndTundra",
+          "callee": "CountCold",
+          "lineNumber": 100
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "Run",
+          "lineNumber": 106
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "Run",
+          "lineNumber": 107
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "Assert.Equal",
+          "lineNumber": 108
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 108
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 108
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "Assert.True",
+          "lineNumber": 109
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "new MemoryStream",
+          "lineNumber": 111
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "SaveGameSerializer.Save",
+          "lineNumber": 112
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "SaveGameSerializer.Load",
+          "lineNumber": 114
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "Assert.Equal",
+          "lineNumber": 115
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 115
+        },
+        {
+          "caller": "ClimateUpdatesAreDeterministicAndSurviveSaving",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 115
+        },
+        {
+          "caller": "Run",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 120
+        },
+        {
+          "caller": "Run",
+          "callee": "GameSettings.Test",
+          "lineNumber": 120
+        },
+        {
+          "caller": "Run",
+          "callee": "new TurnRunner",
+          "lineNumber": 121
+        },
+        {
+          "caller": "Run",
+          "callee": "CoreSystems.Register",
+          "lineNumber": 122
+        },
+        {
+          "caller": "Run",
+          "callee": "runner.RunTurn",
+          "lineNumber": 125
+        },
+        {
+          "caller": "CountCold",
+          "callee": "Content.Biome",
+          "lineNumber": 133
+        },
+        {
+          "caller": "CountCold",
+          "callee": "Content.Biome",
+          "lineNumber": 134
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 7,
+        "functionCount": 8,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/WorldGen/PlanetTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 129,
+      "nonEmptyLines": 115,
+      "functions": [
+        {
+          "name": "Ratio",
+          "startLine": 17,
+          "endLine": 17,
+          "params": [
+            "fixedValue"
+          ]
+        },
+        {
+          "name": "IntegerTrigonometryIsAccurate",
+          "startLine": 19,
+          "endLine": 31,
+          "params": []
+        },
+        {
+          "name": "EarthSunlightMatchesTheKnownValues",
+          "startLine": 33,
+          "endLine": 43,
+          "params": []
+        },
+        {
+          "name": "EarthClimateHasWarmTropicsAndColdPoles",
+          "startLine": 45,
+          "endLine": 58,
+          "params": []
+        },
+        {
+          "name": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "startLine": 60,
+          "endLine": 67,
+          "params": []
+        },
+        {
+          "name": "WithYear",
+          "startLine": 70,
+          "endLine": 71,
+          "params": [
+            "yearThousandths"
+          ]
+        },
+        {
+          "name": "LongerYearsSwingFurther",
+          "startLine": 73,
+          "endLine": 81,
+          "params": []
+        },
+        {
+          "name": "SofterSeasonsSwingLess",
+          "startLine": 83,
+          "endLine": 94,
+          "params": []
+        },
+        {
+          "name": "PresetsLoadAndSetTheWorld",
+          "startLine": 96,
+          "endLine": 117,
+          "params": []
+        },
+        {
+          "name": "EveryPresetGivesAValidWorld",
+          "startLine": 119,
+          "endLine": 128,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "PlanetTests",
+          "startLine": 13,
+          "endLine": 129,
+          "methods": [
+            "Ratio",
+            "IntegerTrigonometryIsAccurate",
+            "EarthSunlightMatchesTheKnownValues",
+            "EarthClimateHasWarmTropicsAndColdPoles",
+            "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+            "WithYear",
+            "LongerYearsSwingFurther",
+            "SofterSeasonsSwingLess",
+            "PresetsLoadAndSetTheWorld",
+            "EveryPresetGivesAValidWorld"
+          ],
+          "properties": [
+            "Content"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "IntegerTrigonometryIsAccurate",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "EarthSunlightMatchesTheKnownValues",
+          "line": 33,
+          "isDefault": false
+        },
+        {
+          "name": "EarthClimateHasWarmTropicsAndColdPoles",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "line": 60,
+          "isDefault": false
+        },
+        {
+          "name": "LongerYearsSwingFurther",
+          "line": 73,
+          "isDefault": false
+        },
+        {
+          "name": "SofterSeasonsSwingLess",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "PresetsLoadAndSetTheWorld",
+          "line": 96,
+          "isDefault": false
+        },
+        {
+          "name": "EveryPresetGivesAValidWorld",
+          "line": 119,
+          "isDefault": false
+        },
+        {
+          "name": "PlanetTests",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Assert.InRange",
+          "lineNumber": 25
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Ratio",
+          "lineNumber": 25
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 25
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 25
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Math.Sin",
+          "lineNumber": 25
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Assert.InRange",
+          "lineNumber": 26
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Ratio",
+          "lineNumber": 26
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "FixedTrig.Cos",
+          "lineNumber": 26
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 26
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Math.Cos",
+          "lineNumber": 26
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Assert.InRange",
+          "lineNumber": 29
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "FixedTrig.Asin",
+          "lineNumber": 29
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "Assert.Equal",
+          "lineNumber": 30
+        },
+        {
+          "caller": "IntegerTrigonometryIsAccurate",
+          "callee": "FixedTrig.Acos",
+          "lineNumber": 30
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Insolation.At",
+          "lineNumber": 37
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Insolation.At",
+          "lineNumber": 38
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Assert.InRange",
+          "lineNumber": 39
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Ratio",
+          "lineNumber": 39
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Assert.InRange",
+          "lineNumber": 40
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Ratio",
+          "lineNumber": 40
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Assert.Equal",
+          "lineNumber": 41
+        },
+        {
+          "caller": "EarthSunlightMatchesTheKnownValues",
+          "callee": "Assert.True",
+          "lineNumber": 42
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "new ClimateModel",
+          "lineNumber": 49
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.InRange",
+          "lineNumber": 50
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "climate.MeanTemperature",
+          "lineNumber": 50
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.InRange",
+          "lineNumber": 51
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "climate.MeanTemperature",
+          "lineNumber": 51
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 51
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 51
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.InRange",
+          "lineNumber": 52
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "climate.MeanTemperature",
+          "lineNumber": 52
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.InRange",
+          "lineNumber": 53
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.True",
+          "lineNumber": 54
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "climate.SeasonalSwing",
+          "lineNumber": 54
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 54
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 54
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "climate.SeasonalSwing",
+          "lineNumber": 54
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 54
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 54
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.Equal",
+          "lineNumber": 55
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "ClimateModel.GrowingSeason",
+          "lineNumber": 55
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.Equal",
+          "lineNumber": 56
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "ClimateModel.GrowingSeason",
+          "lineNumber": 56
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "Assert.Equal",
+          "lineNumber": 57
+        },
+        {
+          "caller": "EarthClimateHasWarmTropicsAndColdPoles",
+          "callee": "ClimateModel.GrowingSeason",
+          "lineNumber": 57
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "new ClimateModel",
+          "lineNumber": 63
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "Content.Planet",
+          "lineNumber": 63
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 64
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 64
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "Assert.True",
+          "lineNumber": 65
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "uranus.MeanTemperature",
+          "lineNumber": 65
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "uranus.MeanTemperature",
+          "lineNumber": 65
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "Assert.True",
+          "lineNumber": 66
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "uranus.SeasonalSwing",
+          "lineNumber": 66
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "new ClimateModel(PlanetParameters.Earth).SeasonalSwing",
+          "lineNumber": 66
+        },
+        {
+          "caller": "ALyingAxisMakesThePolesWarmerThanTheEquatorWithExtremeSeasons",
+          "callee": "new ClimateModel",
+          "lineNumber": 66
+        },
+        {
+          "caller": "WithYear",
+          "callee": "PlanetSetup.Build",
+          "lineNumber": 71
+        },
+        {
+          "caller": "WithYear",
+          "callee": "new PlanetOverrides",
+          "lineNumber": 71
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 76
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 76
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "new ClimateModel(PlanetParameters.Earth).SeasonalSwing",
+          "lineNumber": 77
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "new ClimateModel",
+          "lineNumber": 77
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "new ClimateModel(WithYear(10_000)).SeasonalSwing",
+          "lineNumber": 78
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "new ClimateModel",
+          "lineNumber": 78
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "WithYear",
+          "lineNumber": 78
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "new ClimateModel(WithYear(250)).SeasonalSwing",
+          "lineNumber": 79
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "new ClimateModel",
+          "lineNumber": 79
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "WithYear",
+          "lineNumber": 79
+        },
+        {
+          "caller": "LongerYearsSwingFurther",
+          "callee": "Assert.True",
+          "lineNumber": 80
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 86
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 86
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "new ClimateModel(PlanetParameters.Earth).SeasonalSwing",
+          "lineNumber": 87
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "new ClimateModel",
+          "lineNumber": 87
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "Assert.Equal",
+          "lineNumber": 90
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "new ClimateModel(thick).SeasonalSwing",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "new ClimateModel",
+          "lineNumber": 91
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "Assert.InRange",
+          "lineNumber": 92
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "Assert.Equal",
+          "lineNumber": 93
+        },
+        {
+          "caller": "SofterSeasonsSwingLess",
+          "callee": "Content.Planet",
+          "lineNumber": 93
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 99
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Content.Planets.Select",
+          "lineNumber": 99
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Content.Planet",
+          "lineNumber": 100
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 101
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 102
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 103
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 104
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.True",
+          "lineNumber": 105
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "GameSettings.Test(1).WithPreset",
+          "lineNumber": 106
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "GameSettings.Test",
+          "lineNumber": 106
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 107
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 108
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 109
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Throws<ArgumentOutOfRangeException>",
+          "lineNumber": 110
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "(PlanetParameters.Earth with { DistanceThousandths = 500 }).Validate",
+          "lineNumber": 110
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Content.Planet",
+          "lineNumber": 113
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 114
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.InRange",
+          "lineNumber": 115
+        },
+        {
+          "caller": "PresetsLoadAndSetTheWorld",
+          "callee": "Assert.InRange",
+          "lineNumber": 116
+        },
+        {
+          "caller": "EveryPresetGivesAValidWorld",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 124
+        },
+        {
+          "caller": "EveryPresetGivesAValidWorld",
+          "callee": "GameSettings.Test(5).WithPreset",
+          "lineNumber": 124
+        },
+        {
+          "caller": "EveryPresetGivesAValidWorld",
+          "callee": "GameSettings.Test",
+          "lineNumber": 124
+        },
+        {
+          "caller": "EveryPresetGivesAValidWorld",
+          "callee": "Assert.Empty",
+          "lineNumber": 125
+        },
+        {
+          "caller": "EveryPresetGivesAValidWorld",
+          "callee": "WorldValidator.Validate",
+          "lineNumber": 125
+        },
+        {
+          "caller": "EveryPresetGivesAValidWorld",
+          "callee": "WorldGenOptions.From",
+          "lineNumber": 125
+        },
+        {
+          "caller": "EveryPresetGivesAValidWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 126
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 9,
+        "functionCount": 10,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/WorldGen/SeaLevelTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 180,
+      "nonEmptyLines": 155,
+      "functions": [
+        {
+          "name": "TheSeaFallsWithTheIce",
+          "startLine": 17,
+          "endLine": 29,
+          "params": []
+        },
+        {
+          "name": "AWarmerWorldFloodsLowCoasts",
+          "startLine": 31,
+          "endLine": 55,
+          "params": []
+        },
+        {
+          "name": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "startLine": 57,
+          "endLine": 74,
+          "params": []
+        },
+        {
+          "name": "SeaIce",
+          "startLine": 76,
+          "endLine": 85,
+          "params": [
+            "world"
+          ]
+        },
+        {
+          "name": "ShelvesFallDryAndFloodAgain",
+          "startLine": 87,
+          "endLine": 115,
+          "params": []
+        },
+        {
+          "name": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "startLine": 117,
+          "endLine": 148,
+          "params": []
+        },
+        {
+          "name": "Water",
+          "startLine": 150,
+          "endLine": 159,
+          "params": [
+            "map"
+          ]
+        },
+        {
+          "name": "AssertRiversOnlyBetweenLand",
+          "startLine": 161,
+          "endLine": 179,
+          "params": [
+            "world"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SeaLevelTests",
+          "startLine": 13,
+          "endLine": 180,
+          "methods": [
+            "TheSeaFallsWithTheIce",
+            "AWarmerWorldFloodsLowCoasts",
+            "TheSeaFreezesInColdTimesAndThawsAgain",
+            "SeaIce",
+            "ShelvesFallDryAndFloodAgain",
+            "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+            "Water",
+            "AssertRiversOnlyBetweenLand"
+          ],
+          "properties": [
+            "Content"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "TheSeaFallsWithTheIce",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "AWarmerWorldFloodsLowCoasts",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "line": 57,
+          "isDefault": false
+        },
+        {
+          "name": "ShelvesFallDryAndFloodAgain",
+          "line": 87,
+          "isDefault": false
+        },
+        {
+          "name": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "line": 117,
+          "isDefault": false
+        },
+        {
+          "name": "SeaLevelTests",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "Assert.Equal",
+          "lineNumber": 21
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "SeaLevel.Target",
+          "lineNumber": 21
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "Assert.Equal",
+          "lineNumber": 22
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "SeaLevel.Target",
+          "lineNumber": 22
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "Assert.Equal",
+          "lineNumber": 23
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "SeaLevel.Target",
+          "lineNumber": 23
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "Assert.Equal",
+          "lineNumber": 26
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "SeaLevel.Target",
+          "lineNumber": 26
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "Assert.Equal",
+          "lineNumber": 27
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "SeaLevel.MeltedShare",
+          "lineNumber": 27
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "new ClimateState",
+          "lineNumber": 27
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "Assert.Equal",
+          "lineNumber": 28
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "SeaLevel.MeltedShare",
+          "lineNumber": 28
+        },
+        {
+          "caller": "TheSeaFallsWithTheIce",
+          "callee": "new ClimateState",
+          "lineNumber": 28
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 34
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "GameSettings.Test",
+          "lineNumber": 34
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "Assert.True",
+          "lineNumber": 37
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "Water",
+          "lineNumber": 38
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "SeaLevel.Apply",
+          "lineNumber": 40
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "Assert.False",
+          "lineNumber": 45
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "Assert.True",
+          "lineNumber": 49
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "Assert.True",
+          "lineNumber": 53
+        },
+        {
+          "caller": "AWarmerWorldFloodsLowCoasts",
+          "callee": "AssertRiversOnlyBetweenLand",
+          "lineNumber": 54
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 60
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "GameSettings.Test",
+          "lineNumber": 60
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "SeaIce",
+          "lineNumber": 62
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "new ClimateCycles",
+          "lineNumber": 63
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "ClimateSystem.Potentials",
+          "lineNumber": 64
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "ClimateSystem.LandShare",
+          "lineNumber": 65
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "ClimateSystem.Apply",
+          "lineNumber": 68
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "Assert.True",
+          "lineNumber": 69
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "SeaIce",
+          "lineNumber": 69
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "SeaIce",
+          "lineNumber": 69
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "ClimateSystem.Apply",
+          "lineNumber": 72
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "Assert.Equal",
+          "lineNumber": 73
+        },
+        {
+          "caller": "TheSeaFreezesInColdTimesAndThawsAgain",
+          "callee": "SeaIce",
+          "lineNumber": 73
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 90
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "GameSettings.Test",
+          "lineNumber": 90
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Water",
+          "lineNumber": 93
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "SeaLevel.Apply",
+          "lineNumber": 95
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Assert.NotEmpty",
+          "lineNumber": 96
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Assert.False",
+          "lineNumber": 101
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Assert.True",
+          "lineNumber": 105
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Assert.True",
+          "lineNumber": 109
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "SeaLevel.Apply",
+          "lineNumber": 111
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Assert.Equal",
+          "lineNumber": 112
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Water",
+          "lineNumber": 112
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "Assert.Equal",
+          "lineNumber": 113
+        },
+        {
+          "caller": "ShelvesFallDryAndFloodAgain",
+          "callee": "AssertRiversOnlyBetweenLand",
+          "lineNumber": 114
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 120
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "GameSettings.Test",
+          "lineNumber": 120
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "SeaLevel.Apply",
+          "lineNumber": 123
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.True",
+          "lineNumber": 132
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "state.FoundSettlement",
+          "lineNumber": 134
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "world.Geometry.FromIndex",
+          "lineNumber": 134
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Amount.FromUnits",
+          "lineNumber": 136
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "SeaLevel.Apply",
+          "lineNumber": 138
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.Contains",
+          "lineNumber": 139
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "l.Contains",
+          "lineNumber": 139
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.False",
+          "lineNumber": 140
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "world.Geometry.Index",
+          "lineNumber": 140
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.Equal",
+          "lineNumber": 141
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "camp.TotalPopulation",
+          "lineNumber": 141
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.Single",
+          "lineNumber": 143
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "world.Geometry.FromIndex",
+          "lineNumber": 143
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.Equal",
+          "lineNumber": 144
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.Equal",
+          "lineNumber": 146
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "new PlunderSettlementCommand(Content, camp.Id, ruins.Id).Validate",
+          "lineNumber": 146
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "new PlunderSettlementCommand",
+          "lineNumber": 146
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "Assert.Equal",
+          "lineNumber": 147
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "new OccupySettlementCommand(Content, camp.Id, ruins.Id, 100).Validate",
+          "lineNumber": 147
+        },
+        {
+          "caller": "PeopleLeaveFloodedLandAndTheRuinsStayUnderTheSea",
+          "callee": "new OccupySettlementCommand",
+          "lineNumber": 147
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "geo.Edge",
+          "lineNumber": 168
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "geo.FromIndex",
+          "lineNumber": 168
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "geo.EdgeIndex",
+          "lineNumber": 169
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "geo.EdgeCells",
+          "lineNumber": 174
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "Assert.False",
+          "lineNumber": 175
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "geo.Index",
+          "lineNumber": 175
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "Assert.False",
+          "lineNumber": 176
+        },
+        {
+          "caller": "AssertRiversOnlyBetweenLand",
+          "callee": "geo.Index",
+          "lineNumber": 176
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 6,
+        "functionCount": 8,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/WorldGen/SeasonTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 110,
+      "nonEmptyLines": 97,
+      "functions": [
+        {
+          "name": "NewGame",
+          "startLine": 19,
+          "endLine": 25,
+          "params": [
+            "planet"
+          ]
+        },
+        {
+          "name": "OnlyLongYearsArePlayedSeasonBySeason",
+          "startLine": 27,
+          "endLine": 38,
+          "params": []
+        },
+        {
+          "name": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "startLine": 40,
+          "endLine": 54,
+          "params": []
+        },
+        {
+          "name": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "startLine": 56,
+          "endLine": 80,
+          "params": []
+        },
+        {
+          "name": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "startLine": 82,
+          "endLine": 95,
+          "params": []
+        },
+        {
+          "name": "ColdToleranceMakesColdLandWorthMore",
+          "startLine": 97,
+          "endLine": 109,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "SeasonTests",
+          "startLine": 15,
+          "endLine": 110,
+          "methods": [
+            "NewGame",
+            "OnlyLongYearsArePlayedSeasonBySeason",
+            "SlowDecisionsComeOncePerEraLengthPeriod",
+            "EachHemisphereGetsItsSummerAndWinterInTurn",
+            "WinterCutsWildFoodOnlyWithLiveSeasons",
+            "ColdToleranceMakesColdLandWorthMore"
+          ],
+          "properties": [
+            "Content"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "OnlyLongYearsArePlayedSeasonBySeason",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "line": 82,
+          "isDefault": false
+        },
+        {
+          "name": "ColdToleranceMakesColdLandWorthMore",
+          "line": 97,
+          "isDefault": false
+        },
+        {
+          "name": "SeasonTests",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "NewGame",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 21
+        },
+        {
+          "caller": "NewGame",
+          "callee": "GameSettings.Test(3).WithPreset",
+          "lineNumber": 21
+        },
+        {
+          "caller": "NewGame",
+          "callee": "GameSettings.Test",
+          "lineNumber": 21
+        },
+        {
+          "caller": "NewGame",
+          "callee": "Content.Planet",
+          "lineNumber": 21
+        },
+        {
+          "caller": "NewGame",
+          "callee": "new TurnRunner",
+          "lineNumber": 22
+        },
+        {
+          "caller": "NewGame",
+          "callee": "CoreSystems.Register",
+          "lineNumber": 23
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Assert.False",
+          "lineNumber": 30
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Content.Seasons.Live",
+          "lineNumber": 30
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Content.Planet",
+          "lineNumber": 30
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Assert.False",
+          "lineNumber": 31
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Content.Seasons.Live",
+          "lineNumber": 31
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Content.Planet",
+          "lineNumber": 31
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Assert.True",
+          "lineNumber": 32
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Content.Seasons.Live",
+          "lineNumber": 32
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Content.Planet",
+          "lineNumber": 32
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Assert.Equal",
+          "lineNumber": 34
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "NewGame(\"earth\").State.MonthsPerTurn",
+          "lineNumber": 34
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "NewGame",
+          "lineNumber": 34
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "NewGame",
+          "lineNumber": 35
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Assert.Equal",
+          "lineNumber": 36
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "uranus.MonthsPerTurn",
+          "lineNumber": 36
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "Assert.Equal",
+          "lineNumber": 37
+        },
+        {
+          "caller": "OnlyLongYearsArePlayedSeasonBySeason",
+          "callee": "uranus.EraMonthsPerTurn",
+          "lineNumber": 37
+        },
+        {
+          "caller": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "callee": "NewGame",
+          "lineNumber": 43
+        },
+        {
+          "caller": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "callee": "runner.State.IsDecisionTurn",
+          "lineNumber": 47
+        },
+        {
+          "caller": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "callee": "runner.RunTurn",
+          "lineNumber": 48
+        },
+        {
+          "caller": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "callee": "Assert.InRange",
+          "lineNumber": 52
+        },
+        {
+          "caller": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "callee": "Assert.True",
+          "lineNumber": 53
+        },
+        {
+          "caller": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "callee": "NewGame(\"earth\").State.IsDecisionTurn",
+          "lineNumber": 53
+        },
+        {
+          "caller": "SlowDecisionsComeOncePerEraLengthPeriod",
+          "callee": "NewGame",
+          "lineNumber": 53
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "new ClimateModel",
+          "lineNumber": 59
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Content.Planet",
+          "lineNumber": 59
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "FixedTrig.Sin",
+          "lineNumber": 60
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "FixedTrig.Degrees",
+          "lineNumber": 60
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Enumerable.Range(0, Insolation.Steps).MinBy",
+          "lineNumber": 61
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Enumerable.Range",
+          "lineNumber": 61
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "climate.TemperatureAt",
+          "lineNumber": 61
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Enumerable.Range(0, Insolation.Steps).MaxBy",
+          "lineNumber": 62
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Enumerable.Range",
+          "lineNumber": 62
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "climate.TemperatureAt",
+          "lineNumber": 62
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Assert.True",
+          "lineNumber": 63
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "climate.TemperatureAt",
+          "lineNumber": 63
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "climate.TemperatureAt",
+          "lineNumber": 63
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Assert.True",
+          "lineNumber": 66
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "climate.TemperatureAt",
+          "lineNumber": 66
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "climate.TemperatureAt",
+          "lineNumber": 66
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Assert.InRange",
+          "lineNumber": 67
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "NewGame",
+          "lineNumber": 70
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "runner.RunTurn",
+          "lineNumber": 72
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "map.SeasonTemperature.Values.ToArray",
+          "lineNumber": 73
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "runner.RunTurn",
+          "lineNumber": 76
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "Assert.NotEqual",
+          "lineNumber": 79
+        },
+        {
+          "caller": "EachHemisphereGetsItsSummerAndWinterInTurn",
+          "callee": "map.SeasonTemperature.Values.ToArray",
+          "lineNumber": 79
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "NewGame",
+          "lineNumber": 85
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "runner.RunTurn",
+          "lineNumber": 88
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "Enumerable.Range(0, map.Biome.Length).First",
+          "lineNumber": 89
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "Enumerable.Range",
+          "lineNumber": 89
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "map.SeasonGrowth.Set",
+          "lineNumber": 90
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "gathering.CellFoodPerYear",
+          "lineNumber": 91
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "map.SeasonGrowth.Set",
+          "lineNumber": 92
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "gathering.CellFoodPerYear",
+          "lineNumber": 93
+        },
+        {
+          "caller": "WinterCutsWildFoodOnlyWithLiveSeasons",
+          "callee": "Assert.InRange",
+          "lineNumber": 94
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "NewGame",
+          "lineNumber": 100
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "Enumerable.Range(0, world.Map.Temperature.Length).First",
+          "lineNumber": 103
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "Enumerable.Range",
+          "lineNumber": 103
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "new TribeAi",
+          "lineNumber": 104
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "ai.Comfort",
+          "lineNumber": 105
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "state.Effects.Add",
+          "lineNumber": 106
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "Content.Effect",
+          "lineNumber": 106
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "Assert.True",
+          "lineNumber": 107
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "ai.Comfort",
+          "lineNumber": 107
+        },
+        {
+          "caller": "ColdToleranceMakesColdLandWorthMore",
+          "callee": "Assert.True",
+          "lineNumber": 108
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 6,
+        "functionCount": 6,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/WorldGen/StarAndAirTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 157,
+      "nonEmptyLines": 137,
+      "functions": [
+        {
+          "name": "FixedLogarithmsAreAccurate",
+          "startLine": 11,
+          "endLine": 25,
+          "params": []
+        },
+        {
+          "name": "KeplerGivesTheKnownYears",
+          "startLine": 27,
+          "endLine": 36,
+          "params": []
+        },
+        {
+          "name": "HabitableZoneFollowsTheStar",
+          "startLine": 38,
+          "endLine": 47,
+          "params": []
+        },
+        {
+          "name": "AnyTwoQuantitiesGiveTheThird",
+          "startLine": 49,
+          "endLine": 63,
+          "params": []
+        },
+        {
+          "name": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "startLine": 65,
+          "endLine": 79,
+          "params": []
+        },
+        {
+          "name": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "startLine": 81,
+          "endLine": 103,
+          "params": []
+        },
+        {
+          "name": "ALyingAxisDoesNotNeedTheEdgeOfTheZoneToShapeItsAir",
+          "startLine": 105,
+          "endLine": 111,
+          "params": []
+        },
+        {
+          "name": "ThickAirEvensOutTheClimate",
+          "startLine": 113,
+          "endLine": 121,
+          "params": []
+        },
+        {
+          "name": "BuildingAPlanetFollowsTheStatedRules",
+          "startLine": 123,
+          "endLine": 144,
+          "params": []
+        },
+        {
+          "name": "TheClimateIsTheSameEveryTime",
+          "startLine": 146,
+          "endLine": 156,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "StarAndAirTests",
+          "startLine": 9,
+          "endLine": 157,
+          "methods": [
+            "FixedLogarithmsAreAccurate",
+            "KeplerGivesTheKnownYears",
+            "HabitableZoneFollowsTheStar",
+            "AnyTwoQuantitiesGiveTheThird",
+            "LeavingTheZonePutsThePlanetOnItsEdge",
+            "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+            "ALyingAxisDoesNotNeedTheEdgeOfTheZoneToShapeItsAir",
+            "ThickAirEvensOutTheClimate",
+            "BuildingAPlanetFollowsTheStatedRules",
+            "TheClimateIsTheSameEveryTime"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "FixedLogarithmsAreAccurate",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "KeplerGivesTheKnownYears",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "HabitableZoneFollowsTheStar",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "AnyTwoQuantitiesGiveTheThird",
+          "line": 49,
+          "isDefault": false
+        },
+        {
+          "name": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "line": 65,
+          "isDefault": false
+        },
+        {
+          "name": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "line": 81,
+          "isDefault": false
+        },
+        {
+          "name": "ALyingAxisDoesNotNeedTheEdgeOfTheZoneToShapeItsAir",
+          "line": 105,
+          "isDefault": false
+        },
+        {
+          "name": "ThickAirEvensOutTheClimate",
+          "line": 113,
+          "isDefault": false
+        },
+        {
+          "name": "BuildingAPlanetFollowsTheStatedRules",
+          "line": 123,
+          "isDefault": false
+        },
+        {
+          "name": "TheClimateIsTheSameEveryTime",
+          "line": 146,
+          "isDefault": false
+        },
+        {
+          "name": "StarAndAirTests",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "FixedLogarithmsAreAccurate",
+          "callee": "Math.Log2",
+          "lineNumber": 16
+        },
+        {
+          "caller": "FixedLogarithmsAreAccurate",
+          "callee": "Assert.InRange",
+          "lineNumber": 17
+        },
+        {
+          "caller": "FixedLogarithmsAreAccurate",
+          "callee": "FixedLog.Log2",
+          "lineNumber": 17
+        },
+        {
+          "caller": "FixedLogarithmsAreAccurate",
+          "callee": "Math.Pow",
+          "lineNumber": 22
+        },
+        {
+          "caller": "FixedLogarithmsAreAccurate",
+          "callee": "Assert.InRange",
+          "lineNumber": 23
+        },
+        {
+          "caller": "FixedLogarithmsAreAccurate",
+          "callee": "FixedLog.Pow2",
+          "lineNumber": 23
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "Assert.Equal",
+          "lineNumber": 30
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "StarOrbit.YearThousandths",
+          "lineNumber": 30
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "Assert.InRange",
+          "lineNumber": 31
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "StarOrbit.YearThousandths",
+          "lineNumber": 31
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "Assert.Equal",
+          "lineNumber": 32
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "StarOrbit.MassThousandths",
+          "lineNumber": 32
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "Assert.InRange",
+          "lineNumber": 33
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "StarOrbit.MassThousandths",
+          "lineNumber": 33
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "Assert.InRange",
+          "lineNumber": 34
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "StarOrbit.MassThousandths",
+          "lineNumber": 34
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "Assert.InRange",
+          "lineNumber": 35
+        },
+        {
+          "caller": "KeplerGivesTheKnownYears",
+          "callee": "StarOrbit.LightMillionths",
+          "lineNumber": 35
+        },
+        {
+          "caller": "HabitableZoneFollowsTheStar",
+          "callee": "StarOrbit.ZoneThousandths",
+          "lineNumber": 41
+        },
+        {
+          "caller": "HabitableZoneFollowsTheStar",
+          "callee": "Assert.InRange",
+          "lineNumber": 42
+        },
+        {
+          "caller": "HabitableZoneFollowsTheStar",
+          "callee": "Assert.InRange",
+          "lineNumber": 43
+        },
+        {
+          "caller": "HabitableZoneFollowsTheStar",
+          "callee": "StarOrbit.ZoneThousandths",
+          "lineNumber": 44
+        },
+        {
+          "caller": "HabitableZoneFollowsTheStar",
+          "callee": "Assert.InRange",
+          "lineNumber": 45
+        },
+        {
+          "caller": "HabitableZoneFollowsTheStar",
+          "callee": "Assert.InRange",
+          "lineNumber": 46
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "StarOrbit.Solve",
+          "lineNumber": 53
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "Assert.False",
+          "lineNumber": 54
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "Assert.InRange",
+          "lineNumber": 55
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "StarOrbit.YearThousandths",
+          "lineNumber": 55
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "Assert.InRange",
+          "lineNumber": 56
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "StarOrbit.LightMillionths",
+          "lineNumber": 56
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "StarOrbit.Solve",
+          "lineNumber": 59
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "Assert.False",
+          "lineNumber": 60
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "Assert.InRange",
+          "lineNumber": 61
+        },
+        {
+          "caller": "AnyTwoQuantitiesGiveTheThird",
+          "callee": "Assert.Equal",
+          "lineNumber": 62
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "StarOrbit.Adjust",
+          "lineNumber": 69
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "Assert.True",
+          "lineNumber": 70
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "Assert.Equal",
+          "lineNumber": 71
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "Assert.InRange",
+          "lineNumber": 72
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "StarOrbit.Adjust",
+          "lineNumber": 75
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "Assert.True",
+          "lineNumber": 76
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "Assert.Equal",
+          "lineNumber": 77
+        },
+        {
+          "caller": "LeavingTheZonePutsThePlanetOnItsEdge",
+          "callee": "Assert.InRange",
+          "lineNumber": 78
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "CarbonCycle.EquilibriumCo2Microbar",
+          "lineNumber": 84
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "Assert.InRange",
+          "lineNumber": 85
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "Assert.Equal",
+          "lineNumber": 86
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "CarbonCycle.GreenhouseTenths",
+          "lineNumber": 86
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "CarbonCycle.EquilibriumCo2Microbar",
+          "lineNumber": 89
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "Assert.True",
+          "lineNumber": 90
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "CarbonCycle.EquilibriumCo2Microbar",
+          "lineNumber": 93
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "Assert.True",
+          "lineNumber": 94
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "Assert.True",
+          "lineNumber": 95
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "CarbonCycle.GreenhouseTenths",
+          "lineNumber": 95
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "CarbonCycle.Co2ForGreenhouse",
+          "lineNumber": 100
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "CarbonCycle.GreenhouseTenths",
+          "lineNumber": 100
+        },
+        {
+          "caller": "TheCarbonCycleKeepsEarthAtItsCo2AndWarmsColdPlanets",
+          "callee": "Assert.InRange",
+          "lineNumber": 101
+        },
+        {
+          "caller": "ALyingAxisDoesNotNeedTheEdgeOfTheZoneToShapeItsAir",
+          "callee": "CarbonCycle.EquilibriumCo2Microbar",
+          "lineNumber": 109
+        },
+        {
+          "caller": "ALyingAxisDoesNotNeedTheEdgeOfTheZoneToShapeItsAir",
+          "callee": "Assert.NotInRange",
+          "lineNumber": 110
+        },
+        {
+          "caller": "ThickAirEvensOutTheClimate",
+          "callee": "new ClimateModel",
+          "lineNumber": 116
+        },
+        {
+          "caller": "ThickAirEvensOutTheClimate",
+          "callee": "new ClimateModel",
+          "lineNumber": 117
+        },
+        {
+          "caller": "ThickAirEvensOutTheClimate",
+          "callee": "earth.MeanTemperatureMillionths",
+          "lineNumber": 118
+        },
+        {
+          "caller": "ThickAirEvensOutTheClimate",
+          "callee": "earth.MeanTemperatureMillionths",
+          "lineNumber": 118
+        },
+        {
+          "caller": "ThickAirEvensOutTheClimate",
+          "callee": "thick.MeanTemperatureMillionths",
+          "lineNumber": 119
+        },
+        {
+          "caller": "ThickAirEvensOutTheClimate",
+          "callee": "thick.MeanTemperatureMillionths",
+          "lineNumber": 119
+        },
+        {
+          "caller": "ThickAirEvensOutTheClimate",
+          "callee": "Assert.True",
+          "lineNumber": 120
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "PlanetSetup.Build",
+          "lineNumber": 127
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "new PlanetOverrides",
+          "lineNumber": 127
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.InRange",
+          "lineNumber": 128
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.Equal",
+          "lineNumber": 129
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "PlanetSetup.Build",
+          "lineNumber": 130
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "new PlanetOverrides",
+          "lineNumber": 130
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.Equal",
+          "lineNumber": 131
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.Empty",
+          "lineNumber": 132
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.True",
+          "lineNumber": 133
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.Throws<ArgumentException>",
+          "lineNumber": 136
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "PlanetSetup.Build",
+          "lineNumber": 136
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "new PlanetOverrides",
+          "lineNumber": 136
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "PlanetSetup.Build",
+          "lineNumber": 137
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "new PlanetOverrides",
+          "lineNumber": 137
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.Single",
+          "lineNumber": 138
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "PlanetSetup.Build",
+          "lineNumber": 141
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "new PlanetOverrides",
+          "lineNumber": 141
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.Equal",
+          "lineNumber": 142
+        },
+        {
+          "caller": "BuildingAPlanetFollowsTheStatedRules",
+          "callee": "Assert.Equal",
+          "lineNumber": 143
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "EnergyBalance.Solve",
+          "lineNumber": 149
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "EnergyBalance.Solve",
+          "lineNumber": 150
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "Assert.Equal",
+          "lineNumber": 151
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "Assert.Equal",
+          "lineNumber": 154
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "new ClimateModel(PlanetParameters.Earth).MeanTemperature",
+          "lineNumber": 154
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "new ClimateModel",
+          "lineNumber": 154
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "Assert.Equal",
+          "lineNumber": 155
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "new ClimateModel(PlanetParameters.Earth).MeanTemperature",
+          "lineNumber": 155
+        },
+        {
+          "caller": "TheClimateIsTheSameEveryTime",
+          "callee": "new ClimateModel",
+          "lineNumber": 155
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 11,
+        "functionCount": 10,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "tests/CivSim.Tests/WorldGen/WorldGeneratorTests.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 299,
+      "nonEmptyLines": 259,
+      "functions": [
+        {
+          "name": "Generate",
+          "startLine": 18,
+          "endLine": 22,
+          "params": [
+            "settings"
+          ]
+        },
+        {
+          "name": "Validate",
+          "startLine": 24,
+          "endLine": 28,
+          "params": [
+            "state",
+            "report"
+          ]
+        },
+        {
+          "name": "SameSeedGivesTheSameWorld",
+          "startLine": 30,
+          "endLine": 34,
+          "params": []
+        },
+        {
+          "name": "DifferentSeedsGiveDifferentWorlds",
+          "startLine": 36,
+          "endLine": 40,
+          "params": []
+        },
+        {
+          "name": "GoldenWorldHashIsStable",
+          "startLine": 42,
+          "endLine": 47,
+          "params": []
+        },
+        {
+          "name": "EveryWorldTypeIsValid",
+          "startLine": 51,
+          "endLine": 62,
+          "params": [
+            "type",
+            "water"
+          ]
+        },
+        {
+          "name": "HundredSeedsOnTheTestMapAreValid",
+          "startLine": 64,
+          "endLine": 83,
+          "params": []
+        },
+        {
+          "name": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "startLine": 85,
+          "endLine": 110,
+          "params": []
+        },
+        {
+          "name": "CivilizationsGetTheirStartCells",
+          "startLine": 112,
+          "endLine": 120,
+          "params": []
+        },
+        {
+          "name": "GeneratedWorldSurvivesSaveAndLoad",
+          "startLine": 122,
+          "endLine": 135,
+          "params": []
+        },
+        {
+          "name": "RiversOnlyRunBetweenLandCells",
+          "startLine": 137,
+          "endLine": 158,
+          "params": []
+        },
+        {
+          "name": "CountBiomes",
+          "startLine": 162,
+          "endLine": 171,
+          "params": [
+            "r"
+          ]
+        },
+        {
+          "name": "CountRelief",
+          "startLine": 173,
+          "endLine": 182,
+          "params": [
+            "state",
+            "relief"
+          ]
+        },
+        {
+          "name": "Sum",
+          "startLine": 184,
+          "endLine": 193,
+          "params": [
+            "counts"
+          ]
+        },
+        {
+          "name": "EveryWorldSettingIsValid",
+          "startLine": 195,
+          "endLine": 206,
+          "params": [
+            "lightPercent",
+            "moisture",
+            "relief",
+            "resources",
+            "inland"
+          ]
+        },
+        {
+          "name": "Light",
+          "startLine": 209,
+          "endLine": 210,
+          "params": [
+            "thousandths"
+          ]
+        },
+        {
+          "name": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "startLine": 212,
+          "endLine": 220,
+          "params": []
+        },
+        {
+          "name": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "startLine": 222,
+          "endLine": 229,
+          "params": []
+        },
+        {
+          "name": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "startLine": 231,
+          "endLine": 238,
+          "params": []
+        },
+        {
+          "name": "TotalHumidity",
+          "startLine": 240,
+          "endLine": 249,
+          "params": [
+            "state"
+          ]
+        },
+        {
+          "name": "MountainousWorldsHaveMoreMountains",
+          "startLine": 251,
+          "endLine": 258,
+          "params": []
+        },
+        {
+          "name": "RichWorldsHaveMoreDeposits",
+          "startLine": 260,
+          "endLine": 266,
+          "params": []
+        },
+        {
+          "name": "CivilizationCountIsIndependentOfMapSize",
+          "startLine": 268,
+          "endLine": 277,
+          "params": [
+            "civs"
+          ]
+        },
+        {
+          "name": "WorldSettingsSurviveSaveAndLoad",
+          "startLine": 279,
+          "endLine": 298,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "WorldGeneratorTests",
+          "startLine": 14,
+          "endLine": 299,
+          "methods": [
+            "Generate",
+            "Validate",
+            "SameSeedGivesTheSameWorld",
+            "DifferentSeedsGiveDifferentWorlds",
+            "GoldenWorldHashIsStable",
+            "EveryWorldTypeIsValid",
+            "HundredSeedsOnTheTestMapAreValid",
+            "StandardMapHasRiversLakesDepositsAndFairStarts",
+            "CivilizationsGetTheirStartCells",
+            "GeneratedWorldSurvivesSaveAndLoad",
+            "RiversOnlyRunBetweenLandCells",
+            "CountBiomes",
+            "CountRelief",
+            "Sum",
+            "EveryWorldSettingIsValid",
+            "Light",
+            "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+            "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+            "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+            "TotalHumidity",
+            "MountainousWorldsHaveMoreMountains",
+            "RichWorldsHaveMoreDeposits",
+            "CivilizationCountIsIndependentOfMapSize",
+            "WorldSettingsSurviveSaveAndLoad"
+          ],
+          "properties": [
+            "Content",
+            "GoldenWorldHash",
+            "Medium"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "SameSeedGivesTheSameWorld",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "DifferentSeedsGiveDifferentWorlds",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "GoldenWorldHashIsStable",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "EveryWorldTypeIsValid",
+          "line": 51,
+          "isDefault": false
+        },
+        {
+          "name": "HundredSeedsOnTheTestMapAreValid",
+          "line": 64,
+          "isDefault": false
+        },
+        {
+          "name": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "line": 85,
+          "isDefault": false
+        },
+        {
+          "name": "CivilizationsGetTheirStartCells",
+          "line": 112,
+          "isDefault": false
+        },
+        {
+          "name": "GeneratedWorldSurvivesSaveAndLoad",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "RiversOnlyRunBetweenLandCells",
+          "line": 137,
+          "isDefault": false
+        },
+        {
+          "name": "EveryWorldSettingIsValid",
+          "line": 195,
+          "isDefault": false
+        },
+        {
+          "name": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "line": 212,
+          "isDefault": false
+        },
+        {
+          "name": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "line": 222,
+          "isDefault": false
+        },
+        {
+          "name": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "line": 231,
+          "isDefault": false
+        },
+        {
+          "name": "MountainousWorldsHaveMoreMountains",
+          "line": 251,
+          "isDefault": false
+        },
+        {
+          "name": "RichWorldsHaveMoreDeposits",
+          "line": 260,
+          "isDefault": false
+        },
+        {
+          "name": "CivilizationCountIsIndependentOfMapSize",
+          "line": 268,
+          "isDefault": false
+        },
+        {
+          "name": "WorldSettingsSurviveSaveAndLoad",
+          "line": 279,
+          "isDefault": false
+        },
+        {
+          "name": "WorldGeneratorTests",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Generate",
+          "callee": "GameState.CreateNew",
+          "lineNumber": 20
+        },
+        {
+          "caller": "Validate",
+          "callee": "WorldValidator.Validate",
+          "lineNumber": 27
+        },
+        {
+          "caller": "Validate",
+          "callee": "WorldGenOptions.From",
+          "lineNumber": 27
+        },
+        {
+          "caller": "SameSeedGivesTheSameWorld",
+          "callee": "Assert.Equal",
+          "lineNumber": 33
+        },
+        {
+          "caller": "SameSeedGivesTheSameWorld",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 33
+        },
+        {
+          "caller": "SameSeedGivesTheSameWorld",
+          "callee": "Generate",
+          "lineNumber": 33
+        },
+        {
+          "caller": "SameSeedGivesTheSameWorld",
+          "callee": "GameSettings.Test",
+          "lineNumber": 33
+        },
+        {
+          "caller": "SameSeedGivesTheSameWorld",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 33
+        },
+        {
+          "caller": "SameSeedGivesTheSameWorld",
+          "callee": "Generate",
+          "lineNumber": 33
+        },
+        {
+          "caller": "SameSeedGivesTheSameWorld",
+          "callee": "GameSettings.Test",
+          "lineNumber": 33
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentWorlds",
+          "callee": "Assert.NotEqual",
+          "lineNumber": 39
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentWorlds",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 39
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentWorlds",
+          "callee": "Generate",
+          "lineNumber": 39
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentWorlds",
+          "callee": "GameSettings.Test",
+          "lineNumber": 39
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentWorlds",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 39
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentWorlds",
+          "callee": "Generate",
+          "lineNumber": 39
+        },
+        {
+          "caller": "DifferentSeedsGiveDifferentWorlds",
+          "callee": "GameSettings.Test",
+          "lineNumber": 39
+        },
+        {
+          "caller": "GoldenWorldHashIsStable",
+          "callee": "Assert.Equal",
+          "lineNumber": 46
+        },
+        {
+          "caller": "GoldenWorldHashIsStable",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 46
+        },
+        {
+          "caller": "GoldenWorldHashIsStable",
+          "callee": "Generate",
+          "lineNumber": 46
+        },
+        {
+          "caller": "GoldenWorldHashIsStable",
+          "callee": "GameSettings.Test",
+          "lineNumber": 46
+        },
+        {
+          "caller": "EveryWorldTypeIsValid",
+          "callee": "new GameSettings",
+          "lineNumber": 58
+        },
+        {
+          "caller": "EveryWorldTypeIsValid",
+          "callee": "Generate",
+          "lineNumber": 59
+        },
+        {
+          "caller": "EveryWorldTypeIsValid",
+          "callee": "Assert.Empty",
+          "lineNumber": 60
+        },
+        {
+          "caller": "EveryWorldTypeIsValid",
+          "callee": "Validate",
+          "lineNumber": 60
+        },
+        {
+          "caller": "EveryWorldTypeIsValid",
+          "callee": "Assert.InRange",
+          "lineNumber": 61
+        },
+        {
+          "caller": "HundredSeedsOnTheTestMapAreValid",
+          "callee": "new List<string>",
+          "lineNumber": 67
+        },
+        {
+          "caller": "HundredSeedsOnTheTestMapAreValid",
+          "callee": "Generate",
+          "lineNumber": 70
+        },
+        {
+          "caller": "HundredSeedsOnTheTestMapAreValid",
+          "callee": "GameSettings.Test",
+          "lineNumber": 70
+        },
+        {
+          "caller": "HundredSeedsOnTheTestMapAreValid",
+          "callee": "Validate",
+          "lineNumber": 71
+        },
+        {
+          "caller": "HundredSeedsOnTheTestMapAreValid",
+          "callee": "failures.Add",
+          "lineNumber": 73
+        },
+        {
+          "caller": "HundredSeedsOnTheTestMapAreValid",
+          "callee": "failures.Add",
+          "lineNumber": 78
+        },
+        {
+          "caller": "HundredSeedsOnTheTestMapAreValid",
+          "callee": "Assert.Empty",
+          "lineNumber": 82
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Generate",
+          "lineNumber": 88
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "new GameSettings",
+          "lineNumber": 88
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Assert.Empty",
+          "lineNumber": 89
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Validate",
+          "lineNumber": 89
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Assert.True",
+          "lineNumber": 90
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Assert.True",
+          "lineNumber": 91
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Assert.True",
+          "lineNumber": 92
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Assert.True",
+          "lineNumber": 93
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Assert.True",
+          "lineNumber": 101
+        },
+        {
+          "caller": "StandardMapHasRiversLakesDepositsAndFairStarts",
+          "callee": "Assert.True",
+          "lineNumber": 109
+        },
+        {
+          "caller": "CivilizationsGetTheirStartCells",
+          "callee": "Generate",
+          "lineNumber": 115
+        },
+        {
+          "caller": "CivilizationsGetTheirStartCells",
+          "callee": "GameSettings.Test",
+          "lineNumber": 115
+        },
+        {
+          "caller": "CivilizationsGetTheirStartCells",
+          "callee": "Assert.Equal",
+          "lineNumber": 118
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "GameSettings.Test",
+          "lineNumber": 125
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "Generate",
+          "lineNumber": 126
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "new MemoryStream",
+          "lineNumber": 127
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "SaveGameSerializer.Save",
+          "lineNumber": 128
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "SaveGameSerializer.Load",
+          "lineNumber": 130
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "Assert.Equal",
+          "lineNumber": 131
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 131
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 131
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "Assert.Equal",
+          "lineNumber": 132
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "Assert.Equal",
+          "lineNumber": 133
+        },
+        {
+          "caller": "GeneratedWorldSurvivesSaveAndLoad",
+          "callee": "Assert.Equal",
+          "lineNumber": 134
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "Generate",
+          "lineNumber": 140
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "GameSettings.Test",
+          "lineNumber": 140
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "geo.EdgeCells",
+          "lineNumber": 152
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "new HexEdge",
+          "lineNumber": 152
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "geo.FromIndex",
+          "lineNumber": 152
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "Assert.False",
+          "lineNumber": 153
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "geo.Index",
+          "lineNumber": 153
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "Assert.False",
+          "lineNumber": 154
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "geo.Index",
+          "lineNumber": 154
+        },
+        {
+          "caller": "RiversOnlyRunBetweenLandCells",
+          "callee": "Assert.True",
+          "lineNumber": 157
+        },
+        {
+          "caller": "CountBiomes",
+          "callee": "Content.Biome",
+          "lineNumber": 167
+        },
+        {
+          "caller": "EveryWorldSettingIsValid",
+          "callee": "Light",
+          "lineNumber": 203
+        },
+        {
+          "caller": "EveryWorldSettingIsValid",
+          "callee": "Generate",
+          "lineNumber": 204
+        },
+        {
+          "caller": "EveryWorldSettingIsValid",
+          "callee": "Assert.Empty",
+          "lineNumber": 205
+        },
+        {
+          "caller": "EveryWorldSettingIsValid",
+          "callee": "Validate",
+          "lineNumber": 205
+        },
+        {
+          "caller": "Light",
+          "callee": "PlanetSetup.Build",
+          "lineNumber": 210
+        },
+        {
+          "caller": "Light",
+          "callee": "new PlanetOverrides",
+          "lineNumber": 210
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "Generate",
+          "lineNumber": 216
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "Light",
+          "lineNumber": 216
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "Generate",
+          "lineNumber": 217
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "Light",
+          "lineNumber": 217
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "Assert.True",
+          "lineNumber": 218
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "CountBiomes",
+          "lineNumber": 218
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "CountBiomes",
+          "lineNumber": 218
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "Assert.True",
+          "lineNumber": 219
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "CountBiomes",
+          "lineNumber": 219
+        },
+        {
+          "caller": "DimStarsGiveMoreIceAndTundraThanBrightOnes",
+          "callee": "CountBiomes",
+          "lineNumber": 219
+        },
+        {
+          "caller": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "callee": "Generate",
+          "lineNumber": 225
+        },
+        {
+          "caller": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "callee": "Generate",
+          "lineNumber": 226
+        },
+        {
+          "caller": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "callee": "Assert.True",
+          "lineNumber": 227
+        },
+        {
+          "caller": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "callee": "Assert.True",
+          "lineNumber": 228
+        },
+        {
+          "caller": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "callee": "CountBiomes",
+          "lineNumber": 228
+        },
+        {
+          "caller": "WetWorldsHaveMoreRiversAndForestThanDryOnes",
+          "callee": "CountBiomes",
+          "lineNumber": 228
+        },
+        {
+          "caller": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "callee": "TotalHumidity",
+          "lineNumber": 234
+        },
+        {
+          "caller": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "callee": "Generate",
+          "lineNumber": 234
+        },
+        {
+          "caller": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "callee": "TotalHumidity",
+          "lineNumber": 235
+        },
+        {
+          "caller": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "callee": "Generate",
+          "lineNumber": 235
+        },
+        {
+          "caller": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "callee": "TotalHumidity",
+          "lineNumber": 236
+        },
+        {
+          "caller": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "callee": "Generate",
+          "lineNumber": 236
+        },
+        {
+          "caller": "DryInlandWorldsHaveLessHumidityThanHumidOnes",
+          "callee": "Assert.True",
+          "lineNumber": 237
+        },
+        {
+          "caller": "MountainousWorldsHaveMoreMountains",
+          "callee": "CountRelief",
+          "lineNumber": 254
+        },
+        {
+          "caller": "MountainousWorldsHaveMoreMountains",
+          "callee": "Generate",
+          "lineNumber": 254
+        },
+        {
+          "caller": "MountainousWorldsHaveMoreMountains",
+          "callee": "CountRelief",
+          "lineNumber": 255
+        },
+        {
+          "caller": "MountainousWorldsHaveMoreMountains",
+          "callee": "Generate",
+          "lineNumber": 255
+        },
+        {
+          "caller": "MountainousWorldsHaveMoreMountains",
+          "callee": "CountRelief",
+          "lineNumber": 256
+        },
+        {
+          "caller": "MountainousWorldsHaveMoreMountains",
+          "callee": "Generate",
+          "lineNumber": 256
+        },
+        {
+          "caller": "MountainousWorldsHaveMoreMountains",
+          "callee": "Assert.True",
+          "lineNumber": 257
+        },
+        {
+          "caller": "RichWorldsHaveMoreDeposits",
+          "callee": "Sum",
+          "lineNumber": 263
+        },
+        {
+          "caller": "RichWorldsHaveMoreDeposits",
+          "callee": "Generate",
+          "lineNumber": 263
+        },
+        {
+          "caller": "RichWorldsHaveMoreDeposits",
+          "callee": "Sum",
+          "lineNumber": 264
+        },
+        {
+          "caller": "RichWorldsHaveMoreDeposits",
+          "callee": "Generate",
+          "lineNumber": 264
+        },
+        {
+          "caller": "RichWorldsHaveMoreDeposits",
+          "callee": "Assert.True",
+          "lineNumber": 265
+        },
+        {
+          "caller": "CivilizationCountIsIndependentOfMapSize",
+          "callee": "Generate",
+          "lineNumber": 274
+        },
+        {
+          "caller": "CivilizationCountIsIndependentOfMapSize",
+          "callee": "Assert.Equal",
+          "lineNumber": 275
+        },
+        {
+          "caller": "CivilizationCountIsIndependentOfMapSize",
+          "callee": "Assert.Empty",
+          "lineNumber": 276
+        },
+        {
+          "caller": "CivilizationCountIsIndependentOfMapSize",
+          "callee": "Validate",
+          "lineNumber": 276
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "GameSettings.Test",
+          "lineNumber": 282
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "new PlanetParameters",
+          "lineNumber": 284
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "Generate",
+          "lineNumber": 291
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "new MemoryStream",
+          "lineNumber": 292
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "SaveGameSerializer.Save",
+          "lineNumber": 293
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "SaveGameSerializer.Load",
+          "lineNumber": 295
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "Assert.Equal",
+          "lineNumber": 296
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "Assert.Equal",
+          "lineNumber": 297
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 297
+        },
+        {
+          "caller": "WorldSettingsSurviveSaveAndLoad",
+          "callee": "GameStateHash.Compute",
+          "lineNumber": 297
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 18,
+        "functionCount": 24,
+        "classCount": 1
+      }
+    }
+  ]
+}

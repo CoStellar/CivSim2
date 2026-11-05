@@ -122,4 +122,43 @@ public sealed record AiRules
     /// How many of the best actions an advisor draws among, chances by score (1-3). 1 always takes the best one.
     /// </summary>
     public int PickAmongTop { get; init; } = 1;
+
+    /// <summary>Turns between two strategy reviews of one civilization (GDD 8.1: 10-20); reviews are spread over the civilizations.</summary>
+    public int ReviewEveryTurns { get; init; } = 15;
+
+    /// <summary>Boost for places that lie closer to the strategist's expansion target (GDD 7.6: a suggestion).</summary>
+    public int DirectionBonusPercent { get; init; } = 15;
+
+    /// <summary>A new recipe must beat the one the artisans make by this much before they switch.</summary>
+    public int RecipeSwitchBetterByPercent { get; init; } = 25;
+
+    /// <summary>Camps this full (people against the most their level holds, in all camps) give the lowest expansion weight.</summary>
+    public int CrowdingLowPercent { get; init; } = 40;
+
+    /// <summary>Camps this full give the highest expansion weight.</summary>
+    public int CrowdingHighPercent { get; init; } = 90;
+
+    /// <summary>Lowest and highest expansion weight from crowding, per mille.</summary>
+    public int ExpansionWeightMin { get; init; } = 750;
+
+    /// <summary>Highest expansion weight from crowding, per mille.</summary>
+    public int ExpansionWeightMax { get; init; } = 1500;
+
+    /// <summary>People fed this well (per cent, all camps) need no extra care.</summary>
+    public int FedWellPercent { get; init; } = 95;
+
+    /// <summary>People fed this badly push prosperity and security to their highest weight.</summary>
+    public int FedBadlyPercent { get; init; } = 60;
+
+    /// <summary>Highest prosperity and security weight from hunger, per mille.</summary>
+    public int HungerWeightMax { get; init; } = 1500;
+
+    /// <summary>A hungry or cold camp that is not starving looks for a better place every this many turns.</summary>
+    public int SearchEveryTurns { get; init; } = 3;
+
+    /// <summary>A camp fed worse than this (per cent) is starving and looks for a better place every turn.</summary>
+    public int StarvingFedPercent { get; init; } = 85;
+
+    /// <summary>A camp never splits below this share of its level's people, however expansive its civilization.</summary>
+    public int SplitMinPercentOfLevel { get; init; } = 50;
 }

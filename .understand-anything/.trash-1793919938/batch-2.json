@@ -1,0 +1,273 @@
+{
+ "nodes": [
+  {
+   "id": "document:CLAUDE.md",
+   "type": "document",
+   "name": "CLAUDE.md",
+   "filePath": "CLAUDE.md",
+   "summary": "Instrukcje pracy dla Claude Code w repo CivSim 2: zakres (tylko CORE z GDD rozdz. 16), role, języki, przebieg sesji i PR, twarde zasady architektury (rdzeń bez grafiki, komendy, determinizm, dane w JSON, klient–serwer, HexGlobe), struktura repo, cele wydajności i użycie Understand Anything.",
+   "tags": [
+    "documentation",
+    "architektura",
+    "zasady-pracy",
+    "determinizm",
+    "development"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "config:CivSim2.sln",
+   "type": "config",
+   "name": "CivSim2.sln",
+   "filePath": "CivSim2.sln",
+   "summary": "Solucja .NET grupująca projekty CivSim.Core, CivSim.Data, CivSim.Protocol, CivSim.Server, CivSim.Headless, CivSim.Tests oraz klienta CivSim.Game w folderach src, tests i game.",
+   "tags": [
+    "configuration",
+    "build-system",
+    "solucja-dotnet",
+    "struktura-projektu"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "document:README.md",
+   "type": "document",
+   "name": "README.md",
+   "filePath": "README.md",
+   "summary": "Angielski opis projektu CivSim 2: turowy symulator rozwoju gospodarczego 4X na heksagonalnej planecie, tabela etapów 0–12 z kryteriami ukończenia, instrukcja startu (.NET 10, Godot 4.7.2), stos technologiczny i układ repozytorium.",
+   "tags": [
+    "documentation",
+    "entry-point",
+    "overview",
+    "plan-projektu"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "document:ROADMAP.md",
+   "type": "document",
+   "name": "ROADMAP.md",
+   "filePath": "ROADMAP.md",
+   "summary": "Roadmapa po polsku z listami zadań (checkboxy) i kryteriami „Gotowe” dla etapów 0–5+ (fundamenty, mapa-kula, gwiazda i klimat, podgląd Godot, gospodarka i ludność, AI i dyplomacja); wskazuje etap 3 jako zamknięty i etap 4 jako następny.",
+   "tags": [
+    "documentation",
+    "roadmapa",
+    "planowanie",
+    "postep-prac"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "config:global.json",
+   "type": "config",
+   "name": "global.json",
+   "filePath": "global.json",
+   "summary": "Przypina wersję .NET SDK 10.0.100 (rollForward latestFeature) oraz wersję Godot.NET.Sdk 4.7.2 dla projektu klienta.",
+   "tags": [
+    "configuration",
+    "build-system",
+    "dotnet-sdk",
+    "godot"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "document:CLAUDE.md",
+   "target": "document:ROADMAP.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "document:docs/GDD.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "file:Directory.Build.props",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "document:docs/systems/README.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "document:docs/decisions/0003-determinizm.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:CLAUDE.md",
+   "target": "document:docs/decisions/0012-mapa-kula.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "config:CivSim2.sln",
+   "target": "config:src/CivSim.Core/CivSim.Core.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:CivSim2.sln",
+   "target": "config:src/CivSim.Data/CivSim.Data.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:CivSim2.sln",
+   "target": "config:src/CivSim.Headless/CivSim.Headless.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:CivSim2.sln",
+   "target": "config:src/CivSim.Protocol/CivSim.Protocol.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:CivSim2.sln",
+   "target": "config:src/CivSim.Server/CivSim.Server.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:CivSim2.sln",
+   "target": "config:tests/CivSim.Tests/CivSim.Tests.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:CivSim2.sln",
+   "target": "config:game/CivSim.Game.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "document:README.md",
+   "target": "document:ROADMAP.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:README.md",
+   "target": "document:docs/GDD.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:README.md",
+   "target": "document:docs/SETUP.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:README.md",
+   "target": "config:CivSim2.sln",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:ROADMAP.md",
+   "target": "document:docs/GDD.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:ROADMAP.md",
+   "target": "config:CivSim2.sln",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:ROADMAP.md",
+   "target": "file:Directory.Build.props",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:ROADMAP.md",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:ROADMAP.md",
+   "target": "file:src/CivSim.Headless/Program.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "config:global.json",
+   "target": "config:game/CivSim.Game.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:global.json",
+   "target": "config:CivSim2.sln",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:global.json",
+   "target": "file:Directory.Build.props",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

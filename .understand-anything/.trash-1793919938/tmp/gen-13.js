@@ -1,0 +1,43 @@
+const fs=require("fs");
+process.chdir("I:/CivSim/CivSim2/.understand-anything");
+const all=new Set(fs.readFileSync("tmp/allpaths-13.txt","utf8").split("\n").map(s=>s.trim()));
+const r=require("I:/CivSim/CivSim2/.understand-anything/tmp/ua-file-extract-results-13.json");
+const T="tests/CivSim.Tests/";
+const meta={
+"Simulation/CommandQueueTests.cs":{s:"Testy kolejki komend: sortowanie według kategorii, cywilizacji i kolejności nadejścia oraz sprawiedliwa rotacja kolejności cywilizacji co turę.",t:["test","komendy","determinizm","kolejka"],c:"moderate",prod:["src/CivSim.Core/Commands/CommandQueue.cs","src/CivSim.Core/Commands/CommandCategory.cs"]},
+"Simulation/DeterminismTests.cs":{s:"Testy determinizmu symulacji: dwa przebiegi z tym samym seedem dają identyczny hash stanu, różne seedy różne hashe, a złoty hash jest stabilny między platformami.",t:["test","determinizm","hashowanie","prng"],c:"moderate",prod:["src/CivSim.Core/Hashing/GameStateHash.cs","src/CivSim.Core/Hashing/StateHasher.cs","src/CivSim.Core/Simulation/TurnRunner.cs","src/CivSim.Core/Random/RandomState.cs"]},
+"Simulation/TestDoubles.cs":{s:"Atrapy testowe dla symulacji: system rejestrujący fazy, system zużywający losowość, źródło komend zmieniające nazwy cywilizacji i komenda logująca.",t:["test","test-doubles","komendy","fazy-tury"],c:"simple",prod:[],dep:["src/CivSim.Core/Simulation/ITurnSystem.cs","src/CivSim.Core/Simulation/ICommandSource.cs","src/CivSim.Core/Commands/ICommand.cs","src/CivSim.Core/Commands/RenameCivilizationCommand.cs"]},
+"Simulation/TurnRunnerTests.cs":{s:"Testy pętli tury: nowa gra z Ziemią i cywilizacjami, odrzucanie nieparzystej wysokości mapy, kolejność faz z GDD, raport czasu faz, rozstrzyganie komend i publikacja niezmiennych migawek.",t:["test","petla-tury","migawki","komendy"],c:"moderate",prod:["src/CivSim.Core/Simulation/TurnRunner.cs","src/CivSim.Core/Simulation/TurnReport.cs","src/CivSim.Core/Simulation/SnapshotBuffer.cs","src/CivSim.Core/Simulation/GameSnapshot.cs","src/CivSim.Core/State/GameState.cs","src/CivSim.Core/Commands/RenameCivilizationCommand.cs"]},
+"SmokeTests.cs":{s:"Testy dymne całego rozwiązania: dodatnia wersja protokołu oraz poprawne działanie, odrzucanie złych argumentów i determinizm trybu headless z zapisem raportu.",t:["test","smoke-test","headless","protokol"],c:"simple",prod:["src/CivSim.Protocol/ProtocolInfo.cs","src/CivSim.Headless/Program.cs","src/CivSim.Headless/HeadlessRun.cs","src/CivSim.Headless/HeadlessOptions.cs"]},
+"WorldGen/ClimateCycleTests.cs":{s:"Testy cykli klimatycznych: start w ciepłej fazie, epoki lodowcowe kończące się gwałtownie, brak ich na planecie leżącej na boku oraz determinizm i zgodność z zapisem gry.",t:["test","klimat","epoki-lodowcowe","determinizm"],c:"moderate",prod:["src/CivSim.Core/WorldGen/ClimateCycles.cs","src/CivSim.Core/WorldGen/ClimateSystem.cs","src/CivSim.Server/Saves/SaveGameSerializer.cs"]},
+"WorldGen/PlanetTests.cs":{s:"Testy modelu planety: dokładność trygonometrii całkowitoliczbowej, nasłonecznienie i klimat Ziemi, wpływ nachylenia osi i długości roku na pory roku oraz poprawność presetów planet.",t:["test","planeta","klimat","fixed-point"],c:"moderate",prod:["src/CivSim.Core/WorldGen/Planet.cs","src/CivSim.Core/Numerics/FixedTrig.cs","src/CivSim.Core/WorldGen/PlanetSetup.cs","src/CivSim.Core/WorldGen/WorldValidator.cs"]},
+"WorldGen/SeaLevelTests.cs":{s:"Testy poziomu morza: opadanie morza wraz z lodem, zalewanie niskich wybrzeży, zamarzanie i rozmarzanie morza, odsłanianie szelfów oraz opuszczanie zalanych osad z ruinami pod wodą.",t:["test","poziom-morza","klimat","osady"],c:"moderate",prod:["src/CivSim.Core/WorldGen/SeaLevel.cs","src/CivSim.Core/WorldGen/ClimateSystem.cs","src/CivSim.Core/Commands/SettlementCommands.cs"]},
+"WorldGen/SeasonTests.cs":{s:"Testy pór roku: rozgrywanie długich lat sezon po sezonie, wolne decyzje raz na okres ery, naprzemienne lato i zima na półkulach, wpływ zimy na dziką żywność i odporność na zimno.",t:["test","pory-roku","kalendarz","ai"],c:"moderate",prod:["src/CivSim.Core/WorldGen/SeasonSystem.cs","src/CivSim.Core/Simulation/CalendarSystem.cs","src/CivSim.Core/Ai/TribeAi.cs"]},
+"WorldGen/StarAndAirTests.cs":{s:"Testy gwiazdy, orbity i atmosfery: logarytmy fixed-point, prawa Keplera, ekosfera, cykl węglowy, bilans energii i wyrównywanie klimatu przez gęstą atmosferę.",t:["test","orbita","atmosfera","fixed-point"],c:"moderate",prod:["src/CivSim.Core/WorldGen/StarOrbit.cs","src/CivSim.Core/WorldGen/CarbonCycle.cs","src/CivSim.Core/WorldGen/EnergyBalance.cs","src/CivSim.Core/Numerics/FixedLog.cs","src/CivSim.Core/WorldGen/PlanetSetup.cs"]},
+"WorldGen/WorldGeneratorTests.cs":{s:"Obszerne testy generatora świata: determinizm i złoty hash, poprawność wszystkich typów i ustawień świata, rzeki, jeziora, złoża i sprawiedliwe starty oraz zapis i odczyt wygenerowanego świata.",t:["test","generator-swiata","determinizm","walidacja"],c:"complex",prod:["src/CivSim.Core/WorldGen/WorldGenerator.cs","src/CivSim.Core/WorldGen/WorldValidator.cs","src/CivSim.Core/WorldGen/WorldType.cs","src/CivSim.Core/Hashing/GameStateHash.cs","src/CivSim.Server/Saves/SaveGameSerializer.cs"]},
+};
+const helperDesc={CreateRunner:"Pomocnik tworzący TurnRunner z atrapami zużywającymi losowość.",RunAndHash:"Pomocnik uruchamiający N tur i zwracający hash stanu.",Run:"Pomocnik przesuwający cykle klimatyczne o zadaną liczbę lat.",CountCold:"Pomocnik liczący zimne pola (lód, tundra) na mapie.",Water:"Pomocnik liczący pola wodne na mapie.",AssertRiversOnlyBetweenLand:"Asercja, że rzeki biegną tylko między polami lądu.",Generate:"Pomocnik generujący świat dla podanego seeda i ustawień.",Validate:"Pomocnik walidujący wygenerowany świat.",CountBiomes:"Pomocnik liczący pola danego biomu.",CountRelief:"Pomocnik liczący pola danej rzeźby terenu.",Sum:"Pomocnik sumujący wartości po polach mapy.",TotalHumidity:"Pomocnik sumujący wilgotność wszystkich pól.",NewGame:"Pomocnik tworzący nową grę do testów pór roku."};
+const doubles={PhaseRecorder:"Atrapa systemu tury zapisująca kolejność wykonanych faz.",RandomConsumer:"Atrapa systemu tury pobierająca liczby z wybranego strumienia PRNG, by sprawdzić determinizm.",RandomRenamer:"Atrapa źródła komend wydająca losowe komendy zmiany nazwy cywilizacji.",LoggingCommand:"Atrapa komendy zapisująca kolejność zastosowania do dziennika."};
+const nodes=[],edges=[];const ids=new Set();
+const add=n=>{if(!ids.has(n.id)){ids.add(n.id);nodes.push(n);}};
+const E=(s,t,type,w)=>{if(s!==t)edges.push({source:s,target:t,type,direction:"forward",weight:w});};
+const words=n=>n.replace(/([a-z0-9])([A-Z])/g,"$1 $2").toLowerCase();
+for(const f of r.results){const k=f.path.slice(T.length);const m=meta[k];const fid="file:"+f.path;const isD=k.includes("TestDoubles");
+ const node={id:fid,type:"file",name:f.path.split("/").pop(),filePath:f.path,summary:m.s,tags:m.t,complexity:m.c};
+ if(!isD)node.languageNotes="Testy xUnit z atrybutami [Fact]/[Theory]; nazwy metod opisują oczekiwane zachowanie pełnym zdaniem po angielsku.";
+ add(node);
+ if(isD){
+  for(const c of f.classes){const cid=`class:${f.path}:${c.name}`;
+   add({id:cid,type:"class",name:c.name,filePath:f.path,lineRange:[c.startLine,c.endLine],summary:doubles[c.name],tags:["test-doubles","test","atrapa"],complexity:"simple"});E(fid,cid,"contains",1.0);}
+ } else {
+  for(const c of f.classes){const cid=`class:${f.path}:${c.name}`;add({id:cid,type:"class",name:c.name,filePath:f.path,lineRange:[c.startLine,c.endLine],summary:"Klasa testów xUnit. "+m.s,tags:["test","xunit",m.t[1]],complexity:m.c});E(fid,cid,"contains",1.0);}
+  for(const fn of f.functions){const len=fn.endLine-fn.startLine+1;if(len<10)continue;const id=`function:${f.path}:${fn.name}`;if(ids.has(id))continue;
+   const h=helperDesc[fn.name];add({id,type:"function",name:fn.name,filePath:f.path,lineRange:[fn.startLine,fn.endLine],summary:h||`Test sprawdzający: ${words(fn.name)}.`,tags:h?["test","pomocnik",m.t[1]]:["test","xunit",m.t[1]],complexity:len>25?"moderate":"simple"});E(fid,id,"contains",1.0);}
+ }
+ for(const p of m.prod){if(all.has(p))E("file:"+p,fid,"tested_by",0.5);else console.error("MISSING",p);}
+ for(const p of (m.dep||[])){if(all.has(p))E(fid,"file:"+p,"depends_on",0.6);else console.error("MISSING",p);}
+}
+for(const k of ["Simulation/DeterminismTests.cs","Simulation/TurnRunnerTests.cs","Simulation/CommandQueueTests.cs"])E("file:"+T+k,"file:"+T+"Simulation/TestDoubles.cs","depends_on",0.6);
+for(const e of edges)for(const x of [e.source,e.target])if(!ids.has(x)&&!all.has(x.replace(/^file:/,"")))console.error("BAD",x);
+console.log(nodes.length,edges.length);
+fs.writeFileSync("intermediate/batch-13.json",JSON.stringify({nodes,edges},null,1));

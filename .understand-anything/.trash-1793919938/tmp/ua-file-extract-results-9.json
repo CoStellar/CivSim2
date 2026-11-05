@@ -1,0 +1,7129 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 25,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 25,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 25,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/CivSim.Core/Map/HexCorners.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 95,
+      "nonEmptyLines": 84,
+      "functions": [
+        {
+          "name": "HexCorners",
+          "startLine": 17,
+          "endLine": 21,
+          "params": [
+            "map"
+          ]
+        },
+        {
+          "name": "UpperRight",
+          "startLine": 27,
+          "endLine": 27,
+          "params": [
+            "c"
+          ]
+        },
+        {
+          "name": "East",
+          "startLine": 30,
+          "endLine": 30,
+          "params": [
+            "c"
+          ]
+        },
+        {
+          "name": "IsPolar",
+          "startLine": 36,
+          "endLine": 49,
+          "params": [
+            "corner"
+          ]
+        },
+        {
+          "name": "Cells",
+          "startLine": 52,
+          "endLine": 66,
+          "params": [
+            "corner",
+            "destination"
+          ]
+        },
+        {
+          "name": "Neighbors",
+          "startLine": 69,
+          "endLine": 94,
+          "params": [
+            "corner",
+            "corners",
+            "edges"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "HexCorners",
+          "startLine": 9,
+          "endLine": 95,
+          "methods": [
+            "HexCorners",
+            "UpperRight",
+            "East",
+            "IsPolar",
+            "Cells",
+            "Neighbors"
+          ],
+          "properties": [
+            "PerCell",
+            "_map",
+            "Count"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PerCell",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "HexCorners",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "Count",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "UpperRight",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "East",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "IsPolar",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "Cells",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "Neighbors",
+          "line": 69,
+          "isDefault": false
+        },
+        {
+          "name": "HexCorners",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "HexCorners",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 19
+        },
+        {
+          "caller": "UpperRight",
+          "callee": "_map.Index",
+          "lineNumber": 27
+        },
+        {
+          "caller": "East",
+          "callee": "_map.Index",
+          "lineNumber": 30
+        },
+        {
+          "caller": "IsPolar",
+          "callee": "Cells",
+          "lineNumber": 39
+        },
+        {
+          "caller": "Cells",
+          "callee": "_map.FromIndex",
+          "lineNumber": 54
+        },
+        {
+          "caller": "Cells",
+          "callee": "_map.Neighbor",
+          "lineNumber": 58
+        },
+        {
+          "caller": "Cells",
+          "callee": "_map.Neighbor",
+          "lineNumber": 59
+        },
+        {
+          "caller": "Cells",
+          "callee": "_map.Neighbor",
+          "lineNumber": 63
+        },
+        {
+          "caller": "Cells",
+          "callee": "_map.Neighbor",
+          "lineNumber": 64
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.FromIndex",
+          "lineNumber": 71
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "East",
+          "lineNumber": 75
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Neighbor",
+          "lineNumber": 75
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Edge",
+          "lineNumber": 76
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "East",
+          "lineNumber": 77
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Edge",
+          "lineNumber": 78
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Neighbor",
+          "lineNumber": 79
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "East",
+          "lineNumber": 80
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Edge",
+          "lineNumber": 81
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "UpperRight",
+          "lineNumber": 86
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Edge",
+          "lineNumber": 87
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "UpperRight",
+          "lineNumber": 88
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Neighbor",
+          "lineNumber": 88
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Edge",
+          "lineNumber": 89
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Neighbor",
+          "lineNumber": 90
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "UpperRight",
+          "lineNumber": 91
+        },
+        {
+          "caller": "Neighbors",
+          "callee": "_map.Edge",
+          "lineNumber": 92
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 9,
+        "functionCount": 6,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Map/HexDirection.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 52,
+      "nonEmptyLines": 40,
+      "functions": [
+        {
+          "name": "Vector",
+          "startLine": 42,
+          "endLine": 42,
+          "params": [
+            "direction"
+          ]
+        },
+        {
+          "name": "Opposite",
+          "startLine": 45,
+          "endLine": 45,
+          "params": [
+            "direction"
+          ]
+        },
+        {
+          "name": "Mirror",
+          "startLine": 48,
+          "endLine": 48,
+          "params": [
+            "direction"
+          ]
+        },
+        {
+          "name": "Clockwise",
+          "startLine": 51,
+          "endLine": 51,
+          "params": [
+            "direction"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "HexDirections",
+          "startLine": 26,
+          "endLine": 52,
+          "methods": [
+            "Vector",
+            "Opposite",
+            "Mirror",
+            "Clockwise"
+          ],
+          "properties": [
+            "Count",
+            "Vectors"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Count",
+          "line": 29,
+          "isDefault": false
+        },
+        {
+          "name": "Vector",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "Opposite",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "Mirror",
+          "line": 48,
+          "isDefault": false
+        },
+        {
+          "name": "Clockwise",
+          "line": 51,
+          "isDefault": false
+        },
+        {
+          "name": "HexDirections",
+          "line": 26,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 6,
+        "functionCount": 4,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Map/HexEdge.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 13,
+      "nonEmptyLines": 12,
+      "classes": [
+        {
+          "name": "HexEdge",
+          "startLine": 9,
+          "endLine": 13,
+          "methods": [],
+          "properties": [
+            "PerCell"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PerCell",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "HexEdge",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Map/HexGlobe.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 371,
+      "nonEmptyLines": 317,
+      "functions": [
+        {
+          "name": "HexGlobe",
+          "startLine": 22,
+          "endLine": 31,
+          "params": [
+            "width",
+            "height"
+          ]
+        },
+        {
+          "name": "IsValidSize",
+          "startLine": 34,
+          "endLine": 34,
+          "params": [
+            "width",
+            "height"
+          ]
+        },
+        {
+          "name": "SinLatitude",
+          "startLine": 41,
+          "endLine": 41,
+          "params": [
+            "c",
+            "one"
+          ]
+        },
+        {
+          "name": "Longitude",
+          "startLine": 44,
+          "endLine": 44,
+          "params": [
+            "c",
+            "one"
+          ]
+        },
+        {
+          "name": "Wrap",
+          "startLine": 67,
+          "endLine": 76,
+          "params": [
+            "col",
+            "row"
+          ]
+        },
+        {
+          "name": "CrossesPole",
+          "startLine": 82,
+          "endLine": 87,
+          "params": [
+            "c",
+            "direction"
+          ]
+        },
+        {
+          "name": "Back",
+          "startLine": 90,
+          "endLine": 91,
+          "params": [
+            "c",
+            "direction"
+          ]
+        },
+        {
+          "name": "Contains",
+          "startLine": 94,
+          "endLine": 94,
+          "params": [
+            "c"
+          ]
+        },
+        {
+          "name": "Index",
+          "startLine": 97,
+          "endLine": 105,
+          "params": [
+            "c"
+          ]
+        },
+        {
+          "name": "FromIndex",
+          "startLine": 108,
+          "endLine": 116,
+          "params": [
+            "index"
+          ]
+        },
+        {
+          "name": "ToAxial",
+          "startLine": 119,
+          "endLine": 119,
+          "params": [
+            "c"
+          ]
+        },
+        {
+          "name": "FromAxial",
+          "startLine": 122,
+          "endLine": 127,
+          "params": [
+            "a"
+          ]
+        },
+        {
+          "name": "Neighbor",
+          "startLine": 130,
+          "endLine": 130,
+          "params": [
+            "c",
+            "direction"
+          ]
+        },
+        {
+          "name": "GetNeighbors",
+          "startLine": 133,
+          "endLine": 145,
+          "params": [
+            "c",
+            "destination"
+          ]
+        },
+        {
+          "name": "Distance",
+          "startLine": 150,
+          "endLine": 150,
+          "params": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "name": "Line",
+          "startLine": 156,
+          "endLine": 184,
+          "params": [
+            "a",
+            "b",
+            "destination"
+          ]
+        },
+        {
+          "name": "Line",
+          "startLine": 187,
+          "endLine": 192,
+          "params": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "name": "RingSize",
+          "startLine": 195,
+          "endLine": 195,
+          "params": [
+            "radius"
+          ]
+        },
+        {
+          "name": "RangeSize",
+          "startLine": 198,
+          "endLine": 198,
+          "params": [
+            "radius"
+          ]
+        },
+        {
+          "name": "Ring",
+          "startLine": 204,
+          "endLine": 233,
+          "params": [
+            "center",
+            "radius",
+            "destination"
+          ]
+        },
+        {
+          "name": "Range",
+          "startLine": 239,
+          "endLine": 255,
+          "params": [
+            "center",
+            "radius",
+            "destination"
+          ]
+        },
+        {
+          "name": "Edge",
+          "startLine": 262,
+          "endLine": 275,
+          "params": [
+            "cell",
+            "side"
+          ]
+        },
+        {
+          "name": "EdgeIndex",
+          "startLine": 281,
+          "endLine": 294,
+          "params": [
+            "edge"
+          ]
+        },
+        {
+          "name": "EdgeCells",
+          "startLine": 297,
+          "endLine": 297,
+          "params": [
+            "edge"
+          ]
+        },
+        {
+          "name": "ToAxial",
+          "startLine": 299,
+          "endLine": 299,
+          "params": [
+            "col",
+            "row"
+          ]
+        },
+        {
+          "name": "NearestImage",
+          "startLine": 302,
+          "endLine": 325,
+          "params": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "name": "CubeRound",
+          "startLine": 327,
+          "endLine": 349,
+          "params": [
+            "x",
+            "y",
+            "z",
+            "scale"
+          ]
+        },
+        {
+          "name": "DivRound",
+          "startLine": 351,
+          "endLine": 364,
+          "params": [
+            "value",
+            "divisor"
+          ]
+        },
+        {
+          "name": "Mod",
+          "startLine": 366,
+          "endLine": 370,
+          "params": [
+            "value",
+            "m"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "HexGlobe",
+          "startLine": 14,
+          "endLine": 371,
+          "methods": [
+            "HexGlobe",
+            "IsValidSize",
+            "SinLatitude",
+            "Longitude",
+            "Wrap",
+            "CrossesPole",
+            "Back",
+            "Contains",
+            "Index",
+            "FromIndex",
+            "ToAxial",
+            "FromAxial",
+            "Neighbor",
+            "GetNeighbors",
+            "Distance",
+            "Line",
+            "Line",
+            "RingSize",
+            "RangeSize",
+            "Ring",
+            "Range",
+            "Edge",
+            "EdgeIndex",
+            "EdgeCells",
+            "ToAxial",
+            "NearestImage",
+            "CubeRound",
+            "DivRound",
+            "Mod"
+          ],
+          "properties": [
+            "Width",
+            "Height",
+            "CellCount",
+            "EdgeCount",
+            "MaxUniqueRadius"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "HexGlobe",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "IsValidSize",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "SinLatitude",
+          "line": 41,
+          "isDefault": false
+        },
+        {
+          "name": "Longitude",
+          "line": 44,
+          "isDefault": false
+        },
+        {
+          "name": "Width",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "Height",
+          "line": 50,
+          "isDefault": false
+        },
+        {
+          "name": "CellCount",
+          "line": 53,
+          "isDefault": false
+        },
+        {
+          "name": "EdgeCount",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "MaxUniqueRadius",
+          "line": 61,
+          "isDefault": false
+        },
+        {
+          "name": "Wrap",
+          "line": 67,
+          "isDefault": false
+        },
+        {
+          "name": "CrossesPole",
+          "line": 82,
+          "isDefault": false
+        },
+        {
+          "name": "Back",
+          "line": 90,
+          "isDefault": false
+        },
+        {
+          "name": "Contains",
+          "line": 94,
+          "isDefault": false
+        },
+        {
+          "name": "Index",
+          "line": 97,
+          "isDefault": false
+        },
+        {
+          "name": "FromIndex",
+          "line": 108,
+          "isDefault": false
+        },
+        {
+          "name": "ToAxial",
+          "line": 119,
+          "isDefault": false
+        },
+        {
+          "name": "FromAxial",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "Neighbor",
+          "line": 130,
+          "isDefault": false
+        },
+        {
+          "name": "GetNeighbors",
+          "line": 133,
+          "isDefault": false
+        },
+        {
+          "name": "Distance",
+          "line": 150,
+          "isDefault": false
+        },
+        {
+          "name": "Line",
+          "line": 156,
+          "isDefault": false
+        },
+        {
+          "name": "Line",
+          "line": 187,
+          "isDefault": false
+        },
+        {
+          "name": "RingSize",
+          "line": 195,
+          "isDefault": false
+        },
+        {
+          "name": "RangeSize",
+          "line": 198,
+          "isDefault": false
+        },
+        {
+          "name": "Ring",
+          "line": 204,
+          "isDefault": false
+        },
+        {
+          "name": "Range",
+          "line": 239,
+          "isDefault": false
+        },
+        {
+          "name": "Edge",
+          "line": 262,
+          "isDefault": false
+        },
+        {
+          "name": "EdgeIndex",
+          "line": 281,
+          "isDefault": false
+        },
+        {
+          "name": "EdgeCells",
+          "line": 297,
+          "isDefault": false
+        },
+        {
+          "name": "HexGlobe",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "HexGlobe",
+          "callee": "IsValidSize",
+          "lineNumber": 24
+        },
+        {
+          "caller": "HexGlobe",
+          "callee": "new ArgumentException",
+          "lineNumber": 26
+        },
+        {
+          "caller": "Wrap",
+          "callee": "Mod",
+          "lineNumber": 75
+        },
+        {
+          "caller": "CrossesPole",
+          "callee": "ToAxial",
+          "lineNumber": 84
+        },
+        {
+          "caller": "CrossesPole",
+          "callee": "direction.Vector",
+          "lineNumber": 84
+        },
+        {
+          "caller": "Back",
+          "callee": "CrossesPole",
+          "lineNumber": 91
+        },
+        {
+          "caller": "Back",
+          "callee": "direction.Opposite().Mirror",
+          "lineNumber": 91
+        },
+        {
+          "caller": "Back",
+          "callee": "direction.Opposite",
+          "lineNumber": 91
+        },
+        {
+          "caller": "Back",
+          "callee": "direction.Opposite",
+          "lineNumber": 91
+        },
+        {
+          "caller": "Index",
+          "callee": "Contains",
+          "lineNumber": 99
+        },
+        {
+          "caller": "Index",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 101
+        },
+        {
+          "caller": "Index",
+          "callee": "nameof",
+          "lineNumber": 101
+        },
+        {
+          "caller": "FromIndex",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 112
+        },
+        {
+          "caller": "FromIndex",
+          "callee": "nameof",
+          "lineNumber": 112
+        },
+        {
+          "caller": "FromIndex",
+          "callee": "new HexCoord",
+          "lineNumber": 115
+        },
+        {
+          "caller": "ToAxial",
+          "callee": "ToAxial",
+          "lineNumber": 119
+        },
+        {
+          "caller": "FromAxial",
+          "callee": "Wrap",
+          "lineNumber": 126
+        },
+        {
+          "caller": "Neighbor",
+          "callee": "FromAxial",
+          "lineNumber": 130
+        },
+        {
+          "caller": "Neighbor",
+          "callee": "ToAxial",
+          "lineNumber": 130
+        },
+        {
+          "caller": "Neighbor",
+          "callee": "direction.Vector",
+          "lineNumber": 130
+        },
+        {
+          "caller": "GetNeighbors",
+          "callee": "new ArgumentException",
+          "lineNumber": 137
+        },
+        {
+          "caller": "GetNeighbors",
+          "callee": "nameof",
+          "lineNumber": 137
+        },
+        {
+          "caller": "GetNeighbors",
+          "callee": "ToAxial",
+          "lineNumber": 140
+        },
+        {
+          "caller": "GetNeighbors",
+          "callee": "FromAxial",
+          "lineNumber": 143
+        },
+        {
+          "caller": "GetNeighbors",
+          "callee": "((HexDirection)d).Vector",
+          "lineNumber": 143
+        },
+        {
+          "caller": "Distance",
+          "callee": "AxialCoord.PlaneDistance",
+          "lineNumber": 150
+        },
+        {
+          "caller": "Distance",
+          "callee": "ToAxial",
+          "lineNumber": 150
+        },
+        {
+          "caller": "Distance",
+          "callee": "NearestImage",
+          "lineNumber": 150
+        },
+        {
+          "caller": "Line",
+          "callee": "ToAxial",
+          "lineNumber": 158
+        },
+        {
+          "caller": "Line",
+          "callee": "NearestImage",
+          "lineNumber": 159
+        },
+        {
+          "caller": "Line",
+          "callee": "AxialCoord.PlaneDistance",
+          "lineNumber": 160
+        },
+        {
+          "caller": "Line",
+          "callee": "new ArgumentException",
+          "lineNumber": 163
+        },
+        {
+          "caller": "Line",
+          "callee": "nameof",
+          "lineNumber": 163
+        },
+        {
+          "caller": "Line",
+          "callee": "FromAxial",
+          "lineNumber": 180
+        },
+        {
+          "caller": "Line",
+          "callee": "CubeRound",
+          "lineNumber": 180
+        },
+        {
+          "caller": "Line",
+          "callee": "Distance",
+          "lineNumber": 189
+        },
+        {
+          "caller": "Line",
+          "callee": "Line",
+          "lineNumber": 190
+        },
+        {
+          "caller": "Line",
+          "callee": "new List<HexCoord>",
+          "lineNumber": 191
+        },
+        {
+          "caller": "Line",
+          "callee": "buffer.AsSpan(0, count).ToArray",
+          "lineNumber": 191
+        },
+        {
+          "caller": "Line",
+          "callee": "buffer.AsSpan",
+          "lineNumber": 191
+        },
+        {
+          "caller": "Ring",
+          "callee": "ArgumentOutOfRangeException.ThrowIfNegative",
+          "lineNumber": 206
+        },
+        {
+          "caller": "Ring",
+          "callee": "RingSize",
+          "lineNumber": 207
+        },
+        {
+          "caller": "Ring",
+          "callee": "new ArgumentException",
+          "lineNumber": 210
+        },
+        {
+          "caller": "Ring",
+          "callee": "nameof",
+          "lineNumber": 210
+        },
+        {
+          "caller": "Ring",
+          "callee": "ToAxial",
+          "lineNumber": 220
+        },
+        {
+          "caller": "Ring",
+          "callee": "HexDirection.N.Vector",
+          "lineNumber": 220
+        },
+        {
+          "caller": "Ring",
+          "callee": "((HexDirection)side).Clockwise().Clockwise().Vector",
+          "lineNumber": 224
+        },
+        {
+          "caller": "Ring",
+          "callee": "((HexDirection)side).Clockwise().Clockwise",
+          "lineNumber": 224
+        },
+        {
+          "caller": "Ring",
+          "callee": "((HexDirection)side).Clockwise",
+          "lineNumber": 224
+        },
+        {
+          "caller": "Ring",
+          "callee": "FromAxial",
+          "lineNumber": 227
+        },
+        {
+          "caller": "Range",
+          "callee": "ArgumentOutOfRangeException.ThrowIfNegative",
+          "lineNumber": 241
+        },
+        {
+          "caller": "Range",
+          "callee": "RangeSize",
+          "lineNumber": 242
+        },
+        {
+          "caller": "Range",
+          "callee": "new ArgumentException",
+          "lineNumber": 245
+        },
+        {
+          "caller": "Range",
+          "callee": "nameof",
+          "lineNumber": 245
+        },
+        {
+          "caller": "Range",
+          "callee": "Ring",
+          "lineNumber": 251
+        },
+        {
+          "caller": "Edge",
+          "callee": "Neighbor",
+          "lineNumber": 264
+        },
+        {
+          "caller": "Edge",
+          "callee": "Back",
+          "lineNumber": 265
+        },
+        {
+          "caller": "Edge",
+          "callee": "new HexEdge",
+          "lineNumber": 271
+        },
+        {
+          "caller": "Edge",
+          "callee": "new HexEdge",
+          "lineNumber": 271
+        },
+        {
+          "caller": "Edge",
+          "callee": "new HexEdge",
+          "lineNumber": 274
+        },
+        {
+          "caller": "Edge",
+          "callee": "new HexEdge",
+          "lineNumber": 274
+        },
+        {
+          "caller": "EdgeIndex",
+          "callee": "Index",
+          "lineNumber": 285
+        },
+        {
+          "caller": "EdgeIndex",
+          "callee": "new HexCoord",
+          "lineNumber": 285
+        },
+        {
+          "caller": "EdgeIndex",
+          "callee": "new ArgumentException",
+          "lineNumber": 290
+        },
+        {
+          "caller": "EdgeIndex",
+          "callee": "nameof",
+          "lineNumber": 290
+        },
+        {
+          "caller": "EdgeIndex",
+          "callee": "Index",
+          "lineNumber": 293
+        },
+        {
+          "caller": "EdgeCells",
+          "callee": "Neighbor",
+          "lineNumber": 297
+        },
+        {
+          "caller": "NearestImage",
+          "callee": "ToAxial",
+          "lineNumber": 304
+        },
+        {
+          "caller": "NearestImage",
+          "callee": "ToAxial",
+          "lineNumber": 314
+        },
+        {
+          "caller": "NearestImage",
+          "callee": "AxialCoord.PlaneDistance",
+          "lineNumber": 315
+        },
+        {
+          "caller": "CubeRound",
+          "callee": "DivRound",
+          "lineNumber": 329
+        },
+        {
+          "caller": "CubeRound",
+          "callee": "DivRound",
+          "lineNumber": 330
+        },
+        {
+          "caller": "CubeRound",
+          "callee": "DivRound",
+          "lineNumber": 331
+        },
+        {
+          "caller": "CubeRound",
+          "callee": "Math.Abs",
+          "lineNumber": 332
+        },
+        {
+          "caller": "CubeRound",
+          "callee": "Math.Abs",
+          "lineNumber": 333
+        },
+        {
+          "caller": "CubeRound",
+          "callee": "Math.Abs",
+          "lineNumber": 334
+        },
+        {
+          "caller": "CubeRound",
+          "callee": "new AxialCoord",
+          "lineNumber": 348
+        },
+        {
+          "caller": "DivRound",
+          "callee": "Math.DivRem",
+          "lineNumber": 353
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 30,
+        "functionCount": 29,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Map/MapChunks.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 57,
+      "nonEmptyLines": 46,
+      "functions": [
+        {
+          "name": "MapChunks",
+          "startLine": 15,
+          "endLine": 21,
+          "params": [
+            "geometry"
+          ]
+        },
+        {
+          "name": "ChunkOf",
+          "startLine": 36,
+          "endLine": 36,
+          "params": [
+            "cell"
+          ]
+        },
+        {
+          "name": "ChunkOfIndex",
+          "startLine": 39,
+          "endLine": 43,
+          "params": [
+            "cellIndex"
+          ]
+        },
+        {
+          "name": "Bounds",
+          "startLine": 46,
+          "endLine": 56,
+          "params": [
+            "chunk"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "MapChunks",
+          "startLine": 9,
+          "endLine": 57,
+          "methods": [
+            "MapChunks",
+            "ChunkOf",
+            "ChunkOfIndex",
+            "Bounds"
+          ],
+          "properties": [
+            "Size",
+            "Geometry",
+            "ChunksX",
+            "ChunksY",
+            "Count"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Size",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "MapChunks",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "Geometry",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "ChunksX",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "ChunksY",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "Count",
+          "line": 33,
+          "isDefault": false
+        },
+        {
+          "name": "ChunkOf",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "ChunkOfIndex",
+          "line": 39,
+          "isDefault": false
+        },
+        {
+          "name": "Bounds",
+          "line": 46,
+          "isDefault": false
+        },
+        {
+          "name": "MapChunks",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MapChunks",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 17
+        },
+        {
+          "caller": "Bounds",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 50
+        },
+        {
+          "caller": "Bounds",
+          "callee": "nameof",
+          "lineNumber": 50
+        },
+        {
+          "caller": "Bounds",
+          "callee": "Math.Min",
+          "lineNumber": 55
+        },
+        {
+          "caller": "Bounds",
+          "callee": "Math.Min",
+          "lineNumber": 55
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 10,
+        "functionCount": 4,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Map/MapLayer.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 71,
+      "nonEmptyLines": 58,
+      "functions": [
+        {
+          "name": "MapLayer",
+          "startLine": 18,
+          "endLine": 28,
+          "params": [
+            "name",
+            "owner",
+            "valuesPerCell",
+            "initial"
+          ]
+        },
+        {
+          "name": "AsBytes",
+          "startLine": 46,
+          "endLine": 46,
+          "params": []
+        },
+        {
+          "name": "Set",
+          "startLine": 49,
+          "endLine": 58,
+          "params": [
+            "index",
+            "value"
+          ]
+        },
+        {
+          "name": "LoadBytes",
+          "startLine": 61,
+          "endLine": 70,
+          "params": [
+            "bytes"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "MapLayer",
+          "startLine": 11,
+          "endLine": 71,
+          "methods": [
+            "MapLayer",
+            "AsBytes",
+            "Set",
+            "LoadBytes"
+          ],
+          "properties": [
+            "_values",
+            "_owner",
+            "_valuesPerCell",
+            "Name",
+            "Length",
+            "Values",
+            "Raw"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Name",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "Length",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "Values",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "Raw",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "AsBytes",
+          "line": 46,
+          "isDefault": false
+        },
+        {
+          "name": "Set",
+          "line": 49,
+          "isDefault": false
+        },
+        {
+          "name": "MapLayer",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MapLayer",
+          "callee": "initial.Equals",
+          "lineNumber": 24
+        },
+        {
+          "caller": "MapLayer",
+          "callee": "Array.Fill",
+          "lineNumber": 26
+        },
+        {
+          "caller": "AsBytes",
+          "callee": "MemoryMarshal.AsBytes",
+          "lineNumber": 46
+        },
+        {
+          "caller": "AsBytes",
+          "callee": "_values.AsSpan",
+          "lineNumber": 46
+        },
+        {
+          "caller": "Set",
+          "callee": "_values[index].Equals",
+          "lineNumber": 51
+        },
+        {
+          "caller": "Set",
+          "callee": "_owner.MarkCellDirty",
+          "lineNumber": 57
+        },
+        {
+          "caller": "LoadBytes",
+          "callee": "MemoryMarshal.AsBytes",
+          "lineNumber": 63
+        },
+        {
+          "caller": "LoadBytes",
+          "callee": "_values.AsSpan",
+          "lineNumber": 63
+        },
+        {
+          "caller": "LoadBytes",
+          "callee": "new ArgumentException",
+          "lineNumber": 66
+        },
+        {
+          "caller": "LoadBytes",
+          "callee": "bytes.CopyTo",
+          "lineNumber": 69
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 7,
+        "functionCount": 4,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Map/WorldMap.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 204,
+      "nonEmptyLines": 155,
+      "functions": [
+        {
+          "name": "WorldMap",
+          "startLine": 21,
+          "endLine": 56,
+          "params": [
+            "geometry"
+          ]
+        },
+        {
+          "name": "MarkCellDirty",
+          "startLine": 170,
+          "endLine": 170,
+          "params": [
+            "cellIndex"
+          ]
+        },
+        {
+          "name": "MarkAllDirty",
+          "startLine": 173,
+          "endLine": 173,
+          "params": []
+        },
+        {
+          "name": "Add",
+          "startLine": 175,
+          "endLine": 180,
+          "params": [
+            "layer"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "WorldMap",
+          "startLine": 10,
+          "endLine": 191,
+          "methods": [
+            "WorldMap",
+            "MarkCellDirty",
+            "MarkAllDirty",
+            "Add"
+          ],
+          "properties": [
+            "NoOwner",
+            "FullWildFood",
+            "_layers",
+            "Geometry",
+            "Chunks",
+            "Dirty",
+            "Elevation",
+            "Temperature",
+            "Humidity",
+            "Biome",
+            "Relief",
+            "Feature",
+            "Fertility",
+            "Deposit",
+            "DepositRichness",
+            "DepositDepth",
+            "Owner",
+            "Pollution",
+            "River",
+            "WildFood",
+            "Claim",
+            "Influence",
+            "Seasonality",
+            "GrowingSeason",
+            "ClimateSine",
+            "TemperatureOffset",
+            "Continentality",
+            "NaturalFertility",
+            "FertilityRemainder",
+            "ClimateSineOne",
+            "YearHundredths",
+            "LiveSeasons",
+            "SeasonTemperature",
+            "SeasonGrowth",
+            "NextSeasonTemperature",
+            "NextSeasonGrowth",
+            "Layers"
+          ]
+        },
+        {
+          "name": "IMapLayerInfo",
+          "startLine": 194,
+          "endLine": 204,
+          "methods": [
+            "AsBytes",
+            "LoadBytes"
+          ],
+          "properties": [
+            "Name"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "NoOwner",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "FullWildFood",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "WorldMap",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "Geometry",
+          "line": 59,
+          "isDefault": false
+        },
+        {
+          "name": "Chunks",
+          "line": 62,
+          "isDefault": false
+        },
+        {
+          "name": "Dirty",
+          "line": 65,
+          "isDefault": false
+        },
+        {
+          "name": "Elevation",
+          "line": 68,
+          "isDefault": false
+        },
+        {
+          "name": "Temperature",
+          "line": 71,
+          "isDefault": false
+        },
+        {
+          "name": "Humidity",
+          "line": 74,
+          "isDefault": false
+        },
+        {
+          "name": "Biome",
+          "line": 77,
+          "isDefault": false
+        },
+        {
+          "name": "Relief",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "Feature",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "Fertility",
+          "line": 86,
+          "isDefault": false
+        },
+        {
+          "name": "Deposit",
+          "line": 89,
+          "isDefault": false
+        },
+        {
+          "name": "DepositRichness",
+          "line": 92,
+          "isDefault": false
+        },
+        {
+          "name": "DepositDepth",
+          "line": 95,
+          "isDefault": false
+        },
+        {
+          "name": "Owner",
+          "line": 98,
+          "isDefault": false
+        },
+        {
+          "name": "Pollution",
+          "line": 101,
+          "isDefault": false
+        },
+        {
+          "name": "River",
+          "line": 104,
+          "isDefault": false
+        },
+        {
+          "name": "WildFood",
+          "line": 110,
+          "isDefault": false
+        },
+        {
+          "name": "Claim",
+          "line": 113,
+          "isDefault": false
+        },
+        {
+          "name": "Influence",
+          "line": 116,
+          "isDefault": false
+        },
+        {
+          "name": "Seasonality",
+          "line": 119,
+          "isDefault": false
+        },
+        {
+          "name": "GrowingSeason",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "ClimateSine",
+          "line": 128,
+          "isDefault": false
+        },
+        {
+          "name": "TemperatureOffset",
+          "line": 131,
+          "isDefault": false
+        },
+        {
+          "name": "Continentality",
+          "line": 134,
+          "isDefault": false
+        },
+        {
+          "name": "NaturalFertility",
+          "line": 137,
+          "isDefault": false
+        },
+        {
+          "name": "FertilityRemainder",
+          "line": 140,
+          "isDefault": false
+        },
+        {
+          "name": "ClimateSineOne",
+          "line": 143,
+          "isDefault": false
+        },
+        {
+          "name": "YearHundredths",
+          "line": 149,
+          "isDefault": false
+        },
+        {
+          "name": "LiveSeasons",
+          "line": 152,
+          "isDefault": false
+        },
+        {
+          "name": "SeasonTemperature",
+          "line": 155,
+          "isDefault": false
+        },
+        {
+          "name": "SeasonGrowth",
+          "line": 158,
+          "isDefault": false
+        },
+        {
+          "name": "NextSeasonTemperature",
+          "line": 161,
+          "isDefault": false
+        },
+        {
+          "name": "NextSeasonGrowth",
+          "line": 164,
+          "isDefault": false
+        },
+        {
+          "name": "Layers",
+          "line": 167,
+          "isDefault": false
+        },
+        {
+          "name": "MarkCellDirty",
+          "line": 170,
+          "isDefault": false
+        },
+        {
+          "name": "MarkAllDirty",
+          "line": 173,
+          "isDefault": false
+        },
+        {
+          "name": "WorldMap",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "IMapLayerInfo",
+          "line": 194,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "WorldMap",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 23
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapChunks",
+          "lineNumber": 25
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new DirtyChunks",
+          "lineNumber": 26
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 28
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 28
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 29
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<sbyte>",
+          "lineNumber": 29
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 30
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 30
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 31
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 31
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 32
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 32
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 33
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 33
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 34
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 34
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 35
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<ushort>",
+          "lineNumber": 35
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 36
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<int>",
+          "lineNumber": 36
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 37
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 37
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 38
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<short>",
+          "lineNumber": 38
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 39
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 39
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 40
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 40
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 41
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<ushort>",
+          "lineNumber": 41
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 42
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<int>",
+          "lineNumber": 42
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 43
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 43
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 44
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 44
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 45
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 45
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 46
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<sbyte>",
+          "lineNumber": 46
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 47
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 47
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 48
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<sbyte>",
+          "lineNumber": 48
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 49
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 49
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 50
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<short>",
+          "lineNumber": 50
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 51
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<sbyte>",
+          "lineNumber": 51
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 52
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 52
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 53
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<byte>",
+          "lineNumber": 53
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "Add",
+          "lineNumber": 54
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "new MapLayer<sbyte>",
+          "lineNumber": 54
+        },
+        {
+          "caller": "WorldMap",
+          "callee": "MarkAllDirty",
+          "lineNumber": 55
+        },
+        {
+          "caller": "MarkCellDirty",
+          "callee": "Dirty.Mark",
+          "lineNumber": 170
+        },
+        {
+          "caller": "MarkCellDirty",
+          "callee": "Chunks.ChunkOfIndex",
+          "lineNumber": 170
+        },
+        {
+          "caller": "MarkAllDirty",
+          "callee": "Dirty.MarkAll",
+          "lineNumber": 173
+        },
+        {
+          "caller": "Add",
+          "callee": "_layers.Add",
+          "lineNumber": 178
+        },
+        {
+          "caller": "Add",
+          "callee": "new LayerInfo<T>",
+          "lineNumber": 178
+        },
+        {
+          "caller": "AsBytes",
+          "callee": "layer.AsBytes",
+          "lineNumber": 187
+        },
+        {
+          "caller": "LoadBytes",
+          "callee": "layer.LoadBytes",
+          "lineNumber": 189
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 41,
+        "functionCount": 4,
+        "classCount": 2
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Numerics/Amount.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 286,
+      "nonEmptyLines": 232,
+      "functions": [
+        {
+          "name": "Amount",
+          "startLine": 16,
+          "endLine": 19,
+          "params": [
+            "hundredths"
+          ]
+        },
+        {
+          "name": "FromUnits",
+          "startLine": 40,
+          "endLine": 43,
+          "params": [
+            "units"
+          ]
+        },
+        {
+          "name": "FromHundredths",
+          "startLine": 46,
+          "endLine": 49,
+          "params": [
+            "hundredths"
+          ]
+        },
+        {
+          "name": "Parse",
+          "startLine": 55,
+          "endLine": 63,
+          "params": [
+            "text"
+          ]
+        },
+        {
+          "name": "TryParse",
+          "startLine": 66,
+          "endLine": 119,
+          "params": [
+            "text",
+            "value"
+          ]
+        },
+        {
+          "name": "Min",
+          "startLine": 155,
+          "endLine": 155,
+          "params": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "name": "Max",
+          "startLine": 158,
+          "endLine": 158,
+          "params": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "name": "Clamp",
+          "startLine": 161,
+          "endLine": 169,
+          "params": [
+            "min",
+            "max"
+          ]
+        },
+        {
+          "name": "MultiplyRatio",
+          "startLine": 172,
+          "endLine": 175,
+          "params": [
+            "numerator",
+            "denominator",
+            "rounding"
+          ]
+        },
+        {
+          "name": "MultiplyPercent",
+          "startLine": 178,
+          "endLine": 181,
+          "params": [
+            "percent",
+            "rounding"
+          ]
+        },
+        {
+          "name": "Multiply",
+          "startLine": 184,
+          "endLine": 187,
+          "params": [
+            "other",
+            "rounding"
+          ]
+        },
+        {
+          "name": "Divide",
+          "startLine": 190,
+          "endLine": 193,
+          "params": [
+            "divisor",
+            "rounding"
+          ]
+        },
+        {
+          "name": "Divide",
+          "startLine": 196,
+          "endLine": 199,
+          "params": [
+            "divisor",
+            "rounding"
+          ]
+        },
+        {
+          "name": "SplitProportionally",
+          "startLine": 205,
+          "endLine": 265,
+          "params": [
+            "weights",
+            "shares"
+          ]
+        },
+        {
+          "name": "Equals",
+          "startLine": 268,
+          "endLine": 268,
+          "params": [
+            "other"
+          ]
+        },
+        {
+          "name": "Equals",
+          "startLine": 271,
+          "endLine": 271,
+          "params": [
+            "obj"
+          ]
+        },
+        {
+          "name": "GetHashCode",
+          "startLine": 274,
+          "endLine": 274,
+          "params": []
+        },
+        {
+          "name": "CompareTo",
+          "startLine": 277,
+          "endLine": 277,
+          "params": [
+            "other"
+          ]
+        },
+        {
+          "name": "ToString",
+          "startLine": 280,
+          "endLine": 285,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "Amount",
+          "startLine": 11,
+          "endLine": 286,
+          "methods": [
+            "Amount",
+            "FromUnits",
+            "FromHundredths",
+            "Parse",
+            "TryParse",
+            "Min",
+            "Max",
+            "Clamp",
+            "MultiplyRatio",
+            "MultiplyPercent",
+            "Multiply",
+            "Divide",
+            "Divide",
+            "SplitProportionally",
+            "Equals",
+            "Equals",
+            "GetHashCode",
+            "CompareTo",
+            "ToString"
+          ],
+          "properties": [
+            "Scale",
+            "Zero",
+            "Epsilon",
+            "MaxValue",
+            "Hundredths",
+            "WholeUnits",
+            "IsNegative"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Scale",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "Zero",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "Epsilon",
+          "line": 25,
+          "isDefault": false
+        },
+        {
+          "name": "MaxValue",
+          "line": 28,
+          "isDefault": false
+        },
+        {
+          "name": "Hundredths",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "WholeUnits",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "IsNegative",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "FromUnits",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "FromHundredths",
+          "line": 46,
+          "isDefault": false
+        },
+        {
+          "name": "Parse",
+          "line": 55,
+          "isDefault": false
+        },
+        {
+          "name": "TryParse",
+          "line": 66,
+          "isDefault": false
+        },
+        {
+          "name": "Min",
+          "line": 155,
+          "isDefault": false
+        },
+        {
+          "name": "Max",
+          "line": 158,
+          "isDefault": false
+        },
+        {
+          "name": "Clamp",
+          "line": 161,
+          "isDefault": false
+        },
+        {
+          "name": "MultiplyRatio",
+          "line": 172,
+          "isDefault": false
+        },
+        {
+          "name": "MultiplyPercent",
+          "line": 178,
+          "isDefault": false
+        },
+        {
+          "name": "Multiply",
+          "line": 184,
+          "isDefault": false
+        },
+        {
+          "name": "Divide",
+          "line": 190,
+          "isDefault": false
+        },
+        {
+          "name": "Divide",
+          "line": 196,
+          "isDefault": false
+        },
+        {
+          "name": "SplitProportionally",
+          "line": 205,
+          "isDefault": false
+        },
+        {
+          "name": "Equals",
+          "line": 268,
+          "isDefault": false
+        },
+        {
+          "name": "Equals",
+          "line": 271,
+          "isDefault": false
+        },
+        {
+          "name": "GetHashCode",
+          "line": 274,
+          "isDefault": false
+        },
+        {
+          "name": "CompareTo",
+          "line": 277,
+          "isDefault": false
+        },
+        {
+          "name": "ToString",
+          "line": 280,
+          "isDefault": false
+        },
+        {
+          "name": "Amount",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "FromUnits",
+          "callee": "new Amount",
+          "lineNumber": 42
+        },
+        {
+          "caller": "FromHundredths",
+          "callee": "new Amount",
+          "lineNumber": 48
+        },
+        {
+          "caller": "Parse",
+          "callee": "TryParse",
+          "lineNumber": 57
+        },
+        {
+          "caller": "Parse",
+          "callee": "new FormatException",
+          "lineNumber": 59
+        },
+        {
+          "caller": "TryParse",
+          "callee": "string.IsNullOrWhiteSpace",
+          "lineNumber": 69
+        },
+        {
+          "caller": "TryParse",
+          "callee": "text.AsSpan().Trim",
+          "lineNumber": 74
+        },
+        {
+          "caller": "TryParse",
+          "callee": "text.AsSpan",
+          "lineNumber": 74
+        },
+        {
+          "caller": "TryParse",
+          "callee": "s.IndexOf",
+          "lineNumber": 82
+        },
+        {
+          "caller": "TryParse",
+          "callee": "long.TryParse",
+          "lineNumber": 90
+        },
+        {
+          "caller": "TryParse",
+          "callee": "long.TryParse",
+          "lineNumber": 98
+        },
+        {
+          "caller": "TryParse",
+          "callee": "new Amount",
+          "lineNumber": 112
+        },
+        {
+          "caller": "Clamp",
+          "callee": "new ArgumentException",
+          "lineNumber": 165
+        },
+        {
+          "caller": "Clamp",
+          "callee": "Max",
+          "lineNumber": 168
+        },
+        {
+          "caller": "Clamp",
+          "callee": "Min",
+          "lineNumber": 168
+        },
+        {
+          "caller": "MultiplyRatio",
+          "callee": "new Amount",
+          "lineNumber": 174
+        },
+        {
+          "caller": "MultiplyRatio",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 174
+        },
+        {
+          "caller": "MultiplyPercent",
+          "callee": "MultiplyRatio",
+          "lineNumber": 180
+        },
+        {
+          "caller": "Multiply",
+          "callee": "new Amount",
+          "lineNumber": 186
+        },
+        {
+          "caller": "Multiply",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 186
+        },
+        {
+          "caller": "Divide",
+          "callee": "new Amount",
+          "lineNumber": 192
+        },
+        {
+          "caller": "Divide",
+          "callee": "IntMath.Divide",
+          "lineNumber": 192
+        },
+        {
+          "caller": "Divide",
+          "callee": "new Amount",
+          "lineNumber": 198
+        },
+        {
+          "caller": "Divide",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 198
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "new ArgumentException",
+          "lineNumber": 209
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "new InvalidOperationException",
+          "lineNumber": 214
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "new ArgumentException",
+          "lineNumber": 222
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "nameof",
+          "lineNumber": 222
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "shares.Clear",
+          "lineNumber": 230
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 237
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "new Amount",
+          "lineNumber": 238
+        },
+        {
+          "caller": "SplitProportionally",
+          "callee": "new Amount",
+          "lineNumber": 262
+        },
+        {
+          "caller": "Equals",
+          "callee": "Equals",
+          "lineNumber": 271
+        },
+        {
+          "caller": "GetHashCode",
+          "callee": "Hundredths.GetHashCode",
+          "lineNumber": 274
+        },
+        {
+          "caller": "CompareTo",
+          "callee": "Hundredths.CompareTo",
+          "lineNumber": 277
+        },
+        {
+          "caller": "ToString",
+          "callee": "Math.Abs",
+          "lineNumber": 282
+        },
+        {
+          "caller": "ToString",
+          "callee": "string.Create",
+          "lineNumber": 284
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 26,
+        "functionCount": 19,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Numerics/FixedLog.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 115,
+      "nonEmptyLines": 98,
+      "functions": [
+        {
+          "name": "Log2",
+          "startLine": 21,
+          "endLine": 63,
+          "params": [
+            "valueMillionths"
+          ]
+        },
+        {
+          "name": "Pow2",
+          "startLine": 66,
+          "endLine": 101,
+          "params": [
+            "xMillionths"
+          ]
+        },
+        {
+          "name": "BuildRoots",
+          "startLine": 103,
+          "endLine": 114,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "FixedLog",
+          "startLine": 9,
+          "endLine": 115,
+          "methods": [
+            "Log2",
+            "Pow2",
+            "BuildRoots"
+          ],
+          "properties": [
+            "Unit",
+            "FractionBits",
+            "OneQ",
+            "Roots"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Unit",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "Log2",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "Pow2",
+          "line": 66,
+          "isDefault": false
+        },
+        {
+          "name": "FixedLog",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Log2",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 25
+        },
+        {
+          "caller": "Log2",
+          "callee": "nameof",
+          "lineNumber": 25
+        },
+        {
+          "caller": "Pow2",
+          "callee": "Math.DivRem",
+          "lineNumber": 68
+        },
+        {
+          "caller": "BuildRoots",
+          "callee": "IntMath.Sqrt",
+          "lineNumber": 109
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Numerics/FixedTrig.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 127,
+      "nonEmptyLines": 107,
+      "functions": [
+        {
+          "name": "Degrees",
+          "startLine": 27,
+          "endLine": 27,
+          "params": [
+            "degrees"
+          ]
+        },
+        {
+          "name": "TenthsOfDegree",
+          "startLine": 30,
+          "endLine": 30,
+          "params": [
+            "tenths"
+          ]
+        },
+        {
+          "name": "ToRadians",
+          "startLine": 33,
+          "endLine": 33,
+          "params": [
+            "angle"
+          ]
+        },
+        {
+          "name": "Sin",
+          "startLine": 36,
+          "endLine": 48,
+          "params": [
+            "angle"
+          ]
+        },
+        {
+          "name": "Cos",
+          "startLine": 51,
+          "endLine": 51,
+          "params": [
+            "angle"
+          ]
+        },
+        {
+          "name": "Asin",
+          "startLine": 54,
+          "endLine": 69,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "FirstAtLeast",
+          "startLine": 72,
+          "endLine": 90,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "Acos",
+          "startLine": 93,
+          "endLine": 93,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "Complement",
+          "startLine": 96,
+          "endLine": 100,
+          "params": [
+            "sine"
+          ]
+        },
+        {
+          "name": "BuildQuarter",
+          "startLine": 103,
+          "endLine": 126,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "FixedTrig",
+          "startLine": 10,
+          "endLine": 127,
+          "methods": [
+            "Degrees",
+            "TenthsOfDegree",
+            "ToRadians",
+            "Sin",
+            "Cos",
+            "Asin",
+            "FirstAtLeast",
+            "Acos",
+            "Complement",
+            "BuildQuarter"
+          ],
+          "properties": [
+            "One",
+            "FullTurn",
+            "QuarterTurn",
+            "Pi",
+            "Quarter"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "One",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "FullTurn",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "QuarterTurn",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "Pi",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "Degrees",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "TenthsOfDegree",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "ToRadians",
+          "line": 33,
+          "isDefault": false
+        },
+        {
+          "name": "Sin",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "Cos",
+          "line": 51,
+          "isDefault": false
+        },
+        {
+          "name": "Asin",
+          "line": 54,
+          "isDefault": false
+        },
+        {
+          "name": "Acos",
+          "line": 93,
+          "isDefault": false
+        },
+        {
+          "name": "Complement",
+          "line": 96,
+          "isDefault": false
+        },
+        {
+          "name": "FixedTrig",
+          "line": 10,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Cos",
+          "callee": "Sin",
+          "lineNumber": 51
+        },
+        {
+          "caller": "Asin",
+          "callee": "Math.Clamp",
+          "lineNumber": 56
+        },
+        {
+          "caller": "Asin",
+          "callee": "Math.Abs",
+          "lineNumber": 58
+        },
+        {
+          "caller": "Asin",
+          "callee": "FirstAtLeast",
+          "lineNumber": 65
+        },
+        {
+          "caller": "Asin",
+          "callee": "FirstAtLeast",
+          "lineNumber": 66
+        },
+        {
+          "caller": "Acos",
+          "callee": "Asin",
+          "lineNumber": 93
+        },
+        {
+          "caller": "Complement",
+          "callee": "Math.Clamp",
+          "lineNumber": 98
+        },
+        {
+          "caller": "Complement",
+          "callee": "IntMath.Sqrt",
+          "lineNumber": 99
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 13,
+        "functionCount": 10,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Numerics/IntMath.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 126,
+      "nonEmptyLines": 109,
+      "functions": [
+        {
+          "name": "MulDiv",
+          "startLine": 14,
+          "endLine": 23,
+          "params": [
+            "value",
+            "numerator",
+            "denominator",
+            "rounding"
+          ]
+        },
+        {
+          "name": "Divide",
+          "startLine": 26,
+          "endLine": 34,
+          "params": [
+            "dividend",
+            "divisor",
+            "rounding"
+          ]
+        },
+        {
+          "name": "Divide",
+          "startLine": 36,
+          "endLine": 65,
+          "params": [
+            "dividend",
+            "divisor",
+            "rounding"
+          ]
+        },
+        {
+          "name": "Sqrt",
+          "startLine": 68,
+          "endLine": 98,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "Sqrt",
+          "startLine": 101,
+          "endLine": 125,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "IntMath",
+          "startLine": 6,
+          "endLine": 126,
+          "methods": [
+            "MulDiv",
+            "Divide",
+            "Divide",
+            "Sqrt",
+            "Sqrt"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MulDiv",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "Divide",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "Sqrt",
+          "line": 68,
+          "isDefault": false
+        },
+        {
+          "name": "Sqrt",
+          "line": 101,
+          "isDefault": false
+        },
+        {
+          "name": "IntMath",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MulDiv",
+          "callee": "new DivideByZeroException",
+          "lineNumber": 18
+        },
+        {
+          "caller": "MulDiv",
+          "callee": "Divide",
+          "lineNumber": 22
+        },
+        {
+          "caller": "Divide",
+          "callee": "new DivideByZeroException",
+          "lineNumber": 30
+        },
+        {
+          "caller": "Divide",
+          "callee": "Divide",
+          "lineNumber": 33
+        },
+        {
+          "caller": "Divide",
+          "callee": "Int128.Abs",
+          "lineNumber": 55
+        },
+        {
+          "caller": "Divide",
+          "callee": "Int128.Abs",
+          "lineNumber": 56
+        },
+        {
+          "caller": "Divide",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 63
+        },
+        {
+          "caller": "Divide",
+          "callee": "nameof",
+          "lineNumber": 63
+        },
+        {
+          "caller": "Sqrt",
+          "callee": "nameof",
+          "lineNumber": 72
+        },
+        {
+          "caller": "Sqrt",
+          "callee": "nameof",
+          "lineNumber": 105
+        },
+        {
+          "caller": "Sqrt",
+          "callee": "System.Int128.LeadingZeroCount",
+          "lineNumber": 114
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 5,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Numerics/Rounding.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 13,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Perception/MapMemory.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 364,
+      "nonEmptyLines": 323,
+      "functions": [
+        {
+          "name": "See",
+          "startLine": 21,
+          "endLine": 56,
+          "params": [
+            "content",
+            "state"
+          ]
+        },
+        {
+          "name": "Scout",
+          "startLine": 63,
+          "endLine": 105,
+          "params": [
+            "content",
+            "state"
+          ]
+        },
+        {
+          "name": "Knows",
+          "startLine": 108,
+          "endLine": 119,
+          "params": [
+            "content",
+            "state",
+            "civ",
+            "cell"
+          ]
+        },
+        {
+          "name": "KnownCells",
+          "startLine": 122,
+          "endLine": 132,
+          "params": [
+            "content",
+            "state",
+            "civ"
+          ]
+        },
+        {
+          "name": "Walkable",
+          "startLine": 135,
+          "endLine": 140,
+          "params": [
+            "content",
+            "map",
+            "cell"
+          ]
+        },
+        {
+          "name": "Path",
+          "startLine": 146,
+          "endLine": 147,
+          "params": [
+            "content",
+            "state",
+            "civ",
+            "world",
+            "from",
+            "to"
+          ]
+        },
+        {
+          "name": "Find",
+          "startLine": 163,
+          "endLine": 217,
+          "params": [
+            "content",
+            "state",
+            "civ",
+            "world",
+            "from",
+            "to"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 229,
+          "endLine": 234,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "Validate",
+          "startLine": 247,
+          "endLine": 272,
+          "params": [
+            "state",
+            "civ"
+          ]
+        },
+        {
+          "name": "Apply",
+          "startLine": 275,
+          "endLine": 275,
+          "params": [
+            "state",
+            "civ"
+          ]
+        },
+        {
+          "name": "ApplyWithChronicle",
+          "startLine": 278,
+          "endLine": 286,
+          "params": [
+            "state",
+            "civ"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 303,
+          "endLine": 350,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "Lived",
+          "startLine": 352,
+          "endLine": 363,
+          "params": [
+            "state",
+            "world",
+            "cell",
+            "self"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "MapMemory",
+          "startLine": 18,
+          "endLine": 148,
+          "methods": [
+            "See",
+            "Scout",
+            "Knows",
+            "KnownCells",
+            "Walkable",
+            "Path"
+          ],
+          "properties": []
+        },
+        {
+          "name": "PathFinder",
+          "startLine": 151,
+          "endLine": 218,
+          "methods": [
+            "Find"
+          ],
+          "properties": [
+            "_came",
+            "_stamp",
+            "_queue",
+            "_run",
+            "_path"
+          ]
+        },
+        {
+          "name": "PerceptionSystem",
+          "startLine": 221,
+          "endLine": 235,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "_content",
+            "Phase"
+          ]
+        },
+        {
+          "name": "JourneyCommand",
+          "startLine": 241,
+          "endLine": 287,
+          "methods": [
+            "Validate",
+            "Apply",
+            "ApplyWithChronicle"
+          ],
+          "properties": [
+            "Category"
+          ]
+        },
+        {
+          "name": "JourneySystem",
+          "startLine": 294,
+          "endLine": 364,
+          "methods": [
+            "Execute",
+            "Lived"
+          ],
+          "properties": [
+            "_content",
+            "_paths",
+            "Phase"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "See",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "Scout",
+          "line": 63,
+          "isDefault": false
+        },
+        {
+          "name": "Knows",
+          "line": 108,
+          "isDefault": false
+        },
+        {
+          "name": "KnownCells",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "Walkable",
+          "line": 135,
+          "isDefault": false
+        },
+        {
+          "name": "Path",
+          "line": 146,
+          "isDefault": false
+        },
+        {
+          "name": "MapMemory",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "Find",
+          "line": 163,
+          "isDefault": false
+        },
+        {
+          "name": "PathFinder",
+          "line": 151,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 226,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 229,
+          "isDefault": false
+        },
+        {
+          "name": "PerceptionSystem",
+          "line": 221,
+          "isDefault": false
+        },
+        {
+          "name": "Category",
+          "line": 244,
+          "isDefault": false
+        },
+        {
+          "name": "Validate",
+          "line": 247,
+          "isDefault": false
+        },
+        {
+          "name": "Apply",
+          "line": 275,
+          "isDefault": false
+        },
+        {
+          "name": "ApplyWithChronicle",
+          "line": 278,
+          "isDefault": false
+        },
+        {
+          "name": "JourneyCommand",
+          "line": 241,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 300,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 303,
+          "isDefault": false
+        },
+        {
+          "name": "JourneySystem",
+          "line": 294,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "See",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 23
+        },
+        {
+          "caller": "See",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 24
+        },
+        {
+          "caller": "See",
+          "callee": "Math.Min",
+          "lineNumber": 27
+        },
+        {
+          "caller": "See",
+          "callee": "HexGlobe.RangeSize",
+          "lineNumber": 28
+        },
+        {
+          "caller": "See",
+          "callee": "HexGlobe.RangeSize",
+          "lineNumber": 28
+        },
+        {
+          "caller": "See",
+          "callee": "HexGlobe.RangeSize",
+          "lineNumber": 28
+        },
+        {
+          "caller": "See",
+          "callee": "state.FindCivilization",
+          "lineNumber": 37
+        },
+        {
+          "caller": "See",
+          "callee": "Array.Resize",
+          "lineNumber": 46
+        },
+        {
+          "caller": "See",
+          "callee": "geo.Range",
+          "lineNumber": 50
+        },
+        {
+          "caller": "See",
+          "callee": "geo.Index",
+          "lineNumber": 53
+        },
+        {
+          "caller": "Scout",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 65
+        },
+        {
+          "caller": "Scout",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 66
+        },
+        {
+          "caller": "Scout",
+          "callee": "state.FindCivilization",
+          "lineNumber": 79
+        },
+        {
+          "caller": "Scout",
+          "callee": "rng.NextInt",
+          "lineNumber": 85
+        },
+        {
+          "caller": "Scout",
+          "callee": "geo.Neighbor",
+          "lineNumber": 89
+        },
+        {
+          "caller": "Scout",
+          "callee": "Walkable",
+          "lineNumber": 90
+        },
+        {
+          "caller": "Scout",
+          "callee": "geo.Index",
+          "lineNumber": 90
+        },
+        {
+          "caller": "Scout",
+          "callee": "rng.NextInt",
+          "lineNumber": 92
+        },
+        {
+          "caller": "Scout",
+          "callee": "geo.Index",
+          "lineNumber": 97
+        },
+        {
+          "caller": "Scout",
+          "callee": "geo.GetNeighbors",
+          "lineNumber": 98
+        },
+        {
+          "caller": "Scout",
+          "callee": "geo.Index",
+          "lineNumber": 101
+        },
+        {
+          "caller": "Knows",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 110
+        },
+        {
+          "caller": "Knows",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 111
+        },
+        {
+          "caller": "Knows",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 112
+        },
+        {
+          "caller": "KnownCells",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 124
+        },
+        {
+          "caller": "KnownCells",
+          "callee": "Knows",
+          "lineNumber": 128
+        },
+        {
+          "caller": "Walkable",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 137
+        },
+        {
+          "caller": "Walkable",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 138
+        },
+        {
+          "caller": "Path",
+          "callee": "new PathFinder().Find",
+          "lineNumber": 147
+        },
+        {
+          "caller": "Path",
+          "callee": "new PathFinder",
+          "lineNumber": 147
+        },
+        {
+          "caller": "Find",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 165
+        },
+        {
+          "caller": "Find",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 166
+        },
+        {
+          "caller": "Find",
+          "callee": "geo.FromIndex",
+          "lineNumber": 178
+        },
+        {
+          "caller": "Find",
+          "callee": "_path.Clear",
+          "lineNumber": 190
+        },
+        {
+          "caller": "Find",
+          "callee": "_path.Add",
+          "lineNumber": 193
+        },
+        {
+          "caller": "Find",
+          "callee": "_path.Reverse",
+          "lineNumber": 196
+        },
+        {
+          "caller": "Find",
+          "callee": "geo.GetNeighbors",
+          "lineNumber": 200
+        },
+        {
+          "caller": "Find",
+          "callee": "geo.FromIndex",
+          "lineNumber": 200
+        },
+        {
+          "caller": "Find",
+          "callee": "geo.Index",
+          "lineNumber": 203
+        },
+        {
+          "caller": "Find",
+          "callee": "MapMemory.Walkable",
+          "lineNumber": 204
+        },
+        {
+          "caller": "Find",
+          "callee": "MapMemory.Knows",
+          "lineNumber": 204
+        },
+        {
+          "caller": "Find",
+          "callee": "geo.Distance",
+          "lineNumber": 205
+        },
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 231
+        },
+        {
+          "caller": "Execute",
+          "callee": "MapMemory.See",
+          "lineNumber": 232
+        },
+        {
+          "caller": "Execute",
+          "callee": "MapMemory.Scout",
+          "lineNumber": 233
+        },
+        {
+          "caller": "Validate",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 249
+        },
+        {
+          "caller": "Validate",
+          "callee": "SettlementRules.CheckOwn",
+          "lineNumber": 250
+        },
+        {
+          "caller": "Validate",
+          "callee": "CommandResult.Fail",
+          "lineNumber": 258
+        },
+        {
+          "caller": "Validate",
+          "callee": "world.Geometry.Index",
+          "lineNumber": 262
+        },
+        {
+          "caller": "Validate",
+          "callee": "state.FindCivilization",
+          "lineNumber": 263
+        },
+        {
+          "caller": "Validate",
+          "callee": "MapMemory.Knows",
+          "lineNumber": 264
+        },
+        {
+          "caller": "Validate",
+          "callee": "CommandResult.Fail",
+          "lineNumber": 266
+        },
+        {
+          "caller": "Validate",
+          "callee": "MapMemory.Path",
+          "lineNumber": 269
+        },
+        {
+          "caller": "Validate",
+          "callee": "world.Geometry.Index",
+          "lineNumber": 269
+        },
+        {
+          "caller": "Validate",
+          "callee": "CommandResult.Fail",
+          "lineNumber": 270
+        },
+        {
+          "caller": "Apply",
+          "callee": "ApplyWithChronicle",
+          "lineNumber": 275
+        },
+        {
+          "caller": "ApplyWithChronicle",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 280
+        },
+        {
+          "caller": "ApplyWithChronicle",
+          "callee": "state.FindSettlement",
+          "lineNumber": 281
+        },
+        {
+          "caller": "ApplyWithChronicle",
+          "callee": "world.Geometry.Index",
+          "lineNumber": 283
+        },
+        {
+          "caller": "ApplyWithChronicle",
+          "callee": "state.FindCivilization",
+          "lineNumber": 284
+        },
+        {
+          "caller": "ApplyWithChronicle",
+          "callee": "world.Geometry.Distance",
+          "lineNumber": 284
+        },
+        {
+          "caller": "ApplyWithChronicle",
+          "callee": "SettlementRules.Direction",
+          "lineNumber": 285
+        },
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 305
+        },
+        {
+          "caller": "Execute",
+          "callee": "state.FindCivilization",
+          "lineNumber": 316
+        },
+        {
+          "caller": "Execute",
+          "callee": "_paths.Find",
+          "lineNumber": 319
+        },
+        {
+          "caller": "Execute",
+          "callee": "world.Geometry.Index",
+          "lineNumber": 319
+        },
+        {
+          "caller": "Execute",
+          "callee": "Math.Min",
+          "lineNumber": 326
+        },
+        {
+          "caller": "Execute",
+          "callee": "Lived",
+          "lineNumber": 332
+        },
+        {
+          "caller": "Execute",
+          "callee": "SettlementAssets.Relocate",
+          "lineNumber": 343
+        },
+        {
+          "caller": "Execute",
+          "callee": "world.Geometry.FromIndex",
+          "lineNumber": 343
+        },
+        {
+          "caller": "Execute",
+          "callee": "context.Chronicle",
+          "lineNumber": 347
+        },
+        {
+          "caller": "Lived",
+          "callee": "world.Geometry.Index",
+          "lineNumber": 356
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 20,
+        "functionCount": 13,
+        "classCount": 5
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Population/Influence.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 212,
+      "nonEmptyLines": 187,
+      "functions": [
+        {
+          "name": "Influence",
+          "startLine": 27,
+          "endLine": 32,
+          "params": [
+            "content"
+          ]
+        },
+        {
+          "name": "RangeOf",
+          "startLine": 35,
+          "endLine": 49,
+          "params": [
+            "settlement"
+          ]
+        },
+        {
+          "name": "EnterCost",
+          "startLine": 52,
+          "endLine": 67,
+          "params": [
+            "map",
+            "cell"
+          ]
+        },
+        {
+          "name": "Recompute",
+          "startLine": 70,
+          "endLine": 77,
+          "params": [
+            "state"
+          ]
+        },
+        {
+          "name": "Recompute",
+          "startLine": 79,
+          "endLine": 117,
+          "params": [
+            "state",
+            "world"
+          ]
+        },
+        {
+          "name": "Spread",
+          "startLine": 120,
+          "endLine": 174,
+          "params": [
+            "world",
+            "s"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 189,
+          "endLine": 198,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "AnySettlementMoved",
+          "startLine": 200,
+          "endLine": 211,
+          "params": [
+            "context"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "Influence",
+          "startLine": 16,
+          "endLine": 175,
+          "methods": [
+            "Influence",
+            "RangeOf",
+            "EnterCost",
+            "Recompute",
+            "Recompute",
+            "Spread"
+          ],
+          "properties": [
+            "_content",
+            "_rules",
+            "_queue",
+            "_reached",
+            "_cost",
+            "_bestStrength",
+            "_bestClaim"
+          ]
+        },
+        {
+          "name": "InfluenceSystem",
+          "startLine": 181,
+          "endLine": 212,
+          "methods": [
+            "Execute",
+            "AnySettlementMoved"
+          ],
+          "properties": [
+            "_influence",
+            "Phase"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Influence",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "RangeOf",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "EnterCost",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "Recompute",
+          "line": 70,
+          "isDefault": false
+        },
+        {
+          "name": "Influence",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 186,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 189,
+          "isDefault": false
+        },
+        {
+          "name": "InfluenceSystem",
+          "line": 181,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Influence",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 29
+        },
+        {
+          "caller": "RangeOf",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 37
+        },
+        {
+          "caller": "RangeOf",
+          "callee": "Math.Min",
+          "lineNumber": 48
+        },
+        {
+          "caller": "RangeOf",
+          "callee": "Math.Max",
+          "lineNumber": 48
+        },
+        {
+          "caller": "EnterCost",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 54
+        },
+        {
+          "caller": "Recompute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 72
+        },
+        {
+          "caller": "Recompute",
+          "callee": "Recompute",
+          "lineNumber": 75
+        },
+        {
+          "caller": "Recompute",
+          "callee": "Array.Fill",
+          "lineNumber": 88
+        },
+        {
+          "caller": "Recompute",
+          "callee": "Array.Clear",
+          "lineNumber": 91
+        },
+        {
+          "caller": "Recompute",
+          "callee": "Array.Clear",
+          "lineNumber": 92
+        },
+        {
+          "caller": "Recompute",
+          "callee": "s.TotalPopulation",
+          "lineNumber": 95
+        },
+        {
+          "caller": "Recompute",
+          "callee": "Spread",
+          "lineNumber": 100
+        },
+        {
+          "caller": "Recompute",
+          "callee": "Math.Min",
+          "lineNumber": 107
+        },
+        {
+          "caller": "Recompute",
+          "callee": "map.Claim.Set",
+          "lineNumber": 112
+        },
+        {
+          "caller": "Recompute",
+          "callee": "map.Influence.Set",
+          "lineNumber": 113
+        },
+        {
+          "caller": "Recompute",
+          "callee": "Math.Min",
+          "lineNumber": 113
+        },
+        {
+          "caller": "Recompute",
+          "callee": "state.FindSettlement",
+          "lineNumber": 114
+        },
+        {
+          "caller": "Recompute",
+          "callee": "new SettlementId",
+          "lineNumber": 114
+        },
+        {
+          "caller": "Recompute",
+          "callee": "map.Owner.Set",
+          "lineNumber": 115
+        },
+        {
+          "caller": "Spread",
+          "callee": "RangeOf",
+          "lineNumber": 124
+        },
+        {
+          "caller": "Spread",
+          "callee": "geo.Index",
+          "lineNumber": 125
+        },
+        {
+          "caller": "Spread",
+          "callee": "_reached.Clear",
+          "lineNumber": 126
+        },
+        {
+          "caller": "Spread",
+          "callee": "_queue.Clear",
+          "lineNumber": 127
+        },
+        {
+          "caller": "Spread",
+          "callee": "_reached.Add",
+          "lineNumber": 129
+        },
+        {
+          "caller": "Spread",
+          "callee": "_queue.Enqueue",
+          "lineNumber": 130
+        },
+        {
+          "caller": "Spread",
+          "callee": "_queue.TryDequeue",
+          "lineNumber": 132
+        },
+        {
+          "caller": "Spread",
+          "callee": "geo.GetNeighbors",
+          "lineNumber": 146
+        },
+        {
+          "caller": "Spread",
+          "callee": "geo.FromIndex",
+          "lineNumber": 146
+        },
+        {
+          "caller": "Spread",
+          "callee": "geo.Index",
+          "lineNumber": 149
+        },
+        {
+          "caller": "Spread",
+          "callee": "EnterCost",
+          "lineNumber": 150
+        },
+        {
+          "caller": "Spread",
+          "callee": "_reached.Add",
+          "lineNumber": 161
+        },
+        {
+          "caller": "Spread",
+          "callee": "_queue.Enqueue",
+          "lineNumber": 165
+        },
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 191
+        },
+        {
+          "caller": "Execute",
+          "callee": "AnySettlementMoved",
+          "lineNumber": 192
+        },
+        {
+          "caller": "Execute",
+          "callee": "_influence.Recompute",
+          "lineNumber": 197
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 8,
+        "functionCount": 8,
+        "classCount": 2
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Population/PopulationSystem.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 209,
+      "nonEmptyLines": 184,
+      "functions": [
+        {
+          "name": "PopulationSystem",
+          "startLine": 24,
+          "endLine": 32,
+          "params": [
+            "content"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 38,
+          "endLine": 66,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "GrowthFactor",
+          "startLine": 72,
+          "endLine": 88,
+          "params": [
+            "hundredthsPerMillePerYear",
+            "months"
+          ]
+        },
+        {
+          "name": "UpdateHealthAndMood",
+          "startLine": 90,
+          "endLine": 108,
+          "params": [
+            "state",
+            "s",
+            "people"
+          ]
+        },
+        {
+          "name": "NewTotal",
+          "startLine": 110,
+          "endLine": 129,
+          "params": [
+            "state",
+            "s",
+            "people",
+            "months"
+          ]
+        },
+        {
+          "name": "ChangeTotal",
+          "startLine": 132,
+          "endLine": 161,
+          "params": [
+            "s",
+            "before",
+            "after"
+          ]
+        },
+        {
+          "name": "Drift",
+          "startLine": 164,
+          "endLine": 195,
+          "params": [
+            "s",
+            "months"
+          ]
+        },
+        {
+          "name": "HasPeople",
+          "startLine": 197,
+          "endLine": 208,
+          "params": [
+            "state",
+            "civ"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "PopulationSystem",
+          "startLine": 15,
+          "endLine": 209,
+          "methods": [
+            "PopulationSystem",
+            "Execute",
+            "GrowthFactor",
+            "UpdateHealthAndMood",
+            "NewTotal",
+            "ChangeTotal",
+            "Drift",
+            "HasPeople"
+          ],
+          "properties": [
+            "_content",
+            "_rules",
+            "_weights",
+            "_shares",
+            "_target",
+            "Phase"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PopulationSystem",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "GrowthFactor",
+          "line": 72,
+          "isDefault": false
+        },
+        {
+          "name": "PopulationSystem",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PopulationSystem",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 26
+        },
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 40
+        },
+        {
+          "caller": "Execute",
+          "callee": "state.MonthsPerTurn",
+          "lineNumber": 42
+        },
+        {
+          "caller": "Execute",
+          "callee": "s.TotalPopulation",
+          "lineNumber": 45
+        },
+        {
+          "caller": "Execute",
+          "callee": "UpdateHealthAndMood",
+          "lineNumber": 51
+        },
+        {
+          "caller": "Execute",
+          "callee": "NewTotal",
+          "lineNumber": 52
+        },
+        {
+          "caller": "Execute",
+          "callee": "ChangeTotal",
+          "lineNumber": 53
+        },
+        {
+          "caller": "Execute",
+          "callee": "Drift",
+          "lineNumber": 54
+        },
+        {
+          "caller": "Execute",
+          "callee": "HasPeople",
+          "lineNumber": 59
+        },
+        {
+          "caller": "Execute",
+          "callee": "context.Chronicle",
+          "lineNumber": 63
+        },
+        {
+          "caller": "GrowthFactor",
+          "callee": "Math.Max",
+          "lineNumber": 74
+        },
+        {
+          "caller": "GrowthFactor",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 78
+        },
+        {
+          "caller": "GrowthFactor",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 84
+        },
+        {
+          "caller": "GrowthFactor",
+          "callee": "Math.Max",
+          "lineNumber": 87
+        },
+        {
+          "caller": "UpdateHealthAndMood",
+          "callee": "Math.Min",
+          "lineNumber": 97
+        },
+        {
+          "caller": "UpdateHealthAndMood",
+          "callee": "Math.Clamp",
+          "lineNumber": 100
+        },
+        {
+          "caller": "UpdateHealthAndMood",
+          "callee": "state.Effects.Total",
+          "lineNumber": 105
+        },
+        {
+          "caller": "UpdateHealthAndMood",
+          "callee": "state.Effects.Total",
+          "lineNumber": 106
+        },
+        {
+          "caller": "UpdateHealthAndMood",
+          "callee": "Math.Clamp",
+          "lineNumber": 107
+        },
+        {
+          "caller": "NewTotal",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 113
+        },
+        {
+          "caller": "NewTotal",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 114
+        },
+        {
+          "caller": "NewTotal",
+          "callee": "Math.Max",
+          "lineNumber": 120
+        },
+        {
+          "caller": "NewTotal",
+          "callee": "state.Effects.Total",
+          "lineNumber": 124
+        },
+        {
+          "caller": "NewTotal",
+          "callee": "GrowthFactor",
+          "lineNumber": 127
+        },
+        {
+          "caller": "NewTotal",
+          "callee": "Math.Min",
+          "lineNumber": 128
+        },
+        {
+          "caller": "NewTotal",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 128
+        },
+        {
+          "caller": "ChangeTotal",
+          "callee": "Amount.FromHundredths(Math.Abs(after - before)).SplitProportionally",
+          "lineNumber": 155
+        },
+        {
+          "caller": "ChangeTotal",
+          "callee": "Amount.FromHundredths",
+          "lineNumber": 155
+        },
+        {
+          "caller": "ChangeTotal",
+          "callee": "Math.Abs",
+          "lineNumber": 155
+        },
+        {
+          "caller": "ChangeTotal",
+          "callee": "Math.Max",
+          "lineNumber": 159
+        },
+        {
+          "caller": "Drift",
+          "callee": "s.TotalPopulation",
+          "lineNumber": 167
+        },
+        {
+          "caller": "Drift",
+          "callee": "Amount.FromHundredths(total).SplitProportionally",
+          "lineNumber": 178
+        },
+        {
+          "caller": "Drift",
+          "callee": "Amount.FromHundredths",
+          "lineNumber": 178
+        },
+        {
+          "caller": "Drift",
+          "callee": "Math.Min",
+          "lineNumber": 179
+        },
+        {
+          "caller": "HasPeople",
+          "callee": "s.TotalPopulation",
+          "lineNumber": 201
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 5,
+        "functionCount": 8,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Population/SettlementAssets.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 229,
+      "nonEmptyLines": 208,
+      "functions": [
+        {
+          "name": "CarryCapacity",
+          "startLine": 24,
+          "endLine": 35,
+          "params": [
+            "content",
+            "state",
+            "civ",
+            "people"
+          ]
+        },
+        {
+          "name": "Carry",
+          "startLine": 42,
+          "endLine": 82,
+          "params": [
+            "from",
+            "to",
+            "capacity",
+            "sharePercent"
+          ]
+        },
+        {
+          "name": "Abandon",
+          "startLine": 88,
+          "endLine": 109,
+          "params": [
+            "content",
+            "state",
+            "s"
+          ]
+        },
+        {
+          "name": "Relocate",
+          "startLine": 116,
+          "endLine": 134,
+          "params": [
+            "content",
+            "state",
+            "s",
+            "target"
+          ]
+        },
+        {
+          "name": "Warriors",
+          "startLine": 137,
+          "endLine": 149,
+          "params": [
+            "content",
+            "s"
+          ]
+        },
+        {
+          "name": "Lose",
+          "startLine": 152,
+          "endLine": 164,
+          "params": [
+            "content",
+            "s",
+            "percent",
+            "warriorsOnly"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 177,
+          "endLine": 187,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 200,
+          "endLine": 228,
+          "params": [
+            "context"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SettlementAssets",
+          "startLine": 14,
+          "endLine": 165,
+          "methods": [
+            "CarryCapacity",
+            "Carry",
+            "Abandon",
+            "Relocate",
+            "Warriors",
+            "Lose"
+          ],
+          "properties": [
+            "OldSitePrefix"
+          ]
+        },
+        {
+          "name": "AbandonmentSystem",
+          "startLine": 171,
+          "endLine": 188,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "Phase"
+          ]
+        },
+        {
+          "name": "DecaySystem",
+          "startLine": 194,
+          "endLine": 229,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "Phase"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "OldSitePrefix",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "CarryCapacity",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "Carry",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "Abandon",
+          "line": 88,
+          "isDefault": false
+        },
+        {
+          "name": "Relocate",
+          "line": 116,
+          "isDefault": false
+        },
+        {
+          "name": "Warriors",
+          "line": 137,
+          "isDefault": false
+        },
+        {
+          "name": "Lose",
+          "line": 152,
+          "isDefault": false
+        },
+        {
+          "name": "SettlementAssets",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 174,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 177,
+          "isDefault": false
+        },
+        {
+          "name": "AbandonmentSystem",
+          "line": 171,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 197,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 200,
+          "isDefault": false
+        },
+        {
+          "name": "DecaySystem",
+          "line": 194,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "CarryCapacity",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 26
+        },
+        {
+          "caller": "CarryCapacity",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 27
+        },
+        {
+          "caller": "CarryCapacity",
+          "callee": "state.Effects.Total",
+          "lineNumber": 31
+        },
+        {
+          "caller": "CarryCapacity",
+          "callee": "(content.Assets.CarryPerPerson * Math.Max(0, people)).MultiplyPercent",
+          "lineNumber": 34
+        },
+        {
+          "caller": "CarryCapacity",
+          "callee": "Math.Max",
+          "lineNumber": 34
+        },
+        {
+          "caller": "CarryCapacity",
+          "callee": "Math.Max",
+          "lineNumber": 34
+        },
+        {
+          "caller": "Carry",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 44
+        },
+        {
+          "caller": "Carry",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 45
+        },
+        {
+          "caller": "Carry",
+          "callee": "stock[g].MultiplyPercent",
+          "lineNumber": 50
+        },
+        {
+          "caller": "Carry",
+          "callee": "Math.Min",
+          "lineNumber": 58
+        },
+        {
+          "caller": "Carry",
+          "callee": "stock[g].MultiplyPercent",
+          "lineNumber": 62
+        },
+        {
+          "caller": "Carry",
+          "callee": "Amount.FromHundredths",
+          "lineNumber": 63
+        },
+        {
+          "caller": "Carry",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 63
+        },
+        {
+          "caller": "Carry",
+          "callee": "Amount.FromHundredths",
+          "lineNumber": 75
+        },
+        {
+          "caller": "Carry",
+          "callee": "Math.Min",
+          "lineNumber": 75
+        },
+        {
+          "caller": "Abandon",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 90
+        },
+        {
+          "caller": "Abandon",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 91
+        },
+        {
+          "caller": "Abandon",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 92
+        },
+        {
+          "caller": "Abandon",
+          "callee": "s.Population.Clear",
+          "lineNumber": 93
+        },
+        {
+          "caller": "Abandon",
+          "callee": "state.FindCivilization",
+          "lineNumber": 100
+        },
+        {
+          "caller": "Relocate",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 118
+        },
+        {
+          "caller": "Relocate",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 119
+        },
+        {
+          "caller": "Relocate",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 120
+        },
+        {
+          "caller": "Relocate",
+          "callee": "CarryCapacity",
+          "lineNumber": 121
+        },
+        {
+          "caller": "Relocate",
+          "callee": "s.TotalPopulation",
+          "lineNumber": 121
+        },
+        {
+          "caller": "Relocate",
+          "callee": "s.TotalStock",
+          "lineNumber": 123
+        },
+        {
+          "caller": "Relocate",
+          "callee": "state.FoundSettlement",
+          "lineNumber": 125
+        },
+        {
+          "caller": "Relocate",
+          "callee": "Carry",
+          "lineNumber": 126
+        },
+        {
+          "caller": "Relocate",
+          "callee": "Carry",
+          "lineNumber": 127
+        },
+        {
+          "caller": "Relocate",
+          "callee": "Abandon",
+          "lineNumber": 128
+        },
+        {
+          "caller": "Warriors",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 139
+        },
+        {
+          "caller": "Warriors",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 140
+        },
+        {
+          "caller": "Lose",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 154
+        },
+        {
+          "caller": "Lose",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 155
+        },
+        {
+          "caller": "Lose",
+          "callee": "IntMath.MulDiv",
+          "lineNumber": 161
+        },
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 179
+        },
+        {
+          "caller": "Execute",
+          "callee": "s.TotalPopulation",
+          "lineNumber": 182
+        },
+        {
+          "caller": "Execute",
+          "callee": "SettlementAssets.Abandon",
+          "lineNumber": 184
+        },
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 202
+        },
+        {
+          "caller": "Execute",
+          "callee": "state.RemoveSettlements",
+          "lineNumber": 226
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 14,
+        "functionCount": 8,
+        "classCount": 3
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Random/DeterministicRandom.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 165,
+      "nonEmptyLines": 139,
+      "functions": [
+        {
+          "name": "DeterministicRandom",
+          "startLine": 17,
+          "endLine": 20,
+          "params": [
+            "seed"
+          ]
+        },
+        {
+          "name": "DeterministicRandom",
+          "startLine": 23,
+          "endLine": 26,
+          "params": [
+            "state"
+          ]
+        },
+        {
+          "name": "Reseed",
+          "startLine": 32,
+          "endLine": 39,
+          "params": [
+            "seed"
+          ]
+        },
+        {
+          "name": "SetState",
+          "startLine": 42,
+          "endLine": 53,
+          "params": [
+            "state"
+          ]
+        },
+        {
+          "name": "NextULong",
+          "startLine": 56,
+          "endLine": 69,
+          "params": []
+        },
+        {
+          "name": "NextUInt",
+          "startLine": 72,
+          "endLine": 75,
+          "params": []
+        },
+        {
+          "name": "NextInt",
+          "startLine": 78,
+          "endLine": 86,
+          "params": [
+            "maxExclusive"
+          ]
+        },
+        {
+          "name": "NextInt",
+          "startLine": 89,
+          "endLine": 98,
+          "params": [
+            "minInclusive",
+            "maxExclusive"
+          ]
+        },
+        {
+          "name": "Chance",
+          "startLine": 101,
+          "endLine": 119,
+          "params": [
+            "numerator",
+            "denominator"
+          ]
+        },
+        {
+          "name": "ChancePercent",
+          "startLine": 122,
+          "endLine": 125,
+          "params": [
+            "percent"
+          ]
+        },
+        {
+          "name": "NextBool",
+          "startLine": 128,
+          "endLine": 131,
+          "params": []
+        },
+        {
+          "name": "Shuffle",
+          "startLine": 134,
+          "endLine": 141,
+          "params": [
+            "items"
+          ]
+        },
+        {
+          "name": "NextBounded",
+          "startLine": 144,
+          "endLine": 159,
+          "params": [
+            "range"
+          ]
+        },
+        {
+          "name": "RotateLeft",
+          "startLine": 161,
+          "endLine": 164,
+          "params": [
+            "x",
+            "k"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "DeterministicRandom",
+          "startLine": 9,
+          "endLine": 165,
+          "methods": [
+            "DeterministicRandom",
+            "DeterministicRandom",
+            "Reseed",
+            "SetState",
+            "NextULong",
+            "NextUInt",
+            "NextInt",
+            "NextInt",
+            "Chance",
+            "ChancePercent",
+            "NextBool",
+            "Shuffle",
+            "NextBounded",
+            "RotateLeft"
+          ],
+          "properties": [
+            "_s0",
+            "_s1",
+            "_s2",
+            "_s3",
+            "State"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DeterministicRandom",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "DeterministicRandom",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "State",
+          "line": 29,
+          "isDefault": false
+        },
+        {
+          "name": "Reseed",
+          "line": 32,
+          "isDefault": false
+        },
+        {
+          "name": "SetState",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "NextULong",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "NextUInt",
+          "line": 72,
+          "isDefault": false
+        },
+        {
+          "name": "NextInt",
+          "line": 78,
+          "isDefault": false
+        },
+        {
+          "name": "NextInt",
+          "line": 89,
+          "isDefault": false
+        },
+        {
+          "name": "Chance",
+          "line": 101,
+          "isDefault": false
+        },
+        {
+          "name": "ChancePercent",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "NextBool",
+          "line": 128,
+          "isDefault": false
+        },
+        {
+          "name": "Shuffle",
+          "line": 134,
+          "isDefault": false
+        },
+        {
+          "name": "DeterministicRandom",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DeterministicRandom",
+          "callee": "Reseed",
+          "lineNumber": 19
+        },
+        {
+          "caller": "DeterministicRandom",
+          "callee": "SetState",
+          "lineNumber": 25
+        },
+        {
+          "caller": "Reseed",
+          "callee": "SplitMix64.Next",
+          "lineNumber": 35
+        },
+        {
+          "caller": "Reseed",
+          "callee": "SplitMix64.Next",
+          "lineNumber": 36
+        },
+        {
+          "caller": "Reseed",
+          "callee": "SplitMix64.Next",
+          "lineNumber": 37
+        },
+        {
+          "caller": "Reseed",
+          "callee": "SplitMix64.Next",
+          "lineNumber": 38
+        },
+        {
+          "caller": "SetState",
+          "callee": "new ArgumentException",
+          "lineNumber": 46
+        },
+        {
+          "caller": "SetState",
+          "callee": "nameof",
+          "lineNumber": 46
+        },
+        {
+          "caller": "NextULong",
+          "callee": "RotateLeft",
+          "lineNumber": 58
+        },
+        {
+          "caller": "NextULong",
+          "callee": "RotateLeft",
+          "lineNumber": 66
+        },
+        {
+          "caller": "NextUInt",
+          "callee": "NextULong",
+          "lineNumber": 74
+        },
+        {
+          "caller": "NextInt",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 82
+        },
+        {
+          "caller": "NextInt",
+          "callee": "nameof",
+          "lineNumber": 82
+        },
+        {
+          "caller": "NextInt",
+          "callee": "NextBounded",
+          "lineNumber": 85
+        },
+        {
+          "caller": "NextInt",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 93
+        },
+        {
+          "caller": "NextInt",
+          "callee": "nameof",
+          "lineNumber": 93
+        },
+        {
+          "caller": "NextInt",
+          "callee": "NextBounded",
+          "lineNumber": 97
+        },
+        {
+          "caller": "Chance",
+          "callee": "new ArgumentOutOfRangeException",
+          "lineNumber": 105
+        },
+        {
+          "caller": "Chance",
+          "callee": "nameof",
+          "lineNumber": 105
+        },
+        {
+          "caller": "Chance",
+          "callee": "NextInt",
+          "lineNumber": 118
+        },
+        {
+          "caller": "ChancePercent",
+          "callee": "Chance",
+          "lineNumber": 124
+        },
+        {
+          "caller": "NextBool",
+          "callee": "NextULong",
+          "lineNumber": 130
+        },
+        {
+          "caller": "Shuffle",
+          "callee": "NextInt",
+          "lineNumber": 138
+        },
+        {
+          "caller": "NextBounded",
+          "callee": "NextUInt",
+          "lineNumber": 146
+        },
+        {
+          "caller": "NextBounded",
+          "callee": "NextUInt",
+          "lineNumber": 153
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 14,
+        "functionCount": 14,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Random/RandomState.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 8,
+      "nonEmptyLines": 7,
+      "classes": [
+        {
+          "name": "RandomState",
+          "startLine": 4,
+          "endLine": 8,
+          "methods": [],
+          "properties": [
+            "IsZero"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "IsZero",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "RandomState",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Random/RandomStreamId.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 32,
+      "nonEmptyLines": 24,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Random/RandomStreams.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 74,
+      "nonEmptyLines": 62,
+      "functions": [
+        {
+          "name": "RandomStreams",
+          "startLine": 17,
+          "endLine": 24,
+          "params": [
+            "gameSeed"
+          ]
+        },
+        {
+          "name": "Derive",
+          "startLine": 36,
+          "endLine": 40,
+          "params": [
+            "id",
+            "entityId",
+            "turn"
+          ]
+        },
+        {
+          "name": "CopyStates",
+          "startLine": 43,
+          "endLine": 54,
+          "params": [
+            "destination"
+          ]
+        },
+        {
+          "name": "RestoreStates",
+          "startLine": 57,
+          "endLine": 68,
+          "params": [
+            "states"
+          ]
+        },
+        {
+          "name": "StreamSeed",
+          "startLine": 70,
+          "endLine": 73,
+          "params": [
+            "gameSeed",
+            "streamIndex"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "RandomStreams",
+          "startLine": 9,
+          "endLine": 74,
+          "methods": [
+            "RandomStreams",
+            "Derive",
+            "CopyStates",
+            "RestoreStates",
+            "StreamSeed"
+          ],
+          "properties": [
+            "Count",
+            "_streams",
+            "GameSeed"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Count",
+          "line": 12,
+          "isDefault": false
+        },
+        {
+          "name": "RandomStreams",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "GameSeed",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "Derive",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "CopyStates",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "RestoreStates",
+          "line": 57,
+          "isDefault": false
+        },
+        {
+          "name": "RandomStreams",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RandomStreams",
+          "callee": "new DeterministicRandom",
+          "lineNumber": 22
+        },
+        {
+          "caller": "RandomStreams",
+          "callee": "StreamSeed",
+          "lineNumber": 22
+        },
+        {
+          "caller": "Derive",
+          "callee": "SplitMix64.Combine",
+          "lineNumber": 38
+        },
+        {
+          "caller": "Derive",
+          "callee": "SplitMix64.Combine",
+          "lineNumber": 38
+        },
+        {
+          "caller": "Derive",
+          "callee": "StreamSeed",
+          "lineNumber": 38
+        },
+        {
+          "caller": "Derive",
+          "callee": "new DeterministicRandom",
+          "lineNumber": 39
+        },
+        {
+          "caller": "CopyStates",
+          "callee": "new ArgumentException",
+          "lineNumber": 47
+        },
+        {
+          "caller": "CopyStates",
+          "callee": "nameof",
+          "lineNumber": 47
+        },
+        {
+          "caller": "RestoreStates",
+          "callee": "new ArgumentException",
+          "lineNumber": 61
+        },
+        {
+          "caller": "RestoreStates",
+          "callee": "nameof",
+          "lineNumber": 61
+        },
+        {
+          "caller": "RestoreStates",
+          "callee": "_streams[i].SetState",
+          "lineNumber": 66
+        },
+        {
+          "caller": "StreamSeed",
+          "callee": "SplitMix64.Combine",
+          "lineNumber": 72
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 7,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Random/SplitMix64.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 30,
+      "nonEmptyLines": 26,
+      "functions": [
+        {
+          "name": "Next",
+          "startLine": 11,
+          "endLine": 15,
+          "params": [
+            "state"
+          ]
+        },
+        {
+          "name": "Mix",
+          "startLine": 18,
+          "endLine": 23,
+          "params": [
+            "z"
+          ]
+        },
+        {
+          "name": "Combine",
+          "startLine": 26,
+          "endLine": 29,
+          "params": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SplitMix64",
+          "startLine": 6,
+          "endLine": 30,
+          "methods": [
+            "Next",
+            "Mix",
+            "Combine"
+          ],
+          "properties": [
+            "GoldenGamma"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Next",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "Mix",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "Combine",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "SplitMix64",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Next",
+          "callee": "Mix",
+          "lineNumber": 14
+        },
+        {
+          "caller": "Combine",
+          "callee": "Mix",
+          "lineNumber": 28
+        },
+        {
+          "caller": "Combine",
+          "callee": "Mix",
+          "lineNumber": 28
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Research/ResearchSystem.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 152,
+      "nonEmptyLines": 134,
+      "functions": [
+        {
+          "name": "Execute",
+          "startLine": 24,
+          "endLine": 73,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "Validate",
+          "startLine": 83,
+          "endLine": 95,
+          "params": [
+            "state",
+            "civ"
+          ]
+        },
+        {
+          "name": "Apply",
+          "startLine": 98,
+          "endLine": 102,
+          "params": [
+            "state",
+            "civ"
+          ]
+        },
+        {
+          "name": "IssueCommands",
+          "startLine": 115,
+          "endLine": 151,
+          "params": [
+            "state",
+            "queue"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ResearchSystem",
+          "startLine": 16,
+          "endLine": 74,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "_content",
+            "Phase"
+          ]
+        },
+        {
+          "name": "SetResearchCommand",
+          "startLine": 77,
+          "endLine": 103,
+          "methods": [
+            "Validate",
+            "Apply"
+          ],
+          "properties": [
+            "Category"
+          ]
+        },
+        {
+          "name": "ResearchAi",
+          "startLine": 110,
+          "endLine": 152,
+          "methods": [
+            "IssueCommands"
+          ],
+          "properties": [
+            "_content"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Phase",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "ResearchSystem",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "Category",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "Validate",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "Apply",
+          "line": 98,
+          "isDefault": false
+        },
+        {
+          "name": "SetResearchCommand",
+          "line": 77,
+          "isDefault": false
+        },
+        {
+          "name": "IssueCommands",
+          "line": 115,
+          "isDefault": false
+        },
+        {
+          "name": "ResearchAi",
+          "line": 110,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 26
+        },
+        {
+          "caller": "Execute",
+          "callee": "state.MonthsPerTurn",
+          "lineNumber": 33
+        },
+        {
+          "caller": "Execute",
+          "callee": "Technologies.EnsureSize",
+          "lineNumber": 43
+        },
+        {
+          "caller": "Execute",
+          "callee": "Technologies.Science",
+          "lineNumber": 44
+        },
+        {
+          "caller": "Execute",
+          "callee": "Technologies.Available",
+          "lineNumber": 46
+        },
+        {
+          "caller": "Execute",
+          "callee": "CivFacts.Measure",
+          "lineNumber": 58
+        },
+        {
+          "caller": "Execute",
+          "callee": "Technologies.Cost",
+          "lineNumber": 59
+        },
+        {
+          "caller": "Execute",
+          "callee": "Technologies.Learn",
+          "lineNumber": 68
+        },
+        {
+          "caller": "Execute",
+          "callee": "context.Chronicle",
+          "lineNumber": 70
+        },
+        {
+          "caller": "Validate",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 85
+        },
+        {
+          "caller": "Validate",
+          "callee": "state.FindCivilization",
+          "lineNumber": 86
+        },
+        {
+          "caller": "Validate",
+          "callee": "CommandResult.Fail",
+          "lineNumber": 89
+        },
+        {
+          "caller": "Validate",
+          "callee": "Technologies.Available",
+          "lineNumber": 92
+        },
+        {
+          "caller": "Validate",
+          "callee": "CommandResult.Fail",
+          "lineNumber": 94
+        },
+        {
+          "caller": "Apply",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 100
+        },
+        {
+          "caller": "Apply",
+          "callee": "state.FindCivilization",
+          "lineNumber": 101
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 117
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 118
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "Technologies.Available",
+          "lineNumber": 123
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "CivFacts.Measure",
+          "lineNumber": 128
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "Technologies.Available",
+          "lineNumber": 133
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "Technologies.Cost",
+          "lineNumber": 138
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "queue.Enqueue",
+          "lineNumber": 148
+        },
+        {
+          "caller": "IssueCommands",
+          "callee": "new SetResearchCommand",
+          "lineNumber": 148
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 9,
+        "functionCount": 4,
+        "classCount": 3
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Research/Technologies.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 427,
+      "nonEmptyLines": 371,
+      "functions": [
+        {
+          "name": "TechBenefits",
+          "startLine": 17,
+          "endLine": 21,
+          "params": [
+            "deposits",
+            "biomes"
+          ]
+        },
+        {
+          "name": "Empty",
+          "startLine": 24,
+          "endLine": 28,
+          "params": [
+            "content"
+          ]
+        },
+        {
+          "name": "ForDeposit",
+          "startLine": 34,
+          "endLine": 35,
+          "params": [
+            "deposit"
+          ]
+        },
+        {
+          "name": "ForBiome",
+          "startLine": 38,
+          "endLine": 39,
+          "params": [
+            "biome"
+          ]
+        },
+        {
+          "name": "Of",
+          "startLine": 42,
+          "endLine": 65,
+          "params": [
+            "content",
+            "civ"
+          ]
+        },
+        {
+          "name": "Measure",
+          "startLine": 96,
+          "endLine": 227,
+          "params": [
+            "content",
+            "state"
+          ]
+        },
+        {
+          "name": "Available",
+          "startLine": 234,
+          "endLine": 266,
+          "params": [
+            "content",
+            "civ",
+            "technology"
+          ]
+        },
+        {
+          "name": "CostPercent",
+          "startLine": 269,
+          "endLine": 300,
+          "params": [
+            "content",
+            "state",
+            "facts",
+            "civIndex",
+            "technology"
+          ]
+        },
+        {
+          "name": "Cost",
+          "startLine": 303,
+          "endLine": 307,
+          "params": [
+            "content",
+            "state",
+            "facts",
+            "civIndex",
+            "technology"
+          ]
+        },
+        {
+          "name": "Science",
+          "startLine": 310,
+          "endLine": 330,
+          "params": [
+            "content",
+            "state",
+            "civ",
+            "months"
+          ]
+        },
+        {
+          "name": "Learn",
+          "startLine": 336,
+          "endLine": 364,
+          "params": [
+            "content",
+            "state",
+            "civ",
+            "technology"
+          ]
+        },
+        {
+          "name": "QualifiesForEra",
+          "startLine": 367,
+          "endLine": 389,
+          "params": [
+            "content",
+            "civ",
+            "era"
+          ]
+        },
+        {
+          "name": "KnowsRecipe",
+          "startLine": 392,
+          "endLine": 413,
+          "params": [
+            "content",
+            "civ",
+            "recipe"
+          ]
+        },
+        {
+          "name": "EnsureSize",
+          "startLine": 416,
+          "endLine": 426,
+          "params": [
+            "content",
+            "civ"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "TechBenefits",
+          "startLine": 11,
+          "endLine": 66,
+          "methods": [
+            "TechBenefits",
+            "Empty",
+            "ForDeposit",
+            "ForBiome",
+            "Of"
+          ],
+          "properties": [
+            "None",
+            "_byDeposit",
+            "_byBiome",
+            "FromWater"
+          ]
+        },
+        {
+          "name": "CivFacts",
+          "startLine": 72,
+          "endLine": 228,
+          "methods": [
+            "Measure"
+          ],
+          "properties": [
+            "Deposits",
+            "Biomes",
+            "River",
+            "ColdestWinter",
+            "People",
+            "Goods",
+            "Neighbours"
+          ]
+        },
+        {
+          "name": "Technologies",
+          "startLine": 231,
+          "endLine": 427,
+          "methods": [
+            "Available",
+            "CostPercent",
+            "Cost",
+            "Science",
+            "Learn",
+            "QualifiesForEra",
+            "KnowsRecipe",
+            "EnsureSize"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Empty",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "FromWater",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "ForDeposit",
+          "line": 34,
+          "isDefault": false
+        },
+        {
+          "name": "ForBiome",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "Of",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "TechBenefits",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "Deposits",
+          "line": 75,
+          "isDefault": false
+        },
+        {
+          "name": "Biomes",
+          "line": 78,
+          "isDefault": false
+        },
+        {
+          "name": "River",
+          "line": 81,
+          "isDefault": false
+        },
+        {
+          "name": "ColdestWinter",
+          "line": 84,
+          "isDefault": false
+        },
+        {
+          "name": "People",
+          "line": 87,
+          "isDefault": false
+        },
+        {
+          "name": "Goods",
+          "line": 90,
+          "isDefault": false
+        },
+        {
+          "name": "Neighbours",
+          "line": 93,
+          "isDefault": false
+        },
+        {
+          "name": "Measure",
+          "line": 96,
+          "isDefault": false
+        },
+        {
+          "name": "CivFacts",
+          "line": 72,
+          "isDefault": false
+        },
+        {
+          "name": "Available",
+          "line": 234,
+          "isDefault": false
+        },
+        {
+          "name": "CostPercent",
+          "line": 269,
+          "isDefault": false
+        },
+        {
+          "name": "Cost",
+          "line": 303,
+          "isDefault": false
+        },
+        {
+          "name": "Science",
+          "line": 310,
+          "isDefault": false
+        },
+        {
+          "name": "Learn",
+          "line": 336,
+          "isDefault": false
+        },
+        {
+          "name": "QualifiesForEra",
+          "line": 367,
+          "isDefault": false
+        },
+        {
+          "name": "KnowsRecipe",
+          "line": 392,
+          "isDefault": false
+        },
+        {
+          "name": "EnsureSize",
+          "line": 416,
+          "isDefault": false
+        },
+        {
+          "name": "Technologies",
+          "line": 231,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Empty",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 26
+        },
+        {
+          "caller": "Empty",
+          "callee": "new TechBenefits",
+          "lineNumber": 27
+        },
+        {
+          "caller": "Of",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 44
+        },
+        {
+          "caller": "Of",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 45
+        },
+        {
+          "caller": "Of",
+          "callee": "new TechBenefits",
+          "lineNumber": 46
+        },
+        {
+          "caller": "Of",
+          "callee": "civ.Knows",
+          "lineNumber": 49
+        },
+        {
+          "caller": "Of",
+          "callee": "list.AddRange",
+          "lineNumber": 59
+        },
+        {
+          "caller": "Measure",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 98
+        },
+        {
+          "caller": "Measure",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 99
+        },
+        {
+          "caller": "Measure",
+          "callee": "new CivFacts",
+          "lineNumber": 104
+        },
+        {
+          "caller": "Measure",
+          "callee": "Math.Max",
+          "lineNumber": 108
+        },
+        {
+          "caller": "Measure",
+          "callee": "Array.Fill",
+          "lineNumber": 109
+        },
+        {
+          "caller": "Measure",
+          "callee": "state.IndexOfCivilization",
+          "lineNumber": 119
+        },
+        {
+          "caller": "Measure",
+          "callee": "s.TotalPopulation",
+          "lineNumber": 131
+        },
+        {
+          "caller": "Measure",
+          "callee": "state.Worlds[s.World.Value].Geometry.Index",
+          "lineNumber": 139
+        },
+        {
+          "caller": "Measure",
+          "callee": "Math.Min",
+          "lineNumber": 140
+        },
+        {
+          "caller": "Measure",
+          "callee": "f.Biomes.Add",
+          "lineNumber": 158
+        },
+        {
+          "caller": "Measure",
+          "callee": "f.Deposits.Add",
+          "lineNumber": 161
+        },
+        {
+          "caller": "Measure",
+          "callee": "geo.FromIndex",
+          "lineNumber": 166
+        },
+        {
+          "caller": "Measure",
+          "callee": "geo.EdgeIndex",
+          "lineNumber": 169
+        },
+        {
+          "caller": "Measure",
+          "callee": "geo.Edge",
+          "lineNumber": 169
+        },
+        {
+          "caller": "Measure",
+          "callee": "geo.GetNeighbors",
+          "lineNumber": 174
+        },
+        {
+          "caller": "Measure",
+          "callee": "geo.FromIndex",
+          "lineNumber": 174
+        },
+        {
+          "caller": "Measure",
+          "callee": "geo.Index",
+          "lineNumber": 177
+        },
+        {
+          "caller": "Measure",
+          "callee": "f.Biomes.Add",
+          "lineNumber": 180
+        },
+        {
+          "caller": "Measure",
+          "callee": "f.Deposits.Add",
+          "lineNumber": 183
+        },
+        {
+          "caller": "Measure",
+          "callee": "state.IndexOfCivilization",
+          "lineNumber": 195
+        },
+        {
+          "caller": "Measure",
+          "callee": "state.IndexOfCivilization",
+          "lineNumber": 210
+        },
+        {
+          "caller": "Measure",
+          "callee": "facts[ca].Neighbours.Contains",
+          "lineNumber": 211
+        },
+        {
+          "caller": "Measure",
+          "callee": "geo.Distance",
+          "lineNumber": 211
+        },
+        {
+          "caller": "Measure",
+          "callee": "facts[ca].Neighbours.Add",
+          "lineNumber": 216
+        },
+        {
+          "caller": "Measure",
+          "callee": "facts[cb].Neighbours.Add",
+          "lineNumber": 217
+        },
+        {
+          "caller": "Measure",
+          "callee": "f.Neighbours.Sort",
+          "lineNumber": 223
+        },
+        {
+          "caller": "Available",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 236
+        },
+        {
+          "caller": "Available",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 237
+        },
+        {
+          "caller": "Available",
+          "callee": "civ.Knows",
+          "lineNumber": 238
+        },
+        {
+          "caller": "Available",
+          "callee": "civ.Knows",
+          "lineNumber": 246
+        },
+        {
+          "caller": "Available",
+          "callee": "civ.Knows",
+          "lineNumber": 259
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 271
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 272
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 273
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "f.Deposits.Contains",
+          "lineNumber": 282
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "f.Biomes.Contains",
+          "lineNumber": 283
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "state.Civilizations[n].Knows",
+          "lineNumber": 295
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "Math.Min",
+          "lineNumber": 298
+        },
+        {
+          "caller": "CostPercent",
+          "callee": "Math.Max",
+          "lineNumber": 299
+        },
+        {
+          "caller": "Cost",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 305
+        },
+        {
+          "caller": "Cost",
+          "callee": "CostPercent",
+          "lineNumber": 306
+        },
+        {
+          "caller": "Science",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 312
+        },
+        {
+          "caller": "Science",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 313
+        },
+        {
+          "caller": "Learn",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 338
+        },
+        {
+          "caller": "Learn",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 339
+        },
+        {
+          "caller": "Learn",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 340
+        },
+        {
+          "caller": "Learn",
+          "callee": "new List<string>",
+          "lineNumber": 341
+        },
+        {
+          "caller": "Learn",
+          "callee": "EnsureSize",
+          "lineNumber": 342
+        },
+        {
+          "caller": "Learn",
+          "callee": "state.Effects.Add",
+          "lineNumber": 353
+        },
+        {
+          "caller": "Learn",
+          "callee": "lines.Add",
+          "lineNumber": 356
+        },
+        {
+          "caller": "Learn",
+          "callee": "QualifiesForEra",
+          "lineNumber": 357
+        },
+        {
+          "caller": "Learn",
+          "callee": "lines.Add",
+          "lineNumber": 360
+        },
+        {
+          "caller": "QualifiesForEra",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 369
+        },
+        {
+          "caller": "QualifiesForEra",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 370
+        },
+        {
+          "caller": "QualifiesForEra",
+          "callee": "civ.Knows",
+          "lineNumber": 372
+        },
+        {
+          "caller": "QualifiesForEra",
+          "callee": "civ.Knows",
+          "lineNumber": 384
+        },
+        {
+          "caller": "KnowsRecipe",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 394
+        },
+        {
+          "caller": "KnowsRecipe",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 395
+        },
+        {
+          "caller": "KnowsRecipe",
+          "callee": "civ.Knows",
+          "lineNumber": 398
+        },
+        {
+          "caller": "EnsureSize",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 418
+        },
+        {
+          "caller": "EnsureSize",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 419
+        },
+        {
+          "caller": "EnsureSize",
+          "callee": "Array.Copy",
+          "lineNumber": 423
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 24,
+        "functionCount": 14,
+        "classCount": 3
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Simulation/CalendarSystem.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 72,
+      "nonEmptyLines": 65,
+      "functions": [
+        {
+          "name": "Execute",
+          "startLine": 18,
+          "endLine": 22,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "Execute",
+          "startLine": 32,
+          "endLine": 36,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "Register",
+          "startLine": 43,
+          "endLine": 71,
+          "params": [
+            "runner",
+            "content"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "CalendarSystem",
+          "startLine": 10,
+          "endLine": 23,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "_content",
+            "Phase"
+          ]
+        },
+        {
+          "name": "EffectExpirySystem",
+          "startLine": 26,
+          "endLine": 37,
+          "methods": [
+            "Execute"
+          ],
+          "properties": [
+            "Phase"
+          ]
+        },
+        {
+          "name": "CoreSystems",
+          "startLine": 40,
+          "endLine": 72,
+          "methods": [
+            "Register"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Phase",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "CalendarSystem",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "Phase",
+          "line": 29,
+          "isDefault": false
+        },
+        {
+          "name": "Execute",
+          "line": 32,
+          "isDefault": false
+        },
+        {
+          "name": "EffectExpirySystem",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "Register",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "CoreSystems",
+          "line": 40,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 20
+        },
+        {
+          "caller": "Execute",
+          "callee": "context.State.MonthsPerTurn",
+          "lineNumber": 21
+        },
+        {
+          "caller": "Execute",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 34
+        },
+        {
+          "caller": "Execute",
+          "callee": "context.State.Effects.RemoveExpired",
+          "lineNumber": 35
+        },
+        {
+          "caller": "Register",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 45
+        },
+        {
+          "caller": "Register",
+          "callee": "ArgumentNullException.ThrowIfNull",
+          "lineNumber": 46
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 48
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 49
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 50
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 51
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 52
+        },
+        {
+          "caller": "Register",
+          "callee": "new EffectExpirySystem",
+          "lineNumber": 52
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 53
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 54
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 55
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 56
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 57
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 58
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 59
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 60
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 61
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 62
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 63
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 64
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 65
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddCommandSource",
+          "lineNumber": 66
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddCommandSource",
+          "lineNumber": 67
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 68
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddCommandSource",
+          "lineNumber": 69
+        },
+        {
+          "caller": "Register",
+          "callee": "runner.AddSystem",
+          "lineNumber": 70
+        },
+        {
+          "caller": "Register",
+          "callee": "new CalendarSystem",
+          "lineNumber": 70
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 8,
+        "functionCount": 3,
+        "classCount": 3
+      }
+    },
+    {
+      "path": "src/CivSim.Core/Simulation/GameSnapshot.cs",
+      "language": "csharp",
+      "fileCategory": "code",
+      "totalLines": 118,
+      "nonEmptyLines": 97,
+      "functions": [
+        {
+          "name": "From",
+          "startLine": 22,
+          "endLine": 70,
+          "params": [
+            "state"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "GameSnapshot",
+          "startLine": 10,
+          "endLine": 71,
+          "methods": [
+            "From"
+          ],
+          "properties": [
+            "Month",
+            "LiveSeasons",
+            "Settlements"
+          ]
+        },
+        {
+          "name": "WorldSnapshot",
+          "startLine": 77,
+          "endLine": 77,
+          "methods": [],
+          "properties": []
+        },
+        {
+          "name": "CivilizationSnapshot",
+          "startLine": 80,
+          "endLine": 84,
+          "methods": [],
+          "properties": [
+            "DiedOutMonth"
+          ]
+        },
+        {
+          "name": "SettlementSnapshot",
+          "startLine": 87,
+          "endLine": 118,
+          "methods": [],
+          "properties": [
+            "Population",
+            "Health",
+            "Mood",
+            "FoodGathered",
+            "FoodNeeded",
+            "FoodEaten",
+            "Status",
+            "AbandonedMonth",
+            "ClaimCiv",
+            "ClaimUntilMonth"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Month",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "LiveSeasons",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "Settlements",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "From",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "GameSnapshot",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "WorldSnapshot",
+          "line": 77,
+          "isDefault": false
+        },
+        {
+          "name": "DiedOutMonth",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "CivilizationSnapshot",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "Population",
+          "line": 90,
+          "isDefault": false
+        },
+        {
+          "name": "Health",
+          "line": 93,
+          "isDefault": false
+        },
+        {
+          "name": "Mood",
+          "line": 96,
+          "isDefault": false
+        },
+        {
+          "name": "FoodGathered",
+          "line": 99,
+          "isDefault": false
+        },
+        {
+          "name": "FoodNeeded",
+          "line": 102,
+          "isDefault": false
+        },
+        {
+          "name": "FoodEaten",
+          "line": 105,
+          "isDefault": false
+        },
+        {
+          "name": "Status",
+          "line": 108,
+          "isDefault": false
+        },
+        {
+          "name": "AbandonedMonth",
+          "line": 111,
+          "isDefault": false
+        },
+        {
+          "name": "ClaimCiv",
+          "line": 114,
+          "isDefault": false
+        },
+        {
+          "name": "ClaimUntilMonth",
+          "line": 117,
+          "isDefault": false
+        },
+        {
+          "name": "SettlementSnapshot",
+          "line": 87,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "From",
+          "callee": "ImmutableArray.CreateBuilder<WorldSnapshot>",
+          "lineNumber": 24
+        },
+        {
+          "caller": "From",
+          "callee": "changed.Clear",
+          "lineNumber": 28
+        },
+        {
+          "caller": "From",
+          "callee": "w.Map.Dirty.CopyTo",
+          "lineNumber": 29
+        },
+        {
+          "caller": "From",
+          "callee": "worlds.Add",
+          "lineNumber": 30
+        },
+        {
+          "caller": "From",
+          "callee": "new WorldSnapshot",
+          "lineNumber": 30
+        },
+        {
+          "caller": "From",
+          "callee": "ImmutableArray.CreateBuilder<CivilizationSnapshot>",
+          "lineNumber": 33
+        },
+        {
+          "caller": "From",
+          "callee": "civs.Add",
+          "lineNumber": 36
+        },
+        {
+          "caller": "From",
+          "callee": "new CivilizationSnapshot",
+          "lineNumber": 36
+        },
+        {
+          "caller": "From",
+          "callee": "ImmutableArray.CreateBuilder<SettlementSnapshot>",
+          "lineNumber": 39
+        },
+        {
+          "caller": "From",
+          "callee": "settlements.Add",
+          "lineNumber": 49
+        },
+        {
+          "caller": "From",
+          "callee": "new SettlementSnapshot",
+          "lineNumber": 49
+        },
+        {
+          "caller": "From",
+          "callee": "ImmutableArray.Create",
+          "lineNumber": 49
+        },
+        {
+          "caller": "From",
+          "callee": "ImmutableArray.Create",
+          "lineNumber": 51
+        },
+        {
+          "caller": "From",
+          "callee": "st.PopulationView.ToArray",
+          "lineNumber": 51
+        },
+        {
+          "caller": "From",
+          "callee": "new GameSnapshot",
+          "lineNumber": 64
+        },
+        {
+          "caller": "From",
+          "callee": "worlds.MoveToImmutable",
+          "lineNumber": 64
+        },
+        {
+          "caller": "From",
+          "callee": "civs.MoveToImmutable",
+          "lineNumber": 64
+        },
+        {
+          "caller": "From",
+          "callee": "settlements.MoveToImmutable",
+          "lineNumber": 68
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 19,
+        "functionCount": 1,
+        "classCount": 4
+      }
+    }
+  ]
+}

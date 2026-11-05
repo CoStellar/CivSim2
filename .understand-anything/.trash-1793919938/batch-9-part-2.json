@@ -1,0 +1,1646 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "file",
+   "name": "Amount.cs",
+   "filePath": "src/CivSim.Core/Numerics/Amount.cs",
+   "summary": "Typ Amount: ilość zasobu w setnych częściach jednostki na liczbach całkowitych, z dokładną arytmetyką kontrolującą przepełnienia, parsowaniem i sprawiedliwym podziałem proporcjonalnym.",
+   "tags": [
+    "numerics",
+    "determinizm",
+    "ekonomia",
+    "data-model",
+    "value-type"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Numerics/Amount.cs:Amount",
+   "type": "class",
+   "name": "Amount",
+   "filePath": "src/CivSim.Core/Numerics/Amount.cs",
+   "lineRange": [
+    11,
+    286
+   ],
+   "summary": "Struktura wartości ilości w setnych z dokładną arytmetyką, porównaniami, parsowaniem i podziałem metodą największych reszt.",
+   "tags": [
+    "numerics",
+    "value-type",
+    "ekonomia",
+    "numerics"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/Amount.cs:TryParse",
+   "type": "function",
+   "name": "TryParse",
+   "filePath": "src/CivSim.Core/Numerics/Amount.cs",
+   "lineRange": [
+    66,
+    119
+   ],
+   "summary": "Parsuje tekst dziesiętny z maksymalnie dwiema cyframi po przecinku do Amount.",
+   "tags": [
+    "numerics",
+    "amount",
+    "algorytm"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/Amount.cs:SplitProportionally",
+   "type": "function",
+   "name": "SplitProportionally",
+   "filePath": "src/CivSim.Core/Numerics/Amount.cs",
+   "lineRange": [
+    205,
+    265
+   ],
+   "summary": "Dzieli ilość proporcjonalnie do wag metodą największych reszt tak, by części sumowały się dokładnie.",
+   "tags": [
+    "numerics",
+    "amount",
+    "algorytm"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "type": "file",
+   "name": "FixedLog.cs",
+   "filePath": "src/CivSim.Core/Numerics/FixedLog.cs",
+   "summary": "Deterministyczny logarytm i potęga o podstawie 2 na liczbach w milionowych częściach, używane przez model klimatu (CO₂, wietrzenie skał).",
+   "tags": [
+    "numerics",
+    "fixed-point",
+    "determinizm",
+    "klimat"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Numerics/FixedLog.cs:FixedLog",
+   "type": "class",
+   "name": "FixedLog",
+   "filePath": "src/CivSim.Core/Numerics/FixedLog.cs",
+   "lineRange": [
+    9,
+    115
+   ],
+   "summary": "Statyczna klasa logarytmu i potęgi dwójki w milionowych, z tabelą pierwiastków budowaną raz.",
+   "tags": [
+    "fixed-point",
+    "numerics",
+    "numerics"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/FixedLog.cs:Log2",
+   "type": "function",
+   "name": "Log2",
+   "filePath": "src/CivSim.Core/Numerics/FixedLog.cs",
+   "lineRange": [
+    21,
+    63
+   ],
+   "summary": "Liczy log₂ wartości w milionowych dokładnie na liczbach całkowitych.",
+   "tags": [
+    "numerics",
+    "fixedlog",
+    "algorytm"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/FixedLog.cs:Pow2",
+   "type": "function",
+   "name": "Pow2",
+   "filePath": "src/CivSim.Core/Numerics/FixedLog.cs",
+   "lineRange": [
+    66,
+    101
+   ],
+   "summary": "Liczy 2^x w milionowych z nasyceniem zamiast przepełnienia.",
+   "tags": [
+    "numerics",
+    "fixedlog",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/FixedLog.cs:BuildRoots",
+   "type": "function",
+   "name": "BuildRoots",
+   "filePath": "src/CivSim.Core/Numerics/FixedLog.cs",
+   "lineRange": [
+    103,
+    114
+   ],
+   "summary": "Buduje tabelę kolejnych pierwiastków z 2 używaną przez Pow2.",
+   "tags": [
+    "numerics",
+    "fixedlog",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "type": "file",
+   "name": "FixedTrig.cs",
+   "filePath": "src/CivSim.Core/Numerics/FixedTrig.cs",
+   "summary": "Trygonometria stałoprzecinkowa (sin, cos, asin, acos) oparta na tabeli ćwiartki fali liczonej dokładnym szeregiem Taylora; identyczne wyniki na każdej platformie.",
+   "tags": [
+    "numerics",
+    "fixed-point",
+    "determinizm",
+    "trygonometria"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Numerics/FixedTrig.cs:FixedTrig",
+   "type": "class",
+   "name": "FixedTrig",
+   "filePath": "src/CivSim.Core/Numerics/FixedTrig.cs",
+   "lineRange": [
+    10,
+    127
+   ],
+   "summary": "Statyczna trygonometria stałoprzecinkowa z tabelą ćwiartki fali i odwrotnymi funkcjami przez wyszukiwanie binarne.",
+   "tags": [
+    "fixed-point",
+    "trygonometria",
+    "numerics"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/FixedTrig.cs:Sin",
+   "type": "function",
+   "name": "Sin",
+   "filePath": "src/CivSim.Core/Numerics/FixedTrig.cs",
+   "lineRange": [
+    36,
+    48
+   ],
+   "summary": "Sinus kąta w częściach pełnego obrotu, z tabeli ćwiartki fali.",
+   "tags": [
+    "numerics",
+    "fixedtrig",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/FixedTrig.cs:Asin",
+   "type": "function",
+   "name": "Asin",
+   "filePath": "src/CivSim.Core/Numerics/FixedTrig.cs",
+   "lineRange": [
+    54,
+    69
+   ],
+   "summary": "Arcus sinus wartości stałoprzecinkowej, przycięty do ±1.",
+   "tags": [
+    "numerics",
+    "fixedtrig",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/FixedTrig.cs:FirstAtLeast",
+   "type": "function",
+   "name": "FirstAtLeast",
+   "filePath": "src/CivSim.Core/Numerics/FixedTrig.cs",
+   "lineRange": [
+    72,
+    90
+   ],
+   "summary": "Wyszukiwanie binarne pierwszego kąta w tabeli o sinusie nie mniejszym niż wartość.",
+   "tags": [
+    "numerics",
+    "fixedtrig",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/FixedTrig.cs:BuildQuarter",
+   "type": "function",
+   "name": "BuildQuarter",
+   "filePath": "src/CivSim.Core/Numerics/FixedTrig.cs",
+   "lineRange": [
+    103,
+    126
+   ],
+   "summary": "Buduje tabelę ćwiartki sinusa dokładnym całkowitym szeregiem Taylora.",
+   "tags": [
+    "numerics",
+    "fixedtrig",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "file",
+   "name": "IntMath.cs",
+   "filePath": "src/CivSim.Core/Numerics/IntMath.cs",
+   "summary": "Dokładne pomocnicze operacje całkowitoliczbowe: mnożenie z dzieleniem bez przepełnienia, dzielenie z jawnym zaokrąglaniem i pierwiastki całkowite (także 128-bitowe).",
+   "tags": [
+    "numerics",
+    "utility",
+    "determinizm",
+    "integer-math"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Numerics/IntMath.cs:IntMath",
+   "type": "class",
+   "name": "IntMath",
+   "filePath": "src/CivSim.Core/Numerics/IntMath.cs",
+   "lineRange": [
+    6,
+    126
+   ],
+   "summary": "Statyczne operacje całkowitoliczbowe z jawnym zaokrąglaniem i bez liczb zmiennoprzecinkowych.",
+   "tags": [
+    "integer-math",
+    "utility",
+    "numerics"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/IntMath.cs:MulDiv",
+   "type": "function",
+   "name": "MulDiv",
+   "filePath": "src/CivSim.Core/Numerics/IntMath.cs",
+   "lineRange": [
+    14,
+    23
+   ],
+   "summary": "Liczy value×numerator/denominator bez pośredniego przepełnienia, z wybranym zaokrągleniem.",
+   "tags": [
+    "numerics",
+    "intmath",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/IntMath.cs:Divide",
+   "type": "function",
+   "name": "Divide",
+   "filePath": "src/CivSim.Core/Numerics/IntMath.cs",
+   "lineRange": [
+    36,
+    65
+   ],
+   "summary": "Dzielenie 128-bitowe z jawnym trybem zaokrąglania.",
+   "tags": [
+    "numerics",
+    "intmath",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/IntMath.cs:Sqrt",
+   "type": "function",
+   "name": "Sqrt",
+   "filePath": "src/CivSim.Core/Numerics/IntMath.cs",
+   "lineRange": [
+    68,
+    98
+   ],
+   "summary": "Całkowity pierwiastek kwadratowy liczby 64-bitowej bez liczb zmiennoprzecinkowych.",
+   "tags": [
+    "numerics",
+    "intmath",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Numerics/IntMath.cs:Sqrt(Int128)",
+   "type": "function",
+   "name": "Sqrt(Int128)",
+   "filePath": "src/CivSim.Core/Numerics/IntMath.cs",
+   "lineRange": [
+    101,
+    125
+   ],
+   "summary": "Całkowity pierwiastek liczby 128-bitowej metodą Newtona.",
+   "tags": [
+    "numerics",
+    "intmath",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/Numerics/Rounding.cs",
+   "type": "file",
+   "name": "Rounding.cs",
+   "filePath": "src/CivSim.Core/Numerics/Rounding.cs",
+   "summary": "Enum trybów zaokrąglania dzielenia całkowitego, wymagany jawnie przez wszystkie operacje numeryczne rdzenia.",
+   "tags": [
+    "numerics",
+    "type-definition",
+    "determinizm"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "type": "file",
+   "name": "MapMemory.cs",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "summary": "Pamięć mapy cywilizacji (GDD 8): osady widzą okolicę, zwiadowcy odkrywają teren, wiedza wygasa po latach ustnej pamięci. Zawiera też wyszukiwanie ścieżek po znanych polach, fazę percepcji oraz komendę i system wędrówek obozów.",
+   "tags": [
+    "percepcja",
+    "mgla-wojny",
+    "pathfinding",
+    "command",
+    "turn-system"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Perception/MapMemory.cs:MapMemory",
+   "type": "class",
+   "name": "MapMemory",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    18,
+    148
+   ],
+   "summary": "Operacje pamięci mapy: widzenie wokół osad, zwiad, sprawdzanie wiedzy o polach, przechodniość i ścieżki.",
+   "tags": [
+    "percepcja",
+    "mgla-wojny",
+    "mapa",
+    "perception"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Perception/MapMemory.cs:PathFinder",
+   "type": "class",
+   "name": "PathFinder",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    151,
+    218
+   ],
+   "summary": "Wyszukiwanie wszerz po znanych, przechodnich polach z buforami ponownie używanymi między wyszukiwaniami.",
+   "tags": [
+    "pathfinding",
+    "bfs",
+    "wydajnosc",
+    "perception"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Perception/MapMemory.cs:PerceptionSystem",
+   "type": "class",
+   "name": "PerceptionSystem",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    221,
+    235
+   ],
+   "summary": "System fazy percepcji odświeżający pamięć mapy na podstawie tego, co widzą osady.",
+   "tags": [
+    "turn-system",
+    "percepcja",
+    "perception"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneyCommand",
+   "type": "class",
+   "name": "JourneyCommand",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    241,
+    287
+   ],
+   "summary": "Komenda wysyłająca obóz w wieloturową wędrówkę do znanego, odległego miejsca, z walidacją celu.",
+   "tags": [
+    "command",
+    "ruch",
+    "walidacja",
+    "perception"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneySystem",
+   "type": "class",
+   "name": "JourneySystem",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    294,
+    364
+   ],
+   "summary": "System prowadzący trwające wędrówki najkrótszą znaną drogą, zatrzymujący je przed zamieszkanymi polami lub gdy droga zniknie.",
+   "tags": [
+    "turn-system",
+    "ruch",
+    "pathfinding",
+    "perception"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:See",
+   "type": "function",
+   "name": "See",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    21,
+    56
+   ],
+   "summary": "Oznacza pola widziane w tym roku przez każdą zamieszkaną osadę.",
+   "tags": [
+    "perception",
+    "mapmemory",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:Scout",
+   "type": "function",
+   "name": "Scout",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    63,
+    105
+   ],
+   "summary": "Każda zamieszkana osada wysyła zwiadowcę w losowym kierunku, który odkrywa pola na swojej drodze.",
+   "tags": [
+    "perception",
+    "mapmemory",
+    "algorytm"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:Knows",
+   "type": "function",
+   "name": "Knows",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    108,
+    119
+   ],
+   "summary": "Sprawdza, czy cywilizacja zna teraz pole (widziane i jeszcze niezapomniane).",
+   "tags": [
+    "perception",
+    "mapmemory",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:KnownCells",
+   "type": "function",
+   "name": "KnownCells",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    122,
+    132
+   ],
+   "summary": "Zwraca tablicę wszystkich pól Ziemi znanych cywilizacji.",
+   "tags": [
+    "perception",
+    "mapmemory",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:Find",
+   "type": "function",
+   "name": "Find",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    163,
+    217
+   ],
+   "summary": "Najkrótsza droga po znanych przechodnich polach, z ponownie używaną listą wyniku.",
+   "tags": [
+    "perception",
+    "pathfinder",
+    "algorytm"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:Validate",
+   "type": "function",
+   "name": "Validate",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    247,
+    272
+   ],
+   "summary": "Sprawdza komendę wędrówki: własność osady, znany i osiągalny cel.",
+   "tags": [
+    "perception",
+    "journeycommand",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    303,
+    350
+   ],
+   "summary": "Przesuwa wędrujące obozy po znanej drodze, przenosząc dobra i kończąc wędrówki.",
+   "tags": [
+    "perception",
+    "journeysystem",
+    "algorytm"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Perception/MapMemory.cs:Lived",
+   "type": "function",
+   "name": "Lived",
+   "filePath": "src/CivSim.Core/Perception/MapMemory.cs",
+   "lineRange": [
+    352,
+    363
+   ],
+   "summary": "Sprawdza, czy na polu mieszka inna osada (blokada wędrówki).",
+   "tags": [
+    "perception",
+    "journeysystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Population/Influence.cs",
+   "type": "file",
+   "name": "Influence.cs",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "summary": "Strefy wpływów osad: rozchodzenie się wpływu po koszcie ruchu z zasięgiem zależnym od wojowników, rozstrzyganie konfliktów i system przeliczający strefy w fazie nauki oraz po ruchach obozów.",
+   "tags": [
+    "populacja",
+    "wplywy",
+    "turn-system",
+    "mapa"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Population/Influence.cs:Influence",
+   "type": "class",
+   "name": "Influence",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    16,
+    175
+   ],
+   "summary": "Liczy strefy wpływów osad: zasięg, koszt wejścia na pole i rozprzestrzenianie z rozstrzyganiem remisów po identyfikatorze.",
+   "tags": [
+    "wplywy",
+    "mapa",
+    "algorytm",
+    "population"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Population/Influence.cs:InfluenceSystem",
+   "type": "class",
+   "name": "InfluenceSystem",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    181,
+    212
+   ],
+   "summary": "System przeliczający strefy wpływów w fazie nauki albo w fazie ruchu, gdy jakaś osada się przesunęła.",
+   "tags": [
+    "turn-system",
+    "wplywy",
+    "population"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/Influence.cs:RangeOf",
+   "type": "function",
+   "name": "RangeOf",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    35,
+    49
+   ],
+   "summary": "Zasięg wpływu osady w koszcie ruchu: baza plus punkt za każdą grupę wojowników.",
+   "tags": [
+    "population",
+    "influence",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/Influence.cs:EnterCost",
+   "type": "function",
+   "name": "EnterCost",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    52,
+    67
+   ],
+   "summary": "Koszt wejścia wpływu na pole; -1 dla wody.",
+   "tags": [
+    "population",
+    "influence",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/Influence.cs:Recompute",
+   "type": "function",
+   "name": "Recompute",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    79,
+    117
+   ],
+   "summary": "Przelicza od nowa strefy wpływów wszystkich osad świata.",
+   "tags": [
+    "population",
+    "influence",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/Influence.cs:Spread",
+   "type": "function",
+   "name": "Spread",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    120,
+    174
+   ],
+   "summary": "Rozprzestrzenia wpływ jednej osady po koszcie ruchu, przejmując pola od słabszych.",
+   "tags": [
+    "population",
+    "influence",
+    "algorytm"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/Influence.cs:Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    189,
+    198
+   ],
+   "summary": "Uruchamia przeliczenie wpływów w swojej fazie, w fazie ruchu tylko gdy osady się przesunęły.",
+   "tags": [
+    "population",
+    "influencesystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/Influence.cs:AnySettlementMoved",
+   "type": "function",
+   "name": "AnySettlementMoved",
+   "filePath": "src/CivSim.Core/Population/Influence.cs",
+   "lineRange": [
+    200,
+    211
+   ],
+   "summary": "Sprawdza w komendach tury, czy jakaś osada się przesunęła lub podzieliła.",
+   "tags": [
+    "population",
+    "influencesystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "target": "class:src/CivSim.Core/Numerics/Amount.cs:Amount",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "target": "class:src/CivSim.Core/Numerics/Amount.cs:Amount",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "target": "function:src/CivSim.Core/Numerics/Amount.cs:TryParse",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/Amount.cs:Amount",
+   "target": "function:src/CivSim.Core/Numerics/Amount.cs:TryParse",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "target": "function:src/CivSim.Core/Numerics/Amount.cs:SplitProportionally",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/Amount.cs:Amount",
+   "target": "function:src/CivSim.Core/Numerics/Amount.cs:SplitProportionally",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "target": "file:src/CivSim.Core/Numerics/Rounding.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "target": "class:src/CivSim.Core/Numerics/FixedLog.cs:FixedLog",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "target": "class:src/CivSim.Core/Numerics/FixedLog.cs:FixedLog",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "target": "function:src/CivSim.Core/Numerics/FixedLog.cs:Log2",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/FixedLog.cs:FixedLog",
+   "target": "function:src/CivSim.Core/Numerics/FixedLog.cs:Log2",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "target": "function:src/CivSim.Core/Numerics/FixedLog.cs:Pow2",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/FixedLog.cs:FixedLog",
+   "target": "function:src/CivSim.Core/Numerics/FixedLog.cs:Pow2",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "target": "function:src/CivSim.Core/Numerics/FixedLog.cs:BuildRoots",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/FixedLog.cs:FixedLog",
+   "target": "function:src/CivSim.Core/Numerics/FixedLog.cs:BuildRoots",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedLog.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "target": "class:src/CivSim.Core/Numerics/FixedTrig.cs:FixedTrig",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "target": "class:src/CivSim.Core/Numerics/FixedTrig.cs:FixedTrig",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:Sin",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/FixedTrig.cs:FixedTrig",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:Sin",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:Asin",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/FixedTrig.cs:FixedTrig",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:Asin",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:FirstAtLeast",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/FixedTrig.cs:FixedTrig",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:FirstAtLeast",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:BuildQuarter",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/FixedTrig.cs:FixedTrig",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:BuildQuarter",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/FixedTrig.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "class:src/CivSim.Core/Numerics/IntMath.cs:IntMath",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "class:src/CivSim.Core/Numerics/IntMath.cs:IntMath",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:MulDiv",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/IntMath.cs:IntMath",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:MulDiv",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:Divide",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/IntMath.cs:IntMath",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:Divide",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:Sqrt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/IntMath.cs:IntMath",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:Sqrt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:Sqrt(Int128)",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Numerics/IntMath.cs:IntMath",
+   "target": "function:src/CivSim.Core/Numerics/IntMath.cs:Sqrt(Int128)",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "target": "file:src/CivSim.Core/Numerics/Rounding.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:MapMemory",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:MapMemory",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:PathFinder",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:PathFinder",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:PerceptionSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:PerceptionSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneyCommand",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneyCommand",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneySystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneySystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:See",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:MapMemory",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:See",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Scout",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:MapMemory",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Scout",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Knows",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:MapMemory",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Knows",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:KnownCells",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:MapMemory",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:KnownCells",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Find",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:PathFinder",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Find",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Validate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneyCommand",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Validate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneySystem",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Lived",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneySystem",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Lived",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandCategory.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandResult.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Commands/ICommand.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Commands/SettlementCommands.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Map/HexDirection.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Random/RandomStreamId.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnContext.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnPhase.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "target": "file:src/CivSim.Core/WorldGen/WorldType.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "class:src/CivSim.Core/Population/Influence.cs:Influence",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "class:src/CivSim.Core/Population/Influence.cs:Influence",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "class:src/CivSim.Core/Population/Influence.cs:InfluenceSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "class:src/CivSim.Core/Population/Influence.cs:InfluenceSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:RangeOf",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/Influence.cs:Influence",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:RangeOf",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:EnterCost",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/Influence.cs:Influence",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:EnterCost",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:Recompute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/Influence.cs:Influence",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:Recompute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:Spread",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/Influence.cs:Influence",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:Spread",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/Influence.cs:InfluenceSystem",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:AnySettlementMoved",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/Influence.cs:InfluenceSystem",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:AnySettlementMoved",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandCategory.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Commands/CommandEnvelope.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Content/BiomeDefinition.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnContext.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnPhase.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/Influence.cs",
+   "target": "file:src/CivSim.Core/State/WorldState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:PerceptionSystem",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneySystem",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneyCommand",
+   "target": "file:src/CivSim.Core/Commands/ICommand.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/CivSim.Core/Perception/MapMemory.cs:JourneyCommand",
+   "target": "file:src/CivSim.Core/Commands/SettlementCommands.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/Influence.cs:InfluenceSystem",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "function:src/CivSim.Core/Perception/MapMemory.cs:Execute",
+   "target": "function:src/CivSim.Core/Perception/MapMemory.cs:Find",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Perception/MapMemory.cs:Execute",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Relocate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Population/Influence.cs:Recompute",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:Spread",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Population/Influence.cs:Spread",
+   "target": "function:src/CivSim.Core/Population/Influence.cs:EnterCost",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Numerics/FixedTrig.cs:Asin",
+   "target": "function:src/CivSim.Core/Numerics/FixedTrig.cs:FirstAtLeast",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

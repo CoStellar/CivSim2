@@ -1,0 +1,1835 @@
+{
+ "scriptCompleted": true,
+ "entryPointCandidates": [
+  {
+   "id": "document:README.md",
+   "score": 5,
+   "name": "README.md",
+   "summary": "Angielski opis projektu CivSim 2: turowy symulator rozwoju gospodarczego 4X na heksagonalnej planecie, tabela etapów 0–12 z kryteriami ukończenia, instrukcja startu (.NET 10, Godot 4.7.2), stos technologiczny i układ repozytorium.",
+   "type": "document"
+  },
+  {
+   "id": "file:src/CivSim.Headless/Program.cs",
+   "score": 3,
+   "name": "Program.cs",
+   "summary": "Punkt wejścia aplikacji CivSim.Headless: parsuje argumenty, uruchamia przebieg bez okna i wypisuje podsumowanie (hash, czasy, świat).",
+   "type": "file"
+  },
+  {
+   "id": "document:CLAUDE.md",
+   "score": 2,
+   "name": "CLAUDE.md",
+   "summary": "Instrukcje pracy dla Claude Code w repo CivSim 2: zakres (tylko CORE z GDD rozdz. 16), role, języki, przebieg sesji i PR, twarde zasady architektury (rdzeń bez grafiki, komendy, determinizm, dane w JSON, klient–serwer, HexGlobe), struktura repo, cele wydajności i użycie Understand Anything.",
+   "type": "document"
+  },
+  {
+   "id": "document:ROADMAP.md",
+   "score": 2,
+   "name": "ROADMAP.md",
+   "summary": "Roadmapa po polsku z listami zadań (checkboxy) i kryteriami „Gotowe” dla etapów 0–5+ (fundamenty, mapa-kula, gwiazda i klimat, podgląd Godot, gospodarka i ludność, AI i dyplomacja); wskazuje etap 3 jako zamknięty i etap 4 jako następny.",
+   "type": "document"
+  },
+  {
+   "id": "file:.gitattributes",
+   "score": 2,
+   "name": ".gitattributes",
+   "summary": "Reguły Git dla całego repo: normalizacja końców linii do LF (CRLF dla .sln), diff C# dla .cs oraz oznaczenie grafik i dźwięków jako plików binarnych; zawiera wskazówkę o Git LFS dla grafu wiedzy.",
+   "type": "file"
+  }
+ ],
+ "fanInRanking": [
+  {
+   "id": "file:src/CivSim.Core/State/GameState.cs",
+   "fanIn": 44,
+   "name": "GameState.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Content/GameContent.cs",
+   "fanIn": 43,
+   "name": "GameContent.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/HexGlobe.cs",
+   "fanIn": 32,
+   "name": "HexGlobe.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "fanIn": 29,
+   "name": "HexCoord.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "fanIn": 28,
+   "name": "Amount.cs"
+  },
+  {
+   "id": "file:src/CivSim.Data/ContentLoader.cs",
+   "fanIn": 28,
+   "name": "ContentLoader.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Map/WorldMap.cs",
+   "fanIn": 27,
+   "name": "WorldMap.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/SettlementState.cs",
+   "fanIn": 20,
+   "name": "SettlementState.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "fanIn": 19,
+   "name": "ITurnSystem.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/GameSettings.cs",
+   "fanIn": 19,
+   "name": "GameSettings.cs"
+  },
+  {
+   "id": "document:docs/systems/README.md",
+   "fanIn": 17,
+   "name": "README.md"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "fanIn": 17,
+   "name": "CivilizationState.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/Ids.cs",
+   "fanIn": 17,
+   "name": "Ids.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/WorldState.cs",
+   "fanIn": 17,
+   "name": "WorldState.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/WorldGen/Planet.cs",
+   "fanIn": 17,
+   "name": "Planet.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "fanIn": 16,
+   "name": "TurnRunner.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Simulation/TurnPhase.cs",
+   "fanIn": 15,
+   "name": "TurnPhase.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "fanIn": 13,
+   "name": "CommandQueue.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Commands/ICommand.cs",
+   "fanIn": 12,
+   "name": "ICommand.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "fanIn": 12,
+   "name": "IntMath.cs"
+  }
+ ],
+ "fanOutRanking": [
+  {
+   "id": "file:src/CivSim.Server/GameServer.cs",
+   "fanOut": 28,
+   "name": "GameServer.cs"
+  },
+  {
+   "id": "file:src/CivSim.Headless/HeadlessRun.cs",
+   "fanOut": 27,
+   "name": "HeadlessRun.cs"
+  },
+  {
+   "id": "config:tests/CivSim.Tests/CivSim.Tests.csproj",
+   "fanOut": 25,
+   "name": "CivSim.Tests.csproj"
+  },
+  {
+   "id": "file:src/CivSim.Core/WorldGen/WorldGenerator.cs",
+   "fanOut": 23,
+   "name": "WorldGenerator.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Perception/MapMemory.cs",
+   "fanOut": 22,
+   "name": "MapMemory.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Simulation/CalendarSystem.cs",
+   "fanOut": 21,
+   "name": "CalendarSystem.cs"
+  },
+  {
+   "id": "file:src/CivSim.Server/Saves/SaveGameSerializer.cs",
+   "fanOut": 17,
+   "name": "SaveGameSerializer.cs"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs",
+   "fanOut": 17,
+   "name": "TradeProductionTests.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Population/Influence.cs",
+   "fanOut": 16,
+   "name": "Influence.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/WorldGen/ClimateSystem.cs",
+   "fanOut": 16,
+   "name": "ClimateSystem.cs"
+  },
+  {
+   "id": "document:data/README.md",
+   "fanOut": 15,
+   "name": "README.md"
+  },
+  {
+   "id": "document:docs/decisions/README.md",
+   "fanOut": 15,
+   "name": "README.md"
+  },
+  {
+   "id": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "fanOut": 15,
+   "name": "PopulationSystem.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Research/Technologies.cs",
+   "fanOut": 15,
+   "name": "Technologies.cs"
+  },
+  {
+   "id": "file:tests/CivSim.Tests/Population/MigrationTests.cs",
+   "fanOut": 15,
+   "name": "MigrationTests.cs"
+  },
+  {
+   "id": "document:docs/systems/worldgen.md",
+   "fanOut": 14,
+   "name": "worldgen.md"
+  },
+  {
+   "id": "file:src/CivSim.Core/Research/ResearchSystem.cs",
+   "fanOut": 14,
+   "name": "ResearchSystem.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/Simulation/TurnRunner.cs",
+   "fanOut": 14,
+   "name": "TurnRunner.cs"
+  },
+  {
+   "id": "file:src/CivSim.Core/State/GameState.cs",
+   "fanOut": 14,
+   "name": "GameState.cs"
+  },
+  {
+   "id": "file:src/CivSim.Server/LocalServerHost.cs",
+   "fanOut": 14,
+   "name": "LocalServerHost.cs"
+  }
+ ],
+ "bfsTraversal": {
+  "startNode": "file:src/CivSim.Headless/Program.cs",
+  "order": [
+   "file:src/CivSim.Headless/Program.cs",
+   "file:src/CivSim.Headless/HeadlessOptions.cs",
+   "file:src/CivSim.Headless/HeadlessRun.cs",
+   "file:src/CivSim.Core/WorldGen/WorldValidator.cs",
+   "file:src/CivSim.Data/ContentLoader.cs"
+  ],
+  "depthMap": {
+   "file:src/CivSim.Headless/Program.cs": 0,
+   "file:src/CivSim.Headless/HeadlessOptions.cs": 1,
+   "file:src/CivSim.Headless/HeadlessRun.cs": 1,
+   "file:src/CivSim.Core/WorldGen/WorldValidator.cs": 2,
+   "file:src/CivSim.Data/ContentLoader.cs": 2
+  },
+  "byDepth": {
+   "0": [
+    "file:src/CivSim.Headless/Program.cs"
+   ],
+   "1": [
+    "file:src/CivSim.Headless/HeadlessOptions.cs",
+    "file:src/CivSim.Headless/HeadlessRun.cs"
+   ],
+   "2": [
+    "file:src/CivSim.Core/WorldGen/WorldValidator.cs",
+    "file:src/CivSim.Data/ContentLoader.cs"
+   ]
+  }
+ },
+ "nonCodeFiles": {
+  "documentation": [
+   {
+    "id": "document:CLAUDE.md",
+    "name": "CLAUDE.md",
+    "type": "document",
+    "summary": "Instrukcje pracy dla Claude Code w repo CivSim 2: zakres (tylko CORE z GDD rozdz. 16), role, języki, przebieg sesji i PR, twarde zasady architektury (rdzeń bez grafiki, komendy, determinizm, dane w JSON, klient–serwer, HexGlobe), struktura repo, cele wydajności i użycie Understand Anything."
+   },
+   {
+    "id": "document:README.md",
+    "name": "README.md",
+    "type": "document",
+    "summary": "Angielski opis projektu CivSim 2: turowy symulator rozwoju gospodarczego 4X na heksagonalnej planecie, tabela etapów 0–12 z kryteriami ukończenia, instrukcja startu (.NET 10, Godot 4.7.2), stos technologiczny i układ repozytorium."
+   },
+   {
+    "id": "document:ROADMAP.md",
+    "name": "ROADMAP.md",
+    "type": "document",
+    "summary": "Roadmapa po polsku z listami zadań (checkboxy) i kryteriami „Gotowe” dla etapów 0–5+ (fundamenty, mapa-kula, gwiazda i klimat, podgląd Godot, gospodarka i ludność, AI i dyplomacja); wskazuje etap 3 jako zamknięty i etap 4 jako następny."
+   },
+   {
+    "id": "document:data/README.md",
+    "name": "README.md",
+    "type": "document",
+    "summary": "Opis katalogu z zawartością gry w JSON: zasada danych walidowanych przy ładowaniu oraz tabela planowanych plików z ich treścią i etapem wprowadzenia."
+   },
+   {
+    "id": "document:docs/decisions/0001-silnik-godot-csharp.md",
+    "name": "0001-silnik-godot-csharp.md",
+    "type": "document",
+    "summary": "ADR 0001: wybór silnika Godot 4 w wersji .NET i całej logiki w C#; uzasadnia odrzucenie Pythona, Javy, C++ i Unity oraz rezygnację z eksportu do przeglądarki."
+   },
+   {
+    "id": "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md",
+    "name": "0002-rdzen-oddzielony-od-wyswietlania.md",
+    "type": "document",
+    "summary": "ADR 0002: rdzeń CivSim.Core nie zależy od Godota, działa na osobnym wątku, przyjmuje komendy i publikuje niezmienne migawki stanu rysowane przez klienta."
+   },
+   {
+    "id": "document:docs/decisions/0003-determinizm.md",
+    "name": "0003-determinizm.md",
+    "type": "document",
+    "summary": "ADR 0003: determinizm symulacji przez własny PRNG ze strumieniami na system, ekonomię na liczbach całkowitych, stałą kolejność iteracji i test hasha stanu w każdym PR."
+   },
+   {
+    "id": "document:docs/decisions/0004-mapa-hex-torus.md",
+    "name": "0004-mapa-hex-torus.md",
+    "type": "document",
+    "summary": "ADR 0004: mapa z heksów flat-top we współrzędnych osiowych, fragmenty 32×32 i wiele światów; część o zawijaniu na torusie zastąpiona przez ADR 0012."
+   },
+   {
+    "id": "document:docs/decisions/0005-zawartosc-w-json.md",
+    "name": "0005-zawartosc-w-json.md",
+    "type": "document",
+    "summary": "ADR 0005: cała zawartość gry (technologie, zasoby, budynki, zdarzenia) w plikach data/*.json walidowanych przy starcie, kod zna tylko mechanizmy."
+   },
+   {
+    "id": "document:docs/decisions/0006-jezyk-angielski.md",
+    "name": "0006-jezyk-angielski.md",
+    "type": "document",
+    "summary": "ADR 0006: gra, dane, kod i commity wyłącznie po angielsku, dokumentacja projektowa po polsku; bez systemu tłumaczeń na start."
+   },
+   {
+    "id": "document:docs/decisions/0007-religia-poza-zakresem.md",
+    "name": "0007-religia-poza-zakresem.md",
+    "type": "document",
+    "summary": "ADR 0007: usunięcie religii z wersji podstawowej (teokrację zastępuje oligarchia, technologię Wierzenia zastępują Tradycje); religia może wrócić jako moduł."
+   },
+   {
+    "id": "document:docs/decisions/0008-gotowosc-na-multiplayer.md",
+    "name": "0008-gotowosc-na-multiplayer.md",
+    "type": "document",
+    "summary": "ADR 0008: gra od etapu 0 działa jako klient i autorytatywny serwer z transportem w pamięci; klient zależy tylko od CivSim.Protocol i dostaje widok filtrowany mgłą wojny (odrzucony lockstep)."
+   },
+   {
+    "id": "document:docs/decisions/0009-zakres-core.md",
+    "name": "0009-zakres-core.md",
+    "type": "document",
+    "summary": "ADR 0009: bieżący plan obejmuje tylko funkcje CORE i CORE (uproszczone) z rozdziału 16 GDD; moduły to przyszłe aktualizacje, a kultura jest usunięta całkowicie."
+   },
+   {
+    "id": "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md",
+    "name": "0010-klient-uruchamia-serwer-lokalny.md",
+    "type": "document",
+    "summary": "ADR 0010: klient Godota uruchamia serwer przez LocalServerHost i LocalGameOptions, a Core i Data są kopiowane bez referencji kompilacji, więc kompilator pilnuje granicy klient–serwer."
+   },
+   {
+    "id": "document:docs/decisions/0011-czas-gry-w-miesiacach.md",
+    "name": "0011-czas-gry-w-miesiacach.md",
+    "type": "document",
+    "summary": "ADR 0011: czas gry jako liczba miesięcy (GameState.Month) zwiększana przez CalendarSystem o monthsPerTurn z eras.json; efekty mają miesiąc końca, a tempa są przeliczane z wartości rocznych."
+   },
+   {
+    "id": "document:docs/decisions/0012-mapa-kula.md",
+    "name": "0012-mapa-kula.md",
+    "type": "document",
+    "summary": "ADR 0012: mapa jako walec heksów z przejściem przez bieguny na drugą stronę planety, szerokość 4k+2 i rzędy o równej powierzchni; wszystkie sąsiedztwa przez moduł HexGlobe."
+   },
+   {
+    "id": "document:docs/decisions/0013-dwa-zegary.md",
+    "name": "0013-dwa-zegary.md",
+    "type": "document",
+    "summary": "ADR 0013: krok świata zależny od długości roku planety (żywe pory roku w SeasonSystem, np. dla Urana) oraz rzadsze wolne decyzje AI (GameState.IsDecisionTurn) i ocena komfortu temperatury."
+   },
+   {
+    "id": "document:docs/decisions/0014-model-klimatu.md",
+    "name": "0014-model-klimatu.md",
+    "type": "document",
+    "summary": "ADR 0014: fizyczny model klimatu: gwiazda i orbita z praw Keplera (StarOrbit), bilans energii Budyko–Sellersa w pasach (EnergyBalance) i cykl węglanowo-krzemianowy (CarbonCycle) z kalibracją do Ziemi i presetami planet."
+   },
+   {
+    "id": "document:docs/decisions/0015-epoki-lodowe.md",
+    "name": "0015-epoki-lodowe.md",
+    "type": "document",
+    "summary": "ADR 0015: epoki lodowe z cykli Milankovicia (ClimateCycles) i modelu lądolodów Paillarda, przeliczanie klimatu co 500 lat (ClimateSystem), zmiany poziomu morza, lód morski i zalewanie osad."
+   },
+   {
+    "id": "document:docs/decisions/README.md",
+    "name": "README.md",
+    "type": "document",
+    "summary": "Indeks decyzji architektonicznych (ADR) z zasadami ich prowadzenia: numerowane pliki, nowe decyzje zastępują stare bez ich usuwania; lista ADR 0001–0015."
+   },
+   {
+    "id": "document:docs/prompts/01-pierwsza-sesja.md",
+    "name": "01-pierwsza-sesja.md",
+    "type": "document",
+    "summary": "Gotowy prompt na pierwszą sesję Claude Code: każe przeczytać CLAUDE.md, ROADMAP.md, GDD i ADR-y, a potem przedstawić streszczenie, plan etapu 0, wybór wersji .NET/Godota i pluginu Understand Anything, bez pisania kodu."
+   },
+   {
+    "id": "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md",
+    "name": "02-etap-1c-gwiazda-atmosfera.md",
+    "type": "document",
+    "summary": "Dokument przekazania pracy dla etapu 1c: stan prac, zaakceptowane decyzje Patryka (gwiazda i orbita z praw Keplera, strefa zamieszkiwalna, atmosfera, model bilansu energii Budyko–Sellers, cykle Milankovicia, epoki lodowe), plan trzech PR-ów i prompt na nową sesję."
+   },
+   {
+    "id": "document:docs/prompts/03-etap-4-ai-dyplomacja.md",
+    "name": "03-etap-4-ai-dyplomacja.md",
+    "type": "document",
+    "summary": "Dokument przekazania pracy na start etapu 4 (AI i dyplomacja): co już działa, opis obecnej AI (TribeAi, EconomyAi, ResearchAi) i jej ograniczeń, proponowany podział na PR-y 4a–4g, pytania do Patryka z rekomendacjami, pułapki techniczne i prompt na nową sesję."
+   },
+   {
+    "id": "document:docs/systems/README.md",
+    "name": "README.md",
+    "type": "document",
+    "summary": "Szablon i zasady pisania opisów systemów rdzenia: każdy plik ma streszczenie w jednym zdaniu, dane wejściowe i wyjściowe, diagram Mermaid i odnośniki do testów."
+   },
+   {
+    "id": "document:docs/systems/client-server.md",
+    "name": "client-server.md",
+    "type": "document",
+    "summary": "Opis architektury klient–serwer: lokalny serwer w tym samym procesie, transport w pamięci, wiadomości protokołu (MessagePack), sprawdzanie komend, filtrowany widok gracza i zapisy gry."
+   },
+   {
+    "id": "document:docs/systems/determinism.md",
+    "name": "determinism.md",
+    "type": "document",
+    "summary": "Opisuje zasady determinizmu: własny PRNG z osobnymi strumieniami, całkowitoliczbowy typ Amount, stała kolejność iteracji i hash stanu sprawdzany w testach."
+   },
+   {
+    "id": "document:docs/systems/economy-trade.md",
+    "name": "economy-trade.md",
+    "type": "document",
+    "summary": "Opisuje sieć handlową osad jednej cywilizacji, dzielenie zapasów ze stratą zależną od odległości, receptury rzemieślników i wybór produkcji przez AI według cen wewnętrznych (etap 3e)."
+   },
+   {
+    "id": "document:docs/systems/effects.md",
+    "name": "effects.md",
+    "type": "document",
+    "summary": "Opisuje wspólny mechanizm efektów (GDD 10.1): modyfikatory z siłą i datą końca nakładane na pole, osadę lub cywilizację, sumowane przez systemy."
+   },
+   {
+    "id": "document:docs/systems/events.md",
+    "name": "events.md",
+    "type": "document",
+    "summary": "Opisuje zdarzenia losowe (susza, pożar, powódź, epidemia) trafiające osady z szansą zależną od stanu świata, łagodzone technologiami i działające przez efekty, żyzność i kronikę (etap 3h)."
+   },
+   {
+    "id": "document:docs/systems/farming.md",
+    "name": "farming.md",
+    "type": "document",
+    "summary": "Opisuje osiedlanie się obozów jako wiosek po poznaniu rolnictwa, uprawę żyznych pól strefy wpływów oraz jałowienie i odłogowanie ziemi (etap 3f)."
+   },
+   {
+    "id": "document:docs/systems/influence-migration.md",
+    "name": "influence-migration.md",
+    "type": "document",
+    "summary": "Opisuje strefy wpływów osad, zbieranie i odrastanie dzikiej żywności oraz wędrówki i odłamy głodnych lub zatłoczonych obozów."
+   },
+   {
+    "id": "document:docs/systems/map.md",
+    "name": "map.md",
+    "type": "document",
+    "summary": "Opisuje moduł mapy: HexGlobe odpowiada na pytania o sąsiedztwo, odległości i linie na kuli, a WorldMap przechowuje dane pól w płaskich tablicach z fragmentami 32×32."
+   },
+   {
+    "id": "document:docs/systems/perception.md",
+    "name": "perception.md",
+    "type": "document",
+    "summary": "Opisuje zwiad i pamięć mapy cywilizacji: znane i zapominane pola, wybór celów AI tylko ze znanych pól, filtrowanie widoku gracza i wielotorowe wyprawy obozów (etap 3g)."
+   },
+   {
+    "id": "document:docs/systems/population.md",
+    "name": "population.md",
+    "type": "document",
+    "summary": "Opisuje system ludności: zbieranie żywności, jedzenie z magazynu, narodziny, zgony, choroby i przechodzenie między trzema warstwami społecznymi."
+   },
+   {
+    "id": "document:docs/systems/research.md",
+    "name": "research.md",
+    "type": "document",
+    "summary": "Opisuje badania technologii: punkty nauki, inspiracje i dyfuzja od sąsiadów obniżające koszt, odblokowywanie receptur, dóbr i efektów oraz przejścia między erami (etap 3f)."
+   },
+   {
+    "id": "document:docs/systems/settlement-assets.md",
+    "name": "settlement-assets.md",
+    "type": "document",
+    "summary": "Opisuje cykl życia osady jako majątku: opuszczenie, ruiny, wprowadzenie się lub zabranie zapasów przez właściciela ziemi oraz podbój."
+   },
+   {
+    "id": "document:docs/systems/settlements-storage.md",
+    "name": "settlements-storage.md",
+    "type": "document",
+    "summary": "Opisuje osady i ich magazyny: towary liczone w setnych częściach jednostki, roczne psucie się żywności i przepadanie nadwyżek ponad pojemność."
+   },
+   {
+    "id": "document:docs/systems/turn-loop.md",
+    "name": "turn-loop.md",
+    "type": "document",
+    "summary": "Opisuje pętlę tury: 11 faz w stałej kolejności, kolejkę i rozstrzyganie komend, pomiar czasu oraz publikowanie niezmiennej migawki (double buffer)."
+   },
+   {
+    "id": "document:docs/systems/viewer.md",
+    "name": "viewer.md",
+    "type": "document",
+    "summary": "Opisuje deweloperski podgląd symulacji w Godocie: uruchamia lokalny serwer, łączy się jako obserwator i rysuje mapę, osady, nakładki oraz panel z wykresem."
+   },
+   {
+    "id": "document:docs/systems/worldgen.md",
+    "name": "worldgen.md",
+    "type": "document",
+    "summary": "Szczegółowy opis generatora świata: z seeda i parametrów planety buduje ląd i morze, klimat z porami roku, biomy, rzeki, jeziora, żyzność, złoża i pozycje startowe plemion."
+   },
+   {
+    "id": "document:docs/GDD.md",
+    "name": "GDD.md",
+    "type": "document",
+    "summary": "Pełny dokument projektu gry CivSim 2 w 16 rozdziałach: wizja, architektura, mapa-planeta, ekonomia, ludność, technologie, autonomia AI, dyplomacja, zdarzenia, pętla tury, interfejs oraz zakres CORE i moduły."
+   },
+   {
+    "id": "document:docs/SETUP.md",
+    "name": "SETUP.md",
+    "type": "document",
+    "summary": "Instrukcja przygotowania komputera po polsku: instalacja narzędzi, pobranie repo, otwarcie projektu w Godocie, opis struktury katalogów, rozwiązywanie problemów i uruchamianie symulacji bez okna."
+   }
+  ],
+  "infrastructure": [
+   {
+    "id": "pipeline:.github/workflows/ci.yml",
+    "name": "ci.yml",
+    "type": "pipeline",
+    "summary": "Workflow GitHub Actions uruchamiany przy push do main/development i przy PR: buduje i testuje solucję na Ubuntu, Windows i macOS, a na Ubuntu wykonuje benchmark 10 000 tur (mapy standard i huge) oraz sprawdza determinizm, porównując hash stanu dwóch przebiegów z tym samym seedem."
+   }
+  ],
+  "data": [],
+  "config": [
+   {
+    "id": "config:CivSim2.sln",
+    "name": "CivSim2.sln",
+    "type": "config",
+    "summary": "Solucja .NET grupująca projekty CivSim.Core, CivSim.Data, CivSim.Protocol, CivSim.Server, CivSim.Headless, CivSim.Tests oraz klienta CivSim.Game w folderach src, tests i game."
+   },
+   {
+    "id": "config:global.json",
+    "name": "global.json",
+    "type": "config",
+    "summary": "Przypina wersję .NET SDK 10.0.100 (rollForward latestFeature) oraz wersję Godot.NET.Sdk 4.7.2 dla projektu klienta."
+   },
+   {
+    "id": "config:data/biomes.json",
+    "name": "biomes.json",
+    "type": "config",
+    "summary": "Definicje biomów lądowych i wodnych: zakresy temperatury i wilgotności, koszt ruchu, żyzność bazowa, żywność, materiały zbierane (drewno) i kolory podglądu."
+   },
+   {
+    "id": "config:data/effects.json",
+    "name": "effects.json",
+    "type": "config",
+    "summary": "Typy efektów (GDD 10.1) nakładanych przez zdarzenia, technologie i budynki: cel (pole, osada, cywilizacja), zmieniana statystyka i sposób kumulacji."
+   },
+   {
+    "id": "config:data/eras.json",
+    "name": "eras.json",
+    "type": "config",
+    "summary": "Lista er od epoki kamienia do ery kosmicznej z długością tury w miesiącach i technologią progową otwierającą erę."
+   },
+   {
+    "id": "config:data/events.json",
+    "name": "events.json",
+    "type": "config",
+    "summary": "Losowe zdarzenia (GDD 10.2, etap 3h) z częstością na 10 000 lat, warunkami, łagodzącymi technologiami, efektami, zyskiem żyzności i rozprzestrzenianiem w sieci handlu."
+   },
+   {
+    "id": "config:data/goods.json",
+    "name": "goods.json",
+    "type": "config",
+    "summary": "Dobra przechowywane w magazynach osad: era, kategoria magazynowa, psucie na rok i wartość bazowa w jednostkach wymiany."
+   },
+   {
+    "id": "config:data/perception.json",
+    "name": "perception.json",
+    "type": "config",
+    "summary": "Zasady widzenia i pamięci cywilizacji (GDD 8.2): zasięg wzroku osad, zwiadowcy, pamięć ustna w latach i maksymalna długość wypraw."
+   },
+   {
+    "id": "config:data/planets.json",
+    "name": "planets.json",
+    "type": "config",
+    "summary": "Presety planet: nachylenie osi, mimośród orbity, gwiazda i orbita, atmosfera z cyklem węglowym, woda, rzeźba oraz zasady pór roku i cykli klimatycznych."
+   },
+   {
+    "id": "config:data/population.json",
+    "name": "population.json",
+    "type": "config",
+    "summary": "Zasady populacji: wzrost, głód, zdrowie, zbieractwo, odrastanie dzikiej żywności, strefy wpływów, migracja plemion, komfort klimatyczny i uproszczony podbój."
+   },
+   {
+    "id": "config:data/recipes.json",
+    "name": "recipes.json",
+    "type": "config",
+    "summary": "Jednoetapowe receptury produkcji er 1-2 (np. narzędzia kamienne, ceramika, chleb) z wejściami, wyjściami, liczbą pracowników i czasem."
+   },
+   {
+    "id": "config:data/resources.json",
+    "name": "resources.json",
+    "type": "config",
+    "summary": "Złoża naturalne rozmieszczane przez generator świata: dopuszczalne biomy i rzeźba, gęstość, zasobność, głębokość, odnawialność i plony zbieractwa."
+   },
+   {
+    "id": "config:data/settlements.json",
+    "name": "settlements.json",
+    "type": "config",
+    "summary": "Poziomy osad (populacja, pojemność magazynu, mobilność, porzucenie), udźwig na osobę oraz zapasy i warunki startowe nowego plemienia."
+   },
+   {
+    "id": "config:data/strata.json",
+    "name": "strata.json",
+    "type": "config",
+    "summary": "Warstwy społeczne (producenci, rzemieślnicy, wojownicy) z docelowymi udziałami, potrzebami podstawowymi i wyższymi oraz punktami nauki."
+   },
+   {
+    "id": "config:data/technologies.json",
+    "name": "technologies.json",
+    "type": "config",
+    "summary": "Graf technologii er 1-2: koszty, wymagania, inspiracje, dyfuzja od sąsiadów i odblokowania (receptury, zbieractwo, efekty)."
+   },
+   {
+    "id": "config:data/trade.json",
+    "name": "trade.json",
+    "type": "config",
+    "summary": "Zasady sieci handlu bez fizycznego transportu: zasięg połączeń, strata na pole, rezerwa żywności i zakres cen wewnętrznych."
+   },
+   {
+    "id": "config:.claude/settings.json",
+    "name": "settings.json",
+    "type": "config",
+    "summary": "Ustawienia Claude Code dla projektu: rejestrują marketplace Egonex-AI/Understand-Anything i włączają plugin understand-anything."
+   },
+   {
+    "id": "config:game/CivSim.Game.csproj",
+    "name": "CivSim.Game.csproj",
+    "type": "config",
+    "summary": "Projekt C# klienta Godot (Godot.NET.Sdk 4.7.2): referencje tylko do CivSim.Protocol i CivSim.Server, z wyłączonymi referencjami przechodnimi, tak by klient nie mógł użyć typów CivSim.Core; Core i Data są kopiowane jedynie na potrzeby lokalnego serwera, a dane JSON linkowane do wyjścia."
+   },
+   {
+    "id": "config:src/CivSim.Core/CivSim.Core.csproj",
+    "name": "CivSim.Core.csproj",
+    "type": "config",
+    "summary": "Minimalny projekt biblioteki CivSim.Core (logika symulacji bez Godota); wspólne ustawienia dziedziczy z Directory.Build.props."
+   },
+   {
+    "id": "config:src/CivSim.Data/CivSim.Data.csproj",
+    "name": "CivSim.Data.csproj",
+    "type": "config",
+    "summary": "Projekt biblioteki CivSim.Data: zależy od CivSim.Core i kopiuje wszystkie pliki JSON z data/ obok każdego programu, który go używa."
+   },
+   {
+    "id": "config:src/CivSim.Headless/CivSim.Headless.csproj",
+    "name": "CivSim.Headless.csproj",
+    "type": "config",
+    "summary": "Projekt aplikacji konsolowej CivSim.Headless (Exe) zależny od CivSim.Core i CivSim.Data."
+   },
+   {
+    "id": "config:src/CivSim.Protocol/CivSim.Protocol.csproj",
+    "name": "CivSim.Protocol.csproj",
+    "type": "config",
+    "summary": "Projekt biblioteki CivSim.Protocol z pakietem MessagePack 3.1.12 i celowo bez referencji do CivSim.Core, aby klient Godot nie widział rdzenia."
+   },
+   {
+    "id": "config:src/CivSim.Server/CivSim.Server.csproj",
+    "name": "CivSim.Server.csproj",
+    "type": "config",
+    "summary": "Projekt biblioteki CivSim.Server zależny od CivSim.Core, CivSim.Data i CivSim.Protocol."
+   },
+   {
+    "id": "config:tests/CivSim.Tests/CivSim.Tests.csproj",
+    "name": "CivSim.Tests.csproj",
+    "type": "config",
+    "summary": "Projekt testów xUnit, który referencjonuje wszystkie projekty rozwiązania (Core, Data, Protocol, Server, Headless) i pakiety Microsoft.NET.Test.Sdk oraz xunit."
+   }
+  ]
+ },
+ "clusters": [],
+ "layers": {
+  "count": 10,
+  "list": [
+   {
+    "id": "layer:core-foundation",
+    "name": "Fundamenty rdzenia",
+    "description": "Deterministyczne podstawy CivSim.Core: moduł HexGlobe i mapa w płaskich tablicach, liczby fixed-point i typ Amount, własny PRNG ze strumieniami, model stanu gry (GameState, cywilizacje, osady), definicje zawartości i hashowanie stanu do testów determinizmu."
+   },
+   {
+    "id": "layer:simulation",
+    "name": "Symulacja tury i systemy gry",
+    "description": "Pętla tury (TurnRunner, fazy, migawki w double bufferze), komendy ICommand oraz systemy ekonomii, populacji i migracji, badań, zdarzeń, percepcji i AI plemion, które co turę zmieniają stan."
+   },
+   {
+    "id": "layer:worldgen",
+    "name": "Generowanie świata i klimat",
+    "description": "Generator planety-kuli: orbita gwiazdy, bilans energii, cykl węglowy, pory roku, epoki lodowe, poziom morza, szum całkowitoliczbowy oraz walidacja i raport wygenerowanego świata."
+   },
+   {
+    "id": "layer:content",
+    "name": "Zawartość gry w danych",
+    "description": "Pliki JSON w data/ (biomy, technologie, dobra, receptury, ery, zdarzenia, warstwy społeczne itd.) wraz z projektem CivSim.Data, który je ładuje i waliduje przy starcie."
+   },
+   {
+    "id": "layer:server-protocol",
+    "name": "Serwer i protokół",
+    "description": "Autorytatywny serwer gry (sprawdzanie komend, filtrowanie widoku przez mgłę wojny, zapis gry) oraz wersjonowany protokół MessagePack z transportem w pamięci, przez który klient rozmawia z serwerem."
+   },
+   {
+    "id": "layer:client",
+    "name": "Klient Godot",
+    "description": "Projekt Godot w C# (game/): scena główna, widok mapy heksowej, nakładki, znaczniki osad, HUD i wykres tur; zależy wyłącznie od CivSim.Protocol."
+   },
+   {
+    "id": "layer:headless",
+    "name": "Uruchamianie headless",
+    "description": "Aplikacja konsolowa CivSim.Headless do przebiegów bez okna, benchmarków czasu tury, raportów CSV i eksportu mapy do PNG."
+   },
+   {
+    "id": "layer:test",
+    "name": "Testy",
+    "description": "Zestaw testów xUnit w tests/CivSim.Tests: testy jednostkowe systemów, determinizmu (hash stanu), serwera, zapisu i serializacji protokołu."
+   },
+   {
+    "id": "layer:documentation",
+    "name": "Dokumentacja projektu",
+    "description": "Dokumenty po polsku: GDD, ROADMAP, CLAUDE.md, decyzje architektoniczne (ADR) w docs/decisions, opisy systemów w docs/systems, prompty sesji i instrukcja instalacji."
+   },
+   {
+    "id": "layer:build-config",
+    "name": "Build, konfiguracja i CI",
+    "description": "Ustawienia budowania i repozytorium: solucja .NET, global.json, Directory.Build.props, .gitattributes, ustawienia Claude Code oraz workflow GitHub Actions."
+   }
+  ]
+ },
+ "nodeSummaryIndex": {
+  "pipeline:.github/workflows/ci.yml": {
+   "name": "ci.yml",
+   "type": "pipeline",
+   "summary": "Workflow GitHub Actions uruchamiany przy push do main/development i przy PR: buduje i testuje solucję na Ubuntu, Windows i macOS, a na Ubuntu wykonuje benchmark 10 000 tur (mapy standard i huge) oraz sprawdza determinizm, porównując hash stanu dwóch przebiegów z tym samym seedem."
+  },
+  "document:CLAUDE.md": {
+   "name": "CLAUDE.md",
+   "type": "document",
+   "summary": "Instrukcje pracy dla Claude Code w repo CivSim 2: zakres (tylko CORE z GDD rozdz. 16), role, języki, przebieg sesji i PR, twarde zasady architektury (rdzeń bez grafiki, komendy, determinizm, dane w JSON, klient–serwer, HexGlobe), struktura repo, cele wydajności i użycie Understand Anything."
+  },
+  "config:CivSim2.sln": {
+   "name": "CivSim2.sln",
+   "type": "config",
+   "summary": "Solucja .NET grupująca projekty CivSim.Core, CivSim.Data, CivSim.Protocol, CivSim.Server, CivSim.Headless, CivSim.Tests oraz klienta CivSim.Game w folderach src, tests i game."
+  },
+  "document:README.md": {
+   "name": "README.md",
+   "type": "document",
+   "summary": "Angielski opis projektu CivSim 2: turowy symulator rozwoju gospodarczego 4X na heksagonalnej planecie, tabela etapów 0–12 z kryteriami ukończenia, instrukcja startu (.NET 10, Godot 4.7.2), stos technologiczny i układ repozytorium."
+  },
+  "document:ROADMAP.md": {
+   "name": "ROADMAP.md",
+   "type": "document",
+   "summary": "Roadmapa po polsku z listami zadań (checkboxy) i kryteriami „Gotowe” dla etapów 0–5+ (fundamenty, mapa-kula, gwiazda i klimat, podgląd Godot, gospodarka i ludność, AI i dyplomacja); wskazuje etap 3 jako zamknięty i etap 4 jako następny."
+  },
+  "config:global.json": {
+   "name": "global.json",
+   "type": "config",
+   "summary": "Przypina wersję .NET SDK 10.0.100 (rollForward latestFeature) oraz wersję Godot.NET.Sdk 4.7.2 dla projektu klienta."
+  },
+  "document:data/README.md": {
+   "name": "README.md",
+   "type": "document",
+   "summary": "Opis katalogu z zawartością gry w JSON: zasada danych walidowanych przy ładowaniu oraz tabela planowanych plików z ich treścią i etapem wprowadzenia."
+  },
+  "config:data/biomes.json": {
+   "name": "biomes.json",
+   "type": "config",
+   "summary": "Definicje biomów lądowych i wodnych: zakresy temperatury i wilgotności, koszt ruchu, żyzność bazowa, żywność, materiały zbierane (drewno) i kolory podglądu."
+  },
+  "config:data/effects.json": {
+   "name": "effects.json",
+   "type": "config",
+   "summary": "Typy efektów (GDD 10.1) nakładanych przez zdarzenia, technologie i budynki: cel (pole, osada, cywilizacja), zmieniana statystyka i sposób kumulacji."
+  },
+  "config:data/eras.json": {
+   "name": "eras.json",
+   "type": "config",
+   "summary": "Lista er od epoki kamienia do ery kosmicznej z długością tury w miesiącach i technologią progową otwierającą erę."
+  },
+  "config:data/events.json": {
+   "name": "events.json",
+   "type": "config",
+   "summary": "Losowe zdarzenia (GDD 10.2, etap 3h) z częstością na 10 000 lat, warunkami, łagodzącymi technologiami, efektami, zyskiem żyzności i rozprzestrzenianiem w sieci handlu."
+  },
+  "config:data/goods.json": {
+   "name": "goods.json",
+   "type": "config",
+   "summary": "Dobra przechowywane w magazynach osad: era, kategoria magazynowa, psucie na rok i wartość bazowa w jednostkach wymiany."
+  },
+  "config:data/perception.json": {
+   "name": "perception.json",
+   "type": "config",
+   "summary": "Zasady widzenia i pamięci cywilizacji (GDD 8.2): zasięg wzroku osad, zwiadowcy, pamięć ustna w latach i maksymalna długość wypraw."
+  },
+  "config:data/planets.json": {
+   "name": "planets.json",
+   "type": "config",
+   "summary": "Presety planet: nachylenie osi, mimośród orbity, gwiazda i orbita, atmosfera z cyklem węglowym, woda, rzeźba oraz zasady pór roku i cykli klimatycznych."
+  },
+  "config:data/population.json": {
+   "name": "population.json",
+   "type": "config",
+   "summary": "Zasady populacji: wzrost, głód, zdrowie, zbieractwo, odrastanie dzikiej żywności, strefy wpływów, migracja plemion, komfort klimatyczny i uproszczony podbój."
+  },
+  "config:data/recipes.json": {
+   "name": "recipes.json",
+   "type": "config",
+   "summary": "Jednoetapowe receptury produkcji er 1-2 (np. narzędzia kamienne, ceramika, chleb) z wejściami, wyjściami, liczbą pracowników i czasem."
+  },
+  "config:data/resources.json": {
+   "name": "resources.json",
+   "type": "config",
+   "summary": "Złoża naturalne rozmieszczane przez generator świata: dopuszczalne biomy i rzeźba, gęstość, zasobność, głębokość, odnawialność i plony zbieractwa."
+  },
+  "config:data/settlements.json": {
+   "name": "settlements.json",
+   "type": "config",
+   "summary": "Poziomy osad (populacja, pojemność magazynu, mobilność, porzucenie), udźwig na osobę oraz zapasy i warunki startowe nowego plemienia."
+  },
+  "config:data/strata.json": {
+   "name": "strata.json",
+   "type": "config",
+   "summary": "Warstwy społeczne (producenci, rzemieślnicy, wojownicy) z docelowymi udziałami, potrzebami podstawowymi i wyższymi oraz punktami nauki."
+  },
+  "config:data/technologies.json": {
+   "name": "technologies.json",
+   "type": "config",
+   "summary": "Graf technologii er 1-2: koszty, wymagania, inspiracje, dyfuzja od sąsiadów i odblokowania (receptury, zbieractwo, efekty)."
+  },
+  "config:data/trade.json": {
+   "name": "trade.json",
+   "type": "config",
+   "summary": "Zasady sieci handlu bez fizycznego transportu: zasięg połączeń, strata na pole, rezerwa żywności i zakres cen wewnętrznych."
+  },
+  "document:docs/decisions/0001-silnik-godot-csharp.md": {
+   "name": "0001-silnik-godot-csharp.md",
+   "type": "document",
+   "summary": "ADR 0001: wybór silnika Godot 4 w wersji .NET i całej logiki w C#; uzasadnia odrzucenie Pythona, Javy, C++ i Unity oraz rezygnację z eksportu do przeglądarki."
+  },
+  "document:docs/decisions/0002-rdzen-oddzielony-od-wyswietlania.md": {
+   "name": "0002-rdzen-oddzielony-od-wyswietlania.md",
+   "type": "document",
+   "summary": "ADR 0002: rdzeń CivSim.Core nie zależy od Godota, działa na osobnym wątku, przyjmuje komendy i publikuje niezmienne migawki stanu rysowane przez klienta."
+  },
+  "document:docs/decisions/0003-determinizm.md": {
+   "name": "0003-determinizm.md",
+   "type": "document",
+   "summary": "ADR 0003: determinizm symulacji przez własny PRNG ze strumieniami na system, ekonomię na liczbach całkowitych, stałą kolejność iteracji i test hasha stanu w każdym PR."
+  },
+  "document:docs/decisions/0004-mapa-hex-torus.md": {
+   "name": "0004-mapa-hex-torus.md",
+   "type": "document",
+   "summary": "ADR 0004: mapa z heksów flat-top we współrzędnych osiowych, fragmenty 32×32 i wiele światów; część o zawijaniu na torusie zastąpiona przez ADR 0012."
+  },
+  "document:docs/decisions/0005-zawartosc-w-json.md": {
+   "name": "0005-zawartosc-w-json.md",
+   "type": "document",
+   "summary": "ADR 0005: cała zawartość gry (technologie, zasoby, budynki, zdarzenia) w plikach data/*.json walidowanych przy starcie, kod zna tylko mechanizmy."
+  },
+  "document:docs/decisions/0006-jezyk-angielski.md": {
+   "name": "0006-jezyk-angielski.md",
+   "type": "document",
+   "summary": "ADR 0006: gra, dane, kod i commity wyłącznie po angielsku, dokumentacja projektowa po polsku; bez systemu tłumaczeń na start."
+  },
+  "document:docs/decisions/0007-religia-poza-zakresem.md": {
+   "name": "0007-religia-poza-zakresem.md",
+   "type": "document",
+   "summary": "ADR 0007: usunięcie religii z wersji podstawowej (teokrację zastępuje oligarchia, technologię Wierzenia zastępują Tradycje); religia może wrócić jako moduł."
+  },
+  "document:docs/decisions/0008-gotowosc-na-multiplayer.md": {
+   "name": "0008-gotowosc-na-multiplayer.md",
+   "type": "document",
+   "summary": "ADR 0008: gra od etapu 0 działa jako klient i autorytatywny serwer z transportem w pamięci; klient zależy tylko od CivSim.Protocol i dostaje widok filtrowany mgłą wojny (odrzucony lockstep)."
+  },
+  "document:docs/decisions/0009-zakres-core.md": {
+   "name": "0009-zakres-core.md",
+   "type": "document",
+   "summary": "ADR 0009: bieżący plan obejmuje tylko funkcje CORE i CORE (uproszczone) z rozdziału 16 GDD; moduły to przyszłe aktualizacje, a kultura jest usunięta całkowicie."
+  },
+  "document:docs/decisions/0010-klient-uruchamia-serwer-lokalny.md": {
+   "name": "0010-klient-uruchamia-serwer-lokalny.md",
+   "type": "document",
+   "summary": "ADR 0010: klient Godota uruchamia serwer przez LocalServerHost i LocalGameOptions, a Core i Data są kopiowane bez referencji kompilacji, więc kompilator pilnuje granicy klient–serwer."
+  },
+  "document:docs/decisions/0011-czas-gry-w-miesiacach.md": {
+   "name": "0011-czas-gry-w-miesiacach.md",
+   "type": "document",
+   "summary": "ADR 0011: czas gry jako liczba miesięcy (GameState.Month) zwiększana przez CalendarSystem o monthsPerTurn z eras.json; efekty mają miesiąc końca, a tempa są przeliczane z wartości rocznych."
+  },
+  "document:docs/decisions/0012-mapa-kula.md": {
+   "name": "0012-mapa-kula.md",
+   "type": "document",
+   "summary": "ADR 0012: mapa jako walec heksów z przejściem przez bieguny na drugą stronę planety, szerokość 4k+2 i rzędy o równej powierzchni; wszystkie sąsiedztwa przez moduł HexGlobe."
+  },
+  "document:docs/decisions/0013-dwa-zegary.md": {
+   "name": "0013-dwa-zegary.md",
+   "type": "document",
+   "summary": "ADR 0013: krok świata zależny od długości roku planety (żywe pory roku w SeasonSystem, np. dla Urana) oraz rzadsze wolne decyzje AI (GameState.IsDecisionTurn) i ocena komfortu temperatury."
+  },
+  "document:docs/decisions/0014-model-klimatu.md": {
+   "name": "0014-model-klimatu.md",
+   "type": "document",
+   "summary": "ADR 0014: fizyczny model klimatu: gwiazda i orbita z praw Keplera (StarOrbit), bilans energii Budyko–Sellersa w pasach (EnergyBalance) i cykl węglanowo-krzemianowy (CarbonCycle) z kalibracją do Ziemi i presetami planet."
+  },
+  "document:docs/decisions/0015-epoki-lodowe.md": {
+   "name": "0015-epoki-lodowe.md",
+   "type": "document",
+   "summary": "ADR 0015: epoki lodowe z cykli Milankovicia (ClimateCycles) i modelu lądolodów Paillarda, przeliczanie klimatu co 500 lat (ClimateSystem), zmiany poziomu morza, lód morski i zalewanie osad."
+  },
+  "document:docs/decisions/README.md": {
+   "name": "README.md",
+   "type": "document",
+   "summary": "Indeks decyzji architektonicznych (ADR) z zasadami ich prowadzenia: numerowane pliki, nowe decyzje zastępują stare bez ich usuwania; lista ADR 0001–0015."
+  },
+  "document:docs/prompts/01-pierwsza-sesja.md": {
+   "name": "01-pierwsza-sesja.md",
+   "type": "document",
+   "summary": "Gotowy prompt na pierwszą sesję Claude Code: każe przeczytać CLAUDE.md, ROADMAP.md, GDD i ADR-y, a potem przedstawić streszczenie, plan etapu 0, wybór wersji .NET/Godota i pluginu Understand Anything, bez pisania kodu."
+  },
+  "document:docs/prompts/02-etap-1c-gwiazda-atmosfera.md": {
+   "name": "02-etap-1c-gwiazda-atmosfera.md",
+   "type": "document",
+   "summary": "Dokument przekazania pracy dla etapu 1c: stan prac, zaakceptowane decyzje Patryka (gwiazda i orbita z praw Keplera, strefa zamieszkiwalna, atmosfera, model bilansu energii Budyko–Sellers, cykle Milankovicia, epoki lodowe), plan trzech PR-ów i prompt na nową sesję."
+  },
+  "document:docs/prompts/03-etap-4-ai-dyplomacja.md": {
+   "name": "03-etap-4-ai-dyplomacja.md",
+   "type": "document",
+   "summary": "Dokument przekazania pracy na start etapu 4 (AI i dyplomacja): co już działa, opis obecnej AI (TribeAi, EconomyAi, ResearchAi) i jej ograniczeń, proponowany podział na PR-y 4a–4g, pytania do Patryka z rekomendacjami, pułapki techniczne i prompt na nową sesję."
+  },
+  "document:docs/systems/README.md": {
+   "name": "README.md",
+   "type": "document",
+   "summary": "Szablon i zasady pisania opisów systemów rdzenia: każdy plik ma streszczenie w jednym zdaniu, dane wejściowe i wyjściowe, diagram Mermaid i odnośniki do testów."
+  },
+  "document:docs/systems/client-server.md": {
+   "name": "client-server.md",
+   "type": "document",
+   "summary": "Opis architektury klient–serwer: lokalny serwer w tym samym procesie, transport w pamięci, wiadomości protokołu (MessagePack), sprawdzanie komend, filtrowany widok gracza i zapisy gry."
+  },
+  "document:docs/systems/determinism.md": {
+   "name": "determinism.md",
+   "type": "document",
+   "summary": "Opisuje zasady determinizmu: własny PRNG z osobnymi strumieniami, całkowitoliczbowy typ Amount, stała kolejność iteracji i hash stanu sprawdzany w testach."
+  },
+  "document:docs/systems/economy-trade.md": {
+   "name": "economy-trade.md",
+   "type": "document",
+   "summary": "Opisuje sieć handlową osad jednej cywilizacji, dzielenie zapasów ze stratą zależną od odległości, receptury rzemieślników i wybór produkcji przez AI według cen wewnętrznych (etap 3e)."
+  },
+  "document:docs/systems/effects.md": {
+   "name": "effects.md",
+   "type": "document",
+   "summary": "Opisuje wspólny mechanizm efektów (GDD 10.1): modyfikatory z siłą i datą końca nakładane na pole, osadę lub cywilizację, sumowane przez systemy."
+  },
+  "document:docs/systems/events.md": {
+   "name": "events.md",
+   "type": "document",
+   "summary": "Opisuje zdarzenia losowe (susza, pożar, powódź, epidemia) trafiające osady z szansą zależną od stanu świata, łagodzone technologiami i działające przez efekty, żyzność i kronikę (etap 3h)."
+  },
+  "document:docs/systems/farming.md": {
+   "name": "farming.md",
+   "type": "document",
+   "summary": "Opisuje osiedlanie się obozów jako wiosek po poznaniu rolnictwa, uprawę żyznych pól strefy wpływów oraz jałowienie i odłogowanie ziemi (etap 3f)."
+  },
+  "document:docs/systems/influence-migration.md": {
+   "name": "influence-migration.md",
+   "type": "document",
+   "summary": "Opisuje strefy wpływów osad, zbieranie i odrastanie dzikiej żywności oraz wędrówki i odłamy głodnych lub zatłoczonych obozów."
+  },
+  "document:docs/systems/map.md": {
+   "name": "map.md",
+   "type": "document",
+   "summary": "Opisuje moduł mapy: HexGlobe odpowiada na pytania o sąsiedztwo, odległości i linie na kuli, a WorldMap przechowuje dane pól w płaskich tablicach z fragmentami 32×32."
+  },
+  "document:docs/systems/perception.md": {
+   "name": "perception.md",
+   "type": "document",
+   "summary": "Opisuje zwiad i pamięć mapy cywilizacji: znane i zapominane pola, wybór celów AI tylko ze znanych pól, filtrowanie widoku gracza i wielotorowe wyprawy obozów (etap 3g)."
+  },
+  "document:docs/systems/population.md": {
+   "name": "population.md",
+   "type": "document",
+   "summary": "Opisuje system ludności: zbieranie żywności, jedzenie z magazynu, narodziny, zgony, choroby i przechodzenie między trzema warstwami społecznymi."
+  },
+  "document:docs/systems/research.md": {
+   "name": "research.md",
+   "type": "document",
+   "summary": "Opisuje badania technologii: punkty nauki, inspiracje i dyfuzja od sąsiadów obniżające koszt, odblokowywanie receptur, dóbr i efektów oraz przejścia między erami (etap 3f)."
+  },
+  "document:docs/systems/settlement-assets.md": {
+   "name": "settlement-assets.md",
+   "type": "document",
+   "summary": "Opisuje cykl życia osady jako majątku: opuszczenie, ruiny, wprowadzenie się lub zabranie zapasów przez właściciela ziemi oraz podbój."
+  },
+  "document:docs/systems/settlements-storage.md": {
+   "name": "settlements-storage.md",
+   "type": "document",
+   "summary": "Opisuje osady i ich magazyny: towary liczone w setnych częściach jednostki, roczne psucie się żywności i przepadanie nadwyżek ponad pojemność."
+  },
+  "document:docs/systems/turn-loop.md": {
+   "name": "turn-loop.md",
+   "type": "document",
+   "summary": "Opisuje pętlę tury: 11 faz w stałej kolejności, kolejkę i rozstrzyganie komend, pomiar czasu oraz publikowanie niezmiennej migawki (double buffer)."
+  },
+  "document:docs/systems/viewer.md": {
+   "name": "viewer.md",
+   "type": "document",
+   "summary": "Opisuje deweloperski podgląd symulacji w Godocie: uruchamia lokalny serwer, łączy się jako obserwator i rysuje mapę, osady, nakładki oraz panel z wykresem."
+  },
+  "document:docs/systems/worldgen.md": {
+   "name": "worldgen.md",
+   "type": "document",
+   "summary": "Szczegółowy opis generatora świata: z seeda i parametrów planety buduje ląd i morze, klimat z porami roku, biomy, rzeki, jeziora, żyzność, złoża i pozycje startowe plemion."
+  },
+  "config:.claude/settings.json": {
+   "name": "settings.json",
+   "type": "config",
+   "summary": "Ustawienia Claude Code dla projektu: rejestrują marketplace Egonex-AI/Understand-Anything i włączają plugin understand-anything."
+  },
+  "file:.gitattributes": {
+   "name": ".gitattributes",
+   "type": "file",
+   "summary": "Reguły Git dla całego repo: normalizacja końców linii do LF (CRLF dla .sln), diff C# dla .cs oraz oznaczenie grafik i dźwięków jako plików binarnych; zawiera wskazówkę o Git LFS dla grafu wiedzy."
+  },
+  "file:Directory.Build.props": {
+   "name": "Directory.Build.props",
+   "type": "file",
+   "summary": "Wspólne właściwości MSBuild dla wszystkich projektów .NET: net10.0, nullable, ostrzeżenia jako błędy, deterministyczna kompilacja i InvariantGlobalization."
+  },
+  "document:docs/GDD.md": {
+   "name": "GDD.md",
+   "type": "document",
+   "summary": "Pełny dokument projektu gry CivSim 2 w 16 rozdziałach: wizja, architektura, mapa-planeta, ekonomia, ludność, technologie, autonomia AI, dyplomacja, zdarzenia, pętla tury, interfejs oraz zakres CORE i moduły."
+  },
+  "document:docs/SETUP.md": {
+   "name": "SETUP.md",
+   "type": "document",
+   "summary": "Instrukcja przygotowania komputera po polsku: instalacja narzędzi, pobranie repo, otwarcie projektu w Godocie, opis struktury katalogów, rozwiązywanie problemów i uruchamianie symulacji bez okna."
+  },
+  "file:game/.gitattributes": {
+   "name": ".gitattributes",
+   "type": "file",
+   "summary": "Wymusza końce linii LF dla plików sceny i zasobów Godota (.tscn, .tres, .godot) w kliencie."
+  },
+  "config:game/CivSim.Game.csproj": {
+   "name": "CivSim.Game.csproj",
+   "type": "config",
+   "summary": "Projekt C# klienta Godot (Godot.NET.Sdk 4.7.2): referencje tylko do CivSim.Protocol i CivSim.Server, z wyłączonymi referencjami przechodnimi, tak by klient nie mógł użyć typów CivSim.Core; Core i Data są kopiowane jedynie na potrzeby lokalnego serwera, a dane JSON linkowane do wyjścia."
+  },
+  "file:game/project.godot": {
+   "name": "project.godot",
+   "type": "file",
+   "summary": "Konfiguracja silnika Godot 4.7 dla klienta: nazwa aplikacji, scena startowa Main.tscn, okno 1920×1080, filtrowanie tekstur nearest dla pixel artu i domyślne argumenty uruchomienia (seed 42, mapa huge)."
+  },
+  "file:game/scenes/Main.tscn": {
+   "name": "Main.tscn",
+   "type": "file",
+   "summary": "Scena główna Godota: pojedynczy węzeł Node2D z podpiętym skryptem Main.cs."
+  },
+  "file:game/scripts/Main.cs": {
+   "name": "Main.cs",
+   "type": "file",
+   "summary": "Punkt wejścia deweloperskiej przeglądarki: uruchamia lokalny serwer na osobnym wątku, łączy się jako obserwator i rysuje to, co przysyła serwer; obsługuje kamerę, klawiaturę, zrzuty ekranu, benchmark i opcje wiersza poleceń."
+  },
+  "file:game/scripts/Map/HexLayout.cs": {
+   "name": "HexLayout.cs",
+   "type": "file",
+   "summary": "Statyczna geometria heksów flat-top klienta: rozmiary w pikselach, narożniki, okres zawijania mapy, środek komórki i komórka pod pozycją piksela."
+  },
+  "file:game/scripts/Map/MapOverlay.cs": {
+   "name": "MapOverlay.cs",
+   "type": "file",
+   "summary": "Definiuje enum widoków mapy (biomy, wysokość, temperatura, żyzność, złoża, właściciel, wpływy, pory roku) i klasę OverlayColors liczącą kolor podglądu każdej komórki."
+  },
+  "file:game/scripts/Map/MapView.cs": {
+   "name": "MapView.cs",
+   "type": "file",
+   "summary": "Renderer świata jako kolorowych heksów: każdy fragment 32×32 ma MultiMesh heksów i rzek przebudowywany tylko po zmianie, a w każdej klatce węzły dostają jedynie widoczne kopie fragmentów, co daje zawijanie mapy przy stałym koszcie."
+  },
+  "file:game/scripts/Map/SelectionOutline.cs": {
+   "name": "SelectionOutline.cs",
+   "type": "file",
+   "summary": "Węzeł Godota rysujący białą obwódkę wokół zaznaczonego heksu."
+  },
+  "file:game/scripts/Map/SettlementMarkers.cs": {
+   "name": "SettlementMarkers.cs",
+   "type": "file",
+   "summary": "Deweloperskie znaczniki osad: kwadraty w kolorze właściciela, większe dla wyższych poziomów, szare dla opuszczonych i ciemne dla ruin, rysowane na każdej widocznej kopii zawiniętej mapy."
+  },
+  "file:game/scripts/Net/ClientSession.cs": {
+   "name": "ClientSession.cs",
+   "type": "file",
+   "summary": "Sesja klienta: łączy się z serwerem przez IConnection, przedstawia się w roli, a w Pump przetwarza wiadomości protokołu (Welcome, zawartość, widok, fragmenty mapy, kronika, czasy tur, odmowy) w ograniczonym budżecie na klatkę."
+  },
+  "file:game/scripts/Net/ClientWorld.cs": {
+   "name": "ClientWorld.cs",
+   "type": "file",
+   "summary": "Kliencka kopia mapy jednego świata zbudowana wyłącznie z MapChunkMessage: płaskie tablice warstw (wysokość, klimat, biom, złoża, właściciel, wpływy, rzeki) i flagi zmienionych fragmentów."
+  },
+  "file:game/scripts/Ui/Hud.cs": {
+   "name": "Hud.cs",
+   "type": "file",
+   "summary": "Deweloperski HUD budowany w kodzie: górny pasek z turą, prędkością i widokiem, inspektor komórki po lewej, kronika po prawej i wykres czasu tury na dole."
+  },
+  "file:game/scripts/Ui/TurnChart.cs": {
+   "name": "TurnChart.cs",
+   "type": "file",
+   "summary": "Prosty wykres słupkowy ostatnich czasów tur w milisekundach dla HUD-a deweloperskiego."
+  },
+  "file:src/CivSim.Core/Ai/EconomyAi.cs": {
+   "name": "EconomyAi.cs",
+   "type": "file",
+   "summary": "AI produkcji cywilizacji: raz na turę ery każda osada z rzemieślnikami wybiera recepturę o najwyższej wartości przy wewnętrznych cenach sieci, wydając te same komendy co gracz."
+  },
+  "file:src/CivSim.Core/Ai/TribeAi.cs": {
+   "name": "TribeAi.cs",
+   "type": "file",
+   "summary": "Regułowe AI plemion: dla każdego obozu porównuje obecne jedzenie z najlepszym miejscem w zasięgu i decyduje o przeprowadzce, wysłaniu grupy, połączeniu obozów lub przejęciu porzuconych zasobów, wydając komendy jak gracz."
+  },
+  "config:src/CivSim.Core/CivSim.Core.csproj": {
+   "name": "CivSim.Core.csproj",
+   "type": "config",
+   "summary": "Minimalny projekt biblioteki CivSim.Core (logika symulacji bez Godota); wspólne ustawienia dziedziczy z Directory.Build.props."
+  },
+  "file:src/CivSim.Core/Commands/CommandCategory.cs": {
+   "name": "CommandCategory.cs",
+   "type": "file",
+   "summary": "Enum grup rozstrzygania komend (dyplomacja, ekonomia, ruch), którego wartość liczbowa wyznacza kolejność w fazie tury."
+  },
+  "file:src/CivSim.Core/Commands/CommandEnvelope.cs": {
+   "name": "CommandEnvelope.cs",
+   "type": "file",
+   "summary": "Niezmienny rekord-struktura łączący komendę z graczem, cywilizacją i numerem sekwencji nadanym przez kolejkę."
+  },
+  "file:src/CivSim.Core/Commands/CommandQueue.cs": {
+   "name": "CommandQueue.cs",
+   "type": "file",
+   "summary": "Kolejka komend tury, która wydaje je w stałej, deterministycznej kolejności: kategoria, cywilizacja (rotowana co turę) i kolejność przybycia."
+  },
+  "file:src/CivSim.Core/Commands/CommandResult.cs": {
+   "name": "CommandResult.cs",
+   "type": "file",
+   "summary": "Niezmienny wynik walidacji lub wykonania komendy: sukces albo odrzucenie z czytelnym dla gracza powodem po angielsku."
+  },
+  "file:src/CivSim.Core/Commands/ICommand.cs": {
+   "name": "ICommand.cs",
+   "type": "file",
+   "summary": "Interfejs ICommand: jedyny sposób zmiany stanu gry; AI i gracz wydają te same komendy, które najpierw są walidowane, a potem stosowane."
+  },
+  "file:src/CivSim.Core/Commands/ProductionCommands.cs": {
+   "name": "ProductionCommands.cs",
+   "type": "file",
+   "summary": "Komenda SetRecipeCommand wybierająca recepturę dla rzemieślników osady (lub jej wyłączenie), dozwoloną tylko po poznaniu odblokowującej technologii."
+  },
+  "file:src/CivSim.Core/Commands/RenameCivilizationCommand.cs": {
+   "name": "RenameCivilizationCommand.cs",
+   "type": "file",
+   "summary": "Komenda zmiany nazwy cywilizacji wydającej komendę; pierwsza prawdziwa komenda, używana też w testach determinizmu."
+  },
+  "file:src/CivSim.Core/Commands/SettlementAssetCommands.cs": {
+   "name": "SettlementAssetCommands.cs",
+   "type": "file",
+   "summary": "Komendy aktywów osad (GDD 5.5): porzucenie osady, zajęcie porzuconej osady lub ruin, grabież i podbój cudzej osady z ucieczką pokonanych."
+  },
+  "file:src/CivSim.Core/Commands/SettlementCommands.cs": {
+   "name": "SettlementCommands.cs",
+   "type": "file",
+   "summary": "Wspólne reguły komend osad (SettlementRules), interfejs IChronicledCommand oraz komendy przenoszenia obozu koczowników i dzielenia osady (GDD 5.4)."
+  },
+  "file:src/CivSim.Core/Content/BiomeDefinition.cs": {
+   "name": "BiomeDefinition.cs",
+   "type": "file",
+   "summary": "Definicje biomów i złóż z danych JSON: rodzaj biomu dla generatora, wartości zbieractwa, żyzności i cechy wody."
+  },
+  "file:src/CivSim.Core/Content/EconomyDefinitions.cs": {
+   "name": "EconomyDefinitions.cs",
+   "type": "file",
+   "summary": "Definicje ekonomiczne z JSON: dobra, receptury, poziomy osad, ery, efekty, reguły handlu i aktywów oraz presety planet."
+  },
+  "file:src/CivSim.Core/Content/EventDefinitions.cs": {
+   "name": "EventDefinitions.cs",
+   "type": "file",
+   "summary": "Definicje zdarzeń losowych z data/events.json: warunki zależne od stanu świata, łagodzenie technologiami i efekty."
+  },
+  "file:src/CivSim.Core/Content/GameContent.cs": {
+   "name": "GameContent.cs",
+   "type": "file",
+   "summary": "Kontener całej zawartości gry wczytanej z data/ przez CivSim.Data; rdzeń tylko go czyta, listy są indeksowane gęstymi identyfikatorami."
+  },
+  "file:src/CivSim.Core/Content/PopulationDefinitions.cs": {
+   "name": "PopulationDefinitions.cs",
+   "type": "file",
+   "summary": "Definicje populacji: potrzeby i warstwy społeczne z JSON oraz obszerne reguły PopulationRules (rolnictwo, demografia, zbieractwo, wpływy, migracja, walka)."
+  },
+  "file:src/CivSim.Core/Content/TechnologyDefinitions.cs": {
+   "name": "TechnologyDefinitions.cs",
+   "type": "file",
+   "summary": "Definicje technologii (pola, inspiracje, premie zbieractwa, efekty) oraz reguły badań i percepcji cywilizacji."
+  },
+  "file:src/CivSim.Core/CoreInfo.cs": {
+   "name": "CoreInfo.cs",
+   "type": "file",
+   "summary": "Statyczna informacja o rdzeniu symulacji (nazwa CivSim.Core), używana jako znacznik i test dymny."
+  },
+  "file:src/CivSim.Core/Economy/Consumption.cs": {
+   "name": "Consumption.cs",
+   "type": "file",
+   "summary": "System konsumpcji fazy ekonomii (GDD 11.1, faza 7): warstwy biorą potrzeby z magazynu własnej osady, najpierw najszybciej psującą się żywność."
+  },
+  "file:src/CivSim.Core/Economy/Farming.cs": {
+   "name": "Farming.cs",
+   "type": "file",
+   "summary": "Rolnictwo osiadłych wiosek (GDD 4.4, 5.3): uprawa żyznych pól strefy, zbiory zboża, wyjaławianie i regeneracja gleby oraz komenda osiedlenia obozu jako wioski."
+  },
+  "file:src/CivSim.Core/Economy/Gathering.cs": {
+   "name": "Gathering.cs",
+   "type": "file",
+   "summary": "Zbieractwo i dzika żywność: losowe dobre i złe lata na fragment mapy, odrastanie dzikich zasobów oraz system zbieractwa przydzielający pola osadom i dostarczający plony."
+  },
+  "file:src/CivSim.Core/Economy/Production.cs": {
+   "name": "Production.cs",
+   "type": "file",
+   "summary": "Podział dóbr w sieciach handlowych (TradeSystem: żywność, potrzeby wyższe, wejścia receptur, ze stratami na odległość) oraz produkcja według receptur (ProductionSystem)."
+  },
+  "file:src/CivSim.Core/Economy/Spoilage.cs": {
+   "name": "Spoilage.cs",
+   "type": "file",
+   "summary": "Statyczne przeliczenie rocznego tempa psucia na udział dobra zachowany w jednej turze, w arytmetyce stałoprzecinkowej (zasada 6 CLAUDE.md)."
+  },
+  "file:src/CivSim.Core/Economy/StorageSystem.cs": {
+   "name": "StorageSystem.cs",
+   "type": "file",
+   "summary": "Ostatni krok fazy ekonomii: psucie dóbr wg tempa rocznego, przesyłanie nadwyżek w sieci i obcinanie zapasów do pojemności magazynu."
+  },
+  "file:src/CivSim.Core/Economy/Trade.cs": {
+   "name": "Trade.cs",
+   "type": "file",
+   "summary": "Sieci handlowe osad jednej cywilizacji (union-find), obliczanie popytu (żywność, potrzeby, receptury) i rynkowe ceny względne w sieci."
+  },
+  "file:src/CivSim.Core/Events/EventSystem.cs": {
+   "name": "EventSystem.cs",
+   "type": "file",
+   "summary": "System zdarzeń losowych (GDD 10.2): susze, pożary, powodzie i epidemie zależne od stanu świata, łagodzone technologiami, działające przez efekty, żyzność i kronikę."
+  },
+  "file:src/CivSim.Core/Hashing/GameStateHash.cs": {
+   "name": "GameStateHash.cs",
+   "type": "file",
+   "summary": "Oblicza hash determinizmu całego GameState w kolejności identyfikatorów; dwa przebiegi z tym samym seedem muszą dać identyczną wartość."
+  },
+  "file:src/CivSim.Core/Hashing/StateHasher.cs": {
+   "name": "StateHasher.cs",
+   "type": "file",
+   "summary": "Niezależny od platformy 64-bitowy builder hasza FNV-1a (little-endian, łańcuchy jako UTF-8) do testów determinizmu i wykrywania desynchronizacji."
+  },
+  "file:src/CivSim.Core/Map/DirtyChunks.cs": {
+   "name": "DirtyChunks.cs",
+   "type": "file",
+   "summary": "Zbiór bitów brudnych fragmentów mapy: systemy przeliczają, a podgląd przerysowuje tylko zmienione fragmenty, iterowane rosnąco."
+  },
+  "file:src/CivSim.Core/Map/HexCoord.cs": {
+   "name": "HexCoord.cs",
+   "type": "file",
+   "summary": "Współrzędne pól: HexCoord (kolumna, wiersz w układzie odd-q w pamięci) i AxialCoord (q, r) do obliczeń kierunków i odległości."
+  },
+  "file:src/CivSim.Core/Map/HexCorners.cs": {
+   "name": "HexCorners.cs",
+   "type": "file",
+   "summary": "Graf narożników siatki heksów (punktów, w których stykają się trzy pola), po których płyną rzeki; daje sąsiednie narożniki i kanoniczne krawędzie między nimi."
+  },
+  "file:src/CivSim.Core/Map/HexDirection.cs": {
+   "name": "HexDirection.cs",
+   "type": "file",
+   "summary": "Enum sześciu kierunków heksa flat-top (zgodnie z ruchem wskazówek zegara od północy) oraz pomocnicze operacje: wektor, kierunek przeciwny, odbicie i obrót."
+  },
+  "file:src/CivSim.Core/Map/HexEdge.cs": {
+   "name": "HexEdge.cs",
+   "type": "file",
+   "summary": "Prosty typ wartości opisujący kanoniczną krawędź heksa (pole + strona), używany do rzek i krawędzi mapy."
+  },
+  "file:src/CivSim.Core/Map/HexGlobe.cs": {
+   "name": "HexGlobe.cs",
+   "type": "file",
+   "summary": "Centralny moduł geometrii mapy-planety: zawijanie wschód–zachód, przejście przez biegun, sąsiedztwa, odległości, linie, pierścienie, zasięgi i indeksy krawędzi. Każda operacja przestrzenna w grze musi przechodzić przez tę klasę (zasada 8 z CLAUDE.md)."
+  },
+  "file:src/CivSim.Core/Map/MapChunks.cs": {
+   "name": "MapChunks.cs",
+   "type": "file",
+   "summary": "Dzieli mapę na fragmenty 32×32 pól (identyfikatory wierszowo), wylicza fragment dla pola i granice fragmentu; podstawa dirty flags."
+  },
+  "file:src/CivSim.Core/Map/MapLayer.cs": {
+   "name": "MapLayer.cs",
+   "type": "file",
+   "summary": "Generyczna warstwa danych mapy w płaskiej tablicy (struktura tablic); zapis pojedynczej wartości oznacza fragment jako zmieniony, a surowe bajty służą do haszowania i zapisów."
+  },
+  "file:src/CivSim.Core/Map/WorldMap.cs": {
+   "name": "WorldMap.cs",
+   "type": "file",
+   "summary": "Wszystkie dane pól jednego świata (biom, rzeźba, rzeki, właściciele wpływów itd.) jako warstwy w płaskich tablicach, wraz z flagami zmienionych fragmentów; definiuje też interfejs IMapLayerInfo do haszowania i zapisu."
+  },
+  "file:src/CivSim.Core/Numerics/Amount.cs": {
+   "name": "Amount.cs",
+   "type": "file",
+   "summary": "Typ Amount: ilość zasobu w setnych częściach jednostki na liczbach całkowitych, z dokładną arytmetyką kontrolującą przepełnienia, parsowaniem i sprawiedliwym podziałem proporcjonalnym."
+  },
+  "file:src/CivSim.Core/Numerics/FixedLog.cs": {
+   "name": "FixedLog.cs",
+   "type": "file",
+   "summary": "Deterministyczny logarytm i potęga o podstawie 2 na liczbach w milionowych częściach, używane przez model klimatu (CO₂, wietrzenie skał)."
+  },
+  "file:src/CivSim.Core/Numerics/FixedTrig.cs": {
+   "name": "FixedTrig.cs",
+   "type": "file",
+   "summary": "Trygonometria stałoprzecinkowa (sin, cos, asin, acos) oparta na tabeli ćwiartki fali liczonej dokładnym szeregiem Taylora; identyczne wyniki na każdej platformie."
+  },
+  "file:src/CivSim.Core/Numerics/IntMath.cs": {
+   "name": "IntMath.cs",
+   "type": "file",
+   "summary": "Dokładne pomocnicze operacje całkowitoliczbowe: mnożenie z dzieleniem bez przepełnienia, dzielenie z jawnym zaokrąglaniem i pierwiastki całkowite (także 128-bitowe)."
+  },
+  "file:src/CivSim.Core/Numerics/Rounding.cs": {
+   "name": "Rounding.cs",
+   "type": "file",
+   "summary": "Enum trybów zaokrąglania dzielenia całkowitego, wymagany jawnie przez wszystkie operacje numeryczne rdzenia."
+  },
+  "file:src/CivSim.Core/Perception/MapMemory.cs": {
+   "name": "MapMemory.cs",
+   "type": "file",
+   "summary": "Pamięć mapy cywilizacji (GDD 8): osady widzą okolicę, zwiadowcy odkrywają teren, wiedza wygasa po latach ustnej pamięci. Zawiera też wyszukiwanie ścieżek po znanych polach, fazę percepcji oraz komendę i system wędrówek obozów."
+  },
+  "file:src/CivSim.Core/Population/Influence.cs": {
+   "name": "Influence.cs",
+   "type": "file",
+   "summary": "Strefy wpływów osad: rozchodzenie się wpływu po koszcie ruchu z zasięgiem zależnym od wojowników, rozstrzyganie konfliktów i system przeliczający strefy w fazie nauki oraz po ruchach obozów."
+  },
+  "file:src/CivSim.Core/Population/PopulationSystem.cs": {
+   "name": "PopulationSystem.cs",
+   "type": "file",
+   "summary": "System fazy populacji: wzrost i spadek liczby ludzi według rocznych temp przeliczanych na długość tury, zdrowie, nastrój i przepływ ludzi między warstwami społecznymi."
+  },
+  "file:src/CivSim.Core/Population/SettlementAssets.cs": {
+   "name": "SettlementAssets.cs",
+   "type": "file",
+   "summary": "Osady jako majątek (GDD 5.5): przenoszenie dóbr, porzucanie i przenosiny osad, liczenie wojowników i strat; zawiera systemy porzucania pustych osad i ich rozpadu w ruiny."
+  },
+  "file:src/CivSim.Core/Random/DeterministicRandom.cs": {
+   "name": "DeterministicRandom.cs",
+   "type": "file",
+   "summary": "Deterministyczny generator xoshiro256** zastępujący System.Random w logice gry: liczby bez obciążenia, szanse, tasowanie i zapisywalny stan."
+  },
+  "file:src/CivSim.Core/Random/RandomState.cs": {
+   "name": "RandomState.cs",
+   "type": "file",
+   "summary": "Niezmienny rekord pełnego 256-bitowego stanu generatora DeterministicRandom, do zapisów i haszowania."
+  },
+  "file:src/CivSim.Core/Random/RandomStreamId.cs": {
+   "name": "RandomStreamId.cs",
+   "type": "file",
+   "summary": "Enum nazwanych strumieni losowości (po jednym na system), stabilny w formacie zapisu; nowe wartości tylko dopisywane."
+  },
+  "file:src/CivSim.Core/Random/RandomStreams.cs": {
+   "name": "RandomStreams.cs",
+   "type": "file",
+   "summary": "Zbiór niezależnych generatorów, po jednym na strumień, wyprowadzonych z jednego ziarna gry; kopiuje i przywraca ich stany."
+  },
+  "file:src/CivSim.Core/Random/SplitMix64.cs": {
+   "name": "SplitMix64.cs",
+   "type": "file",
+   "summary": "Mieszacz SplitMix64 używany wyłącznie do rozwijania ziaren w stan generatora i łączenia wartości, nigdy do rzutów w rozgrywce."
+  },
+  "file:src/CivSim.Core/Research/ResearchSystem.cs": {
+   "name": "ResearchSystem.cs",
+   "type": "file",
+   "summary": "Faza badań: punkty nauki przybliżają wybraną technologię, po jej odkryciu startują efekty i ewentualnie nowa era; zawiera komendę wyboru badania i proste AI wybierające najtańszą dostępną technologię."
+  },
+  "file:src/CivSim.Core/Research/Technologies.cs": {
+   "name": "Technologies.cs",
+   "type": "file",
+   "summary": "Reguły drzewa technologii (GDD 6): dostępność, koszt z inspiracjami i dyfuzją od sąsiadów, punkty nauki, nauka technologii i wejście w ery; plus pomiar sytuacji cywilizacji (CivFacts) i premie zbieractwa (TechBenefits)."
+  },
+  "file:src/CivSim.Core/Simulation/CalendarSystem.cs": {
+   "name": "CalendarSystem.cs",
+   "type": "file",
+   "summary": "Systemy upływu czasu i wygasania efektów oraz CoreSystems, który rejestruje wszystkie systemy rdzenia i źródła komend AI w stałej kolejności faz tury."
+  },
+  "file:src/CivSim.Core/Simulation/GameSnapshot.cs": {
+   "name": "GameSnapshot.cs",
+   "type": "file",
+   "summary": "Niezmienne migawki stanu gry po turze (świat, cywilizacje, osady) czytane przez inne wątki, serwer i podgląd zamiast żywego GameState."
+  },
+  "file:src/CivSim.Core/Simulation/ICommandSource.cs": {
+   "name": "ICommandSource.cs",
+   "type": "file",
+   "summary": "Interfejs źródła komend (np. kontrolera AI), które w fazie decyzji tylko czyta stan gry i dokłada komendy do kolejki."
+  },
+  "file:src/CivSim.Core/Simulation/ITurnSystem.cs": {
+   "name": "ITurnSystem.cs",
+   "type": "file",
+   "summary": "Interfejs systemu symulacji uruchamianego w jednej fazie każdej tury; systemy rejestruje TurnRunner i wykonuje w kolejności rejestracji."
+  },
+  "file:src/CivSim.Core/Simulation/SnapshotBuffer.cs": {
+   "name": "SnapshotBuffer.cs",
+   "type": "file",
+   "summary": "Generyczny bufor przekazujący ostatnią gotową, niezmienną migawkę z wątku symulacji do czytelników przez atomową podmianę referencji."
+  },
+  "file:src/CivSim.Core/Simulation/TurnContext.cs": {
+   "name": "TurnContext.cs",
+   "type": "file",
+   "summary": "Kontekst tury: wszystko, czego system może użyć w trakcie tury (stan gry, strumienie losowe, zaakceptowane komendy, wpisy kroniki)."
+  },
+  "file:src/CivSim.Core/Simulation/TurnPhase.cs": {
+   "name": "TurnPhase.cs",
+   "type": "file",
+   "summary": "Wyliczenie 11 faz tury w kolejności wykonania (GDD 11.1) oraz pomocnicza klasa TurnPhases."
+  },
+  "file:src/CivSim.Core/Simulation/TurnReport.cs": {
+   "name": "TurnReport.cs",
+   "type": "file",
+   "summary": "Raport z ostatniej tury: czasy poszczególnych faz i komendy odrzucone przy walidacji; obiekt jest używany ponownie między turami."
+  },
+  "file:src/CivSim.Core/Simulation/TurnRunner.cs": {
+   "name": "TurnRunner.cs",
+   "type": "file",
+   "summary": "Główna pętla tury: przeprowadza GameState przez 11 faz, zbiera i rozstrzyga posortowane komendy, mierzy czas faz i publikuje migawkę."
+  },
+  "file:src/CivSim.Core/State/CivilizationState.cs": {
+   "name": "CivilizationState.cs",
+   "type": "file",
+   "summary": "Stan jednej cywilizacji: identyfikator, nazwa i znane technologie; pozostałe dane dochodzą w kolejnych etapach."
+  },
+  "file:src/CivSim.Core/State/EffectBook.cs": {
+   "name": "EffectBook.cs",
+   "type": "file",
+   "summary": "Rejestr aktywnych efektów (modyfikatorów z GDD 10.1) posortowanych po id, z dodawaniem, usuwaniem wygasłych i sumowaniem wartości statystyk."
+  },
+  "file:src/CivSim.Core/State/GameSettings.cs": {
+   "name": "GameSettings.cs",
+   "type": "file",
+   "summary": "Ustawienia wybierane przy tworzeniu gry (seed, wymiary mapy, liczba cywilizacji, typ świata i planeta), stałe przez całą grę, z presetami."
+  },
+  "file:src/CivSim.Core/State/GameState.cs": {
+   "name": "GameState.cs",
+   "type": "file",
+   "summary": "Pełny autorytatywny stan gry należący do serwera: światy, cywilizacje, osady, efekty, kalendarz i liczniki; tworzy nową grę i odtwarza ją z zapisu."
+  },
+  "file:src/CivSim.Core/State/Ids.cs": {
+   "name": "Ids.cs",
+   "type": "file",
+   "summary": "Silnie typowane identyfikatory (CivId, PlayerId, WorldId, SettlementId, EffectId) jako porównywalne record struct."
+  },
+  "file:src/CivSim.Core/State/SettlementState.cs": {
+   "name": "SettlementState.cs",
+   "type": "file",
+   "summary": "Stan pojedynczej osady (GDD 5.3) z własnym magazynem dóbr, populacją, roszczeniami do pól i statusem porzucenia (GDD 5.5)."
+  },
+  "file:src/CivSim.Core/State/WorldState.cs": {
+   "name": "WorldState.cs",
+   "type": "file",
+   "summary": "Stan jednego świata (planety): geometria HexGlobe, dane mapy na pola i wolny stan klimatu."
+  },
+  "file:src/CivSim.Core/WorldGen/CarbonCycle.cs": {
+   "name": "CarbonCycle.cs",
+   "type": "file",
+   "summary": "Model obiegu węgla: efekt cieplarniany z CO2, ciśnienie atmosfery, wietrzenie skał i równowagowe stężenie CO2, skalibrowane na Ziemię (280 µbar daje 33 °C)."
+  },
+  "file:src/CivSim.Core/WorldGen/CellClimate.cs": {
+   "name": "CellClimate.cs",
+   "type": "file",
+   "summary": "Klimat pojedynczego pola z klimatu planety i danych pola (szerokość, wysokość, szum, kontynentalność) oraz wybór biomu lądowego."
+  },
+  "file:src/CivSim.Core/WorldGen/ClimateCycles.cs": {
+   "name": "ClimateCycles.cs",
+   "type": "file",
+   "summary": "Wolne cykle klimatyczne: reguły, stan lodu obu półkul i model cykli Milankovicia z narastaniem i topnieniem lądolodów (Paillard 1998)."
+  },
+  "file:src/CivSim.Core/WorldGen/ClimateSystem.cs": {
+   "name": "ClimateSystem.cs",
+   "type": "file",
+   "summary": "System tury, który co UpdateYears przesuwa cykle klimatu, rozwiązuje bilans energii, podnosi lub obniża morze i przelicza temperaturę, sezony i biomy pól."
+  },
+  "file:src/CivSim.Core/WorldGen/EnergyBalance.cs": {
+   "name": "EnergyBalance.cs",
+   "type": "file",
+   "summary": "Model bilansu energii w pasach szerokości (ADR 0014) liczony wyłącznie na liczbach całkowitych z rozwiązaniem trójprzekątniowym, deterministyczny na każdej platformie."
+  },
+  "file:src/CivSim.Core/WorldGen/IntNoise.cs": {
+   "name": "IntNoise.cs",
+   "type": "file",
+   "summary": "Całkowitoliczbowy szum wartości: płaski kafelkowany (IntNoise) oraz sferyczny bez szwów na kuli (SphereNoise) dla generatora świata."
+  },
+  "file:src/CivSim.Core/WorldGen/Planet.cs": {
+   "name": "Planet.cs",
+   "type": "file",
+   "summary": "Parametry planety (gwiazda, orbita, atmosfera) z walidacją, nasłonecznienie według szerokości, model klimatu planety i reguły sezonów."
+  },
+  "file:src/CivSim.Core/WorldGen/PlanetSetup.cs": {
+   "name": "PlanetSetup.cs",
+   "type": "file",
+   "summary": "Nadpisania parametrów planety (gracz, preset, linia komend) i budowanie z nich planety na bazie planety startowej."
+  },
+  "file:src/CivSim.Core/WorldGen/PlanetSummary.cs": {
+   "name": "PlanetSummary.cs",
+   "type": "file",
+   "summary": "Czytelne podsumowanie (po angielsku) gwiazdy, orbity, powietrza i klimatu planety dla trybu headless, zapisów i podglądu."
+  },
+  "file:src/CivSim.Core/WorldGen/SeaLevel.cs": {
+   "name": "SeaLevel.cs",
+   "type": "file",
+   "summary": "Poziom morza zależny od lodu: cel poziomu, klasyfikacja wody, zalewanie wybrzeży i przenoszenie osad na najbliższe suche pole (ruiny pod wodą)."
+  },
+  "file:src/CivSim.Core/WorldGen/SeasonSystem.cs": {
+   "name": "SeasonSystem.cs",
+   "type": "file",
+   "summary": "System tury zapisujący na mapie sezon bieżącej i następnej tury (temperatura, udział okresu wegetacji) na planetach z długim rokiem."
+  },
+  "config:src/CivSim.Data/CivSim.Data.csproj": {
+   "name": "CivSim.Data.csproj",
+   "type": "config",
+   "summary": "Projekt biblioteki CivSim.Data: zależy od CivSim.Core i kopiuje wszystkie pliki JSON z data/ obok każdego programu, który go używa."
+  },
+  "file:src/CivSim.Core/WorldGen/StarOrbit.cs": {
+   "name": "StarOrbit.cs",
+   "type": "file",
+   "summary": "Model gwiazdy i orbity planety na rzeczywistych wzorach (S = L/d², ciąg główny, III prawo Keplera, ekosfera Kopparapu) liczony wyłącznie na liczbach całkowitych w milionowych częściach."
+  },
+  "file:src/CivSim.Core/WorldGen/WorldGenReport.cs": {
+   "name": "WorldGenReport.cs",
+   "type": "file",
+   "summary": "Raport z generowania świata: udział wody, liczby biomów, rzek, jezior i złóż, pozycje startowe z ocenami oraz wskaźnik sprawiedliwości startów."
+  },
+  "file:src/CivSim.Core/WorldGen/WorldGenerator.cs": {
+   "name": "WorldGenerator.cs",
+   "type": "file",
+   "summary": "Deterministyczny generator świata według GDD 3: ląd i płyty, poziom morza, temperatura, wilgotność, biomy, rzeki i jeziora, cechy terenu, żyzność, złoża oraz pozycje startowe cywilizacji."
+  },
+  "file:src/CivSim.Core/WorldGen/WorldType.cs": {
+   "name": "WorldType.cs",
+   "type": "file",
+   "summary": "Typy wyliczeniowe ustawień świata: kształt lądów (WorldType), cechy terenu, wilgotność, spadek wilgotności w głąb lądu, rzeźba i zasobność złóż."
+  },
+  "file:src/CivSim.Core/WorldGen/WorldValidator.cs": {
+   "name": "WorldValidator.cs",
+   "type": "file",
+   "summary": "Sprawdza, czy wygenerowany świat spełnia zasady GDD 3 (udział wody, rzeki, biomy, starty), zwracając listę problemów."
+  },
+  "file:src/CivSim.Data/ContentLoader.cs": {
+   "name": "ContentLoader.cs",
+   "type": "file",
+   "summary": "Ładuje i waliduje całą zawartość gry z plików JSON w folderze data/ (warstwy społeczne, dobra, receptury, osady, ery, planety, technologie, zdarzenia, biomy, złoża), zbierając wszystkie błędy z pozycją w pliku."
+  },
+  "config:src/CivSim.Headless/CivSim.Headless.csproj": {
+   "name": "CivSim.Headless.csproj",
+   "type": "config",
+   "summary": "Projekt aplikacji konsolowej CivSim.Headless (Exe) zależny od CivSim.Core i CivSim.Data."
+  },
+  "config:src/CivSim.Protocol/CivSim.Protocol.csproj": {
+   "name": "CivSim.Protocol.csproj",
+   "type": "config",
+   "summary": "Projekt biblioteki CivSim.Protocol z pakietem MessagePack 3.1.12 i celowo bez referencji do CivSim.Core, aby klient Godot nie widział rdzenia."
+  },
+  "file:src/CivSim.Headless/HeadlessOptions.cs": {
+   "name": "HeadlessOptions.cs",
+   "type": "file",
+   "summary": "Opcje wiersza poleceń trybu headless (seed, liczba tur, rozmiar mapy, raporty CSV, PNG, parametry planety) z parserem i przeliczeniem na GameSettings."
+  },
+  "file:src/CivSim.Headless/HeadlessRun.cs": {
+   "name": "HeadlessRun.cs",
+   "type": "file",
+   "summary": "Uruchamia pełną symulację bez okna: ładuje dane, generuje i waliduje świat, wykonuje tury, zapisuje raporty CSV (czasy tur, statystyki cywilizacji) i podglądy PNG."
+  },
+  "file:src/CivSim.Headless/Png/MapRenderer.cs": {
+   "name": "MapRenderer.cs",
+   "type": "file",
+   "summary": "Deweloperski renderer mapy do PNG: rysuje heksy flat-top w wielu widokach (biomy, wysokość, temperatura, wilgotność, żyzność, złoża, wpływy, pory roku, globus)."
+  },
+  "file:src/CivSim.Headless/Png/PngWriter.cs": {
+   "name": "PngWriter.cs",
+   "type": "file",
+   "summary": "Minimalny koder PNG (8-bit RGB, bez filtrowania, kompresja zlib) oraz prosty bufor obrazu RgbImage, bez zewnętrznych pakietów."
+  },
+  "file:src/CivSim.Headless/Program.cs": {
+   "name": "Program.cs",
+   "type": "file",
+   "summary": "Punkt wejścia aplikacji CivSim.Headless: parsuje argumenty, uruchamia przebieg bez okna i wypisuje podsumowanie (hash, czasy, świat)."
+  },
+  "file:src/CivSim.Protocol/Hosting/LocalGameOptions.cs": {
+   "name": "LocalGameOptions.cs",
+   "type": "file",
+   "summary": "Ustawienia nowej gry lokalnej wybierane przez klienta (typ świata, planeta, orbita, atmosfera, woda, rzeźba, zasoby) wyłącznie jako typy protokołu, plus presety rozmiarów mapy."
+  },
+  "file:src/CivSim.Protocol/Messages/Commands.cs": {
+   "name": "Commands.cs",
+   "type": "file",
+   "summary": "Sieciowe formy komend gry (DTO) jako unia MessagePack: zmiana nazwy cywilizacji oraz przenoszenie, dzielenie, porzucanie, zajmowanie, plądrowanie i podbój osad."
+  },
+  "file:src/CivSim.Protocol/Messages/Messages.cs": {
+   "name": "Messages.cs",
+   "type": "file",
+   "summary": "Wszystkie wiadomości protokołu klient–serwer (Hello, Welcome, odrzucenia, komendy, koniec tury, widok gry, prędkość, zawartość, fragmenty mapy) jako wersjonowana unia MessagePack."
+  },
+  "file:src/CivSim.Protocol/ProtocolInfo.cs": {
+   "name": "ProtocolInfo.cs",
+   "type": "file",
+   "summary": "Stała wersji protokołu klient–serwer (obecnie 7), podbijana przy każdej niezgodnej zmianie wiadomości."
+  },
+  "file:src/CivSim.Protocol/ProtocolSerializer.cs": {
+   "name": "ProtocolSerializer.cs",
+   "type": "file",
+   "summary": "Serializuje wiadomości protokołu do ramek MessagePack poprzedzonych 4-bajtową wersją i deserializuje je z kontrolą wersji."
+  },
+  "file:src/CivSim.Protocol/Transport/IConnection.cs": {
+   "name": "IConnection.cs",
+   "type": "file",
+   "summary": "Interfejs połączenia klient–serwer (Send, TryReceive, Close), wspólny dla transportu w pamięci i przyszłego sieciowego."
+  },
+  "file:src/CivSim.Protocol/Transport/InMemoryConnection.cs": {
+   "name": "InMemoryConnection.cs",
+   "type": "file",
+   "summary": "Transport w pamięci: para połączonych kolejek, która mimo to serializuje każdą wiadomość, by gra jednoosobowa przechodziła przez ten sam format co sieć."
+  },
+  "config:src/CivSim.Server/CivSim.Server.csproj": {
+   "name": "CivSim.Server.csproj",
+   "type": "config",
+   "summary": "Projekt biblioteki CivSim.Server zależny od CivSim.Core, CivSim.Data i CivSim.Protocol."
+  },
+  "file:src/CivSim.Server/CommandMapper.cs": {
+   "name": "CommandMapper.cs",
+   "type": "file",
+   "summary": "Tłumaczy komendy z protokołu (DTO) na komendy rdzenia; nieznane typy są odrzucane, nigdy zgadywane."
+  },
+  "file:src/CivSim.Server/GameServer.cs": {
+   "name": "GameServer.cs",
+   "type": "file",
+   "summary": "Autorytatywny serwer gry: posiada stan, jako jedyny liczy symulację, sprawdza komendy klientów i wysyła każdemu filtrowany widok, kronikę i zmienione fragmenty mapy."
+  },
+  "file:src/CivSim.Server/LocalServerHost.cs": {
+   "name": "LocalServerHost.cs",
+   "type": "file",
+   "summary": "Uruchamia GameServer na osobnym wątku symulacji w procesie klienta (gra jednoosobowa i obserwator), udostępniając klientowi tylko połączenia IConnection i typy protokołu."
+  },
+  "file:src/CivSim.Server/MapViewBuilder.cs": {
+   "name": "MapViewBuilder.cs",
+   "type": "file",
+   "summary": "Buduje wiadomości MapChunkMessage z fragmentów mapy 32×32 (wysokość, temperatura, wilgotność, biom, rzeźba, rzeki, wpływy); po stronie serwera zeruje komórki, których widz nie zna, więc klient nie dostaje ukrytych danych."
+  },
+  "file:src/CivSim.Server/Saves/SaveData.cs": {
+   "name": "SaveData.cs",
+   "type": "file",
+   "summary": "Rekordy MessagePack opisujące format zapisu gry na dysku: ustawienia i planetę, strumienie losowe, światy z klimatem i warstwami mapy, cywilizacje, osady i efekty. Klucze są częścią formatu i wolno je tylko dopisywać."
+  },
+  "file:src/CivSim.Server/Saves/SaveGameSerializer.cs": {
+   "name": "SaveGameSerializer.cs",
+   "type": "file",
+   "summary": "Zapisuje i wczytuje pełny stan gry: nagłówek \"CS2S\" + wersja formatu, potem ciało MessagePack skompresowane LZ4; odrzuca obce lub nowsze pliki i odtwarza GameState wraz z mapą, osadami i efektami."
+  },
+  "file:src/CivSim.Server/ViewBuilder.cs": {
+   "name": "ViewBuilder.cs",
+   "type": "file",
+   "summary": "Tworzy GameViewMessage dla jednego gracza z gotowej migawki: lista światów, cywilizacji i osad, przy czym obce osady poza znanymi komórkami są pomijane, a zawartość magazynów trafia tylko do właściciela."
+  },
+  "config:tests/CivSim.Tests/CivSim.Tests.csproj": {
+   "name": "CivSim.Tests.csproj",
+   "type": "config",
+   "summary": "Projekt testów xUnit, który referencjonuje wszystkie projekty rozwiązania (Core, Data, Protocol, Server, Headless) i pakiety Microsoft.NET.Test.Sdk oraz xunit."
+  },
+  "file:tests/CivSim.Tests/Data/ContentLoaderTests.cs": {
+   "name": "ContentLoaderTests.cs",
+   "type": "file",
+   "summary": "Testy ładowania danych JSON: domyślne dane wczytują się bez błędów, a uszkodzone dane zgłaszają każdy błąd walidacji."
+  },
+  "file:tests/CivSim.Tests/Economy/FarmingTests.cs": {
+   "name": "FarmingTests.cs",
+   "type": "file",
+   "summary": "Testy rolnictwa: osiadanie obozu po odkryciu rolnictwa, uprawa najlepszej ziemi, wyjaławianie i regeneracja pól oraz zależność plonów zboża od żyzności i pory roku."
+  },
+  "file:tests/CivSim.Tests/Economy/StorageTests.cs": {
+   "name": "StorageTests.cs",
+   "type": "file",
+   "summary": "Testy magazynów i efektów: ładowanie danych ekonomii, psucie się zasobów jak procent składany, limity pojemności, determinizm, zapis/odczyt osad oraz widoczność magazynów tylko dla właściciela; zawiera też testy EffectBook."
+  },
+  "file:tests/CivSim.Tests/Economy/TradeProductionTests.cs": {
+   "name": "TradeProductionTests.cs",
+   "type": "file",
+   "summary": "Testy handlu i produkcji: sieci osad jednej cywilizacji, dystrybucja żywności do głodnych ze stratami, receptury rzemieślników, ceny wg podaży i popytu, decyzje EconomyAi oraz wyczerpywanie krzemienia i drewno z lasów."
+  },
+  "file:tests/CivSim.Tests/Events/EventTests.cs": {
+   "name": "EventTests.cs",
+   "type": "file",
+   "summary": "Testy zdarzeń losowych: ładowanie z danych, szansa zależna od terenu i przeliczana z rocznej na turę, łagodzenie technologią, susza, powódź i epidemia rozchodząca się siecią handlu oraz determinizm."
+  },
+  "file:tests/CivSim.Tests/Map/HexCornersTests.cs": {
+   "name": "HexCornersTests.cs",
+   "type": "file",
+   "summary": "Test spójności grafu narożników heksów (HexCorners) względem krawędzi i geometrii HexGlobe."
+  },
+  "file:tests/CivSim.Tests/Map/HexGlobeTests.cs": {
+   "name": "HexGlobeTests.cs",
+   "type": "file",
+   "summary": "Obszerne testy geometrii mapy-kuli HexGlobe: indeksowanie, zawijanie wschód–zachód i przez bieguny, pasy równej powierzchni, sąsiedztwa, odległości porównywane z BFS, linie, pierścienie, zasięgi i krawędzie."
+  },
+  "file:tests/CivSim.Tests/Map/WorldMapTests.cs": {
+   "name": "WorldMapTests.cs",
+   "type": "file",
+   "summary": "Testy mapy świata: siatka fragmentów 32×32, częściowe fragmenty brzegowe, flagi dirty, migawka zmienionych fragmentów oraz udział mapy w haszu stanu i w zapisie."
+  },
+  "file:tests/CivSim.Tests/Numerics/AmountTests.cs": {
+   "name": "AmountTests.cs",
+   "type": "file",
+   "summary": "Testy typu Amount (setne części jednostki): formatowanie, parsowanie, dokładna arytmetyka, przepełnienia, zaokrąglanie, MulDiv i podział proporcjonalny; plus test pierwiastka całkowitego IntMath."
+  },
+  "file:tests/CivSim.Tests/Perception/MapMemoryTests.cs": {
+   "name": "MapMemoryTests.cs",
+   "type": "file",
+   "summary": "Testy pamięci mapy cywilizacji: początkowa znajomość otoczenia, zanikanie pamięci ustnej, zwiadowcy poszerzający wiedzę, wyprawy tylko na znany ląd oraz chodzenie po lodzie morskim."
+  },
+  "file:tests/CivSim.Tests/Population/MigrationTests.cs": {
+   "name": "MigrationTests.cs",
+   "type": "file",
+   "summary": "Testy migracji i stref wpływów: obozy zajmują okoliczną ziemię, wpływ maleje i zatrzymuje się na wodzie, zbieractwo i odrastanie, przenoszenie i dzielenie obozów, rozprzestrzenianie się plemion przez TribeAi i jej determinizm."
+  },
+  "file:tests/CivSim.Tests/Population/PopulationTests.cs": {
+   "name": "PopulationTests.cs",
+   "type": "file",
+   "summary": "Testy populacji: dane i walidacja, wzrost składany rocznie, start z 50 osobami, jedzenie i głód, zachowanie liczby ludzi przy zaokrągleniach, dryf warstw społecznych, nasycenie wzrostu, zapis/odczyt i niezależność od długości tury."
+  },
+  "file:tests/CivSim.Tests/Population/SettlementAssetTests.cs": {
+   "name": "SettlementAssetTests.cs",
+   "type": "file",
+   "summary": "Testy majątku osad: limit noszenia i efekty, zostawianie dobytku przy przenosinach, rozpad pustych osad w ruiny, przejmowanie i grabież, podbój oraz wymieranie cywilizacji bez ludzi."
+  },
+  "file:tests/CivSim.Tests/Protocol/ProtocolSerializerTests.cs": {
+   "name": "ProtocolSerializerTests.cs",
+   "type": "file",
+   "summary": "Testy protokołu klient–serwer: każda wiadomość przechodzi przez serializację w obie strony, ramka zaczyna się od wersji protokołu, zła wersja i śmieci są odrzucane, format jest stabilny, a transport w pamięci dostarcza w kolejności."
+  },
+  "file:tests/CivSim.Tests/Random/DeterministicRandomTests.cs": {
+   "name": "DeterministicRandomTests.cs",
+   "type": "file",
+   "summary": "Testy własnego PRNG: wektory referencyjne SplitMix64 i xoshiro256**, powtarzalność dla seeda, odtwarzanie stanu, zakresy i równomierność NextInt, prawdopodobieństwo Chance i deterministyczne tasowanie."
+  },
+  "file:tests/CivSim.Tests/Random/RandomStreamsTests.cs": {
+   "name": "RandomStreamsTests.cs",
+   "type": "file",
+   "summary": "Testy osobnych strumieni losowych na system: niezależność i brak korelacji, generatory pochodne zależne tylko od kluczy, zapis stanów i stabilność pierwszych wartości między wersjami."
+  },
+  "file:tests/CivSim.Tests/Research/ResearchTests.cs": {
+   "name": "ResearchTests.cs",
+   "type": "file",
+   "summary": "Testy badań: ładowanie grafu technologii, wymagania, tańsze technologie dzięki inspiracjom i sąsiadom, efekty technologii, wejście w neolit, wybór najtańszej technologii przez AI, rybołówstwo, garnki oraz determinizm i zapis."
+  },
+  "file:tests/CivSim.Tests/Server/GameServerTests.cs": {
+   "name": "GameServerTests.cs",
+   "type": "file",
+   "summary": "Testy serwera gry przez transport w pamięci: powitanie i widok startowy, odrzucanie złej wersji protokołu i obcych komend, koniec tury, zwrot naruszeń zasad, przejęcie rozłączonej cywilizacji przez AI i zgodność komend z protokołu z bezpośrednimi."
+  },
+  "file:tests/CivSim.Tests/Server/LocalServerHostTests.cs": {
+   "name": "LocalServerHostTests.cs",
+   "type": "file",
+   "summary": "Testy lokalnego hosta serwera: obserwator dostaje zawartość, całą mapę i steruje prędkością, gracz otrzymuje tylko znane komórki, a nieznane ustawienia są odrzucane."
+  },
+  "file:tests/CivSim.Tests/Server/SaveGameTests.cs": {
+   "name": "SaveGameTests.cs",
+   "type": "file",
+   "summary": "Testy zapisu gry: zapis i odczyt zachowują hasz stanu, wczytana gra toczy się identycznie jak oryginał, zapis do pliku działa, a obce lub nowsze pliki są odrzucane."
+  },
+  "file:tests/CivSim.Tests/Simulation/CommandQueueTests.cs": {
+   "name": "CommandQueueTests.cs",
+   "type": "file",
+   "summary": "Testy kolejki komend: sortowanie według kategorii, cywilizacji i kolejności nadejścia oraz sprawiedliwa rotacja kolejności cywilizacji co turę."
+  },
+  "file:tests/CivSim.Tests/Simulation/DeterminismTests.cs": {
+   "name": "DeterminismTests.cs",
+   "type": "file",
+   "summary": "Testy determinizmu symulacji: dwa przebiegi z tym samym seedem dają identyczny hash stanu, różne seedy różne hashe, a złoty hash jest stabilny między platformami."
+  },
+  "file:tests/CivSim.Tests/Simulation/TestDoubles.cs": {
+   "name": "TestDoubles.cs",
+   "type": "file",
+   "summary": "Atrapy testowe dla symulacji: system rejestrujący fazy, system zużywający losowość, źródło komend zmieniające nazwy cywilizacji i komenda logująca."
+  },
+  "file:tests/CivSim.Tests/Simulation/TurnRunnerTests.cs": {
+   "name": "TurnRunnerTests.cs",
+   "type": "file",
+   "summary": "Testy pętli tury: nowa gra z Ziemią i cywilizacjami, odrzucanie nieparzystej wysokości mapy, kolejność faz z GDD, raport czasu faz, rozstrzyganie komend i publikacja niezmiennych migawek."
+  },
+  "file:tests/CivSim.Tests/SmokeTests.cs": {
+   "name": "SmokeTests.cs",
+   "type": "file",
+   "summary": "Testy dymne całego rozwiązania: dodatnia wersja protokołu oraz poprawne działanie, odrzucanie złych argumentów i determinizm trybu headless z zapisem raportu."
+  },
+  "file:tests/CivSim.Tests/WorldGen/ClimateCycleTests.cs": {
+   "name": "ClimateCycleTests.cs",
+   "type": "file",
+   "summary": "Testy cykli klimatycznych: start w ciepłej fazie, epoki lodowcowe kończące się gwałtownie, brak ich na planecie leżącej na boku oraz determinizm i zgodność z zapisem gry."
+  },
+  "file:tests/CivSim.Tests/WorldGen/PlanetTests.cs": {
+   "name": "PlanetTests.cs",
+   "type": "file",
+   "summary": "Testy modelu planety: dokładność trygonometrii całkowitoliczbowej, nasłonecznienie i klimat Ziemi, wpływ nachylenia osi i długości roku na pory roku oraz poprawność presetów planet."
+  },
+  "file:tests/CivSim.Tests/WorldGen/SeaLevelTests.cs": {
+   "name": "SeaLevelTests.cs",
+   "type": "file",
+   "summary": "Testy poziomu morza: opadanie morza wraz z lodem, zalewanie niskich wybrzeży, zamarzanie i rozmarzanie morza, odsłanianie szelfów oraz opuszczanie zalanych osad z ruinami pod wodą."
+  },
+  "file:tests/CivSim.Tests/WorldGen/SeasonTests.cs": {
+   "name": "SeasonTests.cs",
+   "type": "file",
+   "summary": "Testy pór roku: rozgrywanie długich lat sezon po sezonie, wolne decyzje raz na okres ery, naprzemienne lato i zima na półkulach, wpływ zimy na dziką żywność i odporność na zimno."
+  },
+  "file:tests/CivSim.Tests/WorldGen/StarAndAirTests.cs": {
+   "name": "StarAndAirTests.cs",
+   "type": "file",
+   "summary": "Testy gwiazdy, orbity i atmosfery: logarytmy fixed-point, prawa Keplera, ekosfera, cykl węglowy, bilans energii i wyrównywanie klimatu przez gęstą atmosferę."
+  },
+  "file:tests/CivSim.Tests/WorldGen/WorldGeneratorTests.cs": {
+   "name": "WorldGeneratorTests.cs",
+   "type": "file",
+   "summary": "Obszerne testy generatora świata: determinizm i złoty hash, poprawność wszystkich typów i ustawień świata, rzeki, jeziora, złoża i sprawiedliwe starty oraz zapis i odczyt wygenerowanego świata."
+  }
+ },
+ "totalNodes": 218,
+ "totalEdges": 1168
+}

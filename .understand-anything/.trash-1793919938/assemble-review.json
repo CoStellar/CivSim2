@@ -1,0 +1,19 @@
+{
+  "fixedSectionOk": true,
+  "nodesRecovered": 0,
+  "edgesRestored": 0,
+  "crossBatchEdgesAdded": 10,
+  "typesRemapped": 0,
+  "complexityRemapped": 0,
+  "edgesRetargeted": 13,
+  "notes": [
+    "Skrypt merge nie zgłosił żadnych poprawek ID ani odrzuconych edge'y; wszystkie 1038 node'ów ma poprawny prefix typu, filePath zgodny z ID i krawędź contains od rodzica.",
+    "Pokrycie pełne: każdy z 218 plików ze scan-result.json ma dokładnie jeden node na poziomie pliku, a typ node'a zgadza się z fileCategory skanu.",
+    "Wszystkie wartości complexity są już poprawne (simple 570, moderate 345, complex 123); brak nieznanych typów node'ów.",
+    "Przepięto 13 krawędzi implements, które wskazywały na node pliku (np. file:src/CivSim.Core/Simulation/ITurnSystem.cs) zamiast na node interfejsu (class:...:ITurnSystem, ICommand, IChronicledCommand, ICommandSource) — niespójność między batchami.",
+    "Dodano 10 krawędzi depends_on między plikami .csproj na podstawie ProjectReference (Data, Headless, Server, Game); batche zarejestrowały wcześniej tylko referencje z CivSim.Tests.csproj. Referencje Game -> Core/Data mają wagę 0.4, bo są to referencje tylko na zawartość (ReferenceOutputAssembly=false), bez łączenia kodu.",
+    "importMap w scan-result.json jest pusty (resolver przestrzeni nazw C# nie dał wyników); zależności między plikami pochodzą z 701 krawędzi depends_on file->file wygenerowanych przez analizatory, więc brak krawędzi imports nie oznacza utraty danych.",
+    "Directory.Build.props ma typ 'file' (skan sklasyfikował go jako code), choć semantycznie jest to konfiguracja MSBuild; pozostawiono zgodnie ze skanem.",
+    "Linker tested_by dodał 0 krawędzi, ale batche same wygenerowały 72 krawędzie tested_by file->file."
+  ]
+}

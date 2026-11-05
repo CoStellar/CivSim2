@@ -62,14 +62,30 @@ public abstract class Advisor : ICommandSource
     /// <inheritdoc />
     public abstract void IssueCommands(GameState state, CommandQueue queue);
 
-    /// <summary>
-    /// The weight the strategist gives <paramref name="goal"/> for <paramref name="civ"/>, per mille. Neutral until
-    /// stage 4b brings the strategist.
-    /// </summary>
-    protected static int GoalWeight(CivilizationState civ, Goal goal) => Factor.Neutral;
+    /// <summary>The weight the strategist gives <paramref name="goal"/> for <paramref name="civ"/>, per mille (GDD 8.1).</summary>
+    protected static int GoalWeight(CivilizationState civ, Goal goal)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        return civ.GoalWeight(goal);
+    }
 
-    /// <summary>The character multiplier of <paramref name="civ"/> for an action serving <paramref name="goal"/>. Neutral until stage 4b.</summary>
-    protected static int CharacterMultiplier(CivilizationState civ, Goal goal) => Factor.Neutral;
+    /// <summary>The character multiplier of <paramref name="civ"/> for an action serving <paramref name="goal"/> (GDD 8.3, 8.4).</summary>
+    protected static int CharacterMultiplier(CivilizationState civ, Goal goal) => Character.Multiplier(civ, goal);
+
+    /// <summary>
+    /// Rank of the chosen action (GDD 8.3): a cautious civilization takes the best one with a chance equal to its
+    /// caution, otherwise it draws among the kept actions with chances by score.
+    /// </summary>
+    protected int Pick(CivilizationState civ, DeterministicRandom? random)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        if (random is null || Chooser.Count <= 1 || random.NextInt(1000) < civ.Trait(Trait.Caution))
+        {
+            return Chooser.Count == 0 ? -1 : 0;
+        }
+
+        return Chooser.Pick(random);
+    }
 
     /// <summary>
     /// The generator for one decision about <paramref name="entity"/>, or null when the chooser keeps only the best
@@ -107,12 +123,15 @@ public sealed class AiCouncil : ICommandSource
 {
     private readonly Advisor[] _advisors;
 
-    /// <summary>Creates the council of the core advisors: governor, treasurer, scholar.</summary>
+    /// <summary>
+    /// Creates the council of the core advisors. The governor runs first, so the strategist reads this turn's place
+    /// values; the strategy it sets applies from the next turn.
+    /// </summary>
     public AiCouncil(GameContent content)
     {
         ArgumentNullException.ThrowIfNull(content);
         Governor = new GovernorAdvisor(content);
-        _advisors = [Governor, new TreasurerAdvisor(content), new Research.ScholarAdvisor(content)];
+        _advisors = [Governor, new StrategistAdvisor(content, Governor), new TreasurerAdvisor(content), new Research.ScholarAdvisor(content)];
         foreach (Advisor advisor in _advisors)
         {
             advisor.Log = Log;

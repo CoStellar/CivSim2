@@ -1,0 +1,245 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 4,
+  "filesSkipped": [
+    "CivSim2.sln"
+  ],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 4,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 4
+    }
+  },
+  "results": [
+    {
+      "path": "CLAUDE.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 161,
+      "nonEmptyLines": 132,
+      "sections": [
+        {
+          "heading": "CivSim 2 — instrukcje dla Claude Code",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Projekt w skrócie",
+          "level": 2,
+          "line": 6
+        },
+        {
+          "heading": "Zakres",
+          "level": 2,
+          "line": 12
+        },
+        {
+          "heading": "Role",
+          "level": 2,
+          "line": 19
+        },
+        {
+          "heading": "Języki",
+          "level": 2,
+          "line": 26
+        },
+        {
+          "heading": "Jak wygląda każda sesja",
+          "level": 2,
+          "line": 32
+        },
+        {
+          "heading": "Architektura — twarde zasady",
+          "level": 2,
+          "line": 50
+        },
+        {
+          "heading": "Struktura repo",
+          "level": 2,
+          "line": 89
+        },
+        {
+          "heading": "Testy, benchmarki i CI",
+          "level": 2,
+          "line": 105
+        },
+        {
+          "heading": "Zrozumiałość kodu: Understand Anything",
+          "level": 2,
+          "line": 121
+        },
+        {
+          "heading": "Dokumentacja techniczna",
+          "level": 2,
+          "line": 137
+        },
+        {
+          "heading": "Grafika (kiedy prosisz Patryka o pliki)",
+          "level": 2,
+          "line": 144
+        },
+        {
+          "heading": "Czego nie robić",
+          "level": 2,
+          "line": 153
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 13
+      }
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 60,
+      "nonEmptyLines": 44,
+      "sections": [
+        {
+          "heading": "CivSim 2",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Status",
+          "level": 2,
+          "line": 12
+        },
+        {
+          "heading": "Project plan",
+          "level": 2,
+          "line": 16
+        },
+        {
+          "heading": "Getting started",
+          "level": 2,
+          "line": 38
+        },
+        {
+          "heading": "Tech",
+          "level": 2,
+          "line": 43
+        },
+        {
+          "heading": "Repository layout",
+          "level": 2,
+          "line": 51
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 6
+      }
+    },
+    {
+      "path": "ROADMAP.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 146,
+      "nonEmptyLines": 108,
+      "sections": [
+        {
+          "heading": "CivSim 2 — Roadmapa",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Etap 0 — Fundamenty",
+          "level": 2,
+          "line": 14
+        },
+        {
+          "heading": "Etap 1 — Mapa",
+          "level": 2,
+          "line": 34
+        },
+        {
+          "heading": "Etap 1b — Świat jak planeta (dodany 2026-11-05)",
+          "level": 2,
+          "line": 49
+        },
+        {
+          "heading": "Etap 1c — Gwiazda, atmosfera i wahania klimatu (decyzje z 2026-11-05)",
+          "level": 2,
+          "line": 62
+        },
+        {
+          "heading": "Etap 2 — Podgląd symulacji (Godot)",
+          "level": 2,
+          "line": 74
+        },
+        {
+          "heading": "Etap 3 — Gospodarka i ludność (ery 1–2)",
+          "level": 2,
+          "line": 88
+        },
+        {
+          "heading": "Etap 4 — AI i dyplomacja",
+          "level": 2,
+          "line": 114
+        },
+        {
+          "heading": "Etap 5 — Tryb gracza i grafika",
+          "level": 2,
+          "line": 128
+        },
+        {
+          "heading": "Etapy 6–12 — Ery 3–9",
+          "level": 2,
+          "line": 137
+        },
+        {
+          "heading": "Aktualizacje po CORE (poza tym planem)",
+          "level": 2,
+          "line": 142
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 11
+      }
+    },
+    {
+      "path": "global.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 9,
+      "nonEmptyLines": 9,
+      "sections": [
+        {
+          "heading": "sdk",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "msbuild-sdks",
+          "level": 1,
+          "line": 6
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 2
+      }
+    }
+  ]
+}

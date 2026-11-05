@@ -118,12 +118,13 @@ Gotowe, gdy: 100 gier AI kontra AI daje sensowne historie (wojny, sojusze, upadk
 Punkt startu, proponowany podział na PR-y (4a–4g) i pytania do decyzji: `docs/prompts/03-etap-4-ai-dyplomacja.md`.
 
 Gotowe: **4a** (wspólna ocena działań: czynniki w tysięcznych z krzywych, waga celu, charakter, koszt; wybór z 1–3 najlepszych; rada doradców:
-gubernator, skarbnik, uczony; dziennik „Dlaczego?” i `--decisions` w Headless; symulacja bit w bit taka sama jak w etapie 3; `docs/systems/ai.md`, ADR 0016).
+gubernator, skarbnik, uczony; dziennik „Dlaczego?” i `--decisions` w Headless; symulacja bit w bit taka sama jak w etapie 3; `docs/systems/ai.md`, ADR 0016),
+**4b** (charakter z 8 cech, strateg z wagami celów i kierunkiem ekspansji, losowanie z 3 najlepszych zależne od ostrożności, histereza receptur, rzadsze szukanie miejsc; ADR 0017).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
-- [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji
+- [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji (kierunek ekspansji z wartości wolnej ziemi gotowy w 4b)
 - [ ] Ocena działań (utility AI) — dopracowanie na podstawie testów wsadowych (szkielet gotowy w 4a)
-- [ ] Charakter cywilizacji i przywódcy, sukcesja
+- [ ] Charakter cywilizacji i przywódcy, sukcesja (charakter cywilizacji gotowy w 4b)
 - [ ] Odkrywanie cywilizacji (zwiad, kontakt, pogłoski), pamięć relacji, umowy (pokój, wojna, handel, sojusz), wojna z celem, wynikiem i zmęczeniem, armie na jednym polu, uproszczone zaopatrzenie, plemiona niezależne
 - [ ] 3–4 ustroje z tempem decyzji (ustrój zmienia spadek stabilności), stabilność, bunty, secesja, administracja
 - [ ] Panel „Dlaczego?” i wpisy w kronice

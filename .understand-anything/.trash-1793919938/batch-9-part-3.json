@@ -1,0 +1,1284 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "type": "file",
+   "name": "PopulationSystem.cs",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "summary": "System fazy populacji: wzrost i spadek liczby ludzi według rocznych temp przeliczanych na długość tury, zdrowie, nastrój i przepływ ludzi między warstwami społecznymi.",
+   "tags": [
+    "populacja",
+    "turn-system",
+    "symulacja",
+    "demografia"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "type": "class",
+   "name": "PopulationSystem",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    15,
+    209
+   ],
+   "summary": "System populacji: wzrost złożony w czasie tury, zdrowie i nastrój, zmiana liczebności i dryf między warstwami.",
+   "tags": [
+    "turn-system",
+    "populacja",
+    "demografia",
+    "population"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/PopulationSystem.cs:Execute",
+   "type": "function",
+   "name": "Execute",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    38,
+    66
+   ],
+   "summary": "Dla każdej osady aktualizuje zdrowie, nastrój, liczebność i warstwy na podstawie danych z fazy ekonomii.",
+   "tags": [
+    "population",
+    "populationsystem",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/PopulationSystem.cs:GrowthFactor",
+   "type": "function",
+   "name": "GrowthFactor",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    72,
+    88
+   ],
+   "summary": "Współczynnik wzrostu stałoprzecinkowy dla rocznego tempa złożonego przez liczbę miesięcy tury.",
+   "tags": [
+    "population",
+    "populationsystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/PopulationSystem.cs:UpdateHealthAndMood",
+   "type": "function",
+   "name": "UpdateHealthAndMood",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    90,
+    108
+   ],
+   "summary": "Aktualizuje zdrowie i nastrój osady według zjedzonej żywności i zaspokojonych potrzeb.",
+   "tags": [
+    "population",
+    "populationsystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/PopulationSystem.cs:NewTotal",
+   "type": "function",
+   "name": "NewTotal",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    110,
+    129
+   ],
+   "summary": "Liczy nową liczbę ludzi osady z tempem urodzeń i zgonów oraz efektami.",
+   "tags": [
+    "population",
+    "populationsystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/PopulationSystem.cs:ChangeTotal",
+   "type": "function",
+   "name": "ChangeTotal",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    132,
+    161
+   ],
+   "summary": "Rozkłada zmianę liczby ludzi na warstwy społeczne.",
+   "tags": [
+    "population",
+    "populationsystem",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/PopulationSystem.cs:Drift",
+   "type": "function",
+   "name": "Drift",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    164,
+    195
+   ],
+   "summary": "Przesuwa ludzi między warstwami społecznymi ku docelowym udziałom.",
+   "tags": [
+    "population",
+    "populationsystem",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/PopulationSystem.cs:HasPeople",
+   "type": "function",
+   "name": "HasPeople",
+   "filePath": "src/CivSim.Core/Population/PopulationSystem.cs",
+   "lineRange": [
+    197,
+    208
+   ],
+   "summary": "Sprawdza, czy cywilizacja ma jeszcze jakichkolwiek ludzi.",
+   "tags": [
+    "population",
+    "populationsystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "type": "file",
+   "name": "SettlementAssets.cs",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "summary": "Osady jako majątek (GDD 5.5): przenoszenie dóbr, porzucanie i przenosiny osad, liczenie wojowników i strat; zawiera systemy porzucania pustych osad i ich rozpadu w ruiny.",
+   "tags": [
+    "populacja",
+    "osady",
+    "turn-system",
+    "ekonomia"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "type": "class",
+   "name": "SettlementAssets",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    14,
+    165
+   ],
+   "summary": "Wspólne reguły majątku osad: udźwig, przenoszenie dóbr, porzucanie, przenosiny, wojownicy i straty ludności.",
+   "tags": [
+    "osady",
+    "ekonomia",
+    "reguly-gry",
+    "population"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem",
+   "type": "class",
+   "name": "AbandonmentSystem",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    171,
+    188
+   ],
+   "summary": "System porzucający osady, w których nie został nikt żywy.",
+   "tags": [
+    "turn-system",
+    "osady",
+    "population"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem",
+   "type": "class",
+   "name": "DecaySystem",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    194,
+    229
+   ],
+   "summary": "System zamieniający porzucone osady w ruiny, a ruiny usuwający po czasie zależnym od poziomu osady.",
+   "tags": [
+    "turn-system",
+    "osady",
+    "ruiny",
+    "population"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:CarryCapacity",
+   "type": "function",
+   "name": "CarryCapacity",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    24,
+    35
+   ],
+   "summary": "Liczy, ile mogą unieść ludzie cywilizacji, z danych osad i efektów udźwigu.",
+   "tags": [
+    "population",
+    "settlementassets",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:Carry",
+   "type": "function",
+   "name": "Carry",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    42,
+    82
+   ],
+   "summary": "Przenosi dobra między osadami w granicach udźwigu i procentu każdego dobra.",
+   "tags": [
+    "population",
+    "settlementassets",
+    "algorytm"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:Abandon",
+   "type": "function",
+   "name": "Abandon",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    88,
+    109
+   ],
+   "summary": "Oznacza pustą osadę jako porzuconą i daje dawnemu właścicielowi roszczenie.",
+   "tags": [
+    "population",
+    "settlementassets",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:Relocate",
+   "type": "function",
+   "name": "Relocate",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    116,
+    134
+   ],
+   "summary": "Przenosi osadę z ludźmi na nowe pole, zostawiając porzucony obóz z resztą dóbr.",
+   "tags": [
+    "population",
+    "settlementassets",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:Warriors",
+   "type": "function",
+   "name": "Warriors",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    137,
+    149
+   ],
+   "summary": "Liczy wojowników osady (warstwy, które walczą).",
+   "tags": [
+    "population",
+    "settlementassets",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:Lose",
+   "type": "function",
+   "name": "Lose",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    152,
+    164
+   ],
+   "summary": "Usuwa procent ludzi osady, opcjonalnie tylko z warstw walczących.",
+   "tags": [
+    "population",
+    "settlementassets",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem.Execute",
+   "type": "function",
+   "name": "AbandonmentSystem.Execute",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    177,
+    187
+   ],
+   "summary": "Porzuca każdą osadę, w której nie został nikt.",
+   "tags": [
+    "population",
+    "abandonmentsystem",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem.Execute",
+   "type": "function",
+   "name": "DecaySystem.Execute",
+   "filePath": "src/CivSim.Core/Population/SettlementAssets.cs",
+   "lineRange": [
+    200,
+    228
+   ],
+   "summary": "Zamienia porzucone osady w ruiny i usuwa ruiny po czasie zależnym od poziomu.",
+   "tags": [
+    "population",
+    "decaysystem",
+    "metoda"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "type": "file",
+   "name": "DeterministicRandom.cs",
+   "filePath": "src/CivSim.Core/Random/DeterministicRandom.cs",
+   "summary": "Deterministyczny generator xoshiro256** zastępujący System.Random w logice gry: liczby bez obciążenia, szanse, tasowanie i zapisywalny stan.",
+   "tags": [
+    "random",
+    "determinizm",
+    "prng",
+    "utility"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "type": "class",
+   "name": "DeterministicRandom",
+   "filePath": "src/CivSim.Core/Random/DeterministicRandom.cs",
+   "lineRange": [
+    9,
+    165
+   ],
+   "summary": "Generator xoshiro256** z metodami liczb całkowitych bez obciążenia, szans, tasowania i ustawiania stanu.",
+   "tags": [
+    "prng",
+    "determinizm",
+    "random"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Random/DeterministicRandom.cs:SetState",
+   "type": "function",
+   "name": "SetState",
+   "filePath": "src/CivSim.Core/Random/DeterministicRandom.cs",
+   "lineRange": [
+    42,
+    53
+   ],
+   "summary": "Przywraca dokładny stan generatora, np. po wczytaniu zapisu.",
+   "tags": [
+    "random",
+    "deterministicrandom",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextULong",
+   "type": "function",
+   "name": "NextULong",
+   "filePath": "src/CivSim.Core/Random/DeterministicRandom.cs",
+   "lineRange": [
+    56,
+    69
+   ],
+   "summary": "Zwraca kolejne 64 losowe bity algorytmem xoshiro256**.",
+   "tags": [
+    "random",
+    "deterministicrandom",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextInt",
+   "type": "function",
+   "name": "NextInt",
+   "filePath": "src/CivSim.Core/Random/DeterministicRandom.cs",
+   "lineRange": [
+    89,
+    98
+   ],
+   "summary": "Zwraca równomierną liczbę całkowitą z przedziału bez obciążenia.",
+   "tags": [
+    "random",
+    "deterministicrandom",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Random/DeterministicRandom.cs:Chance",
+   "type": "function",
+   "name": "Chance",
+   "filePath": "src/CivSim.Core/Random/DeterministicRandom.cs",
+   "lineRange": [
+    101,
+    119
+   ],
+   "summary": "Zwraca true z prawdopodobieństwem licznik/mianownik.",
+   "tags": [
+    "random",
+    "deterministicrandom",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextBounded",
+   "type": "function",
+   "name": "NextBounded",
+   "filePath": "src/CivSim.Core/Random/DeterministicRandom.cs",
+   "lineRange": [
+    144,
+    159
+   ],
+   "summary": "Losuje liczbę z zakresu bez obciążenia (mnożenie z odrzucaniem).",
+   "tags": [
+    "random",
+    "deterministicrandom",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Random/RandomState.cs",
+   "type": "file",
+   "name": "RandomState.cs",
+   "filePath": "src/CivSim.Core/Random/RandomState.cs",
+   "summary": "Niezmienny rekord pełnego 256-bitowego stanu generatora DeterministicRandom, do zapisów i haszowania.",
+   "tags": [
+    "random",
+    "type-definition",
+    "serialization"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Random/RandomStreamId.cs",
+   "type": "file",
+   "name": "RandomStreamId.cs",
+   "filePath": "src/CivSim.Core/Random/RandomStreamId.cs",
+   "summary": "Enum nazwanych strumieni losowości (po jednym na system), stabilny w formacie zapisu; nowe wartości tylko dopisywane.",
+   "tags": [
+    "random",
+    "type-definition",
+    "determinizm"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "type": "file",
+   "name": "RandomStreams.cs",
+   "filePath": "src/CivSim.Core/Random/RandomStreams.cs",
+   "summary": "Zbiór niezależnych generatorów, po jednym na strumień, wyprowadzonych z jednego ziarna gry; kopiuje i przywraca ich stany.",
+   "tags": [
+    "random",
+    "determinizm",
+    "prng",
+    "stan-gry"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/CivSim.Core/Random/RandomStreams.cs:RandomStreams",
+   "type": "class",
+   "name": "RandomStreams",
+   "filePath": "src/CivSim.Core/Random/RandomStreams.cs",
+   "lineRange": [
+    9,
+    74
+   ],
+   "summary": "Rejestr niezależnych strumieni losowości wyprowadzanych z ziarna gry, z kopiowaniem i przywracaniem stanów.",
+   "tags": [
+    "prng",
+    "random",
+    "stan-gry",
+    "random"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/CivSim.Core/Random/RandomStreams.cs:CopyStates",
+   "type": "function",
+   "name": "CopyStates",
+   "filePath": "src/CivSim.Core/Random/RandomStreams.cs",
+   "lineRange": [
+    43,
+    54
+   ],
+   "summary": "Kopiuje stany wszystkich strumieni do bufora.",
+   "tags": [
+    "random",
+    "randomstreams",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/CivSim.Core/Random/RandomStreams.cs:RestoreStates",
+   "type": "function",
+   "name": "RestoreStates",
+   "filePath": "src/CivSim.Core/Random/RandomStreams.cs",
+   "lineRange": [
+    57,
+    68
+   ],
+   "summary": "Przywraca stany wszystkich strumieni z bufora.",
+   "tags": [
+    "random",
+    "randomstreams",
+    "metoda"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/CivSim.Core/Random/SplitMix64.cs",
+   "type": "file",
+   "name": "SplitMix64.cs",
+   "filePath": "src/CivSim.Core/Random/SplitMix64.cs",
+   "summary": "Mieszacz SplitMix64 używany wyłącznie do rozwijania ziaren w stan generatora i łączenia wartości, nigdy do rzutów w rozgrywce.",
+   "tags": [
+    "random",
+    "hashing",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/CivSim.Core/Random/SplitMix64.cs:SplitMix64",
+   "type": "class",
+   "name": "SplitMix64",
+   "filePath": "src/CivSim.Core/Random/SplitMix64.cs",
+   "lineRange": [
+    6,
+    30
+   ],
+   "summary": "Statyczny mieszacz SplitMix64 do rozwijania i łączenia ziaren.",
+   "tags": [
+    "random",
+    "hashing",
+    "random"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:GrowthFactor",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:GrowthFactor",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:UpdateHealthAndMood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:UpdateHealthAndMood",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:NewTotal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:NewTotal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:ChangeTotal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:ChangeTotal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:Drift",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:Drift",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:HasPeople",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:HasPeople",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Content/EconomyDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Content/PopulationDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Economy/Spoilage.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Numerics/Rounding.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnContext.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnPhase.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/State/CivilizationState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/PopulationSystem.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "class:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "class:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "class:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "class:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:CarryCapacity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:CarryCapacity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Carry",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Carry",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Abandon",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Abandon",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Relocate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Relocate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Warriors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Warriors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Lose",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:SettlementAssets",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Lose",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem.Execute",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Content/EconomyDefinitions.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Content/GameContent.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Map/HexCoord.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Numerics/Amount.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Numerics/IntMath.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Numerics/Rounding.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnContext.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/Simulation/TurnPhase.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/State/GameState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/State/Ids.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Population/SettlementAssets.cs",
+   "target": "file:src/CivSim.Core/State/SettlementState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:SetState",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:SetState",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextULong",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextULong",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextInt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextInt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:Chance",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:Chance",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextBounded",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Random/DeterministicRandom.cs:DeterministicRandom",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextBounded",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "file:src/CivSim.Core/Random/RandomState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "target": "file:src/CivSim.Core/Random/SplitMix64.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "class:src/CivSim.Core/Random/RandomStreams.cs:RandomStreams",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "class:src/CivSim.Core/Random/RandomStreams.cs:RandomStreams",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "function:src/CivSim.Core/Random/RandomStreams.cs:CopyStates",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Random/RandomStreams.cs:RandomStreams",
+   "target": "function:src/CivSim.Core/Random/RandomStreams.cs:CopyStates",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "function:src/CivSim.Core/Random/RandomStreams.cs:RestoreStates",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "class:src/CivSim.Core/Random/RandomStreams.cs:RandomStreams",
+   "target": "function:src/CivSim.Core/Random/RandomStreams.cs:RestoreStates",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "file:src/CivSim.Core/Random/DeterministicRandom.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "file:src/CivSim.Core/Random/RandomState.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "file:src/CivSim.Core/Random/RandomStreamId.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/RandomStreams.cs",
+   "target": "file:src/CivSim.Core/Random/SplitMix64.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/SplitMix64.cs",
+   "target": "class:src/CivSim.Core/Random/SplitMix64.cs:SplitMix64",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/CivSim.Core/Random/SplitMix64.cs",
+   "target": "class:src/CivSim.Core/Random/SplitMix64.cs:SplitMix64",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/PopulationSystem.cs:PopulationSystem",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "class:src/CivSim.Core/Population/SettlementAssets.cs:DecaySystem",
+   "target": "file:src/CivSim.Core/Simulation/ITurnSystem.cs",
+   "type": "implements",
+   "direction": "forward",
+   "weight": 0.9
+  },
+  {
+   "source": "function:src/CivSim.Core/Population/SettlementAssets.cs:AbandonmentSystem.Execute",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Abandon",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Population/SettlementAssets.cs:Relocate",
+   "target": "function:src/CivSim.Core/Population/SettlementAssets.cs:Carry",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Population/PopulationSystem.cs:NewTotal",
+   "target": "function:src/CivSim.Core/Population/PopulationSystem.cs:GrowthFactor",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Random/RandomStreams.cs:RestoreStates",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:SetState",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextInt",
+   "target": "function:src/CivSim.Core/Random/DeterministicRandom.cs:NextBounded",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  }
+ ]
+}

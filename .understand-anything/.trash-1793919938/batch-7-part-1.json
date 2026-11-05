@@ -1,0 +1,1132 @@
+{
+ "nodes": [
+  {
+   "id": "config:.claude/settings.json",
+   "type": "config",
+   "name": "settings.json",
+   "filePath": ".claude/settings.json",
+   "summary": "Ustawienia Claude Code dla projektu: rejestrują marketplace Egonex-AI/Understand-Anything i włączają plugin understand-anything.",
+   "tags": [
+    "configuration",
+    "claude-code",
+    "plugin",
+    "tooling"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:.gitattributes",
+   "type": "file",
+   "name": ".gitattributes",
+   "filePath": ".gitattributes",
+   "summary": "Reguły Git dla całego repo: normalizacja końców linii do LF (CRLF dla .sln), diff C# dla .cs oraz oznaczenie grafik i dźwięków jako plików binarnych; zawiera wskazówkę o Git LFS dla grafu wiedzy.",
+   "tags": [
+    "configuration",
+    "git",
+    "line-endings",
+    "repo-hygiene"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:Directory.Build.props",
+   "type": "file",
+   "name": "Directory.Build.props",
+   "filePath": "Directory.Build.props",
+   "summary": "Wspólne właściwości MSBuild dla wszystkich projektów .NET: net10.0, nullable, ostrzeżenia jako błędy, deterministyczna kompilacja i InvariantGlobalization.",
+   "tags": [
+    "build-system",
+    "configuration",
+    "msbuild",
+    "determinism"
+   ],
+   "complexity": "simple",
+   "languageNotes": "Directory.Build.props jest automatycznie importowany przez każdy plik .csproj w drzewie katalogów poniżej niego."
+  },
+  {
+   "id": "document:docs/GDD.md",
+   "type": "document",
+   "name": "GDD.md",
+   "filePath": "docs/GDD.md",
+   "summary": "Pełny dokument projektu gry CivSim 2 w 16 rozdziałach: wizja, architektura, mapa-planeta, ekonomia, ludność, technologie, autonomia AI, dyplomacja, zdarzenia, pętla tury, interfejs oraz zakres CORE i moduły.",
+   "tags": [
+    "documentation",
+    "game-design",
+    "specification",
+    "scope"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "document:docs/SETUP.md",
+   "type": "document",
+   "name": "SETUP.md",
+   "filePath": "docs/SETUP.md",
+   "summary": "Instrukcja przygotowania komputera po polsku: instalacja narzędzi, pobranie repo, otwarcie projektu w Godocie, opis struktury katalogów, rozwiązywanie problemów i uruchamianie symulacji bez okna.",
+   "tags": [
+    "documentation",
+    "setup",
+    "getting-started",
+    "headless"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:game/.gitattributes",
+   "type": "file",
+   "name": ".gitattributes",
+   "filePath": "game/.gitattributes",
+   "summary": "Wymusza końce linii LF dla plików sceny i zasobów Godota (.tscn, .tres, .godot) w kliencie.",
+   "tags": [
+    "configuration",
+    "git",
+    "godot",
+    "line-endings"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "config:game/CivSim.Game.csproj",
+   "type": "config",
+   "name": "CivSim.Game.csproj",
+   "filePath": "game/CivSim.Game.csproj",
+   "summary": "Projekt C# klienta Godot (Godot.NET.Sdk 4.7.2): referencje tylko do CivSim.Protocol i CivSim.Server, z wyłączonymi referencjami przechodnimi, tak by klient nie mógł użyć typów CivSim.Core; Core i Data są kopiowane jedynie na potrzeby lokalnego serwera, a dane JSON linkowane do wyjścia.",
+   "tags": [
+    "configuration",
+    "build-system",
+    "godot",
+    "client-server-boundary"
+   ],
+   "complexity": "simple",
+   "languageNotes": "DisableTransitiveProjectReferences oraz ReferenceOutputAssembly=\"false\" egzekwują granicę klient–serwer już na etapie kompilacji."
+  },
+  {
+   "id": "file:game/project.godot",
+   "type": "file",
+   "name": "project.godot",
+   "filePath": "game/project.godot",
+   "summary": "Konfiguracja silnika Godot 4.7 dla klienta: nazwa aplikacji, scena startowa Main.tscn, okno 1920×1080, filtrowanie tekstur nearest dla pixel artu i domyślne argumenty uruchomienia (seed 42, mapa huge).",
+   "tags": [
+    "configuration",
+    "godot",
+    "entry-point",
+    "engine-settings"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:game/scenes/Main.tscn",
+   "type": "file",
+   "name": "Main.tscn",
+   "filePath": "game/scenes/Main.tscn",
+   "summary": "Scena główna Godota: pojedynczy węzeł Node2D z podpiętym skryptem Main.cs.",
+   "tags": [
+    "godot",
+    "scene",
+    "entry-point",
+    "markup"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:game/scripts/Main.cs",
+   "type": "file",
+   "name": "Main.cs",
+   "filePath": "game/scripts/Main.cs",
+   "summary": "Punkt wejścia deweloperskiej przeglądarki: uruchamia lokalny serwer na osobnym wątku, łączy się jako obserwator i rysuje to, co przysyła serwer; obsługuje kamerę, klawiaturę, zrzuty ekranu, benchmark i opcje wiersza poleceń.",
+   "tags": [
+    "entry-point",
+    "godot",
+    "client",
+    "camera",
+    "benchmark"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:game/scripts/Map/HexLayout.cs",
+   "type": "file",
+   "name": "HexLayout.cs",
+   "filePath": "game/scripts/Map/HexLayout.cs",
+   "summary": "Statyczna geometria heksów flat-top klienta: rozmiary w pikselach, narożniki, okres zawijania mapy, środek komórki i komórka pod pozycją piksela.",
+   "tags": [
+    "utility",
+    "hex-grid",
+    "geometry",
+    "rendering"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:game/scripts/Map/MapOverlay.cs",
+   "type": "file",
+   "name": "MapOverlay.cs",
+   "filePath": "game/scripts/Map/MapOverlay.cs",
+   "summary": "Definiuje enum widoków mapy (biomy, wysokość, temperatura, żyzność, złoża, właściciel, wpływy, pory roku) i klasę OverlayColors liczącą kolor podglądu każdej komórki.",
+   "tags": [
+    "rendering",
+    "map-overlay",
+    "color-mapping",
+    "developer-preview"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:game/scripts/Map/MapView.cs",
+   "type": "file",
+   "name": "MapView.cs",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "summary": "Renderer świata jako kolorowych heksów: każdy fragment 32×32 ma MultiMesh heksów i rzek przebudowywany tylko po zmianie, a w każdej klatce węzły dostają jedynie widoczne kopie fragmentów, co daje zawijanie mapy przy stałym koszcie.",
+   "tags": [
+    "rendering",
+    "component",
+    "godot",
+    "multimesh",
+    "performance"
+   ],
+   "complexity": "complex",
+   "languageNotes": "Pula węzłów (Take/Release) i dirty flags na fragmentach unikają alokacji i pełnego przerysowywania co klatkę."
+  },
+  {
+   "id": "class:game/scripts/Main.cs:Main",
+   "type": "class",
+   "name": "Main",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    22,
+    494
+   ],
+   "summary": "Węzeł główny klienta Godot: zarządza lokalnym serwerem, sesją obserwatora, kamerą, wejściem, HUD-em i benchmarkiem.",
+   "tags": [
+    "entry-point",
+    "godot",
+    "client",
+    "controller"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:_Ready",
+   "type": "function",
+   "name": "_Ready",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    48,
+    88
+   ],
+   "summary": "Parsuje opcje, uruchamia lokalny serwer, tworzy sesję klienta, MapView i HUD oraz podpina zdarzenia.",
+   "tags": [
+    "initialization",
+    "godot-lifecycle",
+    "bootstrap"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:_Process",
+   "type": "function",
+   "name": "_Process",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    98,
+    139
+   ],
+   "summary": "Co klatkę pompuje wiadomości serwera, odświeża mapę, znaczniki osad i HUD.",
+   "tags": [
+    "game-loop",
+    "godot-lifecycle",
+    "rendering"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:Screenshot",
+   "type": "function",
+   "name": "Screenshot",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    142,
+    165
+   ],
+   "summary": "Zapisuje zrzut ekranu widoku do pliku PNG.",
+   "tags": [
+    "utility",
+    "screenshot",
+    "debug"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:_UnhandledInput",
+   "type": "function",
+   "name": "_UnhandledInput",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    168,
+    192
+   ],
+   "summary": "Obsługuje mysz: przeciąganie kamery, zoom kółkiem i zaznaczanie komórki.",
+   "tags": [
+    "input",
+    "event-handler",
+    "camera"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:HandleKey",
+   "type": "function",
+   "name": "HandleKey",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    194,
+    233
+   ],
+   "summary": "Mapuje klawisze na zmianę prędkości, widoku mapy, siatki i zrzut ekranu.",
+   "tags": [
+    "input",
+    "event-handler",
+    "keyboard"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:MoveCamera",
+   "type": "function",
+   "name": "MoveCamera",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    235,
+    267
+   ],
+   "summary": "Przesuwa kamerę klawiszami z zawijaniem wschód–zachód.",
+   "tags": [
+    "camera",
+    "input",
+    "wrapping"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:ZoomAt",
+   "type": "function",
+   "name": "ZoomAt",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    269,
+    283
+   ],
+   "summary": "Zmienia przybliżenie kamery, zachowując punkt pod kursorem.",
+   "tags": [
+    "camera",
+    "zoom",
+    "utility"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:Benchmark",
+   "type": "function",
+   "name": "Benchmark",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    293,
+    332
+   ],
+   "summary": "Mierzy czasy klatek przez zadaną liczbę klatek i wypisuje raport wydajności.",
+   "tags": [
+    "benchmark",
+    "performance",
+    "diagnostics"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:FindDataDirectory",
+   "type": "function",
+   "name": "FindDataDirectory",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    336,
+    353
+   ],
+   "summary": "Szuka katalogu data/ z plikami JSON, idąc w górę od katalogu aplikacji.",
+   "tags": [
+    "utility",
+    "filesystem",
+    "data-loading"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Main.cs:ParseOptions",
+   "type": "function",
+   "name": "ParseOptions",
+   "filePath": "game/scripts/Main.cs",
+   "lineRange": [
+    366,
+    491
+   ],
+   "summary": "Parsuje argumenty wiersza poleceń (seed, rozmiar mapy, prędkość, benchmark, ustawienia świata) do opcji lokalnej gry.",
+   "tags": [
+    "cli",
+    "parsing",
+    "configuration"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:game/scripts/Map/HexLayout.cs:HexLayout",
+   "type": "class",
+   "name": "HexLayout",
+   "filePath": "game/scripts/Map/HexLayout.cs",
+   "lineRange": [
+    10,
+    62
+   ],
+   "summary": "Statyczna klasa geometrii heksów flat-top w pikselach dla klienta.",
+   "tags": [
+    "utility",
+    "hex-grid",
+    "geometry"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Map/HexLayout.cs:CellAt",
+   "type": "function",
+   "name": "CellAt",
+   "filePath": "game/scripts/Map/HexLayout.cs",
+   "lineRange": [
+    41,
+    61
+   ],
+   "summary": "Wyznacza komórkę (kolumna, rząd) pod pozycją piksela, sprawdzając sąsiednie środki heksów.",
+   "tags": [
+    "geometry",
+    "hit-testing",
+    "hex-grid"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:game/scripts/Map/MapOverlay.cs:OverlayColors",
+   "type": "class",
+   "name": "OverlayColors",
+   "filePath": "game/scripts/Map/MapOverlay.cs",
+   "lineRange": [
+    48,
+    157
+   ],
+   "summary": "Statyczne funkcje kolorów podglądu dla każdego widoku mapy.",
+   "tags": [
+    "rendering",
+    "color-mapping",
+    "utility"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Map/MapOverlay.cs:Of",
+   "type": "function",
+   "name": "Of",
+   "filePath": "game/scripts/Map/MapOverlay.cs",
+   "lineRange": [
+    54,
+    79
+   ],
+   "summary": "Zwraca kolor komórki dla wybranego widoku mapy, delegując do funkcji poszczególnych warstw.",
+   "tags": [
+    "color-mapping",
+    "dispatcher",
+    "rendering"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Map/MapOverlay.cs:BiomeColor",
+   "type": "function",
+   "name": "BiomeColor",
+   "filePath": "game/scripts/Map/MapOverlay.cs",
+   "lineRange": [
+    95,
+    112
+   ],
+   "summary": "Kolor biomu z uwzględnieniem rzeźby terenu i cech.",
+   "tags": [
+    "color-mapping",
+    "biome",
+    "rendering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/MapOverlay.cs:DepositColor",
+   "type": "function",
+   "name": "DepositColor",
+   "filePath": "game/scripts/Map/MapOverlay.cs",
+   "lineRange": [
+    130,
+    140
+   ],
+   "summary": "Kolor złoża zależny od typu, zasobności i głębokości.",
+   "tags": [
+    "color-mapping",
+    "deposits",
+    "rendering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:game/scripts/Map/MapView.cs:MapView",
+   "type": "class",
+   "name": "MapView",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    15,
+    429
+   ],
+   "summary": "Węzeł Godota rysujący świat jako heksy z MultiMesh na fragmentach 32×32 z zawijaniem mapy.",
+   "tags": [
+    "rendering",
+    "component",
+    "multimesh",
+    "performance"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:Bind",
+   "type": "function",
+   "name": "Bind",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    67,
+    99
+   ],
+   "summary": "Podpina sesję i świat klienta, przygotowując struktury fragmentów do rysowania.",
+   "tags": [
+    "initialization",
+    "binding",
+    "rendering"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:SetGrid",
+   "type": "function",
+   "name": "SetGrid",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    104,
+    116
+   ],
+   "summary": "Włącza lub wyłącza widoczne odstępy między heksami (siatkę).",
+   "tags": [
+    "rendering",
+    "toggle",
+    "grid"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:SelectAt",
+   "type": "function",
+   "name": "SelectAt",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    119,
+    136
+   ],
+   "summary": "Zaznacza komórkę pod pozycją w świecie i zwraca jej zawinięte współrzędne.",
+   "tags": [
+    "selection",
+    "hit-testing",
+    "input"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:Refresh",
+   "type": "function",
+   "name": "Refresh",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    139,
+    212
+   ],
+   "summary": "Przebudowuje zmienione fragmenty i przydziela węzły kopiom fragmentów widocznym w kadrze.",
+   "tags": [
+    "rendering",
+    "dirty-flags",
+    "culling"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:UpdateOutline",
+   "type": "function",
+   "name": "UpdateOutline",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    214,
+    233
+   ],
+   "summary": "Ustawia obwódkę zaznaczenia na właściwej kopii zaznaczonej komórki.",
+   "tags": [
+    "selection",
+    "rendering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:Take",
+   "type": "function",
+   "name": "Take",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    235,
+    248
+   ],
+   "summary": "Pobiera węzeł fragmentu z puli lub tworzy nowy.",
+   "tags": [
+    "object-pool",
+    "performance"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:BuildHexMesh",
+   "type": "function",
+   "name": "BuildHexMesh",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    258,
+    276
+   ],
+   "summary": "Buduje siatkę pojedynczego heksu użytą przez MultiMesh.",
+   "tags": [
+    "mesh",
+    "geometry",
+    "rendering"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:game/scripts/Map/MapView.cs:BuildMesh",
+   "type": "function",
+   "name": "BuildMesh",
+   "filePath": "game/scripts/Map/MapView.cs",
+   "lineRange": [
+    282,
+    294
+   ],
+   "summary": "Tworzy ArrayMesh z podanych wierzchołków i indeksów.",
+   "tags": [
+    "mesh",
+    "utility",
+    "rendering"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "class:game/scripts/Main.cs:Main",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "class:game/scripts/Main.cs:Main",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:_Ready",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:_Process",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:Screenshot",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:_UnhandledInput",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:HandleKey",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:MoveCamera",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:ZoomAt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:Benchmark",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:FindDataDirectory",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "function:game/scripts/Main.cs:ParseOptions",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/HexLayout.cs",
+   "target": "class:game/scripts/Map/HexLayout.cs:HexLayout",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/HexLayout.cs",
+   "target": "class:game/scripts/Map/HexLayout.cs:HexLayout",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/HexLayout.cs",
+   "target": "function:game/scripts/Map/HexLayout.cs:CellAt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/HexLayout.cs",
+   "target": "function:game/scripts/Map/HexLayout.cs:CellAt",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapOverlay.cs",
+   "target": "class:game/scripts/Map/MapOverlay.cs:OverlayColors",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapOverlay.cs",
+   "target": "class:game/scripts/Map/MapOverlay.cs:OverlayColors",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapOverlay.cs",
+   "target": "function:game/scripts/Map/MapOverlay.cs:Of",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapOverlay.cs",
+   "target": "function:game/scripts/Map/MapOverlay.cs:Of",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapOverlay.cs",
+   "target": "function:game/scripts/Map/MapOverlay.cs:BiomeColor",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapOverlay.cs",
+   "target": "function:game/scripts/Map/MapOverlay.cs:DepositColor",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "class:game/scripts/Map/MapView.cs:MapView",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "class:game/scripts/Map/MapView.cs:MapView",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:Bind",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:Bind",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:SetGrid",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:SetGrid",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:SelectAt",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:SelectAt",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:Refresh",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:Refresh",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:UpdateOutline",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:Take",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:BuildHexMesh",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "function:game/scripts/Map/MapView.cs:BuildMesh",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "file:game/scripts/Map/MapView.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "file:game/scripts/Ui/Hud.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "file:game/scripts/Net/ClientSession.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "file:game/scripts/Map/HexLayout.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Main.cs",
+   "target": "file:game/scripts/Map/SettlementMarkers.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "file:game/scripts/Net/ClientWorld.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "file:game/scripts/Net/ClientSession.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "file:game/scripts/Map/HexLayout.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "file:game/scripts/Map/MapOverlay.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Map/MapView.cs",
+   "target": "file:game/scripts/Map/SelectionOutline.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scripts/Map/MapOverlay.cs",
+   "target": "file:game/scripts/Net/ClientWorld.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/scenes/Main.tscn",
+   "target": "file:game/scripts/Main.cs",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "function:game/scripts/Main.cs:_Ready",
+   "target": "function:game/scripts/Map/MapView.cs:Bind",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:game/scripts/Main.cs:_Process",
+   "target": "function:game/scripts/Map/MapView.cs:Refresh",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:game/scripts/Main.cs:_Process",
+   "target": "function:game/scripts/Net/ClientSession.cs:Pump",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:game/scripts/Main.cs:_Process",
+   "target": "function:game/scripts/Map/SettlementMarkers.cs:Show",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:game/scripts/Main.cs:_Process",
+   "target": "function:game/scripts/Ui/Hud.cs:UpdateStatus",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:game/scripts/Main.cs:_UnhandledInput",
+   "target": "function:game/scripts/Map/MapView.cs:SelectAt",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:game/scripts/Map/MapView.cs:SelectAt",
+   "target": "function:game/scripts/Map/HexLayout.cs:CellAt",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:game/project.godot",
+   "target": "file:game/scenes/Main.tscn",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:game/CivSim.Game.csproj",
+   "target": "file:game/scripts/Main.cs",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "config:game/CivSim.Game.csproj",
+   "target": "file:game/project.godot",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "file:Directory.Build.props",
+   "target": "config:game/CivSim.Game.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:Directory.Build.props",
+   "target": "config:src/CivSim.Core/CivSim.Core.csproj",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:game/.gitattributes",
+   "target": "file:game/scenes/Main.tscn",
+   "type": "configures",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:.gitattributes",
+   "target": "file:game/.gitattributes",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/GDD.md",
+   "target": "file:src/CivSim.Core/Ai/TribeAi.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/GDD.md",
+   "target": "file:src/CivSim.Core/Ai/EconomyAi.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/GDD.md",
+   "target": "file:src/CivSim.Core/Commands/CommandQueue.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/GDD.md",
+   "target": "file:src/CivSim.Core/Commands/CommandCategory.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/GDD.md",
+   "target": "file:game/scripts/Ui/Hud.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/GDD.md",
+   "target": "file:game/scripts/Map/MapOverlay.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/SETUP.md",
+   "target": "file:game/project.godot",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/SETUP.md",
+   "target": "file:game/scripts/Main.cs",
+   "type": "documents",
+   "direction": "forward",
+   "weight": 0.5
+  },
+  {
+   "source": "document:docs/SETUP.md",
+   "target": "document:docs/GDD.md",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  }
+ ]
+}

@@ -18,3 +18,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0014 Model klimatu: gwiazda i orbita z prawdziwych wzorów, bilans energii i cykl węglowy](0014-model-klimatu.md)
 - [0015 Epoki lodowe: cykle Milankovicia, lądolody Paillarda, klimat zmienia się w trakcie gry](0015-epoki-lodowe.md)
 - [0016 Wspólna ocena działań AI w liczbach całkowitych, dziennik „Dlaczego?” poza stanem gry](0016-ocena-dzialan-ai.md)
+- [0017 Charakter i strategia w stanie gry, strateg działa komendą](0017-charakter-i-strateg.md)

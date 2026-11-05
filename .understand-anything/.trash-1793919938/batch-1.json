@@ -1,0 +1,57 @@
+{
+ "nodes": [
+  {
+   "id": "pipeline:.github/workflows/ci.yml",
+   "type": "pipeline",
+   "name": "ci.yml",
+   "filePath": ".github/workflows/ci.yml",
+   "summary": "Workflow GitHub Actions uruchamiany przy push do main/development i przy PR: buduje i testuje solucję na Ubuntu, Windows i macOS, a na Ubuntu wykonuje benchmark 10 000 tur (mapy standard i huge) oraz sprawdza determinizm, porównując hash stanu dwóch przebiegów z tym samym seedem.",
+   "tags": [
+    "ci-cd",
+    "benchmark",
+    "determinizm",
+    "build-system",
+    "testy"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "Macierz systemów z fail-fast: false oraz zapis wyników do $GITHUB_STEP_SUMMARY i artefaktu benchmark-reports. Według CLAUDE.md testy uruchamia się teraz lokalnie, więc CI pełni rolę pomocniczą."
+  }
+ ],
+ "edges": [
+  {
+   "source": "pipeline:.github/workflows/ci.yml",
+   "target": "config:CivSim2.sln",
+   "type": "triggers",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "pipeline:.github/workflows/ci.yml",
+   "target": "config:global.json",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "pipeline:.github/workflows/ci.yml",
+   "target": "file:src/CivSim.Headless/Program.cs",
+   "type": "triggers",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "pipeline:.github/workflows/ci.yml",
+   "target": "config:tests/CivSim.Tests/CivSim.Tests.csproj",
+   "type": "triggers",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "pipeline:.github/workflows/ci.yml",
+   "target": "config:src/CivSim.Headless/CivSim.Headless.csproj",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

@@ -56,8 +56,32 @@ public sealed class CivilizationState
     /// </summary>
     public int[] SeenYear { get; set; } = [];
 
+    /// <summary>Character traits, per mille, indexed by <see cref="Ai.Trait"/> (GDD 8.4; stage 4b). Empty = all average.</summary>
+    public int[] Traits { get; set; } = [];
+
+    /// <summary>Goal weights set by the strategist, per mille, indexed by <see cref="Ai.Goal"/> (GDD 8.1). Empty = all neutral.</summary>
+    public int[] GoalWeights { get; set; } = [];
+
+    /// <summary>Earth cell the strategist points expansion towards (GDD 7.6), or <see cref="NoTarget"/>.</summary>
+    public int ExpansionTarget { get; set; } = NoTarget;
+
+    /// <summary>Game month from which the strategist reviews the goals again.</summary>
+    public long StrategyReviewMonth { get; set; }
+
+    /// <summary>Era of the last strategy review: a new era is a shock that brings a review at once.</summary>
+    public int StrategyEra { get; set; } = -1;
+
     /// <summary>Value of <see cref="Researching"/> when nothing is researched.</summary>
     public const int NoResearch = -1;
+
+    /// <summary>Value of <see cref="ExpansionTarget"/> when there is no direction.</summary>
+    public const int NoTarget = -1;
+
+    /// <summary>A trait, per mille; average when traits were never rolled.</summary>
+    public int Trait(Ai.Trait trait) => (int)trait < Traits.Length ? Traits[(int)trait] : Ai.Character.Average;
+
+    /// <summary>The strategist's weight for a goal, per mille; neutral before the first review.</summary>
+    public int GoalWeight(Ai.Goal goal) => (int)goal < GoalWeights.Length ? GoalWeights[(int)goal] : 1000;
 
     /// <summary>True when the technology is known.</summary>
     public bool Knows(int technology) => technology >= 0 && technology < KnownTechnologies.Length && KnownTechnologies[technology];
