@@ -68,7 +68,7 @@ Szczegóły i wzory: `docs/prompts/02-etap-1c-gwiazda-atmosfera.md`.
 - [x] 1c-A: atmosfera z cyklu węglowego (wulkanizm, CO₂ w równowadze, efekt cieplarniany i ciśnienie z CO₂) i model bilansu energii zamiast obecnego wzoru (ADR 0014)
 - [ ] Patryk ogląda mapy trzech presetów po 1c-A
 - Na później: CO₂ z działań cywilizacji (spalanie, wycinanie lasów) przez mechanizm efektów w erze przemysłowej; wietrzenie liczone z prawdziwego lądu na mapie
-- [ ] 1c-B: cykle Milankovicia i zmienność gwiazdy: klimat zmienia się w trakcie gry
+- [x] 1c-B: cykle Milankovicia (start w ciepłym momencie), lądolody Paillarda na prawdziwym lądzie, zmienność gwiazdy: klimat, biomy i dzika żywność zmieniają się co 500 lat gry (ADR 0015)
 - [ ] 1c-C: poziom morza zmienia się w trakcie gry (pomosty lądowe)
 
 ## Etap 2 — Podgląd symulacji (Godot)

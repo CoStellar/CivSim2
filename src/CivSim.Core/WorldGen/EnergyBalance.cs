@@ -51,6 +51,7 @@ public static class EnergyBalance
     private const long FreeAlbedo = 320_000;         // mean albedo without ice
     private const long AlbedoTowardsPoles = 160_000; // × P2(x) = (3x² − 1) / 2
     private const long IceAlbedo = 620_000;
+    private const long SheetAlbedo = 750_000;        // thick snow on ice sheets reflects more than sea ice
 
     /// <summary>
     /// Annual mean temperature of every band, millionths of a degree Celsius, from the south pole (band 0) to the north
@@ -59,7 +60,7 @@ public static class EnergyBalance
     public static long[] Solve(PlanetParameters planet)
     {
         ArgumentNullException.ThrowIfNull(planet);
-        return Solve(planet.AxialTiltTenths, planet.EccentricityThousandths, planet.LightMillionths, planet.GreenhouseTenths, planet.PressureHundredths);
+        return Solve(Forcing(planet.AxialTiltTenths, planet.EccentricityThousandths, planet.LightMillionths, planet.PerihelionTenths), planet.GreenhouseTenths, planet.PressureHundredths);
     }
 
     /// <summary>Like <see cref="Solve(PlanetParameters)"/>, from the values the climate depends on.</summary>
@@ -86,21 +87,25 @@ public static class EnergyBalance
     public static long BandSine(int band) => -Unit + (((2L * band) + 1) * Unit / Bands);
 
     /// <summary>Sunlight reaching each band before the albedo, millionths of W/m².</summary>
-    public static long[] Forcing(int tiltTenths, int eccentricityThousandths, long lightMillionths)
+    public static long[] Forcing(int tiltTenths, int eccentricityThousandths, long lightMillionths, int perihelionTenths = 2700)
     {
         var forcing = new long[Bands];
         for (int i = 0; i < Bands; i++)
         {
             long sin = BandSine(i) * FixedTrig.One / Unit;
-            long q = Insolation.At(sin, tiltTenths, eccentricityThousandths, lightMillionths, []).Mean;
+            long q = Insolation.At(sin, tiltTenths, eccentricityThousandths, lightMillionths, [], perihelionTenths).Mean;
             forcing[i] = SolarConstant * q * Unit / FixedTrig.One;
         }
 
         return forcing;
     }
 
-    /// <summary>Band temperatures (millionths of °C) for a given sunlight per band (see <see cref="Forcing"/>).</summary>
-    public static long[] Solve(long[] forcing, int greenhouseTenths, int pressureHundredths)
+    /// <summary>
+    /// Band temperatures (millionths of °C) for a given sunlight per band (see <see cref="Forcing"/>).
+    /// <paramref name="iceSheets"/> is the share of each band covered by ice sheets on land (millionths, stage 1c-B):
+    /// covered ground reflects like ice whatever its temperature.
+    /// </summary>
+    public static long[] Solve(long[] forcing, int greenhouseTenths, int pressureHundredths, long[]? iceSheets = null)
     {
         ArgumentNullException.ThrowIfNull(forcing);
         long a = EarthA - (B * (greenhouseTenths - EarthGreenhouseTenths) / 10);
@@ -153,6 +158,11 @@ public static class EnergyBalance
             for (int i = 0; i < Bands; i++)
             {
                 long target = t[i] < IceBelow * Unit ? IceAlbedo : free[i];
+                if (iceSheets is not null && iceSheets[i] > 0)
+                {
+                    target = Math.Max(target, free[i] + Mul(SheetAlbedo - free[i], Math.Min(Unit, iceSheets[i])));
+                }
+
                 albedo[i] = (albedo[i] + target) / 2;
             }
         }

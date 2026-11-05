@@ -33,7 +33,9 @@ public sealed record SaveData(
     [property: Key(24)] string PlanetName = "Earth",
     [property: Key(25)] int Co2Microbar = 280,
     [property: Key(26)] int BackgroundPressureHundredths = 100,
-    [property: Key(27)] int VolcanismPercent = 100);
+    [property: Key(27)] int VolcanismPercent = 100,
+    [property: Key(28)] int StarVariabilityPerMille = 0,
+    [property: Key(29)] int StarCycleYears = 100_000);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]
@@ -46,7 +48,19 @@ public sealed record WorldSaveData(
     [property: Key(1)] string Name,
     [property: Key(2)] int Width,
     [property: Key(3)] int Height,
-    [property: Key(4)] IReadOnlyList<MapLayerSaveData> Layers);
+    [property: Key(4)] IReadOnlyList<MapLayerSaveData> Layers,
+    [property: Key(5)] ClimateSaveData? Climate = null);
+
+/// <summary>Saved slow climate of a world (stage 1c-B).</summary>
+[MessagePackObject]
+public sealed record ClimateSaveData(
+    [property: Key(0)] long Year,
+    [property: Key(1)] int NorthRegime,
+    [property: Key(2)] int SouthRegime,
+    [property: Key(3)] long NorthIce,
+    [property: Key(4)] long SouthIce,
+    [property: Key(5)] int Co2Microbar,
+    [property: Key(6)] long GlobalMeanMillionths);
 
 /// <summary>Raw bytes of one map layer, identified by name.</summary>
 [MessagePackObject]

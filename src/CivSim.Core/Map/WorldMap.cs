@@ -47,6 +47,9 @@ public sealed class WorldMap
         SeasonGrowth = Add(new MapLayer<byte>("season_growth", this, 1, 100));
         NextSeasonTemperature = Add(new MapLayer<sbyte>("next_season_temperature", this, 1, 0));
         NextSeasonGrowth = Add(new MapLayer<byte>("next_season_growth", this, 1, 100));
+        ClimateSine = Add(new MapLayer<short>("climate_sine", this, 1, 0));
+        TemperatureOffset = Add(new MapLayer<sbyte>("temperature_offset", this, 1, 0));
+        Continentality = Add(new MapLayer<byte>("continentality", this, 1, 100));
         MarkAllDirty();
     }
 
@@ -115,6 +118,21 @@ public sealed class WorldMap
 
     /// <summary>Share of the year warm enough for plants to grow, 0–100%.</summary>
     public MapLayer<byte> GrowingSeason { get; }
+
+    /// <summary>
+    /// Sine of the cell's climate latitude (the latitude bent by noise so climate zones follow wavy lines), in parts of
+    /// <see cref="ClimateSineOne"/> (stage 1c-B: the climate is solved again during the game).
+    /// </summary>
+    public MapLayer<short> ClimateSine { get; }
+
+    /// <summary>What height and local noise add to the latitude's temperature, °C (stage 1c-B).</summary>
+    public MapLayer<sbyte> TemperatureOffset { get; }
+
+    /// <summary>How continental the climate is, percent: 25 over water, up to 100 deep inland (stage 1c-B).</summary>
+    public MapLayer<byte> Continentality { get; }
+
+    /// <summary>Value of <see cref="ClimateSine"/> at the poles.</summary>
+    public const int ClimateSineOne = 32_767;
 
     /// <summary>
     /// Length of this planet's year in Earth years × 100. The dead season (no growth) lasts

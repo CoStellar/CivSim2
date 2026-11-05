@@ -186,6 +186,8 @@ public sealed class GameState
         earth.Map.LiveSeasons = content.Seasons.Live(settings.Planet);
         var options = WorldGenOptions.From(settings);
         report = WorldGenerator.Generate(content, earth.Map, state.Random[RandomStreamId.World], settings.Seed, options);
+        earth.Climate.Co2Microbar = settings.Planet.Co2Microbar;
+        earth.Climate.GlobalMeanMillionths = report.GlobalMeanMillionths;
         for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)
         {
             CivilizationState civ = state._civilizations[i];

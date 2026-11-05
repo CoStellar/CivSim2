@@ -38,6 +38,12 @@ public sealed record PlanetOverrides
 
     /// <summary>Volcanic activity, percent of Earth's.</summary>
     public int? VolcanismPercent { get; init; }
+
+    /// <summary>Swing of the star's brightness either way, per mille (stage 1c-B).</summary>
+    public int? StarVariabilityPerMille { get; init; }
+
+    /// <summary>Period of the star's brightness cycle, years.</summary>
+    public int? StarCycleYears { get; init; }
 }
 
 /// <summary>Builds a planet from a starting planet and <see cref="PlanetOverrides"/> (decisions of 2026-11-05).</summary>
@@ -101,6 +107,8 @@ public static class PlanetSetup
             LuminosityThousandths = l,
             DistanceThousandths = d,
             VolcanismPercent = overrides.VolcanismPercent ?? start.VolcanismPercent,
+            StarVariabilityPerMille = overrides.StarVariabilityPerMille ?? start.StarVariabilityPerMille,
+            StarCycleYears = overrides.StarCycleYears ?? start.StarCycleYears,
         };
 
         int? co2 = overrides.Co2Microbar ?? (overrides.GreenhouseTenths is int gh ? CarbonCycle.Co2ForGreenhouse(gh) : null);

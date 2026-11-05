@@ -6,6 +6,9 @@ namespace CivSim.Core.WorldGen;
 /// <summary>Summary of a generated world, for reports, validation and tuning.</summary>
 public sealed class WorldGenReport
 {
+    /// <summary>Mean temperature of the planet at the start of the game, millionths of °C (stage 1c-B).</summary>
+    public long GlobalMeanMillionths { get; internal set; }
+
     /// <summary>Percent of cells that are water (0–100).</summary>
     public int WaterPercent { get; internal set; }
 

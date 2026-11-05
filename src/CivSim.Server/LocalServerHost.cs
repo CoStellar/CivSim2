@@ -64,6 +64,8 @@ public sealed class LocalServerHost : IDisposable
             Co2Microbar = options.Co2Microbar,
             PressureHundredths = options.PressureHundredths,
             VolcanismPercent = options.VolcanismPercent,
+            StarVariabilityPerMille = options.StarVariabilityPerMille,
+            StarCycleYears = options.StarCycleYears,
         });
         settings = settings with
         {

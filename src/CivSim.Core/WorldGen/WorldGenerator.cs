@@ -32,7 +32,6 @@ public sealed class WorldGenerator
     private readonly int _shallowId;
     private readonly int _coastId;
     private readonly int _lakeId;
-    private readonly int _grasslandId;
     private readonly int _iceId;
     private bool[] _water = [];
     private readonly long[] _px;
@@ -54,9 +53,9 @@ public sealed class WorldGenerator
         _shallowId = content.WaterBiome(BiomeKind.ShallowSea).Id;
         _coastId = content.WaterBiome(BiomeKind.Coast).Id;
         _lakeId = content.WaterBiome(BiomeKind.Lake).Id;
-        _grasslandId = content.Biome("grassland").Id;
         _iceId = content.Biome("ice").Id;
-        _climate = new ClimateModel(options.Planet);
+        // The game starts at a warm moment of the Milankovitch cycles (stage 1c-B), without ice sheets.
+        _climate = new ClimateModel(new ClimateCycles(options.Planet, content.ClimateCycles).OrbitAt(0));
         _yearHundredths = options.Planet.YearHundredths;
 
         // Every cell's point on the unit sphere: noise is sampled there, so it has no seam around the globe or over the poles.
@@ -362,23 +361,27 @@ public sealed class WorldGenerator
         Span<byte> growing = _map.GrowingSeason.Raw;
         for (int i = 0; i < t.Length; i++)
         {
-            int temp = _climate.MeanTemperature(_climateSin[i]);
+            // What does not change with the climate is kept on the map, so the climate can be solved again in the game.
+            int offset = 0;
             int e = _map.Elevation[i];
             if (e > SeaLevel)
             {
-                temp -= (e - SeaLevel) * 20 / (255 - SeaLevel);
+                offset -= (e - SeaLevel) * 20 / (255 - SeaLevel);
             }
 
-            temp += ((Noise(_seed ^ 0x7E4D, 0, 16, i) - 32768) * 4) / 32768;
-            temp = Math.Clamp(temp, -30, 40);
-            t[i] = (sbyte)temp;
+            offset += ((Noise(_seed ^ 0x7E4D, 0, 16, i) - 32768) * 4) / 32768;
 
             // Continentality: 25% over water, 35% on the coast up to 100% six standard-map cells inland.
             int inland = Math.Min(6, distToWater[i] * 258 / _geo.Width);
             int continental = _water[i] ? 25 : 35 + (65 * inland / 6);
-            int s = _climate.SeasonalSwing(_climateSin[i], continental);
+            _map.ClimateSine.Set(i, CellClimate.StoredSine(_climateSin[i]));
+            _map.TemperatureOffset.Set(i, (sbyte)offset);
+            _map.Continentality.Set(i, (byte)continental);
+
+            (int temp, int s, int grow) = CellClimate.Of(_climate, _map, i);
+            t[i] = (sbyte)temp;
             swing[i] = (byte)s;
-            growing[i] = (byte)ClimateModel.GrowingSeason(temp, s);
+            growing[i] = (byte)grow;
         }
     }
 
@@ -442,46 +445,8 @@ public sealed class WorldGenerator
                 continue;
             }
 
-            biome[i] = (byte)LandBiome(_map.Temperature[i], _map.Humidity[i], (Content.Relief)_map.Relief[i], _map.Seasonality[i], _map.GrowingSeason[i]);
+            biome[i] = (byte)CellClimate.LandBiome(_content, _map.Temperature[i], _map.Humidity[i], (Content.Relief)_map.Relief[i], _map.Seasonality[i], _map.GrowingSeason[i]);
         }
-    }
-
-    // Seasons (stage 1b): land whose summer stays below freezing is ice; land with almost no growing season is tundra;
-    // very large swings between summer and winter act like drought, so forests give way to steppe and desert.
-    private int LandBiome(int temperature, int humidity, Content.Relief relief, int swing, int growing)
-    {
-        if (temperature + (swing / 2) < 0)
-        {
-            temperature = Math.Min(temperature, -12);
-        }
-        else if (growing < 15 && temperature > -11)
-        {
-            return _content.Biome("tundra").Id;
-        }
-
-        humidity = Math.Max(0, humidity - (Math.Max(0, swing - 40) / 2));
-        foreach (BiomeDefinition b in _content.Biomes)
-        {
-            if (b.Kind != BiomeKind.Land)
-            {
-                continue;
-            }
-
-            if (temperature < b.MinTemperature || temperature > b.MaxTemperature || humidity < b.MinHumidity || humidity > b.MaxHumidity)
-            {
-                continue;
-            }
-
-            // Swamps only form on flat ground.
-            if (b.Key == "swamp" && relief != Content.Relief.Flat)
-            {
-                continue;
-            }
-
-            return b.Id;
-        }
-
-        return _grasslandId;
     }
 
     // ---- 6. Rivers and lakes -------------------------------------------------------------------------------------
@@ -1029,6 +994,7 @@ public sealed class WorldGenerator
 
     private void FillReport(WorldGenReport report)
     {
+        report.GlobalMeanMillionths = _climate.GlobalMeanMillionths;
         int water = 0;
         var biomes = new int[_content.Biomes.Count];
         var deposits = new int[_content.Deposits.Count + 1];

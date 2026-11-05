@@ -379,6 +379,8 @@ public partial class Main : Node2D
         int? co2 = null;
         int? pressure = null;
         int? volcanism = null;
+        int? starVariability = null;
+        int? starCycle = null;
         int? eccentricity = null;
         string? moisture = null;
         string? inland = null;
@@ -433,6 +435,12 @@ public partial class Main : Node2D
                 case "--volcanism":
                     volcanism = int.Parse(v, CultureInfo.InvariantCulture);
                     break;
+                case "--star-variability":
+                    starVariability = int.Parse(v, CultureInfo.InvariantCulture);
+                    break;
+                case "--star-cycle":
+                    starCycle = int.Parse(v, CultureInfo.InvariantCulture);
+                    break;
                 case "--eccentricity":
                     eccentricity = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1000);
                     break;
@@ -473,6 +481,8 @@ public partial class Main : Node2D
             Co2Microbar = co2,
             PressureHundredths = pressure,
             VolcanismPercent = volcanism,
+            StarVariabilityPerMille = starVariability,
+            StarCycleYears = starCycle,
             Moisture = moisture ?? o.Moisture,
             Inland = inland ?? o.Inland,
             Relief = relief ?? o.Relief,

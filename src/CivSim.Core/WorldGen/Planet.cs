@@ -60,6 +60,25 @@ public sealed record PlanetParameters(
     /// <inheritdoc cref="TiltRange"/>
     public static (int Min, int Max) SeasonStrengthRange => (20, 150);
 
+    /// <summary>
+    /// Where on its orbit the planet is closest to its star, tenths of a degree of the season (2700: at the northern
+    /// winter solstice, like Earth today). Precession turns it round every 23 000 years (stage 1c-B, <see cref="ClimateCycles"/>);
+    /// a new game always starts at 2700.
+    /// </summary>
+    public int PerihelionTenths { get; init; } = 2700;
+
+    /// <summary>How much the star's brightness swings either way, per mille (stage 1c-B; 0 = steady, like the Sun at this scale).</summary>
+    public int StarVariabilityPerMille { get; init; }
+
+    /// <summary>Period of the star's brightness cycle, years (used when <see cref="StarVariabilityPerMille"/> is not 0).</summary>
+    public int StarCycleYears { get; init; } = 100_000;
+
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) StarVariabilityRange => (0, 100);
+
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) StarCycleRange => (1_000, 10_000_000);
+
     /// <summary>Sunlight reaching the planet compared with Earth, millionths (S = L / d²; Earth 1 000 000).</summary>
     public long LightMillionths => StarOrbit.LightMillionths(LuminosityThousandths, DistanceThousandths);
 
@@ -86,6 +105,8 @@ public sealed record PlanetParameters(
         Check(Co2Microbar, Co2Range, "CO2");
         Check(BackgroundPressureHundredths, BackgroundPressureRange, "air pressure");
         Check(VolcanismPercent, VolcanismRange, "volcanism");
+        Check(StarVariabilityPerMille, StarVariabilityRange, "star variability");
+        Check(StarCycleYears, StarCycleRange, "star cycle");
         if (DistanceThousandths <= 0)
         {
             throw new ArgumentOutOfRangeException("distance", "The distance must be positive.");
@@ -120,8 +141,6 @@ public static class Insolation
     /// <summary>Points of the orbit sampled per year (equal time steps).</summary>
     public const int Steps = 48;
 
-    /// <summary>Where the planet is closest to its star: at the northern winter solstice, like Earth.</summary>
-    public static readonly int PerihelionLongitude = FixedTrig.Degrees(270);
 
     /// <summary>Annual mean, the darkest and the brightest step at a latitude given by its sine.</summary>
     public static (long Mean, long Min, long Max) At(long sinLatitude, PlanetParameters planet) => At(sinLatitude, planet, []);
@@ -133,15 +152,16 @@ public static class Insolation
     public static (long Mean, long Min, long Max) At(long sinLatitude, PlanetParameters planet, Span<long> steps)
     {
         ArgumentNullException.ThrowIfNull(planet);
-        return At(sinLatitude, planet.AxialTiltTenths, planet.EccentricityThousandths, planet.LightMillionths, steps);
+        return At(sinLatitude, planet.AxialTiltTenths, planet.EccentricityThousandths, planet.LightMillionths, steps, planet.PerihelionTenths);
     }
 
     /// <summary>
     /// Like <see cref="At(long, PlanetParameters, Span{long})"/>, from the tilt (tenths of a degree), the eccentricity
-    /// (thousandths) and the light on the planet (millionths of Earth's).
+    /// (thousandths), the light on the planet (millionths of Earth's) and the perihelion (tenths of a degree of the season).
     /// </summary>
-    public static (long Mean, long Min, long Max) At(long sinLatitude, int tiltTenths, int eccentricityThousandths, long lightMillionths, Span<long> steps)
+    public static (long Mean, long Min, long Max) At(long sinLatitude, int tiltTenths, int eccentricityThousandths, long lightMillionths, Span<long> steps, int perihelionTenths = 2700)
     {
+        int perihelion = FixedTrig.TenthsOfDegree(perihelionTenths);
         long one = FixedTrig.One;
         long sinPhi = Math.Clamp(sinLatitude, -one, one);
         long cosPhi = FixedTrig.Complement(sinPhi);
@@ -160,7 +180,7 @@ public static class Insolation
             long distance = ratio * ratio / one;
 
             // Declination of the star: how far north it stands at this point of the year.
-            long sinDecl = sinTilt * FixedTrig.Sin(nu + PerihelionLongitude) / one;
+            long sinDecl = sinTilt * FixedTrig.Sin(nu + perihelion) / one;
             long cosDecl = FixedTrig.Complement(sinDecl);
 
             // Half the length of the day (hour angle of sunset), then the daily mean on a flat surface.
@@ -209,12 +229,25 @@ public sealed class ClimateModel
 
     /// <summary>Builds the model for <paramref name="planet"/>.</summary>
     public ClimateModel(PlanetParameters planet)
+        : this(planet, null)
+    {
+    }
+
+    /// <summary>
+    /// Builds the model for <paramref name="planet"/> with ice sheets on land covering <paramref name="iceSheets"/> of each
+    /// energy-balance band (millionths, stage 1c-B).
+    /// </summary>
+    public ClimateModel(PlanetParameters planet, long[]? iceSheets)
     {
         ArgumentNullException.ThrowIfNull(planet);
         planet.Validate();
         _planet = planet;
         _yearHundredths = planet.YearHundredths;
-        _bands = EnergyBalance.Solve(planet);
+        _bands = EnergyBalance.Solve(
+            EnergyBalance.Forcing(planet.AxialTiltTenths, planet.EccentricityThousandths, planet.LightMillionths, planet.PerihelionTenths),
+            planet.GreenhouseTenths,
+            planet.PressureHundredths,
+            iceSheets);
         for (int k = 0; k <= TableSize; k++)
         {
             long sin = -FixedTrig.One + (2 * FixedTrig.One * k / TableSize);

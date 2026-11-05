@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 10;
+    public const int FormatVersion = 11;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -47,7 +47,9 @@ public static class SaveGameSerializer
                 layers.Add(new MapLayerSaveData(layer.Name, layer.AsBytes().ToArray()));
             }
 
-            worlds.Add(new WorldSaveData(w.Id.Value, w.Name, w.Width, w.Height, layers));
+            Core.WorldGen.ClimateState c = w.Climate;
+            worlds.Add(new WorldSaveData(w.Id.Value, w.Name, w.Width, w.Height, layers,
+                new ClimateSaveData(c.Year, (int)c.NorthRegime, (int)c.SouthRegime, c.NorthIce, c.SouthIce, c.Co2Microbar, c.GlobalMeanMillionths)));
         }
 
         var civs = new List<CivilizationSaveData>(state.Civilizations.Count);
@@ -82,7 +84,8 @@ public static class SaveGameSerializer
         var data = new SaveData(s.Seed, s.MapWidth, s.MapHeight, s.CivilizationCount, state.Turn, streams, worlds, civs, (int)s.WorldType, s.WaterPercent, 0, (int)s.Moisture, (int)s.Relief, (int)s.Resources, (int)s.Inland,
             state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects,
             s.Planet.AxialTiltTenths, s.Planet.LuminosityThousandths, s.Planet.DistanceThousandths, s.Planet.EccentricityThousandths, s.PlanetName,
-            s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent);
+            s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent,
+            s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -124,7 +127,11 @@ public static class SaveGameSerializer
             WaterPercent = data.WaterPercent,
             Planet = new Core.WorldGen.PlanetParameters(
                 data.AxialTiltTenths, data.EccentricityThousandths, data.LuminosityThousandths, data.DistanceThousandths,
-                data.Co2Microbar, data.BackgroundPressureHundredths, data.VolcanismPercent),
+                data.Co2Microbar, data.BackgroundPressureHundredths, data.VolcanismPercent)
+            {
+                StarVariabilityPerMille = data.StarVariabilityPerMille,
+                StarCycleYears = data.StarCycleYears,
+            },
             PlanetName = data.PlanetName,
             Moisture = (Core.WorldGen.WorldMoisture)data.Moisture,
             Inland = (Core.WorldGen.WorldInland)data.Inland,
@@ -146,6 +153,16 @@ public static class SaveGameSerializer
         {
             var world = new WorldState(new WorldId(w.Id), w.Name, w.Width, w.Height);
             LoadLayers(world.Map, w.Layers);
+            if (w.Climate is ClimateSaveData c)
+            {
+                world.Climate.Year = c.Year;
+                world.Climate.NorthRegime = (Core.WorldGen.IceRegime)c.NorthRegime;
+                world.Climate.SouthRegime = (Core.WorldGen.IceRegime)c.SouthRegime;
+                world.Climate.NorthIce = c.NorthIce;
+                world.Climate.SouthIce = c.SouthIce;
+                world.Climate.Co2Microbar = c.Co2Microbar;
+                world.Climate.GlobalMeanMillionths = c.GlobalMeanMillionths;
+            }
             if (world.Id.Value == 0)
             {
                 world.Map.YearHundredths = settings.Planet.YearHundredths;

@@ -45,6 +45,7 @@ public static class CoreSystems
         ArgumentNullException.ThrowIfNull(runner);
         ArgumentNullException.ThrowIfNull(content);
         var years = new Economy.YieldYears(content.Population.YieldSwingPercent);
+        runner.AddSystem(new WorldGen.ClimateSystem(content));
         runner.AddSystem(new WorldGen.SeasonSystem(content));
         runner.AddSystem(new EffectExpirySystem());
         runner.AddSystem(new Population.DecaySystem(content));
