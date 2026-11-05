@@ -52,6 +52,7 @@ sequenceDiagram
 - **Kronika:** serwer pamięta ostatnie 500 wpisów; nowy klient dostaje je raz, przy powitaniu.
 - **Osady** (protokół v3): widok zawiera czas gry w miesiącach i listę osad. Gracz widzi swoje osady z zawartością magazynu,
   a cudze tylko na polach, które zna, i bez magazynu. Obserwator widzi wszystko. `ContentMessage` niesie też towary i nazwy poziomów osad.
+- **Mapa** (protokół v4): fragmenty niosą dziką żywność i siłę wpływu. Gracz może wysłać komendy `MoveSettlementDto` i `SplitSettlementDto`; serwer sprawdza je tak samo jak komendy AI.
 - **`LocalServerHost`:** uruchamia serwer w osobnym wątku i daje klientowi połączenie w pamięci (ADR 0010). Tury idą
   w tempie wybranej prędkości, tylko gdy podłączony jest obserwator; przy maks. widok wychodzi najwyżej co 250 ms.
 

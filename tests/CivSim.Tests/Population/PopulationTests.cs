@@ -46,7 +46,7 @@ public class PopulationTests
         Assert.Equal(3, Content.Strata.Count);
         Assert.True(Content.Strata[Stratum("producers")].Gathers);
         Assert.False(Content.Strata[Stratum("warriors")].Gathers);
-        Assert.Equal(2, Content.Population.GatherRadius);
+        Assert.Equal(3, Content.Population.InfluenceBaseRange);
         Assert.Equal(50, Content.Population.NewTribe[0] + Content.Population.NewTribe[1] + Content.Population.NewTribe[2]);
         Assert.Equal("meat", Content.Goods[Content.Population.MeatGood].Key);
         Assert.NotEmpty(Content.Deposits[0].Gather);

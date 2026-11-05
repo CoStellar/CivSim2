@@ -16,6 +16,8 @@ public class ProtocolSerializerTests
         yield return [new WelcomeMessage(ProtocolInfo.Version, 1, 2)];
         yield return [new ConnectionRejectedMessage("Full")];
         yield return [new SubmitCommandMessage(2, 7, new RenameCivilizationDto("Rome"))];
+        yield return [new SubmitCommandMessage(2, 8, new MoveSettlementDto(3, 10, 12))];
+        yield return [new SubmitCommandMessage(2, 9, new SplitSettlementDto(3, 14, 12, 40))];
         yield return [new CommandRejectedMessage(7, "Nope")];
         yield return [new EndTurnMessage(12)];
         yield return [new GameViewMessage(3, 1, [new WorldView(0, "Earth", 64, 40)], [new CivilizationView(1, "Rome", true)])];
@@ -88,8 +90,9 @@ public class ProtocolSerializerTests
         // Compatibility guard: version 3 frames must keep encoding the same way.
         // Version 2 added the client role to Hello (observer mode) and the map, content and speed messages.
         // Version 3 added settlements and game time to the view and goods and settlement levels to the content.
+        // Version 4 added wild food and influence strength to map chunks.
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("03000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("04000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

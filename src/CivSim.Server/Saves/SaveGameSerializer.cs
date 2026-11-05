@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 6;
+    public const int FormatVersion = 7;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -68,7 +68,7 @@ public static class SaveGameSerializer
 
             settlements.Add(new SettlementSaveData(
                 st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
-                st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille));
+                st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -165,6 +165,7 @@ public static class SaveGameSerializer
                 FoodNeeded = st.FoodNeeded,
                 FoodEaten = st.FoodEaten,
                 HigherNeedsPerMille = st.HigherNeedsPerMille,
+                MovedMonth = st.MovedMonth,
             };
             for (int g = 0; g < st.Stock.Length; g++)
             {

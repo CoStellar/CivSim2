@@ -109,7 +109,7 @@ dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --
 - `--stats`: plik CSV z ludnością każdej cywilizacji, zapasem jedzenia, średnim zdrowiem i nastrojem; `--stats-every N` zapisuje co N tur (domyślnie 10),
 - `--world-type`: `continents` (domyślnie), `pangea` albo `archipelago`,
 - `--water`: procent wody, 30–80 (domyślnie 60),
-- `--png <folder>`: zapisuje podgląd mapy jako 6 obrazów PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża),
+- `--png <folder>`: zapisuje podgląd mapy jako obrazy PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża, strefy wpływów, dzika żywność); przy `--turns` większym od 0 dodatkowo strefy i dzika żywność po ostatniej turze,
 - `--png-scale`: wielkość heksa na obrazie (1–12, domyślnie 3, czyli heks szeroki na 12 px),
 - `--climate`: `temperate` (domyślnie), `cold` albo `hot`,
 - `--moisture`: `normal` (domyślnie), `dry` albo `wet`,

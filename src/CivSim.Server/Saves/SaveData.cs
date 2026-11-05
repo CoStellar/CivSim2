@@ -69,7 +69,8 @@ public sealed record SettlementSaveData(
     [property: Key(12)] long FoodGathered = 0,
     [property: Key(13)] long FoodNeeded = 0,
     [property: Key(14)] long FoodEaten = 0,
-    [property: Key(15)] int HigherNeedsPerMille = 0);
+    [property: Key(15)] int HigherNeedsPerMille = 0,
+    [property: Key(16)] long MovedMonth = 0);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

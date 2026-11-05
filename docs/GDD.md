@@ -213,6 +213,9 @@ Każdy surowiec jest niewidoczny i niedostępny do zbierania, dopóki cywilizacj
 - **Wydobycie:** pole z ulepszeniem (farma, kopalnia, tartak, pastwisko, łowisko) obsadzone ludnością.
 - **Wydajność pola** = baza biomu × żyzność lub zasobność złoża × mnożnik technologii × efekty (susza, powódź) × nastrój pracowników.
 - **Złoża kopalne się wyczerpują.** Kopalnia z zasobnością 2000 jednostek przy wydobyciu 10/turę działa 200 tur, potem trzeba szukać nowych złóż lub sprowadzać surowiec. Lasy, łowiska i zwierzyna odnawiają się, chyba że eksploatacja przekroczy tempo odnawiania.
+- **Dzika żywność wokół obozów się wyczerpuje.** Każde pole ma zapas zwierzyny i roślin (0–100%). Zbieranie go zmniejsza, a nieużywane pole odrasta według tempa na rok. Plemię, które zbiera za dużo, wyjada okolicę, głoduje i musi wędrować; porzucona okolica po kilku stuleciach wraca do pełni.
+- **Ziemia uprawna jałowieje** (zgoda Patryka z 2026-11-05). Pole uprawiane rok po roku traci żyzność, a pole leżące odłogiem ją odzyskuje. Nawadnianie, płodozmian i nawozy (późniejsze technologie) spowalniają jałowienie. Wyjałowione pola to jeden z powodów spadków ludności i wędrówek rolników.
+- **Lata dobre i złe:** plony z roku na rok wahają się regionalnie (kilkanaście procent w górę i w dół). Duże klęski to osobne zdarzenia (rozdział 10).
 - **Produkcja to receptury** (styl Factorio): wejścia → wyjścia, wymagana grupa pracowników, czas. Przykład: dymarka: 2 ruda żelaza + 1 węgiel drzewny → 1 żelazo, 2 rzemieślników, 1 tura.
 - **Łańcuchy wydłużają się z erami.** Węgiel drzewny z drewna → żelazo → stal → maszyny → fabryka elektroniki. Jedno brakujące ogniwo zatrzymuje cały łańcuch, więc AI musi planować zapasy.
 

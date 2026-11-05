@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CivSim.Core.Content;
 using CivSim.Core.Numerics;
 using CivSim.Core.Simulation;
@@ -79,8 +80,10 @@ public sealed class ConsumptionSystem : ITurnSystem
                     continue;
                 }
 
-                foreach (NeedDefinition need in _content.Strata[k].Needs)
+                IReadOnlyList<NeedDefinition> needs = _content.Strata[k].Needs;
+                for (int n = 0; n < needs.Count; n++)
                 {
+                    NeedDefinition need = needs[n];
                     if (need.Basic != basic)
                     {
                         continue;
@@ -125,8 +128,9 @@ public sealed class ConsumptionSystem : ITurnSystem
             return got;
         }
 
-        foreach (GoodDefinition g in _content.Goods)
+        for (int k = 0; k < _content.Goods.Count; k++)
         {
+            GoodDefinition g = _content.Goods[k];
             if (g.Category == category)
             {
                 got += TakeGood(s, g.Id, wanted - got);

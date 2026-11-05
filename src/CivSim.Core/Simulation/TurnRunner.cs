@@ -122,7 +122,18 @@ public sealed class TurnRunner
             CommandResult result = envelope.Command.Validate(State, envelope.Civ);
             if (result.Success)
             {
-                envelope.Command.Apply(State, envelope.Civ);
+                if (envelope.Command is IChronicledCommand chronicled)
+                {
+                    if (chronicled.ApplyWithChronicle(State, envelope.Civ) is { } line)
+                    {
+                        _context.Chronicle(line);
+                    }
+                }
+                else
+                {
+                    envelope.Command.Apply(State, envelope.Civ);
+                }
+
                 LastReport.AppliedCommands++;
             }
             else

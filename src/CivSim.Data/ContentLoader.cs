@@ -93,7 +93,8 @@ public static class ContentLoader
                 errors.Add($"{at}.needs: a basic need for the food category is required.");
             }
 
-            result.Add(new StratumDefinition(i, key, name, gathers, share, needs));
+            bool fights = e.TryGetProperty("fights", out JsonElement f) && f.ValueKind == JsonValueKind.True;
+            result.Add(new StratumDefinition(i, key, name, gathers, share, needs) { Fights = fights });
             i++;
         }
 
@@ -164,6 +165,10 @@ public static class ContentLoader
         var growth = new Reader(Section("growth"), $"{file}: growth", errors);
         var health = new Reader(Section("health"), $"{file}: health", errors);
         var gathering = new Reader(Section("gathering"), $"{file}: gathering", errors);
+        var wild = new Reader(Section("wildFood"), $"{file}: wildFood", errors);
+        var years = new Reader(Section("goodAndBadYears"), $"{file}: goodAndBadYears", errors);
+        var influence = new Reader(Section("influence"), $"{file}: influence", errors);
+        var migration = new Reader(Section("migration"), $"{file}: migration", errors);
         var tribe = new int[strata.Count];
         JsonElement tribeElement = Section("newTribe");
         var tribeReader = new Reader(tribeElement, $"{file}: newTribe", errors);
@@ -203,7 +208,6 @@ public static class ContentLoader
             HungerPenaltyPercent = health.Int("hungerPenaltyPercent", 0, 100),
             CrowdingPenaltyPercent = health.Int("crowdingPenaltyPercent", 0, 1000),
             LowHealthBelow = health.Int("lowHealthBelow", 0, 100),
-            GatherRadius = gathering.Int("radius", 0, 10),
             FoodPerWorkerPerYear = gathering.Amount("foodPerWorkerPerYear", Amount.Epsilon, Amount.FromUnits(1000)),
             FoodPerBiomeFoodPerYear = gathering.Amount("foodPerBiomeFoodPerYear", Amount.Zero, Amount.FromUnits(1000)),
             PlantsPercent = gathering.Int("plantsPercent", 0, 100),
@@ -213,6 +217,25 @@ public static class ContentLoader
             PlantsGood = GoodOf("plantsGood"),
             MeatGood = GoodOf("meatGood"),
             HidesGood = GoodOf("hidesGood"),
+            WildDepletionPerMillePerYear = wild.Int("depletionPerMillePerYear", 0, 1000),
+            WildRegrowthBasisPointsPerYear = (int)wild.Amount("regrowthPercentPerYear", Amount.Zero, Amount.FromUnits(100)).Hundredths,
+            YieldSwingPercent = years.Int("yieldSwingPercent", 0, 90),
+            InfluenceBaseRange = influence.Int("baseRange", 0, 20),
+            WarriorsPerRange = influence.Int("warriorsPerRange", 1, 100_000),
+            InfluenceMaxRange = influence.Int("maxRange", 0, 20),
+            HillsCost = influence.Int("hillsCost", 0, 10),
+            MountainsCost = influence.Int("mountainsCost", 0, 10),
+            InfluencePerStep = influence.Int("strengthPerStep", 1, 255),
+            MaxMoveCells = migration.Int("maxMoveCells", 0, 50),
+            MoveWhenFedBelowPercent = migration.Int("moveWhenFedBelowPercent", 0, 100),
+            MoveWhenBetterByPercent = migration.Int("moveWhenBetterByPercent", 0, 1000),
+            MinYearsBetweenMoves = migration.Int("minYearsBetweenMoves", 0, 100_000),
+            DistancePenaltyPercentPerCell = migration.Int("distancePenaltyPercentPerCell", 0, 100),
+            SplitAbovePercentOfLevel = migration.Int("splitAbovePercentOfLevel", 1, 1000),
+            SplitPercent = migration.Int("splitPercent", 1, 90),
+            MinSplitPeople = migration.Int("minSplitPeople", 2, 1_000_000),
+            MinDistanceBetweenOwnCamps = migration.Int("minDistanceBetweenOwnCamps", 1, 50),
+            MaxSettlementsPerCivilization = migration.Int("maxSettlementsPerCivilization", 1, 10_000),
             NewTribe = tribe,
         };
     }

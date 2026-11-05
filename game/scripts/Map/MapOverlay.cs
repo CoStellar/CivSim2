@@ -28,7 +28,10 @@ public enum MapOverlay
     /// <summary>Owner civilization (from Stage 3).</summary>
     Owner,
 
-    /// <summary>Influence zones (from Stage 3; until then the same as owner).</summary>
+    /// <summary>Wild food left around camps (Stage 3c): green = untouched, brown = eaten.</summary>
+    WildFood,
+
+    /// <summary>Influence zones (Stage 3c): owner colour, stronger near the camp.</summary>
     Influence,
 }
 
@@ -56,6 +59,8 @@ public static class OverlayColors
             MapOverlay.Humidity => water ? Water : Rgb(0xC8A060).Lerp(Rgb(0x1E6E32), w.Humidity[i] / 100f),
             MapOverlay.Fertility => water ? Water : Rgb(0x5A4A3A).Lerp(Rgb(0x40D040), w.Fertility[i] / 100f),
             MapOverlay.Deposits => DepositColor(w, content, i, water),
+            MapOverlay.WildFood => water ? Water : Rgb(0x7A4A1E).Lerp(Rgb(0x2E8B3A), w.WildFood[i] / 1000f),
+            MapOverlay.Influence => InfluenceColor(w.Owner[i], w.Influence[i], water),
             _ => OwnerColor(w.Owner[i], water),
         };
         return w.Visibility[i] == MapChunkMessage.Remembered ? c.Darkened(0.4f) : c;
@@ -112,6 +117,12 @@ public static class OverlayColors
 
         Color c = Rgb(content.Deposits[d - 1].Color);
         return w.DepositDepth[i] == 0 ? c : c.Darkened(0.5f);
+    }
+
+    private static Color InfluenceColor(short owner, byte strength, bool water)
+    {
+        Color baseColor = OwnerColor(-1, water);
+        return owner < 0 ? baseColor : baseColor.Lerp(CivColor(owner), 0.25f + (0.75f * Mathf.Min(1f, strength / 240f)));
     }
 
     private static Color OwnerColor(short owner, bool water)

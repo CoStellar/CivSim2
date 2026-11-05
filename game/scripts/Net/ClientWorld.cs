@@ -33,6 +33,8 @@ public sealed class ClientWorld
         DepositDepth = new byte[n];
         Owner = new short[n];
         Array.Fill(Owner, (short)-1);
+        WildFood = new ushort[n];
+        Influence = new byte[n];
         River = new byte[n * MapChunkMessage.RiverEdgesPerCell];
         ChunksX = (width + ChunkSize - 1) / ChunkSize;
         ChunksY = (height + ChunkSize - 1) / ChunkSize;
@@ -96,6 +98,12 @@ public sealed class ClientWorld
     /// <summary>Owner civilization id or -1.</summary>
     public short[] Owner { get; }
 
+    /// <summary>Wild food left, per mille of an untouched cell.</summary>
+    public ushort[] WildFood { get; }
+
+    /// <summary>Influence strength of the owner, 0–255.</summary>
+    public byte[] Influence { get; }
+
     /// <summary>River size on the N, NE and SE edge of each cell.</summary>
     public byte[] River { get; }
 
@@ -124,6 +132,8 @@ public sealed class ClientWorld
                 DepositRichness[i] = m.DepositRichness[k];
                 DepositDepth[i] = m.DepositDepth[k];
                 Owner[i] = m.Owner[k];
+                WildFood[i] = m.WildFood is { } wild ? wild[k] : (ushort)1000;
+                Influence[i] = m.Influence is { } inf ? inf[k] : (byte)0;
                 for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)
                 {
                     River[(i * MapChunkMessage.RiverEdgesPerCell) + e] = m.River[(k * MapChunkMessage.RiverEdgesPerCell) + e];

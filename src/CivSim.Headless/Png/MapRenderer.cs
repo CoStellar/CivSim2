@@ -28,6 +28,12 @@ public enum MapView
 
     /// <summary>Surface deposits as coloured dots over a grey map.</summary>
     Resources,
+
+    /// <summary>Influence zones in each civilization's colour (stronger near the camps) and the camps themselves.</summary>
+    Influence,
+
+    /// <summary>Wild food left: green = untouched, brown = eaten (Stage 3c).</summary>
+    WildFood,
 }
 
 /// <summary>
@@ -46,6 +52,9 @@ public sealed class MapRenderer
     private readonly int _halfW;
     private readonly int _halfH;
 
+    /// <summary>Settlements drawn on the influence view (cell and whether anyone lives there).</summary>
+    public IReadOnlyList<(HexCoord Cell, bool Inhabited)> Settlements { get; init; } = [];
+
     /// <summary>Creates a renderer. <paramref name="scale"/> (k) of 3 gives 12-px-wide hexes.</summary>
     public MapRenderer(WorldState world, GameContent content, IReadOnlyList<HexCoord> starts, int scale = 3)
     {
@@ -58,10 +67,14 @@ public sealed class MapRenderer
     }
 
     /// <summary>Writes every view as <c>&lt;prefix&gt;_&lt;view&gt;.png</c> in <paramref name="folder"/>. Returns the paths.</summary>
-    public IReadOnlyList<string> SaveAll(string folder, string prefix)
+    public IReadOnlyList<string> SaveAll(string folder, string prefix) => Save(folder, prefix, Enum.GetValues<MapView>());
+
+    /// <summary>Writes the given views as <c>&lt;prefix&gt;_&lt;view&gt;.png</c> in <paramref name="folder"/>. Returns the paths.</summary>
+    public IReadOnlyList<string> Save(string folder, string prefix, IEnumerable<MapView> views)
     {
+        ArgumentNullException.ThrowIfNull(views);
         var paths = new List<string>();
-        foreach (MapView view in Enum.GetValues<MapView>())
+        foreach (MapView view in views)
         {
             string path = Path.Combine(folder, $"{prefix}_{view.ToString().ToLowerInvariant()}.png");
             PngWriter.Save(Render(view), path);
@@ -99,6 +112,17 @@ public sealed class MapRenderer
                     int r = Math.Max(1, _k - 1);
                     FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, _world.Map.DepositDepth[i] == 0 ? color : Darken(color, 50));
                 }
+            }
+        }
+
+        if (view == MapView.Influence)
+        {
+            foreach ((HexCoord cell, bool inhabited) in Settlements)
+            {
+                (int cx, int cy) = Center(cell);
+                int r = _k;
+                FillRect(image, cx - r - 1, cy - r - 1, (2 * r) + 3, (2 * r) + 3, 0x000000);
+                FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, inhabited ? 0xFFFFFFu : 0x777777u);
             }
         }
 
@@ -168,9 +192,40 @@ public sealed class MapRenderer
                 return water ? 0x0A2647u : Lerp(0x5A4A3A, 0x40D040, m.Fertility[i], 100);
             case MapView.Resources:
                 return water ? 0x16283Au : (Relief)m.Relief[i] == Relief.Mountains ? 0x5C5C5Cu : 0x3C3C3Cu;
+            case MapView.WildFood:
+                return water ? 0x0A2647u : _content.Biomes[biome].Food == 0 ? 0x4A4A4Au : Lerp(0x7A4A1E, 0x2E8B3A, m.WildFood[i], WorldMap.FullWildFood);
+            case MapView.Influence:
+            {
+                uint ground = water ? 0x0A2647u : Darken(_content.Biomes[biome].Color, 45);
+                short owner = m.Owner[i];
+                return owner < 0 ? ground : Lerp(ground, CivColor(owner), 80 + Math.Min(160, (int)m.Influence[i]), 255);
+            }
             default:
                 return 0;
         }
+    }
+
+    // Same colours as the viewer: hues spaced by the golden ratio.
+    private static uint CivColor(int civ)
+    {
+        double h = (civ * 0.618034) % 1.0 * 6.0;
+        double s = 0.75;
+        double v = 0.95;
+        int sector = (int)h;
+        double f = h - sector;
+        double p = v * (1 - s);
+        double q = v * (1 - (s * f));
+        double t = v * (1 - (s * (1 - f)));
+        (double r, double g, double b) = sector switch
+        {
+            0 => (v, t, p),
+            1 => (q, v, p),
+            2 => (p, v, t),
+            3 => (p, q, v),
+            4 => (t, p, v),
+            _ => (v, p, q),
+        };
+        return ((uint)(r * 255) << 16) | ((uint)(g * 255) << 8) | (uint)(b * 255);
     }
 
     private (int X, int Y) Center(HexCoord c) => ((c.Col * 3 * _k) + _halfW, (c.Row * 2 * _halfH) + _halfH + ((c.Col & 1) * _halfH));

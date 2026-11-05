@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using CivSim.Core.Content;
 using CivSim.Core.Hashing;
+using CivSim.Core.Map;
 using CivSim.Core.Simulation;
 using CivSim.Core.State;
 using CivSim.Core.WorldGen;
@@ -121,6 +122,19 @@ public static class HeadlessRun
         {
             turnMs = [];
         }
+        else if (options.PngFolder is not null)
+        {
+            // After the run: where the tribes live and how much wild food they left.
+            var camps = new List<(HexCoord, bool)>();
+            foreach (SettlementState s in runner.State.Settlements)
+            {
+                camps.Add((s.Cell, s.TotalPopulation() > 0));
+            }
+
+            var end = new MapRenderer(runner.State.Worlds[0], content, [], options.PngScale) { Settlements = camps };
+            string prefix = string.Create(CultureInfo.InvariantCulture, $"seed{options.Seed}_{options.MapSize.ToString().ToLowerInvariant()}_turn{runner.State.Turn}");
+            pngs = [.. pngs, .. end.Save(options.PngFolder, prefix, [MapView.Influence, MapView.WildFood])];
+        }
 
         double[] sorted = (double[])turnMs.Clone();
         Array.Sort(sorted);
@@ -175,7 +189,7 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
         }
 
-        stats.WriteLine(",food_stock,avg_health,avg_mood");
+        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -214,8 +228,21 @@ public static class HeadlessRun
             stats.Write(string.Create(inv, $",{p}"));
         }
 
+        // Average wild food left on land cells that have any food (how hard the land is used).
+        long wild = 0;
+        long landCells = 0;
+        Core.Map.WorldMap map = state.Worlds[0].Map;
+        for (int i = 0; i < map.WildFood.Length; i++)
+        {
+            if (content.Biomes[map.Biome[i]].Food > 0 && !content.Biomes[map.Biome[i]].IsWater)
+            {
+                wild += map.WildFood[i];
+                landCells++;
+            }
+        }
+
         stats.WriteLine(string.Create(
-            inv, $",{FoodUnits(state, content)},{(populated == 0 ? 0 : health / populated)},{(populated == 0 ? 0 : mood / populated)}"));
+            inv, $",{FoodUnits(state, content)},{(populated == 0 ? 0 : health / populated)},{(populated == 0 ? 0 : mood / populated)},{populated},{(landCells == 0 ? 0 : wild / landCells)}"));
     }
 
     private static long FoodUnits(GameState state, GameContent content)

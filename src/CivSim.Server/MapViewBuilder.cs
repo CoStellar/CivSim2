@@ -35,6 +35,8 @@ public static class MapViewBuilder
         var depth = new byte[n];
         var owner = new short[n];
         var river = new byte[n * MapChunkMessage.RiverEdgesPerCell];
+        var wild = new ushort[n];
+        var influence = new byte[n];
         bool any = false;
         for (int r = 0; r < h; r++)
         {
@@ -61,6 +63,8 @@ public static class MapViewBuilder
                 richness[k] = map.DepositRichness[i];
                 depth[k] = map.DepositDepth[i];
                 owner[k] = map.Owner[i];
+                wild[k] = map.WildFood[i];
+                influence[k] = map.Influence[i];
                 for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)
                 {
                     river[(k * MapChunkMessage.RiverEdgesPerCell) + e] = map.River[(i * HexEdge.PerCell) + e];
@@ -75,6 +79,6 @@ public static class MapViewBuilder
 
         return new MapChunkMessage(
             world.Id.Value, turn, chunk, x0, y0, w, h, visibility, elevation, temperature, humidity, biome, relief, feature,
-            fertility, deposit, richness, depth, owner, river);
+            fertility, deposit, richness, depth, owner, river, wild, influence);
     }
 }
