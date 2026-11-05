@@ -52,7 +52,8 @@ Jeśli widzisz mapę, wszystko działa: Godot, .NET, lokalny serwer i połączen
 
 ### Inny świat w podglądzie
 
-W Godocie: **Project → Project Settings → Application → Run → Main Run Args**, np.:
+W Godocie: **Project → Project Settings**, włącz **Advanced Settings** (prawy górny róg) i wpisz `main run args` w pole **Filter Settings**
+(to pole jest w sekcji **Editor → Run**). Albo: **Debug → Customize Run Instances… → Enable Main Run Args**. Wpisz np.:
 
 ```
 -- --seed 42 --map-size huge --climate cold --relief mountainous --civs 20
@@ -60,6 +61,7 @@ W Godocie: **Project → Project Settings → Application → Run → Main Run A
 
 Te same ustawienia co w trybie bez okna (niżej): `--seed`, `--map-size` (test, standard, large, huge), `--world-type`,
 `--water`, `--climate`, `--moisture`, `--relief`, `--resources`, `--civs`, oraz `--speed` (paused, x1, x2, x5, max).
+Osobne `--` na początku jest zalecane. Bez niego też zadziała, z wyjątkiem `--benchmark`, które Godot bierze wtedy za własną opcję.
 `--benchmark 600` przelatuje kamerą nad mapą przez 600 klatek, wypisuje w panelu Output średni czas klatki i zamyka grę.
 
 ## Co jest gdzie

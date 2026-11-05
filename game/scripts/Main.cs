@@ -49,9 +49,9 @@ public partial class Main : Node2D
     {
         GetNodeOrNull<Label>("StatusLabel")?.QueueFree();
         RenderingServer.SetDefaultClearColor(new Color(0.04f, 0.04f, 0.05f));
-        string[] args = OS.GetCmdlineUserArgs();
+        string[] args = GameArguments();
         LocalGameOptions options = ParseOptions(args, out SimulationSpeed speed, out _benchmarkFrames);
-        for (int i = 0; i + 1 < args.Length; i += 2)
+        for (int i = 0; i + 1 < args.Length; i++)
         {
             switch (args[i])
             {
@@ -351,6 +351,17 @@ public partial class Main : Node2D
         return candidates[0];
     }
 
+    /// <summary>
+    /// Game options come after a lone <c>--</c> on the command line. When that separator is missing,
+    /// Godot passes unknown options through as engine arguments, so those are read instead.
+    /// Options are matched by name, so other arguments in between are skipped.
+    /// </summary>
+    private static string[] GameArguments()
+    {
+        string[] user = OS.GetCmdlineUserArgs();
+        return user.Length > 0 ? user : OS.GetCmdlineArgs();
+    }
+
     private static LocalGameOptions ParseOptions(string[] args, out SimulationSpeed speed, out int benchmark)
     {
         ulong seed = 1;
@@ -365,7 +376,7 @@ public partial class Main : Node2D
         string? resources = null;
         int? water = null;
         int? civs = null;
-        for (int i = 0; i + 1 < args.Length; i += 2)
+        for (int i = 0; i + 1 < args.Length; i++)
         {
             string v = args[i + 1];
             switch (args[i])
