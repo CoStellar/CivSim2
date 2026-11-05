@@ -39,6 +39,25 @@ public sealed class EffectBook
     /// <summary>Number of active effects.</summary>
     public int Count => _effects.Count;
 
+    // Number of active effects per target (index for Total: most cells and settlements have none).
+    private readonly Dictionary<long, int> _perTarget = [];
+
+    private static long Key(EffectTarget target, WorldId world, int targetId) => ((long)target << 48) | ((long)world.Value << 32) | (uint)targetId;
+
+    private void Track(EffectInstance e, int change)
+    {
+        long key = Key(e.Target, e.World, e.TargetId);
+        int n = (_perTarget.TryGetValue(key, out int c) ? c : 0) + change;
+        if (n <= 0)
+        {
+            _perTarget.Remove(key);
+        }
+        else
+        {
+            _perTarget[key] = n;
+        }
+    }
+
     /// <summary>
     /// Adds an effect following the stacking rule of its type: <see cref="EffectStacking.Replace"/> removes older
     /// effects of the same type on the same target; <see cref="EffectStacking.Strongest"/> keeps only the one with the
@@ -62,12 +81,14 @@ public sealed class EffectBook
                     return null;
                 }
 
+                Track(_effects[i], -1);
                 _effects.RemoveAt(i);
             }
         }
 
         var effect = new EffectInstance(new EffectId(NextId++), definition.Id, definition.Target, world, targetId, strength, endMonth);
         _effects.Add(effect);
+        Track(effect, 1);
         return effect.Id;
     }
 
@@ -80,6 +101,7 @@ public sealed class EffectBook
             return false;
         }
 
+        Track(_effects[i], -1);
         _effects.RemoveAt(i);
         return true;
     }
@@ -93,6 +115,10 @@ public sealed class EffectBook
             if (_effects[read].EndMonth > month)
             {
                 _effects[write++] = _effects[read];
+            }
+            else
+            {
+                Track(_effects[read], -1);
             }
         }
 
@@ -111,6 +137,11 @@ public sealed class EffectBook
     /// </summary>
     public int Total(IReadOnlyList<EffectDefinition> definitions, EffectStat stat, EffectTarget target, WorldId world, int targetId)
     {
+        if (!_perTarget.ContainsKey(Key(target, world, targetId)))
+        {
+            return 0;
+        }
+
         int total = 0;
         foreach (EffectInstance e in _effects)
         {
@@ -132,6 +163,7 @@ public sealed class EffectBook
         }
 
         _effects.Add(effect);
+        Track(effect, 1);
         NextId = nextId;
     }
 

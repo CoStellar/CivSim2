@@ -41,6 +41,7 @@ public static class ContentLoader
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
+        List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -77,6 +78,7 @@ public static class ContentLoader
             ClimateCycles = cycles,
             Trade = trade,
             Perception = perception,
+            Events = events,
             Technologies = technologies,
             Research = research,
         };
@@ -867,6 +869,106 @@ public static class ContentLoader
             }
 
             i++;
+        }
+    }
+
+    private static List<EventDefinition> LoadEvents(
+        string path,
+        List<BiomeDefinition> biomes,
+        List<EffectDefinition> effects,
+        List<TechnologyDefinition> technologies,
+        List<string> errors)
+    {
+        var result = new List<EventDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "events", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        string file = Path.GetFileName(path);
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            string at = $"{file}: events[{i}]";
+            var r = new Reader(e, at, errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            int chance = r.Int("timesPer10000Years", 0, 10_000);
+            string chronicle = r.String("chronicle");
+            var conditions = new List<EventCondition>();
+            foreach ((JsonElement x, string xat) in Items(e, "conditions", at))
+            {
+                var cr = new Reader(x, xat, errors);
+                EventConditionKind kind = cr.Enum<EventConditionKind>("kind");
+                int percent = cr.OptionalInt("percent", 0, 10_000) ?? 100;
+                bool required = x.TryGetProperty("required", out _) && cr.Bool("required");
+                int value = kind switch
+                {
+                    EventConditionKind.HumidityBelow or EventConditionKind.HumidityAbove => cr.Int("value", 0, 100),
+                    EventConditionKind.BiomeNear => cr.Int("value", 0, 10),
+                    EventConditionKind.PeopleAtLeast => cr.Int("value", 1, 1_000_000_000),
+                    _ => 0,
+                };
+                var biomeIds = new List<int>();
+                if (kind == EventConditionKind.BiomeNear)
+                {
+                    foreach ((JsonElement b, string bat) in Items(x, "biomes", xat))
+                    {
+                        biomeIds.Add(IdOf(biomes.FindIndex(d => d.Key == b.GetString()), "biome", bat, errors));
+                    }
+
+                    if (biomeIds.Count == 0)
+                    {
+                        errors.Add($"{xat}.biomes: required list of biome keys.");
+                    }
+                }
+
+                conditions.Add(new EventCondition(kind, value, biomeIds, percent, required));
+            }
+
+            var softened = new List<EventSoftening>();
+            foreach ((JsonElement x, string xat) in Items(e, "softenedBy", at))
+            {
+                var sr = new Reader(x, xat, errors);
+                string tech = sr.String("technology");
+                softened.Add(new EventSoftening(IdOf(technologies.FindIndex(t => t.Key == tech), "technology", xat, errors), sr.Int("percent", 1, 100)));
+            }
+
+            var laid = new List<EventEffect>();
+            foreach ((JsonElement x, string xat) in Items(e, "effects", at))
+            {
+                var er = new Reader(x, xat, errors);
+                string effect = er.String("effect");
+                int id = IdOf(effects.FindIndex(d => d.Key == effect), "effect", xat, errors);
+                int radius = er.OptionalInt("radiusCells", 0, 10) ?? 0;
+                laid.Add(new EventEffect(id, er.Int("strength", -10_000, 10_000), er.Int("years", 1, 1000), radius));
+            }
+
+            int fertility = r.OptionalInt("fertilityGain", 0, 100) ?? 0;
+            int fertilityRadius = r.OptionalInt("fertilityRadius", 0, 10) ?? 0;
+            int spread = r.OptionalInt("spreadPercent", 0, 100) ?? 0;
+            result.Add(new EventDefinition(i, key, name, chance, conditions, softened, laid, fertility, fertilityRadius, spread, chronicle));
+            i++;
+        }
+
+        return result;
+    }
+
+    // The items of an optional array property, with their error location.
+    private static IEnumerable<(JsonElement Item, string At)> Items(JsonElement e, string name, string at)
+    {
+        if (!e.TryGetProperty(name, out JsonElement a) || a.ValueKind != JsonValueKind.Array)
+        {
+            yield break;
+        }
+
+        int k = 0;
+        foreach (JsonElement x in a.EnumerateArray())
+        {
+            yield return (x, $"{at}.{name}[{k}]");
+            k++;
         }
     }
 

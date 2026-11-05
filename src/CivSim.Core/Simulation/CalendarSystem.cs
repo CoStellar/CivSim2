@@ -50,6 +50,7 @@ public static class CoreSystems
         runner.AddSystem(new Perception.JourneySystem(content));
         runner.AddSystem(new WorldGen.SeasonSystem(content));
         runner.AddSystem(new EffectExpirySystem());
+        runner.AddSystem(new Events.EventSystem(content));
         runner.AddSystem(new Population.DecaySystem(content));
         runner.AddSystem(new Economy.WildFoodSystem(content, years));
         runner.AddSystem(new Population.InfluenceSystem(content, TurnPhase.Movement));

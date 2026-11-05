@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CivSim.Core.Content;
 using CivSim.Core.Economy;
 using CivSim.Core.Hashing;
@@ -202,7 +203,8 @@ public class StorageTests
 
         Assert.Equal(GameStateHash.Compute(runner.State), GameStateHash.Compute(loaded));
         Assert.Equal(runner.State.Settlements.Count, loaded.Settlements.Count);
-        Assert.Equal(2, loaded.Effects.Count);
+        Assert.Equal(runner.State.Effects.Count, loaded.Effects.Count); // ours and any laid by events
+        Assert.True(loaded.Effects.Count >= 2);
         Assert.Equal(600, loaded.Month);
     }
 
@@ -286,15 +288,16 @@ public class EffectBookTests
         GameState state = GameState.CreateNew(GameSettings.Test(1), Content, out WorldGenReport _);
         var runner = new TurnRunner(state);
         CoreSystems.Register(runner, Content);
-        state.Effects.Add(Content.Effect("damage"), WorldId.Earth, 0, -30, state.Month + (60 * 12)); // 60 years
-        state.Effects.Add(Content.Effect("depopulation"), WorldId.Earth, 0, 5, state.Month + (20 * 12)); // 20 years
+        EffectId longer = state.Effects.Add(Content.Effect("damage"), WorldId.Earth, 0, -30, state.Month + (60 * 12))!.Value; // 60 years
+        EffectId shorter = state.Effects.Add(Content.Effect("depopulation"), WorldId.Earth, 0, 5, state.Month + (20 * 12))!.Value; // 20 years
+        bool Has(EffectId id) => state.Effects.All.Any(e => e.Id == id); // events may lay effects of their own
 
         runner.RunTurn(); // year 0 -> 50: nothing has expired at the start of the turn
-        Assert.Equal(2, state.Effects.Count);
+        Assert.True(Has(longer) && Has(shorter));
         runner.RunTurn(); // the 20-year effect is gone at the start of this turn
-        Assert.Equal(1, state.Effects.Count);
+        Assert.True(Has(longer) && !Has(shorter));
         runner.RunTurn(); // year 100: the 60-year effect is gone too
-        Assert.Equal(0, state.Effects.Count);
+        Assert.False(Has(longer));
     }
 
     [Fact]

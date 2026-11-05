@@ -99,6 +99,12 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
         {
             int i = world.Geometry.Index(_area[k]);
             long perFarmer = map.Claim[i] == claim ? GrainPerFarmer(map, i) : 0;
+            if (perFarmer > 0 && state.Effects.Count > 0)
+            {
+                // Drought, wildfire and flood lower what a cell gives (cell extraction effects, stage 3h).
+                perFarmer = perFarmer * Math.Max(0, 100 + state.Effects.Total(_content.Effects, EffectStat.ExtractionPercent, EffectTarget.Cell, s.World, i)) / 100;
+            }
+
             if (perFarmer > 0)
             {
                 _keys.Add((-perFarmer << 24) | (uint)i);
@@ -106,7 +112,10 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
         }
 
         _keys.Sort();
-        int output = 100 + (state.Effects.Count == 0 ? 0 : state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Civilization, WorldId.Earth, s.Owner.Value));
+        int output = 100 + (state.Effects.Count == 0
+            ? 0
+            : state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Settlement, s.World, s.Id.Value)
+                + state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Civilization, WorldId.Earth, s.Owner.Value));
         long grainHundredths = 0;
         int left = producers;
         foreach (long key in _keys)

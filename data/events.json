@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "comment": "Random events (GDD 10.2, stage 3h). Every turn each lived-in settlement may be struck by each event once. timesPer10000Years: how often the event strikes a settlement in 10 000 years with no condition (yearly chance = times / 10 000); over a turn of N years the chance is 1 - (1 - p)^N, at most once a turn. Events here are the big ones a settlement remembers, not every dry summer. conditions: kind humidity_below / humidity_above (value 0-100, the settlement's cell), river (a river on an edge of its cell), biome_near (one of biomes within value cells), people_at_least (value), settled (the settlement cannot move). A condition that holds multiplies the chance by percent (default 100; 0 rules the event out); a required condition that does not hold rules it out. softenedBy: a technology the owner knows lowers the strength of every effect by percent. effects: an effect type from effects.json with a strength and a duration in years; settlement and civilization effects fall on the struck settlement or its owner, cell effects on every land cell within radiusCells. When a turn is longer than the effect lasts, the effect stays for the whole turn with its strength scaled by years / turn years, so a short drought in a 50-year turn weighs little. fertilityGain: fertility points added to land cells within fertilityRadius (a flood's silt, up to 100). spreadPercent: the chance that each other settlement in the same trade network is struck too (an epidemic). chronicle: {settlement} and {civilization} are filled in.",
+  "events": [
+    {
+      "key": "drought",
+      "name": "Drought",
+      "timesPer10000Years": 15,
+      "conditions": [
+        {"kind": "humidity_below", "value": 35, "percent": 300},
+        {"kind": "humidity_above", "value": 75, "percent": 0},
+        {"kind": "river", "percent": 50}
+      ],
+      "softenedBy": [
+        {"technology": "irrigation", "percent": 50},
+        {"technology": "pottery", "percent": 20}
+      ],
+      "effects": [
+        {"effect": "extraction_reduction", "strength": -40, "years": 8, "radiusCells": 4}
+      ],
+      "chronicle": "A drought dried the land around {settlement} ({civilization})."
+    },
+    {
+      "key": "wildfire",
+      "name": "Wildfire",
+      "timesPer10000Years": 10,
+      "conditions": [
+        {"kind": "biome_near", "value": 2, "biomes": ["taiga", "deciduous_forest", "savanna"], "required": true},
+        {"kind": "humidity_below", "value": 50, "percent": 250}
+      ],
+      "softenedBy": [
+        {"technology": "stonemasonry", "percent": 50}
+      ],
+      "effects": [
+        {"effect": "damage", "strength": -30, "years": 3},
+        {"effect": "extraction_reduction", "strength": -50, "years": 15, "radiusCells": 2}
+      ],
+      "chronicle": "A wildfire burned the forests around {settlement} ({civilization})."
+    },
+    {
+      "key": "flood",
+      "name": "Flood",
+      "timesPer10000Years": 30,
+      "conditions": [
+        {"kind": "river", "required": true},
+        {"kind": "humidity_above", "value": 60, "percent": 200}
+      ],
+      "effects": [
+        {"effect": "depopulation", "strength": 60, "years": 1},
+        {"effect": "extraction_reduction", "strength": -50, "years": 1, "radiusCells": 1}
+      ],
+      "fertilityGain": 4,
+      "fertilityRadius": 1,
+      "chronicle": "The river flooded {settlement} ({civilization}); the silt left the fields richer."
+    },
+    {
+      "key": "epidemic",
+      "name": "Epidemic",
+      "timesPer10000Years": 3,
+      "conditions": [
+        {"kind": "people_at_least", "value": 300, "percent": 300},
+        {"kind": "people_at_least", "value": 1000, "percent": 300},
+        {"kind": "settled", "percent": 300}
+      ],
+      "effects": [
+        {"effect": "depopulation", "strength": 120, "years": 3},
+        {"effect": "mood_drop", "strength": -15, "years": 3}
+      ],
+      "spreadPercent": 40,
+      "chronicle": "An epidemic broke out in {settlement} ({civilization})."
+    }
+  ]
+}
