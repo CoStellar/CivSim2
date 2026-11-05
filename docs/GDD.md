@@ -205,7 +205,7 @@ Każdy surowiec jest niewidoczny i niedostępny do zbierania, dopóki cywilizacj
 
 - **Magazyn osady** ma osobną pojemność na cztery kategorie: żywność (spichlerz), materiały sypkie i masowe (skład), towary cenne (skarbiec), płyny i gazy (zbiorniki, od ery przemysłowej).
 - **Nadmiar ponad pojemność przepada** albo jest sprzedawany z rabatem, jeśli osada jest w sieci handlowej.
-- **Psucie się na turę:** zboże 1%, chleb 4%, mięso 5%, ryby 8%. Solenie, chłodnie i konserwy obniżają te wartości. Drewno, kamień i metale się nie psują, a narzędzia i broń zużywają się tylko w użyciu.
+- **Psucie się na rok** (przeliczane przez długość tury, jak każde tempo): zboże 1%, chleb 4%, mięso 5%, ryby 8%. Solenie, chłodnie i konserwy obniżają te wartości. Drewno, kamień i metale się nie psują, a narzędzia i broń zużywają się tylko w użyciu.
 - **Energia elektryczna** nie jest magazynowana bez magazynów energii (od ery informacji). Co turę produkcja musi pokryć zużycie, inaczej budynki pracują z mniejszą wydajnością.
 
 ### 4.4 Wydobycie i produkcja

@@ -121,7 +121,7 @@ public partial class Hud : CanvasLayer
         {
             ClientWorld? w = map.World;
             string where = w is null ? string.Empty : string.Create(CultureInfo.InvariantCulture, $"   {w.Name} {w.Width}x{w.Height}");
-            _turn.Text = string.Create(CultureInfo.InvariantCulture, $"Turn {view.Turn}{where}");
+            _turn.Text = string.Create(CultureInfo.InvariantCulture, $"Turn {view.Turn}   Year {view.Month / 12}{where}");
             if (_speedButtons.TryGetValue(view.Speed, out Button? b) && !b.ButtonPressed)
             {
                 b.SetPressedNoSignal(true);
@@ -182,7 +182,52 @@ public partial class Hud : CanvasLayer
 
         sb.Append("Rivers on own edges: ").Append(rivers.Count == 0 ? "none" : string.Join(", ", rivers)).Append('\n');
         sb.Append("Owner: ").Append(w.Owner[i] < 0 ? "none" : FindCiv(session, w.Owner[i])).Append('\n');
+        AppendSettlement(sb, session, w.Id, sel.Col, sel.Row);
         return sb.ToString();
+    }
+
+    // Settlement on the selected cell: owner, level and warehouse (only when the server sent it).
+    private static void AppendSettlement(StringBuilder sb, ClientSession session, int world, int col, int row)
+    {
+        if (session.View?.Settlements is not { } settlements)
+        {
+            return;
+        }
+
+        CultureInfo inv = CultureInfo.InvariantCulture;
+        ContentMessage? c = session.Content;
+        foreach (SettlementView s in settlements)
+        {
+            if (s.World != world || s.Col != col || s.Row != row)
+            {
+                continue;
+            }
+
+            string level = c?.SettlementLevels is { } levels && s.Level < levels.Count ? levels[s.Level] : s.Level.ToString(inv);
+            sb.Append(inv, $"\n[b]{s.Name}[/b]\n{level} of {FindCiv(session, s.Owner)}\n");
+            if (s.Stock is null)
+            {
+                sb.Append("[color=gray]Warehouse not visible.[/color]\n");
+                continue;
+            }
+
+            long total = 0;
+            var lines = new StringBuilder();
+            for (int g = 0; g < s.Stock.Length; g++)
+            {
+                if (s.Stock[g] == 0)
+                {
+                    continue;
+                }
+
+                total += s.Stock[g];
+                string name = c?.Goods is { } goods && g < goods.Count ? goods[g].Name : g.ToString(inv);
+                lines.Append(inv, $"  {name}: {s.Stock[g] / 100.0:F2}\n");
+            }
+
+            sb.Append(inv, $"Warehouse ({total / 100.0:F2} units):\n");
+            sb.Append(lines.Length == 0 ? "  empty\n" : lines.ToString());
+        }
     }
 
     private static string FindCiv(ClientSession session, int id)

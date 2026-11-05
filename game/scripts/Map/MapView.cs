@@ -32,6 +32,7 @@ public partial class MapView : Node2D
     private Vector2 _period;
     private (int Col, int Row)? _selected;
     private SelectionOutline? _outline;
+    private SettlementMarkers? _markers;
 
     /// <summary>Chunk copies drawn in the last frame (for the performance read-out).</summary>
     public int VisibleChunks { get; private set; }
@@ -82,6 +83,12 @@ public partial class MapView : Node2D
                 int h = Math.Min(ClientWorld.ChunkSize, world.Height - y0);
                 _chunks.Add(new ChunkGfx(x0, y0, w, h, _hexMesh, _quadMesh));
             }
+        }
+
+        _markers ??= new SettlementMarkers { ZIndex = 5 };
+        if (_markers.GetParent() is null)
+        {
+            AddChild(_markers);
         }
 
         _outline ??= new SelectionOutline { ZIndex = 10 };
@@ -194,6 +201,7 @@ public partial class MapView : Node2D
         Release(_hexPool, used);
         Release(_riverPool, usedRivers);
         VisibleChunks = used;
+        _markers?.Show(_session.View?.Settlements, _world.Id, _period, view);
         UpdateOutline(view);
     }
 

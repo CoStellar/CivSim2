@@ -50,12 +50,14 @@ sequenceDiagram
 - **Obserwator** (protokół v2): nie rządzi cywilizacją (`WelcomeMessage.NoCiv = -1`), widzi całą mapę i jako jedyny może zmieniać
   prędkość symulacji. Gracz, który wyśle `SetSpeed`, dostaje odmowę.
 - **Kronika:** serwer pamięta ostatnie 500 wpisów; nowy klient dostaje je raz, przy powitaniu.
+- **Osady** (protokół v3): widok zawiera czas gry w miesiącach i listę osad. Gracz widzi swoje osady z zawartością magazynu,
+  a cudze tylko na polach, które zna, i bez magazynu. Obserwator widzi wszystko. `ContentMessage` niesie też towary i nazwy poziomów osad.
 - **`LocalServerHost`:** uruchamia serwer w osobnym wątku i daje klientowi połączenie w pamięci (ADR 0010). Tury idą
   w tempie wybranej prędkości, tylko gdy podłączony jest obserwator; przy maks. widok wychodzi najwyżej co 250 ms.
 
 **Zapis gry** (`SaveGameSerializer`, po stronie serwera):
 - Plik: `CS2S` + wersja formatu (4 bajty) + MessagePack skompresowany LZ4.
-- Zawiera ustawienia, numer tury, stany wszystkich generatorów losowych, światy i cywilizacje.
+- Zawiera ustawienia, numer tury, czas gry, stany wszystkich generatorów losowych, światy, cywilizacje (z erą), osady z magazynami i aktywne efekty (format 5).
 - Zapis idzie najpierw do pliku `.tmp`, potem podmienia właściwy plik, więc awaria nie zostawi uszkodzonego zapisu.
 - Obcy plik albo nowsza wersja formatu = czytelny błąd zamiast awarii.
 

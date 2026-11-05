@@ -53,7 +53,7 @@ flowchart LR
 | --- | --- |
 | WASD, strzałki, przeciąganie prawym lub środkowym przyciskiem | przesuwanie mapy |
 | kółko myszy, `+` / `-` | zoom |
-| lewy przycisk | wybór pola (inspektor po lewej) |
+| lewy przycisk | wybór pola (inspektor po lewej; na polu z osadą także jej poziom i magazyn) |
 | Spacja | pauza / ×1 |
 | 1–5 | pauza, ×1, ×2, ×5, maks. |
 | Tab | następna nakładka |
@@ -78,3 +78,5 @@ najmniejszym zoomie i przełącza nakładki, symulacja w tle na maks.
 
 Prawdziwe FPS zależą od karty graficznej; trzeba je zmierzyć na komputerze Patryka (`-- --map-size huge --benchmark 600`).
 Wąskie gardło na przyszłość: pierwsze wczytanie dużej mapy (do 120 ms, raz).
+
+**Osady (etap 3a):** kwadrat w kolorze właściciela na polu osady, większy dla wyższego poziomu (`SettlementMarkers`). Górny pasek pokazuje rok gry.

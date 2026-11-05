@@ -71,6 +71,12 @@ public static class ContentLoader
             GoodCategory category = r.Enum<GoodCategory>("category");
             Amount spoilage = r.Amount("spoilagePerYear", Amount.Zero, Amount.FromUnits(100));
             uint color = r.Color("color");
+            if (category != GoodCategory.Food && spoilage > Amount.Zero)
+            {
+                // CORE simplified (GDD 16): only food spoils.
+                errors.Add($"{Path.GetFileName(path)}: goods[{i}].spoilagePerYear: only food may spoil.");
+            }
+
             result.Add(new GoodDefinition(i, key, name, era, category, (int)spoilage.Hundredths, color));
             i++;
         }
