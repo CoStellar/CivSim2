@@ -34,4 +34,25 @@ public sealed class CivilizationState
 
     /// <summary>Current era id (index into <c>GameContent.Eras</c>); everyone starts in the Stone Age (0).</summary>
     public int Era { get; set; }
+
+    /// <summary>Technologies known, by technology id (GDD 6; stage 3f). Grows to the number of technologies on first use.</summary>
+    public bool[] KnownTechnologies { get; set; } = [];
+
+    /// <summary>Number of technologies known (changes when one is learned; caches key on it).</summary>
+    public int KnownCount { get; set; }
+
+    /// <summary>Technology being researched, or <see cref="NoResearch"/>.</summary>
+    public int Researching { get; set; } = NoResearch;
+
+    /// <summary>Research points collected towards <see cref="Researching"/>, hundredths.</summary>
+    public long ResearchProgress { get; set; }
+
+    /// <summary>Research points gained in the last turn, hundredths (for reports).</summary>
+    public long LastScience { get; set; }
+
+    /// <summary>Value of <see cref="Researching"/> when nothing is researched.</summary>
+    public const int NoResearch = -1;
+
+    /// <summary>True when the technology is known.</summary>
+    public bool Knows(int technology) => technology >= 0 && technology < KnownTechnologies.Length && KnownTechnologies[technology];
 }

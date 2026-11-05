@@ -12,8 +12,8 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `goods.json` | goods in settlement warehouses, category, spoilage per year (only food spoils in CORE), base value for internal prices | 3a, 3e |
 | `trade.json` | trade network links, transport loss per cell, food reserve, price range | 3e |
 | `settlements.json` | settlement levels (population, storage capacity, mobile) and the new tribe's camp | 3a |
-| `eras.json` | eras and turn length in months (entry thresholds come with technologies) | 3a |
-| `technologies.json` | technology graph, costs, inspirations, unlocks | 3 |
+| `eras.json` | eras, turn length in months, threshold technology | 3a, 3f |
+| `technologies.json` | technology graph, costs, inspirations, diffusion, unlocks (recipes, gathering, effects) | 3f |
 | `recipes.json` | one-step production recipes (inputs → outputs, workers, years) | 3a |
 | `buildings.json` | buildings and tile improvements | 3 |
 | `strata.json` | population strata, target shares and needs (3 at start, more per era) | 3b |

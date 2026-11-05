@@ -83,7 +83,11 @@ public sealed record SettlementLevelDefinition(
 }
 
 /// <summary>An era from <c>data/eras.json</c> (GDD 6.2).</summary>
-public sealed record EraDefinition(int Id, string Key, string Name, int MonthsPerTurn);
+public sealed record EraDefinition(int Id, string Key, string Name, int MonthsPerTurn)
+{
+    /// <summary>Technology that opens this era (stage 3f), or -1 when none is defined yet.</summary>
+    public int ThresholdTechnology { get; init; } = -1;
+}
 
 /// <summary>What an effect is attached to (GDD 10.1).</summary>
 public enum EffectTarget
@@ -124,6 +128,9 @@ public enum EffectStat
 
     /// <summary>Degrees of cold a civilization bears without losing comfort (fire, clothing, houses from technologies).</summary>
     ColdToleranceDegrees = 7,
+
+    /// <summary>Percent change of how fast food spoils (granaries and pots lower it; stage 3f).</summary>
+    SpoilagePercent = 8,
 }
 
 /// <summary>How effects of the same type on the same target combine.</summary>

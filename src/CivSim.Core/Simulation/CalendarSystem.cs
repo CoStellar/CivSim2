@@ -61,6 +61,8 @@ public static class CoreSystems
         runner.AddSystem(new Population.InfluenceSystem(content));
         runner.AddCommandSource(new Ai.TribeAi(content));
         runner.AddCommandSource(new Ai.EconomyAi(content));
+        runner.AddSystem(new Research.ResearchSystem(content));
+        runner.AddCommandSource(new Research.ResearchAi(content));
         runner.AddSystem(new CalendarSystem(content));
     }
 }

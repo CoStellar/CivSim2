@@ -180,34 +180,6 @@ public static class Demand
 
         return sum;
     }
-
-    /// <summary>True when the recipe's goods belong to an era already reached (technologies come in stage 3f).</summary>
-    public static bool Allowed(GameContent content, GameState state, RecipeDefinition recipe)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        ArgumentNullException.ThrowIfNull(state);
-        ArgumentNullException.ThrowIfNull(recipe);
-        int era = state.CalendarEra() + 1;
-        for (int iQ = 0; iQ < recipe.Inputs.Count; iQ++)
-        {
-            GoodQuantity q = recipe.Inputs[iQ];
-            if (content.Goods[q.GoodId].Era > era)
-            {
-                return false;
-            }
-        }
-
-        for (int iQ = 0; iQ < recipe.Outputs.Count; iQ++)
-        {
-            GoodQuantity q = recipe.Outputs[iQ];
-            if (content.Goods[q.GoodId].Era > era)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }
 
 /// <summary>

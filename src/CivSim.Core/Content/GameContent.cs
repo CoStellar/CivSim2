@@ -55,6 +55,15 @@ public sealed class GameContent
     /// <summary>Production recipes, index = id (<c>data/recipes.json</c>).</summary>
     public IReadOnlyList<RecipeDefinition> Recipes { get; init; } = [];
 
+    /// <summary>Technologies (data/technologies.json, stage 3f), index = id.</summary>
+    public IReadOnlyList<TechnologyDefinition> Technologies { get; init; } = [];
+
+    /// <summary>Research and diffusion rules (stage 3f).</summary>
+    public ResearchRules Research { get; init; } = new();
+
+    /// <summary>Technology by key.</summary>
+    public TechnologyDefinition Technology(string key) => Find(Technologies, t => t.Key, key, "technology");
+
     /// <summary>Trade network and internal prices (data/trade.json, stage 3e).</summary>
     public TradeRules Trade { get; init; } = new();
 

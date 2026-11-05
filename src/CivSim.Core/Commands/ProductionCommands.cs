@@ -7,7 +7,7 @@ namespace CivSim.Core.Commands;
 
 /// <summary>
 /// Chooses the recipe a settlement's artisans work (GDD 4.4, stage 3e), or <see cref="SettlementState.NoRecipe"/> to
-/// stop. A recipe is allowed when its goods belong to an era already reached (technologies come in stage 3f).
+/// stop. A recipe is allowed when a technology the civilization knows unlocks it (stage 3f).
 /// </summary>
 public sealed record SetRecipeCommand(GameContent Content, SettlementId Settlement, int RecipeId) : ICommand
 {
@@ -39,9 +39,9 @@ public sealed record SetRecipeCommand(GameContent Content, SettlementId Settleme
             return CommandResult.Fail("No such recipe.");
         }
 
-        return Demand.Allowed(Content, state, Content.Recipes[RecipeId])
+        return Research.Technologies.KnowsRecipe(Content, state.FindCivilization(civ)!, RecipeId)
             ? CommandResult.Ok
-            : CommandResult.Fail("That recipe needs goods of a later era.");
+            : CommandResult.Fail("No technology the civilization knows unlocks that recipe.");
     }
 
     /// <inheritdoc />

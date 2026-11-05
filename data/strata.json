@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Population strata and their needs (GDD 5.1; CORE simplified: three strata at the start, later eras add more). gathers: the stratum works the land (only producers in eras 1-2). fights (optional): the stratum widens the influence zone (GDD 5.4). targetShare: share of the population this stratum drifts towards, in percent; the shares must add up to 100. needs: amounts per person per year. 'category' means any good of that storage class (food = any food, eaten most perishable first); 'good' means one good. basic needs decide hunger and health, higher needs raise mood. crafts (optional, stage 3e): the stratum works the settlement's recipe.",
+  "comment": "Population strata and their needs (GDD 5.1; CORE simplified: three strata at the start, later eras add more). gathers: the stratum works the land (only producers in eras 1-2). fights (optional): the stratum widens the influence zone (GDD 5.4). targetShare: share of the population this stratum drifts towards, in percent; the shares must add up to 100. needs: amounts per person per year. 'category' means any good of that storage class (food = any food, eaten most perishable first); 'good' means one good. basic needs decide hunger and health, higher needs raise mood. crafts (optional, stage 3e): the stratum works the settlement's recipe. sciencePerThousandPerYear (stage 3f): research points a thousand people of the stratum add per year.",
   "strata": [
     {
       "key": "producers",
@@ -18,7 +18,8 @@
           "perYear": "0.05",
           "kind": "higher"
         }
-      ]
+      ],
+      "sciencePerThousandPerYear": 3
     },
     {
       "key": "artisans",
@@ -37,7 +38,8 @@
           "kind": "higher"
         }
       ],
-      "crafts": true
+      "crafts": true,
+      "sciencePerThousandPerYear": 30
     },
     {
       "key": "warriors",
@@ -56,7 +58,8 @@
           "perYear": "0.1",
           "kind": "higher"
         }
-      ]
+      ],
+      "sciencePerThousandPerYear": 2
     }
   ]
 }

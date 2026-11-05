@@ -223,7 +223,7 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
         }
 
-        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials");
+        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -290,7 +290,34 @@ public static class HeadlessRun
         stats.WriteLine(string.Create(
             inv, $",{FoodUnits(state, content)},{(populated == 0 ? 0 : health / populated)},{(populated == 0 ? 0 : mood / populated)},{populated},{(landCells == 0 ? 0 : wild / landCells)}"
             + $",{state.Worlds[0].Climate.GlobalMeanMillionths / 100_000 / 10.0:F1},{state.Worlds[0].Climate.NorthIce / 1000},{state.Worlds[0].Climate.SouthIce / 1000},{state.Worlds[0].Climate.Co2Microbar},{(state.Worlds[0].Climate.SeaLevel - Core.WorldGen.WorldGenerator.SeaLevel) * content.ClimateCycles.SeaMetersPerStep}"
-            + $",{(populated == 0 ? 0 : higher / populated)},{crafting},{valuables / 100},{materials / 100}"));
+            + $",{(populated == 0 ? 0 : higher / populated)},{crafting},{valuables / 100},{materials / 100}"
+            + $",{TechAverage(state)},{TechMax(state)},{EraMax(state)},{ScienceAverage(state)}"));
+    }
+
+    private static string TechAverage(GameState state)
+    {
+        int alive = 0;
+        long known = 0;
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            if (c.IsAlive)
+            {
+                alive++;
+                known += c.KnownCount;
+            }
+        }
+
+        return alive == 0 ? "0" : (known / (double)alive).ToString("F1", CultureInfo.InvariantCulture);
+    }
+
+    private static int TechMax(GameState state) => state.Civilizations.Where(c => c.IsAlive).Select(c => c.KnownCount).DefaultIfEmpty(0).Max();
+
+    private static int EraMax(GameState state) => state.Civilizations.Where(c => c.IsAlive).Select(c => c.Era).DefaultIfEmpty(0).Max();
+
+    private static long ScienceAverage(GameState state)
+    {
+        long[] science = state.Civilizations.Where(c => c.IsAlive).Select(c => c.LastScience).ToArray();
+        return science.Length == 0 ? 0 : science.Sum() / science.Length / 100;
     }
 
     private static long FoodUnits(GameState state, GameContent content)

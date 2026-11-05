@@ -27,7 +27,7 @@ flowchart LR
 - **Towary są tylko w magazynach osad** (GDD 4). Nie ma skarbca cywilizacji.
 - **Start:** każde plemię dostaje jeden obóz (poziom `camp`) na polu startowym z generatora i zapasy z `newTribe.stock` (40 roślin, 30 mięsa, 10 skór, 20 drewna, 10 krzemienia, 5 narzędzi kamiennych).
 - **Czas gry** liczymy w miesiącach (`GameState.Month`), bo w erze informacji tura trwa pół roku, a w kosmicznej kwartał. Rok w podglądzie = miesiące / 12.
-- **Długość tury** bierzemy z ery najbardziej zaawansowanej żywej cywilizacji. To zasada tymczasowa: ostatecznie ustalimy ją razem z erami w etapie 3f.
+- **Długość tury** bierzemy z ery najbardziej zaawansowanej żywej cywilizacji (ery wynikają z technologii od etapu 3f, [research.md](research.md)).
 - **Psucie** (GDD 4.3, zgoda Patryka z 2026-11-05: liczby są **na rok**): z zapasu zostaje `(1 − tempo)^lata`. Pełne lata liczymy jako procent składany, resztę roku proporcjonalnie. Przykład: zboże (1% na rok) po turze 50 lat ma 60,5% zapasu, ryby (8%) tylko 1,5%. Zapasy żywności są więc buforem na złe lata, nie oszczędnościami na stulecia. Według GDD 16 psuje się tylko żywność; walidator danych tego pilnuje.
 - **Pojemność** (CORE uproszczone): jedna liczba na osadę, z poziomu osady (obóz 300 jednostek, wioska 2000…). Nadwyżka znika ze wszystkich towarów proporcjonalnie do ich ilości. Od etapu 3e nadwyżka najpierw jedzie do osad sieci handlowej z wolnym miejscem (bez pieniędzy nie ma sprzedaży z rabatem); opis w [economy-trade.md](economy-trade.md).
 - Wszystko na liczbach całkowitych (`Amount` w setnych częściach, udział psucia w miliardowych), więc wynik jest identyczny na każdym komputerze.

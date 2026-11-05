@@ -100,7 +100,10 @@ public sealed class PopulationSystem : ITurnSystem
         s.Health = Math.Clamp(health, 0, 100);
 
         int mood = (fed * 60 / 1000) + (s.HigherNeedsPerMille * 40 / 1000);
-        mood += state.Effects.Count == 0 ? 0 : state.Effects.Total(_content.Effects, EffectStat.Mood, EffectTarget.Settlement, s.World, s.Id.Value);
+        mood += state.Effects.Count == 0
+            ? 0
+            : state.Effects.Total(_content.Effects, EffectStat.Mood, EffectTarget.Settlement, s.World, s.Id.Value)
+                + state.Effects.Total(_content.Effects, EffectStat.Mood, EffectTarget.Civilization, WorldId.Earth, s.Owner.Value);
         s.Mood = Math.Clamp(mood, 0, 100);
     }
 

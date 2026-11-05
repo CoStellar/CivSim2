@@ -421,6 +421,8 @@ Era cywilizacji zmienia się po zbadaniu technologii progowej i 60% technologii 
 | Nawadnianie | Neolit | Rolnictwo + rzeka obok | kanały, +żyzność, odporność na suszę |
 | Wymiana barterowa | Neolit | Garncarstwo | handel z innymi plemionami |
 
+**W CORE (etap 3f):** naukę w erach 1–2 wytwarzają wszyscy ludzie (rzemieślnicy dziesięć razy więcej niż wytwórcy), bo uczonych i budynków jeszcze nie ma. Koszt spada o inspiracje (np. krzemień w strefie wpływów: obróbka krzemienia −30%) i o 20% za każdego sąsiada, który zna technologię (najwyżej 2 sąsiadów, sąsiad: osada w promieniu 12 pól), nie niżej niż do 25% kosztu. Odkryć przypadkiem nie ma (rozdział 16: „Wytnij”). Odblokowania z tabeli działają tak: ogień +10% plonów i +4 °C tolerancji zimna; obróbka krzemienia: zbieranie krzemienia i narzędzia kamienne; łowiectwo zespołowe: więcej mięsa i skór ze zwierzyny; rybołówstwo: ryby z wybrzeży, jezior i łowisk; garbarstwo: odzież ze skór i +4 °C; tradycje: +5 nastroju; rolnictwo: zboże z dzikiego zboża; udomowienie: stada (bydło, owce, konie) i +25% udźwigu; garncarstwo: glina, ceramika i 25% wolniejsze psucie jedzenia; tkactwo: tkaniny; kamieniarstwo: kamień; nawadnianie: +5% plonów; pieczenie chleba (dodane, żeby chleb miał swoją technologię): chleb. Wymiana barterowa zacznie działać z handlem między cywilizacjami w etapie 4. Pola uprawne i osiedlanie się w wioskach to osobny krok.
+
 Ery 3–10 rozpiszemy etapami: każdy etap roadmapy (rozdział 14) zaczyna się od pełnej listy technologii swojej ery.
 
 ## 7. Zarządzanie cywilizacją

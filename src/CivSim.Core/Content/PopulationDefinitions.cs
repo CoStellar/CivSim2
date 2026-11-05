@@ -27,6 +27,9 @@ public sealed record StratumDefinition(int Id, string Key, string Name, bool Gat
 
     /// <summary>True when the stratum works the settlement's recipe (artisans, stage 3e).</summary>
     public bool Crafts { get; init; }
+
+    /// <summary>Research points a thousand people of this stratum add per year (stage 3f).</summary>
+    public int SciencePerThousandPerYear { get; init; }
 }
 
 /// <summary>Growth, hunger, health and gathering rules from <c>data/population.json</c> (GDD 5.2, 4.4).</summary>

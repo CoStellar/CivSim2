@@ -12,7 +12,7 @@ namespace CivSim.Core.Ai;
 /// <summary>
 /// Production choices of AI civilizations (stage 3e, until the treasurer advisor of stage 4). Once per era turn, every
 /// settlement with artisans picks the recipe worth most at its network's internal prices (outputs minus inputs) among
-/// the recipes whose inputs the network has; nothing when no recipe pays. Needs drive prices, so a tribe without
+/// the recipes its civilization knows and whose inputs the network has; nothing when no recipe pays. Needs drive prices, so a tribe without
 /// clothing makes clothing, and switches to tools once its stores are full. It issues the same command a player would.
 /// </summary>
 public sealed class EconomyAi(GameContent content) : ICommandSource
@@ -50,7 +50,7 @@ public sealed class EconomyAi(GameContent content) : ICommandSource
 
                 prices ??= Market.Prices(_content, state, members);
                 supply ??= Supply(state, members);
-                int best = Best(state, prices, supply);
+                int best = Best(civ, prices, supply);
                 if (best != s.RecipeId)
                 {
                     queue.Enqueue(PlayerId.Ai, civ.Id, new SetRecipeCommand(_content, s.Id, best));
@@ -60,14 +60,14 @@ public sealed class EconomyAi(GameContent content) : ICommandSource
     }
 
     // The allowed recipe the network can feed with the highest value added; NoRecipe when none adds value.
-    private int Best(GameState state, Amount[] prices, long[] supply)
+    private int Best(CivilizationState civ, Amount[] prices, long[] supply)
     {
         int best = SettlementState.NoRecipe;
         long bestValue = 0;
         for (int r = 0; r < _content.Recipes.Count; r++)
         {
             RecipeDefinition recipe = _content.Recipes[r];
-            if (!Demand.Allowed(_content, state, recipe))
+            if (!Research.Technologies.KnowsRecipe(_content, civ, r))
             {
                 continue;
             }

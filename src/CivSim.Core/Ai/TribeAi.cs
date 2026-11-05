@@ -37,6 +37,7 @@ public sealed class TribeAi : ICommandSource
     private long _civStamp;
     private readonly List<long[]> _cellFood = [];
     private long _cellFoodStamp;
+    private readonly List<long> _cellFoodClimate = [];
     private long[] _siteFood = [];
     private long[] _siteStamp = [];
     private long _stamp;
@@ -488,7 +489,10 @@ public sealed class TribeAi : ICommandSource
         }
 
         bool live = world.Map.LiveSeasons;
-        if (_cellFood[w].Length != world.Geometry.CellCount || (live && _cellFoodStamp != _stamp))
+
+        // The climate changes every few centuries (stage 1c-B): then the food of the land changes too.
+        bool climateChanged = _cellFoodClimate.Count <= w || _cellFoodClimate[w] != world.Climate.Year;
+        if (_cellFood[w].Length != world.Geometry.CellCount || climateChanged || (live && _cellFoodStamp != _stamp))
         {
             long[] food = _cellFood[w].Length == world.Geometry.CellCount ? _cellFood[w] : new long[world.Geometry.CellCount];
             for (int i = 0; i < food.Length; i++)
@@ -501,6 +505,12 @@ public sealed class TribeAi : ICommandSource
 
             _cellFood[w] = food;
             _cellFoodStamp = _stamp;
+            while (_cellFoodClimate.Count <= w)
+            {
+                _cellFoodClimate.Add(-1);
+            }
+
+            _cellFoodClimate[w] = world.Climate.Year;
         }
 
         return _cellFood[w];

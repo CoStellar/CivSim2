@@ -109,6 +109,11 @@ public sealed class GatheringSystem : ITurnSystem
     private readonly List<long> _worked = [];
     private readonly List<int> _wild = [];
     private readonly Amount[] _gathered;
+    private readonly Dictionary<int, (int Known, Research.TechBenefits Benefits)> _benefits = [];
+    private Research.TechBenefits? _none;
+    private Research.TechBenefits _current = null!;
+    private long[] _addedStamp = [];
+    private long _addedRun;
 
     /// <summary>Creates the system.</summary>
     public GatheringSystem(GameContent content, YieldYears years)
@@ -134,17 +139,42 @@ public sealed class GatheringSystem : ITurnSystem
         {
             s.FoodGathered = 0;
             WorldState world = state.Worlds[s.World.Value];
+            _current = Benefits(state, s.Owner);
             CollectCells(state, world, s);
             if (_cells.Count == 0)
             {
                 continue;
             }
 
-            int output = 100 + (state.Effects.Count == 0 ? 0 : state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Settlement, s.World, s.Id.Value));
+            // Effects on the settlement and on its civilization (cooking, irrigation) both count.
+            int output = 100 + (state.Effects.Count == 0
+                ? 0
+                : state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Settlement, s.World, s.Id.Value)
+                    + state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Civilization, WorldId.Earth, s.Owner.Value));
             Amount capacityPerYear = (_rules.FoodPerWorkerPerYear * Workers(s)).MultiplyPercent(Math.Max(0, output), Rounding.Floor);
             WorkTheLand(world.Map, capacityPerYear.Hundredths, months);
             Deliver(world, s);
         }
+    }
+
+    /// <summary>What the technologies of <paramref name="civ"/> add to gathering (cached until it learns something).</summary>
+    public Research.TechBenefits Benefits(GameState state, CivId civ)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        _none ??= Research.TechBenefits.Empty(_content);
+        CivilizationState? c = state.FindCivilization(civ);
+        if (c is null || c.KnownCount == 0)
+        {
+            return _none;
+        }
+
+        if (!_benefits.TryGetValue(civ.Value, out (int Known, Research.TechBenefits Benefits) cached) || cached.Known != c.KnownCount)
+        {
+            cached = (c.KnownCount, Research.TechBenefits.Of(_content, c));
+            _benefits[civ.Value] = cached;
+        }
+
+        return cached.Benefits;
     }
 
     // The settlement's cells and the food each would give per year if untouched (hundredths).
@@ -157,20 +187,48 @@ public sealed class GatheringSystem : ITurnSystem
         WorldMap map = world.Map;
         int claim = s.Id.Value + 1;
         int count = world.Geometry.Range(s.Cell, Math.Min(_rules.InfluenceMaxRange, world.Geometry.MaxUniqueRadius), _area);
+        bool shore = _current.FromWater;
+        if (shore && _addedStamp.Length != world.Geometry.CellCount)
+        {
+            _addedStamp = new long[world.Geometry.CellCount];
+        }
+
+        _addedRun++;
+        Span<HexCoord> n6 = stackalloc HexCoord[6];
         for (int k = 0; k < count; k++)
         {
             int i = world.Geometry.Index(_area[k]);
             if (map.Claim[i] != claim)
             {
-                continue;
+                // Fishers also work the water next to the zone (zones do not cross water).
+                if (!shore || !_content.Biomes[map.Biome[i]].IsWater || _addedStamp[i] == _addedRun || !NextToClaim(world, i, claim, n6))
+                {
+                    continue;
+                }
+
+                _addedStamp[i] = _addedRun;
             }
 
             int percent = CellPercent(state, world, s, i);
             _cells.Add(i);
-            _food.Add(percent <= 0 ? 0 : CellFoodPerYear(map, i).MultiplyPercent(percent, Rounding.Floor).Hundredths);
+            _food.Add(percent <= 0 ? 0 : CellFoodPerYear(map, i, false, _current).MultiplyPercent(percent, Rounding.Floor).Hundredths);
             _worked.Add(0);
             _wild.Add(map.WildFood[i]);
         }
+    }
+
+    private static bool NextToClaim(WorldState world, int cell, int claim, Span<HexCoord> n6)
+    {
+        world.Geometry.GetNeighbors(world.Geometry.FromIndex(cell), n6);
+        foreach (HexCoord c in n6)
+        {
+            if (world.Map.Claim[world.Geometry.Index(c)] == claim)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Relief, good or bad year and effects, in percent of the biome's yield.
@@ -199,13 +257,21 @@ public sealed class GatheringSystem : ITurnSystem
     /// Like <see cref="CellFoodPerYear(WorldMap, int)"/>; with live seasons <paramref name="nextTurn"/> gives the food the
     /// cell will give in the next turn's season (what the tribe AI expects).
     /// </summary>
-    public Amount CellFoodPerYear(WorldMap map, int cell, bool nextTurn)
+    public Amount CellFoodPerYear(WorldMap map, int cell, bool nextTurn) => CellFoodPerYear(map, cell, nextTurn, _none ??= Research.TechBenefits.Empty(_content));
+
+    /// <summary>
+    /// Like <see cref="CellFoodPerYear(WorldMap, int, bool)"/> for a civilization with these technology benefits: water
+    /// gives food only through them (fishing), deposits and biomes give their extra food.
+    /// </summary>
+    public Amount CellFoodPerYear(WorldMap map, int cell, bool nextTurn, Research.TechBenefits benefits)
     {
         ArgumentNullException.ThrowIfNull(map);
+        ArgumentNullException.ThrowIfNull(benefits);
         BiomeDefinition biome = _content.Biomes[map.Biome[cell]];
+        Amount extra = FoodOf(benefits.ForBiome(biome.Id)) + FoodOf(benefits.ForDeposit(map.DepositDepth[cell] == 0 ? map.Deposit[cell] : 0));
         if (biome.IsWater)
         {
-            return Amount.Zero;
+            return extra;
         }
 
         // Biome food, better on fertile land: fertility 0 gives half, 50 gives the full value, 100 gives 150%.
@@ -218,13 +284,20 @@ public sealed class GatheringSystem : ITurnSystem
         int deposit = map.Deposit[cell];
         if (deposit != 0 && map.DepositDepth[cell] == 0)
         {
-            IReadOnlyList<GoodQuantity> gather = _content.Deposit(deposit).Gather;
-            for (int k = 0; k < gather.Count; k++)
+            food += FoodOf(_content.Deposit(deposit).Gather);
+        }
+
+        return food + extra;
+    }
+
+    private Amount FoodOf(IReadOnlyList<GoodQuantity> goods)
+    {
+        Amount food = Amount.Zero;
+        for (int k = 0; k < goods.Count; k++)
+        {
+            if (_content.Goods[goods[k].GoodId].IsFood)
             {
-                if (_content.Goods[gather[k].GoodId].IsFood)
-                {
-                    food += gather[k].Amount;
-                }
+                food += goods[k].Amount;
             }
         }
 
@@ -277,7 +350,7 @@ public sealed class GatheringSystem : ITurnSystem
             }
 
             int i = _cells[c];
-            long fullFood = CellFoodPerYear(map, i).Hundredths;
+            long fullFood = CellFoodPerYear(map, i, false, _current).Hundredths;
             if (fullFood == 0)
             {
                 continue;
@@ -286,15 +359,24 @@ public sealed class GatheringSystem : ITurnSystem
             // _food holds the cell's food after relief, year and effects; scale every good the same way.
             long scale = IntMath.MulDiv(_food[c], Full, fullFood, Rounding.Floor);
             BiomeDefinition biome = _content.Biomes[map.Biome[i]];
-            Amount biomeFood = (_rules.FoodPerBiomeFoodPerYear * biome.Food).MultiplyRatio(50L + map.Fertility[i], 100, Rounding.Floor);
-            Amount plants = biomeFood.MultiplyPercent(_rules.PlantsPercent, Rounding.Floor);
-            Amount meat = biomeFood - plants;
-            Add(_rules.PlantsGood, plants, scale, worked);
-            Add(_rules.MeatGood, meat, scale, worked);
-            Add(_rules.HidesGood, meat.Multiply(_rules.HidesPerMeat, Rounding.Floor), scale, worked);
-            for (int k = 0; k < biome.Gather.Count; k++)
+            IReadOnlyList<GoodQuantity> biomeExtra = _current.ForBiome(biome.Id);
+            for (int k = 0; k < biomeExtra.Count; k++)
             {
-                Add(biome.Gather[k].GoodId, biome.Gather[k].Amount, scale, worked);
+                Add(biomeExtra[k].GoodId, biomeExtra[k].Amount, scale, worked);
+            }
+
+            if (!biome.IsWater)
+            {
+                Amount biomeFood = (_rules.FoodPerBiomeFoodPerYear * biome.Food).MultiplyRatio(50L + map.Fertility[i], 100, Rounding.Floor);
+                Amount plants = biomeFood.MultiplyPercent(_rules.PlantsPercent, Rounding.Floor);
+                Amount meat = biomeFood - plants;
+                Add(_rules.PlantsGood, plants, scale, worked);
+                Add(_rules.MeatGood, meat, scale, worked);
+                Add(_rules.HidesGood, meat.Multiply(_rules.HidesPerMeat, Rounding.Floor), scale, worked);
+                for (int k = 0; k < biome.Gather.Count; k++)
+                {
+                    Add(biome.Gather[k].GoodId, biome.Gather[k].Amount, scale, worked);
+                }
             }
 
             int deposit = map.Deposit[i];
@@ -305,6 +387,12 @@ public sealed class GatheringSystem : ITurnSystem
                 for (int k = 0; k < def.Gather.Count; k++)
                 {
                     taken += Add(def.Gather[k].GoodId, def.Gather[k].Amount, scale, worked);
+                }
+
+                IReadOnlyList<GoodQuantity> techExtra = _current.ForDeposit(deposit);
+                for (int k = 0; k < techExtra.Count; k++)
+                {
+                    taken += Add(techExtra[k].GoodId, techExtra[k].Amount, scale, worked);
                 }
 
                 // Flint and stone run out (GDD 4.4): the richness is in whole units; an empty deposit is gone.

@@ -83,6 +83,15 @@ public static class GameStateHash
             h.Add(c.StartCell.Row);
             h.Add(c.Era);
             h.Add(c.DiedOutMonth);
+            h.Add(c.KnownTechnologies.Length);
+            foreach (bool known in c.KnownTechnologies)
+            {
+                h.Add(known);
+            }
+
+            h.Add(c.Researching);
+            h.Add(c.ResearchProgress);
+            h.Add(c.LastScience);
         }
 
         h.Add(state.Month);
