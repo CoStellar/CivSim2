@@ -53,13 +53,21 @@ okresów ciepłych: zimne fazy precesji (co 23 tys. lat) są krótsze niż czas 
 
 - Woda uwięziona w lądolodach obniża morze: `poziom = 100 − 120 m × średni udział lądolodu obu półkul / 40 m na stopień wysokości`
   (dane: `glacialSeaDropMeters`, `seaMetersPerStep`). W pełni zlodowacenia morze leży 3 stopnie niżej (97): odsłania się ok. 6–7% oceanu,
-  czyli płytkie szelfy, jak w ostatnim zlodowaceniu. Morze nigdy nie wznosi się ponad poziom startowy.
+  czyli płytkie szelfy, jak w ostatnim zlodowaceniu.
+- **Morze może też wznieść się ponad poziom startowy** (uwaga Patryka z 2026-11-05: klimat może się ocieplić, później także przez działalność ludzi):
+  gdy topnieje stały lód lądowy ze startu (pola lądu z biomem lodu; Ziemia: 13% lądu), morze rośnie o `70 m × stopiona część`
+  (dane: `meltSeaRiseMeters`; Ziemia: Grenlandia i Antarktyda to ok. 70 m). Przy całym stopionym lodzie morze stoi 2 stopnie wyżej (102)
+  i zalewa ok. 2% lądu, najniższe wybrzeża. Złoża na zalanych polach zostają w danych i wracają, gdy morze się cofnie.
 - Odsłonięte dno to nowy ląd (płaski, wilgotność sąsiadów, pełna dzika żywność); biom nadaje mu zaraz potem przeliczenie klimatu. Gdy lód topnieje,
   morze zabiera ten ląd z powrotem: znikają rzeki na jego krawędziach, właściciel i cechy terenu. Rodzaje wody (wybrzeże, płytkie, głębokie) liczymy
   na nowo; jeziora zostają.
 - **Osady na zalanych polach** (decyzja Patryka): mieszkańcy przenoszą się z tym, co uniosą, na najbliższe suche pole bez innej zamieszkanej osady
   (do 30 pól), a to, co zostawili, i każda pusta osada na zalanym polu stają się ruinami pod wodą. Ruin pod wodą nie da się zająć ani ograbić;
   rozpadają się jak zwykłe ruiny.
+- **Lód morski** (`IceField`) zmienia się co 500 lat razem z klimatem: morze zamarza, gdzie średnia roczna spada do −8 °C. W zlodowaceniu lód morski
+  łączy masywy lądowe. Plemiona przeprowadzają się na razie skokiem do 10 pól bez liczenia drogi; lód jako droga zacznie mieć znaczenie przy
+  wędrówkach przez kilka tur (etap 3g). Przy bardzo zimnej planecie zamarza cały ocean („Ziemia-śnieżka”: np. 80% światła przy stałych 280 ppm CO₂
+  daje średnio −48 °C); cykl węglowy temu zapobiega, bo pod lodem wietrzenie ustaje i CO₂ rośnie.
 - Po zmianie wybrzeża udział lądu w pasach (pod lądolody) mierzymy od nowa. Poziom morza jest w stanie klimatu świata (zapis, format 12, i hash).
 - Wynik (Ziemia, seed 42): w 59 tys. roku morze opada o 80 m (971 pól nowego lądu), w 107 tys. o 120 m (kolejne 865 pól), a po końcu zlodowacenia
   (112–119 tys. lat) wraca. Między środkowymi kontynentami powstaje pomost lądowy, a na wschodzie wynurza się wyspa.

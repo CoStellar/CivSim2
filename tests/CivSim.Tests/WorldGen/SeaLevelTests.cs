@@ -21,6 +21,67 @@ public class SeaLevelTests
         Assert.Equal(100, SeaLevel.Target(rules, 0));
         Assert.Equal(97, SeaLevel.Target(rules, 1_000_000)); // 120 m at 40 m per step
         Assert.Equal(99, SeaLevel.Target(rules, 300_000));
+
+        // Melting all the land ice of the start raises the sea by 70 m: two steps above the old coast.
+        Assert.Equal(102, SeaLevel.Target(rules, 0, 1_000_000));
+        Assert.Equal(1_000_000, SeaLevel.MeltedShare(new ClimateState { StartLandIce = 50 }, 0));
+        Assert.Equal(0, SeaLevel.MeltedShare(new ClimateState { StartLandIce = 50 }, 80));
+    }
+
+    [Fact]
+    public void AWarmerWorldFloodsLowCoasts()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(23), Content, out _);
+        WorldState world = state.Worlds[0];
+        WorldMap map = world.Map;
+        Assert.True(world.Climate.StartLandIce > 0);
+        bool[] waterAtStart = Water(map);
+
+        SeaLevel.Apply(Content, state, world, 102);
+        int flooded = 0;
+        for (int i = 0; i < map.Biome.Length; i++)
+        {
+            bool water = Content.Biomes[map.Biome[i]].IsWater;
+            Assert.False(waterAtStart[i] && !water, "a rising sea uncovers nothing");
+            if (!waterAtStart[i] && water)
+            {
+                flooded++;
+                Assert.True(map.Elevation[i] < 102);
+            }
+        }
+
+        Assert.True(flooded > 0);
+        AssertRiversOnlyBetweenLand(world);
+    }
+
+    [Fact]
+    public void TheSeaFreezesInColdTimesAndThawsAgain()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(24), Content, out _);
+        WorldState world = state.Worlds[0];
+        int iceAtStart = SeaIce(world);
+        var cycles = new ClimateCycles(state.Settings.Planet, Content.ClimateCycles);
+        (long n, long s) = ClimateSystem.Potentials(cycles);
+        long[] land = ClimateSystem.LandShare(Content, world.Map);
+
+        world.Climate.NorthIce = world.Climate.SouthIce = Content.ClimateCycles.FullSheetVolume;
+        ClimateSystem.Apply(Content, world, cycles, land, n, s);
+        Assert.True(SeaIce(world) > iceAtStart * 11 / 10, $"{SeaIce(world)} vs {iceAtStart}");
+
+        world.Climate.NorthIce = world.Climate.SouthIce = 0;
+        ClimateSystem.Apply(Content, world, cycles, land, n, s);
+        Assert.Equal(iceAtStart, SeaIce(world));
+    }
+
+    private static int SeaIce(WorldState world)
+    {
+        int n = 0;
+        for (int i = 0; i < world.Map.Feature.Length; i++)
+        {
+            n += world.Map.Feature[i] == (byte)TerrainFeature.IceField ? 1 : 0;
+        }
+
+        return n;
     }
 
     [Fact]

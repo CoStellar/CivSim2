@@ -58,7 +58,7 @@ internal static class SettlementRules
 
         WorldState world = state.Worlds[target.World.Value];
         int cell = world.Geometry.Index(target.Cell);
-        if (world.Map.Elevation[cell] < world.Climate.SeaLevel && world.Map.Elevation[cell] < WorldGen.WorldGenerator.SeaLevel)
+        if (world.Map.Elevation[cell] < world.Climate.SeaLevel)
         {
             return CommandResult.Fail("The ruins lie under the sea.");
         }

@@ -69,7 +69,7 @@ Szczegóły i wzory: `docs/prompts/02-etap-1c-gwiazda-atmosfera.md`.
 - [ ] Patryk ogląda mapy trzech presetów po 1c-A
 - Na później: CO₂ z działań cywilizacji (spalanie, wycinanie lasów) przez mechanizm efektów w erze przemysłowej; wietrzenie liczone z prawdziwego lądu na mapie
 - [x] 1c-B: cykle Milankovicia (start w ciepłym momencie), lądolody Paillarda na prawdziwym lądzie, zmienność gwiazdy: klimat, biomy i dzika żywność zmieniają się co 500 lat gry (ADR 0015)
-- [x] 1c-C: poziom morza zmienia się w trakcie gry: −120 m w pełni zlodowacenia, pomosty lądowe, osady z zalanych pól przenoszą się, ruiny pod wodą (ADR 0015)
+- [x] 1c-C: poziom morza zmienia się w trakcie gry: −120 m w pełni zlodowacenia, do +70 m po stopieniu lodu lądowego ze startu, pomosty lądowe, lód morski zmienia się z klimatem, osady z zalanych pól przenoszą się, ruiny pod wodą (ADR 0015)
 
 ## Etap 2 — Podgląd symulacji (Godot)
 
@@ -96,7 +96,7 @@ Plan: 8 PR-ów (3a–3h). Gotowe: **3a** (towary, magazyny osad z jedną pojemno
 - [x] Koczownicy, obozy, strefa wpływów, migracje (sezonowe, odłam, całkowita, z podbojem)
 - [x] Osady jako majątek: porzucanie, dwa stany (opuszczona, ruiny), przejmowanie, odbudowa, roszczenia (odbudowa budynków razem z budynkami)
 - [ ] Technologie er 1–2 w danych, badania, dyfuzja, inspiracje
-- [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze; wędrówki trwające kilka tur do znanych dalekich miejsc (żeby na planetach leżących na boku plemiona mogły iść za latem na drugą półkulę)
+- [ ] Zwiad i pamięć mapy (pamięć ustna, mapy rysowane), mgła wojny, filtrowanie widoku gracza na serwerze; wędrówki trwające kilka tur do znanych dalekich miejsc, także po lodzie morskim i pomostach lądowych z epok lodowych (żeby na planetach leżących na boku plemiona mogły iść za latem na drugą półkulę)
 - [ ] Mechanizm efektów + zdarzenia: susza, pożar, powódź, epidemia
 
 ## Etap 4 — AI i dyplomacja

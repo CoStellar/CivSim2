@@ -70,7 +70,13 @@ public sealed record ClimateCycleRules
     /// <summary>How far the sea falls when both hemispheres carry the full ice sheet, meters (Earth's last glacial: about 120).</summary>
     public int GlacialSeaDropMeters { get; init; } = 120;
 
-    /// <summary>Meters of sea depth per step of map elevation below sea level (stage 1c-C).</summary>
+    /// <summary>
+    /// How far the sea rises when all the land ice of the start (permanent ice caps) has melted, meters (Earth: Greenland
+    /// and Antarctica, about 70). Warmer climates, later also from industry, raise the sea above its starting level.
+    /// </summary>
+    public int MeltSeaRiseMeters { get; init; } = 70;
+
+    /// <summary>Meters of height per step of map elevation near sea level, below and above it (stage 1c-C).</summary>
     public int SeaMetersPerStep { get; init; } = 40;
 
     /// <summary>Samples of summer sunlight (one per 1000 years) used to measure its average and spread.</summary>
@@ -114,8 +120,11 @@ public sealed class ClimateState
     /// <summary>Mean temperature of the planet at the last update, millionths of °C (for reports).</summary>
     public long GlobalMeanMillionths { get; set; }
 
-    /// <summary>Sea level in map elevation (100 at the start; lower while ice sheets hold water, stage 1c-C).</summary>
+    /// <summary>Sea level in map elevation (100 at the start; lower while ice sheets hold water, higher when the old ice melts).</summary>
     public int SeaLevel { get; set; } = WorldGenerator.SeaLevel;
+
+    /// <summary>Land cells under ice at the start of the game: the ice that can melt and raise the sea (stage 1c-C).</summary>
+    public int StartLandIce { get; set; }
 }
 
 /// <summary>

@@ -12,20 +12,48 @@ namespace CivSim.Core.WorldGen;
 /// up to <see cref="ClimateCycleRules.GlacialSeaDropMeters"/>: shallow shelves fall dry and become land bridges, and
 /// when the ice melts the sea takes them back. People on a flooded cell move with what they can carry to the nearest
 /// dry cell; what they leave behind, and any empty settlement there, become ruins under the sea (Patryk's decision).
-/// Only land that was sea at the start can flood again: the sea never rises above its level at the start of the game.
+/// When the land ice of the start melts (a warmer climate, later also from industry), the sea rises above its starting
+/// level by up to <see cref="ClimateCycleRules.MeltSeaRiseMeters"/> and floods low coasts.
 /// </summary>
 public static class SeaLevel
 {
     /// <summary>Settlements look this far for dry land when the sea takes their cell.</summary>
     public const int RefugeRadius = 30;
 
-    /// <summary>Sea level (elevation, 100 at the start) for the mean ice-sheet share of both hemispheres (millionths).</summary>
-    public static int Target(ClimateCycleRules rules, long meanSheetShare)
+    /// <summary>
+    /// Sea level (elevation, 100 at the start) for the mean ice-sheet share of both hemispheres (millionths) and the share
+    /// of the starting land ice that has melted (millionths): the sheets lower the sea, melted old ice raises it.
+    /// </summary>
+    public static int Target(ClimateCycleRules rules, long meanSheetShare, long meltedShare = 0)
     {
         ArgumentNullException.ThrowIfNull(rules);
-        long dropMicro = rules.GlacialSeaDropMeters * Math.Clamp(meanSheetShare, 0, 1_000_000);
-        long steps = (dropMicro + (rules.SeaMetersPerStep * 500_000L)) / (rules.SeaMetersPerStep * 1_000_000L);
-        return WorldGenerator.SeaLevel - (int)steps;
+        long micro = (rules.MeltSeaRiseMeters * Math.Clamp(meltedShare, 0, 1_000_000))
+            - (rules.GlacialSeaDropMeters * Math.Clamp(meanSheetShare, 0, 1_000_000));
+        long unit = rules.SeaMetersPerStep * 1_000_000L;
+        long steps = micro >= 0 ? (micro + (unit / 2)) / unit : -((-micro + (unit / 2)) / unit);
+        return WorldGenerator.SeaLevel + (int)steps;
+    }
+
+    /// <summary>Land cells under ice now (the ice biome on land).</summary>
+    public static int LandIce(GameContent content, WorldMap map)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(map);
+        int ice = content.Biome("ice").Id;
+        int n = 0;
+        for (int i = 0; i < map.Biome.Length; i++)
+        {
+            n += map.Biome[i] == ice ? 1 : 0;
+        }
+
+        return n;
+    }
+
+    /// <summary>Share of the starting land ice that has melted, millionths (0 when there is as much ice as at the start or more).</summary>
+    public static long MeltedShare(ClimateState climate, int landIceNow)
+    {
+        ArgumentNullException.ThrowIfNull(climate);
+        return climate.StartLandIce <= 0 ? 0 : Math.Max(0, (long)(climate.StartLandIce - landIceNow) * 1_000_000 / climate.StartLandIce);
     }
 
     /// <summary>
@@ -73,7 +101,7 @@ public static class SeaLevel
                 map.WildFood.Set(i, WorldMap.FullWildFood);
                 exposed++;
             }
-            else if (!b.IsWater && e < level && e < WorldGenerator.SeaLevel)
+            else if (!b.IsWater && e < level)
             {
                 map.Biome.Set(i, (byte)content.WaterBiome(BiomeKind.Coast).Id);
                 map.Humidity.Set(i, 100);
@@ -103,10 +131,13 @@ public static class SeaLevel
 
         ClassifyWater(content, map);
         MoveSettlements(content, state, world, lines);
-        string meters = (Math.Abs(level - WorldGenerator.SeaLevel) * content.ClimateCycles.SeaMetersPerStep).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        int offset = (level - WorldGenerator.SeaLevel) * content.ClimateCycles.SeaMetersPerStep;
+        string where = offset == 0
+            ? "back to its old level"
+            : string.Create(System.Globalization.CultureInfo.InvariantCulture, $"to {Math.Abs(offset)} m {(offset < 0 ? "below" : "above")} its old level");
         lines.Insert(0, exposed > 0
-            ? $"The sea fell to {meters} m below its old level: {exposed} cells of sea floor became land."
-            : $"The sea rose to {meters} m below its old level and took back {flooded} cells of land.");
+            ? $"The sea fell {where}: {exposed} cells of sea floor became land."
+            : $"The sea rose {where} and took {flooded} cells of land.");
         return lines;
     }
 

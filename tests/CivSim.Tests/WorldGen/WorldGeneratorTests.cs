@@ -46,7 +46,7 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    private const ulong GoldenWorldHash = 6557277038619350674UL;
+    private const ulong GoldenWorldHash = 18106249000498624900UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]
