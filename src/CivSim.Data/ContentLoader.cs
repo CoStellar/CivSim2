@@ -26,9 +26,11 @@ public static class ContentLoader
         directory ??= DefaultDirectory;
         var errors = new List<string>();
         List<BiomeDefinition> biomes = LoadBiomes(Path.Combine(directory, "biomes.json"), errors);
-        List<DepositDefinition> deposits = LoadDeposits(Path.Combine(directory, "resources.json"), biomes, errors);
-        ValidateBiomeSet(biomes, errors);
         List<GoodDefinition> goods = LoadGoods(Path.Combine(directory, "goods.json"), errors);
+        List<DepositDefinition> deposits = LoadDeposits(Path.Combine(directory, "resources.json"), biomes, goods, errors);
+        ValidateBiomeSet(biomes, errors);
+        List<StratumDefinition> strata = LoadStrata(Path.Combine(directory, "strata.json"), goods, errors);
+        PopulationRules population = LoadPopulation(Path.Combine(directory, "population.json"), strata, goods, errors);
         List<RecipeDefinition> recipes = LoadRecipes(Path.Combine(directory, "recipes.json"), goods, errors);
         (List<SettlementLevelDefinition> levels, int tribeLevel, List<GoodQuantity> tribeStock) =
             LoadSettlements(Path.Combine(directory, "settlements.json"), goods, errors);
@@ -48,6 +50,170 @@ public static class ContentLoader
             Effects = effects,
             NewTribeLevel = tribeLevel,
             NewTribeStock = tribeStock,
+            Strata = strata,
+            Population = population,
+        };
+    }
+
+    private static List<StratumDefinition> LoadStrata(string path, List<GoodDefinition> goods, List<string> errors)
+    {
+        var result = new List<StratumDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "strata", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        string file = Path.GetFileName(path);
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        int shares = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            string at = $"{file}: strata[{i}]";
+            var r = new Reader(e, at, errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            bool gathers = r.Bool("gathers");
+            int share = (int)r.Amount("targetShare", Amount.Zero, Amount.FromUnits(100)).WholeUnits;
+            shares += share;
+            var needs = new List<NeedDefinition>();
+            if (e.TryGetProperty("needs", out JsonElement list) && list.ValueKind == JsonValueKind.Array)
+            {
+                int n = 0;
+                foreach (JsonElement ne in list.EnumerateArray())
+                {
+                    needs.Add(ReadNeed(new Reader(ne, $"{at}.needs[{n}]", errors), ne, goods, errors, $"{at}.needs[{n}]"));
+                    n++;
+                }
+            }
+
+            if (!needs.Exists(x => x.Basic && x.AnyOfCategory && x.Category == GoodCategory.Food))
+            {
+                errors.Add($"{at}.needs: a basic need for the food category is required.");
+            }
+
+            result.Add(new StratumDefinition(i, key, name, gathers, share, needs));
+            i++;
+        }
+
+        if (result.Count == 0)
+        {
+            errors.Add($"{file}: at least one stratum is required.");
+        }
+        else if (shares != 100)
+        {
+            errors.Add($"{file}: targetShare of all strata must add up to 100, not {shares}.");
+        }
+
+        if (!result.Exists(x => x.Gathers))
+        {
+            errors.Add($"{file}: at least one stratum must gather.");
+        }
+
+        return result;
+    }
+
+    private static NeedDefinition ReadNeed(Reader r, JsonElement e, List<GoodDefinition> goods, List<string> errors, string at)
+    {
+        Amount perYear = r.Amount("perYear", Amount.Epsilon, Amount.FromUnits(1000));
+        string kind = r.String("kind");
+        if (kind is not ("basic" or "higher") && kind.Length > 0)
+        {
+            errors.Add($"{at}.kind: '{kind}' must be basic or higher.");
+        }
+
+        bool basic = kind == "basic";
+        if (e.TryGetProperty("good", out JsonElement g) && g.ValueKind == JsonValueKind.String)
+        {
+            int id = goods.FindIndex(x => x.Key == g.GetString());
+            if (id < 0)
+            {
+                errors.Add($"{at}.good: unknown good '{g.GetString()}'.");
+                id = 0;
+            }
+
+            return new NeedDefinition(id, goods.Count > 0 ? goods[id].Category : GoodCategory.Food, perYear, basic);
+        }
+
+        GoodCategory category = r.Enum<GoodCategory>("category");
+        return new NeedDefinition(-1, category, perYear, basic);
+    }
+
+    private static PopulationRules LoadPopulation(string path, List<StratumDefinition> strata, List<GoodDefinition> goods, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new PopulationRules();
+        }
+
+        string file = Path.GetFileName(path);
+        JsonElement root = doc.RootElement;
+        JsonElement Section(string name)
+        {
+            if (root.TryGetProperty(name, out JsonElement v) && v.ValueKind == JsonValueKind.Object)
+            {
+                return v;
+            }
+
+            errors.Add($"{file}: missing object '{name}'.");
+            return JsonDocument.Parse("{}").RootElement.Clone();
+        }
+
+        var growth = new Reader(Section("growth"), $"{file}: growth", errors);
+        var health = new Reader(Section("health"), $"{file}: health", errors);
+        var gathering = new Reader(Section("gathering"), $"{file}: gathering", errors);
+        var tribe = new int[strata.Count];
+        JsonElement tribeElement = Section("newTribe");
+        var tribeReader = new Reader(tribeElement, $"{file}: newTribe", errors);
+        int total = 0;
+        foreach (StratumDefinition s in strata)
+        {
+            tribe[s.Id] = tribeReader.Int(s.Key, 0, 1_000_000);
+            total += tribe[s.Id];
+        }
+
+        if (total == 0 && strata.Count > 0)
+        {
+            errors.Add($"{file}: newTribe must have at least one person.");
+        }
+
+        int GoodOf(string name)
+        {
+            string key = gathering.String(name);
+            int id = goods.FindIndex(g => g.Key == key);
+            if (id < 0 && key.Length > 0)
+            {
+                errors.Add($"{file}: gathering.{name}: unknown good '{key}'.");
+            }
+
+            return id;
+        }
+
+        Amount unit = Amount.FromUnits(1);
+        return new PopulationRules
+        {
+            BirthsPerMille = growth.Int("birthsPerMille", 0, 1000),
+            DeathsPerMille = growth.Int("deathsPerMille", 0, 1000),
+            StarvationDeathPercent = growth.Int("starvationDeathPercent", 0, 100),
+            LowHealthDeathsPerMillePerPoint = growth.Amount("lowHealthDeathsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
+            MoodBirthsPerMillePerPoint = growth.Amount("moodBirthsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
+            StrataShiftPercentPerYear = growth.Amount("strataShiftPercentPerYear", Amount.Zero, Amount.FromUnits(100)),
+            HungerPenaltyPercent = health.Int("hungerPenaltyPercent", 0, 100),
+            CrowdingPenaltyPercent = health.Int("crowdingPenaltyPercent", 0, 1000),
+            LowHealthBelow = health.Int("lowHealthBelow", 0, 100),
+            GatherRadius = gathering.Int("radius", 0, 10),
+            FoodPerWorkerPerYear = gathering.Amount("foodPerWorkerPerYear", Amount.Epsilon, Amount.FromUnits(1000)),
+            FoodPerBiomeFoodPerYear = gathering.Amount("foodPerBiomeFoodPerYear", Amount.Zero, Amount.FromUnits(1000)),
+            PlantsPercent = gathering.Int("plantsPercent", 0, 100),
+            HidesPerMeat = gathering.Amount("hidesPerMeat", Amount.Zero, unit * 10),
+            HillsPercent = gathering.Int("hillsPercent", 0, 100),
+            MountainsPercent = gathering.Int("mountainsPercent", 0, 100),
+            PlantsGood = GoodOf("plantsGood"),
+            MeatGood = GoodOf("meatGood"),
+            HidesGood = GoodOf("hidesGood"),
+            NewTribe = tribe,
         };
     }
 
@@ -269,7 +435,7 @@ public static class ContentLoader
         return result;
     }
 
-    private static List<DepositDefinition> LoadDeposits(string path, List<BiomeDefinition> biomes, List<string> errors)
+    private static List<DepositDefinition> LoadDeposits(string path, List<BiomeDefinition> biomes, List<GoodDefinition> goods, List<string> errors)
     {
         var result = new List<DepositDefinition>();
         using JsonDocument? doc = Open(path, errors);
@@ -319,7 +485,8 @@ public static class ContentLoader
             int depth = r.Int("depth", 0, 2);
             bool renewable = r.Bool("renewable");
             uint color = r.Color("color");
-            result.Add(new DepositDefinition(i + 1, key, name, inBiomes, relief, per, rMin, rMax, depth, renewable, color));
+            List<GoodQuantity> gather = e.TryGetProperty("gather", out _) ? r.Goods("gather", goods) : [];
+            result.Add(new DepositDefinition(i + 1, key, name, inBiomes, relief, per, rMin, rMax, depth, renewable, color) { Gather = gather });
             i++;
         }
 

@@ -9,6 +9,12 @@ namespace CivSim.Headless;
 /// <summary>Command-line options of the headless runner.</summary>
 public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, string? ReportPath, bool Quiet)
 {
+    /// <summary>CSV file with population and food per civilization, or null for none.</summary>
+    public string? StatsPath { get; init; }
+
+    /// <summary>Write a stats row every this many turns.</summary>
+    public int StatsEvery { get; init; } = 10;
+
     /// <summary>Folder for PNG map previews, or null for none.</summary>
     public string? PngFolder { get; init; }
 
@@ -58,7 +64,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
     /// <summary>Usage text.</summary>
     public const string Usage =
-        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--quiet]\n" +
+        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--quiet]\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--climate temperate|cold|hot] [--moisture normal|dry|wet] [--inland normal|dry|humid] [--relief normal|flat|mountainous]\n" +
         "       [--resources normal|scarce|rich] [--civs 1-64]\n" +
@@ -71,6 +77,8 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         int turns = 100;
         MapSize size = MapSize.Standard;
         string? report = null;
+        string? stats = null;
+        int statsEvery = 10;
         bool quiet = false;
         string? png = null;
         int pngScale = 3;
@@ -114,6 +122,23 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     if (!MapSizes.TryParse(Next(), out size))
                     {
                         error = "--map-size must be test, standard, large or huge.";
+                        return null;
+                    }
+
+                    break;
+                case "--stats":
+                    stats = Next();
+                    if (string.IsNullOrWhiteSpace(stats))
+                    {
+                        error = "--stats needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--stats-every":
+                    if (!int.TryParse(Next(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out statsEvery) || statsEvery < 1)
+                    {
+                        error = "--stats-every must be a positive whole number.";
                         return null;
                     }
 
@@ -235,6 +260,8 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         {
             PngFolder = png,
             PngScale = pngScale,
+            StatsPath = stats,
+            StatsEvery = statsEvery,
             WorldType = worldType,
             WaterPercent = water,
             Climate = climate,

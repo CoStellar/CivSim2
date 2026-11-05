@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "comment": "Population strata and their needs (GDD 5.1; CORE simplified: three strata at the start, later eras add more). gathers: the stratum works the land (only producers in eras 1-2). targetShare: share of the population this stratum drifts towards, in percent; the shares must add up to 100. needs: amounts per person per year. 'category' means any good of that storage class (food = any food, eaten most perishable first); 'good' means one good. basic needs decide hunger and health, higher needs raise mood.",
+  "strata": [
+    {
+      "key": "producers", "name": "Producers", "gathers": true, "targetShare": "80",
+      "needs": [
+        { "category": "food", "perYear": "1", "kind": "basic" },
+        { "good": "hide_clothing", "perYear": "0.05", "kind": "higher" }
+      ]
+    },
+    {
+      "key": "artisans", "name": "Artisans", "gathers": false, "targetShare": "5",
+      "needs": [
+        { "category": "food", "perYear": "1", "kind": "basic" },
+        { "good": "stone_tools", "perYear": "0.05", "kind": "higher" }
+      ]
+    },
+    {
+      "key": "warriors", "name": "Warriors", "gathers": false, "targetShare": "15",
+      "needs": [
+        { "category": "food", "perYear": "1.2", "kind": "basic" },
+        { "good": "stone_tools", "perYear": "0.1", "kind": "higher" }
+      ]
+    }
+  ]
+}

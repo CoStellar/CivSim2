@@ -40,8 +40,12 @@ public static class ViewBuilder
                 continue;
             }
 
-            settlements.Add(new SettlementView(
-                st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, observer || own ? [.. st.Stock] : null));
+            bool details = observer || own;
+            settlements.Add(details
+                ? new SettlementView(
+                    st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, [.. st.Stock],
+                    [.. st.Population], st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten)
+                : new SettlementView(st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, null));
         }
 
         return new GameViewMessage(snapshot.Turn, viewer.Value, worlds, civs, Settlements: settlements, Month: snapshot.Month);
