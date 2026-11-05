@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 5;
+    public const int FormatVersion = 6;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -66,7 +66,9 @@ public static class SaveGameSerializer
                 stock[g] = view[g].Hundredths;
             }
 
-            settlements.Add(new SettlementSaveData(st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock));
+            settlements.Add(new SettlementSaveData(
+                st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
+                st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -154,11 +156,22 @@ public static class SaveGameSerializer
         foreach (SettlementSaveData st in data.Settlements ?? [])
         {
             var settlement = new SettlementState(
-                new SettlementId(st.Id), new CivId(st.Owner), new WorldId(st.World), new HexCoord(st.Col, st.Row), st.Name, st.Level, st.FoundedTurn, st.Stock.Length);
+                new SettlementId(st.Id), new CivId(st.Owner), new WorldId(st.World), new HexCoord(st.Col, st.Row), st.Name, st.Level, st.FoundedTurn, st.Stock.Length,
+                st.Population?.Length ?? 0)
+            {
+                Health = st.Health,
+                Mood = st.Mood,
+                FoodGathered = st.FoodGathered,
+                FoodNeeded = st.FoodNeeded,
+                FoodEaten = st.FoodEaten,
+                HigherNeedsPerMille = st.HigherNeedsPerMille,
+            };
             for (int g = 0; g < st.Stock.Length; g++)
             {
                 settlement.Stock[g] = Core.Numerics.Amount.FromHundredths(st.Stock[g]);
             }
+
+            st.Population?.CopyTo(settlement.Population);
 
             state.AddSettlementForLoad(settlement, data.NextSettlementId);
         }

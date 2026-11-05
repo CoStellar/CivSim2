@@ -80,8 +80,9 @@ public sealed record GameViewMessage(
     [property: Key(8)] long Month = 0) : IProtocolMessage;
 
 /// <summary>
-/// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id) is filled only for the viewer's
-/// own settlements and for observers; foreign settlements show only where they are.
+/// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per
+/// stratum id), health, mood and food (hundredths, last turn) are filled only for the viewer's own settlements and
+/// for observers; foreign settlements show only where they are.
 /// </summary>
 [MessagePackObject]
 public sealed record SettlementView(
@@ -92,7 +93,13 @@ public sealed record SettlementView(
     [property: Key(4)] int Row,
     [property: Key(5)] string Name,
     [property: Key(6)] int Level,
-    [property: Key(7)] long[]? Stock);
+    [property: Key(7)] long[]? Stock,
+    [property: Key(8)] int[]? Population = null,
+    [property: Key(9)] int Health = 0,
+    [property: Key(10)] int Mood = 0,
+    [property: Key(11)] long FoodGathered = 0,
+    [property: Key(12)] long FoodNeeded = 0,
+    [property: Key(13)] long FoodEaten = 0);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
@@ -140,7 +147,8 @@ public sealed record ContentMessage(
     [property: Key(2)] IReadOnlyList<string> Features,
     [property: Key(3)] IReadOnlyList<string> Reliefs,
     [property: Key(4)] IReadOnlyList<GoodInfo>? Goods = null,
-    [property: Key(5)] IReadOnlyList<string>? SettlementLevels = null) : IProtocolMessage;
+    [property: Key(5)] IReadOnlyList<string>? SettlementLevels = null,
+    [property: Key(6)] IReadOnlyList<string>? Strata = null) : IProtocolMessage;
 
 /// <summary>A good as the client sees it. Ids match the indexes of <see cref="SettlementView.Stock"/>.</summary>
 [MessagePackObject]

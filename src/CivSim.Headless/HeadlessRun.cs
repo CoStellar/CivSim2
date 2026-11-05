@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using CivSim.Core.Content;
 using CivSim.Core.Hashing;
 using CivSim.Core.Simulation;
@@ -35,6 +36,12 @@ public sealed record HeadlessResult(
 
     /// <summary>Number of settlements at the end of the run.</summary>
     public int Settlements { get; init; }
+
+    /// <summary>People in all settlements at the end of the run.</summary>
+    public long People { get; init; }
+
+    /// <summary>Civilizations still alive at the end of the run.</summary>
+    public int AliveCivilizations { get; init; }
 
     /// <summary>Food in all warehouses at the end of the run, in whole units.</summary>
     public long FoodUnits { get; init; }
@@ -71,6 +78,12 @@ public static class HeadlessRun
 
         using StreamWriter? csv = options.ReportPath is null ? null : CreateReport(options.ReportPath);
         csv?.WriteLine(CsvHeader());
+        using StreamWriter? stats = options.StatsPath is null ? null : CreateReport(options.StatsPath);
+        if (stats is not null)
+        {
+            WriteStatsHeader(stats, state);
+            WriteStats(stats, state, content);
+        }
 
         for (int i = 0; i < options.Turns; i++)
         {
@@ -83,6 +96,19 @@ public static class HeadlessRun
             if (csv is not null)
             {
                 WriteRow(csv, report, allocated);
+            }
+
+            if (stats is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
+            {
+                WriteStats(stats, runner.State, content);
+            }
+
+            if (!options.Quiet)
+            {
+                foreach (string line in runner.LastChronicle)
+                {
+                    log.WriteLine(string.Create(CultureInfo.InvariantCulture, $"  [turn {runner.State.Turn}] {line}"));
+                }
             }
 
             if (!options.Quiet && (i + 1) % 1000 == 0)
@@ -122,9 +148,74 @@ public static class HeadlessRun
             PngFiles = pngs,
             WorldProblems = problems,
             Settlements = runner.State.Settlements.Count,
+            People = People(runner.State),
+            AliveCivilizations = runner.State.Civilizations.Count(c => c.IsAlive),
             FoodUnits = FoodUnits(runner.State, content),
             Years = runner.State.Month / 12,
         };
+    }
+
+    private static long People(GameState state)
+    {
+        long people = 0;
+        foreach (SettlementState s in state.Settlements)
+        {
+            people += s.TotalPopulation();
+        }
+
+        return people;
+    }
+
+    // One row: turn, year, total people, then people of each civilization, then total food in stock.
+    private static void WriteStatsHeader(StreamWriter stats, GameState state)
+    {
+        stats.Write("turn,year,people,alive");
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
+        }
+
+        stats.WriteLine(",food_stock,avg_health,avg_mood");
+    }
+
+    private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
+    {
+        CultureInfo inv = CultureInfo.InvariantCulture;
+        var perCiv = new long[state.Civilizations.Count];
+        long health = 0;
+        long mood = 0;
+        int populated = 0;
+        foreach (SettlementState s in state.Settlements)
+        {
+            int people = s.TotalPopulation();
+            int index = state.IndexOfCivilization(s.Owner);
+            if (index >= 0)
+            {
+                perCiv[index] += people;
+            }
+
+            if (people > 0)
+            {
+                health += s.Health;
+                mood += s.Mood;
+                populated++;
+            }
+        }
+
+        long total = 0;
+        foreach (long p in perCiv)
+        {
+            total += p;
+        }
+
+        stats.Write(string.Create(inv, $"{state.Turn},{state.Month / 12},{total},{state.Civilizations.Count(c => c.IsAlive)}"));
+        foreach (long p in perCiv)
+        {
+            stats.Write(string.Create(inv, $",{p}"));
+        }
+
+        stats.WriteLine(string.Create(
+            inv, $",{FoodUnits(state, content)},{(populated == 0 ? 0 : health / populated)},{(populated == 0 ? 0 : mood / populated)}"));
     }
 
     private static long FoodUnits(GameState state, GameContent content)

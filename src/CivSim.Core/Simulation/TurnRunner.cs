@@ -37,6 +37,9 @@ public sealed class TurnRunner
     /// <summary>Latest finished snapshot for readers on other threads.</summary>
     public SnapshotBuffer<GameSnapshot> Snapshots { get; } = new();
 
+    /// <summary>Chronicle lines written by systems in the last completed turn.</summary>
+    public IReadOnlyList<string> LastChronicle => _context.ChronicleLines;
+
     /// <summary>Report of the last completed turn (reused object).</summary>
     public TurnReport LastReport { get; } = new();
 
@@ -59,6 +62,7 @@ public sealed class TurnRunner
     {
         long turnStart = Stopwatch.GetTimestamp();
         LastReport.Reset(State.Turn + 1);
+        _context.ChronicleList.Clear();
 
         for (int p = 0; p < TurnPhases.Count; p++)
         {

@@ -64,6 +64,12 @@ public sealed class GameContent
     /// <summary>Effect types, index = id (<c>data/effects.json</c>).</summary>
     public IReadOnlyList<EffectDefinition> Effects { get; init; } = [];
 
+    /// <summary>Population strata, index = id (<c>data/strata.json</c>).</summary>
+    public IReadOnlyList<StratumDefinition> Strata { get; init; } = [];
+
+    /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
+    public PopulationRules Population { get; init; } = new();
+
     /// <summary>Level of the camp a new tribe starts with.</summary>
     public int NewTribeLevel { get; init; }
 

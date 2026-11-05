@@ -106,6 +106,7 @@ dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --
 - `--turns`: ile tur policzyć,
 - `--map-size`: `test`, `standard`, `large` albo `huge`,
 - `--report`: plik CSV z czasem każdej fazy każdej tury (otworzysz go w Excelu albo LibreOffice),
+- `--stats`: plik CSV z ludnością każdej cywilizacji, zapasem jedzenia, średnim zdrowiem i nastrojem; `--stats-every N` zapisuje co N tur (domyślnie 10),
 - `--world-type`: `continents` (domyślnie), `pangea` albo `archipelago`,
 - `--water`: procent wody, 30–80 (domyślnie 60),
 - `--png <folder>`: zapisuje podgląd mapy jako 6 obrazów PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża),

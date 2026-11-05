@@ -79,4 +79,4 @@ najmniejszym zoomie i przełącza nakładki, symulacja w tle na maks.
 Prawdziwe FPS zależą od karty graficznej; trzeba je zmierzyć na komputerze Patryka (`-- --map-size huge --benchmark 600`).
 Wąskie gardło na przyszłość: pierwsze wczytanie dużej mapy (do 120 ms, raz).
 
-**Osady (etap 3a):** kwadrat w kolorze właściciela na polu osady, większy dla wyższego poziomu (`SettlementMarkers`). Górny pasek pokazuje rok gry.
+**Osady (etap 3a):** kwadrat w kolorze właściciela na polu osady, większy dla wyższego poziomu (`SettlementMarkers`). Górny pasek pokazuje rok gry. Inspektor osady pokazuje też ludność w warstwach, zdrowie, nastrój, odsetek najedzonych i jedzenie z ostatniej tury (etap 3b).

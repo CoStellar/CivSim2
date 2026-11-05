@@ -9,6 +9,8 @@
 - Zmienia: zapasy w magazynach osad (`SettlementState.Stock`), czas gry `GameState.Month`.
 - Publikuje w migawce: każdą osadę (właściciel, pole, nazwa, poziom, zapasy) i czas gry. Serwer wysyła graczowi zapasy tylko jego własnych osad; cudze osady widzi bez zawartości magazynu, i tylko na polach, które zna. Obserwator widzi wszystko.
 
+Przed psuciem w tej samej fazie działają zbieranie i konsumpcja (opis w [population.md](population.md)).
+
 ## Przepływ
 
 ```mermaid

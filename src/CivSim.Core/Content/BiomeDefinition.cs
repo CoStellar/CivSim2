@@ -68,4 +68,8 @@ public sealed record DepositDefinition(
     int MaxRichness,
     int Depth,
     bool Renewable,
-    uint Color);
+    uint Color)
+{
+    /// <summary>Goods per year gatherers take from the cell before any technology (meat from game...).</summary>
+    public IReadOnlyList<GoodQuantity> Gather { get; init; } = [];
+}

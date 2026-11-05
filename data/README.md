@@ -15,7 +15,8 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `technologies.json` | technology graph, costs, inspirations, unlocks | 3 |
 | `recipes.json` | one-step production recipes (inputs → outputs, workers, years) | 3a |
 | `buildings.json` | buildings and tile improvements | 3 |
-| `strata.json` | population strata and their needs (3 at start, more per era) | 3 |
+| `strata.json` | population strata, target shares and needs (3 at start, more per era) | 3b |
+| `population.json` | growth, hunger, health, mood and gathering rules, the new tribe's people | 3b |
 | `events.json` | random events: conditions, chances, effects, chronicle text | 3 |
 | `effects.json` | effect types: target, changed stat, stacking rule | 3a |
 | `governments.json` | governments: decision speed, stability decay | 4 |

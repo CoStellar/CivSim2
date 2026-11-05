@@ -133,6 +133,7 @@ public class StorageTests
         TurnRunner runner = NewGame(4);
         SettlementState camp = runner.State.Settlements[0];
         camp.Stock.Clear();
+        camp.Population.Clear(); // nobody gathers or eats: only spoilage changes the stock
         camp.Add(Good("grain"), Amount.FromUnits(100));
         camp.Add(Good("stone_tools"), Amount.FromUnits(5));
 
@@ -149,6 +150,7 @@ public class StorageTests
         TurnRunner runner = NewGame(5);
         SettlementState camp = runner.State.Settlements[0];
         camp.Stock.Clear();
+        camp.Population.Clear();
         camp.Add(Good("stone"), Amount.FromUnits(300));
         camp.Add(Good("wood"), Amount.FromUnits(100));
 

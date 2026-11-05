@@ -43,7 +43,15 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
                 stock[g] = view[g].Hundredths;
             }
 
-            settlements.Add(new SettlementSnapshot(st.Id, st.Owner, st.World, st.Cell.Col, st.Cell.Row, st.Name, st.Level, ImmutableArray.Create(stock)));
+            settlements.Add(new SettlementSnapshot(st.Id, st.Owner, st.World, st.Cell.Col, st.Cell.Row, st.Name, st.Level, ImmutableArray.Create(stock))
+            {
+                Population = ImmutableArray.Create(st.PopulationView.ToArray()),
+                Health = st.Health,
+                Mood = st.Mood,
+                FoodGathered = st.FoodGathered,
+                FoodNeeded = st.FoodNeeded,
+                FoodEaten = st.FoodEaten,
+            });
         }
 
         return new GameSnapshot(state.Turn, worlds.MoveToImmutable(), civs.MoveToImmutable())
@@ -64,4 +72,23 @@ public sealed record WorldSnapshot(WorldId Id, string Name, int Width, int Heigh
 public sealed record CivilizationSnapshot(CivId Id, string Name, PlayerId Controller, bool IsAlive);
 
 /// <summary>Immutable copy of a settlement. <paramref name="Stock"/> holds hundredths per good id.</summary>
-public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId World, int Col, int Row, string Name, int Level, ImmutableArray<long> Stock);
+public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId World, int Col, int Row, string Name, int Level, ImmutableArray<long> Stock)
+{
+    /// <summary>People per stratum id.</summary>
+    public ImmutableArray<int> Population { get; init; } = [];
+
+    /// <summary>Health 0–100.</summary>
+    public int Health { get; init; }
+
+    /// <summary>Mood 0–100.</summary>
+    public int Mood { get; init; }
+
+    /// <summary>Food gathered in the last turn (hundredths).</summary>
+    public long FoodGathered { get; init; }
+
+    /// <summary>Food needed in the last turn (hundredths).</summary>
+    public long FoodNeeded { get; init; }
+
+    /// <summary>Food eaten in the last turn (hundredths).</summary>
+    public long FoodEaten { get; init; }
+}

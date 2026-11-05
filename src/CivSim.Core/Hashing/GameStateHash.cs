@@ -78,6 +78,19 @@ public static class GameStateHash
             h.Add(s.Name);
             h.Add(s.Level);
             h.Add(s.FoundedTurn);
+            h.Add(s.Health);
+            h.Add(s.Mood);
+            h.Add(s.FoodGathered);
+            h.Add(s.FoodNeeded);
+            h.Add(s.FoodEaten);
+            h.Add(s.HigherNeedsPerMille);
+            ReadOnlySpan<int> people = s.PopulationView;
+            h.Add(people.Length);
+            foreach (int p in people)
+            {
+                h.Add(p);
+            }
+
             ReadOnlySpan<Numerics.Amount> stock = s.StockView;
             h.Add(stock.Length);
             foreach (Numerics.Amount a in stock)

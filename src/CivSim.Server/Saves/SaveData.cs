@@ -62,7 +62,14 @@ public sealed record SettlementSaveData(
     [property: Key(5)] string Name,
     [property: Key(6)] int Level,
     [property: Key(7)] long FoundedTurn,
-    [property: Key(8)] long[] Stock);
+    [property: Key(8)] long[] Stock,
+    [property: Key(9)] int[]? Population = null,
+    [property: Key(10)] int Health = 100,
+    [property: Key(11)] int Mood = 50,
+    [property: Key(12)] long FoodGathered = 0,
+    [property: Key(13)] long FoodNeeded = 0,
+    [property: Key(14)] long FoodEaten = 0,
+    [property: Key(15)] int HigherNeedsPerMille = 0);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

@@ -137,6 +137,11 @@ public sealed class GameServer
     {
         TurnReport report = Runner.RunTurn();
         _lastTurnTicks = report.TotalTicks;
+        foreach (string line in Runner.LastChronicle)
+        {
+            AddChronicle(line);
+        }
+
         GameSnapshot? snapshot = Runner.Snapshots.Latest;
         if (snapshot is not null)
         {
@@ -308,7 +313,13 @@ public sealed class GameServer
             levels.Add(l.Name);
         }
 
-        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels));
+        var strata = new List<string>(_content.Strata.Count);
+        foreach (StratumDefinition s in _content.Strata)
+        {
+            strata.Add(s.Name);
+        }
+
+        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels, strata));
     }
 
     private void SendAllChunks(Client client)

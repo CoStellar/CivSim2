@@ -45,7 +45,10 @@ public static class CoreSystems
         ArgumentNullException.ThrowIfNull(runner);
         ArgumentNullException.ThrowIfNull(content);
         runner.AddSystem(new EffectExpirySystem());
+        runner.AddSystem(new Economy.GatheringSystem(content));
+        runner.AddSystem(new Economy.ConsumptionSystem(content));
         runner.AddSystem(new Economy.StorageSystem(content));
+        runner.AddSystem(new Population.PopulationSystem(content));
         runner.AddSystem(new CalendarSystem(content));
     }
 }

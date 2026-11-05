@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "comment": "Population growth, hunger, health and gathering (GDD 5.2, 4.4). All rates are per year and converted by the turn length. Per mille = parts per thousand. Values are first guesses for tuning with Patryk.",
+  "growth": {
+    "birthsPerMille": 35,
+    "deathsPerMille": 32,
+    "starvationDeathPercent": 80,
+    "lowHealthDeathsPerMillePerPoint": "0.2",
+    "moodBirthsPerMillePerPoint": "0.05",
+    "strataShiftPercentPerYear": "1"
+  },
+  "health": {
+    "hungerPenaltyPercent": 100,
+    "crowdingPenaltyPercent": 50,
+    "lowHealthBelow": 60
+  },
+  "gathering": {
+    "radius": 2,
+    "plantsGood": "wild_plants",
+    "meatGood": "meat",
+    "hidesGood": "hides",
+    "foodPerWorkerPerYear": "2",
+    "foodPerBiomeFoodPerYear": "4",
+    "plantsPercent": 60,
+    "hidesPerMeat": "0.2",
+    "hillsPercent": 75,
+    "mountainsPercent": 25
+  },
+  "newTribe": { "producers": 40, "artisans": 0, "warriors": 10 }
+}

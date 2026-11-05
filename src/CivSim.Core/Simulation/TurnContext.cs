@@ -26,4 +26,12 @@ public sealed class TurnContext
     public IReadOnlyList<CommandEnvelope> Commands => CommandList;
 
     internal List<CommandEnvelope> CommandList { get; } = [];
+
+    /// <summary>Chronicle lines written during this turn (cleared when the turn starts).</summary>
+    public IReadOnlyList<string> ChronicleLines => ChronicleList;
+
+    internal List<string> ChronicleList { get; } = [];
+
+    /// <summary>Writes a line to the chronicle (GDD 11.1, phase 11). Use for rare, notable events only.</summary>
+    public void Chronicle(string text) => ChronicleList.Add(text);
 }

@@ -11,10 +11,15 @@ namespace CivSim.Core.State;
 public sealed class SettlementState
 {
     private readonly Amount[] _stock;
+    private readonly int[] _population;
 
-    /// <summary>Creates a settlement with an empty warehouse for <paramref name="goodCount"/> goods.</summary>
-    public SettlementState(SettlementId id, CivId owner, WorldId world, HexCoord cell, string name, int level, long foundedTurn, int goodCount)
+    /// <summary>
+    /// Creates a settlement with an empty warehouse for <paramref name="goodCount"/> goods and no people in
+    /// <paramref name="strataCount"/> strata.
+    /// </summary>
+    public SettlementState(SettlementId id, CivId owner, WorldId world, HexCoord cell, string name, int level, long foundedTurn, int goodCount, int strataCount = 0)
     {
+        _population = new int[strataCount];
         Id = id;
         Owner = owner;
         World = world;
@@ -51,6 +56,45 @@ public sealed class SettlementState
 
     /// <summary>Read-only view of the warehouse.</summary>
     public ReadOnlySpan<Amount> StockView => _stock;
+
+    /// <summary>People per stratum id (GDD 5.1).</summary>
+    public Span<int> Population => _population;
+
+    /// <summary>Read-only view of the people per stratum.</summary>
+    public ReadOnlySpan<int> PopulationView => _population;
+
+    /// <summary>All people in the settlement.</summary>
+    public int TotalPopulation()
+    {
+        int total = 0;
+        foreach (int p in _population)
+        {
+            total += p;
+        }
+
+        return total;
+    }
+
+    /// <summary>Health 0–100 (GDD 5.2, CORE simplified: one value). Set by the population system.</summary>
+    public int Health { get; set; } = 100;
+
+    /// <summary>Mood (satisfaction) 0–100; 50 = basic needs met, nothing more.</summary>
+    public int Mood { get; set; } = 50;
+
+    /// <summary>Food gathered in the last turn, in hundredths.</summary>
+    public long FoodGathered { get; set; }
+
+    /// <summary>Food the people needed in the last turn, in hundredths.</summary>
+    public long FoodNeeded { get; set; }
+
+    /// <summary>Food actually eaten in the last turn, in hundredths.</summary>
+    public long FoodEaten { get; set; }
+
+    /// <summary>Share of higher needs met in the last turn, per mille (1000 = all).</summary>
+    public int HigherNeedsPerMille { get; set; }
+
+    /// <summary>Share of the people fed in the last turn, per mille (1000 = everyone).</summary>
+    public int FedPerMille => FoodNeeded <= 0 ? 1000 : (int)Math.Min(1000, FoodEaten * 1000 / FoodNeeded);
 
     /// <summary>Sum of all goods in the warehouse.</summary>
     public Amount TotalStock()
