@@ -262,7 +262,8 @@ public sealed class GatheringSystem : ITurnSystem
         }
     }
 
-    // Turns worked shares into goods: plants and meat from the biome, hides with the meat, deposit goods.
+    // Turns worked shares into goods: plants and meat from the biome, hides with the meat, biome materials (wood),
+    // deposit goods (which run out when the deposit is not renewable).
     private void Deliver(WorldState world, SettlementState s)
     {
         Array.Clear(_gathered);
@@ -291,13 +292,34 @@ public sealed class GatheringSystem : ITurnSystem
             Add(_rules.PlantsGood, plants, scale, worked);
             Add(_rules.MeatGood, meat, scale, worked);
             Add(_rules.HidesGood, meat.Multiply(_rules.HidesPerMeat, Rounding.Floor), scale, worked);
+            for (int k = 0; k < biome.Gather.Count; k++)
+            {
+                Add(biome.Gather[k].GoodId, biome.Gather[k].Amount, scale, worked);
+            }
+
             int deposit = map.Deposit[i];
             if (deposit != 0 && map.DepositDepth[i] == 0)
             {
-                IReadOnlyList<GoodQuantity> gather = _content.Deposit(deposit).Gather;
-                for (int k = 0; k < gather.Count; k++)
+                DepositDefinition def = _content.Deposit(deposit);
+                long taken = 0;
+                for (int k = 0; k < def.Gather.Count; k++)
                 {
-                    Add(gather[k].GoodId, gather[k].Amount, scale, worked);
+                    taken += Add(def.Gather[k].GoodId, def.Gather[k].Amount, scale, worked);
+                }
+
+                // Flint and stone run out (GDD 4.4): the richness is in whole units; an empty deposit is gone.
+                if (!def.Renewable && taken > 0)
+                {
+                    long left = map.DepositRichness[i] - ((taken + 99) / 100);
+                    if (left <= 0)
+                    {
+                        map.Deposit.Set(i, 0);
+                        map.DepositRichness.Set(i, 0);
+                    }
+                    else
+                    {
+                        map.DepositRichness.Set(i, (int)left);
+                    }
                 }
             }
         }
@@ -316,15 +338,18 @@ public sealed class GatheringSystem : ITurnSystem
     }
 
     // perYear × scale × worked, where scale and worked are fractions of Full (worked already counts the years).
-    private void Add(int good, Amount perYear, long scale, long worked)
+    // Returns what was added, in hundredths.
+    private long Add(int good, Amount perYear, long scale, long worked)
     {
         if (good < 0 || perYear <= Amount.Zero)
         {
-            return;
+            return 0;
         }
 
         long scaled = IntMath.MulDiv(perYear.Hundredths, scale, Full, Rounding.Floor);
-        _gathered[good] += Amount.FromHundredths(IntMath.MulDiv(scaled, worked, Full, Rounding.Floor));
+        long added = IntMath.MulDiv(scaled, worked, Full, Rounding.Floor);
+        _gathered[good] += Amount.FromHundredths(added);
+        return added;
     }
 
     private int Workers(SettlementState s)

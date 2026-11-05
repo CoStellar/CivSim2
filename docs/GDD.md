@@ -256,7 +256,7 @@ Każdy surowiec jest niewidoczny i niedostępny do zbierania, dopóki cywilizacj
 
 ### 4.5 Rozdział przy niedoborach
 
-Gdy towaru brakuje, sieć rozdziela go według priorytetów, które ustawia gracz lub AI. Domyślna kolejność:
+Gdy towaru brakuje, sieć rozdziela go według priorytetów, które ustawia gracz lub AI (etap 3e: na razie stała kolejność domyślna; potrzeby wyższe ludzi, np. odzież i narzędzia, idą zaraz po wyżywieniu). Domyślna kolejność:
 
 1. Wyżywienie ludności (głód to najszybszy spadek populacji i stabilności).
 2. Utrzymanie: budynki i armia.
@@ -264,9 +264,13 @@ Gdy towaru brakuje, sieć rozdziela go według priorytetów, które ustawia grac
 4. Produkcja przetwórcza.
 5. Eksport i rezerwy.
 
+**Sieć handlowa w CORE** (etap 3e, decyzje Patryka z 2026-11-05): sieć tworzą osady jednej cywilizacji połączone łańcuchem, w którym sąsiednie osady dzieli najwyżej 8 pól. Przy każdym przekazaniu ginie 2% towaru na pole odległości (10 pól: 18%). Każda osada zatrzymuje jedzenie na turę i rok zapasu, zanim odda resztę. Nadwyżka ponad pojemność magazynu najpierw jedzie do osady sieci z wolnym miejscem; reszta przepada (bez pieniędzy nie ma sprzedaży z rabatem). Handel między cywilizacjami przyjdzie z umowami w etapie 4.
+
+**Produkcja w CORE** (etap 3e): rzemieślnicy osady wykonują jedną recepturę; cykli jest tyle, ile pozwalają rzemieślnicy i wejścia w magazynie. Surowce do receptur zbierają wytwórcy przy okazji jedzenia: drewno w lasach, krzemień i kamień ze złóż (złoża nieodnawialne się wyczerpują). Recepturę wybiera AI według cen wewnętrznych: najbardziej opłaca się to, czego ludziom brakuje.
+
 ### 4.6 Ceny i pieniądz
 
-- Każdy towar ma **cenę wewnętrzną w sieci handlowej**, liczoną z podaży, popytu i zapasów. AI używa jej do oceny, co opłaca się produkować, kupować i sprzedawać.
+- Każdy towar ma **cenę wewnętrzną w sieci handlowej**, liczoną z podaży, popytu i zapasów. AI używa jej do oceny, co opłaca się produkować, kupować i sprzedawać. W CORE (etap 3e): cena = wartość towaru × roczny popyt sieci / zapasy sieci, w granicach 25–400% wartości.
 - Do odkrycia mennictwa handel jest barterowy (wymiana po cenach wewnętrznych obu stron). Potem pojawia się złoto jako waluta, podatki i budżet. Później bankowość, kredyt i inflacja.
 
 ## 5. Ludność i osady

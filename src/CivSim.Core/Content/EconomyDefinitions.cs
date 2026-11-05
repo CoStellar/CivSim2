@@ -31,6 +31,25 @@ public sealed record GoodDefinition(int Id, string Key, string Name, int Era, Go
 {
     /// <summary>True when the good is food.</summary>
     public bool IsFood => Category == GoodCategory.Food;
+
+    /// <summary>Base worth in barter units (wild plants = 1); internal prices move around it (stage 3e).</summary>
+    public Amount Value { get; init; } = Amount.FromUnits(1);
+}
+
+/// <summary>Trade network rules (data/trade.json, GDD 4, CORE simplified: no physical transport; stage 3e).</summary>
+public sealed record TradeRules
+{
+    /// <summary>Two settlements of a civilization are linked when at most this many cells apart.</summary>
+    public int LinkCells { get; init; } = 8;
+
+    /// <summary>Percent of the goods lost per cell of distance when passed on (at most 90% in all).</summary>
+    public int LossPercentPerCell { get; init; } = 2;
+
+    /// <summary>Years of food needs a settlement keeps before it gives food away.</summary>
+    public Amount FoodReserveYears { get; init; } = Amount.FromUnits(1);
+
+    /// <summary>Internal prices stay within these percentages of the good's value.</summary>
+    public (int Min, int Max) PriceRangePercent { get; init; } = (25, 400);
 }
 
 /// <summary>An amount of one good.</summary>

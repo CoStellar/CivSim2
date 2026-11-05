@@ -24,6 +24,9 @@ public sealed record StratumDefinition(int Id, string Key, string Name, bool Gat
 {
     /// <summary>True when the stratum fights and so widens the settlement's influence zone (GDD 5.4).</summary>
     public bool Fights { get; init; }
+
+    /// <summary>True when the stratum works the settlement's recipe (artisans, stage 3e).</summary>
+    public bool Crafts { get; init; }
 }
 
 /// <summary>Growth, hunger, health and gathering rules from <c>data/population.json</c> (GDD 5.2, 4.4).</summary>
