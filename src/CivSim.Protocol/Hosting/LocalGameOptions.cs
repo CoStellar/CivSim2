@@ -16,17 +16,32 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     /// <summary>Axial tilt in tenths of a degree (0–1800), or null for the preset's.</summary>
     public int? AxialTiltTenths { get; init; }
 
-    /// <summary>Year length in Earth years × 100, or null for the preset's.</summary>
-    public int? YearHundredths { get; init; }
-
-    /// <summary>Star brightness in percent of Earth's sunlight (80–120), or null for the preset's.</summary>
-    public int? StarBrightnessPercent { get; init; }
-
     /// <summary>Orbit eccentricity in thousandths (0–300), or null for the preset's.</summary>
     public int? EccentricityPerMille { get; init; }
 
-    /// <summary>Season strength in percent of Earth's (20–150), or null for the preset's.</summary>
-    public int? SeasonStrengthPercent { get; init; }
+    /// <summary>
+    /// Star brightness in thousandths of the Sun's. Of brightness, distance, year and light give at most two; the rest
+    /// follows from them (real formulas, stage 1c-A). Null for the preset's.
+    /// </summary>
+    public long? LuminosityThousandths { get; init; }
+
+    /// <summary>Distance from the star in thousandths of an astronomical unit, or null.</summary>
+    public long? DistanceThousandths { get; init; }
+
+    /// <summary>Year length in thousandths of an Earth year, or null.</summary>
+    public long? YearThousandths { get; init; }
+
+    /// <summary>Light on the planet in thousandths of Earth's (356–1107), or null.</summary>
+    public long? LightThousandths { get; init; }
+
+    /// <summary>CO₂ in millionths of a bar, or null for the carbon cycle (or the preset's value).</summary>
+    public int? Co2Microbar { get; init; }
+
+    /// <summary>Total air pressure in hundredths of a bar, or null for the preset's other gases plus the CO₂.</summary>
+    public int? PressureHundredths { get; init; }
+
+    /// <summary>Volcanic activity in percent of Earth's, or null for the preset's.</summary>
+    public int? VolcanismPercent { get; init; }
 
     /// <summary>Share of water, 30–80, or null for the preset's.</summary>
     public int? WaterPercent { get; init; }

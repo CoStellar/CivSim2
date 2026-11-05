@@ -138,4 +138,8 @@ public sealed record AssetRules
 }
 
 /// <summary>A planet preset from <c>data/planets.json</c> (stage 1b): Earth, Mars, Uranus… Every value can be changed after choosing it.</summary>
-public sealed record PlanetPreset(string Key, string Name, WorldGen.PlanetParameters Planet, int WaterPercent, WorldGen.WorldMoisture Moisture, WorldGen.WorldRelief Relief);
+public sealed record PlanetPreset(string Key, string Name, WorldGen.PlanetParameters Planet, int WaterPercent, WorldGen.WorldMoisture Moisture, WorldGen.WorldRelief Relief)
+{
+    /// <summary>True when the preset's CO₂ comes from the carbon cycle, so it follows changes of star, orbit and air.</summary>
+    public bool AutoCo2 { get; init; } = true;
+}

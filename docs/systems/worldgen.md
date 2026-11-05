@@ -5,7 +5,7 @@
 **Faza tury:** żadna. Działa raz, przy tworzeniu nowej gry (`GameState.CreateNew(settings, content, out report)`), przed pierwszą turą.
 
 ## Dane wejściowe i wyjściowe
-- Czyta: `GameSettings` (seed, wymiary, liczba cywilizacji, `WorldType`, `WaterPercent`, `Planet`, `Moisture`, `Inland`, `Relief`, `Resources`; tabela w GDD 3), zawartość z `data/biomes.json`, `data/resources.json` i `data/planets.json` (presety).
+- Czyta: `GameSettings` (seed, wymiary, liczba cywilizacji, `WorldType`, `WaterPercent`, `Planet`, `Moisture`, `Inland`, `Relief`, `Resources`; tabela w GDD 3), zawartość z `data/biomes.json`, `data/resources.json` i `data/planets.json` (presety: dwie z czterech wielkości jasność, odległość, rok, światło, oraz atmosfera, `PlanetSetup`).
 - Zmienia: wszystkie warstwy mapy Ziemi (`WorldMap`), strumień losowy `World`, pole `StartCell` każdej cywilizacji.
 - Zwraca: `WorldGenReport` (procent wody, liczba rzek i jezior, liczba pól każdego biomu i złoża, starty, ich odległość i uczciwość, czas).
 - Publikuje w migawce: nic nowego. Mapa idzie do widoku przez zwykłe fragmenty 32×32 (wszystkie oznaczone jako zmienione).
@@ -37,14 +37,25 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
     Wysokość to suma 5 oktaw szumu. Typ świata zmienia skalę pierwszej oktawy: pangea ma 2 duże „plamy” na szerokość mapy, kontynenty 5, archipelag 10 (i ostrzejszy kontrast).
 2. **Poziom morza.** Liczymy histogram wysokości i ustawiamy próg dokładnie tak, żeby woda zajęła zadany procent pól (domyślnie 60%). Woda dostaje wysokości 0–99, ląd 100–255 (poziom morza = 100, jak w GDD).
 3. **Rzeźba.** 8% najwyższego lądu to góry, kolejne 20% to wzgórza (ustawienie górzystości: płaska 4+12%, górzysta 14+26%).
-4. **Temperatura i pory roku** (etap 1b, `ClimateModel`, `Insolation`): dla każdej szerokości liczymy dobowe nasłonecznienie w 48 równych
-   odstępach czasu na orbicie (deklinacja z nachylenia osi, odległość od gwiazdy z mimośrodu i prawa Keplera, jasność gwiazdy).
-   Trygonometria jest na liczbach całkowitych (`FixedTrig`, tablica sinusów z szeregu Taylora), więc mapa jest identyczna na każdym komputerze.
-   - **Średnia temperatura:** r = 0 przy nasłonecznieniu równika Ziemi, 1 przy biegunie Ziemi; `T = 28 − 55 · r · (0,3 + 0,7 r)` (wiatry i prądy
-     przenoszą ciepło ku biegunom). Szerokość jest „wygięta” szumem (do ok. 13°), więc strefy klimatu biegną falistymi liniami. Dalej: minus do 20 °C
+4. **Temperatura i pory roku** (etapy 1b i 1c-A, `ClimateModel`, `Insolation`, `EnergyBalance`, ADR 0014): dla każdej szerokości liczymy dobowe
+   nasłonecznienie w 48 równych odstępach czasu na orbicie (deklinacja z nachylenia osi, odległość od gwiazdy z mimośrodu i prawa Keplera,
+   ilość światła `S = L / d²` z gwiazdy i odległości, `StarOrbit`). Trygonometria i cała matematyka klimatu są na liczbach całkowitych
+   (`FixedTrig`, `FixedLog`, iloczyny 128-bitowe), więc mapa jest identyczna na każdym komputerze.
+   - **Średnia temperatura** z bilansu energii w 90 pasach o równej powierzchni (Budyko–Sellers, North 1975):
+     `F(x)·(1 − albedo) = A + B·T − d/dx[D(x)·(1 − x²)·dT/dx]`, x = sinus szerokości. A = 203,3 − 2,09 · (cieplarniany − 33), B = 2,09 W/m²/K,
+     D = 0,3 · (1 + 3 · (1 − x²)²) · √(ciśnienie w barach) (szybciej w tropikach), albedo 0,32 + 0,16 · P₂(x), lód 0,62 poniżej −10 °C.
+     Rozwiązanie: układ trójprzekątniowy (algorytm Thomasa) 40 razy, z łagodną poprawką lodu. Ziemia: równik 27 °C, 45° 10 °C, 60° −4 °C, biegun −22 °C.
+     Temperaturę pola bierzemy z pasa (interpolacja liniowa po sinusie). Szerokość jest „wygięta” szumem (do ok. 13°), więc strefy klimatu biegną falistymi liniami. Dalej: minus do 20 °C
      za wysokość, plus mały szum ±4 °C.
    - **Różnica lato–zima:** `121 °C × (najjaśniejszy − najciemniejszy punkt roku) × kontynentalność × współczynnik roku`, najwyżej 120 °C.
      Kontynentalność: 25% nad wodą, 35% na wybrzeżu, rośnie do 100% sześć pól standardowych w głąb lądu. Współczynnik roku: `rok · 1,5 / (rok + 0,5)` (Ziemia 1, Uran 1,49).
+     Siła pór roku wynika z ciśnienia: `100% · √(1 bar / ciśnienie)` (20–150%; Mars-preset ok. 10 bar: 32%).
+   - **Atmosfera z cyklu węglowego** (`CarbonCycle`, decyzja Patryka z 2026-11-05): wulkany dają CO₂ (`volcanism`, % Ziemi), wietrzenie je zabiera:
+     `(CO₂ / 280 ppm)^0,3 × średnia po pasach z T > 0 °C z 2^((T − 15) / 10)`, znormalizowane do Ziemi. CO₂ na starcie to równowaga (bisekcja po logarytmie,
+     24 kroki, każdy z pełnym bilansem energii). Cieplarniany: 33 °C + 1,8 °C na podwojenie CO₂ do 0,01 bar, potem 4,7 °C na podwojenie (gruba atmosfera).
+     Ciśnienie = pozostałe gazy (`otherGases`, Ziemia 1 bar) + CO₂. CO₂ ręcznie (`--co2`, `--greenhouse`) wyłącza cykl.
+     Wyniki (seed 42): Ziemia 280 ppm, 33 °C, średnio 14,6 °C; Mars (1,524 AU, wulkanizm 1000%) 9,05 bar CO₂, 88,5 °C, równik 9 °C, biegun 1 °C;
+     Uran (rok 84 przy S = 1: gwiazda 1365 L☉, 7,14 M☉, 36,9 AU) 756 ppm, średnio 14,6 °C, równik 13,6 °C, biegun 15 °C.
    - **Sezon wzrostu:** część roku (rok jak sinusoida wokół średniej) z temperaturą między 5 °C a 45 °C.
    - **Długie zimy** (trudniejszy wariant symulacji, decyzja Patryka z 2026-11-05): martwa pora trwa `(100% − sezon wzrostu) × rok`. Gdy jest dłuższa niż
      `survivableDeadSeasonYears` (0,75 roku, `data/population.json`), dzika żywność spada proporcjonalnie. Na Uranie (zimy po kilkadziesiąt lat)
@@ -87,7 +98,7 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
   najmniej 5%; temperatura następnej pory roku albo zimowa przy porach uśrednionych; efekt `cold_tolerance` obniża granicę zimna).
 - Wynik na Uranie (seed 42, 2000 tur = 21 000 lat): ok. 6300 ludzi, wszyscy żyją; obozy trzymają się pasa wokół równika, a środek populacji
   przesuwa się z każdym rokiem planety; w turach zmiany pory roku widać serie przeprowadzek. Wysokie półkule mają latem ponad 80 °C, a zimą −30 °C.
-- **Siła pór roku** (`seasonStrength`, 20–150%, `--seasons`): mnoży różnicę lato–zima. Pomiar na Uranie (seed 42, po 400 turach):
+- **Siła pór roku** (dawniej ustawienie `seasonStrength`, od etapu 1c-A wynika z ciśnienia, patrz krok 4): mnoży różnicę lato–zima. Pomiar na Uranie (seed 42, po 400 turach):
   100% → ok. 6 100 ludzi, środek populacji 9–12°; 60% → ok. 9 500 ludzi, 21–24°, najwięcej przeprowadzek; 40% → ok. 11 900 ludzi.
   Pełnych przejść między półkulami jeszcze nie ma: pas przy równiku jest znośny przez cały rok, a AI widzi tylko 10 pól wokół obozów
   i przenosi się najwyżej o 10 pól. Dalekie wędrówki otworzą pamięć mapy (etap 3g) i wędrówki trwające kilka tur.
@@ -96,6 +107,9 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 ## Testy
 - `SeasonTests`: tylko długie lata są liczone na żywo (Uran tak, Ziemia i Mars nie), długość tury Urana 126 miesięcy, wolne decyzje raz na 50 lat,
   półkule mają lato i zimę na zmianę, zima obcina dziką żywność do polowania, tolerancja zimna podnosi wartość zimnych terenów.
+- `StarAndAirTests` (etap 1c-A): logarytm i potęga stałoprzecinkowa, Kepler (Ziemia 1 rok, Mars 1,881), masa z jasności, strefa zamieszkiwalna,
+  dowolne dwie wielkości dają trzecią, wyjście ze strefy stawia planetę na granicy, cykl węglowy (Ziemia ok. 280 ppm, dalej od gwiazdy więcej CO₂,
+  więcej wulkanów cieplej, Uran inaczej niż Ziemia), gęsta atmosfera wyrównuje klimat, zasady `PlanetSetup`, stałe wartości klimatu Ziemi.
 - `PlanetTests` (etap 1b): trygonometria całkowitoliczbowa, nasłonecznienie Ziemi zgodne z podręcznikowym (ok. 417 i 173 W/m²), klimat Ziemi,
   Uran z cieplejszymi biegunami i skrajnymi porami roku, dłuższy rok = większe wahania, presety i poprawne światy dla każdego presetu.
 - `ContentLoaderTests`: domyślne dane się wczytują; zepsute dane zgłaszają każdy błąd.

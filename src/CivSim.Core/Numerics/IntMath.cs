@@ -96,4 +96,31 @@ public static class IntMath
 
         return r;
     }
+
+    /// <summary>Integer square root of a 128-bit value: the largest r with r*r &lt;= value (Newton's method, exact).</summary>
+    public static System.Int128 Sqrt(System.Int128 value)
+    {
+        if (value < 0)
+        {
+            throw new System.ArgumentOutOfRangeException(nameof(value));
+        }
+
+        if (value == 0)
+        {
+            return 0;
+        }
+
+        // Start above the root so the iteration falls monotonically onto it.
+        System.Int128 r = (System.Int128)1 << ((int)((128 - System.Int128.LeadingZeroCount(value)) / 2) + 1);
+        while (true)
+        {
+            System.Int128 next = (r + (value / r)) / 2;
+            if (next >= r)
+            {
+                return r;
+            }
+
+            r = next;
+        }
+    }
 }

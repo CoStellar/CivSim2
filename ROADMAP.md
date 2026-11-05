@@ -7,7 +7,7 @@ Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. 
 wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
-**Aktualny etap: 1b (świat), potem 3e**
+**Aktualny etap: 1c (klimat), potem 3e**
 
 ---
 
@@ -64,8 +64,10 @@ Gotowe, gdy: mapa zachowuje się jak kula, a Patryk obejrzał presety Ziemia, Ma
 Gotowe, gdy: Ziemia, Mars i Uran liczą się z prawdziwych wzorów (gwiazda, orbita, atmosfera), a w trakcie gry przychodzą epoki lodowe.
 Szczegóły i wzory: `docs/prompts/02-etap-1c-gwiazda-atmosfera.md`.
 
-- [ ] 1c-A: jasność gwiazdy, odległość i rok (Kepler, masa z jasności), strefa zamieszkiwalna z dopasowaniem do granicy
-- [ ] 1c-A: atmosfera (efekt cieplarniany, ciśnienie, domyślnie z cyklu węglanowo-krzemianowego) i model bilansu energii zamiast obecnego wzoru
+- [x] 1c-A: jasność gwiazdy, odległość i rok (Kepler, masa z jasności), strefa zamieszkiwalna z dopasowaniem do granicy
+- [x] 1c-A: atmosfera z cyklu węglowego (wulkanizm, CO₂ w równowadze, efekt cieplarniany i ciśnienie z CO₂) i model bilansu energii zamiast obecnego wzoru (ADR 0014)
+- [ ] Patryk ogląda mapy trzech presetów po 1c-A
+- Na później: CO₂ z działań cywilizacji (spalanie, wycinanie lasów) przez mechanizm efektów w erze przemysłowej; wietrzenie liczone z prawdziwego lądu na mapie
 - [ ] 1c-B: cykle Milankovicia i zmienność gwiazdy: klimat zmienia się w trakcie gry
 - [ ] 1c-C: poziom morza zmienia się w trakcie gry (pomosty lądowe)
 

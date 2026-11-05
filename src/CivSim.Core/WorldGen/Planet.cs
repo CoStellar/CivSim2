@@ -4,28 +4,31 @@ using CivSim.Core.Numerics;
 namespace CivSim.Core.WorldGen;
 
 /// <summary>
-/// The planet a world is on (GDD 3, stage 1b). It always lies in the habitable zone of its star. All values are
-/// integers so they can be saved, hashed and compared exactly.
+/// The planet a world is on (GDD 3, stages 1b and 1c-A). Its star and orbit follow the real formulas (decision of
+/// 2026-11-05, <see cref="StarOrbit"/>): the light, the star's mass and the year follow from the star's brightness and
+/// the distance, and the planet always lies in the habitable zone. The air is CO₂ on top of other gases (nitrogen,
+/// oxygen); the CO₂ gives the greenhouse warming and comes from the carbon cycle (<see cref="CarbonCycle"/>) unless set
+/// by hand. The climate follows through <see cref="EnergyBalance"/>. All values are integers so they can be saved,
+/// hashed and compared exactly.
 /// </summary>
 /// <param name="AxialTiltTenths">Tilt of the spin axis against the orbit, in tenths of a degree (Earth 234, Uranus 978).</param>
-/// <param name="YearHundredths">Length of the year in Earth years × 100 (Earth 100, Mars 188). Changes only the seasons: the game clock stays in Earth years.</param>
-/// <param name="StarBrightnessPercent">Sunlight reaching the planet compared with Earth, in percent (80–120 stays habitable).</param>
 /// <param name="EccentricityThousandths">How stretched the orbit is, in thousandths (Earth 17, Mars 93).</param>
-public sealed record PlanetParameters(int AxialTiltTenths, int YearHundredths, int StarBrightnessPercent, int EccentricityThousandths)
+/// <param name="LuminosityThousandths">Brightness of the star in thousandths of the Sun's (Sun 1000).</param>
+/// <param name="DistanceThousandths">Distance from the star in thousandths of an astronomical unit (Earth 1000, Mars 1524).</param>
+/// <param name="Co2Microbar">CO₂ in the air, millionths of a bar (Earth before industry: 280).</param>
+/// <param name="BackgroundPressureHundredths">Pressure of the other gases (nitrogen, oxygen), hundredths of a bar (Earth 100).</param>
+/// <param name="VolcanismPercent">Volcanic activity compared with Earth's: how much CO₂ volcanoes give (Earth 100).</param>
+public sealed record PlanetParameters(
+    int AxialTiltTenths,
+    int EccentricityThousandths,
+    int LuminosityThousandths,
+    int DistanceThousandths,
+    int Co2Microbar,
+    int BackgroundPressureHundredths,
+    int VolcanismPercent)
 {
     /// <summary>Earth.</summary>
-    public static PlanetParameters Earth { get; } = new(234, 100, 100, 17);
-
-    /// <summary>
-    /// How strong the seasons are, in percent of an Earth-like atmosphere and ocean (decision of 2026-11-05). Thick air
-    /// and big oceans carry heat between summer and winter and soften the seasons (below 100); thin air sharpens them.
-    /// On a planet lying on its side, soft seasons make the middle latitudes livable in their summer, so tribes can follow
-    /// the summer from one hemisphere to the other.
-    /// </summary>
-    public int SeasonStrengthPercent { get; init; } = 100;
-
-    /// <inheritdoc cref="TiltRange"/>
-    public static (int Min, int Max) SeasonStrengthRange => (20, 150);
+    public static PlanetParameters Earth { get; } = new(234, 17, 1000, 1000, CarbonCycle.EarthCo2Microbar, 100, 100);
 
     /// <summary>Smallest and largest allowed values.</summary>
     public static (int Min, int Max) TiltRange => (0, 1800);
@@ -34,19 +37,68 @@ public sealed record PlanetParameters(int AxialTiltTenths, int YearHundredths, i
     public static (int Min, int Max) YearRange => (10, 50_000);
 
     /// <inheritdoc cref="TiltRange"/>
-    public static (int Min, int Max) BrightnessRange => (80, 120);
-
-    /// <inheritdoc cref="TiltRange"/>
     public static (int Min, int Max) EccentricityRange => (0, 300);
 
-    /// <summary>Throws when a value is outside its range.</summary>
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) GreenhouseRange => (0, 1500);
+
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) BackgroundPressureRange => (10, 5_000);
+
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) Co2Range => (1, CarbonCycle.MaxCo2Microbar);
+
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) VolcanismRange => (0, 5_000);
+
+    /// <summary>Greenhouse warming from the CO₂, tenths of a degree Celsius (Earth 330).</summary>
+    public int GreenhouseTenths => CarbonCycle.GreenhouseTenths(Co2Microbar);
+
+    /// <summary>Air pressure at sea level, hundredths of a bar: other gases plus CO₂ (Earth 100).</summary>
+    public int PressureHundredths => CarbonCycle.PressureHundredths(BackgroundPressureHundredths, Co2Microbar);
+
+    /// <inheritdoc cref="TiltRange"/>
+    public static (int Min, int Max) SeasonStrengthRange => (20, 150);
+
+    /// <summary>Sunlight reaching the planet compared with Earth, millionths (S = L / d²; Earth 1 000 000).</summary>
+    public long LightMillionths => StarOrbit.LightMillionths(LuminosityThousandths, DistanceThousandths);
+
+    /// <summary>Length of the year in Earth years × 100 (Kepler). Changes only the seasons: the game clock stays in Earth years.</summary>
+    public int YearHundredths => (int)((StarOrbit.YearThousandths(LuminosityThousandths, DistanceThousandths) + 5) / 10);
+
+    /// <summary>Mass of the star, thousandths of the Sun's (main sequence).</summary>
+    public int StarMassThousandths => StarOrbit.MassThousandths(LuminosityThousandths);
+
+    /// <summary>
+    /// How strong the seasons are, in percent of Earth's (decision of 2026-11-05: it follows from the pressure). Thick
+    /// air holds and spreads heat between summer and winter: strength = 100 × √(1 bar / pressure), within
+    /// <see cref="SeasonStrengthRange"/> (Mars-like 2.5 bar: 63%).
+    /// </summary>
+    public int SeasonStrengthPercent =>
+        (int)Math.Clamp((IntMath.Sqrt(10_000_000_000L / Math.Max(1, PressureHundredths)) + 50) / 100, SeasonStrengthRange.Min, SeasonStrengthRange.Max);
+
+    /// <summary>Throws when a value is outside its range or the planet is outside the habitable zone.</summary>
     public void Validate()
     {
         Check(AxialTiltTenths, TiltRange, "axial tilt");
-        Check(YearHundredths, YearRange, "year length");
-        Check(StarBrightnessPercent, BrightnessRange, "star brightness");
         Check(EccentricityThousandths, EccentricityRange, "eccentricity");
-        Check(SeasonStrengthPercent, SeasonStrengthRange, "season strength");
+        Check(LuminosityThousandths, StarOrbit.LuminosityRange, "star luminosity");
+        Check(Co2Microbar, Co2Range, "CO2");
+        Check(BackgroundPressureHundredths, BackgroundPressureRange, "air pressure");
+        Check(VolcanismPercent, VolcanismRange, "volcanism");
+        if (DistanceThousandths <= 0)
+        {
+            throw new ArgumentOutOfRangeException("distance", "The distance must be positive.");
+        }
+
+        // Stored values are rounded to thousandths, so allow the rounding of the zone edge.
+        long light = LightMillionths;
+        if (light < StarOrbit.ZoneOuterMillionths - 3000 || light > StarOrbit.ZoneInnerMillionths + 3000)
+        {
+            throw new ArgumentOutOfRangeException("distance", $"The light {light / 1000}‰ of Earth's is outside the habitable zone.");
+        }
+
+        Check(YearHundredths, YearRange, "year length");
     }
 
     private static void Check(int value, (int Min, int Max) range, string name)
@@ -60,7 +112,7 @@ public sealed record PlanetParameters(int AxialTiltTenths, int YearHundredths, i
 
 /// <summary>
 /// Sunlight over the year at one latitude: the daily mean at every step of the orbit, from the axial tilt, the
-/// eccentricity and the star brightness. Values are shares of the sunlight Earth gets at its average distance, in
+/// eccentricity and the light on the planet. Values are shares of the sunlight Earth gets at its average distance, in
 /// parts of <see cref="FixedTrig.One"/> (Earth's equator gets about 0.30 on average over the year).
 /// </summary>
 public static class Insolation
@@ -81,11 +133,20 @@ public static class Insolation
     public static (long Mean, long Min, long Max) At(long sinLatitude, PlanetParameters planet, Span<long> steps)
     {
         ArgumentNullException.ThrowIfNull(planet);
+        return At(sinLatitude, planet.AxialTiltTenths, planet.EccentricityThousandths, planet.LightMillionths, steps);
+    }
+
+    /// <summary>
+    /// Like <see cref="At(long, PlanetParameters, Span{long})"/>, from the tilt (tenths of a degree), the eccentricity
+    /// (thousandths) and the light on the planet (millionths of Earth's).
+    /// </summary>
+    public static (long Mean, long Min, long Max) At(long sinLatitude, int tiltTenths, int eccentricityThousandths, long lightMillionths, Span<long> steps)
+    {
         long one = FixedTrig.One;
         long sinPhi = Math.Clamp(sinLatitude, -one, one);
         long cosPhi = FixedTrig.Complement(sinPhi);
-        long sinTilt = FixedTrig.Sin(FixedTrig.TenthsOfDegree(planet.AxialTiltTenths));
-        long e = planet.EccentricityThousandths * one / 1000;
+        long sinTilt = FixedTrig.Sin(FixedTrig.TenthsOfDegree(tiltTenths));
+        long e = eccentricityThousandths * one / 1000;
         long sum = 0;
         long min = long.MaxValue;
         long max = long.MinValue;
@@ -107,7 +168,7 @@ public static class Insolation
             long b = cosPhi * cosDecl / one;
             int sunset = b == 0 ? (a > 0 ? FixedTrig.FullTurn / 2 : 0) : FixedTrig.Acos(-a * one / b);
             long daily = ((FixedTrig.ToRadians(sunset) * a / one) + (b * FixedTrig.Sin(sunset) / one)) * one / FixedTrig.Pi;
-            long q = Math.Max(0, daily) * distance / one * planet.StarBrightnessPercent / 100;
+            long q = Math.Max(0, daily) * distance / one * lightMillionths / 1_000_000;
             sum += q;
             if (steps.Length >= Steps)
             {
@@ -125,16 +186,16 @@ public static class Insolation
 }
 
 /// <summary>
-/// Climate from sunlight (GDD 3, stage 1b, decision of 2026-11-05: seasons are averaged, not played turn by turn).
-/// The annual mean temperature follows the yearly sunlight, calibrated so an Earth-like planet has 28 °C at the
-/// equator and −27 °C at the poles, with heat carried towards the poles by winds and currents. Seasons swing around it: more with a bigger difference between summer and winter
-/// sunlight, far from the sea and on planets with long years; less over water.
+/// Climate from sunlight (GDD 3, stages 1b and 1c-A). The annual mean temperature comes from the energy balance of
+/// latitude bands (<see cref="EnergyBalance"/>, ADR 0014): Earth gets about 27 °C at the equator and −22 °C at the poles.
+/// Seasons swing around it: more with a bigger difference between summer and winter sunlight, far from the sea and on
+/// planets with long years; less over water and under thick air.
 /// </summary>
 public sealed class ClimateModel
 {
-    private readonly long _equatorMean;
-    private readonly long _poleMean;
     private readonly PlanetParameters _planet;
+    private readonly int _yearHundredths;
+    private readonly long[] _bands;
     private readonly (long Mean, long Min, long Max)[] _table = new (long, long, long)[TableSize + 1];
     private readonly long[] _steps = new long[(TableSize + 1) * Insolation.Steps];
 
@@ -152,8 +213,8 @@ public sealed class ClimateModel
         ArgumentNullException.ThrowIfNull(planet);
         planet.Validate();
         _planet = planet;
-        _equatorMean = Insolation.At(0, PlanetParameters.Earth).Mean;
-        _poleMean = Insolation.At(FixedTrig.One, PlanetParameters.Earth).Mean;
+        _yearHundredths = planet.YearHundredths;
+        _bands = EnergyBalance.Solve(planet);
         for (int k = 0; k <= TableSize; k++)
         {
             long sin = -FixedTrig.One + (2 * FixedTrig.One * k / TableSize);
@@ -192,18 +253,38 @@ public sealed class ClimateModel
     }
 
     /// <summary>
-    /// Annual mean temperature at sea level, °C. Winds and sea currents carry heat towards the poles, so the
-    /// temperature falls slowly at first and faster near the poles: with r = 0 at Earth's equatorial sunlight and 1 at
-    /// Earth's polar sunlight, T = 28 − 55 × r × (0.3 + 0.7 r). Brighter places than Earth's equator warm by 16.5 °C per
-    /// step of r.
+    /// Annual mean temperature at sea level, °C: the energy-balance temperature of the latitude, interpolated between
+    /// band centres.
     /// </summary>
-    public int MeanTemperature(long sinLatitude)
+    public int MeanTemperature(long sinLatitude) => (int)Math.Clamp(RoundToDegree(MeanTemperatureMillionths(sinLatitude)), -60, 80);
+
+    /// <summary>Like <see cref="MeanTemperature"/>, in millionths of a degree (for reports and tests).</summary>
+    public long MeanTemperatureMillionths(long sinLatitude)
     {
-        long q = Sunlight(sinLatitude).Mean;
-        long r = (_equatorMean - q) * 1000 / (_equatorMean - _poleMean); // per mille
-        long cooling = r <= 0 ? r * 300 / 1000 : r * (300 + (700 * r / 1000)) / 1000;
-        return (int)Math.Clamp(28 - (cooling * 55 / 1000), -60, 80);
+        long x = Math.Clamp(sinLatitude, -FixedTrig.One, FixedTrig.One) * EnergyBalance.Unit / FixedTrig.One;
+
+        // Position in bands, in millionths of a band: band i has its centre at (i + 0.5).
+        long pos = ((x + EnergyBalance.Unit) * EnergyBalance.Bands / 2) - (EnergyBalance.Unit / 2);
+        if (pos <= 0)
+        {
+            return _bands[0];
+        }
+
+        int i = (int)(pos / EnergyBalance.Unit);
+        if (i >= EnergyBalance.Bands - 1)
+        {
+            return _bands[^1];
+        }
+
+        long f = pos - ((long)i * EnergyBalance.Unit);
+        return _bands[i] + ((_bands[i + 1] - _bands[i]) * f / EnergyBalance.Unit);
     }
+
+    /// <summary>Mean temperature of the whole planet, millionths of a degree.</summary>
+    public long GlobalMeanMillionths => EnergyBalance.GlobalMean(_bands);
+
+    private static long RoundToDegree(long millionths) =>
+        millionths >= 0 ? (millionths + 500_000) / 1_000_000 : -((-millionths + 500_000) / 1_000_000);
 
     /// <summary>
     /// Difference between the warmest and the coldest time of year, °C. <paramref name="continentalPercent"/> is 100 deep
@@ -212,7 +293,7 @@ public sealed class ClimateModel
     public int SeasonalSwing(long sinLatitude, int continentalPercent)
     {
         (_, long min, long max) = Sunlight(sinLatitude);
-        long year = _planet.YearHundredths;
+        long year = _yearHundredths;
         long yearPercent = year * 150 / (year + 50); // 100 for Earth; long years let summers and winters go further
         long swing = (max - min) * SwingPerSunlight / FixedTrig.One * continentalPercent / 100 * yearPercent / 100 * _planet.SeasonStrengthPercent / 100;
         return (int)Math.Clamp(swing, 0, 120);

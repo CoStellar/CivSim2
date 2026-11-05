@@ -46,7 +46,7 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    private const ulong GoldenWorldHash = 729215081901436172UL;
+    private const ulong GoldenWorldHash = 16605692067914450901UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]
@@ -198,18 +198,23 @@ public class WorldGeneratorTests
     [InlineData(90, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich, WorldInland.Normal)]
     [InlineData(110, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal, WorldInland.Dry)]
     [InlineData(100, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Normal, WorldInland.Humid)]
-    public void EveryWorldSettingIsValid(int brightness, WorldMoisture moisture, WorldRelief relief, WorldResources resources, WorldInland inland)
+    public void EveryWorldSettingIsValid(int lightPercent, WorldMoisture moisture, WorldRelief relief, WorldResources resources, WorldInland inland)
     {
-        GameSettings settings = Medium with { Planet = PlanetParameters.Earth with { StarBrightnessPercent = brightness }, Moisture = moisture, Relief = relief, Resources = resources, Inland = inland };
+        GameSettings settings = Medium with { Planet = Light(lightPercent * 10), Moisture = moisture, Relief = relief, Resources = resources, Inland = inland };
         (GameState state, WorldGenReport report) = Generate(settings);
         Assert.Empty(Validate(state, report));
     }
 
+    // Earth with this light (thousandths of Earth's) at the same star, Earth's CO₂ and air.
+    private static PlanetParameters Light(int thousandths) =>
+        PlanetSetup.Build(PlanetParameters.Earth, autoCo2: false, new PlanetOverrides { LightThousandths = thousandths }).Planet;
+
     [Fact]
     public void DimStarsGiveMoreIceAndTundraThanBrightOnes()
     {
-        WorldGenReport cold = Generate(Medium with { Planet = PlanetParameters.Earth with { StarBrightnessPercent = 90 } }).Report;
-        WorldGenReport hot = Generate(Medium with { Planet = PlanetParameters.Earth with { StarBrightnessPercent = 110 } }).Report;
+        // Earth's CO₂ kept as it is (no carbon cycle), so only the light changes.
+        WorldGenReport cold = Generate(Medium with { Planet = Light(900) }).Report;
+        WorldGenReport hot = Generate(Medium with { Planet = Light(1100) }).Report;
         Assert.True(CountBiomes(cold, "ice", "tundra") > CountBiomes(hot, "ice", "tundra") * 3 / 2);
         Assert.True(CountBiomes(hot, "jungle", "savanna", "desert") > CountBiomes(cold, "jungle", "savanna", "desert") * 3 / 2);
     }
@@ -276,7 +281,7 @@ public class WorldGeneratorTests
     {
         GameSettings settings = GameSettings.Test(8) with
         {
-            Planet = new PlanetParameters(978, 8400, 105, 46),
+            Planet = new PlanetParameters(978, 46, 1_364_640, 36_941, 756, 120, 250),
             PlanetName = "Uranus",
             Moisture = WorldMoisture.Wet,
             Relief = WorldRelief.Mountainous,
