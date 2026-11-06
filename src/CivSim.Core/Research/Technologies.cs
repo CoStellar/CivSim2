@@ -89,7 +89,7 @@ public sealed class CivFacts
     /// <summary>Goods in all its warehouses, hundredths, by good id.</summary>
     public long[] Goods { get; set; } = [];
 
-    /// <summary>Indices of other living civilizations with a settlement within contact distance.</summary>
+    /// <summary>Indices of other living civilizations with a settlement within contact distance, or trading with this one.</summary>
     public List<int> Neighbours { get; } = [];
 
     /// <summary>Measures every living civilization (index = civilization index in the state).</summary>
@@ -216,6 +216,20 @@ public sealed class CivFacts
                 facts[ca].Neighbours.Add(cb);
                 facts[cb].Neighbours.Add(ca);
             }
+        }
+
+        // Trade partners (GDD 9.2; stage 4d): merchants carry knowledge, however far apart the partners live.
+        foreach (Diplomacy.Treaty t in state.Treaties.All)
+        {
+            int ca = state.IndexOfCivilization(t.A);
+            int cb = state.IndexOfCivilization(t.B);
+            if (t.Kind != Diplomacy.TreatyKind.Trade || t.LastFlowMonth < 0 || ca < 0 || cb < 0 || facts[ca].Neighbours.Contains(cb))
+            {
+                continue;
+            }
+
+            facts[ca].Neighbours.Add(cb);
+            facts[cb].Neighbours.Add(ca);
         }
 
         foreach (CivFacts f in facts)

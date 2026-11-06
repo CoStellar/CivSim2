@@ -19,6 +19,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>CSV file with what every civilization knows of the others (stage 4c), written with the stats cadence, or null for none.</summary>
     public string? RelationsPath { get; init; }
 
+    /// <summary>CSV file with the treaties and wars in force (stage 4d), written with the stats cadence, or null for none.</summary>
+    public string? TreatiesPath { get; init; }
+
     /// <summary>Write a stats row every this many turns.</summary>
     public int StatsEvery { get; init; } = 10;
 
@@ -94,7 +97,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
     /// <summary>Usage text.</summary>
     public const string Usage =
-        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--quiet]\n" +
+        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--treaties treaties.csv] [--quiet]\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
         "       [--luminosity SUNS] [--distance AU] [--year EARTH_YEARS] [--light 0.356-1.107] (at most two; the rest follows)\n" +
@@ -113,6 +116,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         string? stats = null;
         string? decisions = null;
         string? relations = null;
+        string? treaties = null;
         int statsEvery = 10;
         bool quiet = false;
         string? png = null;
@@ -169,6 +173,15 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     if (string.IsNullOrWhiteSpace(stats))
                     {
                         error = "--stats needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--treaties":
+                    treaties = Next();
+                    if (string.IsNullOrWhiteSpace(treaties))
+                    {
+                        error = "--treaties needs a file path.";
                         return null;
                     }
 
@@ -410,6 +423,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             StatsPath = stats,
             DecisionsPath = decisions,
             RelationsPath = relations,
+            TreatiesPath = treaties,
             StatsEvery = statsEvery,
             WorldType = worldType,
             WaterPercent = water,

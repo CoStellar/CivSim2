@@ -44,6 +44,7 @@ public static class ContentLoader
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
+        Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -82,6 +83,7 @@ public static class ContentLoader
             Perception = perception,
             Ai = ai,
             Relations = relations,
+            Treaties = treaties,
             Events = events,
             Technologies = technologies,
             Research = research,
@@ -1089,6 +1091,117 @@ public static class ContentLoader
             BorderOpening = r.SignedHundredths("borderOpening", -Core.Diplomacy.Relation.Max, Core.Diplomacy.Relation.Max) ?? 0,
             MaxMemories = r.Int("maxMemories", 1, 64),
             Events = Array.ConvertAll(events, e => e ?? new Core.Diplomacy.RelationEventDefinition()),
+        };
+    }
+
+    private static Core.Diplomacy.TreatyRules LoadTreaties(string path, List<TechnologyDefinition> technologies, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Diplomacy.TreatyRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        int kinds = Enum.GetValues<Core.Diplomacy.TreatyKind>().Length;
+        var defs = new Core.Diplomacy.TreatyKindDefinition?[kinds];
+        if (TryArray(doc.RootElement, "treaties", path, errors, out JsonElement array))
+        {
+            int i = 0;
+            foreach (JsonElement e in array.EnumerateArray())
+            {
+                string at = $"{file}: treaties[{i}]";
+                var x = new Reader(e, at, errors);
+                Core.Diplomacy.TreatyKind kind = x.Enum<Core.Diplomacy.TreatyKind>("kind");
+                int tech = -1;
+                if (e.TryGetProperty("requires", out JsonElement req) && req.ValueKind == JsonValueKind.String)
+                {
+                    string key = req.GetString()!;
+                    tech = technologies.FindIndex(t => t.Key == key);
+                    if (tech < 0)
+                    {
+                        errors.Add($"{at}.requires: unknown technology '{key}'.");
+                    }
+                }
+
+                bool binds = e.TryGetProperty("bindsAgainstWar", out _) && x.Bool("bindsAgainstWar");
+                if (defs[(int)kind] is not null)
+                {
+                    errors.Add($"{at}.kind: '{e.GetProperty("kind")}' is listed twice.");
+                }
+
+                defs[(int)kind] = new Core.Diplomacy.TreatyKindDefinition
+                {
+                    Kind = kind,
+                    RequiresTechnology = tech,
+                    Years = x.OptionalInt("years", 0, 100_000) ?? 0,
+                    BindsAgainstWar = binds,
+                };
+                i++;
+            }
+        }
+
+        for (int k = 0; k < kinds; k++)
+        {
+            if (defs[k] is null)
+            {
+                errors.Add($"{file}: treaties: missing kind '{ToSnake(((Core.Diplomacy.TreatyKind)k).ToString())}'.");
+            }
+        }
+
+        if (defs[(int)Core.Diplomacy.TreatyKind.Peace] is { Years: 0 })
+        {
+            errors.Add($"{file}: treaties: peace needs years (the truce after a war).");
+        }
+
+        var defaults = new Core.Diplomacy.TreatyRules();
+        JsonElement curves = doc.RootElement.TryGetProperty("curves", out JsonElement c) ? c : default;
+        Core.Ai.Utility.ResponseCurve Curve(string name, int scale, Core.Ai.Utility.ResponseCurve fallback)
+        {
+            string at = $"{file}: curves.{name}";
+            if (curves.ValueKind != JsonValueKind.Object || !curves.TryGetProperty(name, out JsonElement ce))
+            {
+                errors.Add($"{at}: required curve {{x0, f0, x1, f1}}.");
+                return fallback;
+            }
+
+            var cr = new Reader(ce, at, errors);
+            int x0 = cr.Int("x0", -1_000_000, 1_000_000);
+            int x1 = cr.Int("x1", -1_000_000, 1_000_000);
+            long f0 = cr.OptionalThousandths("f0", 0, 10_000) ?? 0;
+            long f1 = cr.OptionalThousandths("f1", 0, 10_000) ?? 0;
+            if (x1 <= x0)
+            {
+                errors.Add($"{at}: x1 must be greater than x0.");
+                return fallback;
+            }
+
+            return Core.Ai.Utility.ResponseCurve.Linear((long)x0 * scale, (int)f0, (long)x1 * scale, (int)f1);
+        }
+
+        return new Core.Diplomacy.TreatyRules
+        {
+            ReviewEveryYears = r.Int("reviewEveryYears", 1, 10_000),
+            ProposeAbove = (int)(r.OptionalThousandths("proposeAbove", 0, 100_000) ?? defaults.ProposeAbove),
+            AcceptAbove = (int)(r.OptionalThousandths("acceptAbove", 0, 100_000) ?? defaults.AcceptAbove),
+            DeclareWarAbove = (int)(r.OptionalThousandths("declareWarAbove", 0, 100_000) ?? defaults.DeclareWarAbove),
+            RetryYears = r.Int("retryYears", 0, 100_000),
+            ReachCells = r.Int("reachCells", 1, 1000),
+            TradeSharePercent = r.Int("tradeSharePercent", 0, 100),
+            WitnessPercent = r.Int("witnessPercent", 0, 100),
+            AllyJoinBasePerMille = r.Int("allyJoinBasePerMille", 0, 1000),
+            WarRaidPercent = r.Int("warRaidPercent", 0, 1000),
+            Opinion = Curve("opinion", 100, defaults.Opinion),
+            Trust = Curve("trust", 100, defaults.Trust),
+            AllianceTrust = Curve("allianceTrust", 100, defaults.AllianceTrust),
+            Threat = Curve("threat", 1, defaults.Threat),
+            TradeGain = Curve("tradeGain", 1, defaults.TradeGain),
+            Hostility = Curve("hostility", 100, defaults.Hostility),
+            Advantage = Curve("advantage", 1, defaults.Advantage),
+            WarWeariness = Curve("warWeariness", 1, defaults.WarWeariness),
+            PeaceOpinion = Curve("peaceOpinion", 100, defaults.PeaceOpinion),
+            Kinds = Array.ConvertAll(defs, d => d ?? new Core.Diplomacy.TreatyKindDefinition()),
         };
     }
 

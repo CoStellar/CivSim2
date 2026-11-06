@@ -58,11 +58,13 @@ public static class CoreSystems
         runner.AddSystem(new Economy.FarmingSystem(content));
         runner.AddSystem(new Economy.GatheringSystem(content, years));
         runner.AddSystem(new Economy.TradeSystem(content));
+        runner.AddSystem(new Diplomacy.ForeignTradeSystem(content));
         runner.AddSystem(new Economy.ProductionSystem(content));
         runner.AddSystem(new Economy.ConsumptionSystem(content));
         runner.AddSystem(new Economy.StorageSystem(content));
         runner.AddSystem(new Population.PopulationSystem(content));
         runner.AddSystem(new Population.AbandonmentSystem(content));
+        runner.AddSystem(new Diplomacy.DiplomacySystem(content));
         runner.AddSystem(new Population.InfluenceSystem(content));
         var council = new Ai.AiCouncil(content);
         runner.AddCommandSource(council);

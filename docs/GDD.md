@@ -619,6 +619,7 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Umowy (odblokowywane technologiami):** otwarte granice, umowa handlowa, pakt o nieagresji, sojusz obronny, sojusz pełny, trybut i wasalstwo, później organizacje międzynarodowe i federacje.
 - **Negocjacje:** każda propozycja jest oceniana przez dyplomatę drugiej strony tak samo jak inne działania (8.3). AI też składa propozycje graczowi.
 - **Reputacja:** złamanie umowy obniża zaufanie nie tylko u poszkodowanego, ale u wszystkich, którzy o tym wiedzą.
+- **W CORE (etap 4d):** umowy na start to pokój (rozejm po wojnie), wojna, umowa handlowa, pakt o nieagresji i sojusz obronny (decyzja Patryka z 2026-11-05). Sojusz wymaga paktu. Pakt, sojusz i rozejm blokują napady. Wojna do etapu 4e jest tylko stanem dyplomatycznym. Świadkowie złamania umowy pamiętają połowę urazy. Szczegóły i wartości: `docs/systems/diplomacy.md`.
 
 ### 9.2 Handel
 
@@ -626,6 +627,7 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Umowy państwowe:** stałe dostawy, np. 10 zboża na turę za 3 żelaza, negocjowane przez dyplomatów.
 - **Szlaki handlowe** to jednostki na mapie (karawany, statki, później pociągi i kontenerowce). Można je napaść, zablokować lub chronić. Kontynuacja pomysłu jednostek handlowych ze starego CivSim.
 - **Efekty uboczne:** handel podnosi sympatię, przyspiesza dyfuzję technologii (6.1) i przenosi choroby.
+- **W CORE (etap 4d):** handel między cywilizacjami bez karawan (decyzja Patryka z 2026-11-05): przy umowie handlowej najbliższe osady partnerów wymieniają nadwyżki barterem po cenach wewnętrznych obu stron, ze stratą 2% na pole jak w sieci handlowej.
 
 ### 9.3 Wojna
 

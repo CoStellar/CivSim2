@@ -38,6 +38,9 @@ public sealed record HeadlessResult(
     /// <summary>Relations at the end of the run among living civilizations: met (both ways counted) and rumors only.</summary>
     public (int Met, int Rumors) Contacts { get; init; }
 
+    /// <summary>Diplomacy over the run (stage 4d): what happened and what is in force at the end.</summary>
+    public TreatyTally Treaties { get; init; } = new();
+
     /// <summary>Number of settlements at the end of the run.</summary>
     public int Settlements { get; init; }
 
@@ -97,6 +100,9 @@ public static class HeadlessRun
         decisions?.WriteLine(DecisionCsv.Header);
         using StreamWriter? relations = options.RelationsPath is null ? null : CreateReport(options.RelationsPath);
         relations?.WriteLine(RelationCsv.Header);
+        using StreamWriter? treatyCsv = options.TreatiesPath is null ? null : CreateReport(options.TreatiesPath);
+        treatyCsv?.WriteLine(TreatyCsv.Header);
+        var tally = new TreatyTally();
         if (stats is not null)
         {
             WriteStatsHeader(stats, state);
@@ -133,6 +139,12 @@ public static class HeadlessRun
             if (relations is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
             {
                 RelationCsv.Write(relations, runner.State);
+            }
+
+            tally.Count(runner.LastChronicle);
+            if (treatyCsv is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
+            {
+                TreatyCsv.Write(treatyCsv, runner.State);
             }
 
             if (!options.Quiet)
@@ -218,6 +230,7 @@ public static class HeadlessRun
             FoodUnits = FoodUnits(runner.State, content),
             Years = runner.State.Month / 12,
             Contacts = CountContacts(runner.State),
+            Treaties = tally.Finish(runner.State),
         };
     }
 

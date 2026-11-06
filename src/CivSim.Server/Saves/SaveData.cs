@@ -35,7 +35,33 @@ public sealed record SaveData(
     [property: Key(26)] int BackgroundPressureHundredths = 100,
     [property: Key(27)] int VolcanismPercent = 100,
     [property: Key(28)] int StarVariabilityPerMille = 0,
-    [property: Key(29)] int StarCycleYears = 100_000);
+    [property: Key(29)] int StarCycleYears = 100_000,
+    [property: Key(30)] IReadOnlyList<TreatySaveData>? Treaties = null,
+    [property: Key(31)] IReadOnlyList<ProposalSaveData>? Proposals = null);
+
+/// <summary>Saved treaty or war between two civilizations (stage 4d).</summary>
+[MessagePackObject]
+public sealed record TreatySaveData(
+    [property: Key(0)] int A,
+    [property: Key(1)] int B,
+    [property: Key(2)] byte Kind,
+    [property: Key(3)] int Initiator,
+    [property: Key(4)] long SinceMonth,
+    [property: Key(5)] long UntilMonth,
+    [property: Key(6)] int GatewayA,
+    [property: Key(7)] int GatewayB,
+    [property: Key(8)] long LastFlowMonth,
+    [property: Key(9)] long LastWorth,
+    [property: Key(10)] long TotalWorth);
+
+/// <summary>Saved treaty proposal (stage 4d).</summary>
+[MessagePackObject]
+public sealed record ProposalSaveData(
+    [property: Key(0)] int From,
+    [property: Key(1)] int To,
+    [property: Key(2)] byte Kind,
+    [property: Key(3)] long Month,
+    [property: Key(4)] byte Status);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]

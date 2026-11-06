@@ -121,7 +121,11 @@ Gotowe: **4a** (wspólna ocena działań: czynniki w tysięcznych z krzywych, wa
 gubernator, skarbnik, uczony; dziennik „Dlaczego?” i `--decisions` w Headless; symulacja bit w bit taka sama jak w etapie 3; `docs/systems/ai.md`, ADR 0016),
 **4b** (charakter z 8 cech, strateg z wagami celów i kierunkiem ekspansji, losowanie z 3 najlepszych zależne od ostrożności, histereza receptur, rzadsze szukanie miejsc; ADR 0017),
 **4c** (odkrywanie cywilizacji: zwiad, zetknięcie stref, napaść; pogłoski od znajomych; pamięć wydarzeń z zanikaniem, sympatia i zaufanie; spór o przejętą osadę;
-opinia o sąsiedzie w decyzji o wypędzeniu obozu; wpisy w kronice; `--relations` w Headless; `docs/systems/relations.md`, `data/relations.json`).
+opinia o sąsiedzie w decyzji o wypędzeniu obozu; wpisy w kronice; `--relations` w Headless; `docs/systems/relations.md`, `data/relations.json`),
+**4d** (dyplomacja i handel między cywilizacjami: wojna jako stan, pokój z rozejmem, umowa handlowa, pakt o nieagresji, sojusz obronny; dyplomata AI składa
+propozycje, a druga strona ocenia je tą samą oceną; złamanie umowy psuje opinię u poszkodowanego i świadków; sojusznik przystępuje do wojny albo zawodzi;
+handel barterowy między najbliższymi osadami partnerów bez karawan; handel buduje sympatię i zaufanie, przenosi technologie i epidemie; wspólny wróg;
+`--treaties` w Headless; `docs/systems/diplomacy.md`, `data/diplomacy.json`).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
 - [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji (kierunek ekspansji z wartości wolnej ziemi gotowy w 4b)

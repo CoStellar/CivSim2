@@ -195,6 +195,32 @@ public static class GameStateHash
             h.Add(e.EndMonth);
         }
 
+        h.Add(state.Treaties.All.Count);
+        foreach (Diplomacy.Treaty t in state.Treaties.All)
+        {
+            h.Add(t.A.Value);
+            h.Add(t.B.Value);
+            h.Add((int)t.Kind);
+            h.Add(t.Initiator.Value);
+            h.Add(t.SinceMonth);
+            h.Add(t.UntilMonth);
+            h.Add(t.GatewayA);
+            h.Add(t.GatewayB);
+            h.Add(t.LastFlowMonth);
+            h.Add(t.LastWorth);
+            h.Add(t.TotalWorth);
+        }
+
+        h.Add(state.Treaties.Proposals.Count);
+        foreach (Diplomacy.TreatyProposal p in state.Treaties.Proposals)
+        {
+            h.Add(p.From.Value);
+            h.Add(p.To.Value);
+            h.Add((int)p.Kind);
+            h.Add(p.Month);
+            h.Add((int)p.Status);
+        }
+
         return h.Value;
     }
 }

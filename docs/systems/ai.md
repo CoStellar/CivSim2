@@ -48,7 +48,7 @@ flowchart LR
 | Skarbnik | `TreasurerAdvisor` | receptura rzemieślników w każdej osadzie | raz na turę ery |
 | Uczony | `ScholarAdvisor` | następna technologia | gdy nic nie jest badane |
 
-Dyplomata i dowódca przyjdą w etapach 4d–4e.
+Dyplomata (etap 4d) jest opisany w `docs/systems/diplomacy.md`; dowódca przyjdzie w etapie 4e.
 
 **Przykład z dziennika** (seed 7, tura 3): `Civilization 5, Governor, MoveCamp, ocena 6645: distance 88% (4 pola), food 7552, better than here 3166`.
 

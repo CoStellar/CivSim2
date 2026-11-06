@@ -53,6 +53,9 @@ public sealed class GameState
     /// <summary>Active effects (GDD 10.1).</summary>
     public EffectBook Effects { get; } = new();
 
+    /// <summary>Treaties, wars and proposals between civilizations (GDD 9.1; stage 4d).</summary>
+    public Diplomacy.TreatyBook Treaties { get; } = new();
+
     /// <summary>
     /// Era that sets the turn length: the most advanced living civilization's era (provisional rule until
     /// technologies and eras arrive in Stage 3f).

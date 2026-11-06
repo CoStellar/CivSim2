@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 17;
+    public const int FormatVersion = 18;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -87,7 +87,7 @@ public static class SaveGameSerializer
             state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects,
             s.Planet.AxialTiltTenths, s.Planet.LuminosityThousandths, s.Planet.DistanceThousandths, s.Planet.EccentricityThousandths, s.PlanetName,
             s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent,
-            s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears);
+            s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state));
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -238,6 +238,7 @@ public static class SaveGameSerializer
                 data.NextEffectId);
         }
 
+        LoadTreaties(state, data);
         return state;
     }
 
@@ -286,6 +287,51 @@ public static class SaveGameSerializer
     {
         using FileStream fs = File.OpenRead(path);
         return Load(fs);
+    }
+
+    private static List<TreatySaveData> SaveTreaties(GameState state)
+    {
+        var list = new List<TreatySaveData>(state.Treaties.All.Count);
+        foreach (Core.Diplomacy.Treaty t in state.Treaties.All)
+        {
+            list.Add(new TreatySaveData(t.A.Value, t.B.Value, (byte)t.Kind, t.Initiator.Value, t.SinceMonth, t.UntilMonth,
+                t.GatewayA, t.GatewayB, t.LastFlowMonth, t.LastWorth, t.TotalWorth));
+        }
+
+        return list;
+    }
+
+    private static List<ProposalSaveData> SaveProposals(GameState state)
+    {
+        var list = new List<ProposalSaveData>(state.Treaties.Proposals.Count);
+        foreach (Core.Diplomacy.TreatyProposal p in state.Treaties.Proposals)
+        {
+            list.Add(new ProposalSaveData(p.From.Value, p.To.Value, (byte)p.Kind, p.Month, (byte)p.Status));
+        }
+
+        return list;
+    }
+
+    private static void LoadTreaties(GameState state, SaveData data)
+    {
+        foreach (TreatySaveData t in data.Treaties ?? [])
+        {
+            state.Treaties.Add(new Core.Diplomacy.Treaty(new CivId(t.A), new CivId(t.B), (Core.Diplomacy.TreatyKind)t.Kind, new CivId(t.Initiator), t.SinceMonth)
+            {
+                UntilMonth = t.UntilMonth,
+                GatewayA = t.GatewayA,
+                GatewayB = t.GatewayB,
+                LastFlowMonth = t.LastFlowMonth,
+                LastWorth = t.LastWorth,
+                TotalWorth = t.TotalWorth,
+            });
+        }
+
+        foreach (ProposalSaveData p in data.Proposals ?? [])
+        {
+            state.Treaties.AddProposalForLoad(new Core.Diplomacy.TreatyProposal(
+                new CivId(p.From), new CivId(p.To), (Core.Diplomacy.TreatyKind)p.Kind, p.Month, (Core.Diplomacy.ProposalStatus)p.Status));
+        }
     }
 
     private static List<RelationSaveData> SaveRelations(CivilizationState civ)

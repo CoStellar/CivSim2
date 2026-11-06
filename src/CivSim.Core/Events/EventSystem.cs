@@ -321,6 +321,72 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             {
                 context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {reached} more settlement{(reached == 1 ? string.Empty : "s")}.");
             }
+
+            AlongTradeRoutes(context, networks, networkOf, source, e, months, rng);
         }
+    }
+
+    // GDD 9.2: trade carries disease. A trade agreement whose goods flowed last turn links the gateways of the two
+    // partners; when the struck settlement's network holds one gateway, the other may be struck too.
+    private void AlongTradeRoutes(TurnContext context, List<List<int>> networks, int[] networkOf, int source, int e, int months, DeterministicRandom rng)
+    {
+        GameState state = context.State;
+        EventDefinition ev = _events[e];
+        long recent = state.Month - (2L * months);
+        foreach (Diplomacy.Treaty t in state.Treaties.All)
+        {
+            if (t.Kind != Diplomacy.TreatyKind.Trade || t.LastFlowMonth < recent || t.GatewayA < 0 || t.GatewayB < 0)
+            {
+                continue;
+            }
+
+            int ga = IndexOfSettlement(state, t.GatewayA);
+            int gb = IndexOfSettlement(state, t.GatewayB);
+            if (ga < 0 || gb < 0)
+            {
+                continue;
+            }
+
+            int other = networkOf[ga] >= 0 && networkOf[ga] == networkOf[source] ? gb
+                : networkOf[gb] >= 0 && networkOf[gb] == networkOf[source] ? ga
+                : -1;
+            if (other < 0 || !state.Settlements[other].IsActive || _struck.Contains((other, e)) || rng.NextInt(100) >= ev.SpreadPercent)
+            {
+                continue;
+            }
+
+            SettlementState target = state.Settlements[other];
+            Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
+            _struck.Add((other, e));
+            string partner = state.FindCivilization(target.Owner)?.Name ?? "no one";
+            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).");
+        }
+    }
+
+    private static int IndexOfSettlement(GameState state, int id)
+    {
+        IReadOnlyList<SettlementState> all = state.Settlements;
+        int lo = 0;
+        int hi = all.Count - 1;
+        while (lo <= hi)
+        {
+            int mid = (lo + hi) >>> 1;
+            int v = all[mid].Id.Value;
+            if (v == id)
+            {
+                return mid;
+            }
+
+            if (v < id)
+            {
+                lo = mid + 1;
+            }
+            else
+            {
+                hi = mid - 1;
+            }
+        }
+
+        return -1;
     }
 }

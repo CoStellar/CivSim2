@@ -461,6 +461,13 @@ public sealed class GovernorAdvisor : Advisor
 
             SettlementState? there = earth && Math.Abs(_occupiedAt[i]) == _stamp && _settlementAt[i] >= 0 ? state.Settlements[_settlementAt[i]] : null;
             bool foreignCamp = there is { IsActive: true } && there.Owner != civ.Id;
+
+            // GDD 9.1: a pact, an alliance or the truce after a war keeps the camp from driving out theirs.
+            if (foreignCamp && state.Treaties.ForbidsAttack(civ.Id, there!.Owner))
+            {
+                continue;
+            }
+
             if (!foreignCamp && !OpenLand(world, civ, c))
             {
                 continue;
@@ -476,7 +483,7 @@ public sealed class GovernorAdvisor : Advisor
             if (untouched != NoBound)
             {
                 Evaluation bound = Rate(untouched, comfort);
-                Place(ref bound, world, civ, from.Cell, c, distance, campsite, foreignCamp ? there!.Owner : (CivId?)null);
+                Place(ref bound, state, world, civ, from.Cell, c, distance, campsite, foreignCamp ? there!.Owner : (CivId?)null);
                 if (!Chooser.WouldKeep(bound.Value))
                 {
                     continue;
@@ -484,7 +491,7 @@ public sealed class GovernorAdvisor : Advisor
             }
 
             Evaluation e = Rate(SiteFood(world, c), comfort);
-            Place(ref e, world, civ, from.Cell, c, distance, campsite, foreignCamp ? there!.Owner : (CivId?)null);
+            Place(ref e, state, world, civ, from.Cell, c, distance, campsite, foreignCamp ? there!.Owner : (CivId?)null);
 
             // The costly checks run only for places the chooser would keep.
             if (!Chooser.WouldKeep(e.Value))
@@ -524,7 +531,7 @@ public sealed class GovernorAdvisor : Advisor
 
     // The factors of a place within one move: nearness, an old campsite of the tribe, the direction, the opinion of
     // the people living there (a foreign camp), goal and character.
-    private void Place(ref Evaluation e, WorldState world, CivilizationState civ, HexCoord from, HexCoord to, int distance, bool campsite, CivId? foreigners)
+    private void Place(ref Evaluation e, GameState state, WorldState world, CivilizationState civ, HexCoord from, HexCoord to, int distance, bool campsite, CivId? foreigners)
     {
         bool foreignCamp = foreigners is not null;
         e.Apply(FactorId.Distance, _nearness, distance);
@@ -543,6 +550,12 @@ public sealed class GovernorAdvisor : Advisor
             // GDD 8.3: the worse the opinion of them, the readier to drive them out (0.5 at full sympathy, 1.5 at full hatred).
             int sympathy = Diplomacy.Contacts.Sympathy(civ, foreigners!.Value);
             e.Apply(FactorId.Opinion, Factor.Neutral - (sympathy / 20), sympathy / 100);
+
+            // At war (stage 4d), the enemy's camps are fair game.
+            if (state.Treaties.AtWar(civ.Id, foreigners.Value))
+            {
+                e.Apply(FactorId.War, _content.Treaties.WarRaidPercent * 10, 1);
+            }
         }
 
         Weigh(ref e, civ, foreignCamp ? Goal.Conquest : Goal.Expansion);

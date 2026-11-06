@@ -210,7 +210,14 @@ public sealed record ConquerSettlementCommand(GameContent Content, SettlementId 
             return reach;
         }
 
-        return target!.Owner == civ || !target.IsActive ? CommandResult.Fail("Only settlements of other civilizations can be attacked.") : CommandResult.Ok;
+        if (target!.Owner == civ || !target.IsActive)
+        {
+            return CommandResult.Fail("Only settlements of other civilizations can be attacked.");
+        }
+
+        return state.Treaties.ForbidsAttack(civ, target.Owner)
+            ? CommandResult.Fail("A treaty forbids attacking them; declare war first.")
+            : CommandResult.Ok;
     }
 
     /// <summary>Strength of the defence of <paramref name="s"/>: its warriors plus a share of everyone else.</summary>
