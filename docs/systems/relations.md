@@ -44,7 +44,7 @@ flowchart LR
 - **Pogłoski:** co turę cywilizacja może usłyszeć o ludzie, który poznał ktoś, kogo ona zna (20% na stulecie na każdy taki lud, przeliczone na długość tury; najwyżej jedna pogłoska na turę). Pogłoska podaje nazwę, przybliżone miejsce (przesunięte nawet o połowę odległości) i liczebność zawyżoną albo zaniżoną nawet o połowę. Przykład: `A heard from B of a people called C, about 3400 strong, somewhere to the southeast.` Pogłoska nie daje sympatii (dla AI to 0) ani dyplomacji; prawdziwy kontakt ją zastępuje i jest pierwszym kontaktem.
 - **Najwyżej 12 wspomnień** na znaną cywilizację (`maxMemories`); gdy brakuje miejsca, znika najsłabsze.
 - **AI (GDD 8.3, czynnik „Opinia o B”):** gubernator mnoży ocenę wypędzenia obcego obozu przez 1,0 − sympatia/200: przy sympatii −100 to 1,5, przy +100 to 0,5, przy obcych bez kontaktu 1,0. AI zna tylko własne relacje, nie cudze.
-- **Czasy w latach, nie w turach:** zasada 6 z `CLAUDE.md` (tempa na rok). Tabela w GDD 8.5 podaje tury; wartości przyjęte jako lata, do decyzji Patryka.
+- **Czasy w latach, nie w turach:** zasada 6 z `CLAUDE.md` (tempa na rok), decyzja Patryka z 2026-11-06, wpisana do GDD 8.5.
 - **Determinizm:** losowanie pogłosek ma generator zależny tylko od seeda, cywilizacji i tury (strumień `ai`, sól `0xD1 << 40`), więc inne strumienie się nie przesuwają. Relacje są w hashu stanu i w zapisie gry (format 17).
 
 | Wydarzenie | Sympatia | Zaufanie | Zanika po | Kto je wywołuje |
