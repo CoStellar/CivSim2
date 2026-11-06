@@ -127,7 +127,7 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 - PNG: przebieg z `--png` na takiej planecie zapisuje `_year.png`, czyli 8 klatek ostatniego roku (temperatura pory roku i obozy), oraz widok `seasonnow`.
 
 ## Testy
-- `SeasonTests`: tylko długie lata są liczone na żywo (Uran tak, Ziemia i Mars nie), długość tury Urana 126 miesięcy, wolne decyzje raz na 50 lat,
+- `SeasonTests`: tylko długie lata są liczone na żywo (Uran tak, Ziemia i Mars nie), krok Urana 126 miesięcy, wolne decyzje raz na 50 lat,
   półkule mają lato i zimę na zmianę, zima obcina dziką żywność do polowania, tolerancja zimna podnosi wartość zimnych terenów.
 - `SeaLevelTests` (etap 1c-C): poziom morza z lodu i ze stopionego lodu lądowego, szelfy wysychają i wracają do stanu ze startu, cieplejszy świat
   zalewa niskie wybrzeża, lód morski rośnie w zlodowaceniu i wraca do stanu ze startu, rzeki tylko między lądem, mieszkańcy zalanej osady

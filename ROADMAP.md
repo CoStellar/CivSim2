@@ -125,7 +125,12 @@ opinia o sąsiedzie w decyzji o wypędzeniu obozu; wpisy w kronice; `--relations
 **4d** (dyplomacja i handel między cywilizacjami: wojna jako stan, pokój z rozejmem, umowa handlowa, pakt o nieagresji, sojusz obronny; dyplomata AI składa
 propozycje, a druga strona ocenia je tą samą oceną; złamanie umowy psuje opinię u poszkodowanego i świadków; sojusznik przystępuje do wojny albo zawodzi;
 handel barterowy między najbliższymi osadami partnerów bez karawan; handel buduje sympatię i zaufanie, przenosi technologie i epidemie; wspólny wróg;
-`--treaties` w Headless; `docs/systems/diplomacy.md`, `data/diplomacy.json`).
+`--treaties` w Headless; `docs/systems/diplomacy.md`, `data/diplomacy.json`),
+**zegar** (przed 4e, decyzja Patryka z 2026-11-06, ADR 0018: licznik lat świata, każda cywilizacja liczy się i decyduje we własnym rytmie swojej ery,
+kroki przypięte do kalendarza bez utraty lat; decyzje reaktywne na wojnę, napad, propozycję i koniec badania; odstępy AI w własnych krokach; zapis w formacie 19).
+
+Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **B** wartości (priorytety technologii i towarów, rola każdej wagi i cechy),
+**C** ocena ziemi i migracje, **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
 - [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji (kierunek ekspansji z wartości wolnej ziemi gotowy w 4b)

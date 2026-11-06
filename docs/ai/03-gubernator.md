@@ -6,8 +6,9 @@ Gubernator prowadzi **obozy koczownicze**. Wioski (osiadłe) nie dostają od nie
 
 ## Kolejność decyzji jednego obozu
 
-Każdą turę gubernator przechodzi cywilizacje AI po kolei, a w każdej jej zamieszkane obozy po kolei. Dla obozu sprawdza decyzje
-**w tej kolejności i kończy na pierwszej, która zapadła** (obóz robi najwyżej jedną rzecz na turę):
+W każdym kroku świata gubernator przechodzi po kolei cywilizacje AI, które mają **własny krok** albo alarm „napadnięto nasz obóz”
+(ADR 0018), a w każdej jej zamieszkane obozy po kolei. Dla obozu sprawdza decyzje **w tej kolejności i kończy na pierwszej, która
+zapadła** (obóz robi najwyżej jedną rzecz na krok). W reakcji na napad sprawdza tylko G2 (bez G1, G3–G6):
 
 ```mermaid
 flowchart TD
@@ -15,7 +16,7 @@ flowchart TD
   J -->|tak| END["nic (idzie dalej)"]
   J -->|nie| G1{"G1: tura decyzyjna<br/>i poniżej 15 osób<br/>i własna osada ≥ 15 osób w ≤ 10 polach?"}
   G1 -->|tak| C1["dołącz do najbliższej"]
-  G1 -->|nie| Q{"głodny (najedzenie poniżej 95%)<br/>lub zmarznięty (wygoda poniżej 100%)<br/>i odpoczął 2 tury<br/>i tura szukania?"}
+  G1 -->|nie| Q{"głodny (najedzenie poniżej 95%)<br/>lub zmarznięty (wygoda poniżej 100%)<br/>i odpoczął 2 własne kroki<br/>i krok szukania?<br/>(albo reakcja na napad)"}
   Q -->|tak| G2{"G2: najlepsze miejsce w ≤ 10 polach<br/>lepsze o 30% niż tu?"}
   G2 -->|tak| C2["przenieś / zajmij / wypędź"]
   G2 -->|nie| G3{"G3: tura decyzyjna<br/>i najlepsze miejsce 11–40 pól<br/>lepsze o 60%<br/>i znana droga?"}
@@ -121,11 +122,14 @@ ekspansji × ekspansywność. Bez premii za stare obozowisko i bez obcych obozó
 
 **Warunki wejścia (wszystkie):**
 
-1. obóz jest **głodny** (najedzenie w poprzedniej turze < 95%, `moveWhenFedBelowPercent`) **albo zmarznięty/przegrzany** (wygoda
-   jego pola < 100%);
-2. **odpoczął**: od ostatniej przeprowadzki minęły co najmniej 2 tury (`minTurnsBetweenMoves`);
-3. to **tura szukania**: obóz głoduje mocno (najedzenie < 85%, `starvingFedPercent`), albo planeta ma pory roku na żywo, albo
-   `(tura + numer obozu) mod 3 = 0` (`searchEveryTurns`).
+1. obóz jest **głodny** (najedzenie w poprzednim własnym kroku < 95%, `moveWhenFedBelowPercent`) **albo zmarznięty/przegrzany**
+   (wygoda jego pola < 100%);
+2. **odpoczął**: od ostatniej przeprowadzki minęły co najmniej 2 własne kroki (`minStepsBetweenMoves` × rytm ery);
+3. to **krok szukania**: obóz głoduje mocno (najedzenie < 85%, `starvingFedPercent`), albo planeta ma pory roku na żywo, albo
+   `(liczba własnych kroków − 1 + numer obozu) mod 3 = 0` (`searchEverySteps`).
+
+**Reakcja na napad** (ADR 0018): gdy inna cywilizacja napadła któryś obóz tej cywilizacji, w najbliższym kroku świata wszystkie jej
+obozy sprawdzają G2 od razu: warunki 1–3 nie obowiązują, ale nowe miejsce dalej musi być lepsze o 30%.
 
 **Kandydaci:** każde pole w promieniu 10 pól, które:
 
@@ -160,7 +164,7 @@ ostrożność albo losowanie ([wybór](01-wspolne-mechanizmy.md#3-wybór-chooser
 
 Przy wymaganej przewadze 150% szansa wygranej wynosi co najmniej 60%.
 
-Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w turze decyzyjnej), a potem przechodzi do decyzji wolnych.
+Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyzje wolne), a potem przechodzi do decyzji wolnych.
 
 ## G3: Daleka wędrówka
 
@@ -173,7 +177,7 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w turze decyzyjn
 - **Droga:** dopiero dla wybranego pola szukamy drogi: najkrótsza ścieżka po **znanych** polach lądu, lodu morskiego i pomostów,
   nie dalej niż 40 pól od startu (`PathFinder`). Brak drogi = brak wędrówki w tej turze (nie próbuje drugiego kandydata).
 - **Próg:** `ocena × 100 > max(zostać tutaj, najlepsze miejsce z G2) × 160` (dwa razy próg G2).
-- **Komenda:** `JourneyCommand`. Potem system wędrówki co turę przesuwa obóz do 10 pól po drodze, zatrzymując się tylko na wolnym lądzie,
+- **Komenda:** `JourneyCommand`. Potem system wędrówki w każdym własnym kroku cywilizacji przesuwa obóz do 10 pól po drodze, zatrzymując się tylko na wolnym lądzie,
   aż dojdzie albo droga zniknie (zapomniany ląd, stopiony lód). W trakcie wędrówki obóz nie podejmuje żadnych decyzji.
 
 ## G4: Osiedlenie się (wioska)

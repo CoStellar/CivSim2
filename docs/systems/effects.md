@@ -30,7 +30,7 @@ flowchart LR
 - **Efekt** = typ (z danych), cel (pole na danym świecie, osada albo cywilizacja), siła (liczba całkowita, np. −50 = połowa wydobycia) i miesiąc końca. Czas trwania podaje się w latach, więc nie zależy od długości tury.
 - **Statystyki** (co efekt zmienia): wydajność osady w %, zakaz wejścia na pole, dodatkowy koszt ruchu, wydobycie z pola w %, ubytek ludności w promilach na rok, nastrój. Nowy typ efektu dodajesz w danych; nowa statystyka wymaga kodu, bo ktoś musi ją czytać.
 - **Nakładanie:** `sum` dodaje siły; `replace` zostawia najnowszy; `strongest` zostawia ten o największej wartości bezwzględnej. Efekty różnych typów na tę samą statystykę zawsze się sumują.
-- **Zniszczenie** z GDD 10.1 nie jest trwałym efektem, tylko jednorazową akcją zdarzenia; przyjdzie razem z budynkami. Zdarzenia (etap 3h, `docs/systems/events.md`) nakładają efekty z siłą przeliczoną przez długość tury.
+- **Zniszczenie** z GDD 10.1 nie jest trwałym efektem, tylko jednorazową akcją zdarzenia; przyjdzie razem z budynkami. Zdarzenia (etap 3h, `docs/systems/events.md`) nakładają efekty z siłą przeliczoną przez długość kroku cywilizacji.
 - Efekty mają rosnące id i są trzymane w tej kolejności, więc wynik nie zależy od kolejności słowników.
 
 ## Pliki danych

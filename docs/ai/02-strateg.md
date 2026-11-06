@@ -13,11 +13,13 @@ jest 6, któraś jest spoza 0–3000 albo pole nie należy do Ziemi.
 
 ### Kiedy
 
-Dla każdej żywej cywilizacji AI, gdy **nadszedł miesiąc przeglądu** albo **cywilizacja jest w innej erze niż przy ostatnim
-przeglądzie**. Pierwszy przegląd: tura 1 (wszyscy). Następny: za 15 tur (`reviewEveryTurns`) plus przesunięcie `numer cywilizacji
-mod 15` (tylko po pierwszym przeglądzie), potem co 15 tur. W epoce kamienia 15 tur = 750 lat; w neolicie 375 lat.
+Dla każdej żywej cywilizacji AI, **we własnym kroku** (ADR 0018), gdy **nadszedł miesiąc przeglądu** albo **cywilizacja jest w innej
+erze niż przy ostatnim przeglądzie**. Pierwszy przegląd: pierwszy krok (wszyscy). Następny: za 15 własnych kroków
+(`reviewEverySteps`) plus przesunięcie `numer cywilizacji mod 15` (tylko po pierwszym przeglądzie), potem co 15 własnych kroków.
+Miesiąc przeglądu = teraz + kroki × rytm jej ery. W epoce kamienia 15 kroków = 750 lat, w neolicie 375 lat, w brązie 300 lat,
+niezależnie od tego, w jakiej erze są inni.
 
-Strateg działa **po gubernatorze**, więc nowe wagi obowiązują od następnej tury.
+Strateg działa **po gubernatorze**, więc nowe wagi obowiązują od następnego własnego kroku.
 
 ### Dane wejściowe
 

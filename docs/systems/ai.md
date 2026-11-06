@@ -15,7 +15,7 @@
 
 ```mermaid
 flowchart LR
-  S["Stan gry<br/>(tylko odczyt)"] --> ST["Strateg<br/>wagi celów, kierunek ekspansji<br/>(co 15 tur i w nowej erze)"]
+  S["Stan gry<br/>(tylko odczyt)"] --> ST["Strateg<br/>wagi celów, kierunek ekspansji<br/>(co 15 własnych kroków i w nowej erze)"]
   ST -->|SetStrategyCommand| S
   CH["Charakter<br/>8 cech"] --> E
   S --> G["Gubernator<br/>obozy: przeniesienie, odłam,<br/>osiedlenie, wędrówka, łupy"]
@@ -33,22 +33,23 @@ flowchart LR
 - **Ocena** (`Evaluation`, GDD 8.3): `ocena = wartość bazowa × Π czynników × waga celu × charakter − koszt`. Wartość bazowa jest w jednostkach działania (jedzenie okolicy na rok, wartość dodana receptury). Każdy czynnik to liczba w tysięcznych: 1000 = bez zmian, 0 = wyklucza działanie, ponad 1000 = premia. Czynniki mnożymy po kolei z dzieleniem całkowitym, więc wynik jest bit w bit taki sam na każdym komputerze (ADR 0016).
 - **Krzywe odpowiedzi** (`ResponseCurve`): zamieniają wartość ze świata na czynnik. Trzy kształty: prosta, krzywa S (wolno, szybko, wolno) i próg. Dziś używa ich bliskość miejsca (1,0 tuż obok, −3% na pole, `distancePenaltyPercentPerCell`) i bliskość dalekiego celu wędrówki (−1% na pole).
 - **Charakter** (GDD 8.4, etap 4b): 8 cech w skali 0–1000 (agresja, ekspansywność, handlowość, ciekawość świata, otwartość, ostrożność, mściwość, lojalność), losowanych raz na grę ze strumienia `leaders` (średnia z dwóch losowań, więc skrajności są rzadkie). Mnożnik charakteru dla działania = 0,5 + cecha związana z jego celem: ekspansja ↔ ekspansywność, bezpieczeństwo ↔ ostrożność, dobrobyt ↔ handlowość, nauka ↔ ciekawość, wpływ ↔ otwartość, podbój ↔ agresja. Otwartość ustawia pierwsze wrażenie po kontakcie, a mściwość wydłuża pamięć napaści (etap 4c, `docs/systems/relations.md`); lojalność zadziała z sojuszami (4d).
-- **Strateg** (GDD 8.1, 7.6): co 15 tur (przeglądy rozłożone między cywilizacje) i od razu w nowej erze ustawia wagi celów. Ekspansja rośnie z zatłoczeniem obozów (do 50% miejsc: 1,0; przy 90%: 1,6). Dobrobyt i bezpieczeństwo rosną z głodem (najedzeni w 95%: 1,0; w 60%: 1,5). Nauka, wpływ i podbój zostają 1,0 (podbój dostanie wagę z wojnami w 4e). Cel ekspansji to najlepsza znana wolna ziemia (niczyja) w promieniu wędrówki (40 pól) od największej osady, oceniona jak miejsce na obóz i pomniejszona za odległość.
+- **Strateg** (GDD 8.1, 7.6): co 15 własnych kroków cywilizacji (przeglądy rozłożone między cywilizacje) i od razu w nowej erze ustawia wagi celów. Ekspansja rośnie z zatłoczeniem obozów (do 50% miejsc: 1,0; przy 90%: 1,6). Dobrobyt i bezpieczeństwo rosną z głodem (najedzeni w 95%: 1,0; w 60%: 1,5). Nauka, wpływ i podbój zostają 1,0 (podbój dostanie wagę z wojnami w 4e). Cel ekspansji to najlepsza znana wolna ziemia (niczyja) w promieniu wędrówki (40 pól) od największej osady, oceniona jak miejsce na obóz i pomniejszona za odległość.
 - **Opinia o sąsiedzie** (GDD 8.3, etap 4c): ocena wypędzenia obcego obozu jest mnożona przez 1,0 − sympatia/200 (sympatia −100 → 1,5; +100 → 0,5; obcy bez kontaktu → 1,0). Sympatia pochodzi z pamięci relacji tej cywilizacji (`docs/systems/relations.md`), więc napadnięty chętniej oddaje cios.
 - **Kierunek ekspansji:** miejsce bliżej celu niż obecny obóz dostaje +15% (`directionBonusPercent`, „sugestia” z GDD 7.6). Premia nie dotyczy obcych obozów.
 - **Odłamy z powodu, nie tylko z głodu:** obóz wysyła grupę, gdy jest pełny w 80% podzielone przez (waga ekspansji × mnożnik charakteru), ale nie niżej niż 50% i nie wyżej niż 100%. Ekspansywna cywilizacja w ciasnych obozach rozsyła ludzi wcześniej.
 - **Koszt i nauka:** uczony mnoży wartość technologii przez (koszt najtańszej / koszt tej)², więc najtańsza wygrywa, a dwa razy droższa ma cztery razy mniejszą szansę w losowaniu.
 - **Wybór** (`Chooser`): doradca trzyma 3 najlepsze działania (`pickAmongTop`). Z szansą równą ostrożności cywilizacja bierze najlepsze, w przeciwnym razie losuje spośród trzech z szansą proporcjonalną do oceny. Przy remisie wygrywa działanie ocenione wcześniej. Losowanie jest deterministyczne: generator zależy tylko od seeda, doradcy, osady albo cywilizacji i tury, a wspólny strumień `ai` się nie przesuwa.
 - **Histereza** (GDD 8.6): obóz przenosi się tylko, gdy nowe miejsce jest lepsze o co najmniej 30% (`moveWhenBetterByPercent`), a do wędrówki o 60%. Obie strony ważymy tą samą wagą celu, więc o przeprowadzce decyduje miejsce i kierunek, a nie sama waga. Rzemieślnicy zmieniają recepturę tylko na lepszą o 25% (`recipeSwitchBetterByPercent`); obecna receptura liczy się jako wykonalna, nawet gdy w tej turze zabrakło wejść (produkcja po prostu czeka).
-- **Rzadsze szukanie:** głodny albo zmarznięty obóz szuka nowego miejsca co 3 tury (rozłożone między obozy), a co turę tylko przy najedzeniu poniżej 85% albo na planecie z porami roku na żywo.
+- **Rytm i reakcje** (ADR 0018): rada liczy decyzje cywilizacji tylko w jej własnym kroku (rytm jej ery). Poza rytmem reaguje na alarmy: wypowiedziana wojna (dyplomata: przegląd stosunków) i napad na obóz (dyplomata oraz obozy od razu szukają bezpieczniejszego miejsca). Odpowiedź na propozycję i wybór badania zapadają w każdym kroku świata. Alarmy są kasowane po fazie decyzji.
+- **Rzadsze szukanie:** głodny albo zmarznięty obóz szuka nowego miejsca co 3 własne kroki (rozłożone między obozy), a w każdym kroku tylko przy najedzeniu poniżej 85% albo na planecie z porami roku na żywo.
 - **„Dlaczego?”** (GDD 8.7): każda wydana komenda zapisuje doradcę, działanie, cel, ocenę i 3 czynniki, które najbardziej odbiegały od neutralnych. Potem idą notatki (wartości wyjaśniające regułę, np. „lepsze niż tu 3166”, „plon z pól 2605%”), a na końcu czynniki neutralne.
 
-| Doradca | Klasa | Decyduje o | Co ile tur |
+| Doradca | Klasa | Decyduje o | Kiedy (ADR 0018) |
 | --- | --- | --- | --- |
-| Strateg | `StrategistAdvisor` | wagi celów, cel ekspansji (`SetStrategyCommand`) | co 15 tur, rozłożone; od razu w nowej erze |
-| Gubernator | `GovernorAdvisor` | przeniesienie obozu, odłam, przyłączenie małego obozu, osiedlenie się jako wioska, wędrówka do dalekiego miejsca, łupy z opuszczonych osad, wypędzenie słabszego obozu | przetrwanie co turę, reszta raz na turę ery |
-| Skarbnik | `TreasurerAdvisor` | receptura rzemieślników w każdej osadzie | raz na turę ery |
-| Uczony | `ScholarAdvisor` | następna technologia | gdy nic nie jest badane |
+| Strateg | `StrategistAdvisor` | wagi celów, cel ekspansji (`SetStrategyCommand`) | co 15 własnych kroków, rozłożone; od razu w nowej erze |
+| Gubernator | `GovernorAdvisor` | przeniesienie obozu, odłam, przyłączenie małego obozu, osiedlenie się jako wioska, wędrówka do dalekiego miejsca, łupy z opuszczonych osad, wypędzenie słabszego obozu | przetrwanie w każdym własnym kroku, reszta raz na długość kroku ery; po napadzie od razu (szukanie miejsca) |
+| Skarbnik | `TreasurerAdvisor` | receptura rzemieślników w każdej osadzie | raz na długość kroku ery |
+| Uczony | `ScholarAdvisor` | następna technologia | gdy nic nie jest badane (reakcja, w każdym kroku świata) |
 
 Dyplomata (etap 4d) jest opisany w `docs/systems/diplomacy.md`; dowódca przyjdzie w etapie 4e.
 

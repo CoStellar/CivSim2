@@ -9,7 +9,9 @@
 ### Kiedy
 
 Dla każdej żywej cywilizacji AI, która **nic nie bada** (na starcie i zaraz po odkryciu technologii, bo system badań zeruje wybór).
-Punkty zebrane ponad koszt przechodzą na następną technologię, więc przerwy w badaniu nie ma.
+To decyzja **reaktywna** (ADR 0018): zapada w najbliższym kroku świata, także poza rytmem cywilizacji. Badania postępują tylko we
+własnych krokach, więc wybór zawsze zdąży przed następnym przyrostem punktów. Punkty zebrane ponad koszt przechodzą na następną
+technologię, więc przerwy w badaniu nie ma.
 
 ### Kandydaci
 

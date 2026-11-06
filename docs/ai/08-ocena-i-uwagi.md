@@ -16,11 +16,11 @@ zmieniam: każda poprawka zmienia zasady gry, więc decydujesz Ty. Na końcu są
 | Wioski | **brak AI** | po osiedleniu gubernator nic nie robi |
 | Strateg | **za skomplikowany w stosunku do skutku** | 6 wag; ekspansja działa w gubernatorze, głód (bezpieczeństwo, dobrobyt) od 4d tylko w dyplomacji |
 | Charakter | **częściowo martwy** | od 4d nic nie zmienia tylko ciekawość świata |
-| Dyplomata (4d) | **dobre, z dwiema dziurami** | ta sama ocena dla obu stron; ale „widzi” dzisiejszą siłę z pamiętanych pól i kilka rytmów jest w turach |
+| Dyplomata (4d) | **dobre, z jedną dziurą** | ta sama ocena dla obu stron, reaguje na wojnę i napad poza rytmem (ADR 0018); ale „widzi” dzisiejszą siłę z pamiętanych pól |
 | Skarbnik | dobry pomysł (ceny z popytu), **drobne braki** | osady sieci nie koordynują się |
 | Uczony | **za prosty** | bierze najtańsze, nie patrzy, co technologia daje |
 | Wiedza AI | **niezgodne z zasadą** | AI zna dzisiejszy stan pól, które tylko pamięta |
-| Odstępy czasu | **niezgodne z zasadą „w latach”** | 3 parametry są w turach |
+| Rytm decyzji | **dobre (od ADR 0018)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i ruch obozu nadal „na krok” (PR C) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają
 
@@ -84,17 +84,23 @@ koczowaniem, wag ani charakteru.
 **Propozycja:** liczyć plon dla prawdziwej liczby producentów (najlepsze pola najpierw, jak robi to system rolnictwa) i porównać z
 tym, co daje zbieractwo; ekspansywna cywilizacja mogłaby dłużej koczować.
 
-## 5. Odstępy czasu w turach, a nie w latach
+## 5. Odstępy czasu: rozwiązane przez zegar świata (ADR 0018)
 
-Zasada 6 i Twoja decyzja z 2026-11-06: backend ma myśleć w latach. Trzy parametry AI są w turach:
+Do etapu 4d trzy parametry AI liczyły **tury świata**, a długość tury ustalała najbardziej rozwinięta cywilizacja. Plemię z epoki
+kamienia w świecie, w którym ktoś wszedł w neolit, robiło przegląd strategii co 375 lat zamiast 750. Od ADR 0018 liczą **własne
+kroki cywilizacji**, czyli jej rytm:
 
-| Parametr | Dziś | W epoce kamienia | W erze przemysłowej |
-| --- | --- | --- | --- |
-| `reviewEveryTurns` 15 | 15 tur | 750 lat | 15 lat |
-| `searchEveryTurns` 3 | 3 tury | 150 lat | 3 lata |
-| `minTurnsBetweenMoves` 2 | 2 tury | 100 lat | 2 lata |
+| Parametr | Wartość | W epoce kamienia | W neolicie | W erze przemysłowej |
+| --- | --- | --- | --- | --- |
+| `reviewEverySteps` | 15 kroków | 750 lat | 375 lat | 15 lat |
+| `searchEverySteps` | 3 kroki | 150 lat | 75 lat | 3 lata |
+| `minStepsBetweenMoves` | 2 kroki | 100 lat | 50 lat | 2 lata |
 
-**Propozycja:** zamienić na lata (np. przegląd strategii co 100 lat, ale nie rzadziej niż co turę), jak zrobiliśmy z pamięcią relacji w 4c.
+To celowo nie są lata: Twoja zasada „każda cywilizacja decyduje co tyle lat, ile wynika z jej ery” oznacza, że rozwinięta cywilizacja
+planuje częściej. Tempa (wzrost, psucie, pamięć relacji) dalej są na rok.
+
+Uwaga do zostawionej rzeczy: zwiadowca (15 pól) i ruch obozu (10 pól) to nadal „na własny krok”, więc rozwinięte cywilizacje
+odkrywają świat i wędrują szybciej w przeliczeniu na rok. To zmieniamy w PR C (ziemia i migracje), bo zmienia równowagę wędrówek.
 
 ## 6. Gubernator nie zna swoich technologii
 
@@ -130,8 +136,8 @@ To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzie
   łupy są ostatnie w kolejności.
 - **15 liczb zaszytych w kodzie** (lista w [parametrach](07-parametry.md#liczby-zaszyte-w-kodzie-nie-w-danych)), np. próg osiedlenia
   150% czy próg łupów 50%. Zasada 5 mówi: zawartość w danych. Warto je przenieść do `data/ai.json`.
-- **Dyplomata: rytm przy krótkich turach.** Przegląd „co 50 lat” sprawdza rok gry. Gdy tura jest krótsza niż rok (od ery
-  informacji), w roku przeglądu przegląd wypada w każdej turze tego roku (np. 4 razy przy turze 3-miesięcznej).
+- **Dyplomata: rytm przy krótkich krokach** (naprawione w ADR 0018): przegląd liczy miesiące, więc przy kroku 3-miesięcznym wypada
+  raz na 50 lat, a nie 4 razy w roku przeglądu. Tak samo pogłoski liczą szansę w milionowych za dokładne miesiące kroku.
 - **Dyplomata: dużo odrzuceń.** W seedzie 42: 666 propozycji, 619 odrzuconych, 32 przyjęte. Próg propozycji (1,0) jest wyższy niż
   próg przyjęcia (0,8), ale druga strona często ocenia gorzej (np. czuje mniejsze zagrożenie). Do strojenia w 4g.
 - **Czego GDD obiecuje, a jeszcze nie ma:** plany wieloetapowe (8.6), mapy zagrożeń i napięcia (8.2), prognozy zasobów („za 12 tur
@@ -142,7 +148,8 @@ To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzie
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku).
 2. **Lata a długość tury:** sprawdzone; wyniki i poprawki w planie.
 3. **Technologie (i nie tylko uczony):** priorytet z położenia, braków i charakteru, koszt jako przeszkoda; decyzja nie zawsze optymalna.
-4. **Czas:** symulacja w latach, każda cywilizacja decyduje we własnym rytmie, decyzje reaktywne i proaktywne.
+4. **Czas:** symulacja w latach, każda cywilizacja decyduje we własnym rytmie, decyzje reaktywne i proaktywne. **Zrobione:**
+   ADR 0018 (licznik świata, kroki przypięte do kalendarza bez utraty lat, wartości er bez zmian).
 5. **Ziemia i migracje:** lepsza ocena ziemi; odłamy, które idą na nowe tereny i z czasem stają się osobnymi cywilizacjami.
 
 Plan wykonania: [`docs/prompts/04-ai-czas-wartosci-migracje.md`](../prompts/04-ai-czas-wartosci-migracje.md).

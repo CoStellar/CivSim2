@@ -4,7 +4,8 @@
 GDD 8.1, 9.1, 9.2 · etap 4d (PR #34)
 
 Dyplomata prowadzi stosunki z cywilizacjami, które jego cywilizacja **naprawdę spotkała** (R1). Ma dwa rodzaje decyzji:
-**reaktywne** (odpowiedź na propozycję, co turę) i **proaktywne** (przegląd stosunków, co 50 lat).
+**reaktywne** (odpowiedź na propozycję w każdym kroku świata; przegląd po wypowiedzianej wojnie albo napadzie) i **proaktywne**
+(przegląd stosunków, co 50 lat we własnym kroku). Rytmy: [wspólne mechanizmy, pkt 7](01-wspolne-mechanizmy.md#7-rytm-cywilizacji-decyzje-proaktywne-i-reaktywne-adr-0018).
 
 ## Umowy i stany
 
@@ -27,7 +28,7 @@ samo, ze swojego punktu widzenia (GDD 9.1).
 ocena = 1000 × czynniki × waga celu × mnożnik charakteru
 ```
 
-Dane wejściowe liczone raz na turę (`Prepare`):
+Dane wejściowe liczone raz na krok świata, gdy ktoś ma przegląd albo odpowiedź (`Prepare`):
 
 - **odległość** = najmniejsza odległość między osadami obu cywilizacji (te dwie osady to „bramy”),
 - **nasi wojownicy** = suma wojowników we wszystkich naszych osadach,
@@ -63,16 +64,19 @@ ich napaści. Bez powodu wojna ma ocenę 0.
 
 ## D1: Odpowiedź na propozycję (reaktywna)
 
-- **Kiedy:** **co turę**, dla każdej oczekującej propozycji do cywilizacji AI. Propozycja złożona w turze N dostaje odpowiedź w turze
-  N+1; bez odpowiedzi wygasa jako odrzucona.
+- **Kiedy:** **w każdym kroku świata**, dla każdej oczekującej propozycji do cywilizacji AI, także gdy ta czeka na swój krok.
+  Propozycja złożona w kroku świata N dostaje odpowiedź w kroku N+1; bez odpowiedzi wygasa jako odrzucona.
 - **Decyzja:** przyjmij, gdy `ocena ≥ 800` (`acceptAbove: 0.8`) i umowę wciąż można podpisać. Bez losowania.
 - **Komenda:** `AnswerProposalCommand` (działanie `AcceptTreaty` / `DeclineTreaty`). Odrzuconej propozycji ta sama strona nie
   powtarza przez 100 lat (`retryYears`).
 
 ## D2: Przegląd stosunków (proaktywny)
 
-- **Kiedy:** raz na 50 lat (`reviewEveryYears`), rozłożone między cywilizacje: gdy `(rok + 7 × numer cywilizacji) mod 50 < długość
-  tury w latach`. W epoce kamienia (tura 50 lat) więc **co turę**; w neolicie co drugą turę.
+- **Kiedy (proaktywnie):** raz na 50 lat (`reviewEveryYears`), rozłożone między cywilizacje, we własnym kroku: gdy
+  `(miesiąc + 84 × numer cywilizacji) mod 600 < długość jej kroku w miesiącach`. W epoce kamienia (krok 50 lat) więc w **każdym
+  własnym kroku**; w neolicie co drugim; przy krokach półrocznych w jednym ze 100 (od ADR 0018 bez powtórek w roku przeglądu).
+- **Kiedy (reaktywnie, ADR 0018):** w najbliższym kroku świata po tym, jak ktoś **wypowiedział jej wojnę** albo **napadł jej obóz**,
+  także poza rytmem. Wtedy rozważa te same kroki (pokój, sojusz z kimś trzecim, odwet wojną).
 - **Kandydaci:** dla każdej spotkanej cywilizacji:
   - w wojnie z nią: tylko **pokój** (D3), jeśli ocena ≥ 1000;
   - w pokoju: **handel**, **pakt**, **sojusz** (każdy tylko jeśli można go zaproponować: nie obowiązuje, nie czeka, nie odrzucony
@@ -94,7 +98,8 @@ ich napaści. Bez powodu wojna ma ocenę 0.
 
 ## Handel między cywilizacjami (zasada, nie decyzja)
 
-Decyzją jest tylko podpisanie umowy (D1/D2). Sam handel dzieje się automatycznie (`ForeignTradeSystem`) co turę: bramy wymieniają
+Decyzją jest tylko podpisanie umowy (D1/D2). Sam handel dzieje się automatycznie (`ForeignTradeSystem`) w każdym kroku, w którym krok ma któraś ze stron (za miesiące dłuższego
+z ich kroków; ADR 0018): bramy wymieniają
 do 50% nadwyżki (`tradeSharePercent`) tych towarów, które druga strona wycenia wyżej po stracie w transporcie (2% na pole), i tylko
 tyle, ile drugiej bramie brakuje; barter po równej wartości. Tura z wymianą podtrzymuje wspomnienie „aktywny handel”
 (do +30 sympatii, +20 zaufania). Partnerzy handlowi liczą się też jako sąsiedzi przy dyfuzji technologii (U1) i mogą przenieść epidemię.
