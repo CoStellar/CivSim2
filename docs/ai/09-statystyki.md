@@ -2,7 +2,7 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 tur, seedy 7, 23 i 42, commit `f2232a9`. Polecenie:
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 tur, seedy 7, 23 i 42, commit `8cc73e1` (etap 4d). Polecenie:
 
 ```
 dotnet run --project src/CivSim.Headless -c Release -- --seed 7 --turns 1000 --map-size standard --decisions why7.csv
@@ -16,25 +16,31 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 | Decyzja | Id | Seed 7 | Seed 23 | Seed 42 |
 | --- | --- | ---: | ---: | ---: |
-| strateg ustawia strategię | S1 | 648 | 746 | 693 |
-| uczony wybiera badanie | U1 | 83 | 127 | 99 |
-| skarbnik zmienia recepturę | T1 | 1928 | 2504 | 2901 |
-| obóz przenosi się | G2 | 1931 | 1674 | 2519 |
-| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 370 | 369 | 426 |
-| wypędzenie obcego obozu | G2 | 148 | 224 | 88 |
-| odłam zakłada nowy obóz | G5 | 1422 | 1587 | 1451 |
-| mały obóz dołącza do innego | G1 | 1257 | 1440 | 1330 |
-| obóz osiada (wioska) | G4 | 189 | 205 | 145 |
-| daleka wędrówka | G3 | 0 | 7 | 7 |
-| zabranie porzuconych dóbr | G6 | 1 | 5 | 8 |
-| **razem** | | **7977** | **8888** | **9667** |
+| strateg ustawia strategię | S1 | 583 | 608 | 678 |
+| uczony wybiera badanie | U1 | 79 | 113 | 106 |
+| skarbnik zmienia recepturę | T1 | 1539 | 1113 | 1527 |
+| obóz przenosi się | G2 | 1800 | 1283 | 2507 |
+| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 277 | 295 | 438 |
+| wypędzenie obcego obozu | G2 | 137 | 132 | 36 |
+| odłam zakłada nowy obóz | G5 | 1156 | 1291 | 1433 |
+| mały obóz dołącza do innego | G1 | 1018 | 1158 | 1340 |
+| obóz osiada (wioska) | G4 | 148 | 172 | 143 |
+| daleka wędrówka | G3 | 3 | 1 | 6 |
+| zabranie porzuconych dóbr | G6 | 0 | 0 | 6 |
+| dyplomata proponuje umowę albo pokój | D2 | 230 | 112 | 666 |
+| dyplomata przyjmuje propozycję | D1 | 39 | 21 | 32 |
+| dyplomata odrzuca propozycję | D1 | 158 | 81 | 619 |
+| dyplomata wypowiada wojnę | D2 | 19 | 5 | 1 |
+| **razem** | | **7186** | **6385** | **9538** |
 
 Co z tego widać:
 
-- Większość decyzji zapada w pierwszych 300 turach (epoka kamienia i początek neolitu), kiedy osady są obozami. Potem prawie wszystko
+- Większość decyzji zapada w pierwszych 200–300 turach (epoka kamienia i początek neolitu), kiedy osady są obozami. Potem prawie wszystko
   to wioski, a wioski nie mają decyzji gubernatora ([uwagi, pkt 8](08-ocena-i-uwagi.md#8-wioski-bez-ai)).
 - Odłamów i dołączeń jest podobnie dużo ([uwagi, pkt 9](08-ocena-i-uwagi.md#9-inne-drobne-rzeczy)).
 - Wędrówki i łupy prawie się nie zdarzają.
+- Dyplomacja: na 12 cywilizacji 1–19 wojen w 1000 tur; większość propozycji jest odrzucana ([uwagi, pkt 9](08-ocena-i-uwagi.md#9-inne-drobne-rzeczy)).
+- Liczby różnią się od wersji 4c, bo dyplomacja zmienia przebieg gry (pakty blokują wypędzenia, wojny je zachęcają).
 
 ## Przykładowe wpisy „Dlaczego?” (jeden na rodzaj decyzji)
 
@@ -51,6 +57,12 @@ Co z tego widać:
 | 7, 21 | Civilization 10 | G1 JoinCamp | 13 | people 13 |
 | 7, 419 | Civilization 4 | G6 Plunder | 22 081 | goods left 22081 |
 | 7, 27 | Civilization 4 | T1 SetRecipe (narzędzia kamienne) | 274 487 | character 87%, value added 313700, inputs available 100% |
+| 7, 12 (4d) | Civilization 8 | D2 ProposeTreaty → Civ 11 | 1 042 | character 91%, opinion 108% (sympatia +4), trade gain 105% (28%) |
+| 7, 13 (4d) | Civilization 12 | D1 AcceptTreaty ← Civ 7 | 1 353 | character 124%, trade gain 108% (29%), opinion 100% |
+| 7, 20 (4d) | Civilization 12 | D1 DeclineTreaty ← Civ 7 | 695 | threat 70% (ich wojownicy 81% naszych), character 98%, opinion 100% |
+| 7, 43 (4d) | Civilization 12 | D2 DeclareWar → Civ 7 | 2 134 | opinion 153% (sympatia −38), strength 150% (przewaga 293%), character 93% |
+
+Wiersze bez „(4d)” pochodzą z gier w wersji 4c; reguły tych decyzji się nie zmieniły (poza G2: umowy i wojna, patrz gubernator).
 
 Jak czytać czynnik: `distance 73% (9)` znaczy „bliskość obniżyła ocenę do 73%, bo miejsce jest 9 pól dalej”. Liczba w nawiasie to
 wartość ze świata. Notatki bez procentu (np. `food 59917`, `people 13`) tylko wyjaśniają.

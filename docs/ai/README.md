@@ -4,7 +4,7 @@ Ten katalog opisuje **każdą decyzję**, którą podejmuje sztuczna inteligencj
 na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to jest w kodzie. Jest pisany dla Patryka:
 żeby można było ocenić, czy mechanika nie jest za prosta albo za skomplikowana i bez sensu.
 
-**Stan opisu:** etap 4c (gałąź `development` po PR #32, commit `f2232a9`). Dyplomata (4d) i dowódca (4e) jeszcze nie istnieją.
+**Stan opisu:** etap 4d (gałąź `development` po PR #34 i #35, commit `8cc73e1`). Dowódca i armie (4e) jeszcze nie istnieją.
 **Aktualizacja:** po każdym etapie, który zmienia AI (zasada w `CLAUDE.md`). Historia zmian jest na dole tej strony.
 
 ## Jak czytać
@@ -13,12 +13,13 @@ na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to j
 2. [Wspólne mechanizmy](01-wspolne-mechanizmy.md): jak AI liczy ocenę, jak wybiera, czym jest charakter i waga celu. Bez tego reszta
    jest niezrozumiała, bo wszyscy doradcy liczą tak samo.
 3. Doradcy, każdy w osobnym pliku: [Strateg](02-strateg.md), [Gubernator](03-gubernator.md), [Skarbnik](04-skarbnik.md),
-   [Uczony](05-uczony.md).
+   [Uczony](05-uczony.md), [Dyplomata](10-dyplomata.md).
 4. [Co AI wie](06-wiedza-i-relacje.md): pamięć mapy, kontakty, sympatia i zaufanie.
 5. [Wszystkie liczby](07-parametry.md): każdy parametr z plikiem, wartością i decyzją, na którą wpływa. Także liczby zaszyte w kodzie.
 6. [Ocena i uwagi](08-ocena-i-uwagi.md): co naprawdę działa, co jest tylko „na papierze”, gdzie AI jest za proste, a gdzie
    zbyt skomplikowane. **To najważniejsza strona do Twojej oceny.**
 7. [Statystyki](09-statystyki.md): ile i jakich decyzji AI podejmuje w prawdziwych grach (3 seedy po 1000 tur).
+8. Plan zmian po uwagach Patryka (czas w latach, priorytety, migracje): [`docs/prompts/04-ai-czas-wartosci-migracje.md`](../prompts/04-ai-czas-wartosci-migracje.md).
 
 Każda decyzja ma stały identyfikator (np. **G2**), którego używają wszystkie strony. Ścieżki do kodu mają postać
 `plik:linia` dla commita podanego wyżej; linie mogą się przesunąć, nazwy metod zostają.
@@ -33,6 +34,7 @@ flowchart TD
     G["1. Gubernator<br/>każdy obóz: G1–G6"] --> S["2. Strateg<br/>S1: wagi celów + kierunek"]
     S --> T["3. Skarbnik<br/>T1: receptury"]
     T --> U["4. Uczony<br/>U1: następna technologia"]
+    U --> DP["5. Dyplomata<br/>D1: odpowiedzi (co turę)<br/>D2: przegląd stosunków (co 50 lat)"]
   end
   D --> Q["Kolejka komend<br/>(te same komendy co gracz)"]
   Q --> R["Faza 4: rozstrzyganie komend<br/>kolejność: kategoria → cywilizacja (rotacja co turę) → kolejność wydania;<br/>każda komenda jest sprawdzana, odrzucona przepada"]
@@ -57,6 +59,8 @@ poprzedniej tury).
 | **G6** | Gubernator | zabranie dóbr z porzuconej osady w pobliżu | `PlunderSettlementCommand` | tura decyzyjna | [03-gubernator.md#g6](03-gubernator.md#g6-zabranie-porzuconych-dóbr) |
 | **T1** | Skarbnik | jaką recepturę robią rzemieślnicy osady | `SetRecipeCommand` | tura decyzyjna | [04-skarbnik.md](04-skarbnik.md) |
 | **U1** | Uczony | jaką technologię badać | `SetResearchCommand` | gdy nic nie jest badane | [05-uczony.md](05-uczony.md) |
+| **D1** | Dyplomata | przyjąć czy odrzucić propozycję umowy | `AnswerProposalCommand` | co turę (reaktywnie) | [10-dyplomata.md](10-dyplomata.md#d1-odpowiedź-na-propozycję-reaktywna) |
+| **D2** | Dyplomata | jeden krok wobec spotkanych: handel, pakt o nieagresji, sojusz obronny, wojna, pokój | `ProposeTreatyCommand`, `DeclareWarCommand` | co 50 lat (rozłożone) | [10-dyplomata.md](10-dyplomata.md#d2-przegląd-stosunków-proaktywny) |
 
 **Tura decyzyjna** (tzw. drugi zegar): pierwsza tura każdego okresu o długości tury ery. Na Ziemi każda tura jest decyzyjna; na
 planecie z porami roku na żywo tura jest krótsza, a decyzje „wolne” zapadają raz na długość tury ery (ADR 0013).
@@ -67,10 +71,11 @@ Procesy, które **nie są decyzjami**, ale dostarczają AI danych (opisane w [06
 | --- | --- | --- |
 | **W1** | pamięć mapy: widzenie 6 pól, zwiadowca 15 pól, pamięć 300 lat | G2, G3, S1 (AI wybiera tylko znane pola) |
 | **W2** | ścieżka po znanym lądzie (wędrówka) | G3 |
-| **R1** | pierwszy kontakt (zobaczenie, zetknięcie stref, napaść) | — (na razie tylko kronika) |
-| **R2** | pierwsze wrażenie z otwartości | G2 (wypędzenie) przez sympatię |
-| **R3** | pamięć napaści (mściwość wydłuża) | G2 (wypędzenie) przez sympatię |
-| **R4** | spór graniczny o zajętą osadę | G2 (wypędzenie) przez sympatię |
+| **R1** | pierwszy kontakt (zobaczenie, zetknięcie stref, napaść) | D1, D2 (dyplomacja tylko po kontakcie) |
+| **R2** | pierwsze wrażenie z otwartości | G2 (wypędzenie), D1, D2 przez sympatię |
+| **R3** | pamięć napaści (mściwość wydłuża) | G2, D1, D2 przez sympatię; powód wojny |
+| **R4** | spór graniczny o zajętą osadę | G2, D1, D2 przez sympatię; powód wojny |
+| **R6** | wspomnienia z dyplomacji: złamanie umowy, aktywny handel, wspólny wróg, pomoc w wojnie | G2, D1, D2 przez sympatię i zaufanie |
 | **R5** | pogłoski o dalekich ludach | — (na razie tylko kronika) |
 | **C1** | charakter: 8 cech losowanych raz na grę | prawie wszystkie decyzje (mnożnik i ostrożność) |
 
@@ -101,7 +106,6 @@ w `docs/systems/`:
 
 | Etap | Co dojdzie | Opis w GDD |
 | --- | --- | --- |
-| 4d | dyplomata: umowy (pokój, handel, nieagresja, sojusz obronny), handel między cywilizacjami | 8.1, 9.1 |
 | 4e | dowódca: wojny, armie; waga celu „podbój” zacznie zależeć od sytuacji | 8.1, 9.3 |
 | 4f | frakcje, zmiana charakteru z doświadczeniem, sukcesja przywódców | 8.4 |
 | później | plany wieloetapowe (GDD 8.6), mapy wpływów i zagrożeń (8.2), prognozy zasobów | 8.2, 8.6 |
@@ -111,3 +115,4 @@ w `docs/systems/`:
 | Data | Etap | Co zmieniono |
 | --- | --- | --- |
 | 2026-11-06 | 4c | Pierwsza wersja: wszystkie decyzje etapów 3c–4c, parametry, uwagi, statystyki z 3 seedów. |
+| 2026-11-06 | 4d | Dyplomata (D1, D2, wojna i pokój, sojusznicy), zakaz wypędzeń przez umowy i premia w wojnie (G2), wagi celów i cechy używane w dyplomacji, nowe parametry z `data/diplomacy.json`, nowe statystyki i wykres. |

@@ -74,10 +74,10 @@ Ocena = waga ekspansji. Notatki: zatłoczenie w %, najedzenie w ‰, wartość p
 | Wynik | Czyta | Skutek |
 | --- | --- | --- |
 | waga ekspansji | G2, G3, G5 | mnożnik ocen miejsc; **obniża próg odłamu** (G5) |
-| waga podboju | G2 | mnożnik oceny wypędzenia (dziś zawsze 1000) |
-| waga dobrobytu | T1 | mnożnik wszystkich receptur (bez wpływu na wybór) |
+| waga podboju | G2, D2 | mnożnik oceny wypędzenia i wojny (dziś zawsze 1000) |
+| waga dobrobytu | T1, D1, D2 | mnożnik receptur (bez wpływu) i umowy handlowej (działa: konkuruje z innymi krokami i progiem) |
 | waga nauki | U1 | mnożnik wszystkich technologii (zawsze 1000) |
-| waga bezpieczeństwa | nikt | — |
+| waga bezpieczeństwa | D1, D2 | głodna cywilizacja chętniej proponuje i przyjmuje pakt, sojusz i pokój |
 | waga wpływu | nikt | — |
 | cel ekspansji | G2, G3, G5 | +15% dla miejsc w jego stronę |
 
@@ -91,5 +91,5 @@ flowchart LR
   WE --> G2["G2, G3, G5"]
   C --> G2
   WG --> T1["T1 (bez wpływu)"]
-  WG -.-> X["bezpieczeństwo: nikt nie czyta"]
+  WG --> DP["D1, D2: handel, pakt, sojusz, pokój"]
 ```

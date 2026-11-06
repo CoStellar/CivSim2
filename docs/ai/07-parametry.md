@@ -54,6 +54,23 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `farming.farmersPerCell` | 40 | osoby | G4 | rolników na pole w rachunku osiedlenia |
 | `farming.minFertility` | 20 | punkty | G4 | pole słabsze nie daje zboża |
 
+## `data/diplomacy.json` (od 4d)
+
+| Klucz | Wartość | Jednostka | Decyzje | Znaczenie |
+| --- | --- | --- | --- | --- |
+| `reviewEveryYears` | 50 | lata | D2 | co ile lat przegląd stosunków |
+| `proposeAbove` | 1 | ocena | D2 | próg propozycji umowy i pokoju |
+| `acceptAbove` | 0,8 | ocena | D1 | próg przyjęcia |
+| `declareWarAbove` | 1,5 | ocena | D2 | próg wypowiedzenia wojny |
+| `retryYears` | 100 | lata | D2 | po odmowie nie proponuje tego samego |
+| `reachCells` | 16 | pola | D1, D2, handel | zasięg handlu i paktu |
+| `tradeSharePercent` | 50 | **% na turę** | handel | jaka część nadwyżki idzie przez bramę |
+| `witnessPercent` | 50 | % | D3 | jak mocno złamanie umowy pamiętają świadkowie |
+| `allyJoinBasePerMille` | 300 | ‰ | D3 | szansa dołączenia sojusznika przy lojalności 0 |
+| `warRaidPercent` | 150 | % | G2 | premia za wypędzanie obozów wroga w wojnie |
+| `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 9 krzywych czynników |
+| `treaties[].years` | pokój: 100 | lata | D3 | rozejm po wojnie |
+
 ## Inne pliki
 
 | Plik i klucz | Wartość | Decyzje | Znaczenie |

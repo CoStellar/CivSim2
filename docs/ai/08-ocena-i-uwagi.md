@@ -14,8 +14,9 @@ zmieniam: każda poprawka zmienia zasady gry, więc decydujesz Ty. Na końcu są
 | Gubernator: osiedlenie (G4) | **za proste** | w praktyce „zna rolnictwo i ma 60 osób = osiada” |
 | Gubernator: łupy (G6), dołączanie (G1) | proste, ale wystarczy | rzadkie albo oczywiste sytuacje |
 | Wioski | **brak AI** | po osiedleniu gubernator nic nie robi |
-| Strateg | **za skomplikowany w stosunku do skutku** | 6 wag, z czego realnie działa jedna (ekspansja) |
-| Charakter | **częściowo martwy** | 3 z 8 cech nic nie zmieniają |
+| Strateg | **za skomplikowany w stosunku do skutku** | 6 wag; ekspansja działa w gubernatorze, głód (bezpieczeństwo, dobrobyt) od 4d tylko w dyplomacji |
+| Charakter | **częściowo martwy** | od 4d nic nie zmienia tylko ciekawość świata |
+| Dyplomata (4d) | **dobre, z dwiema dziurami** | ta sama ocena dla obu stron; ale „widzi” dzisiejszą siłę z pamiętanych pól i kilka rytmów jest w turach |
 | Skarbnik | dobry pomysł (ceny z popytu), **drobne braki** | osady sieci nie koordynują się |
 | Uczony | **za prosty** | bierze najtańsze, nie patrzy, co technologia daje |
 | Wiedza AI | **niezgodne z zasadą** | AI zna dzisiejszy stan pól, które tylko pamięta |
@@ -36,17 +37,18 @@ zaokrąglenia o 1).
 | ta sama | G5: wybór miejsca odłamu (wszystkie wolne) | **nie** |
 | waga podboju × agresja | G2: obcy obóz | **tak** (waga podboju zawsze 1000, działa tylko agresja) |
 | waga dobrobytu × handlowość | T1: wszystkie receptury | **nie** |
+| ta sama | D2: umowa handlowa kontra pakt, sojusz, wojna (inne cele) i próg 1,0 | **tak** (od 4d) |
+| waga bezpieczeństwa × ostrożność | D1, D2: pakt, pokój; sojusz (× lojalność) | **tak** (od 4d) |
 | waga nauki × ciekawość | U1: wszystkie technologie | **nie** |
-| waga bezpieczeństwa | nigdzie | **nie** |
 | waga wpływu | nigdzie | **nie** |
-| lojalność | nigdzie | **nie** (czeka na 4d) |
+| lojalność | D2 sojusz, hamulec wojny, D3 dołączanie sojusznika | **tak** (od 4d) |
 
-**Skutek:** strateg liczy wagę głodu (bezpieczeństwo i dobrobyt), ale ona **nic nie zmienia**. Handlowość, ciekawość świata i
-lojalność **nic nie zmieniają**. Ciekawa uboczna rzecz: im bardziej zatłoczona cywilizacja (wyższa waga ekspansji), tym **rzadziej**
+**Skutek (stan 4d):** waga głodu (bezpieczeństwo i dobrobyt) działa tylko w dyplomacji: głodna cywilizacja chętniej zawiera pakty i
+pokój. W skarbniku i uczonym dalej nic nie zmienia. **Ciekawość świata nic nie zmienia.** Waga wpływu nie jest nigdzie używana. Ciekawa uboczna rzecz: im bardziej zatłoczona cywilizacja (wyższa waga ekspansji), tym **rzadziej**
 wypędza obce obozy, bo wolne miejsca rosną w ocenie, a obce obozy nie.
 
-Działające cechy: ostrożność (losowanie), ekspansywność (próg odłamu, wolne miejsca kontra podbój), agresja (podbój), otwartość
-(pierwsze wrażenie), mściwość (pamięć napaści).
+Działające cechy: ostrożność (losowanie, pakt, pokój), ekspansywność (próg odłamu, wolne miejsca kontra podbój), agresja (podbój,
+wojna), handlowość (umowa handlowa), otwartość (pierwsze wrażenie), mściwość (pamięć napaści), lojalność (sojusz, łamanie umów).
 
 ## 2. AI zna dzisiejszy stan pól, które tylko pamięta
 
@@ -54,6 +56,8 @@ Działające cechy: ostrożność (losowanie), ekspansywność (próg odłamu, w
 latach), ale **ocenia** je według dzisiejszego stanu: obecnej dzikiej żywności, obecnej temperatury, obecnego mieszkańca i jego
 dzisiejszej liczby wojowników. Liczy też jedzenie pól wokół znanego pola, których mogło nie widzieć. G6 (łupy) w ogóle nie sprawdza,
 czy osada jest znana.
+
+Dyplomata (4d) ma tę samą dziurę: siłę rywala liczy z osad stojących na **znanych** polach, ale z ich **dzisiejszą** liczbą wojowników.
 
 Przykład: plemię widziało dolinę 250 lat temu. Dziś obok mieszka obcy obóz. AI „wie”, ilu ma wojowników, i może go zaatakować,
 choć nigdy go nie widziało.
@@ -126,14 +130,19 @@ To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzie
   łupy są ostatnie w kolejności.
 - **15 liczb zaszytych w kodzie** (lista w [parametrach](07-parametry.md#liczby-zaszyte-w-kodzie-nie-w-danych)), np. próg osiedlenia
   150% czy próg łupów 50%. Zasada 5 mówi: zawartość w danych. Warto je przenieść do `data/ai.json`.
+- **Dyplomata: rytm przy krótkich turach.** Przegląd „co 50 lat” sprawdza rok gry. Gdy tura jest krótsza niż rok (od ery
+  informacji), w roku przeglądu przegląd wypada w każdej turze tego roku (np. 4 razy przy turze 3-miesięcznej).
+- **Dyplomata: dużo odrzuceń.** W seedzie 42: 666 propozycji, 619 odrzuconych, 32 przyjęte. Próg propozycji (1,0) jest wyższy niż
+  próg przyjęcia (0,8), ale druga strona często ocenia gorzej (np. czuje mniejsze zagrożenie). Do strojenia w 4g.
 - **Czego GDD obiecuje, a jeszcze nie ma:** plany wieloetapowe (8.6), mapy zagrożeń i napięcia (8.2), prognozy zasobów („za 12 tur
   zabraknie żelaza”). To zgodne z planem etapów, ale dziś AI reaguje tylko na bieżący stan, nie planuje.
 
-## Pytania do Ciebie (z moją rekomendacją)
+## Decyzje Patryka (2026-11-06)
 
-1. **Wagi bez skutku (pkt 1).** Rekomendacja: przy okazji 4d dać im skutek (głód → uczony i skarbnik wolą jedzenie; handlowość →
-   dyplomata woli umowy handlowe; ciekawość → szybsze badania albo droższe technologie mniej odstraszają). Alternatywa: na razie nic.
-2. **Wiedza AI (pkt 2).** Rekomendacja: obce obozy tylko z pól widzianych w tym roku. Małe, szybkie, zgodne z zasadą.
-3. **Uczony (pkt 3).** Rekomendacja: wartość technologii z jej skutków i potrzeb, w osobnym małym PR po 4d.
-4. **Odstępy w latach (pkt 5).** Rekomendacja: tak, razem z punktem 2.
-5. **Technologie w ocenie ziemi (pkt 6)** i **osiedlenie (pkt 4).** Rekomendacja: tak, oba w jednym PR „lepsza ocena ziemi”.
+1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku).
+2. **Lata a długość tury:** sprawdzone; wyniki i poprawki w planie.
+3. **Technologie (i nie tylko uczony):** priorytet z położenia, braków i charakteru, koszt jako przeszkoda; decyzja nie zawsze optymalna.
+4. **Czas:** symulacja w latach, każda cywilizacja decyduje we własnym rytmie, decyzje reaktywne i proaktywne.
+5. **Ziemia i migracje:** lepsza ocena ziemi; odłamy, które idą na nowe tereny i z czasem stają się osobnymi cywilizacjami.
+
+Plan wykonania: [`docs/prompts/04-ai-czas-wartosci-migracje.md`](../prompts/04-ai-czas-wartosci-migracje.md).
