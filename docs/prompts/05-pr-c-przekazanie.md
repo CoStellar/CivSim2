@@ -1,6 +1,6 @@
 # PR C (ziemia i migracje): stan do przejęcia (2026-11-06 13:30)
 
-Gałąź: `feat/ai-land` (od `development` po PR #39). PR do `development` jeszcze nie otwarty. Plan: `docs/prompts/04-ai-czas-wartosci-migracje.md`, punkt 5 (bez odłamów jako nowych cywilizacji, to PR D w 4f).
+Gałąź: `feat/ai-land` (od `development` po PR #39). PR do `development` otwarty (punkty niżej zrobione). Plan: `docs/prompts/04-ai-czas-wartosci-migracje.md`, punkt 5 (bez odłamów jako nowych cywilizacji, to PR D w 4f).
 
 ## Zrobione (kod + testy)
 
@@ -28,7 +28,7 @@ Osady ~100 → 350–450, ludzie ~2×, odległość od startu 10–12 → 20–2
 **Uwaga:** tura 3–4× dłuższa, standard przekracza cel 50 ms. Przed PR: profilować fazy (`--report`), sprawdzić, czy koszt to tylko więcej osad
 (wtedy wyjaśnić albo dostroić tempo osadników), czy nowe obliczenia AI (`FarmFood`, `Land` na zestaw technologii, `WornPercent`).
 
-## Do zrobienia
+## Do zrobienia (stan 2026-11-06 15:40: punkty 1–5 zrobione, PR otwarty)
 
 1. `dotnet test` całość + test determinizmu.
 2. Profil wydajności (patrz uwaga wyżej) i powtórny benchmark po ewentualnych poprawkach.
@@ -38,3 +38,11 @@ Osady ~100 → 350–450, ludzie ~2×, odległość od startu 10–12 → 20–2
 5. PR do `development` po polsku (co, dlaczego, jak sprawdzić, testy, benchmark, tabela przed/po).
 
 Potem: 4e (wojna), potem D (odłamy w 4f), po zgodzie Patryka.
+
+## Wynik dokończenia (2026-11-06 15:40)
+
+- `dotnet test`: 398/398 (z determinizmem).
+- Profil: koszt to stare porównania każdej osady z każdą (`NearestImage` 36% czasu), a nie nowe obliczenia AI. Trzy przyspieszenia bez
+  zmiany wyniku (hash seeda 23 identyczny `FF4C717C0D03518D`). Benchmark po poprawkach: standard 37,3 / 52,4 / 48,2 ms, ogromna 163 ms.
+- Wykresy: `docs/ai/img/ziemia_przed_po.png` (`docs/ai/tools/land_chart.py`), `decyzje_1000_tur.png` z G7 i G8.
+- docs/ai 08 (pkt 4, 5, 6, 8 zamknięte, nowy pkt 10 wydajność), 09, README, `docs/systems/ai.md`.
