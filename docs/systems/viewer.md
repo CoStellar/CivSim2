@@ -116,6 +116,9 @@ w folderze paczki i w konsoli. Paczka może też zmienić ramki interfejsu (`ui/
   ludności / osad / technologii w czasie (śledzona grubą linią, pozostałe przygaszone), a dla śledzonej: era, ludność w warstwach,
   osady według poziomów, jedzenie, badania (znane technologie, bieżące badanie i postęp), charakter (8 cech), wagi celów stratega,
   zapasy, stosunki z innymi (sympatia, zaufanie, umowy, wojny i wspomnienia od najsilniejszego).
+- **Zmiana nazwy** (GDD 5.6): przycisk „Rename people” w panelu śledzonej cywilizacji i „Rename settlement” w zakładce Cell, gdy na polu
+  stoi osada. Okno pokazuje 8 propozycji w języku tego ludu („More names” daje kolejne) i pole na własną nazwę; serwer sprawdza, czy
+  nazwa jest wolna, i zmienia ją od razu (także w pauzie). Test: `--rename-dialog`.
 - **Kronika** w prawym dolnym rogu (mniejsza, przycisk ↕ wydłuża ją do pełnej wysokości), z opcją „followed”: tylko linie o śledzonej
   cywilizacji.
 - **Wykres czasu tury** na dole między panelami.

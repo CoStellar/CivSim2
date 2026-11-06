@@ -19,6 +19,7 @@ public sealed class ClientSession
     private readonly List<ChronicleEntry> _chronicle = [];
     private readonly Queue<double> _turnMs = new();
     private long _lastTurn;
+    private long _sequence;
 
     /// <summary>Connects and says hello in the given role.</summary>
     public ClientSession(IConnection connection, ClientRole role, string name)
@@ -84,6 +85,24 @@ public sealed class ClientSession
         FogVersion++;
         _connection.Send(new WatchCivilizationMessage(civ));
     }
+
+    /// <summary>Raised when name suggestions arrive (GDD 5.6).</summary>
+    public event Action<NameSuggestionsMessage>? NamesReceived;
+
+    /// <summary>Raised when the server refuses a command (text of the reason).</summary>
+    public event Action<string>? CommandRefused;
+
+    /// <summary>Asks for other names in the same language for a civilization or a settlement.</summary>
+    public void RequestNames(NameTarget target, int id, int page, int count = 8) =>
+        _connection.Send(new NameSuggestionsRequestMessage(target, id, page, count));
+
+    /// <summary>Renames a civilization (observers: any; applied at once between turns).</summary>
+    public void RenameCivilization(int civ, string name) =>
+        _connection.Send(new SubmitCommandMessage(civ, ++_sequence, new RenameCivilizationDto(name)));
+
+    /// <summary>Renames a settlement of <paramref name="owner"/>.</summary>
+    public void RenameSettlement(int owner, int settlement, string name) =>
+        _connection.Send(new SubmitCommandMessage(owner, ++_sequence, new RenameSettlementDto(settlement, name)));
 
     /// <summary>Closes the connection (back to the start menu).</summary>
     public void Close() => _connection.Close();
@@ -181,6 +200,10 @@ public sealed class ClientSession
                 break;
             case CommandRejectedMessage rejected:
                 LastError = rejected.Reason;
+                CommandRefused?.Invoke(rejected.Reason);
+                break;
+            case NameSuggestionsMessage names:
+                NamesReceived?.Invoke(names);
                 break;
         }
     }

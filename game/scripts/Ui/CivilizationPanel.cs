@@ -27,6 +27,11 @@ public partial class CivilizationPanel : VBoxContainer
     /// <summary>Raised when the user clicks a civilization in the table.</summary>
     public event Action<int>? FollowChosen;
 
+    /// <summary>Raised when the user wants to rename the followed civilization: (id, current name).</summary>
+    public event Action<int, string>? RenameRequested;
+
+    private Button _rename = null!;
+
     /// <inheritdoc />
     public override void _Ready()
     {
@@ -74,6 +79,15 @@ public partial class CivilizationPanel : VBoxContainer
 
         _chart = new HistoryChart { CustomMinimumSize = new Vector2(0, 150), MouseFilter = MouseFilterEnum.Ignore };
         AddChild(_chart);
+        _rename = new Button { Text = "Rename people", Visible = false, SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
+        _rename.Pressed += () =>
+        {
+            if (_lastDetails is CivilizationDetailsMessage d)
+            {
+                RenameRequested?.Invoke(d.CivId, d.Name);
+            }
+        };
+        AddChild(_rename);
         _details = new RichTextLabel { BbcodeEnabled = true, SizeFlagsVertical = SizeFlags.ExpandFill, Text = "Pick a civilization to follow." };
         AddChild(_details);
     }
@@ -93,6 +107,7 @@ public partial class CivilizationPanel : VBoxContainer
         {
             _lastDetails = session.CivDetails;
             _details.Text = session.CivDetails is { } d ? Describe(d, session) : session.WatchedCiv < 0 ? "Pick a civilization to follow." : "Waiting for the server...";
+            _rename.Visible = session.CivDetails is not null && session.CivId == WelcomeMessage.NoCiv;
         }
     }
 

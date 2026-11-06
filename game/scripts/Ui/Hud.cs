@@ -42,6 +42,10 @@ public partial class Hud : CanvasLayer
     private TurnChart _chart = null!;
     private CivilizationPanel _civs = null!;
     private int _followCount = -1;
+    private Button _renameSettlement = null!;
+    private SettlementView? _selectedSettlement;
+    private ClientSession? _session;
+    private Control _root = null!;
     private int _chronicleFilter = int.MinValue;
 
     /// <summary>Raised when the user picks a speed.</summary>
@@ -77,6 +81,7 @@ public partial class Hud : CanvasLayer
         var root = new Control { MouseFilter = Control.MouseFilterEnum.Ignore, Theme = PixelTheme.Current };
         root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         AddChild(root);
+        _root = root;
 
         // Top bar.
         var top = new PanelContainer { ThemeTypeVariation = "TopBar" };
@@ -133,10 +138,22 @@ public partial class Hud : CanvasLayer
         _left = left;
         _tabs = new TabContainer();
         left.AddChild(_tabs);
-        _inspector = new RichTextLabel { Name = "Cell", BbcodeEnabled = true, Text = "Click a hex to inspect it." };
-        _tabs.AddChild(_inspector);
+        var cell = new VBoxContainer { Name = "Cell" };
+        _tabs.AddChild(cell);
+        _renameSettlement = new Button { Text = "Rename settlement", Visible = false, SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
+        _renameSettlement.Pressed += () =>
+        {
+            if (_selectedSettlement is { } st)
+            {
+                OpenRename(NameTarget.Settlement, st.Id, st.Owner, st.Name);
+            }
+        };
+        cell.AddChild(_renameSettlement);
+        _inspector = new RichTextLabel { BbcodeEnabled = true, Text = "Click a hex to inspect it.", SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        cell.AddChild(_inspector);
         _civs = new CivilizationPanel { Name = "Civilizations" };
         _civs.FollowChosen += civ => FollowChosen?.Invoke(civ);
+        _civs.RenameRequested += (civ, name) => OpenRename(NameTarget.Civilization, civ, civ, name);
         _tabs.AddChild(_civs);
 
         // Right: chronicle.
@@ -271,10 +288,24 @@ public partial class Hud : CanvasLayer
             _chart.SetValues(session.TurnMilliseconds);
         }
 
+        _session = session;
         if (_left.Visible)
         {
             _inspector.Text = Inspect(session, map);
             _civs.UpdateFrom(session);
+            _selectedSettlement = null;
+            if (map.Selected is { } sel && map.World is { } world && view?.Settlements is { } settlements)
+            {
+                foreach (SettlementView st in settlements)
+                {
+                    if (st.World == world.Id && st.Col == sel.Col && st.Row == sel.Row)
+                    {
+                        _selectedSettlement = st;
+                    }
+                }
+            }
+
+            _renameSettlement.Visible = _selectedSettlement is not null;
         }
 
         // The chronicle filter follows the followed civilization.
@@ -295,6 +326,34 @@ public partial class Hud : CanvasLayer
     }
 
     private string? _followedName;
+
+    /// <summary>Opens the rename dialog for the followed civilization (test argument <c>--rename-dialog</c>).</summary>
+    public void RenameFollowed()
+    {
+        if (_session?.CivDetails is { } d)
+        {
+            OpenRename(NameTarget.Civilization, d.CivId, d.CivId, d.Name);
+        }
+    }
+
+    // Opens the rename dialog (GDD 5.6) in the middle of the screen; one at a time.
+    private void OpenRename(NameTarget target, int id, int owner, string current)
+    {
+        if (_session is null)
+        {
+            return;
+        }
+
+        foreach (Node child in _root.GetChildren())
+        {
+            if (child is RenameDialog old)
+            {
+                old.QueueFree();
+            }
+        }
+
+        _root.AddChild(new RenameDialog(_session, target, id, owner, current));
+    }
 
     private bool Matches(ChronicleEntry e) => _followedName is null || e.Text.Contains(_followedName, StringComparison.Ordinal);
 

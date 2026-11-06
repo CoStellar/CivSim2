@@ -59,6 +59,7 @@ public partial class Main : Node2D
     private int _watch = WelcomeMessage.NoCiv;
     private readonly List<(MapLayer Layer, int Opacity)> _opacities = [];
     private bool _openLayerSettings;
+    private bool _renameDialog;
 
     /// <inheritdoc />
     public override void _Ready()
@@ -98,6 +99,9 @@ public partial class Main : Node2D
                 case "--opacity":
                     string[] kv = next.Split('=');
                     _opacities.Add((Enum.Parse<MapLayer>(kv[0], ignoreCase: true), int.Parse(kv[1], CultureInfo.InvariantCulture)));
+                    break;
+                case "--rename-dialog":
+                    _renameDialog = true;
                     break;
                 case "--layer-settings":
                     _openLayerSettings = true;
@@ -434,6 +438,10 @@ public partial class Main : Node2D
         if (_screenshotFrames == 10)
         {
             GoToFollowed(jump: true);
+            if (_renameDialog)
+            {
+                _hud?.RenameFollowed();
+            }
         }
 
         _screenshotFrames--;
