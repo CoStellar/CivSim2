@@ -133,6 +133,8 @@ handel barterowy między najbliższymi osadami partnerów bez karawan; handel bu
 - [ ] Charakter cywilizacji i przywódcy, sukcesja (charakter cywilizacji gotowy w 4b)
 - [ ] Odkrywanie cywilizacji (zwiad, kontakt, pogłoski), pamięć relacji, umowy (pokój, wojna, handel, sojusz), wojna z celem, wynikiem i zmęczeniem, armie na jednym polu, uproszczone zaopatrzenie, plemiona niezależne
 - [ ] 3–4 ustroje z tempem decyzji (ustrój zmienia spadek stabilności), stabilność, bunty, secesja, administracja
+- [ ] W 4f: **tytuł ustroju w nazwie cywilizacji** (wzór tytułu w danych ustroju + rdzeń z języka ludu, GDD 5.6 i 7.2) i **język nowej cywilizacji z secesji** dziedziczony po rodzicu z mutacją (`NameLanguage.Mutate`, decyzja Patryka z 2026-11-06)
+- [ ] **Nazwy z języków ludów** (GDD 5.6): język na cywilizację z `data/names.json`, nazwy ludów i osad, zmiana nazwy przez obserwatora z propozycjami w tym samym języku
 - [ ] Panel „Dlaczego?” i wpisy w kronice
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
