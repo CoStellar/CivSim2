@@ -41,8 +41,8 @@ CivSim 2 to symulator rozwoju gospodarczego: **nie ma kultury ani religii** jako
 3. **Praca:** osobna gałąź `feat/<krótki-opis>` albo `fix/<...>`, małe commity.
 4. **PR:** opis po polsku: co, dlaczego, jak sprawdzić, wyniki testów, benchmark, raport `/understand-diff`.
    Nigdy nie pushuj bezpośrednio do `main`. Merge robi Patryk.
-5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/systems/`, upewnij się, że graf
-   wiedzy jest aktualny, i napisz krótkie podsumowanie: co działa, co zostało, co Patryk ma zrobić.
+5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/systems/` (a gdy etap zmienia AI, także `docs/ai/`),
+   upewnij się, że graf wiedzy jest aktualny, i napisz krótkie podsumowanie: co działa, co zostało, co Patryk ma zrobić.
 
 Jeśli zadanie zmienia zasady z `docs/GDD.md`, **najpierw zaproponuj zmianę Patrykowi**, potem ją wprowadź
 w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
@@ -139,6 +139,11 @@ Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla
 - Każdy system rdzenia ma plik `docs/systems/<system>.md` według szablonu z `docs/systems/README.md`,
   z diagramem przepływu danych w Mermaid.
 - Ważna decyzja techniczna = nowy plik ADR w `docs/decisions/` (numerowany, po polsku).
+- **Pełny opis decyzji AI: `docs/ai/`** (po polsku, dla Patryka). Każda decyzja AI ma tam identyfikator, warunki, wzory, progi,
+  parametry, miejsce w kodzie i przykład z dziennika „Dlaczego?”, a `08-ocena-i-uwagi.md` uczciwie ocenia, co jest za proste albo zbędne.
+  **Obowiązkowo aktualizuj go na końcu każdego etapu (i w każdym PR), który zmienia AI:** nowe lub zmienione decyzje, czynniki, parametry
+  w `data/ai.json` i innych plikach, kolejność doradców, wiedza AI. Odśwież statystyki z 3 seedów (`--decisions`), wykres PNG,
+  commit w nagłówku `docs/ai/README.md` i dopisz wiersz w jego historii zmian. Nie wolno niczego pominąć.
 - Publiczne klasy i metody w kodzie mają krótkie komentarze XML po angielsku.
 
 ## Grafika (kiedy prosisz Patryka o pliki)

@@ -2,6 +2,8 @@
 
 **W jednym zdaniu:** każda cywilizacja komputerowa to rada doradców (GDD 8.1), którzy oceniają możliwe działania jednym wspólnym wzorem (GDD 8.3), wybierają najlepsze i wydają te same komendy co gracz, a każda decyzja zapisuje 3 najważniejsze powody („Dlaczego?”, GDD 8.7) (etap 4a). Od etapu 4b każda cywilizacja ma charakter (8 cech), a strateg ustawia wagi celów i kierunek ekspansji.
 
+**Pełny, szczegółowy opis każdej decyzji AI (dla Patryka):** [`docs/ai/`](../ai/README.md).
+
 **Faza tury:** 3. Decyzje (`AiCouncil` jako źródło komend). Komendy rozstrzyga faza 4, jak komendy gracza.
 
 ## Dane wejściowe i wyjściowe
