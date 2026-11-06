@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "comment": "Skills (stage 4F, ADR 0020, GDD 5.1): what people know, inside their stratum. A skill belongs to one stratum and is opened by one technology; people learn it from masters over trainingYears (stage 4F PR 2). People of a stratum without any of these skills are its plain members (gatherers among producers, warriors among warriors). Elders (thinkers) and chiefs (leaders) come with their strata in PR 3.",
+  "skills": [
+    { "key": "hunter", "name": "Hunter", "stratum": "producers", "technology": "cooperative_hunting", "trainingYears": 3 },
+    { "key": "fisher", "name": "Fisher", "stratum": "producers", "technology": "fishing", "trainingYears": 3 },
+    { "key": "farmer", "name": "Farmer", "stratum": "producers", "technology": "agriculture", "trainingYears": 5 },
+    { "key": "herder", "name": "Herder", "stratum": "producers", "technology": "animal_husbandry", "trainingYears": 5 },
+    { "key": "knapper", "name": "Knapper", "stratum": "artisans", "technology": "flint_knapping", "trainingYears": 3 },
+    { "key": "tanner", "name": "Tanner", "stratum": "artisans", "technology": "tanning", "trainingYears": 3 },
+    { "key": "potter", "name": "Potter", "stratum": "artisans", "technology": "pottery", "trainingYears": 5 },
+    { "key": "weaver", "name": "Weaver", "stratum": "artisans", "technology": "weaving", "trainingYears": 5 },
+    { "key": "mason", "name": "Mason", "stratum": "artisans", "technology": "stonemasonry", "trainingYears": 5 },
+    { "key": "baker", "name": "Baker", "stratum": "artisans", "technology": "bread_baking", "trainingYears": 3 }
+  ]
+}
