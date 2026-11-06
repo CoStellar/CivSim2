@@ -3,8 +3,8 @@
 **Zakres:** budujemy wyłącznie funkcje oznaczone w `docs/GDD.md` (rozdział 16) jako **CORE** i **CORE (uproszczone)**.
 Moduły to przyszłe aktualizacje i nie wchodzą do tego planu. Kultury i religii nie ma w grze.
 
-Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. Pixel art i interfejs gracza
-wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
+Priorytet: **symulacja**. Etapy 0–12 to rdzeń, lepszy podgląd z grafikami zastępczymi (etap 5), wszystkie ery i podgląd deweloperski. Pixel art i interfejs gracza
+wchodzą na końcu, w etapie 13 (decyzja Patryka z 2026-11-06). Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
 **Aktualny etap: 3 (gospodarka i ludność): wszystkie PR-y 3a–3h gotowe, próba 2000 tur przeszła; następny etap 4 (AI i dyplomacja)**
@@ -131,19 +131,34 @@ opinia o sąsiedzie w decyzji o wypędzeniu obozu; wpisy w kronice; `--relations
 - [ ] 3–4 ustroje z tempem decyzji (ustrój zmienia spadek stabilności), stabilność, bunty, secesja, administracja
 - [ ] Panel „Dlaczego?” i wpisy w kronice
 
-## Etap 5 — Tryb gracza i grafika
+## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 
-Gotowe, gdy: da się rozegrać pełną grę do końca ery 2. **Brama: grywalne demo.**
+Zaraz po etapie 4. Cel: łatwiej oceniać symulację, bez grzebania w argumentach uruchomienia w Godocie.
 
-- [ ] Pixel art Patryka w warstwach, shader koloru cywilizacji
-- [ ] Jeden motyw interfejsu (ramki 9-slice), statyczne grafiki
-- [ ] Rozkazy gracza, delegowanie poziomów decyzji do AI, drzewo technologii, zapis w dowolnym momencie
-- [ ] Warunki zwycięstwa: punktowe i bez końca; narzędzia „widoku boga” potrzebne do testów
+Gotowe, gdy: Patryk uruchamia podgląd, ustawia świat i symulację w menu, startuje grę i ogląda mapę z kilkoma warstwami naraz, na których widać osady, jednostki i złoża.
+
+- [ ] **Menu startowe podglądu:** ustawienia świata z GDD 3 (seed, rozmiar mapy, typ świata, procent wody, klimat, wilgotność, rzeźba, zasoby, planeta lub własne parametry gwiazdy i orbity, liczba cywilizacji) i symulacji (prędkość, limit tur, opcje raportów); przycisk „Start” uruchamia serwer z tymi ustawieniami; ostatnie ustawienia zapamiętane; argumenty uruchomienia dalej działają
+- [ ] **Widok warstw:** jeden widok, w którym warstwy nakładają się z przezroczystością zamiast przełączania jednej nakładki: biomy (podkład), żyzność, temperatura, złoża, właściciel, strefy wpływów, relacje, pamięć mapy i mgła; każdą warstwę można włączyć i wyłączyć, ustawić jej przezroczystość i kolejność; granice i ikony rysowane tak, żeby nie zasłaniały biomu
+- [ ] **Grafiki zastępcze (placeholdery):** proste grafiki robione przeze mnie w paletcie `art/palette/civsim2_palette.gpl`, w rozmiarach i pod nazwami z GDD 12.3, dla tego, co już działa: biomy, wzgórza i góry, rzeki, złoża, obozy, wioski, osady opuszczone i ruiny, pola uprawne, zwiadowcy i wędrujące grupy, oznaczenia zdarzeń; kolor cywilizacji przez zarezerwowane odcienie magenty; Twoje grafiki z etapu 13 podmieniają je bez zmian w kodzie
+- [ ] Aktualizacja `docs/systems/viewer.md`
 
 ## Etapy 6–12 — Ery 3–9
 
-Jedna era na etap. W każdym: technologie i zasoby w danych → potrzebne mechaniki z zakresu CORE → AI → grafiki → balans w 100 grach.
+Jedna era na etap. W każdym: technologie i zasoby w danych → potrzebne mechaniki z zakresu CORE → AI → podgląd deweloperski → balans w 100 grach.
 Kolejne ustroje i warstwy ludności dochodzą razem z erami, w ramach wersji uproszczonych z GDD.
+
+## Etap 13 — Tryb gracza i grafika (na sam koniec CORE)
+
+Decyzja Patryka z 2026-11-06: najważniejsza jest dobrze działająca symulacja, więc tryb gracza to ostatni etap CORE, po wszystkich erach.
+
+Gotowe, gdy: da się rozegrać pełną grę od ery kamienia do ery informacji. **Brama: grywalna gra.**
+
+- [ ] Pixel art Patryka w warstwach w miejsce grafik zastępczych z etapu 5, shader koloru cywilizacji
+- [ ] Jeden motyw interfejsu (ramki 9-slice), statyczne grafiki, czcionka Pixelify Sans (GDD 12.4)
+- [ ] Rozkazy gracza, delegowanie poziomów decyzji do AI, drzewo technologii, zapis w dowolnym momencie
+- [ ] Strojenie wydajności mapy ogromnej
+- [ ] Grafiki dla wszystkich er (teren, osady, ulepszenia, jednostki); motywy interfejsu dla er zostają modułem
+- [ ] Warunki zwycięstwa: punktowe i bez końca; narzędzia „widoku boga” potrzebne do testów
 
 ## Aktualizacje po CORE (poza tym planem)
 

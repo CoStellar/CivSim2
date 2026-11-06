@@ -69,7 +69,7 @@ Osobne `--` na początku jest zalecane. Bez niego też zadziała, z wyjątkiem `
 | Folder | Co tam jest | Czy tu pracujesz |
 | --- | --- | --- |
 | `game/` | projekt Godota (sceny, skrypty klienta) | tak, w edytorze Godota |
-| `art/` | Twoje pliki LibreSprite i paleta | tak; do etapu 5 grafika nie trafia jeszcze do `game/` |
+| `art/` | Twoje pliki LibreSprite i paleta | tak; do etapu 13 Twoja grafika nie trafia jeszcze do `game/` |
 | `src/`, `tests/` | symulacja, serwer, testy (C#) | nie, to moja część |
 | `data/` | zawartość gry w JSON | czasem, przy balansie |
 | `docs/` | GDD, decyzje, opisy systemów | czytasz i akceptujesz zmiany |

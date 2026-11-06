@@ -7,7 +7,7 @@
 ## Dane wejściowe i wyjściowe
 - Czyta: typy efektów z `data/effects.json`, czas gry `GameState.Month`.
 - Zmienia: listę aktywnych efektów `GameState.Effects` (dodawanie, usuwanie, wygasanie).
-- Publikuje w migawce: na razie nic. Efekty pokaże inspektor w etapie 5.
+- Publikuje w migawce: na razie nic. Efekty pokaże inspektor w jednej z kolejnych zmian.
 
 ## Przepływ
 

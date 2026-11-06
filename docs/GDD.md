@@ -755,25 +755,26 @@ Nad tym gra rysuje sama, bez Twoich grafik: granice, strefę wpływów, kierunki
 
 ### 12.3 Lista grafik na pierwsze etapy
 
-Do etapu 4 podgląd używa prostych kolorowych heksów, więc grafiki zaczynają być potrzebne od etapu 5. Możesz rysować wcześniej, jeśli masz ochotę.
+Do etapu 4 podgląd używa prostych kolorowych heksów. Od etapu 5 używa grafik zastępczych, które robię ja, w tych samych rozmiarach i pod tymi samymi nazwami co w tabeli. Twoje grafiki są potrzebne w etapie 13 (tryb gracza, na końcu CORE) i podmieniają zastępcze bez zmian w kodzie. Możesz rysować wcześniej, jeśli masz ochotę.
 
 | Zestaw | Rozmiar | Sztuk | Kiedy potrzebne |
 | --- | --- | --- | --- |
-| Biomy | 48×42 | 14 × 3 warianty = 42 | Etap 5 (najpierw po 1 wariancie: 14) |
-| Rzeźba: wzgórza, góry | 48×42 | 2 × 2 warianty | Etap 5 |
-| Cechy terenu | 48×42 | 6 | Etap 5 |
-| Rzeki | 48×42 | 12 (6 krawędzi × 2 szerokości) | Etap 5 |
-| Ikony złóż | 24×24 | 12 (era kamienia i neolit) | Etap 5 |
-| Osady: obóz, wioska, miasteczko (+ opuszczona i ruiny) | 48×42 | 3 × 3 stany = 9 | Etap 5 |
-| Ulepszenia pól | 48×42 | 6 | Etap 5 |
-| Motyw interfejsu ery | elementy 9-slice: rogi 16×16, krawędzie, tła, przyciski w 3 stanach | ok. 10 na erę; na start 2 ery | Etap 5 |
-| Ikony interfejsu | 16×16 | ok. 30 | Etap 5 |
-| Jednostki (z kolorem cywilizacji) | 32×32 | 6 + 2 klatki ruchu | Etap 6 |
-| Portrety przywódców | 64×64 | 8 | Etap 6 |
+| Biomy | 48×42 | 14 × 3 warianty = 42 | Etap 13 (najpierw po 1 wariancie: 14) |
+| Rzeźba: wzgórza, góry | 48×42 | 2 × 2 warianty | Etap 13 |
+| Cechy terenu | 48×42 | 6 | Etap 13 |
+| Rzeki | 48×42 | 12 (6 krawędzi × 2 szerokości) | Etap 13 |
+| Ikony złóż | 24×24 | 12 (era kamienia i neolit) | Etap 13 |
+| Osady: obóz, wioska, miasteczko (+ opuszczona i ruiny) | 48×42 | 3 × 3 stany = 9 | Etap 13 |
+| Ulepszenia pól | 48×42 | 6 | Etap 13 |
+| Motyw interfejsu ery | elementy 9-slice: rogi 16×16, krawędzie, tła, przyciski w 3 stanach | ok. 10 na erę; na start 2 ery | Etap 13 |
+| Ikony interfejsu | 16×16 | ok. 30 | Etap 13 |
+| Jednostki (z kolorem cywilizacji) | 32×32 | 6 + 2 klatki ruchu | Etap 13 |
+| Portrety przywódców | 64×64 | 8 | Etap 13 |
 
 ### 12.4 Interfejs
 
 - Pełny ekran, skalowanie UI także całkowite. Cały interfejs po angielsku, czcionka pixelowa.
+- **Czcionka: Pixelify Sans** (decyzja Patryka z 2026-11-06). Darmowa z Google Fonts, licencja SIL Open Font License 1.1, więc można ją dołączyć do gry razem z plikiem licencji. Grube wersje na nagłówki i liczby, zwykła na teksty. Rysujemy ją bez wygładzania, w rozmiarach będących wielokrotnością siatki czcionki, żeby piksele były ostre jak w grafikach. Pliki czcionki trafią do zasobów klienta w etapie 13 i są przypisane w motywach Theme, więc motyw ery może ją w przyszłości zmienić.
 - **Układ ekranu:** górny pasek (era, rok, kluczowe zasoby, nauka, stabilność), minimapa w prawym dolnym rogu, panel wybranego pola lub osady po lewej, kronika i powiadomienia po prawej, na dole oś czasu z prędkością symulacji.
 - **Widoki mapy** (przełączane klawiszem): polityczny, zasoby, żyzność, zagrożenie AI, relacje dyplomatyczne, handel. Osobny przełącznik: powierzchnia wybranego świata albo widok kosmosu.
 - **Ekrany:** drzewo technologii, przegląd gospodarki (bilans towarów), dyplomacja, wykresy historii, kronika.
@@ -830,9 +831,9 @@ Gra ma dwa tryby na tym samym rdzeniu: obserwatora, w którym oglądasz i badasz
 
 ## 14. Roadmapa i podział pracy
 
-Etapy 0–4 dają działający symulator, etap 5 grywalne demo do ery neolitu. Potem każda kolejna era (3–9) to osobny etap tworzony tym samym cyklem. Moduły z rozdziału 16, w tym gra w sieci i kosmos, przyjdą jako późniejsze aktualizacje. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
+Etapy 0–4 dają działający symulator er 1–2. Etap 5 to lepszy podgląd: menu startowe z ustawieniami świata i symulacji, widok nakładających się warstw z przezroczystością i grafiki zastępcze. Potem każda kolejna era (3–9) to osobny etap (6–12) tworzony tym samym cyklem. Tryb gracza z pixel artem to ostatni etap CORE (13), bo najważniejsza jest dobrze działająca symulacja (decyzja Patryka z 2026-11-06). Moduły z rozdziału 16, w tym gra w sieci i kosmos, przyjdą jako późniejsze aktualizacje. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 
-**Priorytet: symulacja.** Do etapu 4 włącznie budujemy wyłącznie rdzeń i prosty podgląd deweloperski: kolorowe heksy, wykresy, kronika, inspektor pola i nakładki AI. Pixel art i interfejs gracza wchodzą od etapu 5, kiedy symulacja działa stabilnie na mapie ogromnej. Twoja rola w etapach 0–4 to decyzje o zasadach i ocena, czy przebiegi symulacji wyglądają sensownie.
+**Priorytet: symulacja.** Do etapu 12 włącznie budujemy wyłącznie rdzeń i podgląd deweloperski: kolorowe heksy (od etapu 5 grafiki zastępcze), wykresy, kronika, inspektor pola, warstwy i menu startowe. Pixel art i interfejs gracza wchodzą w etapie 13, kiedy symulacja wszystkich er działa stabilnie na mapie ogromnej. Twoja rola w etapach 0–12 to decyzje o zasadach i ocena, czy przebiegi symulacji wyglądają sensownie.
 
 ```mermaid
 flowchart LR
@@ -840,9 +841,10 @@ flowchart LR
   E1 --> E2["Etap 2 · Podgląd symulacji<br/>kolorowe heksy, wykresy, kronika<br/>Gotowe: 60 FPS, mapa ogromna"]
   E2 --> E3["Etap 3 · Gospodarka<br/>zasoby, ludność, osady, ery 1–2<br/>Gotowe: plemiona rosną same"]
   E3 --> E4["Etap 4 · AI i dyplomacja<br/>BRAMA: demo symulatora"]
-  E4 --> E5["Etap 5 · Tryb gracza<br/>pixel art, UI<br/>BRAMA: grywalne demo"]
+  E4 --> E5["Etap 5 · Lepszy podgląd<br/>menu startowe, warstwy,<br/>grafiki zastępcze"]
   E5 --> E6["Etapy 6–12 · ery 3–9<br/>jedna era na etap"]
-  E6 -.-> U["Aktualizacje po CORE<br/>moduły: sieć, kosmos, …"]
+  E6 --> E13["Etap 13 · Tryb gracza<br/>pixel art, UI<br/>BRAMA: grywalna gra"]
+  E13 -.-> U["Aktualizacje po CORE<br/>moduły: sieć, kosmos, …"]
 ```
 
 W każdym etapie ja piszę kod, testy i pliki danych, a na starcie etapu dostajesz listę grafik z rozmiarami i wskazówkami. Ty decydujesz o kierunku, rysujesz, uruchamiasz grę i oceniasz, czy jest fajna.
@@ -887,7 +889,7 @@ Te punkty przyjąłem roboczo albo zostawiłem otwarte. Odznacz, gdy decyzja zap
 
 CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. Wszystko inne to moduły dobudowywane później bez przebudowy, bo architektura (dane w JSON, efekty, komendy) zostawia na nie miejsce. W kolumnie „Decyzja” jest moja rekomendacja; zmień ją z listy, jeśli się nie zgadzasz.
 
-- **CORE:** budujemy w etapach 0–5.
+- **CORE:** budujemy w etapach 0–13.
 - **CORE (uproszczone):** w CORE, ale w prostszej wersji; pełna wersja to późniejszy moduł.
 - **Moduł:** przyszła aktualizacja po ukończeniu CORE; teraz jej nie planujemy.
 - **Wytnij:** rezygnujemy, bo dubluje inną funkcję albo nie jest warta kosztu.
@@ -903,7 +905,7 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Mapa hex na kuli (ADR 0012), fragmenty 32×32 | 3 | CORE | baza wszystkiego |
 | Planeta: nachylenie osi, rok, jasność gwiazdy, orbita, uśrednione pory roku, presety | 3 | CORE | decyzja Patryka z 2026-11-05 (etap 1b) |
 | Generator: klimat, biomy, rzeki na krawędziach, złoża | 3 | CORE | bez tego nie ma sytuacji, na które AI reaguje |
-| Mapy duża i ogromna | 3 | CORE (uproszczone) | architektura od razu, strojenie wydajności ogromnej dopiero przed etapem 5 |
+| Mapy duża i ogromna | 3 | CORE (uproszczone) | architektura od razu, strojenie wydajności ogromnej dopiero w etapie 13 |
 | Cuda natury | 3 | Moduł | ozdoba, nie zmienia symulacji |
 | Mechaniki późnych er: elektryczność, zanieczyszczenie, promieniowanie, zmiany klimatu | 3, 4, 10 | Moduł | dotyczą dopiero ery przemysłowej i późniejszych |
 | Wiele światów i kosmos | 3 | Moduł | ostatnia era; w CORE tylko lista światów w stanie gry |
@@ -954,7 +956,7 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Pozostałe zdarzenia i wielcy ludzie | 10 | Moduł | każde zdarzenie to mały dodatek w danych |
 | Podgląd deweloperski i tryb obserwatora | 13 | CORE | tak ocenisz symulację |
 | Narzędzia „widoku boga” | 13.1 | CORE (uproszczone) | tylko te potrzebne do testów |
-| Tryb gracza | 13.1 | CORE | po symulatorze, w etapie 5 |
+| Tryb gracza | 13.1 | CORE | na końcu, w etapie 13, po symulacji wszystkich er |
 | Warunki zwycięstwa | 13.2 | CORE (uproszczone) | punktowe i bez końca; pozostałe razem z modułami |
 | Poziomy trudności | 13.3 | Moduł | ma sens dopiero przy dopracowanym AI |
 | Pixel art w warstwach, kolor cywilizacji | 12 | CORE | podstawa wyglądu gry |
