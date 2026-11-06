@@ -4,7 +4,7 @@
 
 **Faza tury:** 8. Ludność, po `PopulationSystem` (zgony, urodzenia, dryf warstw), w krokach cywilizacji (ADR 0018). Pierwsi mistrzowie pojawiają się w fazie badań, gdy cywilizacja odkryje technologię (`Technologies.Learn`).
 
-**Stan:** PR 1 (dane, stan, zapis, hash, statystyki) i PR 2 (nauka fachu, przenoszenie, utrata, praca fachowców). PR 3: warstwy myślicieli (3%, główne źródło nauki) i przywódców (1%), wymogi ludzi w technologiach (`docs/systems/research.md`).
+**Stan:** PR 1 (dane, stan, zapis, hash, statystyki) i PR 2 (nauka fachu, przenoszenie, utrata, praca fachowców). PR 3: warstwy myślicieli (3%, główne źródło nauki) i przywódców (1%), wymogi ludzi w technologiach (`docs/systems/research.md`). PR 4: demografia (`docs/systems/population.md`). PR 5: graf technologii, fachów i ludzi rysowany z danych ([graf-technologii.md](graf-technologii.md), skrypt `docs/systems/tools/tech_graph.py`) i test, że całe drzewo jest osiągalne od zera.
 
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/skills.json` (fachy i reguły), ludzi warstw osady, znane technologie, umowy handlowe, odległości osad (`data/trade.json` `linkCells`).
@@ -43,6 +43,7 @@ flowchart TD
 - `data/skills.json` (wersja 2): 10 fachów er 1–2 z `jobsPercent` i latami nauki, reguły (`firstMasters` 2, `apprenticesPerMaster` 3, `apprenticeWorkPercent` 50, `moveMinMasters` 3, `moveSpareAbove` 2, `moveSharePercent` 50, `teachForOthersPercent` 50, `farmingSkill` farmer). Fach jest powiązany z recepturami i dobrami zbierania swojej technologii (`SkillLinks`, liczone przy wczytywaniu; jedna technologia otwiera najwyżej jeden fach).
 
 ## Testy
+- `TechnologyGraphTests` (PR 5): każda technologia i każdy fach osiągalne od zera, bez pętli między fachami a technologiami.
 - `SkillTests` (PR 1): dane, błędy w danych, przycinanie, nowe osady, zapis i hash.
 - `SkillLearningTests` (PR 2): pierwsi mistrzowie tam, gdzie żyje najwięcej ludzi warstwy; uczniowie po 3 na mistrza do miejsc pracy i koniec nauki po latach; uczeń pracuje za pół; utracony fach wraca tylko od partnera handlowego; nadwyżka przenosi się z miejscem w warstwie; osadnicy biorą fachowca; recepturę robią tylko fachowcy; dobra technologii według pokrycia.
 - Testy rolnictwa, receptur i suszy dostały rolników i garbarzy; `DeadValueTests`: sytuacja „rynek” z garbarzami i piekarzami, pakt obok umowy handlowej w sytuacjach neolitycznych.

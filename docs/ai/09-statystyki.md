@@ -3,8 +3,8 @@
 [← spis treści](README.md)
 
 Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata (ok. 27–29 tys. lat), seedy 7, 23 i 42,
-gałąź `feat/skills-learning` (etap 4F, PR 2: nauka fachu). W nawiasach liczby sprzed PR 2 (`development`, commit `448a104`,
-po PR C i PR 1 etapu 4F).
+koniec etapu 4F (gałąź `feat/demography`, PR 4: demografia). Wykres decyzji i tabela niżej są z tych gier; w nawiasach w tabeli
+liczby po PR 3 (commit `f993e4d`).
 Polecenie:
 
 ```
@@ -14,6 +14,27 @@ dotnet run --project src/CivSim.Headless -c Release -- --seed 7 --turns 1000 --m
 Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv, why42.csv>` (potrzebuje matplotlib).
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
+
+## Demografia (etap 4F, PR 4)
+
+Ludność przed PR 4 i po nim (`python3 docs/ai/tools/population_chart.py <katalog>`):
+
+![Ludność przed i po](img/ludnosc_przed_po.png)
+
+| Seed | Pierwszy neolit (rok) | Ludzie w kroku 200 | Ludzie na końcu | Technologie (średnio) | Obozy na końcu | Odległość od startu (pola) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 7 | 8450 (5800) | 9 276 (158 976) | 128 403 (238 508) | 9,8 (9,4) | 32 (40) | 13 (18) |
+| 23 | 8800 (5825) | 11 815 (244 646) | 113 062 (325 519) | 12,0 (13,6) | 32 (52) | 12 (20) |
+| 42 | 8950 (4800) | 14 837 (172 200) | 126 284 (221 459) | 8,6 (9,6) | 59 (54) | 17 (23) |
+
+Co widać (AI się nie zmieniło, zmienił się świat, w którym decyduje):
+
+- **Obozy przenoszą się 5–9 razy rzadziej** (1000–2000 zamiast 7600–9600 przeprowadzek), a dalekich wędrówek, zajęć pustych osad
+  i osadników jest 3–10 razy mniej. Ludzi przybywa powoli, więc obóz rzadko wyjada okolicę i rzadko głoduje; gubernator nie ma
+  powodu się ruszać. Cywilizacje rozchodzą się mniej daleko od startu.
+- **Neolit 3000–4000 lat później:** 10 myślicieli do rolnictwa to cywilizacja ok. 330 ludzi, a do takiej liczby dochodzi się teraz wolniej.
+- **Badania i strategia bez zmian** (ok. 120 wyborów badań i 600 przeglądów strategii na grę).
+- **Receptur mniej o połowę** (900–1000 zmian): mniej osad z rzemieślnikami i spokojniejsze ceny jedzenia.
 
 ## Ludzie w technologiach (etap 4F, PR 3)
 
@@ -105,30 +126,30 @@ Rytmy cywilizacji i ludność przed zegarem i po nim (ADR 0018, `python3 docs/ai
 | 23 | 100, rok 4800 (140, rok 6875) | 163 527 (117 698) | 9 (7) | 14,0 (13,0) | 129 (81) |
 | 42 | 90, rok 4425 (150, rok 7350) | 117 473 (103 500) | 8 (7) | 9,5 (10,6) | 91 (66) |
 
-## Liczba decyzji w 1000 tur (etap 4F PR 2; w nawiasach przed PR 2)
+## Liczba decyzji w 1000 tur (etap 4F po PR 4; w nawiasach po PR 3)
 
 | Decyzja | Id | Seed 7 | Seed 23 | Seed 42 |
 | --- | --- | ---: | ---: | ---: |
-| strateg ustawia strategię | S1 | 612 (550) | 501 (497) | 519 (484) |
-| uczony wybiera badanie | U1 | 113 (103) | 97 (113) | 102 (101) |
-| skarbnik zmienia recepturę | T1 | 1523 (4992) | 1905 (2702) | 1878 (2966) |
-| obóz przenosi się | G2 | 6984 (2244) | 6686 (1516) | 8583 (2616) |
-| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 496 (304) | 473 (281) | 577 (276) |
-| wypędzenie obcego obozu | G2 | 129 (95) | 13 (5) | 34 (24) |
-| odłam zakłada nowy obóz | G5 | 833 (781) | 880 (773) | 865 (677) |
-| mały obóz dołącza do innego | G1 | 1063 (778) | 1163 (727) | 1590 (761) |
-| obóz osiada (wioska) | G4 | 371 (428) | 473 (541) | 437 (500) |
-| wioska wysyła osadników | G7 | 607 (424) | 739 (473) | 895 (469) |
-| wyprawa w nieznane | G8 | 6 (8) | 16 (12) | 231 (97) |
-| daleka wędrówka | G3 | 139 (32) | 36 (38) | 88 (23) |
-| zabranie porzuconych dóbr | G6 | 3 (1) | 0 (1) | 0 (1) |
-| dyplomata proponuje umowę albo pokój | D2 | 374 (184) | 351 (98) | 882 (613) |
-| dyplomata przyjmuje propozycję | D1 | 29 (44) | 19 (23) | 25 (30) |
-| dyplomata odrzuca propozycję | D1 | 330 (114) | 318 (63) | 836 (565) |
-| dyplomata wypowiada wojnę | D2 | 8 (10) | 2 (0) | 7 (1) |
-| **razem** | | **13620** (11092) | **13672** (7863) | **17549** (10204) |
+| strateg ustawia strategię | S1 | 653 (657) | 620 (624) | 629 (564) |
+| uczony wybiera badanie | U1 | 125 (118) | 126 (128) | 127 (112) |
+| skarbnik zmienia recepturę | T1 | 957 (1486) | 909 (2202) | 994 (2080) |
+| obóz przenosi się | G2 | 993 (7637) | 1070 (9619) | 1983 (9066) |
+| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 97 (422) | 54 (608) | 175 (644) |
+| wypędzenie obcego obozu | G2 | 47 (87) | 16 (71) | 25 (76) |
+| odłam zakłada nowy obóz | G5 | 631 (828) | 661 (853) | 669 (991) |
+| mały obóz dołącza do innego | G1 | 397 (1092) | 421 (1316) | 761 (1705) |
+| obóz osiada (wioska) | G4 | 380 (374) | 439 (503) | 363 (355) |
+| wioska wysyła osadników | G7 | 153 (631) | 211 (969) | 164 (599) |
+| wyprawa w nieznane | G8 | 6 (16) | 8 (23) | 328 (485) |
+| daleka wędrówka | G3 | 6 (120) | 15 (141) | 32 (87) |
+| zabranie porzuconych dóbr | G6 | 0 (0) | 0 (0) | 0 (0) |
+| dyplomata proponuje umowę albo pokój | D2 | 308 (494) | 235 (131) | 1009 (1089) |
+| dyplomata przyjmuje propozycję | D1 | 34 (27) | 21 (27) | 27 (27) |
+| dyplomata odrzuca propozycję | D1 | 254 (455) | 205 (84) | 961 (1043) |
+| dyplomata wypowiada wojnę | D2 | 13 (8) | 4 (9) | 5 (5) |
+| **razem** | | **5054** (14452) | **5015** (17308) | **8252** (18928) |
 
-Tabela po PR C (z liczbami sprzed PR C) jest w historii tej strony w gicie (commit `448a104`).
+Tabele po PR 2 i po PR C są w historii tej strony w gicie (commity `f993e4d` i `448a104`).
 
 Co widać po PR B (historia):
 
