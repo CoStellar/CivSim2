@@ -81,10 +81,10 @@ się dziś **nie zmieniają** w trakcie gry (zmiana z doświadczeniem i sukcesja
 | Cecha | Do czego jest używana dziś | Gdzie |
 | --- | --- | --- |
 | agresja | mnożnik celu „podbój”: wypędzenie obcego obozu, wypowiedzenie wojny | G2, D2 |
-| ekspansywność | mnożnik celu „ekspansja”: przeniesienie, wędrówka, odłam; **próg odłamu** | G2, G3, G5 |
-| handlowość | mnożnik celu „dobrobyt”: receptury, umowa handlowa | D1, D2 (T1 bez realnego wpływu, patrz [uwagi](08-ocena-i-uwagi.md)) |
-| ciekawość świata | mnożnik celu „nauka”: badania | U1 (bez realnego wpływu, patrz uwagi) |
-| otwartość | pierwsze wrażenie po kontakcie (−20 … +20 sympatii) | R2 → G2 |
+| ekspansywność | mnożnik celu „ekspansja”: przeniesienie, wędrówka, odłam (od PR B „zostać” ma tylko połowę); **próg odłamu**; technologie udźwigu | G2, G3, G5, U1 |
+| handlowość | mnożnik celu „dobrobyt”: wyroby w recepturach i technologiach, umowa handlowa; premia dla wyrobów na wymianę | T1, U1, D1, D2 |
+| ciekawość świata | mnożnik celu „nauka” w technologiach; zmniejsza strach przed kosztem technologii (od PR B) | U1 |
+| otwartość | pierwsze wrażenie po kontakcie (−20 … +20 sympatii); mnożnik celu „wpływ” (technologie społeczne, nastrój) | R2 → G2, U1 |
 | ostrożność | szansa wzięcia najlepszego działania zamiast losowania; mnożnik celu „bezpieczeństwo”: pakt o nieagresji, pokój | wszystkie wybory, D1, D2 |
 | mściwość | jak długo pamięta napaść (150 → 300 lat) | R3 → G2 |
 | lojalność | mnożnik sojuszu obronnego; hamuje wojnę łamiącą umowę; szansa dołączenia do wojny sojusznika | D1, D2, D3 |
@@ -110,14 +110,15 @@ wszystkie są równe 1000. Doradca mnoży ocenę działania przez wagę celu, kt
 | --- | --- |
 | przeniesienie obozu na wolne miejsce, zajęcie pustej osady, wędrówka, odłam | ekspansja |
 | wypędzenie obcego obozu, wypowiedzenie wojny | podbój |
-| receptura, umowa handlowa | dobrobyt |
+| receptura na wyroby, umowa handlowa | dobrobyt (`goalOfGoods`) |
+| receptura na jedzenie (chleb) | bezpieczeństwo (`goalOfFood`) |
 | pakt o nieagresji, sojusz obronny, pokój | bezpieczeństwo |
-| technologia | nauka |
-| (nic) | wpływ — żadne działanie dziś go nie używa |
+| technologia | każda część osobno: podstawa i dziedzina nauki → nauka, społeczna → wpływ, wojskowa → podbój, jedzenie i wioski → bezpieczeństwo, wyroby → dobrobyt, udźwig → ekspansja ([uczony](05-uczony.md)) |
 
 **Ważne:** waga celu i mnożnik charakteru zmieniają wynik **tylko wtedy, gdy porównywane działania służą różnym celom** (albo gdy ocena
 jest porównywana ze stałym progiem). Jeśli wszystkie opcje mnożymy przez tę samą liczbę, kolejność i szanse w losowaniu się nie
-zmieniają. Szczegóły i skutki w [uwagach](08-ocena-i-uwagi.md#1-wagi-i-cechy-które-nic-nie-zmieniają).
+zmieniają. Dlatego od PR B każda opcja mówi, któremu celowi służy, a test `DeadValueTests` pilnuje, żeby każda waga i cecha coś
+zmieniała. Szczegóły w [uwagach](08-ocena-i-uwagi.md#1-wagi-i-cechy-które-nic-nie-zmieniają-zamknięte-w-pr-b).
 
 ## 6. Histereza (żeby AI się nie miotało)
 

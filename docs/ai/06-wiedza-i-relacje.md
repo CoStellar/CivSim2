@@ -11,11 +11,13 @@ To nie są decyzje. To dane, z których AI korzysta przy decyzjach.
 - W każdym własnym kroku każda zamieszkana osada wysyła **zwiadowcę** w losowym kierunku (strumień `population`): idzie do 15 pól (`scoutCells`)
   prosto po lądzie i lodzie morskim, skręca losowo przy wodzie, widzi pola obok swojej drogi.
 - Pole jest **znane** przez 300 lat od ostatniego zobaczenia (`oralMemoryYears`), potem zapomniane, chyba że plemię wróci.
-- Kto używa: G2 i G3 (kandydaci muszą być znani), S1 (cel ekspansji musi być znany), W2.
+- Kto używa: G2 i G3 (kandydaci muszą być znani), G6 (łupy tylko ze znanych pól, od PR B), S1 (cel ekspansji musi być znany), W2.
 
-**Ważne zastrzeżenie:** AI wybiera tylko znane pola, ale ocenia je według **obecnego** stanu świata (dzisiejsza dzika żywność,
-dzisiejsza temperatura, kto tam dziś mieszka, ilu ma wojowników), a nie według tego, co widziało. Liczy też jedzenie pól wokół
-znanego pola, nawet jeśli tych pól nie widziało. Patrz [uwagi](08-ocena-i-uwagi.md#2-ai-zna-dzisiejszy-stan-pól-które-tylko-pamięta).
+**Pole widziane teraz** (od PR B, `MapMemory.SeesNow`): pole, które cywilizacja widziała w swoim ostatnim własnym kroku. Tylko na
+takich polach AI liczy obce obozy (G2: wypędzenie) i obcych wojowników (dyplomata: zagrożenie, siła).
+
+**Zastrzeżenie, które zostało:** jedzenie i temperaturę znanych pól AI ocenia według **obecnego** stanu świata, a nie według tego, co
+widziało, i liczy też jedzenie pól wokół znanego pola. Patrz [uwagi](08-ocena-i-uwagi.md#2-ai-zna-dzisiejszy-stan-pól-które-tylko-pamięta).
 
 ## W2: Droga wędrówki
 

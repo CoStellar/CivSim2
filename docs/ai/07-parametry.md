@@ -23,6 +23,39 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `splitMinPercentOfLevel` | 50 | % | G5 | najniższy próg zatłoczenia dla odłamu |
 | `searchEverySteps` | 3 | własne kroki | G2 | co ile własnych kroków szuka nie mocno głodny obóz |
 | `starvingFedPercent` | 85 | % | G2 | poniżej tego najedzenia obóz szuka co turę |
+| `goalOfFood` | `security` | cel | T1, U1 | któremu celowi służy jedzenie (PR B) |
+| `goalOfGoods` | `prosperity` | cel | T1, U1 | któremu celowi służą pozostałe towary (PR B) |
+| `tradeGoodsBonusPercent` | 50 | % × handlowość | T1 | premia dla wyrobów cennych, gdy towary płyną do partnera handlowego (PR B) |
+| `scienceBehindTechs` | 4 | technologie | S1 | przy takiej przewadze najlepszego spotkanego waga nauki jest najwyższa (PR B) |
+| `scienceWeightMax` | 1500 | ‰ | S1 | najwyższa waga nauki (PR B) |
+| `influenceMetCivs` | 4 | cywilizacje | S1 | przy tylu spotkanych waga wpływu jest najwyższa (PR B) |
+| `influenceWeightMax` | 1300 | ‰ | S1 | najwyższa waga wpływu (PR B) |
+| `moveExpansionSharePercent` | 50 | % | G2, G3 | jaką część odchylenia wagi ekspansji i ekspansywności dostaje przeprowadzka ponad „zostać” (PR B) |
+| `journeyBetterByPercent` | 60 | % | G3 | o ile wędrówka musi być lepsza (dawniej 2 × próg G2 w kodzie) |
+| `journeyPenaltyPerMillePerCell` | 10 | ‰ na pole | G3 | spadek bliskości dalekiego miejsca (dawniej w kodzie) |
+| `farSearchEveryCells` | 3 | pola | G3, S1 | gęstość siatki dalekich kandydatów (dawniej w kodzie) |
+| `targetZeroAtJourneys` | 2 | promienie wędrówki | S1 | w jakiej odległości cel ekspansji traci całą wartość (dawniej w kodzie) |
+| `settleFarmYieldPercent` | 150 | % | G4 | ile potrzeb musi dać plon z pól, żeby osiąść (dawniej w kodzie) |
+| `plunderBelowStoragePercent` | 50 | % | G6 | poniżej jakiego zapełnienia magazynu obóz zbiera porzucone dobra (dawniej w kodzie) |
+| `uncomfortableBelowPercent` | 100 | % | G2 | poniżej tej wygody obóz szuka nowego miejsca (dawniej w kodzie) |
+| `opinionSwingPercent` | 50 | % | G2 | jak mocno sympatia zmienia chęć wypędzenia: ±50% przy pełnej sympatii albo nienawiści (dawniej „/ 20” w kodzie) |
+| `reviewStaggerYears` | 7 | lata | D2 | rozłożenie przeglądów dyplomaty między cywilizacje (dawniej 84 miesiące w kodzie) |
+
+### `data/ai.json` → `scholar` (uczony, PR B)
+
+| Klucz | Wartość | Jednostka | Znaczenie |
+| --- | --- | --- | --- |
+| `baseWorthPerPerson` | 0,01 | jedn. wymiany na osobę na rok | każda technologia (cel: nauka) |
+| `fieldWorthPerPerson` | 0,02 | j.w. | dziedzina nauka, społeczeństwo, wojsko (cele: nauka, wpływ, podbój) |
+| `gatherWorthPercent` | 100 | % | jak liczyć dodatkowe plony zbierania na polach strefy |
+| `missingInputPercent` | 25 | % | ile wart jest przepis, gdy brakuje surowca |
+| `villageWorthPerPerson` | 0,1 | jedn. na osobę na rok | wioski (rolnictwo), mnożone przez żyzność strefy; **najmocniejsza gałka tempa neolitu** |
+| `leadsToPercent` | 25 | % | jaka część najlepszej technologii „za nią” dochodzi do wartości |
+| `curiosityCostReliefPercent` | 100 | % | jak mocno ciekawość zmniejsza strach przed kosztem |
+| `effects[]` | patrz [uczony](05-uczony.md#priorytet-co-technologia-daje) | jedn. za punkt na 100 osób | wartość punktu efektu: wydajność, odporność na zimno, nastrój, psucie, udźwig |
+
+Test `DeadValueTests` sprawdza każdy z tych parametrów (i każdą cechę oraz wagę celu): zmiana wartości musi zmienić jakąś decyzję
+w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala test.
 
 ## `data/population.json`
 
@@ -96,22 +129,15 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 
 ## Liczby zaszyte w kodzie (nie w danych)
 
+Od PR B zostały tylko liczby, które są częścią samej metody (nie strojenia):
+
 | Liczba | Gdzie | Decyzje | Znaczenie |
 | --- | --- | --- | --- |
 | 500 + cecha | `Character.Multiplier` | wszystkie | zakres mnożnika charakteru 0,5–1,5 |
 | średnia z 2 losowań | `Character.Roll` | C1 | rozkład cech |
-| 1000 − 10 × odległość | `GovernorAdvisor._farNearness` | G3 | bliskość dalekiego miejsca |
-| co 3. pole | `FarSite`, `StrategistAdvisor.Target` | G3, S1 | rzadka siatka kandydatów |
-| 2 × próg przeprowadzki | `Decide` | G3 | histereza wędrówki (60%) |
-| 2 × promień wędrówki | `StrategistAdvisor.Target` | S1 | bliskość celu (0,5 na 40 polach) |
-| plon × 2 ≥ potrzeby × 3 | `Decide` | G4 | próg osiedlenia 150% |
-| magazyn < 50% | `Decide` | G6 | kiedy zbierać porzucone dobra |
-| wygoda < 100% | `Decide` | G2 | „zmarznięty” wyzwala szukanie |
-| sympatia / 20 | `Place` | G2 | siła czynnika opinii |
-| 1 000 000 000 | `ScholarAdvisor.TechnologyWorth` | U1 | wartość każdej technologii |
+| 150 × pola lądu | `ScholarAdvisor.Priorities` | U1 | „plon rolny” pełnej żyzności (50 + 100) jako 100% |
+| kwadrat ilorazu kosztów (bez ciekawości) | `ScholarAdvisor.CostFactor` | U1 | jak mocno taniość przeważa |
 | alarmy `WarDeclared`, `Attacked` | `WorldClock.cs`, `Treaties.DeclareWar`, `Contacts.RecordAttack` | D2, G2 | co budzi reakcję poza rytmem |
-| 84 miesiące × numer cywilizacji | `DiplomatAdvisor.IssueCommands` | D2 | rozłożenie przeglądów dyplomaty (7 lat na cywilizację) |
-| kwadrat ilorazu kosztów | `ScholarAdvisor` | U1 | jak mocno taniość przeważa |
 | 3000 | `SetStrategyCommand.MaxWeight` | S1 | najwyższa dozwolona waga celu |
 | 3 | `Chooser.MaxRoom` | wszystkie | najwięcej działań w losowaniu |
 | kolejność G1 → G2 → G3 → G4 → G5 → G6 | `Decide` | gubernator | priorytet decyzji obozu |

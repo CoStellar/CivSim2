@@ -127,10 +127,12 @@ propozycje, a druga strona ocenia je tą samą oceną; złamanie umowy psuje opi
 handel barterowy między najbliższymi osadami partnerów bez karawan; handel buduje sympatię i zaufanie, przenosi technologie i epidemie; wspólny wróg;
 `--treaties` w Headless; `docs/systems/diplomacy.md`, `data/diplomacy.json`),
 **zegar** (przed 4e, decyzja Patryka z 2026-11-06, ADR 0018: licznik lat świata, każda cywilizacja liczy się i decyduje we własnym rytmie swojej ery,
-kroki przypięte do kalendarza bez utraty lat; decyzje reaktywne na wojnę, napad, propozycję i koniec badania; odstępy AI w własnych krokach; zapis w formacie 19).
+kroki przypięte do kalendarza bez utraty lat; decyzje reaktywne na wojnę, napad, propozycję i koniec badania; odstępy AI w własnych krokach; zapis w formacie 19),
+**B: wartości** (decyzja Patryka z 2026-11-06, ADR 0019: każda opcja służy celowi; uczony liczy priorytet technologii z położenia, braków i
+charakteru, a koszt jest przeszkodą łagodzoną ciekawością; skarbnik koordynuje osady sieci, jedzenie kontra wyroby, premia za handel;
+strateg: waga nauki i wpływu; obce obozy tylko z pól widzianych teraz; liczby strojenia w `data/ai.json`; test martwych wartości).
 
-Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **B** wartości (priorytety technologii i towarów, rola każdej wagi i cechy),
-**C** ocena ziemi i migracje, **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
+Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **C** ocena ziemi i migracje, **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
 - [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji (kierunek ekspansji z wartości wolnej ziemi gotowy w 4b)

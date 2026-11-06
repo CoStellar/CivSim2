@@ -95,12 +95,17 @@ nowego miejsca nawet najedzony (G2).
 
 ### Czynniki miejsca dalekiego (G3)
 
-`Far`, `GovernorAdvisor.cs:518`: jedzenie × wygoda × bliskość dalekiego miejsca (1000 − 10 × odległość) × kierunek (1150) × waga
+`Far`, `GovernorAdvisor.cs:518`: jedzenie × wygoda × bliskość dalekiego miejsca (1000 − 10 × odległość, `journeyPenaltyPerMillePerCell`) × kierunek (1150) × waga
 ekspansji × ekspansywność. Bez premii za stare obozowisko i bez obcych obozów.
 
 ### Ocena „zostać tutaj”
 
-`stay` = jedzenie okolicy obecnego pola × wygoda × waga ekspansji × (500 + ekspansywność). **Bez** bliskości, kierunku i obozowiska.
+`stay` = jedzenie okolicy obecnego pola × wygoda × **połowa** wagi ekspansji × **połowa** mnożnika ekspansywności. **Bez** bliskości,
+kierunku i obozowiska.
+
+„Połowa” znaczy: zostaje 50% odchylenia od 1000 (`moveExpansionSharePercent: 50`). Przy wadze ekspansji 1600 nowe miejsca dostają
+× 1,6, a „zostać” tylko × 1,3. Dawniej obie strony dostawały pełną wagę, więc waga ekspansji i ekspansywność nie zmieniały decyzji
+„przenieść się czy zostać” (od PR B zmieniają: ekspansywne, zatłoczone plemię chętniej rusza w drogę).
 
 ---
 
@@ -123,7 +128,7 @@ ekspansji × ekspansywność. Bez premii za stare obozowisko i bez obcych obozó
 **Warunki wejścia (wszystkie):**
 
 1. obóz jest **głodny** (najedzenie w poprzednim własnym kroku < 95%, `moveWhenFedBelowPercent`) **albo zmarznięty/przegrzany**
-   (wygoda jego pola < 100%);
+   (wygoda jego pola < 100%, `uncomfortableBelowPercent`);
 2. **odpoczął**: od ostatniej przeprowadzki minęły co najmniej 2 własne kroki (`minStepsBetweenMoves` × rytm ery);
 3. to **krok szukania**: obóz głoduje mocno (najedzenie < 85%, `starvingFedPercent`), albo planeta ma pory roku na żywo, albo
    `(liczba własnych kroków − 1 + numer obozu) mod 3 = 0` (`searchEverySteps`).
@@ -136,7 +141,8 @@ obozy sprawdzają G2 od razu: warunki 1–3 nie obowiązują, ale nowe miejsce d
 - nie jest wodą i nie jest polem obozu,
 - jest **znane** cywilizacji (pamięć mapy, W1),
 - jest **niczyje albo własne** (strefa wpływów), **albo** stoi na nim zamieszkany **obcy obóz** cywilizacji, z którą **nie** łączy nas
-  pakt o nieagresji, sojusz obronny ani rozejm po wojnie (etap 4d),
+  pakt o nieagresji, sojusz obronny ani rozejm po wojnie (etap 4d), a cywilizacja **widziała to pole w swoim ostatnim kroku**
+  (`MapMemory.SeesNow`, od PR B: nie zna dzisiejszej siły obozów, których dawno nie widziała),
 - nie stoi na nim zamieszkana osada (chyba że obca, patrz wypędzenie) i nie zostało zarezerwowane w tej turze.
 
 Puste (porzucone) osady i ruiny **są** dozwolone: wtedy zamiast przeprowadzki jest zajęcie.
@@ -176,7 +182,7 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
 - **Ocena:** [czynniki dalekie](#czynniki-miejsca-dalekiego-g3). Wybór: 3 najlepsze, ostrożność albo losowanie.
 - **Droga:** dopiero dla wybranego pola szukamy drogi: najkrótsza ścieżka po **znanych** polach lądu, lodu morskiego i pomostów,
   nie dalej niż 40 pól od startu (`PathFinder`). Brak drogi = brak wędrówki w tej turze (nie próbuje drugiego kandydata).
-- **Próg:** `ocena × 100 > max(zostać tutaj, najlepsze miejsce z G2) × 160` (dwa razy próg G2).
+- **Próg:** `ocena × 100 > max(zostać tutaj, najlepsze miejsce z G2) × 160` (`journeyBetterByPercent: 60`).
 - **Komenda:** `JourneyCommand`. Potem system wędrówki w każdym własnym kroku cywilizacji przesuwa obóz do 10 pól po drodze, zatrzymując się tylko na wolnym lądzie,
   aż dojdzie albo droga zniknie (zapomniany ląd, stopiony lód). W trakcie wędrówki obóz nie podejmuje żadnych decyzji.
 
@@ -193,7 +199,7 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
                3 × (50 + żyzność) / 100 × część roku wegetacji %  × 40 rolników na pole
                (pole wodne albo z żyznością < 20 daje 0)
   potrzeby  = roczne potrzeby jedzenia wszystkich mieszkańców
-  osiądź, gdy plon z pól × 2 ≥ potrzeby × 3     (czyli plon ≥ 150% potrzeb)
+  osiądź, gdy plon z pól × 100 ≥ potrzeby × 150     (settleFarmYieldPercent: 150)
   ```
 
 - **Ocena:** plon z pól. Notatki: `farm yield` (plon / potrzeby w %), `people`. Bez wag, charakteru i losowania.
@@ -232,12 +238,12 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
 
 `Decide`, `GovernorAdvisor.cs:282`.
 
-- **Kiedy:** tura decyzyjna, nic wcześniej nie zapadło, magazyn obozu jest zapełniony **mniej niż w połowie** (zaszyte w kodzie).
+- **Kiedy:** tura decyzyjna, nic wcześniej nie zapadło, magazyn obozu jest zapełniony **mniej niż w połowie** (`plunderBelowStoragePercent: 50`).
 - **Wybór:** **pierwsza** na liście osad pusta osada albo ruina na tym samym świecie, z jakimikolwiek dobrami, w promieniu 10 pól, na
   ziemi niczyjej albo własnej. Nie ma porównywania kilku miejsc ani oceny.
 - **Ocena:** ilość dóbr w setnych; notatka `goods left`.
 - **Komenda:** `PlunderSettlementCommand`: obóz zabiera tyle, ile udźwigną jego ludzie.
-- **Uwaga:** pamięć mapy nie jest sprawdzana (osada nie musi być znana).
+- Od PR B tylko osady na polach, które cywilizacja **zna** (pamięć mapy, W1).
 
 ---
 
@@ -246,7 +252,8 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
 Obóz 100 osób, najedzony w 90% (głodny, bo < 95%), tura szukania. Cywilizacja: waga ekspansji 1300, ekspansywność 600 (mnożnik
 1,1), ostrożność 700, cel ekspansji na wschodzie.
 
-1. **Zostać:** jedzenie okolicy 9000 (90 na rok), wygoda 100% → 9000 × 1,3 × 1,1 = **12 870**.
+1. **Zostać:** jedzenie okolicy 9000 (90 na rok), wygoda 100% → 9000 × 1,15 × 1,05 = **10 868** (połowa odchylenia wagi 1300 i
+   mnożnika 1,1).
 2. **Pole A** 4 pola na wschód: jedzenie 12 000, wygoda 100%, bliskość 880, kierunek 1150 →
    12 000 × 0,88 × 1,15 = 12 144 → × 1,3 × 1,1 = **17 365**.
 3. **Pole B** 2 pola na zachód, stare obozowisko: jedzenie 11 500, bliskość 940, obozowisko 1100 → 11 891 → **17 004**.
@@ -255,6 +262,6 @@ Obóz 100 osób, najedzony w 90% (głodny, bo < 95%), tura szukania. Cywilizacja
    < 150%: **odpada** przed wejściem do wyboru.
 5. Wybór trzyma A (17 365) i B (17 004). Z szansą 70% (ostrożność) bierze A; w pozostałych 30% losuje 50,5% A / 49,5% B.
    Razem: A ≈ 85%, B ≈ 15%.
-6. Próg: 17 365 × 100 = 1 736 500 > 12 870 × 130 = 1 673 100 → **przenosi się**. Pole B też przeszłoby próg (1 700 400).
+6. Próg: 17 365 × 100 = 1 736 500 > 10 868 × 130 = 1 412 840 → **przenosi się**. Pole B też przeszłoby próg (1 700 400).
 
 Prawdziwe wpisy z dziennika są w [statystykach](09-statystyki.md).

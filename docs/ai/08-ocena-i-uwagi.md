@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Ta strona to moja (Claude) uczciwa ocena obecnego AI po przeczytaniu całego kodu i trzech grach po 1000 tur. Niczego tu nie
-zmieniam: każda poprawka zmienia zasady gry, więc decydujesz Ty. Na końcu są pytania z rekomendacją.
+Ta strona to moja (Claude) uczciwa ocena obecnego AI po przeczytaniu całego kodu i trzech grach po 1000 tur. Każda poprawka
+zmienia zasady gry, więc decydujesz Ty. **Stan: po PR B (wartości i priorytety)**; punkty, które PR B zamknął, są oznaczone.
 
 ## Podsumowanie w jednej tabeli
 
@@ -14,41 +14,42 @@ zmieniam: każda poprawka zmienia zasady gry, więc decydujesz Ty. Na końcu są
 | Gubernator: osiedlenie (G4) | **za proste** | w praktyce „zna rolnictwo i ma 60 osób = osiada” |
 | Gubernator: łupy (G6), dołączanie (G1) | proste, ale wystarczy | rzadkie albo oczywiste sytuacje |
 | Wioski | **brak AI** | po osiedleniu gubernator nic nie robi |
-| Strateg | **za skomplikowany w stosunku do skutku** | 6 wag; ekspansja działa w gubernatorze, głód (bezpieczeństwo, dobrobyt) od 4d tylko w dyplomacji |
-| Charakter | **częściowo martwy** | od 4d nic nie zmienia tylko ciekawość świata |
+| Strateg | **dobre (od PR B)** | każda z 6 wag na coś wpływa; nauka rośnie, gdy spotkani wiedzą więcej, wpływ z liczbą spotkanych; podbój czeka na 4e |
+| Charakter | **żywy (od PR B)** | każda cecha zmienia decyzję (test `DeadValueTests`); ciekawość zmniejsza strach przed kosztem technologii |
 | Dyplomata (4d) | **dobre, z jedną dziurą** | ta sama ocena dla obu stron, reaguje na wojnę i napad poza rytmem (ADR 0018); ale „widzi” dzisiejszą siłę z pamiętanych pól |
-| Skarbnik | dobry pomysł (ceny z popytu), **drobne braki** | osady sieci nie koordynują się |
-| Uczony | **za prosty** | bierze najtańsze, nie patrzy, co technologia daje |
-| Wiedza AI | **niezgodne z zasadą** | AI zna dzisiejszy stan pól, które tylko pamięta |
+| Skarbnik | **dobre (od PR B), jedna słabość** | osady sieci koordynują się, jedzenie kontra wyroby, premia za handel; zostało przełączanie odzież ↔ chleb |
+| Uczony | **dobre (od PR B)** | priorytet z położenia, braków i charakteru, koszt jako przeszkoda; rolnictwo przychodzi wcześniej (do oceny) |
+| Wiedza AI | **częściowo naprawione (PR B)** | obce obozy i ich siła tylko z pól widzianych w ostatnim kroku; jedzenie pól nadal dzisiejsze |
 | Rytm decyzji | **dobre (od ADR 0018)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i ruch obozu nadal „na krok” (PR C) |
 
-## 1. Wagi i cechy, które nic nie zmieniają
+## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
 Waga celu i mnożnik charakteru zmieniają decyzję **tylko wtedy, gdy porównywane opcje służą różnym celom** albo gdy ocenę porównujemy
-ze stałym progiem. Jeśli wszystkie opcje pomnożymy przez tę samą liczbę, kolejność i szanse w losowaniu zostają te same (pomijając
-zaokrąglenia o 1).
+ze stałym progiem. Jeśli wszystkie opcje pomnożymy przez tę samą liczbę, kolejność i szanse w losowaniu zostają te same. Przed PR B
+tak było w skarbniku (dobrobyt × handlowość na wszystkich recepturach), u uczonego (nauka × ciekawość na wszystkich technologiach), w
+G2 i G3 („zostać” dostawało tę samą wagę ekspansji co przeprowadzka), a waga wpływu nie była używana nigdzie.
 
-| Wielkość | Gdzie mnoży | Czy zmienia decyzję |
-| --- | --- | --- |
-| waga ekspansji × ekspansywność | G2: „zostać” i wolne miejsca jednakowo | **nie** (między sobą) |
-| ta sama | G2: wolne miejsce kontra obcy obóz (który ma wagę podboju × agresję) | **tak** |
-| ta sama | G3: wędrówka kontra „zostać” | **nie** |
-| ta sama | G5: próg zatłoczenia | **tak** (jedyne silne działanie) |
-| ta sama | G5: wybór miejsca odłamu (wszystkie wolne) | **nie** |
-| waga podboju × agresja | G2: obcy obóz | **tak** (waga podboju zawsze 1000, działa tylko agresja) |
-| waga dobrobytu × handlowość | T1: wszystkie receptury | **nie** |
-| ta sama | D2: umowa handlowa kontra pakt, sojusz, wojna (inne cele) i próg 1,0 | **tak** (od 4d) |
-| waga bezpieczeństwa × ostrożność | D1, D2: pakt, pokój; sojusz (× lojalność) | **tak** (od 4d) |
-| waga nauki × ciekawość | U1: wszystkie technologie | **nie** |
-| waga wpływu | nigdzie | **nie** |
-| lojalność | D2 sojusz, hamulec wojny, D3 dołączanie sojusznika | **tak** (od 4d) |
+Po PR B:
 
-**Skutek (stan 4d):** waga głodu (bezpieczeństwo i dobrobyt) działa tylko w dyplomacji: głodna cywilizacja chętniej zawiera pakty i
-pokój. W skarbniku i uczonym dalej nic nie zmienia. **Ciekawość świata nic nie zmienia.** Waga wpływu nie jest nigdzie używana. Ciekawa uboczna rzecz: im bardziej zatłoczona cywilizacja (wyższa waga ekspansji), tym **rzadziej**
-wypędza obce obozy, bo wolne miejsca rosną w ocenie, a obce obozy nie.
+| Wielkość | Gdzie działa |
+| --- | --- |
+| waga ekspansji × ekspansywność | G2, G3: przeprowadzka kontra „zostać” (zostać ma połowę odchylenia); G5: próg odłamu; G2: wolne miejsce kontra obcy obóz; U1: udźwig |
+| waga podboju × agresja | G2: obcy obóz; D2: wojna; U1: technologie wojskowe |
+| waga dobrobytu × handlowość | T1: wyroby kontra jedzenie; U1: technologie wyrobów; D2: umowa handlowa |
+| handlowość (sama) | T1: premia dla wyrobów cennych, gdy towary płyną do partnera |
+| waga bezpieczeństwa × ostrożność | T1: jedzenie; U1: jedzenie, ogień, wioski; D1, D2: pakt, sojusz, pokój |
+| waga nauki × ciekawość | U1: część „podstawa” i dziedzina nauki; ciekawość zmniejsza też strach przed kosztem |
+| waga wpływu | U1: technologie społeczne, nastrój |
+| lojalność, otwartość, mściwość | D2, D3; pierwsze wrażenie; długość pamięci napaści |
 
-Działające cechy: ostrożność (losowanie, pakt, pokój), ekspansywność (próg odłamu, wolne miejsca kontra podbój), agresja (podbój,
-wojna), handlowość (umowa handlowa), otwartość (pierwsze wrażenie), mściwość (pamięć napaści), lojalność (sojusz, łamanie umów).
+**Test, który tego pilnuje:** `tests/CivSim.Tests/Ai/DeadValueTests.cs`. Bierze zapisane sytuacje z gier (obozy z epoki kamienia,
+wioski neolitu z handlem, kilka sytuacji ułożonych celowo: wędrówka, wypędzenie, łupy, rynek), zmienia po kolei każdą cechę (0 i
+1000), każdą wagę celu (300 i 3000) i każdy parametr `data/ai.json` (0, połowa, podwojenie, 10 razy, milion) i sprawdza, czy choć
+jedna decyzja (albo opinia o sąsiedzie po kilku krokach) wychodzi inna. Wartość, która niczego nie zmienia, wywala test.
+
+Uczciwie: test sprawdza, że wartość **na coś** wpływa, a nie że wpływa **sensownie**. Mściwość zmienia tylko długość pamięci napaści,
+więc w teście jest jedna napaść ułożona z góry; premia handlowa działa tylko w sytuacji „rynek” (wioski z handlem i surowcami do
+chleba i odzieży naraz).
 
 ## 2. AI zna dzisiejszy stan pól, które tylko pamięta
 
@@ -62,17 +63,19 @@ Dyplomata (4d) ma tę samą dziurę: siłę rywala liczy z osad stojących na **
 Przykład: plemię widziało dolinę 250 lat temu. Dziś obok mieszka obcy obóz. AI „wie”, ilu ma wojowników, i może go zaatakować,
 choć nigdy go nie widziało.
 
-**Propozycja:** obce obozy i ich siła tylko z pól widzianych w tym roku (to tanie: pamięć mapy już zapisuje rok). Jedzenie okolicy
-może zostać dzisiejsze, bo przy turach po 50 lat różnica jest mała, a zapamiętywanie wartości kosztuje pamięć.
+**Zrobione w PR B:** obce obozy (G2) i wojownicy rywala (dyplomata) liczą się tylko z pól widzianych w ostatnim własnym kroku
+(`MapMemory.SeesNow`). Łupy (G6) tylko ze znanych pól. Jedzenie okolicy zostaje dzisiejsze, bo przy krokach po 50 lat różnica jest
+mała, a zapamiętywanie wartości kosztuje pamięć. Skutek w grach: wypędzeń jest o 50–80% mniej.
 
-## 3. Uczony wybiera najtańsze, a nie najpotrzebniejsze
+## 3. Uczony: priorytet zamiast „najtańsze” (zamknięte w PR B)
 
-Uczony patrzy tylko na koszt (z inspiracjami i sąsiadami). Nie wie, co technologia daje, i nie widzi potrzeb: głodne plemię nie
-szuka technologii jedzenia, zmarznięte nie szuka ognia (chyba że ogień jest akurat najtańszy). Rolnictwo przychodzi wtedy, gdy staje
-się najtańsze z dostępnych. W 1000 tur cywilizacja wybiera badanie 7–11 razy, więc każdy wybór ma duże znaczenie.
+Dawniej uczony patrzył tylko na koszt. Od PR B technologia ma priorytet z tego, co daje tej cywilizacji (zbieranie na jej polach,
+receptury dla jej rzemieślników, efekty, wioski z żyzności), ważony celami i charakterem, plus 25% najlepszej technologii „za nią”;
+koszt jest przeszkodą, którą ciekawość zmniejsza. Opis: [uczony](05-uczony.md).
 
-**Propozycja:** wartość technologii z tego, co daje i czego cywilizacji brakuje (np. „daje jedzenie” × waga głodu, „daje odzież” ×
-zimno, „otwiera recepturę na towar o wysokiej cenie” × waga dobrobytu). To dałoby też sens wagom stratega i ciekawości (pkt 1).
+**Do Twojej oceny:** rolnictwo przychodzi teraz wcześniej (pierwszy neolit o ok. 2000–2900 lat wcześniej, [statystyki](09-statystyki.md)).
+Jeśli to za szybko, najprostsza gałka to `scholar.villageWorthPerPerson` (0,1). Zostały uproszczenia: uczony patrzy na wartości
+bazowe towarów (nie na ceny w sieci) i tylko jeden krok dalej.
 
 ## 4. Osiedlenie to w praktyce próg, a nie wybór
 
@@ -130,12 +133,15 @@ To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzie
   rezerwowane. Cywilizacja 1 zawsze wybiera pierwsza. Rozstrzyganie komend rotuje kolejność, ale rezerwacja już nie. Mały, stały przechył.
 - **Odłamy i łączenie:** w 1000 tur jest ~1400–1600 odłamów i ~1250–1450 dołączeń. Możliwe, że wiele odłamów się kurczy i wraca
   (nie sprawdziłem tego dokładnie). Warto zbadać w raporcie 100 gier (4g).
-- **Skarbnik:** osady jednej sieci widzą te same ceny i ten sam zapas, więc mogą wszystkie wybrać tę samą recepturę, choć surowca
-  wystarczy dla jednej.
+- **Skarbnik (PR B):** osady jednej sieci wybierają po kolei i widzą wybory poprzednich (zamknięte). Przełączanie „praca ↔ brak
+  receptury” prawie zniknęło. **Zostało przełączanie odzież ↔ chleb** (700–950 zmian na grę): cena jedzenia skacze z plonami o więcej
+  niż histereza 25%. Możliwa poprawka: liczyć cenę jedzenia ze średniej z kilku kroków albo podnieść `recipeSwitchBetterByPercent`.
+  Nie zmieniałem tego, bo to strojenie, a nie błąd.
 - **Wędrówki i łupy prawie się nie zdarzają** (0–8 na 1000 tur). Próg 60% i rzadka siatka sprawiają, że wędrówka jest wyjątkiem;
   łupy są ostatnie w kolejności.
-- **15 liczb zaszytych w kodzie** (lista w [parametrach](07-parametry.md#liczby-zaszyte-w-kodzie-nie-w-danych)), np. próg osiedlenia
-  150% czy próg łupów 50%. Zasada 5 mówi: zawartość w danych. Warto je przenieść do `data/ai.json`.
+- **Liczby zaszyte w kodzie (PR B):** 11 liczb strojenia przeniesionych do `data/ai.json` (próg osiedlenia, łupów, wędrówki, wygody,
+  siła opinii, siatka i bliskość dalekich miejsc, rozłożenie przeglądów). W kodzie zostały tylko części metody
+  ([lista](07-parametry.md#liczby-zaszyte-w-kodzie-nie-w-danych)).
 - **Dyplomata: rytm przy krótkich krokach** (naprawione w ADR 0018): przegląd liczy miesiące, więc przy kroku 3-miesięcznym wypada
   raz na 50 lat, a nie 4 razy w roku przeglądu. Tak samo pogłoski liczą szansę w milionowych za dokładne miesiące kroku.
 - **Dyplomata: dużo odrzuceń.** W seedzie 42: 666 propozycji, 619 odrzuconych, 32 przyjęte. Próg propozycji (1,0) jest wyższy niż
@@ -145,9 +151,10 @@ To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzie
 
 ## Decyzje Patryka (2026-11-06)
 
-1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku).
+1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.
 2. **Lata a długość tury:** sprawdzone; wyniki i poprawki w planie.
 3. **Technologie (i nie tylko uczony):** priorytet z położenia, braków i charakteru, koszt jako przeszkoda; decyzja nie zawsze optymalna.
+   **Zrobione:** PR B (uczony, skarbnik, strateg).
 4. **Czas:** symulacja w latach, każda cywilizacja decyduje we własnym rytmie, decyzje reaktywne i proaktywne. **Zrobione:**
    ADR 0018 (licznik świata, kroki przypięte do kalendarza bez utraty lat, wartości er bez zmian).
 5. **Ziemia i migracje:** lepsza ocena ziemi; odłamy, które idą na nowe tereny i z czasem stają się osobnymi cywilizacjami.

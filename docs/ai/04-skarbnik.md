@@ -19,23 +19,38 @@ pusta albo żadna znana technologia nie odblokowuje receptury.
 
 ### Dane wejściowe (wspólne dla całej sieci)
 
-- **Ceny wewnętrzne** sieci (`Market.Prices`): `wartość towaru × popyt / podaż`, ograniczone do 25–400% wartości. Popyt = roczne
-  potrzeby mieszkańców + wejścia receptur, które sieć już robi. Podaż = to, co leży w magazynach sieci. Wszystkie rodzaje jedzenia
-  mają wspólny stosunek popytu do podaży.
-- **Zapas** sieci: suma magazynów wszystkich osad sieci.
+- **Popyt i podaż** sieci (`Market.Tally`): popyt = roczne potrzeby mieszkańców + roczne wejścia receptur, które sieć już robi;
+  podaż = to, co leży w magazynach sieci. Wszystkie rodzaje jedzenia mają wspólny stosunek popytu do podaży.
+- **Cena** towaru (`Market.Price`): `wartość towaru × popyt / podaż`, ograniczona do 25–400% wartości.
+- **Waga towaru** (od PR B): jedzenie służy bezpieczeństwu (`goalOfFood`), reszta dobrobytowi (`goalOfGoods`). Waga = waga celu od
+  stratega × charakter dla tego celu.
+- **Premia handlowa** (od PR B): gdy cywilizacja ma umowę handlową, przez którą towary już płyną, wyroby cenne (narzędzia, odzież,
+  ceramika, tkaniny) są warte więcej: `50% (tradeGoodsBonusPercent) × handlowość`, czyli +25% przy handlowości 500.
 
 ### Ocena receptury
 
 Dla każdej receptury, którą cywilizacja zna (przez technologie), w kolejności numerów:
 
 ```
-wartość dodana = Σ cena wyjścia × ilość − Σ cena wejścia × ilość   (dla jednego przebiegu receptury)
-ocena = wartość dodana
+cena wejścia = cena przy popycie sieci BEZ własnej receptury tej osady, najwyżej wartość bazowa towaru
+cena wyjścia = cena przy podaży powiększonej o rok własnej produkcji (pełny magazyn obniża cenę)
+wartość = Σ cena wyjścia × ilość × waga towaru (× premia handlowa dla cennych)
+        − Σ cena wejścia × ilość × waga towaru                       (dla jednego przebiegu receptury)
+ocena = wartość
       × dostępność wejść: 1000‰, gdy zapas sieci ≥ wejścia jednego przebiegu (albo to obecna receptura), inaczej 0 (wyklucza)
-      × waga dobrobytu × (500 + handlowość)
 ```
 
 Receptury z oceną ≤ 0 nie biorą udziału. Wybór: 3 najlepsze, ostrożność albo losowanie.
+
+Dlaczego tak (PR B, koniec „skakania” receptur): dawniej własne wejścia osady podbijały cenę surowca, więc praca „traciła wartość”,
+osada przestawała pracować, cena spadała i za krok wracała do tej samej receptury. Teraz osada nie płaci sama sobie za swój popyt,
+a cena wyjścia uwzględnia, że przez rok zapełni magazyn.
+
+### Koordynacja sieci (od PR B)
+
+Osady jednej sieci wybierają po kolei. Po każdym wyborze skarbnik poprawia dane dla następnych (`Plan`): wejścia wybranej receptury
+dochodzą do popytu (porzuconej znikają), a rok jej produkcji dochodzi do podaży. Druga osada widzi więc, że skóry są już „zajęte”, a
+odzieży przybędzie, i chętniej robi coś innego. Tak powstają łańcuchy: jedna osada piecze chleb, druga tka.
 
 ### Histereza
 
@@ -50,19 +65,24 @@ Komenda jest wysyłana tylko wtedy, gdy wybrana receptura różni się od obecne
 
 ### Zapis „Dlaczego?”
 
-Ocena, notatka `value added`, czynnik `inputs available`, waga i charakter. Przykład z gry (seed 7, tura 27):
-`Civilization 4, Treasurer, SetRecipe 0 (wyrób kamiennych narzędzi), ocena 274487: character 87% (0), value added 313700, inputs available 100% (1)`.
+Ocena, notatki `value added` (wartość dodana bez wag), `serves <cel>` (cel pierwszego wyjścia), `for trade` (premia handlowa w ‰,
+gdy zadziałała) i czynnik `inputs available`. Przykłady z gry (seed 7):
+
+- tura 27: `Lakhaem, SetRecipe 0 (narzędzia kamienne), ocena 274488: value added 313700, serves prosperity, inputs available 100%`;
+- tura 55: `Rishboy, SetRecipe 0 (narzędzia kamienne), ocena 527438: value added 313700, serves prosperity, for trade 363`
+  (handlowość 726, towary płyną do partnera, więc narzędzia są warte o 36% więcej).
 
 ### Jak to działa w praktyce
 
 Potrzeby napędzają ceny: plemię bez odzieży ma drogą odzież, więc szyje odzież; gdy magazyny się zapełnią, cena spada i opłaca się
-robić narzędzia. Dzisiejsze receptury (`data/recipes.json`): narzędzia kamienne, odzież ze skór, ceramika, tkanie wełny, tkanie lnu,
-pieczenie chleba.
+robić narzędzia. Głodna sieć (wysoka waga bezpieczeństwa, puste spiżarnie) piecze chleb, choć odzież daje więcej „na papierze”.
+Handlująca cywilizacja chętniej robi wyroby na wymianę. Dzisiejsze receptury (`data/recipes.json`): narzędzia kamienne, odzież ze
+skór, ceramika, tkanie wełny, tkanie lnu, pieczenie chleba.
 
 ### Uproszczenia (do Twojej oceny)
 
-- Wszystkie osady sieci widzą te same ceny i ten sam zapas, a wybór jednej nie zmienia danych dla następnej. Kilka osad może więc
-  wybrać tę samą recepturę, choć wejść wystarczy dla jednej.
-- Waga dobrobytu i handlowość mnożą **wszystkie** receptury jednakowo, więc **nie zmieniają wyboru** (patrz
-  [uwagi](08-ocena-i-uwagi.md#1-wagi-i-cechy-które-nic-nie-zmieniają)).
-- Liczy się tylko wartość dodana jednego przebiegu, nie ile przebiegów zrobią rzemieślnicy ani jak długo trwa receptura.
+- Przełączanie odzież ↔ chleb zostało (ok. 800–900 zmian na grę): cena jedzenia wyraźnie skacze z plonami, więc raz wygrywa chleb,
+  raz odzież. Histereza 25% tego nie zatrzymuje. To prawdziwa zmiana sytuacji, nie błąd liczenia, ale jest jej dużo
+  ([uwagi](08-ocena-i-uwagi.md)).
+- Liczy się wartość jednego przebiegu, nie ile przebiegów zrobią rzemieślnicy (tylko cena wyjścia uwzględnia rok produkcji).
+- Premia handlowa nie patrzy, czego potrzebuje partner: każdy wyrób cenny jest „na wymianę”.

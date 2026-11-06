@@ -402,7 +402,7 @@ Każda technologia w pliku JSON ma:
 - **inspiracje:** warunki sytuacyjne obniżające koszt, np. „masz miedź i cynę w sieci handlowej: −30%”, „sąsiad zna technologię: −20%”, „przeżyłeś epidemię: medycyna −15%”;
 - **odblokowania:** surowce (widoczność i wydobycie), ulepszenia pól, budynki, receptury, jednostki, polityki, ustroje, warstwy ludności.
 
-**Zasady badania:** naukę produkują uczeni i budynki. Cywilizacja bada jedną technologię naraz i może mieć kolejkę. Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
+**Zasady badania:** naukę produkują uczeni i budynki. Cywilizacja bada jedną technologię naraz i może mieć kolejkę. AI wybiera badanie według priorytetu (co technologia da jej cywilizacji) i kosztu jako przeszkody (8.3). Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
 
 ### 6.2 Ery
 
@@ -594,6 +594,15 @@ Każde możliwe działanie ma listę czynników. Każdy czynnik zamienia jedną 
 | Charakter | agresja i mściwość przywódcy | mnożnik 0,5–2 |
 
 **Wybór:** AI nie bierze zawsze najlepszego działania. Losuje spośród 3 najlepszych z prawdopodobieństwem zależnym od ocen (losowość z seeda, więc deterministyczna). Ostrożny przywódca prawie zawsze bierze najlepsze, nieprzewidywalny częściej ryzykuje.
+
+**Wartość i priorytet (decyzja Patryka z 2026-11-06, ADR 0019).** Każda wartość AI (waga celu, cecha charakteru, parametr) musi coś zmieniać, a pilnuje tego test. Dlatego każda opcja mówi, **któremu celowi służy**, a ocena to **priorytet × przeszkoda**:
+
+- **Uczony:** priorytet technologii to to, co da tej cywilizacji na rok: dodatkowe plony na polach jej strefy, receptury dla jej rzemieślników, efekty (np. odporność na zimno tylko tam, gdzie zima jest za mroźna), wioski według żyzności strefy, plus część wartości technologii, do której prowadzi. Każda część jest ważona wagą swojego celu i charakterem. Koszt jest przeszkodą, którą ciekawość świata zmniejsza. Wybór nadal losowy spośród 3 najlepszych.
+- **Skarbnik:** jedzenie służy bezpieczeństwu, pozostałe towary dobrobytowi; osady jednej sieci wybierają receptury po kolei i widzą wybory poprzednich; cywilizacja, której towary płyną do partnera handlowego, ceni wyroby na wymianę wyżej (z handlowością).
+- **Strateg:** waga nauki rośnie, gdy spotkane cywilizacje znają więcej technologii; waga wpływu rośnie z liczbą spotkanych cywilizacji.
+- **Wiedza:** obce obozy i ich wojowników AI liczy tylko z pól, które widziała w swoim ostatnim kroku.
+
+Wszystkie liczby strojenia są w `data/ai.json`; pełny opis decyzji w `docs/ai/`.
 
 ### 8.4 Charakter cywilizacji
 
