@@ -27,9 +27,10 @@ flowchart LR
 ```
 
 ## Zasady i wzory
-- **Nauka** (GDD 6.1, uproszczone: uczeni i budynki przyjdą z erami): punkty na rok = Σ ludzie warstwy × `sciencePerThousandPerYear` / 1000 (wytwórcy 3, rzemieślnicy 30, wojownicy 2). Obóz 100 ludzi daje ok. 0,4 punktu na rok.
+- **Nauka** (GDD 6.1, uproszczone: uczeni i budynki przyjdą z erami): punkty na rok = Σ ludzie warstwy × `sciencePerThousandPerYear` / 1000. Od etapu 4F (PR 3, ADR 0020) głównie myśliciele: myśliciel 60, rzemieślnik 10, wytwórca, wojownik i przywódca 2 (proporcja Patryka 30 : 5 : 1, razy 2, żeby cywilizacja o zwykłym składzie badała tak szybko jak przedtem: 4,1 punktu na tysiąc ludzi na rok zamiast 4,2). Obóz 100 ludzi daje ok. 0,4 punktu na rok.
 - **Badanie:** jedna technologia naraz. Punkty zbierają się zawsze; nadwyżka po zbadaniu przechodzi na następną.
 - **Wymagania:** `requires` (wszystkie) i `requiresAny` (co najmniej jedna, np. tkactwo: hodowla albo rolnictwo).
+- **Wymóg ludzi** (etap 4F, PR 3, ADR 0020): `requiresPeople` (wszystkie) i `requiresPeopleAny` (co najmniej jeden): liczba fachowców (uczniowie za pół) albo ludzi warstwy w całej cywilizacji, a z `inOneSettlement` w jednej osadzie. Technologię można wybrać (`SetResearchCommand` mówi, czego brakuje) i ukończyć tylko z tymi ludźmi; punkty zbierają się dalej (`Technologies.PeopleReady`, `CanResearch`). Wymogi er 1–2: `docs/prompts/06-etap-fachy.md`.
 - **Koszt dziś** = koszt bazowy × max(25%, 100% − Σ inspiracji − dyfuzja). Inspiracje (GDD 6.1): towar w magazynach cywilizacji, złoże, biom albo rzeka w strefie wpływów (woda tuż przy strefie też się liczy), zima obozu co najmniej tak zimna, liczba ludzi. **Dyfuzja:** −20% za każdego sąsiada, który zna technologię, najwyżej 2 sąsiadów; sąsiad = inna cywilizacja z osadą w promieniu 12 pól od naszej.
 - **Odblokowania:** receptury (każda receptura musi mieć technologię, sprawdza to ładowanie danych); dodatkowe zbieranie według złoża albo biomu (łowienie ryb działa na wodzie przy strefie wpływów, bo strefy nie wchodzą na wodę); stałe efekty cywilizacji: `cooking` (+% plonów), `cold_tolerance`, `tradition` (+nastrój), `storage` (−% psucia), `carrying`.
 - **Ery** (GDD 6.2): cywilizacja wchodzi w następną erę, gdy zna jej technologię progową (neolit: rolnictwo) i 60% technologii obecnej ery. Długość tury wyznacza nadal najbardziej zaawansowana żywa cywilizacja.

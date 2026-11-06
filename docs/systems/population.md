@@ -1,6 +1,6 @@
 # Ludność
 
-**W jednym zdaniu:** ludzie w każdej osadzie zbierają jedzenie z okolicy, jedzą z własnego magazynu, rodzą się, umierają, chorują i powoli przechodzą między trzema warstwami.
+**W jednym zdaniu:** ludzie w każdej osadzie zbierają jedzenie z okolicy, jedzą z własnego magazynu, rodzą się, umierają, chorują i powoli przechodzą między pięcioma warstwami (od etapu 4F: wytwórcy, rzemieślnicy, wojownicy, myśliciele, przywódcy) i uczą się fachów (`docs/systems/skills.md`).
 
 **Faza tury:** 7. Gospodarka (zbieranie, potem konsumpcja, potem magazyn) i 8. Ludność (wzrost, głód, zdrowie, warstwy).
 

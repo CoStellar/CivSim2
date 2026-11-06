@@ -4,7 +4,7 @@
 
 **Faza tury:** 8. Ludność, po `PopulationSystem` (zgony, urodzenia, dryf warstw), w krokach cywilizacji (ADR 0018). Pierwsi mistrzowie pojawiają się w fazie badań, gdy cywilizacja odkryje technologię (`Technologies.Learn`).
 
-**Stan:** PR 1 (dane, stan, zapis, hash, statystyki) i PR 2 (nauka fachu, przenoszenie, utrata, praca fachowców). Warstwy myślicieli i przywódców oraz wymogi ludzi w technologiach: PR 3.
+**Stan:** PR 1 (dane, stan, zapis, hash, statystyki) i PR 2 (nauka fachu, przenoszenie, utrata, praca fachowców). PR 3: warstwy myślicieli (3%, główne źródło nauki) i przywódców (1%), wymogi ludzi w technologiach (`docs/systems/research.md`).
 
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/skills.json` (fachy i reguły), ludzi warstw osady, znane technologie, umowy handlowe, odległości osad (`data/trade.json` `linkCells`).

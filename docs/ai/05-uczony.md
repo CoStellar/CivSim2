@@ -7,7 +7,7 @@ właśnie tej cywilizacji (z jej położenia, braków i charakteru). Koszt jest 
 
 ## U1: Wybór technologii do badania
 
-**Komenda:** `SetResearchCommand(technologia)`. Odrzucana, gdy technologia jest już znana albo jej wymagania nie są spełnione.
+**Komenda:** `SetResearchCommand(technologia)`. Odrzucana, gdy technologia jest już znana, jej wymagania nie są spełnione albo (od etapu 4F) cywilizacja nie ma potrzebnych ludzi.
 
 ### Kiedy
 
@@ -18,7 +18,9 @@ przechodzą na następną technologię, więc przerwy w badaniu nie ma.
 ### Kandydaci
 
 Każda technologia **dostępna**: jeszcze nieznana, wszystkie wymagane (`requires`) znane, a jeśli ma listę „jedna z” (`requiresAny`),
-to co najmniej jedna z niej znana.
+to co najmniej jedna z niej znana. **Od etapu 4F (PR 3)** także z ludźmi, których potrzebuje (`requiresPeople`, np. łowiectwo
+zespołowe: 5 krzemieniarzy; `Technologies.CanResearch`). Uczony wybiera też od nowa, gdy obecnego badania nie da się skończyć, bo
+ludzi ubyło (punkty zbierają się dalej, nic nie przepada). Gdy żadna technologia nie ma swoich ludzi, uczony czeka.
 
 ### Co uczony wie o swojej cywilizacji
 
