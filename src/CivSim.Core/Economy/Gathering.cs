@@ -347,6 +347,16 @@ public sealed class GatheringSystem : ITurnSystem
     private void Deliver(WorldState world, SettlementState s)
     {
         Array.Clear(_gathered);
+        if (_coverage.Length != _content.Skills.Count)
+        {
+            _coverage = new int[_content.Skills.Count];
+        }
+
+        for (int k = 0; k < _coverage.Length; k++)
+        {
+            _coverage[k] = Population.Skills.CoveragePerMille(_content, s, k);
+        }
+
         WorldMap map = world.Map;
         for (int c = 0; c < _cells.Count; c++)
         {
@@ -367,9 +377,10 @@ public sealed class GatheringSystem : ITurnSystem
             long scale = IntMath.MulDiv(_food[c], Full, fullFood, Rounding.Floor);
             BiomeDefinition biome = _content.Biomes[map.Biome[i]];
             IReadOnlyList<GoodQuantity> biomeExtra = _current.ForBiome(biome.Id);
+            IReadOnlyList<int> biomeSkill = _current.SkillsForBiome(biome.Id);
             for (int k = 0; k < biomeExtra.Count; k++)
             {
-                Add(biomeExtra[k].GoodId, biomeExtra[k].Amount, scale, worked);
+                Add(biomeExtra[k].GoodId, Skilled(biomeExtra[k].Amount, biomeSkill, k), scale, worked);
             }
 
             if (!biome.IsWater)
@@ -397,9 +408,10 @@ public sealed class GatheringSystem : ITurnSystem
                 }
 
                 IReadOnlyList<GoodQuantity> techExtra = _current.ForDeposit(deposit);
+                IReadOnlyList<int> techSkill = _current.SkillsForDeposit(deposit);
                 for (int k = 0; k < techExtra.Count; k++)
                 {
-                    taken += Add(techExtra[k].GoodId, techExtra[k].Amount, scale, worked);
+                    taken += Add(techExtra[k].GoodId, Skilled(techExtra[k].Amount, techSkill, k), scale, worked);
                 }
 
                 // Flint and stone run out (GDD 4.4): the richness is in whole units; an empty deposit is gone.
@@ -430,6 +442,15 @@ public sealed class GatheringSystem : ITurnSystem
         }
 
         s.FoodGathered += food;
+    }
+
+    private int[] _coverage = [];
+
+    // A technology's goods come in only as far as its skilled people cover the work (stage 4F).
+    private Amount Skilled(Amount perYear, IReadOnlyList<int> skills, int entry)
+    {
+        int skill = entry < skills.Count ? skills[entry] : -1;
+        return skill < 0 || skill >= _coverage.Length ? perYear : perYear.MultiplyRatio(_coverage[skill], 1000, Rounding.Floor);
     }
 
     // perYear × scale × worked, where scale and worked are fractions of Full (worked already counts the years).

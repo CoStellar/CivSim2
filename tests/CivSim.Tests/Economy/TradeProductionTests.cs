@@ -1,3 +1,4 @@
+using System.Linq;
 using CivSim.Core.Ai;
 using CivSim.Core.Commands;
 using CivSim.Core.Content;
@@ -40,7 +41,7 @@ public class TradeProductionTests
 
     private static SettlementState Camp(GameState state, CivId civ, HexCoord cell, int producers, int artisans = 0, int warriors = 0)
     {
-        SettlementState s = state.FoundSettlement(civ, state.Worlds[0].Id, cell, "Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count);
+        SettlementState s = state.FoundSettlement(civ, state.Worlds[0].Id, cell, "Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
         s.Population[Content.Strata[0].Id] = producers;
         s.Population[1] = artisans;
         s.Population[2] = warriors;
@@ -126,6 +127,7 @@ public class TradeProductionTests
         (GameState state, _, HexCoord[] land) = Empty(33);
         SettlementState s = Camp(state, state.Civilizations[0].Id, land[0], 20, artisans: 2);
         s.RecipeId = Recipe("sew_hide_clothing");
+        s.Skilled[Content.Skills.First(k => k.Key == "tanner").Id] = 2; // only tanners sew clothing (stage 4F)
         s.Stock[Good("hides")] = Amount.FromUnits(30);
 
         Run(state, new ProductionSystem(Content));

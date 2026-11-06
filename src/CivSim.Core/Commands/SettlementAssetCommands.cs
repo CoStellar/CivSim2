@@ -51,6 +51,7 @@ public sealed record AbandonSettlementCommand(GameContent Content, SettlementId 
             into.Population[k] += from.Population[k];
         }
 
+        CivSim.Core.Population.Skills.Move(from, into, 100);
         SettlementAssets.Abandon(Content, state, from);
         return Content.SettlementLevels[from.Level].Mobile ? null : $"The people of {from.Name} left for {into.Name}.";
     }
@@ -107,6 +108,9 @@ public sealed record OccupySettlementCommand(GameContent Content, SettlementId F
             people[k] -= going;
             target.Population[k] = going;
         }
+
+        CivSim.Core.Population.Skills.Clear(target);
+        CivSim.Core.Population.Skills.Move(from, target, Percent);
 
         SettlementAssets.Carry(from, target, SettlementAssets.CarryCapacity(Content, state, civ, target.TotalPopulation()), Percent);
         if (from.TotalPopulation() == 0)
@@ -313,6 +317,7 @@ public sealed record ConquerSettlementCommand(GameContent Content, SettlementId 
         if (refuge is null)
         {
             s.Population.Clear();
+            CivSim.Core.Population.Skills.Clear(s);
             return ("the survivors scattered", s);
         }
 
@@ -322,6 +327,7 @@ public sealed record ConquerSettlementCommand(GameContent Content, SettlementId 
             refuge.Population[k] += s.Population[k];
         }
 
+        CivSim.Core.Population.Skills.Move(s, refuge, 100);
         s.Population.Clear();
         return ($"the survivors went to {refuge.Name}", s);
     }

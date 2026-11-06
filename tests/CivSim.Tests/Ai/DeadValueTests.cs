@@ -488,6 +488,20 @@ public class DeadValueTests
             foreach (SettlementState s in state.Settlements.Where(x => x.Owner == civ.Id && x.IsActive))
             {
                 s.RecipeId = SettlementState.NoRecipe;
+
+                // Artisans who can both sew and bake (stage 4F skills), now sewing what is already plentiful: bread is
+                // the challenger, and whether they switch depends on the hysteresis.
+                int artisans = Content.Strata.First(x => x.Crafts).Id;
+                int tanner = Content.Skills.First(x => x.Key == "tanner").Id;
+                int baker = Content.Skills.First(x => x.Key == "baker").Id;
+                if (civ.Knows(Content.Skills[tanner].TechnologyId) && civ.Knows(Content.Skills[baker].TechnologyId) && s.PopulationView[artisans] >= 2)
+                {
+                    s.Skilled.Clear();
+                    s.Skilled[tanner] = s.PopulationView[artisans] / 2;
+                    s.Skilled[baker] = s.PopulationView[artisans] / 2;
+                    s.RecipeId = Content.Recipes.First(x => x.Key == "sew_hide_clothing").Id;
+                }
+
                 for (int g = 0; g < Content.Goods.Count; g++)
                 {
                     if (Content.Goods[g].IsFood)
@@ -593,6 +607,10 @@ public class DeadValueTests
                 CivSim.Core.Diplomacy.Treaty trade = state.Treaties.Add(new CivSim.Core.Diplomacy.Treaty(
                     state.Civilizations[c].Id, state.Civilizations[c + 1].Id, CivSim.Core.Diplomacy.TreatyKind.Trade, state.Civilizations[c].Id, 0));
                 trade.LastFlowMonth = 0;
+
+                // And a non-aggression pact, so that a defensive alliance (and with it loyalty) is on the table.
+                state.Treaties.Add(new CivSim.Core.Diplomacy.Treaty(
+                    state.Civilizations[c].Id, state.Civilizations[c + 1].Id, CivSim.Core.Diplomacy.TreatyKind.NonAggression, state.Civilizations[c].Id, 0));
             }
         }
 

@@ -71,6 +71,7 @@ public static class CoreSystems
         runner.AddSystem(new Economy.ConsumptionSystem(content));
         runner.AddSystem(new Economy.StorageSystem(content));
         runner.AddSystem(new Population.PopulationSystem(content));
+        runner.AddSystem(new Population.SkillSystem(content));
         runner.AddSystem(new Population.AbandonmentSystem(content));
         runner.AddSystem(new Diplomacy.DiplomacySystem(content));
         runner.AddSystem(new Population.InfluenceSystem(content));

@@ -247,6 +247,8 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
             camp.Population[k] = leaving;
         }
 
+        CivSim.Core.Population.Skills.Move(from, camp, Percent);
+
         SettlementAssets.Carry(from, camp, SettlementAssets.CarryCapacity(Content, state, civ, camp.TotalPopulation()), Percent);
         return $"{camp.TotalPopulation()} people left {from.Name} and founded {camp.Name}.";
     }

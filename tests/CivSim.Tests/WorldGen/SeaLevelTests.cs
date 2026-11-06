@@ -131,7 +131,7 @@ public class SeaLevelTests
 
         Assert.True(shelf >= 0);
         CivilizationState civ = state.Civilizations[0];
-        SettlementState camp = state.FoundSettlement(civ.Id, world.Id, world.Geometry.FromIndex(shelf), "Shore Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count);
+        SettlementState camp = state.FoundSettlement(civ.Id, world.Id, world.Geometry.FromIndex(shelf), "Shore Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
         camp.Population[0] = 20;
         camp.Stock[0] = Amount.FromUnits(100_000);
 

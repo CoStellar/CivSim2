@@ -45,7 +45,8 @@ public static class ContentLoader
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
-        List<SkillDefinition> skills = LoadSkills(Path.Combine(directory, "skills.json"), strata, technologies, errors);
+        (List<SkillDefinition> skills, SkillRules skillRules) = LoadSkills(Path.Combine(directory, "skills.json"), strata, technologies, errors);
+        SkillLinks skillLinks = LinkSkills(skills, technologies, recipes.Count, errors);
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
         for (int l = 0; l < levels.Count; l++)
@@ -78,6 +79,8 @@ public static class ContentLoader
             NewTribeStock = tribeStock,
             Strata = strata,
             Skills = skills,
+            SkillRules = skillRules,
+            SkillLinks = skillLinks,
             Population = population,
             Assets = assets,
             Planets = planets,
@@ -96,16 +99,36 @@ public static class ContentLoader
     }
 
     // Skills of data/skills.json (stage 4F, ADR 0020): each belongs to a stratum and is opened by a technology.
-    private static List<SkillDefinition> LoadSkills(string path, List<StratumDefinition> strata, List<TechnologyDefinition> technologies, List<string> errors)
+    private static (List<SkillDefinition> Skills, SkillRules Rules) LoadSkills(string path, List<StratumDefinition> strata, List<TechnologyDefinition> technologies, List<string> errors)
     {
         var result = new List<SkillDefinition>();
+        var rules = new SkillRules();
         using JsonDocument? doc = Open(path, errors);
         if (doc is null || !TryArray(doc.RootElement, "skills", path, errors, out JsonElement array))
         {
-            return result;
+            return (result, rules);
         }
 
         string file = Path.GetFileName(path);
+        if (doc.RootElement.TryGetProperty("rules", out JsonElement re) && re.ValueKind == JsonValueKind.Object)
+        {
+            var rr = new Reader(re, $"{file}: rules", errors);
+            rules = new SkillRules
+            {
+                FirstMasters = rr.Int("firstMasters", 1, 1000),
+                ApprenticesPerMaster = rr.Int("apprenticesPerMaster", 0, 100),
+                ApprenticeWorkPercent = rr.Int("apprenticeWorkPercent", 0, 100),
+                MoveMinMasters = rr.Int("moveMinMasters", 1, 1000),
+                MoveSpareAbove = rr.Int("moveSpareAbove", 0, 1000),
+                MoveSharePercent = rr.Int("moveSharePercent", 0, 100),
+                TeachForOthersPercent = rr.Int("teachForOthersPercent", 0, 1000),
+            };
+        }
+        else
+        {
+            errors.Add($"{file}: rules: required object.");
+        }
+
         var keys = new HashSet<string>(StringComparer.Ordinal);
         int i = 0;
         foreach (JsonElement e in array.EnumerateArray())
@@ -129,11 +152,54 @@ public static class ContentLoader
             }
 
             int years = r.Int("trainingYears", 0, 100);
-            result.Add(new SkillDefinition(i, key, name, stratum, tech, years));
+            int jobs = r.Int("jobsPercent", 1, 100);
+            result.Add(new SkillDefinition(i, key, name, stratum, tech, years) { JobsPercent = jobs });
             i++;
         }
 
-        return result;
+        if (re.ValueKind == JsonValueKind.Object && re.TryGetProperty("farmingSkill", out JsonElement fs) && fs.ValueKind == JsonValueKind.String)
+        {
+            int farming = result.FindIndex(x => x.Key == fs.GetString());
+            if (farming < 0)
+            {
+                errors.Add($"{file}: rules.farmingSkill: unknown skill '{fs.GetString()}'.");
+            }
+
+            rules = rules with { FarmingSkill = farming };
+        }
+
+        return (result, rules);
+    }
+
+    // Each technology opens at most one skill; the skill works the technology's recipes and its gathering.
+    private static SkillLinks LinkSkills(List<SkillDefinition> skills, List<TechnologyDefinition> technologies, int recipeCount, List<string> errors)
+    {
+        var ofTech = Enumerable.Repeat(-1, technologies.Count).ToArray();
+        var ofRecipe = Enumerable.Repeat(-1, recipeCount).ToArray();
+        foreach (SkillDefinition k in skills)
+        {
+            if (k.TechnologyId < 0)
+            {
+                continue;
+            }
+
+            if (ofTech[k.TechnologyId] >= 0)
+            {
+                errors.Add($"skills.json: skills '{skills[ofTech[k.TechnologyId]].Key}' and '{k.Key}' both come with technology '{technologies[k.TechnologyId].Key}'.");
+                continue;
+            }
+
+            ofTech[k.TechnologyId] = k.Id;
+            foreach (int r in technologies[k.TechnologyId].Recipes)
+            {
+                if (r >= 0 && r < recipeCount)
+                {
+                    ofRecipe[r] = k.Id;
+                }
+            }
+        }
+
+        return new SkillLinks(ofRecipe, ofTech);
     }
 
     private static List<StratumDefinition> LoadStrata(string path, List<GoodDefinition> goods, List<string> errors)

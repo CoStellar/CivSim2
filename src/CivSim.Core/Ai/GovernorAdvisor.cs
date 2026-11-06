@@ -274,9 +274,20 @@ public sealed class GovernorAdvisor : Advisor
         if (mobile && people >= _content.Assets.SettleMinPeople && CanSettle(civ, s.Level))
         {
             int producers = Producers(s);
-            long farm = FarmFood(world, s, producers);
-            long eat = GroupFoodNeed(s, 100);
+            // Only farmers farm (stage 4F): a camp settles only with a farmer among its people, and counts the farmers
+            // its village will have once the masters have taught them (the farming skill's share of the producers).
+            int farmers = producers;
+            int farming = _content.SkillRules.FarmingSkill;
+            if (farming >= 0)
+            {
+                farmers = s.SkilledView[farming] == 0 ? 0 : (int)((long)producers * _content.Skills[farming].JobsPercent / 100);
+            }
+
             long gather = Math.Min(SiteFood(world, s.Cell), _rules.FoodPerWorkerPerYear.Hundredths * producers);
+
+            // The village's food: what its farmers grow, and what its other producers go on gathering (stage 4F).
+            long farm = FarmFood(world, s, farmers) + (producers == 0 ? 0 : gather * (producers - farmers) / producers);
+            long eat = GroupFoodNeed(s, 100);
             long wander = (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral;
             if (farm * 100 >= eat * _content.Ai.SettleFarmYieldPercent
                 && farm * 100 * Factor.Neutral >= gather * _content.Ai.SettleOverGatheringPercent * wander)

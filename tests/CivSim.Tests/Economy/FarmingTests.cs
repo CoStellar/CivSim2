@@ -18,6 +18,8 @@ public class FarmingTests
 
     private static int Village => Content.SettlementLevel("village").Id;
 
+    private static int Farmer => Content.SkillRules.FarmingSkill;
+
     private static GameState NewGame(ulong seed) => GameState.CreateNew(GameSettings.Test(seed), Content, out _);
 
     private static void Teach(GameState state, CivilizationState civ, params string[] keys)
@@ -56,6 +58,7 @@ public class FarmingTests
         SettlementState village = state.Settlements[0];
         village.Level = Village;
         village.Population[0] = 300;
+        village.Skilled[Farmer] = 300;   // only farmers farm (stage 4F)
         var runner = new TurnRunner(state);
         CoreSystems.Register(runner, Content);
         runner.RunTurn();
@@ -76,6 +79,7 @@ public class FarmingTests
         SettlementState village = state.Settlements[0];
         village.Level = Village;
         village.Population[0] = 2000;   // more than the zone can take: every farmable cell is worked in full
+        village.Skilled[Farmer] = 2000;
         var farming = new FarmingSystem(Content);
         var runner = new TurnRunner(state);
         runner.AddSystem(new CivSim.Core.Population.InfluenceSystem(Content, TurnPhase.World));

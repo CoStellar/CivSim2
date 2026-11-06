@@ -11,14 +11,27 @@ namespace CivSim.Core.Research;
 public sealed class TechBenefits
 {
     private static readonly IReadOnlyList<GoodQuantity> None = [];
+    private static readonly IReadOnlyList<int> NoSkills = [];
     private readonly List<GoodQuantity>?[] _byDeposit;
     private readonly List<GoodQuantity>?[] _byBiome;
+    private readonly List<int>?[] _skillByDeposit;
+    private readonly List<int>?[] _skillByBiome;
 
     private TechBenefits(int deposits, int biomes)
     {
         _byDeposit = new List<GoodQuantity>?[deposits + 1];
         _byBiome = new List<GoodQuantity>?[biomes];
+        _skillByDeposit = new List<int>?[deposits + 1];
+        _skillByBiome = new List<int>?[biomes];
     }
+
+    /// <summary>For each entry of <see cref="ForDeposit"/>, the skill whose people gather it, or -1 (stage 4F).</summary>
+    public IReadOnlyList<int> SkillsForDeposit(int deposit) =>
+        deposit > 0 && deposit < _skillByDeposit.Length ? (IReadOnlyList<int>?)_skillByDeposit[deposit] ?? NoSkills : NoSkills;
+
+    /// <summary>For each entry of <see cref="ForBiome"/>, the skill whose people gather it, or -1 (stage 4F).</summary>
+    public IReadOnlyList<int> SkillsForBiome(int biome) =>
+        biome >= 0 && biome < _skillByBiome.Length ? (IReadOnlyList<int>?)_skillByBiome[biome] ?? NoSkills : NoSkills;
 
     /// <summary>Benefits of a civilization that knows nothing.</summary>
     public static TechBenefits Empty(GameContent content)
@@ -51,12 +64,21 @@ public sealed class TechBenefits
                 continue;
             }
 
+            int skill = content.SkillLinks.ForTechnology(t.Id);
             foreach (GatherBonus g in t.Gather)
             {
                 List<GoodQuantity> list = g.DepositId > 0
                     ? b._byDeposit[g.DepositId] ??= []
                     : b._byBiome[g.BiomeId] ??= [];
+                List<int> skills = g.DepositId > 0
+                    ? b._skillByDeposit[g.DepositId] ??= []
+                    : b._skillByBiome[g.BiomeId] ??= [];
                 list.AddRange(g.Goods);
+                for (int n = 0; n < g.Goods.Count; n++)
+                {
+                    skills.Add(skill);
+                }
+
                 b.FromWater |= g.BiomeId >= 0 && content.Biomes[g.BiomeId].IsWater;
             }
         }
@@ -416,6 +438,13 @@ public static class Technologies
         }
 
         lines.Add($"{civ.Name} learned {t.Name}.");
+
+        // The first masters of the skill the technology opens (stage 4F, ADR 0020).
+        int skill = content.SkillLinks.ForTechnology(technology);
+        if (skill >= 0)
+        {
+            Population.Skills.Seed(content, state, civ.Id, skill, content.SkillRules.FirstMasters);
+        }
         while (civ.Era + 1 < content.Eras.Count && QualifiesForEra(content, civ, civ.Era + 1))
         {
             civ.Era++;

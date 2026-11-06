@@ -114,6 +114,17 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 9 krzywych czynników |
 | `treaties[].years` | pokój: 100 | lata | D3 | rozejm po wojnie |
 
+## `data/skills.json` (od etapu 4F)
+
+| Parametr | Wartość | Na co wpływa w AI |
+| --- | --- | --- |
+| `rules.farmingSkill` | `farmer` | G4: osiedlenie wymaga choć jednego rolnika; plon z pól liczony dla rolników |
+| `skills[farmer].jobsPercent` | 50 | G4: ilu producentów wioska wyuczy na rolników (reszta dalej zbiera) |
+| `jobsPercent` rzemiosł | 10–15 | T1 (skarbnik): receptura jest warta tyle, ilu ma fachowców (`Demand.Runs`) |
+| `rules.apprenticeWorkPercent` | 50 | T1 i G4 pośrednio: uczeń liczy się za pół fachowca |
+
+Pozostałe reguły (mistrzowie, uczniowie, przenoszenie) nie są decyzjami AI, tylko zasadami systemu fachów: `docs/systems/skills.md`.
+
 ## Inne pliki
 
 | Plik i klucz | Wartość | Decyzje | Znaczenie |
