@@ -59,6 +59,9 @@ public enum AiAction : byte
 
     /// <summary>The civilization starts researching a technology.</summary>
     SetResearch = 9,
+
+    /// <summary>The strategist sets goal weights and the expansion target.</summary>
+    SetStrategy = 10,
 }
 
 /// <summary>

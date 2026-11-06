@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 15;
+    public const int FormatVersion = 16;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -56,7 +56,8 @@ public static class SaveGameSerializer
         foreach (CivilizationState c in state.Civilizations)
         {
             civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era, c.DiedOutMonth,
-                c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience, c.SeenYear));
+                c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience, c.SeenYear,
+                c.Traits, c.GoalWeights, c.ExpansionTarget, c.StrategyReviewMonth, c.StrategyEra));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -187,6 +188,11 @@ public static class SaveGameSerializer
                 ResearchProgress = c.ResearchProgress,
                 LastScience = c.LastScience,
                 SeenYear = c.SeenYear ?? [],
+                Traits = c.Traits ?? [],
+                GoalWeights = c.GoalWeights ?? [],
+                ExpansionTarget = c.ExpansionTarget,
+                StrategyReviewMonth = c.StrategyReviewMonth,
+                StrategyEra = c.StrategyEra,
             });
         }
 

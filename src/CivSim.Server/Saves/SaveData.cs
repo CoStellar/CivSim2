@@ -79,7 +79,12 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(8)] int Researching = -1,
     [property: Key(9)] long ResearchProgress = 0,
     [property: Key(10)] long LastScience = 0,
-    [property: Key(11)] int[]? SeenYear = null);
+    [property: Key(11)] int[]? SeenYear = null,
+    [property: Key(12)] int[]? Traits = null,
+    [property: Key(13)] int[]? GoalWeights = null,
+    [property: Key(14)] int ExpansionTarget = -1,
+    [property: Key(15)] long StrategyReviewMonth = 0,
+    [property: Key(16)] int StrategyEra = -1);
 
 /// <summary>Saved settlement. <see cref="Stock"/> holds hundredths per good id.</summary>
 [MessagePackObject]

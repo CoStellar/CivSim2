@@ -98,6 +98,21 @@ public static class GameStateHash
             h.Add(c.Researching);
             h.Add(c.ResearchProgress);
             h.Add(c.LastScience);
+            h.Add(c.Traits.Length);
+            foreach (int trait in c.Traits)
+            {
+                h.Add(trait);
+            }
+
+            h.Add(c.GoalWeights.Length);
+            foreach (int weight in c.GoalWeights)
+            {
+                h.Add(weight);
+            }
+
+            h.Add(c.ExpansionTarget);
+            h.Add(c.StrategyReviewMonth);
+            h.Add(c.StrategyEra);
         }
 
         h.Add(state.Month);
