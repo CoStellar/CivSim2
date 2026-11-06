@@ -83,13 +83,15 @@ public static class HeadlessRun
         }
 
         var runner = new TurnRunner(state);
-        CoreSystems.Register(runner, content);
+        Core.Ai.AiCouncil council = CoreSystems.Register(runner, content);
         var turnMs = new double[Math.Max(1, options.Turns)];
         long totalAllocated = 0;
 
         using StreamWriter? csv = options.ReportPath is null ? null : CreateReport(options.ReportPath);
         csv?.WriteLine(CsvHeader());
         using StreamWriter? stats = options.StatsPath is null ? null : CreateReport(options.StatsPath);
+        using StreamWriter? decisions = options.DecisionsPath is null ? null : CreateReport(options.DecisionsPath);
+        decisions?.WriteLine(DecisionCsv.Header);
         if (stats is not null)
         {
             WriteStatsHeader(stats, state);
@@ -111,6 +113,11 @@ public static class HeadlessRun
             if (csv is not null)
             {
                 WriteRow(csv, report, allocated);
+            }
+
+            if (decisions is not null)
+            {
+                DecisionCsv.Write(decisions, council.Log, runner.State);
             }
 
             if (stats is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))

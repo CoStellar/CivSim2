@@ -33,11 +33,11 @@ public sealed class RandomStreams
     /// Creates a generator that depends only on the game seed, stream, entity and turn, not on how many
     /// numbers other code drew. Use it for work that runs in parallel (e.g. each civilization's AI).
     /// </summary>
-    public DeterministicRandom Derive(RandomStreamId id, ulong entityId, long turn)
-    {
-        ulong seed = SplitMix64.Combine(SplitMix64.Combine(StreamSeed(GameSeed, (ulong)id), entityId), (ulong)turn);
-        return new DeterministicRandom(seed);
-    }
+    public DeterministicRandom Derive(RandomStreamId id, ulong entityId, long turn) => new(DeriveSeed(id, entityId, turn));
+
+    /// <summary>The seed <see cref="Derive"/> uses, for reseeding a reused generator without allocating.</summary>
+    public ulong DeriveSeed(RandomStreamId id, ulong entityId, long turn) =>
+        SplitMix64.Combine(SplitMix64.Combine(StreamSeed(GameSeed, (ulong)id), entityId), (ulong)turn);
 
     /// <summary>Copies every stream's state into <paramref name="destination"/> (length <see cref="Count"/>).</summary>
     public void CopyStates(Span<RandomState> destination)

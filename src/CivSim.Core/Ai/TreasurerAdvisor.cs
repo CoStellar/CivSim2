@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CivSim.Core.Ai.Utility;
 using CivSim.Core.Commands;
 using CivSim.Core.Content;
 using CivSim.Core.Economy;
@@ -10,17 +11,18 @@ using CivSim.Core.State;
 namespace CivSim.Core.Ai;
 
 /// <summary>
-/// Production choices of AI civilizations (stage 3e, until the treasurer advisor of stage 4). Once per era turn, every
+/// The treasurer advisor: production choices of AI civilizations (GDD 8.1; rules of stage 3e, on the shared evaluation since
+/// stage 4a). Once per era turn, every
 /// settlement with artisans picks the recipe worth most at its network's internal prices (outputs minus inputs) among
 /// the recipes its civilization knows and whose inputs the network has; nothing when no recipe pays. Needs drive prices, so a tribe without
 /// clothing makes clothing, and switches to tools once its stores are full. It issues the same command a player would.
 /// </summary>
-public sealed class EconomyAi(GameContent content) : ICommandSource
+public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, AdvisorKind.Treasurer)
 {
-    private readonly GameContent _content = content ?? throw new ArgumentNullException(nameof(content));
+    private readonly GameContent _content = content;
 
     /// <inheritdoc />
-    public void IssueCommands(GameState state, CommandQueue queue)
+    public override void IssueCommands(GameState state, CommandQueue queue)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(queue);
@@ -50,20 +52,21 @@ public sealed class EconomyAi(GameContent content) : ICommandSource
 
                 prices ??= Market.Prices(_content, state, members);
                 supply ??= Supply(state, members);
-                int best = Best(civ, prices, supply);
+                int pick = Best(civ, prices, supply, RandomFor(state, s.Id.Value));
+                int best = pick < 0 ? SettlementState.NoRecipe : Chooser.KeyAt(pick);
                 if (best != s.RecipeId)
                 {
-                    queue.Enqueue(PlayerId.Ai, civ.Id, new SetRecipeCommand(_content, s.Id, best));
+                    Evaluation why = pick < 0 ? NothingPays() : Chooser.EvaluationAt(pick);
+                    Issue(state, queue, civ.Id, new SetRecipeCommand(_content, s.Id, best), AiAction.SetRecipe, s.Id.Value, best, why);
                 }
             }
         }
     }
 
-    // The allowed recipe the network can feed with the highest value added; NoRecipe when none adds value.
-    private int Best(CivilizationState civ, Amount[] prices, long[] supply)
+    // Rank in the chooser of the allowed recipe the network can feed with the highest value added; -1 when none adds value.
+    private int Best(CivilizationState civ, Amount[] prices, long[] supply, Random.DeterministicRandom? random)
     {
-        int best = SettlementState.NoRecipe;
-        long bestValue = 0;
+        Chooser.Clear();
         for (int r = 0; r < _content.Recipes.Count; r++)
         {
             RecipeDefinition recipe = _content.Recipes[r];
@@ -87,14 +90,23 @@ public sealed class EconomyAi(GameContent content) : ICommandSource
                 value += prices[q.GoodId].Hundredths * q.Amount.Hundredths;
             }
 
-            if (fed && value > bestValue)
-            {
-                best = r;
-                bestValue = value;
-            }
+            // Value added at internal prices; a recipe the network cannot feed scores zero.
+            Evaluation e = Evaluation.Of(value);
+            e.Note(FactorId.ValueAdded, value);
+            e.Apply(FactorId.InputsAvailable, fed ? Factor.Neutral : 0, fed ? 1 : 0);
+            e.Weigh(GoalWeight(civ, Goal.Prosperity), CharacterMultiplier(civ, Goal.Prosperity));
+            Chooser.Offer(r, e);
         }
 
-        return best;
+        return Chooser.Pick(random);
+    }
+
+    // No recipe adds value, or the network cannot feed any: the artisans stop.
+    private static Evaluation NothingPays()
+    {
+        Evaluation e = Evaluation.Of(0);
+        e.Note(FactorId.ValueAdded, 0);
+        return e;
     }
 
     private long[] Supply(GameState state, List<int> members)

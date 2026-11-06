@@ -13,6 +13,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>CSV file with population and food per civilization, or null for none.</summary>
     public string? StatsPath { get; init; }
 
+    /// <summary>CSV file with every AI decision and its three main reasons ("Why?", GDD 8.7), or null for none.</summary>
+    public string? DecisionsPath { get; init; }
+
     /// <summary>Write a stats row every this many turns.</summary>
     public int StatsEvery { get; init; } = 10;
 
@@ -88,7 +91,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
     /// <summary>Usage text.</summary>
     public const string Usage =
-        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--quiet]\n" +
+        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--quiet]\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
         "       [--luminosity SUNS] [--distance AU] [--year EARTH_YEARS] [--light 0.356-1.107] (at most two; the rest follows)\n" +
@@ -105,6 +108,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         MapSize size = MapSize.Standard;
         string? report = null;
         string? stats = null;
+        string? decisions = null;
         int statsEvery = 10;
         bool quiet = false;
         string? png = null;
@@ -161,6 +165,15 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     if (string.IsNullOrWhiteSpace(stats))
                     {
                         error = "--stats needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--decisions":
+                    decisions = Next();
+                    if (string.IsNullOrWhiteSpace(decisions))
+                    {
+                        error = "--decisions needs a file path.";
                         return null;
                     }
 
@@ -382,6 +395,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             PngFolder = png,
             PngScale = pngScale,
             StatsPath = stats,
+            DecisionsPath = decisions,
             StatsEvery = statsEvery,
             WorldType = worldType,
             WaterPercent = water,

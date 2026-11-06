@@ -64,6 +64,9 @@ public sealed class GameContent
     /// <summary>Sight, map memory and journeys (data/perception.json, stage 3g).</summary>
     public PerceptionRules Perception { get; init; } = new();
 
+    /// <summary>How the AI advisors decide (data/ai.json, stage 4a).</summary>
+    public AiRules Ai { get; init; } = new();
+
     /// <summary>Research and diffusion rules (stage 3f).</summary>
     public ResearchRules Research { get; init; } = new();
 

@@ -101,7 +101,7 @@ public class SeasonTests
         WorldState world = state.Worlds[0];
         CivilizationState civ = state.Civilizations[0];
         int cold = Enumerable.Range(0, world.Map.Temperature.Length).First(i => world.Map.Temperature[i] - (world.Map.Seasonality[i] / 2) < -25);
-        var ai = new TribeAi(Content);
+        var ai = new GovernorAdvisor(Content);
         int before = ai.Comfort(state, world, civ, cold);
         state.Effects.Add(Content.Effect("cold_tolerance"), WorldId.Earth, civ.Id.Value, 15, state.Month + 12_000);
         Assert.True(ai.Comfort(state, world, civ, cold) > before);

@@ -116,7 +116,7 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
   leżącej na boku każda półkula ma po kolei długie lato i długą zimę.
 - Warstwy `season_temperature`, `season_growth` (bieżąca tura) i `next_season_temperature`, `next_season_growth` (następna, dla AI).
 - Zbieranie: `winterFoodPercent + (100 − winterFoodPercent) × wzrost_tury`; kara za długie zimy z trybu uśrednionego wtedy nie działa (zima jest prawdziwa).
-- AI plemion (`TribeAi.Comfort`): wartość miejsca = jedzenie (średnia z tej i następnej tury) × wygoda temperatury (granice −5 °C i 38 °C, 2% za stopień,
+- AI plemion (`GovernorAdvisor.Comfort`): wartość miejsca = jedzenie (średnia z tej i następnej tury) × wygoda temperatury (granice −5 °C i 38 °C, 2% za stopień,
   najmniej 5%; temperatura następnej pory roku albo zimowa przy porach uśrednionych; efekt `cold_tolerance` obniża granicę zimna).
 - Wynik na Uranie (seed 42, 2000 tur = 21 000 lat): ok. 6300 ludzi, wszyscy żyją; obozy trzymają się pasa wokół równika, a środek populacji
   przesuwa się z każdym rokiem planety; w turach zmiany pory roku widać serie przeprowadzek. Wysokie półkule mają latem ponad 80 °C, a zimą −30 °C.

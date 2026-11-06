@@ -39,8 +39,8 @@ public sealed class EffectExpirySystem : ITurnSystem
 /// <summary>Registers the core simulation systems in their phases, in a fixed order, and the tribe AI.</summary>
 public static class CoreSystems
 {
-    /// <summary>Adds every core system to <paramref name="runner"/>.</summary>
-    public static void Register(TurnRunner runner, GameContent content)
+    /// <summary>Adds every core system and the AI council to <paramref name="runner"/>; returns the council (for its decision log).</summary>
+    public static Ai.AiCouncil Register(TurnRunner runner, GameContent content)
     {
         ArgumentNullException.ThrowIfNull(runner);
         ArgumentNullException.ThrowIfNull(content);
@@ -63,10 +63,10 @@ public static class CoreSystems
         runner.AddSystem(new Population.PopulationSystem(content));
         runner.AddSystem(new Population.AbandonmentSystem(content));
         runner.AddSystem(new Population.InfluenceSystem(content));
-        runner.AddCommandSource(new Ai.TribeAi(content));
-        runner.AddCommandSource(new Ai.EconomyAi(content));
+        var council = new Ai.AiCouncil(content);
+        runner.AddCommandSource(council);
         runner.AddSystem(new Research.ResearchSystem(content));
-        runner.AddCommandSource(new Research.ResearchAi(content));
         runner.AddSystem(new CalendarSystem(content));
+        return council;
     }
 }

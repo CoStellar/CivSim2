@@ -131,7 +131,7 @@ public class ResearchTests
     {
         GameState state = NewGame(45);
         var queue = new CommandQueue();
-        new ResearchAi(Content).IssueCommands(state, queue);
+        new ScholarAdvisor(Content).IssueCommands(state, queue);
         var commands = new List<CommandEnvelope>();
         queue.DrainSorted(state, 1, commands);
         Assert.Equal(state.Civilizations.Count, commands.Count);

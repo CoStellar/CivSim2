@@ -38,6 +38,7 @@ public static class ContentLoader
         List<EffectDefinition> effects = LoadEffects(Path.Combine(directory, "effects.json"), errors);
         TradeRules trade = LoadTrade(Path.Combine(directory, "trade.json"), errors);
         PerceptionRules perception = LoadPerception(Path.Combine(directory, "perception.json"), errors);
+        AiRules ai = LoadAi(Path.Combine(directory, "ai.json"), errors);
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
@@ -78,6 +79,7 @@ public static class ContentLoader
             ClimateCycles = cycles,
             Trade = trade,
             Perception = perception,
+            Ai = ai,
             Events = events,
             Technologies = technologies,
             Research = research,
@@ -987,6 +989,21 @@ public static class ContentLoader
             OralMemoryYears = r.Int("oralMemoryYears", 1, 1_000_000),
             JourneyCells = r.Int("journeyCells", 1, 200),
             ScoutCells = r.Int("scoutCells", 0, 200),
+        };
+    }
+
+    private static AiRules LoadAi(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new AiRules();
+        }
+
+        var r = new Reader(doc.RootElement, Path.GetFileName(path), errors);
+        return new AiRules
+        {
+            PickAmongTop = r.Int("pickAmongTop", 1, 3),
         };
     }
 

@@ -186,7 +186,7 @@ public class TradeProductionTests
     private static System.Collections.Generic.List<CommandEnvelope> Issue(GameState state)
     {
         var queue = new CommandQueue();
-        new EconomyAi(Content).IssueCommands(state, queue);
+        new TreasurerAdvisor(Content).IssueCommands(state, queue);
         var commands = new System.Collections.Generic.List<CommandEnvelope>();
         queue.DrainSorted(state, 1, commands);
         return commands;
