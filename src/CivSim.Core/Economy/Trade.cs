@@ -161,7 +161,10 @@ public static class Demand
     public static long Runs(GameContent content, SettlementState s, RecipeDefinition recipe, int months)
     {
         ArgumentNullException.ThrowIfNull(recipe);
-        return (long)Crafters(content, s) * 100 * months / (12L * Math.Max(1, recipe.Years) * Math.Max(1, recipe.Workers));
+        // A recipe of a skill is worked only by its skilled people and apprentices (stage 4F).
+        int skill = content.SkillLinks.ForRecipe(recipe.Id);
+        int crafters = skill < 0 ? Crafters(content, s) : Math.Min(Crafters(content, s), Population.Skills.Workers(content, s, skill));
+        return (long)crafters * 100 * months / (12L * Math.Max(1, recipe.Years) * Math.Max(1, recipe.Workers));
     }
 
     /// <summary>Of a good, what the settlement's recipe uses in <paramref name="months"/> at full work, hundredths.</summary>

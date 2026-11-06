@@ -88,6 +88,12 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
             producers += _content.Strata[k].Gathers ? people[k] : 0;
         }
 
+        // Only farmers farm (stage 4F): the skill's people and apprentices at their share; the others gather.
+        if (_content.SkillRules.FarmingSkill >= 0)
+        {
+            producers = Math.Min(producers, Population.Skills.Workers(_content, s, _content.SkillRules.FarmingSkill));
+        }
+
         if (producers == 0)
         {
             return;

@@ -100,6 +100,12 @@ public sealed class GameContent
     /// <summary>Skills, index = id (<c>data/skills.json</c>, stage 4F).</summary>
     public IReadOnlyList<SkillDefinition> Skills { get; init; } = [];
 
+    /// <summary>How skills are learned and passed on (<c>data/skills.json</c>, stage 4F).</summary>
+    public SkillRules SkillRules { get; init; } = new();
+
+    /// <summary>Which skill works which recipe and which technology's gathering.</summary>
+    public SkillLinks SkillLinks { get; init; } = SkillLinks.None;
+
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
 

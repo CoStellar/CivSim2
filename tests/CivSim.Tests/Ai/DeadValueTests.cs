@@ -314,8 +314,8 @@ public class DeadValueTests
     {
         var saved = new List<byte[]>();
         Record(saved, 11, [1, 3, 5, 8, 11, 14, 18], neolithic: false, extremes: false);
-        Record(saved, 12, [1, 4, 8, 12, 16, 20], neolithic: true, extremes: false);
-        Record(saved, 13, [2, 6, 10, 15, 20], neolithic: true, extremes: true);
+        Record(saved, 12, [1, 4, 8, 12, 16, 20, 26, 32], neolithic: true, extremes: false);
+        Record(saved, 13, [2, 6, 10, 15, 20, 26, 32], neolithic: true, extremes: true);
 
         // Rare situations made on purpose from Stone Age camps: a hungry camp in a poor valley that knows rich land far
         // away (a journey), a hungry camp next to a weak foreign camp (driving it out), an idle camp next to goods left
@@ -580,6 +580,22 @@ public class DeadValueTests
                     if (t.Era == 1 || t.Key == "agriculture" || (civ.Id.Value % 2 == 0 && t.Era == 2))
                     {
                         Technologies.Learn(Content, state, civ, t.Id);
+                    }
+                }
+            }
+        }
+
+        if (neolithic)
+        {
+            // Peoples who have long known these technologies have their skilled people (stage 4F): farmers, potters, bakers.
+            foreach (SettlementState s in state.Settlements)
+            {
+                CivilizationState owner = state.FindCivilization(s.Owner)!;
+                for (int k = 0; k < Content.Skills.Count; k++)
+                {
+                    if (owner.Knows(Content.Skills[k].TechnologyId))
+                    {
+                        s.Skilled[k] += Math.Min(CivSim.Core.Population.Skills.Free(Content, s, Content.Skills[k].StratumId), CivSim.Core.Population.Skills.Needed(Content, s, k) - s.SkilledView[k]);
                     }
                 }
             }

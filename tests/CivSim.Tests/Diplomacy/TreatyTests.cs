@@ -43,7 +43,7 @@ public class TreatyTests
 
     private static SettlementState Camp(GameState state, CivilizationState civ, HexCoord cell, int people)
     {
-        SettlementState s = state.FoundSettlement(civ.Id, state.Worlds[0].Id, cell, civ.Name + " Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count);
+        SettlementState s = state.FoundSettlement(civ.Id, state.Worlds[0].Id, cell, civ.Name + " Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
         s.Population[Content.Strata[0].Id] = people;
         return s;
     }

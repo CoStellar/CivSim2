@@ -39,7 +39,7 @@ public class EventTests
 
     private static SettlementState Camp(GameState state, CivId civ, HexCoord cell, int people)
     {
-        SettlementState s = state.FoundSettlement(civ, state.Worlds[0].Id, cell, "Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count);
+        SettlementState s = state.FoundSettlement(civ, state.Worlds[0].Id, cell, "Camp", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
         s.Population[Content.Strata[0].Id] = people;
         return s;
     }
@@ -124,6 +124,7 @@ public class EventTests
         CivilizationState civ = state.Civilizations[0];
         SettlementState village = Camp(state, civ.Id, land[land.Length / 2], 200);
         village.Level = SettleCommand.VillageLevel(Content, village.Level);
+        village.Skilled[Content.SkillRules.FarmingSkill] = village.PopulationView[0]; // only farmers farm (stage 4F)
         Run(state, new CivSim.Core.Population.InfluenceSystem(Content, TurnPhase.World));
         foreach (HexCoord c in land)
         {
