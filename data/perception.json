@@ -1,8 +1,10 @@
 {
   "version": 1,
-  "comment": "What civilizations see and remember (GDD 8.2, CORE simplified: oral memory; stage 3g). Every turn each lived-in settlement sees the cells within sightCells (hunters and gatherers roam far in a turn of decades). Scouts: every turn each lived-in settlement sends a scout in a random direction; it walks up to scoutCells over land and sea ice and sees the cells next to its way (GDD 8.2: what hunters and scouts see goes into memory). Oral memory: a cell seen once stays known for oralMemoryYears after it was last seen, then it is forgotten unless the tribe comes back (drawn maps from writing come with later eras). Journeys: a camp may set out for a known place up to journeyCells away; it walks maxMoveCells (population.json) per turn over known land, sea ice and land bridges.",
+  "comment": "What civilizations see and remember (GDD 8.2, CORE simplified: oral memory; stage 3g). Every turn each lived-in settlement sees the cells within sightCells (hunters and gatherers roam far in a turn of decades). Scouts: each lived-in settlement sends scoutsPerCentury scouts per century (rule 6: a rate per year, counted over the civilization's own step, the fraction by chance); each walks up to scoutCells over land and sea ice in a random direction and sees the cells next to its way (GDD 8.2: what hunters and scouts see goes into memory). Oral memory: a cell seen once stays known for oralMemoryYears after it was last seen, then it is forgotten unless the tribe comes back (drawn maps from writing come with later eras). Journeys: a camp may set out for a known place up to journeyCells away; it walks marchCellsPerCentury cells per century (at least one cell per own step, at most maxMoveCells of population.json) over known land, sea ice and land bridges.",
   "sightCells": 6,
   "oralMemoryYears": 300,
   "journeyCells": 40,
-  "scoutCells": 15
+  "scoutCells": 15,
+  "scoutsPerCentury": 2,
+  "marchCellsPerCentury": 20
 }

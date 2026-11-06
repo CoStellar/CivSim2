@@ -108,8 +108,14 @@ public sealed record PerceptionRules
     /// <summary>Years a seen cell stays known without being seen again (oral memory).</summary>
     public int OralMemoryYears { get; init; } = 300;
 
-    /// <summary>Cells a camp's scout walks every turn.</summary>
+    /// <summary>Cells a scout walks on one trip.</summary>
     public int ScoutCells { get; init; } = 15;
+
+    /// <summary>Scout trips of a lived-in settlement per century (rule 6: a rate per year, PR C; 2 = one per 50 years).</summary>
+    public int ScoutsPerCentury { get; init; } = 2;
+
+    /// <summary>Cells a camp on a journey walks per century (rule 6, PR C; 20 = the old 10 cells per 50-year step).</summary>
+    public int MarchCellsPerCentury { get; init; } = 20;
 
     /// <summary>Farthest a camp may set out for in one journey.</summary>
     public int JourneyCells { get; init; } = 40;
@@ -209,6 +215,38 @@ public sealed record AiRules
 
     /// <summary>A camp settles when farming its zone would feed this share of its people (G4).</summary>
     public int SettleFarmYieldPercent { get; init; } = 150;
+
+    /// <summary>
+    /// Settling also needs farming to grow this share of what the camp gathers now, times the expansion weight and
+    /// expansiveness: an expansive civilization wanders longer (percent, PR C).
+    /// </summary>
+    public int SettleOverGatheringPercent { get; init; } = 100;
+
+    /// <summary>A village sends settlers from this share of its level's people on (lower for an expansive civilization, percent).</summary>
+    public int VillageSettlersAbovePercent { get; init; } = 80;
+
+    /// <summary>A village whose fields are below this share of their natural fertility sends settlers (percent).</summary>
+    public int VillageWornBelowPercent { get; init; } = 70;
+
+    /// <summary>People who leave a village as settlers (at most 90% of it).</summary>
+    public int VillageSettlersPeople { get; init; } = 60;
+
+    /// <summary>A village sends at most one group of settlers in this many years (rule 6; staggered by village).</summary>
+    public int VillageSettlersEveryYears { get; init; } = 100;
+
+    /// <summary>
+    /// A camp sends explorers when expansion weight × expansiveness × curiosity (per mille, 1000 = neutral) reaches this.
+    /// </summary>
+    public int ExploreAbovePerMille { get; init; } = 1500;
+
+    /// <summary>Radius around a candidate place in which explorers count unknown land (cells).</summary>
+    public int ExploreLookCells { get; init; } = 3;
+
+    /// <summary>Explorers go only where at least this share of the land around is unknown (percent).</summary>
+    public int ExploreUnknownPercent { get; init; } = 30;
+
+    /// <summary>Share of a camp's people who leave as explorers (percent).</summary>
+    public int ExploreGroupPercent { get; init; } = 25;
 
     /// <summary>A camp takes left goods only while its warehouse is fuller than this (G6).</summary>
     public int PlunderBelowStoragePercent { get; init; } = 50;

@@ -309,9 +309,23 @@ public sealed class HexGlobe
         ReadOnlySpan<int> rows = [b.Row, -1 - b.Row, (2 * Height) - 1 - b.Row, b.Row + (2 * Height), b.Row - (2 * Height)];
         for (int image = 0; image < cols.Length; image++)
         {
+            // No path of n steps changes the column or the offset row by more than n, so an image at least that far
+            // in either cannot be closer than the best so far: skip it (same result, PR C: most calls skip 12 of 15).
+            int rowGap = Math.Abs(rows[image] - a.Row);
+            if (rowGap >= bestDistance)
+            {
+                continue;
+            }
+
             for (int k = -1; k <= 1; k++)
             {
-                AxialCoord p = ToAxial(cols[image] + (k * Width), rows[image]);
+                int col = cols[image] + (k * Width);
+                if (Math.Abs(col - a.Col) >= bestDistance)
+                {
+                    continue;
+                }
+
+                AxialCoord p = ToAxial(col, rows[image]);
                 int d = AxialCoord.PlaneDistance(origin, p);
                 if (d < bestDistance)
                 {

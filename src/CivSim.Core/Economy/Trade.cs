@@ -38,11 +38,16 @@ public static class TradeNetworks
             for (int b = a + 1; b < all.Count; b++)
             {
                 SettlementState sb = all[b];
-                if (sb.IsActive && sb.Owner == sa.Owner && sb.World == sa.World
-                    && world.Geometry.Distance(sa.Cell, sb.Cell) <= content.Trade.LinkCells)
+                if (!sb.IsActive || sb.Owner != sa.Owner || sb.World != sa.World)
                 {
-                    int ra = Root(parent, a);
-                    int rb = Root(parent, b);
+                    continue;
+                }
+
+                // Already in one network: joining again changes nothing, so the distance is not needed.
+                int ra = Root(parent, a);
+                int rb = Root(parent, b);
+                if (ra != rb && world.Geometry.Distance(sa.Cell, sb.Cell) <= content.Trade.LinkCells)
+                {
                     parent[Math.Max(ra, rb)] = Math.Min(ra, rb);
                 }
             }

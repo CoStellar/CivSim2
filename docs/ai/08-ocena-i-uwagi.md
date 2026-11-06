@@ -3,7 +3,7 @@
 [← spis treści](README.md)
 
 Ta strona to moja (Claude) uczciwa ocena obecnego AI po przeczytaniu całego kodu i trzech grach po 1000 tur. Każda poprawka
-zmienia zasady gry, więc decydujesz Ty. **Stan: po PR B (wartości i priorytety)**; punkty, które PR B zamknął, są oznaczone.
+zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; punkty, które PR B i PR C zamknęły, są oznaczone.
 
 ## Podsumowanie w jednej tabeli
 
@@ -11,16 +11,18 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR B (wartości i priorytety
 | --- | --- | --- |
 | Wspólna ocena i wybór (czynniki, 3 najlepsze, ostrożność) | **dobre** | jeden wzór dla wszystkich, deterministyczny, wyjaśnialny |
 | Gubernator: przeprowadzki, odłamy, wypędzenia | **dobre, rozsądnie złożone** | liczy jedzenie, wygodę, odległość, kierunek, opinię, siłę |
-| Gubernator: osiedlenie (G4) | **za proste** | w praktyce „zna rolnictwo i ma 60 osób = osiada” |
+| Gubernator: osiedlenie (G4) | **dobre (od PR C)** | plon dla prawdziwych rolników, porównanie ze zbieractwem i ekspansywnością |
 | Gubernator: łupy (G6), dołączanie (G1) | proste, ale wystarczy | rzadkie albo oczywiste sytuacje |
-| Wioski | **brak AI** | po osiedleniu gubernator nic nie robi |
+| Wioski | **proste (od PR C)** | wysyłają osadników (G7), gdy są zatłoczone albo pola wyjałowione; budowy i dzielnice w późniejszych etapach |
 | Strateg | **dobre (od PR B)** | każda z 6 wag na coś wpływa; nauka rośnie, gdy spotkani wiedzą więcej, wpływ z liczbą spotkanych; podbój czeka na 4e |
 | Charakter | **żywy (od PR B)** | każda cecha zmienia decyzję (test `DeadValueTests`); ciekawość zmniejsza strach przed kosztem technologii |
 | Dyplomata (4d) | **dobre, z jedną dziurą** | ta sama ocena dla obu stron, reaguje na wojnę i napad poza rytmem (ADR 0018); ale „widzi” dzisiejszą siłę z pamiętanych pól |
 | Skarbnik | **dobre (od PR B), jedna słabość** | osady sieci koordynują się, jedzenie kontra wyroby, premia za handel; zostało przełączanie odzież ↔ chleb |
 | Uczony | **dobre (od PR B)** | priorytet z położenia, braków i charakteru, koszt jako przeszkoda; rolnictwo przychodzi wcześniej (do oceny) |
-| Wiedza AI | **częściowo naprawione (PR B)** | obce obozy i ich siła tylko z pól widzianych w ostatnim kroku; jedzenie pól nadal dzisiejsze |
-| Rytm decyzji | **dobre (od ADR 0018)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i ruch obozu nadal „na krok” (PR C) |
+| Wiedza AI | **częściowo naprawione (PR B, PR C)** | obce obozy i ich siła tylko z pól widzianych w ostatnim kroku; ziemia wyceniana z technologiami cywilizacji; jedzenie pól nadal dzisiejsze |
+| Wyprawy (G8) | **nowe, rzadkie** | 8–97 na grę; zależą od ciekawości i ekspansywności |
+| Rytm decyzji | **dobre (od ADR 0018, PR C)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i marsz obozu na stulecie |
+| Wydajność | **do pilnowania (PR C)** | 3–4× więcej osad; stare systemy porównują każdą osadę z każdą (patrz pkt 10) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -77,7 +79,7 @@ koszt jest przeszkodą, którą ciekawość zmniejsza. Opis: [uczony](05-uczony.
 Jeśli to za szybko, najprostsza gałka to `scholar.villageWorthPerPerson` (0,1). Zostały uproszczenia: uczony patrzy na wartości
 bazowe towarów (nie na ceny w sieci) i tylko jeden krok dalej.
 
-## 4. Osiedlenie to w praktyce próg, a nie wybór
+## 4. Osiedlenie to w praktyce próg, a nie wybór (zamknięte w PR C)
 
 Rachunek G4 zakłada, że każde pole strefy uprawia 40 rolników, choć obóz ma ich kilkudziesięciu. Dlatego plon wychodzi zwykle
 kilkanaście razy większy od potrzeb: w 539 osiedleniach z trzech gier mediana `farm yield` to ok. 1650%, najmniej 169%, najwięcej
@@ -86,6 +88,12 @@ koczowaniem, wag ani charakteru.
 
 **Propozycja:** liczyć plon dla prawdziwej liczby producentów (najlepsze pola najpierw, jak robi to system rolnictwa) i porównać z
 tym, co daje zbieractwo; ekspansywna cywilizacja mogłaby dłużej koczować.
+
+**Zrobione (PR C):** plon liczymy dla producentów obozu na najlepszych polach strefy (najwyżej `farmersPerCell` na pole), a
+osiedlenie wymaga też, żeby rolnictwo dało więcej niż zbieractwo razy waga ekspansji i ekspansywność
+(`settleOverGatheringPercent` = 100%). W 1469 osiedleniach z trzech gier mediana `farm yield` to 280% (najmniej 151%,
+najwięcej 363%), a `over gathering` 292% (101–1006). Próg 150% jest teraz prawdziwą granicą. Osiedleń jest 2–3 razy więcej niż
+przed PR C (428–541 zamiast 161–252), bo większość nowych obozów zakładają osadnicy z wiosek (G7) i one też osiadają.
 
 ## 5. Odstępy czasu: rozwiązane przez zegar świata (ADR 0018)
 
@@ -103,9 +111,11 @@ To celowo nie są lata: Twoja zasada „każda cywilizacja decyduje co tyle lat,
 planuje częściej. Tempa (wzrost, psucie, pamięć relacji) dalej są na rok.
 
 Uwaga do zostawionej rzeczy: zwiadowca (15 pól) i ruch obozu (10 pól) to nadal „na własny krok”, więc rozwinięte cywilizacje
-odkrywają świat i wędrują szybciej w przeliczeniu na rok. To zmieniamy w PR C (ziemia i migracje), bo zmienia równowagę wędrówek.
+odkrywają świat i wędrują szybciej w przeliczeniu na rok. **Zrobione (PR C):** zwiadowcy to 2 wyprawy na stulecie
+(`scoutsPerCentury`), a obóz w drodze idzie 20 pól na stulecie (`marchCellsPerCentury`, najwyżej jeden ruch na krok);
+`data/perception.json`.
 
-## 6. Gubernator nie zna swoich technologii
+## 6. Gubernator nie zna swoich technologii (zamknięte w PR C)
 
 Wartość miejsca liczy jedzenie pola **bez technologii cywilizacji**, a pól wody w ogóle nie liczy. Plemię z rybołówstwem, które
 naprawdę je ryby z wybrzeża, wycenia wybrzeże jak plemię bez rybołówstwa. Tak samo premie z łowiectwa i hodowli. AI wycenia więc
@@ -114,6 +124,9 @@ ziemię gorzej, niż ona naprawdę karmi, i rzadziej przenosi się nad morze.
 **Propozycja:** liczyć jedzenie z technologiami cywilizacji (system zbierania już to potrafi) i dodawać pola wody, jeśli cywilizacja
 zna rybołówstwo.
 
+**Zrobione (PR C):** jedzenie miejsca liczymy z technologiami zbierania cywilizacji (`GovernorAdvisor.Land`, wspólne dla
+cywilizacji o tym samym zestawie), a rybacy liczą pola wody przy lądzie swojej strefy.
+
 ## 7. Dziennik „Dlaczego?” czasem wprowadza w błąd
 
 Dziennik pokazuje 3 czynniki najdalsze od 1000. W seedzie 7 pierwszym czynnikiem jest `character` w 3600 z 7977 wpisów (45%), choć (pkt 1) nie wpłynął na wybór, bo wszystkie
@@ -121,11 +134,18 @@ opcje miały ten sam. Przykład z gry: `Scholar, SetResearch: character 105%, re
 
 **Propozycja:** w dzienniku pomijać czynniki wspólne dla wszystkich opcji danej decyzji.
 
-## 8. Wioski bez AI
+## 8. Wioski bez AI (zamknięte w PR C)
 
 Po osiedleniu gubernator nie robi z wioską nic: nie wyśle odłamu, gdy jest pełna, nie przeniesie ludzi, gdy brakuje jedzenia. Na
 [wykresie](09-statystyki.md) widać, że po turze ~300, gdy większość osad jest już wioskami, liczba decyzji spada kilkukrotnie.
 To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzieć, że od neolitu AI „śpi”.
+
+**Zrobione (PR C):** wioska wysyła 60 osadników (G7), gdy jest zatłoczona (od 80% miejsc, wcześniej dla ekspansywnych) albo gdy
+jej pola mają mniej niż 70% naturalnej żyzności; najwyżej raz na 100 lat, w wolne miejsce poza strefami własnych osad.
+W 1000 tur to 424–473 grup na grę. Ludność na końcu jest 1,6–2,3 razy większa, a ludzie żyją średnio 20–24 pola od startu
+zamiast 10–12 ([wykres](09-statystyki.md#ziemia-i-migracje-pr-c)). Decyzji po turze 300 jest więcej niż przed PR C, ale nadal
+mniej niż na początku gry, bo wioski poza osadnikami nic nie robią.
+
 
 ## 9. Inne drobne rzeczy
 
@@ -149,6 +169,21 @@ To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzie
 - **Czego GDD obiecuje, a jeszcze nie ma:** plany wieloetapowe (8.6), mapy zagrożeń i napięcia (8.2), prognozy zasobów („za 12 tur
   zabraknie żelaza”). To zgodne z planem etapów, ale dziś AI reaguje tylko na bieżący stan, nie planuje.
 
+## 10. Wydajność: stare systemy porównują każdą osadę z każdą (PR C)
+
+Po PR C osad jest 3–4 razy więcej (350–450 zamiast 80–130 na mapie standard po 1000 tur). Kilka systemów sprzed PR C sprawdza
+każdą parę osad: sieci handlowe (`TradeNetworks.Build`, budowane 5 razy na turę), przygotowanie dyplomaty, `CivFacts.Measure` i
+wysyłanie nadwyżek z magazynów. Par jest ~11 razy więcej, więc tura wydłużyła się z 16–19 ms do 37–52 ms (cel 50 ms).
+Koszt na jedną osadę jest taki jak przed PR C.
+
+W PR C przyspieszyłem trzy rzeczy bez zmiany wyniku (hash stanu identyczny): odległość na kuli pomija obrazy pola, które nie mogą
+być bliżej, nadwyżki sortują osady po wyliczonej raz odległości, a sieci nie liczą odległości dla osad już połączonych. To dało
+ok. 30–40% (seed 23: 81 → 52 ms).
+
+**Propozycja na później:** siatka przestrzenna osad (kubełki po kilka pól), żeby pary liczyć tylko dla bliskich osad, i jedna
+budowa sieci handlowych na turę. To zmiana kilku systemów naraz, więc osobny PR. Gdyby gra miała być szybsza od razu, można
+rzadziej wysyłać osadników (`villageSettlersEveryYears`) – ale to zmienia tempo gry, więc decyzja należy do Ciebie.
+
 ## Decyzje Patryka (2026-11-06)
 
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.
@@ -158,5 +193,7 @@ To zgodne z planem (budowy i dzielnice to późniejsze etapy), ale warto wiedzie
 4. **Czas:** symulacja w latach, każda cywilizacja decyduje we własnym rytmie, decyzje reaktywne i proaktywne. **Zrobione:**
    ADR 0018 (licznik świata, kroki przypięte do kalendarza bez utraty lat, wartości er bez zmian).
 5. **Ziemia i migracje:** lepsza ocena ziemi; odłamy, które idą na nowe tereny i z czasem stają się osobnymi cywilizacjami.
+   **Zrobione w części:** PR C (ocena ziemi z technologiami, osiedlenie, osadnicy z wiosek, wyprawy, zwiad i marsz na stulecie).
+   Odłamy jako nowe cywilizacje: PR D (etap 4f).
 
 Plan wykonania: [`docs/prompts/04-ai-czas-wartosci-migracje.md`](../prompts/04-ai-czas-wartosci-migracje.md).

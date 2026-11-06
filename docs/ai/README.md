@@ -4,7 +4,7 @@ Ten katalog opisuje **każdą decyzję**, którą podejmuje sztuczna inteligencj
 na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to jest w kodzie. Jest pisany dla Patryka:
 żeby można było ocenić, czy mechanika nie jest za prosta albo za skomplikowana i bez sensu.
 
-**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019; gałąź `feat/ai-values`, commit `6bfae1f`). Dowódca i armie (4e) jeszcze nie istnieją.
+**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019) + ziemia i migracje (PR C; gałąź `feat/ai-land`, commit `51067a5`). Dowódca i armie (4e) jeszcze nie istnieją.
 **Aktualizacja:** po każdym etapie, który zmienia AI (zasada w `CLAUDE.md`). Historia zmian jest na dole tej strony.
 
 ## Jak czytać
@@ -59,9 +59,11 @@ zjedli” to wynik poprzedniego kroku tej cywilizacji).
 | **G1** | Gubernator | mały obóz (< 15 osób) dołącza do najbliższego własnego | `AbandonSettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g1](03-gubernator.md#g1-mały-obóz-dołącza-do-innego) |
 | **G2** | Gubernator | głodny lub zmarznięty obóz zmienia miejsce w zasięgu 10 pól: przenosi się, zajmuje pustą osadę albo wypędza słabszy obcy obóz | `MoveSettlementCommand`, `OccupySettlementCommand`, `ConquerSettlementCommand` | w każdym własnym kroku (gdy głoduje), inaczej co 3 własne kroki; od razu po napadzie | [03-gubernator.md#g2](03-gubernator.md#g2-przeniesienie-obozu-zajęcie-albo-wypędzenie) |
 | **G3** | Gubernator | daleka wędrówka (11–40 pól), gdy w zasięgu nic nie ma | `JourneyCommand` | własny krok na decyzje wolne, po nieudanym G2 | [03-gubernator.md#g3](03-gubernator.md#g3-daleka-wędrówka) |
-| **G4** | Gubernator | obóz osiada jako wioska rolnicza | `SettleCommand` | własny krok na decyzje wolne | [03-gubernator.md#g4](03-gubernator.md#g4-osiedlenie-się-wioska) |
+| **G4** | Gubernator | obóz osiada jako wioska rolnicza, gdy prawdziwi producenci wyhodują więcej, niż zbierają (ekspansywni dłużej wędrują) | `SettleCommand` | własny krok na decyzje wolne | [03-gubernator.md#g4](03-gubernator.md#g4-osiedlenie-się-wioska) |
 | **G5** | Gubernator | zatłoczony obóz wysyła 40% ludzi na nowe miejsce | `SplitSettlementCommand` albo `OccupySettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g5](03-gubernator.md#g5-odłam-nowy-obóz) |
 | **G6** | Gubernator | zabranie dóbr z porzuconej osady w pobliżu | `PlunderSettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g6](03-gubernator.md#g6-zabranie-porzuconych-dóbr) |
+| **G7** | Gubernator | wioska (pełna albo z wyjałowionymi polami) wysyła 60 osadników (najwyżej raz na 100 lat), którzy zakładają obóz | `SplitSettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g7](03-gubernator.md#g7-wioska-wysyła-osadników-od-pr-c) |
+| **G8** | Gubernator | ciekawy i ekspansywny obóz wysyła 25% ludzi ku nieznanej ziemi | `SplitSettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g8](03-gubernator.md#g8-wyprawa-w-nieznane-od-pr-c) |
 | **T1** | Skarbnik | jaką recepturę robią rzemieślnicy osady | `SetRecipeCommand` | własny krok na decyzje wolne | [04-skarbnik.md](04-skarbnik.md) |
 | **U1** | Uczony | jaką technologię badać: priorytet (co da tej cywilizacji) × przeszkoda kosztu | `SetResearchCommand` | gdy nic nie jest badane (reaktywnie, każdy krok świata) | [05-uczony.md](05-uczony.md) |
 | **D1** | Dyplomata | przyjąć czy odrzucić propozycję umowy | `AnswerProposalCommand` | każdy krok świata (reaktywnie) | [10-dyplomata.md](10-dyplomata.md#d1-odpowiedź-na-propozycję-reaktywna) |
@@ -75,7 +77,7 @@ Procesy, które **nie są decyzjami**, ale dostarczają AI danych (opisane w [06
 
 | Id | Proces | Wpływa na decyzję |
 | --- | --- | --- |
-| **W1** | pamięć mapy: widzenie 6 pól, zwiadowca 15 pól, pamięć 300 lat | G2, G3, S1 (AI wybiera tylko znane pola) |
+| **W1** | pamięć mapy: widzenie 6 pól, zwiadowcy (2 na stulecie, każdy 15 pól), pamięć 300 lat | G2, G3, G7, G8, S1 (AI wybiera tylko znane pola) |
 | **W2** | ścieżka po znanym lądzie (wędrówka) | G3 |
 | **R1** | pierwszy kontakt (zobaczenie, zetknięcie stref, napaść) | D1, D2 (dyplomacja tylko po kontakcie) |
 | **R2** | pierwsze wrażenie z otwartości | G2 (wypędzenie), D1, D2 przez sympatię |
@@ -88,8 +90,8 @@ Procesy, które **nie są decyzjami**, ale dostarczają AI danych (opisane w [06
 ## Kogo dotyczy AI
 
 - Każda żywa cywilizacja z kontrolerem `PlayerId.Ai` (dziś wszystkie, bo trybu gracza jeszcze nie ma).
-- Gubernator zajmuje się **tylko obozami koczowniczymi** (poziom `mobile: true`). Wioska po osiedleniu nie dostaje już żadnej
-  decyzji gubernatora (nie przenosi się, nie dzieli, nie łączy). Zostają jej tylko receptury (T1) i badania całej cywilizacji (U1).
+- Gubernator zajmuje się głównie **obozami koczowniczymi** (poziom `mobile: true`). Wioska po osiedleniu ma od PR C jedną decyzję:
+  wysłanie osadników (G7); nie przenosi się i nie łączy. Do tego receptury (T1) i badania całej cywilizacji (U1).
 - Tylko Ziemia (świat 0) ma pełną obsługę; kod innych światów jest przygotowany, ale nieużywany.
 
 ## Granica: co jest decyzją AI, a co zwykłą zasadą gry
@@ -124,3 +126,4 @@ w `docs/systems/`:
 | 2026-11-06 | 4d | Dyplomata (D1, D2, wojna i pokój, sojusznicy), zakaz wypędzeń przez umowy i premia w wojnie (G2), wagi celów i cechy używane w dyplomacji, nowe parametry z `data/diplomacy.json`, nowe statystyki i wykres. |
 | 2026-11-06 | zegar (ADR 0018) | Rytm każdej cywilizacji: decyzje proaktywne we własnym kroku, reaktywne (alarmy wojny i napadu, propozycje, wybór badania) w każdym kroku świata; nowe reakcje D2 i G2; odstępy AI w własnych krokach (`reviewEverySteps`, `searchEverySteps`, `minStepsBetweenMoves`); zwiad, widzenie i pogłoski w własnym kroku; nowe statystyki, wykres rytmów i ludności przed/po. |
 | 2026-11-06 | wartości (PR B, ADR 0019) | Uczony od nowa (priorytet z położenia, braków i charakteru, koszt jako przeszkoda łagodzona ciekawością); skarbnik: cele towarów, koordynacja sieci, koniec przełączania „praca ↔ brak”, premia za handel; strateg: wagi nauki i wpływu; „zostać” z połową wagi ekspansji; obce obozy i wojownicy tylko z pól widzianych teraz; 11 liczb z kodu do `data/ai.json` (sekcja `scholar`); test martwych wartości; nowe statystyki z 3 seedów, wykresy decyzji i „przed/po”. |
+| 2026-11-06 | ziemia i migracje (PR C) | Gubernator wycenia ziemię z technologiami zbierania cywilizacji, rybacy liczą wodę; G4 osiedlenie dla prawdziwej liczby producentów i w porównaniu ze zbieractwem i ekspansywnością (`settleOverGatheringPercent`); nowe decyzje G7 (wioska wysyła osadników) i G8 (wyprawa w nieznane); osadnicy omijają strefy własnych osad; zwiad i marsz na stulecie (`data/perception.json`); nowe parametry w `data/ai.json`; punkty 4, 5, 6 i 8 oceny zamknięte, nowy punkt 10 (wydajność); statystyki z 3 seedów, wykres ziemi i migracji, wykres decyzji z G7 i G8. |

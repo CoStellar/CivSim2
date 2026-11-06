@@ -481,7 +481,9 @@ public class DeadValueTests
         foreach (CivilizationState civ in state.Civilizations)
         {
             // Every step of the Neolithic peoples plans production now.
+            // A step of a whole settlers' period, so every village is due to send settlers (G7) whatever its stagger.
             civ.StepMonths = Math.Max(civ.StepMonths, CivSim.Core.Simulation.WorldClock.RhythmMonths(Content, state, civ));
+            civ.StepMonths = Math.Max(civ.StepMonths, Content.Ai.VillageSettlersEveryYears * 12);
             civ.Traits[(int)Trait.Tradefulness] = 500;
             foreach (SettlementState s in state.Settlements.Where(x => x.Owner == civ.Id && x.IsActive))
             {
@@ -495,6 +497,18 @@ public class DeadValueTests
                 }
 
                 s.Add(clothing, Amount.FromUnits(200)); // and plenty of clothing already
+
+                // Villages 70% full: whether they send settlers depends on the threshold and the civilization's drive.
+                if (!Content.SettlementLevels[s.Level].Mobile)
+                {
+                    int room = Content.SettlementLevels[s.Level].MaxPopulation * 70 / 100;
+                    int total = s.TotalPopulation();
+                    Span<int> crowd = s.Population;
+                    for (int k = 0; k < crowd.Length; k++)
+                    {
+                        crowd[k] = total == 0 ? 0 : (int)((long)crowd[k] * room / total);
+                    }
+                }
                 s.Add(grain, Amount.FromUnits(60));
                 s.Add(hides, Amount.FromUnits(60));
                 s.Add(wood, Amount.FromUnits(60));

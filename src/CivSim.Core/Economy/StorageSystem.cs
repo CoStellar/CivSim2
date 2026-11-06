@@ -19,6 +19,7 @@ public sealed class StorageSystem : ITurnSystem
     private readonly long[] _keptShare;
     private readonly long[] _weights;
     private readonly Amount[] _losses;
+    private readonly List<long> _order = [];
     private int _cachedMonths = -1;
     private readonly Dictionary<long, long[]> _modified = [];
 
@@ -127,24 +128,25 @@ public sealed class StorageSystem : ITurnSystem
         long used = 0;
         SettlementState s = state.Settlements[from];
         WorldState world = state.Worlds[s.World.Value];
-        var order = new List<int>(members.Count);
+        if (s.TotalStock() <= capacity)
+        {
+            return 0;
+        }
+
+        // Nearest first, ties by index: each distance is computed once and packed with the index into one sort key.
+        _order.Clear();
         foreach (int m in members)
         {
             if (m != from)
             {
-                order.Add(m);
+                _order.Add(((long)world.Geometry.Distance(s.Cell, state.Settlements[m].Cell) << 32) | (uint)m);
             }
         }
 
-        order.Sort((a, b) =>
+        _order.Sort();
+        foreach (long key in _order)
         {
-            int da = world.Geometry.Distance(s.Cell, state.Settlements[a].Cell);
-            int db = world.Geometry.Distance(s.Cell, state.Settlements[b].Cell);
-            return da != db ? da.CompareTo(db) : a.CompareTo(b);
-        });
-
-        foreach (int m in order)
-        {
+            int m = (int)(key & 0xFFFFFFFF);
             Amount excess = s.TotalStock() - capacity;
             if (excess <= Amount.Zero)
             {

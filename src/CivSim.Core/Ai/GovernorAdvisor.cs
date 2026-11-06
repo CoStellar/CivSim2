@@ -40,12 +40,14 @@ public sealed class GovernorAdvisor : Advisor
     private readonly long[] _foodPerPerson;
     private long[] _nearOwnAt = [];
     private long _civStamp;
-    private readonly List<long[]> _cellFood = [];
-    private long _cellFoodStamp;
-    private readonly List<long> _cellFoodClimate = [];
-    private long[] _siteFood = [];
-    private long[] _siteStamp = [];
-    private long _stamp;
+    // The land as each set of gathering technologies sees it (PR C): fishers count the water, hunters the game.
+    // Civilizations with the same set share it; the set changes only when a gathering technology is learned.
+    private readonly Dictionary<string, Land> _lands = [];
+    private readonly List<string?> _landKeyOf = [];
+    private readonly List<int> _landKnownOf = [];
+    private Land _land = null!;
+    private int _landCiv = -1;
+    private long _stamp = 1; // never 0, the value of a fresh cache entry
     private readonly ResponseCurve _nearness;
     private readonly ResponseCurve _farNearness;
 
@@ -60,6 +62,7 @@ public sealed class GovernorAdvisor : Advisor
         _reach = new HexCoord[HexGlobe.RangeSize(_rules.MaxMoveCells)];
         _farmArea = new HexCoord[HexGlobe.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
         _influence = new Influence(content);
+        _otherWorld = new Land(Research.TechBenefits.Empty(content));
         _near = new HexCoord[HexGlobe.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
         // Nearness: 1.0 next door, falling by the distance penalty per cell (data/population.json), 0 from 100/penalty cells on.
         _nearness = ResponseCurve.Linear(0, Factor.Neutral, 100, Factor.Neutral - (Factor.Neutral * _rules.DistancePenaltyPercentPerCell));
@@ -158,6 +161,8 @@ public sealed class GovernorAdvisor : Advisor
                 continue;
             }
 
+            UseLand(civ);
+
             // Cells too close to this civilization's camps for a new camp.
             _civStamp++;
             foreach (SettlementState s in all)
@@ -170,9 +175,18 @@ public sealed class GovernorAdvisor : Advisor
 
             foreach (SettlementState s in all)
             {
-                if (s.Owner == civ.Id && s.IsActive && s.TotalPopulation() > 0 && _content.SettlementLevels[s.Level].Mobile && !_joined.Contains(s.Id.Value))
+                if (s.Owner != civ.Id || !s.IsActive || s.TotalPopulation() == 0 || _joined.Contains(s.Id.Value))
+                {
+                    continue;
+                }
+
+                if (_content.SettlementLevels[s.Level].Mobile)
                 {
                     Decide(state, queue, civ, s, reacting: !steps);
+                }
+                else if (steps && Simulation.WorldClock.PlansNow(_content, state, civ))
+                {
+                    DecideVillage(state, queue, civ, s);
                 }
             }
 
@@ -254,15 +268,22 @@ public sealed class GovernorAdvisor : Advisor
             return;
         }
 
-        // Agriculture: a camp whose land could feed half again as many people by farming settles down (GDD 5.3).
+        // Agriculture (GDD 5.3): a camp settles when its producers, farming the best land of its zone, would feed the
+        // camp with a margin and grow more than they gather now. An expansive civilization asks for more before it
+        // gives up wandering (PR C of 2026-11-06).
         if (mobile && people >= _content.Assets.SettleMinPeople && CanSettle(civ, s.Level))
         {
-            long farm = FarmFood(world, s);
+            int producers = Producers(s);
+            long farm = FarmFood(world, s, producers);
             long eat = GroupFoodNeed(s, 100);
-            if (farm * 100 >= eat * _content.Ai.SettleFarmYieldPercent)
+            long gather = Math.Min(SiteFood(world, s.Cell), _rules.FoodPerWorkerPerYear.Hundredths * producers);
+            long wander = (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral;
+            if (farm * 100 >= eat * _content.Ai.SettleFarmYieldPercent
+                && farm * 100 * Factor.Neutral >= gather * _content.Ai.SettleOverGatheringPercent * wander)
             {
                 Evaluation settle = Evaluation.Of(farm);
                 settle.Note(FactorId.FarmYield, eat > 0 ? farm * 100 / eat : 0);
+                settle.Note(FactorId.OverGathering, gather > 0 ? farm * 100 / gather : 0);
                 settle.Note(FactorId.People, people);
                 Issue(state, queue, civ.Id, new SettleCommand(_content, s.Id), AiAction.Settle, s.Id.Value, world.Geometry.Index(s.Cell), settle);
                 return;
@@ -289,6 +310,13 @@ public sealed class GovernorAdvisor : Advisor
             }
         }
 
+        // A camp that has room and food sends a group of explorers towards land nobody of its people has seen, when its
+        // civilization is curious and expansive enough (PR C: settling empty continents without hunger driving them).
+        if (people >= _rules.MinSplitPeople && s.FedPerMille >= _rules.MoveWhenFedBelowPercent * 10 && Explore(state, queue, civ, s, world))
+        {
+            return;
+        }
+
         // Nothing better to do: take what others left nearby while there is room in the warehouse.
         if (s.TotalStock().Hundredths * 100 < _content.SettlementLevels[s.Level].StorageCapacity.Hundredths * _content.Ai.PlunderBelowStoragePercent)
         {
@@ -307,6 +335,149 @@ public sealed class GovernorAdvisor : Advisor
             }
         }
     }
+
+    // A village (GDD 5.3, PR C) does not move, but it sends settlers out: when it is crowded (earlier for an expansive
+    // civilization), or when the land it farms is worn out. They found a camp on the best known free land within one
+    // move, and that camp chooses where to live and whether to settle by itself.
+    private void DecideVillage(GameState state, CommandQueue queue, CivilizationState civ, SettlementState s)
+    {
+        WorldState world = state.Worlds[s.World.Value];
+        int people = s.TotalPopulation();
+        if (people < _rules.MinSplitPeople)
+        {
+            return;
+        }
+
+        // At most one group per period of years (rule 6), staggered by village so that not all villages go at once.
+        // The village plans once per own step, or once per era-length period with live seasons.
+        long period = _content.Ai.VillageSettlersEveryYears * 12L;
+        long window = Math.Max(civ.StepMonths, Simulation.WorldClock.EraMonths(_content, civ.Era));
+        long offset = s.Id.Value * 97L % period;
+        if (window < period && (state.Month + offset) / period == (state.Month - window + offset) / period)
+        {
+            return;
+        }
+
+        int max = _content.SettlementLevels[s.Level].MaxPopulation;
+        long drive = Math.Max(1, (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral);
+        long settleAbove = Math.Clamp(_content.Ai.VillageSettlersAbovePercent * Factor.Neutral / drive, _content.Ai.SplitMinPercentOfLevel, 100);
+        bool crowded = people * 100L >= max * settleAbove;
+        int worn = WornPercent(world, s);
+        bool wornOut = worn < _content.Ai.VillageWornBelowPercent;
+        if (!crowded && !wornOut)
+        {
+            return;
+        }
+
+        // A group the size of a new camp leaves, however big the village is.
+        // Each stratum gives its share rounded down, so the share grows until the group is whole.
+        int percent = (int)Math.Clamp(_content.Ai.VillageSettlersPeople * 100L / people, 1, 90);
+        while (percent < 90 && GroupPeople(s, percent) < _content.Ai.VillageSettlersPeople)
+        {
+            percent++;
+        }
+
+        long need = GroupFoodNeed(s, percent) * _rules.SplitNeedsFoodPercent / 100;
+        (HexCoord site, Evaluation go) = BestSite(state, world, civ, s, splitting: true, RandomFor(state, s.Id.Value));
+        if (go.Value > 0 && SiteFood(world, site) >= need)
+        {
+            go.Note(FactorId.Crowding, people * 100L / Math.Max(1, max));
+            go.Note(FactorId.WornLand, worn);
+            (ICommand command, AiAction action) = MoveTo(state, world, s, site, percent);
+            Issue(state, queue, civ.Id, command, action == AiAction.SplitCamp ? AiAction.SendSettlers : action, s.Id.Value, world.Geometry.Index(site), go);
+            Take(world, site);
+        }
+    }
+
+    // Fertility of the village's farmable land against its natural fertility, % (100 = as it was, lower = worn out).
+    private int WornPercent(WorldState world, SettlementState s)
+    {
+        int claim = s.Id.Value + 1;
+        int count = world.Geometry.Range(s.Cell, Math.Min(_rules.InfluenceMaxRange, world.Geometry.MaxUniqueRadius), _farmArea);
+        long now = 0;
+        long natural = 0;
+        for (int k = 0; k < count; k++)
+        {
+            int i = world.Geometry.Index(_farmArea[k]);
+            if (world.Map.Claim[i] == claim && world.Map.NaturalFertility[i] >= _rules.MinFarmFertility)
+            {
+                now += world.Map.Fertility[i];
+                natural += world.Map.NaturalFertility[i];
+            }
+        }
+
+        return natural == 0 ? 100 : (int)(now * 100 / natural);
+    }
+
+    // Explorers (PR C): a group goes to the known free cell within one move that has the most unknown land around it,
+    // when curiosity and expansiveness together (with the expansion weight) reach the threshold of data/ai.json.
+    private bool Explore(GameState state, CommandQueue queue, CivilizationState civ, SettlementState s, WorldState world)
+    {
+        if (world.Id != WorldId.Earth)
+        {
+            return false;
+        }
+
+        long drive = (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral
+            * CharacterMultiplier(civ, Goal.Science) / Factor.Neutral;
+        if (drive < _content.Ai.ExploreAbovePerMille)
+        {
+            return false;
+        }
+
+        HexGlobe geo = world.Geometry;
+        int count = geo.Range(s.Cell, Math.Min(_rules.MaxMoveCells, geo.MaxUniqueRadius), _reach);
+        int look = Math.Min(_content.Ai.ExploreLookCells, geo.MaxUniqueRadius);
+        if (_look.Length < HexGlobe.RangeSize(look))
+        {
+            _look = new HexCoord[HexGlobe.RangeSize(look)];
+        }
+
+        long need = GroupFoodNeed(s, _content.Ai.ExploreGroupPercent) * _rules.SplitNeedsFoodPercent / 100;
+        Chooser.Clear();
+        for (int k = 0; k < count; k++)
+        {
+            HexCoord c = _reach[k];
+            int i = geo.Index(c);
+            if (_content.Biomes[world.Map.Biome[i]].IsWater || !Perception.MapMemory.Knows(_content, state, civ, i)
+                || Math.Abs(_occupiedAt[i]) == _stamp || !OpenLand(world, civ, c) || !Free(world, s, c, splitting: true))
+            {
+                continue;
+            }
+
+            int around = geo.Range(c, look, _look);
+            int unknown = 0;
+            for (int n = 0; n < around; n++)
+            {
+                int j = geo.Index(_look[n]);
+                unknown += !_content.Biomes[world.Map.Biome[j]].IsWater && !Perception.MapMemory.Knows(_content, state, civ, j) ? 1 : 0;
+            }
+
+            if (unknown * 100 < around * _content.Ai.ExploreUnknownPercent || SiteFood(world, c) < need)
+            {
+                continue;
+            }
+
+            Evaluation e = Evaluation.Of(unknown);
+            e.Note(FactorId.Unknown, unknown);
+            Toward(ref e, world, civ, s.Cell, c);
+            e.Weigh(Factor.Neutral, (int)Math.Min(int.MaxValue, drive));
+            Chooser.Offer(i, e);
+        }
+
+        int pick = Pick(civ, RandomFor(state, s.Id.Value));
+        if (pick < 0)
+        {
+            return false;
+        }
+
+        HexCoord site = geo.FromIndex(Chooser.KeyAt(pick));
+        Issue(state, queue, civ.Id, new SplitSettlementCommand(_content, s.Id, site, _content.Ai.ExploreGroupPercent), AiAction.Explore, s.Id.Value, Chooser.KeyAt(pick), Chooser.EvaluationAt(pick));
+        Take(world, site);
+        return true;
+    }
+
+    private HexCoord[] _look = [];
 
     // Known free land beyond one move, on a sparse lattice (every third cell each way) to keep the search cheap;
     // a small penalty per cell of distance.
@@ -404,8 +575,11 @@ public sealed class GovernorAdvisor : Advisor
     /// How good a place is to live in for <paramref name="civ"/> this turn: the food of its land times comfort.
     /// Valid after this advisor's <see cref="IssueCommands"/> ran this turn (the strategist reads it).
     /// </summary>
-    internal long SiteValue(GameState state, WorldState world, CivilizationState civ, HexCoord center) =>
-        SiteEvaluation(state, world, civ, center).Value;
+    public long SiteValue(GameState state, WorldState world, CivilizationState civ, HexCoord center)
+    {
+        UseLand(civ);
+        return SiteEvaluation(state, world, civ, center).Value;
+    }
 
     private HexCoord[] _far = [];
     private readonly Perception.PathFinder _paths = new();
@@ -422,22 +596,53 @@ public sealed class GovernorAdvisor : Advisor
         return tech < 0 || civ.Knows(tech);
     }
 
-    // Grain per year the camp's zone would give if every cell were farmed in full, hundredths.
-    private long FarmFood(WorldState world, SettlementState s)
+    // Grain per year the camp's producers would grow on its zone, best land first and at most farmersPerCell on a
+    // cell, the way the farming system works a village's fields (hundredths).
+    private long FarmFood(WorldState world, SettlementState s, int producers)
     {
         int claim = s.Id.Value + 1;
         int count = world.Geometry.Range(s.Cell, Math.Min(_rules.InfluenceMaxRange, world.Geometry.MaxUniqueRadius), _farmArea);
-        long food = 0;
+        _farmKeys.Clear();
         for (int k = 0; k < count; k++)
         {
             int i = world.Geometry.Index(_farmArea[k]);
-            if (world.Map.Claim[i] == claim)
+            long perFarmer = world.Map.Claim[i] == claim ? _farming.GrainPerFarmer(world.Map, i) : 0;
+            if (perFarmer > 0)
             {
-                food += _farming.GrainPerFarmer(world.Map, i) * _rules.FarmersPerCell;
+                _farmKeys.Add(-perFarmer);
+            }
+        }
+
+        _farmKeys.Sort();
+        long food = 0;
+        int left = producers;
+        foreach (long key in _farmKeys)
+        {
+            int farmers = Math.Min(left, _rules.FarmersPerCell);
+            food += -key * farmers;
+            left -= farmers;
+            if (left == 0)
+            {
+                break;
             }
         }
 
         return food;
+    }
+
+    private readonly List<long> _farmKeys = [];
+
+    // People of the strata that gather (and would farm).
+    private int Producers(SettlementState s)
+    {
+        int producers = 0;
+        ReadOnlySpan<int> people = s.PopulationView;
+        for (int k = 0; k < people.Length && k < _content.Strata.Count; k++)
+        {
+            producers += _content.Strata[k].Gathers ? people[k] : 0;
+        }
+
+        return producers;
     }
 
     // The command that brings people to the chosen cell: into an empty settlement there, against the camp living
@@ -619,6 +824,19 @@ public sealed class GovernorAdvisor : Advisor
     }
 
     // Food per year the leaving share of the people needs (hundredths).
+    // People who go when percent of each stratum leaves (rounded down per stratum, as the split commands do).
+    private static int GroupPeople(SettlementState s, int percent)
+    {
+        int going = 0;
+        ReadOnlySpan<int> people = s.PopulationView;
+        for (int k = 0; k < people.Length; k++)
+        {
+            going += (int)((long)people[k] * percent / 100);
+        }
+
+        return going;
+    }
+
     private long GroupFoodNeed(SettlementState s, int percent)
     {
         long need = 0;
@@ -639,8 +857,11 @@ public sealed class GovernorAdvisor : Advisor
             return true;
         }
 
+        // A split group also keeps out of the zones of its own settlements: the zone of the bigger settlement takes the
+        // land, and a new camp inside it would gather nothing (found in PR C measurements: settlers starved).
         int i = world.Geometry.Index(c);
-        return _occupiedAt[i] != _stamp && (!splitting || _nearOwnAt[i] != _civStamp);
+        return _occupiedAt[i] != _stamp
+            && (!splitting || (_nearOwnAt[i] != _civStamp && world.Map.Owner[i] != from.Owner.Value));
     }
 
     private void Take(WorldState world, HexCoord cell)
@@ -664,8 +885,9 @@ public sealed class GovernorAdvisor : Advisor
         }
     }
 
-    // Food per year the land around a cell gives now, wild food taken into account (hundredths). Cached for the turn:
-    // wild food does not change while the AI decides. Only Earth is cached; other worlds come with space travel.
+    // Food per year the land around a cell gives now to this civilization's gatherers, wild food taken into account
+    // (hundredths). Cached for the turn: wild food does not change while the AI decides. Only Earth is cached; other
+    // worlds come with space travel.
     private long SiteFood(WorldState world, HexCoord center)
     {
         if (world.Id != WorldId.Earth)
@@ -674,19 +896,20 @@ public sealed class GovernorAdvisor : Advisor
         }
 
         int cell = world.Geometry.Index(center);
-        if (_siteFood.Length != world.Geometry.CellCount)
+        Land land = _land;
+        if (land.Site.Length != world.Geometry.CellCount)
         {
-            _siteFood = new long[world.Geometry.CellCount];
-            _siteStamp = new long[world.Geometry.CellCount];
+            land.Site = new long[world.Geometry.CellCount];
+            land.SiteStamp = new long[world.Geometry.CellCount];
         }
 
-        if (_siteStamp[cell] != _stamp)
+        if (land.SiteStamp[cell] != _stamp)
         {
-            _siteFood[cell] = ComputeSiteFood(world, center);
-            _siteStamp[cell] = _stamp;
+            land.Site[cell] = ComputeSiteFood(world, center);
+            land.SiteStamp[cell] = _stamp;
         }
 
-        return _siteFood[cell];
+        return land.Site[cell];
     }
 
     // How good a place is to live in: the food its land gives, times how pleasant its temperature is for this
@@ -703,9 +926,6 @@ public sealed class GovernorAdvisor : Advisor
     }
 
     private const long NoBound = -1;
-    private long[] _untouched = [];
-    private long[] _untouchedVersion = [];
-    private long _cellFoodVersion;
 
     // Food per year the land around a cell would give if nobody had gathered there: SiteFood never exceeds it. Kept
     // until the climate changes the land; NoBound with live seasons (the land changes every turn) and off Earth.
@@ -717,20 +937,21 @@ public sealed class GovernorAdvisor : Advisor
         }
 
         _ = CellFood(world);
+        Land land = _land;
         int cell = world.Geometry.Index(center);
-        if (_untouched.Length != world.Geometry.CellCount)
+        if (land.Untouched.Length != world.Geometry.CellCount)
         {
-            _untouched = new long[world.Geometry.CellCount];
-            _untouchedVersion = new long[world.Geometry.CellCount];
+            land.Untouched = new long[world.Geometry.CellCount];
+            land.UntouchedVersion = new long[world.Geometry.CellCount];
         }
 
-        if (_untouchedVersion[cell] != _cellFoodVersion)
+        if (land.UntouchedVersion[cell] != land.Version)
         {
-            _untouched[cell] = ComputeSiteFood(world, center, wild: false);
-            _untouchedVersion[cell] = _cellFoodVersion;
+            land.Untouched[cell] = ComputeSiteFood(world, center, wild: false);
+            land.UntouchedVersion[cell] = land.Version;
         }
 
-        return _untouched[cell];
+        return land.Untouched[cell];
     }
 
     /// <summary>
@@ -758,6 +979,7 @@ public sealed class GovernorAdvisor : Advisor
         WorldMap map = world.Map;
         HexGlobe geo = world.Geometry;
         long[] full = CellFood(world);
+        bool fishing = world.Id == WorldId.Earth && _land.Benefits.FromWater;
         if (_costAt.Length != geo.CellCount)
         {
             _costAt = new int[geo.CellCount];
@@ -786,6 +1008,16 @@ public sealed class GovernorAdvisor : Advisor
             {
                 int next = geo.Index(nc);
                 int step = _influence.EnterCost(map, next);
+
+                // Fishers also work the water next to the land of the place (zones do not cross water), once per cell.
+                if (step < 0 && fishing && _costStamp[next] != _costRun && _content.Biomes[map.Biome[next]].IsWater)
+                {
+                    _costStamp[next] = _costRun;
+                    _costAt[next] = int.MaxValue;
+                    food += wild ? full[next] * map.WildFood[next] / WorldMap.FullWildFood : full[next];
+                    continue;
+                }
+
                 int total = cost + step;
                 if (step >= 0 && total <= range && (_costStamp[next] != _costRun || total < _costAt[next]))
                 {
@@ -799,41 +1031,99 @@ public sealed class GovernorAdvisor : Advisor
         return food;
     }
 
-    // Food of every cell when untouched; computed once per world, or every turn when seasons are live.
+    // Food of every cell when untouched for the current civilization's gathering technologies; computed once per set
+    // and climate, or every turn when seasons are live. Other worlds (space travel) are computed without technologies.
     private long[] CellFood(WorldState world)
     {
-        int w = world.Id.Value;
-        while (_cellFood.Count <= w)
-        {
-            _cellFood.Add([]);
-        }
-
+        Land land = world.Id == WorldId.Earth ? _land : _otherWorld;
         bool live = world.Map.LiveSeasons;
 
         // The climate changes every few centuries (stage 1c-B): then the food of the land changes too.
-        bool climateChanged = _cellFoodClimate.Count <= w || _cellFoodClimate[w] != world.Climate.Year;
-        if (_cellFood[w].Length != world.Geometry.CellCount || climateChanged || (live && _cellFoodStamp != _stamp))
+        if (land.Cell.Length != world.Geometry.CellCount || land.Climate != world.Climate.Year || land.World != world.Id.Value || (live && land.CellStamp != _stamp))
         {
-            long[] food = _cellFood[w].Length == world.Geometry.CellCount ? _cellFood[w] : new long[world.Geometry.CellCount];
+            long[] food = land.Cell.Length == world.Geometry.CellCount ? land.Cell : new long[world.Geometry.CellCount];
             for (int i = 0; i < food.Length; i++)
             {
                 // With live seasons the AI plans for this turn and the next one.
                 food[i] = live
-                    ? (_yields.CellFoodPerYear(world.Map, i).Hundredths + _yields.CellFoodPerYear(world.Map, i, nextTurn: true).Hundredths) / 2
-                    : _yields.CellFoodPerYear(world.Map, i).Hundredths;
+                    ? (_yields.CellFoodPerYear(world.Map, i, false, land.Benefits).Hundredths + _yields.CellFoodPerYear(world.Map, i, true, land.Benefits).Hundredths) / 2
+                    : _yields.CellFoodPerYear(world.Map, i, false, land.Benefits).Hundredths;
             }
 
-            _cellFood[w] = food;
-            _cellFoodStamp = _stamp;
-            _cellFoodVersion++;
-            while (_cellFoodClimate.Count <= w)
-            {
-                _cellFoodClimate.Add(-1);
-            }
-
-            _cellFoodClimate[w] = world.Climate.Year;
+            land.Cell = food;
+            land.CellStamp = _stamp;
+            land.Version++;
+            land.Climate = world.Climate.Year;
+            land.World = world.Id.Value;
         }
 
-        return _cellFood[w];
+        return land.Cell;
+    }
+
+    // Picks the land view of a civilization's gathering technologies; computed again only after it learned something.
+    private void UseLand(CivilizationState civ)
+    {
+        int c = civ.Id.Value;
+        if (_landCiv == c && _landKnownOf[c] == civ.KnownCount)
+        {
+            return;
+        }
+
+        _landCiv = c;
+        while (_landKeyOf.Count <= c)
+        {
+            _landKeyOf.Add(null);
+            _landKnownOf.Add(-1);
+        }
+
+        if (_landKeyOf[c] is null || _landKnownOf[c] != civ.KnownCount)
+        {
+            var key = new System.Text.StringBuilder();
+            foreach (TechnologyDefinition t in _content.Technologies)
+            {
+                if (t.Gather.Count > 0 && civ.Knows(t.Id))
+                {
+                    key.Append(t.Id).Append(',');
+                }
+            }
+
+            _landKeyOf[c] = key.ToString();
+            _landKnownOf[c] = civ.KnownCount;
+        }
+
+        string k = _landKeyOf[c]!;
+        if (!_lands.TryGetValue(k, out Land? land))
+        {
+            land = new Land(Research.TechBenefits.Of(_content, civ));
+            _lands.Add(k, land);
+        }
+
+        _land = land;
+    }
+
+    private readonly Land _otherWorld;
+
+    // Food of the land for one set of gathering technologies: per cell, around each place this turn, and untouched.
+    private sealed class Land(Research.TechBenefits benefits)
+    {
+        public Research.TechBenefits Benefits { get; } = benefits;
+
+        public long[] Cell { get; set; } = [];
+
+        public long CellStamp { get; set; } = -1;
+
+        public long Climate { get; set; } = long.MinValue;
+
+        public int World { get; set; } = -1;
+
+        public long Version { get; set; }
+
+        public long[] Site { get; set; } = [];
+
+        public long[] SiteStamp { get; set; } = [];
+
+        public long[] Untouched { get; set; } = [];
+
+        public long[] UntouchedVersion { get; set; } = [];
     }
 }

@@ -273,7 +273,7 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
         }
 
-        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg,villages,village_people,farmers,journeys,known_cells_avg");
+        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg,villages,village_people,farmers,journeys,known_cells_avg,settlements,spread_cells");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -345,7 +345,29 @@ public static class HeadlessRun
             + $",{state.Settlements.Count(x => x.IsActive && !content.SettlementLevels[x.Level].Mobile)}"
             + $",{state.Settlements.Where(x => x.IsActive && !content.SettlementLevels[x.Level].Mobile).Sum(x => x.TotalPopulation())}"
             + $",{state.Settlements.Sum(x => x.Farmers)}"
-            + $",{state.Settlements.Count(x => x.JourneyTarget >= 0)},{KnownAverage(state, content)}"));
+            + $",{state.Settlements.Count(x => x.JourneyTarget >= 0)},{KnownAverage(state, content)}"
+            + $",{state.Settlements.Count(x => x.IsActive && x.TotalPopulation() > 0)},{Spread(state)}"));
+    }
+
+    // How far people live from where their civilization started, cells, averaged over all people (PR C).
+    private static long Spread(GameState state)
+    {
+        long sum = 0;
+        long people = 0;
+        foreach (SettlementState s in state.Settlements)
+        {
+            CivilizationState? civ = state.FindCivilization(s.Owner);
+            int n = s.TotalPopulation();
+            if (!s.IsActive || n == 0 || civ is null || s.World != state.Worlds[0].Id)
+            {
+                continue;
+            }
+
+            sum += (long)state.Worlds[0].Geometry.Distance(s.Cell, civ.StartCell) * n;
+            people += n;
+        }
+
+        return people == 0 ? 0 : sum / people;
     }
 
     private static long KnownAverage(GameState state, GameContent content)

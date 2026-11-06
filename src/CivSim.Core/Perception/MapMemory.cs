@@ -82,23 +82,29 @@ public static class MapMemory
                 continue;
             }
 
-            var direction = (HexDirection)rng.NextInt(6);
-            HexCoord at = s.Cell;
-            for (int step = 0; step < content.Perception.ScoutCells; step++)
+            // Trips over the civilization's own step (rule 6): the whole ones, and the fraction by chance.
+            long parts = (long)civ.StepMonths * content.Perception.ScoutsPerCentury;
+            int trips = (int)(parts / 1200) + (parts % 1200 != 0 && rng.Chance((int)(parts % 1200), 1200) ? 1 : 0);
+            for (int trip = 0; trip < trips; trip++)
             {
-                HexCoord next = geo.Neighbor(at, direction);
-                if (!Walkable(content, earth.Map, geo.Index(next)))
+                var direction = (HexDirection)rng.NextInt(6);
+                HexCoord at = s.Cell;
+                for (int step = 0; step < content.Perception.ScoutCells; step++)
                 {
-                    direction = (HexDirection)(((int)direction + 1 + rng.NextInt(5)) % 6);
-                    continue;
-                }
+                    HexCoord next = geo.Neighbor(at, direction);
+                    if (!Walkable(content, earth.Map, geo.Index(next)))
+                    {
+                        direction = (HexDirection)(((int)direction + 1 + rng.NextInt(5)) % 6);
+                        continue;
+                    }
 
-                at = next;
-                civ.SeenYear[geo.Index(at)] = stamp;
-                geo.GetNeighbors(at, n6);
-                foreach (HexCoord c in n6)
-                {
-                    civ.SeenYear[geo.Index(c)] = stamp;
+                    at = next;
+                    civ.SeenYear[geo.Index(at)] = stamp;
+                    geo.GetNeighbors(at, n6);
+                    foreach (HexCoord c in n6)
+                    {
+                        civ.SeenYear[geo.Index(c)] = stamp;
+                    }
                 }
             }
         }
@@ -298,7 +304,8 @@ public sealed record JourneyCommand(GameContent Content, SettlementId Settlement
 }
 
 /// <summary>
-/// Movement phase (stage 3g): camps on a journey walk up to <see cref="PopulationRules.MaxMoveCells"/> cells along the
+/// Movement phase (stage 3g): camps on a journey walk <see cref="PerceptionRules.MarchCellsPerCentury"/> cells per century (at most
+/// <see cref="PopulationRules.MaxMoveCells"/> per own step) along the
 /// shortest known way, carrying what they can; they stop before a cell where another settlement lives, and end the
 /// journey when they arrive or the way is gone (forgotten land, melted ice).
 /// </summary>
@@ -334,7 +341,10 @@ public sealed class JourneySystem(GameContent content) : ITurnSystem
                 continue;
             }
 
-            int step = Math.Min(path.Count, _content.Population.MaxMoveCells);
+            // Cells per century over the civilization's own step (rule 6, PR C), at least one, at most one move.
+            int months = Simulation.WorldClock.MonthsOf(state, s.Owner);
+            int march = (int)Math.Clamp((long)months * _content.Perception.MarchCellsPerCentury / 1200, 1, _content.Population.MaxMoveCells);
+            int step = Math.Min(path.Count, march);
             int stop = -1;
             for (int k = step - 1; k >= 0 && stop < 0; k--)
             {

@@ -92,6 +92,15 @@ public enum FactorId : byte
 
     /// <summary>Goods of this kind go to a trade partner (production for exchange, PR B).</summary>
     ForTrade = 28,
+
+    /// <summary>What farming would grow against what the camp gathers now, % (settling, PR C).</summary>
+    OverGathering = 29,
+
+    /// <summary>Fertility of a village's fields against their natural fertility, % (PR C).</summary>
+    WornLand = 30,
+
+    /// <summary>Unknown land cells around a place (explorers, PR C).</summary>
+    Unknown = 31,
 }
 
 /// <summary>

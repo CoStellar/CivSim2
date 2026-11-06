@@ -996,6 +996,8 @@ public static class ContentLoader
             OralMemoryYears = r.Int("oralMemoryYears", 1, 1_000_000),
             JourneyCells = r.Int("journeyCells", 1, 200),
             ScoutCells = r.Int("scoutCells", 0, 200),
+            ScoutsPerCentury = r.Int("scoutsPerCentury", 0, 1200),
+            MarchCellsPerCentury = r.Int("marchCellsPerCentury", 1, 100_000),
         };
     }
 
@@ -1038,6 +1040,15 @@ public static class ContentLoader
             FarSearchEveryCells = r.Int("farSearchEveryCells", 1, 10),
             TargetZeroAtJourneys = r.Int("targetZeroAtJourneys", 1, 10),
             SettleFarmYieldPercent = r.Int("settleFarmYieldPercent", 1, 10_000),
+            SettleOverGatheringPercent = r.Int("settleOverGatheringPercent", 0, 10_000),
+            VillageSettlersAbovePercent = r.Int("villageSettlersAbovePercent", 1, 100),
+            VillageWornBelowPercent = r.Int("villageWornBelowPercent", 0, 100),
+            VillageSettlersPeople = r.Int("villageSettlersPeople", 1, 100_000),
+            VillageSettlersEveryYears = r.Int("villageSettlersEveryYears", 1, 100_000),
+            ExploreAbovePerMille = r.Int("exploreAbovePerMille", 0, 1_000_000),
+            ExploreLookCells = r.Int("exploreLookCells", 1, 20),
+            ExploreUnknownPercent = r.Int("exploreUnknownPercent", 0, 100),
+            ExploreGroupPercent = r.Int("exploreGroupPercent", 1, 90),
             PlunderBelowStoragePercent = r.Int("plunderBelowStoragePercent", 0, 100),
             UncomfortableBelowPercent = r.Int("uncomfortableBelowPercent", 0, 100),
             OpinionSwingPercent = r.Int("opinionSwingPercent", 0, 100),

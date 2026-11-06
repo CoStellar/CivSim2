@@ -18,7 +18,7 @@ flowchart LR
   S["Stan gry<br/>(tylko odczyt)"] --> ST["Strateg<br/>wagi celów, kierunek ekspansji<br/>(co 15 własnych kroków i w nowej erze)"]
   ST -->|SetStrategyCommand| S
   CH["Charakter<br/>8 cech"] --> E
-  S --> G["Gubernator<br/>obozy: przeniesienie, odłam,<br/>osiedlenie, wędrówka, łupy"]
+  S --> G["Gubernator<br/>obozy: przeniesienie, odłam,<br/>osiedlenie, wędrówka, łupy, wyprawa;<br/>wioski: osadnicy"]
   S --> T["Skarbnik<br/>receptury osad"]
   S --> U["Uczony<br/>następna technologia"]
   G --> E["Ocena działania<br/>wartość × czynniki × waga celu × charakter − koszt"]
@@ -38,6 +38,7 @@ flowchart LR
 - **Kierunek ekspansji:** miejsce bliżej celu niż obecny obóz dostaje +15% (`directionBonusPercent`, „sugestia” z GDD 7.6). Premia nie dotyczy obcych obozów.
 - **Odłamy z powodu, nie tylko z głodu:** obóz wysyła grupę, gdy jest pełny w 80% podzielone przez (waga ekspansji × mnożnik charakteru), ale nie niżej niż 50% i nie wyżej niż 100%. Ekspansywna cywilizacja w ciasnych obozach rozsyła ludzi wcześniej.
 - **Priorytet i koszt** (PR B, ADR 0019): każda opcja mówi, któremu celowi służy. Uczony liczy priorytet technologii z tego, co da cywilizacji na rok (zbieranie, receptury, efekty, wioski, droga dalej), każdą część ważoną jej celem i charakterem, i mnoży przez przeszkodę kosztu `r × (r + (1 − r) × ciekawość)`, gdzie r = najtańsza / ta. Skarbnik waży jedzenie bezpieczeństwem, a wyroby dobrobytem. Pełny opis: `docs/ai/`.
+- **Ziemia i migracje** (PR C): gubernator wycenia jedzenie miejsca z technologiami zbierania cywilizacji (`Land`, jeden widok na zestaw technologii, liczony od nowa tylko po nauczeniu się technologii zbierania); rybacy liczą pola wody przy lądzie strefy. Obóz osiada (G4), gdy jego producenci na najlepszych polach strefy wyżywią go z zapasem 150% i rolnictwo da więcej niż zbieractwo razy waga ekspansji i ekspansywność (`settleOverGatheringPercent`). Wioska (G7) wysyła 60 osadników, gdy jest pełna w 80% (mniej dla ekspansywnych) albo jej pola mają poniżej 70% naturalnej żyzności, najwyżej raz na 100 lat (rozłożone między wioski), w wolne miejsce poza strefami własnych osad. Ciekawy i ekspansywny obóz (G8) wysyła 25% ludzi tam, gdzie co najmniej 30% lądu w promieniu 3 pól jest nieznane. Zwiad: 2 wyprawy na stulecie po 15 pól; obóz w drodze idzie 20 pól na stulecie (`data/perception.json`).
 - **Wybór** (`Chooser`): doradca trzyma 3 najlepsze działania (`pickAmongTop`). Z szansą równą ostrożności cywilizacja bierze najlepsze, w przeciwnym razie losuje spośród trzech z szansą proporcjonalną do oceny. Przy remisie wygrywa działanie ocenione wcześniej. Losowanie jest deterministyczne: generator zależy tylko od seeda, doradcy, osady albo cywilizacji i tury, a wspólny strumień `ai` się nie przesuwa.
 - **Histereza** (GDD 8.6): obóz przenosi się tylko, gdy nowe miejsce jest lepsze o co najmniej 30% (`moveWhenBetterByPercent`), a do wędrówki o 60%. „Zostać” dostaje tylko połowę odchylenia wagi ekspansji i ekspansywności (`moveExpansionSharePercent`, PR B), więc zatłoczone, ekspansywne plemię rusza chętniej. Rzemieślnicy zmieniają recepturę tylko na lepszą o 25% (`recipeSwitchBetterByPercent`); obecna receptura liczy się jako wykonalna, nawet gdy w tej turze zabrakło wejść (produkcja po prostu czeka).
 - **Rytm i reakcje** (ADR 0018): rada liczy decyzje cywilizacji tylko w jej własnym kroku (rytm jej ery). Poza rytmem reaguje na alarmy: wypowiedziana wojna (dyplomata: przegląd stosunków) i napad na obóz (dyplomata oraz obozy od razu szukają bezpieczniejszego miejsca). Odpowiedź na propozycję i wybór badania zapadają w każdym kroku świata. Alarmy są kasowane po fazie decyzji.
@@ -47,7 +48,7 @@ flowchart LR
 | Doradca | Klasa | Decyduje o | Kiedy (ADR 0018) |
 | --- | --- | --- | --- |
 | Strateg | `StrategistAdvisor` | wagi celów, cel ekspansji (`SetStrategyCommand`) | co 15 własnych kroków, rozłożone; od razu w nowej erze |
-| Gubernator | `GovernorAdvisor` | przeniesienie obozu, odłam, przyłączenie małego obozu, osiedlenie się jako wioska, wędrówka do dalekiego miejsca, łupy z opuszczonych osad, wypędzenie słabszego obozu | przetrwanie w każdym własnym kroku, reszta raz na długość kroku ery; po napadzie od razu (szukanie miejsca) |
+| Gubernator | `GovernorAdvisor` | przeniesienie obozu, odłam, przyłączenie małego obozu, osiedlenie się jako wioska, wędrówka do dalekiego miejsca, łupy z opuszczonych osad, wypędzenie słabszego obozu, wyprawa w nieznane; osadnicy z wiosek (PR C) | przetrwanie w każdym własnym kroku, reszta raz na długość kroku ery; po napadzie od razu (szukanie miejsca) |
 | Skarbnik | `TreasurerAdvisor` | receptura rzemieślników w każdej osadzie | raz na długość kroku ery |
 | Uczony | `ScholarAdvisor` | następna technologia | gdy nic nie jest badane (reakcja, w każdym kroku świata) |
 
@@ -57,7 +58,9 @@ Dyplomata (etap 4d) jest opisany w `docs/systems/diplomacy.md`; dowódca przyjdz
 
 ## Pliki danych
 - `data/ai.json` (wersja 3): `pickAmongTop` (3), przeglądy stratega, krzywe wag (zatłoczenie, głód, przewaga technologiczna spotkanych, liczba spotkanych), premia za kierunek, próg zmiany receptury, rzadsze szukanie miejsc, najniższy próg odłamu; cele jedzenia i towarów, premia za handel; progi gubernatora (wędrówka, osiedlenie, łupy, wygoda, opinia) i rozłożenie przeglądów dyplomaty; sekcja `scholar` z wartościami uczonego (PR B). Pełna tabela: `docs/ai/07-parametry.md`.
-- `data/population.json`: progi i kary, z których gubernator buduje czynniki.
+- `data/population.json`: progi i kary, z których gubernator buduje czynniki; `farmersPerCell` dla rachunku osiedlenia.
+- `data/perception.json` (PR C): `scoutsPerCentury`, `marchCellsPerCentury`.
+- `data/ai.json` (PR C): `settleOverGatheringPercent`, `villageSettlers*`, `villageWornBelowPercent`, `explore*`.
 
 ## Testy
 - `UtilityTests`: krzywe (prosta, S, próg, nigdy poniżej zera); czynniki w tysięcznych dają dokładnie ten sam wynik co rachunek procentowy z etapu 3 (10 000 losowych przypadków); zero wyklucza działanie; neutralna waga i charakter nic nie zmieniają; koszt i notatki; kolejność „Dlaczego?”; wybór: najlepsze, remisy, 3 najlepsze w kolejności, losowanie zgodne z ocenami i powtarzalne, brak przepełnienia.
@@ -66,13 +69,18 @@ Dyplomata (etap 4d) jest opisany w `docs/systems/diplomacy.md`; dowódca przyjdz
 - `StrategyTests`: charakter z seeda, różny między cywilizacjami, w skali 0–1000; mnożnik 0,5–1,5; strateg przegląda wszystkich w pierwszej turze, potem rozkłada przeglądy; cel ekspansji to znany ląd; głód podnosi dobrobyt i bezpieczeństwo; komenda strategii odrzuca złe dane; rzemieślnicy nie zmieniają receptur co turę; charakter i strategia przechodzą przez zapis; ruchy w stronę celu dostają premię.
 - `DeadValueTests` (PR B): każda cecha (0 i 1000), każda waga celu (300 i 3000) i każdy parametr `data/ai.json` (0, połowa, podwojenie, 10 razy, milion) zmienia co najmniej jedną decyzję w zapisanych sytuacjach z gier (obozy, wioski z handlem, sytuacje ułożone: wędrówka, wypędzenie, łupy, rynek); sprawdzenie, że odcisk decyzji w ogóle widzi zmianę.
 - `AiValueTests` (PR B): rybołówstwo warte więcej nad morzem, ogień w zimnie, rolnictwo na żyznej ziemi; ciekawość zmniejsza przeszkodę kosztu (25% → 50% dla dwa razy droższej); „widziane teraz” to tylko pola z ostatniego własnego kroku.
+- `LandAndMigrationTests` (PR C): rybacy cenią wybrzeże wyżej niż cywilizacja bez rybołówstwa; zatłoczona wioska wysyła osadników, a spokojna nie. Nowe parametry `data/ai.json` sprawdza też `DeadValueTests` (każdy zmienia co najmniej jedną decyzję).
 - `DeterminismTests`, `WorldGeneratorTests`: nowe złote hashe (stan zawiera charakter; sama mapa się nie zmieniła).
 
 ## Wydajność
+- **PR C**, ta sama maszyna (kontener w chmurze), Release, po kolei, przed (`development` 3233763) → po: standard seed 7: 15,6 → 37,3 ms; seed 23: 18,8 → 52,4 ms; seed 42: 15,8 → 48,2 ms (1000 tur); ogromna seed 42, 300 tur: 109 → 163 ms. Pamięć (working set) 191–200 → 215–217 MB, ogromna 225 → 260 MB. Osad jest 3,4–4,2 razy więcej, a koszt na osadę jest taki jak przed PR C: drożeją stare porównania każdej osady z każdą (sieci handlowe, dyplomata, `CivFacts`, nadwyżki). Bez zmiany wyniku przyspieszone: `HexGlobe.NearestImage` (pomija obrazy, które nie mogą być bliżej), `StorageSystem.SendSurplus` (sortowanie po wyliczonej raz odległości, bez alokacji) i `TradeNetworks.Build` (bez odległości dla osad już w jednej sieci); seed 23: 81 → 52 ms, hash `FF4C717C0D03518D` bez zmian. Propozycja na później: siatka przestrzenna osad (`docs/ai/08-ocena-i-uwagi.md`, pkt 10).
 - **4b**, ta sama maszyna, Release, 1000 tur, mapa standard (przed → po): seed 7: 20,4 → 19,4 ms; seed 11: 14,9 → 13,4 ms; seed 23: 27,9 → 22,2 ms; seed 42: 19,0 → 20,0 ms. Mapa ogromna, seed 42, 150 tur: 150,8 → 154,1 ms (szczyt 235 → 294 ms); cel to 250 ms średnio. Alokacje na turę bez zmian (ok. 250–420 KB).
 - Gubernator najpierw liczy górną granicę oceny miejsca z nietkniętej ziemi i pomija pola, które i tak nie weszłyby do 3 najlepszych (wynik identyczny, sprawdzone hashem).
 - **4a:** seed 7 i 11, mapa standard, 1000 tur, ta sama maszyna: hash stanu identyczny jak przed etapem 4a (`4FE3BE49C2F03AF8`, `280BCF460E9A1470`). Czas tury 19,9 / 14,4 ms (przed: 26,2 / 17,5 ms; różnica to szum pomiaru, logika się nie zmieniła). Alokacje na turę bez zmian (349,7 / 253,8 KB).
 - Ocena pola to struktura bez alokacji (8 czynników w tablicy wbudowanej); kosztowne sprawdzenia (siła obrońców, wolne miejsce, ścieżka) liczymy tylko dla działań, które wybór by zatrzymał.
+
+## Zachowanie po PR C (seedy 7, 23, 42; 1000 tur)
+- Ludzie żyją średnio 20–24 pola od startu (przed: 10–12), zamieszkanych osad 346–446 (83–129), ludność 1,6–2,3 razy większa. Pierwszy neolit bez zmian (±10 kroków). Szczegóły i wykres: `docs/ai/09-statystyki.md`.
 
 ## Zachowanie po 4b (seedy 7, 11, 23, 42; 1000 tur)
 - Zmiany receptur: 82 810 → ok. 1 900 (seed 7); 101 868 → ok. 4 000 (seed 23). Przełączanie co turę z etapu 3e zniknęło.
