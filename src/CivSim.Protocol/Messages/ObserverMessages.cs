@@ -86,8 +86,9 @@ public sealed record RelationView(
 }
 
 /// <summary>
-/// Observer → server: show the map memory and fog of war of one civilization (layer "memory and fog"), or stop
-/// with <see cref="WelcomeMessage.NoCiv"/>. The observer still gets the whole map; the fog comes as a separate layer.
+/// Observer → server: follow one civilization (stage 5), or stop with <see cref="WelcomeMessage.NoCiv"/>. The server
+/// then sends its fog of war (layer "memory and fog") and its <see cref="CivilizationDetailsMessage"/> after every
+/// view. The observer still gets the whole map.
 /// </summary>
 [MessagePackObject]
 public sealed record WatchCivilizationMessage([property: Key(0)] int CivId) : IProtocolMessage;
@@ -103,3 +104,45 @@ public sealed record FogMessage(
     [property: Key(1)] int WorldId,
     [property: Key(2)] long Turn,
     [property: Key(3)] byte[] Cells) : IProtocolMessage;
+
+/// <summary>
+/// Server → observer: everything about the followed civilization (stage 5 civilization panel). Lists of names and
+/// values have the same length. Amounts are in hundredths.
+/// </summary>
+[MessagePackObject]
+public sealed record CivilizationDetailsMessage(
+    [property: Key(0)] int CivId,
+    [property: Key(1)] long Turn,
+    [property: Key(2)] string Name,
+    [property: Key(3)] bool IsAlive,
+    [property: Key(4)] string Era,
+    [property: Key(5)] IReadOnlyList<string> Technologies,
+    [property: Key(6)] string Researching,
+    [property: Key(7)] int ResearchPercent,
+    [property: Key(8)] long ScienceLastTurn,
+    [property: Key(9)] IReadOnlyList<string> TraitNames,
+    [property: Key(10)] IReadOnlyList<int> Traits,
+    [property: Key(11)] IReadOnlyList<string> GoalNames,
+    [property: Key(12)] IReadOnlyList<int> GoalWeights,
+    [property: Key(13)] IReadOnlyList<string> Strata,
+    [property: Key(14)] IReadOnlyList<long> People,
+    [property: Key(15)] IReadOnlyList<string> SettlementLevels,
+    [property: Key(16)] IReadOnlyList<int> Settlements,
+    [property: Key(17)] long FoodGathered,
+    [property: Key(18)] long FoodNeeded,
+    [property: Key(19)] IReadOnlyList<string> Goods,
+    [property: Key(20)] IReadOnlyList<long> Stock,
+    [property: Key(21)] IReadOnlyList<RelationDetail> Relations) : IProtocolMessage;
+
+/// <summary>
+/// What the followed civilization thinks of another: contact, sympathy and trust (hundredths, −10 000 … +10 000),
+/// treaty flags of <see cref="RelationView"/>, and its memories as "kind strength‰" texts, strongest first.
+/// </summary>
+[MessagePackObject]
+public sealed record RelationDetail(
+    [property: Key(0)] int Other,
+    [property: Key(1)] int Contact,
+    [property: Key(2)] int Sympathy,
+    [property: Key(3)] int Trust,
+    [property: Key(4)] int Treaties,
+    [property: Key(5)] IReadOnlyList<string> Memories);

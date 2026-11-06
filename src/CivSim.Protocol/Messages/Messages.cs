@@ -19,6 +19,7 @@ namespace CivSim.Protocol.Messages;
 [Union(10, typeof(ObserverDetailsMessage))]
 [Union(11, typeof(WatchCivilizationMessage))]
 [Union(12, typeof(FogMessage))]
+[Union(13, typeof(CivilizationDetailsMessage))]
 public interface IProtocolMessage
 {
 }
@@ -118,10 +119,20 @@ public sealed record ChronicleEntry([property: Key(0)] long Turn, [property: Key
 [MessagePackObject]
 public sealed record WorldView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] int Width, [property: Key(3)] int Height);
 
-/// <summary>What the viewer knows about one civilization.</summary>
+/// <summary>
+/// What the viewer knows about one civilization. Era, people (in lived-in settlements), settlements and known
+/// technologies are filled for observers only (stage 5); otherwise empty or -1.
+/// </summary>
 [MessagePackObject]
-public sealed record CivilizationView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive,
-    [property: Key(3)] long DiedOutMonth = 0);
+public sealed record CivilizationView(
+    [property: Key(0)] int Id,
+    [property: Key(1)] string Name,
+    [property: Key(2)] bool IsAlive,
+    [property: Key(3)] long DiedOutMonth = 0,
+    [property: Key(4)] string Era = "",
+    [property: Key(5)] long People = -1,
+    [property: Key(6)] int Settlements = -1,
+    [property: Key(7)] int Technologies = -1);
 
 /// <summary>Observer speeds (GDD 11.2).</summary>
 public enum SimulationSpeed

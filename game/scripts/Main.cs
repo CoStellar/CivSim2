@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -14,10 +15,13 @@ using Godot;
 namespace CivSim.Game;
 
 /// <summary>
-/// Developer viewer (Stage 2): starts a local server on its own thread, connects to it as an observer and draws
-/// what the server sends. It never touches the game state directly (CLAUDE.md rule 10).
-/// Command line (after <c>--</c>): <c>--seed N --map-size test|standard|large|huge --speed pause|x1|x2|x5|max
-/// --benchmark FRAMES</c>, plus the world settings of <see cref="LocalGameOptions"/>.
+/// Developer viewer (stages 2 and 5). Shows the start menu, then starts a local server on its own thread with the
+/// chosen settings, connects to it as an observer and draws what the server sends. It never touches the game state
+/// directly (CLAUDE.md rule 10). Any start setting on the command line (after <c>--</c>, e.g. <c>--seed 3
+/// --map-size test</c>) skips the menu, like before stage 5; <c>--no-menu</c> starts with the saved settings, and
+/// <c>--benchmark FRAMES</c>, <c>--screenshot file.png</c> (with <c>--screenshot-turn N</c>), <c>--menu-screenshot file.png</c>,
+/// <c>--zoom</c>, <c>--overlay LAYER</c> (only that cell layer), <c>--layer LAYER</c> (switch one on) and <c>--watch CIV</c>
+/// (that civilization's fog) are for tests.
 /// </summary>
 public partial class Main : Node2D
 {
@@ -25,11 +29,16 @@ public partial class Main : Node2D
     private const float MaxZoom = 4f;
     private const float PanSpeed = 900f;
 
+    private readonly ViewerSettings _saved = ViewerSettings.Load();
+    private readonly LayerStack _layers = new();
     private LocalServerHost? _host;
     private ClientSession? _session;
-    private MapView _map = null!;
+    private MapView? _map;
     private Camera2D _camera = null!;
-    private Hud _hud = null!;
+    private Hud? _hud;
+    private StartMenu? _menu;
+    private ArtLibrary _art = null!;
+    private string _dataDirectory = string.Empty;
     private bool _dragging;
     private bool _bound;
     private int _benchmarkFrames;
@@ -42,64 +51,187 @@ public partial class Main : Node2D
     private string? _screenshot;
     private int _screenshotFrames = -1;
     private float _startZoom = 0.5f;
-    private MapOverlay _startOverlay = MapOverlay.Biomes;
+    private MapLayer? _startOverlay;
+    private string? _menuScreenshot;
+    private long _screenshotTurn;
+    private readonly List<MapLayer> _extraLayers = [];
+    private int _watch = WelcomeMessage.NoCiv;
 
     /// <inheritdoc />
     public override void _Ready()
     {
         GetNodeOrNull<Label>("StatusLabel")?.QueueFree();
         RenderingServer.SetDefaultClearColor(new Color(0.04f, 0.04f, 0.05f));
-        string[] args = GameArguments();
-        LocalGameOptions options = ParseOptions(args, out SimulationSpeed speed, out _benchmarkFrames);
-        for (int i = 0; i + 1 < args.Length; i++)
-        {
-            switch (args[i])
-            {
-                case "--screenshot":
-                    _screenshot = args[i + 1];
-                    break;
-                case "--zoom":
-                    _startZoom = float.Parse(args[i + 1], CultureInfo.InvariantCulture);
-                    break;
-                case "--overlay":
-                    _startOverlay = Enum.Parse<MapOverlay>(args[i + 1], ignoreCase: true);
-                    break;
-            }
-        }
-
-        _host = LocalServerHost.Start(options, FindDataDirectory());
-        _session = new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
-        if (speed != SimulationSpeed.Paused)
-        {
-            _session.SetSpeed(speed);
-        }
-
-        _map = new MapView();
-        AddChild(_map);
+        _dataDirectory = FindDataDirectory();
+        _art = new ArtLibrary(ArtLibrary.FindArtDirectory());
+        _layers.Load(_saved.Layers);
+        _layers.Changed += () => _saved.Layers = _layers.Save();
         _camera = new Camera2D { Zoom = new Vector2(0.5f, 0.5f) };
         AddChild(_camera);
         _camera.MakeCurrent();
-        _hud = new Hud();
-        AddChild(_hud);
-        _hud.SpeedChosen += s => _session.SetSpeed(s);
-        _hud.OverlayChosen += o => _map.Overlay = o;
-        _session.ChronicleAdded += lines => _hud.AddChronicle(lines);
-        GD.Print($"CivSim 2 viewer: protocol v{ProtocolInfo.Version}, seed {options.Seed}, map {options.Width}x{options.Height}");
+
+        string[] args = GameArguments();
+        bool skipMenu = false;
+        for (int i = 0; i < args.Length; i++)
+        {
+            string next = i + 1 < args.Length ? args[i + 1] : string.Empty;
+            switch (args[i])
+            {
+                case "--screenshot":
+                    _screenshot = next;
+                    break;
+                case "--layer":
+                    _extraLayers.Add(Enum.Parse<MapLayer>(next, ignoreCase: true));
+                    break;
+                case "--watch":
+                    _watch = int.Parse(next, CultureInfo.InvariantCulture);
+                    break;
+                case "--screenshot-turn":
+                    _screenshotTurn = long.Parse(next, CultureInfo.InvariantCulture);
+                    break;
+                case "--menu-screenshot":
+                    _menuScreenshot = next;
+                    break;
+                case "--zoom":
+                    _startZoom = float.Parse(next, CultureInfo.InvariantCulture);
+                    break;
+                case "--overlay":
+                    _startOverlay = Enum.Parse<MapLayer>(next, ignoreCase: true);
+                    break;
+                case "--benchmark":
+                    _benchmarkFrames = int.Parse(next, CultureInfo.InvariantCulture);
+                    skipMenu = true;
+                    break;
+                case "--no-menu":
+                    skipMenu = true;
+                    break;
+            }
+
+            skipMenu |= Array.IndexOf(StartSettings.ArgumentNames, args[i]) >= 0;
+        }
+
+        if (skipMenu)
+        {
+            // Command-line values apply to this run only; the menu keeps the settings the user saved there.
+            StartGame(_saved.Start.WithArguments(args), save: false);
+        }
+        else
+        {
+            ShowMenu();
+        }
     }
 
     /// <inheritdoc />
     public override void _ExitTree()
     {
+        _saved.Save();
+        StopGame();
+    }
+
+    private void ShowMenu()
+    {
+        StopGame();
+        _menu = new StartMenu(LocalServerHost.Describe(_dataDirectory), _saved.Start.Copy(), _dataDirectory);
+        _menu.StartRequested += settings => StartGame(settings, save: true);
+        _menu.QuitRequested += () => GetTree().Quit();
+        AddChild(_menu);
+        if (_menuScreenshot is not null)
+        {
+            _screenshotFrames = 20;
+        }
+    }
+
+    private void StartGame(StartSettings settings, bool save)
+    {
+        LocalGameOptions options;
+        try
+        {
+            options = settings.ToOptions();
+        }
+        catch (FormatException ex)
+        {
+            GD.PrintErr(ex.Message);
+            if (_menu is null)
+            {
+                ShowMenu();
+            }
+
+            return;
+        }
+
+        if (save)
+        {
+            _saved.Start = settings.Copy();
+            _saved.Save();
+        }
+
+        _menu?.QueueFree();
+        _menu = null;
+        _host = LocalServerHost.Start(options, _dataDirectory);
+        _session = new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
+        SimulationSpeed speed = StartSettings.ParseSpeed(settings.Speed);
+        if (speed != SimulationSpeed.Paused)
+        {
+            _session.SetSpeed(speed);
+        }
+
+        if (_startOverlay is { } solo)
+        {
+            _layers.Solo(solo);
+        }
+
+        foreach (MapLayer extra in _extraLayers)
+        {
+            _layers.SetEnabled(extra, true);
+        }
+
+        if (_watch != WelcomeMessage.NoCiv)
+        {
+            _session.Watch(_watch);
+            _layers.SetEnabled(MapLayer.Fog, true);
+        }
+
+        _map = new MapView(_layers, _art);
+        AddChild(_map);
+        var panel = new LayerPanel(_layers);
+        panel.FogCivilizationChosen += civ =>
+        {
+            _session?.Watch(civ);
+            if (civ != WelcomeMessage.NoCiv && !_layers[MapLayer.Fog].Enabled)
+            {
+                _layers.SetEnabled(MapLayer.Fog, true);
+            }
+        };
+        _hud = new Hud { Layers = panel, LayerPanelOpen = _saved.LayerPanelOpen };
+        AddChild(_hud);
+        _hud.SpeedChosen += s => _session?.SetSpeed(s);
+        _hud.MenuRequested += ShowMenu;
+        _hud.LayerPanelToggled += open => _saved.LayerPanelOpen = open;
+        _session.ChronicleAdded += lines => _hud?.AddChronicle(lines);
+        _bound = false;
+        GD.Print($"CivSim 2 viewer: protocol v{ProtocolInfo.Version}, seed {options.Seed}, map {options.Width}x{options.Height}");
+    }
+
+    private void StopGame()
+    {
+        _session?.Close();
+        _session = null;
         _host?.Dispose();
         _host = null;
+        _map?.QueueFree();
+        _map = null;
+        _hud?.QueueFree();
+        _hud = null;
+        _bound = false;
     }
 
     /// <inheritdoc />
     public override void _Process(double delta)
     {
         long start = Stopwatch.GetTimestamp();
-        if (_session is null)
+        if (_session is null || _map is null || _hud is null)
         {
+            MenuScreenshot();
             return;
         }
 
@@ -110,21 +242,20 @@ public partial class Main : Node2D
             Vector2 size = _map.Period;
             _camera.Position = size / 2;
             _camera.Zoom = new Vector2(_startZoom, _startZoom);
-            _map.Overlay = _startOverlay;
-            _hud.ShowOverlay(_startOverlay);
             _bound = true;
             _screenshotFrames = 20;
         }
 
         MoveCamera((float)delta);
         _map.SetGrid(_camera.Zoom.X >= 0.6f);
-        _map.Refresh(VisibleRect());
+        _map.Refresh(VisibleRect(), _camera.Zoom.X);
 
         _statusTimer -= delta;
         if (_statusTimer <= 0)
         {
             _statusTimer = 0.2;
             _hud.UpdateStatus(_session, _map, Engine.GetFramesPerSecond());
+            _hud.Layers?.UpdateCivilizations(_session.View, _session.CivId == WelcomeMessage.NoCiv, _session.WatchedCiv);
         }
 
         if (_host?.Error is { } error)
@@ -138,11 +269,31 @@ public partial class Main : Node2D
         Screenshot();
     }
 
+    // --menu-screenshot file.png: saves the start menu a few frames after it appeared, then quits.
+    private void MenuScreenshot()
+    {
+        if (_menuScreenshot is null || _screenshotFrames < 0 || --_screenshotFrames > 0)
+        {
+            return;
+        }
+
+        GetViewport().GetTexture().GetImage().SavePng(_menuScreenshot);
+        GD.Print($"screenshot: {_menuScreenshot}");
+        GetTree().Quit();
+    }
+
     // --screenshot file.png: saves what the window shows a few frames after the map arrived, then quits.
     private void Screenshot()
     {
-        if (_screenshot is null || _screenshotFrames < 0)
+        if (_screenshot is null || _screenshotFrames < 0 || _map is null)
         {
+            return;
+        }
+
+        // --screenshot-turn N waits until the simulation has run N turns.
+        if ((_session?.View?.Turn ?? 0) < _screenshotTurn)
+        {
+            _screenshotFrames = 20;
             return;
         }
 
@@ -178,7 +329,7 @@ public partial class Main : Node2D
             case InputEventMouseButton mb when mb.ButtonIndex is MouseButton.Right or MouseButton.Middle:
                 _dragging = mb.Pressed;
                 break;
-            case InputEventMouseButton mb when mb.ButtonIndex == MouseButton.Left && mb.Pressed:
+            case InputEventMouseButton mb when mb.ButtonIndex == MouseButton.Left && mb.Pressed && _map is not null:
                 _map.SelectAt(GetGlobalMousePosition());
                 _statusTimer = 0;
                 break;
@@ -219,9 +370,10 @@ public partial class Main : Node2D
                 _session.SetSpeed(SimulationSpeed.Max);
                 break;
             case Key.Tab:
-                MapOverlay next = (MapOverlay)(((int)_map.Overlay + 1) % Enum.GetValues<MapOverlay>().Length);
-                _map.Overlay = next;
-                _hud.ShowOverlay(next);
+                _hud?.ToggleLayerPanel();
+                break;
+            case Key.Escape when _menu is null:
+                ShowMenu();
                 break;
             case Key.Equal or Key.KpAdd:
                 ZoomAt(1.25f, GetViewportRect().Size / 2);
@@ -259,7 +411,7 @@ public partial class Main : Node2D
 
         // The globe wraps east–west: keep the camera inside one copy of the map, the renderer draws the neighbours.
         // North and south end at the poles, so the camera stops there.
-        Vector2 p = _map.Period;
+        Vector2 p = _map?.Period ?? Vector2.Zero;
         if (p.X > 0 && p.Y > 0)
         {
             _camera.Position = new Vector2(Mathf.PosMod(_camera.Position.X, p.X), Mathf.Clamp(_camera.Position.Y, 0, p.Y));
@@ -273,7 +425,7 @@ public partial class Main : Node2D
 
         // Never zoom out so far that more than two copies of the map fit side by side.
         Vector2 view = GetViewportRect().Size;
-        if (_map.Period.X > 0)
+        if (_map is not null && _map.Period.X > 0)
         {
             z = Mathf.Max(z, view.X / (2 * _map.Period.X));
         }
@@ -292,7 +444,7 @@ public partial class Main : Node2D
 
     private void Benchmark(double frameMs)
     {
-        if (_benchmarkFrames <= 0 || !_bound)
+        if (_benchmarkFrames <= 0 || !_bound || _map is null)
         {
             return;
         }
@@ -309,7 +461,8 @@ public partial class Main : Node2D
         _camera.Position += new Vector2(40, 17);
         if (_frames % 120 == 60)
         {
-            _map.Overlay = (MapOverlay)((_frames / 120) % 6);
+            // Switch cell layers on top of each other: the worst case for recolouring.
+            _layers.SetEnabled((MapLayer)(1 + ((_frames / 120) % 11)), true);
         }
 
         if (frameMs > 16)
@@ -362,133 +515,4 @@ public partial class Main : Node2D
         string[] user = OS.GetCmdlineUserArgs();
         return user.Length > 0 ? user : OS.GetCmdlineArgs();
     }
-
-    private static LocalGameOptions ParseOptions(string[] args, out SimulationSpeed speed, out int benchmark)
-    {
-        ulong seed = 1;
-        string size = "standard";
-        speed = SimulationSpeed.Paused;
-        benchmark = 0;
-        string? worldType = null;
-        string? planet = null;
-        int? tilt = null;
-        long? year = null;
-        long? luminosity = null;
-        long? distance = null;
-        long? light = null;
-        int? co2 = null;
-        int? pressure = null;
-        int? volcanism = null;
-        int? starVariability = null;
-        int? starCycle = null;
-        int? eccentricity = null;
-        string? moisture = null;
-        string? inland = null;
-        string? relief = null;
-        string? resources = null;
-        int? water = null;
-        int? civs = null;
-        for (int i = 0; i + 1 < args.Length; i++)
-        {
-            string v = args[i + 1];
-            switch (args[i])
-            {
-                case "--seed":
-                    seed = ulong.Parse(v, CultureInfo.InvariantCulture);
-                    break;
-                case "--map-size":
-                    size = v;
-                    break;
-                case "--speed":
-                    speed = v switch { "x1" => SimulationSpeed.X1, "x2" => SimulationSpeed.X2, "x5" => SimulationSpeed.X5, "max" => SimulationSpeed.Max, _ => SimulationSpeed.Paused };
-                    break;
-                case "--benchmark":
-                    benchmark = int.Parse(v, CultureInfo.InvariantCulture);
-                    break;
-                case "--world-type":
-                    worldType = v;
-                    break;
-                case "--planet":
-                    planet = v;
-                    break;
-                case "--tilt":
-                    tilt = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 10);
-                    break;
-                case "--year":
-                    year = Thousandths(v);
-                    break;
-                case "--luminosity":
-                    luminosity = Thousandths(v);
-                    break;
-                case "--distance":
-                    distance = Thousandths(v);
-                    break;
-                case "--light":
-                    light = Thousandths(v);
-                    break;
-                case "--co2":
-                    co2 = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1_000_000);
-                    break;
-                case "--pressure":
-                    pressure = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 100);
-                    break;
-                case "--volcanism":
-                    volcanism = int.Parse(v, CultureInfo.InvariantCulture);
-                    break;
-                case "--star-variability":
-                    starVariability = int.Parse(v, CultureInfo.InvariantCulture);
-                    break;
-                case "--star-cycle":
-                    starCycle = int.Parse(v, CultureInfo.InvariantCulture);
-                    break;
-                case "--eccentricity":
-                    eccentricity = (int)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1000);
-                    break;
-                case "--inland":
-                    inland = v;
-                    break;
-                case "--moisture":
-                    moisture = v;
-                    break;
-                case "--relief":
-                    relief = v;
-                    break;
-                case "--resources":
-                    resources = v;
-                    break;
-                case "--water":
-                    water = int.Parse(v, CultureInfo.InvariantCulture);
-                    break;
-                case "--civs":
-                    civs = int.Parse(v, CultureInfo.InvariantCulture);
-                    break;
-            }
-        }
-
-        LocalGameOptions o = LocalGameOptions.ForSize(size, seed);
-        return o with
-        {
-            Civilizations = civs ?? o.Civilizations,
-            WorldType = worldType ?? o.WorldType,
-            WaterPercent = water ?? o.WaterPercent,
-            Planet = planet ?? o.Planet,
-            AxialTiltTenths = tilt,
-            EccentricityPerMille = eccentricity,
-            LuminosityThousandths = luminosity,
-            DistanceThousandths = distance,
-            YearThousandths = year,
-            LightThousandths = light,
-            Co2Microbar = co2,
-            PressureHundredths = pressure,
-            VolcanismPercent = volcanism,
-            StarVariabilityPerMille = starVariability,
-            StarCycleYears = starCycle,
-            Moisture = moisture ?? o.Moisture,
-            Inland = inland ?? o.Inland,
-            Relief = relief ?? o.Relief,
-            Resources = resources ?? o.Resources,
-        };
-    }
-
-    private static long Thousandths(string v) => (long)Math.Round(decimal.Parse(v, CultureInfo.InvariantCulture) * 1000);
 }

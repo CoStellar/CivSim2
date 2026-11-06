@@ -396,6 +396,11 @@ public sealed class GameServer
         GameViewMessage view = ViewBuilder.Build(
             snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width);
         long micros = (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
+        if (client.IsObserver && _observerView is not null)
+        {
+            view = view with { Civilizations = _observerView.Civilizations(State, view.Civilizations) };
+        }
+
         return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = joining ? _history.ToArray() : skipChronicle ? [] : _chronicle.ToArray() };
     }
 
@@ -486,9 +491,17 @@ public sealed class GameServer
         }
 
         client.Connection.Send(_observerView.Build(State));
-        if (client.Watched is { } civ && _observerView.Fog(State, civ) is { } fog)
+        if (client.Watched is { } civ)
         {
-            client.Connection.Send(fog);
+            if (_observerView.Fog(State, civ) is { } fog)
+            {
+                client.Connection.Send(fog);
+            }
+
+            if (_observerView.Details(State, civ) is { } details)
+            {
+                client.Connection.Send(details);
+            }
         }
     }
 

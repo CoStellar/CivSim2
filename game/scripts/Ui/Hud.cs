@@ -23,7 +23,9 @@ public partial class Hud : CanvasLayer
     private readonly Dictionary<SimulationSpeed, Button> _speedButtons = [];
     private Label _turn = null!;
     private Label _perf = null!;
-    private OptionButton _overlay = null!;
+    private Button _layersButton = null!;
+    private PanelContainer _layerBox = null!;
+    private LayerPanel? _layerPanel;
     private RichTextLabel _inspector = null!;
     private RichTextLabel _chronicle = null!;
     private TurnChart _chart = null!;
@@ -31,8 +33,21 @@ public partial class Hud : CanvasLayer
     /// <summary>Raised when the user picks a speed.</summary>
     public event Action<SimulationSpeed>? SpeedChosen;
 
-    /// <summary>Raised when the user picks an overlay.</summary>
-    public event Action<MapOverlay>? OverlayChosen;
+    /// <summary>Raised when the user wants the start menu back (the game is stopped).</summary>
+    public event Action? MenuRequested;
+
+    /// <summary>Raised when the layer panel is shown or hidden.</summary>
+    public event Action<bool>? LayerPanelToggled;
+
+    /// <summary>The layer panel, to be set before the HUD enters the tree.</summary>
+    public LayerPanel? Layers
+    {
+        get => _layerPanel;
+        set => _layerPanel = value;
+    }
+
+    /// <summary>Whether the layer panel starts open.</summary>
+    public bool LayerPanelOpen { get; set; } = true;
 
     /// <inheritdoc />
     public override void _Ready()
@@ -60,15 +75,17 @@ public partial class Hud : CanvasLayer
             _speedButtons[speed] = b;
         }
 
-        bar.AddChild(new Label { Text = "   Overlay:" });
-        _overlay = new OptionButton { FocusMode = Control.FocusModeEnum.None };
-        foreach (string name in Enum.GetNames<MapOverlay>())
+        _layersButton = new Button { Text = "Layers", ToggleMode = true, ButtonPressed = LayerPanelOpen, FocusMode = Control.FocusModeEnum.None, TooltipText = "Show or hide the layer panel (Tab)" };
+        _layersButton.Toggled += on =>
         {
-            _overlay.AddItem(name);
-        }
-
-        _overlay.ItemSelected += i => OverlayChosen?.Invoke((MapOverlay)(int)i);
-        bar.AddChild(_overlay);
+            _layerBox.Visible = on;
+            LayerPanelToggled?.Invoke(on);
+        };
+        bar.AddChild(new Label { Text = "  " });
+        bar.AddChild(_layersButton);
+        var menu = new Button { Text = "Menu", FocusMode = Control.FocusModeEnum.None, TooltipText = "Stop this game and go back to the start menu" };
+        menu.Pressed += () => MenuRequested?.Invoke();
+        bar.AddChild(menu);
         _perf = new Label { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, HorizontalAlignment = HorizontalAlignment.Right };
         bar.AddChild(_perf);
 
@@ -81,15 +98,24 @@ public partial class Hud : CanvasLayer
         _inspector = new RichTextLabel { BbcodeEnabled = true, Text = "Click a hex to inspect it.", FitContent = false };
         left.AddChild(_inspector);
 
-        // Chronicle (right).
-        var right = new PanelContainer { CustomMinimumSize = new Vector2(380, 0) };
+        // Layers and chronicle (right).
+        var right = new VBoxContainer { CustomMinimumSize = new Vector2(400, 0) };
         right.SetAnchorsPreset(Control.LayoutPreset.RightWide);
-        right.OffsetLeft = -380;
+        right.OffsetLeft = -400;
         right.OffsetTop = 44;
         right.OffsetBottom = -140;
         root.AddChild(right);
+        _layerBox = new PanelContainer { Visible = LayerPanelOpen };
+        right.AddChild(_layerBox);
+        if (_layerPanel is not null)
+        {
+            _layerBox.AddChild(_layerPanel);
+        }
+
+        var chroniclePanel = new PanelContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        right.AddChild(chroniclePanel);
         var box = new VBoxContainer();
-        right.AddChild(box);
+        chroniclePanel.AddChild(box);
         box.AddChild(new Label { Text = "Chronicle" });
         _chronicle = new RichTextLabel { ScrollFollowing = true, SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         box.AddChild(_chronicle);
@@ -101,8 +127,8 @@ public partial class Hud : CanvasLayer
         root.AddChild(_chart);
     }
 
-    /// <summary>Shows the current overlay in the drop-down (after a keyboard change).</summary>
-    public void ShowOverlay(MapOverlay overlay) => _overlay.Select((int)overlay);
+    /// <summary>Shows or hides the layer panel (Tab).</summary>
+    public void ToggleLayerPanel() => _layersButton.ButtonPressed = !_layersButton.ButtonPressed;
 
     /// <summary>Appends chronicle lines.</summary>
     public void AddChronicle(IReadOnlyList<ChronicleEntry> lines)
@@ -138,7 +164,7 @@ public partial class Hud : CanvasLayer
     {
         if (map.Selected is not { } sel || map.World is not { } w)
         {
-            return "Click a hex to inspect it.\n\n[color=gray]Mouse: left = select, right/middle drag = move, wheel = zoom.\nKeys: WASD/arrows move, +/- zoom, Space pause, 1-5 speed, Tab overlay.[/color]";
+            return "Click a hex to inspect it.\n\n[color=gray]Mouse: left = select, right/middle drag = move, wheel = zoom.\nKeys: WASD/arrows move, +/- zoom, Space pause, 1-5 speed, Tab layer panel, Esc menu.[/color]";
         }
 
         int i = w.Index(sel.Col, sel.Row);
@@ -183,6 +209,7 @@ public partial class Hud : CanvasLayer
         sb.Append("Rivers on own edges: ").Append(rivers.Count == 0 ? "none" : string.Join(", ", rivers)).Append('\n');
         sb.Append("Owner: ").Append(w.Owner[i] < 0 ? "none" : FindCiv(session, w.Owner[i])).Append('\n');
         AppendSettlement(sb, session, w.Id, sel.Col, sel.Row);
+        AppendDetails(sb, session, w.Id, sel.Col, sel.Row);
         return sb.ToString();
     }
 
@@ -255,6 +282,40 @@ public partial class Hud : CanvasLayer
 
             sb.Append(inv, $"Warehouse ({total / 100.0:F2} units):\n");
             sb.Append(lines.Length == 0 ? "  empty\n" : lines.ToString());
+        }
+    }
+
+    // Observer layers on the selected cell: a field, a wandering camp, active events.
+    private static void AppendDetails(StringBuilder sb, ClientSession session, int world, int col, int row)
+    {
+        if (session.Details is not { } d)
+        {
+            return;
+        }
+
+        CultureInfo inv = CultureInfo.InvariantCulture;
+        foreach (FieldView f in d.Fields)
+        {
+            if (f.World == world && f.Col == col && f.Row == row)
+            {
+                sb.Append(inv, $"Field of {FindCiv(session, f.Owner)}, {f.WorkedPercent}% worked\n");
+            }
+        }
+
+        foreach (JourneyView j in d.Journeys)
+        {
+            if (j.World == world && j.Col == col && j.Row == row)
+            {
+                sb.Append(inv, $"Wandering camp ({j.People} people) going to {j.TargetCol}, {j.TargetRow}\n");
+            }
+        }
+
+        foreach (CellEventView e in d.Events)
+        {
+            if (e.World == world && e.Col == col && e.Row == row && session.View is { } v)
+            {
+                sb.Append(inv, $"Event: {e.Effect.Replace('_', ' ')} {e.Strength}, {Math.Max(0, (e.EndMonth - v.Month) / 12)} more years\n");
+            }
         }
     }
 

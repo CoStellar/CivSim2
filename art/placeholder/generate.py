@@ -379,10 +379,11 @@ def settlement(level, state):
         return
     if level == "camp":
         cloth = nearest((170, 101, 39)) if not abandoned else nearest((147, 138, 130))
-        tent(c, 17, 30, 8, cloth, not abandoned)
-        tent(c, 30, 32, 7, cloth, False)
+        tent(c, 18, 30, 12, cloth, not abandoned)
+        tent(c, 32, 34, 10, cloth, False)
         fire = nearest((236, 39, 30)) if not abandoned else nearest((79, 75, 69))
-        c.rect(24, 33, 25, 34, fire)
+        c.rect(24, 33, 26, 35, fire)
+        c.px(25, 32, nearest((234, 210, 32)) if not abandoned else fire)
     elif level == "village":
         for x, y in ((15, 29), (27, 27), (33, 34), (20, 36)):
             house(c, x, y, roof, wall, abandoned and x == 27)

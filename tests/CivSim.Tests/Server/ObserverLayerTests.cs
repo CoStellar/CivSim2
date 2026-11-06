@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using CivSim.Protocol;
 using CivSim.Protocol.Hosting;
@@ -37,7 +38,7 @@ public class ObserverLayerTests
     public void SetupListsThePlanetPresets()
     {
         LocalSetupInfo info = LocalServerHost.Describe();
-        Assert.Equal(["earth", "mars", "uranus"], System.Linq.Enumerable.Select(info.Planets, p => p.Key));
+        Assert.Equal(["earth", "mars", "uranus"], info.Planets.Select(p => p.Key));
         PlanetPresetInfo earth = info.Planets[0];
         Assert.Equal(234, earth.AxialTiltTenths);
         Assert.Equal(1000, earth.DistanceThousandths);
@@ -94,12 +95,20 @@ public class ObserverLayerTests
         WaitFor(viewer, l => l.Exists(m => m is GameViewMessage { Turn: >= 6 }));
         viewer.Send(new SetSpeedMessage(SimulationSpeed.Paused));
         viewer.Send(new WatchCivilizationMessage(0));
-        List<IProtocolMessage> watched = WaitFor(viewer, l => l.Exists(m => m is FogMessage));
+        List<IProtocolMessage> watched = WaitFor(viewer, l => l.Exists(m => m is FogMessage) && l.Exists(m => m is CivilizationDetailsMessage));
         FogMessage fog = (FogMessage)watched.Find(m => m is FogMessage)!;
         Assert.Equal(0, fog.CivId);
         Assert.Equal(66 * 40, fog.Cells.Length);
         Assert.Contains(fog.Cells, c => c == MapChunkMessage.Visible);
         Assert.Contains(fog.Cells, c => c == MapChunkMessage.Unknown);
+
+        CivilizationDetailsMessage civ = (CivilizationDetailsMessage)watched.Find(m => m is CivilizationDetailsMessage)!;
+        Assert.Equal(0, civ.CivId);
+        Assert.Equal(civ.Strata.Count, civ.People.Count);
+        Assert.Equal(civ.TraitNames.Count, civ.Traits.Count);
+        Assert.True(civ.People.Sum() > 0);
+        GameViewMessage view = (GameViewMessage)watched.FindLast(m => m is GameViewMessage)!;
+        Assert.All(view.Civilizations, c => Assert.True(c.People >= 0 && c.Settlements >= 0 && c.Era.Length > 0));
 
         ObserverDetailsMessage details = (ObserverDetailsMessage)watched.FindLast(m => m is ObserverDetailsMessage)!;
         Assert.All(details.Relations, r => Assert.True(r.A < r.B));
@@ -116,6 +125,6 @@ public class ObserverLayerTests
         WaitFor(player, l => l.Exists(m => m is GameViewMessage));
         player.Send(new WatchCivilizationMessage(1));
         List<IProtocolMessage> answer = WaitFor(player, l => l.Exists(m => m is ConnectionRejectedMessage));
-        Assert.DoesNotContain(answer, m => m is FogMessage or ObserverDetailsMessage);
+        Assert.DoesNotContain(answer, m => m is FogMessage or ObserverDetailsMessage or CivilizationDetailsMessage);
     }
 }

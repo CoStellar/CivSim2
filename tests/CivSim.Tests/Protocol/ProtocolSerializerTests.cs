@@ -35,6 +35,10 @@ public class ProtocolSerializerTests
             [new RelationView(0, 1, RelationView.Met, 2500, -300, RelationView.Trade | RelationView.NonAggression)])];
         yield return [new WatchCivilizationMessage(2)];
         yield return [new FogMessage(2, 0, 9, [0, 1, 2, 2])];
+        yield return [new CivilizationDetailsMessage(
+            2, 9, "Rome", true, "Stone Age", ["Fire"], "Pottery", 40, 120, ["Aggression"], [700], ["Expansion"], [1200], ["Gatherers"], [80],
+            ["Tribal Camp"], [2], 5000, 6000, ["Grain"], [12000], [new RelationDetail(1, 2, 2500, -400, RelationView.Trade, ["ActiveTrade 100%"])])];
+        yield return [new GameViewMessage(6, -1, [], [new CivilizationView(1, "Rome", true) { Era = "Neolithic", People = 340, Settlements = 3, Technologies = 5 }])];
         yield return [new MapChunkMessage(0, 2, 5, 32, 0, 2, 1, [2, 0], [120, 0], [-3, 0], [50, 0], [12, 0], [1, 0], [0, 0], [70, 0], [3, 0], [500, 0], [0, 0], [-1, -1], [1, 0, 2, 0, 0, 0])];
     }
 
@@ -49,7 +53,7 @@ public class ProtocolSerializerTests
 
         // Records holding lists or arrays compare by reference, so compare their encoded bytes instead.
         Assert.Equal(frame, ProtocolSerializer.Serialize(back));
-        if (message is GameViewMessage or ContentMessage or MapChunkMessage or ObserverDetailsMessage or FogMessage)
+        if (message is GameViewMessage or ContentMessage or MapChunkMessage or ObserverDetailsMessage or FogMessage or CivilizationDetailsMessage)
         {
             return;
         }
@@ -102,7 +106,8 @@ public class ProtocolSerializerTests
         // Version 5 added settlement status and claims, the died-out month and the settlement asset commands.
         // Version 6 added seasons and the growing season to map chunks (globe, stage 1b).
         // Version 7 added the live season (temperature and growth of the current turn) to map chunks and the view.
-        // Version 8 added the observer layers (journeys, fields, events, relations) and the watched civilization's fog (stage 5).
+        // Version 8 added the observer layers (journeys, fields, events, relations), the followed civilization (fog and
+        // details) and era, people, settlements and technologies of each civilization for observers (stage 5).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
         Assert.Equal("08000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
