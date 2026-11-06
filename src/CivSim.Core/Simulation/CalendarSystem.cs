@@ -47,6 +47,7 @@ public static class CoreSystems
         var years = new Economy.YieldYears(content.Population.YieldSwingPercent);
         runner.AddSystem(new WorldGen.ClimateSystem(content));
         runner.AddSystem(new Perception.PerceptionSystem(content));
+        runner.AddSystem(new Diplomacy.ContactSystem(content));
         runner.AddSystem(new Perception.JourneySystem(content));
         runner.AddSystem(new WorldGen.SeasonSystem(content));
         runner.AddSystem(new EffectExpirySystem());

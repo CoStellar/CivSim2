@@ -176,12 +176,13 @@ public class PopulationTests
     public void StrataDriftTowardsTheirTargetShares()
     {
         TurnRunner runner = NewGame(6);
-        SettlementState camp = runner.State.Settlements[0];
         for (int t = 0; t < 40; t++)
         {
             runner.RunTurn();
         }
 
+        // The largest camp: the first one may have been driven out or merged by then (AI choices since stage 4b).
+        SettlementState camp = runner.State.Settlements.OrderByDescending(s => s.TotalPopulation()).ThenBy(s => s.Id.Value).First();
         int total = camp.TotalPopulation();
         Assert.True(total > 0);
         int artisans = camp.PopulationView[Stratum("artisans")] * 100 / total;

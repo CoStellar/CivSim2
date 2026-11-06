@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 15;
+    public const int FormatVersion = 17;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -56,7 +56,8 @@ public static class SaveGameSerializer
         foreach (CivilizationState c in state.Civilizations)
         {
             civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era, c.DiedOutMonth,
-                c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience, c.SeenYear));
+                c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience, c.SeenYear,
+                c.Traits, c.GoalWeights, c.ExpansionTarget, c.StrategyReviewMonth, c.StrategyEra, SaveRelations(c)));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -176,7 +177,7 @@ public static class SaveGameSerializer
 
         foreach (CivilizationSaveData c in data.Civilizations)
         {
-            state.AddCivilizationForLoad(new CivilizationState(new CivId(c.Id), c.Name, PlayerId.Ai) {
+            var civ = new CivilizationState(new CivId(c.Id), c.Name, PlayerId.Ai) {
                 IsAlive = c.IsAlive,
                 StartCell = new HexCoord(c.StartCol, c.StartRow),
                 Era = c.Era,
@@ -187,7 +188,14 @@ public static class SaveGameSerializer
                 ResearchProgress = c.ResearchProgress,
                 LastScience = c.LastScience,
                 SeenYear = c.SeenYear ?? [],
-            });
+                Traits = c.Traits ?? [],
+                GoalWeights = c.GoalWeights ?? [],
+                ExpansionTarget = c.ExpansionTarget,
+                StrategyReviewMonth = c.StrategyReviewMonth,
+                StrategyEra = c.StrategyEra,
+            };
+            LoadRelations(civ, c.Relations);
+            state.AddCivilizationForLoad(civ);
         }
 
         state.SetCountersForLoad(data.Month, data.NextSettlementId);
@@ -278,5 +286,53 @@ public static class SaveGameSerializer
     {
         using FileStream fs = File.OpenRead(path);
         return Load(fs);
+    }
+
+    private static List<RelationSaveData> SaveRelations(CivilizationState civ)
+    {
+        var list = new List<RelationSaveData>(civ.Relations.Count);
+        foreach (Core.Diplomacy.Relation r in civ.Relations)
+        {
+            var memories = new List<RelationMemorySaveData>(r.Memories.Count);
+            foreach (Core.Diplomacy.RelationMemory m in r.Memories)
+            {
+                memories.Add(new RelationMemorySaveData((byte)m.Kind, m.Sympathy, m.Trust, m.EndMonth, m.FadeMonths));
+            }
+
+            list.Add(new RelationSaveData(r.Other.Value, (byte)r.Level, (byte)r.Way, r.FirstMonth, r.MetMonth, r.LastContactMonth,
+                r.Opening, r.Sympathy, r.Trust, r.RumorCell, r.RumorPeople, r.RumorFrom, memories));
+        }
+
+        return list;
+    }
+
+    private static void LoadRelations(CivilizationState civ, List<RelationSaveData>? relations)
+    {
+        foreach (RelationSaveData d in relations ?? [])
+        {
+            Core.Diplomacy.Relation r = civ.AddRelation(new CivId(d.Other));
+            r.Level = (Core.Diplomacy.ContactLevel)d.Level;
+            r.Way = (Core.Diplomacy.ContactWay)d.Way;
+            r.FirstMonth = d.FirstMonth;
+            r.MetMonth = d.MetMonth;
+            r.LastContactMonth = d.LastContactMonth;
+            r.Opening = d.Opening;
+            r.Sympathy = d.Sympathy;
+            r.Trust = d.Trust;
+            r.RumorCell = d.RumorCell;
+            r.RumorPeople = d.RumorPeople;
+            r.RumorFrom = d.RumorFrom;
+            foreach (RelationMemorySaveData m in d.Memories ?? [])
+            {
+                r.Remember(new Core.Diplomacy.RelationMemory
+                {
+                    Kind = (Core.Diplomacy.RelationEvent)m.Kind,
+                    Sympathy = m.Sympathy,
+                    Trust = m.Trust,
+                    EndMonth = m.EndMonth,
+                    FadeMonths = m.FadeMonths,
+                }, int.MaxValue, 0);
+            }
+        }
     }
 }

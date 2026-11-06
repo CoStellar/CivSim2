@@ -98,6 +98,46 @@ public static class GameStateHash
             h.Add(c.Researching);
             h.Add(c.ResearchProgress);
             h.Add(c.LastScience);
+            h.Add(c.Traits.Length);
+            foreach (int trait in c.Traits)
+            {
+                h.Add(trait);
+            }
+
+            h.Add(c.GoalWeights.Length);
+            foreach (int weight in c.GoalWeights)
+            {
+                h.Add(weight);
+            }
+
+            h.Add(c.ExpansionTarget);
+            h.Add(c.StrategyReviewMonth);
+            h.Add(c.StrategyEra);
+            h.Add(c.Relations.Count);
+            foreach (Diplomacy.Relation r in c.Relations)
+            {
+                h.Add(r.Other.Value);
+                h.Add((int)r.Level);
+                h.Add((int)r.Way);
+                h.Add(r.FirstMonth);
+                h.Add(r.MetMonth);
+                h.Add(r.LastContactMonth);
+                h.Add(r.Opening);
+                h.Add(r.Sympathy);
+                h.Add(r.Trust);
+                h.Add(r.RumorCell);
+                h.Add(r.RumorPeople);
+                h.Add(r.RumorFrom);
+                h.Add(r.Memories.Count);
+                foreach (Diplomacy.RelationMemory m in r.Memories)
+                {
+                    h.Add((int)m.Kind);
+                    h.Add(m.Sympathy);
+                    h.Add(m.Trust);
+                    h.Add(m.EndMonth);
+                    h.Add(m.FadeMonths);
+                }
+            }
         }
 
         h.Add(state.Month);

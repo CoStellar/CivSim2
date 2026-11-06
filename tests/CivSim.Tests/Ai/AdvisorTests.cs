@@ -29,7 +29,8 @@ public class AdvisorTests
     [Fact]
     public void AiRulesLoadFromData()
     {
-        Assert.Equal(1, Content.Ai.PickAmongTop);
+        Assert.Equal(3, Content.Ai.PickAmongTop);
+        Assert.Equal(15, Content.Ai.ReviewEveryTurns);
     }
 
     [Fact]
@@ -70,7 +71,11 @@ public class AdvisorTests
                 Assert.Equal(AdvisorKind.Governor, d.Advisor);
                 FactorId[] ids = d.Factors().Select(f => f.Id).ToArray();
                 Assert.NotEmpty(ids);
-                Assert.All(ids, id => Assert.Contains(id, new[] { FactorId.Food, FactorId.Comfort, FactorId.Distance, FactorId.OwnCampsite, FactorId.BetterThanHere, FactorId.Fed }));
+                Assert.All(ids, id => Assert.Contains(id, new[]
+                {
+                    FactorId.Food, FactorId.Comfort, FactorId.Distance, FactorId.OwnCampsite, FactorId.BetterThanHere, FactorId.Fed,
+                    FactorId.Direction, FactorId.GoalWeight, FactorId.Character,
+                }));
                 return;
             }
         }
@@ -85,38 +90,64 @@ public class AdvisorTests
         runner.RunTurn();
         Decision research = Assert.Single(council.Log.Entries, d => d.Action == AiAction.SetResearch && d.Civ == runner.State.Civilizations[0].Id);
         Assert.Equal(AdvisorKind.Scholar, research.Advisor);
-        Assert.Equal(FactorId.ResearchCost, research.First.Id);
-        Assert.Equal(Core.Research.ScholarAdvisor.TechnologyWorth - research.First.Input, research.Score);
-        Assert.Contains("research cost", Decision.Describe(research.First), StringComparison.Ordinal);
+        Factor cost = Assert.Single(research.Factors(), f => f.Id == FactorId.ResearchCost);
+        Assert.True(cost.Input > 0);
+        Assert.Contains("research cost", Decision.Describe(cost), StringComparison.Ordinal);
     }
 
-    [Fact]
-    public void DrawingAmongTheThreeBestIsDeterministic()
+    // Content with ai.json replaced, everything else from data/.
+    internal static GameContent WithAi(string name, string json)
     {
-        string folder = Path.Combine(Path.GetTempPath(), $"civsim-ai-top3-{Environment.ProcessId}");
+        string folder = Path.Combine(Path.GetTempPath(), $"civsim-ai-{name}-{Environment.ProcessId}");
         Directory.CreateDirectory(folder);
         foreach (string file in Directory.GetFiles(ContentLoader.DefaultDirectory, "*.json"))
         {
             File.Copy(file, Path.Combine(folder, Path.GetFileName(file)), overwrite: true);
         }
 
-        File.WriteAllText(Path.Combine(folder, "ai.json"), "{ \"version\": 1, \"pickAmongTop\": 3 }");
-        GameContent top3 = ContentLoader.Load(folder);
-        Assert.Equal(3, top3.Ai.PickAmongTop);
+        File.WriteAllText(Path.Combine(folder, "ai.json"), json);
+        return ContentLoader.Load(folder);
+    }
 
-        static ulong Run(GameContent content)
+    // The real ai.json with the draw among the best switched off.
+    private static string PickBestOnly() =>
+        File.ReadAllText(Path.Combine(ContentLoader.DefaultDirectory, "ai.json")).Replace("\"pickAmongTop\": 3", "\"pickAmongTop\": 1", StringComparison.Ordinal);
+
+    private static ulong Run(GameContent content, int turns, Action<GameState>? setup = null)
+    {
+        (TurnRunner runner, _) = NewGame(77, content);
+        setup?.Invoke(runner.State);
+        for (int t = 0; t < turns; t++)
         {
-            (TurnRunner runner, _) = NewGame(77, content);
-            for (int t = 0; t < 60; t++)
-            {
-                runner.RunTurn();
-            }
-
-            return GameStateHash.Compute(runner.State);
+            runner.RunTurn();
         }
 
-        ulong a = Run(top3);
-        Assert.Equal(a, Run(top3));
-        Assert.NotEqual(Run(Content), a);
+        return GameStateHash.Compute(runner.State);
+    }
+
+    [Fact]
+    public void DrawingAmongTheThreeBestIsDeterministic()
+    {
+        GameContent best = WithAi("best", PickBestOnly());
+        Assert.Equal(1, best.Ai.PickAmongTop);
+        ulong a = Run(Content, 60);
+        Assert.Equal(a, Run(Content, 60));
+        Assert.NotEqual(Run(best, 60), a);
+    }
+
+    [Fact]
+    public void FullyCautiousCivilizationsAlwaysTakeTheBest()
+    {
+        // Caution 1000: the draw among the three best always ends with the best, exactly as with room for one.
+        GameContent best = WithAi("best1", PickBestOnly());
+        static void Cautious(GameState state)
+        {
+            foreach (CivilizationState civ in state.Civilizations)
+            {
+                civ.Traits[(int)Trait.Caution] = 1000;
+            }
+        }
+
+        Assert.Equal(Run(best, 60, Cautious), Run(Content, 60, Cautious));
     }
 }

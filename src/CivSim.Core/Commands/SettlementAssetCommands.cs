@@ -236,12 +236,14 @@ public sealed record ConquerSettlementCommand(GameContent Content, SettlementId 
         string defenders = state.FindCivilization(target.Owner)!.Name;
         long attack = SettlementAssets.Warriors(Content, from);
         long defence = Math.Max(1, DefenceStrength(Content, target));
+        // The defenders remember the attack, won or lost (GDD 8.5).
+        string met = Diplomacy.Contacts.RecordAttack(Content, state, target.Owner, civ) ? " It was their first meeting." : string.Empty;
         bool won = state.Random[RandomStreamId.Combat].Chance((int)Math.Min(int.MaxValue / 2, attack), (int)Math.Min(int.MaxValue / 2, attack + defence));
         if (!won)
         {
             SettlementAssets.Lose(Content, from, rules.LoserWarriorLossPercent, warriorsOnly: true);
             SettlementAssets.Lose(Content, target, rules.WinnerWarriorLossPercent, warriorsOnly: true);
-            return $"{defenders} beat back {attackers} at {target.Name}.";
+            return $"{defenders} beat back {attackers} at {target.Name}.{met}";
         }
 
         SettlementAssets.Lose(Content, from, rules.WinnerWarriorLossPercent, warriorsOnly: true);
@@ -262,7 +264,7 @@ public sealed record ConquerSettlementCommand(GameContent Content, SettlementId 
             SettlementAssets.Abandon(Content, state, target);
         }
 
-        return $"{attackers} drove {defenders} out of {target.Name}; {flight}.";
+        return $"{attackers} drove {defenders} out of {target.Name}; {flight}.{met}";
     }
 
     // The defeated take what they can carry to the nearest free land cell, or join their nearest settlement.

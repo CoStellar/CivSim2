@@ -56,6 +56,12 @@ public enum FactorId : byte
 
     /// <summary>Multiplier from the civilization's character (stage 4b; neutral until then).</summary>
     Character = 16,
+
+    /// <summary>The place lies closer to the strategist's expansion target (GDD 7.6).</summary>
+    Direction = 17,
+
+    /// <summary>Sympathy for the people living at the place (GDD 8.5; stage 4c), points from −100 to 100.</summary>
+    Opinion = 18,
 }
 
 /// <summary>

@@ -587,14 +587,16 @@ Każda cywilizacja prowadzi dla każdej znanej sobie osobną listę wydarzeń z 
 
 | Wydarzenie | Sympatia | Zaufanie | Wygasa po |
 | --- | --- | --- | --- |
-| Atak na nas | −50 | −20 | 150 tur (mściwi: 300) |
-| Złamanie traktatu | −20 | −40 | 200 tur |
-| Spór graniczny | −1 na turę | — | trwa, dopóki trwa spór |
-| Aktywny handel | +0,5 na turę (max +30) | +0,2 na turę | 20 tur po zerwaniu |
-| Wspólny wróg | +20 | +10 | koniec wojny + 50 tur |
-| Pomoc w wojnie | +30 | +25 | 200 tur |
+| Atak na nas | −50 | −20 | 150 lat (mściwi: 300) |
+| Złamanie traktatu | −20 | −40 | 200 lat |
+| Spór graniczny | −1 na rok (max −30) | — | trwa, dopóki trwa spór, potem 20 lat |
+| Aktywny handel | +0,5 na rok (max +30) | +0,2 na rok (max +20) | 20 lat po zerwaniu |
+| Wspólny wróg | +20 | +10 | koniec wojny + 50 lat |
+| Pomoc w wojnie | +30 | +25 | 200 lat |
 | Inny ustrój | −10 | — | trwa, dopóki różnica |
 
+Czasy i tempa są w latach, nie w turach (zasada „tempa na rok”, decyzja Patryka z 2026-11-06): tura w epoce kamienia trwa 50 lat, więc
+uraz pamiętany 150 lat to tam 3 tury, a w erze przemysłowej 150 tur. Wspomnienie po zakończeniu słabnie liniowo do zera.
 Wartości są robocze, dostroimy je w testach.
 
 ### 8.6 Plany i konsekwencja

@@ -52,9 +52,14 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
 
                 prices ??= Market.Prices(_content, state, members);
                 supply ??= Supply(state, members);
-                int pick = Best(civ, prices, supply, RandomFor(state, s.Id.Value));
+                int pick = Best(civ, prices, supply, s.RecipeId, RandomFor(state, s.Id.Value), out long incumbent);
                 int best = pick < 0 ? SettlementState.NoRecipe : Chooser.KeyAt(pick);
-                if (best != s.RecipeId)
+
+                // Hysteresis (GDD 8.6): the recipe the artisans make goes on while it still pays, unless another
+                // one is clearly better. Before stage 4b they stopped every time a turn used up the inputs.
+                long challenger = pick < 0 ? 0 : Chooser.EvaluationAt(pick).Value;
+                bool keep = incumbent > 0 && challenger * 100 <= incumbent * (100 + _content.Ai.RecipeSwitchBetterByPercent);
+                if (best != s.RecipeId && !keep)
                 {
                     Evaluation why = pick < 0 ? NothingPays() : Chooser.EvaluationAt(pick);
                     Issue(state, queue, civ.Id, new SetRecipeCommand(_content, s.Id, best), AiAction.SetRecipe, s.Id.Value, best, why);
@@ -64,9 +69,11 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
     }
 
     // Rank in the chooser of the allowed recipe the network can feed with the highest value added; -1 when none adds value.
-    private int Best(CivilizationState civ, Amount[] prices, long[] supply, Random.DeterministicRandom? random)
+    // The recipe the artisans make now counts as fed: production simply waits for its inputs.
+    private int Best(CivilizationState civ, Amount[] prices, long[] supply, int current, Random.DeterministicRandom? random, out long incumbent)
     {
         Chooser.Clear();
+        incumbent = 0;
         for (int r = 0; r < _content.Recipes.Count; r++)
         {
             RecipeDefinition recipe = _content.Recipes[r];
@@ -93,12 +100,17 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
             // Value added at internal prices; a recipe the network cannot feed scores zero.
             Evaluation e = Evaluation.Of(value);
             e.Note(FactorId.ValueAdded, value);
-            e.Apply(FactorId.InputsAvailable, fed ? Factor.Neutral : 0, fed ? 1 : 0);
+            e.Apply(FactorId.InputsAvailable, fed || r == current ? Factor.Neutral : 0, fed ? 1 : 0);
             e.Weigh(GoalWeight(civ, Goal.Prosperity), CharacterMultiplier(civ, Goal.Prosperity));
+            if (r == current)
+            {
+                incumbent = e.Value;
+            }
+
             Chooser.Offer(r, e);
         }
 
-        return Chooser.Pick(random);
+        return Pick(civ, random);
     }
 
     // No recipe adds value, or the network cannot feed any: the artisans stop.

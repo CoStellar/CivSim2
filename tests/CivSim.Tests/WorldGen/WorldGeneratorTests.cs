@@ -46,7 +46,8 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    private const ulong GoldenWorldHash = 4407980720461749932UL;
+    // Stage 4c: the state hash includes the (still empty) relations of every civilization (the map itself is unchanged).
+    private const ulong GoldenWorldHash = 3348565998749370355UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]
