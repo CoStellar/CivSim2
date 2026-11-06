@@ -1,6 +1,7 @@
 # ADR 0013: Dwa zegary: krok świata zależny od planety, wolne decyzje rzadziej
 
-**Status:** przyjęta, 2026-11-05 (decyzja Patryka).
+**Status:** przyjęta, 2026-11-05 (decyzja Patryka). Część o turze decyzyjnej i długości tury całego świata zastąpiona przez
+[ADR 0018](0018-zegar-swiata-i-rytmy-cywilizacji.md): każda cywilizacja ma własny rytm.
 
 ## Kontekst
 

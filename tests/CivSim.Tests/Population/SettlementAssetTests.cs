@@ -163,10 +163,11 @@ public class SettlementAssetTests
             s.Population.Clear();
         }
 
+        long start = state.Month;
         runner.RunTurn();
 
         Assert.False(civ.IsAlive);
-        Assert.Equal(state.Month, civ.DiedOutMonth + state.MonthsPerTurn(Content));
+        Assert.Equal(start, civ.DiedOutMonth);
         Assert.Contains(runner.LastChronicle, l => l.Contains("died out", System.StringComparison.Ordinal));
         Assert.All(state.Settlements.Where(s => s.Owner == civ.Id), s => Assert.False(s.IsActive));
     }

@@ -39,14 +39,15 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
         }
 
         GameState state = context.State;
-        int months = state.MonthsPerTurn(_content);
         DeterministicRandom rng = state.Random[RandomStreamId.Events];
         IReadOnlyList<SettlementState> all = state.Settlements;
         _struck.Clear();
         for (int si = 0; si < all.Count; si++)
         {
             SettlementState s = all[si];
-            if (!s.IsActive)
+            // Events are drawn for the civilization's own step, over its whole length (ADR 0018).
+            int months = s.IsActive ? WorldClock.MonthsOf(state, s.Owner) : 0;
+            if (months == 0)
             {
                 continue;
             }
@@ -64,7 +65,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             }
         }
 
-        Spread(context, months, rng);
+        Spread(context, rng);
     }
 
     /// <summary>Yearly chance of <paramref name="ev"/> for settlement <paramref name="s"/>, millionths (0 when ruled out).</summary>
@@ -268,7 +269,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
     }
 
     // Events that spread (an epidemic) may strike the other settlements of the struck one's trade network, once a turn.
-    private void Spread(TurnContext context, int months, DeterministicRandom rng)
+    private void Spread(TurnContext context, DeterministicRandom rng)
     {
         bool any = false;
         foreach ((int _, int e) in _struck)
@@ -302,6 +303,8 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             {
                 continue;
             }
+
+            int months = WorldClock.MonthsOf(state, state.Settlements[source]);
 
             int reached = 0;
             foreach (int m in networks[networkOf[source]])

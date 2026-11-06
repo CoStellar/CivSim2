@@ -70,13 +70,21 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                 accept ? AiAction.AcceptTreaty : AiAction.DeclineTreaty, -1, p.From.Value, e);
         }
 
-        int years = Math.Max(1, state.MonthsPerTurn(_content) / 12);
-        int every = Math.Max(1, _content.Treaties.ReviewEveryYears);
+        long every = Math.Max(1, _content.Treaties.ReviewEveryYears) * 12L;
         for (int x = 0; x < n; x++)
         {
             CivilizationState civ = state.Civilizations[x];
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || civ.Relations.Count == 0
-                || ((state.Month / 12) + (civ.Id.Value * 7L)) % every >= years)
+            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || civ.Relations.Count == 0)
+            {
+                continue;
+            }
+
+            // Planned review (proactive): in the own step that holds the civilization's review month, once every
+            // reviewEveryYears (spread over civilizations). Reaction (reactive, ADR 0018): at once when someone declared
+            // war on it or attacked one of its camps, whatever its rhythm.
+            bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * 7L * 12)) % every < civ.StepMonths;
+            bool alarmed = (civ.Alarms & (Simulation.Alarm.WarDeclared | Simulation.Alarm.Attacked)) != 0;
+            if (!planned && !alarmed)
             {
                 continue;
             }

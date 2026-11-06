@@ -46,16 +46,22 @@ public sealed class StorageSystem : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        RefreshShares(state.MonthsPerTurn(_content));
         long spoiled = 0;
         long overflow = 0;
         foreach (SettlementState s in state.Settlements)
         {
+            int months = WorldClock.MonthsOf(state, s);
+            if (months == 0)
+            {
+                continue; // its civilization waits for its own step (ADR 0018)
+            }
+
+            RefreshShares(months);
             // Pots and granaries (spoilage_percent on the civilization) slow spoiling.
             int slower = state.Effects.Count == 0
                 ? 0
                 : state.Effects.Total(_content.Effects, EffectStat.SpoilagePercent, EffectTarget.Civilization, WorldId.Earth, s.Owner.Value);
-            long[] kept = slower == 0 ? _keptShare : KeptShares(slower, state.MonthsPerTurn(_content));
+            long[] kept = slower == 0 ? _keptShare : KeptShares(slower, months);
             Span<Amount> stock = s.Stock;
             for (int g = 0; g < stock.Length; g++)
             {
@@ -95,6 +101,11 @@ public sealed class StorageSystem : ITurnSystem
         for (int i = 0; i < state.Settlements.Count; i++)
         {
             SettlementState s = state.Settlements[i];
+            if (WorldClock.MonthsOf(state, s) == 0)
+            {
+                continue;
+            }
+
             Amount capacity = _content.SettlementLevels[s.Level].StorageCapacity;
             int net = networkOf[i];
             if (net >= 0 && room[net] > 0 && networks[net].Count > 1 && s.TotalStock() > capacity)

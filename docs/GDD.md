@@ -135,7 +135,7 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 
 Mars w presecie to planeta podobna do Marsa w odległości Marsa od Słońca (zimniejsza, suchsza i bardziej górzysta niż Ziemia, z bardzo aktywnymi wulkanami, dzięki którym gruba atmosfera CO₂ utrzymuje ją przy życiu), nie dzisiejszy Mars. Uran w presecie ma rok Urana przy świetle Ziemi; wymaga to jasnej, ciężkiej gwiazdy, która w rzeczywistości żyje tylko ok. 50 mln lat (w grze naginamy).
 
-**Pory roku na żywo przy długim roku** (ADR 0013, „dwa zegary”): gdy rok planety trwa co najmniej 8 lat ziemskich, tura trwa 1/8 roku planety (Uran: 10,5 roku) i pora roku zmienia się z tury na turę: zimą nic nie rośnie, polowanie daje 20% dzikiej żywności. Plemiona same przenoszą się tam, gdzie jest jedzenie i znośna temperatura; ogień, odzież i domy (efekt `cold_tolerance`) pozwolą później żyć w zimniejszych miejscach. Decyzje wolne (odłamy, łączenie) zapadają raz na długość tury ery.
+**Pory roku na żywo przy długim roku** (ADR 0013, „dwa zegary”): gdy rok planety trwa co najmniej 8 lat ziemskich, tura trwa 1/8 roku planety (Uran: 10,5 roku) i pora roku zmienia się z tury na turę: zimą nic nie rośnie, polowanie daje 20% dzikiej żywności. Plemiona same przenoszą się tam, gdzie jest jedzenie i znośna temperatura; ogień, odzież i domy (efekt `cold_tolerance`) pozwolą później żyć w zimniejszych miejscach. Decyzje wolne (odłamy, łączenie) zapadają raz na długość kroku ery cywilizacji (ADR 0018).
 
 **Na pozostałych planetach pory roku są uśrednione** (tura trwa tam do 50 lat). Generator liczy dla każdej szerokości geograficznej nasłonecznienie w 48 punktach orbity (oś, mimośród, światło gwiazdy) i z tego:
 
@@ -388,9 +388,11 @@ Każda technologia w pliku JSON ma:
 
 ### 6.2 Ery
 
-Wszystkie tempa w grze (wzrost, psucie, odrastanie lasów) są zdefiniowane na rok i przeliczane przez długość tury. Dzięki temu zmiana długości tury między erami nie psuje ekonomii.
+Wszystkie tempa w grze (wzrost, psucie, odrastanie lasów) są zdefiniowane na rok i przeliczane przez długość kroku. Dzięki temu zmiana długości kroku między erami nie psuje ekonomii.
 
-| # | Era | Lat na turę | Próg wejścia | Co się zmienia |
+**Zegar świata i rytm cywilizacji** (ADR 0018, decyzja Patryka z 2026-11-06): czas gry to licznik lat, który sam niczego nie liczy. Każda cywilizacja liczy swój stan (gospodarkę, ludność, naukę, zwiad) i podejmuje zaplanowane decyzje tylko we **własnych krokach**, co tyle lat, ile podaje tabela dla **jej** ery. Kroki są przypięte do kalendarza (rytm 25 lat: lata 0, 25, 50…), a krok liczy dokładnie czas od poprzedniego, więc po zmianie ery pierwszy krok może być krótszy i nikt nie traci lat. Świat (klimat, morze, odrastanie dzikiej żywności poza osadami) i widok liczą się w latach, w których ktoś ma krok. Na wydarzenia (wypowiedziana wojna, napad, propozycja umowy, koniec badania) cywilizacja reaguje od razu, także poza swoim rytmem (decyzje reaktywne, 8.1).
+
+| # | Era | Lat na krok | Próg wejścia | Co się zmienia |
 | --- | --- | --- | --- | --- |
 | 1 | Kamienia | 50 | start | koczownictwo, zbieractwo, plemiona |
 | 2 | Neolit | 25 | Rolnictwo + osiedlenie | wioski, hodowla, pierwsze zapasy |
@@ -507,7 +509,9 @@ Każda cywilizacja komputerowa to zespół „doradców” na poziomach z rozdzi
 
 ### 8.1 Doradcy
 
-| Doradca | Decyduje o | Co ile tur |
+Doradcy pracują w **rytmie swojej cywilizacji** (6.2, ADR 0018): „co ile tur” w tabeli to własne kroki cywilizacji. Decyzje **proaktywne** (plany: strategia, przegląd stosunków, osadnictwo, receptury) zapadają tylko we własnym kroku. Decyzje **reaktywne** zapadają w najbliższym kroku świata, także poza rytmem: odpowiedź na propozycję, wybór badania po skończonym, reakcja na wypowiedzianą wojnę i na napad (przegląd stosunków, obozy szukają bezpieczniejszego miejsca; od 4e także obrona).
+
+| Doradca | Decyduje o | Co ile własnych kroków |
 | --- | --- | --- |
 | Strateg | wagi celów: ekspansja, bezpieczeństwo, dobrobyt, nauka, wpływ, podbój | 10–20 (i natychmiast po wstrząsie: wojna, klęska, nowa era) |
 | Dyplomata | sojusze, umowy, wypowiedzenia wojny, pokój | 5 |
@@ -696,7 +700,7 @@ Wszystkie zdarzenia są w plikach danych: warunki, szanse, efekty i komunikat do
 
 ## 11. Pętla symulacji
 
-Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie tego samego stanu świata, a potem rdzeń rozstrzyga je w stałej kolejności. Dzięki temu AI każdej cywilizacji może liczyć się równolegle na osobnych rdzeniach procesora, a wynik i tak jest deterministyczny.
+Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie tego samego stanu świata, a potem rdzeń rozstrzyga je w stałej kolejności. Jedna tura pętli to **krok świata** (6.2, ADR 0018): trwa do najbliższego roku, w którym któraś cywilizacja ma swój krok. W fazach 2–10 liczą się tylko cywilizacje, które mają krok w tej turze (za cały swój krok), oraz reakcje pozostałych na alarmy; świat liczy się zawsze, za długość kroku świata. Dzięki temu AI każdej cywilizacji może liczyć się równolegle na osobnych rdzeniach procesora, a wynik i tak jest deterministyczny.
 
 ### 11.1 Kolejność faz tury
 

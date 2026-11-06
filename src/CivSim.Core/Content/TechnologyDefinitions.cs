@@ -123,8 +123,8 @@ public sealed record AiRules
     /// </summary>
     public int PickAmongTop { get; init; } = 1;
 
-    /// <summary>Turns between two strategy reviews of one civilization (GDD 8.1: 10-20); reviews are spread over the civilizations.</summary>
-    public int ReviewEveryTurns { get; init; } = 15;
+    /// <summary>Own steps of a civilization between two of its strategy reviews (GDD 8.1: 10-20; ADR 0018); reviews are spread over the civilizations.</summary>
+    public int ReviewEverySteps { get; init; } = 15;
 
     /// <summary>Boost for places that lie closer to the strategist's expansion target (GDD 7.6: a suggestion).</summary>
     public int DirectionBonusPercent { get; init; } = 15;
@@ -153,8 +153,8 @@ public sealed record AiRules
     /// <summary>Highest prosperity and security weight from hunger, per mille.</summary>
     public int HungerWeightMax { get; init; } = 1500;
 
-    /// <summary>A hungry or cold camp that is not starving looks for a better place every this many turns.</summary>
-    public int SearchEveryTurns { get; init; } = 3;
+    /// <summary>A hungry or cold camp that is not starving looks for a better place every this many own steps of its civilization.</summary>
+    public int SearchEverySteps { get; init; } = 3;
 
     /// <summary>A camp fed worse than this (per cent) is starving and looks for a better place every turn.</summary>
     public int StarvingFedPercent { get; init; } = 85;
