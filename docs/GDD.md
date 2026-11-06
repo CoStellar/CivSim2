@@ -370,6 +370,24 @@ Osada to majątek cywilizacji: pola uprawne, budynki, mury i zapasy. Można ją 
 
 **Grafika:** każdy poziom osady potrzebuje dwóch dodatkowych wariantów: opuszczonej i zrujnowanej.
 
+### 5.6 Nazwy: języki ludów (decyzje Patryka z 2026-11-06)
+
+Każda cywilizacja ma **własny wymyślony język**, wylosowany na starcie z ziarna świata: zestaw spółgłosek i samogłosek, wzorce sylab
+(twarde lub miękkie, krótkie lub długie słowa) i ulubione końcówki. Z tego języka powstają **wszystkie jej nazwy**: nazwa ludu i nazwy
+osad, więc lud ma spójne „brzmienie”, a różne ludy brzmią różnie (np. twardy język: lud *Karrut*, osady *Tarok*, *Urkan*; miękki: lud
+*Elawi*, osady *Mirae*, *Soluan*).
+
+- **Osady dostają nazwy** z języka właściciela przy założeniu (także obozy po odłamie); przy przenosinach obozu nazwa zostaje.
+- **Odłamy, które staną się nowymi cywilizacjami** (secesja, etap 4f), dziedziczą język rodzica z drobnymi zmianami (inne końcówki,
+  zamienione głoski), więc ich nazwy są „spokrewnione” z rodzicem.
+- **Bez listy zakazanych słów.** Gdy komuś nazwa się nie podoba, zmienia ją sam: przy zmianie gra proponuje kilka innych nazw w tym
+  samym języku, a można też wpisać własną. Zmiana to komenda (cywilizacji albo osady), jak każda zmiana stanu.
+- **Tytuł z ustroju** (np. *Kingdom of Karrut*) przyjdzie razem z ustrojami w etapie 4f; do tego czasu nazwa to sam rdzeń
+  (*the Karrut*). Rdzeń się nie zmienia, więc kronika pozostaje czytelna.
+- Technicznie: zasady języków (głoski, wzorce, końcówki) w `data/names.json`; nazwy liczone z ziarna świata i numeru cywilizacji
+  bez zużywania strumieni losowania symulacji (ten sam seed = te same nazwy); tylko litery łacińskie bez znaków diakrytycznych
+  (gra jest po angielsku). Później możliwe „paczki nazw” na zasadzie paczek grafik.
+
 ## 6. Technologie i ery
 
 Technologie tworzą jeden graf zależności przez 10 er, od krzesania ognia po statek międzygwiezdny. Koszt badania zależy od sytuacji: sąsiedzi i partnerzy handlowi znający daną technologię oraz dostęp do potrzebnych surowców wyraźnie go obniżają.
@@ -466,6 +484,10 @@ Ustrój decyduje o dwóch rzeczach naraz: jak szybko państwo podejmuje i wdraż
 | Państwo jednopartyjne | Przemysł | szybko | industrializację, gospodarkę planową | niedobory dóbr codziennych, represje |
 | Autorytaryzm | Nowoczesność | bardzo szybko | mobilizację, wojsko | emigracja, stagnacja nauki |
 | Technokracja | Informacja | średnio | naukę, wydajność | nierówności, opór niższych warstw |
+
+**Tytuł w nazwie cywilizacji** (decyzja z 2026-11-06, do zrobienia w etapie 4f): każdy ustrój ma w danych wzór tytułu, który składa
+się z rdzeniem nazwy ludu (5.6), np. wodzostwo „Chiefdom of Karrut”, despotia „Kingdom of Karrut”, republika miejska „Republic of
+Karrut”. Zmiana ustroju zmienia tytuł, rdzeń zostaje.
 
 **Polityki** działają tak samo: każda ma efekt, czas wdrożenia, koszt utrzymania, wpływ na nastrój poszczególnych warstw i dopływ napięcia. Przykład: gospodarka planowa daje +30% produkcji przemysłowej, ale obniża podaż dóbr codziennych i każdej tury dokłada napięcia.
 
@@ -777,10 +799,14 @@ Do etapu 4 podgląd używa prostych kolorowych heksów. Od etapu 5 używa grafik
 | Jednostki (z kolorem cywilizacji) | 32×32 | 6 + 2 klatki ruchu | Etap 13 |
 | Portrety przywódców | 64×64 | 8 | Etap 13 |
 
+**Paczki grafik** (decyzja Patryka z 2026-11-06): każdy może wrzucić własne grafiki do folderu paczki (`art/packs/` albo folder
+użytkownika) pod nazwami i w rozmiarach z `art/placeholder/manifest.json` i wybrać ją w menu. Gra sprawdza pliki przy uruchomieniu,
+pomija złe (zły rozmiar, nazwa, format) i wypisuje, które nie działają. Kolejność: paczka → grafiki Patryka → grafiki zastępcze.
+
 ### 12.4 Interfejs
 
 - Pełny ekran, skalowanie UI także całkowite. Cały interfejs po angielsku, czcionka pixelowa.
-- **Czcionka: Pixelify Sans** (decyzja Patryka z 2026-11-06). Darmowa z Google Fonts, licencja SIL Open Font License 1.1, więc można ją dołączyć do gry razem z plikiem licencji. Grube wersje na nagłówki i liczby, zwykła na teksty. Rysujemy ją bez wygładzania, w rozmiarach będących wielokrotnością siatki czcionki, żeby piksele były ostre jak w grafikach. Pliki czcionki trafią do zasobów klienta w etapie 13 i są przypisane w motywach Theme, więc motyw ery może ją w przyszłości zmienić.
+- **Czcionka: Pixelify Sans** (decyzja Patryka z 2026-11-06). Darmowa z Google Fonts, licencja SIL Open Font License 1.1, więc można ją dołączyć do gry razem z plikiem licencji. Grube wersje na nagłówki i liczby, zwykła na teksty. Rysujemy ją bez wygładzania, w rozmiarach będących wielokrotnością siatki czcionki, żeby piksele były ostre jak w grafikach. Pliki czcionki są w zasobach klienta od etapu 5 (`game/fonts/`, razem z licencją; prośba Patryka z 2026-11-06 o pikselowy interfejs podglądu) i są przypisane w motywie Theme, więc motyw ery może ją w przyszłości zmienić.
 - **Układ ekranu:** górny pasek (era, rok, kluczowe zasoby, nauka, stabilność), minimapa w prawym dolnym rogu, panel wybranego pola lub osady po lewej, kronika i powiadomienia po prawej, na dole oś czasu z prędkością symulacji.
 - **Widoki mapy** (przełączane klawiszem): polityczny, zasoby, żyzność, zagrożenie AI, relacje dyplomatyczne, handel. Osobny przełącznik: powierzchnia wybranego świata albo widok kosmosu.
 - **Ekrany:** drzewo technologii, przegląd gospodarki (bilans towarów), dyplomacja, wykresy historii, kronika.

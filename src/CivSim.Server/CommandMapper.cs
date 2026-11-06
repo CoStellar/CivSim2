@@ -18,6 +18,7 @@ public static class CommandMapper
         return dto switch
         {
             RenameCivilizationDto r => new RenameCivilizationCommand(r.NewName ?? string.Empty),
+            RenameSettlementDto r => new RenameSettlementCommand(new SettlementId(r.SettlementId), r.NewName ?? string.Empty),
             MoveSettlementDto m when content is not null => new MoveSettlementCommand(content, new SettlementId(m.SettlementId), new HexCoord(m.Col, m.Row)),
             SplitSettlementDto s when content is not null => new SplitSettlementCommand(content, new SettlementId(s.SettlementId), new HexCoord(s.Col, s.Row), s.Percent),
             AbandonSettlementDto a when content is not null => new AbandonSettlementCommand(content, new SettlementId(a.SettlementId), new SettlementId(a.IntoSettlementId)),

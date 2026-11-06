@@ -47,7 +47,8 @@ public class WorldGeneratorTests
     }
 
     // ADR 0018: the state hash includes the clock of every civilization (the map itself is unchanged).
-    private const ulong GoldenWorldHash = 5574553073811392289UL;
+    // Peoples' languages (GDD 5.6): names, language seeds and name counters are in the hash (the map is unchanged).
+    private const ulong GoldenWorldHash = 9331969216296532894UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

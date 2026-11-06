@@ -117,7 +117,9 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(19)] long StepStartMonth = 0,
     [property: Key(20)] int StepMonths = 0,
     [property: Key(21)] long Steps = 0,
-    [property: Key(22)] byte Alarms = 0);
+    [property: Key(22)] byte Alarms = 0,
+    [property: Key(23)] ulong LanguageSeed = 0,
+    [property: Key(24)] long NamesIssued = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]

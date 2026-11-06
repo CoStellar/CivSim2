@@ -1,5 +1,8 @@
-using System.Linq;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
@@ -29,6 +32,9 @@ public sealed class LocalServerHost : IDisposable
     private volatile bool _stopping;
     private volatile string? _error;
     private long _turn;
+    private long _turnLimit;
+    private string? _reportPath;
+    private StreamWriter? _report;
 
     private LocalServerHost(GameServer server)
     {
@@ -50,10 +56,72 @@ public sealed class LocalServerHost : IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
         GameContent content = ContentLoader.Load(dataDirectory);
+        (GameSettings settings, _) = BuildSettings(options, content);
+        var host = new LocalServerHost(GameServer.CreateNew(settings, content))
+        {
+            _turnLimit = Math.Max(0, options.TurnLimit),
+            _reportPath = string.IsNullOrWhiteSpace(options.ReportPath) ? null : options.ReportPath,
+        };
+        host._thread.Start();
+        return host;
+    }
+
+    /// <summary>The planet presets the start menu offers (stage 5), read from the data files.</summary>
+    public static LocalSetupInfo Describe(string? dataDirectory = null)
+    {
+        GameContent content = ContentLoader.Load(dataDirectory);
+        var planets = new List<PlanetPresetInfo>(content.Planets.Count);
+        foreach (PlanetPreset p in content.Planets)
+        {
+            PlanetParameters planet = p.Planet;
+            planets.Add(new PlanetPresetInfo(
+                p.Key,
+                p.Name,
+                planet.AxialTiltTenths,
+                planet.EccentricityThousandths,
+                planet.LuminosityThousandths,
+                planet.DistanceThousandths,
+                planet.YearHundredths,
+                (planet.LightMillionths + 500) / 1000,
+                planet.VolcanismPercent,
+                planet.PressureHundredths,
+                p.WaterPercent,
+                p.Moisture.ToString().ToLowerInvariant(),
+                p.Relief.ToString().ToLowerInvariant()));
+        }
+
+        return new LocalSetupInfo(planets);
+    }
+
+    /// <summary>
+    /// Checks start settings without generating a world: the resulting star, orbit, air and climate, the notes about
+    /// values that were moved into range, or the error that would stop <see cref="Start"/>.
+    /// </summary>
+    public static PlanetPreview Preview(LocalGameOptions options, string? dataDirectory = null)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        try
+        {
+            GameContent content = ContentLoader.Load(dataDirectory);
+            (GameSettings settings, IReadOnlyList<string> notes) = BuildSettings(options, content);
+            settings.Planet.Validate();
+            return new PlanetPreview(PlanetSummary.Lines(settings.Planet), notes, null);
+        }
+#pragma warning disable CA1031 // Any bad setting is shown to the user instead of crashing the menu.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            return new PlanetPreview([], [], ex.Message);
+        }
+    }
+
+    // Turns the client's plain options into core settings (GDD 3, "Ustawienia świata").
+    private static (GameSettings Settings, IReadOnlyList<string> Notes) BuildSettings(LocalGameOptions options, GameContent content)
+    {
         PlanetPreset preset = content.Planets.FirstOrDefault(p => p.Key == options.Planet)
             ?? throw new ArgumentException($"Unknown planet '{options.Planet}'.", nameof(options));
         GameSettings settings = new GameSettings(options.Seed, options.Width, options.Height, options.Civilizations).WithPreset(preset);
-        (PlanetParameters planet, _) = PlanetSetup.Build(preset.Planet, preset.AutoCo2, new PlanetOverrides
+        (PlanetParameters planet, IReadOnlyList<string> notes) = PlanetSetup.Build(preset.Planet, preset.AutoCo2, new PlanetOverrides
         {
             AxialTiltTenths = options.AxialTiltTenths,
             EccentricityThousandths = options.EccentricityPerMille,
@@ -77,9 +145,7 @@ public sealed class LocalServerHost : IDisposable
             Relief = options.Relief is null ? settings.Relief : Parse<WorldRelief>(options.Relief),
             Resources = Parse<WorldResources>(options.Resources),
         };
-        var host = new LocalServerHost(GameServer.CreateNew(settings, content));
-        host._thread.Start();
-        return host;
+        return (settings, notes);
     }
 
     /// <summary>Opens a new in-memory connection to the server. Send Hello on it first.</summary>
@@ -141,6 +207,12 @@ public sealed class LocalServerHost : IDisposable
                     _server.AdvanceTurn(sendViews: !max);
                     unsent = max;
                     ran = true;
+                    Report();
+                    if (_turnLimit > 0 && _server.State.Turn == _turnLimit)
+                    {
+                        _server.Pause($"Turn limit {_turnLimit} reached; the simulation is paused.");
+                        unsent = true;
+                    }
                 }
 
                 if (unsent && (_server.Speed != SimulationSpeed.Max || Stopwatch.GetElapsedTime(lastSend) >= MaxSpeedViewInterval))
@@ -168,5 +240,46 @@ public sealed class LocalServerHost : IDisposable
         {
             _error = ex.ToString();
         }
+        finally
+        {
+            _report?.Dispose();
+            _report = null;
+        }
+    }
+
+    // One CSV line per turn (start menu option "turn report"): turn, year, turn time, people, lived-in settlements.
+    private void Report()
+    {
+        if (_reportPath is null)
+        {
+            return;
+        }
+
+        if (_report is null)
+        {
+            string? dir = Path.GetDirectoryName(Path.GetFullPath(_reportPath));
+            if (!string.IsNullOrEmpty(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            _report = new StreamWriter(_reportPath, append: false) { AutoFlush = true };
+            _report.WriteLine("turn,year,turn_ms,people,settlements");
+        }
+
+        GameState state = _server.State;
+        long people = 0;
+        int settlements = 0;
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (s.IsActive)
+            {
+                people += s.TotalPopulation();
+                settlements++;
+            }
+        }
+
+        double ms = _server.LastTurnMicroseconds / 1000.0;
+        _report.WriteLine(string.Create(CultureInfo.InvariantCulture, $"{state.Turn},{state.Month / 12},{ms:F2},{people},{settlements}"));
     }
 }

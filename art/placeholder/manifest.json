@@ -1,0 +1,706 @@
+{
+ "version": 1,
+ "comment": "Every picture the viewer loads, with its size in pixels. An art pack (art/packs/<name>/ or user://art_packs/<name>/) and art/export/ may hold any of these files under the same path; the viewer checks each one at start and ignores files with another size, broken files and unknown names.",
+ "files": [
+  {
+   "file": "biome/biome_coast_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_coast_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_coast_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_deciduous_forest_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_deciduous_forest_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_deciduous_forest_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_deep_ocean_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_deep_ocean_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_deep_ocean_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_desert_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_desert_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_desert_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_grassland_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_grassland_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_grassland_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_ice_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_ice_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_ice_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_jungle_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_jungle_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_jungle_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_lake_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_lake_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_lake_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_savanna_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_savanna_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_savanna_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_shallow_sea_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_shallow_sea_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_shallow_sea_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_steppe_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_steppe_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_steppe_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_swamp_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_swamp_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_swamp_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_taiga_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_taiga_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_taiga_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_tundra_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_tundra_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "biome/biome_tundra_03.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "effects/event_damage.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "effects/event_depopulation.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "effects/event_extraction_reduction.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "effects/event_mood_drop.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "effects/event_movement_restriction.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "effects/event_movement_slowdown.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_bauxite.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_cattle.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_clay.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_coal.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_copper.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_fish.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_flint.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_game.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_gold.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_horses.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_iron_ore.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_lithium.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_marble.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_oil.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_salt.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_saltpeter.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_sheep.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_silver.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_stone.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_tin.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_uranium.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/deposit_wild_grain.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "objects/improvement_field_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_camp_abandoned.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_camp_active.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_camp_ruins.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_town_abandoned.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_town_active.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_town_ruins.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_village_abandoned.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_village_active.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_village_ruins.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_hills_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_hills_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_ice_field_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_mountains_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_mountains_02.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_oasis_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_reef_01.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_n_river.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_n_stream.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_ne_river.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_ne_stream.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_nw_river.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_nw_stream.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_s_river.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_s_stream.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_se_river.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_se_stream.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_sw_river.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "terrain/terrain_river_sw_stream.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "ui/button_disabled.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_hover.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_normal.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_pressed.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/check_off.png",
+   "width": 8,
+   "height": 8
+  },
+  {
+   "file": "ui/check_on.png",
+   "width": 8,
+   "height": 8
+  },
+  {
+   "file": "ui/field.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/frame_bar.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_header.png",
+   "width": 24,
+   "height": 16
+  },
+  {
+   "file": "ui/frame_panel.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/icon_layer_biomes.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_borders.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_deposits.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_elevation.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_events.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_fertility.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_fields.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_fog.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_growing.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_hillshade.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_humidity.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_influence.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_owner.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_relations.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_rivers.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_season_now.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_seasons.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_settlements.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_temperature.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_units.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_layer_wild_food.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/icon_settings.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/scroll_grabber.png",
+   "width": 6,
+   "height": 12
+  },
+  {
+   "file": "ui/slider_fill.png",
+   "width": 8,
+   "height": 6
+  },
+  {
+   "file": "ui/slider_grabber.png",
+   "width": 6,
+   "height": 10
+  },
+  {
+   "file": "ui/slider_track.png",
+   "width": 8,
+   "height": 6
+  },
+  {
+   "file": "ui/tab_selected.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_unselected.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tooltip.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "units/unit_migrants_idle_01.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "units/unit_scout_idle_01.png",
+   "width": 32,
+   "height": 32
+  }
+ ]
+}

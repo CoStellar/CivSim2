@@ -69,6 +69,12 @@ public sealed class CivilizationState
     /// <summary>Game month from which the strategist reviews the goals again.</summary>
     public long StrategyReviewMonth { get; set; }
 
+    /// <summary>Seed of the people's language (GDD 5.6); every name of the civilization comes from it.</summary>
+    public ulong LanguageSeed { get; set; }
+
+    /// <summary>Names the language has handed out so far (the next name's number).</summary>
+    public long NamesIssued { get; set; }
+
     /// <summary>Era of the last strategy review: a new era is a shock that brings a review at once.</summary>
     public int StrategyEra { get; set; } = -1;
 

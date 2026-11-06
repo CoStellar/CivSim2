@@ -79,6 +79,8 @@ public static class GameStateHash
         {
             h.Add(c.Id.Value);
             h.Add(c.Name);
+            h.Add(c.LanguageSeed);
+            h.Add(c.NamesIssued);
             h.Add(c.IsAlive);
             h.Add(c.StartCell.Col);
             h.Add(c.StartCell.Row);

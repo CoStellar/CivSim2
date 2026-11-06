@@ -66,5 +66,7 @@ public class DeterminismTests
 
     // ADR 0018: the world clock and the civilizations' own rhythms joined the state (in a world where everyone is in the
     // same era the simulation runs as before).
-    private const ulong GoldenHash = 4464857234104868100UL;
+    // Names from peoples' languages (GDD 5.6): names, language seeds and name counters joined the hash; the simulation
+    // itself is unchanged (statistics of 300 turns identical before and after).
+    private const ulong GoldenHash = 1694236306854303837UL;
 }

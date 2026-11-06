@@ -138,6 +138,8 @@ Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **B** warto�
 - [ ] Charakter cywilizacji i przywódcy, sukcesja (charakter cywilizacji gotowy w 4b)
 - [ ] Odkrywanie cywilizacji (zwiad, kontakt, pogłoski), pamięć relacji, umowy (pokój, wojna, handel, sojusz), wojna z celem, wynikiem i zmęczeniem, armie na jednym polu, uproszczone zaopatrzenie, plemiona niezależne
 - [ ] 3–4 ustroje z tempem decyzji (ustrój zmienia spadek stabilności), stabilność, bunty, secesja, administracja
+- [ ] W 4f: **tytuł ustroju w nazwie cywilizacji** (wzór tytułu w danych ustroju + rdzeń z języka ludu, GDD 5.6 i 7.2) i **język nowej cywilizacji z secesji** dziedziczony po rodzicu z mutacją (`NameLanguage.Mutate`, decyzja Patryka z 2026-11-06)
+- [x] **Nazwy z języków ludów** (GDD 5.6, `docs/systems/names.md`): język na cywilizację z `data/names.json`, nazwy ludów i osad, zmiana nazwy przez obserwatora z propozycjami w tym samym języku
 - [ ] Panel „Dlaczego?” i wpisy w kronice
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
@@ -146,10 +148,14 @@ Zaraz po etapie 4. Cel: łatwiej oceniać symulację, bez grzebania w argumentac
 
 Gotowe, gdy: Patryk uruchamia podgląd, ustawia świat i symulację w menu, startuje grę i ogląda mapę z kilkoma warstwami naraz, na których widać osady, jednostki i złoża.
 
-- [ ] **Menu startowe podglądu:** ustawienia świata z GDD 3 (seed, rozmiar mapy, typ świata, procent wody, klimat, wilgotność, rzeźba, zasoby, planeta lub własne parametry gwiazdy i orbity, liczba cywilizacji) i symulacji (prędkość, limit tur, opcje raportów); przycisk „Start” uruchamia serwer z tymi ustawieniami; ostatnie ustawienia zapamiętane; argumenty uruchomienia dalej działają
-- [ ] **Widok warstw:** jeden widok, w którym warstwy nakładają się z przezroczystością zamiast przełączania jednej nakładki: biomy (podkład), żyzność, temperatura, złoża, właściciel, strefy wpływów, relacje, pamięć mapy i mgła; każdą warstwę można włączyć i wyłączyć, ustawić jej przezroczystość i kolejność; granice i ikony rysowane tak, żeby nie zasłaniały biomu
-- [ ] **Grafiki zastępcze (placeholdery):** proste grafiki robione przeze mnie w paletcie `art/palette/civsim2_palette.gpl`, w rozmiarach i pod nazwami z GDD 12.3, dla tego, co już działa: biomy, wzgórza i góry, rzeki, złoża, obozy, wioski, osady opuszczone i ruiny, pola uprawne, zwiadowcy i wędrujące grupy, oznaczenia zdarzeń; kolor cywilizacji przez zarezerwowane odcienie magenty; Twoje grafiki z etapu 13 podmieniają je bez zmian w kodzie
-- [ ] Aktualizacja `docs/systems/viewer.md`
+- [x] **Menu startowe podglądu:** ustawienia świata z GDD 3 (seed, rozmiar mapy, typ świata, procent wody, klimat, wilgotność, rzeźba, zasoby, planeta lub własne parametry gwiazdy i orbity, liczba cywilizacji) i symulacji (prędkość, limit tur, raport CSV); podgląd planety z prawdziwych wzorów; przycisk „Start” uruchamia serwer z tymi ustawieniami; ostatnie ustawienia zapamiętane; argumenty uruchomienia dalej działają
+- [x] **Widok warstw:** biomy z terenem jako podkład, warstwy pól mieszane z przezroczystością (wysokość i głębokość wody, cieniowanie rzeźby, temperatura, wilgotność, żyzność, sezon wzrostu, pory roku, dzika żywność, złoża, właściciel, strefy wpływów, pamięć mapy i mgła śledzonej cywilizacji) i warstwy rysowane (rzeki, pola, granice, osady, jednostki, zdarzenia, stosunki); włączanie ikonami w pasku, przezroczystość i kolejność w oknie ustawień warstw; granice po krawędziach heksów
+- [x] **Grafiki zastępcze (placeholdery):** skrypt `art/placeholder/generate.py` w palecie, nazwy i rozmiary z GDD 12.3: biomy (3 warianty), wzgórza i góry, cechy terenu, rzeki (6 krawędzi × 2 szerokości), ikony złóż, osady (obóz, wioska, miasteczko × 3 stany), pole uprawne, wędrujący obóz i zwiadowca, znaczniki zdarzeń, ikony warstw i ramki interfejsu; kolor cywilizacji przez magenty i shader; pliki w `art/export/` podmieniają je pod tymi samymi nazwami
+- [x] **Śledzenie cywilizacji** (prośba Patryka z 2026-11-06): tabela wszystkich cywilizacji, wykresy ludności, osad i technologii w czasie, panel śledzonej (ludność, osady, jedzenie, badania, charakter, cele, zapasy, stosunki ze wspomnieniami), kamera „Go” i „Track”, kronika tylko o niej
+- [x] **Pikselowy interfejs** (prośba Patryka z 2026-11-06): nieprzezroczyste ramki 9-slice z grafik zastępczych, czcionka Pixelify Sans (wcześniej niż w etapie 13), mniejsza kronika, panele do schowania
+- [x] **Paczki grafik** (prośba Patryka z 2026-11-06): folder z PNG w `art/packs/` lub w folderze użytkownika, wybór w menu, sprawdzenie nazw, formatu i rozmiarów przy uruchomieniu, lista złych plików w menu, w `art_check.txt` i w konsoli
+- [x] Aktualizacja `docs/systems/viewer.md`
+- [ ] Patryk ogląda podgląd u siebie (FPS na karcie graficznej, czy warstwy i panele są wygodne)
 
 ## Etapy 6–12 — Ery 3–9
 

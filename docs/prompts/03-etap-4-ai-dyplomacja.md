@@ -42,7 +42,7 @@ Brakuje całkiem: relacji między cywilizacjami (nawet „kto kogo zna”), umó
 | 4c | **Odkrywanie cywilizacji i pamięć relacji:** kontakt przez zwiad i zetknięcie stref, pogłoski, lista wydarzeń z wagą i wygasaniem, sympatia i zaufanie, wpis w kronice | 8.5 |
 | 4d | **Dyplomacja i handel między cywilizacjami:** pokój, wojna, umowa handlowa, pakt, sojusz; propozycje oceniane przez dyplomatę drugiej strony; handel bez transportu fizycznego (jak w 3e), dyfuzja i choroby po kontaktach | 9.1, 9.2 |
 | 4e | **Wojna:** cel wojny, armie na jednym polu, bitwa w rundach, uproszczone zaopatrzenie, wynik i zmęczenie wojną, pokój z warunkami, plemiona niezależne | 9.3, 9.4 |
-| 4f | **Państwo:** 3–4 ustroje z tempem decyzji, stabilność, bunty, secesja, administracja; przywódca i sukcesja | 7.2, 8.4 |
+| 4f | **Państwo:** 3–4 ustroje z tempem decyzji, stabilność, bunty, secesja, administracja; przywódca i sukcesja. **Do zaimportowania przy okazji (decyzje Patryka z 2026-11-06):** tytuł ustroju w nazwie cywilizacji (wzór tytułu w danych ustroju + rdzeń nazwy z języka ludu, GDD 5.6 i 7.2) oraz język nowej cywilizacji z secesji jako mutacja języka rodzica (`NameLanguage.Mutate`) | 5.6, 7.2, 8.4 |
 | 4g | **Testy wsadowe:** 100 gier AI kontra AI w `CivSim.Headless` z metrykami (wojny, sojusze, upadki, głód bez reakcji) i raportem dla Patryka | 8.7 |
 
 Kolejność ma znaczenie: 4a jest bazą dla reszty, 4c przed 4d i 4e.

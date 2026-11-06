@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -40,6 +41,7 @@ public static class ContentLoader
         PerceptionRules perception = LoadPerception(Path.Combine(directory, "perception.json"), errors);
         AiRules ai = LoadAi(Path.Combine(directory, "ai.json"), errors);
         Core.Diplomacy.RelationRules relations = LoadRelations(Path.Combine(directory, "relations.json"), errors);
+        Core.Naming.NameRules names = LoadNames(Path.Combine(directory, "names.json"), errors);
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
@@ -83,6 +85,7 @@ public static class ContentLoader
             Perception = perception,
             Ai = ai,
             Relations = relations,
+            Names = names,
             Treaties = treaties,
             Events = events,
             Technologies = technologies,
@@ -1021,6 +1024,93 @@ public static class ContentLoader
             SplitMinPercentOfLevel = r.Int("splitMinPercentOfLevel", 1, 100),
             SearchEverySteps = r.Int("searchEverySteps", 1, 20),
             StarvingFedPercent = r.Int("starvingFedPercent", 0, 100),
+        };
+    }
+
+    // Peoples' languages (GDD 5.6): pools of hard and soft sounds, syllable patterns and name lengths.
+    private static Core.Naming.NameRules LoadNames(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Naming.NameRules();
+        }
+
+        string file = Path.GetFileName(path);
+        JsonElement root = doc.RootElement;
+        var r = new Reader(root, file, errors);
+
+        (IReadOnlyList<string>, IReadOnlyList<string>) Pools(string name)
+        {
+            if (!root.TryGetProperty(name, out JsonElement e) || e.ValueKind != JsonValueKind.Object)
+            {
+                errors.Add($"{file}.{name}: required object with \"hard\" and \"soft\" lists.");
+                return ([], []);
+            }
+
+            var x = new Reader(e, $"{file}.{name}", errors);
+            List<string> hard = x.StringList("hard");
+            List<string> soft = x.StringList("soft");
+            foreach (string part in hard.Concat(soft))
+            {
+                if (part.Length == 0 || !part.All(c => c is >= 'a' and <= 'z'))
+                {
+                    errors.Add($"{file}.{name}: '{part}' must be lower-case letters a-z (the game is in English).");
+                }
+            }
+
+            return (hard, soft);
+        }
+
+        var patterns = new List<(string, int)>();
+        if (root.TryGetProperty("patterns", out JsonElement p) && p.ValueKind == JsonValueKind.Object)
+        {
+            foreach (JsonProperty pattern in p.EnumerateObject())
+            {
+                if (pattern.Name.Length == 0 || !pattern.Name.All(c => c is 'C' or 'V' or 'K') || !pattern.Value.TryGetInt32(out int weight) || weight < 0)
+                {
+                    errors.Add($"{file}.patterns.{pattern.Name}: a pattern of C, V and K with a weight of 0 or more.");
+                    continue;
+                }
+
+                patterns.Add((pattern.Name, weight));
+            }
+        }
+
+        if (patterns.Count == 0 || patterns.All(x => x.Item2 == 0))
+        {
+            errors.Add($"{file}.patterns: required, with at least one weight above 0.");
+        }
+
+        if (!root.TryGetProperty("language", out JsonElement l) || l.ValueKind != JsonValueKind.Object
+            || !root.TryGetProperty("mutation", out JsonElement m) || m.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add($"{file}: required objects \"language\" and \"mutation\".");
+            return new Core.Naming.NameRules();
+        }
+
+        var language = new Reader(l, $"{file}.language", errors);
+        var mutation = new Reader(m, $"{file}.mutation", errors);
+        return new Core.Naming.NameRules
+        {
+            Consonants = Pools("consonants"),
+            Vowels = Pools("vowels"),
+            Codas = Pools("codas"),
+            PeopleEndings = Pools("peopleEndings"),
+            PlaceEndings = Pools("placeEndings"),
+            Patterns = patterns,
+            LanguageConsonants = language.Range("consonants", 1, 40),
+            LanguageVowels = language.Range("vowels", 1, 20),
+            LanguageCodas = language.Range("codas", 0, 20),
+            LanguagePeopleEndings = language.Range("peopleEndings", 0, 20),
+            LanguagePlaceEndings = language.Range("placeEndings", 0, 20),
+            DoubledPercent = language.Range("doubledPercent", 0, 100),
+            PeopleEndingPercent = language.Int("peopleEndingPercent", 0, 100),
+            PlaceEndingPercent = language.Int("placeEndingPercent", 0, 100),
+            PeopleSyllables = r.Range("peopleSyllables", 1, 6),
+            PlaceSyllables = r.Range("placeSyllables", 1, 6),
+            Length = r.Range("length", 2, 30),
+            Mutation = (mutation.Int("consonants", 0, 20), mutation.Int("vowels", 0, 20), mutation.Int("endings", 0, 20)),
         };
     }
 
