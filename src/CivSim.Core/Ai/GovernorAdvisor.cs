@@ -283,9 +283,11 @@ public sealed class GovernorAdvisor : Advisor
                 farmers = s.SkilledView[farming] == 0 ? 0 : (int)((long)producers * _content.Skills[farming].JobsPercent / 100);
             }
 
-            long farm = FarmFood(world, s, farmers);
-            long eat = GroupFoodNeed(s, 100);
             long gather = Math.Min(SiteFood(world, s.Cell), _rules.FoodPerWorkerPerYear.Hundredths * producers);
+
+            // The village's food: what its farmers grow, and what its other producers go on gathering (stage 4F).
+            long farm = FarmFood(world, s, farmers) + (producers == 0 ? 0 : gather * (producers - farmers) / producers);
+            long eat = GroupFoodNeed(s, 100);
             long wander = (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral;
             if (farm * 100 >= eat * _content.Ai.SettleFarmYieldPercent
                 && farm * 100 * Factor.Neutral >= gather * _content.Ai.SettleOverGatheringPercent * wander)

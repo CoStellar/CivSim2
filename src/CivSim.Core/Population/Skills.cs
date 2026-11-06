@@ -204,7 +204,8 @@ public static class Skills
 
     /// <summary>
     /// Moves <paramref name="percent"/> of the skilled people and apprentices of <paramref name="from"/> to
-    /// <paramref name="to"/> (rounded down, as a split takes its people); 100 moves them all.
+    /// <paramref name="to"/> (rounded down, as a split takes its people, but at least one of each skill while one
+    /// stays behind); 100 moves them all. The people themselves are moved by the caller.
     /// </summary>
     public static void Move(SettlementState from, SettlementState to, int percent)
     {
@@ -215,6 +216,14 @@ public static class Skills
         for (int k = 0; k < skilled.Length && k < to.SkilledView.Length; k++)
         {
             int ks = percent >= 100 ? skilled[k] : (int)((long)skilled[k] * percent / 100);
+
+            // A group that leaves takes at least one of each skill along while one stays behind (settlers take a
+            // farmer, so that their camp can settle and teach the others).
+            if (ks == 0 && percent > 0 && skilled[k] >= 2)
+            {
+                ks = 1;
+            }
+
             int kt = percent >= 100 ? trainees[k] : (int)((long)trainees[k] * percent / 100);
             skilled[k] -= ks;
             trainees[k] -= kt;
