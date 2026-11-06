@@ -481,7 +481,9 @@ public class DeadValueTests
         foreach (CivilizationState civ in state.Civilizations)
         {
             // Every step of the Neolithic peoples plans production now.
+            // A step of a whole settlers' period, so every village is due to send settlers (G7) whatever its stagger.
             civ.StepMonths = Math.Max(civ.StepMonths, CivSim.Core.Simulation.WorldClock.RhythmMonths(Content, state, civ));
+            civ.StepMonths = Math.Max(civ.StepMonths, Content.Ai.VillageSettlersEveryYears * 12);
             civ.Traits[(int)Trait.Tradefulness] = 500;
             foreach (SettlementState s in state.Settlements.Where(x => x.Owner == civ.Id && x.IsActive))
             {

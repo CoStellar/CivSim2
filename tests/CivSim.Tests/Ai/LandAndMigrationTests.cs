@@ -94,7 +94,8 @@ public class LandAndMigrationTests
             c.StepMonths = 0; // only this civilization plans now
         }
 
-        civ.StepMonths = CivSim.Core.Simulation.WorldClock.RhythmMonths(Content, state, civ);
+        // A step of a whole settlers' period (villageSettlersEveryYears), so the village is due whatever its stagger.
+        civ.StepMonths = Content.Ai.VillageSettlersEveryYears * 12;
         var council = new AiCouncil(Content);
         council.IssueCommands(state, new CommandQueue());
         return council.Log.Entries.Count(d => d.Action == AiAction.SendSettlers && d.Subject == village.Id.Value);

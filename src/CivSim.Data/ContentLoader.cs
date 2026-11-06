@@ -1044,6 +1044,7 @@ public static class ContentLoader
             VillageSettlersAbovePercent = r.Int("villageSettlersAbovePercent", 1, 100),
             VillageWornBelowPercent = r.Int("villageWornBelowPercent", 0, 100),
             VillageSettlersPeople = r.Int("villageSettlersPeople", 1, 100_000),
+            VillageSettlersEveryYears = r.Int("villageSettlersEveryYears", 1, 100_000),
             ExploreAbovePerMille = r.Int("exploreAbovePerMille", 0, 1_000_000),
             ExploreLookCells = r.Int("exploreLookCells", 1, 20),
             ExploreUnknownPercent = r.Int("exploreUnknownPercent", 0, 100),

@@ -32,6 +32,7 @@
   "villageSettlersAbovePercent": 80,
   "villageWornBelowPercent": 70,
   "villageSettlersPeople": 60,
+  "villageSettlersEveryYears": 100,
   "exploreAbovePerMille": 1500,
   "exploreLookCells": 3,
   "exploreUnknownPercent": 30,

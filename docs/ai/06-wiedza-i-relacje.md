@@ -8,8 +8,10 @@ To nie są decyzje. To dane, z których AI korzysta przy decyzjach.
 ## W1: Pamięć mapy
 
 - W każdym **własnym kroku** cywilizacji (ADR 0018) każda jej zamieszkana osada **widzi 6 pól** wokół siebie (`sightCells`).
-- W każdym własnym kroku każda zamieszkana osada wysyła **zwiadowcę** w losowym kierunku (strumień `population`): idzie do 15 pól (`scoutCells`)
-  prosto po lądzie i lodzie morskim, skręca losowo przy wodzie, widzi pola obok swojej drogi.
+- Każda zamieszkana osada wysyła **2 zwiadowców na stulecie** (`scoutsPerCentury`, od PR C tempo na rok, zasada 6): w kroku
+  50-letnim jednego, w 25-letnim jednego z szansą 50%, w rocznym jednego z szansą 2% (strumień `population`). Zwiadowca idzie w
+  losowym kierunku do 15 pól (`scoutCells`) prosto po lądzie i lodzie morskim, skręca losowo przy wodzie, widzi pola obok swojej drogi.
+  Dawniej szedł jeden w każdym własnym kroku, więc rozwinięte cywilizacje (krótkie kroki) odkrywały świat wielokrotnie szybciej.
 - Pole jest **znane** przez 300 lat od ostatniego zobaczenia (`oralMemoryYears`), potem zapomniane, chyba że plemię wróci.
 - Kto używa: G2 i G3 (kandydaci muszą być znani), G6 (łupy tylko ze znanych pól, od PR B), S1 (cel ekspansji musi być znany), W2.
 

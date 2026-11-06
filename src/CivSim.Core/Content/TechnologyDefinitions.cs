@@ -231,6 +231,9 @@ public sealed record AiRules
     /// <summary>People who leave a village as settlers (at most 90% of it).</summary>
     public int VillageSettlersPeople { get; init; } = 60;
 
+    /// <summary>A village sends at most one group of settlers in this many years (rule 6; staggered by village).</summary>
+    public int VillageSettlersEveryYears { get; init; } = 100;
+
     /// <summary>
     /// A camp sends explorers when expansion weight × expansiveness × curiosity (per mille, 1000 = neutral) reaches this.
     /// </summary>

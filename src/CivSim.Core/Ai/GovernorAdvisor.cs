@@ -348,6 +348,16 @@ public sealed class GovernorAdvisor : Advisor
             return;
         }
 
+        // At most one group per period of years (rule 6), staggered by village so that not all villages go at once.
+        // The village plans once per own step, or once per era-length period with live seasons.
+        long period = _content.Ai.VillageSettlersEveryYears * 12L;
+        long window = Math.Max(civ.StepMonths, Simulation.WorldClock.EraMonths(_content, civ.Era));
+        long offset = s.Id.Value * 97L % period;
+        if (window < period && (state.Month + offset) / period == (state.Month - window + offset) / period)
+        {
+            return;
+        }
+
         int max = _content.SettlementLevels[s.Level].MaxPopulation;
         long drive = Math.Max(1, (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral);
         long settleAbove = Math.Clamp(_content.Ai.VillageSettlersAbovePercent * Factor.Neutral / drive, _content.Ai.SplitMinPercentOfLevel, 100);
@@ -360,7 +370,13 @@ public sealed class GovernorAdvisor : Advisor
         }
 
         // A group the size of a new camp leaves, however big the village is.
+        // Each stratum gives its share rounded down, so the share grows until the group is whole.
         int percent = (int)Math.Clamp(_content.Ai.VillageSettlersPeople * 100L / people, 1, 90);
+        while (percent < 90 && GroupPeople(s, percent) < _content.Ai.VillageSettlersPeople)
+        {
+            percent++;
+        }
+
         long need = GroupFoodNeed(s, percent) * _rules.SplitNeedsFoodPercent / 100;
         (HexCoord site, Evaluation go) = BestSite(state, world, civ, s, splitting: true, RandomFor(state, s.Id.Value));
         if (go.Value > 0 && SiteFood(world, site) >= need)
@@ -808,6 +824,19 @@ public sealed class GovernorAdvisor : Advisor
     }
 
     // Food per year the leaving share of the people needs (hundredths).
+    // People who go when percent of each stratum leaves (rounded down per stratum, as the split commands do).
+    private static int GroupPeople(SettlementState s, int percent)
+    {
+        int going = 0;
+        ReadOnlySpan<int> people = s.PopulationView;
+        for (int k = 0; k < people.Length; k++)
+        {
+            going += (int)((long)people[k] * percent / 100);
+        }
+
+        return going;
+    }
+
     private long GroupFoodNeed(SettlementState s, int percent)
     {
         long need = 0;
@@ -828,8 +857,11 @@ public sealed class GovernorAdvisor : Advisor
             return true;
         }
 
+        // A split group also keeps out of the zones of its own settlements: the zone of the bigger settlement takes the
+        // land, and a new camp inside it would gather nothing (found in PR C measurements: settlers starved).
         int i = world.Geometry.Index(c);
-        return _occupiedAt[i] != _stamp && (!splitting || _nearOwnAt[i] != _civStamp);
+        return _occupiedAt[i] != _stamp
+            && (!splitting || (_nearOwnAt[i] != _civStamp && world.Map.Owner[i] != from.Owner.Value));
     }
 
     private void Take(WorldState world, HexCoord cell)

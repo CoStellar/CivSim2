@@ -130,9 +130,13 @@ handel barterowy między najbliższymi osadami partnerów bez karawan; handel bu
 kroki przypięte do kalendarza bez utraty lat; decyzje reaktywne na wojnę, napad, propozycję i koniec badania; odstępy AI w własnych krokach; zapis w formacie 19),
 **B: wartości** (decyzja Patryka z 2026-11-06, ADR 0019: każda opcja służy celowi; uczony liczy priorytet technologii z położenia, braków i
 charakteru, a koszt jest przeszkodą łagodzoną ciekawością; skarbnik koordynuje osady sieci, jedzenie kontra wyroby, premia za handel;
-strateg: waga nauki i wpływu; obce obozy tylko z pól widzianych teraz; liczby strojenia w `data/ai.json`; test martwych wartości).
+strateg: waga nauki i wpływu; obce obozy tylko z pól widzianych teraz; liczby strojenia w `data/ai.json`; test martwych wartości),
+**C: ziemia i migracje** (gubernator wycenia ziemię z technologiami cywilizacji i wodą dla rybaków; plon rolny dla prawdziwej liczby rolników,
+osiedlenie porównane ze zbieractwem i ekspansywnością; wioska wysyła osadników, gdy jest pełna albo ma wyjałowione pola; wyprawy w nieznane
+dla ciekawych i ekspansywnych; zwiadowcy i marsz na stulecie; kolumny `settlements` i `spread_cells` w statystykach Headless).
 
-Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **C** ocena ziemi i migracje, **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
+Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
+Przeprowadzka całej wioski (z planu C) jeszcze nie: czeka na koszt porzucanych pól i budynków (etap budowli).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
 - [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji (kierunek ekspansji z wartości wolnej ziemi gotowy w 4b)

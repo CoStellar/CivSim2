@@ -35,7 +35,16 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `journeyPenaltyPerMillePerCell` | 10 | ‰ na pole | G3 | spadek bliskości dalekiego miejsca (dawniej w kodzie) |
 | `farSearchEveryCells` | 3 | pola | G3, S1 | gęstość siatki dalekich kandydatów (dawniej w kodzie) |
 | `targetZeroAtJourneys` | 2 | promienie wędrówki | S1 | w jakiej odległości cel ekspansji traci całą wartość (dawniej w kodzie) |
-| `settleFarmYieldPercent` | 150 | % | G4 | ile potrzeb musi dać plon z pól, żeby osiąść (dawniej w kodzie) |
+| `settleFarmYieldPercent` | 150 | % | G4 | ile potrzeb musi dać plon z pól prawdziwych producentów, żeby osiąść (dawniej w kodzie) |
+| `settleOverGatheringPercent` | 100 | % × zapał | G4 | ile tego, co obóz zbiera dziś, musi dać rolnictwo; ekspansywni chcą więcej (PR C) |
+| `villageSettlersAbovePercent` | 80 | % / zapał | G7 | od jakiego zapełnienia wioska wysyła osadników (PR C) |
+| `villageWornBelowPercent` | 70 | % | G7 | poniżej jakiej żyzności pól (wobec naturalnej) wioska wysyła osadników (PR C) |
+| `villageSettlersPeople` | 60 | osoby | G7 | ilu osadników wychodzi (PR C) |
+| `villageSettlersEveryYears` | 100 | lata | G7 | najwyżej jedna grupa osadników z wioski na tyle lat (PR C) |
+| `exploreAbovePerMille` | 1500 | ‰ | G8 | próg zapału odkrywcy: waga ekspansji × ekspansywność × ciekawość (PR C) |
+| `exploreLookCells` | 3 | pola | G8 | w jakim promieniu liczy się nieznany ląd (PR C) |
+| `exploreUnknownPercent` | 30 | % | G8 | ile lądu wokół musi być nieznane (PR C) |
+| `exploreGroupPercent` | 25 | % | G8 | jaka część obozu idzie na wyprawę (PR C) |
 | `plunderBelowStoragePercent` | 50 | % | G6 | poniżej jakiego zapełnienia magazynu obóz zbiera porzucone dobra (dawniej w kodzie) |
 | `uncomfortableBelowPercent` | 100 | % | G2 | poniżej tej wygody obóz szuka nowego miejsca (dawniej w kodzie) |
 | `opinionSwingPercent` | 50 | % | G2 | jak mocno sympatia zmienia chęć wypędzenia: ±50% przy pełnej sympatii albo nienawiści (dawniej „/ 20” w kodzie) |
@@ -61,7 +70,7 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 
 | Klucz | Wartość | Jednostka | Decyzje | Znaczenie |
 | --- | --- | --- | --- | --- |
-| `migration.maxMoveCells` | 10 | pola | G1, G2, G5, G6, marsz G3 | zasięg jednego ruchu |
+| `migration.maxMoveCells` | 10 | pola | G1, G2, G5, G6, G7, G8, marsz G3 | zasięg jednego ruchu |
 | `migration.moveWhenFedBelowPercent` | 95 | % | G2 | poniżej tego obóz jest „głodny” |
 | `migration.moveWhenBetterByPercent` | 30 | % | G2 (G3: × 2) | histereza przeprowadzki |
 | `migration.minStepsBetweenMoves` | 2 | własne kroki | G2, G3 | odpoczynek po przeprowadzce (nie dotyczy reakcji na napad) |
@@ -84,7 +93,8 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `gathering.foodPerBiomeFoodPerYear` | 4 | jedzenie | wartość miejsca | jedzenie pola na rok na punkt jedzenia biomu |
 | `conquest.defenderNonWarriorPercent` | 25 | % | G2 | ile nie-wojowników liczy się do obrony |
 | `farming.grainPerFarmerPerYear` | 3 | zboże | G4 | plon jednego rolnika |
-| `farming.farmersPerCell` | 40 | osoby | G4 | rolników na pole w rachunku osiedlenia |
+| `farming.farmersPerCell` | 40 | osoby | G4 | najwięcej rolników na pole (rachunek osiedlenia jak system rolnictwa) |
+| `gathering.foodPerWorkerPerYear` | 2 | jedzenie | G4 | ile zbiera producent na rok (porównanie z rolnictwem, PR C) |
 | `farming.minFertility` | 20 | punkty | G4 | pole słabsze nie daje zboża |
 
 ## `data/diplomacy.json` (od 4d)
@@ -113,7 +123,9 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `settlements.json` `carrying.perPerson` | 10 | G1, G2, G5, G6 | ile dóbr niesie osoba |
 | `settlements.json` `abandonment.claimYears` | 100 | R4 | jak długo trwa roszczenie do porzuconej osady |
 | `perception.json` `sightCells` | 6 | W1 | widzenie osady |
-| `perception.json` `scoutCells` | 15 | W1 | zasięg zwiadowcy |
+| `perception.json` `scoutCells` | 15 | W1 | zasięg jednego zwiadowcy |
+| `perception.json` `scoutsPerCentury` | 2 | W1 | zwiadowców na stulecie z każdej osady (PR C, tempo na rok) |
+| `perception.json` `marchCellsPerCentury` | 20 | G3 | pól marszu wędrówki na stulecie (PR C; najwyżej `maxMoveCells` na krok) |
 | `perception.json` `oralMemoryYears` | 300 | W1 | jak długo pamięta pole |
 | `perception.json` `journeyCells` | 40 | G3, S1 | zasięg wędrówki i szukania celu |
 | `strata.json` potrzeby | 1 jedzenie/rok (producent, rzemieślnik), 1,2 (wojownik) | G4, G5 | potrzeby jedzenia |

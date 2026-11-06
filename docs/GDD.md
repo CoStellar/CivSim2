@@ -338,6 +338,13 @@ Cywilizacja nie jest przywiązana do miejsca. Startuje jako koczownicze plemię,
 | Całkowita | cała cywilizacja | wszyscy ruszają w drogę; osady zostają opuszczone i każdy może je przejąć (5.5) |
 | Z podbojem | dowolna, gdy cel jest zajęty | atak na mieszkańców celu; po zwycięstwie wygnanie ich, wcielenie (lojalność podbitych, 5.2) albo nałożenie trybutu |
 
+**W CORE (przebudowa AI, PR C):**
+
+- **Ocena ziemi** liczy jedzenie pól z technologiami cywilizacji (np. łowiectwo, rybołówstwo) i dolicza pola wody, jeśli cywilizacja łowi ryby.
+- **Osiedlenie to wybór:** plon z rolnictwa liczony dla prawdziwej liczby rolników obozu musi wyżywić obóz i być nie gorszy od zbieractwa; ekspansywna cywilizacja dłużej koczuje.
+- **Wioska wysyła osadników** (60 osób, najwyżej raz na 100 lat), gdy jest zatłoczona albo jej pola są wyjałowione. Osadnicy zakładają obóz poza strefą wpływów własnych osad. Przeprowadzki całej wioski jeszcze nie ma.
+- **Wyprawa w nieznane:** ciekawa i ekspansywna cywilizacja wysyła część najedzonego obozu tam, gdzie wokół jest dużo nieznanej ziemi, bez przymusu głodu.
+
 **Osiedlenie się jest odwracalne, ale coraz droższe.** Pola uprawne, budynki i liczna ludność podnoszą koszt przeprowadzki. Dlatego całkowite migracje same zanikają w późniejszych erach, poza sytuacjami kryzysowymi: wojną, zmianą klimatu, klęską.
 
 **Na mapie:** strefa wpływów to poświata w kolorze cywilizacji, mocniejsza tam, gdzie wpływ jest silniejszy. Trasy wędrówek zostają w kronice i można je wyświetlić na mapie.
@@ -563,7 +570,7 @@ AI widzi tylko to, co odkryła jej cywilizacja. Z tego co turę buduje:
 | Nawigacja | Żegluga oceaniczna | wybrzeża, prądy, szlaki morskie | trwała |
 | Rozpoznanie z powietrza | Lotnictwo, potem satelity | aktualny obraz dużych obszarów, ruchy armii | stała aktualizacja |
 
-- **W CORE (etap 3g):** osada widzi 6 pól wokół, a co turę wysyła zwiadowcę na 15 pól w losowym kierunku; pamięć ustna trzyma pole 300 lat od ostatniej obserwacji. Obóz może wyruszyć w kilkuturową wędrówkę do znanego miejsca do 40 pól dalej, po lądzie, lodzie morskim i pomostach lądowych.
+- **W CORE (etap 3g, tempa na rok od przebudowy AI, PR C):** osada widzi 6 pól wokół, a 2 razy na stulecie wysyła zwiadowcę na 15 pól w losowym kierunku; pamięć ustna trzyma pole 300 lat od ostatniej obserwacji. Obóz może wyruszyć w kilkuturową wędrówkę do znanego miejsca do 40 pól dalej, po lądzie, lodzie morskim i pomostach lądowych; idzie 20 pól na stulecie (najmniej 1, najwyżej 10 pól na krok).
 - **Pewność informacji maleje z wiekiem.** Armia widziana 10 tur temu to dla AI już tylko przypuszczenie. Teren starzeje się wolno, ruchy wojsk szybko.
 - **Zobaczyć to nie wszystko.** Złoże trafia do pamięci tylko wtedy, gdy cywilizacja zna już ten surowiec (4.2). Ruda żelaza widziana w epoce kamienia to dla niej zwykłe wzgórze.
 - **Misje zwiadowcze:** dowódca ocenia wartość zwiadu jak każde inne działanie. Liczy się dużo nieznanych pól w kierunku rozwoju (7.6), przestarzałe informacje przy granicy i zagrożenie bez aktualnego rozpoznania.

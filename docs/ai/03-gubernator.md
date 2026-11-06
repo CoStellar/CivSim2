@@ -28,10 +28,14 @@ flowchart TD
   G4 -->|tak| C4["osiądź jako wioska"]
   G4 -->|nie| G5{"G5: zatłoczony<br/>i jest miejsce, które wyżywi odłam?"}
   G5 -->|tak| C5["40% ludzi zakłada nowy obóz"]
-  G5 -->|nie| G6{"G6: magazyn poniżej połowy<br/>i porzucona osada z dobrami w ≤ 10 polach?"}
+  G5 -->|nie| G8{"G8: najedzony, ≥ 60 osób,<br/>ciekawy i ekspansywny,<br/>znane wolne pole przy nieznanej ziemi?"}
+  G8 -->|tak| C8["25% ludzi idzie na zwiad i zakłada obóz"]
+  G8 -->|nie| G6{"G6: magazyn poniżej połowy<br/>i porzucona osada z dobrami w ≤ 10 polach?"}
   G6 -->|tak| C6["zabierz dobra"]
   G6 -->|nie| END3["nic"]
 ```
+
+**Wioski** (od PR C) mają jedną decyzję, G7 (osadnicy), w każdym własnym kroku na decyzje wolne.
 
 **Rezerwacja pól.** Pole wybrane w G2, G3 albo G5 jest zajęte do końca tury dla wszystkich kolejnych obozów (`Take`). Do tego przy
 odłamach (G5) pola w promieniu 3 od każdego obozu cywilizacji (także od nowo wybranych) są wykluczone. Kto liczy wcześniej, wybiera
@@ -53,11 +57,16 @@ jak strefa wpływów:
 2. Bierzemy pola o łącznym koszcie ≤ 3 (`influence.baseRange`).
 3. Dla każdego pola: `jedzenie pola na rok × obecny zapas dzikiej żywności / pełny zapas`.
 
-Jedzenie pola na rok (`GatheringSystem.CellFoodPerYear` **bez technologii cywilizacji**):
+Jedzenie pola na rok (`GatheringSystem.CellFoodPerYear` **z technologiami zbieractwa tej cywilizacji**, od PR C):
 
 ```
 4 × jedzenie biomu × (50 + żyzność) / 100 × część roku, w której rośnie roślinność (%)   + jedzenie ze złoża na tym polu (np. zwierzyna)
+   + dodatkowe jedzenie z technologii dla tego biomu i złoża (np. łowiectwo zespołowe, rybołówstwo)
 ```
+
+**Woda (od PR C):** gdy cywilizacja zna technologię, która daje jedzenie z wody (rybołówstwo), do ziemi miejsca dochodzą pola wody
+sąsiadujące z jej polami lądu (każde raz), tak jak naprawdę łowią rybacy. Bez rybołówstwa woda daje 0. Cywilizacje z tym samym
+zestawem technologii zbieractwa dzielą jedną kopię wartości pól (liczoną od nowa tylko po nowej technologii albo zmianie klimatu).
 
 Na planecie z porami roku na żywo: średnia z obecnej i następnej pory roku.
 
@@ -183,7 +192,8 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
 - **Droga:** dopiero dla wybranego pola szukamy drogi: najkrótsza ścieżka po **znanych** polach lądu, lodu morskiego i pomostów,
   nie dalej niż 40 pól od startu (`PathFinder`). Brak drogi = brak wędrówki w tej turze (nie próbuje drugiego kandydata).
 - **Próg:** `ocena × 100 > max(zostać tutaj, najlepsze miejsce z G2) × 160` (`journeyBetterByPercent: 60`).
-- **Komenda:** `JourneyCommand`. Potem system wędrówki w każdym własnym kroku cywilizacji przesuwa obóz do 10 pól po drodze, zatrzymując się tylko na wolnym lądzie,
+- **Komenda:** `JourneyCommand`. Potem system wędrówki w każdym własnym kroku cywilizacji przesuwa obóz po drodze o 20 pól na
+  stulecie (`marchCellsPerCentury`, od PR C; w epoce kamienia 10 pól na krok, w neolicie 5, najwyżej 10, co najmniej 1), zatrzymując się tylko na wolnym lądzie,
   aż dojdzie albo droga zniknie (zapomniany ląd, stopiony lód). W trakcie wędrówki obóz nie podejmuje żadnych decyzji.
 
 ## G4: Osiedlenie się (wioska)
@@ -192,21 +202,25 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
 
 - **Kiedy:** tura decyzyjna, obóz ma co najmniej **60 osób** (`settle.minPeople`), a cywilizacja zna technologię wymaganą przez
   następny poziom osiadły (wioska: **rolnictwo**).
-- **Rachunek:**
+- **Rachunek (od PR C):**
 
   ```
-  plon z pól = Σ po polach w promieniu 8, które należą do strefy tego obozu:
-               3 × (50 + żyzność) / 100 × część roku wegetacji %  × 40 rolników na pole
-               (pole wodne albo z żyznością < 20 daje 0)
-  potrzeby  = roczne potrzeby jedzenia wszystkich mieszkańców
-  osiądź, gdy plon z pól × 100 ≥ potrzeby × 150     (settleFarmYieldPercent: 150)
+  producenci = ludzie warstw, które zbierają (i uprawiałyby pola)
+  plon z pól = producenci na najlepszych polach strefy (najwyżej 40 na pole, najlepsze najpierw, jak w systemie rolnictwa):
+               Σ 3 × (50 + żyzność) / 100 × część roku wegetacji % × rolnicy na polu   (pole wodne albo z żyznością < 20 daje 0)
+  zbieractwo = min(jedzenie okolicy tego pola, 2 jedzenia na producenta na rok)
+  potrzeby   = roczne potrzeby jedzenia wszystkich mieszkańców
+  zapał      = waga ekspansji × (500 + ekspansywność) / 1000          (1,0 przeciętnie, do 2,4)
+
+  osiądź, gdy  plon z pól × 100 ≥ potrzeby × 150                     (settleFarmYieldPercent)
+          i    plon z pól × 100 ≥ zbieractwo × 100 × zapał            (settleOverGatheringPercent)
   ```
 
-- **Ocena:** plon z pól. Notatki: `farm yield` (plon / potrzeby w %), `people`. Bez wag, charakteru i losowania.
+- **Ocena:** plon z pól. Notatki: `farm yield` (plon / potrzeby w %), `over gathering` (plon / zbieractwo w %), `people`.
 - **Komenda:** `SettleCommand`: obóz staje się wioską (do 1000 osób, magazyn 2000), nie może się już ruszać, producenci uprawiają pola.
-- **Uwaga:** rachunek zakłada, że **każde** pole strefy uprawia 40 rolników, niezależnie od tego, ilu producentów obóz ma naprawdę.
-  W praktyce próg 150% jest spełniony prawie zawsze (w trzech grach mediana ok. 1650%, najmniej 169%), więc obóz osiada, gdy tylko zna rolnictwo i ma 60
-  osób. Szczegóły w [uwagach](08-ocena-i-uwagi.md#4-osiedlenie-to-w-praktyce-próg-a-nie-wybór).
+- **Co się zmieniło w PR C:** dawniej rachunek zakładał, że **każde** pole strefy uprawia 40 rolników, więc plon wychodził kilkanaście
+  razy większy od potrzeb i obóz osiadał, gdy tylko znał rolnictwo. Teraz liczą się prawdziwi producenci, a osiedlenie musi dać
+  więcej niż zbieractwo. Ekspansywna cywilizacja z wysoką wagą ekspansji chce do 2,4 razy więcej, więc dłużej wędruje.
 
 ## G5: Odłam (nowy obóz)
 
@@ -227,7 +241,9 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
   | 500 (mnożnik 1,0) | 80% → 120 osób | 50% → 75 osób |
   | 1000 (mnożnik 1,5) | 53% → 80 osób | 50% → 75 osób |
 
-- **Kandydaci:** jak w G2, ale **bez obcych obozów** i bez pól w promieniu 3 od własnych obozów (`minDistanceBetweenOwnCamps: 4`).
+- **Kandydaci:** jak w G2, ale **bez obcych obozów**, bez pól w promieniu 3 od własnych obozów (`minDistanceBetweenOwnCamps: 4`)
+  i (od PR C) bez pól w **strefie wpływów** własnych osad. Nowy obóz w strefie większej osady nie dostałby żadnego pola do zbierania
+  (strefa silniejszej osady zabiera ziemię) i głodowałby.
 - **Warunek:** ocena wybranego > 0 **i** surowe jedzenie okolicy wybranego pola ≥ roczne potrzeby jedzenia odchodzącej grupy
   (`splitNeedsFoodPercent: 100`). Grupa to 40% każdej warstwy (`splitPercent`).
 - **Bez porównania z „zostać”**: odłam nie potrzebuje progu 30%.
@@ -244,6 +260,43 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
 - **Ocena:** ilość dóbr w setnych; notatka `goods left`.
 - **Komenda:** `PlunderSettlementCommand`: obóz zabiera tyle, ile udźwigną jego ludzie.
 - Od PR B tylko osady na polach, które cywilizacja **zna** (pamięć mapy, W1).
+
+## G7: Wioska wysyła osadników (od PR C)
+
+`DecideVillage`.
+
+- **Kiedy:** własny krok wioski na decyzje wolne, **najwyżej raz na 100 lat** (`villageSettlersEveryYears`, zasada 6; wioski mają
+  przesunięte terminy, żeby nie szły wszystkie naraz), wioska ma co najmniej 60 osób (`minSplitPeople`) i:
+  - jest **zatłoczona**: `ludzie ≥ pojemność × próg`, gdzie próg = 80% (`villageSettlersAbovePercent`) / zapał, nie mniej niż 50%
+    i nie więcej niż 100% (jak próg odłamu G5), **albo**
+  - jej pola są **wyjałowione**: żyzność pól strefy (tylko pól, które z natury dają się uprawiać) spadła poniżej 70%
+    (`villageWornBelowPercent`) ich naturalnej żyzności.
+- **Dokąd:** jak odłam G5: najlepsze znane, wolne pole w zasięgu jednego ruchu (10 pól), co najmniej 4 pola od własnych osad i poza strefami własnych osad, które
+  wyżywi grupę (`BestSite(splitting: true)`).
+- **Kto idzie:** co najmniej 60 osób (`villageSettlersPeople`), najwyżej 90% wioski. Każda warstwa daje swoją część zaokrągloną w dół,
+  więc udział rośnie, aż grupa jest pełna. Zakładają **obóz** (albo zajmują pustą osadę na tym polu, akcja `Occupy`), a ten dalej sam
+  decyduje (przeprowadzka, wędrówka, osiedlenie).
+- **Dlaczego przerwa i pełna grupa** (poprawka po pierwszych pomiarach): bez przerwy każda pełna wioska wysyłała osadników w każdym
+  kroku, a udział liczony w całych procentach (60 z 2000 osób to 3%, a po zaokrągleniu w każdej warstwie zostawało kilkanaście osób)
+  dawał grupki poniżej progu łączenia (G1, 15 osób), które za chwilę wracały. W 1000 turach było ~21 000 takich powrotów, a gra była 4× wolniejsza. Drugi błąd: osadnicy zakładali obóz
+  4–5 pól od wioski, czyli w jej strefie wpływów, i nie mieli z czego zbierać (najedzeni w 0–8%). Dlatego cel musi leżeć poza strefami.
+- **Zapis:** akcja `SendSettlers`, notatki `crowding` (zapełnienie w %) i `worn land` (żyzność pól w % naturalnej).
+- **Czego nie ma:** przeprowadzki całej wioski. Wioska z wyjałowioną ziemią „ucieka” przez osadników; sama zostaje.
+
+## G8: Wyprawa w nieznane (od PR C)
+
+`Explore`.
+
+- **Kiedy:** własny krok na decyzje wolne, obóz nie zrobił nic z G1–G5, ma co najmniej 60 osób, jest najedzony (≥ 95%), a cywilizacja
+  ma dość **zapału odkrywcy**:
+  ```
+  zapał odkrywcy = waga ekspansji × (500 + ekspansywność) / 1000 × (500 + ciekawość) / 1000   ≥ 1,5   (exploreAbovePerMille)
+  ```
+  Przeciętna cywilizacja (1,0) nie wyrusza; ciekawa i ekspansywna (np. 800 i 700 → 1,3 × 1,2 = 1,56) tak.
+- **Dokąd:** znane, wolne pole lądu w zasięgu 10 pól, przy którym co najmniej 30% lądu w promieniu 3 pól (`exploreLookCells`,
+  `exploreUnknownPercent`) jest **nieznane** i którego ziemia wyżywi grupę. Ocena = liczba nieznanych pól, premia za kierunek ekspansji;
+  wybór jak zawsze (3 najlepsze, ostrożność albo losowanie).
+- **Kto idzie:** 25% obozu (`exploreGroupPercent`), komenda `SplitSettlementCommand` (nowy obóz). Notatka `unknown`.
 
 ---
 
