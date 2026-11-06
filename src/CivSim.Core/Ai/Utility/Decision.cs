@@ -74,6 +74,12 @@ public enum AiAction : byte
 
     /// <summary>The diplomat declares war.</summary>
     DeclareWar = 14,
+
+    /// <summary>A village sends settlers to found a camp (PR C).</summary>
+    SendSettlers = 15,
+
+    /// <summary>A camp sends explorers towards unknown land (PR C).</summary>
+    Explore = 16,
 }
 
 /// <summary>
@@ -144,6 +150,8 @@ public readonly record struct Decision(
         FactorId.WarYears => "years at war",
         FactorId.LeadsTo => "leads to",
         FactorId.ForTrade => "for trade",
+        FactorId.OverGathering => "over gathering",
+        FactorId.WornLand => "worn land",
         _ => id.ToString().ToLowerInvariant(),
     };
 }

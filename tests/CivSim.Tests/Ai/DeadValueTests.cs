@@ -495,6 +495,18 @@ public class DeadValueTests
                 }
 
                 s.Add(clothing, Amount.FromUnits(200)); // and plenty of clothing already
+
+                // Villages 70% full: whether they send settlers depends on the threshold and the civilization's drive.
+                if (!Content.SettlementLevels[s.Level].Mobile)
+                {
+                    int room = Content.SettlementLevels[s.Level].MaxPopulation * 70 / 100;
+                    int total = s.TotalPopulation();
+                    Span<int> crowd = s.Population;
+                    for (int k = 0; k < crowd.Length; k++)
+                    {
+                        crowd[k] = total == 0 ? 0 : (int)((long)crowd[k] * room / total);
+                    }
+                }
                 s.Add(grain, Amount.FromUnits(60));
                 s.Add(hides, Amount.FromUnits(60));
                 s.Add(wood, Amount.FromUnits(60));
