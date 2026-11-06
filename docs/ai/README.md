@@ -4,7 +4,7 @@ Ten katalog opisuje **każdą decyzję**, którą podejmuje sztuczna inteligencj
 na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to jest w kodzie. Jest pisany dla Patryka:
 żeby można było ocenić, czy mechanika nie jest za prosta albo za skomplikowana i bez sensu.
 
-**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019; gałąź `feat/ai-values`, commit `6bfae1f`). Dowódca i armie (4e) jeszcze nie istnieją.
+**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019) + ziemia i migracje (PR C; gałąź `feat/ai-land`, commit `51067a5`). Dowódca i armie (4e) jeszcze nie istnieją.
 **Aktualizacja:** po każdym etapie, który zmienia AI (zasada w `CLAUDE.md`). Historia zmian jest na dole tej strony.
 
 ## Jak czytać
@@ -126,3 +126,4 @@ w `docs/systems/`:
 | 2026-11-06 | 4d | Dyplomata (D1, D2, wojna i pokój, sojusznicy), zakaz wypędzeń przez umowy i premia w wojnie (G2), wagi celów i cechy używane w dyplomacji, nowe parametry z `data/diplomacy.json`, nowe statystyki i wykres. |
 | 2026-11-06 | zegar (ADR 0018) | Rytm każdej cywilizacji: decyzje proaktywne we własnym kroku, reaktywne (alarmy wojny i napadu, propozycje, wybór badania) w każdym kroku świata; nowe reakcje D2 i G2; odstępy AI w własnych krokach (`reviewEverySteps`, `searchEverySteps`, `minStepsBetweenMoves`); zwiad, widzenie i pogłoski w własnym kroku; nowe statystyki, wykres rytmów i ludności przed/po. |
 | 2026-11-06 | wartości (PR B, ADR 0019) | Uczony od nowa (priorytet z położenia, braków i charakteru, koszt jako przeszkoda łagodzona ciekawością); skarbnik: cele towarów, koordynacja sieci, koniec przełączania „praca ↔ brak”, premia za handel; strateg: wagi nauki i wpływu; „zostać” z połową wagi ekspansji; obce obozy i wojownicy tylko z pól widzianych teraz; 11 liczb z kodu do `data/ai.json` (sekcja `scholar`); test martwych wartości; nowe statystyki z 3 seedów, wykresy decyzji i „przed/po”. |
+| 2026-11-06 | ziemia i migracje (PR C) | Gubernator wycenia ziemię z technologiami zbierania cywilizacji, rybacy liczą wodę; G4 osiedlenie dla prawdziwej liczby producentów i w porównaniu ze zbieractwem i ekspansywnością (`settleOverGatheringPercent`); nowe decyzje G7 (wioska wysyła osadników) i G8 (wyprawa w nieznane); osadnicy omijają strefy własnych osad; zwiad i marsz na stulecie (`data/perception.json`); nowe parametry w `data/ai.json`; punkty 4, 5, 6 i 8 oceny zamknięte, nowy punkt 10 (wydajność); statystyki z 3 seedów, wykres ziemi i migracji, wykres decyzji z G7 i G8. |

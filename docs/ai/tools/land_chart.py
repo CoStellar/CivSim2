@@ -3,7 +3,7 @@
 Usage: python3 docs/ai/tools/land_chart.py RUNS_DIR
 RUNS_DIR holds before7.csv, before23.csv, before42.csv, after7.csv, after23.csv and after42.csv: --stats files
 (CivSim.Headless --stats, standard map, 1000 turns) from before and after a change. Needs the settlements and
-spread_cells columns (added in PR C); a "before" file without spread_cells draws only its settlements. Needs matplotlib.
+spread_cells columns (added in PR C; for an older build, add them to its HeadlessRun.cs first). Needs matplotlib.
 """
 import csv
 import os
@@ -38,15 +38,16 @@ for seed in SEEDS:
         spread = column(rows, 'spread_cells')
         if spread is not None:
             dist.plot(turns, spread, style, color=COLORS[seed], label=label)
-        camps = column(rows, 'camps')
+        lived = column(rows, 'settlements')
+        if lived is not None:
+            sets.plot(turns, lived, style, color=COLORS[seed], label=label)
         villages = column(rows, 'villages')
-        if camps is not None and villages is not None:
-            sets.plot(turns, [a + b for a, b in zip(camps, villages)], style, color=COLORS[seed], label=label)
+        if villages is not None:
             vill.plot(turns, villages, style, color=COLORS[seed], label=label)
 
 for ax, title, ylabel in (
         (dist, 'Jak daleko od startu żyją ludzie (średnia na osobę)', 'pola'),
-        (sets, 'Wszystkie osady (obozy + wioski)', 'liczba osad'),
+        (sets, 'Zamieszkane osady (obozy i wioski z ludźmi)', 'liczba osad'),
         (vill, 'Wioski (osady rolnicze)', 'liczba wiosek')):
     ax.set_title(title, fontsize=10)
     ax.set_xlabel('tura')
