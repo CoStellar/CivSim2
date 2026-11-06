@@ -52,6 +52,7 @@ public sealed class PopulationSystem : ITurnSystem
             int after = NewTotal(state, s, before, months);
             ChangeTotal(s, before, after);
             Drift(s, months);
+            Skills.Trim(_content.Skills, s); // deaths and drift take the same share from the skills (stage 4F)
         }
 
         foreach (CivilizationState civ in state.Civilizations)

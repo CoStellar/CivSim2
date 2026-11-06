@@ -182,6 +182,19 @@ public static class GameStateHash
                 h.Add(p);
             }
 
+            // Skills (stage 4F): only the skills somebody knows or learns, so a world without skilled people hashes as before.
+            ReadOnlySpan<int> skilled = s.SkilledView;
+            ReadOnlySpan<int> trainees = s.TraineesView;
+            for (int k = 0; k < skilled.Length; k++)
+            {
+                if (skilled[k] != 0 || trainees[k] != 0)
+                {
+                    h.Add(k);
+                    h.Add(skilled[k]);
+                    h.Add(trainees[k]);
+                }
+            }
+
             ReadOnlySpan<Numerics.Amount> stock = s.StockView;
             h.Add(stock.Length);
             foreach (Numerics.Amount a in stock)

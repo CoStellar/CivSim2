@@ -122,7 +122,7 @@ public static class SettlementAssets
         SettlementState? site = null;
         if (s.TotalStock() > capacity)
         {
-            site = state.FoundSettlement(s.Owner, s.World, s.Cell, OldSitePrefix + s.Name, s.Level, s.StockView.Length, s.PopulationView.Length);
+            site = state.FoundSettlement(s.Owner, s.World, s.Cell, OldSitePrefix + s.Name, s.Level, s.StockView.Length, s.PopulationView.Length, s.SkilledView.Length);
             Carry(s, site, Amount.MaxValue);
             Carry(site, s, capacity);
             Abandon(content, state, site);

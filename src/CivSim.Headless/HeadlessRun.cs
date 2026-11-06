@@ -105,7 +105,7 @@ public static class HeadlessRun
         var tally = new TreatyTally();
         if (stats is not null)
         {
-            WriteStatsHeader(stats, state);
+            WriteStatsHeader(stats, state, content);
             WriteStats(stats, state, content);
         }
 
@@ -265,7 +265,7 @@ public static class HeadlessRun
     }
 
     // One row: turn, year, total people, then people of each civilization, then total food in stock.
-    private static void WriteStatsHeader(StreamWriter stats, GameState state)
+    private static void WriteStatsHeader(StreamWriter stats, GameState state, GameContent content)
     {
         stats.Write("turn,year,people,alive");
         foreach (CivilizationState c in state.Civilizations)
@@ -273,7 +273,13 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",civ{c.Id.Value}"));
         }
 
-        stats.WriteLine(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg,villages,village_people,farmers,journeys,known_cells_avg,settlements,spread_cells");
+        stats.Write(",food_stock,avg_health,avg_mood,camps,wild_food_permille,mean_temp_c,ice_north_permille,ice_south_permille,co2_ppm,sea_level_m,higher_needs_permille,crafting_camps,valuables,materials,techs_avg,techs_max,era_max,science_per_turn_avg,villages,village_people,farmers,journeys,known_cells_avg,settlements,spread_cells");
+        foreach (SkillDefinition k in content.Skills)
+        {
+            stats.Write(string.Create(CultureInfo.InvariantCulture, $",skilled_{k.Key}"));
+        }
+
+        stats.WriteLine(",trainees");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -337,7 +343,7 @@ public static class HeadlessRun
             }
         }
 
-        stats.WriteLine(string.Create(
+        stats.Write(string.Create(
             inv, $",{FoodUnits(state, content)},{(populated == 0 ? 0 : health / populated)},{(populated == 0 ? 0 : mood / populated)},{populated},{(landCells == 0 ? 0 : wild / landCells)}"
             + $",{state.Worlds[0].Climate.GlobalMeanMillionths / 100_000 / 10.0:F1},{state.Worlds[0].Climate.NorthIce / 1000},{state.Worlds[0].Climate.SouthIce / 1000},{state.Worlds[0].Climate.Co2Microbar},{(state.Worlds[0].Climate.SeaLevel - Core.WorldGen.WorldGenerator.SeaLevel) * content.ClimateCycles.SeaMetersPerStep}"
             + $",{(populated == 0 ? 0 : higher / populated)},{crafting},{valuables / 100},{materials / 100}"
@@ -347,6 +353,20 @@ public static class HeadlessRun
             + $",{state.Settlements.Sum(x => x.Farmers)}"
             + $",{state.Settlements.Count(x => x.JourneyTarget >= 0)},{KnownAverage(state, content)}"
             + $",{state.Settlements.Count(x => x.IsActive && x.TotalPopulation() > 0)},{Spread(state)}"));
+        long trainees = 0;
+        for (int k = 0; k < content.Skills.Count; k++)
+        {
+            long skilled = 0;
+            foreach (SettlementState s in state.Settlements)
+            {
+                skilled += k < s.SkilledView.Length ? s.SkilledView[k] : 0;
+                trainees += k < s.TraineesView.Length ? s.TraineesView[k] : 0;
+            }
+
+            stats.Write(string.Create(inv, $",{skilled}"));
+        }
+
+        stats.WriteLine(string.Create(inv, $",{trainees}"));
     }
 
     // How far people live from where their civilization started, cells, averaged over all people (PR C).

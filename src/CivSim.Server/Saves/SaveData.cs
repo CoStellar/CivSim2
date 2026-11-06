@@ -173,7 +173,9 @@ public sealed record SettlementSaveData(
     [property: Key(20)] long ClaimUntilMonth = 0,
     [property: Key(21)] int RecipeId = -1,
     [property: Key(22)] long RunsMade = 0,
-    [property: Key(23)] int JourneyTarget = -1);
+    [property: Key(23)] int JourneyTarget = -1,
+    [property: Key(24)] int[]? Skilled = null,
+    [property: Key(25)] int[]? Trainees = null);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

@@ -135,7 +135,7 @@ strateg: waga nauki i wpływu; obce obozy tylko z pól widzianych teraz; liczby 
 osiedlenie porównane ze zbieractwem i ekspansywnością; wioska wysyła osadników, gdy jest pełna albo ma wyjałowione pola; wyprawy w nieznane
 dla ciekawych i ekspansywnych; zwiadowcy i marsz na stulecie; kolumny `settlements` i `spread_cells` w statystykach Headless).
 
-Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
+Dalej: **etap 4F** (ludzie i fachy, niżej, decyzja Patryka z 2026-11-06: przed wojną), potem według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
 Przeprowadzka całej wioski (z planu C) jeszcze nie: czeka na koszt porzucanych pól i budynków (etap budowli).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
@@ -147,6 +147,18 @@ Przeprowadzka całej wioski (z planu C) jeszcze nie: czeka na koszt porzucanych 
 - [ ] W 4f: **tytuł ustroju w nazwie cywilizacji** (wzór tytułu w danych ustroju + rdzeń z języka ludu, GDD 5.6 i 7.2) i **język nowej cywilizacji z secesji** dziedziczony po rodzicu z mutacją (`NameLanguage.Mutate`, decyzja Patryka z 2026-11-06)
 - [x] **Nazwy z języków ludów** (GDD 5.6, `docs/systems/names.md`): język na cywilizację z `data/names.json`, nazwy ludów i osad, zmiana nazwy przez obserwatora z propozycjami w tym samym języku
 - [ ] Panel „Dlaczego?” i wpisy w kronice
+
+## Etap 4F — Ludzie, fachy i przyczyny rozwoju (decyzja Patryka z 2026-11-06)
+
+Przed 4e (wojna potrzebuje kowali i broni). Zasady: GDD 5.1, 5.2, 6.1, ADR 0020. Plan, graf i liczby: `docs/prompts/06-etap-fachy.md`.
+
+Gotowe, gdy: w 3 grach po 1000 tur technologie przychodzą dopiero po zebraniu fachowców, ludzie uczą się fachów i przenoszą je między osadami, przyrost w epoce kamienia jest ok. 3 razy wolniejszy, a śmiertelność dzieci zmienia się z technologiami według danych historycznych.
+
+- [x] **PR 1:** fachy w danych (`data/skills.json`) i stanie osad; przycinanie do ludzi warstwy; kolumny w `--stats`; zapis (format 21); gra bez zmian (ten sam hash)
+- [ ] **PR 2:** nauka fachu (mistrzowie, uczniowie za pół, lata nauki), przenoszenie między osadami sieci, utrata fachu; plony i receptury liczą fachowców
+- [ ] **PR 3:** warstwy myślicieli i przywódców (starszyzna, wódz); wymogi ludzi w technologiach (`requiresPeople`), nauka głównie od myślicieli; AI: uczony widzi braki ludzi, nowa decyzja, ilu ludzi uczyć
+- [ ] **PR 4:** urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty technologii (dane historyczne); wykres ludności przed/po
+- [ ] **PR 5:** graf technologii i fachów rysowany z danych; test osiągalności od zera i braku pętli; `docs/systems/skills.md`, `docs/ai/`
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 

@@ -45,6 +45,7 @@ public static class ContentLoader
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
+        List<SkillDefinition> skills = LoadSkills(Path.Combine(directory, "skills.json"), strata, technologies, errors);
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
         for (int l = 0; l < levels.Count; l++)
@@ -76,6 +77,7 @@ public static class ContentLoader
             NewTribeLevel = tribeLevel,
             NewTribeStock = tribeStock,
             Strata = strata,
+            Skills = skills,
             Population = population,
             Assets = assets,
             Planets = planets,
@@ -91,6 +93,47 @@ public static class ContentLoader
             Technologies = technologies,
             Research = research,
         };
+    }
+
+    // Skills of data/skills.json (stage 4F, ADR 0020): each belongs to a stratum and is opened by a technology.
+    private static List<SkillDefinition> LoadSkills(string path, List<StratumDefinition> strata, List<TechnologyDefinition> technologies, List<string> errors)
+    {
+        var result = new List<SkillDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "skills", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        string file = Path.GetFileName(path);
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            string at = $"{file}: skills[{i}]";
+            var r = new Reader(e, at, errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            string stratumKey = r.String("stratum");
+            int stratum = strata.FindIndex(x => x.Key == stratumKey);
+            if (stratumKey.Length > 0 && stratum < 0)
+            {
+                errors.Add($"{at}.stratum: unknown stratum '{stratumKey}'.");
+            }
+
+            string techKey = r.String("technology");
+            int tech = technologies.FindIndex(x => x.Key == techKey);
+            if (techKey.Length > 0 && tech < 0)
+            {
+                errors.Add($"{at}.technology: unknown technology '{techKey}'.");
+            }
+
+            int years = r.Int("trainingYears", 0, 100);
+            result.Add(new SkillDefinition(i, key, name, stratum, tech, years));
+            i++;
+        }
+
+        return result;
     }
 
     private static List<StratumDefinition> LoadStrata(string path, List<GoodDefinition> goods, List<string> errors)

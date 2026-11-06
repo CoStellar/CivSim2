@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 20;
+    public const int FormatVersion = 21;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -74,7 +74,8 @@ public static class SaveGameSerializer
             settlements.Add(new SettlementSaveData(
                 st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
-                (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget));
+                (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
+                st.SkilledView.ToArray(), st.TraineesView.ToArray()));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -211,7 +212,7 @@ public static class SaveGameSerializer
         {
             var settlement = new SettlementState(
                 new SettlementId(st.Id), new CivId(st.Owner), new WorldId(st.World), new HexCoord(st.Col, st.Row), st.Name, st.Level, st.FoundedTurn, st.Stock.Length,
-                st.Population?.Length ?? 0)
+                st.Population?.Length ?? 0, st.Skilled?.Length ?? 0)
             {
                 Health = st.Health,
                 Mood = st.Mood,
@@ -234,6 +235,8 @@ public static class SaveGameSerializer
             }
 
             st.Population?.CopyTo(settlement.Population);
+            st.Skilled?.CopyTo(settlement.Skilled);
+            st.Trainees?.CopyTo(settlement.Trainees);
 
             state.AddSettlementForLoad(settlement, data.NextSettlementId);
         }
