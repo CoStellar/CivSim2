@@ -25,14 +25,18 @@ public sealed class SettlementState
 {
     private readonly Amount[] _stock;
     private readonly int[] _population;
+    private readonly int[] _skilled;
+    private readonly int[] _trainees;
 
     /// <summary>
     /// Creates a settlement with an empty warehouse for <paramref name="goodCount"/> goods and no people in
-    /// <paramref name="strataCount"/> strata.
+    /// <paramref name="strataCount"/> strata, and nobody skilled in <paramref name="skillCount"/> skills.
     /// </summary>
-    public SettlementState(SettlementId id, CivId owner, WorldId world, HexCoord cell, string name, int level, long foundedTurn, int goodCount, int strataCount = 0)
+    public SettlementState(SettlementId id, CivId owner, WorldId world, HexCoord cell, string name, int level, long foundedTurn, int goodCount, int strataCount = 0, int skillCount = 0)
     {
         _population = new int[strataCount];
+        _skilled = new int[skillCount];
+        _trainees = new int[skillCount];
         Id = id;
         Owner = owner;
         World = world;
@@ -75,6 +79,18 @@ public sealed class SettlementState
 
     /// <summary>Read-only view of the people per stratum.</summary>
     public ReadOnlySpan<int> PopulationView => _population;
+
+    /// <summary>People who know each skill (stage 4F), index = skill id; they are counted in their stratum too.</summary>
+    public Span<int> Skilled => _skilled;
+
+    /// <summary>Read-only view of <see cref="Skilled"/>.</summary>
+    public ReadOnlySpan<int> SkilledView => _skilled;
+
+    /// <summary>Apprentices learning each skill (stage 4F), index = skill id; counted in the skill's stratum.</summary>
+    public Span<int> Trainees => _trainees;
+
+    /// <summary>Read-only view of <see cref="Trainees"/>.</summary>
+    public ReadOnlySpan<int> TraineesView => _trainees;
 
     /// <summary>All people in the settlement.</summary>
     public int TotalPopulation()

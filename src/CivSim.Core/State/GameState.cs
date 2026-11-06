@@ -79,9 +79,9 @@ public sealed class GameState
     }
 
     /// <summary>Founds a settlement with an empty warehouse and returns it.</summary>
-    public SettlementState FoundSettlement(CivId owner, WorldId world, HexCoord cell, string name, int level, int goodCount, int strataCount = 0)
+    public SettlementState FoundSettlement(CivId owner, WorldId world, HexCoord cell, string name, int level, int goodCount, int strataCount = 0, int skillCount = 0)
     {
-        var settlement = new SettlementState(new SettlementId(NextSettlementId++), owner, world, cell, name, level, Turn, goodCount, strataCount);
+        var settlement = new SettlementState(new SettlementId(NextSettlementId++), owner, world, cell, name, level, Turn, goodCount, strataCount, skillCount);
         _settlements.Add(settlement);
         return settlement;
     }
@@ -185,7 +185,7 @@ public sealed class GameState
             {
                 // Every tribe starts with one camp and a little food and gear (GDD 5.3, data/settlements.json).
                 SettlementState camp = state.FoundSettlement(
-                    civ.Id, earth.Id, civ.StartCell, Naming.Names.NextPlace(content.Names, state, civ), content.NewTribeLevel, content.Goods.Count, content.Strata.Count);
+                    civ.Id, earth.Id, civ.StartCell, Naming.Names.NextPlace(content.Names, state, civ), content.NewTribeLevel, content.Goods.Count, content.Strata.Count, content.Skills.Count);
                 foreach (GoodQuantity q in content.NewTribeStock)
                 {
                     camp.Add(q.GoodId, q.Amount);

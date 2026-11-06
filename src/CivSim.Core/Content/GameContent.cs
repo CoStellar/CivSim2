@@ -97,6 +97,9 @@ public sealed class GameContent
     /// <summary>Population strata, index = id (<c>data/strata.json</c>).</summary>
     public IReadOnlyList<StratumDefinition> Strata { get; init; } = [];
 
+    /// <summary>Skills, index = id (<c>data/skills.json</c>, stage 4F).</summary>
+    public IReadOnlyList<SkillDefinition> Skills { get; init; } = [];
+
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
 
