@@ -88,6 +88,7 @@ nowego miejsca nawet najedzony (G2).
 | stare obozowisko (`own old campsite`) | 1100 | na polu stoi pusta osada tej cywilizacji albo przez nią zajmowana (roszczenie) |
 | kierunek (`direction`) | 1150 | pole jest bliżej celu ekspansji niż obecny obóz; **nie** dla obcych obozów |
 | opinia (`opinion`) | 1000 − 5 × sympatia w punktach (−100 → 1500, 0 → 1000, +100 → 500) | tylko obcy obóz |
+| wojna (`war`) | 1500 (`warRaidPercent`) | obcy obóz cywilizacji, z którą jesteśmy w wojnie (etap 4d) |
 | waga celu | waga ekspansji, a dla obcego obozu waga podboju | gdy ≠ 1000 |
 | charakter | 500 + ekspansywność, a dla obcego obozu 500 + agresja | gdy ≠ 1000 |
 
@@ -130,7 +131,8 @@ ekspansji × ekspansywność. Bez premii za stare obozowisko i bez obcych obozó
 
 - nie jest wodą i nie jest polem obozu,
 - jest **znane** cywilizacji (pamięć mapy, W1),
-- jest **niczyje albo własne** (strefa wpływów), **albo** stoi na nim zamieszkany **obcy obóz**,
+- jest **niczyje albo własne** (strefa wpływów), **albo** stoi na nim zamieszkany **obcy obóz** cywilizacji, z którą **nie** łączy nas
+  pakt o nieagresji, sojusz obronny ani rozejm po wojnie (etap 4d),
 - nie stoi na nim zamieszkana osada (chyba że obca, patrz wypędzenie) i nie zostało zarezerwowane w tej turze.
 
 Puste (porzucone) osady i ruiny **są** dozwolone: wtedy zamiast przeprowadzki jest zajęcie.

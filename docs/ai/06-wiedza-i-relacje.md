@@ -30,7 +30,7 @@ Cywilizacja poznaje inną (poziom „spotkana”), gdy:
 - ich **strefy wpływów się stykają** (dwa sąsiednie pola należą do różnych cywilizacji),
 - tamta **napadnie** jej obóz (G2 z wypędzeniem).
 
-Pierwszy kontakt to wpis w kronice. Dziś kontakt **nie zmienia żadnej decyzji** poza przez sympatię (R2–R4). Dyplomacja przyjdzie w 4d.
+Pierwszy kontakt to wpis w kronice. Dopiero prawdziwy kontakt (nie pogłoska) otwiera dyplomację: D1, D2 i wojnę.
 
 ## R2: Pierwsze wrażenie
 
@@ -72,6 +72,18 @@ Najwyżej 12 wspomnień na znaną cywilizację; przy przepełnieniu znika najsł
 | Kto używa | Jak |
 | --- | --- |
 | G2, wypędzenie obcego obozu | czynnik opinii `1000 − 5 × sympatia` ‰ (sympatia −100 → 1,5; +100 → 0,5) |
-| zaufanie | **nikt** (czeka na umowy w 4d) |
+| D1, D2: umowa handlowa, pakt, sojusz, wojna, pokój | czynniki opinii, wrogości i opinii o pokoju ([dyplomata](10-dyplomata.md)) |
+| zaufanie | D1, D2: pakt o nieagresji, sojusz obronny |
 
-Pełna tabela wydarzeń (też tych, które przyjdą w 4d–4f) jest w `data/relations.json` i GDD 8.5.
+## R6: Wspomnienia z dyplomacji (od 4d)
+
+| Wydarzenie | Kiedy | Sympatia | Zaufanie | Zanika |
+| --- | --- | --- | --- | --- |
+| złamanie traktatu | wypowiedzenie wojny mimo paktu, sojuszu albo rozejmu; sojusznik, który nie pomógł | −20 | −40 | 200 lat; świadkowie (znają obie strony) 50% |
+| aktywny handel | każda tura, w której płynęły towary | +0,5/rok do +30 | +0,2/rok do +20 | 20 lat po zerwaniu |
+| wspólny wróg | obie w wojnie z tym samym wrogiem | +20 | +10 | 50 lat po końcu |
+| pomoc w wojnie | sojusznik dołączył do wojny | +30 | +25 | 200 lat |
+
+„Inny ustrój” czeka na etap 4f.
+
+Pełna tabela wydarzeń (też tych, które przyjdą w 4f) jest w `data/relations.json` i GDD 8.5.
