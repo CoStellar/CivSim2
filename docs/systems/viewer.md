@@ -91,11 +91,17 @@ pokrycie) i 4 liczbami (kafelek biomu + rzeźba, kafelek rzeźby, kafelek cechy,
 **Kolor cywilizacji** (`game/shaders/civ_sprite.gdshader`): piksele w zarezerwowanych magentach `#FF00FF`, `#C000C0`, `#800080`
 dostają jasny, zwykły i ciemny odcień koloru cywilizacji.
 
-## Grafiki zastępcze i podmiana
-Wszystkie grafiki ładuje `ArtLibrary` po nazwie: najpierw `art/export/<warstwa>/<nazwa>.png` (pixel art Patryka), potem
-`art/placeholder/<warstwa>/<nazwa>.png`. Pliki zastępcze robi skrypt `art/placeholder/generate.py` (spis w
-`art/placeholder/README.md`). Grafika pod tą samą nazwą w `art/export/` podmienia zastępczą bez zmian w kodzie. Pliki są czytane
-jako zwykłe PNG, bez importu Godota.
+## Grafiki zastępcze, podmiana i paczki grafik
+Wszystkie grafiki ładuje `ArtLibrary` po nazwie, w kolejności: **wybrana paczka grafik** → `art/export/<warstwa>/<nazwa>.png` (pixel art
+Patryka) → `art/placeholder/<warstwa>/<nazwa>.png`. Pliki zastępcze i `art/placeholder/manifest.json` (wszystkie nazwy i rozmiary)
+robi skrypt `art/placeholder/generate.py`. Pliki są czytane jako zwykłe PNG, bez importu Godota.
+
+**Paczki grafik** (prośba Patryka z 2026-11-06): folder w `art/packs/<nazwa>/` albo `user://art_packs/<nazwa>/` z dowolną częścią
+plików i opcjonalnym `pack.json` (nazwa, autor, opis). Wybór w menu startowym (sekcja Art) albo `--art-pack <folder>`; zapisany
+w ustawieniach po „Start”. **Sprawdzenie przy uruchomieniu** (`ArtCheck`): plik paczki i `art/export/` jest używany tylko wtedy, gdy
+ma znaną nazwę z manifestu, jest czytelnym PNG i ma dokładnie wymagany rozmiar; inaczej rysuje się grafika domyślna. Problemy
+(zły rozmiar, nieznana nazwa, zły folder z podpowiedzią właściwego, uszkodzony plik, plik inny niż PNG) są w menu, w `art_check.txt`
+w folderze paczki i w konsoli. Paczka może też zmienić ramki interfejsu (`ui/`). Opis dla twórców paczek: `art/packs/README.md`.
 
 ## Interfejs (pikselowy)
 - **Motyw** (`PixelTheme`): nieprzezroczyste ramki 9-slice z `art/placeholder/ui/` (styl „skóra i kamień” ery kamienia), przyciski
@@ -128,7 +134,7 @@ jako zwykłe PNG, bez importu Godota.
 | Esc | koniec gry, menu startowe |
 
 Do testów i zrzutów: `--screenshot plik.png` (z `--screenshot-turn N`: po N turach), `--menu-screenshot plik.png`, `--zoom Z`,
-`--overlay WARSTWA` (tylko ta warstwa pól), `--layer WARSTWA` (włącza warstwę), `--watch CYW` (śledzi i włącza mgłę), `--opacity WARSTWA=PROCENT`, `--layer-settings` (otwiera okno ustawień warstw),
+`--overlay WARSTWA` (tylko ta warstwa pól), `--layer WARSTWA` (włącza warstwę), `--watch CYW` (śledzi i włącza mgłę), `--opacity WARSTWA=PROCENT`, `--layer-settings` (otwiera okno ustawień warstw), `--art-pack FOLDER`,
 `--benchmark KLATKI`.
 
 ## Zasady

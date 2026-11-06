@@ -23,6 +23,8 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "art", "placeholder")
 W, H = 48, 42
 
+MANIFEST = []  # every picture the viewer can load, with its size (art/placeholder/manifest.json)
+
 CIV = [(255, 0, 255), (192, 0, 192), (128, 0, 128)]  # light, mid, dark civilization colour
 
 
@@ -132,6 +134,7 @@ class Canvas:
         d = os.path.join(OUT, layer)
         os.makedirs(d, exist_ok=True)
         self.im.save(os.path.join(d, name + ".png"))
+        MANIFEST.append({"file": f"{layer}/{name}.png", "width": self.w, "height": self.h})
 
 
 # ---------------------------------------------------------------- biomes (48×42, 3 variants)
@@ -682,7 +685,17 @@ def main():
     for name in ICONS:
         icon(name)
     theme()
-    print("placeholders written to", os.path.relpath(OUT, ROOT))
+    manifest = {
+        "version": 1,
+        "comment": "Every picture the viewer loads, with its size in pixels. An art pack (art/packs/<name>/ or "
+                   "user://art_packs/<name>/) and art/export/ may hold any of these files under the same path; the viewer "
+                   "checks each one at start and ignores files with another size, broken files and unknown names.",
+        "files": sorted(MANIFEST, key=lambda e: e["file"]),
+    }
+    with open(os.path.join(OUT, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=1)
+        f.write("\n")
+    print("placeholders written to", os.path.relpath(OUT, ROOT), f"({len(MANIFEST)} files)")
 
 
 if __name__ == "__main__":

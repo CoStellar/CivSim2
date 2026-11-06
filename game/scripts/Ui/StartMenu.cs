@@ -33,11 +33,13 @@ public partial class StartMenu : CanvasLayer
     private double _previewIn = -1;
 
     /// <summary>Creates the menu filled with <paramref name="settings"/> (edited in place).</summary>
-    public StartMenu(LocalSetupInfo setup, StartSettings settings, string dataDirectory)
+    public StartMenu(LocalSetupInfo setup, StartSettings settings, string dataDirectory, Map.ArtLibrary? art = null, IReadOnlyList<Map.ArtPack>? packs = null)
     {
         _setup = setup;
         _settings = settings;
         _dataDirectory = dataDirectory;
+        _art = art;
+        _packs = packs ?? [];
     }
 
     /// <summary>Required by Godot; not used.</summary>
@@ -45,6 +47,15 @@ public partial class StartMenu : CanvasLayer
         : this(new LocalSetupInfo([]), new StartSettings(), string.Empty)
     {
     }
+
+    /// <summary>The settings as edited so far.</summary>
+    public StartSettings Settings => _settings;
+
+    /// <summary>Raised when another art pack is chosen, or the pictures should be checked again (same key).</summary>
+    public event Action<string>? ArtPackChosen;
+
+    private readonly Map.ArtLibrary? _art;
+    private readonly IReadOnlyList<Map.ArtPack> _packs;
 
     /// <summary>Raised when the user presses Start; the settings are valid.</summary>
     public event Action<StartSettings>? StartRequested;
@@ -217,7 +228,89 @@ public partial class StartMenu : CanvasLayer
             CustomMinimumSize = new Vector2(330, 0),
             Modulate = new Color(0.7f, 0.7f, 0.7f),
         });
+        ArtSection(box);
         return box;
+    }
+
+    // Art packs: choose one, see which of its files are used and which are wrong, open the folder, check again.
+    private void ArtSection(VBoxContainer box)
+    {
+        box.AddChild(Heading("Art"));
+        var row = new HBoxContainer();
+        box.AddChild(row);
+        row.AddChild(new Label { Text = "Art pack" });
+        var choice = new OptionButton { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        var keys = new List<string> { string.Empty };
+        choice.AddItem("default pictures");
+        foreach (Map.ArtPack p in _packs)
+        {
+            choice.AddItem(p.Author.Length > 0 ? $"{p.Name} ({p.Author})" : p.Name);
+            keys.Add(p.Key);
+        }
+
+        choice.Select(Math.Max(0, keys.IndexOf(_settings.ArtPack)));
+        choice.ItemSelected += i =>
+        {
+            _settings.ArtPack = keys[(int)i];
+            ArtPackChosen?.Invoke(_settings.ArtPack);
+        };
+        row.AddChild(choice);
+
+        var buttons = new HBoxContainer();
+        box.AddChild(buttons);
+        var open = new Button { Text = "Open packs folder", TooltipText = Map.ArtPack.UserFolder };
+        open.Pressed += () =>
+        {
+            System.IO.Directory.CreateDirectory(Map.ArtPack.UserFolder);
+            OS.ShellOpen(Map.ArtPack.UserFolder);
+        };
+        buttons.AddChild(open);
+        var again = new Button { Text = "Check again" };
+        again.Pressed += () => ArtPackChosen?.Invoke(_settings.ArtPack);
+        buttons.AddChild(again);
+
+        var status = new RichTextLabel { BbcodeEnabled = true, CustomMinimumSize = new Vector2(330, 150), ScrollActive = true };
+        box.AddChild(status);
+        if (_art is null)
+        {
+            return;
+        }
+
+        var sb = new System.Text.StringBuilder();
+        if (_art.Pack is { } pack)
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"[color=#f2c279]{pack.Name}[/color]: {_art.PackFiles} of {_art.KnownFiles} pictures used.");
+            if (pack.Description.Length > 0)
+            {
+                sb.Append(' ').Append(pack.Description);
+            }
+
+            sb.Append('\n');
+        }
+        else
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"Put a folder with pictures into the packs folder (same names and sizes as art/placeholder, list in manifest.json) and pick it here.\n");
+        }
+
+        if (_art.ExportFiles > 0)
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"art/export: {_art.ExportFiles} pictures used.\n");
+        }
+
+        if (_art.Issues.Count == 0)
+        {
+            sb.Append("[color=#7ba154]No problems found.[/color]");
+        }
+        else
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"[color=#ec271e]{_art.Issues.Count} files not used:[/color]\n");
+            foreach (Map.ArtIssue issue in _art.Issues)
+            {
+                sb.Append(CultureInfo.InvariantCulture, $"• {issue.Source}/{issue.File}: {issue.Problem}\n");
+            }
+        }
+
+        status.Text = sb.ToString();
     }
 
     private void Start()

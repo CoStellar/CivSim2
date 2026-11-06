@@ -146,6 +146,7 @@ Gotowe, gdy: Patryk uruchamia podgląd, ustawia świat i symulację w menu, star
 - [x] **Grafiki zastępcze (placeholdery):** skrypt `art/placeholder/generate.py` w palecie, nazwy i rozmiary z GDD 12.3: biomy (3 warianty), wzgórza i góry, cechy terenu, rzeki (6 krawędzi × 2 szerokości), ikony złóż, osady (obóz, wioska, miasteczko × 3 stany), pole uprawne, wędrujący obóz i zwiadowca, znaczniki zdarzeń, ikony warstw i ramki interfejsu; kolor cywilizacji przez magenty i shader; pliki w `art/export/` podmieniają je pod tymi samymi nazwami
 - [x] **Śledzenie cywilizacji** (prośba Patryka z 2026-11-06): tabela wszystkich cywilizacji, wykresy ludności, osad i technologii w czasie, panel śledzonej (ludność, osady, jedzenie, badania, charakter, cele, zapasy, stosunki ze wspomnieniami), kamera „Go” i „Track”, kronika tylko o niej
 - [x] **Pikselowy interfejs** (prośba Patryka z 2026-11-06): nieprzezroczyste ramki 9-slice z grafik zastępczych, czcionka Pixelify Sans (wcześniej niż w etapie 13), mniejsza kronika, panele do schowania
+- [x] **Paczki grafik** (prośba Patryka z 2026-11-06): folder z PNG w `art/packs/` lub w folderze użytkownika, wybór w menu, sprawdzenie nazw, formatu i rozmiarów przy uruchomieniu, lista złych plików w menu, w `art_check.txt` i w konsoli
 - [x] Aktualizacja `docs/systems/viewer.md`
 - [ ] Patryk ogląda podgląd u siebie (FPS na karcie graficznej, czy warstwy i panele są wygodne)
 

@@ -7,9 +7,11 @@ using Godot;
 namespace CivSim.Game.Map;
 
 /// <summary>
-/// Loads map pictures by name (GDD 12.3): first from <c>art/export/&lt;layer&gt;/</c> (Patryk's pixel art), then from
-/// <c>art/placeholder/&lt;layer&gt;/</c> (stage 5 placeholders). A picture drawn under the same name replaces the
-/// placeholder without code changes. Pictures are read as plain PNG files at run time, so they need no Godot import.
+/// Loads pictures by name (GDD 12.3), in this order: the chosen art pack (<see cref="ArtPack"/>), then
+/// <c>art/export/&lt;layer&gt;/</c> (Patryk's pixel art), then <c>art/placeholder/&lt;layer&gt;/</c> (stage 5
+/// placeholders). The pack and art/export are checked when the library is made (<see cref="ArtCheck"/>): only files with
+/// a known name and the exact size of <c>art/placeholder/manifest.json</c> are used, the rest are listed in
+/// <see cref="Issues"/>. Pictures are read as plain PNG files at run time, so they need no Godot import.
 /// </summary>
 public sealed class ArtLibrary
 {
@@ -25,14 +27,48 @@ public sealed class ArtLibrary
     /// <summary>River edges in drawing order (N, NE, SE, S, SW, NW) as used in the file names.</summary>
     public static readonly string[] RiverEdges = ["n", "ne", "se", "s", "sw", "nw"];
 
-    private readonly string[] _roots;
+    private readonly string _placeholder;
     private readonly Dictionary<string, Texture2D?> _textures = [];
+    private readonly Dictionary<string, (int Width, int Height)> _expected = new(StringComparer.Ordinal);
+    private readonly ArtCheck _export;
+    private readonly ArtCheck _pack;
 
-    /// <summary>Looks for pictures in <paramref name="artDirectory"/> (the repository's art/ folder).</summary>
-    public ArtLibrary(string artDirectory)
+    /// <summary>
+    /// Looks for pictures in <paramref name="artDirectory"/> (the repository's art/ folder) and, when given, in
+    /// <paramref name="pack"/> first.
+    /// </summary>
+    public ArtLibrary(string artDirectory, ArtPack? pack = null)
     {
-        _roots = [Path.Combine(artDirectory, "export"), Path.Combine(artDirectory, "placeholder")];
+        _placeholder = Path.Combine(artDirectory, "placeholder");
+        ReadManifest(Path.Combine(_placeholder, "manifest.json"));
+        Pack = pack;
+        _export = ArtCheck.Run("art/export", Path.Combine(artDirectory, "export"), _expected);
+        _pack = pack is null ? new ArtCheck() : ArtCheck.Run(pack.Name, pack.Directory, _expected);
+        if (pack is not null)
+        {
+            WriteReport(pack);
+        }
+
+        foreach (ArtIssue issue in Issues)
+        {
+            GD.PrintErr($"art: {issue.Source}/{issue.File}: {issue.Problem}");
+        }
     }
+
+    /// <summary>The art pack in use, or null for the default pictures.</summary>
+    public ArtPack? Pack { get; }
+
+    /// <summary>Problems of the pack and of art/export found at start, in file order.</summary>
+    public IReadOnlyList<ArtIssue> Issues => [.. _pack.Issues, .. _export.Issues];
+
+    /// <summary>Pictures the pack replaces.</summary>
+    public int PackFiles => _pack.Accepted.Count;
+
+    /// <summary>Pictures art/export replaces.</summary>
+    public int ExportFiles => _export.Accepted.Count;
+
+    /// <summary>Pictures the game knows (manifest entries).</summary>
+    public int KnownFiles => _expected.Count;
 
     /// <summary>Terrain atlas index of the first hills tile (two variants, then two of mountains).</summary>
     public const int HillsTile = 0;
@@ -74,24 +110,61 @@ public sealed class ArtLibrary
         return candidates[0];
     }
 
-    /// <summary>A picture as an image, or null when no file has that name.</summary>
+    /// <summary>A picture as an image (pack, then art/export, then placeholder), or null when none has that name.</summary>
     public Image? LoadImage(string layer, string name)
     {
-        foreach (string root in _roots)
+        string rel = layer + "/" + name + ".png";
+        string[] candidates =
+        [
+            _pack.Accepted.GetValueOrDefault(rel) ?? string.Empty,
+            _export.Accepted.GetValueOrDefault(rel) ?? string.Empty,
+            Path.Combine(_placeholder, layer, name + ".png"),
+        ];
+        foreach (string path in candidates)
         {
-            string path = Path.Combine(root, layer, name + ".png");
-            if (File.Exists(path))
+            if (path.Length == 0 || !File.Exists(path))
             {
-                Image image = Image.LoadFromFile(path);
-                if (image is not null && !image.IsEmpty())
-                {
-                    image.Convert(Image.Format.Rgba8);
-                    return image;
-                }
+                continue;
+            }
+
+            var image = new Image();
+            if (image.Load(path) == Error.Ok && !image.IsEmpty())
+            {
+                image.Convert(Image.Format.Rgba8);
+                return image;
             }
         }
 
         return null;
+    }
+
+    // The sizes every picture must have, from the placeholder manifest (written by art/placeholder/generate.py).
+    private void ReadManifest(string path)
+    {
+        if (!File.Exists(path))
+        {
+            GD.PrintErr($"art: {path} is missing, art packs cannot be checked and are not used");
+            return;
+        }
+
+        using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        foreach (System.Text.Json.JsonElement e in doc.RootElement.GetProperty("files").EnumerateArray())
+        {
+            _expected[e.GetProperty("file").GetString()!] = (e.GetProperty("width").GetInt32(), e.GetProperty("height").GetInt32());
+        }
+    }
+
+    // art_check.txt in the pack folder, so whoever draws the pack sees what was wrong without the game open.
+    private void WriteReport(ArtPack pack)
+    {
+        try
+        {
+            File.WriteAllText(Path.Combine(pack.Directory, "art_check.txt"), ArtCheck.Report(pack.Name, _pack, _expected.Count));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            GD.PrintErr($"art: cannot write the check report into {pack.Directory}: {ex.Message}");
+        }
     }
 
     /// <summary>A picture as a texture (cached), or null.</summary>

@@ -53,6 +53,7 @@ public partial class Main : Node2D
     private float _startZoom = 0.5f;
     private MapLayer? _startOverlay;
     private string? _menuScreenshot;
+    private StartSettings? _menuSettings;
     private long _screenshotTurn;
     private readonly List<MapLayer> _extraLayers = [];
     private int _watch = WelcomeMessage.NoCiv;
@@ -65,17 +66,16 @@ public partial class Main : Node2D
         GetNodeOrNull<Label>("StatusLabel")?.QueueFree();
         RenderingServer.SetDefaultClearColor(new Color(0.04f, 0.04f, 0.05f));
         _dataDirectory = FindDataDirectory();
-        _art = new ArtLibrary(ArtLibrary.FindArtDirectory());
-        if (PixelTheme.Build(_art) is { } theme)
+        string[] early = GameArguments();
+        int packArg = Array.IndexOf(early, "--art-pack");
+        if (packArg >= 0 && packArg + 1 < early.Length)
         {
-            GetWindow().Theme = theme;
-            PixelTheme.Current = theme;
-            GD.Print("viewer: pixel theme on");
+            // A pack on the command line is shown as chosen in the menu too (saved only when the user presses Start).
+            _menuSettings = _saved.Start.Copy();
+            _menuSettings.ArtPack = early[packArg + 1];
         }
-        else
-        {
-            GD.Print("viewer: pixel theme pictures missing, default look");
-        }
+
+        LoadArt(_menuSettings?.ArtPack ?? _saved.Start.ArtPack);
         _layers.Load(_saved.Layers);
         _layers.Changed += () => _saved.Layers = _layers.Save();
         _camera = new Camera2D { Zoom = new Vector2(0.5f, 0.5f) };
@@ -147,11 +147,38 @@ public partial class Main : Node2D
         StopGame();
     }
 
+    // Builds the picture library for an art pack (checking its files) and the pixel theme from it.
+    private void LoadArt(string packKey)
+    {
+        string artDirectory = ArtLibrary.FindArtDirectory();
+        ArtPack? pack = ArtPack.Find(artDirectory, packKey);
+        if (!string.IsNullOrWhiteSpace(packKey) && pack is null)
+        {
+            GD.PrintErr($"art: pack '{packKey}' not found; default pictures are used");
+        }
+
+        _art = new ArtLibrary(artDirectory, pack);
+        GD.Print($"viewer: art {(pack is null ? "default" : "pack " + pack.Name)}, {_art.Issues.Count} art problems");
+        Theme? theme = PixelTheme.Build(_art);
+        GetWindow().Theme = theme;
+        PixelTheme.Current = theme;
+    }
+
     private void ShowMenu()
     {
         StopGame();
-        _menu = new StartMenu(LocalServerHost.Describe(_dataDirectory), _saved.Start.Copy(), _dataDirectory);
+        _menu = new StartMenu(LocalServerHost.Describe(_dataDirectory), _menuSettings ?? _saved.Start.Copy(), _dataDirectory, _art, ArtPack.Discover(ArtLibrary.FindArtDirectory()));
+        _menuSettings = null;
         _menu.StartRequested += settings => StartGame(settings, save: true);
+        _menu.ArtPackChosen += key =>
+        {
+            // Keep what the user typed, reload the pictures and the theme, and show the menu again with them.
+            _menuSettings = _menu?.Settings;
+            LoadArt(key);
+            _menu?.QueueFree();
+            _menu = null;
+            CallDeferred(MethodName.ShowMenu);
+        };
         _menu.QuitRequested += () => GetTree().Quit();
         AddChild(_menu);
         if (_menuScreenshot is not null)

@@ -773,6 +773,10 @@ Do etapu 4 podgląd używa prostych kolorowych heksów. Od etapu 5 używa grafik
 | Jednostki (z kolorem cywilizacji) | 32×32 | 6 + 2 klatki ruchu | Etap 13 |
 | Portrety przywódców | 64×64 | 8 | Etap 13 |
 
+**Paczki grafik** (decyzja Patryka z 2026-11-06): każdy może wrzucić własne grafiki do folderu paczki (`art/packs/` albo folder
+użytkownika) pod nazwami i w rozmiarach z `art/placeholder/manifest.json` i wybrać ją w menu. Gra sprawdza pliki przy uruchomieniu,
+pomija złe (zły rozmiar, nazwa, format) i wypisuje, które nie działają. Kolejność: paczka → grafiki Patryka → grafiki zastępcze.
+
 ### 12.4 Interfejs
 
 - Pełny ekran, skalowanie UI także całkowite. Cały interfejs po angielsku, czcionka pixelowa.

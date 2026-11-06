@@ -7,7 +7,8 @@
 | `legacy/` | Grafiki ze starego CivSim jako materiał odniesienia (32×32) |
 | `src/` | Pliki źródłowe LibreSprite (`.ase`) |
 | `export/` | PNG gotowe do gry, w podkatalogach według warstw |
-| `placeholder/` | Grafiki zastępcze etapu 5 (skrypt `generate.py`); podgląd bierze plik z `export/`, gdy istnieje, a dopiero potem stąd |
+| `placeholder/` | Grafiki zastępcze etapu 5 (skrypt `generate.py`) i `manifest.json`: lista wszystkich nazw i rozmiarów grafik gry |
+| `packs/` | Paczki grafik (szaty graficzne) do wyboru w menu; kolejność: paczka → `export/` → `placeholder/` (opis w `packs/README.md`) |
 
 ## Zasady
 

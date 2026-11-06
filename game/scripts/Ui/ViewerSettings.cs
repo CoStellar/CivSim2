@@ -135,6 +135,7 @@ public sealed class StartSettings
                 case "--speed": s.Speed = v; break;
                 case "--turn-limit": s.TurnLimit = long.Parse(v, CultureInfo.InvariantCulture); break;
                 case "--report": s.Report = true; s.ReportPath = v; break;
+                case "--art-pack": s.ArtPack = v; break;
             }
         }
 
@@ -143,6 +144,9 @@ public sealed class StartSettings
 
     /// <summary>A copy (the menu edits copies, so Cancel never changes the saved settings).</summary>
     public StartSettings Copy() => (StartSettings)MemberwiseClone();
+
+    /// <summary>Folder name of the art pack; empty = default pictures.</summary>
+    public string ArtPack { get; set; } = string.Empty;
 
     /// <summary>Speed word to the protocol value.</summary>
     public static SimulationSpeed ParseSpeed(string? word) => word switch
