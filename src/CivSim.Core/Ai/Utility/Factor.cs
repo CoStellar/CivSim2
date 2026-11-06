@@ -62,6 +62,27 @@ public enum FactorId : byte
 
     /// <summary>Sympathy for the people living at the place (GDD 8.5; stage 4c), points from −100 to 100.</summary>
     Opinion = 18,
+
+    /// <summary>Trust in the other civilization (GDD 8.5; stage 4d), points from −100 to 100.</summary>
+    Trust = 19,
+
+    /// <summary>Known warriors of a rival against ours, percent (stage 4d).</summary>
+    Threat = 20,
+
+    /// <summary>What trade would gain both sides, percent of the goods' worth (stage 4d).</summary>
+    TradeGain = 21,
+
+    /// <summary>A reason for war: a disputed settlement or an attack to avenge (GDD 9.3: no war without one).</summary>
+    Cause = 22,
+
+    /// <summary>A treaty that war would break: loyalty holds the civilization back (stage 4d).</summary>
+    Treaty = 23,
+
+    /// <summary>Years the war has lasted (war weariness until stage 4e).</summary>
+    WarYears = 24,
+
+    /// <summary>The two civilizations are at war (stage 4d).</summary>
+    War = 25,
 }
 
 /// <summary>

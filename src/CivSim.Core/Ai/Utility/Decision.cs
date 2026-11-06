@@ -62,6 +62,18 @@ public enum AiAction : byte
 
     /// <summary>The strategist sets goal weights and the expansion target.</summary>
     SetStrategy = 10,
+
+    /// <summary>The diplomat proposes a treaty, or peace (stage 4d).</summary>
+    ProposeTreaty = 11,
+
+    /// <summary>The diplomat accepts a proposed treaty.</summary>
+    AcceptTreaty = 12,
+
+    /// <summary>The diplomat declines a proposed treaty.</summary>
+    DeclineTreaty = 13,
+
+    /// <summary>The diplomat declares war.</summary>
+    DeclareWar = 14,
 }
 
 /// <summary>
@@ -113,7 +125,7 @@ public readonly record struct Decision(
         : string.Create(CultureInfo.InvariantCulture, $"{Name(factor.Id)} {factor.PerMille / 10}% ({factor.Input})");
 
     // Notes whose input is a percentage (farm grain against what the people eat, people against the level's room...).
-    private static bool InPercent(FactorId id) => id is FactorId.FarmYield or FactorId.Crowding or FactorId.Strength or FactorId.Comfort;
+    private static bool InPercent(FactorId id) => id is FactorId.FarmYield or FactorId.Crowding or FactorId.Strength or FactorId.Comfort or FactorId.Threat or FactorId.TradeGain;
 
     /// <summary>Lower-case English name of a factor.</summary>
     public static string Name(FactorId id) => id switch
@@ -126,6 +138,8 @@ public readonly record struct Decision(
         FactorId.InputsAvailable => "inputs available",
         FactorId.ResearchCost => "research cost",
         FactorId.GoalWeight => "goal weight",
+        FactorId.TradeGain => "trade gain",
+        FactorId.WarYears => "years at war",
         _ => id.ToString().ToLowerInvariant(),
     };
 }

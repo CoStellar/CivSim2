@@ -131,7 +131,7 @@ public sealed class AiCouncil : ICommandSource
     {
         ArgumentNullException.ThrowIfNull(content);
         Governor = new GovernorAdvisor(content);
-        _advisors = [Governor, new StrategistAdvisor(content, Governor), new TreasurerAdvisor(content), new Research.ScholarAdvisor(content)];
+        _advisors = [Governor, new StrategistAdvisor(content, Governor), new TreasurerAdvisor(content), new Research.ScholarAdvisor(content), new DiplomatAdvisor(content)];
         foreach (Advisor advisor in _advisors)
         {
             advisor.Log = Log;

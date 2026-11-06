@@ -50,11 +50,11 @@ flowchart LR
 | Wydarzenie | Sympatia | Zaufanie | Zanika po | Kto je wywołuje |
 | --- | --- | --- | --- | --- |
 | Atak na nas | −50 | −20 | 150 lat (mściwi: 300) | napaść na obóz (4c) |
-| Złamanie traktatu | −20 | −40 | 200 lat | umowy (4d) |
+| Złamanie traktatu | −20 | −40 | 200 lat | wypowiedzenie wojny mimo paktu, sojuszu lub rozejmu; sojusznik, który nie przyszedł z pomocą (4d); świadkowie pamiętają połowę |
 | Spór graniczny | −1 na rok (do −30) | — | 20 lat po końcu | roszczenie do osady (4c) |
-| Aktywny handel | +0,5 na rok (do +30) | +0,2 na rok (do +20) | 20 lat po końcu | handel (4d) |
-| Wspólny wróg | +20 | +10 | 50 lat po końcu wojny | wojny (4e) |
-| Pomoc w wojnie | +30 | +25 | 200 lat | wojny (4e) |
+| Aktywny handel | +0,5 na rok (do +30) | +0,2 na rok (do +20) | 20 lat po końcu | tura z wymianą towarów przy umowie handlowej (4d) |
+| Wspólny wróg | +20 | +10 | 50 lat po końcu wojny | obie strony w wojnie z tym samym wrogiem (4d) |
+| Pomoc w wojnie | +30 | +25 | 200 lat | sojusznik przystąpił do wojny obronnej (4d) |
 | Inny ustrój | −10 | — | od razu po końcu | ustroje (4f) |
 
 ## Pliki danych

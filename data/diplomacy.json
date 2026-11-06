@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "comment": "Diplomacy and trade between civilizations (GDD 9.1-9.2; stage 4d). Two civilizations that have both really met (relations.json) are at peace by default. treaties: war is a state; peace ends a war and keeps a truce for years; trade lets merchants exchange surpluses; non_aggression and defensive_alliance forbid driving out each other's camps; an alliance needs a non-aggression pact first. requires (optional): a technology both sides must know. bindsAgainstWar: declaring war while the treaty holds breaks it (the victim remembers broken_treaty from relations.json, everyone who has met both remembers witnessPercent of it). The diplomat of every AI civilization answers proposals every turn and reviews its relations every reviewEveryYears years (staggered): it scores each step towards every civilization it met (base 1, times the factors below, times the strategist's goal weight and the character multiplier) and takes one of the best scoring at least proposeAbove (declareWarAbove for war); the other side scores the proposal the same way and accepts at acceptAbove. A declined proposal is not made again for retryYears. Factors are response curves: x from x0 to x1 maps linearly to a factor from f0 to f1, flat outside. opinion and trust take sympathy and trust points (-100..100); threat: their seen warriors against ours, percent; tradeGain: what both would gain, percent of the goods' worth (the price gap after the transport loss); hostility: sympathy for war (no dislike, no war); advantage: our warriors against theirs and their allies', percent; warWeariness: years at war; peaceOpinion: sympathy for peace. War also needs a cause (a settlement of ours they live in, or an attack of theirs remembered) and loyalty holds back from breaking a treaty (factor 1 - loyalty, at least 0.1). Trade: the nearest settlements of the partners (gateways, at most reachCells apart, also the reach of pacts) exchange tradeSharePercent of their surplus per turn, only goods the other side prices higher after the loss and only as much as the other gateway lacks, as barter of equal worth. Allies: when war is declared on a civilization, each of its defensive allies joins with a chance from allyJoinBasePerMille (loyalty 0) to 1000 (loyalty 1); one that stays out breaks the alliance. During a war, raids on the enemy's camps are worth warRaidPercent. Working values, to be tuned in batch tests (stage 4g).",
+  "reviewEveryYears": 50,
+  "proposeAbove": "1",
+  "acceptAbove": "0.8",
+  "declareWarAbove": "1.5",
+  "retryYears": 100,
+  "reachCells": 16,
+  "tradeSharePercent": 50,
+  "witnessPercent": 50,
+  "allyJoinBasePerMille": 300,
+  "warRaidPercent": 150,
+  "curves": {
+    "opinion": {"x0": -50, "f0": "0", "x1": 50, "f1": "2"},
+    "trust": {"x0": -50, "f0": "0", "x1": 50, "f1": "2"},
+    "allianceTrust": {"x0": 0, "f0": "0", "x1": 30, "f1": "1.5"},
+    "threat": {"x0": 50, "f0": "0.5", "x1": 200, "f1": "1.5"},
+    "tradeGain": {"x0": 0, "f0": "0", "x1": 40, "f1": "1.5"},
+    "hostility": {"x0": -50, "f0": "2", "x1": 0, "f1": "0"},
+    "advantage": {"x0": 120, "f0": "0", "x1": 250, "f1": "1.5"},
+    "warWeariness": {"x0": 0, "f0": "0", "x1": 150, "f1": "1.5"},
+    "peaceOpinion": {"x0": -100, "f0": "0.3", "x1": 50, "f1": "1.5"}
+  },
+  "treaties": [
+    {"kind": "war"},
+    {"kind": "peace", "years": 100, "bindsAgainstWar": true},
+    {"kind": "trade"},
+    {"kind": "non_aggression", "bindsAgainstWar": true},
+    {"kind": "defensive_alliance", "bindsAgainstWar": true}
+  ]
+}
