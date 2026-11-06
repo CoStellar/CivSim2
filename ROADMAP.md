@@ -154,9 +154,9 @@ Przed 4e (wojna potrzebuje kowali i broni). Zasady: GDD 5.1, 5.2, 6.1, ADR 0020.
 
 Gotowe, gdy: w 3 grach po 1000 tur technologie przychodzą dopiero po zebraniu fachowców, ludzie uczą się fachów i przenoszą je między osadami, przyrost w epoce kamienia jest ok. 3 razy wolniejszy, a śmiertelność dzieci zmienia się z technologiami według danych historycznych.
 
-- [x] **PR 1:** fachy w danych (`data/skills.json`) i stanie osad; warstwy myślicieli i przywódców; kolumny w `--stats`; zapis
+- [x] **PR 1:** fachy w danych (`data/skills.json`) i stanie osad; przycinanie do ludzi warstwy; kolumny w `--stats`; zapis (format 21); gra bez zmian (ten sam hash)
 - [ ] **PR 2:** nauka fachu (mistrzowie, uczniowie za pół, lata nauki), przenoszenie między osadami sieci, utrata fachu; plony i receptury liczą fachowców
-- [ ] **PR 3:** wymogi ludzi w technologiach (`requiresPeople`), nauka głównie od myślicieli; AI: uczony widzi braki ludzi, nowa decyzja, ilu ludzi uczyć
+- [ ] **PR 3:** warstwy myślicieli i przywódców (starszyzna, wódz); wymogi ludzi w technologiach (`requiresPeople`), nauka głównie od myślicieli; AI: uczony widzi braki ludzi, nowa decyzja, ilu ludzi uczyć
 - [ ] **PR 4:** urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty technologii (dane historyczne); wykres ludności przed/po
 - [ ] **PR 5:** graf technologii i fachów rysowany z danych; test osiągalności od zera i braku pętli; `docs/systems/skills.md`, `docs/ai/`
 

@@ -83,12 +83,12 @@ er 1–10 w GDD 5.2.
 
 ## PR-y
 
-1. **Fachy w danych i stanie.** `data/skills.json` z walidacją; warstwy `thinkers` i `leaders` w `data/strata.json`; liczba fachowców
+1. **Fachy w danych i stanie** (gotowe). `data/skills.json` z walidacją; liczba fachowców
    i uczniów na fach w `SettlementState` (płaska tablica); hash, zapis (nowy format), migawka i protokół; kolumny `--stats`
    (fachowcy na fach w cywilizacji). Przy starcie każdy wytwórca to zbieracz, wojownik to wojownik, a reszta jak w danych.
 2. **Nauka fachu.** Mistrzowie po odkryciu, uczniowie (do 3 na mistrza, praca za pół), lata nauki, przenoszenie w sieci (próg z ADR),
    utrata; plony z technologii zbierania i receptury liczą tylko fachowców.
-3. **Wymogi ludzi i nauka od myślicieli.** `requiresPeople` (cywilizacja albo jedna osada); `sciencePerThousandPerYear` z ADR;
+3. **Warstwy myślicieli i przywódców, wymogi ludzi i nauka od myślicieli.** `thinkers` i `leaders` w `data/strata.json` (fachy elder, chief); `requiresPeople` (cywilizacja albo jedna osada); `sciencePerThousandPerYear` z ADR;
    uczony AI pomija technologie bez ludzi i waży, czego brakuje; nowa decyzja AI (strateg albo gubernator): ilu ludzi uczyć fachu.
 4. **Demografia.** Efekty `birthsPerMille`, `childMortalityPercent`, `adultDeathsPerMille`; strojenie er 1–2; 3 seedy przed/po.
 5. **Graf z danych i dokumentacja.** Skrypt rysuje graf z `data/technologies.json` i `data/skills.json`; test: każdy fach
