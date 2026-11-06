@@ -19,7 +19,8 @@ flowchart TD
   C --> P["Ludność (faza 8)"]
   P --> H["Zdrowie: głód i tłok"]
   P --> N["Nastrój: jedzenie 60 pkt + potrzeby wyższe 40 pkt + efekty"]
-  H --> R["Przyrost na rok: urodzenia − zgony<br/>+ nastrój − choroby − depopulacja"]
+  T["Efekty technologii (etap 4F)<br/>ogień: dzieci −1 pkt %<br/>garncarstwo: dorośli −0,6‰"] --> R
+  H --> R["Przyrost na rok: urodzenia × (1 − śmiertelność dzieci)<br/>− zgony dorosłych (+2‰ w wiosce)<br/>− choroby − depopulacja; nastrój zmienia urodzenia"]
   N --> R
   R --> W["Nowa liczba ludzi, rozdział na warstwy, powolne przesuwanie warstw"]
 ```
@@ -33,17 +34,22 @@ Wszystkie tempa są na rok i przeliczane przez długość kroku cywilizacji (ADR
 - **Potrzeby:** każdy zjada 1 jednostkę jedzenia na rok (wojownik 1,2). Potrzeby wyższe: odzież ze skór (wytwórcy), narzędzia kamienne (rzemieślnicy i wojownicy). Najpierw wszyscy jedzą, dopiero potem zużywają narzędzia i odzież.
 - **Głód:** z osób, dla których zabrakło jedzenia, 80% umiera w czasie tury.
 - **Zdrowie** (0–100): minus brak jedzenia (w procentach), minus tłok (połowa nadwyżki ponad limit poziomu osady, np. 150 dla obozu). Poniżej 60 każdy punkt to 0,2 promila dodatkowych zgonów na rok.
-- **Przyrost:** 35 urodzeń − 32 zgony na tysiąc rocznie (+0,3% na rok, ok. +16% na turę 50 lat), plus 0,05 promila za każdy punkt nastroju ponad 50.
+- **Przyrost** (od etapu 4F, PR 4, ADR 0020, GDD 5.2): `urodzenia × (1 − śmiertelność dzieci) − zgony dorosłych` na rok (`PopulationSystem.GrowthRate`). Na start (najedzona, zdrowa osada, nastrój 50): 60‰ × (1 − 49%) − 29,6‰ = **+1,0‰ na rok** (wcześniej +3‰, czyli 3 razy wolniej). Liczby z danych historycznych: zbieracze-łowcy tracili ok. 49% dzieci przed 15. rokiem życia (Volk i Atkinson 2013), a ludność świata rosła od 10 000 lat p.n.e. do 1700 roku średnio o ok. 0,4‰ na rok (Our World in Data; głód, choroby i wojny zabierają resztę).
+  - Nastrój zmienia urodzenia: 0,1‰ za każdy punkt ponad 50 (mniej poniżej); z tego przeżywa tyle dzieci, ile pozwala śmiertelność, więc na przyrost działa mniej więcej jak dawne 0,05‰.
+  - Wioska: +2‰ zgonów dorosłych (ciasnota, brud, choroby od zwierząt hodowlanych).
+  - Choroby: poniżej 60 zdrowia każdy punkt to 0,2‰ zgonów dorosłych więcej.
+  - Technologie przez efekty (`data/effects.json`): `child_care` (śmiertelność dzieci w dziesiątych częściach procenta), `clean_living` (zgony dorosłych na 10 000), `fertility` (urodzenia na 10 000). Ery 1–2: ogień −10 (49% → 48%, przyrost +1,6‰), garncarstwo −6 (29,6‰ → 29‰, przyrost +2,2‰; czystsze przechowywanie wody i jedzenia). Kolejne ery (higiena, medycyna, kanalizacja, szczepionki) dodadzą efekty według tabeli w GDD 5.2.
 - Cywilizacja bez ani jednego człowieka wymiera; kronika to zapisuje.
 
 **Co z tego wychodzi** (seed 42, mapa standardowa, 2000 tur): każde plemię w ok. 10 turach (500 lat) dochodzi do granicy tego, co da się zebrać wokół obozu (115–310 osób), i tam zostaje. Zdrowie średnio ok. 64 przez tłok ponad 150 osób. Dalszy wzrost dadzą wędrówki i nowe obozy (3c).
 
 ## Pliki danych
 - `data/strata.json`: warstwy, czy zbierają, docelowy udział, potrzeby (kategoria albo konkretny towar, ilość na rok, podstawowa albo wyższa).
-- `data/population.json`: urodzenia, zgony, głód, zdrowie, nastrój, przesuwanie warstw, zbieranie i ludność nowego plemienia.
+- `data/population.json`: urodzenia (`birthsPerMille`), śmiertelność dzieci (`childMortalityPercent`), zgony dorosłych (`adultDeathsPerMille`, `villageDeathsPerMille`), głód, zdrowie, nastrój, przesuwanie warstw, zbieranie i ludność nowego plemienia.
 - `data/resources.json`: opcjonalne `gather` przy złożach.
 
 ## Testy
+- `DemographyTests` (etap 4F): zbieracze rosną o 1‰ na rok, nastrój zmienia urodzenia; ogień i garncarstwo obniżają śmiertelność, wioska ją podnosi; choroby dalej zabijają; liczby pochodzą z danych.
 - `PopulationTests`: dane się wczytują; zepsute dane zgłaszają każdy błąd; wzrost liczy się jak procent składany; plemię startuje z 50 osobami; zbieracze przynoszą jedzenie; najedzone plemię rośnie; plemię bez jedzenia wymiera i trafia do kroniki; zaokrąglenia nie tworzą ani nie gubią ludzi; warstwy dochodzą do 5% i 15%; liczebność się stabilizuje zamiast rosnąć bez końca; zapis i odczyt w połowie gry daje identyczną dalszą historię; długość tury nie zmienia tempa rocznego.
 
 ## Wydajność

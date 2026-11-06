@@ -157,7 +157,7 @@ Gotowe, gdy: w 3 grach po 1000 tur technologie przychodzą dopiero po zebraniu f
 - [x] **PR 1:** fachy w danych (`data/skills.json`) i stanie osad; przycinanie do ludzi warstwy; kolumny w `--stats`; zapis (format 21); gra bez zmian (ten sam hash)
 - [x] **PR 2:** nauka fachu (mistrzowie, uczniowie za pół, lata nauki), przenoszenie między osadami sieci, utrata fachu; plony i receptury liczą fachowców
 - [x] **PR 3:** warstwy myślicieli i przywódców (starszyzna, wódz); wymogi ludzi w technologiach (`requiresPeople`), nauka głównie od myślicieli; AI: uczony widzi braki ludzi (decyzja AI „ile uczyć” odłożona: nauka fachu to reguła systemu, do decyzji Patryka)
-- [ ] **PR 4:** urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty technologii (dane historyczne); wykres ludności przed/po
+- [x] **PR 4:** urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty technologii (dane historyczne: start +1,0‰ na rok, ogień +1,6‰, garncarstwo +2,2‰, wioska −2‰); wykres ludności przed/po (`docs/ai/img/ludnosc_przed_po.png`)
 - [ ] **PR 5:** graf technologii i fachów rysowany z danych; test osiągalności od zera i braku pętli; `docs/systems/skills.md`, `docs/ai/`
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
