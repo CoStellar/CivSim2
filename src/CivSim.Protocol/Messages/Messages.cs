@@ -16,6 +16,9 @@ namespace CivSim.Protocol.Messages;
 [Union(7, typeof(ContentMessage))]
 [Union(8, typeof(MapChunkMessage))]
 [Union(9, typeof(SetSpeedMessage))]
+[Union(10, typeof(ObserverDetailsMessage))]
+[Union(11, typeof(WatchCivilizationMessage))]
+[Union(12, typeof(FogMessage))]
 public interface IProtocolMessage
 {
 }

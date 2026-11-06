@@ -28,6 +28,7 @@ public sealed class GameServer
     private readonly List<ChronicleEntry> _chronicle = [];
     private readonly List<ChronicleEntry> _history = [];
     private readonly bool[][] _pendingChunks;
+    private readonly ObserverViewBuilder? _observerView;
     private long _lastTurnTicks;
     private int _nextPlayerId = 1;
 
@@ -46,6 +47,7 @@ public sealed class GameServer
         if (content is not null)
         {
             CoreSystems.Register(Runner, content);
+            _observerView = new ObserverViewBuilder(content);
         }
         _pendingChunks = new bool[state.Worlds.Count][];
         for (int w = 0; w < state.Worlds.Count; w++)
@@ -71,6 +73,16 @@ public sealed class GameServer
 
     /// <summary>Speed chosen by an observer. The host uses it to pace turns.</summary>
     public SimulationSpeed Speed { get; private set; } = SimulationSpeed.Paused;
+
+    /// <summary>Duration of the last turn in microseconds.</summary>
+    public long LastTurnMicroseconds => (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
+
+    /// <summary>Pauses the simulation from the server side (turn limit of the start menu) and says why in the chronicle.</summary>
+    public void Pause(string reason)
+    {
+        Speed = SimulationSpeed.Paused;
+        AddChronicle(reason);
+    }
 
     /// <summary>True when chronicle lines wait to be sent (for example after a speed change while paused).</summary>
     public bool HasUnsentChronicle => _chronicle.Count > 0 && _clients.Exists(c => c.Player is not null);
@@ -198,6 +210,18 @@ public sealed class GameServer
                 }
 
                 break;
+            case WatchCivilizationMessage watch:
+                if (client.IsObserver)
+                {
+                    client.Watched = watch.CivId < 0 || State.FindCivilization(new CivId(watch.CivId)) is null ? null : new CivId(watch.CivId);
+                    SendObserverDetails(client);
+                }
+                else
+                {
+                    client.Connection.Send(new ConnectionRejectedMessage("Only observers can watch another civilization."));
+                }
+
+                break;
             case EndTurnMessage end:
                 if (client.Civ is not null && end.Turn == State.Turn)
                 {
@@ -234,6 +258,7 @@ public sealed class GameServer
             client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
             client.JustJoined = true;
             SendAllChunks(client);
+            SendObserverDetails(client);
             return;
         }
 
@@ -440,6 +465,8 @@ public sealed class GameServer
                     }
                 }
             }
+
+            SendObserverDetails(client);
         }
 
         foreach (bool[] world in _pendingChunks)
@@ -448,6 +475,21 @@ public sealed class GameServer
         }
 
         _chronicle.Clear();
+    }
+
+    // Observers also get the developer layers and, when they watch a civilization, its fog (stage 5).
+    private void SendObserverDetails(Client client)
+    {
+        if (!client.IsObserver || _observerView is null)
+        {
+            return;
+        }
+
+        client.Connection.Send(_observerView.Build(State));
+        if (client.Watched is { } civ && _observerView.Fog(State, civ) is { } fog)
+        {
+            client.Connection.Send(fog);
+        }
     }
 
     private void Disconnect(Client client)
@@ -474,6 +516,9 @@ public sealed class GameServer
         public bool IsObserver { get; set; }
 
         public bool[]? Known { get; set; }
+
+        // Civilization whose fog an observer looks at, if any.
+        public CivId? Watched { get; set; }
 
         // Got the whole history on joining, so the lines still waiting to be sent are not new to it.
         public bool JustJoined { get; set; }

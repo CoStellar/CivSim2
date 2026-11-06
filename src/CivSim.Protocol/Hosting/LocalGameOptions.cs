@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace CivSim.Protocol.Hosting;
 
 /// <summary>
@@ -63,6 +65,15 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
 
     /// <summary>normal, scarce or rich.</summary>
     public string Resources { get; init; } = "normal";
+
+    /// <summary>Simulation pauses after this many turns (0 = no limit); the observer can resume it (stage 5 start menu).</summary>
+    public long TurnLimit { get; init; }
+
+    /// <summary>When set, the host appends one CSV line per turn here (turn, year, turn time, people, settlements).</summary>
+    public string? ReportPath { get; init; }
+
+    /// <summary>Map size words in the order of the start menu.</summary>
+    public static IReadOnlyList<string> SizeNames { get; } = ["test", "standard", "large", "huge"];
 
     /// <summary>Map size presets from GDD 3.</summary>
     public static LocalGameOptions ForSize(string size, ulong seed) => size switch

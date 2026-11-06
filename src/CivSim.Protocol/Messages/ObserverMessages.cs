@@ -1,0 +1,105 @@
+using System.Collections.Generic;
+using MessagePack;
+
+namespace CivSim.Protocol.Messages;
+
+/// <summary>
+/// Server → observer, after every view (stage 5, layered map view): what the developer layers draw on top of the
+/// map. Players never get this message; they will see units and fields through their own fog of war in stage 13.
+/// </summary>
+[MessagePackObject]
+public sealed record ObserverDetailsMessage(
+    [property: Key(0)] long Turn,
+    [property: Key(1)] IReadOnlyList<JourneyView> Journeys,
+    [property: Key(2)] IReadOnlyList<FieldView> Fields,
+    [property: Key(3)] IReadOnlyList<CellEventView> Events,
+    [property: Key(4)] IReadOnlyList<RelationView> Relations) : IProtocolMessage;
+
+/// <summary>A camp walking to a far place over several turns (stage 3g): where it is and where it goes.</summary>
+[MessagePackObject]
+public sealed record JourneyView(
+    [property: Key(0)] int Settlement,
+    [property: Key(1)] int Owner,
+    [property: Key(2)] int World,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] int TargetCol,
+    [property: Key(6)] int TargetRow,
+    [property: Key(7)] int People);
+
+/// <summary>A farmed cell (stage 3, agriculture): owner and how many of the cell's farmer places are worked, 0–100%.</summary>
+[MessagePackObject]
+public sealed record FieldView(
+    [property: Key(0)] int World,
+    [property: Key(1)] int Col,
+    [property: Key(2)] int Row,
+    [property: Key(3)] int Owner,
+    [property: Key(4)] int WorkedPercent);
+
+/// <summary>
+/// An active effect of an event (stage 3h) on a cell or a settlement. <see cref="Effect"/> is the effect key from
+/// data/effects.json (for example <c>extraction_reduction</c>); <see cref="Strength"/> is its signed strength.
+/// </summary>
+[MessagePackObject]
+public sealed record CellEventView(
+    [property: Key(0)] int World,
+    [property: Key(1)] int Col,
+    [property: Key(2)] int Row,
+    [property: Key(3)] string Effect,
+    [property: Key(4)] int Strength,
+    [property: Key(5)] long EndMonth);
+
+/// <summary>
+/// How two civilizations stand (stage 4c–4d). <see cref="SympathyAB"/> is what A thinks of B (hundredths, −10 000 …
+/// +10 000), <see cref="SympathyBA"/> the other way; 0 when one does not know the other. <see cref="Treaties"/>
+/// is a bit set of <see cref="RelationView"/> flags.
+/// </summary>
+[MessagePackObject]
+public sealed record RelationView(
+    [property: Key(0)] int A,
+    [property: Key(1)] int B,
+    [property: Key(2)] int Contact,
+    [property: Key(3)] int SympathyAB,
+    [property: Key(4)] int SympathyBA,
+    [property: Key(5)] int Treaties)
+{
+    /// <summary>Contact: only a rumor.</summary>
+    public const int Rumor = 1;
+
+    /// <summary>Contact: the two have met.</summary>
+    public const int Met = 2;
+
+    /// <summary>Treaty flag: at war.</summary>
+    public const int War = 1 << 0;
+
+    /// <summary>Treaty flag: peace (truce after a war).</summary>
+    public const int Peace = 1 << 1;
+
+    /// <summary>Treaty flag: trade agreement.</summary>
+    public const int Trade = 1 << 2;
+
+    /// <summary>Treaty flag: non-aggression pact.</summary>
+    public const int NonAggression = 1 << 3;
+
+    /// <summary>Treaty flag: defensive alliance.</summary>
+    public const int Alliance = 1 << 4;
+}
+
+/// <summary>
+/// Observer → server: show the map memory and fog of war of one civilization (layer "memory and fog"), or stop
+/// with <see cref="WelcomeMessage.NoCiv"/>. The observer still gets the whole map; the fog comes as a separate layer.
+/// </summary>
+[MessagePackObject]
+public sealed record WatchCivilizationMessage([property: Key(0)] int CivId) : IProtocolMessage;
+
+/// <summary>
+/// Server → observer: what the watched civilization knows of a world, one byte per cell in row order
+/// (<see cref="MapChunkMessage.Unknown"/>, <see cref="MapChunkMessage.Remembered"/>, <see cref="MapChunkMessage.Visible"/>).
+/// Sent after every view while a civilization is watched.
+/// </summary>
+[MessagePackObject]
+public sealed record FogMessage(
+    [property: Key(0)] int CivId,
+    [property: Key(1)] int WorldId,
+    [property: Key(2)] long Turn,
+    [property: Key(3)] byte[] Cells) : IProtocolMessage;
