@@ -40,11 +40,19 @@ public sealed class ForeignTradeSystem(GameContent content) : ITurnSystem
         GameState state = context.State;
         LastWorth = 0;
         List<List<int>>? networks = null;
-        int months = state.MonthsPerTurn(_content);
         bool sorted = false;
         foreach (Treaty t in state.Treaties.All)
         {
             if (t.Kind != TreatyKind.Trade)
+            {
+                continue;
+            }
+
+            // Goods change hands in the own step of either partner, for the months of that step (ADR 0018).
+            int monthsA = WorldClock.MonthsOf(state, t.A);
+            int monthsB = WorldClock.MonthsOf(state, t.B);
+            int months = Math.Max(monthsA, monthsB);
+            if (months == 0)
             {
                 continue;
             }
@@ -76,8 +84,16 @@ public sealed class ForeignTradeSystem(GameContent content) : ITurnSystem
                 LastWorth += t.LastWorth;
             }
 
-            Keep(state, t.A, t.B, t.LastWorth > 0, months);
-            Keep(state, t.B, t.A, t.LastWorth > 0, months);
+            // Each side remembers the trade in its own steps.
+            if (monthsA > 0)
+            {
+                Keep(state, t.A, t.B, t.LastWorth > 0, monthsA);
+            }
+
+            if (monthsB > 0)
+            {
+                Keep(state, t.B, t.A, t.LastWorth > 0, monthsB);
+            }
         }
     }
 

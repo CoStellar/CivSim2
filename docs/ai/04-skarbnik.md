@@ -12,7 +12,8 @@ pusta albo żadna znana technologia nie odblokowuje receptury.
 
 ### Kiedy i dla kogo
 
-- Tura decyzyjna, i tylko gdy w grze są receptury.
+- Własny krok cywilizacji, który zaczyna okres długości kroku ery (`WorldClock.PlansNow`, ADR 0018; na Ziemi każdy własny krok), i
+  tylko gdy w grze są receptury.
 - Dla każdej **sieci handlowej** cywilizacji AI (osady jednej cywilizacji połączone łańcuchem odstępów ≤ 8 pól), a w niej dla każdej
   osady, która ma **rzemieślników**. Obozy też.
 

@@ -8,7 +8,7 @@ using CivSim.Core.State;
 namespace CivSim.Core.Ai;
 
 /// <summary>
-/// The strategist (GDD 8.1, 7.6; stage 4b). It gives no orders: every few turns, and at once when its civilization enters
+/// The strategist (GDD 8.1, 7.6; stage 4b). It gives no orders: every few own steps of its civilization, and at once when it enters
 /// a new era, it sets the goal weights the other advisors multiply their scores by, and an expansion target. Crowded
 /// camps raise expansion, hunger raises prosperity and security; conquest stays neutral until wars (stage 4e). The target is the best free land the civilization knows within a journey of its largest
 /// settlement.
@@ -31,11 +31,11 @@ public sealed class StrategistAdvisor : Advisor
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(queue);
         AiRules rules = Content.Ai;
-        int monthsPerTurn = state.MonthsPerTurn(Content);
         for (int c = 0; c < state.Civilizations.Count; c++)
         {
             CivilizationState civ = state.Civilizations[c];
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || (state.Month < civ.StrategyReviewMonth && civ.Era == civ.StrategyEra))
+            // A planned decision: only in the civilization's own steps (ADR 0018).
+            if (!Simulation.WorldClock.Steps(civ) || civ.Controller != PlayerId.Ai || (state.Month < civ.StrategyReviewMonth && civ.Era == civ.StrategyEra))
             {
                 continue;
             }
@@ -84,8 +84,8 @@ public sealed class StrategistAdvisor : Advisor
             (int target, long targetValue) = Target(state, civ, heart);
 
             // Reviews are spread over the civilizations: the first one waits a share of the interval.
-            int turns = rules.ReviewEveryTurns + (civ.StrategyEra < 0 ? c % rules.ReviewEveryTurns : 0);
-            long next = state.Month + ((long)turns * monthsPerTurn);
+            int turns = rules.ReviewEverySteps + (civ.StrategyEra < 0 ? c % rules.ReviewEverySteps : 0);
+            long next = state.Month + ((long)turns * Simulation.WorldClock.RhythmMonths(Content, state, civ));
 
             Evaluation why = Evaluation.Of(expansion);
             why.Note(FactorId.Crowding, crowding / 10);

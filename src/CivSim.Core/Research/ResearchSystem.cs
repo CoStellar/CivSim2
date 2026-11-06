@@ -30,14 +30,14 @@ public sealed class ResearchSystem(GameContent content) : ITurnSystem
             return;
         }
 
-        int months = state.MonthsPerTurn(_content);
         CivFacts[]? facts = null;
         for (int c = 0; c < state.Civilizations.Count; c++)
         {
             CivilizationState civ = state.Civilizations[c];
-            if (!civ.IsAlive)
+            int months = civ.IsAlive ? civ.StepMonths : 0;
+            if (months == 0)
             {
-                continue;
+                continue; // research advances in the civilization's own steps (ADR 0018)
             }
 
             Technologies.EnsureSize(_content, civ);

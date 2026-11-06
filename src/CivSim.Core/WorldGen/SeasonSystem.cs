@@ -41,7 +41,7 @@ public sealed class SeasonSystem(GameContent content) : ITurnSystem
             _planet = planet;
         }
 
-        int turn = state.MonthsPerTurn(content);
+        int turn = Math.Max(1, state.StepMonths);
         long yearMonths = Math.Max(1, (long)planet.YearHundredths * 12 / 100);
         Write(world, state.Month, turn, yearMonths, world.Map.SeasonTemperature, world.Map.SeasonGrowth);
         Write(world, state.Month + turn, turn, yearMonths, world.Map.NextSeasonTemperature, world.Map.NextSeasonGrowth);

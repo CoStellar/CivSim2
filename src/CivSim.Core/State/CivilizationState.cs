@@ -78,6 +78,24 @@ public sealed class CivilizationState
     /// <summary>Era of the last strategy review: a new era is a shock that brings a review at once.</summary>
     public int StrategyEra { get; set; } = -1;
 
+    /// <summary>Game month in which this civilization's next own step starts (ADR 0018). 0 for a new one: it steps at once.</summary>
+    public long NextStepMonth { get; set; }
+
+    /// <summary>Game month in which its last own step started.</summary>
+    public long StepStartMonth { get; set; }
+
+    /// <summary>
+    /// Months this civilization computes in the current world step: the length of its own step when it steps now, else 0
+    /// (set by <see cref="Simulation.WorldClock.Begin"/>).
+    /// </summary>
+    public int StepMonths { get; set; }
+
+    /// <summary>Own steps taken since the start (the counter of its own rhythm).</summary>
+    public long Steps { get; set; }
+
+    /// <summary>Reasons to decide before its next own step (reactive decisions, ADR 0018).</summary>
+    public Simulation.Alarm Alarms { get; set; }
+
     /// <summary>
     /// Civilizations this one knows of, sorted by their id (GDD 8.5; stage 4c). Empty at the start: nobody knows anybody.
     /// </summary>

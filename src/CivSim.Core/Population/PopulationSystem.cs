@@ -39,11 +39,11 @@ public sealed class PopulationSystem : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        int months = state.MonthsPerTurn(_content);
         foreach (SettlementState s in state.Settlements)
         {
+            int months = WorldClock.MonthsOf(state, s.Owner);
             int before = s.TotalPopulation();
-            if (before == 0)
+            if (before == 0 || months == 0)
             {
                 continue;
             }

@@ -9,7 +9,7 @@ Zmiana nazwy to komenda (`RenameCivilizationCommand`, `RenameSettlementCommand`)
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/names.json` (pule twardych i miękkich głosek, wzorce sylab, końcówki, długości), ziarno świata, numer cywilizacji.
 - Zmienia: `CivilizationState.Name`, `SettlementState.Name`, `CivilizationState.LanguageSeed` (ziarno języka) i `NamesIssued`
-  (licznik wydanych nazw). Oba pola są w hashu stanu i w zapisie gry (format 19).
+  (licznik wydanych nazw). Oba pola są w hashu stanu i w zapisie gry (format 20).
 - Nie używa strumieni losowania symulacji: wszystko liczy `SplitMix64` z ziarna języka i numeru nazwy. Statystyki 300 tur są
   identyczne przed i po wprowadzeniu nazw; zmienił się tylko hash (nazwy są jego częścią).
 

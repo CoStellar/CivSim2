@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 19;
+    public const int FormatVersion = 20;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -57,7 +57,8 @@ public static class SaveGameSerializer
         {
             civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era, c.DiedOutMonth,
                 c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience, c.SeenYear,
-                c.Traits, c.GoalWeights, c.ExpansionTarget, c.StrategyReviewMonth, c.StrategyEra, SaveRelations(c), c.LanguageSeed, c.NamesIssued));
+                c.Traits, c.GoalWeights, c.ExpansionTarget, c.StrategyReviewMonth, c.StrategyEra, SaveRelations(c),
+                c.NextStepMonth, c.StepStartMonth, c.StepMonths, c.Steps, (byte)c.Alarms, c.LanguageSeed, c.NamesIssued));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -87,7 +88,7 @@ public static class SaveGameSerializer
             state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects,
             s.Planet.AxialTiltTenths, s.Planet.LuminosityThousandths, s.Planet.DistanceThousandths, s.Planet.EccentricityThousandths, s.PlanetName,
             s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent,
-            s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state));
+            s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state), state.StepMonths);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -193,6 +194,11 @@ public static class SaveGameSerializer
                 ExpansionTarget = c.ExpansionTarget,
                 StrategyReviewMonth = c.StrategyReviewMonth,
                 StrategyEra = c.StrategyEra,
+                NextStepMonth = c.NextStepMonth,
+                StepStartMonth = c.StepStartMonth,
+                StepMonths = c.StepMonths,
+                Steps = c.Steps,
+                Alarms = (Core.Simulation.Alarm)c.Alarms,
                 LanguageSeed = c.LanguageSeed,
                 NamesIssued = c.NamesIssued,
             };
@@ -200,7 +206,7 @@ public static class SaveGameSerializer
             state.AddCivilizationForLoad(civ);
         }
 
-        state.SetCountersForLoad(data.Month, data.NextSettlementId);
+        state.SetCountersForLoad(data.Month, data.NextSettlementId, data.StepMonths);
         foreach (SettlementSaveData st in data.Settlements ?? [])
         {
             var settlement = new SettlementState(

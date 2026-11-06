@@ -152,5 +152,11 @@ public sealed class AiCouncil : ICommandSource
         {
             advisor.IssueCommands(state, queue);
         }
+
+        // Every alarm got its reaction in this decisions phase (reactive decisions, ADR 0018).
+        foreach (CivilizationState civ in state.Civilizations)
+        {
+            civ.Alarms = Simulation.Alarm.None;
+        }
     }
 }

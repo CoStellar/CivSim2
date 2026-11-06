@@ -25,7 +25,7 @@ flowchart TD
 ```
 
 ## Zasady i wzory
-Wszystkie tempa są na rok i przeliczane przez długość tury (ADR 0011). Liczby to pierwsze przymiarki do strojenia.
+Wszystkie tempa są na rok i przeliczane przez długość kroku cywilizacji (ADR 0011, ADR 0018). Liczby to pierwsze przymiarki do strojenia.
 
 - **Warstwy** (GDD 5.1, CORE uproszczone): wytwórcy (zbierają, docelowo 80%), rzemieślnicy (5%), wojownicy (15%). Ludzie przesuwają się w stronę tego podziału o 1% różnicy na rok.
 - **Start plemienia:** 50 osób (40 wytwórców, 10 wojowników) w obozie.

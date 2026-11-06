@@ -37,7 +37,8 @@ public sealed record SaveData(
     [property: Key(28)] int StarVariabilityPerMille = 0,
     [property: Key(29)] int StarCycleYears = 100_000,
     [property: Key(30)] IReadOnlyList<TreatySaveData>? Treaties = null,
-    [property: Key(31)] IReadOnlyList<ProposalSaveData>? Proposals = null);
+    [property: Key(31)] IReadOnlyList<ProposalSaveData>? Proposals = null,
+    [property: Key(32)] int StepMonths = 0);
 
 /// <summary>Saved treaty or war between two civilizations (stage 4d).</summary>
 [MessagePackObject]
@@ -112,8 +113,13 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(15)] long StrategyReviewMonth = 0,
     [property: Key(16)] int StrategyEra = -1,
     [property: Key(17)] List<RelationSaveData>? Relations = null,
-    [property: Key(18)] ulong LanguageSeed = 0,
-    [property: Key(19)] long NamesIssued = 0);
+    [property: Key(18)] long NextStepMonth = 0,
+    [property: Key(19)] long StepStartMonth = 0,
+    [property: Key(20)] int StepMonths = 0,
+    [property: Key(21)] long Steps = 0,
+    [property: Key(22)] byte Alarms = 0,
+    [property: Key(23)] ulong LanguageSeed = 0,
+    [property: Key(24)] long NamesIssued = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]
