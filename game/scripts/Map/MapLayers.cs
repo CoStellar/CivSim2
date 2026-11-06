@@ -49,7 +49,10 @@ public enum MapLayer
     /// <summary>Influence zones: owner colour, stronger near the settlement.</summary>
     Influence,
 
-    /// <summary>Map memory and fog of war of the watched civilization (or of the player).</summary>
+    /// <summary>
+    /// Map memory and fog of war of the followed civilization: at full opacity unknown cells are covered completely
+    /// (dark grey, and nothing drawn on them), remembered cells partly. Always on top of the other cell layers.
+    /// </summary>
     Fog,
 
     /// <summary>Rivers on hex edges.</summary>
@@ -149,7 +152,7 @@ public sealed class LayerStack
     {
         int i = IndexOf(layer);
         int j = i + Math.Sign(direction);
-        if (j < 0 || j >= _layers.Count || IsCellLayer(_layers[j].Layer) != IsCellLayer(layer) || _layers[j].Layer == MapLayer.Biomes || layer == MapLayer.Biomes)
+        if (j < 0 || j >= _layers.Count || IsCellLayer(_layers[j].Layer) != IsCellLayer(layer) || _layers[j].Layer is MapLayer.Biomes or MapLayer.Fog || layer is MapLayer.Biomes or MapLayer.Fog)
         {
             return false;
         }
@@ -211,9 +214,9 @@ public sealed class LayerStack
     /// <summary>A copy of the settings for saving.</summary>
     public List<LayerSetting> Save() => _layers.ConvertAll(l => new LayerSetting { Layer = l.Layer, Enabled = l.Enabled, Opacity = l.Opacity });
 
-    private static int Group(MapLayer layer) => layer == MapLayer.Biomes ? 0 : IsCellLayer(layer) ? 1 : 2;
+    private static int Group(MapLayer layer) => layer == MapLayer.Biomes ? 0 : layer == MapLayer.Fog ? 2 : IsCellLayer(layer) ? 1 : 3;
 
-    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Hillshade or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields
+    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Hillshade or MapLayer.Fog or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields
         or MapLayer.Borders or MapLayer.Settlements or MapLayer.Units or MapLayer.Events;
 
     private static int DefaultOpacity(MapLayer layer) => layer switch
@@ -221,7 +224,7 @@ public sealed class LayerStack
         MapLayer.Influence => 45,
         MapLayer.Hillshade => 50,
         MapLayer.Owner => 60,
-        MapLayer.Fog => 80,
+        MapLayer.Fog => 100,
         MapLayer.Relations => 80,
         _ => 100,
     };

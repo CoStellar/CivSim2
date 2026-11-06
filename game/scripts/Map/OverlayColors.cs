@@ -14,6 +14,12 @@ public static class OverlayColors
     private static readonly Color Water = Rgb(0x0A2647);
     private static readonly Color Unknown = new(0.05f, 0.05f, 0.06f);
 
+    /// <summary>Colour of the fog of war (palette dark grey): softer on the eyes than black.</summary>
+    public static readonly Color FogGrey = Rgb(0x3E3C3A);
+
+    /// <summary>Cover of a remembered cell in the fog, at 100% layer opacity.</summary>
+    public const float RememberedCover = 0.6f;
+
     /// <summary>0xRRGGBB to a Godot colour.</summary>
     public static Color Rgb(uint rgb) => new(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f);
 
@@ -53,8 +59,16 @@ public static class OverlayColors
         float r = 0, g = 0, b = 0, a = 0;
         int biome = w.Biome[i];
         bool water = content is not null && biome < content.Biomes.Count && content.Biomes[biome].IsWater;
+        float fogOpacity = 0;
         foreach ((MapLayer layer, float opacity) in active)
         {
+            // The fog always goes over every other cell layer, wherever it is in the list.
+            if (layer == MapLayer.Fog)
+            {
+                fogOpacity = opacity;
+                continue;
+            }
+
             (Color c, float cover) = Of(layer, w, content, fog, i, water);
             float alpha = cover * opacity;
             if (alpha <= 0)
@@ -63,6 +77,16 @@ public static class OverlayColors
             }
 
             // Premultiplied "over": the new layer covers what is below by its alpha.
+            r = (c.R * alpha) + (r * (1 - alpha));
+            g = (c.G * alpha) + (g * (1 - alpha));
+            b = (c.B * alpha) + (b * (1 - alpha));
+            a = alpha + (a * (1 - alpha));
+        }
+
+        if (fogOpacity > 0)
+        {
+            (Color c, float cover) = FogColor(fog, i);
+            float alpha = cover * fogOpacity;
             r = (c.R * alpha) + (r * (1 - alpha));
             g = (c.G * alpha) + (g * (1 - alpha));
             b = (c.B * alpha) + (b * (1 - alpha));
@@ -103,6 +127,13 @@ public static class OverlayColors
         _ => (Colors.Black, 0),
     };
 
+    /// <summary>
+    /// True when the fog hides everything on a cell: the cell is unknown to the followed civilization and the fog
+    /// layer is at full opacity. Drawn layers (settlements, borders, units...) are left out there too.
+    /// </summary>
+    public static bool Hidden(byte[]? fog, float fogAlpha, int i) =>
+        fog is not null && fogAlpha >= 0.99f && i < fog.Length && fog[i] == MapChunkMessage.Unknown;
+
     private static (Color, float) FogColor(byte[]? fog, int i)
     {
         if (fog is null || i >= fog.Length)
@@ -112,8 +143,8 @@ public static class OverlayColors
 
         return fog[i] switch
         {
-            MapChunkMessage.Unknown => (Unknown, 1),
-            MapChunkMessage.Remembered => (Unknown, 0.55f),
+            MapChunkMessage.Unknown => (FogGrey, 1),
+            MapChunkMessage.Remembered => (FogGrey, RememberedCover),
             _ => (Colors.Black, 0),
         };
     }

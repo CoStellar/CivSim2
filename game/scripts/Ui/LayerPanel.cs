@@ -62,7 +62,7 @@ public partial class LayerPanel : VBoxContainer
         AddThemeConstantOverride("separation", 4);
         var head = new HBoxContainer();
         AddChild(head);
-        head.AddChild(new Label { Text = "Layers: top of the list is drawn on top. The memory and fog layer shows the followed civilization's knowledge.", SizeFlagsHorizontal = SizeFlags.ExpandFill, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(360, 0) });
+        head.AddChild(new Label { Text = "Layers: top of the list is drawn on top. The fog (always on top) hides what the followed civilization has never seen; lower its opacity to see through it.", SizeFlagsHorizontal = SizeFlags.ExpandFill, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(360, 0) });
         _rows = new VBoxContainer();
         _rows.AddThemeConstantOverride("separation", 2);
         AddChild(_rows);
@@ -132,9 +132,15 @@ public partial class LayerPanel : VBoxContainer
             FocusMode = FocusModeEnum.None,
             TooltipText = "Opacity",
         };
-        slider.ValueChanged += v => _layers.SetOpacity(layer, (int)v);
+        var percent = new Label { Text = $"{s.Opacity}%", CustomMinimumSize = new Vector2(48, 0), HorizontalAlignment = HorizontalAlignment.Right };
+        slider.ValueChanged += v =>
+        {
+            _layers.SetOpacity(layer, (int)v);
+            percent.Text = $"{(int)v}%";
+        };
         row.AddChild(slider);
-        if (layer != MapLayer.Biomes)
+        row.AddChild(percent);
+        if (layer is not (MapLayer.Biomes or MapLayer.Fog))
         {
             row.AddChild(Arrow("▲", "Move up", () => Move(layer, +1)));
             row.AddChild(Arrow("▼", "Move down", () => Move(layer, -1)));

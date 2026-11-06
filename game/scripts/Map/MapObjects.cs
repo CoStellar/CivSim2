@@ -25,6 +25,8 @@ public partial class MapObjects : Node2D
     private object? _lastView;
     private object? _lastDetails;
     private int _lastLayers = -1;
+    private int _lastFog = -1;
+    private float _fogAlpha;
 
     /// <summary>Creates the layers.</summary>
     public MapObjects(ArtLibrary art)
@@ -57,11 +59,22 @@ public partial class MapObjects : Node2D
 
     private bool Textured => _zoom >= MapView.TexturedZoom;
 
+    // True when the fog at full opacity hides the cell: nothing is drawn there.
+    private bool Fogged(int col, int row)
+    {
+        if (_world is null || _fogAlpha < 0.99f || _session is null || !_session.Fog.TryGetValue(_world.Id, out FogMessage? fog))
+        {
+            return false;
+        }
+
+        return row >= 0 && row < _world.Height && OverlayColors.Hidden(fog.Cells, _fogAlpha, _world.Index(col, row));
+    }
+
     /// <summary>Sets what to draw; redraws only when the data, the layers or the visible area changed.</summary>
     public void Show(ClientSession session, ClientWorld world, LayerStack layers, Vector2 period, Rect2 view, float zoom)
     {
         bool changed = !ReferenceEquals(session.View, _lastView) || !ReferenceEquals(session.Details, _lastDetails)
-            || layers.Version != _lastLayers || view != _view || period != _period || !ReferenceEquals(world, _world);
+            || layers.Version != _lastLayers || session.FogVersion != _lastFog || view != _view || period != _period || !ReferenceEquals(world, _world);
         if (!changed)
         {
             return;
@@ -75,6 +88,8 @@ public partial class MapObjects : Node2D
         _lastView = session.View;
         _lastDetails = session.Details;
         _lastLayers = layers.Version;
+        _lastFog = session.FogVersion;
+        _fogAlpha = layers.Alpha(MapLayer.Fog);
         foreach (LayerPainter p in _painters)
         {
             Place(p, layers, p.Layer, sprites: !p.Lines);
@@ -174,7 +189,7 @@ public partial class MapObjects : Node2D
         Color far = OverlayColors.Rgb(0xEAD220);
         foreach (FieldView f in details.Fields)
         {
-            if (f.World != _world!.Id)
+            if (f.World != _world!.Id || Fogged(f.Col, f.Row))
             {
                 continue;
             }
@@ -213,7 +228,7 @@ public partial class MapObjects : Node2D
             {
                 int i = w.Index(col, row);
                 int d = w.Deposit[i];
-                if (d == 0 || d > content.Deposits.Count || w.Visibility[i] == MapChunkMessage.Unknown)
+                if (d == 0 || d > content.Deposits.Count || w.Visibility[i] == MapChunkMessage.Unknown || Fogged(col, row))
                 {
                     continue;
                 }
@@ -248,7 +263,7 @@ public partial class MapObjects : Node2D
 
         foreach (SettlementView s in settlements)
         {
-            if (s.World != _world!.Id)
+            if (s.World != _world!.Id || Fogged(s.Col, s.Row))
             {
                 continue;
             }
@@ -295,7 +310,7 @@ public partial class MapObjects : Node2D
         var best = new Dictionary<int, (Vector2 At, int People)>();
         foreach (SettlementView s in settlements)
         {
-            if (s.World != _world!.Id || s.Status != 0)
+            if (s.World != _world!.Id || s.Status != 0 || Fogged(s.Col, s.Row))
             {
                 continue;
             }
@@ -345,7 +360,7 @@ public partial class MapObjects : Node2D
         Texture2D? tex = Textured ? _art.Get("units", "unit_migrants_idle_01") : null;
         foreach (JourneyView j in details.Journeys)
         {
-            if (j.World != _world!.Id)
+            if (j.World != _world!.Id || Fogged(j.Col, j.Row))
             {
                 continue;
             }
@@ -380,7 +395,7 @@ public partial class MapObjects : Node2D
         float width = Mathf.Max(2, 2.5f / _zoom);
         foreach (JourneyView j in details.Journeys)
         {
-            if (j.World != _world!.Id)
+            if (j.World != _world!.Id || Fogged(j.Col, j.Row))
             {
                 continue;
             }
@@ -412,7 +427,7 @@ public partial class MapObjects : Node2D
         var groups = new Dictionary<(string, long), List<CellEventView>>();
         foreach (CellEventView e in details.Events)
         {
-            if (e.World != _world!.Id)
+            if (e.World != _world!.Id || Fogged(e.Col, e.Row))
             {
                 continue;
             }
@@ -482,7 +497,7 @@ public partial class MapObjects : Node2D
         var anchors = new Dictionary<int, (Vector2 At, int People)>();
         foreach (SettlementView s in settlements)
         {
-            if (s.World != _world!.Id || s.Status != 0)
+            if (s.World != _world!.Id || s.Status != 0 || Fogged(s.Col, s.Row))
             {
                 continue;
             }

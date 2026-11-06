@@ -21,7 +21,7 @@ namespace CivSim.Game;
 /// --map-size test</c>) skips the menu, like before stage 5; <c>--no-menu</c> starts with the saved settings, and
 /// <c>--benchmark FRAMES</c>, <c>--screenshot file.png</c> (with <c>--screenshot-turn N</c>), <c>--menu-screenshot file.png</c>,
 /// <c>--zoom</c>, <c>--overlay LAYER</c> (only that cell layer), <c>--layer LAYER</c> (switch one on) and <c>--watch CIV</c>
-/// (that civilization's fog) are for tests.
+/// (that civilization's fog), <c>--opacity LAYER=PERCENT</c> and <c>--layer-settings</c> (open that window) are for tests.
 /// </summary>
 public partial class Main : Node2D
 {
@@ -56,6 +56,8 @@ public partial class Main : Node2D
     private long _screenshotTurn;
     private readonly List<MapLayer> _extraLayers = [];
     private int _watch = WelcomeMessage.NoCiv;
+    private readonly List<(MapLayer Layer, int Opacity)> _opacities = [];
+    private bool _openLayerSettings;
 
     /// <inheritdoc />
     public override void _Ready()
@@ -92,6 +94,13 @@ public partial class Main : Node2D
                     break;
                 case "--layer":
                     _extraLayers.Add(Enum.Parse<MapLayer>(next, ignoreCase: true));
+                    break;
+                case "--opacity":
+                    string[] kv = next.Split('=');
+                    _opacities.Add((Enum.Parse<MapLayer>(kv[0], ignoreCase: true), int.Parse(kv[1], CultureInfo.InvariantCulture)));
+                    break;
+                case "--layer-settings":
+                    _openLayerSettings = true;
                     break;
                 case "--watch":
                     _watch = int.Parse(next, CultureInfo.InvariantCulture);
@@ -195,6 +204,11 @@ public partial class Main : Node2D
             _layers.SetEnabled(extra, true);
         }
 
+        foreach ((MapLayer layer, int opacity) in _opacities)
+        {
+            _layers.SetOpacity(layer, opacity);
+        }
+
         if (_watch != WelcomeMessage.NoCiv)
         {
             _layers.SetEnabled(MapLayer.Fog, true);
@@ -203,7 +217,13 @@ public partial class Main : Node2D
         _map = new MapView(_layers, _art);
         AddChild(_map);
         var icons = new LayerBar(_layers, _art);
-        _hud = new Hud { Layers = new LayerPanel(_layers), LayerIcons = icons, Panels = _saved.Panels };
+        HudPanels panels = _saved.Panels;
+        if (_openLayerSettings)
+        {
+            panels.LayerWindow = true;
+        }
+
+        _hud = new Hud { Layers = new LayerPanel(_layers), LayerIcons = icons, Panels = panels };
         AddChild(_hud);
         _hud.SpeedChosen += s => _session?.SetSpeed(s);
         _hud.MenuRequested += ShowMenu;

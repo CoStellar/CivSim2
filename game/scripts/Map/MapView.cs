@@ -44,6 +44,7 @@ public partial class MapView : Node2D
     private int _layersVersion = -1;
     private int _fogVersion = -1;
     private bool _hasArt;
+    private bool _fogHides;
 
     /// <summary>Creates the view with the given layer stack and pictures.</summary>
     public MapView(LayerStack layers, ArtLibrary art)
@@ -166,9 +167,15 @@ public partial class MapView : Node2D
         {
             _layersVersion = Layers.Version;
             _fogVersion = _session.FogVersion;
+            // Lines (rivers, borders) depend on the fog only when it hides cells completely.
+            float fogAlpha = Layers.Alpha(MapLayer.Fog);
+            bool hides = fogAlpha >= 0.99f && _session.Fog.Count > 0;
+            bool linesToo = fogChanged || hides != _fogHides;
+            _fogHides = hides;
             foreach (ChunkGfx c in _chunks)
             {
                 c.ColorsDirty = true;
+                c.LinesDirty |= linesToo;
             }
 
             _hexMaterial.SetShaderParameter("biome_opacity", Layers.Alpha(MapLayer.Biomes));
@@ -225,7 +232,7 @@ public partial class MapView : Node2D
 
             if (c.LinesDirty && (time || !c.EverLined))
             {
-                c.UpdateLines(_world, RiverBaseWidth, BorderWidth);
+                c.UpdateLines(_world, RiverBaseWidth, BorderWidth, _fogHides ? fog : null);
             }
 
             for (int kx = kx0; kx <= kx1; kx++)
@@ -515,7 +522,7 @@ public partial class MapView : Node2D
             return Math.Min(3, (int)w.River[(w.Index(col, row) * MapChunkMessage.RiverEdgesPerCell) + edge]);
         }
 
-        public void UpdateLines(ClientWorld world, float riverWidth, float borderWidth)
+        public void UpdateLines(ClientWorld world, float riverWidth, float borderWidth, byte[]? hiddenBy)
         {
             var rivers = new List<(Transform2D, Color)>();
             var borders = new List<(Transform2D, Color)>();
@@ -527,6 +534,11 @@ public partial class MapView : Node2D
                     int row = Y0 + r;
                     int i = world.Index(col, row);
                     Vector2 center = HexLayout.Center(col, row) - Origin;
+                    if (OverlayColors.Hidden(hiddenBy, 1f, i))
+                    {
+                        continue; // the followed civilization does not know this cell
+                    }
+
                     for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)
                     {
                         int size = world.River[(i * MapChunkMessage.RiverEdgesPerCell) + e];

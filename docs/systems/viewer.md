@@ -73,7 +73,7 @@ heksami (z-index = miejsce na liście). Warstwy pól leżą zawsze pod rysowanym
 | Deposits | pola + ikony | wył. | kolor złoża daleko, ikona 24×24 z bliska (głębokie złoża przyciemnione) |
 | Owner | pola | wył., 60% | właściciel pola |
 | Influence zones | pola | wł., 45% | strefa wpływów w kolorze cywilizacji, mocniejsza przy osadzie |
-| Memory and fog | pola | wył., 80% | mgła wojny **śledzonej cywilizacji**: nieznane czarne, zapamiętane przyciemnione, widziane w ostatniej turze jasne |
+| Memory and fog | pola, zawsze na wierzchu warstw pól | wł., 100% | mgła wojny **śledzonej cywilizacji** (decyzja Patryka z 2026-11-06): nieznane pola całkiem zakryte ciemnoszarym kolorem z palety (`#3E3C3A`), razem z biomami, rzekami, granicami, osadami, jednostkami, zdarzeniami i nazwami; zapamiętane zakryte w 60%; widziane w ostatniej turze odsłonięte. Niższa przezroczystość pozwala widzieć więcej (poniżej 100% rysowane warstwy wracają). Bez śledzonej cywilizacji mgła nic nie robi |
 | Rivers | rysowana | wł. | z bliska grafiki rzek w shaderze, z daleka linie |
 | Fields | rysowana | wł. | pola uprawne wiosek (grafika pola, mocniejsza przy większej obsadzie rolników) |
 | Borders | rysowana | wł. | granice cywilizacji po krawędziach heksów, kolor cywilizacji z ciemnym obrysem |
@@ -83,7 +83,7 @@ heksami (z-index = miejsce na liście). Warstwy pól leżą zawsze pod rysowanym
 | Relations | rysowana | wył. | linie między największymi osadami cywilizacji, które się spotkały: wojna czerwona, sojusz niebieski, pakt turkusowy, handel złoty, pokój biały, sam kontakt szary przerywany |
 
 Sterowanie warstwami: **ikony w górnym pasku** włączają i wyłączają warstwy; **okno „Layer settings”** (ikona zębatki albo Tab)
-ustawia przezroczystość i kolejność.
+ustawia przezroczystość (suwak i wartość w %) i kolejność. Biomy zostają na dole, a mgła na górze warstw pól.
 
 **Heks w shaderze** (`game/shaders/map_hex.gdshader`): każdy heks to instancja w `MultiMesh` z kolorem (odcień warstw pól i jego
 pokrycie) i 4 liczbami (kafelek biomu + rzeźba, kafelek rzeźby, kafelek cechy, 12 bitów rzek: po 2 na każdą z 6 krawędzi). Od zoomu
@@ -128,7 +128,7 @@ jako zwykłe PNG, bez importu Godota.
 | Esc | koniec gry, menu startowe |
 
 Do testów i zrzutów: `--screenshot plik.png` (z `--screenshot-turn N`: po N turach), `--menu-screenshot plik.png`, `--zoom Z`,
-`--overlay WARSTWA` (tylko ta warstwa pól), `--layer WARSTWA` (włącza warstwę), `--watch CYW` (śledzi i włącza mgłę),
+`--overlay WARSTWA` (tylko ta warstwa pól), `--layer WARSTWA` (włącza warstwę), `--watch CYW` (śledzi i włącza mgłę), `--opacity WARSTWA=PROCENT`, `--layer-settings` (otwiera okno ustawień warstw),
 `--benchmark KLATKI`.
 
 ## Zasady
