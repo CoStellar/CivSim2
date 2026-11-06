@@ -13,8 +13,11 @@ public enum MapLayer
     /// <summary>Biome tiles with relief and features (the base; textured when zoomed in).</summary>
     Biomes,
 
-    /// <summary>Height.</summary>
+    /// <summary>Height of land and depth of water (hypsometric and bathymetric tints).</summary>
     Elevation,
+
+    /// <summary>Hill shading: slopes facing the light from the top left are lighter, the others darker.</summary>
+    Hillshade,
 
     /// <summary>Annual mean temperature.</summary>
     Temperature,
@@ -210,12 +213,13 @@ public sealed class LayerStack
 
     private static int Group(MapLayer layer) => layer == MapLayer.Biomes ? 0 : IsCellLayer(layer) ? 1 : 2;
 
-    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields
+    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Hillshade or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields
         or MapLayer.Borders or MapLayer.Settlements or MapLayer.Units or MapLayer.Events;
 
     private static int DefaultOpacity(MapLayer layer) => layer switch
     {
-        MapLayer.Influence => 35,
+        MapLayer.Influence => 45,
+        MapLayer.Hillshade => 50,
         MapLayer.Owner => 60,
         MapLayer.Fog => 80,
         MapLayer.Relations => 80,

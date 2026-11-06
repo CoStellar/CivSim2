@@ -479,6 +479,177 @@ def event(key):
     c.save("effects", f"event_{key}")
 
 
+# ---------------------------------------------------------------- interface icons (16×16)
+
+def icon(name):
+    c = Canvas(16, 16)
+    P = nearest
+    if name == "biomes":  # a tree on grass
+        c.rect(1, 12, 14, 14, P((79, 132, 47)))
+        c.disc(8, 6, 4.2, P((51, 88, 33)))
+        c.disc(7, 5, 1.5, P((123, 161, 84)))
+        c.rect(7, 10, 8, 12, P((122, 45, 2)))
+    elif name == "elevation":  # mountain over water
+        c.rect(0, 12, 15, 14, P((25, 119, 208)))
+        for y in range(3, 12):
+            w = (y - 3)
+            c.line(7 - w, y, 7 + w, y, P((147, 138, 130)) if y > 5 else P((251, 249, 251)))
+    elif name == "hillshade":  # half lit, half shaded hill
+        for y in range(5, 14):
+            w = y - 5
+            c.line(8 - w, y, 7, y, P((228, 191, 68)))
+            c.line(8, y, 8 + w, y, P((105, 56, 41)))
+    elif name == "temperature" or name == "season_now":  # thermometer
+        c.rect(7, 2, 8, 11, P((251, 249, 251)))
+        c.rect(7, 6, 8, 11, P((236, 39, 30)))
+        c.disc(7.5, 12.5, 2.5, P((236, 39, 30)))
+        if name == "season_now":
+            c.disc(12.5, 4.5, 2.5, P((223, 143, 19)))
+    elif name == "humidity":  # drop
+        c.disc(8, 10, 4, P((26, 74, 208)))
+        c.line(8, 2, 8, 7, P((26, 74, 208)), 3)
+        c.px(6, 9, P((63, 167, 201)))
+    elif name == "fertility":  # sprout on soil
+        c.rect(1, 12, 14, 14, P((122, 45, 2)))
+        c.line(8, 12, 8, 5, P((79, 132, 47)))
+        c.rect(4, 5, 7, 6, P((123, 161, 84)))
+        c.rect(9, 3, 12, 4, P((123, 161, 84)))
+    elif name == "growing":  # sun and leaf
+        c.disc(5, 5, 3, P((223, 143, 19)))
+        c.disc(11, 11, 3, P((79, 132, 47)))
+    elif name == "seasons":  # snowflake and sun
+        c.disc(4.5, 11, 3, P((223, 143, 19)))
+        c.line(11, 2, 11, 8, P((185, 216, 230)))
+        c.line(8, 5, 14, 5, P((185, 216, 230)))
+        c.line(9, 3, 13, 7, P((185, 216, 230)))
+    elif name == "wild_food":  # berries
+        for x, y in ((5, 9), (10, 9), (7, 5), (8, 11)):
+            c.disc(x, y, 2.2, P((183, 10, 9)))
+        c.line(7, 2, 9, 4, P((79, 132, 47)))
+    elif name == "deposits":  # gem
+        for y in range(4, 13):
+            w = 6 - abs(y - 7) if y < 8 else 13 - y
+            c.line(8 - w, y, 8 + w, y, P((63, 167, 201)))
+        c.line(4, 7, 12, 7, P((185, 216, 230)))
+    elif name == "owner":  # flag
+        c.line(3, 2, 3, 14, P((47, 46, 45)))
+        c.rect(4, 2, 12, 7, CIV[1])
+        c.rect(4, 2, 12, 3, CIV[0])
+    elif name == "influence":  # rings
+        c.disc(8, 8, 6.5, CIV[2])
+        c.disc(8, 8, 4.5, CIV[1])
+        c.disc(8, 8, 2.2, CIV[0])
+    elif name == "fog":  # cloud
+        c.disc(5, 9, 3, P((124, 137, 142)))
+        c.disc(9, 7, 4, P((169, 162, 160)))
+        c.disc(12, 10, 2.5, P((124, 137, 142)))
+    elif name == "rivers":  # waves
+        for y in (5, 9, 13):
+            for x in range(1, 15):
+                c.px(x, y - (1 if (x // 2) % 2 else 0), P((25, 119, 208)))
+    elif name == "fields":  # furrows
+        for y in range(3, 14, 3):
+            c.line(2, y, 13, y, P((234, 210, 32)))
+            c.line(2, y + 1, 13, y + 1, P((122, 45, 2)))
+    elif name == "borders":  # dashed hex side
+        for x in range(1, 15, 4):
+            c.line(x, 8, x + 2, 8, CIV[0], 2)
+    elif name == "settlements":  # house
+        c.rect(4, 8, 11, 13, P((204, 126, 87)))
+        for i in range(4):
+            c.line(3 + i, 7 - i, 12 - i, 7 - i, CIV[1])
+        c.rect(7, 10, 8, 13, P((47, 46, 45)))
+    elif name == "units":  # person
+        c.disc(8, 4, 2, P((204, 126, 87)))
+        c.rect(6, 7, 9, 11, CIV[1])
+        c.rect(6, 12, 7, 14, P((86, 44, 24)))
+        c.rect(8, 12, 9, 14, P((86, 44, 24)))
+    elif name == "events":  # lightning
+        c.line(10, 1, 5, 8, P((234, 210, 32)), 2)
+        c.line(5, 8, 11, 8, P((234, 210, 32)), 2)
+        c.line(11, 8, 6, 15, P((234, 210, 32)), 2)
+    elif name == "relations":  # two linked dots
+        c.line(4, 11, 12, 5, P((251, 249, 251)), 2)
+        c.disc(4, 11, 2.5, P((236, 39, 30)))
+        c.disc(12, 5, 2.5, P((26, 74, 208)))
+    elif name == "settings":  # cog
+        c.disc(8, 8, 5.5, P((169, 162, 160)))
+        c.disc(8, 8, 2, (0, 0, 0))
+        for x, y in ((8, 1), (8, 14), (1, 8), (14, 8)):
+            c.rect(x - 1, y - 1, x + 1, y + 1, P((169, 162, 160)))
+    if name != "settings":
+        c.outline(nearest((29, 23, 16)))
+    else:
+        c.im.putpixel((8, 8), (0, 0, 0, 0))
+    c.save("ui", f"icon_layer_{name}" if name != "settings" else "icon_settings")
+
+
+# ---------------------------------------------------------------- interface frames (9-slice, stone age theme)
+
+def frame(name, w, h, fill, light, dark, edge, inset=None):
+    """A bevelled 9-slice frame: dark edge, light top-left and dark bottom-right bevel, flat fill."""
+    c = Canvas(w, h)
+    c.rect(0, 0, w - 1, h - 1, edge)
+    c.rect(1, 1, w - 2, h - 2, fill)
+    c.line(1, 1, w - 2, 1, light)
+    c.line(1, 1, 1, h - 2, light)
+    c.line(1, h - 2, w - 2, h - 2, dark)
+    c.line(w - 2, 1, w - 2, h - 2, dark)
+    if inset is not None:  # stitching of the leather, every other pixel, two pixels in
+        for x in range(4, w - 4, 2):
+            c.px(x, 3, inset)
+            c.px(x, h - 4, inset)
+        for y in range(4, h - 4, 2):
+            c.px(3, y, inset)
+            c.px(w - 4, y, inset)
+    # Cut corners, like a hide stretched on a frame.
+    for x, y in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)):
+        c.im.putpixel((x, y), (0, 0, 0, 0))
+    c.save("ui", name)
+
+
+def theme():
+    P = nearest
+    leather, leather_l, leather_d = P((86, 44, 24)), P((122, 45, 2)), P((69, 31, 7))
+    stone, stone_l, stone_d = P((79, 75, 69)), P((101, 99, 98)), P((62, 60, 58))
+    edge = P((29, 23, 16))
+    frame("frame_panel", 24, 24, P((47, 46, 45)), stone, edge, edge, P((62, 60, 58)))
+    frame("frame_bar", 24, 24, leather_d, leather, edge, edge, leather)
+    frame("frame_header", 24, 16, leather, leather_l, leather_d, edge)
+    frame("button_normal", 12, 12, stone, stone_l, stone_d, edge)
+    frame("button_hover", 12, 12, stone_l, P((120, 121, 121)), stone, edge)
+    frame("button_pressed", 12, 12, leather, leather_l, leather_d, edge)
+    frame("button_disabled", 12, 12, stone_d, stone, edge, edge)
+    frame("field", 12, 12, P((29, 23, 16)), edge, stone_d, stone_d)
+    frame("tab_selected", 12, 12, leather, leather_l, leather, edge)
+    frame("tab_unselected", 12, 12, stone_d, stone, stone_d, edge)
+    frame("tooltip", 12, 12, P((242, 194, 121)), P((251, 249, 251)), P((229, 168, 98)), edge)
+    # Small pieces.
+    c = Canvas(8, 8)
+    c.rect(0, 0, 7, 7, edge)
+    c.rect(1, 1, 6, 6, P((29, 23, 16)))
+    c.save("ui", "check_off")
+    c = Canvas(8, 8)
+    c.rect(0, 0, 7, 7, edge)
+    c.rect(1, 1, 6, 6, P((29, 23, 16)))
+    c.rect(2, 2, 5, 5, P((223, 143, 19)))
+    c.px(2, 2, P((234, 210, 32)))
+    c.save("ui", "check_on")
+    c = Canvas(6, 10)
+    c.rect(0, 0, 5, 9, edge)
+    c.rect(1, 1, 4, 8, P((223, 143, 19)))
+    c.line(1, 1, 1, 8, P((234, 210, 32)))
+    c.save("ui", "slider_grabber")
+    frame("slider_track", 8, 6, P((29, 23, 16)), stone_d, edge, edge)
+    frame("slider_fill", 8, 6, leather_l, P((165, 77, 6)), leather, edge)
+    frame("scroll_grabber", 6, 12, stone_l, P((120, 121, 121)), stone, edge)
+
+
+ICONS = ["biomes", "elevation", "hillshade", "temperature", "humidity", "fertility", "growing", "seasons", "season_now",
+         "wild_food", "deposits", "owner", "influence", "fog", "rivers", "fields", "borders", "settlements", "units",
+         "events", "relations", "settings"]
+
+
 def main():
     with open(os.path.join(ROOT, "data", "biomes.json"), encoding="utf-8") as f:
         biomes = json.load(f)["biomes"]
@@ -508,6 +679,9 @@ def main():
     for e in effects:
         if e["target"] in ("cell", "settlement"):
             event(e["key"])
+    for name in ICONS:
+        icon(name)
+    theme()
     print("placeholders written to", os.path.relpath(OUT, ROOT))
 
 

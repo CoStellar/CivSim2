@@ -226,8 +226,8 @@ public sealed class ViewerSettings
     /// <summary>Layer switches, opacities and order.</summary>
     public List<LayerSetting>? Layers { get; set; }
 
-    /// <summary>Whether the layer panel was open.</summary>
-    public bool LayerPanelOpen { get; set; } = true;
+    /// <summary>Which HUD panels were open.</summary>
+    public HudPanels Panels { get; set; } = new();
 
     /// <summary>Reads the saved settings; defaults when there are none or the file is broken.</summary>
     public static ViewerSettings Load()

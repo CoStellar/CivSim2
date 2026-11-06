@@ -140,6 +140,11 @@ public partial class MapObjects : Node2D
                 break;
             case MapLayer.Settlements:
                 PaintSettlements(p);
+                if (p.Lines)
+                {
+                    PaintCivilizationNames(p);
+                }
+
                 break;
             case MapLayer.Units:
                 PaintUnits(p);
@@ -279,6 +284,57 @@ public partial class MapObjects : Node2D
         }
     }
 
+    // The name of each civilization on a banner above its most populous settlement, so peoples stand out at any zoom.
+    private void PaintCivilizationNames(LayerPainter p)
+    {
+        if (_session?.View is not { } view || view.Settlements is not { } settlements)
+        {
+            return;
+        }
+
+        var best = new Dictionary<int, (Vector2 At, int People)>();
+        foreach (SettlementView s in settlements)
+        {
+            if (s.World != _world!.Id || s.Status != 0)
+            {
+                continue;
+            }
+
+            int people = 0;
+            foreach (int n in s.Population ?? [])
+            {
+                people += n;
+            }
+
+            if (!best.TryGetValue(s.Owner, out var b) || people > b.People)
+            {
+                best[s.Owner] = (HexLayout.Center(s.Col, s.Row), people);
+            }
+        }
+
+        Font font = Ui.PixelTheme.Current?.DefaultFont ?? ThemeDB.FallbackFont;
+        int size = (int)Mathf.Clamp(26 / _zoom, 32, 320);
+        size -= size % 16; // whole multiples of the pixel font's grid stay sharp
+        foreach (CivilizationView c in view.Civilizations)
+        {
+            if (!c.IsAlive || !best.TryGetValue(c.Id, out var at))
+            {
+                continue;
+            }
+
+            Vector2 text = font.GetStringSize(c.Name, HorizontalAlignment.Left, -1, size);
+            Color color = OverlayColors.CivColor(c.Id);
+            Each(at.At, text.X + 48, pos =>
+            {
+                Vector2 origin = pos - new Vector2(text.X / 2, 30 + (size * 0.6f));
+                var plate = new Rect2(origin - new Vector2(size * 0.4f, text.Y * 0.8f), new Vector2(text.X + (size * 0.8f), text.Y * 1.1f));
+                p.DrawRect(plate, new Color(0.11f, 0.09f, 0.06f));
+                p.DrawRect(plate, color, filled: false, width: Mathf.Max(2, size / 8f));
+                p.DrawString(font, origin, c.Name, HorizontalAlignment.Left, -1, size, color);
+            });
+        }
+    }
+
     private void PaintUnits(LayerPainter p)
     {
         if (_session?.Details is not { } details)
@@ -351,29 +407,67 @@ public partial class MapObjects : Node2D
             return;
         }
 
-        var drawn = new HashSet<(int, int, string)>();
+        // One event covers many cells (same effect, same end): the icon goes on the middle cell of the group, the
+        // other cells get a small dot, so a big drought does not bury the map in icons.
+        var groups = new Dictionary<(string, long), List<CellEventView>>();
         foreach (CellEventView e in details.Events)
         {
-            if (e.World != _world!.Id || !drawn.Add((e.Col, e.Row, e.Effect)))
+            if (e.World != _world!.Id)
             {
                 continue;
             }
 
-            Texture2D? icon = Textured ? _art.Get("effects", "event_" + e.Effect) : null;
-            Each(HexLayout.Center(e.Col, e.Row), 48, at =>
+            if (!groups.TryGetValue((e.Effect, e.EndMonth), out List<CellEventView>? list))
             {
-                if (icon is not null)
+                list = [];
+                groups[(e.Effect, e.EndMonth)] = list;
+            }
+
+            list.Add(e);
+        }
+
+        Color dot = OverlayColors.Rgb(0xEC271E);
+        foreach (((string effect, _), List<CellEventView> cells) in groups)
+        {
+            Vector2 first = HexLayout.Center(cells[0].Col, cells[0].Row);
+            Vector2 sum = Vector2.Zero;
+            foreach (CellEventView e in cells)
+            {
+                sum += Nearest(first, HexLayout.Center(e.Col, e.Row));
+            }
+
+            Vector2 middle = sum / cells.Count;
+            CellEventView center = cells[0];
+            float best = float.MaxValue;
+            foreach (CellEventView e in cells)
+            {
+                float d = Nearest(middle, HexLayout.Center(e.Col, e.Row)).DistanceSquaredTo(middle);
+                if (d < best)
                 {
-                    if (!p.Lines)
+                    best = d;
+                    center = e;
+                }
+            }
+
+            Texture2D? icon = Textured ? _art.Get("effects", "event_" + effect) : null;
+            foreach (CellEventView e in cells)
+            {
+                bool main = ReferenceEquals(e, center);
+                Each(HexLayout.Center(e.Col, e.Row), 48, at =>
+                {
+                    if (main && icon is not null)
                     {
-                        p.DrawTexture(icon, at + new Vector2(2, -20), Colors.White);
+                        if (!p.Lines)
+                        {
+                            p.DrawTexture(icon, at - new Vector2(12, 12), Colors.White);
+                        }
                     }
-                }
-                else if (p.Lines)
-                {
-                    p.DrawCircle(at, 6 / Mathf.Max(0.35f, _zoom * 2), OverlayColors.Rgb(0xEC271E));
-                }
-            });
+                    else if (p.Lines)
+                    {
+                        p.DrawCircle(at + new Vector2(10, -10), (main ? 6 : 2.5f) / Mathf.Max(0.35f, _zoom * 2), dot);
+                    }
+                });
+            }
         }
     }
 

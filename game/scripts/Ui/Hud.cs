@@ -10,25 +10,39 @@ using Godot;
 namespace CivSim.Game.Ui;
 
 /// <summary>
-/// Developer HUD (GDD 12.4 layout, simplified): top bar with turn, speed and overlay; cell inspector on the left;
-/// chronicle on the right; turn-time chart at the bottom. Built in code so it needs no art.
+/// Developer HUD (stage 5; GDD 12.4 layout, simplified). Top bar: time, speed, the followed civilization, layer
+/// icons and panel switches. Left: tabs with the selected cell and the civilizations (table, statistics, details of
+/// the followed one). Right: the chronicle (optionally only lines about the followed civilization). Bottom: turn
+/// times. Every panel can be hidden, and the layer settings (opacity, order) open in their own window.
+/// Built in code so it needs no art beyond the layer icons.
 /// </summary>
 public partial class Hud : CanvasLayer
 {
-    private static readonly (SimulationSpeed Speed, string Label)[] Speeds =
+    private static readonly (SimulationSpeed Speed, string Label, string Tip)[] Speeds =
     [
-        (SimulationSpeed.Paused, "Pause"), (SimulationSpeed.X1, "x1"), (SimulationSpeed.X2, "x2"), (SimulationSpeed.X5, "x5"), (SimulationSpeed.Max, "Max"),
+        (SimulationSpeed.Paused, "❚❚", "Pause (Space, 1)"), (SimulationSpeed.X1, "▶", "One turn every 2 s (2)"),
+        (SimulationSpeed.X2, "▶▶", "One turn every second (3)"), (SimulationSpeed.X5, "▶▶▶", "Five turns every 2 s (4)"),
+        (SimulationSpeed.Max, "»", "As fast as possible (5)"),
     ];
 
     private readonly Dictionary<SimulationSpeed, Button> _speedButtons = [];
+    private readonly List<int> _followIds = [WelcomeMessage.NoCiv];
+    private readonly List<ChronicleEntry> _chronicleLines = [];
     private Label _turn = null!;
     private Label _perf = null!;
-    private Button _layersButton = null!;
-    private PanelContainer _layerBox = null!;
-    private LayerPanel? _layerPanel;
+    private OptionButton _follow = null!;
+    private Button _track = null!;
+    private Control _left = null!;
+    private TabContainer _tabs = null!;
+    private Control _right = null!;
+    private PanelContainer _layerWindow = null!;
     private RichTextLabel _inspector = null!;
     private RichTextLabel _chronicle = null!;
+    private CheckBox _chronicleFollowed = null!;
     private TurnChart _chart = null!;
+    private CivilizationPanel _civs = null!;
+    private int _followCount = -1;
+    private int _chronicleFilter = int.MinValue;
 
     /// <summary>Raised when the user picks a speed.</summary>
     public event Action<SimulationSpeed>? SpeedChosen;
@@ -36,135 +50,321 @@ public partial class Hud : CanvasLayer
     /// <summary>Raised when the user wants the start menu back (the game is stopped).</summary>
     public event Action? MenuRequested;
 
-    /// <summary>Raised when the layer panel is shown or hidden.</summary>
-    public event Action<bool>? LayerPanelToggled;
+    /// <summary>Raised when the user picks a civilization to follow (<see cref="WelcomeMessage.NoCiv"/> = none).</summary>
+    public event Action<int>? FollowChosen;
 
-    /// <summary>The layer panel, to be set before the HUD enters the tree.</summary>
-    public LayerPanel? Layers
-    {
-        get => _layerPanel;
-        set => _layerPanel = value;
-    }
+    /// <summary>Raised when the user asks to centre the map on the followed civilization.</summary>
+    public event Action? GoToFollowed;
 
-    /// <summary>Whether the layer panel starts open.</summary>
-    public bool LayerPanelOpen { get; set; } = true;
+    /// <summary>Raised when panels are shown or hidden: (left, right, chart, layer window).</summary>
+    public event Action<HudPanels>? PanelsChanged;
+
+    /// <summary>The layer settings (opacity and order), to be set before the HUD enters the tree.</summary>
+    public LayerPanel? Layers { get; set; }
+
+    /// <summary>The layer icon bar, to be set before the HUD enters the tree.</summary>
+    public LayerBar? LayerIcons { get; set; }
+
+    /// <summary>Which panels start open.</summary>
+    public HudPanels Panels { get; set; } = new();
+
+    /// <summary>True while the camera should keep the followed civilization in view.</summary>
+    public bool Tracking => _track.ButtonPressed;
 
     /// <inheritdoc />
     public override void _Ready()
     {
-        var root = new Control { MouseFilter = Control.MouseFilterEnum.Ignore };
+        var root = new Control { MouseFilter = Control.MouseFilterEnum.Ignore, Theme = PixelTheme.Current };
         root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         AddChild(root);
 
         // Top bar.
-        var top = new PanelContainer();
+        var top = new PanelContainer { ThemeTypeVariation = "TopBar" };
         top.SetAnchorsPreset(Control.LayoutPreset.TopWide);
         root.AddChild(top);
         var bar = new HBoxContainer();
-        bar.AddThemeConstantOverride("separation", 12);
+        bar.AddThemeConstantOverride("separation", 6);
         top.AddChild(bar);
-        _turn = new Label { Text = "Connecting...", CustomMinimumSize = new Vector2(220, 0) };
+        _turn = new Label { Text = "Connecting...", CustomMinimumSize = new Vector2(170, 0), VerticalAlignment = VerticalAlignment.Center };
         bar.AddChild(_turn);
         var group = new ButtonGroup();
-        foreach ((SimulationSpeed speed, string label) in Speeds)
+        foreach ((SimulationSpeed speed, string label, string tip) in Speeds)
         {
-            var b = new Button { Text = label, ToggleMode = true, ButtonGroup = group, FocusMode = Control.FocusModeEnum.None };
-            SimulationSpeed s = speed;
-            b.Pressed += () => SpeedChosen?.Invoke(s);
+            var b = new Button { Text = label, TooltipText = tip, ToggleMode = true, ButtonGroup = group, FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(40, 0) };
+            SimulationSpeed sp = speed;
+            b.Pressed += () => SpeedChosen?.Invoke(sp);
             bar.AddChild(b);
             _speedButtons[speed] = b;
         }
 
-        _layersButton = new Button { Text = "Layers", ToggleMode = true, ButtonPressed = LayerPanelOpen, FocusMode = Control.FocusModeEnum.None, TooltipText = "Show or hide the layer panel (Tab)" };
-        _layersButton.Toggled += on =>
+        bar.AddChild(new VSeparator());
+        _follow = new OptionButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(160, 0), TooltipText = "Follow a civilization: its panel, statistics and fog of war (F = next)" };
+        _follow.AddItem("follow: nobody");
+        _follow.ItemSelected += i => FollowChosen?.Invoke(_followIds[(int)i]);
+        bar.AddChild(_follow);
+        var go = new Button { Text = "Go", FocusMode = Control.FocusModeEnum.None, TooltipText = "Centre the map on its largest settlement (G)" };
+        go.Pressed += () => GoToFollowed?.Invoke();
+        bar.AddChild(go);
+        _track = new Button { Text = "Track", ToggleMode = true, FocusMode = Control.FocusModeEnum.None, TooltipText = "Keep the camera on it while it moves (T)" };
+        bar.AddChild(_track);
+        bar.AddChild(new VSeparator());
+        if (LayerIcons is not null)
         {
-            _layerBox.Visible = on;
-            LayerPanelToggled?.Invoke(on);
-        };
-        bar.AddChild(new Label { Text = "  " });
-        bar.AddChild(_layersButton);
-        var menu = new Button { Text = "Menu", FocusMode = Control.FocusModeEnum.None, TooltipText = "Stop this game and go back to the start menu" };
-        menu.Pressed += () => MenuRequested?.Invoke();
-        bar.AddChild(menu);
-        _perf = new Label { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, HorizontalAlignment = HorizontalAlignment.Right };
-        bar.AddChild(_perf);
-
-        // Inspector (left).
-        var left = new PanelContainer { CustomMinimumSize = new Vector2(320, 0) };
-        left.SetAnchorsPreset(Control.LayoutPreset.LeftWide);
-        left.OffsetTop = 44;
-        left.OffsetBottom = -140;
-        root.AddChild(left);
-        _inspector = new RichTextLabel { BbcodeEnabled = true, Text = "Click a hex to inspect it.", FitContent = false };
-        left.AddChild(_inspector);
-
-        // Layers and chronicle (right).
-        var right = new VBoxContainer { CustomMinimumSize = new Vector2(400, 0) };
-        right.SetAnchorsPreset(Control.LayoutPreset.RightWide);
-        right.OffsetLeft = -400;
-        right.OffsetTop = 44;
-        right.OffsetBottom = -140;
-        root.AddChild(right);
-        _layerBox = new PanelContainer { Visible = LayerPanelOpen };
-        right.AddChild(_layerBox);
-        if (_layerPanel is not null)
-        {
-            _layerBox.AddChild(_layerPanel);
+            bar.AddChild(LayerIcons);
+            LayerIcons.SettingsPressed += () => SetPanel(_layerWindow, !_layerWindow.Visible);
         }
 
-        var chroniclePanel = new PanelContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
-        right.AddChild(chroniclePanel);
+        bar.AddChild(new VSeparator());
+        bar.AddChild(PanelToggle("Info", "Cell and civilization panel (I)", () => _left));
+        bar.AddChild(PanelToggle("Log", "Chronicle (L)", () => _right));
+        bar.AddChild(PanelToggle("Chart", "Turn times (C)", () => _chart));
+        var menu = new Button { Text = "Menu", FocusMode = Control.FocusModeEnum.None, TooltipText = "Stop this game and go back to the start menu (Esc)" };
+        menu.Pressed += () => MenuRequested?.Invoke();
+        bar.AddChild(menu);
+        _perf = new Label { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, ClipText = true };
+        bar.AddChild(_perf);
+
+        // Left: cell and civilization tabs.
+        var left = new PanelContainer { CustomMinimumSize = new Vector2(LeftWidth, 0), Visible = Panels.Left };
+        left.SetAnchorsPreset(Control.LayoutPreset.LeftWide);
+        left.OffsetTop = TopHeight;
+        left.OffsetBottom = 0;
+        root.AddChild(left);
+        _left = left;
+        _tabs = new TabContainer();
+        left.AddChild(_tabs);
+        _inspector = new RichTextLabel { Name = "Cell", BbcodeEnabled = true, Text = "Click a hex to inspect it." };
+        _tabs.AddChild(_inspector);
+        _civs = new CivilizationPanel { Name = "Civilizations" };
+        _civs.FollowChosen += civ => FollowChosen?.Invoke(civ);
+        _tabs.AddChild(_civs);
+
+        // Right: chronicle.
+        var right = new PanelContainer { Visible = Panels.Right };
+        right.SetAnchorsPreset(Control.LayoutPreset.BottomRight);
+        right.OffsetLeft = -ChronicleWidth;
+        right.OffsetTop = -ChronicleHeight;
+        right.OffsetRight = 0;
+        right.OffsetBottom = 0;
+        root.AddChild(right);
+        _right = right;
         var box = new VBoxContainer();
-        chroniclePanel.AddChild(box);
-        box.AddChild(new Label { Text = "Chronicle" });
-        _chronicle = new RichTextLabel { ScrollFollowing = true, SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        right.AddChild(box);
+        var head = new HBoxContainer();
+        box.AddChild(head);
+        head.AddChild(new Label { Text = "Chronicle", ThemeTypeVariation = "Heading", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+        var grow = new Button { Text = "↕", FocusMode = Control.FocusModeEnum.None, TooltipText = "Taller or shorter chronicle" };
+        grow.Pressed += () => right.OffsetTop = right.OffsetTop < -ChronicleHeight - 1 ? -ChronicleHeight : TopHeight - GetViewport().GetVisibleRect().Size.Y;
+        head.AddChild(grow);
+        _chronicleFollowed = new CheckBox { Text = "followed", FocusMode = Control.FocusModeEnum.None, TooltipText = "Show only lines about the followed civilization" };
+        _chronicleFollowed.Toggled += _ => _chronicleFilter = int.MinValue;
+        head.AddChild(_chronicleFollowed);
+        _chronicle = new RichTextLabel { ScrollFollowing = true, SizeFlagsVertical = Control.SizeFlags.ExpandFill, BbcodeEnabled = true };
         box.AddChild(_chronicle);
 
-        // Chart (bottom).
-        _chart = new TurnChart { MouseFilter = Control.MouseFilterEnum.Ignore };
+        // Bottom: turn times, between the side panels.
+        _chart = new TurnChart { MouseFilter = Control.MouseFilterEnum.Ignore, Visible = Panels.Chart };
         _chart.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
-        _chart.OffsetTop = -130;
+        _chart.OffsetTop = -72;
         root.AddChild(_chart);
+
+        // Layer settings window (opacity and order), closed unless the user opens it.
+        _layerWindow = new PanelContainer { Visible = Panels.LayerWindow, CustomMinimumSize = new Vector2(420, 0) };
+        _layerWindow.SetAnchorsPreset(Control.LayoutPreset.TopRight);
+        _layerWindow.OffsetLeft = -440;
+        _layerWindow.OffsetTop = TopHeight + 4;
+        _layerWindow.OffsetRight = -20;
+        root.AddChild(_layerWindow);
+        var wbox = new VBoxContainer();
+        _layerWindow.AddChild(wbox);
+        var whead = new HBoxContainer();
+        wbox.AddChild(whead);
+        whead.AddChild(new Label { Text = "Layer settings", ThemeTypeVariation = "Heading", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+        var close = new Button { Text = "✕", Flat = true, FocusMode = Control.FocusModeEnum.None };
+        close.Pressed += () => SetPanel(_layerWindow, false);
+        whead.AddChild(close);
+        if (Layers is not null)
+        {
+            wbox.AddChild(Layers);
+        }
+
+        foreach ((Button b, Func<Control> p) in _toggles)
+        {
+            b.SetPressedNoSignal(p().Visible);
+        }
+
+        LayoutChart();
     }
 
-    /// <summary>Shows or hides the layer panel (Tab).</summary>
-    public void ToggleLayerPanel() => _layersButton.ButtonPressed = !_layersButton.ButtonPressed;
+    /// <summary>Shows or hides the layer settings window (Tab).</summary>
+    public void ToggleLayerPanel() => SetPanel(_layerWindow, !_layerWindow.Visible);
+
+    /// <summary>Shows or hides a panel by key: I info, L log, C chart.</summary>
+    public void TogglePanel(char key)
+    {
+        switch (key)
+        {
+            case 'I':
+                SetPanel(_left, !_left.Visible);
+                break;
+            case 'L':
+                SetPanel(_right, !_right.Visible);
+                break;
+            case 'C':
+                SetPanel(_chart, !_chart.Visible);
+                break;
+        }
+    }
+
+    /// <summary>Switches camera tracking (T).</summary>
+    public void ToggleTracking() => _track.ButtonPressed = !_track.ButtonPressed;
+
+    /// <summary>Opens the civilization tab (after following one).</summary>
+    public void ShowCivilizationTab()
+    {
+        _tabs.CurrentTab = 1;
+        SetPanel(_left, true);
+    }
+
+    /// <summary>Opens the cell tab (after clicking a hex).</summary>
+    public void ShowCellTab() => _tabs.CurrentTab = 0;
 
     /// <summary>Appends chronicle lines.</summary>
     public void AddChronicle(IReadOnlyList<ChronicleEntry> lines)
     {
+        _chronicleLines.AddRange(lines);
+        if (_chronicleLines.Count > 2000)
+        {
+            _chronicleLines.RemoveRange(0, _chronicleLines.Count - 2000);
+        }
+
         foreach (ChronicleEntry e in lines)
         {
-            _chronicle.AppendText(string.Create(CultureInfo.InvariantCulture, $"[{e.Turn}] {e.Text}\n"));
+            if (_chronicleFilter == int.MinValue || Matches(e))
+            {
+                _chronicle.AppendText(Line(e));
+            }
         }
     }
 
-    /// <summary>Refreshes the top bar, the chart and the inspector.</summary>
+    /// <summary>Refreshes the top bar, the chart, the inspector and the civilization panel.</summary>
     public void UpdateStatus(ClientSession session, MapView map, double fps)
     {
         GameViewMessage? view = session.View;
         if (view is not null)
         {
-            ClientWorld? w = map.World;
-            string where = w is null ? string.Empty : string.Create(CultureInfo.InvariantCulture, $"   {w.Name} {w.Width}x{w.Height}");
-            _turn.Text = string.Create(CultureInfo.InvariantCulture, $"Turn {view.Turn}   Year {view.Month / 12}{where}");
+            _turn.Text = string.Create(CultureInfo.InvariantCulture, $"Turn {view.Turn}  ·  Year {view.Month / 12:N0}");
             if (_speedButtons.TryGetValue(view.Speed, out Button? b) && !b.ButtonPressed)
             {
                 b.SetPressedNoSignal(true);
             }
+
+            UpdateFollowList(view, session.WatchedCiv);
         }
 
         string error = session.LastError is null ? string.Empty : "   ! " + session.LastError;
-        _perf.Text = string.Create(CultureInfo.InvariantCulture, $"{fps:F0} FPS   {map.VisibleChunks} chunks drawn{error}");
-        _chart.SetValues(session.TurnMilliseconds);
-        _inspector.Text = Inspect(session, map);
+        ClientWorld? w = map.World;
+        _perf.Text = string.Create(CultureInfo.InvariantCulture, $"{fps:F0} FPS{error}");
+        _perf.TooltipText = w is null ? string.Empty : string.Create(CultureInfo.InvariantCulture, $"{w.Name} {w.Width}×{w.Height}");
+        if (_chart.Visible)
+        {
+            _chart.SetValues(session.TurnMilliseconds);
+        }
+
+        if (_left.Visible)
+        {
+            _inspector.Text = Inspect(session, map);
+            _civs.UpdateFrom(session);
+        }
+
+        // The chronicle filter follows the followed civilization.
+        int filter = _chronicleFollowed.ButtonPressed ? session.WatchedCiv : int.MinValue;
+        if (filter != _chronicleFilter)
+        {
+            _chronicleFilter = filter;
+            _followedName = filter == int.MinValue ? null : CivilizationPanel.CivName(session, filter);
+            _chronicle.Clear();
+            foreach (ChronicleEntry e in _chronicleLines)
+            {
+                if (filter == int.MinValue || Matches(e))
+                {
+                    _chronicle.AppendText(Line(e));
+                }
+            }
+        }
     }
+
+    private string? _followedName;
+
+    private bool Matches(ChronicleEntry e) => _followedName is null || e.Text.Contains(_followedName, StringComparison.Ordinal);
+
+    private static string Line(ChronicleEntry e) => string.Create(CultureInfo.InvariantCulture, $"[color=gray][{e.Turn}][/color] {e.Text}\n");
+
+    private void UpdateFollowList(GameViewMessage view, int watched)
+    {
+        if (view.Civilizations.Count != _followCount)
+        {
+            _followCount = view.Civilizations.Count;
+            _follow.Clear();
+            _followIds.Clear();
+            _follow.AddItem("follow: nobody");
+            _followIds.Add(WelcomeMessage.NoCiv);
+            foreach (CivilizationView c in view.Civilizations)
+            {
+                _follow.AddItem(c.Name);
+                _followIds.Add(c.Id);
+            }
+        }
+
+        int index = Math.Max(0, _followIds.IndexOf(watched));
+        if (_follow.Selected != index)
+        {
+            _follow.Select(index);
+        }
+    }
+
+    private Button PanelToggle(string text, string tip, Func<Control> panel)
+    {
+        var b = new Button { Text = text, ToggleMode = true, FocusMode = Control.FocusModeEnum.None, TooltipText = tip };
+        b.Toggled += on => SetPanel(panel(), on);
+        _toggles.Add((b, panel));
+        return b;
+    }
+
+    private readonly List<(Button Button, Func<Control> Panel)> _toggles = [];
+
+    private void SetPanel(Control panel, bool on)
+    {
+        panel.Visible = on;
+        foreach ((Button b, Func<Control> p) in _toggles)
+        {
+            if (ReferenceEquals(p(), panel))
+            {
+                b.SetPressedNoSignal(on);
+            }
+        }
+
+        LayoutChart();
+        PanelsChanged?.Invoke(new HudPanels { Left = _left.Visible, Right = _right.Visible, Chart = _chart.Visible, LayerWindow = _layerWindow.Visible });
+    }
+
+    // The chart sits between the side panels and the side panels stop above it.
+    private void LayoutChart()
+    {
+        _chart.OffsetLeft = _left.Visible ? LeftWidth : 0;
+        _chart.OffsetRight = _right.Visible ? -ChronicleWidth : 0;
+    }
+
+    private const float LeftWidth = 420;
+    private const float TopHeight = 52;
+    private const float ChronicleWidth = 400;
+    private const float ChronicleHeight = 230;
 
     private static string Inspect(ClientSession session, MapView map)
     {
         if (map.Selected is not { } sel || map.World is not { } w)
         {
-            return "Click a hex to inspect it.\n\n[color=gray]Mouse: left = select, right/middle drag = move, wheel = zoom.\nKeys: WASD/arrows move, +/- zoom, Space pause, 1-5 speed, Tab layer panel, Esc menu.[/color]";
+            return "Click a hex to inspect it.\n\n[color=gray]Mouse: left = select, right/middle drag = move, wheel = zoom.\nKeys: WASD/arrows move, +/- zoom, Space pause, 1-5 speed, Tab layer settings, F follow next, G go to, T track, I/L/C panels, Esc menu.[/color]";
         }
 
         int i = w.Index(sel.Col, sel.Row);
@@ -182,7 +382,7 @@ public partial class Hud : CanvasLayer
         string relief = c is not null && w.Relief[i] < c.Reliefs.Count ? c.Reliefs[w.Relief[i]] : w.Relief[i].ToString(inv);
         string feature = c is not null && w.Feature[i] < c.Features.Count ? c.Features[w.Feature[i]] : w.Feature[i].ToString(inv);
         sb.Append(inv, $"Biome: {biome}\nRelief: {relief}\nFeature: {feature}\n");
-        sb.Append(inv, $"Elevation: {w.Elevation[i]} (sea level 100)\nTemperature: {w.Temperature[i]} °C (summer {w.Temperature[i] + (w.Seasonality[i] / 2)}, winter {w.Temperature[i] - (w.Seasonality[i] / 2)})\nGrowing season: {w.GrowingSeason[i]}% of the year\n{(session.View?.LiveSeasons == true ? $"This season: {w.SeasonTemperature[i]} °C, plants grow {w.SeasonGrowth[i]}% of the turn\n" : string.Empty)}Humidity: {w.Humidity[i]}\nFertility: {w.Fertility[i]}\n");
+        sb.Append(inv, $"Elevation: {w.Elevation[i]} (sea level 100){(OverlayColors.Depth(w, c, i) > 0 ? $", water depth about {OverlayColors.Depth(w, c, i) * 40} m" : string.Empty)}\nTemperature: {w.Temperature[i]} °C (summer {w.Temperature[i] + (w.Seasonality[i] / 2)}, winter {w.Temperature[i] - (w.Seasonality[i] / 2)})\nGrowing season: {w.GrowingSeason[i]}% of the year\n{(session.View?.LiveSeasons == true ? $"This season: {w.SeasonTemperature[i]} °C, plants grow {w.SeasonGrowth[i]}% of the turn\n" : string.Empty)}Humidity: {w.Humidity[i]}\nFertility: {w.Fertility[i]}\n");
         int d = w.Deposit[i];
         if (d != 0)
         {
@@ -334,4 +534,20 @@ public partial class Hud : CanvasLayer
 
         return id.ToString(CultureInfo.InvariantCulture);
     }
+}
+
+/// <summary>Which HUD panels are open (saved with the viewer settings).</summary>
+public sealed class HudPanels
+{
+    /// <summary>Cell and civilization panel.</summary>
+    public bool Left { get; set; } = true;
+
+    /// <summary>Chronicle.</summary>
+    public bool Right { get; set; } = true;
+
+    /// <summary>Turn-time chart.</summary>
+    public bool Chart { get; set; } = true;
+
+    /// <summary>Layer settings window.</summary>
+    public bool LayerWindow { get; set; }
 }

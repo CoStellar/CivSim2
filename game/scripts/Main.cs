@@ -64,6 +64,16 @@ public partial class Main : Node2D
         RenderingServer.SetDefaultClearColor(new Color(0.04f, 0.04f, 0.05f));
         _dataDirectory = FindDataDirectory();
         _art = new ArtLibrary(ArtLibrary.FindArtDirectory());
+        if (PixelTheme.Build(_art) is { } theme)
+        {
+            GetWindow().Theme = theme;
+            PixelTheme.Current = theme;
+            GD.Print("viewer: pixel theme on");
+        }
+        else
+        {
+            GD.Print("viewer: pixel theme pictures missing, default look");
+        }
         _layers.Load(_saved.Layers);
         _layers.Changed += () => _saved.Layers = _layers.Save();
         _camera = new Camera2D { Zoom = new Vector2(0.5f, 0.5f) };
@@ -187,29 +197,98 @@ public partial class Main : Node2D
 
         if (_watch != WelcomeMessage.NoCiv)
         {
-            _session.Watch(_watch);
             _layers.SetEnabled(MapLayer.Fog, true);
         }
 
         _map = new MapView(_layers, _art);
         AddChild(_map);
-        var panel = new LayerPanel(_layers);
-        panel.FogCivilizationChosen += civ =>
-        {
-            _session?.Watch(civ);
-            if (civ != WelcomeMessage.NoCiv && !_layers[MapLayer.Fog].Enabled)
-            {
-                _layers.SetEnabled(MapLayer.Fog, true);
-            }
-        };
-        _hud = new Hud { Layers = panel, LayerPanelOpen = _saved.LayerPanelOpen };
+        var icons = new LayerBar(_layers, _art);
+        _hud = new Hud { Layers = new LayerPanel(_layers), LayerIcons = icons, Panels = _saved.Panels };
         AddChild(_hud);
         _hud.SpeedChosen += s => _session?.SetSpeed(s);
         _hud.MenuRequested += ShowMenu;
-        _hud.LayerPanelToggled += open => _saved.LayerPanelOpen = open;
+        _hud.PanelsChanged += panels => _saved.Panels = panels;
+        _hud.FollowChosen += Follow;
+        _hud.GoToFollowed += () => GoToFollowed(jump: true);
         _session.ChronicleAdded += lines => _hud?.AddChronicle(lines);
         _bound = false;
         GD.Print($"CivSim 2 viewer: protocol v{ProtocolInfo.Version}, seed {options.Seed}, map {options.Width}x{options.Height}");
+    }
+
+    // Follows a civilization: its fog and details come from the server, the panel opens on its tab.
+    private void Follow(int civ)
+    {
+        if (_session is null || civ == _session.WatchedCiv)
+        {
+            return;
+        }
+
+        _session.Watch(civ);
+        if (civ != WelcomeMessage.NoCiv)
+        {
+            _hud?.ShowCivilizationTab();
+            GoToFollowed(jump: true);
+        }
+    }
+
+    // Next civilization in the list (F); after the last, nobody.
+    private void FollowNext()
+    {
+        if (_session?.View is not { } view || view.Civilizations.Count == 0)
+        {
+            return;
+        }
+
+        int k = -1;
+        for (int i = 0; i < view.Civilizations.Count; i++)
+        {
+            if (view.Civilizations[i].Id == _session.WatchedCiv)
+            {
+                k = i;
+            }
+        }
+
+        Follow(k + 1 < view.Civilizations.Count ? view.Civilizations[k + 1].Id : WelcomeMessage.NoCiv);
+    }
+
+    // Moves the camera to the followed civilization's most populous settlement: at once, or gently while tracking.
+    private void GoToFollowed(bool jump)
+    {
+        if (_session?.View?.Settlements is not { } settlements || _map is null || _session.WatchedCiv < 0)
+        {
+            return;
+        }
+
+        Vector2? best = null;
+        int bestPeople = -1;
+        foreach (SettlementView s in settlements)
+        {
+            if (s.Owner != _session.WatchedCiv || s.Status != 0 || s.World != 0)
+            {
+                continue;
+            }
+
+            int people = 0;
+            foreach (int n in s.Population ?? [])
+            {
+                people += n;
+            }
+
+            if (people > bestPeople)
+            {
+                bestPeople = people;
+                best = HexLayout.Center(s.Col, s.Row);
+            }
+        }
+
+        if (best is not { } target)
+        {
+            return;
+        }
+
+        // The nearest copy on the wrapped map, so the camera never flies the long way round.
+        target.X += Mathf.Round((_camera.Position.X - target.X) / _map.Period.X) * _map.Period.X;
+        _camera.Position = jump ? target : _camera.Position.Lerp(target, 0.08f);
     }
 
     private void StopGame()
@@ -244,6 +323,15 @@ public partial class Main : Node2D
             _camera.Zoom = new Vector2(_startZoom, _startZoom);
             _bound = true;
             _screenshotFrames = 20;
+            if (_watch != WelcomeMessage.NoCiv)
+            {
+                Follow(_watch);
+            }
+        }
+
+        if (_hud.Tracking)
+        {
+            GoToFollowed(jump: false);
         }
 
         MoveCamera((float)delta);
@@ -255,8 +343,7 @@ public partial class Main : Node2D
         {
             _statusTimer = 0.2;
             _hud.UpdateStatus(_session, _map, Engine.GetFramesPerSecond());
-            _hud.Layers?.UpdateCivilizations(_session.View, _session.CivId == WelcomeMessage.NoCiv, _session.WatchedCiv);
-        }
+                    }
 
         if (_host?.Error is { } error)
         {
@@ -297,6 +384,11 @@ public partial class Main : Node2D
             return;
         }
 
+        if (_screenshotFrames == 10)
+        {
+            GoToFollowed(jump: true);
+        }
+
         _screenshotFrames--;
         if (_screenshotFrames == 3)
         {
@@ -331,6 +423,7 @@ public partial class Main : Node2D
                 break;
             case InputEventMouseButton mb when mb.ButtonIndex == MouseButton.Left && mb.Pressed && _map is not null:
                 _map.SelectAt(GetGlobalMousePosition());
+                _hud?.ShowCellTab();
                 _statusTimer = 0;
                 break;
             case InputEventMouseMotion mm when _dragging:
@@ -371,6 +464,24 @@ public partial class Main : Node2D
                 break;
             case Key.Tab:
                 _hud?.ToggleLayerPanel();
+                break;
+            case Key.F:
+                FollowNext();
+                break;
+            case Key.G:
+                GoToFollowed(jump: true);
+                break;
+            case Key.T:
+                _hud?.ToggleTracking();
+                break;
+            case Key.I:
+                _hud?.TogglePanel('I');
+                break;
+            case Key.L:
+                _hud?.TogglePanel('L');
+                break;
+            case Key.C:
+                _hud?.TogglePanel('C');
                 break;
             case Key.Escape when _menu is null:
                 ShowMenu();

@@ -87,7 +87,8 @@ public static class OverlayColors
 
     private static (Color Color, float Cover) Of(MapLayer layer, ClientWorld w, ContentMessage? content, byte[]? fog, int i, bool water) => layer switch
     {
-        MapLayer.Elevation => (ElevationColor(w.Elevation[i], water), 1),
+        MapLayer.Elevation => (ElevationColor(w, content, i, water), 1),
+        MapLayer.Hillshade => water ? (Colors.Black, 0) : Hillshade(w, content, i),
         MapLayer.Temperature => (TemperatureColor(w.Temperature[i], water), 1),
         MapLayer.Humidity => water ? (Water, 1) : (Rgb(0xC8A060).Lerp(Rgb(0x1E6E32), w.Humidity[i] / 100f), 1),
         MapLayer.Fertility => water ? (Water, 0) : (Rgb(0x5A4A3A).Lerp(Rgb(0x40D040), w.Fertility[i] / 100f), 1),
@@ -125,14 +126,107 @@ public static class OverlayColors
         return water ? c.Darkened(0.35f) : c;
     }
 
-    private static Color ElevationColor(int e, bool water)
+    /// <summary>Sea level of the elevation scale (GDD 3: about 100; lower in ice ages).</summary>
+    public const int SeaLevel = 100;
+
+    /// <summary>
+    /// Depth of a water cell in elevation steps: below sea level for seas; for lakes, below the lowest land around
+    /// (the lake surface), so it is only an estimate. 0 for land.
+    /// </summary>
+    public static int Depth(ClientWorld w, ContentMessage? content, int i)
+    {
+        if (!IsWater(w, content, i))
+        {
+            return 0;
+        }
+
+        int e = w.Elevation[i];
+        if (e < SeaLevel)
+        {
+            return SeaLevel - e;
+        }
+
+        int shore = int.MaxValue;
+        (int col, int row) = (i % w.Width, i / w.Width);
+        for (int edge = 0; edge < 6; edge++)
+        {
+            (int nc, int nr) = Neighbor(col, row, edge);
+            if (nr >= 0 && nr < w.Height)
+            {
+                int n = w.Index(nc, nr);
+                if (!IsWater(w, content, n))
+                {
+                    shore = System.Math.Min(shore, w.Elevation[n]);
+                }
+            }
+        }
+
+        return shore == int.MaxValue ? 1 : System.Math.Max(1, shore - e + 1);
+    }
+
+    /// <summary>Neighbour of a cell across edge 0–5 (N, NE, SE, S, SW, NW) on the odd-q grid, not wrapped.</summary>
+    public static (int Col, int Row) Neighbor(int col, int row, int edge)
+    {
+        bool odd = (col & 1) == 1;
+        return edge switch
+        {
+            0 => (col, row - 1),
+            1 => (col + 1, odd ? row : row - 1),
+            2 => (col + 1, odd ? row + 1 : row),
+            3 => (col, row + 1),
+            4 => (col - 1, odd ? row + 1 : row),
+            _ => (col - 1, odd ? row : row - 1),
+        };
+    }
+
+    private static bool IsWater(ClientWorld w, ContentMessage? content, int i) =>
+        content is not null && w.Biome[i] < content.Biomes.Count && content.Biomes[w.Biome[i]].IsWater;
+
+    // Land: green lowlands, yellow and brown hills, grey and white peaks. Water: light shallows to dark deeps.
+    private static Color ElevationColor(ClientWorld w, ContentMessage? content, int i, bool water)
     {
         if (water)
         {
-            return Rgb(0x061A33).Lerp(Rgb(0x2E7FC4), e / 100f);
+            int depth = Depth(w, content, i);
+            return Rgb(0x9FD8EE).Lerp(Rgb(0x0A1F44), Mathf.Clamp(Mathf.Sqrt(depth / 60f), 0, 1));
         }
 
-        return e < 170 ? Rgb(0x3B7A2A).Lerp(Rgb(0xC9B458), (e - 100) / 70f) : Rgb(0xC9B458).Lerp(Rgb(0xF4F4F4), (e - 170) / 85f);
+        float h = (w.Elevation[i] - SeaLevel) / 155f;
+        (float At, uint Rgb)[] stops = [(0f, 0x2E7D32), (0.12f, 0x7CB342), (0.3f, 0xE6D36A), (0.5f, 0xB7763C), (0.7f, 0x7D6B5D), (0.85f, 0xBDB6B0), (1f, 0xFAFAFA)];
+        for (int k = 1; k < stops.Length; k++)
+        {
+            if (h <= stops[k].At)
+            {
+                float t = (h - stops[k - 1].At) / (stops[k].At - stops[k - 1].At);
+                return Rgb(stops[k - 1].Rgb).Lerp(Rgb(stops[k].Rgb), Mathf.Clamp(t, 0, 1));
+            }
+        }
+
+        return Rgb(0xFAFAFA);
+    }
+
+    // Light from the top left (north-west): compare the height uphill and downhill of the light.
+    private static (Color, float) Hillshade(ClientWorld w, ContentMessage? content, int i)
+    {
+        (int col, int row) = (i % w.Width, i / w.Width);
+        int nw = Height(w, content, Neighbor(col, row, 5), i);
+        int no = Height(w, content, Neighbor(col, row, 0), i);
+        int se = Height(w, content, Neighbor(col, row, 2), i);
+        int so = Height(w, content, Neighbor(col, row, 3), i);
+        float slope = ((se + so) - (nw + no)) / 2f; // > 0: rises away from the light, so the face looks at it
+        float strength = Mathf.Clamp(Mathf.Abs(slope) / 14f, 0, 1);
+        return slope > 0 ? (Colors.White, strength * 0.7f) : (Colors.Black, strength);
+    }
+
+    private static int Height(ClientWorld w, ContentMessage? content, (int Col, int Row) c, int self)
+    {
+        if (c.Row < 0 || c.Row >= w.Height)
+        {
+            return w.Elevation[self];
+        }
+
+        int n = w.Index(c.Col, c.Row);
+        return IsWater(w, content, n) ? SeaLevel : w.Elevation[n];
     }
 
     private static Color TemperatureColor(int t, bool water)

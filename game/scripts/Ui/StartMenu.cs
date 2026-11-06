@@ -57,7 +57,7 @@ public partial class StartMenu : CanvasLayer
 
     private void Build()
     {
-        var root = new PanelContainer();
+        var root = new PanelContainer { Theme = PixelTheme.Current };
         root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         AddChild(root);
         var center = new CenterContainer();
@@ -66,8 +66,8 @@ public partial class StartMenu : CanvasLayer
         page.AddThemeConstantOverride("separation", 14);
         center.AddChild(page);
 
-        var title = new Label { Text = "CivSim 2 — simulator", HorizontalAlignment = HorizontalAlignment.Center };
-        title.AddThemeFontSizeOverride("font_size", 30);
+        var title = new Label { Text = "CivSim 2 — simulator", HorizontalAlignment = HorizontalAlignment.Center, ThemeTypeVariation = "Heading" };
+        title.AddThemeFontSizeOverride("font_size", 32);
         page.AddChild(title);
         page.AddChild(new Label
         {
@@ -83,7 +83,7 @@ public partial class StartMenu : CanvasLayer
         columns.AddChild(PlanetColumn());
         columns.AddChild(SimulationColumn());
 
-        var previewPanel = new PanelContainer { CustomMinimumSize = new Vector2(0, 150) };
+        var previewPanel = new PanelContainer { CustomMinimumSize = new Vector2(0, 170) };
         page.AddChild(previewPanel);
         var previewBox = new VBoxContainer();
         previewPanel.AddChild(previewBox);
@@ -307,12 +307,7 @@ public partial class StartMenu : CanvasLayer
         return grid;
     }
 
-    private static Label Heading(string text)
-    {
-        var label = new Label { Text = text };
-        label.AddThemeFontSizeOverride("font_size", 20);
-        return label;
-    }
+    private static Label Heading(string text) => new() { Text = text, ThemeTypeVariation = "Heading" };
 
     private LineEdit Text(GridContainer g, string label, string value, Action<string> set, string hint)
     {

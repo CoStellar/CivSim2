@@ -54,8 +54,14 @@ public sealed class ClientSession
     /// <summary>Fog of the watched civilization per world id (observer only), or empty when none is watched.</summary>
     public Dictionary<int, FogMessage> Fog { get; } = [];
 
-    /// <summary>Civilization whose fog the observer asked for, or <see cref="WelcomeMessage.NoCiv"/>.</summary>
+    /// <summary>Civilization the observer follows (fog and details), or <see cref="WelcomeMessage.NoCiv"/>.</summary>
     public int WatchedCiv { get; private set; } = WelcomeMessage.NoCiv;
+
+    /// <summary>Details of the followed civilization; null when none is followed or nothing arrived yet.</summary>
+    public CivilizationDetailsMessage? CivDetails { get; private set; }
+
+    /// <summary>People, settlements and technologies of every civilization over time (observers).</summary>
+    public CivHistory History { get; } = new();
 
     /// <summary>Counts fog updates, so the map knows when to recolour.</summary>
     public int FogVersion { get; private set; }
@@ -73,6 +79,7 @@ public sealed class ClientSession
     public void Watch(int civ)
     {
         WatchedCiv = civ;
+        CivDetails = null;
         Fog.Clear();
         FogVersion++;
         _connection.Send(new WatchCivilizationMessage(civ));
@@ -123,6 +130,11 @@ public sealed class ClientSession
                     }
                 }
 
+                if (first || v.Turn > previous)
+                {
+                    History.Add(v);
+                }
+
                 if (!first && v.Turn > previous)
                 {
                     _turnMs.Enqueue(v.TurnMicroseconds / 1000.0);
@@ -148,6 +160,13 @@ public sealed class ClientSession
                 break;
             case ObserverDetailsMessage details:
                 Details = details;
+                break;
+            case CivilizationDetailsMessage civ:
+                if (civ.CivId == WatchedCiv)
+                {
+                    CivDetails = civ;
+                }
+
                 break;
             case FogMessage fog:
                 if (fog.CivId == WatchedCiv)

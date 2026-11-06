@@ -1,22 +1,22 @@
 using System;
 using System.Collections.Generic;
 using CivSim.Game.Map;
-using CivSim.Protocol.Messages;
 using Godot;
 
 namespace CivSim.Game.Ui;
 
 /// <summary>
 /// The layer list of the stage 5 map view: each layer can be switched on and off, faded with a slider and moved up
-/// or down inside its group (cell layers always lie under drawn layers). The fog layer has a choice of whose fog it
-/// shows (observers only). Top of the list = top of the map.
+/// or down inside its group (cell layers always lie under drawn layers). Top of the list = top of the map. Shown in
+/// the layer settings window; the top bar has the quick on/off icons.
 /// </summary>
 public partial class LayerPanel : VBoxContainer
 {
     private static readonly Dictionary<MapLayer, string> Names = new()
     {
         [MapLayer.Biomes] = "Biomes and terrain",
-        [MapLayer.Elevation] = "Elevation",
+        [MapLayer.Elevation] = "Height and depth",
+        [MapLayer.Hillshade] = "Hill shading",
         [MapLayer.Temperature] = "Temperature",
         [MapLayer.Humidity] = "Humidity",
         [MapLayer.Fertility] = "Fertility",
@@ -38,10 +38,8 @@ public partial class LayerPanel : VBoxContainer
     };
 
     private readonly LayerStack _layers;
-    private readonly List<int> _fogCivs = [WelcomeMessage.NoCiv];
     private VBoxContainer _rows = null!;
-    private OptionButton _fogOf = null!;
-    private int _civCount = -1;
+    private int _version = -1;
 
     /// <summary>Creates the panel for <paramref name="layers"/>.</summary>
     public LayerPanel(LayerStack layers)
@@ -55,9 +53,6 @@ public partial class LayerPanel : VBoxContainer
     {
     }
 
-    /// <summary>Raised when the observer picks whose fog to show (<see cref="WelcomeMessage.NoCiv"/> = none).</summary>
-    public event Action<int>? FogCivilizationChosen;
-
     /// <summary>Display name of a layer.</summary>
     public static string NameOf(MapLayer layer) => Names.GetValueOrDefault(layer, layer.ToString());
 
@@ -67,42 +62,28 @@ public partial class LayerPanel : VBoxContainer
         AddThemeConstantOverride("separation", 4);
         var head = new HBoxContainer();
         AddChild(head);
-        head.AddChild(new Label { Text = "Layers (top = drawn last)", SizeFlagsHorizontal = SizeFlags.ExpandFill });
+        head.AddChild(new Label { Text = "Layers: top of the list is drawn on top. The memory and fog layer shows the followed civilization's knowledge.", SizeFlagsHorizontal = SizeFlags.ExpandFill, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(360, 0) });
         _rows = new VBoxContainer();
         _rows.AddThemeConstantOverride("separation", 2);
         AddChild(_rows);
-        var fog = new HBoxContainer();
-        AddChild(fog);
-        fog.AddChild(new Label { Text = "Fog of:" });
-        _fogOf = new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill, FocusMode = FocusModeEnum.None };
-        _fogOf.AddItem("nobody");
-        _fogOf.ItemSelected += i => FogCivilizationChosen?.Invoke(_fogCivs[(int)i]);
-        fog.AddChild(_fogOf);
         Rebuild();
     }
 
-    /// <summary>Fills the fog choice with the civilizations of the view (observers only).</summary>
-    public void UpdateCivilizations(GameViewMessage? view, bool observer, int watched)
+    /// <inheritdoc />
+    public override void _Process(double delta)
     {
-        _fogOf.Disabled = !observer;
-        if (view is null || view.Civilizations.Count == _civCount)
+        // Switches changed elsewhere (the icon bar) show here too.
+        if (_layers.Version != _version)
         {
-            return;
+            _version = _layers.Version;
+            foreach (Node row in _rows.GetChildren())
+            {
+                if (row is HBoxContainer { } h && h.GetChildCount() > 0 && h.GetChild(0) is CheckBox check && check.HasMeta("layer"))
+                {
+                    check.SetPressedNoSignal(_layers[(MapLayer)(int)check.GetMeta("layer")].Enabled);
+                }
+            }
         }
-
-        _civCount = view.Civilizations.Count;
-        int selected = watched;
-        _fogOf.Clear();
-        _fogCivs.Clear();
-        _fogOf.AddItem("nobody");
-        _fogCivs.Add(WelcomeMessage.NoCiv);
-        foreach (CivilizationView c in view.Civilizations)
-        {
-            _fogOf.AddItem(c.Name);
-            _fogCivs.Add(c.Id);
-        }
-
-        _fogOf.Select(Math.Max(0, _fogCivs.IndexOf(selected)));
     }
 
     private void Rebuild()
@@ -137,6 +118,7 @@ public partial class LayerPanel : VBoxContainer
             FocusMode = FocusModeEnum.None,
             ClipText = true,
         };
+        check.SetMeta("layer", (int)layer);
         check.Toggled += on => _layers.SetEnabled(layer, on);
         row.AddChild(check);
         var slider = new HSlider

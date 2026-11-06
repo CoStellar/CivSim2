@@ -19,7 +19,7 @@ public partial class MapView : Node2D
     public const float TexturedZoom = 0.4f;
 
     private const float RiverBaseWidth = 4f;
-    private const float BorderWidth = 3f;
+    private const float BorderWidth = 4f;
 
     // Recolouring is spread over frames so switching a layer on a huge map never stalls one frame: chunks about to
     // be drawn for the first time are always done, the rest only while this much time is left in the frame.
@@ -560,6 +560,8 @@ public partial class MapView : Node2D
                             continue;
                         }
 
+                        // A dark outline under the colour, so borders read on any biome.
+                        borders.Add((Segment(center, AllEdges[e], borderWidth + 3, 0.1f), new Color(0.11f, 0.09f, 0.06f)));
                         borders.Add((Segment(center, AllEdges[e], borderWidth, 0.12f), OverlayColors.CivColor(owner)));
                     }
                 }
