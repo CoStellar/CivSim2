@@ -50,7 +50,7 @@ Kolejność ma znaczenie: 4a jest bazą dla reszty, 4c przed 4d i 4e.
 ## Pytania do Patryka (z rekomendacją)
 
 1. **Epoka brązu przed etapem 4?** Dziś symulacja stoi przez ok. 45 tys. lat w neolicie, bo nie ma technologii er 3+. Rekomendacja: krótki PR z danymi
-   technologii epoki brązu (miedź, brąz, pismo, koło) przed 4e, żeby wojny miały ciekawszy świat. Ale to wymaga zgody: ROADMAP przypisuje ery 3+ do etapów 6–12 (od 2026-11-06: 5–11).
+   technologii epoki brązu (miedź, brąz, pismo, koło) przed 4e, żeby wojny miały ciekawszy świat. Ale to wymaga zgody: ROADMAP przypisuje ery 3+ do etapów 6–12.
 2. **Handel między cywilizacjami w 4d bez karawan?** GDD 9.2 mówi o fizycznych karawanach. Rekomendacja: w etapie 4 bez transportu (jak 3e), karawany
    razem z jednostkami na mapie.
 3. **Ile umów na start?** Rekomendacja: pokój, wojna, umowa handlowa, pakt o nieagresji, sojusz obronny. Trybut, wasalstwo i federacje później.

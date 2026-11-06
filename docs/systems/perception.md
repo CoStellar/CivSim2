@@ -29,7 +29,7 @@ flowchart LR
 - **Pamięć ustna:** pole jest znane przez `oralMemoryYears` (300 lat) od ostatniej obserwacji. Mapy rysowane (trwałe) przyjdą z pismem w erze brązu.
 - **AI:** miejsca do przeprowadzki, odłamu i podboju wybiera tylko spośród znanych pól. Głodny albo zmarznięty obóz, który nie ma lepszego miejsca w zasięgu jednego ruchu, raz na turę ery szuka znanego lądu do 40 pól dalej (co trzecie pole w obu kierunkach, kara 1% za pole odległości). Rusza, gdy daleki cel jest wart ponad 1,6 raza tyle co obecne miejsce i istnieje znana droga.
 - **Wędrówka:** obóz idzie najkrótszą znaną drogą po lądzie i lodzie morskim (pomosty lądowe z epok lodowych to zwykły ląd), do `maxMoveCells` (10) pól na turę, i zatrzymuje się tylko na lądzie, gdzie nikt nie mieszka. Kończy się po dojściu albo gdy drogi już nie ma (zapomniana ziemia, stopiony lód). Wioski nie wędrują.
-- **Złoża w widoku:** na razie gracz widzi wszystko na znanych polach. Ukrywanie złóż nieznanych surowców (GDD 8.2) przyjdzie razem z widokiem gracza w etapie 12.
+- **Złoża w widoku:** na razie gracz widzi wszystko na znanych polach. Ukrywanie złóż nieznanych surowców (GDD 8.2) przyjdzie razem z widokiem gracza w etapie 13.
 
 ## Pliki danych
 - `data/perception.json`.
