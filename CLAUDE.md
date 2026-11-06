@@ -148,14 +148,14 @@ Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla
   Maska: `art/templates/hex_template_48x42.png`.
 - Warstwy od dołu: biom → teren (rzeźba, cechy, rzeki na krawędziach) → obiekty → jednostki.
 - Kolor cywilizacji: zarezerwowane odcienie magenty `#FF00FF`, `#C000C0`, `#800080` (podmieniane shaderem).
-- Do etapu 4 podgląd używa kolorowych heksów generowanych w kodzie; pixel art wchodzi od etapu 5.
+- Do etapu 11 podgląd używa kolorowych heksów generowanych w kodzie; pixel art wchodzi w etapie 12 (tryb gracza, na końcu CORE).
 
 ## Czego nie robić
 
 - Nie dodawaj religii ani kultury.
 - Nie implementuj modułów z rozdziału 16 GDD bez zgody Patryka.
 - Nie dawaj AI żadnych premii ani ukrytej wiedzy; widzi tylko to, co odkryła jej cywilizacja.
-- Nie buduj interfejsu gracza ani grafiki przed etapem 5 (wyjątek: podgląd deweloperski).
+- Nie buduj interfejsu gracza ani grafiki przed etapem 12 (wyjątek: podgląd deweloperski).
 - Nie planuj eksportu do przeglądarki (Godot nie eksportuje oficjalnie C# do web).
 - Nie buduj gry w sieci (przyszła aktualizacja) i nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio).
 - Nie zmieniaj zasad gry bez zgody Patryka.

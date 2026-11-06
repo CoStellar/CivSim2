@@ -33,7 +33,7 @@ flowchart LR
 
 ## Zasady i wzory
 - **Granica klient–serwer:** `game/` nie widzi `CivSim.Core` (ADR 0010). Wszystko, co klient wie, przyszło w wiadomościach.
-- **Obserwator** widzi całą mapę i może zmieniać prędkość. Gracz (od etapu 5) zobaczy tylko to, co zna jego cywilizacja;
+- **Obserwator** widzi całą mapę i może zmieniać prędkość. Gracz (od etapu 12) zobaczy tylko to, co zna jego cywilizacja;
   do etapu 3 to heksy w promieniu 4 od startu. Gracz nie może zmienić prędkości.
 - **Prędkości:** pauza, ×1 (tura co 2 s), ×2 (1 s), ×5 (0,4 s), maks. (tury bez przerwy; widok najwyżej co 250 ms,
   żeby nie zalać klienta). Symulacja toczy się w osobnym wątku, więc okno nie zacina się przy długiej turze.

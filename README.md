@@ -16,8 +16,8 @@ Early development: **Stage 0 (foundations)**. Repository skeleton and Godot proj
 ## Project plan
 
 The plan covers only features marked **CORE** in the design document (`docs/GDD.md`, chapter 16).
-Simulation first: Stages 0–4 build the simulator with a simple developer viewer, pixel art and the player
-interface arrive in Stage 5. A stage is finished only when its "done when" check passes.
+Simulation first: Stages 0–11 build the simulator for all eras with a simple developer viewer; pixel art and the
+player interface arrive last, in Stage 12. A stage is finished only when its "done when" check passes.
 Full task lists (Polish): [`ROADMAP.md`](ROADMAP.md).
 
 | Stage | Goal | Done when |
@@ -27,8 +27,8 @@ Full task lists (Polish): [`ROADMAP.md`](ROADMAP.md).
 | 2. Simulation viewer | Godot viewer connected to the local server: camera, zoom, map overlays, tile inspector, speed controls, chronicle, charts | The viewer runs at 60 FPS on the huge map while the simulation runs |
 | 3. Economy and population (eras 1–2) | Resources, storage, trade network, population layers, nomads and settlements, migrations, technologies, scouting and fog of war, events (drought, fire, flood, epidemic) | Tribes gather, migrate, settle and grow on their own for 2,000 turns without collapsing |
 | 4. AI and diplomacy | AI advisors, utility-based decisions, leader personalities, contact, treaties, wars, governments, stability, revolts, "Why?" panel | 100 AI-vs-AI games produce sensible histories. **Milestone: simulator demo** |
-| 5. Player mode and art | Pixel art, UI theme, player orders, delegation to AI, tech tree, victory conditions | A full game can be played to the end of era 2. **Milestone: playable demo** |
-| 6–12. Eras 3–9 | One era per stage: data, mechanics, AI, art, balance across 100 games | Each era is balanced in batch tests |
+| 5–11. Eras 3–9 | One era per stage: data, mechanics, AI, developer viewer, balance across 100 games | Each era is balanced in batch tests |
+| 12. Player mode and art | Pixel art for all eras, UI theme, player orders, delegation to AI, tech tree, victory conditions | A full game can be played from the stone age to the information age. **Milestone: playable game** |
 
 After CORE: optional modules such as online multiplayer, the space age and other worlds, physical logistics,
 money and budgets, sieges and animations. Their order will be decided once CORE is complete.

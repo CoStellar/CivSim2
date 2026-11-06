@@ -3,8 +3,8 @@
 **Zakres:** budujemy wyłącznie funkcje oznaczone w `docs/GDD.md` (rozdział 16) jako **CORE** i **CORE (uproszczone)**.
 Moduły to przyszłe aktualizacje i nie wchodzą do tego planu. Kultury i religii nie ma w grze.
 
-Priorytet: **symulacja**. Etapy 0–4 to rdzeń i prosty podgląd deweloperski. Pixel art i interfejs gracza
-wchodzą od etapu 5. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
+Priorytet: **symulacja**. Etapy 0–11 to rdzeń, wszystkie ery i prosty podgląd deweloperski. Pixel art i interfejs gracza
+wchodzą na końcu, w etapie 12 (decyzja Patryka z 2026-11-06). Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 Szczegóły zasad: `docs/GDD.md`.
 
 **Aktualny etap: 3 (gospodarka i ludność): wszystkie PR-y 3a–3h gotowe, próba 2000 tur przeszła; następny etap 4 (AI i dyplomacja)**
@@ -131,19 +131,23 @@ opinia o sąsiedzie w decyzji o wypędzeniu obozu; wpisy w kronice; `--relations
 - [ ] 3–4 ustroje z tempem decyzji (ustrój zmienia spadek stabilności), stabilność, bunty, secesja, administracja
 - [ ] Panel „Dlaczego?” i wpisy w kronice
 
-## Etap 5 — Tryb gracza i grafika
+## Etapy 5–11 — Ery 3–9
 
-Gotowe, gdy: da się rozegrać pełną grę do końca ery 2. **Brama: grywalne demo.**
+Jedna era na etap. W każdym: technologie i zasoby w danych → potrzebne mechaniki z zakresu CORE → AI → podgląd deweloperski → balans w 100 grach.
+Kolejne ustroje i warstwy ludności dochodzą razem z erami, w ramach wersji uproszczonych z GDD.
+
+## Etap 12 — Tryb gracza i grafika (na sam koniec CORE)
+
+Decyzja Patryka z 2026-11-06: najważniejsza jest dobrze działająca symulacja, więc tryb gracza to ostatni etap CORE, po wszystkich erach.
+
+Gotowe, gdy: da się rozegrać pełną grę od ery kamienia do ery informacji. **Brama: grywalna gra.**
 
 - [ ] Pixel art Patryka w warstwach, shader koloru cywilizacji
 - [ ] Jeden motyw interfejsu (ramki 9-slice), statyczne grafiki, czcionka Pixelify Sans (GDD 12.4)
 - [ ] Rozkazy gracza, delegowanie poziomów decyzji do AI, drzewo technologii, zapis w dowolnym momencie
+- [ ] Strojenie wydajności mapy ogromnej
+- [ ] Grafiki dla wszystkich er (teren, osady, ulepszenia, jednostki); motywy interfejsu dla er zostają modułem
 - [ ] Warunki zwycięstwa: punktowe i bez końca; narzędzia „widoku boga” potrzebne do testów
-
-## Etapy 6–12 — Ery 3–9
-
-Jedna era na etap. W każdym: technologie i zasoby w danych → potrzebne mechaniki z zakresu CORE → AI → grafiki → balans w 100 grach.
-Kolejne ustroje i warstwy ludności dochodzą razem z erami, w ramach wersji uproszczonych z GDD.
 
 ## Aktualizacje po CORE (poza tym planem)
 

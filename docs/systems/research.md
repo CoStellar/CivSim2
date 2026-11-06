@@ -7,7 +7,7 @@
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/technologies.json` (graf, koszty, inspiracje, odblokowania, zasady dyfuzji), `data/eras.json` (`threshold`), `sciencePerThousandPerYear` warstw z `data/strata.json`, osady i ludność, warstwę `claim` mapy (strefy wpływów), rzeki, temperatury, zapasy.
 - Zmienia: `CivilizationState.KnownTechnologies`, `KnownCount`, `Researching`, `ResearchProgress`, `LastScience`, `Era`; dodaje stałe efekty cywilizacji (`EffectBook`); wpisy w kronice („X learned Fire.”, „X entered the Neolithic.”).
-- Publikuje w migawce: nic nowego (ery i technologie pokaże podgląd w etapie 5; kronika już idzie do klienta).
+- Publikuje w migawce: nic nowego (ery i technologie pokaże podgląd w jednej z kolejnych zmian; kronika już idzie do klienta).
 
 ## Przepływ
 

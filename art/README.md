@@ -21,4 +21,4 @@
 - **Interfejs:** motyw na każdą erę, ramki 9-slice (rogi 16×16, krawędzie, tło, przyciski w 3 stanach).
 - **Nazwy plików:** `kategoria_nazwa_wariant.png`, po angielsku, np. `terrain_grassland_02.png`.
 
-Pixel art jest potrzebny od etapu 5. Wcześniej podgląd rysuje kolorowe heksy z kodu.
+Pixel art jest potrzebny w etapie 12 (tryb gracza, na końcu CORE). Wcześniej podgląd rysuje kolorowe heksy z kodu.
