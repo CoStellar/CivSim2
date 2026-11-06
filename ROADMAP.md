@@ -136,7 +136,7 @@ opinia o sąsiedzie w decyzji o wypędzeniu obozu; wpisy w kronice; `--relations
 Gotowe, gdy: da się rozegrać pełną grę do końca ery 2. **Brama: grywalne demo.**
 
 - [ ] Pixel art Patryka w warstwach, shader koloru cywilizacji
-- [ ] Jeden motyw interfejsu (ramki 9-slice), statyczne grafiki
+- [ ] Jeden motyw interfejsu (ramki 9-slice), statyczne grafiki, czcionka Pixelify Sans (GDD 12.4)
 - [ ] Rozkazy gracza, delegowanie poziomów decyzji do AI, drzewo technologii, zapis w dowolnym momencie
 - [ ] Warunki zwycięstwa: punktowe i bez końca; narzędzia „widoku boga” potrzebne do testów
 
