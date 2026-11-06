@@ -292,9 +292,31 @@ Ludność to liczba ludzi w każdej osadzie, podzielona na warstwy zawodowe, z k
 
 Ludzie przechodzą między warstwami powoli (kilka procent na turę), w stronę lepiej opłacanych i tam, gdzie są wolne miejsca pracy. Edukacja przyspiesza przejście do warstw wyższych.
 
+**Fachy (decyzja Patryka z 2026-11-06, ADR 0020).** Warstwa mówi, czego ludzie potrzebują i jaki mają głos; **fach** mówi, co umieją (krzemieniarz, myśliwy, rolnik, garncarz, hutnik, kowal, drwal, cieśla, skryba, uczony…). Fachowców i uczniów liczymy w każdej osadzie, a każdy fach należy do jednej warstwy. Do warstw z tabeli dochodzą **myśliciele** (w epoce kamienia starszyzna, potem myśliciele, skrybowie, uczeni; to nie kapłani, gra nie ma religii) i **przywódcy** (wódz i starszyzna, naczelnicy, urzędnicy, politycy).
+
+- Fach otwiera technologia. Gdy cywilizacja ją odkryje, w osadzie z największą liczbą myślicieli pojawia się 2 pierwszych mistrzów.
+- **Nauka fachu:** mistrz uczy do 3 uczniów naraz, przez lata zapisane w danych (krzemieniarz 3, garncarz 5, kowal 10, uczony 15). Uczeń w tym czasie pracuje za pół. Ludzie uczą się tylko tam, gdzie fach jest potrzebny (surowce i miejsca pracy).
+- **Przenoszenie:** fachowcy przenoszą się do innej osady własnej sieci handlowej, gdy u siebie mają co najmniej 3 mistrzów i o co najmniej 2 osoby więcej, niż jest miejsc pracy, a tam fach jest potrzebny i brakuje mistrza albo rąk. Idzie najwyżej połowa nadwyżki, najbliżej najpierw, raz na krok cywilizacji. Od obcych fach przychodzi tylko przez handel.
+- **Utrata:** fachowcy umierają jak wszyscy. Gdy umrze ostatni, technologia zostaje znana, ale nieużywana, dopóki fach nie wróci od sąsiadów albo z nowego odkrycia (ciemne wieki, 6.1).
+- **Jakość narzędzi:** kamień → miedź → brąz → żelazo → stal; ten sam fach z lepszymi narzędziami robi więcej (np. drwal: brąz 100%, żelazo 150%, stal 200%).
+
 ### 5.2 Wzrost i zdrowie
 
-- **Przyrost** = urodzenia − zgony ± migracja. Urodzenia rosną z nadwyżką żywności i zadowoleniem, zgony z głodem, chorobami, wojną i brakiem schronienia.
+- **Przyrost** = urodzenia × (1 − śmiertelność dzieci) − zgony dorosłych ± migracja (decyzja Patryka z 2026-11-06, ADR 0020). Urodzenia rosną z nadwyżką żywności i zadowoleniem, zgony z głodem, chorobami, wojną i brakiem schronienia. Technologie zmieniają urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty w danych. Wartości według danych historycznych (najedzona, zdrowa osada):
+
+| Era | Technologia | Śmiertelność dzieci (do 15 lat) | Zgony dorosłych | Urodzenia | Przyrost |
+| --- | --- | --- | --- | --- | --- |
+| Kamień | start | 49% | 29,6‰ | 60‰ | +1,0‰ |
+| Kamień | ogień | 48% | 29,6‰ | 60‰ | +1,6‰ |
+| Neolit | garncarstwo | 48% | 29‰ | 60‰ | +2,2‰ (wioski −2‰ z ciasnoty) |
+| Brąz | higiena | 47% | 28,5‰ | 60‰ | +3,3‰ |
+| Żelazo | medycyna | 46% | 28‰ | 60‰ | +4,4‰ |
+| Renesans | – | 43% | 28‰ | 60‰ | +6,2‰ |
+| Przemysł | kanalizacja, szczepienie na ospę | 25% | 15‰ | 40‰ | +15‰ |
+| Nowoczesna | antybiotyki, szczepionki | 4% | 9‰ | 20‰ | +10‰ |
+| Informacji | – | 1% | 8‰ | 14‰ | +5,9‰ |
+
+  Dane: do ok. 1800 roku umierała mniej więcej połowa dzieci (zbieracze-łowcy średnio 48,8%, Volk i Atkinson 2013), świat w 1950: ok. 25%, w 2020: 4,3%; średni przyrost ludności od 10 000 lat p.n.e. do 1700 roku ok. 0,4‰ na rok (Our World in Data). Ery 3–10 wejdą z ich etapami.
 - **Pojemność mieszkań** osady ogranicza wzrost. Ponad limit rośnie przeludnienie: więcej chorób i niższe zadowolenie.
 - **Zdrowie osady** zależy od gęstości, wody pitnej, sanitacji (akwedukty, kanalizacja) i medycyny. Niskie zdrowie zwiększa szansę na epidemię.
 - **Migracja:** ludzie uciekają z osad głodujących, ogarniętych wojną lub niezadowolonych do lepszych, także do innych cywilizacji, jeśli granice są otwarte.
@@ -409,7 +431,9 @@ Każda technologia w pliku JSON ma:
 - **inspiracje:** warunki sytuacyjne obniżające koszt, np. „masz miedź i cynę w sieci handlowej: −30%”, „sąsiad zna technologię: −20%”, „przeżyłeś epidemię: medycyna −15%”;
 - **odblokowania:** surowce (widoczność i wydobycie), ulepszenia pól, budynki, receptury, jednostki, polityki, ustroje, warstwy ludności.
 
-**Zasady badania:** naukę produkują uczeni i budynki. Cywilizacja bada jedną technologię naraz i może mieć kolejkę. AI wybiera badanie według priorytetu (co technologia da jej cywilizacji) i kosztu jako przeszkody (8.3). Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
+**Wymóg ludzi (decyzja Patryka z 2026-11-06, ADR 0020):** technologia może wymagać fachowców, np. wytop brązu 20 hutników i cyny w sieci handlowej. Wymóg liczymy w całej cywilizacji, a dla technologii „miejskich” (pismo, filozofia) w jednej osadzie. Rozwój idzie łańcuchem: technologia → ludzie uczą się fachu → fachowcy pozwalają na następną technologię (graf: `docs/prompts/06-etap-fachy.md`).
+
+**Zasady badania:** naukę produkują uczeni i budynki; do ery żelaza głównie myśliciele (myśliciel 30, rzemieślnik 5, reszta 1 punkt na tysiąc na rok). Cywilizacja bada jedną technologię naraz i może mieć kolejkę. AI wybiera badanie według priorytetu (co technologia da jej cywilizacji) i kosztu jako przeszkody (8.3). Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
 
 ### 6.2 Ery
 
@@ -450,7 +474,7 @@ Era cywilizacji zmienia się po zbadaniu technologii progowej i 60% technologii 
 | Nawadnianie | Neolit | Rolnictwo + rzeka obok | kanały, +żyzność, odporność na suszę |
 | Wymiana barterowa | Neolit | Garncarstwo | handel z innymi plemionami |
 
-**W CORE (etap 3f):** naukę w erach 1–2 wytwarzają wszyscy ludzie (rzemieślnicy dziesięć razy więcej niż wytwórcy), bo uczonych i budynków jeszcze nie ma. Koszt spada o inspiracje (np. krzemień w strefie wpływów: obróbka krzemienia −30%) i o 20% za każdego sąsiada, który zna technologię (najwyżej 2 sąsiadów, sąsiad: osada w promieniu 12 pól), nie niżej niż do 25% kosztu. Odkryć przypadkiem nie ma (rozdział 16: „Wytnij”). Odblokowania z tabeli działają tak: ogień +10% plonów i +4 °C tolerancji zimna; obróbka krzemienia: zbieranie krzemienia i narzędzia kamienne; łowiectwo zespołowe: więcej mięsa i skór ze zwierzyny; rybołówstwo: ryby z wybrzeży, jezior i łowisk; garbarstwo: odzież ze skór i +4 °C; tradycje: +5 nastroju; rolnictwo: zboże z dzikiego zboża; udomowienie: stada (bydło, owce, konie) i +25% udźwigu; garncarstwo: glina, ceramika i 25% wolniejsze psucie jedzenia; tkactwo: tkaniny; kamieniarstwo: kamień; nawadnianie: +5% plonów; pieczenie chleba (dodane, żeby chleb miał swoją technologię): chleb. Wymiana barterowa zacznie działać z handlem między cywilizacjami w etapie 4. Rolnictwo pozwala też osiąść w wiosce i uprawiać pola (5.3).
+**W CORE (etap 3f):** naukę w erach 1–2 wytwarzają wszyscy ludzie (rzemieślnicy dziesięć razy więcej niż wytwórcy), bo uczonych i budynków jeszcze nie ma. Od etapu fachów (ADR 0020) naukę dają głównie myśliciele, a technologie er 1–2 mają wymogi ludzi. Koszt spada o inspiracje (np. krzemień w strefie wpływów: obróbka krzemienia −30%) i o 20% za każdego sąsiada, który zna technologię (najwyżej 2 sąsiadów, sąsiad: osada w promieniu 12 pól), nie niżej niż do 25% kosztu. Odkryć przypadkiem nie ma (rozdział 16: „Wytnij”). Odblokowania z tabeli działają tak: ogień +10% plonów i +4 °C tolerancji zimna; obróbka krzemienia: zbieranie krzemienia i narzędzia kamienne; łowiectwo zespołowe: więcej mięsa i skór ze zwierzyny; rybołówstwo: ryby z wybrzeży, jezior i łowisk; garbarstwo: odzież ze skór i +4 °C; tradycje: +5 nastroju; rolnictwo: zboże z dzikiego zboża; udomowienie: stada (bydło, owce, konie) i +25% udźwigu; garncarstwo: glina, ceramika i 25% wolniejsze psucie jedzenia; tkactwo: tkaniny; kamieniarstwo: kamień; nawadnianie: +5% plonów; pieczenie chleba (dodane, żeby chleb miał swoją technologię): chleb. Wymiana barterowa zacznie działać z handlem między cywilizacjami w etapie 4. Rolnictwo pozwala też osiąść w wiosce i uprawiać pola (5.3).
 
 Ery 3–10 rozpiszemy etapami: każdy etap roadmapy (rozdział 14) zaczyna się od pełnej listy technologii swojej ery.
 
@@ -965,7 +989,9 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Ceny wewnętrzne | 4 | CORE | AI potrzebuje ich do decyzji |
 | Pieniądz, podatki, budżet, kredyt | 4, 7.4 | Moduł | wchodzi z antykiem; wcześniej wystarcza barter |
 | Ludność: wzrost, głód, migracje między osadami | 5 | CORE | serce symulacji |
-| Warstwy zawodowe z potrzebami | 5.1 | CORE (uproszczone) | 3 warstwy na start (wytwórcy, rzemieślnicy, wojownicy), kolejne dokładają ery |
+| Warstwy zawodowe z potrzebami | 5.1 | CORE (uproszczone) | na start wytwórcy, rzemieślnicy, wojownicy, myśliciele i przywódcy (ADR 0020), kolejne dokładają ery |
+| Fachy, nauka fachu i wymogi ludzi w technologiach | 5.1, 6.1 | CORE (uproszczone) | decyzja Patryka z 2026-11-06: rozwój zależy od wykształconych ludzi |
+| Śmiertelność dzieci i urodzenia zależne od technologii | 5.2 | CORE | decyzja Patryka z 2026-11-06, wartości z danych historycznych |
 | Zdrowie i sanitacja | 5.2 | CORE (uproszczone) | jedna wartość zdrowia, wpływa na epidemie |
 | Lojalność podbitej ludności | 5.2 | Moduł | ważne przy podbojach, nie na start |
 | Poziomy osad | 5.3 | CORE | widać rozwój cywilizacji |
