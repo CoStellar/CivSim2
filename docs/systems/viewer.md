@@ -1,84 +1,164 @@
 # Podgląd symulacji (klient Godot)
 
-**W jednym zdaniu:** okno w Godocie, które uruchamia lokalny serwer, łączy się z nim jako obserwator i rysuje mapę,
-nakładki, inspektor pola, kronikę i wykres czasu tury.
+**W jednym zdaniu:** okno w Godocie z menu startowym, które uruchamia lokalny serwer z wybranymi ustawieniami, łączy się z nim
+jako obserwator i rysuje mapę z warstwami, panele cywilizacji, kronikę i wykresy, w pikselowym interfejsie.
 
-**Faza tury:** poza turą. Klient tylko czyta widoki, które serwer wysyła po fazie 11, i wysyła komendę zmiany prędkości.
+**Faza tury:** poza turą. Klient tylko czyta wiadomości, które serwer wysyła po fazie 11, i wysyła komendy obserwatora
+(prędkość, śledzona cywilizacja).
+
+Etap 2 zbudował podgląd, etap 5 (decyzja Patryka z 2026-11-06) dodał menu startowe, widok warstw, grafiki zastępcze,
+śledzenie cywilizacji i pikselowy interfejs.
 
 ## Dane wejściowe i wyjściowe
-- Czyta: `WelcomeMessage`, `ContentMessage` (nazwy i kolory biomów, złóż, cech terenu), `GameViewMessage`
-  (tura, prędkość, czas tury, nowe wpisy kroniki) i `MapChunkMessage` (fragmenty 32×32 mapy).
-- Zmienia: nic w stanie gry. Wysyła tylko `HelloMessage` (rola: obserwator) i `SetSpeedMessage`.
-- Trzyma u siebie: kopię mapy złożoną z fragmentów (`ClientWorld`), ostatnie 300 czasów tury, ostatnie wpisy kroniki.
+- Czyta: `WelcomeMessage`, `ContentMessage` (biomy, złoża, towary, poziomy osad), `GameViewMessage` (tura, prędkość, czas tury,
+  kronika, osady, cywilizacje; obserwator dostaje też erę, ludność, liczbę osad i technologii każdej cywilizacji),
+  `MapChunkMessage` (fragmenty 32×32), a od etapu 5 tylko dla obserwatora: `ObserverDetailsMessage` (wędrujące obozy, pola uprawne,
+  efekty zdarzeń, stosunki między cywilizacjami), `FogMessage` (mgła wojny śledzonej cywilizacji) i `CivilizationDetailsMessage`
+  (wszystko o śledzonej cywilizacji).
+- Zmienia: nic w stanie gry. Wysyła `HelloMessage` (rola: obserwator), `SetSpeedMessage` i `WatchCivilizationMessage`.
+- Trzyma u siebie: kopię mapy z fragmentów (`ClientWorld`), ostatnie 300 czasów tury, kronikę (do 2000 linii), historię cywilizacji
+  (`CivHistory`, najwyżej 600 próbek; gdy się zapełni, co druga próbka wypada, więc dawne lata są rzadsze, stała pamięć).
+- Zapisuje na dysku tylko swoje ustawienia: `user://viewer_settings.json` (ostatnie ustawienia startu, warstwy, otwarte panele).
 
 ## Przepływ
 
 ```mermaid
 flowchart LR
   subgraph Proces gry
+    subgraph Wątek Godota
+      M[StartMenu] -- ustawienia --> H
+      C[ClientSession] --> W[ClientWorld: kopia mapy]
+      W --> V[MapView: heksy w shaderze + linie]
+      C --> O[MapObjects: pola, złoża, osady, jednostki, zdarzenia, stosunki]
+      C --> HUD[Hud: pasek, panele, kronika, wykresy]
+      L[LayerStack] --> V
+      L --> O
+    end
     subgraph Wątek symulacji
       H[LocalServerHost] --> S[GameServer] --> R[TurnRunner]
-      S --> MV[MapViewBuilder: fragmenty 32x32]
-    end
-    subgraph Wątek Godota
-      C[ClientSession] --> W[ClientWorld: kopia mapy]
-      W --> M[MapView: MultiMesh na fragment]
-      C --> HUD[Hud: tura, prędkość, kronika, wykres]
-      M --> I[Inspektor pola]
+      S --> MV[MapViewBuilder]
+      S --> OB[ObserverViewBuilder]
     end
   end
-  MV -- MapChunk, GameView --> C
-  HUD -- SetSpeed --> S
+  MV -- MapChunk --> C
+  OB -- ObserverDetails, Fog, CivilizationDetails --> C
+  S -- GameView --> C
+  HUD -- SetSpeed, WatchCivilization --> S
 ```
 
-## Zasady i wzory
-- **Granica klient–serwer:** `game/` nie widzi `CivSim.Core` (ADR 0010). Wszystko, co klient wie, przyszło w wiadomościach.
-- **Obserwator** widzi całą mapę i może zmieniać prędkość. Gracz (od etapu 13) zobaczy tylko to, co zna jego cywilizacja;
-  do etapu 3 to heksy w promieniu 4 od startu. Gracz nie może zmienić prędkości.
-- **Prędkości:** pauza, ×1 (tura co 2 s), ×2 (1 s), ×5 (0,4 s), maks. (tury bez przerwy; widok najwyżej co 250 ms,
-  żeby nie zalać klienta). Symulacja toczy się w osobnym wątku, więc okno nie zacina się przy długiej turze.
-- **Fragmenty mapy:** serwer wysyła cały świat przy powitaniu, potem tylko fragmenty, które się zmieniły.
-- **Rysowanie:** każdy fragment 32×32 to jeden `MultiMesh` heksów (1024 instancje) i jeden dla rzek. Rysowane są tylko
-  fragmenty w kadrze. Zawijanie mapy: fragment przy krawędzi rysuje się drugi raz przesunięty o szerokość lub wysokość mapy.
-  Pozycja kamery zawija się na boki (wschód–zachód), więc można przewijać w nieskończoność; na północy i południu zatrzymuje się na biegunach (ADR 0012).
-  Nakładki `Seasons` (różnica lato–zima), `Growing` (sezon wzrostu) i `SeasonNow` (temperatura bieżącej pory roku na planetach z porami na żywo); inspektor pokazuje temperaturę lata i zimy oraz sezon wzrostu.
-  Planetę wybiera się z linii poleceń: `--planet earth|mars|uranus` oraz `--tilt`, `--eccentricity`, najwyżej dwie z `--luminosity`, `--distance`, `--year`, `--light`, a także `--co2`, `--pressure`, `--volcanism`, `--star-variability`, `--star-cycle`.
-- **Heks:** flat-top 48×42 px, kolumny co 36 px, nieparzyste kolumny przesunięte o 21 px w dół (jak w pixel arcie z CLAUDE.md).
-  Siatka (przerwy między heksami) jest widoczna od zoomu 0,6.
-- **Nakładki:** biomy, wysokość, temperatura, wilgotność, żyzność, złoża, właściciel, strefa wpływów.
-  Właściciel i strefa wpływów są puste, dopóki osady nie powstaną (etap 3). Zmiana nakładki przelicza
-  najwyżej 32 fragmenty na klatkę, żeby nie było przycięcia.
-- **Kolory** biomów i złóż pochodzą z `data/` przez `ContentMessage`, nie są wpisane w kod klienta.
+## Menu startowe
+- Ustawienia świata z GDD 3: ziarno (z przyciskiem losowania), rozmiar mapy, liczba cywilizacji (domyślna rośnie z rozmiarem),
+  typ świata, procent wody, wilgotność, wilgotność w głębi lądu, górzystość, złoża.
+- Planeta: preset (`data/planets.json`) i każda jego wartość: nachylenie osi, mimośród, jasność gwiazdy, odległość, rok, światło,
+  CO₂, ciśnienie, wulkanizm, wahania gwiazdy i ich okres. Puste pole = wartość presetu (podpowiedź w polu ją pokazuje).
+- Symulacja: prędkość startowa, limit tur (serwer zatrzymuje się po tylu turach i pisze to w kronice; dalszy bieg po wybraniu prędkości),
+  raport CSV (jedna linia na turę: tura, rok, czas tury, ludność, osady; domyślnie `user://turn_report.csv`).
+- **Podgląd planety** pod formularzem: gwiazda, orbita, powietrze i klimat z prawdziwych wzorów (`LocalServerHost.Preview`, bez
+  generowania mapy), notatki o przesuniętych wartościach albo błąd, który blokuje „Start”.
+- Ostatnie ustawienia są zapamiętane. **Argumenty uruchomienia dalej działają** (te same nazwy co przed etapem 5: `--seed`,
+  `--map-size`, `--planet`, `--tilt`... oraz nowe `--turn-limit N` i `--report plik.csv`) i pomijają menu, nie zmieniając zapisanych
+  ustawień. `--no-menu` startuje od razu z zapisanymi ustawieniami. Przycisk „Menu” albo Esc kończy grę i wraca do menu.
+
+## Warstwy (`LayerStack`)
+Jedna lista warstw od dołu do góry. **Warstwy pól** barwią całe heksy i są mieszane na procesorze w jeden odcień na heks
+(nakładanie „over”: każda warstwa ma kolor i pokrycie pola, np. złoża tylko tam, gdzie są). **Warstwy rysowane** to osobne węzły nad
+heksami (z-index = miejsce na liście). Warstwy pól leżą zawsze pod rysowanymi; w obrębie grupy kolejność można zmieniać.
+
+| Warstwa | Rodzaj | Domyślnie | Co pokazuje |
+| --- | --- | --- | --- |
+| Biomes and terrain | pola (podkład) | wł. | kafelki biomów (3 warianty), wzgórza i góry, cechy terenu, rzeki na krawędziach |
+| Height and depth | pola | wył. | wysokość lądu (zielony → żółty → brązowy → szary → biały) i głębokość wody (jasne płycizny → ciemne głębie); głębokość jeziora liczona od najniższego brzegu, więc szacunkowa |
+| Hill shading | pola | wł., 50% | cieniowanie rzeźby: zbocza zwrócone ku światłu z lewej góry jaśniejsze, pozostałe ciemniejsze |
+| Temperature, Humidity, Fertility, Growing season, Season swing, Temperature now, Wild food | pola | wył. | jak nakładki z etapów 1b–3 |
+| Deposits | pola + ikony | wył. | kolor złoża daleko, ikona 24×24 z bliska (głębokie złoża przyciemnione) |
+| Owner | pola | wył., 60% | właściciel pola |
+| Influence zones | pola | wł., 45% | strefa wpływów w kolorze cywilizacji, mocniejsza przy osadzie |
+| Memory and fog | pola | wył., 80% | mgła wojny **śledzonej cywilizacji**: nieznane czarne, zapamiętane przyciemnione, widziane w ostatniej turze jasne |
+| Rivers | rysowana | wł. | z bliska grafiki rzek w shaderze, z daleka linie |
+| Fields | rysowana | wł. | pola uprawne wiosek (grafika pola, mocniejsza przy większej obsadzie rolników) |
+| Borders | rysowana | wł. | granice cywilizacji po krawędziach heksów, kolor cywilizacji z ciemnym obrysem |
+| Settlements | rysowana | wł. | obozy, wioski, miasteczka w stanach zamieszkana / opuszczona / ruiny; daleko kwadraty; nad największą osadą każdej cywilizacji tabliczka z jej nazwą |
+| Units | rysowana | wł. | wędrujące obozy (etap 3g) i przerywana strzałka do celu |
+| Events | rysowana | wł. | efekty zdarzeń: jedna ikona na zdarzenie (na środkowym polu), na pozostałych polach kropka |
+| Relations | rysowana | wył. | linie między największymi osadami cywilizacji, które się spotkały: wojna czerwona, sojusz niebieski, pakt turkusowy, handel złoty, pokój biały, sam kontakt szary przerywany |
+
+Sterowanie warstwami: **ikony w górnym pasku** włączają i wyłączają warstwy; **okno „Layer settings”** (ikona zębatki albo Tab)
+ustawia przezroczystość i kolejność.
+
+**Heks w shaderze** (`game/shaders/map_hex.gdshader`): każdy heks to instancja w `MultiMesh` z kolorem (odcień warstw pól i jego
+pokrycie) i 4 liczbami (kafelek biomu + rzeźba, kafelek rzeźby, kafelek cechy, 12 bitów rzek: po 2 na każdą z 6 krawędzi). Od zoomu
+0,4 shader rysuje grafiki, poniżej średni kolor kafelka (piksele z daleka migotałyby) i cieniuje rzeźbę.
+**Kolor cywilizacji** (`game/shaders/civ_sprite.gdshader`): piksele w zarezerwowanych magentach `#FF00FF`, `#C000C0`, `#800080`
+dostają jasny, zwykły i ciemny odcień koloru cywilizacji.
+
+## Grafiki zastępcze i podmiana
+Wszystkie grafiki ładuje `ArtLibrary` po nazwie: najpierw `art/export/<warstwa>/<nazwa>.png` (pixel art Patryka), potem
+`art/placeholder/<warstwa>/<nazwa>.png`. Pliki zastępcze robi skrypt `art/placeholder/generate.py` (spis w
+`art/placeholder/README.md`). Grafika pod tą samą nazwą w `art/export/` podmienia zastępczą bez zmian w kodzie. Pliki są czytane
+jako zwykłe PNG, bez importu Godota.
+
+## Interfejs (pikselowy)
+- **Motyw** (`PixelTheme`): nieprzezroczyste ramki 9-slice z `art/placeholder/ui/` (styl „skóra i kamień” ery kamienia), przyciski
+  w 4 stanach, pola tekstowe, zakładki, pola wyboru, suwaki, paski przewijania, dymki; wszystko powiększone ×2 bez wygładzania.
+- **Czcionka Pixelify Sans** (`game/fonts/`, licencja SIL OFL 1.1 obok pliku), bez wygładzania, rozmiar 16 (wielokrotność siatki).
+  Zgodnie z GDD 12.4 miała wejść w etapie 13; Patryk poprosił 2026-11-06 o pikselowy interfejs już w etapie 5.
+- **Górny pasek:** tura i rok, prędkości, „follow” (wybór śledzonej cywilizacji), „Go” (kamera na jej największą osadę), „Track”
+  (kamera jedzie za nią), ikony warstw i ustawienia warstw, przełączniki paneli (Info, Log, Chart), Menu, FPS.
+- **Lewy panel, zakładka Cell:** inspektor pola: biom, rzeźba, wysokość i głębokość wody, klimat, żyzność, złoże, rzeki, właściciel,
+  osada z ludnością i magazynem, pole uprawne, wędrujący obóz, zdarzenia.
+- **Lewy panel, zakładka Civilizations:** tabela wszystkich cywilizacji (era, ludność, osady, technologie; klik = śledź), wykres
+  ludności / osad / technologii w czasie (śledzona grubą linią, pozostałe przygaszone), a dla śledzonej: era, ludność w warstwach,
+  osady według poziomów, jedzenie, badania (znane technologie, bieżące badanie i postęp), charakter (8 cech), wagi celów stratega,
+  zapasy, stosunki z innymi (sympatia, zaufanie, umowy, wojny i wspomnienia od najsilniejszego).
+- **Kronika** w prawym dolnym rogu (mniejsza, przycisk ↕ wydłuża ją do pełnej wysokości), z opcją „followed”: tylko linie o śledzonej
+  cywilizacji.
+- **Wykres czasu tury** na dole między panelami.
 
 ## Sterowanie
 | Klawisz / mysz | Działanie |
 | --- | --- |
 | WASD, strzałki, przeciąganie prawym lub środkowym przyciskiem | przesuwanie mapy |
 | kółko myszy, `+` / `-` | zoom |
-| lewy przycisk | wybór pola (inspektor po lewej; na polu z osadą także jej poziom i magazyn) |
-| Spacja | pauza / ×1 |
-| 1–5 | pauza, ×1, ×2, ×5, maks. |
-| Tab | następna nakładka |
+| lewy przycisk | wybór pola (zakładka Cell) |
+| Spacja / 1–5 | pauza i ×1 / pauza, ×1, ×2, ×5, maks. |
+| F | śledź następną cywilizację (po ostatniej: nikogo) |
+| G / T | kamera na śledzoną cywilizację / jazda za nią |
+| Tab | okno ustawień warstw |
+| I / L / C | panel informacji / kronika / wykres czasu tury |
+| Esc | koniec gry, menu startowe |
+
+Do testów i zrzutów: `--screenshot plik.png` (z `--screenshot-turn N`: po N turach), `--menu-screenshot plik.png`, `--zoom Z`,
+`--overlay WARSTWA` (tylko ta warstwa pól), `--layer WARSTWA` (włącza warstwę), `--watch CYW` (śledzi i włącza mgłę),
+`--benchmark KLATKI`.
+
+## Zasady
+- **Granica klient–serwer:** `game/` nie widzi `CivSim.Core` (ADR 0010). Szczegóły dla obserwatora liczy na serwerze
+  `ObserverViewBuilder`; gracz (etap 13) ich nie dostaje, a próba śledzenia innej cywilizacji jest odrzucana.
+- **Pola uprawne** serwer wylicza tak samo jak system rolnictwa (najlepsze zajęte pola osady, po `FarmersPerCell` rolników na pole),
+  bo system trzyma obsadę tylko w trakcie tury; efekty zdarzeń są tu pominięte, więc to podgląd, nie zapis stanu.
+- **„Widziane teraz”** w mgle to pola z najnowszym rokiem w pamięci mapy cywilizacji (z ostatniego postrzegania i zwiadu).
+- **Wydajność:** przekolorowanie fragmentów i odbiór wiadomości mają limit czasu na klatkę (3 ms i 4 ms), więc przełączenie warstwy na
+  mapie ogromnej rozkłada się na kilka klatek.
 
 ## Pliki danych
-`data/biomes.json` (kolory biomów) i `data/resources.json` (kolory złóż). Klient dostaje je od serwera, nie czyta plików sam.
+`data/biomes.json` i `data/resources.json` (kolory i klucze grafik), `data/effects.json` (klucze ikon zdarzeń), `data/planets.json`
+(presety w menu). Klient dostaje je od serwera albo przez `LocalServerHost.Describe`, nie czyta plików danych sam.
 
 ## Testy
-- `LocalServerHostTests`: obserwator dostaje zawartość, całą mapę i może zmienić prędkość; gracz dostaje tylko 61 znanych
-  pól i nie może zmienić prędkości; nieznane słowo w ustawieniach daje czytelny błąd.
-- `ProtocolSerializerTests`: nowe wiadomości w obie strony.
-- Brak zależności `game/` od rdzenia sprawdza kompilator (ADR 0010).
+- `ObserverLayerTests`: lista presetów i ich wartości, podgląd planety i błąd złego ustawienia, limit tur zatrzymuje symulację i raport
+  CSV ma linię na turę, obserwator dostaje warstwy, mgłę i szczegóły śledzonej cywilizacji oraz statystyki w tabeli cywilizacji,
+  gracz nie może śledzić innej cywilizacji.
+- `ProtocolSerializerTests`: nowe wiadomości w obie strony, protokół w wersji 8.
+- `LocalServerHostTests`: jak w etapie 2.
 
 ## Wydajność
-Pomiar bez karty graficznej (Xvfb, renderowanie programowe), tryb `--benchmark 600`: kamera przelatuje nad mapą przy
-najmniejszym zoomie i przełącza nakładki, symulacja w tle na maks.
+Pomiar bez karty graficznej (Xvfb, renderowanie programowe llvmpipe), `--benchmark`: kamera przelatuje nad mapą przy najmniejszym
+zoomie i włącza kolejne warstwy pól, symulacja w tle na maks. Porównanie z gałęzią `development` na tej samej maszynie:
 
-| Mapa | Praca klienta na klatkę (średnio) | Fragmenty rysowane | Wolne klatki (> 16 ms) |
+| Mapa | Klatki | Praca klienta na klatkę: przed / po | Klatki na sekundę (programowo): przed / po |
 | --- | --- | --- | --- |
-| Standard 256×160 | 0,9 ms | 242 | 3 (wczytanie mapy) |
-| Ogromna 512×320 | 3,0 ms | 882 | 4 (wczytanie mapy) |
+| Standard 258×160 | 300 | 10,4 ms / 9,0 ms | 4,5 / 4,0 |
+| Ogromna 514×320 | 150 | 28,3 ms / 11,0 ms | 1,7 / 1,5 |
 
-Prawdziwe FPS zależą od karty graficznej; trzeba je zmierzyć na komputerze Patryka (`-- --map-size huge --benchmark 600`).
-Wąskie gardło na przyszłość: pierwsze wczytanie dużej mapy (do 120 ms, raz).
-
-**Osady (etap 3a):** kwadrat w kolorze właściciela na polu osady, większy dla wyższego poziomu (`SettlementMarkers`). Górny pasek pokazuje rok gry. Inspektor osady pokazuje też ludność w warstwach, zdrowie, nastrój, odsetek najedzonych i jedzenie z ostatniej tury (etap 3b). Nakładki `WildFood` (zielone = nietknięte, brązowe = wyjedzone) i `Influence` (kolor właściciela, mocniejszy przy obozie); puste obozy są szare (etap 3c).
+Prawdziwe FPS zależą od karty graficznej; do sprawdzenia u Patryka (`-- --map-size huge --benchmark 600`). Spadek klatek przy
+renderowaniu programowym to koszt shadera z grafikami; praca procesora spadła dzięki limitom czasu.

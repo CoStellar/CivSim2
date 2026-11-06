@@ -7,6 +7,7 @@
 | `legacy/` | Grafiki ze starego CivSim jako materiał odniesienia (32×32) |
 | `src/` | Pliki źródłowe LibreSprite (`.ase`) |
 | `export/` | PNG gotowe do gry, w podkatalogach według warstw |
+| `placeholder/` | Grafiki zastępcze etapu 5 (skrypt `generate.py`); podgląd bierze plik z `export/`, gdy istnieje, a dopiero potem stąd |
 
 ## Zasady
 
@@ -14,7 +15,8 @@
   Maska w szablonie jest wyliczona co do piksela i sprawdzona: heksy łączą się bez szpar i nakładania.
 - **Narzędzie:** LibreSprite (darmowy fork Aseprite). Źródła `.ase` w `src/`, gotowe PNG w `export/`.
 - **Paleta:** tylko kolory z `civsim2_palette.gpl`. Ostatnie 8 kolorów (rozszerzenie) czeka na akceptację.
-- **Warstwy (od dołu):** `biome/` → `terrain/` (rzeźba, cechy, rzeki na krawędziach) → `objects/` → `units/`.
+- **Warstwy (od dołu):** `biome/` → `terrain/` (rzeźba, cechy, rzeki na krawędziach) → `objects/` → `units/`; do tego `effects/`
+  (znaczniki zdarzeń) i `ui/` (ikony warstw 16×16, ramki interfejsu 9-slice).
 - **Kolor cywilizacji:** `#FF00FF`, `#C000C0`, `#800080`. Shader podmienia je na barwy cywilizacji.
 - **Światło z lewej góry**, kontury ciemniejszym odcieniem wypełnienia, bez półprzezroczystych krawędzi.
 - **Rozmiary:** biomy, teren, osady, ulepszenia 48×42; jednostki 32×32; ikony złóż 24×24; ikony UI 16×16; portrety 64×64.
