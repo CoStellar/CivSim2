@@ -349,6 +349,78 @@ public static class Technologies
         return false;
     }
 
+    /// <summary>
+    /// True when the civilization has the people the technology needs (stage 4F, ADR 0020): every requirement of
+    /// <see cref="TechnologyDefinition.RequiresPeople"/> and, when there are any, one of
+    /// <see cref="TechnologyDefinition.RequiresPeopleAny"/>.
+    /// </summary>
+    public static bool PeopleReady(GameContent content, GameState state, CivilizationState civ, int technology)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(civ);
+        if (technology < 0 || technology >= content.Technologies.Count)
+        {
+            return false;
+        }
+
+        TechnologyDefinition t = content.Technologies[technology];
+        foreach (PeopleRequirement r in t.RequiresPeople)
+        {
+            if (People(content, state, civ.Id, r) < r.Count)
+            {
+                return false;
+            }
+        }
+
+        if (t.RequiresPeopleAny.Count == 0)
+        {
+            return true;
+        }
+
+        foreach (PeopleRequirement r in t.RequiresPeopleAny)
+        {
+            if (People(content, state, civ.Id, r) >= r.Count)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>True when the civilization may research the technology now: it is available and its people are there.</summary>
+    public static bool CanResearch(GameContent content, GameState state, CivilizationState civ, int technology) =>
+        Available(content, civ, technology) && PeopleReady(content, state, civ, technology);
+
+    /// <summary>
+    /// People of the requirement's skill (apprentices at their share of work) or stratum that the civilization has: in
+    /// all its lived-in settlements, or in its best one when the requirement asks for one settlement.
+    /// </summary>
+    public static long People(GameContent content, GameState state, CivId civ, PeopleRequirement requirement)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(requirement);
+        long total = 0;
+        long best = 0;
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (!s.IsActive || s.Owner != civ)
+            {
+                continue;
+            }
+
+            long here = requirement.SkillId >= 0
+                ? Population.Skills.Workers(content, s, requirement.SkillId)
+                : requirement.StratumId >= 0 && requirement.StratumId < s.PopulationView.Length ? s.PopulationView[requirement.StratumId] : 0;
+            total += here;
+            best = Math.Max(best, here);
+        }
+
+        return requirement.InOneSettlement ? best : total;
+    }
+
     /// <summary>Percent of the base cost the civilization pays now (inspirations and neighbours that know it).</summary>
     public static int CostPercent(GameContent content, GameState state, CivFacts[] facts, int civIndex, int technology)
     {

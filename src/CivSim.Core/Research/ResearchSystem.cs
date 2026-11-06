@@ -43,7 +43,9 @@ public sealed class ResearchSystem(GameContent content) : ITurnSystem
             Technologies.EnsureSize(_content, civ);
             civ.LastScience = Technologies.Science(_content, state, civ.Id, months);
             civ.ResearchProgress += civ.LastScience;
-            if (!Technologies.Available(_content, civ, civ.Researching))
+
+            // A technology is learned only while the civilization has the people it needs (stage 4F).
+            if (!Technologies.CanResearch(_content, state, civ, civ.Researching))
             {
                 continue;
             }
@@ -89,9 +91,14 @@ public sealed record SetResearchCommand(GameContent Content, int Technology) : I
             return CommandResult.Fail("Civilization does not exist.");
         }
 
-        return Technologies.Available(Content, c, Technology)
+        if (!Technologies.Available(Content, c, Technology))
+        {
+            return CommandResult.Fail("That technology is already known or its requirements are not.");
+        }
+
+        return Technologies.PeopleReady(Content, state, c, Technology)
             ? CommandResult.Ok
-            : CommandResult.Fail("That technology is already known or its requirements are not.");
+            : CommandResult.Fail("The civilization does not have the people this technology needs yet.");
     }
 
     /// <inheritdoc />
@@ -128,7 +135,8 @@ public sealed class ScholarAdvisor(GameContent content) : Ai.Advisor(content, Ai
         for (int c = 0; c < state.Civilizations.Count; c++)
         {
             CivilizationState civ = state.Civilizations[c];
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || Technologies.Available(_content, civ, civ.Researching))
+            // The scholar chooses again when nothing can be researched now (stage 4F: the people may be missing).
+            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || Technologies.CanResearch(_content, state, civ, civ.Researching))
             {
                 continue;
             }
@@ -142,7 +150,7 @@ public sealed class ScholarAdvisor(GameContent content) : Ai.Advisor(content, Ai
             long cheapest = long.MaxValue;
             for (int t = 0; t < _content.Technologies.Count; t++)
             {
-                if (Technologies.Available(_content, civ, t))
+                if (Technologies.CanResearch(_content, state, civ, t))
                 {
                     cheapest = Math.Min(cheapest, Math.Max(1, Technologies.Cost(_content, state, facts, c, t)));
                 }
@@ -158,7 +166,7 @@ public sealed class ScholarAdvisor(GameContent content) : Ai.Advisor(content, Ai
             Chooser.Clear();
             for (int t = 0; t < _content.Technologies.Count; t++)
             {
-                if (!Technologies.Available(_content, civ, t))
+                if (!Technologies.CanResearch(_content, state, civ, t))
                 {
                     continue;
                 }
