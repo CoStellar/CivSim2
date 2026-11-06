@@ -118,6 +118,17 @@ public static class MapMemory
         return (state.Month / 12) - (civ.SeenYear[cell] - 1) <= content.Perception.OralMemoryYears;
     }
 
+    /// <summary>
+    /// True when the civilization saw the Earth cell in its last own step (its camps and scouts look around at the start of
+    /// each own step): what lives there now, foreign camps and their warriors, is known only for such cells.
+    /// </summary>
+    public static bool SeesNow(GameState state, CivilizationState civ, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(civ);
+        return cell >= 0 && cell < civ.SeenYear.Length && civ.SeenYear[cell] != 0 && civ.SeenYear[cell] - 1 >= civ.StepStartMonth / 12;
+    }
+
     /// <summary>Every Earth cell the civilization knows now.</summary>
     public static bool[] KnownCells(GameContent content, GameState state, CivilizationState civ)
     {

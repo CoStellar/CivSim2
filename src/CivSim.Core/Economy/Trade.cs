@@ -193,11 +193,32 @@ public static class Market
     public static Amount[] Prices(GameContent content, GameState state, IReadOnlyList<int> members)
     {
         ArgumentNullException.ThrowIfNull(content);
+        var demand = new long[content.Goods.Count];
+        var supply = new long[content.Goods.Count];
+        (long foodDemand, long foodSupply) = Tally(content, state, members, demand, supply);
+        var prices = new Amount[demand.Length];
+        for (int g = 0; g < prices.Length; g++)
+        {
+            prices[g] = Price(content, g, demand[g], supply[g], foodDemand, foodSupply);
+        }
+
+        return prices;
+    }
+
+    /// <summary>
+    /// Demand (a year of needs and recipe inputs) and supply (stock) of every good in the network, hundredths, into the
+    /// given arrays; returns the demand and supply of food as a whole.
+    /// </summary>
+    public static (long FoodDemand, long FoodSupply) Tally(GameContent content, GameState state, IReadOnlyList<int> members, long[] demand, long[] supply)
+    {
+        ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(members);
+        ArgumentNullException.ThrowIfNull(demand);
+        ArgumentNullException.ThrowIfNull(supply);
         int goods = content.Goods.Count;
-        var demand = new long[goods];
-        var supply = new long[goods];
+        Array.Clear(demand, 0, goods);
+        Array.Clear(supply, 0, goods);
         long foodDemand = 0;
         long foodSupply = 0;
         foreach (int m in members)
@@ -213,14 +234,15 @@ public static class Market
             }
         }
 
-        var prices = new Amount[goods];
-        for (int g = 0; g < goods; g++)
-        {
-            int ratio = content.Goods[g].IsFood ? Ratio(content, foodDemand, foodSupply) : Ratio(content, demand[g], supply[g]);
-            prices[g] = content.Goods[g].Value.MultiplyPercent(ratio, Rounding.HalfAwayFromZero);
-        }
+        return (foodDemand, foodSupply);
+    }
 
-        return prices;
+    /// <summary>The price of one good from its demand and supply (food: those of food as a whole), barter units.</summary>
+    public static Amount Price(GameContent content, int good, long demand, long supply, long foodDemand, long foodSupply)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        int ratio = content.Goods[good].IsFood ? Ratio(content, foodDemand, foodSupply) : Ratio(content, demand, supply);
+        return content.Goods[good].Value.MultiplyPercent(ratio, Rounding.HalfAwayFromZero);
     }
 
     private static int Ratio(GameContent content, long demand, long supply)

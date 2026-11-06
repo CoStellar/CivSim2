@@ -120,7 +120,9 @@ public readonly record struct Decision(
     }
 
     /// <summary>One factor as short English text, e.g. "comfort 80%" or "food 4512".</summary>
-    public static string Describe(Factor factor) => factor.PerMille == Factor.NoteOnly
+    public static string Describe(Factor factor) => factor.Id == FactorId.ServesGoal
+        ? "serves " + ((CivSim.Core.Ai.Goal)factor.Input).ToString().ToLowerInvariant()
+        : factor.PerMille == Factor.NoteOnly
         ? string.Create(CultureInfo.InvariantCulture, $"{Name(factor.Id)} {factor.Input}{(InPercent(factor.Id) ? "%" : string.Empty)}")
         : string.Create(CultureInfo.InvariantCulture, $"{Name(factor.Id)} {factor.PerMille / 10}% ({factor.Input})");
 
@@ -140,6 +142,8 @@ public readonly record struct Decision(
         FactorId.GoalWeight => "goal weight",
         FactorId.TradeGain => "trade gain",
         FactorId.WarYears => "years at war",
+        FactorId.LeadsTo => "leads to",
+        FactorId.ForTrade => "for trade",
         _ => id.ToString().ToLowerInvariant(),
     };
 }

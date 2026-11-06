@@ -10,7 +10,8 @@ namespace CivSim.Core.Ai;
 /// <summary>
 /// The strategist (GDD 8.1, 7.6; stage 4b). It gives no orders: every few own steps of its civilization, and at once when it enters
 /// a new era, it sets the goal weights the other advisors multiply their scores by, and an expansion target. Crowded
-/// camps raise expansion, hunger raises prosperity and security; conquest stays neutral until wars (stage 4e). The target is the best free land the civilization knows within a journey of its largest
+/// camps raise expansion, hunger raises prosperity and security, lagging behind the civilizations met raises science,
+/// many civilizations met raise influence; conquest stays neutral until wars (stage 4e). The target is the best free land the civilization knows within a journey of its largest
 /// settlement.
 /// </summary>
 public sealed class StrategistAdvisor : Advisor
@@ -75,8 +76,20 @@ public sealed class StrategistAdvisor : Advisor
             weights[(int)Goal.Expansion] = expansion;
             weights[(int)Goal.Security] = hunger;
             weights[(int)Goal.Prosperity] = hunger;
-            weights[(int)Goal.Science] = Factor.Neutral;
-            weights[(int)Goal.Influence] = Factor.Neutral;
+            // Knowledge matters more when those we met know more (we are falling behind); standing matters more among many.
+            int ahead = 0;
+            int met = 0;
+            foreach (Diplomacy.Relation r in civ.Relations)
+            {
+                if (r.HasMet && state.FindCivilization(r.Other) is { IsAlive: true } other)
+                {
+                    met++;
+                    ahead = Math.Max(ahead, other.KnownCount - civ.KnownCount);
+                }
+            }
+
+            weights[(int)Goal.Science] = ResponseCurve.Linear(0, Factor.Neutral, rules.ScienceBehindTechs, rules.ScienceWeightMax).Evaluate(ahead);
+            weights[(int)Goal.Influence] = ResponseCurve.Linear(0, Factor.Neutral, rules.InfluenceMetCivs, rules.InfluenceWeightMax).Evaluate(met);
             // Camps only look for a camp to drive out when they are hungry already, so hunger must not count twice;
             // conquest gets its own weight with wars in stage 4e.
             weights[(int)Goal.Conquest] = Factor.Neutral;
@@ -106,14 +119,15 @@ public sealed class StrategistAdvisor : Advisor
             _area = new HexCoord[HexGlobe.RangeSize(radius)];
         }
 
-        ResponseCurve nearness = ResponseCurve.Linear(0, Factor.Neutral, 2L * radius, 0);
+        ResponseCurve nearness = ResponseCurve.Linear(0, Factor.Neutral, (long)Content.Ai.TargetZeroAtJourneys * radius, 0);
+        int every = Content.Ai.FarSearchEveryCells;
         int count = geo.Range(heart.Cell, radius, _area);
         int best = CivilizationState.NoTarget;
         long bestValue = 0;
         for (int k = 0; k < count; k++)
         {
             HexCoord cell = _area[k];
-            if ((cell.Col % 3) != 0 || (cell.Row % 3) != 0)
+            if ((cell.Col % every) != 0 || (cell.Row % every) != 0)
             {
                 continue;
             }

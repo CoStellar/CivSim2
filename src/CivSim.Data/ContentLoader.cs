@@ -1024,6 +1024,73 @@ public static class ContentLoader
             SplitMinPercentOfLevel = r.Int("splitMinPercentOfLevel", 1, 100),
             SearchEverySteps = r.Int("searchEverySteps", 1, 20),
             StarvingFedPercent = r.Int("starvingFedPercent", 0, 100),
+            GoalOfFood = r.Enum<Core.Ai.Goal>("goalOfFood"),
+            GoalOfGoods = r.Enum<Core.Ai.Goal>("goalOfGoods"),
+            Scholar = LoadScholar(doc.RootElement, Path.GetFileName(path), errors),
+            TradeGoodsBonusPercent = r.Int("tradeGoodsBonusPercent", 0, 500),
+            ScienceBehindTechs = r.Int("scienceBehindTechs", 1, 100),
+            ScienceWeightMax = r.Int("scienceWeightMax", 1000, 3000),
+            InfluenceMetCivs = r.Int("influenceMetCivs", 1, 100),
+            InfluenceWeightMax = r.Int("influenceWeightMax", 1000, 3000),
+            MoveExpansionSharePercent = r.Int("moveExpansionSharePercent", 0, 100),
+            JourneyBetterByPercent = r.Int("journeyBetterByPercent", 0, 1000),
+            JourneyPenaltyPerMillePerCell = r.Int("journeyPenaltyPerMillePerCell", 0, 1000),
+            FarSearchEveryCells = r.Int("farSearchEveryCells", 1, 10),
+            TargetZeroAtJourneys = r.Int("targetZeroAtJourneys", 1, 10),
+            SettleFarmYieldPercent = r.Int("settleFarmYieldPercent", 1, 10_000),
+            PlunderBelowStoragePercent = r.Int("plunderBelowStoragePercent", 0, 100),
+            UncomfortableBelowPercent = r.Int("uncomfortableBelowPercent", 0, 100),
+            OpinionSwingPercent = r.Int("opinionSwingPercent", 0, 100),
+            ReviewStaggerYears = r.Int("reviewStaggerYears", 0, 1000),
+        };
+    }
+
+    private static ScholarRules LoadScholar(JsonElement root, string file, List<string> errors)
+    {
+        if (!root.TryGetProperty("scholar", out JsonElement section) || section.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add($"{file}: missing object 'scholar'.");
+            return new ScholarRules();
+        }
+
+        var r = new Reader(section, $"{file}: scholar", errors);
+        Amount most = Amount.FromUnits(1000);
+        var effects = new List<EffectWorth>();
+        if (section.TryGetProperty("effects", out JsonElement list) && list.ValueKind == JsonValueKind.Array)
+        {
+            int i = 0;
+            foreach (JsonElement e in list.EnumerateArray())
+            {
+                var x = new Reader(e, $"{file}: scholar.effects[{i++}]", errors);
+                EffectStat stat = x.Enum<EffectStat>("stat");
+                if (effects.Exists(w => w.Stat == stat))
+                {
+                    errors.Add($"{file}: scholar.effects: stat '{stat}' is listed twice.");
+                }
+
+                effects.Add(new EffectWorth(
+                    stat,
+                    x.Enum<Core.Ai.Goal>("goal"),
+                    x.Amount("perHundredPeoplePerPoint", Amount.Zero, most),
+                    e.TryGetProperty("lowerIsBetter", out _) && x.Bool("lowerIsBetter"),
+                    e.TryGetProperty("onlyWhenCold", out _) && x.Bool("onlyWhenCold")));
+            }
+        }
+        else
+        {
+            errors.Add($"{file}: scholar.effects: required list.");
+        }
+
+        return new ScholarRules
+        {
+            BaseWorthPerPerson = r.Amount("baseWorthPerPerson", Amount.Zero, most),
+            FieldWorthPerPerson = r.Amount("fieldWorthPerPerson", Amount.Zero, most),
+            GatherWorthPercent = r.Int("gatherWorthPercent", 0, 1000),
+            MissingInputPercent = r.Int("missingInputPercent", 0, 100),
+            VillageWorthPerPerson = r.Amount("villageWorthPerPerson", Amount.Zero, most),
+            LeadsToPercent = r.Int("leadsToPercent", 0, 100),
+            CuriosityCostReliefPercent = r.Int("curiosityCostReliefPercent", 0, 100),
+            Effects = effects,
         };
     }
 

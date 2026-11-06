@@ -161,4 +161,110 @@ public sealed record AiRules
 
     /// <summary>A camp never splits below this share of its level's people, however expansive its civilization.</summary>
     public int SplitMinPercentOfLevel { get; init; } = 50;
+
+    /// <summary>The goal food serves (hunger is a matter of safety): technologies and recipes that give food are weighed by it.</summary>
+    public Ai.Goal GoalOfFood { get; init; } = Ai.Goal.Security;
+
+    /// <summary>The goal every other good serves (tools, clothing, goods to trade).</summary>
+    public Ai.Goal GoalOfGoods { get; init; } = Ai.Goal.Prosperity;
+
+    /// <summary>How the scholar values technologies (GDD 6.1, 8.1; PR B of 2026-11-06).</summary>
+    public ScholarRules Scholar { get; init; } = new();
+
+    /// <summary>
+    /// Outputs of the valuables category are worth this much more, at full tradefulness, to a civilization whose goods go
+    /// to a trade partner (production for exchange).
+    /// </summary>
+    public int TradeGoodsBonusPercent { get; init; } = 50;
+
+    /// <summary>Technologies the best-known civilization met is ahead by that give the highest science weight.</summary>
+    public int ScienceBehindTechs { get; init; } = 4;
+
+    /// <summary>Highest science weight, per mille, when the civilization lags behind those it met.</summary>
+    public int ScienceWeightMax { get; init; } = 1500;
+
+    /// <summary>Civilizations met that give the highest influence weight (standing matters among many).</summary>
+    public int InfluenceMetCivs { get; init; } = 4;
+
+    /// <summary>Highest influence weight, per mille.</summary>
+    public int InfluenceWeightMax { get; init; } = 1300;
+
+    /// <summary>
+    /// Share of the expansion weight and expansiveness that a move gets over staying (G2, G3): 100 = staying has no
+    /// expansion weight at all, 0 = both sides are weighed alike (before 2026-11-06).
+    /// </summary>
+    public int MoveExpansionSharePercent { get; init; } = 50;
+
+    /// <summary>A journey (G3) must beat staying and the best place within a move by this much.</summary>
+    public int JourneyBetterByPercent { get; init; } = 60;
+
+    /// <summary>A place a journey away loses this much of its value per cell of distance, per mille.</summary>
+    public int JourneyPenaltyPerMillePerCell { get; init; } = 10;
+
+    /// <summary>Far places (journeys, the strategist's target) are searched on a lattice of every this many cells each way.</summary>
+    public int FarSearchEveryCells { get; init; } = 3;
+
+    /// <summary>The strategist's target loses all value at this many journey ranges from the largest settlement.</summary>
+    public int TargetZeroAtJourneys { get; init; } = 2;
+
+    /// <summary>A camp settles when farming its zone would feed this share of its people (G4).</summary>
+    public int SettleFarmYieldPercent { get; init; } = 150;
+
+    /// <summary>A camp takes left goods only while its warehouse is fuller than this (G6).</summary>
+    public int PlunderBelowStoragePercent { get; init; } = 50;
+
+    /// <summary>A camp whose comfort is below this looks for a warmer or cooler place (G2).</summary>
+    public int UncomfortableBelowPercent { get; init; } = 100;
+
+    /// <summary>How much full sympathy or hatred moves the wish to drive out a foreign camp, percent (G2).</summary>
+    public int OpinionSwingPercent { get; init; } = 50;
+
+    /// <summary>Planned diplomatic reviews of civilizations are this many years apart (spread, D2).</summary>
+    public int ReviewStaggerYears { get; init; } = 7;
 }
+
+/// <summary>
+/// How the scholar values a technology (PR B of 2026-11-06): the worth of what it gives this civilization per year, by the
+/// goal each gain serves, times the goal weight and the character; the cost is an obstacle (cheapness factor).
+/// Worths are in barter units per year (hundredths), like the values of goods.
+/// </summary>
+public sealed record ScholarRules
+{
+    /// <summary>Worth of any technology per person of the civilization: knowledge for its own sake (science).</summary>
+    public Amount BaseWorthPerPerson { get; init; } = Amount.FromHundredths(1);
+
+    /// <summary>Worth per person of a technology of the science, society or military field (science, influence, conquest).</summary>
+    public Amount FieldWorthPerPerson { get; init; } = Amount.FromHundredths(2);
+
+    /// <summary>Share of the yields of the zone's cells that a gathering technology adds, percent.</summary>
+    public int GatherWorthPercent { get; init; } = 100;
+
+    /// <summary>Share of a recipe's worth while the civilization neither has nor gathers one of its inputs, percent.</summary>
+    public int MissingInputPercent { get; init; } = 25;
+
+    /// <summary>
+    /// Worth per person of a technology that lets camps settle into villages (security: farming feeds more) on land of
+    /// the best fertility; the zone's average farming yield scales it (barren land counts nothing).
+    /// </summary>
+    public Amount VillageWorthPerPerson { get; init; } = Amount.FromHundredths(10);
+
+    /// <summary>A technology is also worth this share of the best technology it opens the way to, percent.</summary>
+    public int LeadsToPercent { get; init; } = 25;
+
+    /// <summary>
+    /// How much a fully curious civilization is spared the fear of cost, percent: without curiosity a technology twice
+    /// as dear is worth a quarter (cheapness squared), with full curiosity and 100 here a half.
+    /// </summary>
+    public int CuriosityCostReliefPercent { get; init; } = 100;
+
+    /// <summary>Worths of the effects technologies give, by stat.</summary>
+    public IReadOnlyList<EffectWorth> Effects { get; init; } = [];
+}
+
+/// <summary>What one point of an effect stat is worth to the scholar.</summary>
+/// <param name="Stat">The stat.</param>
+/// <param name="Goal">The goal it serves.</param>
+/// <param name="PerHundredPeoplePerPoint">Worth per hundred people per year of one point of strength.</param>
+/// <param name="LowerIsBetter">True when a negative strength helps (less spoilage).</param>
+/// <param name="OnlyWhenCold">True for cold tolerance: only the degrees the civilization's coldest camp lacks count.</param>
+public sealed record EffectWorth(EffectStat Stat, Ai.Goal Goal, Amount PerHundredPeoplePerPoint, bool LowerIsBetter, bool OnlyWhenCold);
