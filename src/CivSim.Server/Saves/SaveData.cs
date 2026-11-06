@@ -111,7 +111,9 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(14)] int ExpansionTarget = -1,
     [property: Key(15)] long StrategyReviewMonth = 0,
     [property: Key(16)] int StrategyEra = -1,
-    [property: Key(17)] List<RelationSaveData>? Relations = null);
+    [property: Key(17)] List<RelationSaveData>? Relations = null,
+    [property: Key(18)] ulong LanguageSeed = 0,
+    [property: Key(19)] long NamesIssued = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]

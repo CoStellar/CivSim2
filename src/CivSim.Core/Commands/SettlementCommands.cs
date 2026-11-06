@@ -235,14 +235,9 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
         ArgumentNullException.ThrowIfNull(state);
         SettlementState from = state.FindSettlement(Settlement)!;
         CivilizationState owner = state.FindCivilization(civ)!;
-        int number = 1;
-        foreach (SettlementState other in state.Settlements)
-        {
-            number += other.Owner == civ ? 1 : 0;
-        }
-
+        // The new camp gets the next name of its people's language (GDD 5.6).
         SettlementState camp = state.FoundSettlement(
-            civ, from.World, Target, $"{owner.Name} Camp {number}", Content.NewTribeLevel, from.StockView.Length, from.PopulationView.Length);
+            civ, from.World, Target, Naming.Names.NextPlace(Content.Names, state, owner), Content.NewTribeLevel, from.StockView.Length, from.PopulationView.Length);
         camp.MovedMonth = state.Month;
         Span<int> people = from.Population;
         for (int k = 0; k < people.Length; k++)

@@ -70,6 +70,9 @@ public sealed class GameContent
     /// <summary>Contact, rumors and the memory of relations (data/relations.json, stage 4c).</summary>
     public Diplomacy.RelationRules Relations { get; init; } = new();
 
+    /// <summary>Peoples' languages (data/names.json, GDD 5.6).</summary>
+    public Naming.NameRules Names { get; init; } = new();
+
     /// <summary>Diplomacy and trade between civilizations (data/diplomacy.json, stage 4d).</summary>
     public Diplomacy.TreatyRules Treaties { get; init; } = new();
 

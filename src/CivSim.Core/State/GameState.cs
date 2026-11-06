@@ -170,7 +170,10 @@ public sealed class GameState
         state._worlds.Add(new WorldState(WorldId.Earth, settings.PlanetName, settings.MapWidth, settings.MapHeight));
         for (int i = 0; i < settings.CivilizationCount; i++)
         {
-            state._civilizations.Add(new CivilizationState(new CivId(i), $"Civilization {i + 1}", PlayerId.Ai));
+            state._civilizations.Add(new CivilizationState(new CivId(i), $"Civilization {i + 1}", PlayerId.Ai)
+            {
+                LanguageSeed = Naming.Names.LanguageSeed(settings.Seed, i),
+            });
         }
 
         Ai.Character.Roll(state);
@@ -193,6 +196,7 @@ public sealed class GameState
         earth.Climate.Co2Microbar = settings.Planet.Co2Microbar;
         earth.Climate.GlobalMeanMillionths = report.GlobalMeanMillionths;
         earth.Climate.StartLandIce = SeaLevel.LandIce(content, earth.Map);
+        Naming.Names.NamePeoples(content.Names, state);
         for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)
         {
             CivilizationState civ = state._civilizations[i];
@@ -201,7 +205,7 @@ public sealed class GameState
             {
                 // Every tribe starts with one camp and a little food and gear (GDD 5.3, data/settlements.json).
                 SettlementState camp = state.FoundSettlement(
-                    civ.Id, earth.Id, civ.StartCell, $"{civ.Name} Camp", content.NewTribeLevel, content.Goods.Count, content.Strata.Count);
+                    civ.Id, earth.Id, civ.StartCell, Naming.Names.NextPlace(content.Names, state, civ), content.NewTribeLevel, content.Goods.Count, content.Strata.Count);
                 foreach (GoodQuantity q in content.NewTribeStock)
                 {
                     camp.Add(q.GoodId, q.Amount);

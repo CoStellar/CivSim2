@@ -65,5 +65,7 @@ public class DeterminismTests
     }
 
     // Stage 4d: treaties, wars and proposals joined the state; diplomats and foreign trade run every turn.
-    private const ulong GoldenHash = 18123462920090020196UL;
+    // Names from peoples' languages (GDD 5.6): names, language seeds and name counters joined the hash; the simulation
+    // itself is unchanged (statistics of 300 turns identical before and after).
+    private const ulong GoldenHash = 11205048398145944381UL;
 }

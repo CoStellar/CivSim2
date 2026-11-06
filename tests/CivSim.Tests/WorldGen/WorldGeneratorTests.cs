@@ -47,7 +47,8 @@ public class WorldGeneratorTests
     }
 
     // Stage 4d: the state hash includes the (still empty) treaty book (the map itself is unchanged).
-    private const ulong GoldenWorldHash = 15163653490831164499UL;
+    // Peoples' languages (GDD 5.6): names, language seeds and name counters are in the hash (the map is unchanged).
+    private const ulong GoldenWorldHash = 4442586842899577704UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

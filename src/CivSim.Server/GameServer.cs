@@ -210,6 +210,9 @@ public sealed class GameServer
                 }
 
                 break;
+            case NameSuggestionsRequestMessage names:
+                HandleSuggestions(client, names);
+                break;
             case WatchCivilizationMessage watch:
                 if (client.IsObserver)
                 {
@@ -257,6 +260,8 @@ public sealed class GameServer
             SendContent(client);
             client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
             client.JustJoined = true;
+        client.ChronicleSeen = _chronicle.Count;
+            client.ChronicleSeen = _chronicle.Count;
             SendAllChunks(client);
             SendObserverDetails(client);
             return;
@@ -288,6 +293,7 @@ public sealed class GameServer
         SendContent(client);
         client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
         client.JustJoined = true;
+        client.ChronicleSeen = _chronicle.Count;
         SendAllChunks(client);
     }
 
@@ -401,11 +407,23 @@ public sealed class GameServer
             view = view with { Civilizations = _observerView.Civilizations(State, view.Civilizations) };
         }
 
-        return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = joining ? _history.ToArray() : skipChronicle ? [] : _chronicle.ToArray() };
+        // A client that just joined got the history, which held the lines waiting then; only later lines are new to it.
+        ChronicleEntry[] lines = joining ? _history.ToArray()
+            : skipChronicle ? _chronicle.GetRange(Math.Min(client.ChronicleSeen, _chronicle.Count), _chronicle.Count - Math.Min(client.ChronicleSeen, _chronicle.Count)).ToArray()
+            : _chronicle.ToArray();
+        return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
     }
 
     private void HandleSubmit(Client client, SubmitCommandMessage submit)
     {
+        // Observers may rename any civilization or settlement (GDD 5.6). Names change nothing in the simulation, so
+        // the server applies the command at once, between turns, instead of waiting for the next turn.
+        if (client.IsObserver && submit.Command is RenameCivilizationDto or RenameSettlementDto && client.Player is not null)
+        {
+            RenameNow(client, submit);
+            return;
+        }
+
         if (client.Player is not { } player || client.Civ is not { } civ)
         {
             client.Connection.Send(new CommandRejectedMessage(submit.ClientSequence, "Say hello first."));
@@ -427,6 +445,50 @@ public sealed class GameServer
 
         CommandEnvelope envelope = Runner.Commands.Enqueue(player, civ, command);
         client.RememberSequence(envelope.Sequence, submit.ClientSequence);
+    }
+
+    private void RenameNow(Client client, SubmitCommandMessage submit)
+    {
+        var target = new CivId(submit.CivId);
+        if (submit.Command is RenameSettlementDto rs && State.FindSettlement(new SettlementId(rs.SettlementId)) is { } settlement)
+        {
+            target = settlement.Owner;
+        }
+
+        ICommand? command = CommandMapper.ToCore(submit.Command, _content);
+        string before = submit.Command is RenameSettlementDto r2 ? State.FindSettlement(new SettlementId(r2.SettlementId))?.Name ?? string.Empty : State.FindCivilization(target)?.Name ?? string.Empty;
+        CommandResult check = command is null ? CommandResult.Fail("Unknown command.") : command.Validate(State, target);
+        if (!check.Success)
+        {
+            client.Connection.Send(new CommandRejectedMessage(submit.ClientSequence, check.Reason ?? "Refused."));
+            return;
+        }
+
+        command!.Apply(State, target);
+        string after = submit.Command is RenameSettlementDto r3 ? State.FindSettlement(new SettlementId(r3.SettlementId))!.Name : State.FindCivilization(target)!.Name;
+        AddChronicle($"{before} was renamed {after}.");
+        Runner.Snapshots.Publish(GameSnapshot.From(State));
+        SendViews();
+    }
+
+    private void HandleSuggestions(Client client, NameSuggestionsRequestMessage request)
+    {
+        if (_content is null)
+        {
+            return;
+        }
+
+        CivilizationState? civ = request.Target == NameTarget.Civilization
+            ? State.FindCivilization(new CivId(request.Id))
+            : State.FindSettlement(new SettlementId(request.Id)) is { } s ? State.FindCivilization(s.Owner) : null;
+        if (civ is null || (!client.IsObserver && client.Civ != civ.Id))
+        {
+            client.Connection.Send(new ConnectionRejectedMessage("No names for that."));
+            return;
+        }
+
+        List<string> names = Core.Naming.Names.Suggest(_content.Names, State, civ, request.Target == NameTarget.Civilization, Math.Clamp(request.Count, 1, 24), request.Page);
+        client.Connection.Send(new NameSuggestionsMessage(request.Target, request.Id, request.Page, names));
     }
 
     /// <summary>
@@ -535,6 +597,9 @@ public sealed class GameServer
 
         // Got the whole history on joining, so the lines still waiting to be sent are not new to it.
         public bool JustJoined { get; set; }
+
+        // Lines of the pending chronicle that were already in the history sent on joining.
+        public int ChronicleSeen { get; set; }
 
         public void RememberSequence(long serverSequence, long clientSequence) => _clientSequences[serverSequence] = clientSequence;
 

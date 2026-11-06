@@ -35,6 +35,9 @@ public class ProtocolSerializerTests
             [new RelationView(0, 1, RelationView.Met, 2500, -300, RelationView.Trade | RelationView.NonAggression)])];
         yield return [new WatchCivilizationMessage(2)];
         yield return [new FogMessage(2, 0, 9, [0, 1, 2, 2])];
+        yield return [new NameSuggestionsRequestMessage(NameTarget.Settlement, 4, 1, 6)];
+        yield return [new NameSuggestionsMessage(NameTarget.Civilization, 2, 0, ["Karrut", "Elawi"])];
+        yield return [new SubmitCommandMessage(2, 10, new RenameSettlementDto(4, "Tarok"))];
         yield return [new CivilizationDetailsMessage(
             2, 9, "Rome", true, "Stone Age", ["Fire"], "Pottery", 40, 120, ["Aggression"], [700], ["Expansion"], [1200], ["Gatherers"], [80],
             ["Tribal Camp"], [2], 5000, 6000, ["Grain"], [12000], [new RelationDetail(1, 2, 2500, -400, RelationView.Trade, ["ActiveTrade 100%"])])];
@@ -53,7 +56,7 @@ public class ProtocolSerializerTests
 
         // Records holding lists or arrays compare by reference, so compare their encoded bytes instead.
         Assert.Equal(frame, ProtocolSerializer.Serialize(back));
-        if (message is GameViewMessage or ContentMessage or MapChunkMessage or ObserverDetailsMessage or FogMessage or CivilizationDetailsMessage)
+        if (message is GameViewMessage or ContentMessage or MapChunkMessage or ObserverDetailsMessage or FogMessage or CivilizationDetailsMessage or NameSuggestionsMessage)
         {
             return;
         }
@@ -107,7 +110,8 @@ public class ProtocolSerializerTests
         // Version 6 added seasons and the growing season to map chunks (globe, stage 1b).
         // Version 7 added the live season (temperature and growth of the current turn) to map chunks and the view.
         // Version 8 added the observer layers (journeys, fields, events, relations), the followed civilization (fog and
-        // details) and era, people, settlements and technologies of each civilization for observers (stage 5).
+        // details) and era, people, settlements and technologies of each civilization for observers (stage 5),
+        // and renaming settlements with name suggestions from the peoples' languages (GDD 5.6).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
         Assert.Equal("08000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }

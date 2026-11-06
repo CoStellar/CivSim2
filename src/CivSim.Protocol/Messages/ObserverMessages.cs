@@ -146,3 +146,32 @@ public sealed record RelationDetail(
     [property: Key(3)] int Trust,
     [property: Key(4)] int Treaties,
     [property: Key(5)] IReadOnlyList<string> Memories);
+
+/// <summary>What a name suggestion is for.</summary>
+public enum NameTarget
+{
+    /// <summary>A civilization (people's name).</summary>
+    Civilization = 0,
+
+    /// <summary>A settlement (place name).</summary>
+    Settlement = 1,
+}
+
+/// <summary>
+/// Client → server: other names for a civilization or a settlement in the same people's language (GDD 5.6), for the
+/// rename dialog. <see cref="Page"/> 0, 1, 2... gives further names. Players may ask only about their own.
+/// </summary>
+[MessagePackObject]
+public sealed record NameSuggestionsRequestMessage(
+    [property: Key(0)] NameTarget Target,
+    [property: Key(1)] int Id,
+    [property: Key(2)] int Page,
+    [property: Key(3)] int Count) : IProtocolMessage;
+
+/// <summary>Server → client: free names in the right language, for <see cref="Id"/>.</summary>
+[MessagePackObject]
+public sealed record NameSuggestionsMessage(
+    [property: Key(0)] NameTarget Target,
+    [property: Key(1)] int Id,
+    [property: Key(2)] int Page,
+    [property: Key(3)] IReadOnlyList<string> Names) : IProtocolMessage;

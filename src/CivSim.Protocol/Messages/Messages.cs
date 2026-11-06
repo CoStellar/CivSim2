@@ -20,6 +20,8 @@ namespace CivSim.Protocol.Messages;
 [Union(11, typeof(WatchCivilizationMessage))]
 [Union(12, typeof(FogMessage))]
 [Union(13, typeof(CivilizationDetailsMessage))]
+[Union(14, typeof(NameSuggestionsRequestMessage))]
+[Union(15, typeof(NameSuggestionsMessage))]
 public interface IProtocolMessage
 {
 }

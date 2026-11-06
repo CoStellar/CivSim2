@@ -13,11 +13,16 @@ namespace CivSim.Protocol.Messages;
 [Union(4, typeof(OccupySettlementDto))]
 [Union(5, typeof(PlunderSettlementDto))]
 [Union(6, typeof(ConquerSettlementDto))]
+[Union(7, typeof(RenameSettlementDto))]
 public interface ICommandDto
 {
 }
 
-/// <summary>Rename the player's civilization.</summary>
+/// <summary>Rename a settlement of the player's civilization (GDD 5.6). Observers may rename any settlement.</summary>
+[MessagePackObject]
+public sealed record RenameSettlementDto([property: Key(0)] int SettlementId, [property: Key(1)] string NewName) : ICommandDto;
+
+/// <summary>Rename the player's civilization. Observers may rename any civilization (the target is the message's civilization id).</summary>
 [MessagePackObject]
 public sealed record RenameCivilizationDto([property: Key(0)] string NewName) : ICommandDto;
 

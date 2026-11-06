@@ -70,8 +70,10 @@ public class ObserverLayerTests
             viewer.Send(new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer));
             WaitFor(viewer, l => l.Exists(m => m is GameViewMessage));
             viewer.Send(new SetSpeedMessage(SimulationSpeed.Max));
-            List<IProtocolMessage> later = WaitFor(viewer, l => l.Exists(m => m is GameViewMessage { Turn: 4, Speed: SimulationSpeed.Paused }));
-            Assert.Contains(later, m => m is GameViewMessage v && v.Chronicle is { } c && c.Count > 0 && c[^1].Text.StartsWith("Turn limit 4", StringComparison.Ordinal));
+            List<IProtocolMessage> later = WaitFor(viewer, l =>
+                l.Exists(m => m is GameViewMessage v && v.Chronicle is { } c && c.Any(e => e.Text.StartsWith("Turn limit 4", StringComparison.Ordinal)))
+                && l.Exists(m => m is GameViewMessage { Turn: 4, Speed: SimulationSpeed.Paused }));
+            Assert.DoesNotContain(later, m => m is GameViewMessage { Turn: > 4 });
             Thread.Sleep(100);
             Assert.Equal(4, host.Turn);
             Assert.Null(host.Error);
@@ -126,5 +128,44 @@ public class ObserverLayerTests
         player.Send(new WatchCivilizationMessage(1));
         List<IProtocolMessage> answer = WaitFor(player, l => l.Exists(m => m is ConnectionRejectedMessage));
         Assert.DoesNotContain(answer, m => m is FogMessage or ObserverDetailsMessage or CivilizationDetailsMessage);
+    }
+
+    [Fact]
+    public void ObserverRenamesAtOnceAndGetsNamesOfTheSameLanguage()
+    {
+        using LocalServerHost host = LocalServerHost.Start(LocalGameOptions.ForSize("test", 3));
+        IConnection viewer = host.Connect();
+        viewer.Send(new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer));
+        GameViewMessage first = (GameViewMessage)WaitFor(viewer, l => l.Exists(m => m is GameViewMessage)).Find(m => m is GameViewMessage)!;
+        SettlementView camp = first.Settlements![0];
+
+        viewer.Send(new NameSuggestionsRequestMessage(NameTarget.Settlement, camp.Id, 0, 5));
+        NameSuggestionsMessage names = (NameSuggestionsMessage)WaitFor(viewer, l => l.Exists(m => m is NameSuggestionsMessage)).Find(m => m is NameSuggestionsMessage)!;
+        Assert.Equal(5, names.Names.Count);
+        Assert.DoesNotContain(camp.Name, names.Names);
+
+        viewer.Send(new SubmitCommandMessage(camp.Owner, 1, new RenameSettlementDto(camp.Id, names.Names[2])));
+        viewer.Send(new SubmitCommandMessage(1, 2, new RenameCivilizationDto("Riverfolk")));
+        List<IProtocolMessage> after = WaitFor(viewer, l => l.Exists(m => m is GameViewMessage v && v.Civilizations.Any(c => c.Name == "Riverfolk")));
+        GameViewMessage view = (GameViewMessage)after.FindLast(m => m is GameViewMessage)!;
+        Assert.Equal(0, view.Turn); // paused: renamed without running a turn
+        Assert.Equal(names.Names[2], view.Settlements!.First(s => s.Id == camp.Id).Name);
+        Assert.Contains(view.Chronicle!, e => e.Text.EndsWith("was renamed Riverfolk.", StringComparison.Ordinal));
+
+        viewer.Send(new SubmitCommandMessage(2, 3, new RenameCivilizationDto("Riverfolk")));
+        Assert.Contains(WaitFor(viewer, l => l.Exists(m => m is CommandRejectedMessage)), m => m is CommandRejectedMessage { ClientSequence: 3 });
+    }
+
+    [Fact]
+    public void PlayerGetsNamesOnlyForItsOwnCivilization()
+    {
+        using LocalServerHost host = LocalServerHost.Start(LocalGameOptions.ForSize("test", 3));
+        IConnection player = host.Connect();
+        player.Send(new HelloMessage(ProtocolInfo.Version, "Patryk"));
+        WelcomeMessage welcome = (WelcomeMessage)WaitFor(player, l => l.Exists(m => m is WelcomeMessage)).Find(m => m is WelcomeMessage)!;
+        player.Send(new NameSuggestionsRequestMessage(NameTarget.Civilization, welcome.CivId, 0, 4));
+        Assert.Equal(4, ((NameSuggestionsMessage)WaitFor(player, l => l.Exists(m => m is NameSuggestionsMessage)).Find(m => m is NameSuggestionsMessage)!).Names.Count);
+        player.Send(new NameSuggestionsRequestMessage(NameTarget.Civilization, welcome.CivId + 1, 0, 4));
+        Assert.Contains(WaitFor(player, l => l.Exists(m => m is ConnectionRejectedMessage)), m => m is ConnectionRejectedMessage);
     }
 }
