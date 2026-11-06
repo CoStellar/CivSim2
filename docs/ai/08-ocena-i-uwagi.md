@@ -184,6 +184,17 @@ ok. 30–40% (seed 23: 81 → 52 ms).
 budowa sieci handlowych na turę. To zmiana kilku systemów naraz, więc osobny PR. Gdyby gra miała być szybsza od razu, można
 rzadziej wysyłać osadników (`villageSettlersEveryYears`) – ale to zmienia tempo gry, więc decyzja należy do Ciebie.
 
+## 11. Fachy: AI wie o nich jeszcze mało (etap 4F, PR 2)
+
+Od PR 2 dobra z technologii, pola i receptury dają tyle, ilu jest fachowców. AI wie o tym w dwóch miejscach: skarbnik wycenia
+recepturę jej fachowcami (receptura bez fachowców jest warta zero), a gubernator osiada tylko z rolnikiem i liczy rolników, których
+wioska wyuczy. **Za proste:** wycena ziemi (G2, G5, wędrówki, cel ekspansji) liczy pełne dobra technologii, także wtedy, gdy obóz nie
+ma myśliwych ani rybaków; uczony wybiera badania bez patrzenia na ludzi; nikt nie decyduje, ilu ludzi uczyć. To przychodzi w PR 3
+(wymogi ludzi w technologiach, decyzja „ilu uczyć”).
+
+**Skutek uboczny do obserwacji:** w środkowych stuleciach jest więcej obozów i przeprowadzek niż przed PR 2, bo obóz osiada dopiero,
+gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkich. Liczby: `09-statystyki.md`.
+
 ## Decyzje Patryka (2026-11-06)
 
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.

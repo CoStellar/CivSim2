@@ -59,6 +59,7 @@ public sealed class SkillSystem : ITurnSystem
             TakeApprentices(state, civ, s);
         }
 
+        ListNeedy(state);
         foreach (SettlementState s in state.Settlements)
         {
             if (WorldClock.MonthsOf(state, s.Owner) > 0 && s.IsActive && s.TotalPopulation() > 0)
@@ -169,10 +170,11 @@ public sealed class SkillSystem : ITurnSystem
             int going = Math.Max(1, spare * _rules.MoveSharePercent / 100);
             SettlementState? to = null;
             int best = int.MaxValue;
-            foreach (SettlementState s in state.Settlements)
+            int c = state.IndexOfCivilization(from.Owner);
+            foreach (int i in _needy[(c * _content.Skills.Count) + k])
             {
-                if (s == from || s.Owner != from.Owner || s.World != from.World || !s.IsActive || s.TotalPopulation() == 0
-                    || Skills.Needed(_content, s, k) - s.SkilledView[k] - s.TraineesView[k] <= 0)
+                SettlementState s = state.Settlements[i];
+                if (s == from || s.World != from.World || Skills.Needed(_content, s, k) - s.SkilledView[k] - s.TraineesView[k] <= 0)
                 {
                     continue;
                 }
@@ -196,6 +198,49 @@ public sealed class SkillSystem : ITurnSystem
             from.Population[stratum] -= going;
             to.Skilled[k] += going;
             to.Population[stratum] += going;
+        }
+    }
+
+    private System.Collections.Generic.List<int>[] _needy = [];
+
+    // For each civilization and skill, its lived-in settlements short of hands at the start of the moves, in id order.
+    // A settlement that becomes short during the moves (more people came for another skill) waits for the next step.
+    private void ListNeedy(GameState state)
+    {
+        int skills = _content.Skills.Count;
+        int size = state.Civilizations.Count * skills;
+        if (_needy.Length < size)
+        {
+            var grown = new System.Collections.Generic.List<int>[size];
+            for (int n = 0; n < size; n++)
+            {
+                grown[n] = n < _needy.Length ? _needy[n] : [];
+            }
+
+            _needy = grown;
+        }
+
+        for (int n = 0; n < size; n++)
+        {
+            _needy[n].Clear();
+        }
+
+        for (int i = 0; i < state.Settlements.Count; i++)
+        {
+            SettlementState s = state.Settlements[i];
+            int c = state.IndexOfCivilization(s.Owner);
+            if (c < 0 || !s.IsActive || s.TotalPopulation() == 0)
+            {
+                continue;
+            }
+
+            for (int k = 0; k < skills && k < s.SkilledView.Length; k++)
+            {
+                if (Skills.Needed(_content, s, k) - s.SkilledView[k] - s.TraineesView[k] > 0)
+                {
+                    _needy[(c * skills) + k].Add(i);
+                }
+            }
         }
     }
 

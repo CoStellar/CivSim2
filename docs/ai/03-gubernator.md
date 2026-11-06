@@ -205,19 +205,27 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
 - **Rachunek (od PR C):**
 
   ```
-  producenci = ludzie warstw, które zbierają (i uprawiałyby pola)
-  plon z pól = producenci na najlepszych polach strefy (najwyżej 40 na pole, najlepsze najpierw, jak w systemie rolnictwa):
+  producenci = ludzie warstw, które zbierają
+  rolnicy    = 0, gdy w obozie nie ma ani jednego rolnika (etap 4F);
+               inaczej producenci × 50% (jobsPercent rolnika: tylu rolników wioska wyuczy)
+  plon z pól = rolnicy na najlepszych polach strefy (najwyżej 40 na pole, najlepsze najpierw, jak w systemie rolnictwa):
                Σ 3 × (50 + żyzność) / 100 × część roku wegetacji % × rolnicy na polu   (pole wodne albo z żyznością < 20 daje 0)
   zbieractwo = min(jedzenie okolicy tego pola, 2 jedzenia na producenta na rok)
+  jedzenie wioski = plon z pól + zbieractwo × (producenci − rolnicy) / producenci   (reszta producentów dalej zbiera)
   potrzeby   = roczne potrzeby jedzenia wszystkich mieszkańców
   zapał      = waga ekspansji × (500 + ekspansywność) / 1000          (1,0 przeciętnie, do 2,4)
 
-  osiądź, gdy  plon z pól × 100 ≥ potrzeby × 150                     (settleFarmYieldPercent)
-          i    plon z pól × 100 ≥ zbieractwo × 100 × zapał            (settleOverGatheringPercent)
+  osiądź, gdy  jedzenie wioski × 100 ≥ potrzeby × 150                (settleFarmYieldPercent)
+          i    jedzenie wioski × 100 ≥ zbieractwo × 100 × zapał       (settleOverGatheringPercent)
   ```
 
-- **Ocena:** plon z pól. Notatki: `farm yield` (plon / potrzeby w %), `over gathering` (plon / zbieractwo w %), `people`.
-- **Komenda:** `SettleCommand`: obóz staje się wioską (do 1000 osób, magazyn 2000), nie może się już ruszać, producenci uprawiają pola.
+- **Ocena:** jedzenie wioski. Notatki: `farm yield` (jedzenie wioski / potrzeby w %), `over gathering` (jedzenie wioski / zbieractwo
+  w %), `people`.
+- **Komenda:** `SettleCommand`: obóz staje się wioską (do 1000 osób, magazyn 2000), nie może się już ruszać, rolnicy uprawiają pola.
+- **Co się zmieniło w etapie 4F (PR 2):** pola uprawiają tylko rolnicy (fach, `docs/systems/skills.md`), więc obóz osiada dopiero
+  z rolnikiem wśród ludzi i liczy rolników, których wioska wyuczy (50% producentów), a jedzenie wioski to plon z pól i zbieractwo
+  pozostałych producentów. Bez tego drugiego obozy z rolnikami „przegrywały” ze zbieractwem, nie osiadały i rozpadały się na małe,
+  wędrujące grupki.
 - **Co się zmieniło w PR C:** dawniej rachunek zakładał, że **każde** pole strefy uprawia 40 rolników, więc plon wychodził kilkanaście
   razy większy od potrzeb i obóz osiadał, gdy tylko znał rolnictwo. Teraz liczą się prawdziwi producenci, a osiedlenie musi dać
   więcej niż zbieractwo. Ekspansywna cywilizacja z wysoką wagą ekspansji chce do 2,4 razy więcej, więc dłużej wędruje.

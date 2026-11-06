@@ -86,7 +86,7 @@ er 1–10 w GDD 5.2.
 1. **Fachy w danych i stanie** (gotowe). `data/skills.json` z walidacją; liczba fachowców
    i uczniów na fach w `SettlementState` (płaska tablica); hash, zapis (nowy format), migawka i protokół; kolumny `--stats`
    (fachowcy na fach w cywilizacji). Przy starcie każdy wytwórca to zbieracz, wojownik to wojownik, a reszta jak w danych.
-2. **Nauka fachu.** Mistrzowie po odkryciu, uczniowie (do 3 na mistrza, praca za pół), lata nauki, przenoszenie w sieci (próg z ADR),
+2. **Nauka fachu** (gotowe; udziały miejsc pracy zmienione na rolnik 50, myśliwy 20, rybak 15, pasterz 15, rzemiosła 10–15, osiedlenie z rolnikiem). Mistrzowie po odkryciu, uczniowie (do 3 na mistrza, praca za pół), lata nauki, przenoszenie w sieci (próg z ADR),
    utrata; plony z technologii zbierania i receptury liczą tylko fachowców.
 3. **Warstwy myślicieli i przywódców, wymogi ludzi i nauka od myślicieli.** `thinkers` i `leaders` w `data/strata.json` (fachy elder, chief); `requiresPeople` (cywilizacja albo jedna osada); `sciencePerThousandPerYear` z ADR;
    uczony AI pomija technologie bez ludzi i waży, czego brakuje; nowa decyzja AI (strateg albo gubernator): ilu ludzi uczyć fachu.
