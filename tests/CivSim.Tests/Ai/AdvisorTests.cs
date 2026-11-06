@@ -30,7 +30,7 @@ public class AdvisorTests
     public void AiRulesLoadFromData()
     {
         Assert.Equal(3, Content.Ai.PickAmongTop);
-        Assert.Equal(15, Content.Ai.ReviewEveryTurns);
+        Assert.Equal(15, Content.Ai.ReviewEverySteps);
     }
 
     [Fact]

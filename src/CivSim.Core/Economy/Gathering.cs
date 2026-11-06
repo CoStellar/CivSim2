@@ -72,7 +72,8 @@ public sealed class WildFoodSystem(GameContent content, YieldYears years) : ITur
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
         _years.Draw(state);
-        long keep = Spoilage.KeptShare(_content.Population.WildRegrowthBasisPointsPerYear, state.MonthsPerTurn(_content));
+        // Land nobody claims grows back over the whole world step; claimed land grows back in its owner's own steps.
+        long keep = Spoilage.KeptShare(_content.Population.WildRegrowthBasisPointsPerYear, state.StepMonths);
         foreach (WorldState world in state.Worlds)
         {
             WorldMap map = world.Map;
@@ -134,9 +135,14 @@ public sealed class GatheringSystem : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        int months = state.MonthsPerTurn(_content);
         foreach (SettlementState s in state.Settlements)
         {
+            int months = WorldClock.MonthsOf(state, s.Owner);
+            if (months == 0)
+            {
+                continue; // its civilization waits for its own step (ADR 0018)
+            }
+
             long farmed = s.Farmers > 0 ? s.FoodGathered : 0; // farming ran first this turn
             s.FoodGathered = farmed;
             WorldState world = state.Worlds[s.World.Value];

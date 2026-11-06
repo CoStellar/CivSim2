@@ -1,11 +1,12 @@
 using System;
 using CivSim.Core.Content;
+using CivSim.Core.State;
 
 namespace CivSim.Core.Simulation;
 
 /// <summary>
-/// Moves game time forward by the length of the finished turn (GDD 6.2) in the record phase, before the snapshot
-/// is published.
+/// Moves game time forward by the finished world step in the record phase, before the snapshot is published, and starts
+/// the next world step (ADR 0018): who steps in it and how long it lasts.
 /// </summary>
 public sealed class CalendarSystem(GameContent content) : ITurnSystem
 {
@@ -18,7 +19,14 @@ public sealed class CalendarSystem(GameContent content) : ITurnSystem
     public void Execute(TurnContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        context.State.Month += context.State.MonthsPerTurn(_content);
+        GameState state = context.State;
+        if (state.StepMonths == 0)
+        {
+            WorldClock.Begin(_content, state); // a state made without content: start its clock now
+        }
+
+        state.Month += state.StepMonths;
+        WorldClock.Begin(_content, state);
     }
 }
 

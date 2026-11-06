@@ -140,8 +140,8 @@ public sealed record PopulationRules
     /// <summary>The tribe AI looks for a new place when less than this share of people was fed.</summary>
     public int MoveWhenFedBelowPercent { get; init; } = 95;
 
-    /// <summary>AI: a camp waits at least this many turns between moves.</summary>
-    public int MinTurnsBetweenMoves { get; init; } = 2;
+    /// <summary>AI: a camp waits at least this many own steps of its civilization between moves.</summary>
+    public int MinStepsBetweenMoves { get; init; } = 2;
 
     /// <summary>AI comfort: below this temperature (°C) a place is worth less to live in (cold tolerance effects lower it).</summary>
     public int ComfortColdBelow { get; init; } = -5;

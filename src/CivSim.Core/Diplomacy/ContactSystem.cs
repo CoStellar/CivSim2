@@ -72,6 +72,7 @@ public static class Contacts
         }
 
         bool first = Meet(content, state, v, attacker, ContactWay.Attack);
+        v.Alarms |= Alarm.Attacked; // its camps and its diplomat react at once, outside its rhythm (ADR 0018)
         RelationEventDefinition def = content.Relations.Events[(int)RelationEvent.Attack];
         int years = def.Years + (int)((long)(def.VengefulYears - def.Years) * v.Trait(Ai.Trait.Vengefulness) / 1000);
         Relation r = v.Relation(attacker)!;
@@ -156,6 +157,7 @@ public static class Contacts
 public sealed class ContactSystem(GameContent content) : ITurnSystem
 {
     private const ulong RumorSalt = 0xD1UL << 40;
+    private const int Million = 1_000_000;
 
     private readonly GameContent _content = content ?? throw new ArgumentNullException(nameof(content));
     private readonly DeterministicRandom _random = new(0);
@@ -358,7 +360,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
             }
         }
 
-        int months = state.MonthsPerTurn(_content);
+        int months = state.StepMonths; // a dispute grows with the world's time, whoever steps
         for (int ia = 0; ia < n; ia++)
         {
             CivilizationState a = state.Civilizations[ia];
@@ -383,9 +385,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
     private void Rumors(TurnContext context, GameState state)
     {
         RelationRules rules = _content.Relations;
-        int years = Math.Max(1, state.MonthsPerTurn(_content) / 12);
-        int chance = (int)Math.Min(1000L, (long)rules.RumorChancePercentPerCentury * 10 * years / 100);
-        if (chance <= 0)
+        if (rules.RumorChancePercentPerCentury <= 0)
         {
             return;
         }
@@ -393,10 +393,13 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
         WorldState earth = state.Worlds[0];
         foreach (CivilizationState a in state.Civilizations)
         {
-            if (!a.IsAlive)
+            if (!WorldClock.Steps(a))
             {
-                continue;
+                continue; // news is heard in the hearer's own steps, for the whole step (ADR 0018)
             }
+
+            // Chance per pair for the months of this own step, millionths (a share of the chance per century).
+            int chance = (int)Math.Min(Million, (long)rules.RumorChancePercentPerCentury * (Million / 100) * a.StepMonths / 1200);
 
             bool seeded = false;
             bool heardOne = false;
@@ -423,7 +426,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
                         seeded = true;
                     }
 
-                    if (_random.NextInt(1000) >= chance)
+                    if (!Draw(chance))
                     {
                         continue;
                     }
@@ -444,6 +447,14 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
                 }
             }
         }
+    }
+
+    // True with a chance of millionths: one draw in a thousand, and a second only for the rest below a per mille.
+    private bool Draw(int millionths)
+    {
+        int perMille = millionths / 1000;
+        int roll = _random.NextInt(1000);
+        return roll < perMille || (roll == perMille && _random.NextInt(1000) < millionths % 1000);
     }
 
     private string? Hear(GameState state, WorldState earth, RelationRules rules, CivilizationState a, CivilizationState b, CivilizationState c)

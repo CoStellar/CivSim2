@@ -158,6 +158,10 @@ public static class Treaties
         bool broke = EndTreaties(content, book, civ, target);
         book.Add(new Treaty(civ, target, TreatyKind.War, civ, state.Month));
         book.RemoveProposals(p => (p.From == civ && p.To == target) || (p.From == target && p.To == civ));
+        if (state.FindCivilization(target) is { } victim)
+        {
+            victim.Alarms |= Simulation.Alarm.WarDeclared; // it answers at once, outside its rhythm (ADR 0018)
+        }
         var line = new StringBuilder();
         line.Append(CultureInfo.InvariantCulture, $"{Name(state, civ)} declared war on {Name(state, target)}");
         if (broke)
