@@ -67,6 +67,9 @@ public sealed class GameContent
     /// <summary>How the AI advisors decide (data/ai.json, stage 4a).</summary>
     public AiRules Ai { get; init; } = new();
 
+    /// <summary>Contact, rumors and the memory of relations (data/relations.json, stage 4c).</summary>
+    public Diplomacy.RelationRules Relations { get; init; } = new();
+
     /// <summary>Research and diffusion rules (stage 3f).</summary>
     public ResearchRules Research { get; init; } = new();
 

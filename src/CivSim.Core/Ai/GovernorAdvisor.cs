@@ -476,7 +476,7 @@ public sealed class GovernorAdvisor : Advisor
             if (untouched != NoBound)
             {
                 Evaluation bound = Rate(untouched, comfort);
-                Place(ref bound, world, civ, from.Cell, c, distance, campsite, foreignCamp);
+                Place(ref bound, world, civ, from.Cell, c, distance, campsite, foreignCamp ? there!.Owner : (CivId?)null);
                 if (!Chooser.WouldKeep(bound.Value))
                 {
                     continue;
@@ -484,7 +484,7 @@ public sealed class GovernorAdvisor : Advisor
             }
 
             Evaluation e = Rate(SiteFood(world, c), comfort);
-            Place(ref e, world, civ, from.Cell, c, distance, campsite, foreignCamp);
+            Place(ref e, world, civ, from.Cell, c, distance, campsite, foreignCamp ? there!.Owner : (CivId?)null);
 
             // The costly checks run only for places the chooser would keep.
             if (!Chooser.WouldKeep(e.Value))
@@ -522,9 +522,11 @@ public sealed class GovernorAdvisor : Advisor
         Weigh(ref e, civ, Goal.Expansion);
     }
 
-    // The factors of a place within one move: nearness, an old campsite of the tribe, the direction, goal and character.
-    private void Place(ref Evaluation e, WorldState world, CivilizationState civ, HexCoord from, HexCoord to, int distance, bool campsite, bool foreignCamp)
+    // The factors of a place within one move: nearness, an old campsite of the tribe, the direction, the opinion of
+    // the people living there (a foreign camp), goal and character.
+    private void Place(ref Evaluation e, WorldState world, CivilizationState civ, HexCoord from, HexCoord to, int distance, bool campsite, CivId? foreigners)
     {
+        bool foreignCamp = foreigners is not null;
         e.Apply(FactorId.Distance, _nearness, distance);
         if (campsite)
         {
@@ -535,6 +537,12 @@ public sealed class GovernorAdvisor : Advisor
         if (!foreignCamp)
         {
             Toward(ref e, world, civ, from, to);
+        }
+        else
+        {
+            // GDD 8.3: the worse the opinion of them, the readier to drive them out (0.5 at full sympathy, 1.5 at full hatred).
+            int sympathy = Diplomacy.Contacts.Sympathy(civ, foreigners!.Value);
+            e.Apply(FactorId.Opinion, Factor.Neutral - (sympathy / 20), sympathy / 100);
         }
 
         Weigh(ref e, civ, foreignCamp ? Goal.Conquest : Goal.Expansion);

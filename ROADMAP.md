@@ -119,7 +119,9 @@ Punkt startu, proponowany podział na PR-y (4a–4g) i pytania do decyzji: `docs
 
 Gotowe: **4a** (wspólna ocena działań: czynniki w tysięcznych z krzywych, waga celu, charakter, koszt; wybór z 1–3 najlepszych; rada doradców:
 gubernator, skarbnik, uczony; dziennik „Dlaczego?” i `--decisions` w Headless; symulacja bit w bit taka sama jak w etapie 3; `docs/systems/ai.md`, ADR 0016),
-**4b** (charakter z 8 cech, strateg z wagami celów i kierunkiem ekspansji, losowanie z 3 najlepszych zależne od ostrożności, histereza receptur, rzadsze szukanie miejsc; ADR 0017).
+**4b** (charakter z 8 cech, strateg z wagami celów i kierunkiem ekspansji, losowanie z 3 najlepszych zależne od ostrożności, histereza receptur, rzadsze szukanie miejsc; ADR 0017),
+**4c** (odkrywanie cywilizacji: zwiad, zetknięcie stref, napaść; pogłoski od znajomych; pamięć wydarzeń z zanikaniem, sympatia i zaufanie; spór o przejętą osadę;
+opinia o sąsiedzie w decyzji o wypędzeniu obozu; wpisy w kronice; `--relations` w Headless; `docs/systems/relations.md`, `data/relations.json`).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
 - [ ] Mapy wpływów, prognozy zasobów, kierunek ekspansji (kierunek ekspansji z wartości wolnej ziemi gotowy w 4b)

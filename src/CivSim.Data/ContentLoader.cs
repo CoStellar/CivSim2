@@ -39,6 +39,7 @@ public static class ContentLoader
         TradeRules trade = LoadTrade(Path.Combine(directory, "trade.json"), errors);
         PerceptionRules perception = LoadPerception(Path.Combine(directory, "perception.json"), errors);
         AiRules ai = LoadAi(Path.Combine(directory, "ai.json"), errors);
+        Core.Diplomacy.RelationRules relations = LoadRelations(Path.Combine(directory, "relations.json"), errors);
         (List<TechnologyDefinition> technologies, ResearchRules research) =
             LoadTechnologies(Path.Combine(directory, "technologies.json"), goods, biomes, deposits, recipes, effects, errors);
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
@@ -80,6 +81,7 @@ public static class ContentLoader
             Trade = trade,
             Perception = perception,
             Ai = ai,
+            Relations = relations,
             Events = events,
             Technologies = technologies,
             Research = research,
@@ -1020,6 +1022,76 @@ public static class ContentLoader
         };
     }
 
+    private static Core.Diplomacy.RelationRules LoadRelations(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Diplomacy.RelationRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        int kinds = Enum.GetValues<Core.Diplomacy.RelationEvent>().Length;
+        var events = new Core.Diplomacy.RelationEventDefinition?[kinds];
+        if (TryArray(doc.RootElement, "events", path, errors, out JsonElement array))
+        {
+            int i = 0;
+            foreach (JsonElement e in array.EnumerateArray())
+            {
+                string at = $"{file}: events[{i}]";
+                var x = new Reader(e, at, errors);
+                Core.Diplomacy.RelationEvent kind = x.Enum<Core.Diplomacy.RelationEvent>("kind");
+                int years = x.Int("years", 0, 100_000);
+                var def = new Core.Diplomacy.RelationEventDefinition
+                {
+                    Kind = kind,
+                    Sympathy = x.SignedHundredths("sympathy", -Core.Diplomacy.Relation.Max, Core.Diplomacy.Relation.Max) ?? 0,
+                    Trust = x.SignedHundredths("trust", -Core.Diplomacy.Relation.Max, Core.Diplomacy.Relation.Max) ?? 0,
+                    SympathyPerYear = x.SignedHundredths("sympathyPerYear", -Core.Diplomacy.Relation.Max, Core.Diplomacy.Relation.Max) ?? 0,
+                    TrustPerYear = x.SignedHundredths("trustPerYear", -Core.Diplomacy.Relation.Max, Core.Diplomacy.Relation.Max) ?? 0,
+                    Years = years,
+                    VengefulYears = x.OptionalInt("vengefulYears", 0, 100_000) ?? years,
+                };
+                if (def.SympathyPerYear != 0 && Math.Sign(def.SympathyPerYear) != Math.Sign(def.Sympathy))
+                {
+                    errors.Add($"{at}.sympathyPerYear: must lead towards sympathy (same sign).");
+                }
+
+                if (def.TrustPerYear != 0 && Math.Sign(def.TrustPerYear) != Math.Sign(def.Trust))
+                {
+                    errors.Add($"{at}.trustPerYear: must lead towards trust (same sign).");
+                }
+
+                if (events[(int)kind] is not null)
+                {
+                    errors.Add($"{at}.kind: '{e.GetProperty("kind")}' is listed twice.");
+                }
+
+                events[(int)kind] = def;
+                i++;
+            }
+        }
+
+        for (int k = 0; k < kinds; k++)
+        {
+            if (events[k] is null)
+            {
+                errors.Add($"{file}: events: missing kind '{ToSnake(((Core.Diplomacy.RelationEvent)k).ToString())}'.");
+            }
+        }
+
+        return new Core.Diplomacy.RelationRules
+        {
+            RumorChancePercentPerCentury = r.Int("rumorChancePercentPerCentury", 0, 100),
+            RumorErrorPercent = r.Int("rumorErrorPercent", 0, 90),
+            OpeningSympathy = r.SignedHundredths("openingSympathy", 0, Core.Diplomacy.Relation.Max) ?? 0,
+            BorderOpening = r.SignedHundredths("borderOpening", -Core.Diplomacy.Relation.Max, Core.Diplomacy.Relation.Max) ?? 0,
+            MaxMemories = r.Int("maxMemories", 1, 64),
+            Events = Array.ConvertAll(events, e => e ?? new Core.Diplomacy.RelationEventDefinition()),
+        };
+    }
+
     private static TradeRules LoadTrade(string path, List<string> errors)
     {
         using JsonDocument? doc = Open(path, errors);
@@ -1357,6 +1429,39 @@ public static class ContentLoader
             value = (long.Parse(whole, System.Globalization.CultureInfo.InvariantCulture) * 1000)
                 + (frac.Length == 0 ? 0 : long.Parse(frac.PadRight(3, '0'), System.Globalization.CultureInfo.InvariantCulture));
             return true;
+        }
+
+        /// <summary>
+        /// An optional signed decimal with up to 2 places ("-0.5" or 30), in hundredths; null when the property is missing.
+        /// </summary>
+        public int? SignedHundredths(string name, int min, int max)
+        {
+            if (!element.TryGetProperty(name, out JsonElement v))
+            {
+                return null;
+            }
+
+            string? text = v.ValueKind switch
+            {
+                JsonValueKind.String => v.GetString(),
+                JsonValueKind.Number => v.GetRawText(),
+                _ => null,
+            };
+            bool negative = text is { Length: > 0 } && text[0] == '-';
+            if (!TryThousandths(negative ? text![1..] : text, out long thousandths) || thousandths % 10 != 0)
+            {
+                errors.Add($"{at}.{name}: required number such as \"-0.5\" (at most 2 decimal places).");
+                return null;
+            }
+
+            long value = (negative ? -thousandths : thousandths) / 10;
+            if (value < min || value > max)
+            {
+                errors.Add($"{at}.{name}: {text} is outside {min / 100}..{max / 100}.");
+                return null;
+            }
+
+            return (int)value;
         }
 
         public Amount Amount(string name, Amount min, Amount max) =>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CivSim.Core.Map;
 
 namespace CivSim.Core.State;
@@ -70,6 +71,59 @@ public sealed class CivilizationState
 
     /// <summary>Era of the last strategy review: a new era is a shock that brings a review at once.</summary>
     public int StrategyEra { get; set; } = -1;
+
+    /// <summary>
+    /// Civilizations this one knows of, sorted by their id (GDD 8.5; stage 4c). Empty at the start: nobody knows anybody.
+    /// </summary>
+    public List<Diplomacy.Relation> Relations { get; } = [];
+
+    /// <summary>The relation with <paramref name="other"/>, or null when this civilization has never heard of it.</summary>
+    public Diplomacy.Relation? Relation(CivId other)
+    {
+        int k = RelationIndex(other);
+        return k >= 0 ? Relations[k] : null;
+    }
+
+    /// <summary>The relation with <paramref name="other"/>, added (in id order) when it is new.</summary>
+    public Diplomacy.Relation AddRelation(CivId other)
+    {
+        int k = RelationIndex(other);
+        if (k >= 0)
+        {
+            return Relations[k];
+        }
+
+        var relation = new Diplomacy.Relation(other);
+        Relations.Insert(~k, relation);
+        return relation;
+    }
+
+    // Binary search by the other civilization's id; the complement of the insertion point when missing.
+    private int RelationIndex(CivId other)
+    {
+        int lo = 0;
+        int hi = Relations.Count - 1;
+        while (lo <= hi)
+        {
+            int mid = (lo + hi) >>> 1;
+            int v = Relations[mid].Other.Value;
+            if (v == other.Value)
+            {
+                return mid;
+            }
+
+            if (v < other.Value)
+            {
+                lo = mid + 1;
+            }
+            else
+            {
+                hi = mid - 1;
+            }
+        }
+
+        return ~lo;
+    }
 
     /// <summary>Value of <see cref="Researching"/> when nothing is researched.</summary>
     public const int NoResearch = -1;

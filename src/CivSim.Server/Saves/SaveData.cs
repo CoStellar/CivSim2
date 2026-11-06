@@ -84,7 +84,34 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(13)] int[]? GoalWeights = null,
     [property: Key(14)] int ExpansionTarget = -1,
     [property: Key(15)] long StrategyReviewMonth = 0,
-    [property: Key(16)] int StrategyEra = -1);
+    [property: Key(16)] int StrategyEra = -1,
+    [property: Key(17)] List<RelationSaveData>? Relations = null);
+
+/// <summary>Saved relation of a civilization with another (stage 4c).</summary>
+[MessagePackObject]
+public sealed record RelationSaveData(
+    [property: Key(0)] int Other,
+    [property: Key(1)] byte Level,
+    [property: Key(2)] byte Way,
+    [property: Key(3)] long FirstMonth,
+    [property: Key(4)] long MetMonth,
+    [property: Key(5)] long LastContactMonth,
+    [property: Key(6)] int Opening,
+    [property: Key(7)] int Sympathy,
+    [property: Key(8)] int Trust,
+    [property: Key(9)] int RumorCell,
+    [property: Key(10)] int RumorPeople,
+    [property: Key(11)] int RumorFrom,
+    [property: Key(12)] List<RelationMemorySaveData> Memories);
+
+/// <summary>Saved remembered event of a relation (stage 4c).</summary>
+[MessagePackObject]
+public sealed record RelationMemorySaveData(
+    [property: Key(0)] byte Kind,
+    [property: Key(1)] int Sympathy,
+    [property: Key(2)] int Trust,
+    [property: Key(3)] long EndMonth,
+    [property: Key(4)] int FadeMonths);
 
 /// <summary>Saved settlement. <see cref="Stock"/> holds hundredths per good id.</summary>
 [MessagePackObject]

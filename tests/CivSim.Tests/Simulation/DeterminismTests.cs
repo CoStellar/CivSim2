@@ -64,6 +64,6 @@ public class DeterminismTests
         Assert.Equal(GoldenHash, RunAndHash(2026, 100));
     }
 
-    // Stage 4b: civilization character and strategy joined the state.
-    private const ulong GoldenHash = 17299549445470583988UL;
+    // Stage 4c: relations between civilizations (contact, rumors, remembered events) joined the state.
+    private const ulong GoldenHash = 11874383640865236196UL;
 }

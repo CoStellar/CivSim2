@@ -46,8 +46,8 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    // Stage 4b: every new civilization rolls its character (the map itself is unchanged).
-    private const ulong GoldenWorldHash = 17910727293713073971UL;
+    // Stage 4c: the state hash includes the (still empty) relations of every civilization (the map itself is unchanged).
+    private const ulong GoldenWorldHash = 3348565998749370355UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

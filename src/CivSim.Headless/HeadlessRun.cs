@@ -35,6 +35,9 @@ public sealed record HeadlessResult(
     /// <summary>Rule violations found by the world validator (empty = valid).</summary>
     public IReadOnlyList<string> WorldProblems { get; init; } = [];
 
+    /// <summary>Relations at the end of the run among living civilizations: met (both ways counted) and rumors only.</summary>
+    public (int Met, int Rumors) Contacts { get; init; }
+
     /// <summary>Number of settlements at the end of the run.</summary>
     public int Settlements { get; init; }
 
@@ -92,6 +95,8 @@ public static class HeadlessRun
         using StreamWriter? stats = options.StatsPath is null ? null : CreateReport(options.StatsPath);
         using StreamWriter? decisions = options.DecisionsPath is null ? null : CreateReport(options.DecisionsPath);
         decisions?.WriteLine(DecisionCsv.Header);
+        using StreamWriter? relations = options.RelationsPath is null ? null : CreateReport(options.RelationsPath);
+        relations?.WriteLine(RelationCsv.Header);
         if (stats is not null)
         {
             WriteStatsHeader(stats, state);
@@ -123,6 +128,11 @@ public static class HeadlessRun
             if (stats is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
             {
                 WriteStats(stats, runner.State, content);
+            }
+
+            if (relations is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
+            {
+                RelationCsv.Write(relations, runner.State);
             }
 
             if (!options.Quiet)
@@ -207,7 +217,27 @@ public static class HeadlessRun
             AliveCivilizations = runner.State.Civilizations.Count(c => c.IsAlive),
             FoodUnits = FoodUnits(runner.State, content),
             Years = runner.State.Month / 12,
+            Contacts = CountContacts(runner.State),
         };
+    }
+
+    private static (int Met, int Rumors) CountContacts(GameState state)
+    {
+        int met = 0;
+        int rumors = 0;
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            foreach (Core.Diplomacy.Relation r in c.Relations)
+            {
+                if (c.IsAlive && state.FindCivilization(r.Other)?.IsAlive == true)
+                {
+                    met += r.HasMet ? 1 : 0;
+                    rumors += r.HasMet ? 0 : 1;
+                }
+            }
+        }
+
+        return (met, rumors);
     }
 
     private static long People(GameState state)
