@@ -137,6 +137,15 @@ public enum EffectStat
 
     /// <summary>Percent change of how fast food spoils (granaries and pots lower it; stage 3f).</summary>
     SpoilagePercent = 8,
+
+    /// <summary>Change of the share of children who die before 15, in tenths of a percent (per mille of children; ADR 0020).</summary>
+    ChildMortalityPerMille = 9,
+
+    /// <summary>Change of adult deaths per year, in people per ten thousand (−6 = −0.6‰; ADR 0020).</summary>
+    AdultDeathsPerTenThousand = 10,
+
+    /// <summary>Change of births per year, in children per ten thousand people (ADR 0020).</summary>
+    BirthsPerTenThousand = 11,
 }
 
 /// <summary>How effects of the same type on the same target combine.</summary>

@@ -441,8 +441,10 @@ public static class ContentLoader
         Amount unit = Amount.FromUnits(1);
         return new PopulationRules
         {
-            BirthsPerMille = growth.Int("birthsPerMille", 0, 1000),
-            DeathsPerMille = growth.Int("deathsPerMille", 0, 1000),
+            BirthsPerMille = growth.Amount("birthsPerMille", Amount.Zero, Amount.FromUnits(1000)),
+            ChildMortalityPercent = growth.Amount("childMortalityPercent", Amount.Zero, Amount.FromUnits(100)),
+            AdultDeathsPerMille = growth.Amount("adultDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
+            VillageDeathsPerMille = growth.Amount("villageDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             StarvationDeathPercent = growth.Int("starvationDeathPercent", 0, 100),
             LowHealthDeathsPerMillePerPoint = growth.Amount("lowHealthDeathsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
             MoodBirthsPerMillePerPoint = growth.Amount("moodBirthsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
