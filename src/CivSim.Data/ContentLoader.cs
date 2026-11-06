@@ -1004,6 +1004,19 @@ public static class ContentLoader
         return new AiRules
         {
             PickAmongTop = r.Int("pickAmongTop", 1, 3),
+            ReviewEveryTurns = r.Int("reviewEveryTurns", 1, 100),
+            DirectionBonusPercent = r.Int("directionBonusPercent", 0, 100),
+            RecipeSwitchBetterByPercent = r.Int("recipeSwitchBetterByPercent", 0, 500),
+            CrowdingLowPercent = r.Int("crowdingLowPercent", 0, 99),
+            CrowdingHighPercent = r.Int("crowdingHighPercent", 1, 100),
+            ExpansionWeightMin = r.Int("expansionWeightMin", 100, 1000),
+            ExpansionWeightMax = r.Int("expansionWeightMax", 1000, 3000),
+            FedWellPercent = r.Int("fedWellPercent", 1, 100),
+            FedBadlyPercent = r.Int("fedBadlyPercent", 0, 99),
+            HungerWeightMax = r.Int("hungerWeightMax", 1000, 3000),
+            SplitMinPercentOfLevel = r.Int("splitMinPercentOfLevel", 1, 100),
+            SearchEveryTurns = r.Int("searchEveryTurns", 1, 20),
+            StarvingFedPercent = r.Int("starvingFedPercent", 0, 100),
         };
     }
 

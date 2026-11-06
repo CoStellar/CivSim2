@@ -104,14 +104,15 @@ public sealed record SetResearchCommand(GameContent Content, int Technology) : I
 
 /// <summary>
 /// The scholar advisor: research choices of AI civilizations (GDD 8.1; rule of stage 3f, on the shared evaluation since
-/// stage 4a). When nothing is being researched, every available technology scores the same worth minus its cost today
-/// (inspirations and neighbours count), so the cheapest wins, ties in data order. Situations steer it: a tribe by the
+/// stage 4a). When nothing is being researched, every available technology scores the same worth times its cheapness
+/// against the cheapest choice, squared (costs today: inspirations and neighbours count). The cheapest wins; in a draw
+/// among the best (stage 4b) a technology twice as dear is four times less likely. Situations steer it: a tribe by the
 /// sea finds fishing cheap, one among game finds hunting cheap. Goal weights per technology come with stage 4b.
 /// </summary>
 public sealed class ScholarAdvisor(GameContent content) : Ai.Advisor(content, Ai.Utility.AdvisorKind.Scholar)
 {
-    /// <summary>Worth of any technology before its cost, hundredths of research points: far above every real cost.</summary>
-    public const long TechnologyWorth = 1_000_000_000_000_000;
+    /// <summary>Worth of any technology before its cheapness factor.</summary>
+    public const long TechnologyWorth = 1_000_000_000;
 
     private readonly GameContent _content = content;
 
@@ -130,6 +131,15 @@ public sealed class ScholarAdvisor(GameContent content) : Ai.Advisor(content, Ai
             }
 
             facts ??= CivFacts.Measure(_content, state);
+            long cheapest = long.MaxValue;
+            for (int t = 0; t < _content.Technologies.Count; t++)
+            {
+                if (Technologies.Available(_content, civ, t))
+                {
+                    cheapest = Math.Min(cheapest, Math.Max(1, Technologies.Cost(_content, state, facts, c, t)));
+                }
+            }
+
             Chooser.Clear();
             for (int t = 0; t < _content.Technologies.Count; t++)
             {
@@ -138,13 +148,15 @@ public sealed class ScholarAdvisor(GameContent content) : Ai.Advisor(content, Ai
                     continue;
                 }
 
+                // Cheapness against the cheapest choice, squared: a technology twice as dear is four times less likely.
+                long cost = Math.Max(1, Technologies.Cost(_content, state, facts, c, t));
                 Ai.Utility.Evaluation e = Ai.Utility.Evaluation.Of(TechnologyWorth);
-                e.Subtract(Ai.Utility.FactorId.ResearchCost, Technologies.Cost(_content, state, facts, c, t));
+                e.Apply(Ai.Utility.FactorId.ResearchCost, (int)(Ai.Utility.Factor.Neutral * cheapest / cost * cheapest / cost), cost);
                 e.Weigh(GoalWeight(civ, Ai.Goal.Science), CharacterMultiplier(civ, Ai.Goal.Science));
                 Chooser.Offer(t, e);
             }
 
-            int pick = Chooser.Pick(RandomFor(state, civ.Id.Value));
+            int pick = Pick(civ, RandomFor(state, civ.Id.Value));
             if (pick >= 0)
             {
                 int best = Chooser.KeyAt(pick);
