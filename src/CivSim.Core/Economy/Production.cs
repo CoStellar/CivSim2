@@ -39,13 +39,14 @@ public sealed class TradeSystem(GameContent content) : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        int months = state.MonthsPerTurn(_content);
         int goods = _content.Goods.Count;
         long moved = 0;
         foreach (List<int> members in TradeNetworks.Build(_content, state))
         {
             int n = members.Count;
-            if (n < 2)
+            // A network belongs to one civilization: it trades only in that civilization's own steps (ADR 0018).
+            int months = n < 2 ? 0 : WorldClock.MonthsOf(state, state.Settlements[members[0]].Owner);
+            if (months == 0)
             {
                 continue;
             }
@@ -291,10 +292,15 @@ public sealed class ProductionSystem(GameContent content) : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        int months = state.MonthsPerTurn(_content);
         for (int iS = 0; iS < state.Settlements.Count; iS++)
         {
             SettlementState s = state.Settlements[iS];
+            int months = WorldClock.MonthsOf(state, s.Owner);
+            if (months == 0)
+            {
+                continue; // its civilization waits for its own step (ADR 0018)
+            }
+
             s.RunsMade = 0;
             if (!s.IsActive || s.RecipeId < 0 || s.RecipeId >= _content.Recipes.Count)
             {

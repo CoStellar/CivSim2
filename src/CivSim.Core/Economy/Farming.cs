@@ -22,6 +22,7 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
     private readonly List<long> _keys = [];
     private HexCoord[] _area = [];
     private int[] _worked = [];
+    private int[] _wornMonths = [];
 
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.Economy;
@@ -32,26 +33,33 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
         PopulationRules rules = _content.Population;
-        int months = state.MonthsPerTurn(_content);
         foreach (WorldState world in state.Worlds)
         {
             if (_worked.Length != world.Geometry.CellCount)
             {
                 _worked = new int[world.Geometry.CellCount];
+                _wornMonths = new int[world.Geometry.CellCount];
             }
 
             Array.Clear(_worked);
             foreach (SettlementState s in state.Settlements)
             {
-                s.Farmers = 0;
-                s.FoodGathered = 0;
+                // A village whose civilization waits for its own step still holds its fields (they neither wear nor rest
+                // now); it farms them, and they wear, over its whole step when it comes (ADR 0018).
+                int months = WorldClock.MonthsOf(state, s.Owner);
+                if (months > 0)
+                {
+                    s.Farmers = 0;
+                    s.FoodGathered = 0;
+                }
+
                 if (s.World == world.Id && s.IsActive && !_content.SettlementLevels[s.Level].Mobile && rules.GrainGood >= 0)
                 {
                     Farm(state, world, s, months);
                 }
             }
 
-            Wear(world.Map, months);
+            Wear(world.Map, state.StepMonths);
         }
     }
 
@@ -134,8 +142,14 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
             }
 
             _worked[cell] += farmers;
+            _wornMonths[cell] = months;
             left -= farmers;
             grainHundredths += perFarmer * farmers * months / 12;
+        }
+
+        if (months == 0)
+        {
+            return; // only the fields were marked
         }
 
         s.Farmers = producers - left;
@@ -148,6 +162,7 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
     }
 
     // Farmed land wears out in proportion to how fully it is worked; other land recovers to its natural fertility.
+    // Fields wear over their farmers' own step; resting land recovers over the world step.
     private void Wear(WorldMap map, int months)
     {
         PopulationRules rules = _content.Population;
@@ -157,7 +172,7 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
             int natural = map.NaturalFertility[i];
             int fertility = map.Fertility[i];
             long change = _worked[i] > 0
-                ? -(long)rules.ExhaustionHundredthsPerYear * months / 12 * _worked[i] / cap
+                ? -(long)rules.ExhaustionHundredthsPerYear * _wornMonths[i] / 12 * _worked[i] / cap
                 : fertility < natural ? (long)rules.RecoveryHundredthsPerYear * months / 12 : 0;
             if (change == 0)
             {

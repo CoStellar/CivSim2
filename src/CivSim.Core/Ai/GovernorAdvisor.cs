@@ -144,7 +144,11 @@ public sealed class GovernorAdvisor : Advisor
 
         foreach (CivilizationState civ in state.Civilizations)
         {
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai)
+            // Planned decisions in the civilization's own steps; between them only a reaction to an attack on one of
+            // its camps: the camps look for safer land at once (reactive decision, ADR 0018).
+            bool steps = Simulation.WorldClock.Steps(civ);
+            bool attacked = civ.IsAlive && (civ.Alarms & Simulation.Alarm.Attacked) != 0;
+            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || !(steps || attacked))
             {
                 continue;
             }
@@ -163,7 +167,7 @@ public sealed class GovernorAdvisor : Advisor
             {
                 if (s.Owner == civ.Id && s.IsActive && s.TotalPopulation() > 0 && _content.SettlementLevels[s.Level].Mobile && !_joined.Contains(s.Id.Value))
                 {
-                    Decide(state, queue, civ, s);
+                    Decide(state, queue, civ, s, reacting: !steps);
                 }
             }
 
@@ -171,7 +175,7 @@ public sealed class GovernorAdvisor : Advisor
         }
     }
 
-    private void Decide(GameState state, CommandQueue queue, CivilizationState civ, SettlementState s)
+    private void Decide(GameState state, CommandQueue queue, CivilizationState civ, SettlementState s, bool reacting)
     {
         WorldState world = state.Worlds[s.World.Value];
         int people = s.TotalPopulation();
@@ -180,9 +184,9 @@ public sealed class GovernorAdvisor : Advisor
             return; // on the way: the journey system walks it
         }
 
-        // Two clocks: survival moves are weighed every turn, slow choices (joining, splitting, plundering) once per
-        // era-length period. Without live seasons every turn is such a turn.
-        bool slowTurn = state.IsDecisionTurn(_content);
+        // Two clocks: survival moves are weighed every own step (and in a reaction to an attack), slow choices (joining,
+        // splitting, plundering) once per era-length period. Without live seasons every own step is such a step.
+        bool slowTurn = !reacting && Simulation.WorldClock.PlansNow(_content, state, civ);
 
         // A handful of people does not survive on its own: they join the nearest camp of their own.
         if (slowTurn && people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into)
@@ -197,14 +201,15 @@ public sealed class GovernorAdvisor : Advisor
         // A camp looks for a better place when it went hungry or when its place is getting too cold or too hot.
         bool hungry = s.FedPerMille < _rules.MoveWhenFedBelowPercent * 10;
         bool uncomfortable = Comfort(state, world, civ, world.Geometry.Index(s.Cell)) < 100;
-        bool rested = (state.Month - s.MovedMonth) >= _rules.MinTurnsBetweenMoves * (long)state.MonthsPerTurn(_content);
+        bool rested = (state.Month - s.MovedMonth) >= _rules.MinStepsBetweenMoves * (long)Simulation.WorldClock.RhythmMonths(_content, state, civ);
         bool mobile = _content.SettlementLevels[s.Level].Mobile;
 
-        // A camp that is not starving looks around every few turns (staggered by camp), not every turn: a search that
-        // found nothing rarely finds something the next turn. With live seasons it looks every turn to follow the summer.
+        // A camp that is not starving looks around every few own steps (staggered by camp), not every step: a search that
+        // found nothing rarely finds something the next step. With live seasons it looks every step to follow the summer.
+        // A camp of a civilization that was just attacked looks at once, rested or not.
         bool starving = s.FedPerMille < _content.Ai.StarvingFedPercent * 10;
-        bool searchTurn = starving || world.Map.LiveSeasons || (state.Turn + s.Id.Value) % _content.Ai.SearchEveryTurns == 0;
-        if (mobile && (hungry || uncomfortable) && rested && searchTurn)
+        bool searchTurn = reacting || starving || world.Map.LiveSeasons || (civ.Steps - 1 + s.Id.Value) % _content.Ai.SearchEverySteps == 0;
+        if (mobile && (hungry || uncomfortable || reacting) && (rested || reacting) && searchTurn)
         {
             // Staying is the incumbent: another place must be better by a margin (GDD 8.6, hysteresis).
             // Both sides are weighed alike, so the goal weight never tips staying against moving; the direction does.

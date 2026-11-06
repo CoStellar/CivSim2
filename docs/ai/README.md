@@ -4,7 +4,7 @@ Ten katalog opisuje **każdą decyzję**, którą podejmuje sztuczna inteligencj
 na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to jest w kodzie. Jest pisany dla Patryka:
 żeby można było ocenić, czy mechanika nie jest za prosta albo za skomplikowana i bez sensu.
 
-**Stan opisu:** etap 4d (gałąź `development` po PR #34 i #35, commit `8cc73e1`). Dowódca i armie (4e) jeszcze nie istnieją.
+**Stan opisu:** etap 4d + zegar świata (ADR 0018, gałąź `feat/world-clock`, commit `be7e645`). Dowódca i armie (4e) jeszcze nie istnieją.
 **Aktualizacja:** po każdym etapie, który zmienia AI (zasada w `CLAUDE.md`). Historia zmian jest na dole tej strony.
 
 ## Jak czytać
@@ -24,7 +24,11 @@ na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to j
 Każda decyzja ma stały identyfikator (np. **G2**), którego używają wszystkie strony. Ścieżki do kodu mają postać
 `plik:linia` dla commita podanego wyżej; linie mogą się przesunąć, nazwy metod zostają.
 
-## Schemat jednej tury z punktu widzenia AI
+## Schemat jednego kroku świata z punktu widzenia AI
+
+Od ADR 0018 każda cywilizacja ma **własny rytm** (krok o długości tury swojej ery, przypięty do kalendarza). W kroku świata rada
+liczy decyzje proaktywne tylko cywilizacji, które mają swój krok, a reaktywne (alarmy, propozycje, wybór badania) wszystkich.
+Szczegóły: [wspólne mechanizmy, pkt 7](01-wspolne-mechanizmy.md#7-rytm-cywilizacji-decyzje-proaktywne-i-reaktywne-adr-0018).
 
 ```mermaid
 flowchart TD
@@ -34,36 +38,37 @@ flowchart TD
     G["1. Gubernator<br/>każdy obóz: G1–G6"] --> S["2. Strateg<br/>S1: wagi celów + kierunek"]
     S --> T["3. Skarbnik<br/>T1: receptury"]
     T --> U["4. Uczony<br/>U1: następna technologia"]
-    U --> DP["5. Dyplomata<br/>D1: odpowiedzi (co turę)<br/>D2: przegląd stosunków (co 50 lat)"]
+    U --> DP["5. Dyplomata<br/>D1: odpowiedzi (każdy krok świata)<br/>D2: przegląd (co 50 lat albo po alarmie)"]
   end
   D --> Q["Kolejka komend<br/>(te same komendy co gracz)"]
-  Q --> R["Faza 4: rozstrzyganie komend<br/>kolejność: kategoria → cywilizacja (rotacja co turę) → kolejność wydania;<br/>każda komenda jest sprawdzana, odrzucona przepada"]
+  Q --> R["Faza 4: rozstrzyganie komend<br/>kolejność: kategoria → cywilizacja (rotacja co krok) → kolejność wydania;<br/>każda komenda jest sprawdzana, odrzucona przepada"]
   R --> E["Fazy 5–11: ruch, gospodarka, ludność, nauka, zapis"]
   D -.-> L["Dziennik „Dlaczego?”<br/>(3 najważniejsze czynniki każdej decyzji)"]
 ```
 
 AI **niczego nie zmienia samo**. Czyta stan gry i wydaje komendy, dokładnie takie, jakie wyda kiedyś gracz. Serwer sprawdza każdą
-komendę (`Validate`) i dopiero wtedy ją wykonuje. Decyzje z tury N widzą stan po turze N−1 (np. „ile ludzie zjedli” to wynik
-poprzedniej tury).
+komendę (`Validate`) i dopiero wtedy ją wykonuje. Decyzje we własnym kroku widzą stan po poprzednim własnym kroku (np. „ile ludzie
+zjedli” to wynik poprzedniego kroku tej cywilizacji).
 
 ## Katalog wszystkich decyzji
 
 | Id | Kto | Decyzja | Komenda | Kiedy | Opis |
 | --- | --- | --- | --- | --- | --- |
-| **S1** | Strateg | wagi 6 celów i kierunek ekspansji | `SetStrategyCommand` | co 15 tur (rozłożone) i od razu po wejściu w nową erę | [02-strateg.md](02-strateg.md) |
-| **G1** | Gubernator | mały obóz (< 15 osób) dołącza do najbliższego własnego | `AbandonSettlementCommand` | tura decyzyjna | [03-gubernator.md#g1](03-gubernator.md#g1-mały-obóz-dołącza-do-innego) |
-| **G2** | Gubernator | głodny lub zmarznięty obóz zmienia miejsce w zasięgu 10 pól: przenosi się, zajmuje pustą osadę albo wypędza słabszy obcy obóz | `MoveSettlementCommand`, `OccupySettlementCommand`, `ConquerSettlementCommand` | co turę (gdy głoduje), inaczej co 3 tury | [03-gubernator.md#g2](03-gubernator.md#g2-przeniesienie-obozu-zajęcie-albo-wypędzenie) |
-| **G3** | Gubernator | daleka wędrówka (11–40 pól), gdy w zasięgu nic nie ma | `JourneyCommand` | tura decyzyjna, po nieudanym G2 | [03-gubernator.md#g3](03-gubernator.md#g3-daleka-wędrówka) |
-| **G4** | Gubernator | obóz osiada jako wioska rolnicza | `SettleCommand` | tura decyzyjna | [03-gubernator.md#g4](03-gubernator.md#g4-osiedlenie-się-wioska) |
-| **G5** | Gubernator | zatłoczony obóz wysyła 40% ludzi na nowe miejsce | `SplitSettlementCommand` albo `OccupySettlementCommand` | tura decyzyjna | [03-gubernator.md#g5](03-gubernator.md#g5-odłam-nowy-obóz) |
-| **G6** | Gubernator | zabranie dóbr z porzuconej osady w pobliżu | `PlunderSettlementCommand` | tura decyzyjna | [03-gubernator.md#g6](03-gubernator.md#g6-zabranie-porzuconych-dóbr) |
-| **T1** | Skarbnik | jaką recepturę robią rzemieślnicy osady | `SetRecipeCommand` | tura decyzyjna | [04-skarbnik.md](04-skarbnik.md) |
-| **U1** | Uczony | jaką technologię badać | `SetResearchCommand` | gdy nic nie jest badane | [05-uczony.md](05-uczony.md) |
-| **D1** | Dyplomata | przyjąć czy odrzucić propozycję umowy | `AnswerProposalCommand` | co turę (reaktywnie) | [10-dyplomata.md](10-dyplomata.md#d1-odpowiedź-na-propozycję-reaktywna) |
-| **D2** | Dyplomata | jeden krok wobec spotkanych: handel, pakt o nieagresji, sojusz obronny, wojna, pokój | `ProposeTreatyCommand`, `DeclareWarCommand` | co 50 lat (rozłożone) | [10-dyplomata.md](10-dyplomata.md#d2-przegląd-stosunków-proaktywny) |
+| **S1** | Strateg | wagi 6 celów i kierunek ekspansji | `SetStrategyCommand` | co 15 własnych kroków (rozłożone) i od razu po wejściu w nową erę | [02-strateg.md](02-strateg.md) |
+| **G1** | Gubernator | mały obóz (< 15 osób) dołącza do najbliższego własnego | `AbandonSettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g1](03-gubernator.md#g1-mały-obóz-dołącza-do-innego) |
+| **G2** | Gubernator | głodny lub zmarznięty obóz zmienia miejsce w zasięgu 10 pól: przenosi się, zajmuje pustą osadę albo wypędza słabszy obcy obóz | `MoveSettlementCommand`, `OccupySettlementCommand`, `ConquerSettlementCommand` | w każdym własnym kroku (gdy głoduje), inaczej co 3 własne kroki; od razu po napadzie | [03-gubernator.md#g2](03-gubernator.md#g2-przeniesienie-obozu-zajęcie-albo-wypędzenie) |
+| **G3** | Gubernator | daleka wędrówka (11–40 pól), gdy w zasięgu nic nie ma | `JourneyCommand` | własny krok na decyzje wolne, po nieudanym G2 | [03-gubernator.md#g3](03-gubernator.md#g3-daleka-wędrówka) |
+| **G4** | Gubernator | obóz osiada jako wioska rolnicza | `SettleCommand` | własny krok na decyzje wolne | [03-gubernator.md#g4](03-gubernator.md#g4-osiedlenie-się-wioska) |
+| **G5** | Gubernator | zatłoczony obóz wysyła 40% ludzi na nowe miejsce | `SplitSettlementCommand` albo `OccupySettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g5](03-gubernator.md#g5-odłam-nowy-obóz) |
+| **G6** | Gubernator | zabranie dóbr z porzuconej osady w pobliżu | `PlunderSettlementCommand` | własny krok na decyzje wolne | [03-gubernator.md#g6](03-gubernator.md#g6-zabranie-porzuconych-dóbr) |
+| **T1** | Skarbnik | jaką recepturę robią rzemieślnicy osady | `SetRecipeCommand` | własny krok na decyzje wolne | [04-skarbnik.md](04-skarbnik.md) |
+| **U1** | Uczony | jaką technologię badać | `SetResearchCommand` | gdy nic nie jest badane (reaktywnie, każdy krok świata) | [05-uczony.md](05-uczony.md) |
+| **D1** | Dyplomata | przyjąć czy odrzucić propozycję umowy | `AnswerProposalCommand` | każdy krok świata (reaktywnie) | [10-dyplomata.md](10-dyplomata.md#d1-odpowiedź-na-propozycję-reaktywna) |
+| **D2** | Dyplomata | jeden krok wobec spotkanych: handel, pakt o nieagresji, sojusz obronny, wojna, pokój | `ProposeTreatyCommand`, `DeclareWarCommand` | co 50 lat we własnym kroku (rozłożone); od razu po wypowiedzianej wojnie albo napadzie | [10-dyplomata.md](10-dyplomata.md#d2-przegląd-stosunków-proaktywny) |
 
-**Tura decyzyjna** (tzw. drugi zegar): pierwsza tura każdego okresu o długości tury ery. Na Ziemi każda tura jest decyzyjna; na
-planecie z porami roku na żywo tura jest krótsza, a decyzje „wolne” zapadają raz na długość tury ery (ADR 0013).
+**Własny krok na decyzje wolne:** własny krok cywilizacji, który zaczyna okres o długości kroku jej ery (`WorldClock.PlansNow`). Na
+Ziemi to każdy własny krok (poza krótszym krokiem zaraz po zmianie ery); na planecie z porami roku na żywo krok jest krótszy, a
+decyzje „wolne” zapadają raz na długość kroku ery (ADR 0013, ADR 0018).
 
 Procesy, które **nie są decyzjami**, ale dostarczają AI danych (opisane w [06-wiedza-i-relacje.md](06-wiedza-i-relacje.md)):
 
@@ -116,3 +121,4 @@ w `docs/systems/`:
 | --- | --- | --- |
 | 2026-11-06 | 4c | Pierwsza wersja: wszystkie decyzje etapów 3c–4c, parametry, uwagi, statystyki z 3 seedów. |
 | 2026-11-06 | 4d | Dyplomata (D1, D2, wojna i pokój, sojusznicy), zakaz wypędzeń przez umowy i premia w wojnie (G2), wagi celów i cechy używane w dyplomacji, nowe parametry z `data/diplomacy.json`, nowe statystyki i wykres. |
+| 2026-11-06 | zegar (ADR 0018) | Rytm każdej cywilizacji: decyzje proaktywne we własnym kroku, reaktywne (alarmy wojny i napadu, propozycje, wybór badania) w każdym kroku świata; nowe reakcje D2 i G2; odstępy AI w własnych krokach (`reviewEverySteps`, `searchEverySteps`, `minStepsBetweenMoves`); zwiad, widzenie i pogłoski w własnym kroku; nowe statystyki, wykres rytmów i ludności przed/po. |

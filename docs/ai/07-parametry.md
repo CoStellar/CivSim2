@@ -10,7 +10,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | Klucz | Wartość | Jednostka | Decyzje | Znaczenie |
 | --- | --- | --- | --- | --- |
 | `pickAmongTop` | 3 | działania | wszystkie | spośród ilu najlepszych AI losuje (1 = zawsze najlepsze) |
-| `reviewEveryTurns` | 15 | **tury** | S1 | co ile tur strateg robi przegląd |
+| `reviewEverySteps` | 15 | własne kroki | S1 | co ile własnych kroków cywilizacji strateg robi przegląd (ADR 0018) |
 | `directionBonusPercent` | 15 | % | G2, G3, G5 | premia dla miejsc w stronę celu ekspansji |
 | `recipeSwitchBetterByPercent` | 25 | % | T1 | o ile nowa receptura musi być lepsza |
 | `crowdingLowPercent` | 50 | % | S1 | do tego zatłoczenia waga ekspansji minimalna |
@@ -21,7 +21,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `fedBadlyPercent` | 60 | % | S1 | do tego najedzenia waga głodu maksymalna |
 | `hungerWeightMax` | 1500 | ‰ | S1 | najwyższa waga bezpieczeństwa i dobrobytu |
 | `splitMinPercentOfLevel` | 50 | % | G5 | najniższy próg zatłoczenia dla odłamu |
-| `searchEveryTurns` | 3 | **tury** | G2 | co ile tur szuka nie mocno głodny obóz |
+| `searchEverySteps` | 3 | własne kroki | G2 | co ile własnych kroków szuka nie mocno głodny obóz |
 | `starvingFedPercent` | 85 | % | G2 | poniżej tego najedzenia obóz szuka co turę |
 
 ## `data/population.json`
@@ -31,7 +31,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `migration.maxMoveCells` | 10 | pola | G1, G2, G5, G6, marsz G3 | zasięg jednego ruchu |
 | `migration.moveWhenFedBelowPercent` | 95 | % | G2 | poniżej tego obóz jest „głodny” |
 | `migration.moveWhenBetterByPercent` | 30 | % | G2 (G3: × 2) | histereza przeprowadzki |
-| `migration.minTurnsBetweenMoves` | 2 | **tury** | G2, G3 | odpoczynek po przeprowadzce |
+| `migration.minStepsBetweenMoves` | 2 | własne kroki | G2, G3 | odpoczynek po przeprowadzce (nie dotyczy reakcji na napad) |
 | `migration.distancePenaltyPercentPerCell` | 3 | % na pole | G2, G5 | spadek bliskości |
 | `migration.splitAbovePercentOfLevel` | 80 | % | G5 | bazowy próg zatłoczenia |
 | `migration.splitPercent` | 40 | % | G5 | jaka część ludzi odchodzi |
@@ -64,7 +64,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `declareWarAbove` | 1,5 | ocena | D2 | próg wypowiedzenia wojny |
 | `retryYears` | 100 | lata | D2 | po odmowie nie proponuje tego samego |
 | `reachCells` | 16 | pola | D1, D2, handel | zasięg handlu i paktu |
-| `tradeSharePercent` | 50 | **% na turę** | handel | jaka część nadwyżki idzie przez bramę |
+| `tradeSharePercent` | 50 | **% na krok** | handel | jaka część nadwyżki idzie przez bramę (w kroku, który ma któraś ze stron) |
 | `witnessPercent` | 50 | % | D3 | jak mocno złamanie umowy pamiętają świadkowie |
 | `allyJoinBasePerMille` | 300 | ‰ | D3 | szansa dołączenia sojusznika przy lojalności 0 |
 | `warRaidPercent` | 150 | % | G2 | premia za wypędzanie obozów wroga w wojnie |
@@ -90,7 +90,8 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `trade.json` `priceRangePercent` | 25–400 | T1 | granice cen wewnętrznych |
 | `goods.json` wartości towarów | różne | T1 | podstawa cen |
 | `relations.json` | patrz [06](06-wiedza-i-relacje.md) | G2 przez sympatię | pamięć relacji |
-| `eras.json` `monthsPerTurn` | 600 (kamień), 300 (neolit), … | wszystkie zegary | długość tury |
+| `eras.json` `monthsPerTurn` | 600 (kamień), 300 (neolit), 240 (brąz), … | wszystkie zegary | rytm cywilizacji w tej erze: długość jej kroku (ADR 0018) |
+| `relations.json` `rumorChancePercentPerCentury` | 20 | R5 | szansa pogłoski na parę, przeliczona na miesiące własnego kroku |
 | `effects.json` `cold_tolerance` | ogień +4, garbarstwo +4 | wygoda | przesuwa granicę zimna |
 
 ## Liczby zaszyte w kodzie (nie w danych)
@@ -108,6 +109,8 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | wygoda < 100% | `Decide` | G2 | „zmarznięty” wyzwala szukanie |
 | sympatia / 20 | `Place` | G2 | siła czynnika opinii |
 | 1 000 000 000 | `ScholarAdvisor.TechnologyWorth` | U1 | wartość każdej technologii |
+| alarmy `WarDeclared`, `Attacked` | `WorldClock.cs`, `Treaties.DeclareWar`, `Contacts.RecordAttack` | D2, G2 | co budzi reakcję poza rytmem |
+| 84 miesiące × numer cywilizacji | `DiplomatAdvisor.IssueCommands` | D2 | rozłożenie przeglądów dyplomaty (7 lat na cywilizację) |
 | kwadrat ilorazu kosztów | `ScholarAdvisor` | U1 | jak mocno taniość przeważa |
 | 3000 | `SetStrategyCommand.MaxWeight` | S1 | najwyższa dozwolona waga celu |
 | 3 | `Chooser.MaxRoom` | wszystkie | najwięcej działań w losowaniu |

@@ -38,6 +38,7 @@ public static class GameStateHash
         h.Add((int)state.Settings.Relief);
         h.Add((int)state.Settings.Resources);
         h.Add(state.Turn);
+        h.Add(state.StepMonths);
 
         Span<RandomState> rng = stackalloc RandomState[RandomStreams.Count];
         state.Random.CopyStates(rng);
@@ -113,6 +114,11 @@ public static class GameStateHash
             h.Add(c.ExpansionTarget);
             h.Add(c.StrategyReviewMonth);
             h.Add(c.StrategyEra);
+            h.Add(c.NextStepMonth);
+            h.Add(c.StepStartMonth);
+            h.Add(c.StepMonths);
+            h.Add(c.Steps);
+            h.Add((int)c.Alarms);
             h.Add(c.Relations.Count);
             foreach (Diplomacy.Relation r in c.Relations)
             {

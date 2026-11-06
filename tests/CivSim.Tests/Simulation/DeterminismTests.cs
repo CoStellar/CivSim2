@@ -64,6 +64,7 @@ public class DeterminismTests
         Assert.Equal(GoldenHash, RunAndHash(2026, 100));
     }
 
-    // Stage 4d: treaties, wars and proposals joined the state; diplomats and foreign trade run every turn.
-    private const ulong GoldenHash = 18123462920090020196UL;
+    // ADR 0018: the world clock and the civilizations' own rhythms joined the state (in a world where everyone is in the
+    // same era the simulation runs as before).
+    private const ulong GoldenHash = 4464857234104868100UL;
 }

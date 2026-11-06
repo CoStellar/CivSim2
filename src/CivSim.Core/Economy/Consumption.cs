@@ -54,10 +54,13 @@ public sealed class ConsumptionSystem : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        int months = state.MonthsPerTurn(_content);
         foreach (SettlementState s in state.Settlements)
         {
-            Consume(s, months);
+            int months = WorldClock.MonthsOf(state, s.Owner);
+            if (months > 0)
+            {
+                Consume(s, months); // a civilization that waits for its own step eats then, for the whole step (ADR 0018)
+            }
         }
     }
 

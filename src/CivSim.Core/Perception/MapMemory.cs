@@ -35,9 +35,9 @@ public static class MapMemory
             }
 
             CivilizationState? civ = state.FindCivilization(s.Owner);
-            if (civ is null)
+            if (civ is null || !Simulation.WorldClock.Steps(civ))
             {
-                continue;
+                continue; // a civilization looks around in its own steps (ADR 0018)
             }
 
             if (civ.SeenYear.Length != geo.CellCount)
@@ -77,7 +77,7 @@ public static class MapMemory
             }
 
             CivilizationState? civ = state.FindCivilization(s.Owner);
-            if (civ is null || civ.SeenYear.Length != geo.CellCount)
+            if (civ is null || civ.SeenYear.Length != geo.CellCount || !Simulation.WorldClock.Steps(civ))
             {
                 continue;
             }
@@ -307,9 +307,9 @@ public sealed class JourneySystem(GameContent content) : ITurnSystem
         for (int n = 0; n < state.Settlements.Count; n++)
         {
             SettlementState s = state.Settlements[n];
-            if (s.JourneyTarget == SettlementState.NoJourney)
+            if (s.JourneyTarget == SettlementState.NoJourney || Simulation.WorldClock.MonthsOf(state, s.Owner) == 0)
             {
-                continue;
+                continue; // a camp walks one stretch per own step of its civilization (ADR 0018)
             }
 
             WorldState world = state.Worlds[s.World.Value];

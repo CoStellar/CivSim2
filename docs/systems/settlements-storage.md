@@ -5,7 +5,7 @@
 **Faza tury:** 7. Gospodarka, na samym końcu (psucie i limity magazynów, GDD 11.1). Czas gry przesuwa się w fazie 11 (zapis).
 
 ## Dane wejściowe i wyjściowe
-- Czyta: `GameState.Settlements`, długość tury z `data/eras.json` (era najbardziej zaawansowanej żywej cywilizacji), tempo psucia z `data/goods.json`, pojemność poziomu osady z `data/settlements.json`.
+- Czyta: `GameState.Settlements`, długość kroku cywilizacji z `data/eras.json` (jej własna era, ADR 0018; osada opuszczona: krok świata), tempo psucia z `data/goods.json`, pojemność poziomu osady z `data/settlements.json`.
 - Zmienia: zapasy w magazynach osad (`SettlementState.Stock`), czas gry `GameState.Month`.
 - Publikuje w migawce: każdą osadę (właściciel, pole, nazwa, poziom, zapasy) i czas gry. Serwer wysyła graczowi zapasy tylko jego własnych osad; cudze osady widzi bez zawartości magazynu, i tylko na polach, które zna. Obserwator widzi wszystko.
 
@@ -19,7 +19,7 @@ flowchart LR
   C --> T["Tura"]
   T --> S["Psucie: zapas × udział, który przetrwał turę"]
   S --> L["Limit: nadwyżka ponad pojemność<br/>znika proporcjonalnie"]
-  L --> M["Czas gry += długość tury"]
+  L --> M["Czas gry += krok świata"]
   M --> V["Migawka → widok gracza i obserwatora"]
 ```
 

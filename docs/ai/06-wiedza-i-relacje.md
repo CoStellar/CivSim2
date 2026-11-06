@@ -7,8 +7,8 @@ To nie są decyzje. To dane, z których AI korzysta przy decyzjach.
 
 ## W1: Pamięć mapy
 
-- Co turę każda zamieszkana osada **widzi 6 pól** wokół siebie (`sightCells`).
-- Co turę każda zamieszkana osada wysyła **zwiadowcę** w losowym kierunku (strumień `population`): idzie do 15 pól (`scoutCells`)
+- W każdym **własnym kroku** cywilizacji (ADR 0018) każda jej zamieszkana osada **widzi 6 pól** wokół siebie (`sightCells`).
+- W każdym własnym kroku każda zamieszkana osada wysyła **zwiadowcę** w losowym kierunku (strumień `population`): idzie do 15 pól (`scoutCells`)
   prosto po lądzie i lodzie morskim, skręca losowo przy wodzie, widzi pola obok swojej drogi.
 - Pole jest **znane** przez 300 lat od ostatniego zobaczenia (`oralMemoryYears`), potem zapomniane, chyba że plemię wróci.
 - Kto używa: G2 i G3 (kandydaci muszą być znani), S1 (cel ekspansji musi być znany), W2.
@@ -20,13 +20,13 @@ znanego pola, nawet jeśli tych pól nie widziało. Patrz [uwagi](08-ocena-i-uwa
 ## W2: Droga wędrówki
 
 Najkrótsza droga (przeszukiwanie wszerz) po polach **znanych** i przechodnich (ląd, lód morski), nie dalej niż 40 pól od startu.
-Używana do sprawdzenia, czy G3 ma sens, i potem co turę do marszu.
+Używana do sprawdzenia, czy G3 ma sens, i potem w każdym własnym kroku do marszu.
 
 ## R1: Pierwszy kontakt
 
 Cywilizacja poznaje inną (poziom „spotkana”), gdy:
 
-- jej osada albo zwiadowca **zobaczy** zamieszkaną osadę tamtej w tym roku,
+- jej osada albo zwiadowca **zobaczy** zamieszkaną osadę tamtej w tym roku (czyli we własnym kroku, bo tylko wtedy patrzy),
 - ich **strefy wpływów się stykają** (dwa sąsiednie pola należą do różnych cywilizacji),
 - tamta **napadnie** jej obóz (G2 z wypędzeniem).
 
@@ -45,7 +45,8 @@ Pierwsze wrażenie nie zanika.
 
 ## R3: Pamięć napaści
 
-Gdy obóz A próbuje wypędzić obóz B (wygrana czy przegrana), B zapamiętuje: sympatia −50, zaufanie −20, zanika liniowo przez
+Gdy obóz A próbuje wypędzić obóz B (wygrana czy przegrana), B dostaje alarm „napadnięto nasz obóz” (reakcja w najbliższym kroku świata,
+[wspólne mechanizmy, pkt 7](01-wspolne-mechanizmy.md#7-rytm-cywilizacji-decyzje-proaktywne-i-reaktywne-adr-0018)) i zapamiętuje: sympatia −50, zaufanie −20, zanika liniowo przez
 `150 + 150 × mściwość/1000` lat (150–300 lat). A tylko „widzi” B (kontakt bez wspomnienia).
 
 ## R4: Spór graniczny
@@ -55,8 +56,9 @@ druga ma trwające wydarzenie „spór graniczny”: sympatia spada o 1 punkt na
 
 ## R5: Pogłoski
 
-Co turę cywilizacja A może usłyszeć od znanej cywilizacji B o cywilizacji C, której A jeszcze nie zna. Szansa na każdą taką parę:
-20% na stulecie przeliczone na długość tury (w epoce kamienia 10% na turę), najwyżej jedna pogłoska na turę. Miejsce jest przesunięte
+W swoim kroku cywilizacja A może usłyszeć od znanej cywilizacji B o cywilizacji C, której A jeszcze nie zna. Szansa na każdą taką
+parę: 20% na stulecie przeliczone dokładnie na miesiące jej kroku, w milionowych (w epoce kamienia 10% na krok, przy kroku
+3-miesięcznym 0,5%; od ADR 0018 kroki krótsze niż rok nie zawyżają szansy), najwyżej jedna pogłoska na krok. Miejsce jest przesunięte
 o do 50% odległości, liczba ludzi przekłamana o ±50%. Dziś pogłoski **nie wpływają na decyzje** (tylko kronika).
 
 ## Sympatia i zaufanie

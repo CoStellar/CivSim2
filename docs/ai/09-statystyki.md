@@ -2,7 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 tur, seedy 7, 23 i 42, commit `8cc73e1` (etap 4d). Polecenie:
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata (ok. 28,5–29,5 tys. lat), seedy 7, 23 i 42,
+commit `be7e645` (etap 4d + zegar świata, ADR 0018). W nawiasach liczby sprzed zegara (commit `8cc73e1`). Polecenie:
 
 ```
 dotnet run --project src/CivSim.Headless -c Release -- --seed 7 --turns 1000 --map-size standard --decisions why7.csv
@@ -12,26 +13,30 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+Rytmy cywilizacji i ludność przed zegarem i po nim (`python3 docs/ai/tools/clock_chart.py <przed> <po>`, katalogi ze `stats*.csv`):
+
+![Rytmy cywilizacji i ludność przed/po](img/zegar_rytmy.png)
+
 ## Liczba decyzji w 1000 tur
 
 | Decyzja | Id | Seed 7 | Seed 23 | Seed 42 |
 | --- | --- | ---: | ---: | ---: |
-| strateg ustawia strategię | S1 | 583 | 608 | 678 |
-| uczony wybiera badanie | U1 | 79 | 113 | 106 |
-| skarbnik zmienia recepturę | T1 | 1539 | 1113 | 1527 |
-| obóz przenosi się | G2 | 1800 | 1283 | 2507 |
-| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 277 | 295 | 438 |
-| wypędzenie obcego obozu | G2 | 137 | 132 | 36 |
-| odłam zakłada nowy obóz | G5 | 1156 | 1291 | 1433 |
-| mały obóz dołącza do innego | G1 | 1018 | 1158 | 1340 |
-| obóz osiada (wioska) | G4 | 148 | 172 | 143 |
-| daleka wędrówka | G3 | 3 | 1 | 6 |
-| zabranie porzuconych dóbr | G6 | 0 | 0 | 6 |
-| dyplomata proponuje umowę albo pokój | D2 | 230 | 112 | 666 |
-| dyplomata przyjmuje propozycję | D1 | 39 | 21 | 32 |
-| dyplomata odrzuca propozycję | D1 | 158 | 81 | 619 |
-| dyplomata wypowiada wojnę | D2 | 19 | 5 | 1 |
-| **razem** | | **7186** | **6385** | **9538** |
+| strateg ustawia strategię | S1 | 436 (583) | 488 (608) | 479 (678) |
+| uczony wybiera badanie | U1 | 84 (79) | 116 (113) | 107 (106) |
+| skarbnik zmienia recepturę | T1 | 2514 (1539) | 1926 (1113) | 2737 (1527) |
+| obóz przenosi się | G2 | 1639 (1800) | 1426 (1283) | 2413 (2507) |
+| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 248 (277) | 266 (295) | 379 (438) |
+| wypędzenie obcego obozu | G2 | 138 (137) | 118 (132) | 39 (36) |
+| odłam zakłada nowy obóz | G5 | 1142 (1156) | 1368 (1291) | 1438 (1433) |
+| mały obóz dołącza do innego | G1 | 978 (1018) | 1225 (1158) | 1345 (1340) |
+| obóz osiada (wioska) | G4 | 163 (148) | 174 (172) | 134 (143) |
+| daleka wędrówka | G3 | 3 (3) | 2 (1) | 8 (6) |
+| zabranie porzuconych dóbr | G6 | 0 (0) | 2 (0) | 1 (6) |
+| dyplomata proponuje umowę albo pokój | D2 | 273 (230) | 110 (112) | 696 (666) |
+| dyplomata przyjmuje propozycję | D1 | 40 (39) | 19 (21) | 37 (32) |
+| dyplomata odrzuca propozycję | D1 | 199 (158) | 78 (81) | 641 (619) |
+| dyplomata wypowiada wojnę | D2 | 19 (19) | 3 (5) | 1 (1) |
+| **razem** | | **7876** (7186) | **7321** (6385) | **10455** (9538) |
 
 Co z tego widać:
 
@@ -40,7 +45,14 @@ Co z tego widać:
 - Odłamów i dołączeń jest podobnie dużo ([uwagi, pkt 9](08-ocena-i-uwagi.md#9-inne-drobne-rzeczy)).
 - Wędrówki i łupy prawie się nie zdarzają.
 - Dyplomacja: na 12 cywilizacji 1–19 wojen w 1000 tur; większość propozycji jest odrzucana ([uwagi, pkt 9](08-ocena-i-uwagi.md#9-inne-drobne-rzeczy)).
-- Liczby różnią się od wersji 4c, bo dyplomacja zmienia przebieg gry (pakty blokują wypędzenia, wojny je zachęcają).
+- **Zegar świata (ADR 0018):** do pierwszego wejścia w neolit (tura 140–160) gry są identyczne jak przedtem. Potem plemiona z epoki
+  kamienia liczą się co 50 lat zamiast co 25, więc strateg robi o ok. 25% mniej przeglądów, a przeprowadzek jest trochę mniej.
+- **Skarbnik:** więcej zmian receptur, ale to ten sam stary efekt, tylko w innym miejscu historii: kilka osad jednej sieci
+  przełącza się między „receptura 1” a „brak receptury” co 2–8 kroków, gdy wartość dodana spada do zera i wraca. W seedzie 7 przed
+  zmianą działo się to w turach 98–158 (13 przełączeń na osadę), po zmianie w turach 631–1000 (91 przełączeń na osadę). Poprawimy to
+  w PR B (wartości), bo tam zmienia się ocena receptur.
+- Gra jest chaotyczna: od neolitu każda drobna zmiana prowadzi do innej historii, więc pojedyncze różnice w tabeli nie są „skutkiem”
+  zegara. Ogólny obraz (proporcje decyzji) się nie zmienił.
 
 ## Przykładowe wpisy „Dlaczego?” (jeden na rodzaj decyzji)
 

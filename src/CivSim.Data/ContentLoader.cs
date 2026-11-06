@@ -288,7 +288,7 @@ public static class ContentLoader
             MaxMoveCells = migration.Int("maxMoveCells", 0, 50),
             MoveWhenFedBelowPercent = migration.Int("moveWhenFedBelowPercent", 0, 100),
             MoveWhenBetterByPercent = migration.Int("moveWhenBetterByPercent", 0, 1000),
-            MinTurnsBetweenMoves = migration.Int("minTurnsBetweenMoves", 0, 1000),
+            MinStepsBetweenMoves = migration.Int("minStepsBetweenMoves", 0, 1000),
             ComfortColdBelow = comfort.Int("coldBelow", -60, 60),
             ComfortHotAbove = comfort.Int("hotAbove", -60, 80),
             ComfortPercentPerDegree = comfort.Int("percentPerDegree", 0, 100),
@@ -1008,7 +1008,7 @@ public static class ContentLoader
         return new AiRules
         {
             PickAmongTop = r.Int("pickAmongTop", 1, 3),
-            ReviewEveryTurns = r.Int("reviewEveryTurns", 1, 100),
+            ReviewEverySteps = r.Int("reviewEverySteps", 1, 100),
             DirectionBonusPercent = r.Int("directionBonusPercent", 0, 100),
             RecipeSwitchBetterByPercent = r.Int("recipeSwitchBetterByPercent", 0, 500),
             CrowdingLowPercent = r.Int("crowdingLowPercent", 0, 99),
@@ -1019,7 +1019,7 @@ public static class ContentLoader
             FedBadlyPercent = r.Int("fedBadlyPercent", 0, 99),
             HungerWeightMax = r.Int("hungerWeightMax", 1000, 3000),
             SplitMinPercentOfLevel = r.Int("splitMinPercentOfLevel", 1, 100),
-            SearchEveryTurns = r.Int("searchEveryTurns", 1, 20),
+            SearchEverySteps = r.Int("searchEverySteps", 1, 20),
             StarvingFedPercent = r.Int("starvingFedPercent", 0, 100),
         };
     }

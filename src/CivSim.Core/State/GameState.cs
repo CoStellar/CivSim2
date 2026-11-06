@@ -57,10 +57,14 @@ public sealed class GameState
     public Diplomacy.TreatyBook Treaties { get; } = new();
 
     /// <summary>
-    /// Era that sets the turn length: the most advanced living civilization's era (provisional rule until
-    /// technologies and eras arrive in Stage 3f).
+    /// Months of the current world step (ADR 0018): from <see cref="Month"/> to the nearest month in which some
+    /// civilization steps. World systems (climate, regrowth, the sea) compute this many months; civilizations compute
+    /// their own <see cref="CivilizationState.StepMonths"/>. Set by <see cref="Simulation.WorldClock.Begin"/>.
     /// </summary>
-    public int CalendarEra()
+    public int StepMonths { get; internal set; }
+
+    /// <summary>The most advanced era among living civilizations (for reports).</summary>
+    public int TopEra()
     {
         int era = 0;
         foreach (CivilizationState c in _civilizations)
@@ -73,31 +77,6 @@ public sealed class GameState
 
         return era;
     }
-
-    /// <summary>
-    /// Months in the next turn (GDD 6.2); 600 (50 years) when no eras are loaded. On planets with live seasons a turn is
-    /// one step of the planet's year when that is shorter than the era's turn.
-    /// </summary>
-    public int MonthsPerTurn(GameContent content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        int months = EraMonthsPerTurn(content);
-        WorldGen.SeasonRules seasons = content.Seasons;
-        return seasons.Live(Settings.Planet) ? Math.Min(months, seasons.StepMonths(Settings.Planet)) : months;
-    }
-
-    /// <summary>
-    /// Months of a turn of the current era (GDD 6.2), before live seasons shorten it. Slow decisions (splits, plans)
-    /// are taken once per this many months; survival moves every turn ("two clocks", decision of 2026-11-05).
-    /// </summary>
-    public int EraMonthsPerTurn(GameContent content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        return content.Eras.Count == 0 ? 600 : content.Eras[Math.Min(CalendarEra(), content.Eras.Count - 1)].MonthsPerTurn;
-    }
-
-    /// <summary>True in the first turn of each era-length period: the turn for slow decisions.</summary>
-    public bool IsDecisionTurn(GameContent content) => Month % EraMonthsPerTurn(content) < MonthsPerTurn(content);
 
     /// <summary>Founds a settlement with an empty warehouse and returns it.</summary>
     public SettlementState FoundSettlement(CivId owner, WorldId world, HexCoord cell, string name, int level, int goodCount, int strataCount = 0)
@@ -150,11 +129,12 @@ public sealed class GameState
         NextSettlementId = nextSettlementId;
     }
 
-    /// <summary>Sets the time and the next settlement id while loading a save.</summary>
-    public void SetCountersForLoad(long month, int nextSettlementId)
+    /// <summary>Sets the time, the current world step and the next settlement id while loading a save.</summary>
+    public void SetCountersForLoad(long month, int nextSettlementId, int stepMonths = 0)
     {
         Month = month;
         NextSettlementId = nextSettlementId;
+        StepMonths = stepMonths;
     }
 
     /// <summary>Creates a new game: Earth plus <see cref="GameSettings.CivilizationCount"/> AI civilizations.</summary>
@@ -220,6 +200,7 @@ public sealed class GameState
             new Population.Influence(content).Recompute(state);
         }
 
+        Simulation.WorldClock.Begin(content, state);
         Perception.MapMemory.See(content, state);
         return state;
     }

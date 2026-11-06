@@ -129,23 +129,38 @@ GDD 8.6. Obecny stan ma przewagę:
 | G3 daleka wędrówka | 60% od lepszego z (obecne miejsce, najlepsze w zasięgu) | 2 × powyższe, zaszyte w kodzie |
 | T1 zmiana receptury | 25% od obecnej | `recipeSwitchBetterByPercent` |
 
-## 7. Dwa zegary i rzadsze sprawdzanie
+## 7. Rytm cywilizacji: decyzje proaktywne i reaktywne (ADR 0018)
 
-- **Szybki zegar (co turę):** G2 (przeniesienie głodnego obozu). Ale obóz, który nie głoduje mocno (najedzony ≥ 85%), szuka tylko
-  co 3 tury, rozłożone między obozy: gdy `(numer tury + numer obozu) mod 3 = 0` (`searchEveryTurns`). Na planecie z porami roku
-  na żywo szuka co turę.
-- **Wolny zegar (tura decyzyjna):** G1, G3, G4, G5, G6, T1. Na Ziemi każda tura jest decyzyjna.
-- **Strateg:** co 15 tur na cywilizację (`reviewEveryTurns`), pierwszy przegląd w turze 1, potem przesunięcie zależne od numeru
-  cywilizacji, żeby nie wszyscy liczyli w tej samej turze; od razu po wejściu w nową erę.
-- **Uczony:** tylko wtedy, gdy cywilizacja nic nie bada (zaraz po odkryciu technologii).
-- Obóz po przeprowadzce odpoczywa **2 tury** (`minTurnsBetweenMoves`), zanim znów rozważy G2/G3.
+Kod: `src/CivSim.Core/Simulation/WorldClock.cs`.
+
+Czas gry to licznik. Każda cywilizacja ma **własny krok** o długości tury swojej ery (epoka kamienia 50 lat, neolit 25, brąz 20, …),
+przypięty do kalendarza (rytm 25 lat: lata 0, 25, 50…). Pętla przeskakuje do najbliższego roku, w którym ktoś ma krok
+(„krok świata”). Rada liczy decyzje cywilizacji według tabeli:
+
+| Rodzaj | Decyzje | Kiedy |
+| --- | --- | --- |
+| proaktywne, szybkie | G2 (przeniesienie głodnego albo zmarzniętego obozu) | w każdym własnym kroku; obóz, który nie głoduje mocno (najedzony ≥ 85%), szuka co 3 własne kroki, gdy `(liczba własnych kroków − 1 + numer obozu) mod 3 = 0` (`searchEverySteps`); na planecie z porami roku na żywo w każdym |
+| proaktywne, wolne | G1, G3, G4, G5, G6, T1 | we własnym kroku, który zaczyna okres długości kroku ery (`WorldClock.PlansNow`); na Ziemi to każdy własny krok, poza krótszym krokiem zaraz po zmianie ery |
+| proaktywne, strateg | S1 | co 15 własnych kroków (`reviewEverySteps`), pierwszy przegląd w pierwszym kroku, potem przesunięcie `numer cywilizacji mod 15`; od razu w nowej erze |
+| proaktywne, dyplomata | D2 | raz na 50 lat (`reviewEveryYears`), we własnym kroku, który zawiera rok przeglądu ([dyplomata](10-dyplomata.md)) |
+| reaktywne | D1 (odpowiedź na propozycję), U1 (wybór badania, gdy nic nie jest badane) | w każdym kroku świata, także poza rytmem |
+| reaktywne, alarm „wypowiedziano nam wojnę” | D2 | w najbliższym kroku świata |
+| reaktywne, alarm „napadnięto nasz obóz” | D2 i G2 wszystkich obozów: szukają bezpieczniejszego miejsca od razu, nawet bez głodu i tuż po przeprowadzce (próg 30% zostaje) | w najbliższym kroku świata |
+
+- Obóz po przeprowadzce odpoczywa **2 własne kroki** (`minStepsBetweenMoves`), zanim znów rozważy G2/G3 (chyba że reaguje na napad).
+- Alarmy (`CivilizationState.Alarms`) ustawiają: wypowiedzenie wojny (`Treaties.DeclareWar`) i napad na obóz (`Contacts.RecordAttack`).
+  Rada kasuje je po fazie decyzji, więc każdy alarm daje jedną reakcję.
+- Cywilizacja, która czeka na swój krok, nie zbiera, nie je, nie rośnie, nie bada i nie widzi nic nowego. W swoim kroku liczy to
+  wszystko za cały krok naraz.
+- Gdy wszyscy są w tej samej erze, wszystko dzieje się jak przed ADR 0018 (sprawdzone na 3 seedach: statystyki identyczne do
+  pierwszego wejścia w neolit).
 
 ## 8. Kolejność i rozstrzyganie
 
 Kod: `src/CivSim.Core/Ai/Advisor.cs:136` (`AiCouncil`), `src/CivSim.Core/Commands/CommandQueue.cs`.
 
 - Doradcy działają po kolei: **gubernator → strateg → skarbnik → uczony → dyplomata**. Strateg czyta wartości miejsc policzone przez gubernatora
-  w tej samej turze; jego nowa strategia działa od **następnej** tury.
+  w tym samym kroku; jego nowa strategia działa od **następnego** własnego kroku.
 - Gubernator przechodzi cywilizacje po kolei (po numerze), a w cywilizacji obozy po kolei. Wybrane pole jest od razu **rezerwowane na
   tę turę** (`Take`), więc następny obóz go nie wybierze. Wcześniejsze cywilizacje i obozy mają więc pierwszeństwo przy wyborze.
 - Komendy rozstrzyga faza 4 w kolejności: kategoria (dyplomacja → gospodarka → ruch), potem cywilizacja (kolejność **przesuwa się co

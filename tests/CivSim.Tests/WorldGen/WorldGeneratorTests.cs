@@ -46,8 +46,8 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    // Stage 4d: the state hash includes the (still empty) treaty book (the map itself is unchanged).
-    private const ulong GoldenWorldHash = 15163653490831164499UL;
+    // ADR 0018: the state hash includes the clock of every civilization (the map itself is unchanged).
+    private const ulong GoldenWorldHash = 5574553073811392289UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

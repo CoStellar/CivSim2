@@ -1,7 +1,8 @@
 # Plan: czas w latach, każda wartość coś zmienia, priorytety technologii, migracje
 
 Stan na 2026-11-06, po etapie 4d. Odpowiedź na uwagi Patryka do `docs/ai/08-ocena-i-uwagi.md` (punkty 1–5).
-Plan do akceptacji: zmienia zasady gry, więc nic z tego nie jest jeszcze w kodzie.
+Plan zaakceptowany przez Patryka (2026-11-06) w kolejności A → B → C → D. **A (zegar) jest zrobione:** ADR 0018. W punkcie 4
+Patryk doprecyzował: licznik lat nic nie liczy, a czekająca cywilizacja nie liczy niczego (nie tylko decyzji).
 
 ## Punkt 2: czy lata i długość tury do siebie pasują? (sprawdzone w kodzie)
 
@@ -128,9 +129,9 @@ Pomiar: wykres „jak daleko od miejsca startu żyją ludzie” w czasie i liczb
 
 | PR | Zakres | Kiedy |
 | --- | --- | --- |
-| **A. Zegar** | punkt 4 + poprawki z punktu 2 + AI widzi siłę obcych tylko z pól widzianych w tym roku; ADR 0018 | **przed 4e**, bo wojna (reakcja na atak) potrzebuje decyzji reaktywnych |
-| **B. Wartości** | punkty 1 i 3: priorytety technologii i towarów, rola każdej wagi i cechy, test martwych wartości, liczby do danych | po A, przed albo razem z 4e |
-| **C. Ziemia i migracje** | punkt 5 bez secesji | po B |
+| **A. Zegar** | **zrobione (ADR 0018, `feat/world-clock`)**: licznik świata, własne kroki cywilizacji przypięte do kalendarza, decyzje reaktywne (wojna, napad, propozycja, badanie) i proaktywne, odstępy AI we własnych krokach, pogłoski i przegląd dyplomaty bez błędów przy krokach < 1 roku | **przed 4e** |
+| **B. Wartości** | punkty 1 i 3: priorytety technologii i towarów, rola każdej wagi i cechy, test martwych wartości, liczby do danych; do tego przełączanie receptur „1 / brak” (09-statystyki) i AI widzi siłę obcych tylko z pól widzianych w swoim ostatnim kroku (przeniesione z A) | po A, przed albo razem z 4e |
+| **C. Ziemia i migracje** | punkt 5 bez secesji; do tego zwiad, widzenie i zasięg ruchu przeliczone na lata (przeniesione z A, bo zmieniają równowagę wędrówek) | po B |
 | **D. Nowe cywilizacje z odłamów** | secesja | w 4f |
 
 Każdy PR aktualizuje `docs/ai/` i pokazuje przed/po na wykresach z 3 seedów.

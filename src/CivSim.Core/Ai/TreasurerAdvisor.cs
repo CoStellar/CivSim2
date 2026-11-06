@@ -26,7 +26,7 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(queue);
-        if (_content.Recipes.Count == 0 || !state.IsDecisionTurn(_content))
+        if (_content.Recipes.Count == 0)
         {
             return;
         }
@@ -35,7 +35,8 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
         {
             SettlementState first = state.Settlements[members[0]];
             CivilizationState? civ = state.FindCivilization(first.Owner);
-            if (civ is null || !civ.IsAlive || civ.Controller != PlayerId.Ai)
+            // A planned decision: only in the own steps that start an era-length period (ADR 0018).
+            if (civ is null || civ.Controller != PlayerId.Ai || !Simulation.WorldClock.PlansNow(_content, state, civ))
             {
                 continue;
             }

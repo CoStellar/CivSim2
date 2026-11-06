@@ -123,7 +123,8 @@ public class ResearchTests
         List<string> lines = Technologies.Learn(Content, state, civ, Tech("tanning"));
         Assert.Equal(1, civ.Era);
         Assert.Contains(lines, l => l.EndsWith("entered the Neolithic.", System.StringComparison.Ordinal));
-        Assert.Equal(300, state.EraMonthsPerTurn(Content));             // the calendar follows the most advanced civilization
+        Assert.Equal(300, WorldClock.RhythmMonths(Content, state, civ)); // its own rhythm follows its own era (ADR 0018)
+        Assert.Equal(600, WorldClock.RhythmMonths(Content, state, state.Civilizations[1])); // the others keep theirs
     }
 
     [Fact]

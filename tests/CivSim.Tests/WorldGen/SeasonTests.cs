@@ -31,10 +31,11 @@ public class SeasonTests
         Assert.False(Content.Seasons.Live(Content.Planet("mars").Planet));
         Assert.True(Content.Seasons.Live(Content.Planet("uranus").Planet));
 
-        Assert.Equal(600, NewGame("earth").State.MonthsPerTurn(Content));
+        Assert.Equal(600, NewGame("earth").State.StepMonths);
         GameState uranus = NewGame("uranus").State;
-        Assert.Equal(126, uranus.MonthsPerTurn(Content)); // 84 years / 8
-        Assert.Equal(600, uranus.EraMonthsPerTurn(Content));
+        Assert.Equal(126, uranus.StepMonths); // 84 years / 8
+        Assert.Equal(126, WorldClock.RhythmMonths(Content, uranus, uranus.Civilizations[0]));
+        Assert.Equal(600, WorldClock.EraMonths(Content, uranus.Civilizations[0].Era));
     }
 
     [Fact]
@@ -44,13 +45,14 @@ public class SeasonTests
         int slow = 0;
         for (int t = 0; t < 24; t++)
         {
-            slow += runner.State.IsDecisionTurn(Content) ? 1 : 0;
+            slow += WorldClock.PlansNow(Content, runner.State, runner.State.Civilizations[0]) ? 1 : 0;
             runner.RunTurn();
         }
 
         // 24 turns × 10.5 years = 252 years: one slow turn in each 50-year period.
         Assert.InRange(slow, 5, 6);
-        Assert.True(NewGame("earth").State.IsDecisionTurn(Content));
+        GameState earth = NewGame("earth").State;
+        Assert.True(WorldClock.PlansNow(Content, earth, earth.Civilizations[0]));
     }
 
     [Fact]
