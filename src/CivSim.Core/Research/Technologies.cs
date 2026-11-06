@@ -89,6 +89,24 @@ public sealed class CivFacts
     /// <summary>Goods in all its warehouses, hundredths, by good id.</summary>
     public long[] Goods { get; set; } = [];
 
+    /// <summary>Cells of the zone (and water next to it) with each deposit, by deposit id (the scholar's worth of gathering).</summary>
+    public int[] DepositCells { get; set; } = [];
+
+    /// <summary>Cells of the zone (and water next to it) of each biome, by biome id.</summary>
+    public int[] BiomeCells { get; set; } = [];
+
+    /// <summary>Land cells of the zone.</summary>
+    public int LandCells { get; set; }
+
+    /// <summary>
+    /// Farming yield of the zone's land, summed over its land cells: 50 + fertility on cells fertile enough to farm, 0
+    /// elsewhere (grain per farmer grows with 50 + fertility; the scholar's worth of villages).
+    /// </summary>
+    public long FarmYield { get; set; }
+
+    /// <summary>Water cells next to the zone (counted once), filled while measuring.</summary>
+    private HashSet<int> Shore { get; } = [];
+
     /// <summary>Indices of other living civilizations with a settlement within contact distance, or trading with this one.</summary>
     public List<int> Neighbours { get; } = [];
 
@@ -101,7 +119,12 @@ public sealed class CivFacts
         var facts = new CivFacts[civs];
         for (int c = 0; c < civs; c++)
         {
-            facts[c] = new CivFacts { Goods = new long[content.Goods.Count] };
+            facts[c] = new CivFacts
+            {
+                Goods = new long[content.Goods.Count],
+                DepositCells = new int[content.Deposits.Count + 1],
+                BiomeCells = new int[content.Biomes.Count],
+            };
         }
 
         // Settlement id → owner index, for reading the claim layer.
@@ -161,6 +184,18 @@ public sealed class CivFacts
                     f.Deposits.Add(map.Deposit[i]);
                 }
 
+                if (content.Biomes[map.Biome[i]].IsWater)
+                {
+                    f.Shore.Add(i);
+                }
+                else
+                {
+                    f.BiomeCells[map.Biome[i]]++;
+                    f.DepositCells[map.Deposit[i]]++;
+                    f.LandCells++;
+                    f.FarmYield += map.Fertility[i] >= content.Population.MinFarmFertility ? 50 + map.Fertility[i] : 0;
+                }
+
                 if (!f.River)
                 {
                     HexCoord c = geo.FromIndex(i);
@@ -177,6 +212,7 @@ public sealed class CivFacts
                     int j = geo.Index(nc);
                     if (content.Biomes[map.Biome[j]].IsWater)
                     {
+                        f.Shore.Add(j);
                         f.Biomes.Add(map.Biome[j]);
                         if (map.Deposit[j] != 0)
                         {
@@ -184,6 +220,18 @@ public sealed class CivFacts
                         }
                     }
                 }
+            }
+
+            // Water cells counted once each, whichever zone cells they touch.
+            foreach (CivFacts f in facts)
+            {
+                foreach (int j in f.Shore)
+                {
+                    f.BiomeCells[map.Biome[j]]++;
+                    f.DepositCells[map.Deposit[j]]++;
+                }
+
+                f.Shore.Clear();
             }
         }
 

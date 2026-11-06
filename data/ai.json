@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "comment": "How the AI advisors decide (GDD 8.1-8.4, 7.6; stages 4a-4b). Every advisor scores its possible actions the same way: a base value times factors from response curves, times the strategist's goal weight and the character multiplier (0.5 + trait), minus the cost. pickAmongTop: how many of the best actions the AI draws among, chances by score (GDD 8.3); a civilization takes the best one outright with a chance equal to its caution. Strategist (every reviewEverySteps own steps of the civilization (ADR 0018), spread over civilizations, and at once in a new era): expansion weight from how full the camps are (up to crowdingLowPercent: expansionWeightMin, at crowdingHighPercent: expansionWeightMax); prosperity and security weight from hunger (fedWellPercent -> 1.0, fedBadlyPercent -> hungerWeightMax); an expansion target on the best known free land, which boosts places closer to it by directionBonusPercent. An expansive civilization splits camps earlier, but never below splitMinPercentOfLevel. Artisans switch recipes only when the new one is better by recipeSwitchBetterByPercent. A hungry or cold camp looks for a better place every searchEverySteps own steps (staggered), every own step when fed below starvingFedPercent or on planets with live seasons.",
+  "version": 3,
+  "comment": "How the AI advisors decide (GDD 8.1-8.4, 7.6; stages 4a-4b). Every advisor scores its possible actions the same way: a base value times factors from response curves, times the strategist's goal weight and the character multiplier (0.5 + trait), minus the cost. pickAmongTop: how many of the best actions the AI draws among, chances by score (GDD 8.3); a civilization takes the best one outright with a chance equal to its caution. Strategist (every reviewEverySteps own steps of the civilization (ADR 0018), spread over civilizations, and at once in a new era): expansion weight from how full the camps are (up to crowdingLowPercent: expansionWeightMin, at crowdingHighPercent: expansionWeightMax); prosperity and security weight from hunger (fedWellPercent -> 1.0, fedBadlyPercent -> hungerWeightMax); an expansion target on the best known free land, which boosts places closer to it by directionBonusPercent. An expansive civilization splits camps earlier, but never below splitMinPercentOfLevel. Artisans switch recipes only when the new one is better by recipeSwitchBetterByPercent. A hungry or cold camp looks for a better place every searchEverySteps own steps (staggered), every own step when fed below starvingFedPercent or on planets with live seasons. Values (PR B, 2026-11-06): every option serves a goal and is scored priority x cost factor. Food serves goalOfFood, every other good goalOfGoods. Scholar: a technology is worth what it gives this civilization per year (barter units): baseWorthPerPerson for any technology (science), fieldWorthPerPerson for the science/society/military field (science, influence, conquest), the yields of its gathering bonuses on the zone's cells (gatherWorthPercent; the goal of the good), its recipes (value added per year of the civilization's artisans; missingInputPercent while an input is neither held nor gathered), villageWorthPerPerson when it opens villages (security), effects by stat (perHundredPeoplePerPoint; cold tolerance only for the degrees the coldest camp lacks), and leadsToPercent of the best technology it opens the way to; each part times its goal weight and character. Cost factor = r x (r + (1 - r) x curiosity x curiosityCostReliefPercent), r = cheapest cost / this cost: without curiosity r squared. Treasurer: outputs minus inputs at internal prices (an input priced without the deciding settlement's own recipe demand), each good times its goal weight and character; valuables get tradeGoodsBonusPercent x tradefulness while goods flow to a trade partner. Strategist: science weight rises to scienceWeightMax when the best civilization met knows scienceBehindTechs technologies more; influence weight rises to influenceWeightMax with influenceMetCivs civilizations met. Governor: a move gets moveExpansionSharePercent of the expansion weight and expansiveness over staying; journeys must be journeyBetterByPercent better and lose journeyPenaltyPerMillePerCell per cell; far places on a lattice of farSearchEveryCells; the strategist's target loses all value at targetZeroAtJourneys journeys; settling needs settleFarmYieldPercent; plunder only below plunderBelowStoragePercent of storage; uncomfortableBelowPercent comfort starts a search; full sympathy or hatred moves the wish to drive out a camp by opinionSwingPercent. Diplomat: planned reviews are reviewStaggerYears apart between civilizations. Foreign camps and warriors count only on cells seen in the civilization's last own step.",
   "pickAmongTop": 3,
   "reviewEverySteps": 15,
   "directionBonusPercent": 15,
@@ -14,5 +14,60 @@
   "hungerWeightMax": 1500,
   "splitMinPercentOfLevel": 50,
   "searchEverySteps": 3,
-  "starvingFedPercent": 85
+  "starvingFedPercent": 85,
+  "goalOfFood": "security",
+  "goalOfGoods": "prosperity",
+  "tradeGoodsBonusPercent": 50,
+  "scienceBehindTechs": 4,
+  "scienceWeightMax": 1500,
+  "influenceMetCivs": 4,
+  "influenceWeightMax": 1300,
+  "moveExpansionSharePercent": 50,
+  "journeyBetterByPercent": 60,
+  "journeyPenaltyPerMillePerCell": 10,
+  "farSearchEveryCells": 3,
+  "targetZeroAtJourneys": 2,
+  "settleFarmYieldPercent": 150,
+  "plunderBelowStoragePercent": 50,
+  "uncomfortableBelowPercent": 100,
+  "opinionSwingPercent": 50,
+  "reviewStaggerYears": 7,
+  "scholar": {
+    "baseWorthPerPerson": "0.01",
+    "fieldWorthPerPerson": "0.02",
+    "gatherWorthPercent": 100,
+    "missingInputPercent": 25,
+    "villageWorthPerPerson": "0.1",
+    "leadsToPercent": 25,
+    "curiosityCostReliefPercent": 100,
+    "effects": [
+      {
+        "stat": "output_percent",
+        "goal": "security",
+        "perHundredPeoplePerPoint": "1"
+      },
+      {
+        "stat": "cold_tolerance_degrees",
+        "goal": "security",
+        "perHundredPeoplePerPoint": "2",
+        "onlyWhenCold": true
+      },
+      {
+        "stat": "mood",
+        "goal": "influence",
+        "perHundredPeoplePerPoint": "0.5"
+      },
+      {
+        "stat": "spoilage_percent",
+        "goal": "security",
+        "perHundredPeoplePerPoint": "0.1",
+        "lowerIsBetter": true
+      },
+      {
+        "stat": "carry_capacity_percent",
+        "goal": "expansion",
+        "perHundredPeoplePerPoint": "0.2"
+      }
+    ]
+  }
 }

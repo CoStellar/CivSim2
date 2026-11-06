@@ -47,7 +47,7 @@ public sealed class GovernorAdvisor : Advisor
     private long[] _siteStamp = [];
     private long _stamp;
     private readonly ResponseCurve _nearness;
-    private readonly ResponseCurve _farNearness = ResponseCurve.Linear(0, Factor.Neutral, 100, 0);
+    private readonly ResponseCurve _farNearness;
 
     /// <summary>Creates the advisor.</summary>
     public GovernorAdvisor(GameContent content)
@@ -63,6 +63,11 @@ public sealed class GovernorAdvisor : Advisor
         _near = new HexCoord[HexGlobe.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
         // Nearness: 1.0 next door, falling by the distance penalty per cell (data/population.json), 0 from 100/penalty cells on.
         _nearness = ResponseCurve.Linear(0, Factor.Neutral, 100, Factor.Neutral - (Factor.Neutral * _rules.DistancePenaltyPercentPerCell));
+        // A place a journey away loses a share of its value per cell (data/ai.json), nothing from 1000/share cells on.
+        int perCell = content.Ai.JourneyPenaltyPerMillePerCell;
+        _farNearness = perCell == 0
+            ? ResponseCurve.Linear(0, Factor.Neutral, 1, Factor.Neutral)
+            : ResponseCurve.Linear(0, Factor.Neutral, Math.Max(1, Factor.Neutral / perCell), 0);
         _foodPerPerson = new long[content.Strata.Count];
         foreach (StratumDefinition stratum in content.Strata)
         {
@@ -200,7 +205,7 @@ public sealed class GovernorAdvisor : Advisor
 
         // A camp looks for a better place when it went hungry or when its place is getting too cold or too hot.
         bool hungry = s.FedPerMille < _rules.MoveWhenFedBelowPercent * 10;
-        bool uncomfortable = Comfort(state, world, civ, world.Geometry.Index(s.Cell)) < 100;
+        bool uncomfortable = Comfort(state, world, civ, world.Geometry.Index(s.Cell)) < _content.Ai.UncomfortableBelowPercent;
         bool rested = (state.Month - s.MovedMonth) >= _rules.MinStepsBetweenMoves * (long)Simulation.WorldClock.RhythmMonths(_content, state, civ);
         bool mobile = _content.SettlementLevels[s.Level].Mobile;
 
@@ -212,9 +217,10 @@ public sealed class GovernorAdvisor : Advisor
         if (mobile && (hungry || uncomfortable || reacting) && (rested || reacting) && searchTurn)
         {
             // Staying is the incumbent: another place must be better by a margin (GDD 8.6, hysteresis).
-            // Both sides are weighed alike, so the goal weight never tips staying against moving; the direction does.
+            // Staying gets only part of the expansion weight and expansiveness that moving gets, so an expansive
+            // civilization moves more readily and a home-loving one stays (PR B of 2026-11-06).
             Evaluation stay = SiteEvaluation(state, world, civ, s.Cell);
-            Weigh(ref stay, civ, Goal.Expansion);
+            WeighStay(ref stay, civ);
             long here = stay.Value;
             DeterministicRandom? random = RandomFor(state, s.Id.Value);
             (HexCoord best, Evaluation move) = BestSite(state, world, civ, s, splitting: false, random);
@@ -233,7 +239,7 @@ public sealed class GovernorAdvisor : Advisor
             {
                 (HexCoord far, Evaluation journey) = FarSite(state, world, civ, s, random);
                 long incumbent = Math.Max(here, move.Value);
-                if (journey.Value * 100 > incumbent * (100 + (2 * _rules.MoveWhenBetterByPercent)))
+                if (journey.Value * 100 > incumbent * (100 + _content.Ai.JourneyBetterByPercent))
                 {
                     journey.Note(FactorId.BetterThanHere, incumbent);
                     Issue(state, queue, civ.Id, new Perception.JourneyCommand(_content, s.Id, far), AiAction.Journey, s.Id.Value, world.Geometry.Index(far), journey);
@@ -253,7 +259,7 @@ public sealed class GovernorAdvisor : Advisor
         {
             long farm = FarmFood(world, s);
             long eat = GroupFoodNeed(s, 100);
-            if (farm * 2 >= eat * 3)
+            if (farm * 100 >= eat * _content.Ai.SettleFarmYieldPercent)
             {
                 Evaluation settle = Evaluation.Of(farm);
                 settle.Note(FactorId.FarmYield, eat > 0 ? farm * 100 / eat : 0);
@@ -284,13 +290,14 @@ public sealed class GovernorAdvisor : Advisor
         }
 
         // Nothing better to do: take what others left nearby while there is room in the warehouse.
-        if (s.TotalStock() * 2 < _content.SettlementLevels[s.Level].StorageCapacity)
+        if (s.TotalStock().Hundredths * 100 < _content.SettlementLevels[s.Level].StorageCapacity.Hundredths * _content.Ai.PlunderBelowStoragePercent)
         {
             foreach (int n in _emptySites)
             {
                 SettlementState site = state.Settlements[n];
                 if (site.World == s.World && site.TotalStock() > Amount.Zero && world.Geometry.Distance(s.Cell, site.Cell) <= _rules.MaxMoveCells
-                    && OpenLand(world, civ, site.Cell))
+                    && OpenLand(world, civ, site.Cell)
+                    && (site.World != WorldId.Earth || Perception.MapMemory.Knows(_content, state, civ, world.Geometry.Index(site.Cell))))
                 {
                     Evaluation plunder = Evaluation.Of(site.TotalStock().Hundredths);
                     plunder.Note(FactorId.LeftGoods, site.TotalStock().Hundredths);
@@ -313,11 +320,12 @@ public sealed class GovernorAdvisor : Advisor
         }
 
         int count = geo.Range(from.Cell, radius, _far);
+        int every = _content.Ai.FarSearchEveryCells;
         Chooser.Clear();
         for (int k = 0; k < count; k++)
         {
             HexCoord c = _far[k];
-            if ((c.Col % 3) != 0 || (c.Row % 3) != 0)
+            if ((c.Col % every) != 0 || (c.Row % every) != 0)
             {
                 continue;
             }
@@ -364,6 +372,15 @@ public sealed class GovernorAdvisor : Advisor
     // character apply.
     private static void Weigh(ref Evaluation e, CivilizationState civ, Goal goal) =>
         e.Weigh(GoalWeight(civ, goal), CharacterMultiplier(civ, goal));
+
+    // Staying keeps (100 - moveExpansionSharePercent)% of the distance of the expansion weight and character from neutral.
+    private void WeighStay(ref Evaluation e, CivilizationState civ)
+    {
+        int keep = 100 - _content.Ai.MoveExpansionSharePercent;
+        e.Weigh(
+            Factor.Neutral + ((GoalWeight(civ, Goal.Expansion) - Factor.Neutral) * keep / 100),
+            Factor.Neutral + ((CharacterMultiplier(civ, Goal.Expansion) - Factor.Neutral) * keep / 100));
+    }
 
     // GDD 7.6: a place closer to the strategist's expansion target than the camp is now gets a small boost.
     private void Toward(ref Evaluation e, WorldState world, CivilizationState civ, HexCoord from, HexCoord to)
@@ -467,6 +484,13 @@ public sealed class GovernorAdvisor : Advisor
             SettlementState? there = earth && Math.Abs(_occupiedAt[i]) == _stamp && _settlementAt[i] >= 0 ? state.Settlements[_settlementAt[i]] : null;
             bool foreignCamp = there is { IsActive: true } && there.Owner != civ.Id;
 
+            // A foreign camp counts only where the civilization saw it in its last own step: what it remembers from
+            // long ago tells it nothing about who lives there now (CLAUDE.md: no hidden knowledge).
+            if (foreignCamp && !Perception.MapMemory.SeesNow(state, civ, i))
+            {
+                continue;
+            }
+
             // GDD 9.1: a pact, an alliance or the truce after a war keeps the camp from driving out theirs.
             if (foreignCamp && state.Treaties.ForbidsAttack(civ.Id, there!.Owner))
             {
@@ -554,7 +578,7 @@ public sealed class GovernorAdvisor : Advisor
         {
             // GDD 8.3: the worse the opinion of them, the readier to drive them out (0.5 at full sympathy, 1.5 at full hatred).
             int sympathy = Diplomacy.Contacts.Sympathy(civ, foreigners!.Value);
-            e.Apply(FactorId.Opinion, Factor.Neutral - (sympathy / 20), sympathy / 100);
+            e.Apply(FactorId.Opinion, Math.Max(0, Factor.Neutral - (sympathy * _content.Ai.OpinionSwingPercent / 1000)), sympathy / 100);
 
             // At war (stage 4d), the enemy's camps are fair game.
             if (state.Treaties.AtWar(civ.Id, foreigners.Value))

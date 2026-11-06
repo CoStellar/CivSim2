@@ -32,7 +32,8 @@ Dane wejściowe liczone raz na krok świata, gdy ktoś ma przegląd albo odpowie
 
 - **odległość** = najmniejsza odległość między osadami obu cywilizacji (te dwie osady to „bramy”),
 - **nasi wojownicy** = suma wojowników we wszystkich naszych osadach,
-- **ich widziani wojownicy** = suma wojowników w ich osadach stojących na polach, które **znamy** (pamięć mapy W1),
+- **ich widziani wojownicy** = suma wojowników w ich osadach stojących na polach, które **widzieliśmy w ostatnim własnym kroku**
+  (`MapMemory.SeesNow`, od PR B; wcześniej wystarczyło pole pamiętane do 300 lat),
 - **sympatia** i **zaufanie** z pamięci relacji (−100 … +100).
 
 Krzywe (proste, w tysięcznych; poza zakresem płaskie):
@@ -73,7 +74,7 @@ ich napaści. Bez powodu wojna ma ocenę 0.
 ## D2: Przegląd stosunków (proaktywny)
 
 - **Kiedy (proaktywnie):** raz na 50 lat (`reviewEveryYears`), rozłożone między cywilizacje, we własnym kroku: gdy
-  `(miesiąc + 84 × numer cywilizacji) mod 600 < długość jej kroku w miesiącach`. W epoce kamienia (krok 50 lat) więc w **każdym
+  `(miesiąc + 84 × numer cywilizacji) mod 600 < długość jej kroku w miesiącach` (84 miesiące = 7 lat, `reviewStaggerYears`). W epoce kamienia (krok 50 lat) więc w **każdym
   własnym kroku**; w neolicie co drugim; przy krokach półrocznych w jednym ze 100 (od ADR 0018 bez powtórek w roku przeglądu).
 - **Kiedy (reaktywnie, ADR 0018):** w najbliższym kroku świata po tym, jak ktoś **wypowiedział jej wojnę** albo **napadł jej obóz**,
   także poza rytmem. Wtedy rozważa te same kroki (pokój, sojusz z kimś trzecim, odwet wojną).

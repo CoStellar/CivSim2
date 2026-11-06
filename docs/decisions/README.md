@@ -20,3 +20,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0016 Wspólna ocena działań AI w liczbach całkowitych, dziennik „Dlaczego?” poza stanem gry](0016-ocena-dzialan-ai.md)
 - [0017 Charakter i strategia w stanie gry, strateg działa komendą](0017-charakter-i-strateg.md)
 - [0018 Zegar świata i rytmy cywilizacji, decyzje reaktywne i proaktywne](0018-zegar-swiata-i-rytmy-cywilizacji.md)
+- [0019 Wartości i priorytety AI: każda opcja służy celowi, ocena = priorytet × przeszkoda](0019-wartosci-i-priorytety-ai.md)

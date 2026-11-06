@@ -82,7 +82,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             // Planned review (proactive): in the own step that holds the civilization's review month, once every
             // reviewEveryYears (spread over civilizations). Reaction (reactive, ADR 0018): at once when someone declared
             // war on it or attacked one of its camps, whatever its rhythm.
-            bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * 7L * 12)) % every < civ.StepMonths;
+            bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * (long)_content.Ai.ReviewStaggerYears * 12)) % every < civ.StepMonths;
             bool alarmed = (civ.Alarms & (Simulation.Alarm.WarDeclared | Simulation.Alarm.Attacked)) != 0;
             if (!planned && !alarmed)
             {
@@ -265,7 +265,8 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         _networks = null;
     }
 
-    // Warriors of civilization `y` in camps `civ` has seen (map memory): the AI knows only what it saw.
+    // Warriors of civilization `y` in camps `civ` saw in its last own step: the AI knows only what it saw, and only what
+    // it sees now tells it how strong they are today.
     private long SeenWarriors(GameState state, CivilizationState civ, int y)
     {
         long sum = 0;
@@ -274,7 +275,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         {
             SettlementState st = state.Settlements[s];
             int cell = earth.Geometry.Index(st.Cell);
-            if (Perception.MapMemory.Knows(_content, state, civ, cell))
+            if (Perception.MapMemory.SeesNow(state, civ, cell))
             {
                 sum += SettlementAssets.Warriors(_content, st);
             }

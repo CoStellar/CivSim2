@@ -83,6 +83,15 @@ public enum FactorId : byte
 
     /// <summary>The two civilizations are at war (stage 4d).</summary>
     War = 25,
+
+    /// <summary>The goal the largest part of the worth serves (its <see cref="Ai.Goal"/> number).</summary>
+    ServesGoal = 26,
+
+    /// <summary>Share of the worth of the best technology this one opens the way to (PR B).</summary>
+    LeadsTo = 27,
+
+    /// <summary>Goods of this kind go to a trade partner (production for exchange, PR B).</summary>
+    ForTrade = 28,
 }
 
 /// <summary>
