@@ -356,6 +356,8 @@ Cywilizacja nie jest przywiązana do miejsca. Startuje jako koczownicze plemię,
 | Rodzaj migracji | Kto | Co się dzieje |
 | --- | --- | --- |
 | Sezonowa | koczownicy | obóz przesuwa się o kilka pól, mały koszt |
+
+**Co znaczy obóz na mapie** (decyzja Patryka z 2026-11-07, ADR 0022): obóz to **obszar sezonowych wędrówek** grupy, a nie jedno miejsce. Ludzie wędrują po swoich polach kilka razy w roku i to mieści się w zbieraniu ze strefy. Przeprowadzka obozu na mapie to przesunięcie całego obszaru wędrówek, co zdarza się raz na pokolenia; dlatego liczy się w krokach ery, a nie co sezon.
 | Odłam | duże plemię lub osada | część ludności odchodzi i zakłada nową grupę: kolonię albo osobną cywilizację |
 | Całkowita | cała cywilizacja | wszyscy ruszają w drogę; osady zostają opuszczone i każdy może je przejąć (5.5) |
 | Z podbojem | dowolna, gdy cel jest zajęty | atak na mieszkańców celu; po zwycięstwie wygnanie ich, wcielenie (lojalność podbitych, 5.2) albo nałożenie trybutu |
@@ -440,6 +442,8 @@ Każda technologia w pliku JSON ma:
 Wszystkie tempa w grze (wzrost, psucie, odrastanie lasów) są zdefiniowane na rok i przeliczane przez długość kroku. Dzięki temu zmiana długości kroku między erami nie psuje ekonomii.
 
 **Zegar świata i rytm cywilizacji** (ADR 0018, decyzja Patryka z 2026-11-06): czas gry to licznik lat, który sam niczego nie liczy. Każda cywilizacja liczy swój stan (gospodarkę, ludność, naukę, zwiad) i podejmuje zaplanowane decyzje tylko we **własnych krokach**, co tyle lat, ile podaje tabela dla **jej** ery. Kroki są przypięte do kalendarza (rytm 25 lat: lata 0, 25, 50…), a krok liczy dokładnie czas od poprzedniego, więc po zmianie ery pierwszy krok może być krótszy i nikt nie traci lat. Świat (klimat, morze, odrastanie dzikiej żywności poza osadami) i widok liczą się w latach, w których ktoś ma krok. Na wydarzenia (wypowiedziana wojna, napad, propozycja umowy, koniec badania) cywilizacja reaguje od razu, także poza swoim rytmem (decyzje reaktywne, 8.1).
+
+**Dwa zegary: długie kroki i epizody** (ADR 0022, decyzja Patryka z 2026-11-07). Długie kroki ery są dobre dla rzeczy, które same są średnią z wielu lat: urodzeń i zgonów, zbierania, plonów, handlu, nauki, klimatu. Zdarzenia z przebiegiem, które w rzeczywistości trwają dni, tygodnie albo miesiące, liczą się w **epizodach**: epizod ma uczestników (cywilizacje, osady, wyprawę), własny krok w miesiącach i koniec. Zegar świata zatrzymuje się na każdym kroku epizodu, ale liczy wtedy **tylko epizod**; reszta świata i inne cywilizacje czekają. Uczestnicy decydują w każdym kroku epizodu (np. dowódca co miesiąc kampanii). Pierwszy epizod to **kampania wojenna** (9.3, krok co miesiąc); susza, głód, epidemia i wyprawy odkrywców dostaną epizody później.
 
 | # | Era | Lat na krok | Próg wejścia | Co się zmienia |
 | --- | --- | --- | --- | --- |
@@ -704,7 +708,10 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Bitwa:** kilka rund z losowością. Liczą się siła, teren (wzgórza, las, rzeka), mury, morale i dowódca. Przy niskim morale oddział ucieka zamiast ginąć.
 - **Oblężenie:** miasto z murami trzeba oblęgać przez kilka tur. W tym czasie miasto zjada zapasy, a oblężnik zużywa własne zaopatrzenie.
 
-**Wojna w erach 1–2 (etap 4e, decyzje Patryka z 2026-11-07, ADR 0021):**
+**Wojna w erach 1–2 (etap 4e, decyzje Patryka z 2026-11-07, ADR 0021 i 0022):**
+
+- **Wojna to stan, walka to kampanie.** Każda kampania to epizod z krokiem co miesiąc (6.2): zbiórka, marsz, bitwa albo najazd, powrót. Wojna w epoce kamienia trwa zwykle od kilku miesięcy do kilku lat.
+- **Stan wojny bez kampanii wygasa sam:** gdy przez 5 lat żadna strona nie prowadzi kampanii, strony zawierają biały pokój.
 
 - **Cel:** ziemia (konkretna osada wroga), łupy (zapasy) albo odwet (za napaść lub zabraną osadę). Wojna o łupy bez powodu psuje opinię świadków najbardziej, odwet wcale.
 - **Uzbrojenie z technologii, na jakie lud stać:** gołe ręce (50% siły), drewniane włócznie hartowane w ogniu, proce, włócznie i topory z kamiennym grotem (100%). Każdy poziom uzbrojenia to wpis w danych: technologia, dobro zużywane przez wojowników i procent siły. Prawdziwa broń z metalu przychodzi z kowalami w erze 3 (brąz ok. 150%, żelazo ok. 200%).
@@ -713,7 +720,7 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Dowódca nie rusza na wojnę, którą na pewno przegra:** przed wyprawą i przed bitwą liczy spodziewany wynik z tego, co widzi (siła wroga z ostatniego kroku, teren, uzbrojenie, morale, jedzenie), i rusza dopiero przy dobrej szansie.
 - **Podbój:** zdobyta wioska zostaje z mieszkańcami i przechodzi do zwycięzcy; z obozu pokonani uciekają do najbliższej własnej osady. Niewolnictwo i jeńcy w przyszłości.
 - **Pokój:** z celu i wyniku wojny: oddanie spornej osady, jednorazowy okup w dobrach albo biały pokój; potem rozejm.
-- **Zmęczenie wojną** rośnie z latami wojny i stratami i obniża nastrój w osadach (a przez nastrój urodzenia).
+- **Zmęczenie wojną** rośnie z miesięcy kampanii i ze strat (nie z lat kalendarza) i obniża nastrój w osadach (a przez nastrój urodzenia).
 - **Później:** oblężenia i mury (z budynkami), plemiona niezależne (z secesją w 4f), trybut i wasalstwo (moduły).
 - **Co erę** moduł wojny trzeba zaktualizować: nowe uzbrojenie, fachy i jednostki, limity wodza i pola, zaopatrzenie (`docs/systems/war.md`, sekcja „Co erę”).
 
