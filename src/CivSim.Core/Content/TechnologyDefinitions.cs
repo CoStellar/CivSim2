@@ -277,6 +277,12 @@ public sealed record AiRules
     /// <summary>A village sends at most one group of settlers in this many years (rule 6; staggered by village).</summary>
     public int VillageSettlersEveryYears { get; init; } = 100;
 
+    /// <summary>A village fed below this share (percent) sends settlers to feed fewer mouths (AI fixes after stage 4g).</summary>
+    public int VillageHungryFedPercent { get; init; } = 70;
+
+    /// <summary>A hungry village sends at most one group of settlers in this many years (staggered by village).</summary>
+    public int VillageHungrySettlersEveryYears { get; init; } = 20;
+
     /// <summary>
     /// A camp sends explorers when expansion weight × expansiveness × curiosity (per mille, 1000 = neutral) reaches this.
     /// </summary>

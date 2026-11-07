@@ -370,6 +370,15 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        // Hungry villages (AI fixes after stage 4g): fed at half, not crowded, so only hunger can send settlers out.
+        GameState hungry = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
+        HungryVillages(hungry);
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(hungry, ms);
+            saved.Add(ms.ToArray());
+        }
+
         // Stone Age hunters who could learn tanning (stage 4F: technologies need their people).
         Record(saved, 15, [1, 4], neolithic: false, extremes: false, width: 130, height: 80, peoples: 10, hunters: true);
 
@@ -382,6 +391,14 @@ public class DeadValueTests
         // Home camps (the first camp of each people) are never moved or emptied for another people's situation, and no
         // camp is used for two situations.
         var homes = state.Civilizations.Select(c => state.Settlements.FirstOrDefault(x => x.Owner == c.Id && x.IsActive)).Where(x => x is not null).ToHashSet();
+
+        // Peace in these situations: a war of greed in the first turns would make every hungry camp look at the enemy's
+        // camps instead of the land (journeys, driving out).
+        foreach (CivSim.Core.Diplomacy.Treaty war in state.Treaties.All.Where(t => t.Kind == CivSim.Core.Diplomacy.TreatyKind.War).ToArray())
+        {
+            state.Treaties.Remove(war.A, war.B, CivSim.Core.Diplomacy.TreatyKind.War);
+        }
+
         WorldState earth = state.Worlds[0];
         CivSim.Core.Map.HexGlobe geo = earth.Geometry;
         int stamp = (int)(state.Month / 12) + 1;
@@ -397,6 +414,7 @@ public class DeadValueTests
 
             SettlementState home = camps[0];
             home.MovedMonth = -1_000_000;
+            civ.StepMonths = Math.Max(civ.StepMonths, CivSim.Core.Simulation.WorldClock.RhythmMonths(Content, state, civ)); // its own step
             int role = (c + shift) % 5;
 
             switch (role)
@@ -613,6 +631,29 @@ public class DeadValueTests
 
         CivilizationState[] alive = state.Civilizations.Where(c => c.IsAlive && state.Settlements.Any(x => x.Owner == c.Id && x.IsActive)).ToArray();
         CivSim.Core.Diplomacy.Contacts.RecordAttack(Content, state, alive[0].Id, alive[1].Id);
+    }
+
+    private static void HungryVillages(GameState state)
+    {
+        foreach (CivilizationState civ in state.Civilizations)
+        {
+            // Every step plans production and villages; a step of a hungry settlers' period, so a hungry village is due
+            // whatever its stagger (unless the period is longer).
+            civ.StepMonths = Math.Max(civ.StepMonths, CivSim.Core.Simulation.WorldClock.RhythmMonths(Content, state, civ));
+            civ.StepMonths = Math.Max(civ.StepMonths, Content.Ai.VillageHungrySettlersEveryYears * 12);
+            foreach (SettlementState s in state.Settlements.Where(x => x.Owner == civ.Id && x.IsActive && !Content.SettlementLevels[x.Level].Mobile))
+            {
+                int room = Content.SettlementLevels[s.Level].MaxPopulation * 40 / 100;
+                int total = s.TotalPopulation();
+                Span<int> crowd = s.Population;
+                for (int k = 0; k < crowd.Length; k++)
+                {
+                    crowd[k] = total == 0 ? 0 : (int)((long)crowd[k] * room / total);
+                }
+
+                Hungry(s);
+            }
+        }
     }
 
     private static void Hungry(SettlementState s)

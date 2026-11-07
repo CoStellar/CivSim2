@@ -110,6 +110,19 @@ public sealed record TreatyRules
     /// <summary>War score from our side to factor for peace: a side that is losing wants peace more (stage 4e PR 6).</summary>
     public ResponseCurve WarScore { get; init; } = ResponseCurve.Linear(-50, 5000, 0, 1000);
 
+    /// <summary>Sympathy (hundredths) to factor for a war of greed, for loot or land (AI fixes after stage 4g): a people takes from
+    /// those it dislikes sooner, but hunger and a weak neighbour can lead even friends to it.</summary>
+    public ResponseCurve Greed { get; init; } = ResponseCurve.Linear(-5000, 1500, 5000, 300);
+
+    /// <summary>How well our people are fed, percent, to factor for a war for loot: only a hungry people raids for food.</summary>
+    public ResponseCurve LootNeed { get; init; } = ResponseCurve.Linear(60, 2000, 95, 0);
+
+    /// <summary>Food seen in the enemy's settlements against ours, percent, to factor for a war for loot.</summary>
+    public ResponseCurve LootGain { get; init; } = ResponseCurve.Linear(100, 500, 400, 1500);
+
+    /// <summary>Chance our army would take the enemy village, percent, to factor for a war for land (conquest).</summary>
+    public ResponseCurve ConquestChance { get; init; } = ResponseCurve.Linear(60, 0, 95, 1500);
+
     /// <summary>A declined peace is not proposed again for this many years (other treaties: <see cref="RetryYears"/>; stage 4e PR 6).</summary>
     public int PeaceRetryYears { get; init; } = 1;
 

@@ -75,8 +75,16 @@ public class LandAndMigrationTests
         Assert.Equal(0, Settlers(people: 300));
     }
 
+    [Fact]
+    public void AHungryVillageSendsSettlersToFeedFewerMouths()
+    {
+        // AI fixes after stage 4g: a village fed at half is not crowded, but it sends a group out to feed fewer mouths.
+        Assert.Equal(1, Settlers(people: 300, fedPercent: 50));
+        Assert.Equal(0, Settlers(people: 300, fedPercent: Content.Ai.VillageHungryFedPercent));
+    }
+
     // Decisions to send settlers from a village of `people` that knows all land around it.
-    private static int Settlers(int people)
+    private static int Settlers(int people, int fedPercent = 100)
     {
         GameState state = NewState(22);
         CivilizationState civ = state.Civilizations[0];
@@ -89,6 +97,8 @@ public class LandAndMigrationTests
         Span<int> crowd = village.Population;
         crowd.Clear();
         crowd[0] = people;
+        village.FoodNeeded = 1000;
+        village.FoodEaten = fedPercent * 10;
         foreach (CivilizationState c in state.Civilizations)
         {
             c.StepMonths = 0; // only this civilization plans now

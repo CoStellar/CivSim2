@@ -131,6 +131,12 @@ public enum FactorId : byte
 
     /// <summary>How well a government suits the civilization, against the present one, percent (stage 4f PR 5).</summary>
     Suitability = 41,
+
+    /// <summary>Food seen in the enemy's settlements against ours, percent (a war for loot; AI fixes after stage 4g).</summary>
+    Loot = 42,
+
+    /// <summary>The strategist's expansion weight, per mille (a war for land; AI fixes after stage 4g).</summary>
+    Expansion = 43,
 }
 
 /// <summary>

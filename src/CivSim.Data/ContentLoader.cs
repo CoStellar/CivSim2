@@ -1568,6 +1568,8 @@ public static class ContentLoader
             VillageWornBelowPercent = r.Int("villageWornBelowPercent", 0, 100),
             VillageSettlersPeople = r.Int("villageSettlersPeople", 1, 100_000),
             VillageSettlersEveryYears = r.Int("villageSettlersEveryYears", 1, 100_000),
+            VillageHungryFedPercent = r.Int("villageHungryFedPercent", 0, 100),
+            VillageHungrySettlersEveryYears = r.Int("villageHungrySettlersEveryYears", 1, 100_000),
             ExploreAbovePerMille = r.Int("exploreAbovePerMille", 0, 1_000_000),
             ExploreLookCells = r.Int("exploreLookCells", 1, 20),
             ExploreUnknownPercent = r.Int("exploreUnknownPercent", 0, 100),
@@ -1913,6 +1915,10 @@ public static class ContentLoader
             PeaceOpinion = Curve("peaceOpinion", 100, defaults.PeaceOpinion),
             PeaceTerms = Curve("peaceTerms", 1, defaults.PeaceTerms),
             WarScore = Curve("warScore", 1, defaults.WarScore),
+            Greed = Curve("greed", 100, defaults.Greed),
+            LootNeed = Curve("lootNeed", 1, defaults.LootNeed),
+            LootGain = Curve("lootGain", 1, defaults.LootGain),
+            ConquestChance = Curve("conquestChance", 1, defaults.ConquestChance),
             Kinds = Array.ConvertAll(defs, d => d ?? new Core.Diplomacy.TreatyKindDefinition()),
         };
     }
