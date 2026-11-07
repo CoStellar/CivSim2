@@ -41,7 +41,12 @@ public sealed class SeasonSystem(GameContent content) : ITurnSystem
             _planet = planet;
         }
 
-        int turn = Math.Max(1, state.StepMonths);
+        if (state.WorldMonths == 0)
+        {
+            return; // a step of episodes only (ADR 0022): the seasons of the last full step still hold
+        }
+
+        int turn = Math.Max(1, state.WorldMonths);
         long yearMonths = Math.Max(1, (long)planet.YearHundredths * 12 / 100);
         Write(world, state.Month, turn, yearMonths, world.Map.SeasonTemperature, world.Map.SeasonGrowth);
         Write(world, state.Month + turn, turn, yearMonths, world.Map.NextSeasonTemperature, world.Map.NextSeasonGrowth);

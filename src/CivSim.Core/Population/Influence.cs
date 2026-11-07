@@ -189,9 +189,9 @@ public sealed class InfluenceSystem(GameContent content, TurnPhase phase = TurnP
     public void Execute(TurnContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        if (phase == TurnPhase.Movement && !AnySettlementMoved(context))
+        if (phase == TurnPhase.Movement ? !AnySettlementMoved(context) : context.State.WorldMonths == 0)
         {
-            return;
+            return; // zones follow moves at once; otherwise they are drawn again in full steps only (ADR 0022)
         }
 
         _influence.Recompute(context.State);

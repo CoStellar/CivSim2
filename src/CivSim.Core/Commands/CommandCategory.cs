@@ -14,4 +14,7 @@ public enum CommandCategory
 
     /// <summary>Orders that move units, caravans or settlers.</summary>
     Movement = 2,
+
+    /// <summary>War campaigns (stage 4e).</summary>
+    Military = 3,
 }

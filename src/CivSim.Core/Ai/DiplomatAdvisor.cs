@@ -84,9 +84,21 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             // war on it or attacked one of its camps, whatever its rhythm.
             bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * (long)_content.Ai.ReviewStaggerYears * 12)) % every < civ.StepMonths;
             bool alarmed = (civ.Alarms & (Simulation.Alarm.WarDeclared | Simulation.Alarm.Attacked)) != 0;
-            bool weary = Simulation.WorldClock.Steps(civ) && Wars.Weariness(state, civ.Id) >= _content.War.PeaceAbove;
-            if (!planned && !alarmed && !weary)
+            if (!planned && !alarmed)
             {
+                // ADR 0022: between campaigns a side worn out, or one far enough ahead to ask for terms, thinks of peace
+                // in any world step (monthly while campaigns run), not only in its own long steps.
+                if (WantsPeace(state, civ))
+                {
+                    if (!prepared)
+                    {
+                        Prepare(state);
+                        prepared = true;
+                    }
+
+                    ReviewWars(state, queue, civ);
+                }
+
                 continue;
             }
 
@@ -223,6 +235,56 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             PeaceTerms terms = kind == TreatyKind.Peace ? Wars.TermsFor(_content, state, civ.Id, other) : default;
             Issue(state, queue, civ.Id, new ProposeTreatyCommand(_content, other, kind, terms), AiAction.ProposeTreaty, -1, other.Value, why);
         }
+    }
+
+    // A war in which this side has no campaign out and is worn out or far enough ahead (or behind) for terms.
+    private bool WantsPeace(GameState state, CivilizationState civ)
+    {
+        foreach (Treaty t in state.Treaties.All)
+        {
+            if (t.Kind == TreatyKind.War && t.Involves(civ.Id) && !state.Episodes.Campaigning(civ.Id, t.Other(civ.Id))
+                && (Wars.WearinessOf(t, civ.Id) >= _content.War.PeaceAbove || Math.Abs(t.Score) >= _content.War.TermsAboveScore))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Only peace, with the wars this side wants to end (worn out: whatever the score; otherwise at proposeAbove).
+    private void ReviewWars(GameState state, CommandQueue queue, CivilizationState civ)
+    {
+        Chooser.Clear();
+        foreach (Treaty t in state.Treaties.All)
+        {
+            if (t.Kind != TreatyKind.War || !t.Involves(civ.Id))
+            {
+                continue;
+            }
+
+            CivId other = t.Other(civ.Id);
+            int y = state.IndexOfCivilization(other);
+            if (y < 0 || state.Episodes.Campaigning(civ.Id, other))
+            {
+                continue;
+            }
+
+            int threshold = Wars.WearinessOf(t, civ.Id) >= _content.War.PeaceAbove ? 0 : _content.Treaties.ProposeAbove;
+            Consider(state, civ, other, y, TreatyKind.Peace, threshold);
+        }
+
+        int pick = Pick(civ, RandomFor(state, civ.Id.Value));
+        if (pick < 0)
+        {
+            return;
+        }
+
+        int key = Chooser.KeyAt(pick);
+        CivId target = state.Civilizations[key / 8].Id;
+        Evaluation why = Chooser.EvaluationAt(pick);
+        PeaceTerms terms = Wars.TermsFor(_content, state, civ.Id, target);
+        Issue(state, queue, civ.Id, new ProposeTreatyCommand(_content, target, TreatyKind.Peace, terms), AiAction.ProposeTreaty, -1, target.Value, why);
     }
 
     private void Consider(GameState state, CivilizationState civ, CivId other, int y, TreatyKind kind, int threshold)

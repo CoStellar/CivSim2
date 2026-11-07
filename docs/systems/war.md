@@ -4,7 +4,7 @@
 
 **Faza tury:** 6. Walka (`WarSystem`), w krokach cywilizacji (ADR 0018). Wypowiedzenie wojny i pokój: faza decyzji (komendy dyplomaty).
 
-**Stan:** PR 1 zrobiony (cel, wynik, zmęczenie, pokój z warunkami). Wyprawy, uzbrojenie, bitwy, zaopatrzenie i dowódca w PR 2–4 (`docs/prompts/07-etap-wojna.md`).
+**Stan:** PR 1 (cel, wynik, zmęczenie, pokój z warunkami) i PR 2 (kampanie jako epizody z krokiem co miesiąc, `docs/systems/episodes.md`, ADR 0022). Wyprawy, uzbrojenie, bitwy, zaopatrzenie i dowódca w PR 2–4 (`docs/prompts/07-etap-wojna.md`).
 
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/war.json`, traktaty (`TreatyBook`), wspomnienia relacji, osady stron.
@@ -17,8 +17,9 @@
 flowchart TD
   C["Powód: zabrana osada, napaść"] --> D["Wypowiedzenie z celem<br/>ziemia, łupy, odwet"]
   D --> R["Świadkowie pamiętają napaść<br/>(łupy 100%, ziemia 50%, odwet 0%)"]
-  D --> W["Walki: napaści w czasie wojny<br/>wynik ± za walkę i zdobytą osadę"]
-  W --> Z["Zmęczenie co krok:<br/>lata wojny + straty"]
+  D --> W["Kampanie co miesiąc (epizody) i napaści obozów<br/>wynik ± za walkę i zdobytą osadę"]
+  W --> Z["Zmęczenie:<br/>miesiące kampanii + straty"]
+  W --> Q["5 lat bez kampanii:<br/>biały pokój"]
   Z --> M["Efekt war_weariness: nastrój −"]
   Z --> P["Pokój z warunkami<br/>osada / okup / biały"]
   P --> T["Rozejm"]
@@ -31,7 +32,9 @@ flowchart TD
   pamiętają ją w procencie z celu: ziemia 100/50, łupy 100/100, odwet 50/0.
 - **Wynik** (`Treaty.Score`, z perspektywy strony A, −100…+100, `Wars.RecordFight`): napaść w czasie wojny daje zwycięzcy +10, a zdobyta osada +15 więcej.
   Straty to ludzie zabici w walce (wojownicy obu stron i uciekający), liczone osobno dla stron.
-- **Zmęczenie** (`Wars.ComputeWeariness`, co turę w `WarSystem`): `lata wojny × 1 + procent ludzi strony zabitych w wojnie × 3`, najwyżej 100.
+- **Zmęczenie** (`Wars.ComputeWeariness`, co krok świata w `WarSystem`): `miesiące kampanii w tej wojnie × 5 + procent ludzi strony zabitych w wojnie × 3`, najwyżej 100 (od PR 2; w PR 1 liczyły się lata wojny).
+- **Kampanie** (PR 2, `docs/systems/episodes.md`): wyprawa wojowników jednej osady maszeruje co miesiąc, walczy u celu i wraca z łupami; w wojnie o ziemię zdobyta wioska przechodzi z ludźmi.
+- **Ciche wygasanie** (PR 2): wojna, w której przez 5 lat nikt nie prowadził kampanii, kończy się białym pokojem (zegar robi krok dokładnie w tym miesiącu).
   Ludzie strony to jej ludność w chwili wypowiedzenia.
 - **Nastrój:** każda cywilizacja w wojnie dostaje efekt `war_weariness` (nastrój wszystkich osad) = −największe zmęczenie × 20 / 100; trwa jeszcze
   jedną turę po końcu wojny.
@@ -57,6 +60,7 @@ Przy każdym etapie nowej ery (etapy 6–12) sprawdź i uzupełnij:
 - `data/war.json` (PR 1).
 
 ## Testy
+- `EpisodeTests` (PR 2): kampanie co miesiąc, ciche wygasanie, odwrót przed silnym celem, 1/3 w domu, zapis w trakcie marszu.
 - `WarTests` (PR 1): dane; cel, który da się nazwać; agresja u ofiary i świadków według celu; wynik i zmęczenie z lat i strat; spadek nastroju;
   zwycięzca bierze osadę, o którą była wojna; okup w wojnie o łupy; złe warunki odrzucone; zapis; błędy w danych.
 - `TreatyTests`: wojny z celem „łupy” (tekst kroniki „for loot”).

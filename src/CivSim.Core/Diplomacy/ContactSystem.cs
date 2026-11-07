@@ -360,7 +360,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
             }
         }
 
-        int months = state.StepMonths; // a dispute grows with the world's time, whoever steps
+        int months = state.WorldMonths; // a dispute grows with the world's time, whoever steps
         for (int ia = 0; ia < n; ia++)
         {
             CivilizationState a = state.Civilizations[ia];

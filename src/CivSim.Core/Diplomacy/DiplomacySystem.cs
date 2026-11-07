@@ -95,7 +95,7 @@ public sealed class DiplomacySystem(GameContent content) : ITurnSystem
             }
         }
 
-        int months = state.StepMonths; // a war goes on with the world's time, whoever steps
+        int months = state.WorldMonths; // a war goes on with the world's time, whoever steps
         for (int x = 0; x < n; x++)
         {
             CivilizationState civ = state.Civilizations[x];

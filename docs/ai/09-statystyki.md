@@ -16,6 +16,22 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Kampanie co miesiąc (etap 4e, PR 2)
+
+Z `--wars` i `--decisions` (3 seedy, mapa standard, 1000 kroków świata); w nawiasach po PR 1:
+
+| Seed | Wojny | Średnio trwa | Kampanie (miesiące) | Zabici razem | Pokój | Decyzje razem |
+| --- | ---: | --- | --- | ---: | --- | ---: |
+| 7 | 17 (11) | 65 mies. (205 lat) | 19 (80) | 352 (122) | biały 17 | 5428 (4920) |
+| 23 | 5 (2) | 65 mies. (225 lat) | 4 (27) | 4 (38) | biały 5 | 4874 (5430) |
+| 42 | 10 (4) | 62 mies. (187 lat) | 4 (12) | 96 (31) | biały 10 | 8549 (7993) |
+
+- **Wojny trwają 5–6 lat zamiast 150–300.** Kampania trwa od 2 do kilkunastu miesięcy; po 5 latach bez kampanii wojna wygasa.
+- **Dowódca wysłał 4–26 kampanii na grę.** Wojownicy częściej najeżdżają, niż zdobywają osady; kilka razy zawrócili przed silniejszym celem.
+- **Wszystkie pokoje są białe:** przegrany odrzuca warunki (opinia o wrogu bliska −100), a odrzucona propozycja wraca dopiero po 100 latach
+  ([uwagi, punkt 12](08-ocena-i-uwagi.md)). Do strojenia w PR 6.
+- Gra przechodzi przez 26–29 tys. lat w 1000 krokach świata (było 29 tys.): kroki kampanii i alarmów dzielą długie kroki.
+
 ## Wojny z celem (etap 4e, PR 1)
 
 Z `--wars` (3 seedy, mapa standard, 1000 tur; wykres decyzji wyżej jest już z tych gier):

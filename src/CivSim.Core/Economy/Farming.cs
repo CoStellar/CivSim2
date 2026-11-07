@@ -59,7 +59,7 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
                 }
             }
 
-            Wear(world.Map, state.StepMonths);
+            Wear(world.Map, state.WorldMonths);
         }
     }
 
