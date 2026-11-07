@@ -64,7 +64,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                 prepared = true;
             }
 
-            Evaluation e = Evaluate(state, to, p.From, p.Kind);
+            Evaluation e = Evaluate(state, to, p.From, p.Kind, p.Terms);
             bool accept = e.Value >= _content.Treaties.AcceptAbove && Treaties.CannotSign(_content, state, p.From, p.To, p.Kind) is null;
             Issue(state, queue, to.Id, new AnswerProposalCommand(_content, p.From, p.Kind, accept),
                 accept ? AiAction.AcceptTreaty : AiAction.DeclineTreaty, -1, p.From.Value, e);
@@ -84,7 +84,8 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             // war on it or attacked one of its camps, whatever its rhythm.
             bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * (long)_content.Ai.ReviewStaggerYears * 12)) % every < civ.StepMonths;
             bool alarmed = (civ.Alarms & (Simulation.Alarm.WarDeclared | Simulation.Alarm.Attacked)) != 0;
-            if (!planned && !alarmed)
+            bool weary = Simulation.WorldClock.Steps(civ) && Wars.Weariness(state, civ.Id) >= _content.War.PeaceAbove;
+            if (!planned && !alarmed && !weary)
             {
                 continue;
             }
@@ -103,7 +104,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
     /// The score <paramref name="civ"/> gives <paramref name="kind"/> with <paramref name="other"/> now (GDD 8.3): the
     /// same for proposing and for answering. Call only inside <see cref="IssueCommands"/> (it reads the turn's facts).
     /// </summary>
-    private Evaluation Evaluate(GameState state, CivilizationState civ, CivId other, TreatyKind kind)
+    private Evaluation Evaluate(GameState state, CivilizationState civ, CivId other, TreatyKind kind, PeaceTerms terms = default)
     {
         TreatyRules rules = _content.Treaties;
         int x = state.IndexOfCivilization(civ.Id);
@@ -142,7 +143,8 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                 break;
             case TreatyKind.War:
                 e.Apply(FactorId.Opinion, rules.Hostility, sympathy);
-                e.Apply(FactorId.Cause, Cause(r) ? Factor.Neutral : 0, Cause(r) ? 1 : 0);
+                bool cause = Treaties.HasGrievance(state, civ.Id, other);
+                e.Apply(FactorId.Cause, cause ? Factor.Neutral : 0, cause ? 1 : 0);
                 e.Apply(FactorId.Strength, rules.Advantage, Percent(_own[x], EnemyStrength(state, civ, x, other)));
                 if (Binds(state, civ.Id, other))
                 {
@@ -153,9 +155,9 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                 break;
             case TreatyKind.Peace:
                 Treaty? war = state.Treaties.Find(civ.Id, other, TreatyKind.War);
-                long warYears = war is null ? 0 : (state.Month - war.SinceMonth) / 12;
-                e.Apply(FactorId.WarYears, rules.WarWeariness, warYears);
+                e.Apply(FactorId.Weariness, rules.WarWeariness, war is null ? 0 : Wars.WearinessOf(war, civ.Id));
                 e.Apply(FactorId.Opinion, rules.PeaceOpinion, sympathy);
+                e.Apply(FactorId.Terms, rules.PeaceTerms, Wars.TermsWorth(_content, terms, civ.Id));
                 e.Weigh(GoalWeight(civ, Goal.Security), CharacterMultiplier(civ, Goal.Security));
                 break;
         }
@@ -179,7 +181,10 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
 
             if (book.AtWar(civ.Id, r.Other))
             {
-                Consider(state, civ, r.Other, y, TreatyKind.Peace, rules.ProposeAbove);
+                // GDD 9.3: a side worn out by the war looks for peace whatever the score.
+                Treaty war = book.Find(civ.Id, r.Other, TreatyKind.War)!;
+                int threshold = Wars.WearinessOf(war, civ.Id) >= _content.War.PeaceAbove ? 0 : rules.ProposeAbove;
+                Consider(state, civ, r.Other, y, TreatyKind.Peace, threshold);
                 continue;
             }
 
@@ -208,11 +213,15 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         Evaluation why = Chooser.EvaluationAt(pick);
         if (kind == TreatyKind.War)
         {
-            Issue(state, queue, civ.Id, new DeclareWarCommand(_content, other), AiAction.DeclareWar, -1, other.Value, why);
+            // GDD 9.3: the goal follows the cause: land when they hold a settlement we claim, otherwise revenge.
+            int claimed = Treaties.ClaimedSettlement(state, civ.Id, other);
+            WarGoal goal = claimed >= 0 ? WarGoal.Land : WarGoal.Revenge;
+            Issue(state, queue, civ.Id, new DeclareWarCommand(_content, other, goal, claimed), AiAction.DeclareWar, -1, other.Value, why);
         }
         else
         {
-            Issue(state, queue, civ.Id, new ProposeTreatyCommand(_content, other, kind), AiAction.ProposeTreaty, -1, other.Value, why);
+            PeaceTerms terms = kind == TreatyKind.Peace ? Wars.TermsFor(_content, state, civ.Id, other) : default;
+            Issue(state, queue, civ.Id, new ProposeTreatyCommand(_content, other, kind, terms), AiAction.ProposeTreaty, -1, other.Value, why);
         }
     }
 
@@ -223,7 +232,8 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             return;
         }
 
-        Evaluation e = Evaluate(state, civ, other, kind);
+        PeaceTerms terms = kind == TreatyKind.Peace ? Wars.TermsFor(_content, state, civ.Id, other) : default;
+        Evaluation e = Evaluate(state, civ, other, kind, terms);
         if (e.Value >= threshold)
         {
             Chooser.Offer((y * 8) + (int)kind, e);
@@ -374,25 +384,6 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         }
 
         return sum;
-    }
-
-    // GDD 9.3: no war without a cause: a settlement of ours they live in, or an attack of theirs to avenge.
-    private static bool Cause(Relation? r)
-    {
-        if (r is null)
-        {
-            return false;
-        }
-
-        foreach (RelationMemory m in r.Memories)
-        {
-            if ((m.Kind == RelationEvent.BorderDispute && m.IsOngoing) || m.Kind == RelationEvent.Attack)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private bool Binds(GameState state, CivId civ, CivId other)

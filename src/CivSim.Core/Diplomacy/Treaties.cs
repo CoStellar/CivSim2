@@ -99,10 +99,13 @@ public sealed record TreatyRules
     public ResponseCurve Advantage { get; init; } = ResponseCurve.Linear(120, 0, 250, 1500);
 
     /// <summary>Years at war to factor for peace: war weariness until stage 4e brings war score and losses.</summary>
-    public ResponseCurve WarWeariness { get; init; } = ResponseCurve.Linear(0, 0, 150, 1500);
+    public ResponseCurve WarWeariness { get; init; } = ResponseCurve.Linear(0, 0, 100, 1500);
 
     /// <summary>Sympathy (hundredths) to factor for peace: even enemies make peace, friends sooner.</summary>
     public ResponseCurve PeaceOpinion { get; init; } = ResponseCurve.Linear(-10000, 300, 5000, 1500);
+
+    /// <summary>Peace: what its terms are worth to us in war score points (negative when we give; stage 4e).</summary>
+    public ResponseCurve PeaceTerms { get; init; } = ResponseCurve.Linear(-50, 400, 50, 1600);
 
     /// <summary>Rules per treaty kind, index = <see cref="TreatyKind"/>.</summary>
     public IReadOnlyList<TreatyKindDefinition> Kinds { get; init; } = Defaults();
@@ -171,6 +174,36 @@ public sealed class Treaty
     /// <summary>Trade: worth of all goods exchanged so far, hundredths.</summary>
     public long TotalWorth { get; set; }
 
+    /// <summary>War (and the peace after it): what the war is fought for (stage 4e).</summary>
+    public WarGoal Goal { get; set; }
+
+    /// <summary>War: the settlement a war for land is about, or -1.</summary>
+    public int GoalSettlement { get; set; } = -1;
+
+    /// <summary>War: the score from <see cref="A"/>'s side, -100..100 (GDD 9.3).</summary>
+    public int Score { get; set; }
+
+    /// <summary>War: people of <see cref="A"/> killed in it.</summary>
+    public int DeadA { get; set; }
+
+    /// <summary>War: people of <see cref="B"/> killed in it.</summary>
+    public int DeadB { get; set; }
+
+    /// <summary>War: people of <see cref="A"/> when it began.</summary>
+    public int PeopleA { get; set; }
+
+    /// <summary>War: people of <see cref="B"/> when it began.</summary>
+    public int PeopleB { get; set; }
+
+    /// <summary>War: weariness of <see cref="A"/>, 0..100.</summary>
+    public int WearinessA { get; set; }
+
+    /// <summary>War: weariness of <see cref="B"/>, 0..100.</summary>
+    public int WearinessB { get; set; }
+
+    /// <summary>Peace: the terms it was made on.</summary>
+    public PeaceTerms Terms { get; set; } = PeaceTerms.White;
+
     /// <summary>True when <paramref name="civ"/> is one of the two sides.</summary>
     public bool Involves(CivId civ) => civ == A || civ == B;
 
@@ -194,7 +227,8 @@ public enum ProposalStatus : byte
 /// <param name="Kind">The treaty offered (peace ends a war).</param>
 /// <param name="Month">Game month it was made, or declined.</param>
 /// <param name="Status">Waiting or declined.</param>
-public readonly record struct TreatyProposal(CivId From, CivId To, TreatyKind Kind, long Month, ProposalStatus Status);
+/// <param name="Terms">Peace: the conditions offered or asked for (stage 4e).</param>
+public readonly record struct TreatyProposal(CivId From, CivId To, TreatyKind Kind, long Month, ProposalStatus Status, PeaceTerms Terms = default);
 
 /// <summary>
 /// Every treaty, war and proposal of the game (GDD 9.1; stage 4d). Treaties are kept sorted by the pair and kind and

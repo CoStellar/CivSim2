@@ -704,6 +704,19 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Bitwa:** kilka rund z losowością. Liczą się siła, teren (wzgórza, las, rzeka), mury, morale i dowódca. Przy niskim morale oddział ucieka zamiast ginąć.
 - **Oblężenie:** miasto z murami trzeba oblęgać przez kilka tur. W tym czasie miasto zjada zapasy, a oblężnik zużywa własne zaopatrzenie.
 
+**Wojna w erach 1–2 (etap 4e, decyzje Patryka z 2026-11-07, ADR 0021):**
+
+- **Cel:** ziemia (konkretna osada wroga), łupy (zapasy) albo odwet (za napaść lub zabraną osadę). Wojna o łupy bez powodu psuje opinię świadków najbardziej, odwet wcale.
+- **Uzbrojenie z technologii, na jakie lud stać:** gołe ręce (50% siły), drewniane włócznie hartowane w ogniu, proce, włócznie i topory z kamiennym grotem (100%). Każdy poziom uzbrojenia to wpis w danych: technologia, dobro zużywane przez wojowników i procent siły. Prawdziwa broń z metalu przychodzi z kowalami w erze 3 (brąz ok. 150%, żelazo ok. 200%).
+- **Wyprawa:** wojownicy z osad zbierają się w jedną armię pod wodzem (w erach 1–2 do 50 wojowników na jednym polu). Mechanika jest gotowa na późniejsze ery: limit wodza i liczba oddziałów na polu są w danych er, a większa armia zajmie kilka sąsiednich pól (front). Co najmniej 1/3 wojowników każdej osady zostaje w domu.
+- **Zaopatrzenie:** armia niesie jedzenie. Z osad najeźdźcy blisko trasy marszu wychodzą tragarze (jak zwiadowcy) i donoszą jedzenie tą samą trasą. Armia bez jedzenia traci morale, walczy słabiej i musi napadać okoliczne wioski wroga, żeby się wyżywić.
+- **Dowódca nie rusza na wojnę, którą na pewno przegra:** przed wyprawą i przed bitwą liczy spodziewany wynik z tego, co widzi (siła wroga z ostatniego kroku, teren, uzbrojenie, morale, jedzenie), i rusza dopiero przy dobrej szansie.
+- **Podbój:** zdobyta wioska zostaje z mieszkańcami i przechodzi do zwycięzcy; z obozu pokonani uciekają do najbliższej własnej osady. Niewolnictwo i jeńcy w przyszłości.
+- **Pokój:** z celu i wyniku wojny: oddanie spornej osady, jednorazowy okup w dobrach albo biały pokój; potem rozejm.
+- **Zmęczenie wojną** rośnie z latami wojny i stratami i obniża nastrój w osadach (a przez nastrój urodzenia).
+- **Później:** oblężenia i mury (z budynkami), plemiona niezależne (z secesją w 4f), trybut i wasalstwo (moduły).
+- **Co erę** moduł wojny trzeba zaktualizować: nowe uzbrojenie, fachy i jednostki, limity wodza i pola, zaopatrzenie (`docs/systems/war.md`, sekcja „Co erę”).
+
 ### 9.4 Jednostki
 
 | Kategoria | Przykłady przez ery | Uwagi |

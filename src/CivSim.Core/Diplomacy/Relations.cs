@@ -56,6 +56,9 @@ public enum RelationEvent : byte
 
     /// <summary>They live under another form of government (ongoing; stage 4f).</summary>
     OtherGovernment = 6,
+
+    /// <summary>They declared war on us, or on someone we know, for land or loot (stage 4e, GDD 9.3: aggression).</summary>
+    Aggression = 7,
 }
 
 /// <summary>One kind of remembered event (data/relations.json). Points are in hundredths; rates per year.</summary>

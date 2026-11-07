@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 21;
+    public const int FormatVersion = 22;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -306,7 +306,8 @@ public static class SaveGameSerializer
         foreach (Core.Diplomacy.Treaty t in state.Treaties.All)
         {
             list.Add(new TreatySaveData(t.A.Value, t.B.Value, (byte)t.Kind, t.Initiator.Value, t.SinceMonth, t.UntilMonth,
-                t.GatewayA, t.GatewayB, t.LastFlowMonth, t.LastWorth, t.TotalWorth));
+                t.GatewayA, t.GatewayB, t.LastFlowMonth, t.LastWorth, t.TotalWorth, (byte)t.Goal, t.GoalSettlement, t.Score,
+                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms)));
         }
 
         return list;
@@ -317,11 +318,18 @@ public static class SaveGameSerializer
         var list = new List<ProposalSaveData>(state.Treaties.Proposals.Count);
         foreach (Core.Diplomacy.TreatyProposal p in state.Treaties.Proposals)
         {
-            list.Add(new ProposalSaveData(p.From.Value, p.To.Value, (byte)p.Kind, p.Month, (byte)p.Status));
+            list.Add(new ProposalSaveData(p.From.Value, p.To.Value, (byte)p.Kind, p.Month, (byte)p.Status, SaveTerms(p.Terms)));
         }
 
         return list;
     }
+
+    private static PeaceTermsSaveData SaveTerms(Core.Diplomacy.PeaceTerms terms) =>
+        new((byte)terms.Kind, terms.Giver.Value, terms.Settlement, terms.RansomPercent);
+
+    private static Core.Diplomacy.PeaceTerms LoadTerms(PeaceTermsSaveData? t) => t is null
+        ? Core.Diplomacy.PeaceTerms.White
+        : new Core.Diplomacy.PeaceTerms((Core.Diplomacy.PeaceTermsKind)t.Kind, new CivId(t.Giver), t.Settlement, t.RansomPercent);
 
     private static void LoadTreaties(GameState state, SaveData data)
     {
@@ -335,13 +343,23 @@ public static class SaveGameSerializer
                 LastFlowMonth = t.LastFlowMonth,
                 LastWorth = t.LastWorth,
                 TotalWorth = t.TotalWorth,
+                Goal = (Core.Diplomacy.WarGoal)t.Goal,
+                GoalSettlement = t.GoalSettlement,
+                Score = t.Score,
+                DeadA = t.DeadA,
+                DeadB = t.DeadB,
+                PeopleA = t.PeopleA,
+                PeopleB = t.PeopleB,
+                WearinessA = t.WearinessA,
+                WearinessB = t.WearinessB,
+                Terms = LoadTerms(t.Terms),
             });
         }
 
         foreach (ProposalSaveData p in data.Proposals ?? [])
         {
             state.Treaties.AddProposalForLoad(new Core.Diplomacy.TreatyProposal(
-                new CivId(p.From), new CivId(p.To), (Core.Diplomacy.TreatyKind)p.Kind, p.Month, (Core.Diplomacy.ProposalStatus)p.Status));
+                new CivId(p.From), new CivId(p.To), (Core.Diplomacy.TreatyKind)p.Kind, p.Month, (Core.Diplomacy.ProposalStatus)p.Status, LoadTerms(p.Terms)));
         }
     }
 

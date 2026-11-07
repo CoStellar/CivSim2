@@ -230,6 +230,16 @@ public static class GameStateHash
             h.Add(t.LastFlowMonth);
             h.Add(t.LastWorth);
             h.Add(t.TotalWorth);
+            h.Add((int)t.Goal);
+            h.Add(t.GoalSettlement);
+            h.Add(t.Score);
+            h.Add(t.DeadA);
+            h.Add(t.DeadB);
+            h.Add(t.PeopleA);
+            h.Add(t.PeopleB);
+            h.Add(t.WearinessA);
+            h.Add(t.WearinessB);
+            AddTerms(ref h, t.Terms);
         }
 
         h.Add(state.Treaties.Proposals.Count);
@@ -240,8 +250,17 @@ public static class GameStateHash
             h.Add((int)p.Kind);
             h.Add(p.Month);
             h.Add((int)p.Status);
+            AddTerms(ref h, p.Terms);
         }
 
         return h.Value;
+    }
+
+    private static void AddTerms(ref StateHasher h, Diplomacy.PeaceTerms terms)
+    {
+        h.Add((int)terms.Kind);
+        h.Add(terms.Giver.Value);
+        h.Add(terms.Settlement);
+        h.Add(terms.RansomPercent);
     }
 }

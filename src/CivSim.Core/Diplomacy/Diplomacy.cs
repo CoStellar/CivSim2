@@ -97,6 +97,77 @@ public static class Treaties
         return tech >= 0 && (!a.Knows(tech) || !b.Knows(tech)) ? "Both sides must know the technology this treaty needs." : null;
     }
 
+    /// <summary>
+    /// Why <paramref name="civ"/> may not declare war on <paramref name="target"/> for <paramref name="goal"/> now, or null
+    /// when it may (GDD 9.3: a war for land names a settlement of the enemy we know of; revenge needs a cause).
+    /// </summary>
+    public static string? CannotDeclareWar(GameContent content, GameState state, CivId civ, CivId target, WarGoal goal, int goalSettlement)
+    {
+        if (CannotDeclareWar(state, civ, target) is { } reason)
+        {
+            return reason;
+        }
+
+        CivilizationState a = state.FindCivilization(civ)!;
+        switch (goal)
+        {
+            case WarGoal.Land:
+                SettlementState? s = goalSettlement >= 0 ? state.FindSettlement(new SettlementId(goalSettlement)) : null;
+                if (s is not { IsActive: true } || s.Owner != target)
+                {
+                    return "A war for land names a settlement of the enemy.";
+                }
+
+                return Perception.MapMemory.Knows(content, state, a, state.Worlds[s.World.Value].Geometry.Index(s.Cell))
+                    ? null
+                    : "We do not know where that settlement is.";
+            case WarGoal.Revenge:
+                return HasGrievance(state, civ, target) ? null : "There is nothing to avenge.";
+            case WarGoal.Loot:
+                return null;
+            default:
+                return "Unknown war goal.";
+        }
+    }
+
+    /// <summary>
+    /// True when <paramref name="civ"/> has a reason to fight <paramref name="other"/> (GDD 9.3): they attacked us, or
+    /// live in a settlement we claim.
+    /// </summary>
+    public static bool HasGrievance(GameState state, CivId civ, CivId other)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (state.FindCivilization(civ)?.Relation(other) is not { } r)
+        {
+            return false;
+        }
+
+        foreach (RelationMemory m in r.Memories)
+        {
+            if ((m.Kind == RelationEvent.BorderDispute && m.IsOngoing) || m.Kind == RelationEvent.Attack || m.Kind == RelationEvent.Aggression)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>The settlement of <paramref name="other"/> that <paramref name="civ"/> claims (taken from it), or -1.</summary>
+    public static int ClaimedSettlement(GameState state, CivId civ, CivId other)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (s.IsActive && s.Owner == other && s.ClaimCiv == civ.Value && s.HasClaim(state.Month))
+            {
+                return s.Id.Value;
+            }
+        }
+
+        return -1;
+    }
+
     /// <summary>Why <paramref name="civ"/> may not declare war on <paramref name="target"/> now, or null when it may.</summary>
     public static string? CannotDeclareWar(GameState state, CivId civ, CivId target)
     {
@@ -117,7 +188,14 @@ public static class Treaties
     }
 
     /// <summary>Signs <paramref name="kind"/> between <paramref name="from"/> (who proposed) and <paramref name="to"/>; returns the chronicle line.</summary>
-    public static string Sign(GameContent content, GameState state, CivId from, CivId to, TreatyKind kind)
+    public static string Sign(GameContent content, GameState state, CivId from, CivId to, TreatyKind kind) =>
+        Sign(content, state, from, to, kind, PeaceTerms.White);
+
+    /// <summary>
+    /// Signs <paramref name="kind"/>; a peace carries out <paramref name="terms"/> (GDD 9.3) and keeps the war's goal,
+    /// score and dead on the truce for the record. Returns the chronicle line.
+    /// </summary>
+    public static string Sign(GameContent content, GameState state, CivId from, CivId to, TreatyKind kind, PeaceTerms terms)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(state);
@@ -131,9 +209,24 @@ public static class Treaties
         {
             Treaty? war = book.Find(from, to, TreatyKind.War);
             long warYears = war is null ? 0 : (state.Month - war.SinceMonth) / 12;
+            if (war is not null)
+            {
+                treaty.Goal = war.Goal;
+                treaty.GoalSettlement = war.GoalSettlement;
+                treaty.Score = war.Score;
+                treaty.DeadA = war.DeadA;
+                treaty.DeadB = war.DeadB;
+                treaty.PeopleA = war.PeopleA;
+                treaty.PeopleB = war.PeopleB;
+                treaty.WearinessA = war.WearinessA;
+                treaty.WearinessB = war.WearinessB;
+            }
+
+            string kept = Wars.Keep(content, state, from, to, terms);
+            treaty.Terms = kept.Length > 0 ? terms : PeaceTerms.White;
             book.Remove(from, to, TreatyKind.War);
             book.Add(treaty);
-            return string.Create(CultureInfo.InvariantCulture, $"{a} and {b} made peace after {warYears} years of war.");
+            return string.Create(CultureInfo.InvariantCulture, $"{a} and {b} made peace after {warYears} years of war.{kept}");
         }
 
         book.Add(treaty);
@@ -150,13 +243,25 @@ public static class Treaties
     /// broken pact is remembered by the victim and, more weakly, by everyone who knows both; the victim's defensive
     /// allies join the war or let it down. Returns the chronicle line.
     /// </summary>
-    public static string DeclareWar(GameContent content, GameState state, CivId civ, CivId target)
+    public static string DeclareWar(GameContent content, GameState state, CivId civ, CivId target) =>
+        DeclareWar(content, state, civ, target, WarGoal.Revenge, -1);
+
+    /// <summary>
+    /// Declares war for <paramref name="goal"/> (GDD 9.3, stage 4e): like <see cref="DeclareWar(GameContent, GameState, CivId, CivId)"/>,
+    /// and the victim and the witnesses remember the aggression as strongly as the goal says (data/war.json).
+    /// </summary>
+    public static string DeclareWar(GameContent content, GameState state, CivId civ, CivId target, WarGoal goal, int goalSettlement)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(state);
         TreatyBook book = state.Treaties;
         bool broke = EndTreaties(content, book, civ, target);
-        book.Add(new Treaty(civ, target, TreatyKind.War, civ, state.Month));
+        Treaty declared = book.Add(new Treaty(civ, target, TreatyKind.War, civ, state.Month));
+        declared.Goal = goal;
+        declared.GoalSettlement = goal == WarGoal.Land ? goalSettlement : -1;
+        declared.PeopleA = Wars.PeopleOf(state, declared.A);
+        declared.PeopleB = Wars.PeopleOf(state, declared.B);
+        Aggression(content, state, civ, target, goal);
         book.RemoveProposals(p => (p.From == civ && p.To == target) || (p.From == target && p.To == civ));
         if (state.FindCivilization(target) is { } victim)
         {
@@ -164,6 +269,12 @@ public static class Treaties
         }
         var line = new StringBuilder();
         line.Append(CultureInfo.InvariantCulture, $"{Name(state, civ)} declared war on {Name(state, target)}");
+        line.Append(goal switch
+        {
+            WarGoal.Land when state.FindSettlement(new SettlementId(goalSettlement)) is { } s => $" for {s.Name}",
+            WarGoal.Loot => " for loot",
+            _ => " to avenge old wrongs",
+        });
         if (broke)
         {
             line.Append(", breaking their treaty");
@@ -220,6 +331,28 @@ public static class Treaties
             content.Relations.MaxMemories,
             state.Month);
         r.Recount(state.Month);
+    }
+
+    // GDD 9.3: the victim and everyone who knows both remember a war for land or loot (data/war.json goals).
+    private static void Aggression(GameContent content, GameState state, CivId aggressor, CivId victim, WarGoal goal)
+    {
+        WarGoalDefinition def = content.War.Goals[(int)goal];
+        foreach (CivilizationState w in state.Civilizations)
+        {
+            if (!w.IsAlive || w.Id == aggressor)
+            {
+                continue;
+            }
+
+            int percent = w.Id == victim ? def.VictimPercent : def.WitnessPercent;
+            Relation? r = w.Relation(aggressor);
+            if (percent <= 0 || r is not { HasMet: true } || (w.Id != victim && w.Relation(victim) is not { HasMet: true }))
+            {
+                continue;
+            }
+
+            Remember(content, state, r, RelationEvent.Aggression, percent);
+        }
     }
 
     // Removes every treaty between the two; true when one of them bound against war.

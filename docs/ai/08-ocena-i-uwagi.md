@@ -197,6 +197,14 @@ decyzją AI (ile uczyć). To ostatnie zostawiam do decyzji Patryka: reguła dzia
 **Skutek uboczny do obserwacji:** w środkowych stuleciach jest więcej obozów i przeprowadzek niż przed PR 2, bo obóz osiada dopiero,
 gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkich. Liczby: `09-statystyki.md`.
 
+## 12. Wojna: zmęczenie rośnie głównie z lat (etap 4e, PR 1)
+
+- **Co jest za proste:** w epoce kamienia krok ma 50 lat, a zmęczenie rośnie o 1 punkt na rok, więc po 2 krokach każda strona ma 100
+  niezależnie od strat i wyniku. Pokój przychodzi „z nudów”, a nie z przegranych bitew. Straty w napaściach są małe (kilka osób).
+- **Cel wojny wybiera dyplomata z prostej reguły** (roszczenie → ziemia, inaczej odwet). Nie waży łupów ani wartości osady.
+- **Plan:** w PR 2–4 bitwy wypraw dadzą prawdziwe straty, a dowódca będzie liczył szanse i cel; w PR 5 strojenie `wearinessPerYear`
+  (np. 0,3) i `wearinessPerLossPercent`, żeby straty ważyły więcej niż czas.
+
 ## Decyzje Patryka (2026-11-06)
 
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.

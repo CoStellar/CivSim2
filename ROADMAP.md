@@ -135,7 +135,7 @@ strateg: waga nauki i wpływu; obce obozy tylko z pól widzianych teraz; liczby 
 osiedlenie porównane ze zbieractwem i ekspansywnością; wioska wysyła osadników, gdy jest pełna albo ma wyjałowione pola; wyprawy w nieznane
 dla ciekawych i ekspansywnych; zwiadowcy i marsz na stulecie; kolumny `settlements` i `spread_cells` w statystykach Headless).
 
-Gotowe też: **etap 4F** (ludzie i fachy, niżej, decyzja Patryka z 2026-11-06: przed wojną). Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
+Gotowe też: **etap 4F** (ludzie i fachy, niżej, decyzja Patryka z 2026-11-06: przed wojną). Teraz: **4e** wojna (niżej, decyzje z 2026-11-07), potem **D** odłamy jako nowe cywilizacje w 4f.
 Przeprowadzka całej wioski (z planu C) jeszcze nie: czeka na koszt porzucanych pól i budynków (etap budowli).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
@@ -160,6 +160,19 @@ Gotowe, gdy: w 3 grach po 1000 tur technologie przychodzą dopiero po zebraniu f
 - [x] **PR 4:** urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty technologii (dane historyczne: start +1,0‰ na rok, ogień +1,6‰, garncarstwo +2,2‰, wioska −2‰); wykres ludności przed/po (`docs/ai/img/ludnosc_przed_po.png`)
 - [x] **PR 5:** graf technologii i fachów rysowany z danych (`docs/systems/graf-technologii.md`, skrypt `docs/systems/tools/tech_graph.py`); test osiągalności od zera i braku pętli (`TechnologyGraphTests`, sprawdzenie przy wczytywaniu danych); `docs/systems/skills.md`, `docs/ai/` (statystyki z 3 seedów po całym etapie)
 
+## Etap 4e — Wojna (decyzje Patryka z 2026-11-07)
+
+Zasady: GDD 9.3, ADR 0021. Plan: `docs/prompts/07-etap-wojna.md`.
+
+Gotowe, gdy: w 3 grach po 1000 tur wojny mają cel i kończą się pokojem z warunkami, wyprawy maszerują z zaopatrzeniem, bitwy liczą teren,
+morale i uzbrojenie z technologii, dowódca nie rusza na przegraną wojnę, a zmęczenie wojną widać w nastroju.
+
+- [x] **PR 1:** cel wojny (ziemia, łupy, odwet), wynik i zmęczenie (efekt na nastrój), pokój z warunkami (osada, okup, biały pokój), wspomnienie „napaść bez powodu”; dzisiejsze napaści liczą się do wyniku; `data/war.json`, zapis, hash, `--wars` w Headless; dyplomata wybiera cel i warunki
+- [ ] **PR 2:** uzbrojenie z technologii (gołe ręce, drewniane włócznie, proce, kamienne groty; wpisy w danych); wyprawy na mapie: zbiórka (1/3 zostaje w domu), marsz, jedzenie, limit wodza i ludzi na polu z danych er (front na kilku polach gotowy na przyszłe ery); migawka dla podglądu
+- [ ] **PR 3:** bitwa w rundach (teren, morale, uzbrojenie, najedzenie, ucieczka, straty), podbój wioski, ucieczka z obozu; tragarze z jedzeniem po trasie marszu; głodna armia napada okoliczne wioski
+- [ ] **PR 4:** AI: dowódca (spodziewany wynik bitwy z tego, co widzi, próg szansy w `data/ai.json`; zbiórka, marsz, atak, odwrót, obrona); test martwych wartości; `docs/ai/`
+- [ ] **PR 5:** strojenie i statystyki z 3 seedów (wojny, bitwy, straty, zmęczenie), `docs/systems/war.md` z sekcją „Co erę”
+
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 
 Zaraz po etapie 4. Cel: łatwiej oceniać symulację, bez grzebania w argumentach uruchomienia w Godocie.
@@ -178,6 +191,8 @@ Gotowe, gdy: Patryk uruchamia podgląd, ustawia świat i symulację w menu, star
 ## Etapy 6–12 — Ery 3–9
 
 Jedna era na etap. W każdym: technologie i zasoby w danych → potrzebne mechaniki z zakresu CORE → AI → podgląd deweloperski → balans w 100 grach.
+**W każdym etapie ery zaktualizuj też moduł wojny** (prośba Patryka z 2026-11-07): nowe uzbrojenie, fachy (np. kowale) i jednostki, limit wodza
+i liczba ludzi na polu, zaopatrzenie; lista w `docs/systems/war.md`, sekcja „Co erę”.
 Kolejne ustroje i warstwy ludności dochodzą razem z erami, w ramach wersji uproszczonych z GDD.
 
 ## Etap 13 — Tryb gracza i grafika (na sam koniec CORE)

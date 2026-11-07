@@ -15,6 +15,7 @@
     {"key": "storage", "name": "Storage", "target": "civilization", "stat": "spoilage_percent", "stacking": "sum"},
     {"key": "child_care", "name": "Child Care", "target": "civilization", "stat": "child_mortality_per_mille", "stacking": "sum"},
     {"key": "clean_living", "name": "Clean Living", "target": "civilization", "stat": "adult_deaths_per_ten_thousand", "stacking": "sum"},
-    {"key": "fertility", "name": "Fertility", "target": "civilization", "stat": "births_per_ten_thousand", "stacking": "sum"}
+    {"key": "fertility", "name": "Fertility", "target": "civilization", "stat": "births_per_ten_thousand", "stacking": "sum"},
+    {"key": "war_weariness", "name": "War Weariness", "target": "civilization", "stat": "mood", "stacking": "replace"}
   ]
 }

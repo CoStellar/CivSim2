@@ -76,6 +76,9 @@ public sealed class GameContent
     /// <summary>Diplomacy and trade between civilizations (data/diplomacy.json, stage 4d).</summary>
     public Diplomacy.TreatyRules Treaties { get; init; } = new();
 
+    /// <summary>War: goals, score, weariness, terms of peace (data/war.json, stage 4e).</summary>
+    public Diplomacy.WarRules War { get; init; } = new();
+
     /// <summary>Research and diffusion rules (stage 3f).</summary>
     public ResearchRules Research { get; init; } = new();
 
