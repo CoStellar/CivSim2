@@ -50,7 +50,7 @@ public static class ContentLoader
         LoadPeopleRequirements(Path.Combine(directory, "technologies.json"), technologies, skills, strata, errors);
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
-        Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), goods, technologies, errors);
+        Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), goods, technologies, biomes, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -1618,7 +1618,71 @@ public static class ContentLoader
         };
     }
 
-    private static Core.Diplomacy.WarRules LoadWar(string path, List<GoodDefinition> goods, List<TechnologyDefinition> technologies, List<string> errors)
+    // Battles in rounds (stage 4e PR 4): war.json battle, with defence bonuses of terrain.
+    private static Core.Episodes.BattleRules LoadBattle(JsonElement root, string file, IReadOnlyList<BiomeDefinition> biomes, List<string> errors)
+    {
+        if (!root.TryGetProperty("battle", out JsonElement be) || be.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add($"{file}: missing object 'battle'.");
+            return new Core.Episodes.BattleRules();
+        }
+
+        var b = new Reader(be, $"{file}: battle", errors);
+        var list = new List<Core.Episodes.BiomeDefence>();
+        int hills = 0, mountains = 0, river = 0;
+        if (be.TryGetProperty("terrain", out JsonElement te) && te.ValueKind == JsonValueKind.Object)
+        {
+            var t = new Reader(te, $"{file}: battle.terrain", errors);
+            hills = t.Int("hillsPercent", 0, 1000);
+            mountains = t.Int("mountainsPercent", 0, 1000);
+            river = t.Int("riverPercent", 0, 1000);
+            if (te.TryGetProperty("biomes", out JsonElement arr) && arr.ValueKind == JsonValueKind.Array)
+            {
+                int i = 0;
+                foreach (JsonElement e in arr.EnumerateArray())
+                {
+                    string at = $"{file}: battle.terrain.biomes[{i}]";
+                    var x = new Reader(e, at, errors);
+                    string key = x.String("biome");
+                    int id = -1;
+                    for (int k = 0; k < biomes.Count; k++)
+                    {
+                        id = biomes[k].Key == key ? k : id;
+                    }
+
+                    if (id < 0)
+                    {
+                        errors.Add($"{at}.biome: unknown biome '{key}'.");
+                    }
+
+                    list.Add(new Core.Episodes.BiomeDefence(id, x.Int("percent", 0, 1000)));
+                    i++;
+                }
+            }
+        }
+        else
+        {
+            errors.Add($"{file}: battle: missing object 'terrain'.");
+        }
+
+        return new Core.Episodes.BattleRules
+        {
+            Rounds = b.Int("rounds", 1, 100),
+            CasualtyPercent = b.Int("casualtyPercent", 0, 100),
+            RollPercent = b.Range("rollPercent", 0, 1000),
+            MoralePerLossPercent = b.Int("moralePerLossPercent", 0, 100),
+            BreakMorale = b.Int("breakMorale", 0, 100),
+            DefenderMorale = b.Int("defenderMorale", 0, 100),
+            HungryStrengthPercent = b.Int("hungryStrengthPercent", 0, 100),
+            RoutLossPercent = b.Int("routLossPercent", 0, 100),
+            HillsPercent = hills,
+            MountainsPercent = mountains,
+            RiverPercent = river,
+            Biomes = list,
+        };
+    }
+
+    private static Core.Diplomacy.WarRules LoadWar(string path, List<GoodDefinition> goods, List<TechnologyDefinition> technologies, List<BiomeDefinition> biomes, List<string> errors)
     {
         using JsonDocument? doc = Open(path, errors);
         if (doc is null)
@@ -1727,6 +1791,7 @@ public static class ContentLoader
         }
 
         var supply = new Reader(supplyElement, $"{file}: supply", errors);
+        Core.Episodes.BattleRules battle = LoadBattle(doc.RootElement, file, biomes, errors);
 
         var defaults = new Core.Diplomacy.WarRules();
         return new Core.Diplomacy.WarRules
@@ -1734,6 +1799,7 @@ public static class ContentLoader
             Goals = Array.ConvertAll(goals, g => g ?? new Core.Diplomacy.WarGoalDefinition()),
             Armaments = armaments.Count > 0 ? armaments : defaults.Armaments,
             MusterCells = r.Int("musterCells", 0, 1000),
+            Battle = battle,
             FoodPerWarriorPerYear = supply.Amount("foodPerWarriorPerYear", Amount.Zero, Amount.FromUnits(100)),
             CarryFoodMonths = supply.Int("carryFoodMonths", 0, 120),
             SupplySharePercent = supply.Int("supplySharePercent", 0, 100),

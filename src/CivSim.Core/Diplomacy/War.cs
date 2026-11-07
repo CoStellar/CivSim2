@@ -98,6 +98,9 @@ public sealed record WarRules
         new() { Id = 0, Key = "bare_hands", Name = "Bare hands and sticks", StrengthPercent = 50 },
     ];
 
+    /// <summary>Battles in rounds (stage 4e PR 4).</summary>
+    public Episodes.BattleRules Battle { get; init; } = new();
+
     /// <summary>Settlements whose warriors join a campaign lie at most this many cells from the settlement it leaves from.</summary>
     public int MusterCells { get; init; } = 6;
 

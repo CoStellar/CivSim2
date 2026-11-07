@@ -122,6 +122,15 @@ public sealed class Episode
     /// <summary>Campaign: food the carriers bring, index = good.</summary>
     public Amount[] ConvoyFood { get; set; } = [];
 
+    /// <summary>Campaign: battles it fought (stage 4e PR 4).</summary>
+    public int Battles { get; set; }
+
+    /// <summary>Campaign: battles it won.</summary>
+    public int Wins { get; set; }
+
+    /// <summary>Campaign: enemies it killed.</summary>
+    public int Killed { get; set; }
+
     /// <summary>Campaign: loads of food carriers handed over.</summary>
     public int Convoys { get; set; }
 
