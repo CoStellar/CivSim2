@@ -145,6 +145,8 @@ Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla
   w `data/ai.json` i innych plikach, kolejność doradców, wiedza AI. Odśwież statystyki z 3 seedów (`--decisions`), wykres PNG,
   commit w nagłówku `docs/ai/README.md` i dopisz wiersz w jego historii zmian. Nie wolno niczego pominąć.
 - Publiczne klasy i metody w kodzie mają krótkie komentarze XML po angielsku.
+- **Moduł wojny co erę** (prośba Patryka z 2026-11-07): w każdym etapie nowej ery zaktualizuj uzbrojenie, fachy i jednostki wojska, limity wodza
+  i pola oraz zaopatrzenie według listy w `docs/systems/war.md`, sekcja „Co erę”.
 
 ## Grafika (kiedy prosisz Patryka o pliki)
 
