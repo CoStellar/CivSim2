@@ -308,7 +308,7 @@ Ludzie przechodzą między warstwami powoli (kilka procent na turę), w stronę 
 | --- | --- | --- | --- | --- | --- |
 | Kamień | start | 49% | 29,6‰ | 60‰ | +1,0‰ |
 | Kamień | ogień | 48% | 29,6‰ | 60‰ | +1,6‰ |
-| Neolit | garncarstwo | 48% | 29‰ | 60‰ | +2,2‰ (wioski −2‰ z ciasnoty) |
+| Neolit | garncarstwo | 48% | 29‰ | 60‰ (wioska 65‰: krótsze przerwy między dziećmi) | +2,2‰ (wioska +2,8‰: +5‰ urodzeń, −2‰ z ciasnoty) |
 | Brąz | higiena | 47% | 28,5‰ | 60‰ | +3,3‰ |
 | Żelazo | medycyna | 46% | 28‰ | 60‰ | +4,4‰ |
 | Renesans | – | 43% | 28‰ | 60‰ | +6,2‰ |

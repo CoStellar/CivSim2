@@ -36,7 +36,7 @@ Wszystkie tempa są na rok i przeliczane przez długość kroku cywilizacji (ADR
 - **Zdrowie** (0–100): minus brak jedzenia (w procentach), minus tłok (połowa nadwyżki ponad limit poziomu osady, np. 150 dla obozu). Poniżej 60 każdy punkt to 0,2 promila dodatkowych zgonów na rok.
 - **Przyrost** (od etapu 4F, PR 4, ADR 0020, GDD 5.2): `urodzenia × (1 − śmiertelność dzieci) − zgony dorosłych` na rok (`PopulationSystem.GrowthRate`). Na start (najedzona, zdrowa osada, nastrój 50): 60‰ × (1 − 49%) − 29,6‰ = **+1,0‰ na rok** (wcześniej +3‰, czyli 3 razy wolniej). Liczby z danych historycznych: zbieracze-łowcy tracili ok. 49% dzieci przed 15. rokiem życia (Volk i Atkinson 2013), a ludność świata rosła od 10 000 lat p.n.e. do 1700 roku średnio o ok. 0,4‰ na rok (Our World in Data; głód, choroby i wojny zabierają resztę).
   - Nastrój zmienia urodzenia: 0,1‰ za każdy punkt ponad 50 (mniej poniżej); z tego przeżywa tyle dzieci, ile pozwala śmiertelność, więc na przyrost działa mniej więcej jak dawne 0,05‰.
-  - Wioska: +2‰ zgonów dorosłych (ciasnota, brud, choroby od zwierząt hodowlanych).
+  - Wioska: +5‰ urodzeń (osiadli rolnicy mają dzieci w krótszych odstępach, „neolityczna rewolucja demograficzna”, Bocquet-Appel; decyzja Patryka z 2026-11-07) i +2‰ zgonów dorosłych (ciasnota, brud, choroby od zwierząt hodowlanych). Z ogniem i garncarstwem wioska rośnie o +2,8‰, obóz o +2,2‰.
   - Choroby: poniżej 60 zdrowia każdy punkt to 0,2‰ zgonów dorosłych więcej.
   - Technologie przez efekty (`data/effects.json`): `child_care` (śmiertelność dzieci w dziesiątych częściach procenta), `clean_living` (zgony dorosłych na 10 000), `fertility` (urodzenia na 10 000). Ery 1–2: ogień −10 (49% → 48%, przyrost +1,6‰), garncarstwo −6 (29,6‰ → 29‰, przyrost +2,2‰; czystsze przechowywanie wody i jedzenia). Kolejne ery (higiena, medycyna, kanalizacja, szczepionki) dodadzą efekty według tabeli w GDD 5.2.
 - Cywilizacja bez ani jednego człowieka wymiera; kronika to zapisuje.
@@ -45,7 +45,7 @@ Wszystkie tempa są na rok i przeliczane przez długość kroku cywilizacji (ADR
 
 ## Pliki danych
 - `data/strata.json`: warstwy, czy zbierają, docelowy udział, potrzeby (kategoria albo konkretny towar, ilość na rok, podstawowa albo wyższa).
-- `data/population.json`: urodzenia (`birthsPerMille`), śmiertelność dzieci (`childMortalityPercent`), zgony dorosłych (`adultDeathsPerMille`, `villageDeathsPerMille`), głód, zdrowie, nastrój, przesuwanie warstw, zbieranie i ludność nowego plemienia.
+- `data/population.json`: urodzenia (`birthsPerMille`, `villageBirthsPerMille`), śmiertelność dzieci (`childMortalityPercent`), zgony dorosłych (`adultDeathsPerMille`, `villageDeathsPerMille`), głód, zdrowie, nastrój, przesuwanie warstw, zbieranie i ludność nowego plemienia.
 - `data/resources.json`: opcjonalne `gather` przy złożach.
 
 ## Testy

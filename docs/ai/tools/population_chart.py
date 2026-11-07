@@ -1,6 +1,6 @@
 """Draws docs/ai/img/ludnosc_przed_po.png: people and their yearly growth before and after a change.
 
-Usage: python3 docs/ai/tools/population_chart.py RUNS_DIR
+Usage: python3 docs/ai/tools/population_chart.py RUNS_DIR [IMAGE_NAME] [TITLE]
 RUNS_DIR holds before7.csv, before23.csv, before42.csv, after7.csv, after23.csv and after42.csv: --stats files
 (CivSim.Headless --stats, standard map, 1000 turns). Needs matplotlib.
 """
@@ -15,7 +15,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 RUNS = sys.argv[1] if len(sys.argv) > 1 else '.'
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'img', 'ludnosc_przed_po.png')
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'img', sys.argv[2] if len(sys.argv) > 2 else 'ludnosc_przed_po.png')
+TITLE = sys.argv[3] if len(sys.argv) > 3 else 'Etap 4F, PR 4: urodzenia, śmiertelność dzieci i zgony dorosłych'
 SEEDS = (7, 23, 42)
 COLORS = {7: '#2a6fdb', 23: '#e8833a', 42: '#3aa676'}
 WINDOW = 20  # samples in the moving growth window
@@ -54,7 +55,7 @@ for ax in (people, growth):
     ax.spines[['top', 'right']].set_visible(False)
     ax.legend(frameon=False, fontsize=7)
 
-fig.suptitle('Etap 4F, PR 4: urodzenia, śmiertelność dzieci i zgony dorosłych, mapa standard, 1000 tur (przerywana = przed, ciągła = po)', fontsize=11)
+fig.suptitle(TITLE + ', mapa standard, 1000 tur (przerywana = przed, ciągła = po)', fontsize=11)
 plt.tight_layout()
 plt.savefig(OUT, dpi=130)
 print(OUT)
