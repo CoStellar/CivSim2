@@ -56,9 +56,10 @@ flowchart TD
   (`Wars.RecordFight`), morale armii po bitwie zostaje.
 - **Armia z wielu osad** (PR 3): osada wyjścia i własne osady do 6 pól (`musterCells`), z każdej najwyżej 2/3 wojowników; najwyżej `armyLimit`
   wojowników (dane ery, 50 w erach 1–2); `troopsPerCell` (50) mówi, na ilu polach stoi armia (front; w erach 1–2 zawsze jedno pole).
-- **Zaopatrzenie** (PR 3, `supply`): wojownik zjada 1 jedzenia na rok; armia bierze jedzenie na 3 miesiące (najwyżej połowę jedzenia każdej osady
-  i tyle, ile uniesie). Gdy zostaje na mniej niż 2 miesiące, najbliższa własna osada z jedzeniem (do 12 pól) wysyła tragarzy (do 10% ludzi, którzy
-  nie walczą, 10 jedzenia na osobę), którzy idą 4 pola na miesiąc za armią, oddają jedzenie i wracają do domu.
+- **Zaopatrzenie** (PR 3, `supply`; strojenie PR 6): wojownik zjada 1 jedzenia na rok; armia bierze jedzenie na 3 miesiące (najwyżej połowę jedzenia
+  każdej osady i tyle, ile uniesie). Gdy armia zbiera się w osadzie wyjścia, je z jej zapasów, a nie z plecaków (PR 6). Gdy jedzenia zostaje na mniej
+  niż 3 miesiące, tragarzy wysyła ta własna osada do 12 pól, która może dać najwięcej jedzenia (do 10% ludzi, którzy nie walczą, 10 jedzenia
+  na osobę; PR 6, wcześniej najbliższa, często prawie pusta). Tragarze idą 6 pól na miesiąc za armią, oddają jedzenie i wracają do domu.
 - **Głód** (PR 3): głodna armia traci 20 morale na miesiąc (najedzona odzyskuje 10), napada najbliższą znaną osadę wroga do 4 pól, biorąc
   najpierw jedzenie (nie tę samą dwa razy z rzędu), a przy morale poniżej 30 zawraca.
 - **Ciche wygasanie** (PR 2): wojna, w której przez 5 lat nikt nie prowadził kampanii, kończy się białym pokojem (zegar robi krok dokładnie w tym miesiącu).
@@ -90,6 +91,8 @@ Przy każdym etapie nowej ery (etapy 6–12) sprawdź i uzupełnij:
 - `data/war.json` `battle` (PR 4): rundy, straty, szczęście, morale, ucieczka, głód, teren.
 
 ## Testy
+- `WarTuningTests` (PR 6): tragarze z osady z największym zapasem; armia przy zbiórce je z zapasów domu; dowódca nie wysyła armii, której
+  okolica nie wyżywi; przegrywający wysoko płaci okup za pokój; odrzucony pokój wraca po roku.
 - `CommanderTests` (PR 5): spodziewana bitwa bez losowania jest blisko wyników prawdziwych bitew; dowódca nie wysyła armii na silniejszy cel
   ani dalej, niż starczy jedzenia; odwołuje armię, której jedzenie nie wystarczy na drogę; armia atakuje miesiąc po dojściu; odwołać może
   tylko właściciel. `DeadValueTests` ma sytuację wojny, w której każdy próg dowódcy zmienia decyzję.

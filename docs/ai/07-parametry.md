@@ -115,12 +115,13 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `acceptAbove` | 0,8 | ocena | D1 | próg przyjęcia |
 | `declareWarAbove` | 1,5 | ocena | D2 | próg wypowiedzenia wojny |
 | `retryYears` | 100 | lata | D2 | po odmowie nie proponuje tego samego |
+| `peaceRetryYears` | 1 | lata | D2 | po odmowie pokoju proponuje go znowu po roku (od 4e PR 6) |
 | `reachCells` | 16 | pola | D1, D2, handel | zasięg handlu i paktu |
 | `tradeSharePercent` | 50 | **% na krok** | handel | jaka część nadwyżki idzie przez bramę (w kroku, który ma któraś ze stron) |
 | `witnessPercent` | 50 | % | D3 | jak mocno złamanie umowy pamiętają świadkowie |
 | `allyJoinBasePerMille` | 300 | ‰ | D3 | szansa dołączenia sojusznika przy lojalności 0 |
 | `warRaidPercent` | 150 | % | G2 | premia za wypędzanie obozów wroga w wojnie |
-| `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 10 krzywych czynników (od 4e: `warWeariness` liczy zmęczenie 0…100 zamiast lat, nowa `peaceTerms`) |
+| `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 11 krzywych czynników (od 4e: `warWeariness` liczy zmęczenie 0…100 zamiast lat, nowa `peaceTerms`; od PR 6 nowa `warScore` −50 → 5, 0 → 1, a `peaceOpinion` przy −100 daje 0,5 zamiast 0,3) |
 | `treaties[].years` | pokój: 100 | lata | D3 | rozejm po wojnie |
 
 ## `data/war.json` (od etapu 4e)
@@ -141,7 +142,7 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `musterCells` | 6 | pola | K1 | z jak daleka od osady wyjścia dołączają wojownicy innych osad (od PR 3) |
 | `armaments[]` | gołe ręce 50, włócznie hartowane w ogniu 70, proce 80, kamienne groty 100 | % siły | K1 | uzbrojenie (technologia, dobro, zużycie na wojownika); dowódca liczy z niego siłę obu stron (od PR 3) |
 | `battle.*` | 6 rund, 10% siły zabija, szczęście 50–150%, −3 morale na % strat, ucieczka poniżej 40, obrońcy z morale 100, głodni 75%, ucieczka −10%; teren: wzgórza +25, góry +50, rzeka +25, lasy, dżungla i bagna +25 | — | K1 (teren w szansie) | bitwa w rundach (od PR 4); dowódca widzi teren celu w szansie (bez rzeki, bo nie wie, skąd przyjdzie) |
-| `supply.*` | jedzenie 1 na wojownika na rok, zapas na 3 miesiące, tragarze poniżej 2 miesięcy, do 12 pól, 10% ludzi, 4 pola na miesiąc; głód −20 morale na miesiąc, najedzeni +10, odwrót poniżej 30, napad na wioskę do 4 pól | — | K1 (pośrednio) | zaopatrzenie i głód kampanii (od PR 3); dowódca liczy dostępne jedzenie z `supplySharePercent` 50% |
+| `supply.*` | jedzenie 1 na wojownika na rok, zapas na 3 miesiące, tragarze poniżej 3 miesięcy (od PR 6; było 2), do 12 pól, 10% ludzi, 6 pól na miesiąc (od PR 6; było 4); głód −20 morale na miesiąc, najedzeni +10, odwrót poniżej 30, napad na wioskę do 4 pól | | K1, K2 | zaopatrzenie armii (od PR 3); od PR 6 tragarze idą z osady, która może dać najwięcej jedzenia, a armia przy zbiórce je z zapasów domu |
 | `wearinessPerLossPercent` | 3 | punkty na % ludzi zabitych | D1, D2 | zmęczenie ze strat |
 | `peaceAbove` | 60 | punkty zmęczenia | D2 | od tego zmęczenia strona szuka pokoju w każdym kroku i przy każdej ocenie |
 | `moodAtFullWeariness` | 20 | punkty nastroju | — | spadek nastroju przy zmęczeniu 100 |

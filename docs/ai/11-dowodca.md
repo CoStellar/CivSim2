@@ -46,6 +46,9 @@ Test `CommanderTests` sprawdza, że spodziewana szansa jest blisko tego, jak cz�
   celu leży **poza zasięgiem tragarzy** (odległość celu od najbliższej naszej osady minus 12), ile to miesięcy marszu (3 pola na miesiąc),
   i wysyła armię tylko wtedy, gdy jedzenie wystarczy na te miesiące **tam i z powrotem** i jeszcze na 1 miesiąc (`commander.minFoodMonths`):
   `miesiące jedzenia ≥ 2 × miesiące poza zasięgiem + 1`. Przy zapasie na 3 miesiące cel może leżeć najwyżej 3 pola poza zasięgiem tragarzy.
+- **Jedzenie na całą wyprawę** (od PR 6): zapasy, które mogą dać nasze osady do 12 pól od osady wyjścia albo od celu (połowa ich jedzenia),
+  muszą wystarczyć na zbiórkę, marsz tam, miesiąc u celu, marsz z powrotem i jeszcze 1 miesiąc (`minFoodMonths`). Wcześniej dowódca liczył
+  tylko to, co wojownicy niosą, a tragarze nie mieli skąd brać jedzenia, więc armie głodowały w zasięgu własnych osad.
 - **Ocena:** `1000 × szansa × (1 − 0,5% × spodziewane straty) × waga celu „podbój” × mnożnik charakteru (agresja)`; odległość, miesiące
   jedzenia i pola poza zaopatrzeniem tylko w zapisie „Dlaczego?”.
 - **Wybór:** najlepsza ocena (jedna kampania na wojnę naraz).

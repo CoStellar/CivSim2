@@ -37,7 +37,7 @@ for s in SEEDS:
 
 plt.rcParams.update({'font.size': 10, 'axes.edgecolor': GRID, 'axes.labelcolor': INK, 'xtick.color': MUTED, 'ytick.color': MUTED})
 fig, axes = plt.subplots(2, 2, figsize=(13, 9))
-fig.suptitle('Kampanie wojenne w 3 grach po 1000 tur (etap 4e PR 3–5: armie, tragarze, głód, bitwy w rundach, dowódca)', color=INK, fontsize=13)
+fig.suptitle('Kampanie wojenne w 3 grach po 1000 tur (etap 4e PR 3–6: armie, tragarze, głód, bitwy, dowódca, strojenie)', color=INK, fontsize=13)
 
 # (1) Outcomes per seed, stacked.
 a = axes[0][0]
