@@ -180,6 +180,23 @@ public static class GameStateHash
             h.Add(c.Government);
             h.Add(c.PendingGovernment);
             h.Add(c.PendingGovernmentMonth);
+            h.Add(c.LeaderName);
+            h.Add(c.LeaderBornMonth);
+            h.Add(c.LeaderSinceMonth);
+            h.Add(c.LeaderTraits.Length);
+            foreach (int t in c.LeaderTraits)
+            {
+                h.Add(t);
+            }
+
+            h.Add(c.LeaderShift.Length);
+            foreach (int s in c.LeaderShift)
+            {
+                h.Add(s);
+            }
+
+            h.Add(c.Leaders);
+            h.Add(c.CrisisUntilMonth);
             h.Add(c.Relations.Count);
             foreach (Diplomacy.Relation r in c.Relations)
             {

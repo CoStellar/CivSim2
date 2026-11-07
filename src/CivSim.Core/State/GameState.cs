@@ -190,6 +190,7 @@ public sealed class GameState
         earth.Climate.StartLandIce = SeaLevel.LandIce(content, earth.Map);
         Naming.Names.NamePeoples(content.Names, state);
         Governance.Governments.ChooseAtStart(content, state);
+        Governance.Leaders.CrownFirst(content, state);
         for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)
         {
             CivilizationState civ = state._civilizations[i];

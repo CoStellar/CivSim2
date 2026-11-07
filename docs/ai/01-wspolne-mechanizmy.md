@@ -78,7 +78,12 @@ Kod: `src/CivSim.Core/Ai/Character.cs`. GDD 8.4, ADR 0017.
 
 Każda cywilizacja ma 8 cech w skali 0–1000. Są losowane **raz, przy tworzeniu gry**: każda cecha to średnia z dwóch losowań 0–1000
 (więc wartości bliskie 500 są częstsze, skrajne rzadkie). Generator pochodzi ze strumienia `leaders` i numeru cywilizacji. Cechy
-się dziś **nie zmieniają** w trakcie gry (zmiana z doświadczeniem i sukcesja przywódców to etap 4f).
+ludu się dziś **nie zmieniają** w trakcie gry (zmiana z doświadczeniem: później).
+
+**Przywódca** (etap 4f PR 2, GDD 7.5 i 8.4): każda cecha przywódcy przesuwa 1–2 cechy charakteru o 0,2 na czas jego rządów
+(`data/leaders.json`). AI decyduje z cechą = cecha ludu + przesunięcia przywódcy, w granicach 0–1000 (`CivilizationState.Trait`).
+Przykład: lud o agresji 0,5 z wodzem-zdobywcą ma agresję 0,7, więc mnożnik podboju 1,2 zamiast 1,0. Nowy przywódca zmienia politykę
+od razu. Ustrój na starcie i dobór przywódcy przez radę starszych patrzą na cechy samego ludu (`OwnTrait`). Opis: `docs/systems/leaders.md`.
 
 | Cecha | Do czego jest używana dziś | Gdzie |
 | --- | --- | --- |

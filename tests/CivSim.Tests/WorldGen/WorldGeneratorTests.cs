@@ -51,7 +51,8 @@ public class WorldGeneratorTests
     // Stage 4F: every tribe starts with 2 thinkers and a leader too (the map is unchanged).
     // ADR 0022: the months the world computes and the episodes are in the hash (the map is unchanged).
     // Stage 4f: the government of every civilization and the readiness of wars are in the hash (the map is unchanged).
-    private const ulong GoldenWorldHash = 16412736136382599011UL;
+    // Stage 4f PR 2: every civilization's leader is in the hash (the map is unchanged).
+    private const ulong GoldenWorldHash = 3302770729991296288UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

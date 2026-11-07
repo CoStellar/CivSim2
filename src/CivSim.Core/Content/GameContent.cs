@@ -112,6 +112,9 @@ public sealed class GameContent
     /// <summary>Forms of government, index = id (<c>data/governments.json</c>, stage 4f). Empty in hand-made test content.</summary>
     public IReadOnlyList<GovernmentDefinition> Governments { get; init; } = [];
 
+    /// <summary>Leaders: traits, ages, death (<c>data/leaders.json</c>, stage 4f PR 2).</summary>
+    public LeaderRules Leaders { get; init; } = new();
+
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
 

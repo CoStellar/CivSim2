@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 1
-(gałąź `feat/state-governments`, ustroje); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 2
+(gałąź `feat/state-leaders`, przywódcy); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -16,9 +16,26 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Przywódcy (etap 4f, PR 2)
+
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-leaders`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 1 (same ustroje).
+
+| Seed | Lata gry | Ustroje na końcu (żywe) | Następstw | Lat na panowanie | Wojny | Z zerwaniem umowy | Najczęstszy agresor | Kampanie | Pokój z okupem |
+| --- | ---: | --- | ---: | ---: | ---: | ---: | --- | ---: | ---: |
+| 7 | 20 600 (16 000) | 6 wodzostw, 4 rady | 11 621 | 21 | 20 (30) | 13 (21) | cywilizacja 0: 18 wojen | 23 | 3 |
+| 23 | 25 275 (8 901) | 5 rad, 4 wodzostwa | 14 544 | 20 | 8 (48) | 2 (42) | cywilizacje 7 i 10: po 4 | 4 | 1 |
+| 42 | 13 525 (21 200) | 5 rad, 4 wodzostwa | 8 258 | 19 | 45 (26) | 29 (18) | cywilizacje 1 i 8: 18 i 17 | 39 | 6 |
+
+- **Przywódca żyje średnio 19–21 lat u władzy.** Śmierć z wiekiem (tabela w `data/leaders.json`), w wodzostwie każda zmiana wodza
+  przynosi 5 lat walki o władzę (na razie bez skutków; stabilność przychodzi w PR 3).
+- **Cechy przywódcy przesuwają charakter** (np. zdobywca: agresja +200‰), więc ta sama cywilizacja raz jest bardziej wojownicza, raz
+  mniej. Dlatego liczby wojen skaczą między seedami w obie strony: seed 23 z 48 wojen spadł do 8, seed 42 wzrósł z 26 do 45.
+  Pętla odwetu (pkt 14 oceny) nie zniknęła, tylko trafia teraz na inne cywilizacje; poprawka w PR 5.
+- Kronika: jeden wpis o przywódcach na krok cywilizacji (gdy w jednym kroku następuje kilku po sobie, wpis mówi ilu).
+
 ## Ustroje (etap 4f, PR 1)
 
-3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-governments`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 6.
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-governments`. W nawiasach PR 6.
 
 | Seed | Lata gry | Ustroje na końcu (żywe) | Wojny | Z zerwaniem umowy | Najczęstszy agresor | Kampanie | Pokój z okupem |
 | --- | ---: | --- | ---: | ---: | --- | ---: | ---: |

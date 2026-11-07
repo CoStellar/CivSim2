@@ -167,6 +167,16 @@ despotia i republika miejska czekają na epokę brązu.
 | `goalPercent` | bezpieczeństwo 110 | ekspansja 120, podbój 120 | % wagi | S1 (i przez wagi wszystkie) | przechylenie wag celów |
 | `leaning` | ostrożność 1, otwartość 1 | agresja 1, ekspansywność 1 | waga cechy | start gry | który ustrój lud dostaje na start |
 
+## `data/leaders.json` (od etapu 4f PR 2)
+
+| Parametr | Wartość | Decyzje | Znaczenie |
+| --- | --- | --- | --- |
+| `traits[].shifts` | zdobywca: agresja +200; budowniczy: ekspansywność +200; uczony: ciekawość +200; kupiec: handlowość i otwartość +200; ostrożny: ostrożność +200; paranoik: otwartość −200, mściwość +200 | wszystkie przez charakter | przesunięcie cech na czas rządów |
+| `traitCount` | 2–3 | wszystkie | ile cech ma przywódca |
+| `deathByAge` | 20 lat 10‰, 40: 20‰, 50: 35‰, 60: 60‰, 70: 120‰, 80: 250‰, 90: 500‰ na rok | — | jak często zmienia się przywódca (i charakter) |
+| `startAge`, `councilCandidates` | 25–45, 3 | — | wiek pierwszych przywódców; ilu kandydatów waży rada |
+| `governments.json` sukcesja | rada: 40–60 lat, bez kryzysu; wódz: 22–40, kryzys zawsze 5 lat; król: 15–35, kryzys 30%; konsul: 35–55, kadencja 10 lat | — | następca i kryzys (stabilność od PR 3) |
+
 ## `data/skills.json` (od etapu 4F)
 
 | Parametr | Wartość | Na co wpływa w AI |

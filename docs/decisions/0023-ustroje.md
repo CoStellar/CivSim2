@@ -33,6 +33,15 @@ doradców), impulsywność AI, sposób sukcesji, zdolność administracyjną i s
 - **Później w etapie 4f:** stabilność, wpływ warstw, administracja i sukcesja (PR 2–4) dopiszą kolejne pola do tego samego pliku;
   wybór ustroju przez stratega i zmiana po buncie (PR 4–5).
 
+## Uzupełnienie: przywódcy (PR 2 etapu 4f)
+
+- `data/leaders.json`: cechy przywódcy z przesunięciami cech charakteru, liczba cech, śmiertelność z wiekiem; sukcesja w polach ustroju.
+- Charakter, którego używa AI, to cechy ludu plus przesunięcia przywódcy (`LeaderShift` zapisane w stanie, żeby czytać charakter bez
+  zawartości gry). Cechy ludu zostają osobno, więc zmiana władcy jest skokowa, a powolna zmiana z doświadczeniem (później) nie miesza się
+  z cechami przywódcy.
+- Śmierć i następca liczone rok po roku w kroku cywilizacji, z generatora pochodnego (strumień `Leaders`, cywilizacja, miesiąc).
+- Kryzys sukcesji to na razie tylko miesiąc końca (`CrisisUntilMonth`); stabilność (PR 3) go odejmie.
+
 ## Rozważane alternatywy
 
 - **Ustroje w kodzie** (`enum` z wartościami): szybciej, ale łamie zasadę „zawartość w danych” i blokuje ustroje kolejnych er.

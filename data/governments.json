@@ -1,5 +1,5 @@
 {
-  "comment": "Forms of government (GDD 7.2; stage 4f, ADR 0023). title: the civilization's title, {people} is the people's name. fromEra: the first era (key from eras.json) in which a civilization may take it. enactYears: years before a state decision (a new government, a declared war: its armies wait) takes effect; very fast 0, fast 1, medium 2, slow 4. reviewPercent: the strategist and the diplomat review this many percent of their usual interval (lower = a faster state). cautionShift: added to the civilization's caution (per mille) when the AI decides whether to take its best option outright; negative = more impulsive. goalPercent: percent applied to the strategist's goal weights (expansion, security, prosperity, science, influence, conquest); missing goals stay 100. leaning: how much each trait draws a new people to this government at the start; the government with the highest sum of trait x leaning wins (ties: the first). Despotism and the city republic come with the bronze age (stage 6).",
+  "comment": "Forms of government (GDD 7.2; stage 4f, ADR 0023). title: the civilization's title, {people} is the people's name. fromEra: the first era (key from eras.json) in which a civilization may take it. enactYears: years before a state decision (a new government, a declared war: its armies wait) takes effect; very fast 0, fast 1, medium 2, slow 4. reviewPercent: the strategist and the diplomat review this many percent of their usual interval (lower = a faster state). cautionShift: added to the civilization's caution (per mille) when the AI decides whether to take its best option outright; negative = more impulsive. goalPercent: percent applied to the strategist's goal weights (expansion, security, prosperity, science, influence, conquest); missing goals stay 100. leaning: how much each trait draws a new people to this government at the start; the government with the highest sum of trait x leaning wins (ties: the first). Despotism and the city republic come with the bronze age (stage 6). Leaders (stage 4f PR 2, GDD 7.5): leaderTitle styles the leader; succession: council (the council weighs several candidates and takes the one closest to the people's character), strongest (the strongest warrior), hereditary (the heir), election (a new leader every termYears); successorAge: age range of a new leader; crisisPercent: chance a change of leader brings a succession crisis lasting crisisYears (it lowers stability).",
   "governments": [
     {
       "key": "elder_council",
@@ -10,7 +10,13 @@
       "reviewPercent": 150,
       "cautionShift": 200,
       "goalPercent": {"security": 110},
-      "leaning": {"caution": 1, "openness": 1}
+      "leaning": {"caution": 1, "openness": 1},
+      "leaderTitle": "Elder",
+      "succession": "council",
+      "successorAge": [40, 60],
+      "crisisPercent": 0,
+      "crisisYears": 0,
+      "termYears": 0
     },
     {
       "key": "chiefdom",
@@ -21,7 +27,13 @@
       "reviewPercent": 75,
       "cautionShift": 0,
       "goalPercent": {"expansion": 120, "conquest": 120},
-      "leaning": {"aggression": 1, "expansiveness": 1}
+      "leaning": {"aggression": 1, "expansiveness": 1},
+      "leaderTitle": "Chief",
+      "succession": "strongest",
+      "successorAge": [22, 40],
+      "crisisPercent": 100,
+      "crisisYears": 5,
+      "termYears": 0
     },
     {
       "key": "despotism",
@@ -32,7 +44,13 @@
       "reviewPercent": 50,
       "cautionShift": -200,
       "goalPercent": {"conquest": 120, "security": 110},
-      "leaning": {"aggression": 1, "caution": 1}
+      "leaning": {"aggression": 1, "caution": 1},
+      "leaderTitle": "King",
+      "succession": "hereditary",
+      "successorAge": [15, 35],
+      "crisisPercent": 30,
+      "crisisYears": 5,
+      "termYears": 0
     },
     {
       "key": "city_republic",
@@ -43,7 +61,13 @@
       "reviewPercent": 100,
       "cautionShift": 100,
       "goalPercent": {"prosperity": 120, "science": 120, "conquest": 90},
-      "leaning": {"tradefulness": 1, "curiosity": 1}
+      "leaning": {"tradefulness": 1, "curiosity": 1},
+      "leaderTitle": "Consul",
+      "succession": "election",
+      "successorAge": [35, 55],
+      "crisisPercent": 0,
+      "crisisYears": 0,
+      "termYears": 10
     }
   ]
 }

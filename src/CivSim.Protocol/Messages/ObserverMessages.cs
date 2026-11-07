@@ -159,7 +159,8 @@ public sealed record CivilizationDetailsMessage(
     [property: Key(20)] IReadOnlyList<long> Stock,
     [property: Key(21)] IReadOnlyList<RelationDetail> Relations,
     [property: Key(22)] string Title = "",
-    [property: Key(23)] string Government = "") : IProtocolMessage;
+    [property: Key(23)] string Government = "",
+    [property: Key(24)] string Leader = "") : IProtocolMessage;
 
 /// <summary>
 /// What the followed civilization thinks of another: contact, sympathy and trust (hundredths, −10 000 … +10 000),

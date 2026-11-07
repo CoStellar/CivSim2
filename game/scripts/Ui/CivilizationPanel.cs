@@ -156,6 +156,11 @@ public partial class CivilizationPanel : VBoxContainer
             sb.Append(inv, $"Government: {d.Government}\n");
         }
 
+        if (d.Leader.Length > 0)
+        {
+            sb.Append(inv, $"Leader: {d.Leader}\n");
+        }
+
         long people = 0;
         var strata = new List<string>();
         for (int k = 0; k < d.People.Count; k++)

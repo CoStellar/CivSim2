@@ -50,6 +50,9 @@ public sealed record HeadlessResult(
     /// <summary>Civilizations still alive at the end of the run.</summary>
     public int AliveCivilizations { get; init; }
 
+    /// <summary>Leaders who came to power after the first ones, and how many years a leader ruled on average (stage 4f PR 2).</summary>
+    public (long Successions, long AverageReignYears) Leaders { get; init; }
+
     /// <summary>Living civilizations by government at the end of the run, e.g. "7 Chiefdom, 5 Council of Elders" (stage 4f).</summary>
     public string Governments { get; init; } = string.Empty;
 
@@ -240,6 +243,7 @@ public static class HeadlessRun
             Settlements = runner.State.Settlements.Count,
             People = People(runner.State),
             AliveCivilizations = runner.State.Civilizations.Count(c => c.IsAlive),
+            Leaders = LeaderTally(runner.State),
             Governments = string.Join(", ", runner.State.Civilizations.Where(c => c.IsAlive)
                 .GroupBy(c => Core.Governance.Governments.Of(content, c)?.Name ?? "none")
                 .OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal)
@@ -249,6 +253,14 @@ public static class HeadlessRun
             Contacts = CountContacts(runner.State),
             Treaties = tally.Finish(runner.State),
         };
+    }
+
+    private static (long Successions, long AverageReignYears) LeaderTally(GameState state)
+    {
+        long leaders = state.Civilizations.Sum(c => c.Leaders);
+        long successions = Math.Max(0, leaders - state.Civilizations.Count);
+        long years = state.Month / 12 * state.Civilizations.Count;
+        return (successions, leaders == 0 ? 0 : years / leaders);
     }
 
     private static (int Met, int Rumors) CountContacts(GameState state)

@@ -69,7 +69,7 @@ public static class Governments
             long score = 0;
             for (int t = 0; t < g.Leaning.Count; t++)
             {
-                score += (long)g.Leaning[t] * civ.Trait((Ai.Trait)t);
+                score += (long)g.Leaning[t] * civ.OwnTrait((Ai.Trait)t); // the people's character, not the leader's
             }
 
             if (score > bestScore)
