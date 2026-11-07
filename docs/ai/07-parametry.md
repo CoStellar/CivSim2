@@ -166,6 +166,17 @@ despotia i republika miejska czekają na epokę brązu.
 | `cautionShift` | +200 | 0 | ‰ ostrożności | wszystkie z wyborem | jak często AI bierze najlepszą opcję wprost |
 | `goalPercent` | bezpieczeństwo 110 | ekspansja 120, podbój 120 | % wagi | S1 (i przez wagi wszystkie) | przechylenie wag celów |
 | `leaning` | ostrożność 1, otwartość 1 | agresja 1, ekspansywność 1 | waga cechy | start gry | który ustrój lud dostaje na start |
+| `stabilityBonus`, `administration`, `strataInfluence` | +10, 250, myśliciele i przywódcy x4 | 0, 200, wojownicy i przywódcy x4 | punkty, punkty, waga | — (AI czyta stabilność od PR 5) | stabilność i limit administracji ([opis](../systems/stability.md)) |
+
+## `data/stability.json` (od etapu 4f PR 3)
+
+AI jeszcze nie reaguje na stabilność (to PR 5). Na decyzje wpływa pośrednio:
+
+| Parametr | Wartość | Decyzje | Znaczenie |
+| --- | --- | --- | --- |
+| `anarchyYears`, `anarchyPenalty` | 2 lata, 20 | D2 | po zmianie ustroju 2 lata bez wypowiedzeń wojny i bez kolejnej zmiany |
+| `unrestBelow`, `unrestOutputPercentPerPoint` | 30, 1% | wszystkie przez zapasy | niepokoje obniżają wydajność osad, więc mniej jedzenia i dóbr do ocen |
+| pozostałe (`crisisPenalty` 15, `capitalLostPenalty` 15 na 5 lat, `adminPerSettlement` 10, `adminPerRoadCost` 1, `roadSearchCost` 60, `overloadPenaltyPer100Percent` 10, `overloadMaxPenalty` 25, `loyaltyPer10RoadCost` 5) | | — | skład stabilności i lojalności |
 
 ## `data/leaders.json` (od etapu 4f PR 2)
 

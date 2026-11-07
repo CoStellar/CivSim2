@@ -114,6 +114,11 @@ public static class Treaties
             return "We are changing our government."; // GDD 7.2: no state decisions while a new government comes in
         }
 
+        if (Governance.Stability.InAnarchy(a, state.Month))
+        {
+            return "Our state is in anarchy."; // GDD 7.2: no state decisions during anarchy
+        }
+
         switch (goal)
         {
             case WarGoal.Land:

@@ -197,6 +197,11 @@ public static class GameStateHash
 
             h.Add(c.Leaders);
             h.Add(c.CrisisUntilMonth);
+            h.Add(c.Capital);
+            h.Add(c.Stability);
+            h.Add(c.AdminUsed);
+            h.Add(c.AnarchyUntilMonth);
+            h.Add(c.CapitalLostUntilMonth);
             h.Add(c.Relations.Count);
             foreach (Diplomacy.Relation r in c.Relations)
             {
@@ -239,6 +244,7 @@ public static class GameStateHash
             h.Add(s.FoundedTurn);
             h.Add(s.Health);
             h.Add(s.Mood);
+            h.Add(s.Loyalty);
             h.Add(s.FoodGathered);
             h.Add(s.FoodNeeded);
             h.Add(s.FoodEaten);

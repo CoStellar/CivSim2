@@ -1,5 +1,5 @@
 {
-  "comment": "Forms of government (GDD 7.2; stage 4f, ADR 0023). title: the civilization's title, {people} is the people's name. fromEra: the first era (key from eras.json) in which a civilization may take it. enactYears: years before a state decision (a new government, a declared war: its armies wait) takes effect; very fast 0, fast 1, medium 2, slow 4. reviewPercent: the strategist and the diplomat review this many percent of their usual interval (lower = a faster state). cautionShift: added to the civilization's caution (per mille) when the AI decides whether to take its best option outright; negative = more impulsive. goalPercent: percent applied to the strategist's goal weights (expansion, security, prosperity, science, influence, conquest); missing goals stay 100. leaning: how much each trait draws a new people to this government at the start; the government with the highest sum of trait x leaning wins (ties: the first). Despotism and the city republic come with the bronze age (stage 6). Leaders (stage 4f PR 2, GDD 7.5): leaderTitle styles the leader; succession: council (the council weighs several candidates and takes the one closest to the people's character), strongest (the strongest warrior), hereditary (the heir), election (a new leader every termYears); successorAge: age range of a new leader; crisisPercent: chance a change of leader brings a succession crisis lasting crisisYears (it lowers stability).",
+  "comment": "Forms of government (GDD 7.2; stage 4f, ADR 0023). title: the civilization's title, {people} is the people's name. fromEra: the first era (key from eras.json) in which a civilization may take it. enactYears: years before a state decision (a new government, a declared war: its armies wait) takes effect; very fast 0, fast 1, medium 2, slow 4. reviewPercent: the strategist and the diplomat review this many percent of their usual interval (lower = a faster state). cautionShift: added to the civilization's caution (per mille) when the AI decides whether to take its best option outright; negative = more impulsive. goalPercent: percent applied to the strategist's goal weights (expansion, security, prosperity, science, influence, conquest); missing goals stay 100. leaning: how much each trait draws a new people to this government at the start; the government with the highest sum of trait x leaning wins (ties: the first). Despotism and the city republic come with the bronze age (stage 6). Leaders (stage 4f PR 2, GDD 7.5): leaderTitle styles the leader; succession: council (the council weighs several candidates and takes the one closest to the people's character), strongest (the strongest warrior), hereditary (the heir), election (a new leader every termYears); successorAge: age range of a new leader; crisisPercent: chance a change of leader brings a succession crisis lasting crisisYears (it lowers stability). Stability (stage 4f PR 3, GDD 7.3, data/stability.json): stabilityBonus is added to stability; administration is the points of administration the state manages before it is overloaded; strataInfluence is the political influence of each stratum (key from strata.json; missing = 1): stability weighs the mood of each settlement by its people times their influence.",
   "governments": [
     {
       "key": "elder_council",
@@ -16,7 +16,10 @@
       "successorAge": [40, 60],
       "crisisPercent": 0,
       "crisisYears": 0,
-      "termYears": 0
+      "termYears": 0,
+      "stabilityBonus": 10,
+      "administration": 250,
+      "strataInfluence": {"thinkers": 4, "leaders": 4}
     },
     {
       "key": "chiefdom",
@@ -33,7 +36,10 @@
       "successorAge": [22, 40],
       "crisisPercent": 100,
       "crisisYears": 5,
-      "termYears": 0
+      "termYears": 0,
+      "stabilityBonus": 0,
+      "administration": 200,
+      "strataInfluence": {"warriors": 4, "leaders": 4}
     },
     {
       "key": "despotism",
@@ -50,7 +56,10 @@
       "successorAge": [15, 35],
       "crisisPercent": 30,
       "crisisYears": 5,
-      "termYears": 0
+      "termYears": 0,
+      "stabilityBonus": -5,
+      "administration": 350,
+      "strataInfluence": {"warriors": 3, "leaders": 6}
     },
     {
       "key": "city_republic",
@@ -67,7 +76,10 @@
       "successorAge": [35, 55],
       "crisisPercent": 0,
       "crisisYears": 0,
-      "termYears": 10
+      "termYears": 10,
+      "stabilityBonus": 5,
+      "administration": 300,
+      "strataInfluence": {"artisans": 4, "thinkers": 2, "leaders": 2}
     }
   ]
 }

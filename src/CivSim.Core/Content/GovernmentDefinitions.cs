@@ -120,6 +120,18 @@ public sealed record GovernmentDefinition(int Id, string Key, string Name)
     /// <summary>Years an elected leader rules before the next election; 0 = for life.</summary>
     public int TermYears { get; init; }
 
+    /// <summary>Stability this government adds (or takes away when negative), points (GDD 7.3; stage 4f PR 3).</summary>
+    public int StabilityBonus { get; init; }
+
+    /// <summary>Administration points this government can manage before the state is overloaded (GDD 7.3).</summary>
+    public int Administration { get; init; } = 100;
+
+    /// <summary>Political influence of each stratum (index = stratum id) in stability (GDD 7.3); 1 when not set.</summary>
+    public IReadOnlyList<int> StrataInfluence { get; init; } = [];
+
+    /// <summary>The influence of stratum <paramref name="stratum"/> (1 when not set).</summary>
+    public int InfluenceOf(int stratum) => stratum < StrataInfluence.Count ? StrataInfluence[stratum] : 1;
+
     /// <summary>The goal percent for <paramref name="goal"/> (100 when not set).</summary>
     public int PercentFor(Ai.Goal goal) => (int)goal < GoalPercent.Count ? GoalPercent[(int)goal] : 100;
 

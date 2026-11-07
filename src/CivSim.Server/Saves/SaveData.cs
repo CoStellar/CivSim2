@@ -193,7 +193,12 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(31)] int[]? LeaderTraits = null,
     [property: Key(32)] int[]? LeaderShift = null,
     [property: Key(33)] long Leaders = 0,
-    [property: Key(34)] long CrisisUntilMonth = 0);
+    [property: Key(34)] long CrisisUntilMonth = 0,
+    [property: Key(35)] int Capital = -1,
+    [property: Key(36)] int Stability = 50,
+    [property: Key(37)] int AdminUsed = 0,
+    [property: Key(38)] long AnarchyUntilMonth = 0,
+    [property: Key(39)] long CapitalLostUntilMonth = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]
@@ -249,7 +254,8 @@ public sealed record SettlementSaveData(
     [property: Key(22)] long RunsMade = 0,
     [property: Key(23)] int JourneyTarget = -1,
     [property: Key(24)] int[]? Skilled = null,
-    [property: Key(25)] int[]? Trainees = null);
+    [property: Key(25)] int[]? Trainees = null,
+    [property: Key(26)] int Loyalty = 50);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

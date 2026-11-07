@@ -42,6 +42,19 @@ doradców), impulsywność AI, sposób sukcesji, zdolność administracyjną i s
 - Śmierć i następca liczone rok po roku w kroku cywilizacji, z generatora pochodnego (strumień `Leaders`, cywilizacja, miesiąc).
 - Kryzys sukcesji to na razie tylko miesiąc końca (`CrisisUntilMonth`); stabilność (PR 3) go odejmie.
 
+## Uzupełnienie: stolica, administracja i stabilność (PR 3 etapu 4f)
+
+- `data/stability.json` (progi i kary) plus pola ustroju `stabilityBonus`, `administration`, `strataInfluence`; niepokoje to zwykły efekt
+  z `data/effects.json` (`unrest`, wydajność cywilizacji), więc nowe skutki niskiej stabilności dopisze się danymi.
+- Koszt drogi liczony Dijkstrą po kosztach ruchu biomów i rzeźby (te same co strefy wpływów), do limitu; dalsze osady i osady za wodą
+  liczą się jako limit, żeby wynik nie zależał od wielkości mapy.
+- Kryzys, bezkrólewie i utrata stolicy liczą się w części kroku cywilizacji, którą trwają. Bez tego wodzostwo w epoce kamienia (krok
+  50 lat, wódz umiera w prawie każdym kroku) miałoby kryzys stale.
+- Stabilność i lojalność są w stanie (zapis 28, hash), bo bunty w PR 4 i AI w PR 5 je czytają; rozbicie na składniki liczone na żądanie
+  dla podglądu (protokół 12).
+- Limity administracji dobrane tak, żeby plemię z kilkunastoma obozami było lekko przeciążone, a z kilkudziesięcioma dostawało pełną
+  karę 25: imperia epoki kamienia żyją blisko progu niepokojów, ale nie spadają poniżej niego same z siebie.
+
 ## Rozważane alternatywy
 
 - **Ustroje w kodzie** (`enum` z wartościami): szybciej, ale łamie zasadę „zawartość w danych” i blokuje ustroje kolejnych er.

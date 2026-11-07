@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 2
-(gałąź `feat/state-leaders`, przywódcy); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 3
+(gałąź `feat/state-stability`, stabilność); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -16,9 +16,29 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Stabilność (etap 4f, PR 3)
+
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-stability`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 2.
+
+![Stabilność w 3 grach](img/stabilnosc_3_seedy.png)
+
+| Seed | Lata gry | Średnia stabilność | Lat cywilizacji w niepokojach | Wpisów „Unrest spread” | Wojny | Najczęstszy agresor |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 7 | 21 000 (20 600) | 47 | 8% | 285 | 16 (20) | cywilizacja 0: 8 wojen |
+| 23 | 24 275 (25 275) | 49 | 12% | 379 | 15 (8) | cywilizacja 7: 15 wojen |
+| 42 | 18 951 (13 525) | 46 | 12% | 294 | 31 (45) | cywilizacja 1: 25 wojen |
+
+- **Stabilność spada z wiekiem gry** z około 58 do 42–46: plemiona rosną do kilkunastu i kilkudziesięciu osad, a administracja
+  przekracza limit ustroju (pełna kara 25 przy kilkudziesięciu obozach). Średnio 1–2 cywilizacje naraz są w niepokojach
+  (wydajność −1% za punkt poniżej 30).
+- **AI jeszcze nie reaguje** na stabilność (PR 5); działa na nią tylko pośrednio: niepokoje zmniejszają zapasy, bezkrólewie blokuje
+  wojny. Zmian ustroju w tych grach nie było (AI ich nie wybiera do PR 5), więc bezkrólewia też nie.
+- **Stolica nie padła ani razu:** osady wciąż prawie nie zmieniają właściciela (pkt 14 oceny).
+- Pętla odwetu nadal jest (seed 23: wszystkie 15 wojen wypowiedziała cywilizacja 7; seed 42: 25 z 31 cywilizacja 1).
+
 ## Przywódcy (etap 4f, PR 2)
 
-3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-leaders`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 1 (same ustroje).
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-leaders`. W nawiasach PR 1 (same ustroje).
 
 | Seed | Lata gry | Ustroje na końcu (żywe) | Następstw | Lat na panowanie | Wojny | Z zerwaniem umowy | Najczęstszy agresor | Kampanie | Pokój z okupem |
 | --- | ---: | --- | ---: | ---: | ---: | ---: | --- | ---: | ---: |

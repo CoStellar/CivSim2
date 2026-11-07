@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 27;
+    public const int FormatVersion = 28;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -60,7 +60,8 @@ public static class SaveGameSerializer
                 c.Traits, c.GoalWeights, c.ExpansionTarget, c.StrategyReviewMonth, c.StrategyEra, SaveRelations(c),
                 c.NextStepMonth, c.StepStartMonth, c.StepMonths, c.Steps, (byte)c.Alarms, c.LanguageSeed, c.NamesIssued,
                 c.Government, c.PendingGovernment, c.PendingGovernmentMonth,
-                c.LeaderName, c.LeaderBornMonth, c.LeaderSinceMonth, c.LeaderTraits, c.LeaderShift, c.Leaders, c.CrisisUntilMonth));
+                c.LeaderName, c.LeaderBornMonth, c.LeaderSinceMonth, c.LeaderTraits, c.LeaderShift, c.Leaders, c.CrisisUntilMonth,
+                c.Capital, c.Stability, c.AdminUsed, c.AnarchyUntilMonth, c.CapitalLostUntilMonth));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -77,7 +78,7 @@ public static class SaveGameSerializer
                 st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
-                st.SkilledView.ToArray(), st.TraineesView.ToArray()));
+                st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -215,6 +216,11 @@ public static class SaveGameSerializer
                 LeaderShift = c.LeaderShift ?? [],
                 Leaders = c.Leaders,
                 CrisisUntilMonth = c.CrisisUntilMonth,
+                Capital = c.Capital,
+                Stability = c.Stability,
+                AdminUsed = c.AdminUsed,
+                AnarchyUntilMonth = c.AnarchyUntilMonth,
+                CapitalLostUntilMonth = c.CapitalLostUntilMonth,
             };
             LoadRelations(civ, c.Relations);
             state.AddCivilizationForLoad(civ);
@@ -231,6 +237,7 @@ public static class SaveGameSerializer
             {
                 Health = st.Health,
                 Mood = st.Mood,
+                Loyalty = st.Loyalty,
                 FoodGathered = st.FoodGathered,
                 FoodNeeded = st.FoodNeeded,
                 FoodEaten = st.FoodEaten,

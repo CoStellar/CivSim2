@@ -155,6 +155,9 @@ public sealed class SettlementState
     /// <summary>Mood (satisfaction) 0–100; 50 = basic needs met, nothing more.</summary>
     public int Mood { get; set; } = 50;
 
+    /// <summary>Loyalty to the state 0–100 (GDD 7.3; stage 4f PR 3): the owner's stability minus a penalty for the road cost from the capital.</summary>
+    public int Loyalty { get; set; } = 50;
+
     /// <summary>Food gathered in the last turn, in hundredths.</summary>
     public long FoodGathered { get; set; }
 

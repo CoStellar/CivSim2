@@ -31,7 +31,8 @@ flowchart LR
 - **Start (GDD 7.2):** wygrywa ustrój otwarty w erze 1 z największą sumą `cecha × leaning`; remis: pierwszy w pliku.
 - **Tytuł:** wzór `title` z `{people}` zamienionym na rdzeń nazwy ludu. Kronika używa samego rdzenia.
 - **Opóźnienie wdrożenia:** `enactYears × 12` miesięcy obecnego ustroju.
-  - Zmiana ustroju: nowy wchodzi po opóźnieniu (od razu, gdy opóźnienie 0). W tym czasie bez wojen i bez drugiej zmiany.
+  - Zmiana ustroju: nowy wchodzi po opóźnieniu (od razu, gdy opóźnienie 0). W tym czasie bez wojen i bez drugiej zmiany. Po wejściu
+    nowego ustroju 2 lata bezkrólewia (od PR 3): stabilność −20, nadal bez wojen i zmian ustroju ([stabilność](stability.md)).
   - Wypowiedzenie wojny: armie strony wypowiadającej ruszają od `ReadyMonth = miesiąc + opóźnienie`; obrońca od razu. Cicha wojna
     liczy 5 lat od `QuietSince` = najpóźniejsze z: wypowiedzenie, gotowość, ostatnia kampania.
 - **Tempo AI:**

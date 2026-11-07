@@ -45,7 +45,7 @@ public static class ViewBuilder
             SettlementView view = details
                 ? new SettlementView(
                     st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, [.. st.Stock],
-                    [.. st.Population], st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten)
+                    [.. st.Population], st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten) with { Loyalty = st.Loyalty }
                 : new SettlementView(st.Id.Value, st.Owner.Value, st.World.Value, st.Col, st.Row, st.Name, st.Level, null);
             settlements.Add(view with
             {

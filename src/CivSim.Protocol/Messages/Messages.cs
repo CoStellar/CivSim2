@@ -111,7 +111,8 @@ public sealed record SettlementView(
     [property: Key(14)] int Status = 0,
     [property: Key(15)] long AbandonedMonth = 0,
     [property: Key(16)] int ClaimCiv = -1,
-    [property: Key(17)] long ClaimUntilMonth = 0);
+    [property: Key(17)] long ClaimUntilMonth = 0,
+    [property: Key(18)] int Loyalty = 0);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
