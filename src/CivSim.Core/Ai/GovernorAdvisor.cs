@@ -354,15 +354,26 @@ public sealed class GovernorAdvisor : Advisor
     {
         WorldState world = state.Worlds[s.World.Value];
         int people = s.TotalPopulation();
+        bool hungry = s.FedPerMille < _content.Ai.VillageHungryFedPercent * 10;
         if (people < _rules.MinSplitPeople)
         {
+            // A small hungry village (too few for a group of settlers) gives up: its people go to the nearest own settlement
+            // that is better fed (AI fixes after stage 4g: in the 100 games most starving villages were this small).
+            if (hungry && NearestOwnCamp(state, world, civ, s) is { } into && into.FedPerMille >= _content.Ai.VillageHungryFedPercent * 10)
+            {
+                Evaluation join = Evaluation.Of(people);
+                join.Note(FactorId.People, people);
+                join.Note(FactorId.Fed, s.FedPerMille);
+                Issue(state, queue, civ.Id, new AbandonSettlementCommand(_content, s.Id, into.Id), AiAction.JoinCamp, s.Id.Value, into.Id.Value, join);
+                _joined.Add(into.Id.Value);
+            }
+
             return;
         }
 
         // At most one group per period of years (rule 6), staggered by village so that not all villages go at once.
         // The village plans once per own step, or once per era-length period with live seasons. A hungry village sends
         // settlers sooner (AI fixes after stage 4g): fewer mouths to feed.
-        bool hungry = s.FedPerMille < _content.Ai.VillageHungryFedPercent * 10;
         long period = (hungry ? _content.Ai.VillageHungrySettlersEveryYears : _content.Ai.VillageSettlersEveryYears) * 12L;
         long window = Math.Max(civ.StepMonths, Simulation.WorldClock.EraMonths(_content, civ.Era));
         long offset = s.Id.Value * 97L % period;
