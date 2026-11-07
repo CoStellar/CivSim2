@@ -16,6 +16,28 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Armie, uzbrojenie i zaopatrzenie (etap 4e, PR 3)
+
+Z `--campaigns` (nowy raport: jeden wiersz na kampanię) i z kroniki, 3 seedy, mapa standard, 1000 kroków świata. Wykres:
+`python3 docs/ai/tools/campaign_chart.py <katalog z camp_7.csv… i log_7.txt…>`.
+
+| Seed | Wojny (przed PR 3) | Kampanie | Z kilku osad | Średnio wojowników | Uzbrojenie średnio | Głodne kampanie | Głód złamał | Napady po jedzenie | Dostawy tragarzy | Średnio trwa |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | 37 (42) | 67 | 67 | 34 | 70% | 50 | 21 | 5 | 111 | 7 mies. |
+| 23 | 6 (7) | 14 | 14 | 35 | 69% | 9 | 5 | 3 | 20 | 6 mies. |
+| 42 | 9 (24) | 13 | 9 | 34 | 75% | 10 | 1 | 3 | 21 | 8 mies. |
+
+![Kampanie wojenne w 3 grach](img/kampanie_3_seedy.png)
+
+- **Armie są z kilku osad:** prawie każda kampania zbiera wojowników z 4–8 osad i ma 30–50 ludzi (limit wodza 50).
+- **Uzbrojenie to głównie drewniane włócznie (70%):** kamienne narzędzia rzadko leżą w zapasach osad, bo ludzie ich używają;
+  proce i kamienne groty dostaje mniejszość wojowników.
+- **Głód jest częsty:** 3 z 4 kampanii przynajmniej miesiąc nie mają jedzenia, bo idą dalej niż 12 pól od własnych osad (tragarze nie
+  sięgają) albo osady mają mało zapasów. W seedzie 7 głód złamał 21 z 67 wypraw. To zgodne z zasadą „poza zasięgiem zaopatrzenia armia
+  słabnie”, ale może być za ostre: do strojenia w PR 5 (dowódca liczy drogę i jedzenie) i PR 6 (liczby).
+- **Liczba wojen zmienia się mocno między przebiegami** (seed 42: 24 → 9), bo każda zmiana w walce zmienia całą dalszą historię;
+  liczby z jednego seeda nie są porównaniem przyczynowym.
+
 ## Kampanie co miesiąc (etap 4e, PR 2)
 
 Z `--wars` i `--decisions` (3 seedy, mapa standard, 1000 kroków świata); w nawiasach po PR 1:

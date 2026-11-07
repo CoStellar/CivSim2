@@ -128,7 +128,11 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `quietPeaceYears` | 5 | lata | — | wojna bez kampanii kończy się białym pokojem |
 | `minWinChancePercent` | 60 | % | K1 | najmniejsza szansa, przy której dowódca wysyła kampanię na widziany cel i przy której wojownicy atakują u celu |
 | `sendPercent` | 67 | % wojowników osady | K1 | ilu wojowników może wyjść (1/3 zostaje w domu) |
-| `minWarriors` | 5 | wojownicy | K1 | najmniejsza kampania |
+| `minWarriors` | 5 | wojownicy | K1 | najmniejsza kampania (cała armia) |
+| `minFoodMonths` | 1 | miesiące | K1 | dowódca wysyła armię tylko wtedy, gdy osady mogą jej dać jedzenie co najmniej na tyle (od PR 3) |
+| `musterCells` | 6 | pola | K1 | z jak daleka od osady wyjścia dołączają wojownicy innych osad (od PR 3) |
+| `armaments[]` | gołe ręce 50, włócznie hartowane w ogniu 70, proce 80, kamienne groty 100 | % siły | K1 | uzbrojenie (technologia, dobro, zużycie na wojownika); dowódca liczy z niego siłę obu stron (od PR 3) |
+| `supply.*` | jedzenie 1 na wojownika na rok, zapas na 3 miesiące, tragarze poniżej 2 miesięcy, do 12 pól, 10% ludzi, 4 pola na miesiąc; głód −20 morale na miesiąc, najedzeni +10, odwrót poniżej 30, napad na wioskę do 4 pól | — | K1 (pośrednio) | zaopatrzenie i głód kampanii (od PR 3); dowódca liczy dostępne jedzenie z `supplySharePercent` 50% |
 | `wearinessPerLossPercent` | 3 | punkty na % ludzi zabitych | D1, D2 | zmęczenie ze strat |
 | `peaceAbove` | 60 | punkty zmęczenia | D2 | od tego zmęczenia strona szuka pokoju w każdym kroku i przy każdej ocenie |
 | `moodAtFullWeariness` | 20 | punkty nastroju | — | spadek nastroju przy zmęczeniu 100 |
@@ -136,6 +140,9 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `ransomPercentPerScorePoint` | 0,5 | % zapasów na punkt | D2, D1 | wysokość okupu |
 | `maxRansomPercent` | 40 | % zapasów | D2, D1 | największy okup |
 | `cedeWorth` | 40 | punkty wyniku | D1, D2 | ile warte jest oddanie osady przy ocenie warunków |
+
+`data/eras.json` (od 4e PR 3): `armyLimit` 50 (najwięcej wojowników w armii jednego wodza) i `troopsPerCell` 50 (wojownicy na polu; większa armia
+stoi na kilku polach, front). Dowódca nie zbiera więcej niż `armyLimit`.
 
 ## `data/skills.json` (od etapu 4F)
 

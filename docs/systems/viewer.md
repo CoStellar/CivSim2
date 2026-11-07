@@ -78,7 +78,7 @@ heksami (z-index = miejsce na liście). Warstwy pól leżą zawsze pod rysowanym
 | Fields | rysowana | wł. | pola uprawne wiosek (grafika pola, mocniejsza przy większej obsadzie rolników) |
 | Borders | rysowana | wł. | granice cywilizacji po krawędziach heksów, kolor cywilizacji z ciemnym obrysem |
 | Settlements | rysowana | wł. | obozy, wioski, miasteczka w stanach zamieszkana / opuszczona / ruiny; daleko kwadraty; nad największą osadą każdej cywilizacji tabliczka z jej nazwą |
-| Units | rysowana | wł. | wędrujące obozy (etap 3g) i przerywana strzałka do celu |
+| Units | rysowana | wł. | wędrujące obozy (etap 3g) i przerywana strzałka do celu; armie kampanii (etap 4e PR 3: 1–3 wojowników według siły, grubsza strzałka do celu albo do domu) i tragarze z jedzeniem |
 | Events | rysowana | wł. | efekty zdarzeń: jedna ikona na zdarzenie (na środkowym polu), na pozostałych polach kropka |
 | Relations | rysowana | wył. | linie między największymi osadami cywilizacji, które się spotkały: wojna czerwona, sojusz niebieski, pakt turkusowy, handel złoty, pokój biały, sam kontakt szary przerywany |
 
@@ -111,7 +111,7 @@ w folderze paczki i w konsoli. Paczka może też zmienić ramki interfejsu (`ui/
 - **Górny pasek:** tura i rok, prędkości, „follow” (wybór śledzonej cywilizacji), „Go” (kamera na jej największą osadę), „Track”
   (kamera jedzie za nią), ikony warstw i ustawienia warstw, przełączniki paneli (Info, Log, Chart), Menu, FPS.
 - **Lewy panel, zakładka Cell:** inspektor pola: biom, rzeźba, wysokość i głębokość wody, klimat, żyzność, złoże, rzeki, właściciel,
-  osada z ludnością i magazynem, pole uprawne, wędrujący obóz, zdarzenia.
+  osada z ludnością i magazynem, pole uprawne, wędrujący obóz, armia (wojownicy, faza, uzbrojenie, morale, jedzenie) i tragarze, zdarzenia.
 - **Lewy panel, zakładka Civilizations:** tabela wszystkich cywilizacji (era, ludność, osady, technologie; klik = śledź), wykres
   ludności / osad / technologii w czasie (śledzona grubą linią, pozostałe przygaszone), a dla śledzonej: era, ludność w warstwach,
   osady według poziomów, jedzenie, badania (znane technologie, bieżące badanie i postęp), charakter (8 cech), wagi celów stratega,
