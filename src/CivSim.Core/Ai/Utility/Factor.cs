@@ -113,6 +113,12 @@ public enum FactorId : byte
 
     /// <summary>Months the food an army can take along lasts (stage 4e PR 3).</summary>
     FoodMonths = 35,
+
+    /// <summary>Warriors the commander expects to lose in a battle, percent of the army (stage 4e PR 5).</summary>
+    ExpectedLoss = 36,
+
+    /// <summary>Cells of the way beyond the reach of carriers (stage 4e PR 5).</summary>
+    BeyondSupply = 37,
 }
 
 /// <summary>

@@ -1273,6 +1273,7 @@ public static class ContentLoader
             GoalOfFood = r.Enum<Core.Ai.Goal>("goalOfFood"),
             GoalOfGoods = r.Enum<Core.Ai.Goal>("goalOfGoods"),
             Scholar = LoadScholar(doc.RootElement, Path.GetFileName(path), errors),
+            Commander = LoadCommander(doc.RootElement, Path.GetFileName(path), errors),
             TradeGoodsBonusPercent = r.Int("tradeGoodsBonusPercent", 0, 500),
             ScienceBehindTechs = r.Int("scienceBehindTechs", 1, 100),
             ScienceWeightMax = r.Int("scienceWeightMax", 1000, 3000),
@@ -1297,6 +1298,24 @@ public static class ContentLoader
             UncomfortableBelowPercent = r.Int("uncomfortableBelowPercent", 0, 100),
             OpinionSwingPercent = r.Int("opinionSwingPercent", 0, 100),
             ReviewStaggerYears = r.Int("reviewStaggerYears", 0, 1000),
+        };
+    }
+
+    private static CommanderRules LoadCommander(JsonElement root, string file, List<string> errors)
+    {
+        if (!root.TryGetProperty("commander", out JsonElement section) || section.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add($"{file}: missing object 'commander'.");
+            return new CommanderRules();
+        }
+
+        var r = new Reader(section, $"{file}: commander", errors);
+        return new CommanderRules
+        {
+            MinWinChancePercent = r.Int("minWinChancePercent", 0, 100),
+            MaxLossPercent = r.Int("maxLossPercent", 0, 100),
+            MinFoodMonths = r.Int("minFoodMonths", 0, 120),
+            RecallChancePercent = r.Int("recallChancePercent", 0, 100),
         };
     }
 
@@ -1817,8 +1836,7 @@ public static class ContentLoader
             CampaignStepMonths = r.Int("campaignStepMonths", 1, 120),
             MarchCellsPerMonth = r.Int("marchCellsPerMonth", 1, 100),
             QuietPeaceYears = r.Int("quietPeaceYears", 1, 1000),
-            MinWinChancePercent = r.Int("minWinChancePercent", 0, 100),
-            MinFoodMonths = r.Int("minFoodMonths", 0, 120),
+            ArmySightCells = r.Int("armySightCells", 0, 100),
             SendPercent = r.Int("sendPercent", 1, 100),
             MinWarriors = r.Int("minWarriors", 1, 10_000),
             WearinessPerLossPercent = r.SignedHundredths("wearinessPerLossPercent", 0, 10_000) ?? defaults.WearinessPerLossPercent,

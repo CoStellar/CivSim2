@@ -190,6 +190,9 @@ public sealed record AiRules
     /// <summary>How the scholar values technologies (GDD 6.1, 8.1; PR B of 2026-11-06).</summary>
     public ScholarRules Scholar { get; init; } = new();
 
+    /// <summary>How the commander decides on campaigns (stage 4e PR 5).</summary>
+    public CommanderRules Commander { get; init; } = new();
+
     /// <summary>
     /// Outputs of the valuables category are worth this much more, at full tradefulness, to a civilization whose goods go
     /// to a trade partner (production for exchange).
@@ -272,6 +275,28 @@ public sealed record AiRules
 
     /// <summary>Planned diplomatic reviews of civilizations are this many years apart (spread, D2).</summary>
     public int ReviewStaggerYears { get; init; } = 7;
+}
+
+/// <summary>
+/// How the commander decides (stage 4e PR 5, decisions of 2026-11-07): it plays the battle through in its head from what
+/// it sees (<see cref="Episodes.Battles.Expect"/>), counts the road and the food, and looks again every month of a campaign.
+/// </summary>
+public sealed record CommanderRules
+{
+    /// <summary>An army is sent only with at least this expected chance to win, percent (no war it is sure to lose).</summary>
+    public int MinWinChancePercent { get; init; } = 60;
+
+    /// <summary>An army is sent only when it expects to lose at most this share of its warriors, percent.</summary>
+    public int MaxLossPercent { get; init; } = 50;
+
+    /// <summary>
+    /// Months of food an army must have to spare after the months it marches beyond the reach of carriers there and
+    /// back; it is not sent otherwise, and on campaign it turns back when its food falls short of that.
+    /// </summary>
+    public int MinFoodMonths { get; init; } = 1;
+
+    /// <summary>On campaign, the army turns back when the chance it expects from what it sees falls below this, percent.</summary>
+    public int RecallChancePercent { get; init; } = 45;
 }
 
 /// <summary>

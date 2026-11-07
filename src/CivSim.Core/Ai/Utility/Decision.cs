@@ -83,6 +83,9 @@ public enum AiAction : byte
 
     /// <summary>The commander sends warriors on a campaign (stage 4e).</summary>
     LaunchCampaign = 17,
+
+    /// <summary>The commander calls a campaign home (stage 4e PR 5).</summary>
+    RecallCampaign = 18,
 }
 
 /// <summary>
@@ -136,7 +139,7 @@ public readonly record struct Decision(
         : string.Create(CultureInfo.InvariantCulture, $"{Name(factor.Id)} {factor.PerMille / 10}% ({factor.Input})");
 
     // Notes whose input is a percentage (farm grain against what the people eat, people against the level's room...).
-    private static bool InPercent(FactorId id) => id is FactorId.FarmYield or FactorId.Crowding or FactorId.Strength or FactorId.Comfort or FactorId.Threat or FactorId.TradeGain;
+    private static bool InPercent(FactorId id) => id is FactorId.FarmYield or FactorId.Crowding or FactorId.Strength or FactorId.Comfort or FactorId.Threat or FactorId.TradeGain or FactorId.WinChance or FactorId.ExpectedLoss;
 
     /// <summary>Lower-case English name of a factor.</summary>
     public static string Name(FactorId id) => id switch
@@ -155,6 +158,8 @@ public readonly record struct Decision(
         FactorId.Terms => "peace terms",
         FactorId.WinChance => "win chance",
         FactorId.FoodMonths => "food months",
+        FactorId.ExpectedLoss => "expected losses",
+        FactorId.BeyondSupply => "cells beyond supply",
         FactorId.LeadsTo => "leads to",
         FactorId.ForTrade => "for trade",
         FactorId.OverGathering => "over gathering",

@@ -163,11 +163,8 @@ public sealed record WarRules
     /// <summary>A war in which nobody campaigned for this many years ends in a white peace.</summary>
     public int QuietPeaceYears { get; init; } = 5;
 
-    /// <summary>The commander sends a campaign only with at least this chance to win, percent (moves to ai.json with the commander, PR 5).</summary>
-    public int MinWinChancePercent { get; init; } = 60;
-
-    /// <summary>The commander sends an army only with food for at least this many months to take along (moves to ai.json with the commander, PR 5).</summary>
-    public int MinFoodMonths { get; init; } = 1;
+    /// <summary>An army on campaign sees the settlements at most this many cells from where it stands (stage 4e PR 5).</summary>
+    public int ArmySightCells { get; init; } = 1;
 
     /// <summary>Largest share of a settlement's warriors that marches out, percent (decision of 2026-11-07: a third stays home).</summary>
     public int SendPercent { get; init; } = 67;

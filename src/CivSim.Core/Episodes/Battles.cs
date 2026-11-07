@@ -62,6 +62,11 @@ public sealed record BattleRules
 /// <param name="Broken">0 nobody broke (the defenders held), 1 the attackers broke, 2 the defenders broke.</param>
 public readonly record struct BattleResult(bool AttackersWon, int Rounds, int AttackersLost, int DefendersLost, int AttackerMorale, int Broken);
 
+/// <summary>The battle a commander expects, without drawing (stage 4e PR 5).</summary>
+/// <param name="ChancePercent">Share of the played-through battles the attackers win, percent.</param>
+/// <param name="LossPercent">Attackers the commander expects to lose, percent of the army.</param>
+public readonly record struct ExpectedBattle(int ChancePercent, int LossPercent);
+
 /// <summary>
 /// Battles in rounds (GDD 9.3; stage 4e PR 4): in every round each side kills a share of the other in proportion to its
 /// armed strength (men × arms × morale, the defenders with the terrain), times its luck of the round (stream
@@ -113,8 +118,46 @@ public static class Battles
     /// </summary>
     public static BattleResult Fight(BattleRules rules, DeterministicRandom rng, int attackers, long attack, int attackMorale, int defenders, long defence)
     {
-        ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(rng);
+        return Run(rules, rng, 0, 0, attackers, attack, attackMorale, defenders, defence);
+    }
+
+    /// <summary>
+    /// The battle the commander expects (stage 4e PR 5), without drawing: the same rounds played with steady luck,
+    /// <see cref="ExpectSteps"/> levels for each side from the worst to the best of <see cref="BattleRules.RollPercent"/>,
+    /// every pair once (fractions of a man rounded). The chance is the share of these battles the attackers win, the
+    /// losses their average losses. Inputs as in <see cref="Fight"/>, as the commander sees them.
+    /// </summary>
+    public static ExpectedBattle Expect(BattleRules rules, int attackers, long attack, int attackMorale, int defenders, long defence)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        int wins = 0;
+        long lost = 0;
+        for (int a = 0; a < ExpectSteps; a++)
+        {
+            for (int d = 0; d < ExpectSteps; d++)
+            {
+                BattleResult r = Run(rules, null, Luck(rules, a), Luck(rules, d), attackers, attack, attackMorale, defenders, defence);
+                wins += r.AttackersWon ? 1 : 0;
+                lost += r.AttackersLost;
+            }
+        }
+
+        const int All = ExpectSteps * ExpectSteps;
+        int lossPercent = attackers <= 0 ? 100 : (int)Math.Min(100, lost * 100 / All / attackers);
+        return new ExpectedBattle(wins * 100 / All, lossPercent);
+    }
+
+    /// <summary>Levels of luck per side the commander plays through in <see cref="Expect"/>.</summary>
+    public const int ExpectSteps = 5;
+
+    private static int Luck(BattleRules rules, int step) =>
+        rules.RollPercent.Min + ((rules.RollPercent.Max - rules.RollPercent.Min) * step / (ExpectSteps - 1));
+
+    // The rounds of a battle: luck drawn from rng, or steady (luckA, luckD) with fractions rounded when rng is null.
+    private static BattleResult Run(BattleRules rules, DeterministicRandom? rng, int luckA, int luckD, int attackers, long attack, int attackMorale, int defenders, long defence)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
         int menA = Math.Max(0, attackers);
         int menD = Math.Max(0, defenders);
         long strA = Math.Max(0, attack);
@@ -128,8 +171,8 @@ public static class Battles
         while (round < rules.Rounds && menA > 0 && menD > 0)
         {
             round++;
-            int killD = Math.Min(menD, Kills(rules, rng, strA));
-            int killA = Math.Min(menA, Kills(rules, rng, strD));
+            int killD = Math.Min(menD, Kills(rules, rng, strA, luckA));
+            int killA = Math.Min(menA, Kills(rules, rng, strD, luckD));
             moraleA = Math.Max(0, moraleA - (rules.MoralePerLossPercent * killA * 100 / menA));
             moraleD = Math.Max(0, moraleD - (rules.MoralePerLossPercent * killD * 100 / menD));
             strA = menA - killA > 0 ? strA * (menA - killA) / menA : 0;
@@ -150,27 +193,30 @@ public static class Battles
 
         if (broken == 1)
         {
-            int rout = (int)IntMath.MulDiv(menA, rules.RoutLossPercent, 100, Rounding.Ceiling);
-            lostA += rout;
+            lostA += (int)IntMath.MulDiv(menA, rules.RoutLossPercent, 100, Rounding.Ceiling);
         }
         else if (broken == 2)
         {
-            int rout = (int)IntMath.MulDiv(menD, rules.RoutLossPercent, 100, Rounding.Ceiling);
-            lostD += rout;
+            lostD += (int)IntMath.MulDiv(menD, rules.RoutLossPercent, 100, Rounding.Ceiling);
         }
 
         return new BattleResult(broken == 2, round, lostA, lostD, moraleA, broken);
     }
 
-    // Men killed by a side of strength str in one round: str × casualty% × luck%, the fraction of a man by chance.
-    private static int Kills(BattleRules rules, DeterministicRandom rng, long str)
+    // Men killed by a side of strength str in one round: str × casualty% × luck%, the fraction of a man by chance (or
+    // rounded, when the luck is steady).
+    private static int Kills(BattleRules rules, DeterministicRandom? rng, long str, int steady)
     {
-        int luck = rng.NextInt(rules.RollPercent.Min, rules.RollPercent.Max + 1);
+        int luck = rng is null ? steady : rng.NextInt(rules.RollPercent.Min, rules.RollPercent.Max + 1);
         long scaled = str * rules.CasualtyPercent * luck; // warrior-percent × percent × percent
         const long PerMan = 100L * 100 * 100;
         long whole = scaled / PerMan;
         long rest = scaled % PerMan;
-        if (rest > 0 && rng.Chance((int)(rest / 100), (int)(PerMan / 100)))
+        if (rng is null)
+        {
+            whole += rest * 2 >= PerMan ? 1 : 0;
+        }
+        else if (rest > 0 && rng.Chance((int)(rest / 100), (int)(PerMan / 100)))
         {
             whole++;
         }
