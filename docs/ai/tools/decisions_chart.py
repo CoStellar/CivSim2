@@ -15,7 +15,8 @@ names = {'SetStrategy':'Strateg: ustawia strategię','SetResearch':'Uczony: wybi
  'MoveCamp':'Obóz przenosi się','SplitCamp':'Odłam zakłada nowy obóz','JoinCamp':'Mały obóz dołącza do innego',
  'Settle':'Obóz osiada (wioska)','SendSettlers':'Wioska wysyła osadników','Explore':'Wyprawa w nieznane','Occupy':'Zajęcie pustej osady','Conquer':'Wypędzenie obcego obozu',
  'Journey':'Daleka wędrówka','Plunder':'Zabranie porzuconych dóbr',
- 'ProposeTreaty':'Dyplomata: proponuje umowę','AcceptTreaty':'Dyplomata: przyjmuje','DeclineTreaty':'Dyplomata: odrzuca','DeclareWar':'Dyplomata: wypowiada wojnę'}
+ 'ProposeTreaty':'Dyplomata: proponuje umowę','AcceptTreaty':'Dyplomata: przyjmuje','DeclineTreaty':'Dyplomata: odrzuca','DeclareWar':'Dyplomata: wypowiada wojnę',
+ 'LaunchCampaign':'Dowódca: wysyła kampanię','RecallCampaign':'Dowódca: odwołuje kampanię'}
 order = list(names)
 seeds=(7,23,42)
 data={s:collections.Counter(r['action'] for r in csv.DictReader(open(f'{RUNS}/why{s}.csv'))) for s in seeds}
@@ -33,7 +34,7 @@ a.set_title('Ile decyzji podjęło AI w 1000 tur (mapa standard, 12 cywilizacji)
 a.legend(frameon=False,fontsize=9); a.spines[['top','right']].set_visible(False); a.set_xlabel('liczba decyzji')
 rows=list(csv.DictReader(open(f'{RUNS}/why7.csv')))
 groups=[('Ruchy obozów',{'MoveCamp','Journey','Conquer','Occupy'},'#2a6fdb'),('Odłamy i łączenie',{'SplitCamp','JoinCamp'},'#9b59b6'),
- ('Osiedlanie i osadnicy',{'Settle','SendSettlers'},'#3aa676'),('Wyprawy',{'Explore'},'#16a085'),('Receptury',{'SetRecipe'},'#e8833a'),('Strategia i badania',{'SetStrategy','SetResearch','Plunder'},'#888888'),('Dyplomacja',{'ProposeTreaty','AcceptTreaty','DeclineTreaty','DeclareWar'},'#c0392b')]
+ ('Osiedlanie i osadnicy',{'Settle','SendSettlers'},'#3aa676'),('Wyprawy',{'Explore'},'#16a085'),('Receptury',{'SetRecipe'},'#e8833a'),('Strategia i badania',{'SetStrategy','SetResearch','Plunder'},'#888888'),('Dyplomacja',{'ProposeTreaty','AcceptTreaty','DeclineTreaty','DeclareWar'},'#c0392b'),('Wojna (dowódca)',{'LaunchCampaign','RecallCampaign'},'#5d4037')]
 bins=list(range(0,1000,100))
 bottom=[0]*len(bins)
 for label,acts,col in groups:

@@ -1,4 +1,4 @@
-"""Draws docs/ai/img/kampanie_3_seedy.png: war campaigns of stage 4e PR 3 in three 1000-turn games.
+"""Draws docs/ai/img/kampanie_3_seedy.png: war campaigns of stage 4e (PR 3-5) in three 1000-turn games.
 
 Usage: python3 docs/ai/tools/campaign_chart.py RUN_DIR
 RUN_DIR holds camp_7.csv, camp_23.csv, camp_42.csv (CivSim.Headless --campaigns) and log_7.txt, log_23.txt, log_42.txt
@@ -17,14 +17,15 @@ RUN = sys.argv[1]
 SEEDS = [7, 23, 42]
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'img', 'kampanie_3_seedy.png')
 INK, MUTED, GRID = '#2b2b2a', '#6b6a64', '#dddcd6'
-SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#6250d6']
+SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#6250d6', '#8a8984']
 
 # How campaigns ended, from the chronicle lines.
 OUTCOMES = [
     ('wygrana bitwa (łupy, ucieczka z obozu)', r' beat .* at .*fell in'),
     ('zdobyta osada', r' took .* from .*fell in'),
     ('przegrana bitwa (rozbici albo obrońcy się utrzymali)', r'(routed the warriors|held .* against)'),
-    ('zawrócili przed silnym celem', r'saw how strong'),
+    ('zawrócili przed silnym celem (reguła do PR 4)', r'saw how strong'),
+    ('dowódca odwołał wyprawę (od PR 5)', r'called its warriors back'),
     ('głód złamał wyprawę', r'Hunger broke'),
 ]
 
@@ -36,7 +37,7 @@ for s in SEEDS:
 
 plt.rcParams.update({'font.size': 10, 'axes.edgecolor': GRID, 'axes.labelcolor': INK, 'xtick.color': MUTED, 'ytick.color': MUTED})
 fig, axes = plt.subplots(2, 2, figsize=(13, 9))
-fig.suptitle('Kampanie wojenne w 3 grach po 1000 tur (etap 4e PR 3–4: armie, uzbrojenie, tragarze, głód, bitwy w rundach)', color=INK, fontsize=13)
+fig.suptitle('Kampanie wojenne w 3 grach po 1000 tur (etap 4e PR 3–5: armie, tragarze, głód, bitwy w rundach, dowódca)', color=INK, fontsize=13)
 
 # (1) Outcomes per seed, stacked.
 a = axes[0][0]

@@ -45,7 +45,7 @@ wygasa po 5 latach; susza, głód i epidemia jako epizody po etapie 4e; #48 do s
    - Zapis, hash, migawka (wyprawy w podglądzie jak zwiadowcy), `--wars` z liczbą kampanii.
 3. **Uzbrojenie i wyprawy z wielu osad** (`feat/war-armies`): `armaments` w danych; zbiórka z wielu osad (1/3 zostaje); dane er: `armyLimit`, `troopsPerCell`; tragarze; głód wyprawy i napady na wioski. Zrobione (bez notatki przekazania; liczby w `data/war.json`, sekcja `supply`; statystyki w `docs/ai/09-statystyki.md`). Do PR 5–6: głód łamie część wypraw idących dalej niż zasięg tragarzy (12 pól).
 4. **Bitwa i podbój** (`feat/war-battles`): rundy (strumień `combat`), teren, morale, najedzenie, ucieczka; podbój wioski i ucieczka z obozu. Zrobione (`Battles`, `data/war.json` `battle`).
-5. **Dowódca AI** (`feat/war-commander`): spodziewany wynik bitwy bez losowania, z tego, co widzi; decyzje co miesiąc kampanii; `DeadValueTests`; `docs/ai/`.
+5. **Dowódca AI** (`feat/war-commander`): spodziewany wynik bitwy bez losowania, z tego, co widzi; decyzje co miesiąc kampanii; `DeadValueTests`; `docs/ai/`. Zrobione (`Battles.Expect`, K2 `RecallCampaignCommand`, `data/ai.json` `commander`). Do PR 6: kampanie dalej głodują 2–4 miesiące (słabi tragarze); część komend wysłania odrzuca serwer.
 6. **Strojenie i statystyki** (`feat/war-tuning`).
 
 ## Pułapki

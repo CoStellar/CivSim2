@@ -35,18 +35,18 @@ flowchart TD
   - zbiórka (faza `Muster`): tyle miesięcy, ile najdalsza osada idzie do osady wyjścia; potem marsz;
   - każdy krok: armia je (najpierw niesione jedzenie, potem jedzenie z łupów); głodna traci morale, napada pobliską wioskę wroga, przy morale < 30 zawraca; tragarze idą za nią (szczegóły: `docs/systems/war.md`);
   - marsz: 3 pola na miesiąc po znanych polach (ok. 150 km na pole; ok. 15 km dziennie);
-  - u celu wojownicy widzą osadę: atakują tylko przy szansie co najmniej 60%, inaczej wracają;
+  - u celu wojownicy stają na polu obok i atakują w następnym miesiącu; dowódca, który teraz widzi osadę, może ich odwołać (od PR 5, decyzja K2 w `docs/ai/11-dowodca.md`);
   - walka (od PR 4): bitwa w rundach na strumieniu `combat` (`Battles.Fight`, szczegóły w `docs/systems/war.md`): siła z uzbrojeniem, morale, głodem i terenem obrońców, straty co rundę, ucieczka przy niskim morale;
   - wygrana: łupy (tyle, ile uniosą wojownicy, ten sam udział każdego zapasu); w wojnie o ziemię zdobyta wioska przechodzi z ludźmi do zwycięzcy, a pokonani mają do niej roszczenie; ludzie pobitego obozu uciekają do swojej najbliższej osady;
   - powrót: ocaleni wracają do osad, z których przyszli (w proporcji), łupy i resztka jedzenia do osady wyjścia (albo do najbliższej własnej, gdy domu już nie ma).
 - **Wojna** (`WarSystem`): wojna bez kampanii przez 5 lat kończy się białym pokojem; zmęczenie = miesiące kampanii × 5 + procent zabitych × 3.
 
 ## Pliki danych
-- `data/war.json`: `campaignStepMonths` 1, `marchCellsPerMonth` 3, `quietPeaceYears` 5, `wearinessPerCampaignMonth` 5, `minWinChancePercent` 60, `sendPercent` 67, `minWarriors` 5 (ostatnie trzy przejdą do `data/ai.json` z dowódcą w PR 5).
+- `data/war.json`: `campaignStepMonths` 1, `marchCellsPerMonth` 3, `quietPeaceYears` 5, `wearinessPerCampaignMonth` 5, `sendPercent` 67, `minWarriors` 5, `armySightCells` 1 (reguły); progi dowódcy w `data/ai.json` → `commander` (od PR 5).
 
 ## Testy
 - `ArmyTests` (PR 3): patrz `docs/systems/war.md`.
-- `EpisodeTests`: kampania dodaje kroki co miesiąc, a świat czeka; cicha wojna kończy się po 5 latach, a nie w następnym długim kroku; kampania zawraca przed zbyt silnym celem; kampania wymaga wojny i zostawia 1/3 w domu; zapis w trakcie marszu i dalsza gra dają ten sam hash.
+- `EpisodeTests`: kampania dodaje kroki co miesiąc, a świat czeka; cicha wojna kończy się po 5 latach, a nie w następnym długim kroku; kampania zawraca przed zbyt silnym celem (na rozkaz dowódcy); kampania wymaga wojny i zostawia 1/3 w domu; zapis w trakcie marszu i dalsza gra dają ten sam hash.
 - `DeterminismTests`, `WorldGeneratorTests`: nowe wartości kontrolne hashy.
 
 ## Wydajność

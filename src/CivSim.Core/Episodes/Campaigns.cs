@@ -236,17 +236,6 @@ public static class Campaigns
         return (long)e.Warriors * e.ArmsPercent * e.Morale / 100;
     }
 
-    /// <summary>
-    /// The chance, percent, that an attack of <paramref name="attack"/> warrior-percent wins against <paramref name="target"/>
-    /// (its true strength with the terrain; attackers coming from <paramref name="from"/>, or -1 when not known yet): the
-    /// attackers' share of the strength, a rough guess of the battle (the commander's expected battle comes in PR 5).
-    /// </summary>
-    public static int Chance(GameContent content, GameState state, SettlementState target, long attack, int from = -1)
-    {
-        long defence = DefenceInPlace(content, state, target, from);
-        return (int)(Math.Max(0, attack) * 100L / Math.Max(1, attack + defence));
-    }
-
     /// <summary>Strength of a campaign in a battle: <see cref="AttackStrength"/>, lowered when it has no food left (stage 4e PR 4).</summary>
     public static long BattleStrength(GameContent content, Episode e)
     {
@@ -282,17 +271,94 @@ public static class Campaigns
     }
 
     /// <summary>
-    /// The chance, percent, that an attack of <paramref name="attack"/> warrior-percent wins against <paramref name="target"/>
-    /// as <paramref name="civ"/> sees it, or -1 when the settlement is not in sight in its last own step: then nobody knows,
-    /// and the warriors go to look (a campaign that arrives and sees it would lose turns back).
+    /// True when <paramref name="civ"/> sees <paramref name="cell"/> now: seen in its last own step, or at most
+    /// <see cref="WarRules.ArmySightCells"/> from one of its armies on campaign (stage 4e PR 5).
     /// </summary>
-    public static int WinChancePercent(GameContent content, GameState state, CivilizationState civ, SettlementState target, long attack)
+    public static bool Sees(GameContent content, GameState state, CivilizationState civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(civ);
+        if (MapMemory.SeesNow(state, civ, cell))
+        {
+            return true;
+        }
+
+        HexGlobe geo = state.Worlds[0].Geometry;
+        HexCoord at = geo.FromIndex(cell);
+        foreach (Episode e in state.Episodes.All)
+        {
+            if (!e.Ended && e.Kind == EpisodeKind.Campaign && e.Civ == civ.Id && geo.Distance(geo.FromIndex(e.Cell), at) <= content.War.ArmySightCells)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The battle <paramref name="civ"/> expects when <paramref name="attackers"/> men of strength <paramref name="attack"/>
+    /// (warrior-percent, morale in) attack <paramref name="target"/> from <paramref name="from"/> (-1: not known), or null
+    /// when the target is not in sight (stage 4e PR 5): the defenders as they are now, with their arms and the terrain.
+    /// </summary>
+    public static ExpectedBattle? Expect(GameContent content, GameState state, CivilizationState civ, SettlementState target, int attackers, long attack, int morale, int from)
+    {
+        ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(target);
         int cell = state.Worlds[target.World.Value].Geometry.Index(target.Cell);
-        return MapMemory.SeesNow(state, civ, cell) ? Chance(content, state, target, attack) : -1;
+        if (!Sees(content, state, civ, cell))
+        {
+            return null;
+        }
+
+        BattleRules rules = content.War.Battle;
+        long defence = DefenceInPlace(content, state, target, from) * rules.DefenderMorale / 100;
+        return Battles.Expect(rules, attackers, attack, morale, Defenders(content, target), defence);
+    }
+
+    /// <summary>
+    /// Cells from <paramref name="cell"/> to the reach of carriers: its distance to the nearest own settlement of
+    /// <paramref name="civ"/> beyond <see cref="WarRules.CarrierCells"/>, 0 within reach (stage 4e PR 5).
+    /// </summary>
+    public static int BeyondSupplyCells(GameContent content, GameState state, CivId civ, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        WorldState world = state.Worlds[0];
+        HexCoord at = world.Geometry.FromIndex(cell);
+        int nearest = int.MaxValue;
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (s.IsActive && s.Owner == civ && s.World == world.Id)
+            {
+                nearest = Math.Min(nearest, world.Geometry.Distance(at, s.Cell));
+            }
+        }
+
+        return nearest == int.MaxValue ? 0 : Math.Max(0, nearest - content.War.CarrierCells);
+    }
+
+    /// <summary>Months an army needs to march <paramref name="cells"/> cells.</summary>
+    public static int MarchMonths(GameContent content, int cells)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return cells <= 0 ? 0 : (int)IntMath.MulDiv(cells, 1, content.War.MarchCellsPerMonth, Rounding.Ceiling);
+    }
+
+    /// <summary>Months the food of a campaign lasts: what it carries, the food among its loot and what carriers bring.</summary>
+    public static int FoodMonthsLeft(GameContent content, Episode e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        Amount food = FoodIn(content, e.Food) + FoodIn(content, e.Loot) + FoodIn(content, e.ConvoyFood);
+        return MonthsOf(content, food, e.Warriors);
+    }
+
+    /// <summary>Whole months <paramref name="food"/> feeds <paramref name="warriors"/> (at most 120).</summary>
+    public static int MonthsOf(GameContent content, Amount food, int warriors)
+    {
+        long year = Math.Max(1, FoodFor(content, Math.Max(1, warriors), 12).Hundredths);
+        return (int)Math.Min(120, food.Hundredths * 12 / year);
     }
 
     /// <summary>Food <paramref name="warriors"/> eat in <paramref name="months"/> months.</summary>
@@ -493,6 +559,51 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
 }
 
 /// <summary>
+/// Calls a campaign home (stage 4e PR 5): an army that is still gathering or marching turns back; the survivors go home
+/// as after a battle. The commander sends it when what it sees now promises no victory or the food will not last.
+/// </summary>
+public sealed record RecallCampaignCommand(long Episode) : ICommand, IChronicledCommand
+{
+    /// <inheritdoc />
+    public CommandCategory Category => CommandCategory.Military;
+
+    /// <inheritdoc />
+    public CommandResult Validate(GameState state, CivId civ)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return Find(state, civ) is null ? CommandResult.Fail("no campaign of this civilization on the march") : CommandResult.Ok;
+    }
+
+    /// <inheritdoc />
+    public void Apply(GameState state, CivId civ) => ApplyWithChronicle(state, civ);
+
+    /// <inheritdoc />
+    public string? ApplyWithChronicle(GameState state, CivId civ)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        Episode e = Find(state, civ)!;
+        e.Phase = CampaignPhase.Return;
+        e.Foraging = false;
+        string name = state.FindCivilization(civ)?.Name ?? civ.ToString();
+        string target = state.FindSettlement(new SettlementId(e.Target))?.Name ?? "the enemy";
+        return $"{name} called its warriors back from the march on {target}.";
+    }
+
+    private Episode? Find(GameState state, CivId civ)
+    {
+        foreach (Episode e in state.Episodes.All)
+        {
+            if (e.Id == Episode && !e.Ended && e.Kind == EpisodeKind.Campaign && e.Civ == civ && e.Phase is CampaignPhase.Muster or CampaignPhase.March)
+            {
+                return e;
+            }
+        }
+
+        return null;
+    }
+}
+
+/// <summary>
 /// Combat phase (GDD 11.1 phase 6; stage 4e PR 2–3, ADR 0022): every campaign whose step is due eats, gathers, marches
 /// <see cref="WarRules.MarchCellsPerMonth"/> cells over known land, fights when it reaches its target, takes what its
 /// warriors can carry and goes home, where the survivors go back to their settlements. Carriers from the nearest own
@@ -650,18 +761,11 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             return;
         }
 
-        if (path.Count > _content.War.MarchCellsPerMonth)
+        if (path.Count >= 2)
         {
-            e.Cell = path[_content.War.MarchCellsPerMonth - 1];
-            return;
-        }
-
-        e.Cell = path.Count >= 2 ? path[^2] : e.Cell; // the warriors stand next to the settlement they attack
-        // Now they see it: they attack only with a good chance, or else go home (decision of 2026-11-07).
-        if (Campaigns.Chance(_content, state, target, Campaigns.BattleStrength(_content, e), e.Cell) < _content.War.MinWinChancePercent)
-        {
-            context.Chronicle($"The warriors of {civ.Name} saw how strong {target.Name} was and turned back.");
-            e.Phase = CampaignPhase.Return;
+            // Not there yet: march, at most to the cell next to the settlement. The warriors attack in the next step,
+            // so their commander, who sees it now, can still call them back (stage 4e PR 5).
+            e.Cell = path[Math.Min(_content.War.MarchCellsPerMonth, path.Count - 1) - 1];
             return;
         }
 

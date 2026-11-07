@@ -41,6 +41,13 @@
   "uncomfortableBelowPercent": 100,
   "opinionSwingPercent": 50,
   "reviewStaggerYears": 7,
+  "commander": {
+    "comment": "The commander (stage 4e PR 5, GDD 8.1, decisions of 2026-11-07). It plays the battle through in its head from what it sees: the defenders of a target in sight with their arms and the terrain of the cell it would attack from, its own army with arms and morale; 25 battles with steady luck from the worst to the best of battle.rollPercent (war.json), no drawing. It sends an army only when it wins at least minWinChancePercent of them and expects to lose at most maxLossPercent of its warriors (a target out of sight: the warriors go to look). Road and food: the march beyond the reach of carriers (supply.carrierCells from the nearest own settlement) there and back must leave at least minFoodMonths months of food. Every month of a campaign it looks again (an army sees war.json armySightCells around it): it turns back when the expected chance falls below recallChancePercent, or when the food left will not bring the army back within the carriers' reach.",
+    "minWinChancePercent": 60,
+    "maxLossPercent": 50,
+    "minFoodMonths": 1,
+    "recallChancePercent": 45
+  },
   "scholar": {
     "baseWorthPerPerson": "0.01",
     "fieldWorthPerPerson": "0.02",

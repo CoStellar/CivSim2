@@ -178,6 +178,7 @@ public class EpisodeTests
         }
         new LaunchCampaignCommand(Content, home.Id, target.Id, 20).ApplyWithChronicle(state, a.Id);
         TurnRunner runner = Runner(state);
+        runner.AddCommandSource(new CivSim.Core.Ai.CommanderAdvisor(Content)); // the commander looks every month (PR 5)
         var lines = new List<string>();
         for (int k = 0; k < 50 && state.Episodes.Count > 0; k++)
         {
@@ -185,7 +186,7 @@ public class EpisodeTests
             lines.AddRange(runner.LastChronicle);
         }
 
-        Assert.Contains(lines, l => l.Contains("turned back", System.StringComparison.Ordinal));
+        Assert.Contains(lines, l => l.Contains("called its warriors back", System.StringComparison.Ordinal));
         Assert.Equal(200, target.Population[Warriors]);
         Assert.Equal(30, SettlementAssetsWarriors(home));
     }

@@ -159,6 +159,14 @@ public class DeadValueTests
             {
                 yield return (p.Name, Enum.GetValues<Goal>().Where(g => !g.Equals(p.GetValue(rules))).Select(g => Set(rules, p, g)));
             }
+            else if (p.PropertyType == typeof(CommanderRules))
+            {
+                foreach (PropertyInfo q in typeof(CommanderRules).GetProperties())
+                {
+                    int v = (int)q.GetValue(rules.Commander)!;
+                    yield return ("commander." + q.Name, Numbers(v).Select(n => rules with { Commander = Set(rules.Commander, q, n) }));
+                }
+            }
             else if (p.PropertyType == typeof(ScholarRules))
             {
                 foreach (PropertyInfo q in typeof(ScholarRules).GetProperties())
@@ -339,6 +347,16 @@ public class DeadValueTests
         using (var ms = new MemoryStream())
         {
             SaveGameSerializer.Save(market, ms);
+            saved.Add(ms.ToArray());
+        }
+
+        // A war (stage 4e PR 5): a people with a strong village sees a weaker enemy village nearby, and the enemy's army
+        // stands next to the strong village; the commanders of both decide.
+        GameState war = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
+        War(war);
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(war, ms);
             saved.Add(ms.ToArray());
         }
 
@@ -538,6 +556,41 @@ public class DeadValueTests
                 s.Add(wood, Amount.FromUnits(60));
             }
         }
+    }
+
+    private static void War(GameState state)
+    {
+        CivilizationState[] alive = state.Civilizations.Where(c => c.IsAlive && state.Settlements.Any(x => x.Owner == c.Id && x.IsActive)).ToArray();
+        CivilizationState a = alive[0];
+        CivilizationState b = alive[1];
+        int warriors = Content.Strata.Single(x => x.Key == "warriors").Id;
+        int grain = Content.Good("grain").Id;
+        SettlementState strong = state.Settlements.First(x => x.Owner == a.Id && x.IsActive);
+        strong.Population[warriors] = 60;
+        strong.Stock[grain] = Amount.FromUnits(500);
+        strong.Stock[Content.Good("stone_tools").Id] = Amount.FromUnits(50);
+        Assert.True(FreeLandNear(state, strong.Cell, 5, out CivSim.Core.Map.HexCoord at));
+        SettlementState weak = state.FoundSettlement(b.Id, state.Worlds[0].Id, at, "Weak", Content.SettlementLevel("village").Id, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
+        weak.Population[Content.Strata[0].Id] = 40;
+        weak.Population[warriors] = 30;
+        weak.Stock[grain] = Amount.FromUnits(300);
+        int stamp = (int)(state.Month / 12) + 1;
+        foreach (CivilizationState c in new[] { a, b })
+        {
+            Array.Fill(c.SeenYear, stamp);
+            c.StepStartMonth = Math.Min(c.StepStartMonth, state.Month);
+        }
+
+        if (state.Treaties.Find(a.Id, b.Id, CivSim.Core.Diplomacy.TreatyKind.War) is null)
+        {
+            CivSim.Core.Diplomacy.Treaties.DeclareWar(Content, state, a.Id, b.Id, CivSim.Core.Diplomacy.WarGoal.Loot, -1);
+        }
+
+        new CivSim.Core.Episodes.LaunchCampaignCommand(Content, weak.Id, strong.Id, 20).Apply(state, b.Id);
+        CivSim.Core.Episodes.Episode army = state.Episodes.All[^1];
+        CivSim.Core.Map.HexGlobe geo = state.Worlds[0].Geometry;
+        army.Cell = geo.Index(geo.Neighbor(strong.Cell, CivSim.Core.Map.HexDirection.N));
+        army.Phase = CivSim.Core.Episodes.CampaignPhase.March;
     }
 
     private static void Hungry(SettlementState s)

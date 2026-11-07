@@ -50,6 +50,15 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `opinionSwingPercent` | 50 | % | G2 | jak mocno sympatia zmienia chęć wypędzenia: ±50% przy pełnej sympatii albo nienawiści (dawniej „/ 20” w kodzie) |
 | `reviewStaggerYears` | 7 | lata | D2 | rozłożenie przeglądów dyplomaty między cywilizacje (dawniej 84 miesiące w kodzie) |
 
+### `data/ai.json` → `commander` (dowódca, etap 4e PR 5)
+
+| Klucz | Wartość | Jednostka | Decyzje | Znaczenie |
+| --- | --- | --- | --- | --- |
+| `minWinChancePercent` | 60 | % spodziewanych wygranych | K1 | najmniejsza szansa ze spodziewanej bitwy, przy której dowódca wysyła armię na widziany cel (wcześniej w `war.json`) |
+| `maxLossPercent` | 50 | % armii | K1 | najwięcej spodziewanych strat, przy których dowódca wysyła armię |
+| `minFoodMonths` | 1 | miesiące | K1, K2 | zapas jedzenia ponad miesiące marszu poza zasięgiem tragarzy tam i z powrotem (wcześniej w `war.json`: jedzenie na start) |
+| `recallChancePercent` | 45 | % | K2 | w czasie kampanii: poniżej tej szansy dowódca woła armię do domu |
+
 ### `data/ai.json` → `scholar` (uczony, PR B)
 
 | Klucz | Wartość | Jednostka | Znaczenie |
@@ -126,10 +135,9 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `campaignStepMonths` | 1 | miesiące | — | krok kampanii (epizodu) |
 | `marchCellsPerMonth` | 3 | pola na miesiąc | K1 | marsz kampanii |
 | `quietPeaceYears` | 5 | lata | — | wojna bez kampanii kończy się białym pokojem |
-| `minWinChancePercent` | 60 | % | K1 | najmniejsza szansa, przy której dowódca wysyła kampanię na widziany cel i przy której wojownicy atakują u celu |
+| `armySightCells` | 1 | pola | K1, K2 | armia w drodze widzi osady w tej odległości (od PR 5); `minWinChancePercent` przeszło do `ai.json` → `commander` |
 | `sendPercent` | 67 | % wojowników osady | K1 | ilu wojowników może wyjść (1/3 zostaje w domu) |
 | `minWarriors` | 5 | wojownicy | K1 | najmniejsza kampania (cała armia) |
-| `minFoodMonths` | 1 | miesiące | K1 | dowódca wysyła armię tylko wtedy, gdy osady mogą jej dać jedzenie co najmniej na tyle (od PR 3) |
 | `musterCells` | 6 | pola | K1 | z jak daleka od osady wyjścia dołączają wojownicy innych osad (od PR 3) |
 | `armaments[]` | gołe ręce 50, włócznie hartowane w ogniu 70, proce 80, kamienne groty 100 | % siły | K1 | uzbrojenie (technologia, dobro, zużycie na wojownika); dowódca liczy z niego siłę obu stron (od PR 3) |
 | `battle.*` | 6 rund, 10% siły zabija, szczęście 50–150%, −3 morale na % strat, ucieczka poniżej 40, obrońcy z morale 100, głodni 75%, ucieczka −10%; teren: wzgórza +25, góry +50, rzeka +25, lasy, dżungla i bagna +25 | — | K1 (teren w szansie) | bitwa w rundach (od PR 4); dowódca widzi teren celu w szansie (bez rzeki, bo nie wie, skąd przyjdzie) |
@@ -194,4 +202,6 @@ Od PR B zostały tylko liczby, które są częścią samej metody (nie strojenia
 | alarmy `WarDeclared`, `Attacked` | `WorldClock.cs`, `Treaties.DeclareWar`, `Contacts.RecordAttack` | D2, G2 | co budzi reakcję poza rytmem |
 | 3000 | `SetStrategyCommand.MaxWeight` | S1 | najwyższa dozwolona waga celu |
 | 3 | `Chooser.MaxRoom` | wszystkie | najwięcej działań w losowaniu |
+| 5 poziomów szczęścia na stronę (25 bitew) | `Battles.ExpectSteps` | K1, K2 | ile bitew dowódca rozgrywa w głowie |
+| 0,5% oceny na 1% strat | `CommanderAdvisor.Weigh` | K1 | jak spodziewane straty obniżają ocenę kampanii |
 | kolejność G1 → G2 → G3 → G4 → G5 → G6 | `Decide` | gubernator | priorytet decyzji obozu |

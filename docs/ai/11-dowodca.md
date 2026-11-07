@@ -1,11 +1,27 @@
-# Dowódca (K1)
+# Dowódca (K1, K2)
 
-[← spis treści](README.md) · kod: `src/CivSim.Core/Ai/CommanderAdvisor.cs`, `src/CivSim.Core/Episodes/Campaigns.cs` · dane: `data/war.json` ·
-GDD 8.1, 9.3 · etap 4e PR 2–3 (ADR 0022). Prosta wersja: pełny dowódca (decyzje co miesiąc kampanii, spodziewany wynik bitwy
-w rundach) przyjdzie w PR 5.
+[← spis treści](README.md) · kod: `src/CivSim.Core/Ai/CommanderAdvisor.cs`, `src/CivSim.Core/Episodes/Campaigns.cs`,
+`src/CivSim.Core/Episodes/Battles.cs` · dane: `data/ai.json` (sekcja `commander`), `data/war.json` · GDD 8.1, 9.3 · etap 4e PR 2–5 (ADR 0022).
 
 Dowódca wysyła **kampanie**: armie zebrane z osady wyjścia i z własnych osad w pobliżu (od PR 3) przeciw osadzie wroga. Kampania to epizod z krokiem co miesiąc
-([epizody](../systems/episodes.md)): marsz, walka u celu, powrót z łupami.
+([epizody](../systems/episodes.md)): zbiórka, marsz, bitwa u celu, powrót z łupami. Od PR 5 dowódca **rozgrywa bitwę w głowie** z tego, co widzi,
+liczy drogę i jedzenie i **co miesiąc kampanii patrzy jeszcze raz**: może zawołać armię do domu (K2).
+
+## Spodziewana bitwa (od PR 5)
+
+`Battles.Expect` gra tę samą bitwę w rundach co prawdziwa (`Battles.Fight`), ale **bez losowania**: szczęście każdej strony jest stałe
+przez całą bitwę, 5 poziomów od najgorszego do najlepszego z `battle.rollPercent` (50, 75, 100, 125, 150%), każda para raz, czyli 25 bitew;
+ułamek człowieka jest zaokrąglany. Wynik:
+
+- **szansa** = w ilu z 25 bitew wygrywają atakujący, w procentach (krok 4%);
+- **spodziewane straty** = średnio ilu atakujących pada, w procentach armii.
+
+Dane wejściowe to tylko to, co cywilizacja **widzi teraz**: cel widziany w ostatnim własnym kroku albo w zasięgu wzroku jej armii
+(`armySightCells` 1 pole w `data/war.json`). Wtedy dowódca zna obrońców (wojownicy + 25% reszty), ich uzbrojenie z zapasów i teren pola celu
+(wzgórza, góry, lasy, bagna, a przy planie także rzekę na krawędzi, przez którą przyjdzie atak). Swoją armię zna dokładnie: uzbrojenie,
+morale i głód. Gdy celu nie widzi, nie zgaduje: wojownicy idą zobaczyć (w ocenie szansa 50%), a decyzję podejmie K2, gdy armia stanie przy celu.
+
+Test `CommanderTests` sprawdza, że spodziewana szansa jest blisko tego, jak często atakujący wygrywają w 300 prawdziwych bitwach (±25 punktów).
 
 ## K1: Wysłanie kampanii
 
@@ -19,20 +35,37 @@ Dowódca wysyła **kampanie**: armie zebrane z osady wyjścia i z własnych osad
 - **Zbiórka** (od PR 3): do armii dołączają 2/3 wojowników każdej naszej osady do 6 pól (`musterCells`) od osady wyjścia, której
   wojownicy nie są w drodze, najpierw najbliższe (remis: niższy numer osady), aż do limitu wodza ery (`armyLimit` 50 w erach 1–2).
   Cała armia musi mieć co najmniej 5 wojowników (`minWarriors`).
-- **Jedzenie** (od PR 3): osady armii mogą dać połowę swojego jedzenia (`supplySharePercent`). Gdy to mniej niż na 1 miesiąc
-  (`minFoodMonths`), dowódca nie wysyła armii.
 - **Cel:** osada, o którą jest wojna (gdy to my ją wypowiedzieliśmy o ziemię i znamy jej położenie), w innym razie najbliższa znana
   osada wroga w zasięgu wędrówki (40 pól).
-- **Szansa** (`Campaigns.WinChancePercent`): gdy cel widzieliśmy w ostatnim własnym kroku, to nasz udział w sile uzbrojonej
-  (od PR 3: każdy wojownik z najlepszym uzbrojeniem, na jakie stać jego osadę, przeciw obronie: ich wojownicy z uzbrojeniem z ich
-  zapasów + 25% reszty mieszkańców z gołymi rękami; od PR 4 obrona z premią terenu pola celu). Na miejscu wojownicy liczą szansę jeszcze
-  raz, z terenem i rzeką od strony, z której przyszli, i z głodem; przy szansie od 60% wchodzą do bitwy w rundach. Odrzucamy cel z szansą poniżej 60%
-  (`minWinChancePercent`). Gdy go nie widzimy, nikt nie wie: wojownicy idą zobaczyć (w ocenie szansa 50%). Na miejscu atakują tylko
-  przy prawdziwej szansie co najmniej 60%, w innym razie zawracają (decyzja Patryka: dowódca nie idzie na pewną porażkę).
-- **Ocena:** `1000 × szansa × waga celu „podbój” × mnożnik charakteru (agresja)`, odległość tylko w zapisie „Dlaczego?”.
+- **Bitwa** (od PR 5): gdy cel widać, dowódca rozgrywa spodziewaną bitwę (wyżej) dla całej armii z morale 100. Odrzuca cel, gdy szansa
+  jest poniżej 60% (`commander.minWinChancePercent`) albo spodziewane straty powyżej 50% armii (`commander.maxLossPercent`).
+  Najpierw liczy bez rzeki (rzeka pomaga tylko obrońcom, więc jeśli już wtedy przegrywa, nie szuka drogi), potem z polem, z którego przyjdzie atak.
+- **Droga:** musi istnieć droga po znanych polach (najkrótsza, do 40 pól).
+- **Jedzenie i zaopatrzenie** (od PR 5): armia bierze jedzenie najwyżej na 3 miesiące (`supply.carryFoodMonths`), tyle, ile uniosą wojownicy, i najwyżej
+  połowę zapasów osad (`supplySharePercent`). Tragarze dochodzą do 12 pól od naszej osady (`supply.carrierCells`). Dowódca liczy, ile pól
+  celu leży **poza zasięgiem tragarzy** (odległość celu od najbliższej naszej osady minus 12), ile to miesięcy marszu (3 pola na miesiąc),
+  i wysyła armię tylko wtedy, gdy jedzenie wystarczy na te miesiące **tam i z powrotem** i jeszcze na 1 miesiąc (`commander.minFoodMonths`):
+  `miesiące jedzenia ≥ 2 × miesiące poza zasięgiem + 1`. Przy zapasie na 3 miesiące cel może leżeć najwyżej 3 pola poza zasięgiem tragarzy.
+- **Ocena:** `1000 × szansa × (1 − 0,5% × spodziewane straty) × waga celu „podbój” × mnożnik charakteru (agresja)`; odległość, miesiące
+  jedzenia i pola poza zaopatrzeniem tylko w zapisie „Dlaczego?”.
 - **Wybór:** najlepsza ocena (jedna kampania na wojnę naraz).
 - **Komenda:** `LaunchCampaignCommand` (działanie `LaunchCampaign`) z listą osad, które dołączają (`Others`). Serwer sprawdza wojnę,
   znajomość celu, drogę, 1/3 w domu w każdej osadzie, odległość osad od osady wyjścia i limit wodza.
+
+## K2: Odwołanie kampanii (co miesiąc, od PR 5)
+
+- **Kiedy:** w każdym kroku, także w krokach epizodów (co miesiąc kampanii), dla każdej naszej armii, która się zbiera albo maszeruje.
+  Decyzja jest w fazie decyzji, a armia rusza w fazie walki, więc dowódca widzi stan po poprzednim miesiącu.
+- **Bitwa:** gdy cel widać, dowódca rozgrywa spodziewaną bitwę z obecną armią (wojownicy, morale, głód; gdy armia stoi obok celu, także z rzeką
+  od jej strony). Przy szansie poniżej 45% (`commander.recallChancePercent`) woła armię do domu. Próg jest niższy niż 60% przy wysłaniu,
+  żeby armia nie zawracała od drobnej zmiany.
+- **Jedzenie:** gdy armia nie napada właśnie wioski po jedzenie, dowódca liczy miesiące jedzenia, które ma (niesione, w łupach i u tragarzy w drodze),
+  i miesiące marszu poza zasięgiem tragarzy: do celu i od celu z powrotem. Gdy jedzenia jest mniej, woła armię do domu, zanim zacznie głodować.
+- **Komenda:** `RecallCampaignCommand` (działanie `RecallCampaign`): armia zawraca, ocaleni wracają do swoich osad. Serwer przyjmuje ją
+  tylko od właściciela kampanii, która się zbiera albo maszeruje.
+- **Atak:** armia, która doszła do pola obok celu, atakuje dopiero w następnym miesiącu. Ten miesiąc daje dowódcy czas, żeby zobaczyć cel i
+  ewentualnie zawołać armię (wcześniej system sam zawracał armię przed silnym celem; od PR 5 to decyzja dowódcy, a gracz w trybie gracza
+  zdecyduje sam).
 
 ## Co się dzieje po decyzji
 
@@ -40,10 +73,13 @@ Dowódca wysyła **kampanie**: armie zebrane z osady wyjścia i z własnych osad
   wyjścia (zbiórka trwa tyle miesięcy, ile marszu ma najdalsza), potem marsz 3 pola na miesiąc (`marchCellsPerMonth`) po znanych polach.
 - Gdy jedzenia zostaje na mniej niż 2 miesiące, najbliższa nasza osada z jedzeniem (do 12 pól) wysyła tragarzy; głodna armia traci
   morale, napada pobliską wioskę wroga po jedzenie, a przy morale poniżej 30 zawraca (to reguły systemu, nie decyzje dowódcy).
-- U celu: atak przy szansie ≥ 60%, inaczej odwrót. Walka jak napaść (losowanie udziału siły na strumieniu `combat`).
+- U celu: armia staje obok i w następnym miesiącu atakuje, chyba że dowódca ją odwoła (K2). Bitwa w rundach na strumieniu `combat` (PR 4, [war.md](../systems/war.md)).
 - Wygrana: łupy (tyle, ile uniosą wojownicy), w wojnie o ziemię zdobycie wioski z ludźmi; wynik wojny +10 (+15 za osadę).
 - Powrót: ocaleni i łupy do domu. Każdy miesiąc kampanii dodaje 5 punktów zmęczenia obu stronom wojny.
 
 ## Zapis „Dlaczego?”
 
-Czynniki: `win chance`, `distance` i `food months` (tylko zapis), waga celu i charakter. Cel wpisu: osada wyjścia (`settlement`) i osada celu (`target`).
+- **K1:** `win chance` i `expected losses` (od PR 5) liczą się w ocenie; `distance`, `food months` i `cells beyond supply` (od PR 5) tylko w zapisie;
+  waga celu i charakter. Cel wpisu: osada wyjścia (`settlement`) i osada celu (`target`).
+- **K2:** `win chance` i `expected losses` (gdy cel widać), `food months`, a przy braku jedzenia `cells beyond supply`. Przykład z seedu 23:
+  `RecallCampaign, win chance 20%, expected losses 9%, food months 0`.
