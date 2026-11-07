@@ -126,7 +126,8 @@ public static class WorldClock
         return soonest;
     }
 
-    // ADR 0022: the month the first quiet war ends by itself (a white peace), so that it ends in time, not at the next long step.
+    // ADR 0022: the month the first quiet war ends by itself (a white peace), so that it ends in time, not at the next long step;
+    // also the month a declaring side becomes ready to send armies (stage 4f), so that its commander can act then.
     private static long QuietWarEnds(GameContent content, GameState state, long now)
     {
         long quiet = content.War.QuietPeaceYears * 12L;
@@ -135,8 +136,12 @@ public static class WorldClock
         {
             if (t.Kind == Diplomacy.TreatyKind.War)
             {
-                long end = Math.Max(t.SinceMonth, t.LastCampaignMonth) + quiet;
+                long end = t.QuietSince + quiet;
                 soonest = Math.Min(soonest, Math.Max(now + 1, end));
+                if (t.ReadyMonth > now)
+                {
+                    soonest = Math.Min(soonest, t.ReadyMonth); // the declaring side's armies may go (stage 4f)
+                }
             }
         }
 

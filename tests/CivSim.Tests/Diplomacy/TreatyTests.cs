@@ -173,7 +173,7 @@ public class TreatyTests
 
         string? line = Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot));
 
-        Assert.Equal($"{a.Name} declared war on {b.Name} for loot, breaking their treaty.", line);
+        Assert.StartsWith($"{a.Name} declared war on {b.Name} for loot, breaking their treaty.", line, System.StringComparison.Ordinal);
         Assert.True(state.Treaties.AtWar(a.Id, b.Id));
         Assert.False(state.Treaties.Has(a.Id, b.Id, TreatyKind.Trade));
         Assert.False(state.Treaties.Has(a.Id, b.Id, TreatyKind.NonAggression));
@@ -194,7 +194,7 @@ public class TreatyTests
         CivilizationState a = Civ(state, 0);
         CivilizationState b = Civ(state, 1);
         Treaties.Sign(Content, state, a.Id, b.Id, TreatyKind.Trade);
-        Assert.Equal($"{a.Name} declared war on {b.Name} for loot.", Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot)));
+        Assert.StartsWith($"{a.Name} declared war on {b.Name} for loot.", Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot)), System.StringComparison.Ordinal);
         Assert.DoesNotContain(b.Relation(a.Id)!.Memories, m => m.Kind == RelationEvent.BrokenTreaty);
     }
 

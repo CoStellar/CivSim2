@@ -44,7 +44,7 @@ public sealed class WarSystem : ITurnSystem
         for (int k = state.Treaties.All.Count - 1; k >= 0; k--)
         {
             Treaty t = state.Treaties.All[k];
-            if (t.Kind == TreatyKind.War && month - Math.Max(t.SinceMonth, t.LastCampaignMonth) >= quiet
+            if (t.Kind == TreatyKind.War && month - t.QuietSince >= quiet
                 && !state.Episodes.Campaigning(t.A, t.B) && !state.Episodes.Campaigning(t.B, t.A))
             {
                 string line = Treaties.Sign(_content, state, t.A, t.B, TreatyKind.Peace, PeaceTerms.White);

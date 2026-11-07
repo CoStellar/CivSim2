@@ -19,6 +19,9 @@ erze niż przy ostatnim przeglądzie**. Pierwszy przegląd: pierwszy krok (wszys
 Miesiąc przeglądu = teraz + kroki × rytm jej ery. W epoce kamienia 15 kroków = 750 lat, w neolicie 375 lat, w brązie 300 lat,
 niezależnie od tego, w jakiej erze są inni.
 
+**Ustrój zmienia tempo** (etap 4f, GDD 7.2): liczba kroków to `reviewEverySteps × reviewPercent / 100` z `data/governments.json`
+(rada starszych 150% = 22 kroki, wodzostwo 75% = 11 kroków).
+
 Strateg działa **po gubernatorze**, więc nowe wagi obowiązują od następnego własnego kroku.
 
 ### Dane wejściowe
@@ -51,6 +54,11 @@ technologie więcej → nauka 1250. Spotkane 2 cywilizacje → wpływ 1150. Licz
 nic o pozostałych).
 
 Charakter **nie** wpływa na wagi stratega. Wpływa osobno, jako mnożnik w ocenie każdego działania.
+
+**Ustrój przechyla wagi** (etap 4f): po policzeniu każda waga jest mnożona przez `goalPercent / 100` ustroju
+(`Governments.Weight`). Wodzostwo: ekspansja i podbój ×1,2; rada starszych: bezpieczeństwo ×1,1; despotia: podbój ×1,2 i
+bezpieczeństwo ×1,1; republika miejska: dobrobyt i nauka ×1,2, podbój ×0,9. Przykład: wodzostwo z obozami pełnymi w 70% ma
+ekspansję 1300 × 1,2 = 1560, a podbój 1200 zamiast 1000.
 
 ### Cel ekspansji
 

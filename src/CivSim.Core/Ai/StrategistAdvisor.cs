@@ -93,11 +93,20 @@ public sealed class StrategistAdvisor : Advisor
             // Camps only look for a camp to drive out when they are hungry already, so hunger must not count twice;
             // conquest gets its own weight with wars in stage 4e.
             weights[(int)Goal.Conquest] = Factor.Neutral;
+            // The government leans the goals its way (GDD 7.2: a chiefdom favours expansion and war).
+            for (int g = 0; g < weights.Length; g++)
+            {
+                weights[g] = Governance.Governments.Weight(Content, civ, (Goal)g, weights[g]);
+            }
+
+            expansion = weights[(int)Goal.Expansion];
 
             (int target, long targetValue) = Target(state, civ, heart);
 
             // Reviews are spread over the civilizations: the first one waits a share of the interval.
-            int turns = rules.ReviewEverySteps + (civ.StrategyEra < 0 ? c % rules.ReviewEverySteps : 0);
+            // The government sets the pace (GDD 7.2).
+            int every = Math.Max(1, rules.ReviewEverySteps * Governance.Governments.ReviewPercent(Content, civ) / 100);
+            int turns = every + (civ.StrategyEra < 0 ? c % every : 0);
             long next = state.Month + ((long)turns * Simulation.WorldClock.RhythmMonths(Content, state, civ));
 
             Evaluation why = Evaluation.Of(expansion);

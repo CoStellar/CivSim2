@@ -93,6 +93,15 @@ public sealed class CivilizationState
     /// <summary>Own steps taken since the start (the counter of its own rhythm).</summary>
     public long Steps { get; set; }
 
+    /// <summary>The form of government, index into <see cref="Content.GameContent.Governments"/> (GDD 7.2; stage 4f).</summary>
+    public int Government { get; set; }
+
+    /// <summary>The government being brought in (GDD 7.2: enactment), or <see cref="NoGovernment"/> when none.</summary>
+    public int PendingGovernment { get; set; } = NoGovernment;
+
+    /// <summary>The month <see cref="PendingGovernment"/> takes effect.</summary>
+    public long PendingGovernmentMonth { get; set; }
+
     /// <summary>Reasons to decide before its next own step (reactive decisions, ADR 0018).</summary>
     public Simulation.Alarm Alarms { get; set; }
 
@@ -151,6 +160,9 @@ public sealed class CivilizationState
 
     /// <summary>Value of <see cref="Researching"/> when nothing is researched.</summary>
     public const int NoResearch = -1;
+
+    /// <summary>Value of <see cref="PendingGovernment"/> when no change of government is under way.</summary>
+    public const int NoGovernment = -1;
 
     /// <summary>Value of <see cref="ExpansionTarget"/> when there is no direction.</summary>
     public const int NoTarget = -1;

@@ -154,6 +154,19 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 `data/eras.json` (od 4e PR 3): `armyLimit` 50 (najwięcej wojowników w armii jednego wodza) i `troopsPerCell` 50 (wojownicy na polu; większa armia
 stoi na kilku polach, front). Dowódca nie zbiera więcej niż `armyLimit`.
 
+## `data/governments.json` (od etapu 4f)
+
+Każdy ustrój ma te same pola; wartości w [opisie systemu](../systems/governments.md). Dziś działają rada starszych i wodzostwo,
+despotia i republika miejska czekają na epokę brązu.
+
+| Parametr | Rada starszych | Wodzostwo | Jednostka | Decyzje | Znaczenie |
+| --- | ---: | ---: | --- | --- | --- |
+| `enactYears` | 4 | 1 | lata | K1, D2 | po tylu latach armie ruszają na wypowiedzianą wojnę i wchodzi nowy ustrój; w tym czasie bez wypowiedzeń wojny |
+| `reviewPercent` | 150 | 75 | % odstępu | S1, D2 | tempo przeglądów stratega i dyplomaty |
+| `cautionShift` | +200 | 0 | ‰ ostrożności | wszystkie z wyborem | jak często AI bierze najlepszą opcję wprost |
+| `goalPercent` | bezpieczeństwo 110 | ekspansja 120, podbój 120 | % wagi | S1 (i przez wagi wszystkie) | przechylenie wag celów |
+| `leaning` | ostrożność 1, otwartość 1 | agresja 1, ekspansywność 1 | waga cechy | start gry | który ustrój lud dostaje na start |
+
 ## `data/skills.json` (od etapu 4F)
 
 | Parametr | Wartość | Na co wpływa w AI |

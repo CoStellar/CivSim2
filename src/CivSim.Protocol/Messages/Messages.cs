@@ -122,8 +122,9 @@ public sealed record ChronicleEntry([property: Key(0)] long Turn, [property: Key
 public sealed record WorldView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] int Width, [property: Key(3)] int Height);
 
 /// <summary>
-/// What the viewer knows about one civilization. Era, people (in lived-in settlements), settlements and known
-/// technologies are filled for observers only (stage 5); otherwise empty or -1.
+/// What the viewer knows about one civilization. Era, people (in lived-in settlements), settlements, known
+/// technologies, the title with the government (e.g. "Chiefdom of Karrut") and the government are filled for
+/// observers only (stages 5 and 4f); otherwise empty or -1.
 /// </summary>
 [MessagePackObject]
 public sealed record CivilizationView(
@@ -134,7 +135,9 @@ public sealed record CivilizationView(
     [property: Key(4)] string Era = "",
     [property: Key(5)] long People = -1,
     [property: Key(6)] int Settlements = -1,
-    [property: Key(7)] int Technologies = -1);
+    [property: Key(7)] int Technologies = -1,
+    [property: Key(8)] string Title = "",
+    [property: Key(9)] string Government = "");
 
 /// <summary>Observer speeds (GDD 11.2).</summary>
 public enum SimulationSpeed

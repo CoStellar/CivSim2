@@ -50,6 +50,11 @@ public static class Campaigns
             return "We are not at war with them.";
         }
 
+        if (state.Treaties.Find(civ, t.Owner, TreatyKind.War) is { } war && !war.ReadyFor(civ, state.Month))
+        {
+            return "Our people are not ready for war yet.";
+        }
+
         WorldState world = state.Worlds[0];
         if (!MapMemory.Knows(content, state, c, world.Geometry.Index(t.Cell)))
         {

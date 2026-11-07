@@ -70,5 +70,7 @@ public class DeterminismTests
     // itself is unchanged (statistics of 300 turns identical before and after).
     // ADR 0022 (episodes): the months the world computes and the running episodes joined the hash; alarms bring a step a
     // month later, and wars are fought in campaigns.
-    private const ulong GoldenHash = 15923357136071656925UL;
+    // Stage 4f (ADR 0023): governments joined the state and change the AI (goal weights, caution, pace of reviews) and
+    // the readiness of declared wars.
+    private const ulong GoldenHash = 4321695923109760125UL;
 }

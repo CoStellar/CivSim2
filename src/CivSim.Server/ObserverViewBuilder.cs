@@ -90,6 +90,8 @@ public sealed class ObserverViewBuilder(GameContent content)
                 People = p,
                 Settlements = n,
                 Technologies = c.KnownCount,
+                Title = Core.Governance.Governments.Title(_content, c),
+                Government = Core.Governance.Governments.Of(_content, c)?.Name ?? string.Empty,
             });
         }
 
@@ -197,7 +199,9 @@ public sealed class ObserverViewBuilder(GameContent content)
             needed,
             Names(_content.Goods, g => g.Name),
             stock,
-            relations);
+            relations,
+            Core.Governance.Governments.Title(_content, c),
+            Core.Governance.Governments.Of(_content, c)?.Name ?? string.Empty);
     }
 
     private static List<string> Names<T>(IReadOnlyList<T> items, Func<T, string> name)

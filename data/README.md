@@ -14,6 +14,7 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `ai.json` | how AI advisors pick among their best actions | 4a |
 | `relations.json` | first contact, rumors, remembered events, sympathy and trust | 4c |
 | `diplomacy.json` | treaties and war, the diplomat's curves and thresholds, trade between civilizations | 4d |
+| `governments.json` | forms of government: title, era, enactment delay, pace and caution of the AI, goal weights, start leaning | 4f |
 | `trade.json` | trade network links, transport loss per cell, food reserve, price range | 3e |
 | `settlements.json` | settlement levels (population, storage capacity, mobile) and the new tribe's camp | 3a |
 | `eras.json` | eras, turn length in months, threshold technology | 3a, 3f |

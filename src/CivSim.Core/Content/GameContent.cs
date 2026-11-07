@@ -109,6 +109,9 @@ public sealed class GameContent
     /// <summary>Which skill works which recipe and which technology's gathering.</summary>
     public SkillLinks SkillLinks { get; init; } = SkillLinks.None;
 
+    /// <summary>Forms of government, index = id (<c>data/governments.json</c>, stage 4f). Empty in hand-made test content.</summary>
+    public IReadOnlyList<GovernmentDefinition> Governments { get; init; } = [];
+
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
 

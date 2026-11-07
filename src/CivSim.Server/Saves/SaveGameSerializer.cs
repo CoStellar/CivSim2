@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 25;
+    public const int FormatVersion = 26;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -58,7 +58,8 @@ public static class SaveGameSerializer
             civs.Add(new CivilizationSaveData(c.Id.Value, c.Name, c.IsAlive, c.StartCell.Col, c.StartCell.Row, c.Era, c.DiedOutMonth,
                 c.KnownTechnologies, c.Researching, c.ResearchProgress, c.LastScience, c.SeenYear,
                 c.Traits, c.GoalWeights, c.ExpansionTarget, c.StrategyReviewMonth, c.StrategyEra, SaveRelations(c),
-                c.NextStepMonth, c.StepStartMonth, c.StepMonths, c.Steps, (byte)c.Alarms, c.LanguageSeed, c.NamesIssued));
+                c.NextStepMonth, c.StepStartMonth, c.StepMonths, c.Steps, (byte)c.Alarms, c.LanguageSeed, c.NamesIssued,
+                c.Government, c.PendingGovernment, c.PendingGovernmentMonth));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -203,6 +204,9 @@ public static class SaveGameSerializer
                 Alarms = (Core.Simulation.Alarm)c.Alarms,
                 LanguageSeed = c.LanguageSeed,
                 NamesIssued = c.NamesIssued,
+                Government = c.Government,
+                PendingGovernment = c.PendingGovernment,
+                PendingGovernmentMonth = c.PendingGovernmentMonth,
             };
             LoadRelations(civ, c.Relations);
             state.AddCivilizationForLoad(civ);
@@ -310,7 +314,7 @@ public static class SaveGameSerializer
         {
             list.Add(new TreatySaveData(t.A.Value, t.B.Value, (byte)t.Kind, t.Initiator.Value, t.SinceMonth, t.UntilMonth,
                 t.GatewayA, t.GatewayB, t.LastFlowMonth, t.LastWorth, t.TotalWorth, (byte)t.Goal, t.GoalSettlement, t.Score,
-                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms), t.Campaigns, t.CampaignMonths, t.LastCampaignMonth));
+                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms), t.Campaigns, t.CampaignMonths, t.LastCampaignMonth, t.ReadyMonth));
         }
 
         return list;
@@ -443,6 +447,7 @@ public static class SaveGameSerializer
                 Campaigns = t.Campaigns,
                 CampaignMonths = t.CampaignMonths,
                 LastCampaignMonth = t.LastCampaignMonth,
+                ReadyMonth = t.ReadyMonth,
             });
         }
 

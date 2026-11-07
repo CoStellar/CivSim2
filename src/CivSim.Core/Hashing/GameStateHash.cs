@@ -177,6 +177,9 @@ public static class GameStateHash
             h.Add(c.StepMonths);
             h.Add(c.Steps);
             h.Add((int)c.Alarms);
+            h.Add(c.Government);
+            h.Add(c.PendingGovernment);
+            h.Add(c.PendingGovernmentMonth);
             h.Add(c.Relations.Count);
             foreach (Diplomacy.Relation r in c.Relations)
             {
@@ -299,6 +302,7 @@ public static class GameStateHash
             h.Add(t.Campaigns);
             h.Add(t.CampaignMonths);
             h.Add(t.LastCampaignMonth);
+            h.Add(t.ReadyMonth);
         }
 
         h.Add(state.Treaties.Proposals.Count);

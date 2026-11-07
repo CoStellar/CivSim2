@@ -135,7 +135,7 @@ strateg: waga nauki i wpływu; obce obozy tylko z pól widzianych teraz; liczby 
 osiedlenie porównane ze zbieractwem i ekspansywnością; wioska wysyła osadników, gdy jest pełna albo ma wyjałowione pola; wyprawy w nieznane
 dla ciekawych i ekspansywnych; zwiadowcy i marsz na stulecie; kolumny `settlements` i `spread_cells` w statystykach Headless).
 
-Gotowe też: **etap 4F** (ludzie i fachy, niżej, decyzja Patryka z 2026-11-06: przed wojną). Teraz: **4e** wojna (niżej, decyzje z 2026-11-07), potem **D** odłamy jako nowe cywilizacje w 4f.
+Gotowe też: **etap 4F** (ludzie i fachy, niżej, decyzja Patryka z 2026-11-06: przed wojną) i **4e** wojna (niżej, decyzje z 2026-11-07). Teraz: **4f** państwo (niżej), potem **4g** (100 gier i raport), a dopiero potem nowe ery (decyzja Patryka z 2026-11-07).
 Przeprowadzka całej wioski (z planu C) jeszcze nie: czeka na koszt porzucanych pól i budynków (etap budowli).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
@@ -174,6 +174,20 @@ morale i uzbrojenie z technologii, dowódca nie rusza na przegraną wojnę, a zm
 - [x] **PR 5:** AI: dowódca (spodziewany wynik bitwy z tego, co widzi, próg szansy w `data/ai.json`; zbiórka, marsz, atak, czekanie, odwrót, obrona co miesiąc kampanii); test martwych wartości; `docs/ai/`. Zrobione: bitwa w głowie bez losowania, droga i jedzenie, odwołanie co miesiąc (K2), atak miesiąc po dojściu. Czekanie i obrona armią: z wieloma armiami (PR 6 albo późniejsze ery)
 - [x] **PR 6:** strojenie i statystyki z 3 seedów (wojny, kampanie, bitwy, straty, zmęczenie), `docs/systems/war.md` z sekcją „Co erę”. Zrobione: zaopatrzenie (głód 42% → 23% miesięcy wypraw), jedzenie na całą wyprawę, czynnik „wynik wojny”, długi przebieg 10 000 tur; cicha wojna zostaje białym pokojem (decyzja Patryka 2026-11-07)
 - [ ] Po etapie 4e: susza, głód, epidemia i wyprawy odkrywców jako epizody (ADR 0022)
+
+## Etap 4f — Państwo: ustroje, przywódcy, stabilność, secesja (decyzja Patryka z 2026-11-07: przed nowymi erami)
+
+Zasady: GDD 7.2, 7.3, 7.5, 5.6; ADR 0023. Plan i pytania do decyzji: `docs/prompts/08-etap-4f-panstwo.md`
+(dokument „Etap 4f: państwo — propozycja” w Claude Docs).
+
+Gotowe, gdy: w 3 grach po 1000 tur cywilizacje mają ustroje i przywódców, stabilność spada przy zbyt dużym państwie, a dalekie osady
+odłączają się jako nowe cywilizacje z językiem rodzica i własnym tytułem.
+
+- [x] **PR 1:** ustroje w danych (`data/governments.json`: rada starszych i wodzostwo od startu, despotia i republika miejska od brązu), ustrój z charakteru na starcie, tytuł w nazwie („Chiefdom of Karrut”) w podglądzie i raporcie, opóźnienie decyzji w latach (zmiana ustroju, armie po wypowiedzeniu wojny), tempo i ostrożność AI; zapis w formacie 26, protokół 10 (`feat/state-governments`)
+- [ ] **PR 2:** przywódca z imieniem z języka ludu, wiekiem i cechami; starzenie, śmierć, sukcesja według ustroju; cechy przywódcy w charakterze
+- [ ] **PR 3:** stolica, administracja (koszt drogi od stolicy), stabilność 0–100 z nastroju ważonego wpływem warstw; niepokoje poniżej 30
+- [ ] **PR 4:** bunty poniżej 15: przewrót w rdzeniu albo secesja dalekich osad jako nowa cywilizacja (język z mutacją, własny ustrój i tytuł)
+- [ ] **PR 5:** AI państwa (wybór ustroju, reakcja na niską stabilność), pętla odwetu (wojna co 50 lat z tym samym sąsiadem), test martwych wartości, `docs/ai/`, statystyki z 3 seedów
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 

@@ -69,7 +69,8 @@ public sealed record TreatySaveData(
     [property: Key(20)] PeaceTermsSaveData? Terms = null,
     [property: Key(21)] int Campaigns = 0,
     [property: Key(22)] int CampaignMonths = 0,
-    [property: Key(23)] long LastCampaignMonth = -1);
+    [property: Key(23)] long LastCampaignMonth = -1,
+    [property: Key(24)] long ReadyMonth = -1);
 
 /// <summary>Saved episode (ADR 0022): today a war campaign.</summary>
 [MessagePackObject]
@@ -182,7 +183,10 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(21)] long Steps = 0,
     [property: Key(22)] byte Alarms = 0,
     [property: Key(23)] ulong LanguageSeed = 0,
-    [property: Key(24)] long NamesIssued = 0);
+    [property: Key(24)] long NamesIssued = 0,
+    [property: Key(25)] int Government = 0,
+    [property: Key(26)] int PendingGovernment = -1,
+    [property: Key(27)] long PendingGovernmentMonth = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]

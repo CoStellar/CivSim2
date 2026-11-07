@@ -500,7 +500,7 @@ Państwem rządzi się na pięciu poziomach decyzji, od strategii po pojedyncze 
 
 Ustrój decyduje o dwóch rzeczach naraz: jak szybko państwo podejmuje i wdraża decyzje oraz ile kosztuje to ludność. Ustroje szybkie przyspieszają rozwój, ale gromadzą **napięcie społeczne**, które z czasem zamienia się w niepokoje i rewolucje (7.3).
 
-- **Czas wdrożenia:** każda decyzja państwowa (polityka, reforma, wypowiedzenie wojny, mobilizacja, duża budowa) zaczyna działać dopiero po opóźnieniu: bardzo szybko 0 tur, szybko 1, średnio 2, wolno 4.
+- **Czas wdrożenia:** każda decyzja państwowa (polityka, reforma, wypowiedzenie wojny, mobilizacja, duża budowa) zaczyna działać dopiero po opóźnieniu: bardzo szybko 0 lat, szybko 1 rok, średnio 2 lata, wolno 4 lata (decyzja Patryka z 2026-11-07: w latach, nie w turach, bo tura epoki kamienia trwa 50 lat). Dziś działa na zmianę ustroju i na wypowiedzenie wojny: wojna zaczyna się od razu, ale armie strony, która ją wypowiedziała, ruszają po opóźnieniu.
 - **Tempo AI:** ustrój zmienia częstotliwość pracy doradców (8.1). Despotia reaguje od razu, ale impulsywnie (więcej losowości w wyborze). Demokracja reaguje wolno, ale konsekwentnie (silniejsza histereza planów, 8.6).
 - **Napięcie społeczne** rośnie co turę o wartość zależną od ustroju i polityk, a spada przy zadowolonej ludności. Wysokie napięcie obniża stabilność i zwiększa szansę na rewoltę.
 - **Ustrój określa też:** liczbę slotów polityk, wpływ polityczny każdej warstwy, sposób sukcesji, zdolność administracyjną i koszt zmiany ustroju (okres anarchii).
@@ -524,11 +524,20 @@ Ustrój decyduje o dwóch rzeczach naraz: jak szybko państwo podejmuje i wdraż
 się z rdzeniem nazwy ludu (5.6), np. wodzostwo „Chiefdom of Karrut”, despotia „Kingdom of Karrut”, republika miejska „Republic of
 Karrut”. Zmiana ustroju zmienia tytuł, rdzeń zostaje.
 
+**Decyzje Patryka z 2026-11-07 (etap 4f, dokument „Etap 4f: państwo — propozycja”, wszystkie rekomendacje przyjęte):**
+
+- Teraz działają rada starszych i wodzostwo; despotia i republika miejska są w danych i otwierają się z epoką brązu (etap 6).
+- Lud dostaje ustrój na start z charakteru: agresja i ekspansywność → wodzostwo, ostrożność i otwartość → rada starszych.
+- Ustrój zmienia strateg (rzadko, z histerezą) albo bunt. Zmiana kosztuje bezkrólewie: 2 lata niższej stabilności i brak decyzji państwowych.
+- Liczby ustrojów (wdrożenie, premia stabilności, administracja, wpływ warstw, sukcesja, tempo AI) są w `data/governments.json`.
+
 **Polityki** działają tak samo: każda ma efekt, czas wdrożenia, koszt utrzymania, wpływ na nastrój poszczególnych warstw i dopływ napięcia. Przykład: gospodarka planowa daje +30% produkcji przemysłowej, ale obniża podaż dóbr codziennych i każdej tury dokłada napięcia.
 
 ### 7.3 Stabilność i administracja
 
-- **Stabilność (0–100)** to średnia zadowolenia warstw ważona ich wpływem politycznym. Poniżej 30 zaczynają się niepokoje (strajki, niższa wydajność), poniżej 15 bunty, secesja odległych osad lub wojna domowa. Dzięki temu imperia rosną i upadają, a długa symulacja nie kończy się jednym hegemonem.
+- **Stabilność (0–100)** to średnia zadowolenia warstw ważona ich wpływem politycznym. Wpływ warstw zależy od ustroju (rada starszych: starszyzna i myśliciele; wodzostwo: wojownicy i wódz). Dopóki warstwy nie mają osobnego nastroju, nastrój warstwy to nastrój jej osady (decyzja Patryka z 2026-11-07). Do tego premia ustroju, minus przeciążenie administracji, kryzys sukcesji i bezkrólewie. Każda osada ma też lojalność = stabilność minus kara za odległość od stolicy, więc pierwsze odpadają dalekie osady.
+- **Stolica** to osada przywódcy: na start pierwszy obóz, potem największa osada; gdy stolica padnie, przenosi się do największej, a stabilność spada na kilka lat.
+- **Secesja** (decyzja Patryka z 2026-11-07): sąsiadujące ze sobą zbuntowane osady tworzą jedną nową cywilizację z językiem rodzica z mutacją (5.6), innym ustrojem niż rodzic („odłam o innych poglądach”), charakterem przesuniętym od rodzica i kopią technologii i mapy. Wojna nie zaczyna się sama: wybiera ją dyplomata rodzica, a wspomnienie secesji bardzo psuje opinię. Gdy gra ma już 64 cywilizacje, zamiast secesji jest przewrót. Poniżej 30 zaczynają się niepokoje (strajki, niższa wydajność), poniżej 15 bunty, secesja odległych osad lub wojna domowa. Dzięki temu imperia rosną i upadają, a długa symulacja nie kończy się jednym hegemonem.
 - **Zdolność administracyjna:** każda osada zużywa punkty administracji, tym więcej, im dalej leży od stolicy (liczone kosztem drogi, nie w linii prostej). Przekroczenie limitu oznacza korupcję, niższe podatki i spadek stabilności. Limit podnoszą pismo, urzędnicy, drogi, ustrój i później telegraf.
 - **Grupy interesu:** warstwy ludności zachowują się jak frakcje. Wpływowa i niezadowolona warstwa może wymusić zmianę polityki, zorganizować zamach albo rewolucję.
 
@@ -540,7 +549,7 @@ Karrut”. Zmiana ustroju zmienia tytuł, rdzeń zostaje.
 
 ### 7.5 Przywódca
 
-Każda cywilizacja ma przywódcę z imieniem, wiekiem i 2–3 cechami (np. zdobywca, budowniczy, uczony, kupiec, ostrożny, paranoik). Przywódca się starzeje i umiera. Sukcesja zależy od ustroju: dziedziczna grozi kryzysem, wybory zmieniają cechy co kadencję. Cechy przywódcy wpływają bezpośrednio na wagi decyzji AI (rozdział 8), więc zmiana władcy zmienia politykę państwa.
+Każda cywilizacja ma przywódcę z imieniem, wiekiem i 2–3 cechami (zdobywca, budowniczy, uczony, kupiec, ostrożny, paranoik; decyzja Patryka z 2026-11-07: każda cecha przesuwa 1–2 cechy charakteru o 0,2 na czas rządów). Przywódca się starzeje i umiera. Sukcesja zależy od ustroju: dziedziczna grozi kryzysem, wybory zmieniają cechy co kadencję. Cechy przywódcy wpływają bezpośrednio na wagi decyzji AI (rozdział 8), więc zmiana władcy zmienia politykę państwa.
 
 ### 7.6 Kierunki rozwoju
 

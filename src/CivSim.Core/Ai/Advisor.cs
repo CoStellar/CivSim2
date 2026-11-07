@@ -74,12 +74,12 @@ public abstract class Advisor : ICommandSource
 
     /// <summary>
     /// Rank of the chosen action (GDD 8.3): a cautious civilization takes the best one with a chance equal to its
-    /// caution, otherwise it draws among the kept actions with chances by score.
+    /// caution (shifted by its government, GDD 7.2), otherwise it draws among the kept actions with chances by score.
     /// </summary>
     protected int Pick(CivilizationState civ, DeterministicRandom? random)
     {
         ArgumentNullException.ThrowIfNull(civ);
-        if (random is null || Chooser.Count <= 1 || random.NextInt(1000) < civ.Trait(Trait.Caution))
+        if (random is null || Chooser.Count <= 1 || random.NextInt(1000) < Governance.Governments.Caution(Content, civ))
         {
             return Chooser.Count == 0 ? -1 : 0;
         }
