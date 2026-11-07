@@ -145,6 +145,24 @@ public sealed class CivilizationState
     /// <summary>The month the loss of the capital stops lowering stability; 0 or past when it never fell.</summary>
     public long CapitalLostUntilMonth { get; set; }
 
+    /// <summary>The civilization this one broke away from (stage 4f PR 4), or <see cref="NoParent"/> for a people of the first day.</summary>
+    public int ParentCiv { get; set; } = NoParent;
+
+    /// <summary>No parent civilization.</summary>
+    public const int NoParent = -1;
+
+    /// <summary>The month the civilization was founded (0 for the peoples of the first day).</summary>
+    public long FoundedMonth { get; set; }
+
+    /// <summary>Until this month no revolt breaks out again (calm after a revolt, stage 4f PR 4).</summary>
+    public long RevoltCalmUntilMonth { get; set; }
+
+    /// <summary>
+    /// Mutations of the language after <see cref="LanguageSeed"/>, oldest first (GDD 5.6: a people that broke away speaks a
+    /// daughter language of its parent's).
+    /// </summary>
+    public ulong[] LanguageMutations { get; set; } = [];
+
     /// <summary>Reasons to decide before its next own step (reactive decisions, ADR 0018).</summary>
     public Simulation.Alarm Alarms { get; set; }
 

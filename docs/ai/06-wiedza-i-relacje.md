@@ -89,6 +89,7 @@ Najwyżej 12 wspomnień na znaną cywilizację; przy przepełnieniu znika najsł
 | aktywny handel | każda tura, w której płynęły towary | +0,5/rok do +30 | +0,2/rok do +20 | 20 lat po zerwaniu |
 | wspólny wróg | obie w wojnie z tym samym wrogiem | +20 | +10 | 50 lat po końcu |
 | pomoc w wojnie | sojusznik dołączył do wojny | +30 | +25 | 200 lat |
+| secesja (od 4f PR 4) | osady odłączyły się i założyły nowy lud; pamięta rodzic | −60 | −40 | 200 lat, mściwy do 400; powód wojny o odwet |
 
 „Inny ustrój” czeka na etap 4f.
 

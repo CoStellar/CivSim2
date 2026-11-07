@@ -22,7 +22,13 @@ public static class Names
     public static NameLanguage Language(NameRules rules, CivilizationState civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
-        return NameLanguage.Create(rules, civ.LanguageSeed);
+        NameLanguage language = NameLanguage.Create(rules, civ.LanguageSeed);
+        foreach (ulong mutation in civ.LanguageMutations)
+        {
+            language = language.Mutate(mutation);
+        }
+
+        return language;
     }
 
     /// <summary>Gives every civilization a people's name from its own language (new game).</summary>
@@ -33,6 +39,27 @@ public static class Names
         {
             civ.Name = Next(rules, state, civ, people: true);
         }
+    }
+
+    /// <summary>
+    /// The people's name of <paramref name="daughter"/>, which broke away from a people called <paramref name="parentName"/>
+    /// (stage 4f PR 4): the parent's name with an ending of the daughter language, the first that is free.
+    /// </summary>
+    public static string DaughterPeople(NameRules rules, GameState state, CivilizationState daughter, string parentName)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        NameLanguage language = Language(rules, daughter);
+        HashSet<string> used = Used(state);
+        for (ulong number = 0; number < 50; number++)
+        {
+            string name = language.DaughterPeopleName(parentName, number);
+            if (!used.Contains(name))
+            {
+                return name;
+            }
+        }
+
+        return Next(rules, state, daughter, people: true);
     }
 
     /// <summary>The next free place name in the language of <paramref name="civ"/> (advances its counter).</summary>

@@ -176,6 +176,8 @@ AI jeszcze nie reaguje na stabilność (to PR 5). Na decyzje wpływa pośrednio:
 | --- | --- | --- | --- |
 | `anarchyYears`, `anarchyPenalty` | 2 lata, 20 | D2 | po zmianie ustroju 2 lata bez wypowiedzeń wojny i bez kolejnej zmiany |
 | `unrestBelow`, `unrestOutputPercentPerPoint` | 30, 1% | wszystkie przez zapasy | niepokoje obniżają wydajność osad, więc mniej jedzenia i dóbr do ocen |
+| `revoltBelow`, `revoltPerMillePerYear`, `revoltCalmYears` (od PR 4) | 15, 20‰, 20 lat | — (bunt to reguła, nie decyzja AI) | bunt poniżej 15: 2% na rok, potem 20 lat spokoju |
+| `secessionLoyaltyBelow`, `secessionMinPeople`, `maxCivilizations`, `secessionCharacterShift` (od PR 4) | 5, 200, 64, ±150‰ | wszystkie nowego ludu | kto się odłącza; nowy lud ma charakter rodzica ±0,15 na cechę i inny ustrój |
 | pozostałe (`crisisPenalty` 15, `capitalLostPenalty` 15 na 5 lat, `adminPerSettlement` 10, `adminPerRoadCost` 1, `roadSearchCost` 60, `overloadPenaltyPer100Percent` 10, `overloadMaxPenalty` 25, `loyaltyPer10RoadCost` 5) | | — | skład stabilności i lojalności |
 
 ## `data/leaders.json` (od etapu 4f PR 2)

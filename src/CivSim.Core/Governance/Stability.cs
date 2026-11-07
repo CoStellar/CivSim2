@@ -331,12 +331,14 @@ public sealed class RoadCosts
 
 /// <summary>
 /// State phase of stability (GDD 7.3; stage 4f PR 3): every world step the capital follows its settlements; in its own
-/// step (at most once a year) each civilization recomputes administration, stability and loyalty, and unrest follows low stability.
+/// step (at most once a year) each civilization recomputes administration, stability and loyalty, unrest follows low
+/// stability, and below the revolt threshold a revolt may break out (stage 4f PR 4).
 /// </summary>
 public sealed class StabilitySystem : ITurnSystem
 {
     private readonly GameContent _content;
     private readonly RoadCosts _roads = new();
+    private readonly Random.DeterministicRandom _random = new(0);
     private readonly EffectDefinition? _unrest;
 
     /// <summary>Creates the system.</summary>
@@ -360,8 +362,10 @@ public sealed class StabilitySystem : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        foreach (CivilizationState civ in state.Civilizations)
+        int count = state.Civilizations.Count; // a people that breaks away now steps from the next world step
+        for (int k = 0; k < count; k++)
         {
+            CivilizationState civ = state.Civilizations[k];
             if (!civ.IsAlive)
             {
                 continue;
@@ -383,6 +387,12 @@ public sealed class StabilitySystem : ITurnSystem
             if (Stability.UnrestLine(_content, civ, before) is { } unrest)
             {
                 context.Chronicle(unrest);
+            }
+
+            Revolts.Reseed(state, civ, state.Month, _random);
+            if (Revolts.Check(_content, state, civ, _random) is { } revolt)
+            {
+                context.Chronicle(revolt);
             }
         }
     }

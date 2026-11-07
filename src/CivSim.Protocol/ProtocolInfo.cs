@@ -4,5 +4,5 @@ namespace CivSim.Protocol;
 public static class ProtocolInfo
 {
     /// <summary>Protocol version. Bump on every incompatible message change and add a compatibility test.</summary>
-    public const int Version = 12;
+    public const int Version = 13;
 }

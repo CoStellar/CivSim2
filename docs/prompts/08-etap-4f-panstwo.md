@@ -27,7 +27,7 @@ Propozycja dla Patryka z 2026-11-07: dokument „Etap 4f: państwo — propozycj
    sukcesja według pola ustroju, cechy przywódcy dodawane do charakteru (osobno od cech ludu, żeby zmiana władcy była skokowa).
 3. **Stolica, administracja, stabilność** (`feat/state-stability`, zrobione): faza State; koszt drogi przez `HexGlobe` i koszty ruchu biomów; wpływ warstw w danych ustroju;
    stabilność w stanie cywilizacji (zapis, hash, podgląd); niepokoje jako efekt z `data/effects.json`.
-4. **Bunty i secesja:** nowe `CivilizationState` w trakcie gry (id = następny wolny, limit 64 z bitów w `DiplomacySystem`), przeniesienie
+4. **Bunty i secesja** (`feat/state-revolts`, zrobione; losowanie z pochodnego strumienia `Leaders` zamiast nowego strumienia): nowe `CivilizationState` w trakcie gry (id = następny wolny, limit 64 z bitów w `DiplomacySystem`), przeniesienie
    osad, relacje i wspomnienie secesji, `NameLanguage.Mutate`, przewrót (nowy przywódca, ustrój, bezkrólewie).
 5. **AI państwa i strojenie:** wybór ustroju przez stratega, reakcje na stabilność, pętla odwetu (gaśnięcie urazu po wojnie, koszt
    zerwania rozejmu), `DeadValueTests`, `docs/ai/`, statystyki z 3 seedów.

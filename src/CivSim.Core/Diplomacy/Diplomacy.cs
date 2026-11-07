@@ -141,8 +141,8 @@ public static class Treaties
     }
 
     /// <summary>
-    /// True when <paramref name="civ"/> has a reason to fight <paramref name="other"/> (GDD 9.3): they attacked us, or
-    /// live in a settlement we claim.
+    /// True when <paramref name="civ"/> has a reason to fight <paramref name="other"/> (GDD 9.3): they attacked us, declared
+    /// a war of aggression, broke away from us (stage 4f PR 4), or live in a settlement we claim.
     /// </summary>
     public static bool HasGrievance(GameState state, CivId civ, CivId other)
     {
@@ -154,7 +154,7 @@ public static class Treaties
 
         foreach (RelationMemory m in r.Memories)
         {
-            if ((m.Kind == RelationEvent.BorderDispute && m.IsOngoing) || m.Kind == RelationEvent.Attack || m.Kind == RelationEvent.Aggression)
+            if ((m.Kind == RelationEvent.BorderDispute && m.IsOngoing) || m.Kind is RelationEvent.Attack or RelationEvent.Aggression or RelationEvent.Secession)
             {
                 return true;
             }

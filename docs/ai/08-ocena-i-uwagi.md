@@ -26,6 +26,7 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Ustroje (etap 4f, PR 1) | **proste, na start** | ustrój przechyla wagi, ostrożność i tempo; AI jeszcze go nie zmienia sama (PR 5); pętla odwetu widoczniejsza (pkt 14) |
 | Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji obniża stabilność od PR 3 (pkt 15) |
 | Stabilność (etap 4f, PR 3) | **AI jej nie widzi** | stabilność i niepokoje działają, ale strateg i dyplomata reagują dopiero w PR 5 (pkt 16) |
+| Bunty i secesja (etap 4f, PR 4) | **reguła, nie decyzja** | nowe ludy powstają z dalekich osad; AI rodzica może się mścić (pkt 17) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -270,6 +271,18 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   rozumie: wielkie plemiona żyją stale z karą za administrację.
 - **Co jest za proste:** nastrój warstwy = nastrój osady (warstwy nie mają jeszcze osobnych potrzeb politycznych); lojalność osad
   jest liczona, ale niczego jeszcze nie zmienia (bunty w PR 4).
+
+## 17. Bunty i secesja (etap 4f, PR 4)
+
+- **Co działa:** poniżej stabilności 15 wybucha bunt. Dalekie osady bez lojalności odłączają się jako nowy lud z językiem córką, innym
+  ustrojem i charakterem bliskim rodzicowi; gdy ich nie ma, władzę bierze nowy przywódca z innym ustrojem. W 3 grach 1 secesja i 2–4
+  przewroty na grę. Rodzic pamięta secesję i ma powód do odwetu, ale wojnę wybiera jego dyplomata.
+- **Co jest za proste:**
+  - bunt to reguła, nie decyzja AI; AI nie próbuje mu zapobiec (PR 5: reakcja stratega na niską stabilność);
+  - nowy lud dostaje kopię kontaktów rodzica, ale inni nie dowiadują się od razu, że powstał (spotykają go zwykłą drogą);
+  - nie ma wojny domowej (dwie strony walczące o całość): to mogłoby być rozszerzenie po etapie 4g.
+- **Do obserwacji:** secesje są duże (połowa państwa naraz). Jeśli Patryk woli mniejsze, wystarczy obniżyć `secessionLoyaltyBelow`
+  albo dać buntownikom osobny, mniejszy zasięg zamiast `linkCells` (dziś to samo, co w sieci handlowej).
 
 ## Decyzje Patryka (2026-11-06)
 

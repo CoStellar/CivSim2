@@ -46,6 +46,27 @@ public sealed record StabilityRules
     /// <summary>The largest stability loss from an overloaded administration.</summary>
     public int OverloadMaxPenalty { get; init; } = 40;
 
+    /// <summary>Below this stability revolts may break out (stage 4f PR 4).</summary>
+    public int RevoltBelow { get; init; } = 15;
+
+    /// <summary>Chance per year of a revolt while stability is below <see cref="RevoltBelow"/>, per mille.</summary>
+    public int RevoltPerMillePerYear { get; init; } = 20;
+
+    /// <summary>Years without another revolt after one.</summary>
+    public int RevoltCalmYears { get; init; } = 20;
+
+    /// <summary>Settlements with loyalty below this (not the capital) are the rebels who may break away.</summary>
+    public int SecessionLoyaltyBelow { get; init; } = 5;
+
+    /// <summary>The fewest people a group of rebel settlements needs to found a civilization of its own; fewer means a coup instead.</summary>
+    public int SecessionMinPeople { get; init; } = 200;
+
+    /// <summary>The most civilizations a game holds (GDD 3); with this many a revolt is a coup.</summary>
+    public int MaxCivilizations { get; init; } = 64;
+
+    /// <summary>A new people's character traits differ from its parent's by up to this much each, per mille.</summary>
+    public int SecessionCharacterShift { get; init; } = 150;
+
     /// <summary>Loyalty of a settlement lost per 10 points of road cost from the capital (loyalty = stability minus this).</summary>
     public int LoyaltyPer10RoadCost { get; init; } = 5;
 }

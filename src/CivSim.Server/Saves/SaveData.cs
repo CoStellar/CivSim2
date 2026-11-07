@@ -198,7 +198,11 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(36)] int Stability = 50,
     [property: Key(37)] int AdminUsed = 0,
     [property: Key(38)] long AnarchyUntilMonth = 0,
-    [property: Key(39)] long CapitalLostUntilMonth = 0);
+    [property: Key(39)] long CapitalLostUntilMonth = 0,
+    [property: Key(40)] int ParentCiv = -1,
+    [property: Key(41)] long FoundedMonth = 0,
+    [property: Key(42)] long RevoltCalmUntilMonth = 0,
+    [property: Key(43)] ulong[]? LanguageMutations = null);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]

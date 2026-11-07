@@ -53,6 +53,9 @@ public sealed record HeadlessResult(
     /// <summary>Average stability over civilization-years, the percent of civilization-years in unrest and the capitals lost (stage 4f PR 3).</summary>
     public (int Average, int UnrestPercent, int CapitalsLost) Stability { get; init; }
 
+    /// <summary>Secessions (new civilizations) and coups during the run (stage 4f PR 4).</summary>
+    public (int Secessions, int Coups) Revolts { get; init; }
+
     /// <summary>Leaders who came to power after the first ones, and how many years a leader ruled on average (stage 4f PR 2).</summary>
     public (long Successions, long AverageReignYears) Leaders { get; init; }
 
@@ -119,6 +122,8 @@ public static class HeadlessRun
         campaignCsv?.Start();
         var tally = new TreatyTally();
         var stabilityTally = new StabilityTally(runner.State.Month);
+        int secessions = 0;
+        int coups = 0;
         if (stats is not null)
         {
             WriteStatsHeader(stats, state, content);
@@ -159,6 +164,11 @@ public static class HeadlessRun
 
             tally.Count(runner.LastChronicle);
             stabilityTally.Count(runner.State, content);
+            foreach (string line in runner.LastChronicle)
+            {
+                secessions += line.Contains(" broke away from the ", StringComparison.Ordinal) ? 1 : 0;
+                coups += line.StartsWith("A coup in the ", StringComparison.Ordinal) ? 1 : 0;
+            }
             warCsv?.Ended(runner.State);
             campaignCsv?.Seen(runner.State);
             if (treatyCsv is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
@@ -258,6 +268,7 @@ public static class HeadlessRun
             Contacts = CountContacts(runner.State),
             Treaties = tally.Finish(runner.State),
             Stability = stabilityTally.Finish(),
+            Revolts = (secessions, coups),
         };
     }
 
@@ -390,9 +401,10 @@ public static class HeadlessRun
         }
 
         stats.Write(string.Create(inv, $"{state.Turn},{state.Month / 12},{total},{state.Civilizations.Count(c => c.IsAlive)}"));
-        foreach (long p in perCiv)
+        // One column per civilization of the first day (the header's); peoples born of secessions are in the total only.
+        for (int c = 0; c < perCiv.Length && c < state.Settings.CivilizationCount; c++)
         {
-            stats.Write(string.Create(inv, $",{p}"));
+            stats.Write(string.Create(inv, $",{perCiv[c]}"));
         }
 
         // Average wild food left on land cells that have any food (how hard the land is used).

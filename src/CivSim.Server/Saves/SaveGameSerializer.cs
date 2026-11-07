@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 28;
+    public const int FormatVersion = 29;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -61,7 +61,8 @@ public static class SaveGameSerializer
                 c.NextStepMonth, c.StepStartMonth, c.StepMonths, c.Steps, (byte)c.Alarms, c.LanguageSeed, c.NamesIssued,
                 c.Government, c.PendingGovernment, c.PendingGovernmentMonth,
                 c.LeaderName, c.LeaderBornMonth, c.LeaderSinceMonth, c.LeaderTraits, c.LeaderShift, c.Leaders, c.CrisisUntilMonth,
-                c.Capital, c.Stability, c.AdminUsed, c.AnarchyUntilMonth, c.CapitalLostUntilMonth));
+                c.Capital, c.Stability, c.AdminUsed, c.AnarchyUntilMonth, c.CapitalLostUntilMonth,
+                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -221,6 +222,10 @@ public static class SaveGameSerializer
                 AdminUsed = c.AdminUsed,
                 AnarchyUntilMonth = c.AnarchyUntilMonth,
                 CapitalLostUntilMonth = c.CapitalLostUntilMonth,
+                ParentCiv = c.ParentCiv,
+                FoundedMonth = c.FoundedMonth,
+                RevoltCalmUntilMonth = c.RevoltCalmUntilMonth,
+                LanguageMutations = c.LanguageMutations ?? [],
             };
             LoadRelations(civ, c.Relations);
             state.AddCivilizationForLoad(civ);

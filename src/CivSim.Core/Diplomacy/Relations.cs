@@ -59,6 +59,9 @@ public enum RelationEvent : byte
 
     /// <summary>They declared war on us, or on someone we know, for land or loot (stage 4e, GDD 9.3: aggression).</summary>
     Aggression = 7,
+
+    /// <summary>They broke away from us (stage 4f PR 4, GDD 7.3: secession).</summary>
+    Secession = 8,
 }
 
 /// <summary>One kind of remembered event (data/relations.json). Points are in hundredths; rates per year.</summary>
@@ -121,6 +124,8 @@ public sealed record RelationRules
         new() { Kind = RelationEvent.CommonEnemy, Sympathy = 2000, Trust = 1000, Years = 50, VengefulYears = 50 },
         new() { Kind = RelationEvent.WarHelp, Sympathy = 3000, Trust = 2500, Years = 200, VengefulYears = 200 },
         new() { Kind = RelationEvent.OtherGovernment, Sympathy = -1000, Years = 0, VengefulYears = 0 },
+        new() { Kind = RelationEvent.Aggression, Sympathy = -3000, Trust = -1500, Years = 100, VengefulYears = 100 },
+        new() { Kind = RelationEvent.Secession, Sympathy = -6000, Trust = -4000, Years = 200, VengefulYears = 400 },
     ];
 }
 

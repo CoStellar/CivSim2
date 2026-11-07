@@ -14,7 +14,7 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `ai.json` | how AI advisors pick among their best actions | 4a |
 | `relations.json` | first contact, rumors, remembered events, sympathy and trust | 4c |
 | `diplomacy.json` | treaties and war, the diplomat's curves and thresholds, trade between civilizations | 4d |
-| `stability.json` | stability: unrest threshold and output loss, penalties (crisis, anarchy, lost capital), administration cost per settlement and road cost, loyalty | 4f |
+| `stability.json` | stability: unrest threshold and output loss, penalties (crisis, anarchy, lost capital), administration cost per settlement and road cost, loyalty; revolts, secession and coups | 4f |
 | `leaders.json` | leaders: traits that shift the character, number of traits, start age, death chance by age, council candidates | 4f |
 | `governments.json` | forms of government: title, era, enactment delay, pace and caution of the AI, goal weights, start leaning | 4f |
 | `trade.json` | trade network links, transport loss per cell, food reserve, price range | 3e |
