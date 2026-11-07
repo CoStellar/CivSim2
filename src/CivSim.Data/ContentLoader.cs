@@ -51,7 +51,8 @@ public static class ContentLoader
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
         Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), goods, technologies, biomes, errors);
-        List<GovernmentDefinition> governments = LoadGovernments(Path.Combine(directory, "governments.json"), eras, errors);
+        List<GovernmentDefinition> governments = LoadGovernments(Path.Combine(directory, "governments.json"), eras, strata, errors);
+        StabilityRules stability = LoadStability(Path.Combine(directory, "stability.json"), effects, errors);
         LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
         for (int l = 0; l < levels.Count; l++)
         {
@@ -99,6 +100,7 @@ public static class ContentLoader
             War = war,
             Governments = governments,
             Leaders = leaders,
+            Stability = stability,
             Events = events,
             Technologies = technologies,
             Research = research,
@@ -715,7 +717,7 @@ public static class ContentLoader
     }
 
     // Forms of government of data/governments.json (stage 4f, ADR 0023).
-    private static List<GovernmentDefinition> LoadGovernments(string path, List<EraDefinition> eras, List<string> errors)
+    private static List<GovernmentDefinition> LoadGovernments(string path, List<EraDefinition> eras, List<StratumDefinition> strata, List<string> errors)
     {
         var result = new List<GovernmentDefinition>();
         using JsonDocument? doc = Open(path, errors);
@@ -761,6 +763,9 @@ public static class ContentLoader
                 CrisisPercent = r.Int("crisisPercent", 0, 100),
                 CrisisYears = r.Int("crisisYears", 0, 100),
                 TermYears = r.Int("termYears", 0, 100),
+                StabilityBonus = r.Int("stabilityBonus", -100, 100),
+                Administration = r.Int("administration", 1, 1_000_000),
+                StrataInfluence = StrataMap(e, "strataInfluence", at, strata, 1, 0, 100, errors),
             });
             i++;
         }
@@ -850,6 +855,84 @@ public static class ContentLoader
             StartAge = r.Range("startAge", 0, 120),
             CouncilCandidates = r.Int("councilCandidates", 1, 20),
             DeathByAge = death,
+        };
+    }
+
+    // An object {"stratum_key": number} read into an array indexed by stratum id, missing = fallback.
+    private static int[] StrataMap(JsonElement parent, string name, string at, List<StratumDefinition> strata, int fallback, int min, int max, List<string> errors)
+    {
+        var result = new int[strata.Count];
+        Array.Fill(result, fallback);
+        if (!parent.TryGetProperty(name, out JsonElement o))
+        {
+            return result;
+        }
+
+        if (o.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add($"{at}.{name}: must be an object.");
+            return result;
+        }
+
+        foreach (JsonProperty p in o.EnumerateObject())
+        {
+            int k = strata.FindIndex(x => x.Key == p.Name);
+            if (k < 0)
+            {
+                errors.Add($"{at}.{name}: unknown stratum '{p.Name}'.");
+                continue;
+            }
+
+            if (!p.Value.TryGetInt32(out int n) || n < min || n > max)
+            {
+                errors.Add($"{at}.{name}.{p.Name}: must be a whole number in {min}..{max}.");
+                continue;
+            }
+
+            result[k] = n;
+        }
+
+        return result;
+    }
+
+    // Stability and administration of data/stability.json (stage 4f PR 3, GDD 7.3).
+    private static StabilityRules LoadStability(string path, List<EffectDefinition> effects, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new StabilityRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        string unrest = r.String("unrestEffect");
+        EffectDefinition? effect = effects.Find(e => e.Key == unrest);
+        if (effect is null)
+        {
+            errors.Add($"{file}: unrestEffect: unknown effect '{unrest}'.");
+        }
+        else if (effect.Stat != EffectStat.OutputPercent || effect.Target != EffectTarget.Civilization)
+        {
+            errors.Add($"{file}: unrestEffect: '{unrest}' must change output_percent of a civilization.");
+        }
+
+        return new StabilityRules
+        {
+            UnrestBelow = r.Int("unrestBelow", 0, 100),
+            UnrestOutputPercentPerPoint = r.Int("unrestOutputPercentPerPoint", 0, 100),
+            UnrestEffect = unrest,
+            CrisisPenalty = r.Int("crisisPenalty", 0, 100),
+            AnarchyPenalty = r.Int("anarchyPenalty", 0, 100),
+            AnarchyYears = r.Int("anarchyYears", 0, 100),
+            CapitalLostPenalty = r.Int("capitalLostPenalty", 0, 100),
+            CapitalLostYears = r.Int("capitalLostYears", 0, 100),
+            AdminPerSettlement = r.Int("adminPerSettlement", 0, 10_000),
+            AdminPerRoadCost = r.Int("adminPerRoadCost", 0, 10_000),
+            RoadSearchCost = r.Int("roadSearchCost", 1, 10_000),
+            OverloadPenaltyPer100Percent = r.Int("overloadPenaltyPer100Percent", 0, 1000),
+            OverloadMaxPenalty = r.Int("overloadMaxPenalty", 0, 100),
+            LoyaltyPer10RoadCost = r.Int("loyaltyPer10RoadCost", 0, 1000),
         };
     }
 

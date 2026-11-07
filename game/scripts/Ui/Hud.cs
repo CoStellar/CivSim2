@@ -521,7 +521,7 @@ public partial class Hud : CanvasLayer
 
                 int fed = s.FoodNeeded <= 0 ? 100 : (int)Math.Min(100, s.FoodEaten * 100 / s.FoodNeeded);
                 sb.Append(inv, $"People: {headcount} ({string.Join(", ", mix)})\n");
-                sb.Append(inv, $"Health: {s.Health}   Mood: {s.Mood}   Fed: {fed}%\n");
+                sb.Append(inv, $"Health: {s.Health}   Mood: {s.Mood}   Loyalty: {s.Loyalty}   Fed: {fed}%\n");
                 sb.Append(inv, $"Food last turn: gathered {s.FoodGathered / 100.0:F0}, needed {s.FoodNeeded / 100.0:F0}\n");
             }
 

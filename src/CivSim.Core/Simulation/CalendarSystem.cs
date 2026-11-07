@@ -77,6 +77,7 @@ public static class CoreSystems
         runner.AddSystem(new Population.AbandonmentSystem(content));
         runner.AddSystem(new Governance.GovernmentSystem(content));
         runner.AddSystem(new Governance.LeaderSystem(content));
+        runner.AddSystem(new Governance.StabilitySystem(content));
         runner.AddSystem(new Diplomacy.DiplomacySystem(content));
         runner.AddSystem(new Diplomacy.WarSystem(content));
         runner.AddSystem(new Population.InfluenceSystem(content));

@@ -108,6 +108,11 @@ public static class Governments
             return "A change of government is already under way.";
         }
 
+        if (Stability.InAnarchy(c, state.Month))
+        {
+            return "Our state is in anarchy.";
+        }
+
         return content.Governments[government].FromEra > c.Era ? $"{content.Governments[government].Name} comes in a later era." : null;
     }
 
@@ -124,7 +129,7 @@ public static class Governments
         string name = content.Governments[government].Name;
         if (months == 0)
         {
-            return Enact(content, c, government);
+            return Enact(content, state, c, government);
         }
 
         c.PendingGovernment = government;
@@ -147,7 +152,7 @@ public static class Governments
                 c.PendingGovernmentMonth = 0;
                 if (c.IsAlive)
                 {
-                    chronicle?.Invoke(Enact(content, c, government));
+                    chronicle?.Invoke(Enact(content, state, c, government));
                     count++;
                 }
             }
@@ -156,10 +161,18 @@ public static class Governments
         return count;
     }
 
-    private static string Enact(GameContent content, CivilizationState c, int government)
+    // The new government takes effect; anarchy follows for some years (GDD 7.2, stage 4f PR 3).
+    private static string Enact(GameContent content, GameState state, CivilizationState c, int government)
     {
         string before = Title(content, c);
         c.Government = government;
+        int years = content.Stability.AnarchyYears;
+        if (years > 0)
+        {
+            c.AnarchyUntilMonth = Math.Max(c.AnarchyUntilMonth, state.Month + (years * 12L));
+            return string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{before} became the {Title(content, c)}; {years} years of anarchy follow.");
+        }
+
         return $"{before} became the {Title(content, c)}.";
     }
 }

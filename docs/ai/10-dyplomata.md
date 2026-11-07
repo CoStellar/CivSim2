@@ -82,7 +82,8 @@ osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to d
 ## D2: Przegląd stosunków (proaktywny)
 
 - **Ustrój** (etap 4f): odstęp przeglądów razy `reviewPercent / 100` (rada starszych co 75 lat, wodzostwo co 37,5 roku). W czasie
-  zmiany ustroju cywilizacja nie wypowiada wojen (`CannotDeclareWar`: „We are changing our government.”).
+  zmiany ustroju cywilizacja nie wypowiada wojen (`CannotDeclareWar`: „We are changing our government.”), a od PR 3 także przez
+  2 lata bezkrólewia po zmianie („Our state is in anarchy.”).
 - **Kiedy (proaktywnie):** raz na 50 lat (`reviewEveryYears`), rozłożone między cywilizacje, we własnym kroku: gdy
   `(miesiąc + 84 × numer cywilizacji) mod 600 < długość jej kroku w miesiącach` (84 miesiące = 7 lat, `reviewStaggerYears`). W epoce kamienia (krok 50 lat) więc w **każdym
   własnym kroku**; w neolicie co drugim; przy krokach półrocznych w jednym ze 100 (od ADR 0018 bez powtórek w roku przeglądu).

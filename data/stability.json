@@ -1,0 +1,17 @@
+{
+  "comment": "Stability and administration (GDD 7.3; stage 4f PR 3, ADR 0023). Stability 0-100 = the mood of the civilization's settlements weighed by the people of each stratum times the stratum's political influence (strataInfluence in governments.json; until strata have their own mood a stratum's mood is its settlement's), plus the government's stabilityBonus, minus: an overloaded administration (overloadPenaltyPer100Percent points when the points used are twice the government's administration, proportional, at most overloadMaxPenalty), a succession crisis (crisisPenalty), anarchy for anarchyYears after a change of government (anarchyPenalty; no state decisions meanwhile) and a capital fallen to an enemy (capitalLostPenalty for capitalLostYears); these three count for the part of the civilization's step they last (a 5-year crisis in a 50-year step counts a tenth). Administration: every settlement uses adminPerSettlement points plus adminPerRoadCost per point of road cost from the capital (movement cost of the cells on the cheapest land route, searched up to roadSearchCost; farther or across water counts as roadSearchCost). Loyalty of a settlement = stability minus loyaltyPer10RoadCost per 10 points of road cost, so distant settlements break away first (revolts: stage 4f PR 4). Below unrestBelow unrest begins: the unrestEffect (effects.json) lowers the output of every settlement by unrestOutputPercentPerPoint percent per point below.",
+  "unrestBelow": 30,
+  "unrestOutputPercentPerPoint": 1,
+  "unrestEffect": "unrest",
+  "crisisPenalty": 15,
+  "anarchyPenalty": 20,
+  "anarchyYears": 2,
+  "capitalLostPenalty": 15,
+  "capitalLostYears": 5,
+  "adminPerSettlement": 10,
+  "adminPerRoadCost": 1,
+  "roadSearchCost": 60,
+  "overloadPenaltyPer100Percent": 10,
+  "overloadMaxPenalty": 25,
+  "loyaltyPer10RoadCost": 5
+}

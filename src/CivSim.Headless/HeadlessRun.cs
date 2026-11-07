@@ -50,6 +50,9 @@ public sealed record HeadlessResult(
     /// <summary>Civilizations still alive at the end of the run.</summary>
     public int AliveCivilizations { get; init; }
 
+    /// <summary>Average stability over civilization-years, the percent of civilization-years in unrest and the capitals lost (stage 4f PR 3).</summary>
+    public (int Average, int UnrestPercent, int CapitalsLost) Stability { get; init; }
+
     /// <summary>Leaders who came to power after the first ones, and how many years a leader ruled on average (stage 4f PR 2).</summary>
     public (long Successions, long AverageReignYears) Leaders { get; init; }
 
@@ -115,6 +118,7 @@ public static class HeadlessRun
         CampaignCsv? campaignCsv = campaignFile is null ? null : new CampaignCsv(campaignFile);
         campaignCsv?.Start();
         var tally = new TreatyTally();
+        var stabilityTally = new StabilityTally(runner.State.Month);
         if (stats is not null)
         {
             WriteStatsHeader(stats, state, content);
@@ -154,6 +158,7 @@ public static class HeadlessRun
             }
 
             tally.Count(runner.LastChronicle);
+            stabilityTally.Count(runner.State, content);
             warCsv?.Ended(runner.State);
             campaignCsv?.Seen(runner.State);
             if (treatyCsv is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
@@ -252,7 +257,38 @@ public static class HeadlessRun
             Years = runner.State.Month / 12,
             Contacts = CountContacts(runner.State),
             Treaties = tally.Finish(runner.State),
+            Stability = stabilityTally.Finish(),
         };
+    }
+
+    // Stability weighed by the months each turn moved the world (a month of war counts as much as a month of peace).
+    private sealed class StabilityTally(long startMonth)
+    {
+        private long _month = startMonth;
+        private long _sum;
+        private long _months;
+        private long _unrest;
+        private int _lost;
+
+        public void Count(GameState state, GameContent content)
+        {
+            long months = state.Month - _month;
+            _month = state.Month;
+            foreach (CivilizationState c in state.Civilizations)
+            {
+                if (!c.IsAlive)
+                {
+                    continue;
+                }
+
+                _sum += c.Stability * months;
+                _months += months;
+                _unrest += c.Stability < content.Stability.UnrestBelow ? months : 0;
+                _lost += c.CapitalLostUntilMonth == state.Month + (content.Stability.CapitalLostYears * 12L) ? 1 : 0;
+            }
+        }
+
+        public (int, int, int) Finish() => _months == 0 ? (0, 0, _lost) : ((int)(_sum / _months), (int)(_unrest * 100 / _months), _lost);
     }
 
     private static (long Successions, long AverageReignYears) LeaderTally(GameState state)
@@ -308,7 +344,7 @@ public static class HeadlessRun
             stats.Write(string.Create(CultureInfo.InvariantCulture, $",skilled_{k.Key}"));
         }
 
-        stats.WriteLine(",trainees");
+        stats.WriteLine(",trainees,stability_avg,unrest_civs");
     }
 
     private static void WriteStats(StreamWriter stats, GameState state, GameContent content)
@@ -395,7 +431,20 @@ public static class HeadlessRun
             stats.Write(string.Create(inv, $",{skilled}"));
         }
 
-        stats.WriteLine(string.Create(inv, $",{trainees}"));
+        int alive = 0;
+        long stability = 0;
+        int unrest = 0;
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            if (c.IsAlive)
+            {
+                alive++;
+                stability += c.Stability;
+                unrest += c.Stability < content.Stability.UnrestBelow ? 1 : 0;
+            }
+        }
+
+        stats.WriteLine(string.Create(inv, $",{trainees},{(alive == 0 ? 0 : stability / alive)},{unrest}"));
     }
 
     // How far people live from where their civilization started, cells, averaged over all people (PR C).

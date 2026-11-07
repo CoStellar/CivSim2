@@ -127,6 +127,24 @@ public sealed class CivilizationState
     /// <summary>The month a succession crisis ends (stability, stage 4f PR 3); 0 or past when there is none.</summary>
     public long CrisisUntilMonth { get; set; }
 
+    /// <summary>The capital, a settlement id (GDD 7.3; stage 4f PR 3), or <see cref="NoCapital"/> when none.</summary>
+    public int Capital { get; set; } = NoCapital;
+
+    /// <summary>No capital.</summary>
+    public const int NoCapital = -1;
+
+    /// <summary>Stability 0–100 (GDD 7.3), computed in each own step.</summary>
+    public int Stability { get; set; } = 50;
+
+    /// <summary>Administration points the settlements use (GDD 7.3), computed in each own step.</summary>
+    public int AdminUsed { get; set; }
+
+    /// <summary>The month anarchy after a change of government ends (GDD 7.2); 0 or past when there is none.</summary>
+    public long AnarchyUntilMonth { get; set; }
+
+    /// <summary>The month the loss of the capital stops lowering stability; 0 or past when it never fell.</summary>
+    public long CapitalLostUntilMonth { get; set; }
+
     /// <summary>Reasons to decide before its next own step (reactive decisions, ADR 0018).</summary>
     public Simulation.Alarm Alarms { get; set; }
 

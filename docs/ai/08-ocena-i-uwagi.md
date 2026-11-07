@@ -24,7 +24,8 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Rytm decyzji | **dobre (od ADR 0018, PR C)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i marsz obozu na stulecie |
 | Wydajność | **do pilnowania (PR C)** | 3–4× więcej osad; stare systemy porównują każdą osadę z każdą (patrz pkt 10) |
 | Ustroje (etap 4f, PR 1) | **proste, na start** | ustrój przechyla wagi, ostrożność i tempo; AI jeszcze go nie zmienia sama (PR 5); pętla odwetu widoczniejsza (pkt 14) |
-| Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji bez skutków do PR 3 (pkt 15) |
+| Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji obniża stabilność od PR 3 (pkt 15) |
+| Stabilność (etap 4f, PR 3) | **AI jej nie widzi** | stabilność i niepokoje działają, ale strateg i dyplomata reagują dopiero w PR 5 (pkt 16) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -259,6 +260,16 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   - ustrój nadal nie zależy od przywódcy (wybór ustroju przez AI: PR 5).
 - **Ryzyko:** cechy przywódcy dodają losowości do wojen (patrz [statystyki](09-statystyki.md#przywódcy-etap-4f-pr-2)); to zamierzone,
   ale po strojeniu w PR 5 trzeba sprawdzić, czy ostrożny lud z wojowniczym wodzem nie wpada w pętlę odwetu częściej niż inne.
+
+## 16. Stabilność bez reakcji AI (etap 4f, PR 3)
+
+- **Co działa:** stabilność 0–100 z nastroju osad ważonego wpływem warstw, premii ustroju i kar (administracja, kryzys sukcesji,
+  bezkrólewie, utrata stolicy); poniżej 30 niepokoje obniżają wydajność. W 3 grach 8–12% lat cywilizacji to niepokoje.
+- **Czego brakuje (celowo, PR 5):** AI nie widzi stabilności. Strateg nie hamuje ekspansji przy przeciążonej administracji i nie
+  zmienia ustroju, gdy jest źle; dyplomata nie unika wojny przy niskiej stabilności. Dziś stabilność jest więc karą, której AI nie
+  rozumie: wielkie plemiona żyją stale z karą za administrację.
+- **Co jest za proste:** nastrój warstwy = nastrój osady (warstwy nie mają jeszcze osobnych potrzeb politycznych); lojalność osad
+  jest liczona, ale niczego jeszcze nie zmienia (bunty w PR 4).
 
 ## Decyzje Patryka (2026-11-06)
 

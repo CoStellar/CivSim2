@@ -161,6 +161,13 @@ public partial class CivilizationPanel : VBoxContainer
             sb.Append(inv, $"Leader: {d.Leader}\n");
         }
 
+        if (d.StabilityParts.Length > 0)
+        {
+            sb.Append(inv, $"Stability: {d.Stability} ({d.StabilityParts})\n");
+            string admin = d.AdminCapacity > 0 ? string.Create(inv, $"{d.AdminUsed} / {d.AdminCapacity}") : d.AdminUsed.ToString(inv);
+            sb.Append(inv, $"Capital: {(d.Capital.Length > 0 ? d.Capital : "none")}   Administration: {admin}\n");
+        }
+
         long people = 0;
         var strata = new List<string>();
         for (int k = 0; k < d.People.Count; k++)

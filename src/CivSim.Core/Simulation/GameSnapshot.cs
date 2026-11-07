@@ -51,6 +51,7 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
                 Population = ImmutableArray.Create(st.PopulationView.ToArray()),
                 Health = st.Health,
                 Mood = st.Mood,
+                Loyalty = st.Loyalty,
                 FoodGathered = st.FoodGathered,
                 FoodNeeded = st.FoodNeeded,
                 FoodEaten = st.FoodEaten,
@@ -94,6 +95,9 @@ public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId Wo
 
     /// <summary>Mood 0–100.</summary>
     public int Mood { get; init; }
+
+    /// <summary>Loyalty to the owner 0–100 (GDD 7.3).</summary>
+    public int Loyalty { get; init; }
 
     /// <summary>Food gathered in the last turn (hundredths).</summary>
     public long FoodGathered { get; init; }

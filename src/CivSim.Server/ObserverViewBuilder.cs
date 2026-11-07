@@ -202,7 +202,35 @@ public sealed class ObserverViewBuilder(GameContent content)
             relations,
             Core.Governance.Governments.Title(_content, c),
             Core.Governance.Governments.Of(_content, c)?.Name ?? string.Empty,
-            Core.Governance.Leaders.Describe(_content, state, c));
+            Core.Governance.Leaders.Describe(_content, state, c),
+            c.Stability,
+            StabilityParts(state, c),
+            c.Capital >= 0 ? state.FindSettlement(new SettlementId(c.Capital))?.Name ?? string.Empty : string.Empty,
+            c.AdminUsed,
+            Core.Governance.Stability.Capacity(_content, c) == int.MaxValue ? 0 : Core.Governance.Stability.Capacity(_content, c));
+    }
+
+    // "mood 62, government +10, administration -8, crisis -15": what the stability is made of now.
+    private string StabilityParts(GameState state, CivilizationState c)
+    {
+        Core.Governance.StabilityParts p = Core.Governance.Stability.Parts(_content, state, c, c.AdminUsed, state.Month);
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var sb = new System.Text.StringBuilder();
+        sb.Append(inv, $"mood {p.Mood}");
+        if (p.Bonus != 0)
+        {
+            sb.Append(inv, $", government {p.Bonus:+0;-0}");
+        }
+
+        foreach ((string name, int value) in new[] { ("administration", p.Overload), ("crisis", p.Crisis), ("anarchy", p.Anarchy), ("lost capital", p.CapitalLost) })
+        {
+            if (value > 0)
+            {
+                sb.Append(inv, $", {name} -{value}");
+            }
+        }
+
+        return sb.ToString();
     }
 
     private static List<string> Names<T>(IReadOnlyList<T> items, Func<T, string> name)

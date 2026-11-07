@@ -79,7 +79,8 @@ public class GovernmentTests
         Assert.Equal(1, Governments.EnactDue(Content, state, lines.Add));
         Assert.Equal(Id("chiefdom"), civ.Government);
         Assert.Equal(CivilizationState.NoGovernment, civ.PendingGovernment);
-        Assert.EndsWith($"became the Chiefdom of {civ.Name}.", lines.Single(), System.StringComparison.Ordinal);
+        Assert.EndsWith($"became the Chiefdom of {civ.Name}; 2 years of anarchy follow.", lines.Single(), System.StringComparison.Ordinal);
+        Assert.True(Stability.InAnarchy(civ, state.Month), "anarchy follows a change of government");
 
         // A government with no delay changes at once; one of a later era is closed.
         Assert.False(new ChangeGovernmentCommand(Content, Id("despotism")).Validate(state, civ.Id).Success);

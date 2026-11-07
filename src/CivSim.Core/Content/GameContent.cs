@@ -115,6 +115,9 @@ public sealed class GameContent
     /// <summary>Leaders: traits, ages, death (<c>data/leaders.json</c>, stage 4f PR 2).</summary>
     public LeaderRules Leaders { get; init; } = new();
 
+    /// <summary>Stability and administration (<c>data/stability.json</c>, stage 4f PR 3).</summary>
+    public StabilityRules Stability { get; init; } = new();
+
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
 
