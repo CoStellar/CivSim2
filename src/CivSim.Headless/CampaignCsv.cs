@@ -15,7 +15,7 @@ namespace CivSim.Headless;
 public sealed class CampaignCsv(TextWriter writer)
 {
     /// <summary>Column names.</summary>
-    public const string Header = "id,civ,enemy,start_year,end_year,months,settlements,warriors,survivors,dead,arms_percent,morale_end,hungry_months,forays,convoys";
+    public const string Header = "id,civ,enemy,start_year,end_year,months,settlements,warriors,survivors,dead,arms_percent,morale_end,hungry_months,forays,convoys,battles,wins,killed";
 
     private readonly TextWriter _writer = writer ?? throw new ArgumentNullException(nameof(writer));
     private readonly SortedDictionary<long, Row> _out = [];
@@ -74,7 +74,7 @@ public sealed class CampaignCsv(TextWriter writer)
         long months = (endMonth >= 0 ? endMonth : r.LastMonth) - r.StartMonth;
         _writer.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
-            $"{r.Id},{r.Civ},{r.Enemy},{r.StartMonth / 12},{end},{months},{r.Settlements},{r.Mustered},{r.Warriors},{r.Dead},{r.Arms},{r.Morale},{r.Hungry},{r.Forays},{r.Convoys}"));
+            $"{r.Id},{r.Civ},{r.Enemy},{r.StartMonth / 12},{end},{months},{r.Settlements},{r.Mustered},{r.Warriors},{r.Dead},{r.Arms},{r.Morale},{r.Hungry},{r.Forays},{r.Convoys},{r.Battles},{r.Wins},{r.Killed}"));
     }
 
     private sealed class Row(Episode e, long month)
@@ -106,6 +106,12 @@ public sealed class CampaignCsv(TextWriter writer)
         public int Forays { get; } = e.Forays;
 
         public int Convoys { get; } = e.Convoys;
+
+        public int Battles { get; } = e.Battles;
+
+        public int Wins { get; } = e.Wins;
+
+        public int Killed { get; } = e.Killed;
 
         public bool Fresh { get; set; }
     }

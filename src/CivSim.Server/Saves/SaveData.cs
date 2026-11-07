@@ -104,7 +104,10 @@ public sealed record EpisodeSaveData(
     [property: Key(27)] int ConvoyCarriers = 0,
     [property: Key(28)] long[]? ConvoyFood = null,
     [property: Key(29)] int Convoys = 0,
-    [property: Key(30)] int LastPrey = -1);
+    [property: Key(30)] int LastPrey = -1,
+    [property: Key(31)] int Battles = 0,
+    [property: Key(32)] int Wins = 0,
+    [property: Key(33)] int Killed = 0);
 
 /// <summary>Saved terms of a peace (stage 4e).</summary>
 [MessagePackObject]

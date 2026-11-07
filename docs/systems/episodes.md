@@ -4,7 +4,7 @@
 
 **Faza tury:** zegar w fazie zapisu (`CalendarSystem`, `WorldClock.Begin` i `WorldClock.Shorten`); kampanie w fazie walki (`CampaignSystem`, faza 6); decyzje dowódcy i dyplomaty w fazie decyzji.
 
-**Stan:** etap 4e PR 2: silnik epizodów i pierwsza kampania; PR 3: armie z wielu osad, uzbrojenie, tragarze, głód, armie w podglądzie.
+**Stan:** etap 4e PR 2: silnik epizodów i pierwsza kampania; PR 3: armie z wielu osad, uzbrojenie, tragarze, głód, armie w podglądzie; PR 4: bitwa w rundach i podbój.
 
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/war.json` (krok kampanii, marsz, ciche wygasanie wojny, progi dowódcy), kroki cywilizacji, wojny, alarmy.
@@ -36,8 +36,8 @@ flowchart TD
   - każdy krok: armia je (najpierw niesione jedzenie, potem jedzenie z łupów); głodna traci morale, napada pobliską wioskę wroga, przy morale < 30 zawraca; tragarze idą za nią (szczegóły: `docs/systems/war.md`);
   - marsz: 3 pola na miesiąc po znanych polach (ok. 150 km na pole; ok. 15 km dziennie);
   - u celu wojownicy widzą osadę: atakują tylko przy szansie co najmniej 60%, inaczej wracają;
-  - walka: szansa = ich udział w sile (wojownicy × uzbrojenie × morale przeciw wojownikom z uzbrojeniem z ich zapasów + 25% reszty mieszkańców gołymi rękami), na strumieniu `combat`; straty jak przy napaści;
-  - wygrana: łupy (tyle, ile uniosą wojownicy, ten sam udział każdego zapasu); w wojnie o ziemię zdobyta wioska przechodzi z ludźmi do zwycięzcy, a pokonani mają do niej roszczenie;
+  - walka (od PR 4): bitwa w rundach na strumieniu `combat` (`Battles.Fight`, szczegóły w `docs/systems/war.md`): siła z uzbrojeniem, morale, głodem i terenem obrońców, straty co rundę, ucieczka przy niskim morale;
+  - wygrana: łupy (tyle, ile uniosą wojownicy, ten sam udział każdego zapasu); w wojnie o ziemię zdobyta wioska przechodzi z ludźmi do zwycięzcy, a pokonani mają do niej roszczenie; ludzie pobitego obozu uciekają do swojej najbliższej osady;
   - powrót: ocaleni wracają do osad, z których przyszli (w proporcji), łupy i resztka jedzenia do osady wyjścia (albo do najbliższej własnej, gdy domu już nie ma).
 - **Wojna** (`WarSystem`): wojna bez kampanii przez 5 lat kończy się białym pokojem; zmęczenie = miesiące kampanii × 5 + procent zabitych × 3.
 

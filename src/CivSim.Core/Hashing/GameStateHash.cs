@@ -71,6 +71,9 @@ public static class GameStateHash
             h.Add(e.Forays);
             h.Add(e.Foraging ? 1 : 0);
             h.Add(e.LastPrey);
+            h.Add(e.Battles);
+            h.Add(e.Wins);
+            h.Add(e.Killed);
             h.Add(e.ConvoyFrom);
             h.Add(e.ConvoyCell);
             h.Add(e.ConvoyCarriers);

@@ -236,11 +236,49 @@ public static class Campaigns
         return (long)e.Warriors * e.ArmsPercent * e.Morale / 100;
     }
 
-    /// <summary>The chance, percent, that an attack of <paramref name="attack"/> warrior-percent wins against <paramref name="target"/> (its true strength).</summary>
-    public static int Chance(GameContent content, GameState state, SettlementState target, long attack)
+    /// <summary>
+    /// The chance, percent, that an attack of <paramref name="attack"/> warrior-percent wins against <paramref name="target"/>
+    /// (its true strength with the terrain; attackers coming from <paramref name="from"/>, or -1 when not known yet): the
+    /// attackers' share of the strength, a rough guess of the battle (the commander's expected battle comes in PR 5).
+    /// </summary>
+    public static int Chance(GameContent content, GameState state, SettlementState target, long attack, int from = -1)
     {
-        long defence = DefenceStrength(content, state, target);
+        long defence = DefenceInPlace(content, state, target, from);
         return (int)(Math.Max(0, attack) * 100L / Math.Max(1, attack + defence));
+    }
+
+    /// <summary>Strength of a campaign in a battle: <see cref="AttackStrength"/>, lowered when it has no food left (stage 4e PR 4).</summary>
+    public static long BattleStrength(GameContent content, Episode e)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(e);
+        bool hungry = FoodIn(content, e.Food) + FoodIn(content, e.Loot) <= Amount.Zero;
+        return AttackStrength(e) * (hungry ? content.War.Battle.HungryStrengthPercent : 100) / 100;
+    }
+
+    /// <summary>Strength of the defence of <paramref name="target"/> with the terrain of its cell (stage 4e PR 4), warrior-percent.</summary>
+    public static long DefenceInPlace(GameContent content, GameState state, SettlementState target, int from)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(target);
+        WorldState world = state.Worlds[target.World.Value];
+        int terrain = Battles.TerrainPercent(content, world, world.Geometry.Index(target.Cell), from);
+        return DefenceStrength(content, state, target) * (100 + terrain) / 100;
+    }
+
+    /// <summary>Men who fight for <paramref name="s"/>: its warriors and a share of everyone else.</summary>
+    public static int Defenders(GameContent content, SettlementState s)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        int warriors = SettlementAssets.Warriors(content, s);
+        return warriors + (int)((long)(s.TotalPopulation() - warriors) * content.Population.DefenderNonWarriorPercent / 100);
+    }
+
+    /// <summary>Kills <paramref name="count"/> defenders of <paramref name="s"/>: warriors first, then the others; returns how many died.</summary>
+    public static int KillDefenders(GameContent content, SettlementState s, int count)
+    {
+        int dead = Take(content, s, count, fighters: true);
+        return dead + Take(content, s, count - dead, fighters: false);
     }
 
     /// <summary>
@@ -620,7 +658,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
 
         e.Cell = path.Count >= 2 ? path[^2] : e.Cell; // the warriors stand next to the settlement they attack
         // Now they see it: they attack only with a good chance, or else go home (decision of 2026-11-07).
-        if (Campaigns.Chance(_content, state, target, Campaigns.AttackStrength(e)) < _content.War.MinWinChancePercent)
+        if (Campaigns.Chance(_content, state, target, Campaigns.BattleStrength(_content, e), e.Cell) < _content.War.MinWinChancePercent)
         {
             context.Chronicle($"The warriors of {civ.Name} saw how strong {target.Name} was and turned back.");
             e.Phase = CampaignPhase.Return;
@@ -821,30 +859,36 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
     // strength (arms from technology and stores, times morale).
     private (string Text, bool Won) Fight(GameState state, Episode e, CivilizationState civ, SettlementState target, Treaty war)
     {
-        PopulationRules rules = _content.Population;
+        BattleRules rules = _content.War.Battle;
         string attackers = civ.Name;
         CivId defender = target.Owner;
         string defenders = state.FindCivilization(defender)?.Name ?? defender.ToString();
-        long attack = Math.Max(1, Campaigns.AttackStrength(e));
-        long defence = Campaigns.DefenceStrength(_content, state, target);
+        long attack = Campaigns.BattleStrength(_content, e);
+        long defence = Campaigns.DefenceInPlace(_content, state, target, e.Cell) * rules.DefenderMorale / 100;
         Contacts.RecordAttack(_content, state, defender, e.Civ);
         DeterministicRandom rng = state.Random.Derive(RandomStreamId.Combat, FightSalt | (ulong)e.Id, state.Turn);
-        long scale = Math.Max(1, (attack + defence) / (int.MaxValue / 2) + 1);
-        bool won = rng.Chance((int)(attack / scale), (int)Math.Max(1, (attack + defence) / scale));
-        int before = target.TotalPopulation();
-        int lost = (int)IntMath.MulDiv(e.Warriors, won ? rules.WinnerWarriorLossPercent : rules.LoserWarriorLossPercent, 100, Rounding.Ceiling);
+        BattleResult battle = Battles.Fight(rules, rng, e.Warriors, attack, e.Morale, Campaigns.Defenders(_content, target), defence);
+        int lost = Math.Min(e.Warriors, battle.AttackersLost);
         e.Warriors -= lost;
         e.Dead += lost;
-        SettlementAssets.Lose(_content, target, won ? rules.LoserWarriorLossPercent : rules.WinnerWarriorLossPercent, warriorsOnly: true);
-        int killed = before - target.TotalPopulation();
-        if (!won)
+        e.Battles++;
+        e.Morale = battle.AttackerMorale;
+        int killed = Campaigns.KillDefenders(_content, target, battle.DefendersLost);
+        e.Killed += killed;
+        string rounds = battle.Rounds == 1 ? "1 round" : $"{battle.Rounds} rounds";
+        if (!battle.AttackersWon)
         {
             Wars.RecordFight(_content, state, defender, e.Civ, false, killed, lost);
-            return ($"{defenders} beat back the warriors of {attackers} at {target.Name}.", false);
+            return (battle.Broken == 1
+                ? $"{defenders} routed the warriors of {attackers} at {target.Name} after {rounds} ({lost} attackers and {killed} defenders fell)."
+                : $"{defenders} held {target.Name} against {attackers} for {rounds} ({lost} attackers and {killed} defenders fell).", false);
         }
 
-        bool taken = !e.Foraging && war.Goal == WarGoal.Land && war.GoalSettlement == target.Id.Value && !_content.SettlementLevels[target.Level].Mobile;
+        e.Wins++;
+        bool camp = _content.SettlementLevels[target.Level].Mobile;
+        bool taken = !e.Foraging && !camp && war.Goal == WarGoal.Land && war.GoalSettlement == target.Id.Value;
         string loot = Plunder(state, e, target);
+        string flight = string.Empty;
         if (taken)
         {
             // Decision of 2026-11-07: a conquered village keeps its people, who now belong to the winner.
@@ -852,11 +896,54 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             target.ClaimCiv = defender.Value;
             target.ClaimUntilMonth = state.Month + (_content.Assets.ClaimYears * 12L);
         }
+        else if (camp)
+        {
+            flight = FleeCamp(state, target); // GDD 9.3: the people of a beaten camp flee to their nearest settlement
+        }
 
         Wars.RecordFight(_content, state, e.Civ, defender, taken, lost, killed);
+        string fell = $" ({lost} attackers and {killed} defenders fell in {rounds})";
         return (taken
-            ? $"{attackers} took {target.Name} from {defenders}{loot}."
-            : $"{attackers} raided {target.Name} of {defenders}{loot}.", true);
+            ? $"{attackers} took {target.Name} from {defenders}{fell}{loot}."
+            : $"{attackers} beat {defenders} at {target.Name}{fell}{loot}{flight}.", true);
+    }
+
+    // The people of a beaten camp take what they can carry to their nearest own settlement; the camp is left.
+    private string FleeCamp(GameState state, SettlementState camp)
+    {
+        WorldState world = state.Worlds[camp.World.Value];
+        SettlementState? refuge = null;
+        int best = int.MaxValue;
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (s.IsActive && s.Owner == camp.Owner && s.Id != camp.Id && s.World == camp.World)
+            {
+                int d = world.Geometry.Distance(camp.Cell, s.Cell);
+                if (d < best)
+                {
+                    best = d;
+                    refuge = s;
+                }
+            }
+        }
+
+        if (refuge is null)
+        {
+            return string.Empty; // nowhere to go: they stay in their camp
+        }
+
+        SettlementAssets.Carry(camp, refuge, SettlementAssets.CarryCapacity(_content, state, camp.Owner, camp.TotalPopulation()));
+        Span<int> people = camp.Population;
+        Span<int> to = refuge.Population;
+        for (int k = 0; k < people.Length && k < to.Length; k++)
+        {
+            to[k] += people[k];
+        }
+
+        Skills.Move(camp, refuge, 100);
+        people.Clear();
+        SettlementAssets.Abandon(_content, state, camp);
+        return $"; the survivors fled to {refuge.Name}";
     }
 
     // The winners take what their warriors can carry next to their food, the same share of every store; hungry

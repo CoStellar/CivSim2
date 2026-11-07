@@ -29,7 +29,7 @@ public class ArmyTests
     private static int Good(string key) => Content.Goods.Single(g => g.Key == key).Id;
 
     // A strip of land cells along one column, long enough for the test; everyone sees and knows everything.
-    private static (GameState State, HexCoord Start) Strip(ulong seed, int length)
+    internal static (GameState State, HexCoord Start) Strip(ulong seed, int length)
     {
         GameState state = GameState.CreateNew(GameSettings.Test(seed), Content, out _);
         state.RemoveSettlements(_ => true);
@@ -73,7 +73,7 @@ public class ArmyTests
         throw new Xunit.Sdk.XunitException("No land strip found.");
     }
 
-    private static SettlementState Village(GameState state, CivilizationState civ, HexCoord start, int offset, int producers, int warriors, int food = 0)
+    internal static SettlementState Village(GameState state, CivilizationState civ, HexCoord start, int offset, int producers, int warriors, int food = 0)
     {
         var cell = new HexCoord(start.Col, start.Row + offset);
         SettlementState s = state.FoundSettlement(civ.Id, state.Worlds[0].Id, cell, civ.Name + " " + offset, Content.SettlementLevel("village").Id, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
@@ -83,7 +83,7 @@ public class ArmyTests
         return s;
     }
 
-    private static TurnRunner Runner(GameState state)
+    internal static TurnRunner Runner(GameState state)
     {
         foreach (CivilizationState c in state.Civilizations)
         {
@@ -99,14 +99,14 @@ public class ArmyTests
     }
 
     // The step in the month of the launch, then the campaign's first own step a month later.
-    private static void FirstStep(TurnRunner runner)
+    internal static void FirstStep(TurnRunner runner)
     {
         runner.RunTurn();
         runner.RunTurn();
     }
 
     // Runs until no campaign is out (at most 60 steps); returns the chronicle.
-    private static List<string> RunOut(TurnRunner runner, GameState state, System.Action? each = null)
+    internal static List<string> RunOut(TurnRunner runner, GameState state, System.Action? each = null)
     {
         var lines = new List<string>();
         for (int k = 0; k < 60 && state.Episodes.Count > 0; k++)

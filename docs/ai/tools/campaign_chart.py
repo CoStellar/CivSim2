@@ -21,9 +21,9 @@ SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#6250d6']
 
 # How campaigns ended, from the chronicle lines.
 OUTCOMES = [
-    ('wygrany napad (łupy)', r'raided .* of '),
-    ('zdobyta osada', r' took .* from '),
-    ('odparci', r'beat back the warriors'),
+    ('wygrana bitwa (łupy, ucieczka z obozu)', r' beat .* at .*fell in'),
+    ('zdobyta osada', r' took .* from .*fell in'),
+    ('przegrana bitwa (rozbici albo obrońcy się utrzymali)', r'(routed the warriors|held .* against)'),
     ('zawrócili przed silnym celem', r'saw how strong'),
     ('głód złamał wyprawę', r'Hunger broke'),
 ]
@@ -36,7 +36,7 @@ for s in SEEDS:
 
 plt.rcParams.update({'font.size': 10, 'axes.edgecolor': GRID, 'axes.labelcolor': INK, 'xtick.color': MUTED, 'ytick.color': MUTED})
 fig, axes = plt.subplots(2, 2, figsize=(13, 9))
-fig.suptitle('Kampanie wojenne w 3 grach po 1000 tur (etap 4e PR 3: armie z wielu osad, uzbrojenie, tragarze, głód)', color=INK, fontsize=13)
+fig.suptitle('Kampanie wojenne w 3 grach po 1000 tur (etap 4e PR 3–4: armie, uzbrojenie, tragarze, głód, bitwy w rundach)', color=INK, fontsize=13)
 
 # (1) Outcomes per seed, stacked.
 a = axes[0][0]

@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 24;
+    public const int FormatVersion = 25;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -336,7 +336,7 @@ public static class SaveGameSerializer
                 e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, Hundredths(e.Loot),
                 e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilMonth,
                 Hundredths(e.Food), e.HungryMonths, e.Forays, e.Foraging, e.ConvoyFrom, e.ConvoyCell, e.ConvoyCarriers,
-                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey));
+                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed));
         }
 
         return list;
@@ -379,6 +379,9 @@ public static class SaveGameSerializer
                     ConvoyFood = Amounts(e.ConvoyFood),
                     Convoys = e.Convoys,
                     LastPrey = e.LastPrey,
+                    Battles = e.Battles,
+                    Wins = e.Wins,
+                    Killed = e.Killed,
                 },
                 e.Id);
         }
