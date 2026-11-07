@@ -4,7 +4,7 @@ Ten katalog opisuje **każdą decyzję**, którą podejmuje sztuczna inteligencj
 na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to jest w kodzie. Jest pisany dla Patryka:
 żeby można było ocenić, czy mechanika nie jest za prosta albo za skomplikowana i bez sensu.
 
-**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019) + ziemia i migracje (PR C) + fachy i ludzie (etap 4F PR 2–3, gałąź `feat/skills-people`). Dowódca i armie (4e) jeszcze nie istnieją.
+**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019) + ziemia i migracje (PR C) + fachy, ludzie i demografia (cały etap 4F, PR 1–5; kod według commita `ebe82e9` na gałęzi `feat/demography`, AI bez zmian w PR 4–5). Dowódca i armie (4e) jeszcze nie istnieją.
 **Aktualizacja:** po każdym etapie, który zmienia AI (zasada w `CLAUDE.md`). Historia zmian jest na dole tej strony.
 
 ## Jak czytać
@@ -20,7 +20,7 @@ na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to j
    zbyt skomplikowane. **To najważniejsza strona do Twojej oceny.**
 7. [Statystyki](09-statystyki.md): ile i jakich decyzji AI podejmuje w prawdziwych grach (3 seedy po 1000 tur).
 8. Plan zmian po uwagach Patryka (czas w latach, priorytety, migracje): [`docs/prompts/04-ai-czas-wartosci-migracje.md`](../prompts/04-ai-czas-wartosci-migracje.md).
-   Zrobione: zegar (ADR 0018) i wartości (PR B, ADR 0019). Następne: ziemia i migracje (PR C).
+   Zrobione: zegar (ADR 0018), wartości (PR B, ADR 0019), ziemia i migracje (PR C) i etap 4F (ludzie i fachy, ADR 0020). Następne: 4e (wojna).
 
 Każda decyzja ma stały identyfikator (np. **G2**), którego używają wszystkie strony. Ścieżki do kodu mają postać
 `plik:linia` dla commita podanego wyżej; linie mogą się przesunąć, nazwy metod zostają.
@@ -127,6 +127,7 @@ w `docs/systems/`:
 | 2026-11-06 | zegar (ADR 0018) | Rytm każdej cywilizacji: decyzje proaktywne we własnym kroku, reaktywne (alarmy wojny i napadu, propozycje, wybór badania) w każdym kroku świata; nowe reakcje D2 i G2; odstępy AI w własnych krokach (`reviewEverySteps`, `searchEverySteps`, `minStepsBetweenMoves`); zwiad, widzenie i pogłoski w własnym kroku; nowe statystyki, wykres rytmów i ludności przed/po. |
 | 2026-11-06 | wartości (PR B, ADR 0019) | Uczony od nowa (priorytet z położenia, braków i charakteru, koszt jako przeszkoda łagodzona ciekawością); skarbnik: cele towarów, koordynacja sieci, koniec przełączania „praca ↔ brak”, premia za handel; strateg: wagi nauki i wpływu; „zostać” z połową wagi ekspansji; obce obozy i wojownicy tylko z pól widzianych teraz; 11 liczb z kodu do `data/ai.json` (sekcja `scholar`); test martwych wartości; nowe statystyki z 3 seedów, wykresy decyzji i „przed/po”. |
 | 2026-11-06 | ziemia i migracje (PR C) | Gubernator wycenia ziemię z technologiami zbierania cywilizacji, rybacy liczą wodę; G4 osiedlenie dla prawdziwej liczby producentów i w porównaniu ze zbieractwem i ekspansywnością (`settleOverGatheringPercent`); nowe decyzje G7 (wioska wysyła osadników) i G8 (wyprawa w nieznane); osadnicy omijają strefy własnych osad; zwiad i marsz na stulecie (`data/perception.json`); nowe parametry w `data/ai.json`; punkty 4, 5, 6 i 8 oceny zamknięte, nowy punkt 10 (wydajność); statystyki z 3 seedów, wykres ziemi i migracji, wykres decyzji z G7 i G8. |
+| 2026-11-06 | koniec etapu 4F (PR 5) | Bez zmian w decyzjach AI. Statystyki z 3 seedów po całym etapie 4F (obozy przenoszą się 5–9 razy rzadziej przy wolniejszym przyroście), nowy wykres decyzji, sekcja „Demografia” w statystykach; graf technologii i fachów z danych: `docs/systems/graf-technologii.md`. |
 | 2026-11-06 | demografia (etap 4F, PR 4) | Bez zmian w decyzjach AI i w `data/ai.json`. Ludzie rosną wolniej (+1,0‰ na rok na start), więc po kilku turach rzadziej są obce odłamy: w teście martwych wartości sytuacja „wypędzenie” dostaje w razie potrzeby małą placówkę sąsiada i stary uraz (sympatia −5000). |
 | 2026-11-06 | ludzie (etap 4F, PR 3) | U1: uczony wybiera tylko technologie, dla których cywilizacja ma ludzi (`requiresPeople`), i wybiera od nowa, gdy ich ubyło; warstwy myślicieli i przywódców; nauka głównie od myślicieli; statystyki badań z 3 seedów i wykres. |
 | 2026-11-06 | fachy (etap 4F, PR 2) | G4: osiedlenie wymaga rolnika, liczy rolników, których wioska wyuczy (50% producentów), i zbieractwo pozostałych producentów; skarbnik widzi recepturę tylko z jej fachowcami (`Demand.Runs`); wiedza AI o ziemi liczy dobra technologii bez pokrycia fachowcami (uwaga w ocenie); nowe statystyki z 3 seedów. |

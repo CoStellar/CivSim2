@@ -135,7 +135,7 @@ strateg: waga nauki i wpływu; obce obozy tylko z pól widzianych teraz; liczby 
 osiedlenie porównane ze zbieractwem i ekspansywnością; wioska wysyła osadników, gdy jest pełna albo ma wyjałowione pola; wyprawy w nieznane
 dla ciekawych i ekspansywnych; zwiadowcy i marsz na stulecie; kolumny `settlements` i `spread_cells` w statystykach Headless).
 
-Dalej: **etap 4F** (ludzie i fachy, niżej, decyzja Patryka z 2026-11-06: przed wojną), potem według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
+Gotowe też: **etap 4F** (ludzie i fachy, niżej, decyzja Patryka z 2026-11-06: przed wojną). Dalej według planu `docs/prompts/04-ai-czas-wartosci-migracje.md`: **4e** wojna, **D** odłamy jako nowe cywilizacje w 4f.
 Przeprowadzka całej wioski (z planu C) jeszcze nie: czeka na koszt porzucanych pól i budynków (etap budowli).
 
 - [ ] Doradcy: strateg, dyplomata, skarbnik, gubernatorzy, dowódca, uczony
@@ -158,7 +158,7 @@ Gotowe, gdy: w 3 grach po 1000 tur technologie przychodzą dopiero po zebraniu f
 - [x] **PR 2:** nauka fachu (mistrzowie, uczniowie za pół, lata nauki), przenoszenie między osadami sieci, utrata fachu; plony i receptury liczą fachowców
 - [x] **PR 3:** warstwy myślicieli i przywódców (starszyzna, wódz); wymogi ludzi w technologiach (`requiresPeople`), nauka głównie od myślicieli; AI: uczony widzi braki ludzi (decyzja AI „ile uczyć” odłożona: nauka fachu to reguła systemu, do decyzji Patryka)
 - [x] **PR 4:** urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty technologii (dane historyczne: start +1,0‰ na rok, ogień +1,6‰, garncarstwo +2,2‰, wioska −2‰); wykres ludności przed/po (`docs/ai/img/ludnosc_przed_po.png`)
-- [ ] **PR 5:** graf technologii i fachów rysowany z danych; test osiągalności od zera i braku pętli; `docs/systems/skills.md`, `docs/ai/`
+- [x] **PR 5:** graf technologii i fachów rysowany z danych (`docs/systems/graf-technologii.md`, skrypt `docs/systems/tools/tech_graph.py`); test osiągalności od zera i braku pętli (`TechnologyGraphTests`, sprawdzenie przy wczytywaniu danych); `docs/systems/skills.md`, `docs/ai/` (statystyki z 3 seedów po całym etapie)
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 

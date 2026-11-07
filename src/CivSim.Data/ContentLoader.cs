@@ -197,6 +197,33 @@ public static class ContentLoader
             i++;
         }
 
+        // The people a technology needs come from earlier technologies: a skill must be opened by one of the technologies
+        // it requires, directly or through others. Anything else is a loop or a step the tree does not show.
+        for (int t = 0; t < technologies.Count; t++)
+        {
+            HashSet<int> earlier = Earlier(technologies, t);
+            CheckEarlier(technologies[t].RequiresPeople, "requiresPeople");
+            CheckEarlier(technologies[t].RequiresPeopleAny, "requiresPeopleAny");
+
+            void CheckEarlier(IReadOnlyList<PeopleRequirement> people, string name)
+            {
+                for (int n = 0; n < people.Count; n++)
+                {
+                    int skill = people[n].SkillId;
+                    if (skill < 0 || skill >= skills.Count || skills[skill].TechnologyId < 0)
+                    {
+                        continue;
+                    }
+
+                    int from = skills[skill].TechnologyId;
+                    if (!earlier.Contains(from))
+                    {
+                        errors.Add($"{file}: technologies[{t}].{name}[{n}]: skill '{skills[skill].Key}' comes with '{technologies[from].Key}', which '{technologies[t].Key}' does not require (directly or through other technologies).");
+                    }
+                }
+            }
+        }
+
         List<PeopleRequirement> ReadPeople(JsonElement tech, string name, string at)
         {
             var list = new List<PeopleRequirement>();
@@ -247,6 +274,27 @@ public static class ContentLoader
 
             return list;
         }
+    }
+
+    // Every technology that must come before `id` (requires and requiresAny, through other technologies too).
+    private static HashSet<int> Earlier(List<TechnologyDefinition> techs, int id)
+    {
+        var seen = new HashSet<int>();
+        var todo = new Stack<int>();
+        todo.Push(id);
+        while (todo.Count > 0)
+        {
+            TechnologyDefinition t = techs[todo.Pop()];
+            foreach (int r in t.Requires.Concat(t.RequiresAny))
+            {
+                if (r >= 0 && r < techs.Count && seen.Add(r))
+                {
+                    todo.Push(r);
+                }
+            }
+        }
+
+        return seen;
     }
 
     // Each technology opens at most one skill; the skill works the technology's recipes and its gathering.
