@@ -127,7 +127,8 @@ public partial class CivilizationPanel : VBoxContainer
         foreach (CivilizationView c in civs)
         {
             TreeItem item = _table.CreateItem(root);
-            item.SetText(0, c.IsAlive ? c.Name : c.Name + " †");
+            string name = c.Title.Length > 0 ? c.Title : c.Name;
+            item.SetText(0, c.IsAlive ? name : name + " †");
             item.SetCustomColor(0, c.IsAlive ? OverlayColors.CivColor(c.Id) : Colors.Gray);
             item.SetText(1, c.Era);
             item.SetText(2, c.People < 0 ? "?" : c.People.ToString("N0", inv));
@@ -148,8 +149,12 @@ public partial class CivilizationPanel : VBoxContainer
         CultureInfo inv = CultureInfo.InvariantCulture;
         var sb = new StringBuilder();
         string color = OverlayColors.CivColor(d.CivId).ToHtml(false);
-        sb.Append(inv, $"[b][color=#{color}]{d.Name}[/color][/b]{(d.IsAlive ? string.Empty : "  (died out)")}\n");
+        sb.Append(inv, $"[b][color=#{color}]{(d.Title.Length > 0 ? d.Title : d.Name)}[/color][/b]{(d.IsAlive ? string.Empty : "  (died out)")}\n");
         sb.Append(inv, $"Era: {d.Era}\n");
+        if (d.Government.Length > 0)
+        {
+            sb.Append(inv, $"Government: {d.Government}\n");
+        }
 
         long people = 0;
         var strata = new List<string>();

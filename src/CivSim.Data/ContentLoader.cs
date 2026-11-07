@@ -51,6 +51,7 @@ public static class ContentLoader
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
         Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), goods, technologies, biomes, errors);
+        List<GovernmentDefinition> governments = LoadGovernments(Path.Combine(directory, "governments.json"), eras, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -95,6 +96,7 @@ public static class ContentLoader
             Names = names,
             Treaties = treaties,
             War = war,
+            Governments = governments,
             Events = events,
             Technologies = technologies,
             Research = research,
@@ -708,6 +710,98 @@ public static class ContentLoader
         };
 
         return (levels, Math.Max(0, tribeLevel), stock, assets);
+    }
+
+    // Forms of government of data/governments.json (stage 4f, ADR 0023).
+    private static List<GovernmentDefinition> LoadGovernments(string path, List<EraDefinition> eras, List<string> errors)
+    {
+        var result = new List<GovernmentDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "governments", path, errors, out JsonElement array))
+        {
+            return result;
+        }
+
+        string file = Path.GetFileName(path);
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            string at = $"{file}: governments[{i}]";
+            var r = new Reader(e, at, errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            string title = r.String("title");
+            if (title.Length > 0 && !title.Contains("{people}", StringComparison.Ordinal))
+            {
+                errors.Add($"{at}.title: must contain {{people}}.");
+            }
+
+            string era = r.String("fromEra");
+            int fromEra = eras.FindIndex(x => x.Key == era);
+            if (era.Length > 0 && fromEra < 0)
+            {
+                errors.Add($"{at}.fromEra: unknown era '{era}'.");
+            }
+
+            result.Add(new GovernmentDefinition(i, key, name)
+            {
+                Title = title,
+                FromEra = Math.Max(0, fromEra),
+                EnactYears = r.Int("enactYears", 0, 100),
+                ReviewPercent = r.Int("reviewPercent", 10, 1000),
+                CautionShift = r.Int("cautionShift", -1000, 1000),
+                GoalPercent = EnumMap<Core.Ai.Goal>(e, "goalPercent", at, 100, 0, 1000, errors),
+                Leaning = EnumMap<Core.Ai.Trait>(e, "leaning", at, 0, 0, 100, errors),
+            });
+            i++;
+        }
+
+        if (!result.Exists(g => g.FromEra == 0))
+        {
+            errors.Add($"{file}: at least one government must be open from the first era.");
+        }
+
+        return result;
+    }
+
+    // An object {"enum_name": number} read into an array indexed by the enum (names in snake case), missing = fallback.
+    private static int[] EnumMap<TEnum>(JsonElement parent, string name, string at, int fallback, int min, int max, List<string> errors)
+        where TEnum : struct, Enum
+    {
+        TEnum[] values = Enum.GetValues<TEnum>();
+        var result = new int[values.Length];
+        Array.Fill(result, fallback);
+        if (!parent.TryGetProperty(name, out JsonElement o))
+        {
+            return result;
+        }
+
+        if (o.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add($"{at}.{name}: must be an object.");
+            return result;
+        }
+
+        foreach (JsonProperty p in o.EnumerateObject())
+        {
+            int k = Array.FindIndex(values, v => ToSnake(v.ToString()) == p.Name);
+            if (k < 0)
+            {
+                errors.Add($"{at}.{name}: unknown name '{p.Name}'.");
+                continue;
+            }
+
+            if (!p.Value.TryGetInt32(out int n) || n < min || n > max)
+            {
+                errors.Add($"{at}.{name}.{p.Name}: must be a whole number in {min}..{max}.");
+                continue;
+            }
+
+            result[Convert.ToInt32(values[k], System.Globalization.CultureInfo.InvariantCulture)] = n;
+        }
+
+        return result;
     }
 
     private static List<EraDefinition> LoadEras(string path, List<string> errors)

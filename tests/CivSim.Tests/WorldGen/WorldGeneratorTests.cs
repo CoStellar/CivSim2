@@ -50,7 +50,8 @@ public class WorldGeneratorTests
     // Peoples' languages (GDD 5.6): names, language seeds and name counters are in the hash (the map is unchanged).
     // Stage 4F: every tribe starts with 2 thinkers and a leader too (the map is unchanged).
     // ADR 0022: the months the world computes and the episodes are in the hash (the map is unchanged).
-    private const ulong GoldenWorldHash = 2714395782925237720UL;
+    // Stage 4f: the government of every civilization and the readiness of wars are in the hash (the map is unchanged).
+    private const ulong GoldenWorldHash = 16412736136382599011UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

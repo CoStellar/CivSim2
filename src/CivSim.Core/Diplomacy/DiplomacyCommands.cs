@@ -105,5 +105,18 @@ public sealed record DeclareWarCommand(GameContent Content, CivId Target, WarGoa
     public void Apply(GameState state, CivId civ) => ApplyWithChronicle(state, civ);
 
     /// <inheritdoc />
-    public string? ApplyWithChronicle(GameState state, CivId civ) => Treaties.DeclareWar(Content, state, civ, Target, Goal, GoalSettlement);
+    public string? ApplyWithChronicle(GameState state, CivId civ)
+    {
+        string line = Treaties.DeclareWar(Content, state, civ, Target, Goal, GoalSettlement);
+        // GDD 7.2 (stage 4f): the declaration takes effect after the government's enactment delay; until then our
+        // armies stay at home.
+        int months = state.FindCivilization(civ) is { } c ? Governance.Governments.EnactMonths(Content, c) : 0;
+        if (months > 0 && state.Treaties.Find(civ, Target, TreatyKind.War) is { } war)
+        {
+            war.ReadyMonth = state.Month + months;
+            line += string.Create(System.Globalization.CultureInfo.InvariantCulture, $" Its warriors will be ready in {months / 12} year{(months == 12 ? string.Empty : "s")}.");
+        }
+
+        return line;
+    }
 }

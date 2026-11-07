@@ -82,7 +82,9 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             // Planned review (proactive): in the own step that holds the civilization's review month, once every
             // reviewEveryYears (spread over civilizations). Reaction (reactive, ADR 0018): at once when someone declared
             // war on it or attacked one of its camps, whatever its rhythm.
-            bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * (long)_content.Ai.ReviewStaggerYears * 12)) % every < civ.StepMonths;
+            // The government sets the pace (GDD 7.2): a council reviews less often, a chief more often.
+            long own = Math.Max(1, every * Governance.Governments.ReviewPercent(_content, civ) / 100);
+            bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * (long)_content.Ai.ReviewStaggerYears * 12)) % own < civ.StepMonths;
             bool alarmed = (civ.Alarms & (Simulation.Alarm.WarDeclared | Simulation.Alarm.Attacked)) != 0;
             if (!planned && !alarmed)
             {

@@ -189,6 +189,7 @@ public sealed class GameState
         earth.Climate.GlobalMeanMillionths = report.GlobalMeanMillionths;
         earth.Climate.StartLandIce = SeaLevel.LandIce(content, earth.Map);
         Naming.Names.NamePeoples(content.Names, state);
+        Governance.Governments.ChooseAtStart(content, state);
         for (int i = 0; i < state._civilizations.Count && i < report.Starts.Count; i++)
         {
             CivilizationState civ = state._civilizations[i];

@@ -107,7 +107,7 @@ public class WarTests
         CivilizationState b = state.Civilizations[1];
         CivilizationState witness = state.Civilizations[2];
         string? line = Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot));
-        Assert.EndsWith(" for loot.", line, System.StringComparison.Ordinal);
+        Assert.Contains(" for loot.", line, System.StringComparison.Ordinal);
         Assert.Contains(b.Relation(a.Id)!.Memories, m => m.Kind == RelationEvent.Aggression);
         Assert.Contains(witness.Relation(a.Id)!.Memories, m => m.Kind == RelationEvent.Aggression);
 

@@ -1,0 +1,49 @@
+{
+  "comment": "Forms of government (GDD 7.2; stage 4f, ADR 0023). title: the civilization's title, {people} is the people's name. fromEra: the first era (key from eras.json) in which a civilization may take it. enactYears: years before a state decision (a new government, a declared war: its armies wait) takes effect; very fast 0, fast 1, medium 2, slow 4. reviewPercent: the strategist and the diplomat review this many percent of their usual interval (lower = a faster state). cautionShift: added to the civilization's caution (per mille) when the AI decides whether to take its best option outright; negative = more impulsive. goalPercent: percent applied to the strategist's goal weights (expansion, security, prosperity, science, influence, conquest); missing goals stay 100. leaning: how much each trait draws a new people to this government at the start; the government with the highest sum of trait x leaning wins (ties: the first). Despotism and the city republic come with the bronze age (stage 6).",
+  "governments": [
+    {
+      "key": "elder_council",
+      "name": "Council of Elders",
+      "title": "Council of {people}",
+      "fromEra": "stone_age",
+      "enactYears": 4,
+      "reviewPercent": 150,
+      "cautionShift": 200,
+      "goalPercent": {"security": 110},
+      "leaning": {"caution": 1, "openness": 1}
+    },
+    {
+      "key": "chiefdom",
+      "name": "Chiefdom",
+      "title": "Chiefdom of {people}",
+      "fromEra": "stone_age",
+      "enactYears": 1,
+      "reviewPercent": 75,
+      "cautionShift": 0,
+      "goalPercent": {"expansion": 120, "conquest": 120},
+      "leaning": {"aggression": 1, "expansiveness": 1}
+    },
+    {
+      "key": "despotism",
+      "name": "Despotism",
+      "title": "Kingdom of {people}",
+      "fromEra": "bronze_age",
+      "enactYears": 0,
+      "reviewPercent": 50,
+      "cautionShift": -200,
+      "goalPercent": {"conquest": 120, "security": 110},
+      "leaning": {"aggression": 1, "caution": 1}
+    },
+    {
+      "key": "city_republic",
+      "name": "City Republic",
+      "title": "Republic of {people}",
+      "fromEra": "bronze_age",
+      "enactYears": 2,
+      "reviewPercent": 100,
+      "cautionShift": 100,
+      "goalPercent": {"prosperity": 120, "science": 120, "conquest": 90},
+      "leaning": {"tradefulness": 1, "curiosity": 1}
+    }
+  ]
+}

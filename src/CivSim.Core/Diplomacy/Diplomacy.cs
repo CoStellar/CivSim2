@@ -109,6 +109,11 @@ public static class Treaties
         }
 
         CivilizationState a = state.FindCivilization(civ)!;
+        if (a.PendingGovernment != CivilizationState.NoGovernment)
+        {
+            return "We are changing our government."; // GDD 7.2: no state decisions while a new government comes in
+        }
+
         switch (goal)
         {
             case WarGoal.Land:

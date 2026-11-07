@@ -109,9 +109,10 @@ public class StrategyTests
         var queue = new CommandQueue();
         council.IssueCommands(state, queue);
         runner.RunTurn();
-        Assert.Equal(Content.Ai.HungerWeightMax, civ.GoalWeight(Goal.Prosperity));
-        Assert.Equal(Content.Ai.HungerWeightMax, civ.GoalWeight(Goal.Security));
-        Assert.Equal(1000, civ.GoalWeight(Goal.Conquest));
+        // The government leans the weights its way (stage 4f).
+        Assert.Equal(Core.Governance.Governments.Weight(Content, civ, Goal.Prosperity, Content.Ai.HungerWeightMax), civ.GoalWeight(Goal.Prosperity));
+        Assert.Equal(Core.Governance.Governments.Weight(Content, civ, Goal.Security, Content.Ai.HungerWeightMax), civ.GoalWeight(Goal.Security));
+        Assert.Equal(Core.Governance.Governments.Weight(Content, civ, Goal.Conquest, 1000), civ.GoalWeight(Goal.Conquest));
     }
 
     [Fact]

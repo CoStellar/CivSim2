@@ -114,8 +114,9 @@ public class ProtocolSerializerTests
         // details) and era, people, settlements and technologies of each civilization for observers (stage 5),
         // and renaming settlements with name suggestions from the peoples' languages (GDD 5.6).
         // Version 9 added war campaigns (armies and their carriers) to the observer layers (stage 4e PR 3).
+        // Version 10 added the title and the government of each civilization for observers (stage 4f).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("09000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("0A000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

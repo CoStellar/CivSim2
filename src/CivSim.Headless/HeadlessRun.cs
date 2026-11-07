@@ -50,6 +50,9 @@ public sealed record HeadlessResult(
     /// <summary>Civilizations still alive at the end of the run.</summary>
     public int AliveCivilizations { get; init; }
 
+    /// <summary>Living civilizations by government at the end of the run, e.g. "7 Chiefdom, 5 Council of Elders" (stage 4f).</summary>
+    public string Governments { get; init; } = string.Empty;
+
     /// <summary>Food in all warehouses at the end of the run, in whole units.</summary>
     public long FoodUnits { get; init; }
 
@@ -237,6 +240,10 @@ public static class HeadlessRun
             Settlements = runner.State.Settlements.Count,
             People = People(runner.State),
             AliveCivilizations = runner.State.Civilizations.Count(c => c.IsAlive),
+            Governments = string.Join(", ", runner.State.Civilizations.Where(c => c.IsAlive)
+                .GroupBy(c => Core.Governance.Governments.Of(content, c)?.Name ?? "none")
+                .OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal)
+                .Select(g => string.Create(CultureInfo.InvariantCulture, $"{g.Count()} {g.Key}"))),
             FoodUnits = FoodUnits(runner.State, content),
             Years = runner.State.Month / 12,
             Contacts = CountContacts(runner.State),

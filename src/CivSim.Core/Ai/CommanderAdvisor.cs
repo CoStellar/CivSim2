@@ -55,14 +55,15 @@ public sealed class CommanderAdvisor : Advisor
             }
 
             Review(state, queue, civ);
-            if (!Simulation.WorldClock.Steps(civ) && civ.Alarms == Simulation.Alarm.None)
+            if (!Simulation.WorldClock.Steps(civ) && civ.Alarms == Simulation.Alarm.None && !BecameReady(state, civ))
             {
                 continue;
             }
 
             foreach (Treaty war in state.Treaties.All)
             {
-                if (war.Kind != TreatyKind.War || !war.Involves(civ.Id))
+                // A war we declared waits for our government's enactment delay (GDD 7.2; stage 4f).
+                if (war.Kind != TreatyKind.War || !war.Involves(civ.Id) || !war.ReadyFor(civ.Id, state.Month))
                 {
                     continue;
                 }
@@ -76,6 +77,20 @@ public sealed class CommanderAdvisor : Advisor
                 Consider(state, queue, civ, war, enemy);
             }
         }
+    }
+
+    // A war we declared became ready for our armies this month (the world clock steps on that month).
+    private static bool BecameReady(GameState state, CivilizationState civ)
+    {
+        foreach (Treaty war in state.Treaties.All)
+        {
+            if (war.Kind == TreatyKind.War && war.Initiator == civ.Id && war.ReadyMonth == state.Month)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void Consider(GameState state, CommandQueue queue, CivilizationState civ, Treaty war, CivId enemy)
