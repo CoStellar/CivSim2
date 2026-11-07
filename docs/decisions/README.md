@@ -23,3 +23,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0019 Wartości i priorytety AI: każda opcja służy celowi, ocena = priorytet × przeszkoda](0019-wartosci-i-priorytety-ai.md)
 - [0020 Fachy, nauka fachu, wymogi ludzi w technologiach i demografia z danych historycznych](0020-fachy-i-demografia.md)
 - [0021 Wojna z celem, wyprawy, zaopatrzenie i uzbrojenie z technologii](0021-wojna-cel-wyprawy-zaopatrzenie.md)
+- [0022 Epizody: krótki zegar dla zdarzeń z przebiegiem (kampanie wojenne)](0022-epizody-krotki-zegar.md)

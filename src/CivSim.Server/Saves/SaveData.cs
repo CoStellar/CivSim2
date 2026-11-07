@@ -38,7 +38,10 @@ public sealed record SaveData(
     [property: Key(29)] int StarCycleYears = 100_000,
     [property: Key(30)] IReadOnlyList<TreatySaveData>? Treaties = null,
     [property: Key(31)] IReadOnlyList<ProposalSaveData>? Proposals = null,
-    [property: Key(32)] int StepMonths = 0);
+    [property: Key(32)] int StepMonths = 0,
+    [property: Key(33)] int WorldMonths = 0,
+    [property: Key(34)] IReadOnlyList<EpisodeSaveData>? Episodes = null,
+    [property: Key(35)] long NextEpisodeId = 0);
 
 /// <summary>Saved treaty or war between two civilizations (stage 4d).</summary>
 [MessagePackObject]
@@ -63,7 +66,28 @@ public sealed record TreatySaveData(
     [property: Key(17)] int PeopleB = 0,
     [property: Key(18)] int WearinessA = 0,
     [property: Key(19)] int WearinessB = 0,
-    [property: Key(20)] PeaceTermsSaveData? Terms = null);
+    [property: Key(20)] PeaceTermsSaveData? Terms = null,
+    [property: Key(21)] int Campaigns = 0,
+    [property: Key(22)] int CampaignMonths = 0,
+    [property: Key(23)] long LastCampaignMonth = -1);
+
+/// <summary>Saved episode (ADR 0022): today a war campaign.</summary>
+[MessagePackObject]
+public sealed record EpisodeSaveData(
+    [property: Key(0)] long Id,
+    [property: Key(1)] byte Kind,
+    [property: Key(2)] int Civ,
+    [property: Key(3)] int Other,
+    [property: Key(4)] long StartMonth,
+    [property: Key(5)] long NextMonth,
+    [property: Key(6)] int TickMonths,
+    [property: Key(7)] int Home,
+    [property: Key(8)] int Target,
+    [property: Key(9)] int Warriors,
+    [property: Key(10)] int Cell,
+    [property: Key(11)] byte Phase,
+    [property: Key(12)] int Dead,
+    [property: Key(13)] long[] Loot);
 
 /// <summary>Saved terms of a peace (stage 4e).</summary>
 [MessagePackObject]

@@ -68,5 +68,7 @@ public class DeterminismTests
     // same era the simulation runs as before).
     // Names from peoples' languages (GDD 5.6): names, language seeds and name counters joined the hash; the simulation
     // itself is unchanged (statistics of 300 turns identical before and after).
-    private const ulong GoldenHash = 1694236306854303837UL;
+    // ADR 0022 (episodes): the months the world computes and the running episodes joined the hash; alarms bring a step a
+    // month later, and wars are fought in campaigns.
+    private const ulong GoldenHash = 15923357136071656925UL;
 }

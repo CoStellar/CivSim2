@@ -25,6 +25,7 @@ public sealed class CalendarSystem(GameContent content) : ITurnSystem
             WorldClock.Begin(_content, state); // a state made without content: start its clock now
         }
 
+        WorldClock.Shorten(_content, state); // a campaign or a war of this step needs a step soon (ADR 0022)
         state.Month += state.StepMonths;
         WorldClock.Begin(_content, state);
     }
@@ -57,6 +58,7 @@ public static class CoreSystems
         runner.AddSystem(new Perception.PerceptionSystem(content));
         runner.AddSystem(new Diplomacy.ContactSystem(content));
         runner.AddSystem(new Perception.JourneySystem(content));
+        runner.AddSystem(new Episodes.CampaignSystem(content));
         runner.AddSystem(new WorldGen.SeasonSystem(content));
         runner.AddSystem(new EffectExpirySystem());
         runner.AddSystem(new Events.EventSystem(content));

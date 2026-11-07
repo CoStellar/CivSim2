@@ -77,8 +77,26 @@ public sealed record WarRules
     /// <summary>War score for a settlement taken, on top of the fight.</summary>
     public int ScorePerSettlement { get; init; } = 15;
 
-    /// <summary>Weariness per year of war, hundredths of a point.</summary>
-    public int WearinessPerYear { get; init; } = 100;
+    /// <summary>Weariness per month of campaigning in the war (either side's), hundredths of a point (ADR 0022).</summary>
+    public int WearinessPerCampaignMonth { get; init; } = 500;
+
+    /// <summary>Length of a campaign's steps, months (ADR 0022).</summary>
+    public int CampaignStepMonths { get; init; } = 1;
+
+    /// <summary>Cells a campaign marches per month.</summary>
+    public int MarchCellsPerMonth { get; init; } = 3;
+
+    /// <summary>A war in which nobody campaigned for this many years ends in a white peace.</summary>
+    public int QuietPeaceYears { get; init; } = 5;
+
+    /// <summary>The commander sends a campaign only with at least this chance to win, percent (moves to ai.json with the commander, PR 5).</summary>
+    public int MinWinChancePercent { get; init; } = 60;
+
+    /// <summary>Largest share of a settlement's warriors that marches out, percent (decision of 2026-11-07: a third stays home).</summary>
+    public int SendPercent { get; init; } = 67;
+
+    /// <summary>Fewest warriors that make a campaign.</summary>
+    public int MinWarriors { get; init; } = 5;
 
     /// <summary>Weariness per percent of the side's people lost in the war, hundredths of a point.</summary>
     public int WearinessPerLossPercent { get; init; } = 300;
@@ -158,16 +176,15 @@ public static class Wars
         AddDead(war, loser, loserDead);
     }
 
-    /// <summary>Weariness of <paramref name="civ"/> from the years of the war and its dead (0..100).</summary>
+    /// <summary>Weariness of <paramref name="civ"/> from the months of campaigning and its dead (0..100; ADR 0022).</summary>
     public static int ComputeWeariness(WarRules rules, Treaty war, CivId civ, long month)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(war);
-        long years = Math.Max(0, month - war.SinceMonth) / 12;
         int dead = civ == war.A ? war.DeadA : war.DeadB;
         int people = Math.Max(1, civ == war.A ? war.PeopleA : war.PeopleB);
         long lossPercent = (long)dead * 100 / people;
-        long hundredths = (years * rules.WearinessPerYear) + (lossPercent * rules.WearinessPerLossPercent);
+        long hundredths = ((long)war.CampaignMonths * rules.WearinessPerCampaignMonth) + (lossPercent * rules.WearinessPerLossPercent);
         return (int)Math.Min(100, hundredths / 100);
     }
 

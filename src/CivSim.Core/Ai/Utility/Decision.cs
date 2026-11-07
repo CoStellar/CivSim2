@@ -80,6 +80,9 @@ public enum AiAction : byte
 
     /// <summary>A camp sends explorers towards unknown land (PR C).</summary>
     Explore = 16,
+
+    /// <summary>The commander sends warriors on a campaign (stage 4e).</summary>
+    LaunchCampaign = 17,
 }
 
 /// <summary>
@@ -150,6 +153,7 @@ public readonly record struct Decision(
         FactorId.WarYears => "years at war",
         FactorId.Weariness => "war weariness",
         FactorId.Terms => "peace terms",
+        FactorId.WinChance => "win chance",
         FactorId.LeadsTo => "leads to",
         FactorId.ForTrade => "for trade",
         FactorId.OverGathering => "over gathering",

@@ -39,6 +39,29 @@ public static class GameStateHash
         h.Add((int)state.Settings.Resources);
         h.Add(state.Turn);
         h.Add(state.StepMonths);
+        h.Add(state.WorldMonths);
+        h.Add(state.Episodes.NextId);
+        h.Add(state.Episodes.Count);
+        foreach (Episodes.Episode e in state.Episodes.All)
+        {
+            h.Add(e.Id);
+            h.Add((int)e.Kind);
+            h.Add(e.Civ.Value);
+            h.Add(e.Other.Value);
+            h.Add(e.StartMonth);
+            h.Add(e.NextMonth);
+            h.Add(e.TickMonths);
+            h.Add(e.Home);
+            h.Add(e.Target);
+            h.Add(e.Warriors);
+            h.Add(e.Cell);
+            h.Add((int)e.Phase);
+            h.Add(e.Dead);
+            foreach (Numerics.Amount a in e.Loot)
+            {
+                h.Add(a.Hundredths);
+            }
+        }
 
         Span<RandomState> rng = stackalloc RandomState[RandomStreams.Count];
         state.Random.CopyStates(rng);
@@ -240,6 +263,9 @@ public static class GameStateHash
             h.Add(t.WearinessA);
             h.Add(t.WearinessB);
             AddTerms(ref h, t.Terms);
+            h.Add(t.Campaigns);
+            h.Add(t.CampaignMonths);
+            h.Add(t.LastCampaignMonth);
         }
 
         h.Add(state.Treaties.Proposals.Count);

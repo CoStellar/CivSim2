@@ -14,7 +14,7 @@ namespace CivSim.Headless;
 public sealed class WarCsv(TextWriter writer)
 {
     /// <summary>Column names.</summary>
-    public const string Header = "a,b,initiator,goal,goal_settlement,start_year,end_year,years,score_a,dead_a,dead_b,people_a,people_b,weariness_a,weariness_b,terms,giver,ransom_percent";
+    public const string Header = "a,b,initiator,goal,goal_settlement,start_year,end_year,years,score_a,dead_a,dead_b,people_a,people_b,weariness_a,weariness_b,terms,giver,ransom_percent,campaigns,campaign_months,months";
 
     private readonly TextWriter _writer = writer ?? throw new ArgumentNullException(nameof(writer));
     private readonly HashSet<(int, int, long)> _written = [];
@@ -66,8 +66,9 @@ public sealed class WarCsv(TextWriter writer)
         string start = startMonth >= 0 ? (startMonth / 12).ToString(CultureInfo.InvariantCulture) : string.Empty;
         string end = endMonth >= 0 ? (endMonth / 12).ToString(CultureInfo.InvariantCulture) : string.Empty;
         string years = startMonth >= 0 && endMonth >= 0 ? ((endMonth - startMonth) / 12).ToString(CultureInfo.InvariantCulture) : string.Empty;
+        string months = startMonth >= 0 && endMonth >= 0 ? (endMonth - startMonth).ToString(CultureInfo.InvariantCulture) : string.Empty;
         _writer.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
-            $"{t.A.Value},{t.B.Value},{initiator},{goal},{t.GoalSettlement},{start},{end},{years},{t.Score},{t.DeadA},{t.DeadB},{t.PeopleA},{t.PeopleB},{t.WearinessA},{t.WearinessB},{terms},{giver},{t.Terms.RansomPercent}"));
+            $"{t.A.Value},{t.B.Value},{initiator},{goal},{t.GoalSettlement},{start},{end},{years},{t.Score},{t.DeadA},{t.DeadB},{t.PeopleA},{t.PeopleB},{t.WearinessA},{t.WearinessB},{terms},{giver},{t.Terms.RansomPercent},{t.Campaigns},{t.CampaignMonths},{months}"));
     }
 }

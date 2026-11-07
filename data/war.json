@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "War (GDD 9.3; stage 4e, ADR 0021, decisions of 2026-11-07). Every war has a goal: land (a settlement of the enemy, named when war is declared), loot (the enemy's stores) or revenge (needs a cause: an attack, an aggression or a settlement of ours they hold). goals: victimPercent and witnessPercent say how strongly the victim and everyone who knows both sides remember the aggression (relations.json aggression). Score runs from -100 to 100: a fight won gives the winner's side scorePerWin, a settlement taken scorePerSettlement more. Weariness of a side (0..100) = years of war x wearinessPerYear + percent of the side's people killed in the war x wearinessPerLossPercent; at peaceAbove the side looks for peace at once; it lowers the mood of every settlement of the side by moodAtFullWeariness at 100 (effect war_weariness in effects.json). Peace terms: when the score is at least termsAboveScore, the loser hands over the settlement a war for land was about, or else pays a one-time ransom of ransomPercentPerScorePoint percent of every store per score point from termsAboveScore up (at most maxRansomPercent); a closer war ends in a white peace. cedeWorth: what a settlement handed over is worth in score points when a side weighs terms. Working values, to be tuned in stage 4e PR 5.",
+  "comment": "War (GDD 9.3; stage 4e, ADR 0021, decisions of 2026-11-07). Every war has a goal: land (a settlement of the enemy, named when war is declared), loot (the enemy's stores) or revenge (needs a cause: an attack, an aggression or a settlement of ours they hold). goals: victimPercent and witnessPercent say how strongly the victim and everyone who knows both sides remember the aggression (relations.json aggression). Score runs from -100 to 100: a fight won gives the winner's side scorePerWin, a settlement taken scorePerSettlement more. Fighting happens in campaigns (ADR 0022: episodes with a step of campaignStepMonths): warriors of one settlement (at most sendPercent of them, at least minWarriors; a third stays home) march marchCellsPerMonth cells a month over known land to an enemy settlement, fight there (chance = their share of the strength, as in a raid), take what they can carry and go home; the commander sends one when the target is out of sight (the warriors go to look) or when the chance from what it sees now is at least minWinChancePercent; arrived, the warriors attack only with at least that chance and otherwise turn back (minWinChancePercent, sendPercent and minWarriors move to ai.json with the commander, stage 4e PR 5). Wars end by themselves in time: the world clock takes a step in the month a quiet war runs out. A war in which nobody campaigned for quietPeaceYears ends in a white peace. Weariness of a side (0..100) = months of campaigning in the war x wearinessPerCampaignMonth + percent of the side's people killed in the war x wearinessPerLossPercent; at peaceAbove the side looks for peace at once; it lowers the mood of every settlement of the side by moodAtFullWeariness at 100 (effect war_weariness in effects.json). Peace terms: when the score is at least termsAboveScore, the loser hands over the settlement a war for land was about, or else pays a one-time ransom of ransomPercentPerScorePoint percent of every store per score point from termsAboveScore up (at most maxRansomPercent); a closer war ends in a white peace. cedeWorth: what a settlement handed over is worth in score points when a side weighs terms. Working values, to be tuned in stage 4e PR 5.",
   "goals": [
     {"goal": "land", "name": "Land", "victimPercent": 100, "witnessPercent": 50},
     {"goal": "loot", "name": "Loot", "victimPercent": 100, "witnessPercent": 100},
@@ -8,7 +8,13 @@
   ],
   "scorePerWin": 10,
   "scorePerSettlement": 15,
-  "wearinessPerYear": "1",
+  "wearinessPerCampaignMonth": "5",
+  "campaignStepMonths": 1,
+  "marchCellsPerMonth": 3,
+  "quietPeaceYears": 5,
+  "minWinChancePercent": 60,
+  "sendPercent": 67,
+  "minWarriors": 5,
   "wearinessPerLossPercent": "3",
   "peaceAbove": 60,
   "moodAtFullWeariness": 20,

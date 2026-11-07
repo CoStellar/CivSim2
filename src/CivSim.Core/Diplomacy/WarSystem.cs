@@ -38,6 +38,20 @@ public sealed class WarSystem : ITurnSystem
         GameState state = context.State;
         long month = state.Month;
         bool any = false;
+
+        // ADR 0022: a war in which nobody campaigned for some years ends in a white peace.
+        long quiet = _content.War.QuietPeaceYears * 12L;
+        for (int k = state.Treaties.All.Count - 1; k >= 0; k--)
+        {
+            Treaty t = state.Treaties.All[k];
+            if (t.Kind == TreatyKind.War && month - Math.Max(t.SinceMonth, t.LastCampaignMonth) >= quiet
+                && !state.Episodes.Campaigning(t.A, t.B) && !state.Episodes.Campaigning(t.B, t.A))
+            {
+                string line = Treaties.Sign(_content, state, t.A, t.B, TreatyKind.Peace, PeaceTerms.White);
+                context.Chronicle(line + " Nobody had fought for years.");
+            }
+        }
+
         foreach (Treaty t in state.Treaties.All)
         {
             if (t.Kind != TreatyKind.War)
@@ -55,7 +69,9 @@ public sealed class WarSystem : ITurnSystem
             return;
         }
 
-        long until = month + (2L * Math.Max(1, state.StepMonths));
+        // Until just after the next step of a civilization, so that the mood of that step still feels it (ADR 0022).
+        long next = Simulation.WorldClock.NextCivilizationMonth(state);
+        long until = next == long.MaxValue ? month + 1 : next + 1;
         foreach (CivilizationState civ in state.Civilizations)
         {
             if (!civ.IsAlive)

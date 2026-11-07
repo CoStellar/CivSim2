@@ -81,8 +81,11 @@ osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to d
   `(miesiąc + 84 × numer cywilizacji) mod 600 < długość jej kroku w miesiącach` (84 miesiące = 7 lat, `reviewStaggerYears`). W epoce kamienia (krok 50 lat) więc w **każdym
   własnym kroku**; w neolicie co drugim; przy krokach półrocznych w jednym ze 100 (od ADR 0018 bez powtórek w roku przeglądu).
 - **Kiedy (reaktywnie, ADR 0018):** w najbliższym kroku świata po tym, jak ktoś **wypowiedział jej wojnę** albo **napadł jej obóz**,
-  także poza rytmem. Wtedy rozważa te same kroki (pokój, sojusz z kimś trzecim, odwet wojną). Od 4e także w każdym własnym kroku,
-  gdy jej zmęczenie wojną ≥ 60.
+  także poza rytmem. Wtedy rozważa te same kroki (pokój, sojusz z kimś trzecim, odwet wojną). Od 4e PR 2 alarm daje krok świata
+  w następnym miesiącu.
+- **Kiedy (tylko pokój, od 4e PR 2):** w **każdym kroku świata** (także w krokach kampanii, co miesiąc), gdy w którejś wojnie nie mamy
+  własnej kampanii w drodze, a nasze zmęczenie wojną ≥ 60 albo wynik wojny ≥ ±20 (można żądać lub oferować warunki). Wtedy rozważa
+  tylko pokój w takich wojnach (`ReviewWars`).
 - **Kandydaci:** dla każdej spotkanej cywilizacji:
   - w wojnie z nią: tylko **pokój** (D3), jeśli ocena ≥ 1000, a gdy nasze zmęczenie wojną ≥ 60 (`war.json` `peaceAbove`), przy każdej
     ocenie powyżej zera;
@@ -100,9 +103,11 @@ osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to d
   (sympatia −20, zaufanie −40, 200 lat), a każda cywilizacja, która zna obie, pamięta to w 50% (`witnessPercent`).
 - **Sojusznicy ofiary:** każdy dołącza do wojny z szansą `300‰ + 700‰ × lojalność/1000` (`allyJoinBasePerMille`). Dołączył: ofiara
   pamięta „pomoc w wojnie”. Nie dołączył: sojusz się rozpada, ofiara pamięta „złamanie traktatu”. Sojusznik obu stron zostaje z boku.
-- **W wojnie:** gubernator (G2) może wypędzać obozy wroga z premią ×1,5 (`warRaidPercent`). Armii jeszcze nie ma (etap 4e).
+- **W wojnie:** gubernator (G2) może wypędzać obozy wroga z premią ×1,5 (`warRaidPercent`); dowódca (K1) wysyła kampanie
+  ([dowódca](11-dowodca.md)). Wojna, w której przez 5 lat nikt nie prowadził kampanii, kończy się sama białym pokojem.
 - **Wynik i zmęczenie (od 4e):** napaść w czasie wojny daje zwycięskiej stronie +10 do wyniku, zdobyta osada +15 więcej (−100…+100).
-  Zmęczenie strony = lata wojny × 1 + procent jej ludzi zabitych w wojnie × 3 (najwyżej 100). Nastrój wszystkich jej osad spada o
+  Zmęczenie strony = miesiące kampanii w tej wojnie × 5 + procent jej ludzi zabitych w wojnie × 3 (najwyżej 100; od 4e PR 2,
+  wcześniej lata wojny × 1). Nastrój wszystkich jej osad spada o
   zmęczenie × 20 / 100 (efekt `war_weariness`).
 - **Pokój z warunkami (od 4e):** proponujący liczy warunki z wyniku (`Wars.TermsFor`): przy wyniku co najmniej ±20 przegrany oddaje
   osadę, o którą była wojna o ziemię, a w innym razie płaci jednorazowy okup: (wynik − 20 + 1) × 0,5% każdego zapasu (najwyżej 40%);

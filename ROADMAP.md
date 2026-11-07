@@ -162,16 +162,18 @@ Gotowe, gdy: w 3 grach po 1000 tur technologie przychodzą dopiero po zebraniu f
 
 ## Etap 4e — Wojna (decyzje Patryka z 2026-11-07)
 
-Zasady: GDD 9.3, ADR 0021. Plan: `docs/prompts/07-etap-wojna.md`.
+Zasady: GDD 6.2, 9.3, ADR 0021 i 0022 (epizody: kampanie co miesiąc wewnątrz długich kroków, decyzja Patryka z 2026-11-07). Plan: `docs/prompts/07-etap-wojna.md`.
 
 Gotowe, gdy: w 3 grach po 1000 tur wojny mają cel i kończą się pokojem z warunkami, wyprawy maszerują z zaopatrzeniem, bitwy liczą teren,
 morale i uzbrojenie z technologii, dowódca nie rusza na przegraną wojnę, a zmęczenie wojną widać w nastroju.
 
 - [x] **PR 1:** cel wojny (ziemia, łupy, odwet), wynik i zmęczenie (efekt na nastrój), pokój z warunkami (osada, okup, biały pokój), wspomnienie „napaść bez powodu”; dzisiejsze napaści liczą się do wyniku; `data/war.json`, zapis, hash, `--wars` w Headless; dyplomata wybiera cel i warunki
-- [ ] **PR 2:** uzbrojenie z technologii (gołe ręce, drewniane włócznie, proce, kamienne groty; wpisy w danych); wyprawy na mapie: zbiórka (1/3 zostaje w domu), marsz, jedzenie, limit wodza i ludzi na polu z danych er (front na kilku polach gotowy na przyszłe ery); migawka dla podglądu
-- [ ] **PR 3:** bitwa w rundach (teren, morale, uzbrojenie, najedzenie, ucieczka, straty), podbój wioski, ucieczka z obozu; tragarze z jedzeniem po trasie marszu; głodna armia napada okoliczne wioski
-- [ ] **PR 4:** AI: dowódca (spodziewany wynik bitwy z tego, co widzi, próg szansy w `data/ai.json`; zbiórka, marsz, atak, odwrót, obrona); test martwych wartości; `docs/ai/`
-- [ ] **PR 5:** strojenie i statystyki z 3 seedów (wojny, bitwy, straty, zmęczenie), `docs/systems/war.md` z sekcją „Co erę”
+- [x] **PR 2:** epizody (krótki zegar w miesiącach, kroki pełne i kroki epizodów, `WorldMonths`, zapis, hash, determinizm) i pierwsza kampania: wyprawa wojowników z jednej osady, marsz po mapie, walka u celu, powrót z łupami; wojna bez kampanii wygasa po 5 latach; zmęczenie z miesięcy kampanii i strat; prosty wybór kampanii przez AI z progiem szansy (kampanie w migawce dla podglądu: przeniesione do PR 3)
+- [ ] **PR 3:** kampanie w migawce i w podglądzie; uzbrojenie z technologii (gołe ręce, drewniane włócznie, proce, kamienne groty; wpisy w danych); wyprawy z wielu osad (1/3 zostaje w domu), limit wodza i ludzi na polu z danych er (front na kilku polach gotowy na przyszłe ery); tragarze z jedzeniem po trasie, głodna wyprawa napada wioski
+- [ ] **PR 4:** bitwa w rundach (teren, morale, uzbrojenie, najedzenie, ucieczka, straty), podbój wioski z ludźmi, ucieczka z obozu
+- [ ] **PR 5:** AI: dowódca (spodziewany wynik bitwy z tego, co widzi, próg szansy w `data/ai.json`; zbiórka, marsz, atak, czekanie, odwrót, obrona co miesiąc kampanii); test martwych wartości; `docs/ai/`
+- [ ] **PR 6:** strojenie i statystyki z 3 seedów (wojny, kampanie, bitwy, straty, zmęczenie), `docs/systems/war.md` z sekcją „Co erę”
+- [ ] Po etapie 4e: susza, głód, epidemia i wyprawy odkrywców jako epizody (ADR 0022)
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 

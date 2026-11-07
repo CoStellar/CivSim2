@@ -201,6 +201,15 @@ public sealed class Treaty
     /// <summary>War: weariness of <see cref="B"/>, 0..100.</summary>
     public int WearinessB { get; set; }
 
+    /// <summary>War: campaigns sent by either side (stage 4e, ADR 0022).</summary>
+    public int Campaigns { get; set; }
+
+    /// <summary>War: months of campaigning by either side.</summary>
+    public int CampaignMonths { get; set; }
+
+    /// <summary>War: game month of the last campaign step, or -1 when nobody has campaigned.</summary>
+    public long LastCampaignMonth { get; set; } = -1;
+
     /// <summary>Peace: the terms it was made on.</summary>
     public PeaceTerms Terms { get; set; } = PeaceTerms.White;
 

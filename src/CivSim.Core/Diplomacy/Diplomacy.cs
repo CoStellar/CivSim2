@@ -220,6 +220,9 @@ public static class Treaties
                 treaty.PeopleB = war.PeopleB;
                 treaty.WearinessA = war.WearinessA;
                 treaty.WearinessB = war.WearinessB;
+                treaty.Campaigns = war.Campaigns;
+                treaty.CampaignMonths = war.CampaignMonths;
+                treaty.LastCampaignMonth = war.LastCampaignMonth;
             }
 
             string kept = Wars.Keep(content, state, from, to, terms);
@@ -266,6 +269,11 @@ public static class Treaties
         if (state.FindCivilization(target) is { } victim)
         {
             victim.Alarms |= Simulation.Alarm.WarDeclared; // it answers at once, outside its rhythm (ADR 0018)
+        }
+
+        if (state.FindCivilization(civ) is { } aggressor)
+        {
+            aggressor.Alarms |= Simulation.Alarm.WentToWar; // its commander plans a campaign next month (ADR 0022)
         }
         var line = new StringBuilder();
         line.Append(CultureInfo.InvariantCulture, $"{Name(state, civ)} declared war on {Name(state, target)}");
@@ -411,7 +419,11 @@ public static class Treaties
             if (rng.NextInt(1000) < chance)
             {
                 EndTreaties(content, book, ally, aggressor);
-                book.Add(new Treaty(ally, aggressor, TreatyKind.War, ally, state.Month));
+                Treaty joined = book.Add(new Treaty(ally, aggressor, TreatyKind.War, ally, state.Month));
+                joined.Goal = WarGoal.Revenge;
+                joined.PeopleA = Wars.PeopleOf(state, joined.A);
+                joined.PeopleB = Wars.PeopleOf(state, joined.B);
+                z.Alarms |= Simulation.Alarm.WentToWar;
                 if (fromVictim is not null)
                 {
                     Remember(content, state, fromVictim, RelationEvent.WarHelp);

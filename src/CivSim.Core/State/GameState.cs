@@ -63,6 +63,18 @@ public sealed class GameState
     /// </summary>
     public int StepMonths { get; internal set; }
 
+    /// <summary>
+    /// Months the world itself computes in this world step (ADR 0022): in a full step (some civilization steps) the months
+    /// until the next step of any civilization; in a step of episodes only, 0 (the world waits while a campaign runs).
+    /// </summary>
+    public int WorldMonths { get; internal set; }
+
+    /// <summary>Running episodes: war campaigns and, later, other events with a course (ADR 0022).</summary>
+    public Episodes.EpisodeBook Episodes { get; } = new();
+
+    /// <summary>Sets the months the world computes in this step, as saved (loading).</summary>
+    public void SetWorldMonthsForLoad(int worldMonths) => WorldMonths = worldMonths;
+
     /// <summary>The most advanced era among living civilizations (for reports).</summary>
     public int TopEra()
     {

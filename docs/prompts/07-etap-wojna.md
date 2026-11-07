@@ -26,20 +26,27 @@ Decyzje Patryka z 2026-11-07 (dokument „Etap 4e: wojna — propozycja” w Cla
 
 Wojownik bierze najlepszy poziom, na który osada ma dobra. Era 3: brąz (kowal) ok. 150%, era 4: żelazo ok. 200%.
 
+## Zmiana z 2026-11-07: epizody (ADR 0022)
+
+Wojny w PR #48 trwały 150–300 lat, bo walka liczyła się w krokach ery (50 lat). Patryk przyjął propozycję „Czas w grze: długie kroki
+i krótkie zdarzenia”: kampania to epizod z krokiem co miesiąc; zegar świata zatrzymuje się na nim, ale liczy tylko epizod.
+Wszystkie rekomendacje przyjęte: krok kampanii = miesiąc; obóz = obszar sezonowych wędrówek (bez epizodów); wojna bez kampanii
+wygasa po 5 latach; susza, głód i epidemia jako epizody po etapie 4e; #48 do scalenia bez zmian.
+
 ## PR-y
 
-1. **Cel, wynik, zmęczenie, pokój z warunkami** (`feat/war-goals`).
-   - `data/war.json`: cele (ziemia, łupy, odwet; ile świadkowie pamiętają napaść), wynik (+ za wygraną walkę, + za zdobytą osadę), zmęczenie (na rok, na procent strat, próg pokoju, nastrój za punkt), okup (procent zapasów na punkt wyniku), próg warunków.
-   - `Treaty`: cel, osada celu, wynik, straty i zmęczenie stron. `DeclareWarCommand` z celem. Wspomnienie „napaść bez powodu” (`RelationEvent.Aggression`).
-   - `WarSystem` (faza walki): zmęczenie co krok cywilizacji, efekt `war_weariness` (nastrój).
-   - Napaści (`ConquerSettlementCommand`) w czasie wojny dodają do wyniku i strat.
-   - Pokój: propozycja z warunkami (oddanie osady, okup, biały); `Sign` stosuje warunki.
-   - Dyplomata: cel z powodu (zabrana osada → ziemia, napaść → odwet), pokój przy zmęczeniu z warunkami z wyniku, ocena warunków przy odpowiedzi.
-   - Zapis (format 22), hash, `--wars` w Headless (CSV: strony, cel, początek, koniec, wynik, warunki, straty).
-2. **Uzbrojenie i wyprawy** (`feat/war-armies`): `armaments` w danych; `ArmyState` (wódz, ludzie, uzbrojenie, jedzenie, morale, pole, trasa); dane er: `armyLimit`, `troopsPerCell`; zbiórka z osad (1/3 zostaje), marsz, powrót i rozwiązanie; migawka i warstwa jednostek w podglądzie.
-3. **Bitwa, podbój, zaopatrzenie** (`feat/war-battles`): bitwa w rundach (strumień `combat`), teren z biomów i rzeźby, morale, najedzenie, ucieczka; podbój wioski i ucieczka z obozu; tragarze z jedzeniem; głodna armia napada wioski. Wypędzenie obozu w czasie wojny zastępuje bitwa wyprawy.
-4. **Dowódca AI** (`feat/war-commander`): spodziewany wynik bitwy bez losowania, z tego, co widzi; próg szansy i inne liczby w `data/ai.json`; zbiórka, cel marszu, atak, czekanie, odwrót, obrona po alarmie; `DeadValueTests`; `docs/ai/`.
-5. **Strojenie i statystyki** (`feat/war-tuning`): 3 seedy, wykresy wojen, bitew, strat i zmęczenia; `docs/systems/war.md`.
+1. **Cel, wynik, zmęczenie, pokój z warunkami** (`feat/war-goals`, #48). Zrobione.
+2. **Epizody i pierwsza kampania** (`feat/war-episodes`).
+   - Stan: `EpisodeBook` w `GameState` (rodzaj, uczestnicy, start, następny krok, krok w miesiącach, dane kampanii: osada wyjścia, cel, wojownicy, pole, droga, faza, łupy).
+   - Zegar: `WorldClock.Begin` bierze najbliższy krok cywilizacji albo epizodu; `GameState.WorldMonths` = miesiące do następnego kroku cywilizacji w kroku pełnym, 0 w kroku epizodu; systemy świata liczą `WorldMonths` i nic w kroku epizodu.
+   - `CampaignSystem` (faza ruchu i walki): marsz `marchCellsPerMonth` pól na miesiąc po znanych polach, walka u celu (na razie szansa jak przy napaści: udział siły), łupy (ile uniosą wojownicy), powrót, koniec.
+   - Komenda `LaunchCampaignCommand` (osada, cel, ilu wojowników). AI: prosty wybór kampanii w czasie wojny, gdy szansa z widzianej siły ≥ progu z `data/ai.json`.
+   - Wojna bez kampanii wygasa po `quietPeaceYears` (5) białym pokojem; zmęczenie = miesiące kampanii × `wearinessPerCampaignMonth` + straty × `wearinessPerLossPercent`.
+   - Zapis, hash, migawka (wyprawy w podglądzie jak zwiadowcy), `--wars` z liczbą kampanii.
+3. **Uzbrojenie i wyprawy z wielu osad** (`feat/war-armies`): `armaments` w danych; zbiórka z wielu osad (1/3 zostaje); dane er: `armyLimit`, `troopsPerCell`; tragarze; głód wyprawy i napady na wioski.
+4. **Bitwa i podbój** (`feat/war-battles`): rundy (strumień `combat`), teren, morale, najedzenie, ucieczka; podbój wioski i ucieczka z obozu.
+5. **Dowódca AI** (`feat/war-commander`): spodziewany wynik bitwy bez losowania, z tego, co widzi; decyzje co miesiąc kampanii; `DeadValueTests`; `docs/ai/`.
+6. **Strojenie i statystyki** (`feat/war-tuning`).
 
 ## Pułapki
 

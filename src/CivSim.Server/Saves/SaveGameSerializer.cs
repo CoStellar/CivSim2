@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 22;
+    public const int FormatVersion = 23;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -89,7 +89,8 @@ public static class SaveGameSerializer
             state.Month, state.NextSettlementId, settlements, state.Effects.NextId, effects,
             s.Planet.AxialTiltTenths, s.Planet.LuminosityThousandths, s.Planet.DistanceThousandths, s.Planet.EccentricityThousandths, s.PlanetName,
             s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent,
-            s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state), state.StepMonths);
+            s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state), state.StepMonths,
+            state.WorldMonths, SaveEpisodes(state), state.Episodes.NextId);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -208,6 +209,8 @@ public static class SaveGameSerializer
         }
 
         state.SetCountersForLoad(data.Month, data.NextSettlementId, data.StepMonths);
+        state.SetWorldMonthsForLoad(data.WorldMonths);
+        LoadEpisodes(state, data);
         foreach (SettlementSaveData st in data.Settlements ?? [])
         {
             var settlement = new SettlementState(
@@ -307,7 +310,7 @@ public static class SaveGameSerializer
         {
             list.Add(new TreatySaveData(t.A.Value, t.B.Value, (byte)t.Kind, t.Initiator.Value, t.SinceMonth, t.UntilMonth,
                 t.GatewayA, t.GatewayB, t.LastFlowMonth, t.LastWorth, t.TotalWorth, (byte)t.Goal, t.GoalSettlement, t.Score,
-                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms)));
+                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms), t.Campaigns, t.CampaignMonths, t.LastCampaignMonth));
         }
 
         return list;
@@ -322,6 +325,57 @@ public static class SaveGameSerializer
         }
 
         return list;
+    }
+
+    private static List<EpisodeSaveData> SaveEpisodes(GameState state)
+    {
+        var list = new List<EpisodeSaveData>(state.Episodes.Count);
+        foreach (Core.Episodes.Episode e in state.Episodes.All)
+        {
+            long[] loot = new long[e.Loot.Length];
+            for (int g = 0; g < loot.Length; g++)
+            {
+                loot[g] = e.Loot[g].Hundredths;
+            }
+
+            list.Add(new EpisodeSaveData(e.Id, (byte)e.Kind, e.Civ.Value, e.Other.Value, e.StartMonth, e.NextMonth, e.TickMonths,
+                e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, loot));
+        }
+
+        return list;
+    }
+
+    private static void LoadEpisodes(GameState state, SaveData data)
+    {
+        foreach (EpisodeSaveData e in data.Episodes ?? [])
+        {
+            var loot = new Core.Numerics.Amount[e.Loot?.Length ?? 0];
+            for (int g = 0; g < loot.Length; g++)
+            {
+                loot[g] = Core.Numerics.Amount.FromHundredths(e.Loot![g]);
+            }
+
+            state.Episodes.AddForLoad(
+                new Core.Episodes.Episode
+                {
+                    Kind = (Core.Episodes.EpisodeKind)e.Kind,
+                    Civ = new CivId(e.Civ),
+                    Other = new CivId(e.Other),
+                    StartMonth = e.StartMonth,
+                    NextMonth = e.NextMonth,
+                    TickMonths = e.TickMonths,
+                    Home = e.Home,
+                    Target = e.Target,
+                    Warriors = e.Warriors,
+                    Cell = e.Cell,
+                    Phase = (Core.Episodes.CampaignPhase)e.Phase,
+                    Dead = e.Dead,
+                    Loot = loot,
+                },
+                e.Id);
+        }
+
+        state.Episodes.SetNextIdForLoad(data.NextEpisodeId);
     }
 
     private static PeaceTermsSaveData SaveTerms(Core.Diplomacy.PeaceTerms terms) =>
@@ -353,6 +407,9 @@ public static class SaveGameSerializer
                 WearinessA = t.WearinessA,
                 WearinessB = t.WearinessB,
                 Terms = LoadTerms(t.Terms),
+                Campaigns = t.Campaigns,
+                CampaignMonths = t.CampaignMonths,
+                LastCampaignMonth = t.LastCampaignMonth,
             });
         }
 
