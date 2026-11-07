@@ -16,9 +16,31 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Dowódca: bitwa w głowie i odwołanie co miesiąc (etap 4e, PR 5)
+
+Z `--campaigns`, `--decisions` i kroniki, 3 seedy, mapa standard, 1000 kroków świata. W nawiasach PR 4. Wykres `img/kampanie_3_seedy.png` (niżej) jest z tych gier.
+
+| Seed | Kampanie | Bitwy | Wygrane | Zabici atakujący | Zabici obrońcy | Odwołane przez dowódcę (K2) | Głód złamał | Śr. wojowników |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | 38 (40) | 14 (4) | 8 (3) | 54 (1) | 43 (10) | 27 | 1 (18) | 35 (38) |
+| 23 | 17 (61) | 8 (31) | 7 (31) | 18 (28) | 37 (144) | 7 | 2 (13) | 45 (47) |
+| 42 | 7 (6) | 2 (2) | 1 (2) | 0 (0) | 3 (5) | 4 | 2 (1) | 33 (38) |
+
+W PR 4 zamiast odwołań była reguła systemu „zobaczyli, jak silny jest cel, i zawrócili”: 19, 18 i 3 razy.
+
+- **Głód prawie przestał łamać wyprawy** (32 → 5 w 3 grach): dowódca nie wysyła armii dalej niż 3 pola poza zasięg tragarzy. Wyprawy
+  dalej **głodują** średnio 2–4 miesiące (słabe dostawy tragarzy, prawy dolny wykres), ale wracają.
+- **Mniej kampanii w seedzie 23** (61 → 17): dowódca odrzuca cele, do których jedzenie nie wystarczy, i takie, przy których spodziewa się
+  dużych strat. W seedzie 7 jest więcej bitew (4 → 14) i są bardziej wyrównane: armia rusza na cel, który zobaczy dopiero na miejscu,
+  a od PR 5 atakuje, gdy dowódca uzna, że szansa jest co najmniej 45%, a nie 60%.
+- **Odwołania (K2):** wszystkie 38 z powodu spodziewanej bitwy (`win chance` 0–32%), gdy armia zobaczyła cel z bliska. Odwołanie z braku
+  jedzenia w tych grach nie wystąpiło, bo sprawdzenie drogi przy wysłaniu już odrzuca za dalekie cele (działa w teście `CommanderTests`).
+- **Zgrzyt do PR 6:** dowódca podejmuje więcej decyzji „wysłać” (61, 19, 7) niż jest kampanii (38, 17, 7). Część komend odrzuca serwer
+  (np. dwie wojny naraz chcą tych samych wojowników); tak było już w PR 4 (58 decyzji, 40 kampanii w seedzie 7).
+
 ## Bitwy w rundach (etap 4e, PR 4)
 
-Z `--campaigns` i kroniki, 3 seedy, mapa standard, 1000 kroków świata (wykres niżej, w sekcji PR 3, jest już z tych gier).
+Z `--campaigns` i kroniki, 3 seedy, mapa standard, 1000 kroków świata.
 
 | Seed | Kampanie | Bitwy | Wygrane | Zabici atakujący | Zabici obrońcy | Zawrócili przed silnym celem | Głód złamał | Rundy w bitwie |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
@@ -198,28 +220,33 @@ Rytmy cywilizacji i ludność przed zegarem i po nim (ADR 0018, `python3 docs/ai
 | 23 | 100, rok 4800 (140, rok 6875) | 163 527 (117 698) | 9 (7) | 14,0 (13,0) | 129 (81) |
 | 42 | 90, rok 4425 (150, rok 7350) | 117 473 (103 500) | 8 (7) | 9,5 (10,6) | 91 (66) |
 
-## Liczba decyzji w 1000 tur (etap 4F po PR 4; w nawiasach po PR 3)
+## Liczba decyzji w 1000 tur (etap 4e po PR 5; w nawiasach etap 4F po PR 4)
 
 | Decyzja | Id | Seed 7 | Seed 23 | Seed 42 |
 | --- | --- | ---: | ---: | ---: |
-| strateg ustawia strategię | S1 | 653 (657) | 620 (624) | 629 (564) |
-| uczony wybiera badanie | U1 | 125 (118) | 126 (128) | 127 (112) |
-| skarbnik zmienia recepturę | T1 | 957 (1486) | 909 (2202) | 994 (2080) |
-| obóz przenosi się | G2 | 993 (7637) | 1070 (9619) | 1983 (9066) |
-| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 97 (422) | 54 (608) | 175 (644) |
-| wypędzenie obcego obozu | G2 | 47 (87) | 16 (71) | 25 (76) |
-| odłam zakłada nowy obóz | G5 | 631 (828) | 661 (853) | 669 (991) |
-| mały obóz dołącza do innego | G1 | 397 (1092) | 421 (1316) | 761 (1705) |
-| obóz osiada (wioska) | G4 | 380 (374) | 439 (503) | 363 (355) |
-| wioska wysyła osadników | G7 | 153 (631) | 211 (969) | 164 (599) |
-| wyprawa w nieznane | G8 | 6 (16) | 8 (23) | 328 (485) |
-| daleka wędrówka | G3 | 6 (120) | 15 (141) | 32 (87) |
+| strateg ustawia strategię | S1 | 477 (653) | 474 (620) | 544 (629) |
+| uczony wybiera badanie | U1 | 112 (125) | 119 (126) | 111 (127) |
+| skarbnik zmienia recepturę | T1 | 1126 (957) | 1525 (909) | 1594 (994) |
+| obóz przenosi się | G2 | 3275 (993) | 4476 (1070) | 5891 (1983) |
+| zajęcie pustej osady (przeniesienie albo odłam) | G2, G5 | 220 (97) | 223 (54) | 291 (175) |
+| wypędzenie obcego obozu | G2 | 260 (47) | 19 (16) | 15 (25) |
+| odłam zakłada nowy obóz | G5 | 456 (631) | 496 (661) | 562 (669) |
+| mały obóz dołącza do innego | G1 | 524 (397) | 733 (421) | 1264 (761) |
+| obóz osiada (wioska) | G4 | 322 (380) | 482 (439) | 343 (363) |
+| wioska wysyła osadników | G7 | 450 (153) | 745 (211) | 701 (164) |
+| wyprawa w nieznane | G8 | 13 (6) | 16 (8) | 387 (328) |
+| daleka wędrówka | G3 | 66 (6) | 98 (15) | 128 (32) |
 | zabranie porzuconych dóbr | G6 | 0 (0) | 0 (0) | 0 (0) |
-| dyplomata proponuje umowę albo pokój | D2 | 308 (494) | 235 (131) | 1009 (1089) |
-| dyplomata przyjmuje propozycję | D1 | 34 (27) | 21 (27) | 27 (27) |
-| dyplomata odrzuca propozycję | D1 | 254 (455) | 205 (84) | 961 (1043) |
-| dyplomata wypowiada wojnę | D2 | 13 (8) | 4 (9) | 5 (5) |
-| **razem** | | **5054** (14452) | **5015** (17308) | **8252** (18928) |
+| dyplomata proponuje umowę albo pokój | D2 | 213 (308) | 143 (235) | 1053 (1009) |
+| dyplomata przyjmuje propozycję | D1 | 24 (34) | 21 (21) | 14 (27) |
+| dyplomata odrzuca propozycję | D1 | 169 (254) | 111 (205) | 1025 (961) |
+| dyplomata wypowiada wojnę | D2 | 20 (13) | 11 (4) | 4 (5) |
+| dowódca wysyła kampanię | K1 | 61 (–) | 19 (–) | 7 (–) |
+| dowódca odwołuje kampanię | K2 | 27 (–) | 7 (–) | 4 (–) |
+| **razem** | | **7815** (5054) | **9718** (5015) | **13938** (8252) |
+
+Wykres: `img/decyzje_1000_tur.png`. Od etapu 4F gra zmieniła się bardzo (fachy, ludzie, demografia, wojna, epizody), więc różnice w nawiasach
+to skutek wielu PR-ów, nie tylko dowódcy. Kampanii jest mało w porównaniu z decyzjami obozów: wojny w erach 1–2 to kilka wypraw na grę.
 
 Tabele po PR 2 i po PR C są w historii tej strony w gicie (commity `f993e4d` i `448a104`).
 

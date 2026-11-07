@@ -212,6 +212,22 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
 - **Plan:** PR 3 (armie z wielu osad, uzbrojenie, tragarze), PR 4 (bitwa w rundach), PR 5 (dowódca co miesiąc), PR 6 (strojenie,
   m.in. czynnik „przegrywam” w ocenie pokoju i krótszy `retryYears` dla pokoju).
 
+## 13. Dowódca: bitwa w głowie i odwołanie co miesiąc (etap 4e, PR 5)
+
+- **Co działa:** dowódca rozgrywa 25 bitew bez losowania na tych samych zasadach co prawdziwa bitwa, więc zna skutek terenu, uzbrojenia,
+  morale i głodu, a nie tylko „udział w sile”. Nie zna niczego, czego jego cywilizacja nie widzi. Liczy drogę poza zasięgiem tragarzy:
+  „głód złamał” spadł z 32 do 5 kampanii w 3 grach. Co miesiąc może zawołać armię (K2): to 38 odwołań w 3 grach (wszystkie, gdy armia
+  zobaczyła z bliska zbyt silny cel), zamiast reguły systemu „zobaczyli, jak silny jest cel, i zawrócili” (40 w PR 4).
+- **Co jest za proste:**
+  - szczęście jest stałe przez całą spodziewaną bitwę (5 poziomów na stronę); prawdziwa bitwa losuje je co rundę, więc dowódca
+    trochę przecenia skrajne wyniki (test pozwala na ±25 punktów różnicy);
+  - armie wroga w polu nie bronią celu: dowódca liczy tylko obrońców w osadzie. Obrona armią przyjdzie z wieloma armiami;
+  - dowódca nie czeka (np. aż dojdą tragarze albo wróg osłabnie), tylko idzie dalej albo wraca;
+  - zapas jedzenia: armia bierze najwyżej 3 miesiące, a tragarze niosą mało, więc kampanie wciąż głodują średnio 2–4 miesiące
+    (tylko rzadziej się przez to łamią). To strojenie zaopatrzenia na PR 6.
+- **Co może być zbędne:** próg strat `maxLossPercent` 50 rzadko decyduje sam, bo przy szansie ≥ 60% straty są zwykle małe; zostaje,
+  bo test martwych wartości pokazuje, że zmienia decyzje, i będzie ważniejszy z murami i lepszą bronią obrońców.
+
 ## Decyzje Patryka (2026-11-06)
 
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.
