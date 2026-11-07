@@ -42,6 +42,7 @@ public static class Program
         Console.WriteLine(string.Create(inv, $"settlements:        {r.Settlements}, food in stock {r.FoodUnits}"));
         Console.WriteLine(string.Create(inv, $"people:             {r.People}, civilizations alive {r.AliveCivilizations}"));
         Console.WriteLine(string.Create(inv, $"governments:        {r.Governments}"));
+        Console.WriteLine(string.Create(inv, $"leaders:            {r.Leaders.Successions} successions, about {r.Leaders.AverageReignYears} years per reign"));
         Console.WriteLine(string.Create(inv, $"contacts:           {r.Contacts.Met} known with contact, {r.Contacts.Rumors} only from rumors (one way each)"));
         TreatyTally t = r.Treaties;
         Console.WriteLine(string.Create(inv, $"diplomacy:          {t.Signed[2]} trade agreements, {t.Signed[3]} pacts, {t.Signed[4]} alliances, {t.Wars} wars declared ({t.Broken} breaking a treaty), {t.Signed[1]} peaces, {t.AlliesJoined} allies joined, {t.AlliesFailed} let down, {t.Epidemics} epidemics carried by merchants"));

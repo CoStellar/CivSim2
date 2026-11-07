@@ -23,7 +23,7 @@ Propozycja dla Patryka z 2026-11-07: dokument „Etap 4f: państwo — propozycj
 1. **Ustroje** (`feat/state-governments`). Zrobione: `data/governments.json`, `Core.Governance.Governments`, `ChangeGovernmentCommand`,
    `GovernmentSystem` (faza State), `Treaty.ReadyMonth`, tytuł dla obserwatora (protokół 10), zapis 26, `governments:` w Headless,
    `docs/systems/governments.md`, ADR 0023, `docs/ai/`.
-2. **Przywódca i sukcesja:** strumień `Leaders` (już istnieje, dziś losuje charakter), imię z `NameLanguage`, wiek, cechy, śmierć,
+2. **Przywódca i sukcesja** (`feat/state-leaders`, zrobione): strumień `Leaders` (już istnieje, dziś losuje charakter), imię z `NameLanguage`, wiek, cechy, śmierć,
    sukcesja według pola ustroju, cechy przywódcy dodawane do charakteru (osobno od cech ludu, żeby zmiana władcy była skokowa).
 3. **Stolica, administracja, stabilność:** faza State; koszt drogi przez `HexGlobe` i koszty ruchu biomów; wpływ warstw w danych ustroju;
    stabilność w stanie cywilizacji (zapis, hash, podgląd); niepokoje jako efekt z `data/effects.json`.

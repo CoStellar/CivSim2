@@ -188,7 +188,7 @@ public sealed class ObserverViewBuilder(GameContent content)
             percent,
             c.LastScience,
             Enum.GetNames<Core.Ai.Trait>(),
-            [.. c.Traits],
+            Traits(c),
             Enum.GetNames<Core.Ai.Goal>(),
             [.. c.GoalWeights],
             Names(_content.Strata, s => s.Name),
@@ -201,7 +201,8 @@ public sealed class ObserverViewBuilder(GameContent content)
             stock,
             relations,
             Core.Governance.Governments.Title(_content, c),
-            Core.Governance.Governments.Of(_content, c)?.Name ?? string.Empty);
+            Core.Governance.Governments.Of(_content, c)?.Name ?? string.Empty,
+            Core.Governance.Leaders.Describe(_content, state, c));
     }
 
     private static List<string> Names<T>(IReadOnlyList<T> items, Func<T, string> name)
@@ -210,6 +211,18 @@ public sealed class ObserverViewBuilder(GameContent content)
         foreach (T item in items)
         {
             list.Add(name(item));
+        }
+
+        return list;
+    }
+
+    // The character as the AI uses it: the people's own traits plus what the leader adds (stage 4f PR 2).
+    private static List<int> Traits(CivilizationState c)
+    {
+        var list = new List<int>(Core.Ai.Character.TraitCount);
+        for (int t = 0; t < Core.Ai.Character.TraitCount; t++)
+        {
+            list.Add(c.Trait((Core.Ai.Trait)t));
         }
 
         return list;

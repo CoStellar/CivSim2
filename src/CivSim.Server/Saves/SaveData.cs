@@ -186,7 +186,14 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(24)] long NamesIssued = 0,
     [property: Key(25)] int Government = 0,
     [property: Key(26)] int PendingGovernment = -1,
-    [property: Key(27)] long PendingGovernmentMonth = 0);
+    [property: Key(27)] long PendingGovernmentMonth = 0,
+    [property: Key(28)] string LeaderName = "",
+    [property: Key(29)] long LeaderBornMonth = 0,
+    [property: Key(30)] long LeaderSinceMonth = 0,
+    [property: Key(31)] int[]? LeaderTraits = null,
+    [property: Key(32)] int[]? LeaderShift = null,
+    [property: Key(33)] long Leaders = 0,
+    [property: Key(34)] long CrisisUntilMonth = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CivSim.Core.Map;
 
@@ -102,6 +103,30 @@ public sealed class CivilizationState
     /// <summary>The month <see cref="PendingGovernment"/> takes effect.</summary>
     public long PendingGovernmentMonth { get; set; }
 
+    /// <summary>The leader's name, from the people's language (GDD 7.5; stage 4f PR 2); empty before the first leader.</summary>
+    public string LeaderName { get; set; } = string.Empty;
+
+    /// <summary>The month the leader was born.</summary>
+    public long LeaderBornMonth { get; set; }
+
+    /// <summary>The month the leader came to power.</summary>
+    public long LeaderSinceMonth { get; set; }
+
+    /// <summary>The leader's traits, indexes into <see cref="Content.LeaderRules.Traits"/>.</summary>
+    public int[] LeaderTraits { get; set; } = [];
+
+    /// <summary>
+    /// What the leader adds to each character trait, per mille (index = <see cref="Ai.Trait"/>): the sum of the shifts of
+    /// <see cref="LeaderTraits"/>, kept so that the character can be read without the game content.
+    /// </summary>
+    public int[] LeaderShift { get; set; } = [];
+
+    /// <summary>How many leaders this civilization has had (also numbers their names).</summary>
+    public long Leaders { get; set; }
+
+    /// <summary>The month a succession crisis ends (stability, stage 4f PR 3); 0 or past when there is none.</summary>
+    public long CrisisUntilMonth { get; set; }
+
     /// <summary>Reasons to decide before its next own step (reactive decisions, ADR 0018).</summary>
     public Simulation.Alarm Alarms { get; set; }
 
@@ -167,8 +192,19 @@ public sealed class CivilizationState
     /// <summary>Value of <see cref="ExpansionTarget"/> when there is no direction.</summary>
     public const int NoTarget = -1;
 
-    /// <summary>A trait, per mille; average when traits were never rolled.</summary>
-    public int Trait(Ai.Trait trait) => (int)trait < Traits.Length ? Traits[(int)trait] : Ai.Character.Average;
+    /// <summary>The people's own trait, per mille, without the leader (average when never rolled).</summary>
+    public int OwnTrait(Ai.Trait trait) => (int)trait < Traits.Length ? Traits[(int)trait] : Ai.Character.Average;
+
+    /// <summary>
+    /// A trait, per mille: the people's own (<see cref="Traits"/>, average when never rolled) plus what the present
+    /// leader adds (GDD 8.4), kept within 0–1000.
+    /// </summary>
+    public int Trait(Ai.Trait trait)
+    {
+        int own = OwnTrait(trait);
+        int shift = (int)trait < LeaderShift.Length ? LeaderShift[(int)trait] : 0;
+        return shift == 0 ? own : Math.Clamp(own + shift, 0, 1000);
+    }
 
     /// <summary>The strategist's weight for a goal, per mille; neutral before the first review.</summary>
     public int GoalWeight(Ai.Goal goal) => (int)goal < GoalWeights.Length ? GoalWeights[(int)goal] : 1000;

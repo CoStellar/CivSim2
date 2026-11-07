@@ -52,6 +52,7 @@ public static class ContentLoader
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
         Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), goods, technologies, biomes, errors);
         List<GovernmentDefinition> governments = LoadGovernments(Path.Combine(directory, "governments.json"), eras, errors);
+        LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -97,6 +98,7 @@ public static class ContentLoader
             Treaties = treaties,
             War = war,
             Governments = governments,
+            Leaders = leaders,
             Events = events,
             Technologies = technologies,
             Research = research,
@@ -753,6 +755,12 @@ public static class ContentLoader
                 CautionShift = r.Int("cautionShift", -1000, 1000),
                 GoalPercent = EnumMap<Core.Ai.Goal>(e, "goalPercent", at, 100, 0, 1000, errors),
                 Leaning = EnumMap<Core.Ai.Trait>(e, "leaning", at, 0, 0, 100, errors),
+                LeaderTitle = r.String("leaderTitle"),
+                Succession = ParseSuccession(r.String("succession"), at, errors),
+                SuccessorAge = r.Range("successorAge", 0, 120),
+                CrisisPercent = r.Int("crisisPercent", 0, 100),
+                CrisisYears = r.Int("crisisYears", 0, 100),
+                TermYears = r.Int("termYears", 0, 100),
             });
             i++;
         }
@@ -763,6 +771,86 @@ public static class ContentLoader
         }
 
         return result;
+    }
+
+    private static Succession ParseSuccession(string text, string at, List<string> errors)
+    {
+        foreach (Succession s in Enum.GetValues<Succession>())
+        {
+            if (ToSnake(s.ToString()) == text)
+            {
+                return s;
+            }
+        }
+
+        if (text.Length > 0)
+        {
+            errors.Add($"{at}.succession: unknown succession '{text}'.");
+        }
+
+        return Succession.Council;
+    }
+
+    // Leaders of data/leaders.json (stage 4f PR 2, GDD 7.5).
+    private static LeaderRules LoadLeaders(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "traits", path, errors, out JsonElement array))
+        {
+            return new LeaderRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        var traits = new List<LeaderTraitDefinition>();
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            string at = $"{file}: traits[{i}]";
+            var t = new Reader(e, at, errors);
+            traits.Add(new LeaderTraitDefinition(i, t.Key("key", keys), t.String("name"))
+            {
+                Shifts = EnumMap<Core.Ai.Trait>(e, "shifts", at, 0, -1000, 1000, errors),
+            });
+            i++;
+        }
+
+        var death = new List<(int Age, int PerMille)>();
+        if (doc.RootElement.TryGetProperty("deathByAge", out JsonElement d) && d.ValueKind == JsonValueKind.Array)
+        {
+            foreach (JsonElement p in d.EnumerateArray())
+            {
+                if (p.ValueKind != JsonValueKind.Array || p.GetArrayLength() != 2 || !p[0].TryGetInt32(out int age) || !p[1].TryGetInt32(out int perMille)
+                    || perMille < 0 || perMille > 1000 || (death.Count > 0 && age <= death[^1].Age))
+                {
+                    errors.Add($"{file}: deathByAge: each point is [age, per mille 0..1000], ages rising.");
+                    continue;
+                }
+
+                death.Add((age, perMille));
+            }
+        }
+
+        if (death.Count == 0)
+        {
+            errors.Add($"{file}: deathByAge: at least one point is required.");
+        }
+
+        (int min, int max) count = r.Range("traitCount", 0, 10);
+        if (count.max > traits.Count)
+        {
+            errors.Add($"{file}: traitCount: a leader cannot have more traits than there are.");
+        }
+
+        return new LeaderRules
+        {
+            Traits = traits,
+            TraitCount = count,
+            StartAge = r.Range("startAge", 0, 120),
+            CouncilCandidates = r.Int("councilCandidates", 1, 20),
+            DeathByAge = death,
+        };
     }
 
     // An object {"enum_name": number} read into an array indexed by the enum (names in snake case), missing = fallback.

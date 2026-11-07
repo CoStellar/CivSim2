@@ -24,6 +24,7 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Rytm decyzji | **dobre (od ADR 0018, PR C)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i marsz obozu na stulecie |
 | Wydajność | **do pilnowania (PR C)** | 3–4× więcej osad; stare systemy porównują każdą osadę z każdą (patrz pkt 10) |
 | Ustroje (etap 4f, PR 1) | **proste, na start** | ustrój przechyla wagi, ostrożność i tempo; AI jeszcze go nie zmienia sama (PR 5); pętla odwetu widoczniejsza (pkt 14) |
+| Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji bez skutków do PR 3 (pkt 15) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -246,6 +247,18 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   cywilizacja 10 (wodzostwo); seed 7: 23 z 30 cywilizacja 0; seed 42: 11 z 26. W PR 6 bez ustrojów było podobnie, tylko rzadziej
   (seed 7: 32 wojny, 25 z zerwaniem umowy). Do strojenia w PR 5 etapu 4f: odwet powinien gasnąć po wojnie, a zerwanie rozejmu
   kosztować więcej.
+
+## 15. Przywódcy (etap 4f, PR 2)
+
+- **Co działa:** każdy lud ma przywódcę z imieniem w swoim języku, wiekiem i 2–3 cechami. Cechy dodają się do charakteru ludu
+  (np. kupiec: handlowość i otwartość +200‰), więc wszyscy doradcy AI widzą inny charakter, póki ten przywódca rządzi. Rada starszych
+  wybiera z 3 kandydatów tego, który najbardziej pasuje do ludu (uczonych lud dostaje uczonego w około 80% wyborów zamiast 42%).
+- **Co jest za proste:**
+  - przywódca nie podejmuje własnych decyzji, tylko przesuwa charakter; nie ma ambicji ani zdrady;
+  - kryzys sukcesji jest zapisany (`CrisisUntilMonth`), ale jeszcze nic nie zmienia: zacznie obniżać stabilność w PR 3;
+  - ustrój nadal nie zależy od przywódcy (wybór ustroju przez AI: PR 5).
+- **Ryzyko:** cechy przywódcy dodają losowości do wojen (patrz [statystyki](09-statystyki.md#przywódcy-etap-4f-pr-2)); to zamierzone,
+  ale po strojeniu w PR 5 trzeba sprawdzić, czy ostrożny lud z wojowniczym wodzem nie wpada w pętlę odwetu częściej niż inne.
 
 ## Decyzje Patryka (2026-11-06)
 

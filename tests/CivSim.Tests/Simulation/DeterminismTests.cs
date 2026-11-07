@@ -72,5 +72,6 @@ public class DeterminismTests
     // month later, and wars are fought in campaigns.
     // Stage 4f (ADR 0023): governments joined the state and change the AI (goal weights, caution, pace of reviews) and
     // the readiness of declared wars.
-    private const ulong GoldenHash = 4321695923109760125UL;
+    // Stage 4f PR 2: leaders joined the state; their traits shift the character the AI decides with.
+    private const ulong GoldenHash = 11794771765758142925UL;
 }
