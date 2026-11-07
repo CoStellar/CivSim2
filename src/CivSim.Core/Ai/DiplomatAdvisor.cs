@@ -513,7 +513,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         e.Apply(FactorId.Fed, rules.LootNeed, _fed[x]);
         e.Apply(FactorId.Loot, rules.LootGain, Percent(_seenFood[k], _food[x]));
         e.Apply(FactorId.Strength, rules.Advantage, Percent(_own[x], EnemyStrength(state, civ, x, other)));
-        HoldBack(ref e, state, civ, other);
+        Greedy(ref e, state, civ, other);
         e.Weigh(GoalWeight(civ, Goal.Conquest), CharacterMultiplier(civ, Goal.Conquest));
         return e;
     }
@@ -536,9 +536,23 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         e.Apply(FactorId.Opinion, _content.Treaties.Greed, civ.Relation(other)?.Sympathy ?? 0);
         e.Apply(FactorId.WinChance, _content.Treaties.ConquestChance, chance);
         e.Apply(FactorId.Expansion, expansion, expansion);
-        HoldBack(ref e, state, civ, other);
+        Greedy(ref e, state, civ, other);
         e.Weigh(GoalWeight(civ, Goal.Conquest), CharacterMultiplier(civ, Goal.Conquest));
         return e;
+    }
+
+    // Greed never breaks a treaty (the first 100 games with greed: a war in three broke a pact); unrest holds it back.
+    private void Greedy(ref Evaluation e, GameState state, CivilizationState civ, CivId other)
+    {
+        if (Binds(state, civ.Id, other))
+        {
+            e.Apply(FactorId.Treaty, 0, civ.Trait(Trait.Loyalty));
+        }
+
+        if (civ.Stability < _content.Stability.UnrestBelow)
+        {
+            e.Apply(FactorId.Stability, _content.Ai.UnrestWarPercent * 10, civ.Stability);
+        }
     }
 
     // A treaty that war would break, and unrest (stage 4f PR 5), hold a war back.

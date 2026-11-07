@@ -121,7 +121,7 @@ public sealed record TreatyRules
     public ResponseCurve LootGain { get; init; } = ResponseCurve.Linear(100, 500, 400, 1500);
 
     /// <summary>Chance our army would take the enemy village, percent, to factor for a war for land (conquest).</summary>
-    public ResponseCurve ConquestChance { get; init; } = ResponseCurve.Linear(60, 0, 95, 1500);
+    public ResponseCurve ConquestChance { get; init; } = ResponseCurve.Linear(75, 0, 98, 1500);
 
     /// <summary>A declined peace is not proposed again for this many years (other treaties: <see cref="RetryYears"/>; stage 4e PR 6).</summary>
     public int PeaceRetryYears { get; init; } = 1;
