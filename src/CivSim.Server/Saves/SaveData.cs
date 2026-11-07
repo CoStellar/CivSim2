@@ -87,7 +87,24 @@ public sealed record EpisodeSaveData(
     [property: Key(10)] int Cell,
     [property: Key(11)] byte Phase,
     [property: Key(12)] int Dead,
-    [property: Key(13)] long[] Loot);
+    [property: Key(13)] long[] Loot,
+    [property: Key(14)] int GoalTarget = -1,
+    [property: Key(15)] int[]? Members = null,
+    [property: Key(16)] int[]? MemberWarriors = null,
+    [property: Key(17)] int Mustered = 0,
+    [property: Key(18)] int ArmsPercent = 100,
+    [property: Key(19)] int Morale = 100,
+    [property: Key(20)] long MusterUntilMonth = 0,
+    [property: Key(21)] long[]? Food = null,
+    [property: Key(22)] int HungryMonths = 0,
+    [property: Key(23)] int Forays = 0,
+    [property: Key(24)] bool Foraging = false,
+    [property: Key(25)] int ConvoyFrom = -1,
+    [property: Key(26)] int ConvoyCell = 0,
+    [property: Key(27)] int ConvoyCarriers = 0,
+    [property: Key(28)] long[]? ConvoyFood = null,
+    [property: Key(29)] int Convoys = 0,
+    [property: Key(30)] int LastPrey = -1);
 
 /// <summary>Saved terms of a peace (stage 4e).</summary>
 [MessagePackObject]

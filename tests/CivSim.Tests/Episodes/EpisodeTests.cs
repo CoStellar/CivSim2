@@ -84,6 +84,7 @@ public class EpisodeTests
         SettlementState s = state.FoundSettlement(civ.Id, state.Worlds[0].Id, cell, civ.Name + " Village", Content.SettlementLevel("village").Id, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
         s.Population[Content.Strata[0].Id] = producers;
         s.Population[Warriors] = warriors;
+        s.Stock[Content.Goods.Single(g => g.Key == "wild_plants").Id] = Amount.FromUnits(200);
         return s;
     }
 

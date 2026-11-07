@@ -105,6 +105,9 @@ public static class HeadlessRun
         using StreamWriter? warFile = options.WarsPath is null ? null : CreateReport(options.WarsPath);
         WarCsv? warCsv = warFile is null ? null : new WarCsv(warFile);
         warCsv?.Start();
+        using StreamWriter? campaignFile = options.CampaignsPath is null ? null : CreateReport(options.CampaignsPath);
+        CampaignCsv? campaignCsv = campaignFile is null ? null : new CampaignCsv(campaignFile);
+        campaignCsv?.Start();
         var tally = new TreatyTally();
         if (stats is not null)
         {
@@ -146,6 +149,7 @@ public static class HeadlessRun
 
             tally.Count(runner.LastChronicle);
             warCsv?.Ended(runner.State);
+            campaignCsv?.Seen(runner.State);
             if (treatyCsv is not null && (runner.State.Turn % options.StatsEvery == 0 || i == options.Turns - 1))
             {
                 TreatyCsv.Write(treatyCsv, runner.State);
@@ -216,6 +220,7 @@ public static class HeadlessRun
 
         int n = turnMs.Length;
         warCsv?.Ongoing(runner.State);
+        campaignCsv?.Ongoing();
         return new HeadlessResult(
             runner.State.Turn,
             GameStateHash.Compute(runner.State),

@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "comment": "Eras and turn length (GDD 6.2). monthsPerTurn: 600 = 50 years. Every rate in the game is defined per year and converted with this value. threshold (optional, stage 3f): the technology that opens the era, together with eraSharePercent of the previous era's technologies (technologies.json).",
+  "comment": "Eras and turn length (GDD 6.2). monthsPerTurn: 600 = 50 years. Every rate in the game is defined per year and converted with this value. threshold (optional, stage 3f): the technology that opens the era, together with eraSharePercent of the previous era's technologies (technologies.json). armyLimit and troopsPerCell (stage 4e PR 3, GDD 9.3): most warriors one leader leads in a campaign, and most warriors on one cell (a bigger army stands on several cells next to each other, a front). Eras 1-2: 50 and 50 (one cell); later eras keep these until their own stage updates the war module (docs/systems/war.md, Every era).",
   "eras": [
-    {"key": "stone_age", "name": "Stone Age", "monthsPerTurn": 600},
-    {"key": "neolithic", "name": "Neolithic", "monthsPerTurn": 300, "threshold": "agriculture"},
-    {"key": "bronze_age", "name": "Bronze Age", "monthsPerTurn": 240},
-    {"key": "iron_age", "name": "Iron Age and Antiquity", "monthsPerTurn": 120},
-    {"key": "middle_ages", "name": "Middle Ages", "monthsPerTurn": 60},
-    {"key": "renaissance", "name": "Renaissance", "monthsPerTurn": 24},
-    {"key": "industrial", "name": "Industrial Era", "monthsPerTurn": 12},
-    {"key": "modern", "name": "Modern Era", "monthsPerTurn": 12},
-    {"key": "information", "name": "Information Era", "monthsPerTurn": 6},
-    {"key": "space", "name": "Space Era", "monthsPerTurn": 3}
+    {"key": "stone_age", "name": "Stone Age", "monthsPerTurn": 600, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "neolithic", "name": "Neolithic", "monthsPerTurn": 300, "armyLimit": 50, "troopsPerCell": 50, "threshold": "agriculture"},
+    {"key": "bronze_age", "name": "Bronze Age", "monthsPerTurn": 240, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "iron_age", "name": "Iron Age and Antiquity", "monthsPerTurn": 120, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "middle_ages", "name": "Middle Ages", "monthsPerTurn": 60, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "renaissance", "name": "Renaissance", "monthsPerTurn": 24, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "industrial", "name": "Industrial Era", "monthsPerTurn": 12, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "modern", "name": "Modern Era", "monthsPerTurn": 12, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "information", "name": "Information Era", "monthsPerTurn": 6, "armyLimit": 50, "troopsPerCell": 50},
+    {"key": "space", "name": "Space Era", "monthsPerTurn": 3, "armyLimit": 50, "troopsPerCell": 50}
   ]
 }

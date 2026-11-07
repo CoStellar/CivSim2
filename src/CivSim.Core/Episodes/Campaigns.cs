@@ -13,15 +13,22 @@ using CivSim.Core.State;
 
 namespace CivSim.Core.Episodes;
 
+/// <summary>Warriors one settlement sends to a campaign that leaves from another settlement (stage 4e PR 3).</summary>
+/// <param name="Settlement">The settlement that sends them.</param>
+/// <param name="Warriors">How many it sends.</param>
+public readonly record struct CampaignMuster(SettlementId Settlement, int Warriors);
+
 /// <summary>
-/// The rules of a war campaign (GDD 9.3; stage 4e PR 2, ADR 0022): who may march where, taking and giving back warriors,
-/// and the fight at the target. Simplified until the next PRs bring arms, armies of several settlements, carriers and
-/// battles in rounds.
+/// The rules of a war campaign (GDD 9.3; stage 4e PR 2–3, ADR 0022): who may march where, taking and giving back
+/// warriors, arms, food, and the strength in a fight. Battles in rounds come in PR 4.
 /// </summary>
 public static class Campaigns
 {
-    /// <summary>Why <paramref name="civ"/> may not send <paramref name="warriors"/> from <paramref name="home"/> against <paramref name="target"/>, or null.</summary>
-    public static string? CannotLaunch(GameContent content, GameState state, CivId civ, int home, int target, int warriors)
+    /// <summary>
+    /// Why <paramref name="civ"/> may not send <paramref name="warriors"/> from <paramref name="home"/> and the
+    /// <paramref name="others"/> against <paramref name="target"/>, or null.
+    /// </summary>
+    public static string? CannotLaunch(GameContent content, GameState state, CivId civ, int home, int target, int warriors, IReadOnlyList<CampaignMuster>? others = null)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(state);
@@ -54,10 +61,55 @@ public static class Campaigns
             return "Warriors of that settlement are already out.";
         }
 
-        int most = SettlementAssets.Warriors(content, h) * content.War.SendPercent / 100;
-        if (warriors < content.War.MinWarriors || warriors > most)
+        if (warriors < 1 || warriors > Sendable(content, h))
         {
-            return "Too few warriors, or not enough stay home.";
+            return "Not enough warriors stay home.";
+        }
+
+        int total = warriors;
+        for (int i = 0; i < (others?.Count ?? 0); i++)
+        {
+            CampaignMuster m = others![i];
+            SettlementState? s = state.FindSettlement(m.Settlement);
+            if (s is not { IsActive: true } || s.Owner != civ || s.World != h.World || m.Settlement.Value == home)
+            {
+                return "Warriors can only join from other settlements of ours.";
+            }
+
+            for (int j = 0; j < i; j++)
+            {
+                if (others[j].Settlement == m.Settlement)
+                {
+                    return "A settlement is listed twice.";
+                }
+            }
+
+            if (world.Geometry.Distance(s.Cell, h.Cell) > content.War.MusterCells)
+            {
+                return "That settlement is too far to join.";
+            }
+
+            if (state.Episodes.OutFrom(civ, m.Settlement.Value))
+            {
+                return "Warriors of that settlement are already out.";
+            }
+
+            if (m.Warriors < 1 || m.Warriors > Sendable(content, s))
+            {
+                return "Not enough warriors stay home.";
+            }
+
+            total += m.Warriors;
+        }
+
+        if (total < content.War.MinWarriors)
+        {
+            return "Too few warriors.";
+        }
+
+        if (total > Era(content, c).ArmyLimit)
+        {
+            return "More warriors than one leader can lead.";
         }
 
         return MapMemory.Path(content, state, c, world, world.Geometry.Index(h.Cell), world.Geometry.Index(t.Cell)) is null
@@ -65,8 +117,219 @@ public static class Campaigns
             : null;
     }
 
+    /// <summary>The most warriors <paramref name="s"/> may send (a third stays home: decision of 2026-11-07).</summary>
+    public static int Sendable(GameContent content, SettlementState s)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return SettlementAssets.Warriors(content, s) * content.War.SendPercent / 100;
+    }
+
+    /// <summary>The era rules of <paramref name="civ"/> (army limit, warriors per cell).</summary>
+    public static EraDefinition Era(GameContent content, CivilizationState civ)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(civ);
+        return content.Eras[Math.Clamp(civ.Era, 0, content.Eras.Count - 1)];
+    }
+
+    /// <summary>Cells an army of <paramref name="warriors"/> of <paramref name="civ"/> stands on (a front when more than one).</summary>
+    public static int FrontCells(GameContent content, CivilizationState civ, int warriors) =>
+        Math.Max(1, (int)IntMath.MulDiv(Math.Max(0, warriors), 1, Era(content, civ).TroopsPerCell, Rounding.Ceiling));
+
     /// <summary>Takes up to <paramref name="count"/> warriors out of the fighting strata of <paramref name="s"/>; returns how many.</summary>
-    public static int TakeWarriors(GameContent content, SettlementState s, int count)
+    public static int TakeWarriors(GameContent content, SettlementState s, int count) => Take(content, s, count, fighters: true);
+
+    /// <summary>Gives <paramref name="count"/> warriors back to the first fighting stratum of <paramref name="s"/>.</summary>
+    public static void GiveWarriors(GameContent content, SettlementState s, int count) => Give(content, s, count, fighters: true);
+
+    /// <summary>
+    /// Strength of <paramref name="warriors"/> of <paramref name="s"/> with the best arms <paramref name="civ"/> knows and
+    /// the settlement's stores allow, in warrior-percent (a warrior with stone-tipped spears = 100). Each warrior takes the
+    /// strongest level still in stock; with <paramref name="useUp"/> the goods are taken out of the stores.
+    /// </summary>
+    public static long ArmedStrength(GameContent content, CivilizationState? civ, SettlementState s, int warriors, bool useUp)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(s);
+        IReadOnlyList<ArmamentDefinition> arms = content.War.Armaments;
+        Span<Amount> stock = s.Stock;
+        long strength = 0;
+        int left = Math.Max(0, warriors);
+        ulong used = 0;
+        while (left > 0)
+        {
+            int best = -1;
+            for (int a = 0; a < arms.Count && a < 64; a++)
+            {
+                ArmamentDefinition d = arms[a];
+                if ((used & (1UL << a)) != 0 || (d.Technology >= 0 && civ?.Knows(d.Technology) != true))
+                {
+                    continue;
+                }
+
+                if (best < 0 || d.StrengthPercent > arms[best].StrengthPercent)
+                {
+                    best = a;
+                }
+            }
+
+            if (best < 0)
+            {
+                break; // nothing left at all: the rest fights with nothing
+            }
+
+            used |= 1UL << best;
+            ArmamentDefinition arm = arms[best];
+            int covered = left;
+            if (arm.Good >= 0)
+            {
+                long have = arm.Good < stock.Length ? stock[arm.Good].Hundredths : 0;
+                covered = (int)Math.Min(left, have / Math.Max(1, arm.PerWarrior.Hundredths));
+                if (useUp && covered > 0)
+                {
+                    stock[arm.Good] -= arm.PerWarrior * covered;
+                }
+            }
+
+            strength += (long)covered * arm.StrengthPercent;
+            left -= covered;
+        }
+
+        return strength;
+    }
+
+    /// <summary>Strength of the weakest level that needs neither technology nor goods (bare hands), percent.</summary>
+    public static int BareHandsPercent(GameContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        int best = 0;
+        foreach (ArmamentDefinition a in content.War.Armaments)
+        {
+            if (a.Technology < 0 && a.Good < 0)
+            {
+                best = Math.Max(best, a.StrengthPercent);
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>
+    /// Strength of the defence of <paramref name="target"/> in warrior-percent: its warriors with the arms its stores
+    /// allow (not used up) and a share of everyone else bare-handed (population.json defenderNonWarriorPercent).
+    /// </summary>
+    public static long DefenceStrength(GameContent content, GameState state, SettlementState target)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(target);
+        int warriors = SettlementAssets.Warriors(content, target);
+        long armed = ArmedStrength(content, state.FindCivilization(target.Owner), target, warriors, useUp: false);
+        long others = (long)(target.TotalPopulation() - warriors) * content.Population.DefenderNonWarriorPercent * BareHandsPercent(content) / 100;
+        return Math.Max(1, armed + others);
+    }
+
+    /// <summary>Strength of a campaign in a fight, warrior-percent: warriors × arms × morale.</summary>
+    public static long AttackStrength(Episode e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        return (long)e.Warriors * e.ArmsPercent * e.Morale / 100;
+    }
+
+    /// <summary>The chance, percent, that an attack of <paramref name="attack"/> warrior-percent wins against <paramref name="target"/> (its true strength).</summary>
+    public static int Chance(GameContent content, GameState state, SettlementState target, long attack)
+    {
+        long defence = DefenceStrength(content, state, target);
+        return (int)(Math.Max(0, attack) * 100L / Math.Max(1, attack + defence));
+    }
+
+    /// <summary>
+    /// The chance, percent, that an attack of <paramref name="attack"/> warrior-percent wins against <paramref name="target"/>
+    /// as <paramref name="civ"/> sees it, or -1 when the settlement is not in sight in its last own step: then nobody knows,
+    /// and the warriors go to look (a campaign that arrives and sees it would lose turns back).
+    /// </summary>
+    public static int WinChancePercent(GameContent content, GameState state, CivilizationState civ, SettlementState target, long attack)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(target);
+        int cell = state.Worlds[target.World.Value].Geometry.Index(target.Cell);
+        return MapMemory.SeesNow(state, civ, cell) ? Chance(content, state, target, attack) : -1;
+    }
+
+    /// <summary>Food <paramref name="warriors"/> eat in <paramref name="months"/> months.</summary>
+    public static Amount FoodFor(GameContent content, int warriors, int months)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return content.War.FoodPerWarriorPerYear.MultiplyRatio((long)Math.Max(0, warriors) * Math.Max(0, months), 12, Rounding.Ceiling);
+    }
+
+    /// <summary>
+    /// Moves food out of <paramref name="s"/> into <paramref name="into"/> (index = good), at most <paramref name="want"/>
+    /// and at most <see cref="WarRules.SupplySharePercent"/> of each food good, goods in id order; returns how much.
+    /// </summary>
+    public static Amount TakeFood(GameContent content, SettlementState s, Amount[] into, Amount want)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(s);
+        ArgumentNullException.ThrowIfNull(into);
+        Span<Amount> stock = s.Stock;
+        Amount taken = Amount.Zero;
+        for (int g = 0; g < stock.Length && g < into.Length && taken < want; g++)
+        {
+            if (!content.Goods[g].IsFood || stock[g] <= Amount.Zero)
+            {
+                continue;
+            }
+
+            Amount n = Amount.Min(stock[g].MultiplyPercent(content.War.SupplySharePercent, Rounding.Floor), want - taken);
+            stock[g] -= n;
+            into[g] += n;
+            taken += n;
+        }
+
+        return taken;
+    }
+
+    /// <summary>Food <paramref name="s"/> can give a campaign or its carriers (<see cref="WarRules.SupplySharePercent"/> of each food good).</summary>
+    public static Amount SpareFood(GameContent content, SettlementState s)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(s);
+        ReadOnlySpan<Amount> stock = s.StockView;
+        Amount total = Amount.Zero;
+        for (int g = 0; g < stock.Length && g < content.Goods.Count; g++)
+        {
+            total += content.Goods[g].IsFood ? stock[g].MultiplyPercent(content.War.SupplySharePercent, Rounding.Floor) : Amount.Zero;
+        }
+
+        return total;
+    }
+
+    /// <summary>All food in <paramref name="goods"/> (index = good).</summary>
+    public static Amount FoodIn(GameContent content, Amount[] goods)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(goods);
+        Amount total = Amount.Zero;
+        for (int g = 0; g < goods.Length && g < content.Goods.Count; g++)
+        {
+            total += content.Goods[g].IsFood ? goods[g] : Amount.Zero;
+        }
+
+        return total;
+    }
+
+    /// <summary>Takes up to <paramref name="count"/> people who do not fight out of <paramref name="s"/> (carriers); returns how many.</summary>
+    public static int TakeCarriers(GameContent content, SettlementState s, int count) => Take(content, s, count, fighters: false);
+
+    /// <summary>Gives <paramref name="count"/> carriers back to the first stratum of <paramref name="s"/> that does not fight.</summary>
+    public static void GiveCarriers(GameContent content, SettlementState s, int count) => Give(content, s, count, fighters: false);
+
+    /// <summary>People of <paramref name="s"/> who do not fight.</summary>
+    public static int NonFighters(GameContent content, SettlementState s) => s.TotalPopulation() - SettlementAssets.Warriors(content, s);
+
+    private static int Take(GameContent content, SettlementState s, int count, bool fighters)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(s);
@@ -74,7 +337,7 @@ public static class Campaigns
         Span<int> people = s.Population;
         for (int k = 0; k < people.Length && k < content.Strata.Count && taken < count; k++)
         {
-            if (content.Strata[k].Fights)
+            if (content.Strata[k].Fights == fighters)
             {
                 int n = Math.Min(people[k], count - taken);
                 people[k] -= n;
@@ -85,56 +348,35 @@ public static class Campaigns
         return taken;
     }
 
-    /// <summary>Gives <paramref name="count"/> warriors back to the first fighting stratum of <paramref name="s"/>.</summary>
-    public static void GiveWarriors(GameContent content, SettlementState s, int count)
+    private static void Give(GameContent content, SettlementState s, int count, bool fighters)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(s);
         Span<int> people = s.Population;
         for (int k = 0; k < people.Length && k < content.Strata.Count; k++)
         {
-            if (content.Strata[k].Fights)
+            if (content.Strata[k].Fights == fighters)
             {
                 people[k] += count;
                 return;
             }
         }
     }
-
-    /// <summary>
-    /// The chance, percent, that <paramref name="warriors"/> win against the defence of <paramref name="target"/> as
-    /// <paramref name="civ"/> sees it (the share of the strength), or -1 when the settlement is not in sight in its last
-    /// own step: then nobody knows, and the warriors go to look (a campaign that arrives and sees it would lose turns back).
-    /// </summary>
-    public static int WinChancePercent(GameContent content, GameState state, CivilizationState civ, SettlementState target, int warriors)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        ArgumentNullException.ThrowIfNull(state);
-        ArgumentNullException.ThrowIfNull(target);
-        int cell = state.Worlds[target.World.Value].Geometry.Index(target.Cell);
-        return MapMemory.SeesNow(state, civ, cell) ? Chance(content, target, warriors) : -1;
-    }
-
-    /// <summary>The chance, percent, that <paramref name="warriors"/> win against the defence of <paramref name="target"/> (its true strength).</summary>
-    public static int Chance(GameContent content, SettlementState target, int warriors)
-    {
-        long defence = Math.Max(1, ConquerSettlementCommand.DefenceStrength(content, target));
-        return (int)(warriors * 100L / Math.Max(1, warriors + defence));
-    }
 }
 
 /// <summary>
-/// Sends warriors of one settlement on a campaign against an enemy settlement (GDD 9.3; stage 4e PR 2, ADR 0022): they
-/// leave at once and march in steps of a month; a third of the settlement's warriors stays home.
+/// Sends warriors on a campaign against an enemy settlement (GDD 9.3; stage 4e PR 2–3, ADR 0022): warriors of
+/// <see cref="Home"/> and of the <see cref="Others"/> (own settlements near it) take their arms and food and gather at
+/// <see cref="Home"/>, then march in steps of a month; a third of every settlement's warriors stays home.
 /// </summary>
-public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Home, SettlementId Target, int Warriors) : ICommand, IChronicledCommand
+public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Home, SettlementId Target, int Warriors, IReadOnlyList<CampaignMuster>? Others = null) : ICommand, IChronicledCommand
 {
     /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Military;
 
     /// <inheritdoc />
     public CommandResult Validate(GameState state, CivId civ) =>
-        Campaigns.CannotLaunch(Content, state, civ, Home.Value, Target.Value, Warriors) is { } reason ? CommandResult.Fail(reason) : CommandResult.Ok;
+        Campaigns.CannotLaunch(Content, state, civ, Home.Value, Target.Value, Warriors, Others) is { } reason ? CommandResult.Fail(reason) : CommandResult.Ok;
 
     /// <inheritdoc />
     public void Apply(GameState state, CivId civ) => ApplyWithChronicle(state, civ);
@@ -145,21 +387,60 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
         ArgumentNullException.ThrowIfNull(state);
         SettlementState home = state.FindSettlement(Home)!;
         SettlementState target = state.FindSettlement(Target)!;
-        int taken = Campaigns.TakeWarriors(Content, home, Warriors);
+        CivilizationState c = state.FindCivilization(civ)!;
+        WarRules rules = Content.War;
+        HexGlobe geo = state.Worlds[0].Geometry;
+        int count = 1 + (Others?.Count ?? 0);
+        int[] members = new int[count];
+        int[] sent = new int[count];
+        var food = new Amount[Content.Goods.Count];
+        long strength = 0;
+        int total = 0;
+        int farthest = 0;
+        for (int i = 0; i < count; i++)
+        {
+            SettlementState s = i == 0 ? home : state.FindSettlement(Others![i - 1].Settlement)!;
+            int asked = i == 0 ? Warriors : Others![i - 1].Warriors;
+            int taken = Campaigns.TakeWarriors(Content, s, asked);
+            strength += Campaigns.ArmedStrength(Content, c, s, taken, useUp: true);
+            members[i] = s.Id.Value;
+            sent[i] = taken;
+            total += taken;
+            farthest = Math.Max(farthest, geo.Distance(s.Cell, home.Cell));
+        }
+
+        // Food for the first months, as much as the warriors carry, from every settlement in turn.
+        Amount want = Amount.Min(Campaigns.FoodFor(Content, total, rules.CarryFoodMonths), SettlementAssets.CarryCapacity(Content, state, civ, total));
+        Amount packed = Amount.Zero;
+        for (int i = 0; i < count && packed < want; i++)
+        {
+            packed += Campaigns.TakeFood(Content, state.FindSettlement(new SettlementId(members[i]))!, food, want - packed);
+        }
+
+        int musterMonths = (int)IntMath.MulDiv(farthest, 1, rules.MarchCellsPerMonth, Rounding.Ceiling);
         state.Episodes.Begin(new Episode
         {
             Kind = EpisodeKind.Campaign,
             Civ = civ,
             Other = target.Owner,
             StartMonth = state.Month,
-            NextMonth = state.Month + Content.War.CampaignStepMonths,
-            TickMonths = Content.War.CampaignStepMonths,
+            NextMonth = state.Month + rules.CampaignStepMonths,
+            TickMonths = rules.CampaignStepMonths,
             Home = home.Id.Value,
             Target = target.Id.Value,
-            Warriors = taken,
-            Cell = state.Worlds[0].Geometry.Index(home.Cell),
-            Phase = CampaignPhase.March,
+            GoalTarget = target.Id.Value,
+            Warriors = total,
+            Mustered = total,
+            Members = members,
+            MemberWarriors = sent,
+            ArmsPercent = total > 0 ? (int)(strength / total) : Campaigns.BareHandsPercent(Content),
+            Morale = 100,
+            Food = food,
+            Cell = geo.Index(home.Cell),
+            Phase = musterMonths > 0 ? CampaignPhase.Muster : CampaignPhase.March,
+            MusterUntilMonth = state.Month + musterMonths,
             Loot = new Amount[Content.Goods.Count],
+            ConvoyFood = new Amount[Content.Goods.Count],
         });
         Treaty? war = state.Treaties.Find(civ, target.Owner, TreatyKind.War);
         if (war is not null)
@@ -168,15 +449,17 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
             war.LastCampaignMonth = state.Month;
         }
 
-        return $"{state.FindCivilization(civ)!.Name} sent {taken} warriors from {home.Name} against {target.Name}.";
+        string from = count == 1 ? home.Name : $"{count} settlements gathering at {home.Name}";
+        return $"{c.Name} sent {total} warriors from {from} against {target.Name}.";
     }
 }
 
 /// <summary>
-/// Combat phase (GDD 11.1 phase 6; stage 4e PR 2, ADR 0022): every campaign whose step is due marches
+/// Combat phase (GDD 11.1 phase 6; stage 4e PR 2–3, ADR 0022): every campaign whose step is due eats, gathers, marches
 /// <see cref="WarRules.MarchCellsPerMonth"/> cells over known land, fights when it reaches its target, takes what its
-/// warriors can carry and goes home, where the survivors and the loot rejoin their settlement. A campaign turns back
-/// when peace is made, the target is gone or the way is lost.
+/// warriors can carry and goes home, where the survivors go back to their settlements. Carriers from the nearest own
+/// settlement bring food after it; a hungry campaign loses morale, raids nearby enemy settlements for food and turns back
+/// when its morale is gone. A campaign turns back when peace is made, the target is gone or the way is lost.
 /// </summary>
 public sealed class CampaignSystem(GameContent content) : ITurnSystem
 {
@@ -230,56 +513,261 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         }
 
         WorldState world = state.Worlds[0];
-        if (e.Phase == CampaignPhase.March)
+        bool hungry = !Eat(e);
+        if (e.Phase == CampaignPhase.Muster)
         {
-            SettlementState? target = state.FindSettlement(new SettlementId(e.Target));
-            if (war is null || target is not { IsActive: true } || target.Owner != e.Other)
+            if (war is null)
             {
                 e.Phase = CampaignPhase.Return;
             }
-            else
+            else if (state.Month >= e.MusterUntilMonth)
             {
-                List<int>? path = _paths.Find(_content, state, civ, world, e.Cell, world.Geometry.Index(target.Cell));
-                if (path is null)
-                {
-                    e.Phase = CampaignPhase.Return;
-                }
-                else if (path.Count <= _content.War.MarchCellsPerMonth)
-                {
-                    e.Cell = path.Count >= 2 ? path[^2] : e.Cell; // the warriors stand next to the settlement they attack
-                    // Now they see it: they attack only with a good chance, or else go home (decision of 2026-11-07).
-                    context.Chronicle(Campaigns.Chance(_content, target, e.Warriors) >= _content.War.MinWinChancePercent
-                        ? Fight(state, e, civ, target, war)
-                        : $"The warriors of {civ.Name} saw how strong {target.Name} was and turned back.");
-                    e.Phase = CampaignPhase.Return;
-                }
-                else
-                {
-                    e.Cell = path[_content.War.MarchCellsPerMonth - 1];
-                }
+                e.Phase = CampaignPhase.March;
+            }
+        }
+        else if (e.Phase == CampaignPhase.March)
+        {
+            March(context, state, e, civ, war, world, hungry);
+        }
+        else
+        {
+            GoHome(context, state, e, civ, world);
+        }
 
-                return;
+        if (!e.Ended)
+        {
+            Supply(state, e, civ, world);
+        }
+    }
+
+    // A month of food for every warrior: first what they carry, then the food among the loot. Hunger costs morale.
+    private bool Eat(Episode e)
+    {
+        Amount need = Campaigns.FoodFor(_content, e.Warriors, e.TickMonths);
+        need = EatFrom(e.Food, need);
+        need = EatFrom(e.Loot, need);
+        bool fed = need <= Amount.Zero;
+        if (fed)
+        {
+            e.Morale = Math.Min(100, e.Morale + (_content.War.FedMoralePerMonth * e.TickMonths));
+        }
+        else
+        {
+            e.HungryMonths += e.TickMonths;
+            e.Morale = Math.Max(0, e.Morale - (_content.War.HungerMoralePerMonth * e.TickMonths));
+        }
+
+        return fed;
+    }
+
+    private Amount EatFrom(Amount[] goods, Amount need)
+    {
+        for (int g = 0; g < goods.Length && g < _content.Goods.Count && need > Amount.Zero; g++)
+        {
+            if (_content.Goods[g].IsFood && goods[g] > Amount.Zero)
+            {
+                Amount n = Amount.Min(goods[g], need);
+                goods[g] -= n;
+                need -= n;
             }
         }
 
-        GoHome(context, state, e, civ, world);
+        return need;
+    }
+
+    private void March(TurnContext context, GameState state, Episode e, CivilizationState civ, Treaty? war, WorldState world, bool hungry)
+    {
+        if (e.Morale < _content.War.RetreatMorale)
+        {
+            context.Chronicle($"Hunger broke the warriors of {civ.Name}: they turned back.");
+            e.Phase = CampaignPhase.Return;
+            return;
+        }
+
+        if (hungry && !e.Foraging && war is not null && Forage(state, e, civ, world) is { } prey)
+        {
+            e.Foraging = true;
+            e.Target = prey.Id.Value;
+            context.Chronicle($"The hungry warriors of {civ.Name} turned on {prey.Name} for food.");
+        }
+
+        SettlementState? target = state.FindSettlement(new SettlementId(e.Target));
+        if (e.Foraging && (target is not { IsActive: true } || target.Owner != e.Other))
+        {
+            e.Foraging = false; // the prey is gone: on to the goal
+            e.Target = e.GoalTarget;
+            target = state.FindSettlement(new SettlementId(e.Target));
+        }
+
+        if (war is null || target is not { IsActive: true } || target.Owner != e.Other)
+        {
+            e.Phase = CampaignPhase.Return;
+            return;
+        }
+
+        List<int>? path = _paths.Find(_content, state, civ, world, e.Cell, world.Geometry.Index(target.Cell));
+        if (path is null)
+        {
+            e.Phase = CampaignPhase.Return;
+            return;
+        }
+
+        if (path.Count > _content.War.MarchCellsPerMonth)
+        {
+            e.Cell = path[_content.War.MarchCellsPerMonth - 1];
+            return;
+        }
+
+        e.Cell = path.Count >= 2 ? path[^2] : e.Cell; // the warriors stand next to the settlement they attack
+        // Now they see it: they attack only with a good chance, or else go home (decision of 2026-11-07).
+        if (Campaigns.Chance(_content, state, target, Campaigns.AttackStrength(e)) < _content.War.MinWinChancePercent)
+        {
+            context.Chronicle($"The warriors of {civ.Name} saw how strong {target.Name} was and turned back.");
+            e.Phase = CampaignPhase.Return;
+            return;
+        }
+
+        bool foray = e.Foraging;
+        (string text, bool won) = Fight(state, e, civ, target, war);
+        context.Chronicle(text);
+        if (foray)
+        {
+            e.Forays++;
+            e.LastPrey = target.Id.Value;
+            e.Foraging = false;
+            e.Target = e.GoalTarget;
+            e.Phase = won ? CampaignPhase.March : CampaignPhase.Return; // fed, they march on to their goal
+            return;
+        }
+
+        e.Phase = CampaignPhase.Return;
+    }
+
+    // The nearest known settlement of the enemy within reach of a hungry campaign, other than its goal.
+    private SettlementState? Forage(GameState state, Episode e, CivilizationState civ, WorldState world)
+    {
+        HexCoord at = world.Geometry.FromIndex(e.Cell);
+        SettlementState? best = null;
+        int bestDistance = int.MaxValue;
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (!s.IsActive || s.Owner != e.Other || s.World != world.Id || s.Id.Value == e.GoalTarget || s.Id.Value == e.LastPrey)
+            {
+                continue;
+            }
+
+            int d = world.Geometry.Distance(at, s.Cell);
+            if (d <= _content.War.ForageCells && d < bestDistance && MapMemory.Knows(_content, state, civ, world.Geometry.Index(s.Cell)))
+            {
+                best = s;
+                bestDistance = d;
+            }
+        }
+
+        return best;
+    }
+
+    // Carriers: when food runs low, the nearest own settlement sends some; they walk after the army and hand it over.
+    private void Supply(GameState state, Episode e, CivilizationState civ, WorldState world)
+    {
+        WarRules rules = _content.War;
+        if (e.ConvoyFrom >= 0)
+        {
+            List<int>? path = e.ConvoyCell == e.Cell ? null : _paths.Find(_content, state, civ, world, e.ConvoyCell, e.Cell);
+            if (e.ConvoyCell == e.Cell || (path is not null && path.Count <= rules.ConvoyCellsPerMonth))
+            {
+                for (int g = 0; g < e.Food.Length && g < e.ConvoyFood.Length; g++)
+                {
+                    e.Food[g] += e.ConvoyFood[g];
+                    e.ConvoyFood[g] = Amount.Zero;
+                }
+
+                e.Convoys++;
+                EndConvoy(state, e, world);
+            }
+            else if (path is null)
+            {
+                EndConvoy(state, e, world); // they lost the army: they go home with the food
+            }
+            else
+            {
+                e.ConvoyCell = path[rules.ConvoyCellsPerMonth - 1];
+            }
+
+            return;
+        }
+
+        if (e.Phase == CampaignPhase.Return || Campaigns.FoodIn(_content, e.Food) >= Campaigns.FoodFor(_content, e.Warriors, rules.ConvoyBelowMonths))
+        {
+            return;
+        }
+
+        SettlementState? from = CarrierSource(state, world, e);
+        if (from is null)
+        {
+            return;
+        }
+
+        Amount want = Campaigns.FoodFor(_content, e.Warriors, rules.CarryFoodMonths) - Campaigns.FoodIn(_content, e.Food);
+        long perPerson = Math.Max(1, SettlementAssets.CarryCapacity(_content, state, e.Civ, 1).Hundredths);
+        int carriers = (int)Math.Min(
+            (long)Campaigns.NonFighters(_content, from) * rules.CarriersPercent / 100,
+            IntMath.MulDiv(Math.Max(0, want.Hundredths), 1, perPerson, Rounding.Ceiling));
+        if (carriers <= 0 || want <= Amount.Zero)
+        {
+            return;
+        }
+
+        Amount load = Campaigns.TakeFood(_content, from, e.ConvoyFood, Amount.Min(want, SettlementAssets.CarryCapacity(_content, state, e.Civ, carriers)));
+        if (load <= Amount.Zero)
+        {
+            return;
+        }
+
+        e.ConvoyCarriers = Campaigns.TakeCarriers(_content, from, (int)IntMath.MulDiv(load.Hundredths, 1, perPerson, Rounding.Ceiling));
+        e.ConvoyFrom = from.Id.Value;
+        e.ConvoyCell = world.Geometry.Index(from.Cell);
+    }
+
+    // The carriers go home: the food they still have goes back into the stores.
+    private void EndConvoy(GameState state, Episode e, WorldState world)
+    {
+        SettlementState? home = state.FindSettlement(new SettlementId(e.ConvoyFrom));
+        if (home is not { IsActive: true } || home.Owner != e.Civ)
+        {
+            home = Nearest(state, world, e.Civ, e.ConvoyCell, int.MaxValue);
+        }
+
+        if (home is not null)
+        {
+            Campaigns.GiveCarriers(_content, home, e.ConvoyCarriers);
+            Span<Amount> stock = home.Stock;
+            for (int g = 0; g < e.ConvoyFood.Length && g < stock.Length; g++)
+            {
+                stock[g] += e.ConvoyFood[g];
+            }
+        }
+
+        Array.Clear(e.ConvoyFood);
+        e.ConvoyCarriers = 0;
+        e.ConvoyFrom = -1;
     }
 
     private void GoHome(TurnContext context, GameState state, Episode e, CivilizationState civ, WorldState world)
     {
         if (e.Warriors <= 0)
         {
-            e.Ended = true;
+            Finish(state, e, world);
             return;
         }
 
         SettlementState? home = state.FindSettlement(new SettlementId(e.Home));
         if (home is not { IsActive: true } || home.Owner != e.Civ)
         {
-            home = Nearest(state, world, e.Civ, e.Cell);
+            home = Nearest(state, world, e.Civ, e.Cell, int.MaxValue);
             if (home is null)
             {
-                e.Ended = true; // nowhere to go back to: the warriors scatter
+                Finish(state, e, world); // nowhere to go back to: the warriors scatter
                 return;
             }
 
@@ -293,29 +781,56 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             return;
         }
 
-        Campaigns.GiveWarriors(_content, home, e.Warriors);
-        Span<Amount> stock = home.Stock;
-        for (int g = 0; g < e.Loot.Length && g < stock.Length; g++)
+        // The survivors go back to the settlements they came from, in proportion; the rest, the food and the loot stay here.
+        int left = e.Warriors;
+        for (int i = 1; i < e.Members.Length && e.Mustered > 0; i++)
         {
-            stock[g] += e.Loot[g];
+            SettlementState? m = state.FindSettlement(new SettlementId(e.Members[i]));
+            int share = (int)((long)e.Warriors * e.MemberWarriors[i] / e.Mustered);
+            if (m is { IsActive: true } && m.Owner == e.Civ && share > 0)
+            {
+                Campaigns.GiveWarriors(_content, m, share);
+                left -= share;
+            }
+        }
+
+        Campaigns.GiveWarriors(_content, home, left);
+        Span<Amount> stock = home.Stock;
+        for (int g = 0; g < stock.Length; g++)
+        {
+            stock[g] += (g < e.Loot.Length ? e.Loot[g] : Amount.Zero) + (g < e.Food.Length ? e.Food[g] : Amount.Zero);
+        }
+
+        Array.Clear(e.Loot);
+        Array.Clear(e.Food);
+        context.Chronicle($"{civ.Name}'s warriors came home to {home.Name}: {e.Warriors} of them.");
+        Finish(state, e, world);
+    }
+
+    private void Finish(GameState state, Episode e, WorldState world)
+    {
+        if (e.ConvoyFrom >= 0)
+        {
+            EndConvoy(state, e, world);
         }
 
         e.Ended = true;
-        context.Chronicle($"{civ.Name}'s warriors came home to {home.Name}: {e.Warriors} of them.");
     }
 
-    // The fight at the target (until battles in rounds, PR 4): the chance to win is the attackers' share of the strength.
-    private string Fight(GameState state, Episode e, CivilizationState civ, SettlementState target, Treaty war)
+    // The fight at the target (until battles in rounds, PR 4): the chance to win is the attackers' share of the armed
+    // strength (arms from technology and stores, times morale).
+    private (string Text, bool Won) Fight(GameState state, Episode e, CivilizationState civ, SettlementState target, Treaty war)
     {
         PopulationRules rules = _content.Population;
         string attackers = civ.Name;
         CivId defender = target.Owner;
         string defenders = state.FindCivilization(defender)?.Name ?? defender.ToString();
-        long attack = e.Warriors;
-        long defence = Math.Max(1, ConquerSettlementCommand.DefenceStrength(_content, target));
+        long attack = Math.Max(1, Campaigns.AttackStrength(e));
+        long defence = Campaigns.DefenceStrength(_content, state, target);
         Contacts.RecordAttack(_content, state, defender, e.Civ);
         DeterministicRandom rng = state.Random.Derive(RandomStreamId.Combat, FightSalt | (ulong)e.Id, state.Turn);
-        bool won = rng.Chance((int)Math.Min(int.MaxValue / 2, attack), (int)Math.Min(int.MaxValue / 2, attack + defence));
+        long scale = Math.Max(1, (attack + defence) / (int.MaxValue / 2) + 1);
+        bool won = rng.Chance((int)(attack / scale), (int)Math.Max(1, (attack + defence) / scale));
         int before = target.TotalPopulation();
         int lost = (int)IntMath.MulDiv(e.Warriors, won ? rules.WinnerWarriorLossPercent : rules.LoserWarriorLossPercent, 100, Rounding.Ceiling);
         e.Warriors -= lost;
@@ -325,10 +840,10 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         if (!won)
         {
             Wars.RecordFight(_content, state, defender, e.Civ, false, killed, lost);
-            return $"{defenders} beat back the warriors of {attackers} at {target.Name}.";
+            return ($"{defenders} beat back the warriors of {attackers} at {target.Name}.", false);
         }
 
-        bool taken = war.Goal == WarGoal.Land && war.GoalSettlement == target.Id.Value && !_content.SettlementLevels[target.Level].Mobile;
+        bool taken = !e.Foraging && war.Goal == WarGoal.Land && war.GoalSettlement == target.Id.Value && !_content.SettlementLevels[target.Level].Mobile;
         string loot = Plunder(state, e, target);
         if (taken)
         {
@@ -339,41 +854,109 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         }
 
         Wars.RecordFight(_content, state, e.Civ, defender, taken, lost, killed);
-        return taken
+        return (taken
             ? $"{attackers} took {target.Name} from {defenders}{loot}."
-            : $"{attackers} raided {target.Name} of {defenders}{loot}.";
+            : $"{attackers} raided {target.Name} of {defenders}{loot}.", true);
     }
 
-    // The winners take what their warriors can carry, the same share of every store.
+    // The winners take what their warriors can carry next to their food, the same share of every store; hungry
+    // warriors raiding for food take the food first.
     private string Plunder(GameState state, Episode e, SettlementState target)
     {
-        Amount capacity = SettlementAssets.CarryCapacity(_content, state, e.Civ, e.Warriors);
-        Span<Amount> stock = target.Stock;
-        long total = 0;
-        for (int g = 0; g < stock.Length; g++)
+        Amount capacity = SettlementAssets.CarryCapacity(_content, state, e.Civ, e.Warriors) - Campaigns.FoodIn(_content, e.Food) - Total(e.Loot);
+        long carried = 0;
+        long food = 0;
+        if (e.Foraging)
         {
-            total += stock[g].Hundredths;
+            food = Take(target.Stock, e.Loot, capacity.Hundredths, foodOnly: true);
+            carried += food;
         }
 
-        if (total <= 0 || capacity.Hundredths <= 0)
+        carried += Take(target.Stock, e.Loot, capacity.Hundredths - carried, foodOnly: false);
+        if (carried <= 0)
         {
             return string.Empty;
         }
 
-        long share = Math.Min(total, capacity.Hundredths);
-        long carried = 0;
-        for (int g = 0; g < stock.Length && g < e.Loot.Length; g++)
+        return food > 0
+            ? $" and carried off {food / 100} loads of food and {(carried - food) / 100} of other goods"
+            : $" and carried off {carried / 100} loads of goods";
+    }
+
+    // Moves at most room hundredths out of stock into loot, the same share of every good (only food when foodOnly).
+    private long Take(Span<Amount> stock, Amount[] loot, long room, bool foodOnly)
+    {
+        long total = 0;
+        for (int g = 0; g < stock.Length; g++)
         {
+            total += !foodOnly || _content.Goods[g].IsFood ? stock[g].Hundredths : 0;
+        }
+
+        if (total <= 0 || room <= 0)
+        {
+            return 0;
+        }
+
+        long share = Math.Min(total, room);
+        long carried = 0;
+        for (int g = 0; g < stock.Length && g < loot.Length; g++)
+        {
+            if (foodOnly && !_content.Goods[g].IsFood)
+            {
+                continue;
+            }
+
             long take = stock[g].Hundredths * share / total;
             stock[g] -= Amount.FromHundredths(take);
-            e.Loot[g] += Amount.FromHundredths(take);
+            loot[g] += Amount.FromHundredths(take);
             carried += take;
         }
 
-        return carried > 0 ? $" and carried off {carried / 100} loads of goods" : string.Empty;
+        return carried;
     }
 
-    private static SettlementState? Nearest(GameState state, WorldState world, CivId civ, int cell)
+    private static Amount Total(Amount[] goods)
+    {
+        Amount total = Amount.Zero;
+        foreach (Amount a in goods)
+        {
+            total += a;
+        }
+
+        return total;
+    }
+
+    // The nearest own settlement within reach of the carriers that has food and people to carry it (ties: lowest id).
+    private SettlementState? CarrierSource(GameState state, WorldState world, Episode e)
+    {
+        HexCoord at = world.Geometry.FromIndex(e.Cell);
+        SettlementState? best = null;
+        int bestDistance = int.MaxValue;
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (!s.IsActive || s.Owner != e.Civ || s.World != world.Id)
+            {
+                continue;
+            }
+
+            int d = world.Geometry.Distance(at, s.Cell);
+            if (d > _content.War.CarrierCells || d >= bestDistance
+                || (long)Campaigns.NonFighters(_content, s) * _content.War.CarriersPercent / 100 <= 0)
+            {
+                continue;
+            }
+
+            if (Campaigns.SpareFood(_content, s) > Amount.Zero)
+            {
+                best = s;
+                bestDistance = d;
+            }
+        }
+
+        return best;
+    }
+
+    private static SettlementState? Nearest(GameState state, WorldState world, CivId civ, int cell, int maxDistance)
     {
         HexCoord at = world.Geometry.FromIndex(cell);
         SettlementState? best = null;
@@ -383,7 +966,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             if (s.IsActive && s.Owner == civ && s.World == world.Id)
             {
                 int d = world.Geometry.Distance(at, s.Cell);
-                if (d < bestDistance)
+                if (d < bestDistance && d <= maxDistance)
                 {
                     bestDistance = d;
                     best = s;

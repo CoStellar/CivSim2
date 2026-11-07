@@ -569,6 +569,20 @@ public partial class Hud : CanvasLayer
             }
         }
 
+        foreach (ArmyView a in d.Armies ?? [])
+        {
+            if (world == 0 && a.Col == col && a.Row == row)
+            {
+                string phase = a.Phase switch { 1 => "going home", 2 => "gathering", _ => "marching" };
+                sb.Append(inv, $"Army of {FindCiv(session, a.Owner)} against {FindCiv(session, a.Enemy)}: {a.Warriors} warriors {phase}, arms {a.ArmsPercent}%, morale {a.Morale}%, food for {a.FoodMonths} months\n");
+            }
+
+            if (world == 0 && a.Carriers > 0 && a.ConvoyCol == col && a.ConvoyRow == row)
+            {
+                sb.Append(inv, $"{a.Carriers} carriers of {FindCiv(session, a.Owner)} bringing food to their army\n");
+            }
+        }
+
         foreach (CellEventView e in d.Events)
         {
             if (e.World == world && e.Col == col && e.Row == row && session.View is { } v)

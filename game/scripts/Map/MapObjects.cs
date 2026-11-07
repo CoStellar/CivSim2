@@ -382,6 +382,64 @@ public partial class MapObjects : Node2D
                 }
             });
         }
+
+        PaintArmies(p, details);
+    }
+
+    // War campaigns (stage 4e PR 3): one to three warriors by strength (GDD 9.3: drawn by strength), carriers with bundles.
+    private void PaintArmies(LayerPainter p, ObserverDetailsMessage details)
+    {
+        if (details.Armies is not { Count: > 0 } armies || _world!.Id != 0)
+        {
+            return;
+        }
+
+        Texture2D? warrior = Textured ? _art.Get("units", "unit_scout_idle_01") : null;
+        Texture2D? carrier = Textured ? _art.Get("units", "unit_migrants_idle_01") : null;
+        foreach (ArmyView a in armies)
+        {
+            Color civ = OverlayColors.CivColor(a.Owner);
+            int figures = a.Warriors >= 40 ? 3 : a.Warriors >= 15 ? 2 : 1;
+            if (!Fogged(a.Col, a.Row))
+            {
+                Each(HexLayout.Center(a.Col, a.Row), 48, at =>
+                {
+                    for (int f = 0; f < figures; f++)
+                    {
+                        Vector2 spot = at + new Vector2((f - ((figures - 1) / 2f)) * 10, f == 1 ? -4 : 0);
+                        if (warrior is not null)
+                        {
+                            if (!p.Lines)
+                            {
+                                p.DrawTexture(warrior, spot + new Vector2(-16, -11), civ);
+                            }
+                        }
+                        else if (p.Lines)
+                        {
+                            p.DrawCircle(spot, 7 / Mathf.Max(0.35f, _zoom * 2), civ);
+                        }
+                    }
+                });
+            }
+
+            if (a.Carriers > 0 && !Fogged(a.ConvoyCol, a.ConvoyRow))
+            {
+                Each(HexLayout.Center(a.ConvoyCol, a.ConvoyRow), 48, at =>
+                {
+                    if (carrier is not null)
+                    {
+                        if (!p.Lines)
+                        {
+                            p.DrawTexture(carrier, at + new Vector2(-16, -11), civ);
+                        }
+                    }
+                    else if (p.Lines)
+                    {
+                        p.DrawCircle(at, 5 / Mathf.Max(0.35f, _zoom * 2), civ);
+                    }
+                });
+            }
+        }
     }
 
     // The way of each wandering camp to its target: a line in the owner's colour ending in an arrow head.
@@ -400,19 +458,35 @@ public partial class MapObjects : Node2D
                 continue;
             }
 
-            Vector2 from = HexLayout.Center(j.Col, j.Row);
-            Vector2 to = Nearest(from, HexLayout.Center(j.TargetCol, j.TargetRow));
-            Color civ = OverlayColors.CivColor(j.Owner);
-            Each(from, (to - from).Length() + 48, at =>
-            {
-                Vector2 end = at + (to - from);
-                p.DrawDashedLine(at, end, civ, width, 4 * width);
-                Vector2 dir = (end - at).Normalized();
-                Vector2 side = new(-dir.Y, dir.X);
-                float head = 5 * width;
-                p.DrawColoredPolygon([end, end - (dir * head) + (side * head * 0.6f), end - (dir * head) - (side * head * 0.6f)], civ);
-            });
+            Arrow(p, j.Col, j.Row, j.TargetCol, j.TargetRow, OverlayColors.CivColor(j.Owner), width);
         }
+
+        if (details.Armies is { Count: > 0 } armies && _world!.Id == 0)
+        {
+            foreach (ArmyView a in armies)
+            {
+                if (!Fogged(a.Col, a.Row) && (a.Col != a.TargetCol || a.Row != a.TargetRow))
+                {
+                    Arrow(p, a.Col, a.Row, a.TargetCol, a.TargetRow, OverlayColors.CivColor(a.Owner), width * 1.5f);
+                }
+            }
+        }
+    }
+
+    // A dashed line in the owner's colour ending in an arrow head.
+    private void Arrow(LayerPainter p, int col, int row, int targetCol, int targetRow, Color civ, float width)
+    {
+        Vector2 from = HexLayout.Center(col, row);
+        Vector2 to = Nearest(from, HexLayout.Center(targetCol, targetRow));
+        Each(from, (to - from).Length() + 48, at =>
+        {
+            Vector2 end = at + (to - from);
+            p.DrawDashedLine(at, end, civ, width, 4 * width);
+            Vector2 dir = (end - at).Normalized();
+            Vector2 side = new(-dir.Y, dir.X);
+            float head = 5 * width;
+            p.DrawColoredPolygon([end, end - (dir * head) + (side * head * 0.6f), end - (dir * head) - (side * head * 0.6f)], civ);
+        });
     }
 
     private void PaintEvents(LayerPainter p)
