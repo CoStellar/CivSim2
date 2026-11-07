@@ -108,6 +108,36 @@ public sealed class PopulationSystem : ITurnSystem
         s.Mood = Math.Clamp(mood, 0, 100);
     }
 
+    /// <summary>
+    /// Yearly growth of a settlement's fed people, in hundredths of a per mille: births × (1 − child mortality) − adult
+    /// deaths (GDD 5.2, ADR 0020). Mood moves births; villages, low health and technologies move deaths.
+    /// </summary>
+    public long GrowthRate(GameState state, SettlementState s)
+    {
+        long births = _rules.BirthsPerMille.Hundredths + ((s.Mood - 50) * _rules.MoodBirthsPerMillePerPoint.Hundredths);
+        long childMortality = _rules.ChildMortalityPercent.Hundredths / 10;   // per mille of children
+        long adultDeaths = _rules.AdultDeathsPerMille.Hundredths;
+        if (!_content.SettlementLevels[s.Level].Mobile)
+        {
+            adultDeaths += _rules.VillageDeathsPerMille.Hundredths;
+        }
+
+        int sick = Math.Max(0, _rules.LowHealthBelow - s.Health);
+        adultDeaths += sick * _rules.LowHealthDeathsPerMillePerPoint.Hundredths;
+        long depopulation = 0;
+        if (state.Effects.Count > 0)
+        {
+            // Technologies (civilization) and events (settlement); one per ten thousand = 10 hundredths of a per mille.
+            births += 10L * Demography(state, s, EffectStat.BirthsPerTenThousand);
+            childMortality += Demography(state, s, EffectStat.ChildMortalityPerMille);
+            adultDeaths += 10L * Demography(state, s, EffectStat.AdultDeathsPerTenThousand);
+            depopulation = state.Effects.Total(_content.Effects, EffectStat.DepopulationPerMillePerYear, EffectTarget.Settlement, s.World, s.Id.Value) * 100L;
+        }
+
+        long survivingBirths = Math.Max(0, births) * (1000 - Math.Clamp(childMortality, 0, 1000)) / 1000;
+        return survivingBirths - Math.Max(0, adultDeaths) - depopulation;
+    }
+
     private int NewTotal(GameState state, SettlementState s, int people, int months)
     {
         // People who got no food: most of them die during the turn.
@@ -115,19 +145,15 @@ public sealed class PopulationSystem : ITurnSystem
         long starved = IntMath.MulDiv(unfed, _rules.StarvationDeathPercent, 100, Rounding.Ceiling);
         long survivors = people - starved;
 
-        // Everyone else: births and deaths per year, in hundredths of a per mille.
-        long rate = (_rules.BirthsPerMille - _rules.DeathsPerMille) * 100L;
-        rate += (s.Mood - 50) * _rules.MoodBirthsPerMillePerPoint.Hundredths;
-        int sick = Math.Max(0, _rules.LowHealthBelow - s.Health);
-        rate -= sick * _rules.LowHealthDeathsPerMillePerPoint.Hundredths;
-        if (state.Effects.Count > 0)
-        {
-            rate -= state.Effects.Total(_content.Effects, EffectStat.DepopulationPerMillePerYear, EffectTarget.Settlement, s.World, s.Id.Value) * 100L;
-        }
-
+        // Everyone else: births × (1 − child mortality) − adult deaths per year (ADR 0020).
+        long rate = GrowthRate(state, s);
         long factor = GrowthFactor(rate, months);
         return (int)Math.Min(int.MaxValue, IntMath.MulDiv(survivors, factor, Spoilage.One));
     }
+
+    private int Demography(GameState state, SettlementState s, EffectStat stat) =>
+        state.Effects.Total(_content.Effects, stat, EffectTarget.Civilization, WorldId.Earth, s.Owner.Value)
+        + state.Effects.Total(_content.Effects, stat, EffectTarget.Settlement, s.World, s.Id.Value);
 
     // Losses come from every stratum in proportion; newborns join the strata by their target shares.
     private void ChangeTotal(SettlementState s, int before, int after)

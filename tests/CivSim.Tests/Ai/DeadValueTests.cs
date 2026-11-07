@@ -390,6 +390,16 @@ public class DeadValueTests
                     // Driving out: a small foreign camp a few cells away holds the only good land around, seen now.
                     Hungry(home);
                     SettlementState? foreign = state.Settlements.FirstOrDefault(x => x.IsActive && x.Owner != civ.Id && !homes.Contains(x));
+                    if (foreign is null && FreeLandNear(state, home.Cell, 5, out CivSim.Core.Map.HexCoord outpost))
+                    {
+                        // Peoples grow slowly (stage 4F), so a few turns in nobody may have split yet: a neighbour sends
+                        // out a small group.
+                        CivilizationState? other = state.Civilizations.FirstOrDefault(x => x.IsAlive && x.Id != civ.Id);
+                        foreign = other is null
+                            ? null
+                            : state.FoundSettlement(other.Id, earth.Id, outpost, "Outpost", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
+                    }
+
                     if (foreign is not null && homes.Add(foreign) && FreeLandNear(state, home.Cell, 5, out CivSim.Core.Map.HexCoord spot))
                     {
                         var poor = new CivSim.Core.Map.HexCoord[CivSim.Core.Map.HexGlobe.RangeSize(reach + 3)];
@@ -409,10 +419,7 @@ public class DeadValueTests
                         people[0] = 4; // a handful of gatherers
 
                         civ.SeenYear[geo.Index(spot)] = stamp;
-                        if (civ.Relation(foreign.Owner) is { } r)
-                        {
-                            r.Sympathy = -5000; // an old grudge
-                        }
+                        (civ.Relation(foreign.Owner) ?? civ.AddRelation(foreign.Owner)).Sympathy = -5000; // an old grudge
                     }
 
                     break;

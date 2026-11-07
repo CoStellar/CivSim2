@@ -53,11 +53,17 @@ public sealed record PopulationRules
     /// <summary>Fertility points land left alone regains per year, hundredths, up to its natural fertility.</summary>
     public int RecoveryHundredthsPerYear { get; init; } = 5;
 
-    /// <summary>Births per thousand people per year when everyone is fed.</summary>
-    public int BirthsPerMille { get; init; } = 35;
+    /// <summary>Births per thousand people per year in a fed, healthy settlement at mood 50 (GDD 5.2, ADR 0020).</summary>
+    public Amount BirthsPerMille { get; init; } = Amount.FromUnits(60);
 
-    /// <summary>Natural deaths per thousand people per year.</summary>
-    public int DeathsPerMille { get; init; } = 32;
+    /// <summary>Share of children who die before 15, in percent, before technologies (hunter-gatherers: 49%).</summary>
+    public Amount ChildMortalityPercent { get; init; } = Amount.FromUnits(49);
+
+    /// <summary>Natural deaths of grown-ups per thousand people per year, before technologies.</summary>
+    public Amount AdultDeathsPerMille { get; init; } = Amount.FromHundredths(2960);
+
+    /// <summary>Extra adult deaths per thousand per year in a settled village (crowding, dirt, diseases from animals).</summary>
+    public Amount VillageDeathsPerMille { get; init; } = Amount.FromUnits(2);
 
     /// <summary>Share of the people who got no food in a turn who die, in percent.</summary>
     public int StarvationDeathPercent { get; init; } = 80;
@@ -66,7 +72,7 @@ public sealed record PopulationRules
     public Amount LowHealthDeathsPerMillePerPoint { get; init; } = Amount.FromHundredths(20);
 
     /// <summary>Extra births per thousand per year for every mood point above 50 (fewer below).</summary>
-    public Amount MoodBirthsPerMillePerPoint { get; init; } = Amount.FromHundredths(5);
+    public Amount MoodBirthsPerMillePerPoint { get; init; } = Amount.FromHundredths(10);
 
     /// <summary>Share of the gap to the target strata mix that closes every year, in percent.</summary>
     public Amount StrataShiftPercentPerYear { get; init; } = Amount.FromUnits(1);
