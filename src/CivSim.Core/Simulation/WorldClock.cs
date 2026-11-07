@@ -51,6 +51,7 @@ public static class WorldClock
         ArgumentNullException.ThrowIfNull(state);
         long now = state.Month;
         long next = long.MaxValue;
+        bool anyStep = false;
         foreach (CivilizationState civ in state.Civilizations)
         {
             if (!civ.IsAlive)
@@ -73,10 +74,12 @@ public static class WorldClock
                 civ.StepMonths = civ.StepStartMonth == now ? (int)(civ.NextStepMonth - now) : 0;
             }
 
+            anyStep |= civ.StepMonths > 0;
             next = Math.Min(next, civ.NextStepMonth);
         }
 
-        if (next == long.MaxValue)
+        bool noneAlive = next == long.MaxValue;
+        if (noneAlive)
         {
             // Nobody lives: the world still turns, at the slowest rhythm (or one step of a planet's live year).
             WorldGen.SeasonRules seasons = content.Seasons;
@@ -84,7 +87,76 @@ public static class WorldClock
             next = ((now / rest) + 1) * rest;
         }
 
-        state.StepMonths = (int)(next - now);
+        // ADR 0022: the world itself covers the months until the next step of a civilization; episodes (and alarms that
+        // wait for a reaction) put steps of their own in between, in which the world waits.
+        state.WorldMonths = anyStep || noneAlive ? (int)(next - now) : 0;
+        state.StepMonths = (int)(Math.Max(now + 1, Math.Min(next, Soonest(content, state, now))) - now);
+    }
+
+    /// <summary>
+    /// Ends the current world step early when something in it needs a step soon (ADR 0022): a campaign was sent, a war
+    /// was declared (alarms wait for a reaction next month) or a quiet war runs out. Called before time moves on, after
+    /// the decisions and commands of the step. The civilizations' own steps and the world's months stay as they were.
+    /// </summary>
+    public static void Shorten(GameContent content, GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        long now = state.Month;
+        long soonest = Soonest(content, state, now);
+        if (soonest - now < state.StepMonths)
+        {
+            state.StepMonths = (int)Math.Max(1, soonest - now);
+        }
+    }
+
+    // The nearest month something other than a civilization's own step needs a world step: an episode, a reaction to an
+    // alarm (next month), the end of a quiet war.
+    private static long Soonest(GameContent content, GameState state, long now)
+    {
+        long soonest = Math.Min(state.Episodes.NextMonth(), QuietWarEnds(content, state, now));
+        foreach (CivilizationState civ in state.Civilizations)
+        {
+            if (civ.IsAlive && civ.Alarms != Alarm.None)
+            {
+                return Math.Min(soonest, now + 1); // a reaction comes in the next month, not in the next long step
+            }
+        }
+
+        return soonest;
+    }
+
+    // ADR 0022: the month the first quiet war ends by itself (a white peace), so that it ends in time, not at the next long step.
+    private static long QuietWarEnds(GameContent content, GameState state, long now)
+    {
+        long quiet = content.War.QuietPeaceYears * 12L;
+        long soonest = long.MaxValue;
+        foreach (Diplomacy.Treaty t in state.Treaties.All)
+        {
+            if (t.Kind == Diplomacy.TreatyKind.War)
+            {
+                long end = Math.Max(t.SinceMonth, t.LastCampaignMonth) + quiet;
+                soonest = Math.Min(soonest, Math.Max(now + 1, end));
+            }
+        }
+
+        return soonest;
+    }
+
+    /// <summary>The month of the next step of any living civilization (<see cref="long.MaxValue"/> when none lives).</summary>
+    public static long NextCivilizationMonth(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        long next = long.MaxValue;
+        foreach (CivilizationState civ in state.Civilizations)
+        {
+            if (civ.IsAlive)
+            {
+                next = Math.Min(next, civ.NextStepMonth);
+            }
+        }
+
+        return next;
     }
 
     /// <summary>True when <paramref name="civ"/> computes its own state and takes planned decisions in this world step.</summary>
@@ -118,7 +190,7 @@ public static class WorldClock
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(s);
-        return s.IsActive ? MonthsOf(state, s.Owner) : state.StepMonths;
+        return s.IsActive ? MonthsOf(state, s.Owner) : state.WorldMonths;
     }
 
     /// <summary>Months <paramref name="owner"/> computes in this world step (0 when it waits, or is unknown or dead).</summary>
@@ -145,4 +217,7 @@ public enum Alarm : byte
 
     /// <summary>A camp of this civilization was attacked.</summary>
     Attacked = 2,
+
+    /// <summary>This civilization declared war, or joined one: its commander plans a campaign (stage 4e).</summary>
+    WentToWar = 4,
 }

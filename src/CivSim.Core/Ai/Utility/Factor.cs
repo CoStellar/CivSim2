@@ -107,6 +107,9 @@ public enum FactorId : byte
 
     /// <summary>What the terms of a peace are worth to us, war score points (stage 4e).</summary>
     Terms = 33,
+
+    /// <summary>Chance to win a fight as the commander sees it, percent (stage 4e).</summary>
+    WinChance = 34,
 }
 
 /// <summary>

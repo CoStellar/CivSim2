@@ -119,7 +119,7 @@ public class WarTests
     }
 
     [Fact]
-    public void FightsMoveTheScoreAndWearinessGrowsWithYearsAndTheDead()
+    public void FightsMoveTheScoreAndWearinessGrowsWithCampaignsAndTheDead()
     {
         (GameState state, HexCoord[] land) = Empty(53);
         CivilizationState a = state.Civilizations[0];
@@ -134,7 +134,9 @@ public class WarTests
         Assert.Equal(Content.War.ScorePerWin + Content.War.ScorePerSettlement, Wars.ScoreFor(war, a.Id));
         Assert.Equal(-Wars.ScoreFor(war, a.Id), Wars.ScoreFor(war, b.Id));
 
-        // 20 years and 10 of 100 people dead: 20 × 1 + 10 × 3 = 50 points for b; a lost 2% (2 × 3 + 20 = 26).
+        // 4 months of campaigning (5 points each) and 10 of 100 people dead (3 points per percent): 20 + 30 = 50 for b;
+        // a lost 4 of 200 (2%): 20 + 6 = 26. Years of war alone count for nothing (ADR 0022).
+        war.CampaignMonths = 4;
         long month = war.SinceMonth + (20 * 12);
         Assert.Equal(50, Wars.ComputeWeariness(Content.War, war, b.Id, month));
         Assert.Equal(26, Wars.ComputeWeariness(Content.War, war, a.Id, month));

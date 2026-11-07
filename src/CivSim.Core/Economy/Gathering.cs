@@ -71,9 +71,14 @@ public sealed class WildFoodSystem(GameContent content, YieldYears years) : ITur
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
+        if (state.WorldMonths == 0)
+        {
+            return; // a step of episodes only (ADR 0022)
+        }
+
         _years.Draw(state);
         // Land nobody claims grows back over the whole world step; claimed land grows back in its owner's own steps.
-        long keep = Spoilage.KeptShare(_content.Population.WildRegrowthBasisPointsPerYear, state.StepMonths);
+        long keep = Spoilage.KeptShare(_content.Population.WildRegrowthBasisPointsPerYear, state.WorldMonths);
         foreach (WorldState world in state.Worlds)
         {
             WorldMap map = world.Map;
