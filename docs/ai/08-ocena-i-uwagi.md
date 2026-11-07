@@ -23,6 +23,7 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Wyprawy (G8) | **nowe, rzadkie** | 8–97 na grę; zależą od ciekawości i ekspansywności |
 | Rytm decyzji | **dobre (od ADR 0018, PR C)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i marsz obozu na stulecie |
 | Wydajność | **do pilnowania (PR C)** | 3–4× więcej osad; stare systemy porównują każdą osadę z każdą (patrz pkt 10) |
+| Ustroje (etap 4f, PR 1) | **proste, na start** | ustrój przechyla wagi, ostrożność i tempo; AI jeszcze go nie zmienia sama (PR 5); pętla odwetu widoczniejsza (pkt 14) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -230,6 +231,21 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   Patryka: tak zostaje), więc zwycięstwa rzadko coś dają poza łupami. Do przemyślenia przy kolejnych erach: wojny o ziemię są rzadkie.
 - **Co może być zbędne:** próg strat `maxLossPercent` 50 rzadko decyduje sam, bo przy szansie ≥ 60% straty są zwykle małe; zostaje,
   bo test martwych wartości pokazuje, że zmienia decyzje, i będzie ważniejszy z murami i lepszą bronią obrońców.
+
+## 14. Ustroje i pętla odwetu (etap 4f, PR 1)
+
+- **Co działa:** ustrój z danych zmienia cztery rzeczy naraz: wagi celów stratega, ostrożność przy wyborze, tempo przeglądów
+  stratega i dyplomaty i opóźnienie decyzji państwowych (wojna, zmiana ustroju). W 3 grach oba ustroje występują (6–7 wodzostw,
+  3–7 rad starszych na 10–12 żywych cywilizacji). Rada starszych wypowiada wojnę, ale jej armie czekają 4 lata.
+- **Co jest za proste:**
+  - ustrój dobiera się raz, z charakteru, na starcie; AI go nie zmienia (wybór ustroju przez stratega: PR 5, po buncie: PR 4);
+  - przechylenie wag działa tylko tam, gdzie opcje służą różnym celom (jak każda waga celu, pkt 1); wodzostwo częściej wybiera wojnę,
+    bo wojna jest porównywana ze stałym progiem `declareWarAbove`.
+- **Pętla odwetu (stary problem, teraz wyraźniejszy):** jedna cywilizacja wypowiada wojnę o odwet temu samemu sąsiadowi w każdym swoim
+  kroku (co 50 lat), łamiąc rozejm; po kampanii przychodzi cisza i biały pokój, a uraz zostaje. Seed 23: 47 z 48 wojen wypowiedziała
+  cywilizacja 10 (wodzostwo); seed 7: 23 z 30 cywilizacja 0; seed 42: 11 z 26. W PR 6 bez ustrojów było podobnie, tylko rzadziej
+  (seed 7: 32 wojny, 25 z zerwaniem umowy). Do strojenia w PR 5 etapu 4f: odwet powinien gasnąć po wojnie, a zerwanie rozejmu
+  kosztować więcej.
 
 ## Decyzje Patryka (2026-11-06)
 

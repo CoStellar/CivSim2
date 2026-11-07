@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata (ok. 27–29 tys. lat), seedy 7, 23 i 42,
-etap 4e PR 1 (gałąź `feat/war-goals`: wojna z celem, pokój z warunkami). Wykres decyzji jest z tych gier. Tabela liczby decyzji niżej
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 1
+(gałąź `feat/state-governments`, ustroje); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -15,6 +15,22 @@ dotnet run --project src/CivSim.Headless -c Release -- --seed 7 --turns 1000 --m
 Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv, why42.csv>` (potrzebuje matplotlib).
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
+
+## Ustroje (etap 4f, PR 1)
+
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-governments`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 6.
+
+| Seed | Lata gry | Ustroje na końcu (żywe) | Wojny | Z zerwaniem umowy | Najczęstszy agresor | Kampanie | Pokój z okupem |
+| --- | ---: | --- | ---: | ---: | --- | ---: | ---: |
+| 7 | 16 000 (21 100) | 7 wodzostw, 3 rady | 30 (32) | 21 (25) | cywilizacja 0: 23 wojny | 79 | 5 |
+| 23 | 8 901 (27 625) | 7 rad, 5 wodzostw | 48 (5) | 42 (0) | cywilizacja 10: 47 wojen | 113 | 8 |
+| 42 | 21 200 (25 700) | 6 wodzostw, 5 rad | 26 (10) | 18 (6) | cywilizacja 5: 11 wojen | 24 | 1 |
+
+- **Mniej lat w 1000 krokach:** wojny i gotowość armii dodają kroki świata (miesiąc po miesiącu), więc 1000 kroków obejmuje mniej lat.
+  Na rok gry gra liczy się podobnie jak w PR 6 (seed 7: +9%, seed 42: +2%), poza seedem 23, gdzie trwa pętla odwetu (+43%).
+- **Pętla odwetu** opisana w [ocenie, pkt 14](08-ocena-i-uwagi.md#14-ustroje-i-pętla-odwetu-etap-4f-pr-1): jedna cywilizacja co 50 lat
+  wypowiada wojnę temu samemu sąsiadowi. Była i wcześniej; wodzostwo (podbój ×1,2, częstsze przeglądy) ją wzmacnia.
+- **Decyzji** jest 7 200–12 500 na grę (wcześniej 4 900–8 000 w 4e PR 1): więcej kampanii i ruchów obozów w dłuższych wojnach.
 
 ## Strojenie wojny (etap 4e, PR 6)
 

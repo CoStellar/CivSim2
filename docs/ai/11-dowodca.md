@@ -30,6 +30,9 @@ Test `CommanderTests` sprawdza, że spodziewana szansa jest blisko tego, jak cz�
   w następnym miesiącu, więc dowódca reaguje po miesiącu, a nie po 50 latach.
 - **Dla każdej wojny** naszej cywilizacji, w której nie mamy już własnej kampanii w drodze i nasze zmęczenie wojną jest poniżej 60
   (`peaceAbove`).
+- **Opóźnienie ustroju** (etap 4f): w wojnie, którą wypowiedzieliśmy, armie ruszają dopiero od miesiąca gotowości
+  (`Treaty.ReadyMonth` = wypowiedzenie + `enactYears` ustroju: rada starszych 4 lata, wodzostwo 1 rok). Zegar świata robi krok w tym
+  miesiącu i dowódca wtedy planuje. Obrońca może wysłać armię od razu. Cicha wojna (5 lat) liczy się od gotowości.
 - **Kandydaci:** każda nasza osada (osada wyjścia), której wojownicy nie są w drodze i może wysłać 2/3 swoich wojowników
   (`sendPercent`: 1/3 zostaje w domu, decyzja Patryka z 2026-11-07).
 - **Zbiórka** (od PR 3): do armii dołączają 2/3 wojowników każdej naszej osady do 6 pól (`musterCells`) od osady wyjścia, której

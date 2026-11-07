@@ -55,7 +55,9 @@ Kod: `src/CivSim.Core/Ai/Utility/Chooser.cs`, `src/CivSim.Core/Ai/Advisor.cs:72`
 2. Wybór trzyma **3 najlepsze** działania z oceną **większą od zera** (`pickAmongTop: 3` w `data/ai.json`). Przy remisie zostaje
    działanie ocenione wcześniej.
 3. Losowanie:
-   - z szansą równą **ostrożności** cywilizacji (cecha 0–1000, czyli 0–100%) bierze **najlepsze**;
+   - z szansą równą **ostrożności** cywilizacji (cecha 0–1000, czyli 0–100%) bierze **najlepsze**; od etapu 4f ostrożność
+     przesuwa ustrój (`cautionShift` w `data/governments.json`: rada starszych +200‰, despotia −200‰, wynik w 0–1000,
+     `Governments.Caution`);
    - w przeciwnym razie losuje spośród zatrzymanych z wagami proporcjonalnymi do ocen:
      `waga_k = max(1, ocena_k × 1000 / ocena_najlepszego)`.
    - Szansa, że wygra najlepsze: `P = ostrożność + (1 − ostrożność) × waga₁ / Σ wag`.
