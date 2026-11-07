@@ -493,6 +493,7 @@ public static class ContentLoader
             ChildMortalityPercent = growth.Amount("childMortalityPercent", Amount.Zero, Amount.FromUnits(100)),
             AdultDeathsPerMille = growth.Amount("adultDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             VillageDeathsPerMille = growth.Amount("villageDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
+            VillageBirthsPerMille = growth.Amount("villageBirthsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             StarvationDeathPercent = growth.Int("starvationDeathPercent", 0, 100),
             LowHealthDeathsPerMillePerPoint = growth.Amount("lowHealthDeathsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
             MoodBirthsPerMillePerPoint = growth.Amount("moodBirthsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),

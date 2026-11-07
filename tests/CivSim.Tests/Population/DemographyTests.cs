@@ -53,9 +53,10 @@ public class DemographyTests
         Technologies.Learn(Content, state, civ, Content.Technology("pottery").Id);
         Assert.Equal(220, system.GrowthRate(state, camp));
 
-        // A settled village has 2‰ more adult deaths (crowding, dirt, diseases from animals).
+        // A settled village has 5‰ more births (farmers have children at shorter gaps), of which 52% live,
+        // and 2‰ more adult deaths (crowding, dirt, diseases from animals): 65‰ × 52% − 31‰ = +2.8‰.
         camp.Level = Content.SettlementLevel("village").Id;
-        Assert.Equal(20, system.GrowthRate(state, camp));
+        Assert.Equal(280, system.GrowthRate(state, camp));
     }
 
     [Fact]
@@ -77,6 +78,7 @@ public class DemographyTests
         Assert.Equal(49, rules.ChildMortalityPercent.WholeUnits);
         Assert.Equal(2960, rules.AdultDeathsPerMille.Hundredths);
         Assert.Equal(200, rules.VillageDeathsPerMille.Hundredths);
+        Assert.Equal(500, rules.VillageBirthsPerMille.Hundredths);
         Assert.Equal(EffectStat.ChildMortalityPerMille, Content.Effects.Single(e => e.Key == "child_care").Stat);
         Assert.Equal(EffectStat.AdultDeathsPerTenThousand, Content.Effects.Single(e => e.Key == "clean_living").Stat);
         Assert.Equal(EffectStat.BirthsPerTenThousand, Content.Effects.Single(e => e.Key == "fertility").Stat);

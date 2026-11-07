@@ -65,6 +65,9 @@ public sealed record PopulationRules
     /// <summary>Extra adult deaths per thousand per year in a settled village (crowding, dirt, diseases from animals).</summary>
     public Amount VillageDeathsPerMille { get; init; } = Amount.FromUnits(2);
 
+    /// <summary>Extra births per thousand per year in a settled village (shorter gaps between children; decision of 2026-11-07).</summary>
+    public Amount VillageBirthsPerMille { get; init; } = Amount.FromUnits(5);
+
     /// <summary>Share of the people who got no food in a turn who die, in percent.</summary>
     public int StarvationDeathPercent { get; init; } = 80;
 

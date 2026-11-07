@@ -120,6 +120,7 @@ public sealed class PopulationSystem : ITurnSystem
         if (!_content.SettlementLevels[s.Level].Mobile)
         {
             adultDeaths += _rules.VillageDeathsPerMille.Hundredths;
+            births += _rules.VillageBirthsPerMille.Hundredths;
         }
 
         int sick = Math.Max(0, _rules.LowHealthBelow - s.Health);
