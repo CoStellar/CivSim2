@@ -1,7 +1,7 @@
 # ADR 0023: Ustroje w danych, tytuł w nazwie i opóźnienie decyzji państwowych
 
-**Status:** proponowana, 2026-11-07 (PR 1 etapu 4f, według rekomendacji z dokumentu „Etap 4f: państwo — propozycja”; czeka na decyzje
-Patryka, zwłaszcza pytania 3 i 7, które zmieniają GDD 7.2). Zasady w GDD 7.2, 5.6 i 16.
+**Status:** przyjęta, 2026-11-07 (PR 1 etapu 4f; Patryk przyjął wszystkie rekomendacje z dokumentu „Etap 4f: państwo — propozycja”,
+także zmiany GDD 7.2 i 7.3: opóźnienie w latach i wpływ warstw zależny od ustroju). Zasady w GDD 7.2, 7.3, 5.6 i 16.
 
 ## Kontekst
 
