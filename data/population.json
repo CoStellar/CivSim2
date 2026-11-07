@@ -71,7 +71,9 @@
   "newTribe": {
     "producers": 40,
     "artisans": 0,
-    "warriors": 10
+    "warriors": 10,
+    "thinkers": 2,
+    "leaders": 1
   },
   "farming": {
     "grainGood": "grain",

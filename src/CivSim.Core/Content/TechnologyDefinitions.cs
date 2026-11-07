@@ -78,7 +78,20 @@ public sealed record TechnologyDefinition(int Id, string Key, string Name, int E
 
     /// <summary>Permanent effects on the civilization.</summary>
     public IReadOnlyList<TechEffect> Effects { get; init; } = [];
+
+    /// <summary>People the civilization must have before it researches this (all of them; stage 4F, ADR 0020).</summary>
+    public IReadOnlyList<PeopleRequirement> RequiresPeople { get; init; } = [];
+
+    /// <summary>When not empty, at least one of these people requirements must be met too.</summary>
+    public IReadOnlyList<PeopleRequirement> RequiresPeopleAny { get; init; } = [];
 }
+
+/// <summary>
+/// People a technology needs (stage 4F, ADR 0020): <see cref="Count"/> people of a skill, or of a stratum when
+/// <see cref="SkillId"/> is -1, in the whole civilization or, when <see cref="InOneSettlement"/>, in one settlement.
+/// Apprentices count at their share of work.
+/// </summary>
+public sealed record PeopleRequirement(int SkillId, int StratumId, int Count, bool InOneSettlement);
 
 /// <summary>Research rules (data/technologies.json, GDD 6; stage 3f).</summary>
 public sealed record ResearchRules

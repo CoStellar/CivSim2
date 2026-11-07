@@ -342,6 +342,9 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        // Stone Age hunters who could learn tanning (stage 4F: technologies need their people).
+        Record(saved, 15, [1, 4], neolithic: false, extremes: false, width: 130, height: 80, peoples: 10, hunters: true);
+
         Assert.True(saved.Count > stone);
         return [.. saved];
     }
@@ -557,7 +560,7 @@ public class DeadValueTests
         return false;
     }
 
-    private static void Record(List<byte[]> saved, ulong seed, int[] turns, bool neolithic, bool extremes, int width = 66, int height = 40, int peoples = 8)
+    private static void Record(List<byte[]> saved, ulong seed, int[] turns, bool neolithic, bool extremes, int width = 66, int height = 40, int peoples = 8, bool hunters = false)
     {
         // A crowded world (8 peoples on the test map, more on a wider one) where everybody has met everybody: trade,
         // pacts, wars and camps next to foreign camps happen within a few turns.
@@ -597,6 +600,30 @@ public class DeadValueTests
                     }
                 }
             }
+        }
+
+        if (hunters)
+        {
+            // Stone Age hunters (stage 4F): peoples who know fire, flint and cooperative hunting and have the hunters that
+            // tanning needs, so clothing against the cold competes with herds in the choice of the scholar.
+            foreach (CivilizationState civ in state.Civilizations)
+            {
+                foreach (string key in new[] { "fire", "flint_knapping", "cooperative_hunting" })
+                {
+                    Technologies.Learn(Content, state, civ, Content.Technology(key).Id);
+                }
+            }
+
+            int hunter = Content.Skills.First(x => x.Key == "hunter").Id;
+            foreach (SettlementState s in state.Settlements)
+            {
+                s.Skilled[hunter] = Math.Min(12, s.PopulationView[Content.Skills[hunter].StratumId]);
+            }
+
+            // The first people live in a cold valley (winter below the comfort limit), where fire and clothing count.
+            SettlementState cold = state.Settlements.First(x => x.Owner == state.Civilizations[0].Id);
+            int cell = state.Worlds[0].Geometry.Index(cold.Cell);
+            state.Worlds[0].Map.Temperature.Set(cell, (sbyte)(Content.Population.ComfortColdBelow - 8 + (state.Worlds[0].Map.Seasonality[cell] / 2)));
         }
 
         if (neolithic)

@@ -15,6 +15,25 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Ludzie w technologiach (etap 4F, PR 3)
+
+Technologie i nauka przed PR 3 i po nim (`python3 docs/ai/tools/research_chart.py <katalog>`):
+
+![Badania przed i po](img/badania_przed_po.png)
+
+| Seed | Pierwszy neolit (krok, rok) | Technologie na końcu (średnio, najwięcej) | Ludzie na końcu | Żywe cywilizacje |
+| --- | --- | --- | ---: | ---: |
+| 7 | 120, rok 5800 (110, rok 5500) | 9,4 / 14 (9,5 / 14) | 238 508 (225 307) | 12 (11) |
+| 23 | 120, rok 5825 (100, rok 5000) | 13,6 / 14 (9,2 / 14) | 325 519 (279 639) | 9 (9) |
+| 42 | 100, rok 4800 (100, rok 4825) | 9,6 / 14 (10,8 / 14) | 221 459 (279 158) | 10 (8) |
+
+- **Nauka ma to samo tempo** (prawy wykres): myśliciele dają jej większość, a liczby przeskalowałem tak, żeby cywilizacja o zwykłym
+  składzie badała jak przedtem.
+- **Neolit 0–20 kroków później:** rolnictwo czeka na 10 myślicieli (cywilizacja ok. 330 ludzi).
+- **Małe cywilizacje stają na 8–10 technologiach:** nie mają np. 30 rolników do nawadniania ani 20 do garncarstwa i chleba. Duże
+  dochodzą do wszystkich 14.
+- Gra jest chaotyczna: wyniki seedów rozjeżdżają się w obie strony (seed 23 więcej ludzi i technologii, seed 42 mniej).
+
 ## Fachy (etap 4F, PR 2)
 
 Ludność, obozy i fachowcy przed PR 2 i po nim (`python3 docs/ai/tools/skills_chart.py <katalog>`, pliki `before*.csv` i

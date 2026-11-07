@@ -145,6 +145,7 @@ public class MigrationTests
     {
         GameState state = NewGame(7).State;
         SettlementState camp = state.Settlements[0];
+        camp.Population.Clear();
         camp.Population[0] = 80;
         camp.Population[2] = 20;
         Core.Numerics.Amount meat = camp.StockView[Content.Good("meat").Id];

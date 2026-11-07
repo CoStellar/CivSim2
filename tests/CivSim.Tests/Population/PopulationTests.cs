@@ -44,11 +44,11 @@ public class PopulationTests
     [Fact]
     public void PopulationDataLoads()
     {
-        Assert.Equal(3, Content.Strata.Count);
+        Assert.Equal(5, Content.Strata.Count);   // producers, artisans, warriors, thinkers, leaders (stage 4F)
         Assert.True(Content.Strata[Stratum("producers")].Gathers);
         Assert.False(Content.Strata[Stratum("warriors")].Gathers);
         Assert.Equal(3, Content.Population.InfluenceBaseRange);
-        Assert.Equal(50, Content.Population.NewTribe[0] + Content.Population.NewTribe[1] + Content.Population.NewTribe[2]);
+        Assert.Equal(53, Content.Population.NewTribe.Sum());
         Assert.Equal("meat", Content.Goods[Content.Population.MeatGood].Key);
         Assert.NotEmpty(Content.Deposits[0].Gather);
     }
@@ -65,7 +65,7 @@ public class PopulationTests
                 File.Copy(file, Path.Combine(dir, Path.GetFileName(file)), overwrite: true);
             }
 
-            Replace(dir, "strata.json", "\"targetShare\": \"15\"", "\"targetShare\": \"25\"");
+            Replace(dir, "strata.json", "\"targetShare\": \"14\"", "\"targetShare\": \"24\"");
             Replace(dir, "strata.json", "\"good\": \"hide_clothing\"", "\"good\": \"fur_coat\"");
             Replace(dir, "population.json", "\"meatGood\": \"meat\"", "\"meatGood\": \"mammoth\"");
 
@@ -98,12 +98,13 @@ public class PopulationTests
     }
 
     [Fact]
-    public void EveryTribeStartsWithFiftyPeople()
+    public void EveryTribeStartsWithFiftyThreePeople()
     {
         GameState state = NewGame(1).State;
         foreach (SettlementState s in state.Settlements)
         {
-            Assert.Equal(50, s.TotalPopulation());
+            Assert.Equal(53, s.TotalPopulation());   // with 2 thinkers and a leader (stage 4F)
+            Assert.Equal(2, s.PopulationView[Stratum("thinkers")]);
             Assert.Equal(10, s.PopulationView[Stratum("warriors")]);
         }
     }

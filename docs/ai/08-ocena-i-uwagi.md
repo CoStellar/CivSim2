@@ -188,9 +188,11 @@ rzadziej wysyłać osadników (`villageSettlersEveryYears`) – ale to zmienia t
 
 Od PR 2 dobra z technologii, pola i receptury dają tyle, ilu jest fachowców. AI wie o tym w dwóch miejscach: skarbnik wycenia
 recepturę jej fachowcami (receptura bez fachowców jest warta zero), a gubernator osiada tylko z rolnikiem i liczy rolników, których
-wioska wyuczy. **Za proste:** wycena ziemi (G2, G5, wędrówki, cel ekspansji) liczy pełne dobra technologii, także wtedy, gdy obóz nie
-ma myśliwych ani rybaków; uczony wybiera badania bez patrzenia na ludzi; nikt nie decyduje, ilu ludzi uczyć. To przychodzi w PR 3
-(wymogi ludzi w technologiach, decyzja „ilu uczyć”).
+wioska wyuczy. Od PR 3 uczony wybiera tylko technologie, dla których cywilizacja ma ludzi. **Za proste:** wycena ziemi (G2, G5,
+wędrówki, cel ekspansji) liczy pełne dobra technologii, także wtedy, gdy obóz nie ma myśliwych ani rybaków; uczony nie wybiera
+„drogi”, która najpierw wyuczy brakujących ludzi (widzi tylko to, co może badać teraz); nauka fachu jest regułą systemu, a nie
+decyzją AI (ile uczyć). To ostatnie zostawiam do decyzji Patryka: reguła działa, a decyzja AI ma sens dopiero z kosztem nauki
+(budynki, szkoły) w późniejszych erach.
 
 **Skutek uboczny do obserwacji:** w środkowych stuleciach jest więcej obozów i przeprowadzek niż przed PR 2, bo obóz osiada dopiero,
 gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkich. Liczby: `09-statystyki.md`.

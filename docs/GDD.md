@@ -433,7 +433,7 @@ Każda technologia w pliku JSON ma:
 
 **Wymóg ludzi (decyzja Patryka z 2026-11-06, ADR 0020):** technologia może wymagać fachowców, np. wytop brązu 20 hutników i cyny w sieci handlowej. Wymóg liczymy w całej cywilizacji, a dla technologii „miejskich” (pismo, filozofia) w jednej osadzie. Rozwój idzie łańcuchem: technologia → ludzie uczą się fachu → fachowcy pozwalają na następną technologię (graf: `docs/prompts/06-etap-fachy.md`).
 
-**Zasady badania:** naukę produkują uczeni i budynki; do ery żelaza głównie myśliciele (myśliciel 30, rzemieślnik 5, reszta 1 punkt na tysiąc na rok). Cywilizacja bada jedną technologię naraz i może mieć kolejkę. AI wybiera badanie według priorytetu (co technologia da jej cywilizacji) i kosztu jako przeszkody (8.3). Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
+**Zasady badania:** naukę produkują uczeni i budynki; do ery żelaza głównie myśliciele w proporcji myśliciel 30 : rzemieślnik 5 : reszta 1 (w danych razy 2: 60, 10 i 2 punkty na tysiąc ludzi na rok, żeby cywilizacja o zwykłym składzie badała jak przedtem). Cywilizacja bada jedną technologię naraz i może mieć kolejkę. AI wybiera badanie według priorytetu (co technologia da jej cywilizacji) i kosztu jako przeszkody (8.3). Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
 
 ### 6.2 Ery
 

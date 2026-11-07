@@ -47,6 +47,7 @@ public static class ContentLoader
         ResolveEraThresholds(Path.Combine(directory, "eras.json"), eras, technologies, errors);
         (List<SkillDefinition> skills, SkillRules skillRules) = LoadSkills(Path.Combine(directory, "skills.json"), strata, technologies, errors);
         SkillLinks skillLinks = LinkSkills(skills, technologies, recipes.Count, errors);
+        LoadPeopleRequirements(Path.Combine(directory, "technologies.json"), technologies, skills, strata, errors);
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
         for (int l = 0; l < levels.Count; l++)
@@ -169,6 +170,83 @@ public static class ContentLoader
         }
 
         return (result, rules);
+    }
+
+    // People a technology needs (stage 4F, ADR 0020): read after the skills, which come after the technologies.
+    private static void LoadPeopleRequirements(string path, List<TechnologyDefinition> technologies, List<SkillDefinition> skills, List<StratumDefinition> strata, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !TryArray(doc.RootElement, "technologies", path, errors, out JsonElement array))
+        {
+            return;
+        }
+
+        string file = Path.GetFileName(path);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            if (i < technologies.Count)
+            {
+                technologies[i] = technologies[i] with
+                {
+                    RequiresPeople = ReadPeople(e, "requiresPeople", $"{file}: technologies[{i}].requiresPeople"),
+                    RequiresPeopleAny = ReadPeople(e, "requiresPeopleAny", $"{file}: technologies[{i}].requiresPeopleAny"),
+                };
+            }
+
+            i++;
+        }
+
+        List<PeopleRequirement> ReadPeople(JsonElement tech, string name, string at)
+        {
+            var list = new List<PeopleRequirement>();
+            if (!tech.TryGetProperty(name, out JsonElement items))
+            {
+                return list;
+            }
+
+            if (items.ValueKind != JsonValueKind.Array)
+            {
+                errors.Add($"{at}: must be a list.");
+                return list;
+            }
+
+            int n = 0;
+            foreach (JsonElement item in items.EnumerateArray())
+            {
+                string where = $"{at}[{n}]";
+                var r = new Reader(item, where, errors);
+                int skill = -1;
+                int stratum = -1;
+                if (item.TryGetProperty("skill", out JsonElement sk) && sk.ValueKind == JsonValueKind.String)
+                {
+                    skill = skills.FindIndex(x => x.Key == sk.GetString());
+                    if (skill < 0)
+                    {
+                        errors.Add($"{where}.skill: unknown skill '{sk.GetString()}'.");
+                    }
+                }
+                else if (item.TryGetProperty("stratum", out JsonElement st) && st.ValueKind == JsonValueKind.String)
+                {
+                    stratum = strata.FindIndex(x => x.Key == st.GetString());
+                    if (stratum < 0)
+                    {
+                        errors.Add($"{where}.stratum: unknown stratum '{st.GetString()}'.");
+                    }
+                }
+                else
+                {
+                    errors.Add($"{where}: needs a skill or a stratum.");
+                }
+
+                int count = r.Int("count", 1, 1_000_000);
+                bool one = item.TryGetProperty("inOneSettlement", out JsonElement o) && o.ValueKind == JsonValueKind.True;
+                list.Add(new PeopleRequirement(skill, stratum, count, one));
+                n++;
+            }
+
+            return list;
+        }
     }
 
     // Each technology opens at most one skill; the skill works the technology's recipes and its gathering.
