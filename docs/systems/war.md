@@ -4,7 +4,7 @@
 
 **Faza tury:** 6. Walka (`WarSystem`), w krokach cywilizacji (ADR 0018). Wypowiedzenie wojny i pokój: faza decyzji (komendy dyplomaty).
 
-**Stan:** PR 1 (cel, wynik, zmęczenie, pokój z warunkami). Wyprawy, uzbrojenie, bitwy, zaopatrzenie i dowódca w PR 2–4 (`docs/prompts/07-etap-wojna.md`).
+**Stan:** PR 1 zrobiony (cel, wynik, zmęczenie, pokój z warunkami). Wyprawy, uzbrojenie, bitwy, zaopatrzenie i dowódca w PR 2–4 (`docs/prompts/07-etap-wojna.md`).
 
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/war.json`, traktaty (`TreatyBook`), wspomnienia relacji, osady stron.

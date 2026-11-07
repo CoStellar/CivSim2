@@ -167,7 +167,7 @@ Zasady: GDD 9.3, ADR 0021. Plan: `docs/prompts/07-etap-wojna.md`.
 Gotowe, gdy: w 3 grach po 1000 tur wojny mają cel i kończą się pokojem z warunkami, wyprawy maszerują z zaopatrzeniem, bitwy liczą teren,
 morale i uzbrojenie z technologii, dowódca nie rusza na przegraną wojnę, a zmęczenie wojną widać w nastroju.
 
-- [ ] **PR 1:** cel wojny (ziemia, łupy, odwet), wynik i zmęczenie (efekt na nastrój), pokój z warunkami (osada, okup, biały pokój), wspomnienie „napaść bez powodu”; dzisiejsze napaści liczą się do wyniku; `data/war.json`, zapis, hash, `--wars` w Headless; dyplomata wybiera cel i warunki
+- [x] **PR 1:** cel wojny (ziemia, łupy, odwet), wynik i zmęczenie (efekt na nastrój), pokój z warunkami (osada, okup, biały pokój), wspomnienie „napaść bez powodu”; dzisiejsze napaści liczą się do wyniku; `data/war.json`, zapis, hash, `--wars` w Headless; dyplomata wybiera cel i warunki
 - [ ] **PR 2:** uzbrojenie z technologii (gołe ręce, drewniane włócznie, proce, kamienne groty; wpisy w danych); wyprawy na mapie: zbiórka (1/3 zostaje w domu), marsz, jedzenie, limit wodza i ludzi na polu z danych er (front na kilku polach gotowy na przyszłe ery); migawka dla podglądu
 - [ ] **PR 3:** bitwa w rundach (teren, morale, uzbrojenie, najedzenie, ucieczka, straty), podbój wioski, ucieczka z obozu; tragarze z jedzeniem po trasie marszu; głodna armia napada okoliczne wioski
 - [ ] **PR 4:** AI: dowódca (spodziewany wynik bitwy z tego, co widzi, próg szansy w `data/ai.json`; zbiórka, marsz, atak, odwrót, obrona); test martwych wartości; `docs/ai/`
