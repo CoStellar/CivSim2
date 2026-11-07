@@ -250,16 +250,21 @@ public sealed record ConquerSettlementCommand(GameContent Content, SettlementId 
         // The defenders remember the attack, won or lost (GDD 8.5).
         string met = Diplomacy.Contacts.RecordAttack(Content, state, target.Owner, civ) ? " It was their first meeting." : string.Empty;
         bool won = state.Random[RandomStreamId.Combat].Chance((int)Math.Min(int.MaxValue / 2, attack), (int)Math.Min(int.MaxValue / 2, attack + defence));
+        CivId victim = target.Owner;
+        int fromBefore = from.TotalPopulation();
+        int targetBefore = target.TotalPopulation();
         if (!won)
         {
             SettlementAssets.Lose(Content, from, rules.LoserWarriorLossPercent, warriorsOnly: true);
             SettlementAssets.Lose(Content, target, rules.WinnerWarriorLossPercent, warriorsOnly: true);
+            Diplomacy.Wars.RecordFight(Content, state, victim, civ, false, targetBefore - target.TotalPopulation(), fromBefore - from.TotalPopulation());
             return $"{defenders} beat back {attackers} at {target.Name}.{met}";
         }
 
         SettlementAssets.Lose(Content, from, rules.WinnerWarriorLossPercent, warriorsOnly: true);
         SettlementAssets.Lose(Content, target, rules.LoserWarriorLossPercent, warriorsOnly: true);
         SettlementAssets.Lose(Content, target, rules.FleeingLossPercent, warriorsOnly: false);
+        Diplomacy.Wars.RecordFight(Content, state, civ, victim, true, fromBefore - from.TotalPopulation(), targetBefore - target.TotalPopulation());
         HexCoord cell = target.Cell;
         (string flight, SettlementState? left) = Flee(state, target);
 

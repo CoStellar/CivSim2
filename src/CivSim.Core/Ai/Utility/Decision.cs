@@ -148,6 +148,8 @@ public readonly record struct Decision(
         FactorId.GoalWeight => "goal weight",
         FactorId.TradeGain => "trade gain",
         FactorId.WarYears => "years at war",
+        FactorId.Weariness => "war weariness",
+        FactorId.Terms => "peace terms",
         FactorId.LeadsTo => "leads to",
         FactorId.ForTrade => "for trade",
         FactorId.OverGathering => "over gathering",

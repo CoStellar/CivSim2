@@ -25,7 +25,20 @@ flowchart TD
 ```
 
 ## Zasady i wzory
-- Opisane w kolejnych PR-ach (tu dojdą liczby z `data/war.json`).
+- **Cel** (`WarGoal`, `DeclareWarCommand`): ziemia (osada wroga, którą znamy z mapy), łupy (zawsze można), odwet (tylko z powodem: napaść,
+  agresja albo nasza osada u nich, `Treaties.HasGrievance`).
+- **Agresja** (nowe wspomnienie `aggression`, `data/relations.json`: sympatia −30, zaufanie −15, 100 lat): ofiara i świadkowie (znają obie strony)
+  pamiętają ją w procencie z celu: ziemia 100/50, łupy 100/100, odwet 50/0.
+- **Wynik** (`Treaty.Score`, z perspektywy strony A, −100…+100, `Wars.RecordFight`): napaść w czasie wojny daje zwycięzcy +10, a zdobyta osada +15 więcej.
+  Straty to ludzie zabici w walce (wojownicy obu stron i uciekający), liczone osobno dla stron.
+- **Zmęczenie** (`Wars.ComputeWeariness`, co turę w `WarSystem`): `lata wojny × 1 + procent ludzi strony zabitych w wojnie × 3`, najwyżej 100.
+  Ludzie strony to jej ludność w chwili wypowiedzenia.
+- **Nastrój:** każda cywilizacja w wojnie dostaje efekt `war_weariness` (nastrój wszystkich osad) = −największe zmęczenie × 20 / 100; trwa jeszcze
+  jedną turę po końcu wojny.
+- **Warunki pokoju** (`Wars.TermsFor`): przy wyniku co najmniej ±20 przegrany oddaje osadę, o którą była wojna o ziemię, a w innym razie płaci
+  okup: `(|wynik| − 20 + 1) × 0,5%` każdego zapasu każdej swojej osady (1–40%), do największej osady zwycięzcy. Bliższy wynik: biały pokój.
+- **Wykonanie** (`Wars.Keep`, przy podpisaniu): oddana osada przechodzi z ludźmi i fachowcami, roszczenia znikają. Rozejm (`TreatyKind.Peace`)
+  zachowuje cel, wynik, straty, zmęczenie i warunki wojny (do raportu `--wars`).
 
 ## Co erę (prośba Patryka z 2026-11-07)
 
@@ -44,4 +57,6 @@ Przy każdym etapie nowej ery (etapy 6–12) sprawdź i uzupełnij:
 - `data/war.json` (PR 1).
 
 ## Testy
-- `WarTests` (PR 1).
+- `WarTests` (PR 1): dane; cel, który da się nazwać; agresja u ofiary i świadków według celu; wynik i zmęczenie z lat i strat; spadek nastroju;
+  zwycięzca bierze osadę, o którą była wojna; okup w wojnie o łupy; złe warunki odrzucone; zapis; błędy w danych.
+- `TreatyTests`: wojny z celem „łupy” (tekst kroniki „for loot”).

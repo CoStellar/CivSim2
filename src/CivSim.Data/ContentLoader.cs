@@ -50,6 +50,7 @@ public static class ContentLoader
         LoadPeopleRequirements(Path.Combine(directory, "technologies.json"), technologies, skills, strata, errors);
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
+        Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -93,6 +94,7 @@ public static class ContentLoader
             Relations = relations,
             Names = names,
             Treaties = treaties,
+            War = war,
             Events = events,
             Technologies = technologies,
             Research = research,
@@ -1606,7 +1608,69 @@ public static class ContentLoader
             Advantage = Curve("advantage", 1, defaults.Advantage),
             WarWeariness = Curve("warWeariness", 1, defaults.WarWeariness),
             PeaceOpinion = Curve("peaceOpinion", 100, defaults.PeaceOpinion),
+            PeaceTerms = Curve("peaceTerms", 1, defaults.PeaceTerms),
             Kinds = Array.ConvertAll(defs, d => d ?? new Core.Diplomacy.TreatyKindDefinition()),
+        };
+    }
+
+    private static Core.Diplomacy.WarRules LoadWar(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Diplomacy.WarRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        int kinds = Enum.GetValues<Core.Diplomacy.WarGoal>().Length;
+        var goals = new Core.Diplomacy.WarGoalDefinition?[kinds];
+        if (TryArray(doc.RootElement, "goals", path, errors, out JsonElement array))
+        {
+            int i = 0;
+            foreach (JsonElement e in array.EnumerateArray())
+            {
+                string at = $"{file}: goals[{i}]";
+                var x = new Reader(e, at, errors);
+                Core.Diplomacy.WarGoal goal = x.Enum<Core.Diplomacy.WarGoal>("goal");
+                if (goals[(int)goal] is not null)
+                {
+                    errors.Add($"{at}.goal: '{e.GetProperty("goal")}' is listed twice.");
+                }
+
+                goals[(int)goal] = new Core.Diplomacy.WarGoalDefinition
+                {
+                    Goal = goal,
+                    Name = x.String("name"),
+                    VictimPercent = x.Int("victimPercent", 0, 1000),
+                    WitnessPercent = x.Int("witnessPercent", 0, 1000),
+                };
+                i++;
+            }
+        }
+
+        for (int k = 0; k < kinds; k++)
+        {
+            if (goals[k] is null)
+            {
+                errors.Add($"{file}: goals: missing goal '{ToSnake(((Core.Diplomacy.WarGoal)k).ToString())}'.");
+            }
+        }
+
+        var defaults = new Core.Diplomacy.WarRules();
+        return new Core.Diplomacy.WarRules
+        {
+            Goals = Array.ConvertAll(goals, g => g ?? new Core.Diplomacy.WarGoalDefinition()),
+            ScorePerWin = r.Int("scorePerWin", 0, 100),
+            ScorePerSettlement = r.Int("scorePerSettlement", 0, 100),
+            WearinessPerYear = r.SignedHundredths("wearinessPerYear", 0, 10_000) ?? defaults.WearinessPerYear,
+            WearinessPerLossPercent = r.SignedHundredths("wearinessPerLossPercent", 0, 10_000) ?? defaults.WearinessPerLossPercent,
+            PeaceAbove = r.Int("peaceAbove", 0, 100),
+            MoodAtFullWeariness = r.Int("moodAtFullWeariness", 0, 100),
+            TermsAboveScore = r.Int("termsAboveScore", 1, 100),
+            RansomPercentPerScorePoint = r.SignedHundredths("ransomPercentPerScorePoint", 1, 10_000) ?? defaults.RansomPercentPerScorePoint,
+            MaxRansomPercent = r.Int("maxRansomPercent", 1, 100),
+            CedeWorth = r.Int("cedeWorth", 0, 100),
         };
     }
 

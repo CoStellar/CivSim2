@@ -3,8 +3,9 @@
 [← spis treści](README.md)
 
 Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata (ok. 27–29 tys. lat), seedy 7, 23 i 42,
-koniec etapu 4F (gałąź `feat/demography`, PR 4: demografia). Wykres decyzji i tabela niżej są z tych gier; w nawiasach w tabeli
-liczby po PR 3 (commit `f993e4d`).
+etap 4e PR 1 (gałąź `feat/war-goals`: wojna z celem, pokój z warunkami). Wykres decyzji jest z tych gier. Tabela liczby decyzji niżej
+jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
+niż 10% (4900–8000 na grę).
 Polecenie:
 
 ```
@@ -14,6 +15,23 @@ dotnet run --project src/CivSim.Headless -c Release -- --seed 7 --turns 1000 --m
 Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv, why42.csv>` (potrzebuje matplotlib).
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
+
+## Wojny z celem (etap 4e, PR 1)
+
+Z `--wars` (3 seedy, mapa standard, 1000 tur; wykres decyzji wyżej jest już z tych gier):
+
+| Seed | Wojny | Cel | Średnio lat | Zabici razem | Pokój: okup / biały | Okup (% zapasów) |
+| --- | ---: | --- | ---: | ---: | --- | --- |
+| 7 | 11 | odwet 11 | 204 | 122 | 6 / 5 | 3–33 |
+| 23 | 2 | odwet 2 | 225 | 38 | 1 / 1 | 33 |
+| 42 | 4 | odwet 4 | 187 | 31 | 2 / 2 | 3–15 |
+
+- **Wszystkie wojny to odwet:** wojna o ziemię wymaga osady z roszczeniem, a roszczenie trwa krótko po wypędzeniu. Wojny o łupy przyjdą
+  z dowódcą (PR 4).
+- **Wojny trwają 150–300 lat**, bo w epoce kamienia krok ma 50 lat, a zmęczenie rośnie o 1 punkt na rok: na końcu każda strona ma
+  zmęczenie 100 z samych lat. Straty prawie nie mają znaczenia (kilka do kilkudziesięciu zabitych). Do strojenia w PR 5, gdy będą bitwy wypraw.
+- **Okupy działają:** zwycięzca z wynikiem 25–85 dostaje 3–33% zapasów przegranego.
+- Liczba decyzji prawie bez zmian (4900–8000 na grę).
 
 ## Demografia (etap 4F, PR 4)
 

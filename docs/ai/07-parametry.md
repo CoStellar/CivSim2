@@ -111,8 +111,25 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `witnessPercent` | 50 | % | D3 | jak mocno złamanie umowy pamiętają świadkowie |
 | `allyJoinBasePerMille` | 300 | ‰ | D3 | szansa dołączenia sojusznika przy lojalności 0 |
 | `warRaidPercent` | 150 | % | G2 | premia za wypędzanie obozów wroga w wojnie |
-| `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 9 krzywych czynników |
+| `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 10 krzywych czynników (od 4e: `warWeariness` liczy zmęczenie 0…100 zamiast lat, nowa `peaceTerms`) |
 | `treaties[].years` | pokój: 100 | lata | D3 | rozejm po wojnie |
+
+## `data/war.json` (od etapu 4e)
+
+| Klucz | Wartość | Jednostka | Decyzje | Znaczenie |
+| --- | --- | --- | --- | --- |
+| `goals[].victimPercent` | ziemia 100, łupy 100, odwet 50 | % | D3 | jak mocno ofiara pamięta agresję |
+| `goals[].witnessPercent` | ziemia 50, łupy 100, odwet 0 | % | D3 | jak mocno pamiętają ją świadkowie |
+| `scorePerWin` | 10 | punkty wyniku | D3, D1 | wygrana walka |
+| `scorePerSettlement` | 15 | punkty wyniku | D3, D1 | zdobyta osada (ponad walkę) |
+| `wearinessPerYear` | 1 | punkty na rok | D1, D2 | zmęczenie z lat wojny |
+| `wearinessPerLossPercent` | 3 | punkty na % ludzi zabitych | D1, D2 | zmęczenie ze strat |
+| `peaceAbove` | 60 | punkty zmęczenia | D2 | od tego zmęczenia strona szuka pokoju w każdym kroku i przy każdej ocenie |
+| `moodAtFullWeariness` | 20 | punkty nastroju | — | spadek nastroju przy zmęczeniu 100 |
+| `termsAboveScore` | 20 | punkty wyniku | D2, D1 | od tego wyniku zwycięzca żąda warunków |
+| `ransomPercentPerScorePoint` | 0,5 | % zapasów na punkt | D2, D1 | wysokość okupu |
+| `maxRansomPercent` | 40 | % zapasów | D2, D1 | największy okup |
+| `cedeWorth` | 40 | punkty wyniku | D1, D2 | ile warte jest oddanie osady przy ocenie warunków |
 
 ## `data/skills.json` (od etapu 4F)
 

@@ -171,18 +171,19 @@ public class TreatyTests
         Treaties.Sign(Content, state, a.Id, b.Id, TreatyKind.NonAggression);
         int trustBefore = b.Relation(a.Id)!.Trust;
 
-        string? line = Run(state, a.Id, new DeclareWarCommand(Content, b.Id));
+        string? line = Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot));
 
-        Assert.Equal($"{a.Name} declared war on {b.Name}, breaking their treaty.", line);
+        Assert.Equal($"{a.Name} declared war on {b.Name} for loot, breaking their treaty.", line);
         Assert.True(state.Treaties.AtWar(a.Id, b.Id));
         Assert.False(state.Treaties.Has(a.Id, b.Id, TreatyKind.Trade));
         Assert.False(state.Treaties.Has(a.Id, b.Id, TreatyKind.NonAggression));
         RelationEventDefinition broken = Content.Relations.Events[(int)RelationEvent.BrokenTreaty];
-        Assert.Equal(trustBefore + broken.Trust, b.Relation(a.Id)!.Trust);
+        RelationEventDefinition aggression = Content.Relations.Events[(int)RelationEvent.Aggression];
+        Assert.Equal(trustBefore + broken.Trust + aggression.Trust, b.Relation(a.Id)!.Trust);
         RelationMemory seen = Assert.Single(witness.Relation(a.Id)!.Memories, m => m.Kind == RelationEvent.BrokenTreaty);
         Assert.Equal(broken.Trust * Content.Treaties.WitnessPercent / 100, seen.Trust);
         Assert.DoesNotContain(a.Relation(b.Id)!.Memories, m => m.Kind == RelationEvent.BrokenTreaty);
-        Assert.False(new DeclareWarCommand(Content, b.Id).Validate(state, a.Id).Success, "already at war");
+        Assert.False(new DeclareWarCommand(Content, b.Id, WarGoal.Loot).Validate(state, a.Id).Success, "already at war");
     }
 
     [Fact]
@@ -193,7 +194,7 @@ public class TreatyTests
         CivilizationState a = Civ(state, 0);
         CivilizationState b = Civ(state, 1);
         Treaties.Sign(Content, state, a.Id, b.Id, TreatyKind.Trade);
-        Assert.Equal($"{a.Name} declared war on {b.Name}.", Run(state, a.Id, new DeclareWarCommand(Content, b.Id)));
+        Assert.Equal($"{a.Name} declared war on {b.Name} for loot.", Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot)));
         Assert.DoesNotContain(b.Relation(a.Id)!.Memories, m => m.Kind == RelationEvent.BrokenTreaty);
     }
 
@@ -204,7 +205,7 @@ public class TreatyTests
         MeetAll(state);
         CivilizationState a = Civ(state, 0);
         CivilizationState b = Civ(state, 1);
-        Run(state, a.Id, new DeclareWarCommand(Content, b.Id));
+        Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot));
         Assert.False(new ProposeTreatyCommand(Content, b.Id, TreatyKind.Trade).Validate(state, a.Id).Success, "make peace first");
         Run(state, b.Id, new ProposeTreatyCommand(Content, a.Id, TreatyKind.Peace));
         string? line = Run(state, a.Id, new AnswerProposalCommand(Content, b.Id, TreatyKind.Peace, Accept: true));
@@ -240,7 +241,7 @@ public class TreatyTests
         Treaties.Sign(Content, state, victim.Id, ally.Id, TreatyKind.NonAggression);
         Treaties.Sign(Content, state, victim.Id, ally.Id, TreatyKind.DefensiveAlliance);
 
-        string? line = Run(state, aggressor.Id, new DeclareWarCommand(Content, victim.Id));
+        string? line = Run(state, aggressor.Id, new DeclareWarCommand(Content, victim.Id, WarGoal.Loot));
 
         Assert.Contains($"{ally.Name} joined the war at the side of its ally.", line, System.StringComparison.Ordinal);
         Assert.True(state.Treaties.AtWar(ally.Id, aggressor.Id));

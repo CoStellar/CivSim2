@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "comment": "War (GDD 9.3; stage 4e, ADR 0021, decisions of 2026-11-07). Every war has a goal: land (a settlement of the enemy, named when war is declared), loot (the enemy's stores) or revenge (needs a cause: an attack, an aggression or a settlement of ours they hold). goals: victimPercent and witnessPercent say how strongly the victim and everyone who knows both sides remember the aggression (relations.json aggression). Score runs from -100 to 100: a fight won gives the winner's side scorePerWin, a settlement taken scorePerSettlement more. Weariness of a side (0..100) = years of war x wearinessPerYear + percent of the side's people killed in the war x wearinessPerLossPercent; at peaceAbove the side looks for peace at once; it lowers the mood of every settlement of the side by moodAtFullWeariness at 100 (effect war_weariness in effects.json). Peace terms: when the score is at least termsAboveScore, the loser hands over the settlement a war for land was about, or else pays a one-time ransom of ransomPercentPerScorePoint percent of every store per score point from termsAboveScore up (at most maxRansomPercent); a closer war ends in a white peace. cedeWorth: what a settlement handed over is worth in score points when a side weighs terms. Working values, to be tuned in stage 4e PR 5.",
+  "goals": [
+    {"goal": "land", "name": "Land", "victimPercent": 100, "witnessPercent": 50},
+    {"goal": "loot", "name": "Loot", "victimPercent": 100, "witnessPercent": 100},
+    {"goal": "revenge", "name": "Revenge", "victimPercent": 50, "witnessPercent": 0}
+  ],
+  "scorePerWin": 10,
+  "scorePerSettlement": 15,
+  "wearinessPerYear": "1",
+  "wearinessPerLossPercent": "3",
+  "peaceAbove": 60,
+  "moodAtFullWeariness": 20,
+  "termsAboveScore": 20,
+  "ransomPercentPerScorePoint": "0.5",
+  "maxRansomPercent": 40,
+  "cedeWorth": 40
+}

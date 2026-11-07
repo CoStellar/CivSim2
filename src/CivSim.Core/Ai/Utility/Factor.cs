@@ -101,6 +101,12 @@ public enum FactorId : byte
 
     /// <summary>Unknown land cells around a place (explorers, PR C).</summary>
     Unknown = 31,
+
+    /// <summary>Our war weariness, 0..100 (stage 4e).</summary>
+    Weariness = 32,
+
+    /// <summary>What the terms of a peace are worth to us, war score points (stage 4e).</summary>
+    Terms = 33,
 }
 
 /// <summary>

@@ -53,7 +53,25 @@ public sealed record TreatySaveData(
     [property: Key(7)] int GatewayB,
     [property: Key(8)] long LastFlowMonth,
     [property: Key(9)] long LastWorth,
-    [property: Key(10)] long TotalWorth);
+    [property: Key(10)] long TotalWorth,
+    [property: Key(11)] byte Goal = 0,
+    [property: Key(12)] int GoalSettlement = -1,
+    [property: Key(13)] int Score = 0,
+    [property: Key(14)] int DeadA = 0,
+    [property: Key(15)] int DeadB = 0,
+    [property: Key(16)] int PeopleA = 0,
+    [property: Key(17)] int PeopleB = 0,
+    [property: Key(18)] int WearinessA = 0,
+    [property: Key(19)] int WearinessB = 0,
+    [property: Key(20)] PeaceTermsSaveData? Terms = null);
+
+/// <summary>Saved terms of a peace (stage 4e).</summary>
+[MessagePackObject]
+public sealed record PeaceTermsSaveData(
+    [property: Key(0)] byte Kind,
+    [property: Key(1)] int Giver,
+    [property: Key(2)] int Settlement,
+    [property: Key(3)] int RansomPercent);
 
 /// <summary>Saved treaty proposal (stage 4d).</summary>
 [MessagePackObject]
@@ -62,7 +80,8 @@ public sealed record ProposalSaveData(
     [property: Key(1)] int To,
     [property: Key(2)] byte Kind,
     [property: Key(3)] long Month,
-    [property: Key(4)] byte Status);
+    [property: Key(4)] byte Status,
+    [property: Key(5)] PeaceTermsSaveData? Terms = null);
 
 /// <summary>Saved state of one random stream.</summary>
 [MessagePackObject]
