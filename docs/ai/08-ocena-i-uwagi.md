@@ -13,10 +13,10 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Gubernator: przeprowadzki, odłamy, wypędzenia | **dobre, rozsądnie złożone** | liczy jedzenie, wygodę, odległość, kierunek, opinię, siłę |
 | Gubernator: osiedlenie (G4) | **dobre (od PR C)** | plon dla prawdziwych rolników, porównanie ze zbieractwem i ekspansywnością |
 | Gubernator: łupy (G6), dołączanie (G1) | proste, ale wystarczy | rzadkie albo oczywiste sytuacje |
-| Wioski | **proste (od PR C)** | wysyłają osadników (G7), gdy są zatłoczone albo pola wyjałowione; budowy i dzielnice w późniejszych etapach |
+| Wioski | **proste (od PR C, głód po 4g)** | wysyłają osadników (G7), gdy są zatłoczone, pola wyjałowione albo głodują; mała głodna wioska przenosi się do sąsiedniej; budowy i dzielnice w późniejszych etapach |
 | Strateg | **dobre (od PR B)** | każda z 6 wag na coś wpływa; nauka rośnie, gdy spotkani wiedzą więcej, wpływ z liczbą spotkanych; podbój czeka na 4e |
 | Charakter | **żywy (od PR B)** | każda cecha zmienia decyzję (test `DeadValueTests`); ciekawość zmniejsza strach przed kosztem technologii |
-| Dyplomata (4d) | **dobre, z jedną dziurą** | ta sama ocena dla obu stron, reaguje na wojnę i napad poza rytmem (ADR 0018); ale „widzi” dzisiejszą siłę z pamiętanych pól |
+| Dyplomata (4d, po 4g) | **dobre** | ta sama ocena dla obu stron, reaguje na wojnę i napad poza rytmem (ADR 0018); od 4g także wojny z chciwości (łupy, ziemia) i sojusze przeciw wspólnemu wrogowi |
 | Skarbnik | **dobre (od PR B), jedna słabość** | osady sieci koordynują się, jedzenie kontra wyroby, premia za handel; zostało przełączanie odzież ↔ chleb |
 | Uczony | **dobre (od PR B)** | priorytet z położenia, braków i charakteru, koszt jako przeszkoda; rolnictwo przychodzi wcześniej (do oceny) |
 | Wiedza AI | **częściowo naprawione (PR B, PR C)** | obce obozy i ich siła tylko z pól widzianych w ostatnim kroku; ziemia wyceniana z technologiami cywilizacji; jedzenie pól nadal dzisiejsze |
@@ -27,7 +27,7 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji obniża stabilność od PR 3 (pkt 15) |
 | Stabilność (etap 4f, PR 3, PR 5) | **AI reaguje prosto** | przeciążenie hamuje ekspansję, niepokoje: bezpieczeństwo w górę, wojna w dół, spokojniejszy ustrój (pkt 16) |
 | Bunty i secesja (etap 4f, PR 4) | **reguła, nie decyzja** | nowe ludy powstają z dalekich osad; AI rodzica może się mścić (pkt 17) |
-| Testy wsadowe (etap 4g) | **4 dziury** | 100 gier: wioski głodują bez reakcji, wojen o łupy nie ma, podbojów nie ma, sojusze rzadko działają (pkt 18) |
+| Testy wsadowe (etap 4g) | **4 dziury poprawione** | po poprawkach: głodujące wioski 21 zamiast 322 na grę, wojny o łupy w 81 grach, podboje w 19, sojusze 4 na grę (pkt 18) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -305,6 +305,18 @@ Pełny raport: [12-testy-wsadowe.md](12-testy-wsadowe.md). Najważniejsze dziury
 
 Co działa: wojny się kończą (pokojów tyle, co wojen), dyplomacja i handel w każdej grze, w 95 grach wymiera co najmniej jeden lud,
 ustroje zmieniają się około raz na lud na 1000 lat, czas tury 27 ms.
+
+**Po poprawkach AI (gałąź `feat/ai-fixes`, decyzja Patryka „Poprawki AI wszystkie”):** wszystkie cztery punkty poprawione, porównanie
+na tych samych 100 seedach w [12-testy-wsadowe.md](12-testy-wsadowe.md#po-poprawkach-ai-decyzja-patryka-z-2026-11-07-poprawki-ai-wszystkie):
+
+1. Głodujące wioski: mediana **21** zamiast 322 (głodna wioska wysyła osadników co 20 lat, mała przenosi się do najedzonej sąsiedniej osady).
+2. Podboje: osada zdobyta na wojnie w **19** grach zamiast 0 (wojna o wioskę, którą armia zdobędzie z szansą ≥ 75%). Wciąż rzadkie; do
+   sprawdzenia w erze brązu.
+3. Wojny o łupy: w **81** grach (mediana 4), tylko gdy lud głoduje, a sąsiad ma pełniejsze spichlerze i jest słabszy.
+4. Sojusze: mediana **4** zamiast 1, sojusznik przystąpił do wojny w **38** grach zamiast 17.
+
+Za proste albo do pilnowania: wojny z chciwości nigdy nie łamią umowy (zasada w kodzie, nie cecha charakteru; lojalność liczy się tylko
+przy odwecie), a ocena łupów zakłada, że AI widzi zapasy w osadach, które widzi teraz (bez szpiegów i pogłosek).
 
 ## Decyzje Patryka (2026-11-06)
 

@@ -12,7 +12,7 @@ import csv, collections, matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 names = {'SetStrategy':'Strateg: ustawia strategię','SetResearch':'Uczony: wybiera badanie','SetRecipe':'Skarbnik: zmienia recepturę',
- 'MoveCamp':'Obóz przenosi się','SplitCamp':'Odłam zakłada nowy obóz','JoinCamp':'Mały obóz dołącza do innego',
+ 'MoveCamp':'Obóz przenosi się','SplitCamp':'Odłam zakłada nowy obóz','JoinCamp':'Mały obóz albo głodna wioska dołącza',
  'Settle':'Obóz osiada (wioska)','SendSettlers':'Wioska wysyła osadników','Explore':'Wyprawa w nieznane','Occupy':'Zajęcie pustej osady','Conquer':'Wypędzenie obcego obozu',
  'Journey':'Daleka wędrówka','Plunder':'Zabranie porzuconych dóbr',
  'ProposeTreaty':'Dyplomata: proponuje umowę','AcceptTreaty':'Dyplomata: przyjmuje','DeclineTreaty':'Dyplomata: odrzuca','DeclareWar':'Dyplomata: wypowiada wojnę',

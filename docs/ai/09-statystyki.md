@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 5
-(gałąź `feat/state-ai`, AI wobec państwa); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z poprawek po 100 grach
+(etap 4g, gałąź `feat/ai-fixes`); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -16,9 +16,25 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Poprawki po 100 grach (etap 4g)
+
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/ai-fixes`. Wykres decyzji wyżej jest z tych gier. W nawiasach 4f PR 5.
+
+| Seed | Lata gry | Wojny | o odwet / łupy / ziemię | Pakty | Sojusze | Sojusznik przystąpił | Wioska wysyła osadników | Dołączenia (obozy i głodne wioski) | Decyzji AI |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | 19 105 (26 275) | 29 (3) | 23 / 3 / 10 (wliczając sojuszników) | 16 | 5 | 7 | 503 | 560 | 6181 (7594) |
+| 23 | 28 650 (27 025) | 0 (3) | — | 14 | 7 | 0 | 1290 | 1364 | 11 752 (8119) |
+| 42 | 25 400 (14 300) | 11 (30) | 0 / 9 / 2 | 15 | 2 | 0 | 789 | 914 | 10 089 (6914) |
+
+- **Seed 42 spokojniejszy, seed 7 bardziej wojenny:** w 42 pakty zablokowały napady obozów, a z nimi pętlę odwetu (30 → 11 wojen, prawie
+  wszystkie o łupy). W 7 sojusze wciągnęły sojuszników do wojen (7 razy), stąd 29 wojen; świat liczył wtedy co miesiąc, więc gra doszła
+  do 19 tysięcy lat zamiast 26. Na 100 grach liczba wojen spadła (mediana 17 → 10,5), patrz [testy wsadowe](12-testy-wsadowe.md).
+- **Wioski reagują na głód:** wysyłanie osadników i dołączanie małych wiosek to teraz druga i trzecia najczęstsza decyzja gubernatora
+  po przeprowadzkach obozów.
+
 ## AI wobec państwa (etap 4f, PR 5)
 
-3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-ai`. Wykres decyzji wyżej i wykres stabilności niżej są z tych gier.
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-ai`. Wykres stabilności niżej jest z tych gier.
 W nawiasach PR 4.
 
 ![Stabilność w 3 grach](img/stabilnosc_3_seedy.png)

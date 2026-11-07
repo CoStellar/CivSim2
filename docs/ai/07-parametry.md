@@ -41,6 +41,8 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `villageWornBelowPercent` | 70 | % | G7 | poniżej jakiej żyzności pól (wobec naturalnej) wioska wysyła osadników (PR C) |
 | `villageSettlersPeople` | 60 | osoby | G7 | ilu osadników wychodzi (PR C) |
 | `villageSettlersEveryYears` | 100 | lata | G7 | najwyżej jedna grupa osadników z wioski na tyle lat (PR C) |
+| `villageHungryFedPercent` | 70 | % | G7 | wioska najedzona poniżej tego wysyła osadników, żeby było mniej ust do wykarmienia (poprawki po 4g) |
+| `villageHungrySettlersEveryYears` | 20 | lata | G7 | głodna wioska wysyła najwyżej jedną grupę na tyle lat (poprawki po 4g) |
 | `exploreAbovePerMille` | 1500 | ‰ | G8 | próg zapału odkrywcy: waga ekspansji × ekspansywność × ciekawość (PR C) |
 | `exploreLookCells` | 3 | pola | G8 | w jakim promieniu liczy się nieznany ląd (PR C) |
 | `exploreUnknownPercent` | 30 | % | G8 | ile lądu wokół musi być nieznane (PR C) |
@@ -127,7 +129,7 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `witnessPercent` | 50 | % | D3 | jak mocno złamanie umowy pamiętają świadkowie |
 | `allyJoinBasePerMille` | 300 | ‰ | D3 | szansa dołączenia sojusznika przy lojalności 0 |
 | `warRaidPercent` | 150 | % | G2 | premia za wypędzanie obozów wroga w wojnie |
-| `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 11 krzywych czynników (od 4e: `warWeariness` liczy zmęczenie 0…100 zamiast lat, nowa `peaceTerms`; od PR 6 nowa `warScore` −50 → 5, 0 → 1, a `peaceOpinion` przy −100 daje 0,5 zamiast 0,3) |
+| `curves.*` | patrz [dyplomata](10-dyplomata.md) | | D1, D2 | 15 krzywych czynników (od 4e: `warWeariness` liczy zmęczenie 0…100 zamiast lat, nowa `peaceTerms`; od PR 6 nowa `warScore` −50 → 5, 0 → 1, a `peaceOpinion` przy −100 daje 0,5 zamiast 0,3; po 4g nowe `greed`, `lootNeed`, `lootGain`, `conquestChance`, a `threat` zaczyna od 0,8 przy 0% i `allianceTrust` od 0,5 przy zaufaniu 0) |
 | `treaties[].years` | pokój: 100 | lata | D3 | rozejm po wojnie |
 
 ## `data/war.json` (od etapu 4e)

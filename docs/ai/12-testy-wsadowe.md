@@ -93,6 +93,52 @@ epoki brązu jeszcze nie ma w danych (etap 6). W 1 grze (seed 56, wojny co miesi
 7. **Wojny spowalniają zegar świata.** Gra z 90 wojnami doszła tylko do roku 6 600. To zgodne z zasadami (ADR 0022: wojna liczy co miesiąc),
    ale w przyszłych testach wsadowych lepiej porównywać gry po tej samej liczbie lat, nie kroków (opcja do dodania).
 
+## Po poprawkach AI (decyzja Patryka z 2026-11-07: „Poprawki AI wszystkie”)
+
+Te same seedy 1–100 po poprawkach z gałęzi `feat/ai-fixes` (punkty 1, 2, 4 i 5 z listy wyżej). Dane:
+[`dane/100_gier_po_poprawkach.csv`](dane/100_gier_po_poprawkach.csv), wykres: `python3 docs/ai/tools/batch_compare.py dane/100_gier.csv dane/100_gier_po_poprawkach.csv`.
+
+![100 gier przed poprawkami i po nich](img/100_gier_po_poprawkach.png)
+
+| Co | Przed (mediana / średnia) | Po (mediana / średnia) | Gier z zerem przed → po |
+| --- | ---: | ---: | ---: |
+| Głodujące wioski (3 własne kroki z rzędu) | 322 / 360 | **21 / 21** | 1 → 0 |
+| Wojny | 17 / 19 | 10,5 / 16,7 | 2 → 10 |
+| z tego o odwet | 16 / 17,8 | 4 / 6,5 | 2 → 24 |
+| z tego o łupy | 0 / 0 | **4 / 5,6** | 100 → 19 |
+| z tego o ziemię | 1 / 1,2 | 0,5 / 4,5 | 46 → 50 |
+| Wojny łamiące umowę | 0 / 0,8 | 0 / 1,0 | 56 → 64 |
+| Pakty o nieagresji | 8 / 8,1 | 15 / 15,6 | 0 → 0 |
+| Sojusze obronne | 1 / 1,1 | **4 / 4,2** | 45 → 11 |
+| Sojusznik przystąpił do wojny | 0 / 0,4 | 0 / 1,1 | 83 → **62** |
+| Osady zdobyte na wojnie | 0 / 0 | 0 / 0,9 | 100 → **81** |
+| Wymarłe ludy | 3 / 2,9 | 2 / 2,2 | 5 → 7 |
+| Lata gry | 21 625 | 25 350 | |
+| Ludzie na końcu | 255 210 | 260 010 | |
+| Osady na końcu | 363 | 319 | |
+| Niepokoje (% lat) | 7 | 7 | |
+| Średni czas kroku | 27,0 ms | 27,4 ms | |
+
+Co zmieniono (szczegóły w [gubernatorze](03-gubernator.md#g7-wioska-wysyła-osadników-od-pr-c) i [dyplomacie](10-dyplomata.md)):
+
+1. **Głód wiosek:** głodna wioska (najedzona poniżej 70%) wysyła osadników co 20 lat, tylu, ilu nie wyżywi; mała głodna wioska
+   (poniżej 60 osób) przenosi się do najedzonej własnej osady obok. Ten drugi krok dał prawie całą poprawę: drugie 100 gier pokazało,
+   że 4 z 5 głodujących wiosek są za małe na grupę osadników.
+2. **Wojny o łupy:** głodny lud napada sąsiada, którego widziane spichlerze są pełniejsze od jego i którego może pokonać. Są w 81 grach.
+3. **Wojny o ziemię (podbój):** dyplomata wybiera widzianą wioskę sąsiada, którą armia zdobędzie z szansą co najmniej 75% (bitwa w głowie
+   jak u dowódcy), gdy lud chce się rozszerzać. Osada zmieniła właściciela na wojnie w 19 grach (wcześniej w żadnej).
+4. **Sojusze:** pakt pasuje też silniejszemu, sojusz potrzebuje mniej zaufania, a wspólny wróg liczy się w pełni. Sojuszy jest
+   4 razy więcej, a sojusznik przystąpił do wojny w 38 grach zamiast 17.
+5. **Chciwość nie łamie umów:** pierwsza wersja (wojny z chciwości mogły łamać pakt jak odwet) dała medianę 44 wojen, z czego co trzecia
+   łamała pakt, a zegar świata zwalniał (mediana 14 100 lat). Po zakazie wojen jest mniej niż przed poprawkami.
+
+Co zostało (uczciwie):
+
+- **Podboje są wciąż rzadkie** (19 gier, mediana 0): dyplomata i dowódca liczą bitwę z tego, co widzą, a wioski z 150+ ludźmi bronią
+  się dobrze przy armii do 50 wojowników. W neolicie to raczej dobrze; w erze brązu (większe armie, broń z metalu) podbojów powinno być więcej.
+- **Wojen o odwet jest mniej** (mediana 4), bo pakty i sojusze blokują napady obozów, a z nimi powody do odwetu.
+- **Mniej osad na końcu** (319 zamiast 363): małe głodne wioski łączą się z sąsiadami, ludzi jest tyle samo.
+
 ## Kolumny pliku CSV
 
 `seed`, `turns`, `years`, `alive_end`, `peak_alive`, `died_out`, `first_death_year`, `secessions`, `coups`, `government_changes`,

@@ -195,7 +195,9 @@ odłączają się jako nowe cywilizacje z językiem rodzica i własnym tytułem.
   (wojny według celu, umowy, podboje, wymarłe ludy, secesje, przewroty, zmiany ustroju, stabilność, ery, głód bez reakcji), każda gra
   bit w bit jak pojedyncza (`feat/batch-games`)
 - [x] 100 gier i raport dla Patryka: [`docs/ai/12-testy-wsadowe.md`](docs/ai/12-testy-wsadowe.md), wykres `docs/ai/img/100_gier.png`, dane `docs/ai/dane/100_gier.csv`
-- [ ] Poprawki z raportu (do decyzji Patryka): głód wiosek, wojny o łupy, podboje wiosek, sojusze
+- [x] Poprawki z raportu (decyzja Patryka z 2026-11-07: „Poprawki AI wszystkie”): głodna wioska wysyła osadników, mała przenosi się do
+  najedzonej sąsiedniej osady; wojny o łupy i o ziemię (wioska, którą armia zdobędzie) bez łamania umów; pakty i sojusze przeciw wspólnemu
+  wrogowi. Porównanie 100 gier w `docs/ai/12-testy-wsadowe.md`: głodujące wioski 21 zamiast 322 na grę, łupy w 81 grach, podboje w 19, sojusze 4 na grę (`feat/ai-fixes`)
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 

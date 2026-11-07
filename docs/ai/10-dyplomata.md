@@ -42,13 +42,17 @@ Krzywe (proste, w tysięcznych; poza zakresem płaskie):
 | --- | --- | --- | --- |
 | opinia | sympatia | −50 → 0 | +50 → 2000 |
 | zaufanie | zaufanie | −50 → 0 | +50 → 2000 |
-| zaufanie do sojuszu | zaufanie | 0 → 0 | +30 → 1500 |
-| zagrożenie | ich widziani wojownicy / nasi, % | 50% → 500 | 200% → 1500 |
+| zaufanie do sojuszu | zaufanie | 0 → 500 (po 4g; wcześniej 0 → 0) | +30 → 1500 |
+| zagrożenie | ich widziani wojownicy / nasi, % | 0% → 800 (po 4g; wcześniej 50% → 500) | 200% → 1500 |
 | zysk z handlu | ile obie strony zyskałyby, % wartości towarów | 0% → 0 | 40% → 1500 |
 | wrogość | sympatia | −50 → 2000 | 0 → 0 (sympatia ≥ 0 wyklucza wojnę) |
 | przewaga | nasi / (ich + ich sojusznicy), % | 120% → 0 | 250% → 1500 |
 | zmęczenie wojną (od 4e) | nasze zmęczenie wojną, 0…100 (lata wojny + straty, `data/war.json`) | 0 → 0 | 100 → 1500 |
 | opinia o pokoju | sympatia | −100 → 300 | +50 → 1500 |
+| chciwość (po 4g) | sympatia | −50 → 1500 | +50 → 300 (nawet przyjaciela można napaść, ale rzadziej) |
+| potrzeba łupów (po 4g) | jak najedzeni są nasi ludzie, % (suma zjedzonego / suma potrzebnego we wszystkich naszych osadach) | 60% → 2000 | 95% → 0 |
+| łupy (po 4g) | jedzenie widziane w ich osadach / jedzenie w naszych, % | 100% → 500 | 400% → 1500 |
+| szansa podboju (po 4g) | szansa, że nasza armia zdobędzie ich wioskę, % (bitwa w głowie jak u dowódcy, `Campaigns.Expect`) | 75% → 0 | 98% → 1500 |
 | warunki pokoju (od 4e) | ile warunki są dla nas warte w punktach wyniku wojny (oddanie osady 40, okup: 20 + 2 × procent; ujemne, gdy dajemy) | −50 → 400 | +50 → 1600 |
 
 Czynniki każdego kroku:
@@ -57,8 +61,10 @@ Czynniki każdego kroku:
 | --- | --- | --- | --- |
 | **umowa handlowa** | opinia × bliskość (bramy ≤ 16 pól, inaczej 0) × zysk z handlu | dobrobyt | handlowość |
 | **pakt o nieagresji** | opinia × zaufanie × bliskość (≤ 16 pól) × zagrożenie od nich | bezpieczeństwo | ostrożność |
-| **sojusz obronny** | opinia × zaufanie do sojuszu × największe zagrożenie od **innej** cywilizacji (wróg w wojnie = 1500) | bezpieczeństwo | **lojalność** |
-| **wojna** | wrogość × powód (0 bez powodu) × przewaga × (gdy łamie umowę: 1000 − lojalność, min. 100) | podbój | agresja |
+| **sojusz obronny** | opinia × zaufanie do sojuszu × największe zagrożenie od **innej** cywilizacji (wspólny wróg = 1500, patrz niżej) | bezpieczeństwo | **lojalność** |
+| **wojna o odwet** | wrogość × powód (0 bez powodu) × przewaga × (gdy łamie umowę: 1000 − lojalność, min. 100) × (w niepokojach 0,5) | podbój | agresja |
+| **wojna o łupy** (po 4g) | chciwość × bliskość (≤ 16 pól) × potrzeba łupów × łupy × przewaga × (umowa z nimi: 0) × (w niepokojach 0,5) | podbój | agresja |
+| **wojna o ziemię** (po 4g) | chciwość × szansa podboju najlepszej wioski × waga ekspansji stratega (czynnik *expansion*) × (umowa z nimi: 0) × (w niepokojach 0,5) | podbój | agresja |
 | **pokój** | zmęczenie wojną × wynik wojny (od 4e PR 6) × opinia o pokoju × warunki pokoju | bezpieczeństwo | ostrożność |
 
 **Powód wojny** (GDD 9.3): trwający spór graniczny z nimi (mieszkają w naszej osadzie) albo **jakiekolwiek** pamiętane wspomnienie
@@ -67,8 +73,29 @@ ich napaści albo agresji (od 4e: wypowiedzianej nam wojny o ziemię lub łupy; 
 podpisanego pokoju z tą cywilizacją nie są już powodem (`Relation.SettledMonth`); spór graniczny trwa, dopóki trwa. Wspomnienie
 nadal obniża sympatię i zaufanie, tylko nie daje prawa do odwetu. Wojna z ludem, który się odłączył, nie zaczyna się sama: wybiera ją dyplomata rodzica.
 
-**Cel wojny** (od 4e, GDD 9.3, ADR 0021): **ziemia**, gdy mieszkają w osadzie, do której mamy roszczenie (`Treaties.ClaimedSettlement`; cel to ta
-osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to decyzja dowódcy w PR 4).
+**Cel wojny** (od 4e, GDD 9.3, ADR 0021): wojna o odwet ma cel **ziemia**, gdy mieszkają w osadzie, do której mamy roszczenie
+(`Treaties.ClaimedSettlement`; cel to ta osada), w innym razie **odwet**.
+
+**Wojny z chciwości** (poprawki po 4g, `EvaluateLoot`, `EvaluateConquest`): GDD 9.3 pozwala na wojnę o łupy i o ziemię bez powodu,
+ale do etapu 4g AI ich nie wypowiadało (100 gier: 0 wojen o łupy, 0 zdobytych osad). Teraz w każdym przeglądzie dyplomata liczy dla
+każdego sąsiada w pokoju dwie dodatkowe wojny:
+
+- **o łupy:** głodny lud (najedzony poniżej 95%) przeciw sąsiadowi, w którego widzianych osadach jest więcej jedzenia niż u nas
+  i którego może pokonać. Świadkowie pamiętają ją najmocniej (100%).
+- **o ziemię:** wioska sąsiada, którą widzimy teraz i która leży w zasięgu dowódcy (40 pól od naszej najbliższej osady). Armię
+  liczymy tak jak dowódca: wojownicy do wysłania z osad do 6 pól od tej najbliższej, do limitu wodza. Bierzemy wioskę z najlepszą
+  szansą. Cel wojny to ta wioska: dowódca idzie na nią (K1), a zwycięska bitwa ją zdobywa (zasada z 4e). Przy wyniku ≥ 20 pokój
+  ją oddaje.
+
+Chciwość **nigdy nie łamie umowy**: pakt, sojusz albo rozejm z sąsiadem wyklucza obie wojny (czynnik *treaty* 0). Pierwsza wersja
+pozwalała na to jak przy odwecie (1000 − lojalność) i w 100 grach co trzecia wojna łamała pakt, a wojen było 2,5 raza więcej (mediana 44).
+Wtedy też próg szansy podboju podniesiony z 60% do 75%, bo większość wojen o ziemię kończyła się bez zdobycia wioski.
+
+**Wspólny wróg w sojuszu** (poprawki po 4g): w czynniku „największe zagrożenie od innej cywilizacji” w pełni (1500) liczy się lud,
+z którym jesteśmy w wojnie, lud w wojnie z **partnerem** (wojny są jawne) i lud, wobec którego mamy powód do odwetu. Razem z
+łagodniejszymi krzywymi zagrożenia i zaufania do sojuszu daje to sojusze tam, gdzie jest przeciw komu się bronić. Wcześniej słabszy
+sąsiad prawie zawsze odrzucał pakt (zagrożenie 0,5, bo silniejszy go nie widział jako groźnego), a bez paktu nie ma sojuszu:
+1 sojusz w 3 grach.
 
 ## D1: Odpowiedź na propozycję (reaktywna)
 
@@ -101,8 +128,8 @@ osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to d
   - w wojnie z nią: tylko **pokój** (D3), jeśli ocena ≥ 1000, a gdy nasze zmęczenie wojną ≥ 60 (`war.json` `peaceAbove`), przy każdej
     ocenie powyżej zera;
   - w pokoju: **handel**, **pakt**, **sojusz** (każdy tylko jeśli można go zaproponować: nie obowiązuje, nie czeka, nie odrzucony
-    w ostatnich 100 latach, sojusz po pakcie), jeśli ocena ≥ 1000 (`proposeAbove: 1`); **wojna**, jeśli ocena ≥ 1500
-    (`declareWarAbove: 1.5`).
+    w ostatnich 100 latach, sojusz po pakcie), jeśli ocena ≥ 1000 (`proposeAbove: 1`); **wojna o odwet**, **o łupy** i **o ziemię**
+    (po 4g), każda jeśli ocena ≥ 1500 (`declareWarAbove: 1.5`).
 - **Wybór:** **jeden** krok spośród wszystkich cywilizacji i rodzajów: 3 najlepsze, ostrożność albo losowanie
   ([wybór](01-wspolne-mechanizmy.md#3-wybór-chooser-i-advisorpick)).
 - **Komenda:** `ProposeTreatyCommand` (`ProposeTreaty`) albo `DeclareWarCommand` (`DeclareWar`).
