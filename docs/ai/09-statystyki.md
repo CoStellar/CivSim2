@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 4
-(gałąź `feat/state-revolts`, bunty i secesja); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 5
+(gałąź `feat/state-ai`, AI wobec państwa); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -16,9 +16,30 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## AI wobec państwa (etap 4f, PR 5)
+
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-ai`. Wykres decyzji wyżej i wykres stabilności niżej są z tych gier.
+W nawiasach PR 4.
+
+![Stabilność w 3 grach](img/stabilnosc_3_seedy.png)
+
+| Seed | Lata gry | Wojny | O odwet | Zmiany ustroju (S2) | z tego w niepokojach | Przewroty | Secesje | Średnia stabilność | Lat w niepokojach | Decyzji AI |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | 26 275 (21 700) | 3 (19) | 3 (18) | 30 | 5 | 3 (4) | 0 (1) | 48 (50) | 7% (2%) | 7594 (9052) |
+| 23 | 27 025 (25 750) | 3 (9) | 3 (9) | 22 | 10 | 3 (3) | 0 (1) | 51 (53) | 7% (4%) | 8119 (13 638) |
+| 42 | 14 300 (14 525) | 30 (40) | 23 (35) | 6 | 2 | 2 (2) | 0 (1) | 52 (51) | 2% (3%) | 6914 (8642) |
+
+- **Pętla odwetu zamknięta:** pokój zamyka rachunek, więc wojen jest 3–30 zamiast 9–40. W seedzie 42 ta sama para walczy najwyżej
+  5 razy (wcześniej 13), i za każdym razem z nowego powodu (nowa napaść po pokoju).
+- **Ustrój zmienia się rzadko i zwykle po zmianie władcy:** 6–30 zmian na grę (12 ludów, 14–27 tysięcy lat), czyli około jednej
+  na lud na 1000–2000 lat. Większość przychodzi, gdy nowy przywódca przesuwa charakter (np. ostrożny wódz → rada), tylko 2–10 w
+  niepokojach. Najczęściej zmienia się ten sam lud (seed 7: Thethvaeli 10 razy, na zmianę rada i wodzostwo co kilkaset lat).
+- **Niepokojów jest więcej w seedach 7 i 23 (7% zamiast 2–4%)**: nie było secesji (wcześniej każda gra miała jedną dużą, która
+  odcinała dalekie, nielojalne osady), a każda zmiana ustroju to 2 lata bezkrólewia. Do obserwacji w etapie 4g na 100 grach.
+
 ## Bunty i secesja (etap 4f, PR 4)
 
-3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-revolts`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 3.
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-revolts`. W nawiasach PR 3.
 
 | Seed | Lata gry | Secesje | Przewroty | Średnia stabilność | Lat w niepokojach | Wojny | Z udziałem nowego ludu |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -37,7 +58,6 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-stability`. W nawiasach PR 2.
 
-![Stabilność w 3 grach](img/stabilnosc_3_seedy.png)
 
 | Seed | Lata gry | Średnia stabilność | Lat cywilizacji w niepokojach | Wpisów „Unrest spread” | Wojny | Najczęstszy agresor |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |

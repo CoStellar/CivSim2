@@ -86,6 +86,9 @@ public enum AiAction : byte
 
     /// <summary>The commander calls a campaign home (stage 4e PR 5).</summary>
     RecallCampaign = 18,
+
+    /// <summary>The strategist brings in another form of government (stage 4f PR 5).</summary>
+    ChangeGovernment = 19,
 }
 
 /// <summary>
@@ -161,6 +164,9 @@ public readonly record struct Decision(
         FactorId.ExpectedLoss => "expected losses",
         FactorId.BeyondSupply => "cells beyond supply",
         FactorId.WarScore => "war score",
+        FactorId.Stability => "stability",
+        FactorId.Administration => "administration",
+        FactorId.Suitability => "suitability",
         FactorId.LeadsTo => "leads to",
         FactorId.ForTrade => "for trade",
         FactorId.OverGathering => "over gathering",

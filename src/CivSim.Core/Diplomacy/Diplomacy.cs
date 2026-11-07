@@ -142,7 +142,7 @@ public static class Treaties
 
     /// <summary>
     /// True when <paramref name="civ"/> has a reason to fight <paramref name="other"/> (GDD 9.3): they attacked us, declared
-    /// a war of aggression, broke away from us (stage 4f PR 4), or live in a settlement we claim.
+    /// a war of aggression, broke away from us (stage 4f PR 4) since our last peace with them, or live in a settlement we claim.
     /// </summary>
     public static bool HasGrievance(GameState state, CivId civ, CivId other)
     {
@@ -154,7 +154,9 @@ public static class Treaties
 
         foreach (RelationMemory m in r.Memories)
         {
-            if ((m.Kind == RelationEvent.BorderDispute && m.IsOngoing) || m.Kind is RelationEvent.Attack or RelationEvent.Aggression or RelationEvent.Secession)
+            // A wrong from before the last peace is settled (stage 4f PR 5: the revenge loop ends with the war).
+            if ((m.Kind == RelationEvent.BorderDispute && m.IsOngoing)
+                || (m.Kind is RelationEvent.Attack or RelationEvent.Aggression or RelationEvent.Secession && m.EndMonth > r.SettledMonth))
             {
                 return true;
             }
@@ -233,6 +235,15 @@ public static class Treaties
                 treaty.Campaigns = war.Campaigns;
                 treaty.CampaignMonths = war.CampaignMonths;
                 treaty.LastCampaignMonth = war.LastCampaignMonth;
+            }
+
+            // The peace settles the old wrongs on both sides (stage 4f PR 5).
+            foreach ((CivId x, CivId y) in new[] { (from, to), (to, from) })
+            {
+                if (state.FindCivilization(x)?.Relation(y) is { } settled)
+                {
+                    settled.SettledMonth = state.Month;
+                }
             }
 
             string kept = Wars.Keep(content, state, from, to, terms);

@@ -63,7 +63,9 @@ Czynniki każdego kroku:
 
 **Powód wojny** (GDD 9.3): trwający spór graniczny z nimi (mieszkają w naszej osadzie) albo **jakiekolwiek** pamiętane wspomnienie
 ich napaści albo agresji (od 4e: wypowiedzianej nam wojny o ziemię lub łupy; `Treaties.HasGrievance`), a od 4f PR 4 także secesji
-(odłączył się od nas). Bez powodu wojna ma ocenę 0. Wojna z ludem, który się odłączył, nie zaczyna się sama: wybiera ją dyplomata rodzica.
+(odłączył się od nas). Bez powodu wojna ma ocenę 0. **Od 4f PR 5 pokój zamyka rachunek:** napaść, agresja i secesja sprzed ostatniego
+podpisanego pokoju z tą cywilizacją nie są już powodem (`Relation.SettledMonth`); spór graniczny trwa, dopóki trwa. Wspomnienie
+nadal obniża sympatię i zaufanie, tylko nie daje prawa do odwetu. Wojna z ludem, który się odłączył, nie zaczyna się sama: wybiera ją dyplomata rodzica.
 
 **Cel wojny** (od 4e, GDD 9.3, ADR 0021): **ziemia**, gdy mieszkają w osadzie, do której mamy roszczenie (`Treaties.ClaimedSettlement`; cel to ta
 osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to decyzja dowódcy w PR 4).
@@ -84,7 +86,8 @@ osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to d
 
 - **Ustrój** (etap 4f): odstęp przeglądów razy `reviewPercent / 100` (rada starszych co 75 lat, wodzostwo co 37,5 roku). W czasie
   zmiany ustroju cywilizacja nie wypowiada wojen (`CannotDeclareWar`: „We are changing our government.”), a od PR 3 także przez
-  2 lata bezkrólewia po zmianie („Our state is in anarchy.”).
+  2 lata bezkrólewia po zmianie („Our state is in anarchy.”). Od PR 5 dyplomata w ogóle nie rozważa wtedy wojny (wcześniej liczył
+  ją i dostawał odmowę), a **w niepokojach** (stabilność poniżej 30) ocena wojny × `unrestWarPercent` (50%), czynnik *stability*.
 - **Kiedy (proaktywnie):** raz na 50 lat (`reviewEveryYears`), rozłożone między cywilizacje, we własnym kroku: gdy
   `(miesiąc + 84 × numer cywilizacji) mod 600 < długość jej kroku w miesiącach` (84 miesiące = 7 lat, `reviewStaggerYears`). W epoce kamienia (krok 50 lat) więc w **każdym
   własnym kroku**; w neolicie co drugim; przy krokach półrocznych w jednym ze 100 (od ADR 0018 bez powtórek w roku przeglądu).

@@ -40,6 +40,9 @@ flowchart LR
   - dyplomata: przegląd co `reviewEveryYears × reviewPercent / 100` lat;
   - wybór opcji: najlepsza wprost z szansą `ostrożność + cautionShift` (0–1000);
   - wagi celów stratega razy `goalPercent / 100`.
+- **Zmiana ustroju przez AI** (od PR 5, decyzja S2 w [`docs/ai/02-strateg.md`](../ai/02-strateg.md#s2-wybór-ustroju)): w każdym
+  przeglądzie strateg liczy dopasowanie `Σ cecha × leaning` (charakter z cechami przywódcy; w niepokojach plus premia stabilności
+  × 40) i wydaje `ChangeGovernmentCommand`, gdy najlepszy ustrój jego ery pasuje o ponad 30% lepiej niż obecny, nie częściej niż co 200 lat.
 
 | Ustrój | Od | Wdrożenie | Przeglądy | Ostrożność | Wagi celów |
 | --- | --- | --- | --- | --- | --- |

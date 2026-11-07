@@ -56,6 +56,14 @@ flowchart LR
 - **Niepokoje:** poniżej 30 efekt `unrest` (z `data/effects.json`) obniża wydajność wszystkich osad o 1% za każdy punkt poniżej 30,
   do następnego kroku cywilizacji. Kronika zapisuje początek („Unrest spread...”) i koniec („Calm returned...”).
 
+### Jak reaguje AI (od PR 5)
+
+- Strateg: przy przeciążonej administracji waga ekspansji × pojemność / zużycie (nie mniej niż 50%); w niepokojach waga
+  bezpieczeństwa × 1,5 i premia stabilności ustroju w wyborze ustroju (S2).
+- Dyplomata: w niepokojach ocena wojny × 0,5; w bezkrólewiu i w trakcie zmiany ustroju wojny w ogóle nie rozważa.
+- Parametry w `data/ai.json` (`overloadExpansionMinPercent`, `unrestSecurityPercent`, `unrestWarPercent`,
+  `governmentChangeMarginPercent`, `governmentStabilityWeight`, `governmentKeepYears`); opis w [`docs/ai/`](../ai/02-strateg.md).
+
 ## Pliki danych
 
 `data/stability.json`, pola `stabilityBonus`, `administration`, `strataInfluence` w `data/governments.json`, efekt `unrest`

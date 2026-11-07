@@ -49,6 +49,12 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `uncomfortableBelowPercent` | 100 | % | G2 | poniżej tej wygody obóz szuka nowego miejsca (dawniej w kodzie) |
 | `opinionSwingPercent` | 50 | % | G2 | jak mocno sympatia zmienia chęć wypędzenia: ±50% przy pełnej sympatii albo nienawiści (dawniej „/ 20” w kodzie) |
 | `reviewStaggerYears` | 7 | lata | D2 | rozłożenie przeglądów dyplomaty między cywilizacje (dawniej 84 miesiące w kodzie) |
+| `overloadExpansionMinPercent` | 50 | % | S1 | przy przeciążonej administracji waga ekspansji × pojemność / zużycie, ale nie mniej niż tyle (etap 4f PR 5) |
+| `unrestSecurityPercent` | 150 | % | S1 | w niepokojach (stabilność poniżej 30) waga bezpieczeństwa razy tyle (etap 4f PR 5) |
+| `unrestWarPercent` | 50 | % | D2 | w niepokojach ocena wojny razy tyle (etap 4f PR 5) |
+| `governmentChangeMarginPercent` | 30 | % | S2 | o ile lepiej musi pasować nowy ustrój, żeby strateg go wprowadził (histereza; etap 4f PR 5) |
+| `governmentStabilityWeight` | 40 | punkty dopasowania | S2 | w niepokojach każdy punkt premii stabilności ustroju dodaje tyle do dopasowania (etap 4f PR 5) |
+| `governmentKeepYears` | 200 | lata | S2 | tyle lat po zmianie ustroju (także po przewrocie) strateg nie rozważa kolejnej (etap 4f PR 5) |
 
 ### `data/ai.json` → `commander` (dowódca, etap 4e PR 5)
 
@@ -165,17 +171,17 @@ despotia i republika miejska czekają na epokę brązu.
 | `reviewPercent` | 150 | 75 | % odstępu | S1, D2 | tempo przeglądów stratega i dyplomaty |
 | `cautionShift` | +200 | 0 | ‰ ostrożności | wszystkie z wyborem | jak często AI bierze najlepszą opcję wprost |
 | `goalPercent` | bezpieczeństwo 110 | ekspansja 120, podbój 120 | % wagi | S1 (i przez wagi wszystkie) | przechylenie wag celów |
-| `leaning` | ostrożność 1, otwartość 1 | agresja 1, ekspansywność 1 | waga cechy | start gry | który ustrój lud dostaje na start |
-| `stabilityBonus`, `administration`, `strataInfluence` | +10, 250, myśliciele i przywódcy x4 | 0, 200, wojownicy i przywódcy x4 | punkty, punkty, waga | — (AI czyta stabilność od PR 5) | stabilność i limit administracji ([opis](../systems/stability.md)) |
+| `leaning` | ostrożność 1, otwartość 1 | agresja 1, ekspansywność 1 | waga cechy | start gry, S2 | który ustrój lud dostaje na start i który wybiera strateg (od PR 5) |
+| `stabilityBonus`, `administration`, `strataInfluence` | +10, 250, myśliciele i przywódcy x4 | 0, 200, wojownicy i przywódcy x4 | punkty, punkty, waga | S1, S2, D2 (od PR 5) | stabilność i limit administracji ([opis](../systems/stability.md)) |
 
 ## `data/stability.json` (od etapu 4f PR 3)
 
-AI jeszcze nie reaguje na stabilność (to PR 5). Na decyzje wpływa pośrednio:
+Od PR 5 AI czyta stabilność wprost: `unrestBelow` włącza reakcje S1, S2 i D2 (parametry w `ai.json` wyżej). Pozostałe działają pośrednio:
 
 | Parametr | Wartość | Decyzje | Znaczenie |
 | --- | --- | --- | --- |
 | `anarchyYears`, `anarchyPenalty` | 2 lata, 20 | D2 | po zmianie ustroju 2 lata bez wypowiedzeń wojny i bez kolejnej zmiany |
-| `unrestBelow`, `unrestOutputPercentPerPoint` | 30, 1% | wszystkie przez zapasy | niepokoje obniżają wydajność osad, więc mniej jedzenia i dóbr do ocen |
+| `unrestBelow`, `unrestOutputPercentPerPoint` | 30, 1% | S1, S2, D2; wszystkie przez zapasy | niepokoje obniżają wydajność osad, więc mniej jedzenia i dóbr do ocen |
 | `revoltBelow`, `revoltPerMillePerYear`, `revoltCalmYears` (od PR 4) | 15, 20‰, 20 lat | — (bunt to reguła, nie decyzja AI) | bunt poniżej 15: 2% na rok, potem 20 lat spokoju |
 | `secessionLoyaltyBelow`, `secessionMinPeople`, `maxCivilizations`, `secessionCharacterShift` (od PR 4) | 5, 200, 64, ±150‰ | wszystkie nowego ludu | kto się odłącza; nowy lud ma charakter rodzica ±0,15 na cechę i inny ustrój |
 | pozostałe (`crisisPenalty` 15, `capitalLostPenalty` 15 na 5 lat, `adminPerSettlement` 10, `adminPerRoadCost` 1, `roadSearchCost` 60, `overloadPenaltyPer100Percent` 10, `overloadMaxPenalty` 25, `loyaltyPer10RoadCost` 5) | | — | skład stabilności i lojalności |
