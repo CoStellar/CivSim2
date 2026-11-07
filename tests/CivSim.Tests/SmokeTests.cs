@@ -50,4 +50,28 @@ public class SmokeTests
             File.Delete(path);
         }
     }
+
+    [Fact]
+    public void ABatchRunsEveryGameAsItsOwnSeedWould()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"civsim2-batch-{System.Environment.ProcessId}.csv");
+        try
+        {
+            Assert.Equal(2, Program.Main(["--batch", "3"])); // needs --batch-out
+            Assert.Equal(0, Program.Main(["--seed", "40", "--turns", "20", "--map-size", "test", "--batch", "3", "--batch-out", path, "--jobs", "3"]));
+            string[] lines = File.ReadAllLines(path);
+            Assert.Equal(4, lines.Length);
+            Assert.Equal(BatchRun.Header, lines[0]);
+            Assert.All(lines, l => Assert.Equal(BatchRun.Header.Split(',').Length, l.Split(',').Length));
+
+            // The second row is seed 41, the same game as a single run of that seed.
+            HeadlessResult one = HeadlessRun.Execute(new HeadlessOptions(41, 20, MapSize.Test, null, Quiet: true), TextWriter.Null);
+            Assert.StartsWith("41,", lines[2], System.StringComparison.Ordinal);
+            Assert.EndsWith(one.StateHash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture), lines[2], System.StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 }

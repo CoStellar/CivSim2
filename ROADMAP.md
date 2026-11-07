@@ -189,6 +189,14 @@ odłączają się jako nowe cywilizacje z językiem rodzica i własnym tytułem.
 - [x] **PR 4:** bunty poniżej 15: przewrót w rdzeniu albo secesja dalekich osad jako nowa cywilizacja (język z mutacją, własny ustrój i tytuł); rodzic pamięta secesję (powód odwetu); zapis 29, protokół 13 (`feat/state-revolts`)
 - [x] **PR 5:** AI państwa: strateg hamuje ekspansję przy przeciążeniu, w niepokojach dba o bezpieczeństwo i wybiera ustrój pasujący do ludu (S2, histereza 30%); dyplomata unika wojny w niepokojach i bezkrólewiu; pokój zamyka rachunek krzywd (koniec pętli odwetu); test martwych wartości, `docs/ai/`, statystyki z 3 seedów; zapis 30 (`feat/state-ai`)
 
+## Etap 4g — Testy wsadowe: 100 gier i raport (GDD 8.7)
+
+- [x] Tryb wsadowy w `CivSim.Headless` (`--batch N --batch-out games.csv --jobs N`): N gier na kolejnych seedach naraz, wiersz CSV na grę
+  (wojny według celu, umowy, podboje, wymarłe ludy, secesje, przewroty, zmiany ustroju, stabilność, ery, głód bez reakcji), każda gra
+  bit w bit jak pojedyncza (`feat/batch-games`)
+- [x] 100 gier i raport dla Patryka: [`docs/ai/12-testy-wsadowe.md`](docs/ai/12-testy-wsadowe.md), wykres `docs/ai/img/100_gier.png`, dane `docs/ai/dane/100_gier.csv`
+- [ ] Poprawki z raportu (do decyzji Patryka): głód wiosek, wojny o łupy, podboje wiosek, sojusze
+
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 
 Zaraz po etapie 4. Cel: łatwiej oceniać symulację, bez grzebania w argumentach uruchomienia w Godocie.
