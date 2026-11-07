@@ -37,7 +37,7 @@ public static class Treaties
                 return "That proposal is already waiting for an answer.";
             }
 
-            if (state.Month < p.Month + (content.Treaties.RetryYears * 12L))
+            if (state.Month < p.Month + (content.Treaties.RetryYearsFor(kind) * 12L))
             {
                 return "They declined that proposal not long ago.";
             }

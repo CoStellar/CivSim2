@@ -16,6 +16,30 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Strojenie wojny (etap 4e, PR 6)
+
+3 seedy, mapa standard, 1000 kroków świata. W nawiasach PR 5 (ten sam kod gry przed strojeniem). Wykres `img/kampanie_3_seedy.png` jest z tych gier.
+
+| Seed | Kampanie | Miesiące wypraw | Miesiące głodu | Dostawy tragarzy | Bitwy | Wygrane | Odwołane (K2) | Głód złamał | Wojny | Pokój z okupem |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | 24 (38) | 192 (258) | 47 (110) | 41 (64) | 15 (14) | 14 (8) | 12 (27) | 0 (1) | 32 (20) | 1 (0) |
+| 23 | 3 (17) | 20 (124) | 2 (49) | 5 (30) | 3 (8) | 3 (7) | 0 (7) | 0 (2) | 5 (11) | 0 (1) |
+| 42 | 7 (7) | 48 (49) | 12 (24) | 10 (13) | 3 (2) | 3 (1) | 4 (4) | 0 (2) | 10 (4) | 0 (0) |
+
+- **Głód:** armie głodują w 23% miesięcy wypraw (61 z 260), wcześniej w 42% (183 z 431). Głód nie złamał żadnej wyprawy (wcześniej 5).
+  Przyczyna była prosta: tragarze szli z najbliższej osady, często prawie pustej (1–2 osoby z garścią jedzenia), a ich wyprawa blokowała
+  inne osady. Teraz idą z osady, która może dać najwięcej, szybciej (6 pól na miesiąc) i wcześniej (poniżej 3 miesięcy jedzenia); armia
+  w czasie zbiórki je z zapasów domu, a dowódca liczy jedzenie okolicy na całą wyprawę.
+- **Mniej, ale lepiej przygotowanych kampanii:** dowódca nie wysyła armii, której okolica nie wyżywi. W seedzie 23 to tylko 3 kampanie
+  w 5 wojnach; z `minFoodMonths` 0 byłoby ich 19, ale z głodem w 27% miesięcy. Zostawiłem 1 (ostrożniej). Gra jest chaotyczna: różnice
+  w liczbie wojen między PR 5 i PR 6 to w dużej części inna historia świata, nie skutek jednej zmiany.
+- **Pokój z warunkami** wciąż jest rzadki (1 okup w 3 grach). Prawie każda wojna kończy się ciszą: po kampanii nikt nie walczy przez 5 lat
+  i przychodzi biały pokój. Patryk zdecydował 2026-11-07, że tak zostaje (warunki tylko wtedy, gdy strony same się dogadają). Nowy czynnik
+  „wynik wojny” i ponowna propozycja pokoju po roku działają (test `WarTuningTests`), ale rzadko mają okazję.
+- **Podbój:** żadna wioska nie zmieniła właściciela w tych grach. Wojny są prawie zawsze o odwet (wojna o ziemię wymaga roszczenia).
+- **Długi przebieg 10 000 tur** (seed 42, kod PR 5): 203 150 lat gry, średnio 46 ms na turę (p95 82 ms; cel < 50 ms), pamięć danych 32 MB,
+  cały program 258 MB (cel < 1 GB). Średni czas tury w kolejnych 2000 turach: 38, 54, 55, 49, 34 ms (najwięcej osad w środku gry).
+
 ## Dowódca: bitwa w głowie i odwołanie co miesiąc (etap 4e, PR 5)
 
 Z `--campaigns`, `--decisions` i kroniki, 3 seedy, mapa standard, 1000 kroków świata. W nawiasach PR 4. Wykres `img/kampanie_3_seedy.png` (niżej) jest z tych gier.

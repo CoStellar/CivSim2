@@ -160,6 +160,7 @@ public readonly record struct Decision(
         FactorId.FoodMonths => "food months",
         FactorId.ExpectedLoss => "expected losses",
         FactorId.BeyondSupply => "cells beyond supply",
+        FactorId.WarScore => "war score",
         FactorId.LeadsTo => "leads to",
         FactorId.ForTrade => "for trade",
         FactorId.OverGathering => "over gathering",

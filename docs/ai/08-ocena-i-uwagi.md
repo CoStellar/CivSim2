@@ -225,6 +225,9 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   - dowódca nie czeka (np. aż dojdą tragarze albo wróg osłabnie), tylko idzie dalej albo wraca;
   - zapas jedzenia: armia bierze najwyżej 3 miesiące, a tragarze niosą mało, więc kampanie wciąż głodują średnio 2–4 miesiące
     (tylko rzadziej się przez to łamią). To strojenie zaopatrzenia na PR 6.
+- **Po strojeniu (PR 6):** głód spadł z 42% do 23% miesięcy wypraw; dowódca liczy jedzenie okolicy na całą wyprawę, przez co
+  w niektórych grach wysyła mało armii (seed 23: 3 kampanie w 5 wojnach). Wojny wciąż kończą się zwykle ciszą i białym pokojem (decyzja
+  Patryka: tak zostaje), więc zwycięstwa rzadko coś dają poza łupami. Do przemyślenia przy kolejnych erach: wojny o ziemię są rzadkie.
 - **Co może być zbędne:** próg strat `maxLossPercent` 50 rzadko decyduje sam, bo przy szansie ≥ 60% straty są zwykle małe; zostaje,
   bo test martwych wartości pokazuje, że zmienia decyzje, i będzie ważniejszy z murami i lepszą bronią obrońców.
 

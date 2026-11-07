@@ -62,6 +62,9 @@ public sealed record TreatyRules
     /// <summary>Years a declined proposal is not made again to the same civilization.</summary>
     public int RetryYears { get; init; } = 100;
 
+    /// <summary>Years before a declined proposal of <paramref name="kind"/> may be made again.</summary>
+    public int RetryYearsFor(TreatyKind kind) => kind == TreatyKind.Peace ? PeaceRetryYears : RetryYears;
+
     /// <summary>Most cells between the nearest settlements of two civilizations for trade and pacts to make sense.</summary>
     public int ReachCells { get; init; } = 16;
 
@@ -102,7 +105,13 @@ public sealed record TreatyRules
     public ResponseCurve WarWeariness { get; init; } = ResponseCurve.Linear(0, 0, 100, 1500);
 
     /// <summary>Sympathy (hundredths) to factor for peace: even enemies make peace, friends sooner.</summary>
-    public ResponseCurve PeaceOpinion { get; init; } = ResponseCurve.Linear(-10000, 300, 5000, 1500);
+    public ResponseCurve PeaceOpinion { get; init; } = ResponseCurve.Linear(-10000, 500, 5000, 1500);
+
+    /// <summary>War score from our side to factor for peace: a side that is losing wants peace more (stage 4e PR 6).</summary>
+    public ResponseCurve WarScore { get; init; } = ResponseCurve.Linear(-50, 5000, 0, 1000);
+
+    /// <summary>A declined peace is not proposed again for this many years (other treaties: <see cref="RetryYears"/>; stage 4e PR 6).</summary>
+    public int PeaceRetryYears { get; init; } = 1;
 
     /// <summary>Peace: what its terms are worth to us in war score points (negative when we give; stage 4e).</summary>
     public ResponseCurve PeaceTerms { get; init; } = ResponseCurve.Linear(-50, 400, 50, 1600);

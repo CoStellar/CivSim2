@@ -59,7 +59,7 @@ Czynniki każdego kroku:
 | **pakt o nieagresji** | opinia × zaufanie × bliskość (≤ 16 pól) × zagrożenie od nich | bezpieczeństwo | ostrożność |
 | **sojusz obronny** | opinia × zaufanie do sojuszu × największe zagrożenie od **innej** cywilizacji (wróg w wojnie = 1500) | bezpieczeństwo | **lojalność** |
 | **wojna** | wrogość × powód (0 bez powodu) × przewaga × (gdy łamie umowę: 1000 − lojalność, min. 100) | podbój | agresja |
-| **pokój** | zmęczenie wojną × opinia o pokoju × warunki pokoju | bezpieczeństwo | ostrożność |
+| **pokój** | zmęczenie wojną × wynik wojny (od 4e PR 6) × opinia o pokoju × warunki pokoju | bezpieczeństwo | ostrożność |
 
 **Powód wojny** (GDD 9.3): trwający spór graniczny z nimi (mieszkają w naszej osadzie) albo **jakiekolwiek** pamiętane wspomnienie
 ich napaści albo agresji (od 4e: wypowiedzianej nam wojny o ziemię lub łupy; `Treaties.HasGrievance`). Bez powodu wojna ma ocenę 0.
@@ -73,7 +73,11 @@ osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to d
   Propozycja złożona w kroku świata N dostaje odpowiedź w kroku N+1; bez odpowiedzi wygasa jako odrzucona.
 - **Decyzja:** przyjmij, gdy `ocena ≥ 800` (`acceptAbove: 0.8`) i umowę wciąż można podpisać. Bez losowania.
 - **Komenda:** `AnswerProposalCommand` (działanie `AcceptTreaty` / `DeclineTreaty`). Odrzuconej propozycji ta sama strona nie
-  powtarza przez 100 lat (`retryYears`).
+  powtarza przez 100 lat (`retryYears`), a odrzuconego **pokoju** tylko przez rok (`peaceRetryYears`, od 4e PR 6: wynik wojny zmienia się
+  co miesiąc kampanii, więc pokój odrzucony dziś może być przyjęty za rok).
+- **Wynik wojny** (od 4e PR 6, krzywa `warScore`): strona, która przegrywa, chce pokoju bardziej: wynik z jej strony −50 i gorzej daje czynnik 5,
+  0 i lepiej czynnik 1 (liniowo pomiędzy). Wcześniej przegrany prawie nigdy nie przyjmował warunków, bo nienawiść do wroga (opinia −100)
+  dawała czynnik 0,3, a oddanie czegoś jeszcze go obniżało. Od PR 6 opinia −100 daje 0,5 (`peaceOpinion`).
 
 ## D2: Przegląd stosunków (proaktywny)
 
