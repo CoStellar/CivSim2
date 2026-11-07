@@ -61,6 +61,36 @@ public static class GameStateHash
             {
                 h.Add(a.Hundredths);
             }
+
+            h.Add(e.GoalTarget);
+            h.Add(e.Mustered);
+            h.Add(e.ArmsPercent);
+            h.Add(e.Morale);
+            h.Add(e.MusterUntilMonth);
+            h.Add(e.HungryMonths);
+            h.Add(e.Forays);
+            h.Add(e.Foraging ? 1 : 0);
+            h.Add(e.LastPrey);
+            h.Add(e.ConvoyFrom);
+            h.Add(e.ConvoyCell);
+            h.Add(e.ConvoyCarriers);
+            h.Add(e.Convoys);
+            h.Add(e.Members.Length);
+            for (int m = 0; m < e.Members.Length; m++)
+            {
+                h.Add(e.Members[m]);
+                h.Add(m < e.MemberWarriors.Length ? e.MemberWarriors[m] : 0);
+            }
+
+            foreach (Numerics.Amount a in e.Food)
+            {
+                h.Add(a.Hundredths);
+            }
+
+            foreach (Numerics.Amount a in e.ConvoyFood)
+            {
+                h.Add(a.Hundredths);
+            }
         }
 
         Span<RandomState> rng = stackalloc RandomState[RandomStreams.Count];

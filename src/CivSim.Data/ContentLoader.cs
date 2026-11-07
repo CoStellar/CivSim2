@@ -50,7 +50,7 @@ public static class ContentLoader
         LoadPeopleRequirements(Path.Combine(directory, "technologies.json"), technologies, skills, strata, errors);
         List<EventDefinition> events = LoadEvents(Path.Combine(directory, "events.json"), biomes, effects, technologies, errors);
         Core.Diplomacy.TreatyRules treaties = LoadTreaties(Path.Combine(directory, "diplomacy.json"), technologies, errors);
-        Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), errors);
+        Core.Diplomacy.WarRules war = LoadWar(Path.Combine(directory, "war.json"), goods, technologies, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -727,7 +727,11 @@ public static class ContentLoader
             string key = r.Key("key", keys);
             string name = r.String("name");
             int months = r.Int("monthsPerTurn", 1, 1200);
-            result.Add(new EraDefinition(i, key, name, months));
+            result.Add(new EraDefinition(i, key, name, months)
+            {
+                ArmyLimit = r.Int("armyLimit", 1, 1_000_000),
+                TroopsPerCell = r.Int("troopsPerCell", 1, 1_000_000),
+            });
             i++;
         }
 
@@ -1614,7 +1618,7 @@ public static class ContentLoader
         };
     }
 
-    private static Core.Diplomacy.WarRules LoadWar(string path, List<string> errors)
+    private static Core.Diplomacy.WarRules LoadWar(string path, List<GoodDefinition> goods, List<TechnologyDefinition> technologies, List<string> errors)
     {
         using JsonDocument? doc = Open(path, errors);
         if (doc is null)
@@ -1658,10 +1662,89 @@ public static class ContentLoader
             }
         }
 
+        var armaments = new List<Core.Diplomacy.ArmamentDefinition>();
+        if (TryArray(doc.RootElement, "armaments", path, errors, out JsonElement arms))
+        {
+            var keys = new HashSet<string>(StringComparer.Ordinal);
+            bool bare = false;
+            int i = 0;
+            foreach (JsonElement e in arms.EnumerateArray())
+            {
+                string at = $"{file}: armaments[{i}]";
+                bare |= !e.TryGetProperty("technology", out _) && !e.TryGetProperty("good", out _);
+                var x = new Reader(e, at, errors);
+                string key = x.Key("key", keys);
+                int tech = -1;
+                if (e.TryGetProperty("technology", out JsonElement te))
+                {
+                    tech = technologies.FindIndex(t => t.Key == te.GetString());
+                    if (tech < 0)
+                    {
+                        errors.Add($"{at}.technology: unknown technology '{te}'.");
+                    }
+                }
+
+                int good = -1;
+                Amount per = Amount.Zero;
+                if (e.TryGetProperty("good", out JsonElement ge))
+                {
+                    good = goods.FindIndex(g => g.Key == ge.GetString());
+                    if (good < 0)
+                    {
+                        errors.Add($"{at}.good: unknown good '{ge}'.");
+                    }
+
+                    per = x.Amount("perWarrior", Amount.FromHundredths(1), Amount.FromUnits(1000));
+                }
+
+                armaments.Add(new Core.Diplomacy.ArmamentDefinition
+                {
+                    Id = i,
+                    Key = key,
+                    Name = x.String("name"),
+                    Technology = tech,
+                    Good = good,
+                    PerWarrior = per,
+                    StrengthPercent = x.Int("strengthPercent", 1, 10_000),
+                });
+                i++;
+            }
+
+            if (!bare)
+            {
+                errors.Add($"{file}: armaments: one level needs neither a technology nor a good (bare hands).");
+            }
+        }
+
+        JsonElement supplyElement = JsonDocument.Parse("{}").RootElement.Clone();
+        if (doc.RootElement.TryGetProperty("supply", out JsonElement se) && se.ValueKind == JsonValueKind.Object)
+        {
+            supplyElement = se;
+        }
+        else
+        {
+            errors.Add($"{file}: missing object 'supply'.");
+        }
+
+        var supply = new Reader(supplyElement, $"{file}: supply", errors);
+
         var defaults = new Core.Diplomacy.WarRules();
         return new Core.Diplomacy.WarRules
         {
             Goals = Array.ConvertAll(goals, g => g ?? new Core.Diplomacy.WarGoalDefinition()),
+            Armaments = armaments.Count > 0 ? armaments : defaults.Armaments,
+            MusterCells = r.Int("musterCells", 0, 1000),
+            FoodPerWarriorPerYear = supply.Amount("foodPerWarriorPerYear", Amount.Zero, Amount.FromUnits(100)),
+            CarryFoodMonths = supply.Int("carryFoodMonths", 0, 120),
+            SupplySharePercent = supply.Int("supplySharePercent", 0, 100),
+            ConvoyBelowMonths = supply.Int("convoyBelowMonths", 0, 120),
+            CarrierCells = supply.Int("carrierCells", 0, 1000),
+            CarriersPercent = supply.Int("carriersPercent", 0, 100),
+            ConvoyCellsPerMonth = supply.Int("convoyCellsPerMonth", 1, 100),
+            HungerMoralePerMonth = supply.Int("hungerMoralePerMonth", 0, 100),
+            FedMoralePerMonth = supply.Int("fedMoralePerMonth", 0, 100),
+            RetreatMorale = supply.Int("retreatMorale", 0, 100),
+            ForageCells = supply.Int("forageCells", 0, 1000),
             ScorePerWin = r.Int("scorePerWin", 0, 100),
             ScorePerSettlement = r.Int("scorePerSettlement", 0, 100),
             WearinessPerCampaignMonth = r.SignedHundredths("wearinessPerCampaignMonth", 0, 10_000) ?? defaults.WearinessPerCampaignMonth,
@@ -1669,6 +1752,7 @@ public static class ContentLoader
             MarchCellsPerMonth = r.Int("marchCellsPerMonth", 1, 100),
             QuietPeaceYears = r.Int("quietPeaceYears", 1, 1000),
             MinWinChancePercent = r.Int("minWinChancePercent", 0, 100),
+            MinFoodMonths = r.Int("minFoodMonths", 0, 120),
             SendPercent = r.Int("sendPercent", 1, 100),
             MinWarriors = r.Int("minWarriors", 1, 10_000),
             WearinessPerLossPercent = r.SignedHundredths("wearinessPerLossPercent", 0, 10_000) ?? defaults.WearinessPerLossPercent,

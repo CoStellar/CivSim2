@@ -110,6 +110,9 @@ public enum FactorId : byte
 
     /// <summary>Chance to win a fight as the commander sees it, percent (stage 4e).</summary>
     WinChance = 34,
+
+    /// <summary>Months the food an army can take along lasts (stage 4e PR 3).</summary>
+    FoodMonths = 35,
 }
 
 /// <summary>

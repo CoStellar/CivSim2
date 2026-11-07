@@ -20,6 +20,9 @@ public enum CampaignPhase : byte
 
     /// <summary>Going home with the survivors and the loot.</summary>
     Return = 1,
+
+    /// <summary>Warriors of several settlements gather at the settlement the campaign leaves from (stage 4e PR 3).</summary>
+    Muster = 2,
 }
 
 /// <summary>
@@ -70,6 +73,57 @@ public sealed class Episode
 
     /// <summary>Campaign: goods carried home, index = good.</summary>
     public Amount[] Loot { get; set; } = [];
+
+    /// <summary>Campaign: the settlement the war campaign is about; <see cref="Target"/> differs while it raids for food.</summary>
+    public int GoalTarget { get; set; } = -1;
+
+    /// <summary>Campaign: settlements that sent warriors, the one it leaves from first (stage 4e PR 3).</summary>
+    public int[] Members { get; set; } = [];
+
+    /// <summary>Campaign: warriors each of <see cref="Members"/> sent.</summary>
+    public int[] MemberWarriors { get; set; } = [];
+
+    /// <summary>Campaign: warriors who set out.</summary>
+    public int Mustered { get; set; }
+
+    /// <summary>Campaign: average strength of its warriors' arms, percent (data/war.json armaments).</summary>
+    public int ArmsPercent { get; set; } = 100;
+
+    /// <summary>Campaign: morale, 0..100; strength in a fight is multiplied by it.</summary>
+    public int Morale { get; set; } = 100;
+
+    /// <summary>Campaign: game month the muster ends and the march begins.</summary>
+    public long MusterUntilMonth { get; set; }
+
+    /// <summary>Campaign: food it carries, index = good.</summary>
+    public Amount[] Food { get; set; } = [];
+
+    /// <summary>Campaign: months it went hungry.</summary>
+    public int HungryMonths { get; set; }
+
+    /// <summary>Campaign: raids for food it made.</summary>
+    public int Forays { get; set; }
+
+    /// <summary>Campaign: true while it marches on a settlement for food (<see cref="Target"/>) instead of its goal.</summary>
+    public bool Foraging { get; set; }
+
+    /// <summary>Campaign: the settlement it last raided for food, or -1 (it does not raid the same one twice in a row).</summary>
+    public int LastPrey { get; set; } = -1;
+
+    /// <summary>Campaign: settlement its carriers came from, or -1 when no carriers are on the way.</summary>
+    public int ConvoyFrom { get; set; } = -1;
+
+    /// <summary>Campaign: cell its carriers stand on (world 0).</summary>
+    public int ConvoyCell { get; set; }
+
+    /// <summary>Campaign: carriers on the way.</summary>
+    public int ConvoyCarriers { get; set; }
+
+    /// <summary>Campaign: food the carriers bring, index = good.</summary>
+    public Amount[] ConvoyFood { get; set; } = [];
+
+    /// <summary>Campaign: loads of food carriers handed over.</summary>
+    public int Convoys { get; set; }
 
     /// <summary>True once it is over (removed at the end of the step).</summary>
     public bool Ended { get; set; }
@@ -130,12 +184,17 @@ public sealed class EpisodeBook
         return false;
     }
 
-    /// <summary>True when a campaign of <paramref name="civ"/> left from <paramref name="home"/> and is still out.</summary>
+    /// <summary>True when warriors of <paramref name="home"/> are out on a campaign of <paramref name="civ"/>.</summary>
     public bool OutFrom(CivId civ, int home)
     {
         foreach (Episode e in _episodes)
         {
-            if (!e.Ended && e.Kind == EpisodeKind.Campaign && e.Civ == civ && e.Home == home)
+            if (e.Ended || e.Kind != EpisodeKind.Campaign || e.Civ != civ)
+            {
+                continue;
+            }
+
+            if (e.Home == home || Array.IndexOf(e.Members, home) >= 0)
             {
                 return true;
             }

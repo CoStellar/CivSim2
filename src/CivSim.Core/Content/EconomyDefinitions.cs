@@ -93,6 +93,12 @@ public sealed record EraDefinition(int Id, string Key, string Name, int MonthsPe
 {
     /// <summary>Technology that opens this era (stage 3f), or -1 when none is defined yet.</summary>
     public int ThresholdTechnology { get; init; } = -1;
+
+    /// <summary>Most warriors one leader leads in a campaign (GDD 9.3; stage 4e PR 3).</summary>
+    public int ArmyLimit { get; init; } = 50;
+
+    /// <summary>Most warriors on one cell; a bigger army stands on several cells next to each other (a front).</summary>
+    public int TroopsPerCell { get; init; } = 50;
 }
 
 /// <summary>What an effect is attached to (GDD 10.1).</summary>

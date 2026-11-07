@@ -26,7 +26,7 @@ public sealed class ObserverViewBuilder(GameContent content)
     public ObserverDetailsMessage Build(GameState state)
     {
         ArgumentNullException.ThrowIfNull(state);
-        return new ObserverDetailsMessage(state.Turn, Journeys(state), Fields(state), Events(state), Relations(state));
+        return new ObserverDetailsMessage(state.Turn, Journeys(state), Fields(state), Events(state), Relations(state), Armies(state));
     }
 
     /// <summary>
@@ -221,6 +221,38 @@ public sealed class ObserverViewBuilder(GameContent content)
         flags |= t.Has(a, b, TreatyKind.NonAggression) ? RelationView.NonAggression : 0;
         flags |= t.Has(a, b, TreatyKind.DefensiveAlliance) ? RelationView.Alliance : 0;
         return flags;
+    }
+
+    // Campaigns on the march (stage 4e PR 3), in the order they began; world 0 only.
+    private List<ArmyView> Armies(GameState state)
+    {
+        var list = new List<ArmyView>();
+        if (state.Episodes.Count == 0 || state.Worlds.Count == 0)
+        {
+            return list;
+        }
+
+        HexGlobe geo = state.Worlds[0].Geometry;
+        foreach (Core.Episodes.Episode e in state.Episodes.All)
+        {
+            if (e.Ended || e.Kind != Core.Episodes.EpisodeKind.Campaign || state.FindCivilization(e.Civ) is not { } civ)
+            {
+                continue;
+            }
+
+            HexCoord at = geo.FromIndex(e.Cell);
+            SettlementState? goal = state.FindSettlement(new SettlementId(e.Phase == Core.Episodes.CampaignPhase.Return ? e.Home : e.Target));
+            HexCoord to = goal?.Cell ?? at;
+            HexCoord convoy = geo.FromIndex(e.ConvoyCell);
+            Core.Numerics.Amount month = Core.Episodes.Campaigns.FoodFor(_content, e.Warriors, 1);
+            long food = Core.Episodes.Campaigns.FoodIn(_content, e.Food).Hundredths;
+            int months = month.Hundredths > 0 ? (int)Math.Min(int.MaxValue, food / month.Hundredths) : 0;
+            list.Add(new ArmyView(e.Id, e.Civ.Value, e.Other.Value, at.Col, at.Row, to.Col, to.Row, e.Warriors,
+                Core.Episodes.Campaigns.FrontCells(_content, civ, e.Warriors), e.ArmsPercent, e.Morale, months, (byte)e.Phase,
+                e.ConvoyFrom >= 0 ? e.ConvoyCarriers : 0, convoy.Col, convoy.Row));
+        }
+
+        return list;
     }
 
     private static List<JourneyView> Journeys(GameState state)

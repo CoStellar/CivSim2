@@ -154,6 +154,7 @@ public readonly record struct Decision(
         FactorId.Weariness => "war weariness",
         FactorId.Terms => "peace terms",
         FactorId.WinChance => "win chance",
+        FactorId.FoodMonths => "food months",
         FactorId.LeadsTo => "leads to",
         FactorId.ForTrade => "for trade",
         FactorId.OverGathering => "over gathering",

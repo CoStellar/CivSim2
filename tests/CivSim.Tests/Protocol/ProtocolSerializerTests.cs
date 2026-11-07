@@ -32,7 +32,8 @@ public class ProtocolSerializerTests
             [new JourneyView(3, 1, 0, 10, 12, 20, 14, 80)],
             [new FieldView(0, 11, 12, 1, 60)],
             [new CellEventView(0, 5, 6, "extraction_reduction", -50, 1200)],
-            [new RelationView(0, 1, RelationView.Met, 2500, -300, RelationView.Trade | RelationView.NonAggression)])];
+            [new RelationView(0, 1, RelationView.Met, 2500, -300, RelationView.Trade | RelationView.NonAggression)],
+            [new ArmyView(4, 1, 2, 10, 12, 16, 12, 45, 1, 92, 80, 2, 0, 6, 8, 12)])];
         yield return [new WatchCivilizationMessage(2)];
         yield return [new FogMessage(2, 0, 9, [0, 1, 2, 2])];
         yield return [new NameSuggestionsRequestMessage(NameTarget.Settlement, 4, 1, 6)];
@@ -112,8 +113,9 @@ public class ProtocolSerializerTests
         // Version 8 added the observer layers (journeys, fields, events, relations), the followed civilization (fog and
         // details) and era, people, settlements and technologies of each civilization for observers (stage 5),
         // and renaming settlements with name suggestions from the peoples' languages (GDD 5.6).
+        // Version 9 added war campaigns (armies and their carriers) to the observer layers (stage 4e PR 3).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("08000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("09000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

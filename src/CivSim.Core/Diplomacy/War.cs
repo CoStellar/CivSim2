@@ -60,9 +60,80 @@ public sealed record WarGoalDefinition
     public int WitnessPercent { get; init; }
 }
 
+/// <summary>
+/// One level of arms in data/war.json (GDD 9.3; stage 4e PR 3, decision of 2026-11-07): the technology that opens it,
+/// the good a warrior uses up on one campaign and the strength of a warrior with it, percent of a warrior with
+/// stone-tipped spears. A level without a technology and a good (bare hands) is always there.
+/// </summary>
+public sealed record ArmamentDefinition
+{
+    /// <summary>Index in <see cref="WarRules.Armaments"/>.</summary>
+    public int Id { get; init; }
+
+    /// <summary>Key in the data.</summary>
+    public string Key { get; init; } = string.Empty;
+
+    /// <summary>Name in the game.</summary>
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>Technology the civilization needs, or -1.</summary>
+    public int Technology { get; init; } = -1;
+
+    /// <summary>Good a warrior uses up on one campaign, or -1.</summary>
+    public int Good { get; init; } = -1;
+
+    /// <summary>How much of <see cref="Good"/> one warrior uses up on one campaign.</summary>
+    public Amount PerWarrior { get; init; }
+
+    /// <summary>Strength of one warrior with these arms, percent.</summary>
+    public int StrengthPercent { get; init; } = 100;
+}
+
 /// <summary>Rules of war (data/war.json; GDD 9.3, stage 4e, ADR 0021). Scores run from -100 to 100, weariness from 0 to 100.</summary>
 public sealed record WarRules
 {
+    /// <summary>Levels of arms; every warrior takes the strongest one the civilization knows and the settlement can afford (stage 4e PR 3).</summary>
+    public IReadOnlyList<ArmamentDefinition> Armaments { get; init; } =
+    [
+        new() { Id = 0, Key = "bare_hands", Name = "Bare hands and sticks", StrengthPercent = 50 },
+    ];
+
+    /// <summary>Settlements whose warriors join a campaign lie at most this many cells from the settlement it leaves from.</summary>
+    public int MusterCells { get; init; } = 6;
+
+    /// <summary>Food one warrior on a campaign eats in a year.</summary>
+    public Amount FoodPerWarriorPerYear { get; init; } = Amount.FromUnits(1);
+
+    /// <summary>A campaign sets out with food for at most this many months (and at most what its warriors carry).</summary>
+    public int CarryFoodMonths { get; init; } = 3;
+
+    /// <summary>At most this share of a settlement's food goes with a campaign or its carriers, percent.</summary>
+    public int SupplySharePercent { get; init; } = 50;
+
+    /// <summary>Carriers set out when a campaign has food for fewer than this many months.</summary>
+    public int ConvoyBelowMonths { get; init; } = 2;
+
+    /// <summary>Carriers come from a settlement of the attacker at most this many cells from the campaign.</summary>
+    public int CarrierCells { get; init; } = 12;
+
+    /// <summary>At most this share of a settlement's people who do not fight carry food, percent.</summary>
+    public int CarriersPercent { get; init; } = 10;
+
+    /// <summary>Cells carriers walk per month (lighter than an army on the way back, faster than it on the way out).</summary>
+    public int ConvoyCellsPerMonth { get; init; } = 4;
+
+    /// <summary>Morale points a hungry campaign loses per month (morale runs from 0 to 100).</summary>
+    public int HungerMoralePerMonth { get; init; } = 20;
+
+    /// <summary>Morale points a fed campaign wins back per month.</summary>
+    public int FedMoralePerMonth { get; init; } = 10;
+
+    /// <summary>A campaign whose morale falls below this turns back.</summary>
+    public int RetreatMorale { get; init; } = 30;
+
+    /// <summary>A hungry campaign raids a settlement of the enemy at most this many cells away for food.</summary>
+    public int ForageCells { get; init; } = 4;
+
     /// <summary>The goals, index = <see cref="WarGoal"/>.</summary>
     public IReadOnlyList<WarGoalDefinition> Goals { get; init; } =
     [
@@ -91,6 +162,9 @@ public sealed record WarRules
 
     /// <summary>The commander sends a campaign only with at least this chance to win, percent (moves to ai.json with the commander, PR 5).</summary>
     public int MinWinChancePercent { get; init; } = 60;
+
+    /// <summary>The commander sends an army only with food for at least this many months to take along (moves to ai.json with the commander, PR 5).</summary>
+    public int MinFoodMonths { get; init; } = 1;
 
     /// <summary>Largest share of a settlement's warriors that marches out, percent (decision of 2026-11-07: a third stays home).</summary>
     public int SendPercent { get; init; } = 67;

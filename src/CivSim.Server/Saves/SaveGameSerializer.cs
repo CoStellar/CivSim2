@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 23;
+    public const int FormatVersion = 24;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -332,14 +332,11 @@ public static class SaveGameSerializer
         var list = new List<EpisodeSaveData>(state.Episodes.Count);
         foreach (Core.Episodes.Episode e in state.Episodes.All)
         {
-            long[] loot = new long[e.Loot.Length];
-            for (int g = 0; g < loot.Length; g++)
-            {
-                loot[g] = e.Loot[g].Hundredths;
-            }
-
             list.Add(new EpisodeSaveData(e.Id, (byte)e.Kind, e.Civ.Value, e.Other.Value, e.StartMonth, e.NextMonth, e.TickMonths,
-                e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, loot));
+                e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, Hundredths(e.Loot),
+                e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilMonth,
+                Hundredths(e.Food), e.HungryMonths, e.Forays, e.Foraging, e.ConvoyFrom, e.ConvoyCell, e.ConvoyCarriers,
+                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey));
         }
 
         return list;
@@ -349,12 +346,6 @@ public static class SaveGameSerializer
     {
         foreach (EpisodeSaveData e in data.Episodes ?? [])
         {
-            var loot = new Core.Numerics.Amount[e.Loot?.Length ?? 0];
-            for (int g = 0; g < loot.Length; g++)
-            {
-                loot[g] = Core.Numerics.Amount.FromHundredths(e.Loot![g]);
-            }
-
             state.Episodes.AddForLoad(
                 new Core.Episodes.Episode
                 {
@@ -370,12 +361,51 @@ public static class SaveGameSerializer
                     Cell = e.Cell,
                     Phase = (Core.Episodes.CampaignPhase)e.Phase,
                     Dead = e.Dead,
-                    Loot = loot,
+                    Loot = Amounts(e.Loot),
+                    GoalTarget = e.GoalTarget,
+                    Members = e.Members ?? [],
+                    MemberWarriors = e.MemberWarriors ?? [],
+                    Mustered = e.Mustered,
+                    ArmsPercent = e.ArmsPercent,
+                    Morale = e.Morale,
+                    MusterUntilMonth = e.MusterUntilMonth,
+                    Food = Amounts(e.Food),
+                    HungryMonths = e.HungryMonths,
+                    Forays = e.Forays,
+                    Foraging = e.Foraging,
+                    ConvoyFrom = e.ConvoyFrom,
+                    ConvoyCell = e.ConvoyCell,
+                    ConvoyCarriers = e.ConvoyCarriers,
+                    ConvoyFood = Amounts(e.ConvoyFood),
+                    Convoys = e.Convoys,
+                    LastPrey = e.LastPrey,
                 },
                 e.Id);
         }
 
         state.Episodes.SetNextIdForLoad(data.NextEpisodeId);
+    }
+
+    private static long[] Hundredths(Core.Numerics.Amount[] amounts)
+    {
+        long[] list = new long[amounts.Length];
+        for (int g = 0; g < list.Length; g++)
+        {
+            list[g] = amounts[g].Hundredths;
+        }
+
+        return list;
+    }
+
+    private static Core.Numerics.Amount[] Amounts(long[]? hundredths)
+    {
+        var list = new Core.Numerics.Amount[hundredths?.Length ?? 0];
+        for (int g = 0; g < list.Length; g++)
+        {
+            list[g] = Core.Numerics.Amount.FromHundredths(hundredths![g]);
+        }
+
+        return list;
     }
 
     private static PeaceTermsSaveData SaveTerms(Core.Diplomacy.PeaceTerms terms) =>

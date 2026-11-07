@@ -13,7 +13,32 @@ public sealed record ObserverDetailsMessage(
     [property: Key(1)] IReadOnlyList<JourneyView> Journeys,
     [property: Key(2)] IReadOnlyList<FieldView> Fields,
     [property: Key(3)] IReadOnlyList<CellEventView> Events,
-    [property: Key(4)] IReadOnlyList<RelationView> Relations) : IProtocolMessage;
+    [property: Key(4)] IReadOnlyList<RelationView> Relations,
+    [property: Key(5)] IReadOnlyList<ArmyView>? Armies = null) : IProtocolMessage;
+
+/// <summary>
+/// A war campaign on the march (stage 4e PR 3): where the army stands, where it goes, how strong it is and its carriers.
+/// <see cref="Phase"/>: 0 march, 1 return, 2 muster. <see cref="Cells"/> is the width of its front. The carriers are at
+/// <see cref="ConvoyCol"/>, <see cref="ConvoyRow"/> when <see cref="Carriers"/> is above 0.
+/// </summary>
+[MessagePackObject]
+public sealed record ArmyView(
+    [property: Key(0)] long Id,
+    [property: Key(1)] int Owner,
+    [property: Key(2)] int Enemy,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] int TargetCol,
+    [property: Key(6)] int TargetRow,
+    [property: Key(7)] int Warriors,
+    [property: Key(8)] int Cells,
+    [property: Key(9)] int ArmsPercent,
+    [property: Key(10)] int Morale,
+    [property: Key(11)] int FoodMonths,
+    [property: Key(12)] byte Phase,
+    [property: Key(13)] int Carriers,
+    [property: Key(14)] int ConvoyCol,
+    [property: Key(15)] int ConvoyRow);
 
 /// <summary>A camp walking to a far place over several turns (stage 3g): where it is and where it goes.</summary>
 [MessagePackObject]
