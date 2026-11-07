@@ -4,7 +4,7 @@
 
 **Faza tury:** 6. Walka (`WarSystem`), w krokach cywilizacji (ADR 0018). Wypowiedzenie wojny i pokój: faza decyzji (komendy dyplomaty).
 
-**Stan:** PR 1 (cel, wynik, zmęczenie, pokój z warunkami), PR 2 (kampanie jako epizody z krokiem co miesiąc, `docs/systems/episodes.md`, ADR 0022) i PR 3 (uzbrojenie, armie z wielu osad, limity er, tragarze, głód). Bitwy w rundach, pełny dowódca i strojenie w PR 4–6 (`docs/prompts/07-etap-wojna.md`).
+**Stan:** PR 1 (cel, wynik, zmęczenie, pokój z warunkami), PR 2 (kampanie jako epizody z krokiem co miesiąc, `docs/systems/episodes.md`, ADR 0022) PR 3 (uzbrojenie, armie z wielu osad, limity er, tragarze, głód) i PR 4 (bitwa w rundach, teren, podbój, ucieczka z obozu). Pełny dowódca i strojenie w PR 5–6 (`docs/prompts/07-etap-wojna.md`).
 
 ## Dane wejściowe i wyjściowe
 - Czyta: `data/war.json`, traktaty (`TreatyBook`), wspomnienia relacji, osady stron.
@@ -19,6 +19,7 @@ flowchart TD
   D --> R["Świadkowie pamiętają napaść<br/>(łupy 100%, ziemia 50%, odwet 0%)"]
   D --> W["Kampanie co miesiąc (epizody) i napaści obozów<br/>wynik ± za walkę i zdobytą osadę"]
   W --> A["Armia z kilku osad, uzbrojenie z zapasów,<br/>jedzenie, tragarze, głód (PR 3)"]
+  A --> B["Bitwa w rundach: teren, morale,<br/>ucieczka; podbój wioski, ucieczka z obozu (PR 4)"]
   W --> Z["Zmęczenie:<br/>miesiące kampanii + straty"]
   W --> Q["5 lat bez kampanii:<br/>biały pokój"]
   Z --> M["Efekt war_weariness: nastrój −"]
@@ -39,7 +40,16 @@ flowchart TD
   proce 80% (garbarstwo, 0,1 skóry), włócznie i topory z kamiennym grotem 100% (obróbka krzemienia, 0,2 narzędzi kamiennych). Każdy wojownik
   bierze najsilniejszy poziom, którego technologię zna cywilizacja i na który jego osada ma jeszcze dobra; dobra zużywa przy wyjściu.
   Obrońcy walczą tym, na co pozwalają ich zapasy (bez zużycia), pozostali mieszkańcy gołymi rękami (25% z nich).
-- **Siła w walce:** `wojownicy × uzbrojenie × morale` przeciw obronie; szansa = udział w sumie sił (strumień `combat`).
+- **Siła w walce:** `wojownicy × uzbrojenie × morale` (głodna armia bez jedzenia × 75%) przeciw obronie z terenem.
+- **Teren** (PR 4, `battle.terrain`): obrońcy +25% na wzgórzach, +50% w górach, +25% w lesie liściastym, tajdze, dżungli i na bagnach,
+  +25%, gdy atakujący przychodzą przez rzekę (krawędź pola osady); procenty się sumują.
+- **Bitwa w rundach** (PR 4, `Battles.Fight`, strumień `combat`): najwyżej 6 rund. W każdej rundzie strona zabija `siła × 10% × szczęście`
+  ludzi (100 = jeden wojownik z kamiennym grotem; szczęście losowane z 50–150%, ułamek człowieka losowo). Każdy procent straconych ludzi
+  w rundzie to −3 morale; strona z morale poniżej 40 ucieka (obie: ta z mniejszym morale) i traci jeszcze 10% ludzi w ucieczce. Gdy nikt
+  nie ucieknie przez 6 rund, obrońcy się utrzymali. Obrońcy to wojownicy i 25% reszty mieszkańców (z morale 100); giną najpierw wojownicy.
+- **Po bitwie** (PR 4): wygrana w wojnie o ziemię zabiera wioskę, o którą jest wojna, z ludźmi; ludzie pokonanego obozu uciekają z tym, co
+  uniosą, do swojej najbliższej osady, a obóz zostaje pusty; w innym razie zwycięzcy biorą łupy. Wynik i straty idą do wojny
+  (`Wars.RecordFight`), morale armii po bitwie zostaje.
 - **Armia z wielu osad** (PR 3): osada wyjścia i własne osady do 6 pól (`musterCells`), z każdej najwyżej 2/3 wojowników; najwyżej `armyLimit`
   wojowników (dane ery, 50 w erach 1–2); `troopsPerCell` (50) mówi, na ilu polach stoi armia (front; w erach 1–2 zawsze jedno pole).
 - **Zaopatrzenie** (PR 3, `supply`): wojownik zjada 1 jedzenia na rok; armia bierze jedzenie na 3 miesiące (najwyżej połowę jedzenia każdej osady
@@ -72,8 +82,12 @@ Przy każdym etapie nowej ery (etapy 6–12) sprawdź i uzupełnij:
 ## Pliki danych
 - `data/war.json` (PR 1; `armaments`, `musterCells`, `minFoodMonths`, `supply` od PR 3).
 - `data/eras.json`: `armyLimit`, `troopsPerCell` (PR 3).
+- `data/war.json` `battle` (PR 4): rundy, straty, szczęście, morale, ucieczka, głód, teren.
 
 ## Testy
+- `BattleTests` (PR 4): dane bitwy; równa bitwa kończy się ucieczką i kosztuje obie strony, wynik ok. 50/50 i powtarzalny; dużo silniejsza
+  strona wygrywa tanio, niskie morale ucieka szybciej; bez ucieczki obrońcy się utrzymują; wzgórza i rzeka pomagają obrońcom; wojna o
+  ziemię zabiera wioskę z ludźmi; ludzie pobitego obozu uciekają do najbliższej osady; błędy w danych.
 - `ArmyTests` (PR 3): dane uzbrojenia i limitów; najsilniejsze uzbrojenie z zapasów i zużycie dóbr; zbiórka z dwóch osad i powrót ocalałych
   do obu; 1/3 w domu każdej osady, odległość, limit wodza, front; tragarze dochodzą i wracają; głód łamie wyprawę; głodna armia napada wioskę;
   zapis z armią i tragarzami, migawka dla podglądu; dowódca zbiera armię z osad w pobliżu; błędy w danych.

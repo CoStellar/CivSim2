@@ -25,7 +25,8 @@ Dowódca wysyła **kampanie**: armie zebrane z osady wyjścia i z własnych osad
   osada wroga w zasięgu wędrówki (40 pól).
 - **Szansa** (`Campaigns.WinChancePercent`): gdy cel widzieliśmy w ostatnim własnym kroku, to nasz udział w sile uzbrojonej
   (od PR 3: każdy wojownik z najlepszym uzbrojeniem, na jakie stać jego osadę, przeciw obronie: ich wojownicy z uzbrojeniem z ich
-  zapasów + 25% reszty mieszkańców z gołymi rękami). Odrzucamy cel z szansą poniżej 60%
+  zapasów + 25% reszty mieszkańców z gołymi rękami; od PR 4 obrona z premią terenu pola celu). Na miejscu wojownicy liczą szansę jeszcze
+  raz, z terenem i rzeką od strony, z której przyszli, i z głodem; przy szansie od 60% wchodzą do bitwy w rundach. Odrzucamy cel z szansą poniżej 60%
   (`minWinChancePercent`). Gdy go nie widzimy, nikt nie wie: wojownicy idą zobaczyć (w ocenie szansa 50%). Na miejscu atakują tylko
   przy prawdziwej szansie co najmniej 60%, w innym razie zawracają (decyzja Patryka: dowódca nie idzie na pewną porażkę).
 - **Ocena:** `1000 × szansa × waga celu „podbój” × mnożnik charakteru (agresja)`, odległość tylko w zapisie „Dlaczego?”.

@@ -132,6 +132,7 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `minFoodMonths` | 1 | miesiące | K1 | dowódca wysyła armię tylko wtedy, gdy osady mogą jej dać jedzenie co najmniej na tyle (od PR 3) |
 | `musterCells` | 6 | pola | K1 | z jak daleka od osady wyjścia dołączają wojownicy innych osad (od PR 3) |
 | `armaments[]` | gołe ręce 50, włócznie hartowane w ogniu 70, proce 80, kamienne groty 100 | % siły | K1 | uzbrojenie (technologia, dobro, zużycie na wojownika); dowódca liczy z niego siłę obu stron (od PR 3) |
+| `battle.*` | 6 rund, 10% siły zabija, szczęście 50–150%, −3 morale na % strat, ucieczka poniżej 40, obrońcy z morale 100, głodni 75%, ucieczka −10%; teren: wzgórza +25, góry +50, rzeka +25, lasy, dżungla i bagna +25 | — | K1 (teren w szansie) | bitwa w rundach (od PR 4); dowódca widzi teren celu w szansie (bez rzeki, bo nie wie, skąd przyjdzie) |
 | `supply.*` | jedzenie 1 na wojownika na rok, zapas na 3 miesiące, tragarze poniżej 2 miesięcy, do 12 pól, 10% ludzi, 4 pola na miesiąc; głód −20 morale na miesiąc, najedzeni +10, odwrót poniżej 30, napad na wioskę do 4 pól | — | K1 (pośrednio) | zaopatrzenie i głód kampanii (od PR 3); dowódca liczy dostępne jedzenie z `supplySharePercent` 50% |
 | `wearinessPerLossPercent` | 3 | punkty na % ludzi zabitych | D1, D2 | zmęczenie ze strat |
 | `peaceAbove` | 60 | punkty zmęczenia | D2 | od tego zmęczenia strona szuka pokoju w każdym kroku i przy każdej ocenie |

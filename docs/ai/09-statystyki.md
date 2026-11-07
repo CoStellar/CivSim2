@@ -16,6 +16,22 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Bitwy w rundach (etap 4e, PR 4)
+
+Z `--campaigns` i kroniki, 3 seedy, mapa standard, 1000 kroków świata (wykres niżej, w sekcji PR 3, jest już z tych gier).
+
+| Seed | Kampanie | Bitwy | Wygrane | Zabici atakujący | Zabici obrońcy | Zawrócili przed silnym celem | Głód złamał | Rundy w bitwie |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 7 | 40 | 4 | 3 | 1 | 10 | 19 | 18 | zawsze 1 |
+| 23 | 61 | 31 | 31 | 28 | 144 | 18 | 13 | 26× 1, 4× 2, 1× 3 |
+| 42 | 6 | 2 | 2 | 0 | 5 | 3 | 1 | zawsze 1 |
+
+- **Bitwy są krótkie i prawie zawsze wygrane przez atakujących:** dowódca rusza tylko przy szansie co najmniej 60% (udział w sile), więc
+  atakuje słabsze obozy i wioski; obrońcy tracą w pierwszej rundzie tyle ludzi, że uciekają. Równe bitwy (test `BattleTests`) trwają 3–4 rundy.
+- **Żadna wioska nie zmieniła właściciela** w tych grach: wojny o ziemię są rzadkie, a wyprawy częściej zawracają albo głodują. Podbój działa
+  w teście `AWarForLandTakesTheVillageWithItsPeople`.
+- **Głód i zawracanie** dalej kończą większość wypraw (patrz PR 3). Do PR 5 (dowódca liczy spodziewaną bitwę, drogę i jedzenie) i PR 6.
+
 ## Armie, uzbrojenie i zaopatrzenie (etap 4e, PR 3)
 
 Z `--campaigns` (nowy raport: jeden wiersz na kampanię) i z kroniki, 3 seedy, mapa standard, 1000 kroków świata. Wykres:
