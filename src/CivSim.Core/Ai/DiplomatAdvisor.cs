@@ -168,6 +168,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             case TreatyKind.Peace:
                 Treaty? war = state.Treaties.Find(civ.Id, other, TreatyKind.War);
                 e.Apply(FactorId.Weariness, rules.WarWeariness, war is null ? 0 : Wars.WearinessOf(war, civ.Id));
+                e.Apply(FactorId.WarScore, rules.WarScore, war is null ? 0 : Wars.ScoreFor(war, civ.Id));
                 e.Apply(FactorId.Opinion, rules.PeaceOpinion, sympathy);
                 e.Apply(FactorId.Terms, rules.PeaceTerms, Wars.TermsWorth(_content, terms, civ.Id));
                 e.Weigh(GoalWeight(civ, Goal.Security), CharacterMultiplier(civ, Goal.Security));

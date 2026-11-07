@@ -1618,6 +1618,7 @@ public static class ContentLoader
             AcceptAbove = (int)(r.OptionalThousandths("acceptAbove", 0, 100_000) ?? defaults.AcceptAbove),
             DeclareWarAbove = (int)(r.OptionalThousandths("declareWarAbove", 0, 100_000) ?? defaults.DeclareWarAbove),
             RetryYears = r.Int("retryYears", 0, 100_000),
+            PeaceRetryYears = r.Int("peaceRetryYears", 0, 100_000),
             ReachCells = r.Int("reachCells", 1, 1000),
             TradeSharePercent = r.Int("tradeSharePercent", 0, 100),
             WitnessPercent = r.Int("witnessPercent", 0, 100),
@@ -1633,6 +1634,7 @@ public static class ContentLoader
             WarWeariness = Curve("warWeariness", 1, defaults.WarWeariness),
             PeaceOpinion = Curve("peaceOpinion", 100, defaults.PeaceOpinion),
             PeaceTerms = Curve("peaceTerms", 1, defaults.PeaceTerms),
+            WarScore = Curve("warScore", 1, defaults.WarScore),
             Kinds = Array.ConvertAll(defs, d => d ?? new Core.Diplomacy.TreatyKindDefinition()),
         };
     }

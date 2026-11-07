@@ -110,8 +110,9 @@ public sealed class CommanderAdvisor : Advisor
             int warriors = own;
             long attack = Campaigns.ArmedStrength(Content, civ, home, own, useUp: false);
             Amount food = Campaigns.SpareFood(Content, home);
-            Gather(state, civ, world, home, limit, ref warriors, ref attack, ref food);
-            if (Weigh(state, civ, world, home, target, warriors, attack, food) is not { } e)
+            int farthest = 0;
+            Gather(state, civ, world, home, limit, ref warriors, ref attack, ref food, ref farthest);
+            if (Weigh(state, civ, world, home, target, warriors, attack, food, Campaigns.MarchMonths(Content, farthest)) is not { } e)
             {
                 _musters.RemoveRange(first, _musters.Count - first);
                 continue;
@@ -134,7 +135,7 @@ public sealed class CommanderAdvisor : Advisor
 
     // The worth of sending `warriors` of strength `attack` with `food` from home against target, or null when the
     // commander would not: too few, a battle it expects to lose or too costly, no way, or too little food for the road.
-    private Evaluation? Weigh(GameState state, CivilizationState civ, WorldState world, SettlementState home, SettlementState target, int warriors, long attack, Amount food)
+    private Evaluation? Weigh(GameState state, CivilizationState civ, WorldState world, SettlementState home, SettlementState target, int warriors, long attack, Amount food, int musterMonths)
     {
         CommanderRules rules = Content.Ai.Commander;
         if (warriors < Content.War.MinWarriors)
@@ -169,6 +170,14 @@ public sealed class CommanderAdvisor : Advisor
         int foodMonths = Campaigns.MonthsOf(Content, carried, warriors);
         int beyond = Campaigns.BeyondSupplyCells(Content, state, civ.Id, world.Geometry.Index(target.Cell));
         if (foodMonths < (2 * Campaigns.MarchMonths(Content, beyond)) + rules.MinFoodMonths)
+        {
+            return null;
+        }
+
+        // Food for the whole campaign (stage 4e PR 6): the gathering, the march there, a month at the target and the march
+        // back, from what the warriors take and what carriers can bring from our settlements near home and near the target.
+        int months = musterMonths + (2 * Campaigns.MarchMonths(Content, path.Count)) + 1 + rules.MinFoodMonths;
+        if (Campaigns.MonthsOf(Content, Reachable(state, civ, world, home, target), warriors) < months)
         {
             return null;
         }
@@ -239,7 +248,7 @@ public sealed class CommanderAdvisor : Advisor
     }
 
     // Adds the warriors of own settlements within the muster range of home (nearest first, ties by id) until the limit.
-    private void Gather(GameState state, CivilizationState civ, WorldState world, SettlementState home, int limit, ref int warriors, ref long attack, ref Amount food)
+    private void Gather(GameState state, CivilizationState civ, WorldState world, SettlementState home, int limit, ref int warriors, ref long attack, ref Amount food, ref int farthest)
     {
         _near.Clear();
         foreach (SettlementState s in state.Settlements)
@@ -267,8 +276,26 @@ public sealed class CommanderAdvisor : Advisor
             warriors += n;
             attack += Campaigns.ArmedStrength(Content, civ, s, n, useUp: false);
             food += Campaigns.SpareFood(Content, s);
+            farthest = Math.Max(farthest, world.Geometry.Distance(home.Cell, s.Cell));
             _musters.Add(new CampaignMuster(s.Id, n));
         }
+    }
+
+    // Food our settlements within the carriers' reach of home or of the target can give a campaign.
+    private Amount Reachable(GameState state, CivilizationState civ, WorldState world, SettlementState home, SettlementState target)
+    {
+        Amount food = Amount.Zero;
+        int reach = Content.War.CarrierCells;
+        foreach (SettlementState s in state.Settlements)
+        {
+            if (s.IsActive && s.Owner == civ.Id && s.World == world.Id
+                && (world.Geometry.Distance(home.Cell, s.Cell) <= reach || world.Geometry.Distance(target.Cell, s.Cell) <= reach))
+            {
+                food += Campaigns.SpareFood(Content, s);
+            }
+        }
+
+        return food;
     }
 
     // The settlement the war is about when it is known, otherwise the nearest known enemy settlement.

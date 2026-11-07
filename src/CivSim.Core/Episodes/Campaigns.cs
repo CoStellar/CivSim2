@@ -662,6 +662,12 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         }
 
         WorldState world = state.Worlds[0];
+        if (e.Phase == CampaignPhase.Muster && state.FindSettlement(new SettlementId(e.Home)) is { IsActive: true } home && home.Owner == e.Civ)
+        {
+            // While they gather at home, the warriors eat from its stores, not from their packs (stage 4e PR 6).
+            Campaigns.TakeFood(_content, home, e.Food, Campaigns.FoodFor(_content, e.Warriors, e.TickMonths));
+        }
+
         bool hungry = !Eat(e);
         if (e.Phase == CampaignPhase.Muster)
         {
@@ -1118,11 +1124,15 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
     }
 
     // The nearest own settlement within reach of the carriers that has food and people to carry it (ties: lowest id).
+    // The own settlement within the carriers' reach that can send the most food (stage 4e PR 6: the nearest one often had
+    // only crumbs, and its convoy kept the others from sending), the nearer on a tie.
     private SettlementState? CarrierSource(GameState state, WorldState world, Episode e)
     {
         HexCoord at = world.Geometry.FromIndex(e.Cell);
         SettlementState? best = null;
         int bestDistance = int.MaxValue;
+        Amount bestFood = Amount.Zero;
+        long perPerson = Math.Max(1, SettlementAssets.CarryCapacity(_content, state, e.Civ, 1).Hundredths);
         foreach (SettlementState s in state.Settlements)
         {
             if (!s.IsActive || s.Owner != e.Civ || s.World != world.Id)
@@ -1131,16 +1141,19 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             }
 
             int d = world.Geometry.Distance(at, s.Cell);
-            if (d > _content.War.CarrierCells || d >= bestDistance
-                || (long)Campaigns.NonFighters(_content, s) * _content.War.CarriersPercent / 100 <= 0)
+            long carriers = (long)Campaigns.NonFighters(_content, s) * _content.War.CarriersPercent / 100;
+            if (d > _content.War.CarrierCells || carriers <= 0)
             {
                 continue;
             }
 
-            if (Campaigns.SpareFood(_content, s) > Amount.Zero)
+            // What its carriers can bring: its spare food, at most what they carry.
+            Amount food = Amount.Min(Campaigns.SpareFood(_content, s), Amount.FromHundredths(carriers * perPerson));
+            if (food > bestFood || (food == bestFood && food > Amount.Zero && d < bestDistance))
             {
                 best = s;
                 bestDistance = d;
+                bestFood = food;
             }
         }
 

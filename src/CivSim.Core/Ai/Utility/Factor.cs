@@ -119,6 +119,9 @@ public enum FactorId : byte
 
     /// <summary>Cells of the way beyond the reach of carriers (stage 4e PR 5).</summary>
     BeyondSupply = 37,
+
+    /// <summary>The war score from our side, -100..100 (stage 4e PR 6: a side that is losing looks for peace).</summary>
+    WarScore = 38,
 }
 
 /// <summary>

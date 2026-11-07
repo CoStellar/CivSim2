@@ -27,8 +27,7 @@ public sealed class DiplomacySystem(GameContent content) : ITurnSystem
         TreatyBook book = state.Treaties;
         long month = state.Month;
         book.RemoveAll(t => !Alive(state, t.A) || !Alive(state, t.B) || (t.UntilMonth > 0 && month >= t.UntilMonth));
-        long retry = _content.Treaties.RetryYears * 12L;
-        book.RemoveProposals(p => !Alive(state, p.From) || !Alive(state, p.To) || (p.Status == ProposalStatus.Declined && month >= p.Month + retry));
+        book.RemoveProposals(p => !Alive(state, p.From) || !Alive(state, p.To) || (p.Status == ProposalStatus.Declined && month >= p.Month + (_content.Treaties.RetryYearsFor(p.Kind) * 12L)));
         for (int k = 0; k < book.Proposals.Count; k++)
         {
             TreatyProposal p = book.Proposals[k];
