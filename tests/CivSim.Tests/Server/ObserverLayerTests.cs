@@ -4,6 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using CivSim.Core.Content;
+using CivSim.Core.State;
+using CivSim.Data;
 using CivSim.Protocol;
 using CivSim.Protocol.Hosting;
 using CivSim.Protocol.Messages;
@@ -84,6 +87,51 @@ public class ObserverLayerTests
         Assert.Equal("turn,year,turn_ms,people,settlements", lines[0]);
         Assert.Equal(5, lines.Length);
         Assert.StartsWith("4,", lines[4], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AViewerThatFallsBehindGetsNoPileOfViewsButCatchesUp()
+    {
+        // A window that stops reading (minimized, too slow at full speed) used to collect every view in memory: 37 GB after
+        // a few hours. Now the server waits until it reads, and then sends the latest view with what it missed.
+        GameContent content = ContentLoader.Load();
+        GameServer server = GameServer.CreateNew(GameSettings.Test(5), content);
+        (InMemoryConnection viewer, InMemoryConnection end) = InMemoryConnection.CreatePair();
+        server.Accept(end);
+        viewer.Send(new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer));
+        server.Pump();
+        for (int t = 0; t < 120; t++)
+        {
+            server.AddChronicle($"Line {t}");
+            server.AdvanceTurn();
+        }
+
+        // At most the limit plus one round of messages (a view, the changed chunks, the layers) waits.
+        Assert.InRange(end.Backlog, GameServer.MaxBacklog, GameServer.MaxBacklog + 40);
+        Assert.False(server.HasDeferredViews);
+        var waiting = new List<IProtocolMessage>();
+        while (viewer.TryReceive(out IProtocolMessage? m))
+        {
+            waiting.Add(m!);
+        }
+
+        long last = server.State.Turn;
+        Assert.DoesNotContain(waiting, m => m is GameViewMessage v && v.Turn == last);
+
+        // Caught up: the latest view comes with the chronicle lines it missed (the newest ones).
+        Assert.True(server.HasDeferredViews);
+        server.SendViews();
+        var later = new List<IProtocolMessage>();
+        while (viewer.TryReceive(out IProtocolMessage? m))
+        {
+            later.Add(m!);
+        }
+
+        GameViewMessage view = later.OfType<GameViewMessage>().Single();
+        Assert.Equal(last, view.Turn);
+        Assert.Contains(view.Chronicle!, e => e.Text == "Line 119");
+        Assert.Contains(later, m => m is MapChunkMessage);
+        Assert.False(server.HasDeferredViews);
     }
 
     [Fact]

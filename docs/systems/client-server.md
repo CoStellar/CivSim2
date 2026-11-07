@@ -55,6 +55,13 @@ sequenceDiagram
 - **Mapa** (protokół v4): fragmenty niosą dziką żywność i siłę wpływu. Gracz może wysłać komendy `MoveSettlementDto` i `SplitSettlementDto`; serwer sprawdza je tak samo jak komendy AI.
 - **`LocalServerHost`:** uruchamia serwer w osobnym wątku i daje klientowi połączenie w pamięci (ADR 0010). Tury idą
   w tempie wybranej prędkości, tylko gdy podłączony jest obserwator; przy maks. widok wychodzi najwyżej co 250 ms.
+- **Klient, który nie nadąża** (poprawka z 2026-11-07, po 37 GB pamięci w kilkugodzinnej grze Patryka): połączenie mówi, ile wysłanych
+  wiadomości druga strona jeszcze nie odebrała (`IConnection.Backlog`). Gdy klient ma ich więcej niż 256 (`GameServer.MaxBacklog`),
+  serwer nie wysyła mu nowych widoków, tylko zbiera dla niego zmienione fragmenty mapy i najnowsze 500 wpisów kroniki. Gdy klient
+  odczyta zaległości, dostaje raz najnowszy widok z tym, co ominął. Wcześniej przy maks. prędkości serwer wysyłał ok. 3 MB/s
+  (widok, ~35 fragmentów mapy i warstwy co 250 ms), a okno czytało wolniej (albo wcale, gdy było zminimalizowane), więc kolejka
+  w pamięci rosła bez końca.
+- **Kronika w oknie** ma stały limit 2000 wpisów (lista w sesji i tekst w panelu); panel rósł wcześniej bez końca.
 
 **Zapis gry** (`SaveGameSerializer`, po stronie serwera):
 - Plik: `CS2S` + wersja formatu (4 bajty) + MessagePack skompresowany LZ4.
@@ -70,6 +77,8 @@ Brak.
 - `LocalServerHostTests`: obserwator i gracz przez wątek serwera (zawartość, mapa, znane pola, prędkość).
 - `GameServerTests`: powitanie, zła wersja, koniec tury, odrzucanie cudzych i nieznanych komend, odrzucenia z numerem komendy,
   rozłączenie, oraz **komenda przez protokół daje ten sam hash co komenda podana bezpośrednio** (21 tur).
+- `ObserverLayerTests.AViewerThatFallsBehindGetsNoPileOfViewsButCatchesUp`: klient, który przez 120 tur nic nie czyta, ma w kolejce
+  najwyżej limit plus jedną rundę wiadomości, a po odczycie dostaje najnowszy widok z ominiętą kroniką i fragmentami mapy.
 - `SaveGameTests`: zapis i odczyt dają ten sam hash; wczytana gra po 70 kolejnych turach jest identyczna z oryginałem; zapis do pliku; obce i nowsze pliki.
 
 ## Wydajność

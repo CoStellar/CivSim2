@@ -250,9 +250,9 @@ public partial class Hud : CanvasLayer
     public void AddChronicle(IReadOnlyList<ChronicleEntry> lines)
     {
         _chronicleLines.AddRange(lines);
-        if (_chronicleLines.Count > 2000)
+        if (_chronicleLines.Count > ChronicleLines)
         {
-            _chronicleLines.RemoveRange(0, _chronicleLines.Count - 2000);
+            _chronicleLines.RemoveRange(0, _chronicleLines.Count - ChronicleLines);
         }
 
         foreach (ChronicleEntry e in lines)
@@ -262,7 +262,16 @@ public partial class Hud : CanvasLayer
                 _chronicle.AppendText(Line(e));
             }
         }
+
+        // The label keeps the same last lines as the list: it grew without end before (gigabytes after hours at full speed).
+        while (_chronicle.GetParagraphCount() > ChronicleLines + 1)
+        {
+            _chronicle.RemoveParagraph(0);
+        }
     }
+
+    // Chronicle lines kept in the panel.
+    private const int ChronicleLines = 2000;
 
     /// <summary>Refreshes the top bar, the chart, the inspector and the civilization panel.</summary>
     public void UpdateStatus(ClientSession session, MapView map, double fps)
