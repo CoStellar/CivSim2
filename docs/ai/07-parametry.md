@@ -122,7 +122,13 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `goals[].witnessPercent` | ziemia 50, łupy 100, odwet 0 | % | D3 | jak mocno pamiętają ją świadkowie |
 | `scorePerWin` | 10 | punkty wyniku | D3, D1 | wygrana walka |
 | `scorePerSettlement` | 15 | punkty wyniku | D3, D1 | zdobyta osada (ponad walkę) |
-| `wearinessPerYear` | 1 | punkty na rok | D1, D2 | zmęczenie z lat wojny |
+| `wearinessPerCampaignMonth` | 5 | punkty na miesiąc kampanii | D1, D2, K1 | zmęczenie z miesięcy kampanii (od PR 2; wcześniej `wearinessPerYear` 1) |
+| `campaignStepMonths` | 1 | miesiące | — | krok kampanii (epizodu) |
+| `marchCellsPerMonth` | 3 | pola na miesiąc | K1 | marsz kampanii |
+| `quietPeaceYears` | 5 | lata | — | wojna bez kampanii kończy się białym pokojem |
+| `minWinChancePercent` | 60 | % | K1 | najmniejsza szansa, przy której dowódca wysyła kampanię na widziany cel i przy której wojownicy atakują u celu |
+| `sendPercent` | 67 | % wojowników osady | K1 | ilu wojowników może wyjść (1/3 zostaje w domu) |
+| `minWarriors` | 5 | wojownicy | K1 | najmniejsza kampania |
 | `wearinessPerLossPercent` | 3 | punkty na % ludzi zabitych | D1, D2 | zmęczenie ze strat |
 | `peaceAbove` | 60 | punkty zmęczenia | D2 | od tego zmęczenia strona szuka pokoju w każdym kroku i przy każdej ocenie |
 | `moodAtFullWeariness` | 20 | punkty nastroju | — | spadek nastroju przy zmęczeniu 100 |

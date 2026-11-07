@@ -4,7 +4,7 @@ Ten katalog opisuje **każdą decyzję**, którą podejmuje sztuczna inteligencj
 na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to jest w kodzie. Jest pisany dla Patryka:
 żeby można było ocenić, czy mechanika nie jest za prosta albo za skomplikowana i bez sensu.
 
-**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019) + ziemia i migracje (PR C) + fachy, ludzie i demografia (cały etap 4F) + wojna z celem i pokój z warunkami (etap 4e PR 1, gałąź `feat/war-goals`). Dowódca i armie (4e PR 2–4) jeszcze nie istnieją.
+**Stan opisu:** etap 4d + zegar świata (ADR 0018) + wartości i priorytety (PR B, ADR 0019) + ziemia i migracje (PR C) + fachy, ludzie i demografia (cały etap 4F) + wojna z celem i pokój z warunkami (etap 4e PR 1) + epizody i pierwszy dowódca (etap 4e PR 2, gałąź `feat/war-episodes`). Armie z wielu osad, bitwy w rundach i pełny dowódca: 4e PR 3–5.
 **Aktualizacja:** po każdym etapie, który zmienia AI (zasada w `CLAUDE.md`). Historia zmian jest na dole tej strony.
 
 ## Jak czytać
@@ -13,7 +13,7 @@ na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to j
 2. [Wspólne mechanizmy](01-wspolne-mechanizmy.md): jak AI liczy ocenę, jak wybiera, czym jest charakter i waga celu. Bez tego reszta
    jest niezrozumiała, bo wszyscy doradcy liczą tak samo.
 3. Doradcy, każdy w osobnym pliku: [Strateg](02-strateg.md), [Gubernator](03-gubernator.md), [Skarbnik](04-skarbnik.md),
-   [Uczony](05-uczony.md), [Dyplomata](10-dyplomata.md).
+   [Uczony](05-uczony.md), [Dyplomata](10-dyplomata.md), [Dowódca](11-dowodca.md) (od etapu 4e).
 4. [Co AI wie](06-wiedza-i-relacje.md): pamięć mapy, kontakty, sympatia i zaufanie.
 5. [Wszystkie liczby](07-parametry.md): każdy parametr z plikiem, wartością i decyzją, na którą wpływa. Także liczby zaszyte w kodzie.
 6. [Ocena i uwagi](08-ocena-i-uwagi.md): co naprawdę działa, co jest tylko „na papierze”, gdzie AI jest za proste, a gdzie
@@ -67,7 +67,8 @@ zjedli” to wynik poprzedniego kroku tej cywilizacji).
 | **T1** | Skarbnik | jaką recepturę robią rzemieślnicy osady | `SetRecipeCommand` | własny krok na decyzje wolne | [04-skarbnik.md](04-skarbnik.md) |
 | **U1** | Uczony | jaką technologię badać: priorytet (co da tej cywilizacji) × przeszkoda kosztu | `SetResearchCommand` | gdy nic nie jest badane (reaktywnie, każdy krok świata) | [05-uczony.md](05-uczony.md) |
 | **D1** | Dyplomata | przyjąć czy odrzucić propozycję umowy | `AnswerProposalCommand` | każdy krok świata (reaktywnie) | [10-dyplomata.md](10-dyplomata.md#d1-odpowiedź-na-propozycję-reaktywna) |
-| **D2** | Dyplomata | jeden krok wobec spotkanych: handel, pakt o nieagresji, sojusz obronny, wojna, pokój | `ProposeTreatyCommand`, `DeclareWarCommand` | co 50 lat we własnym kroku (rozłożone); od razu po wypowiedzianej wojnie albo napadzie | [10-dyplomata.md](10-dyplomata.md#d2-przegląd-stosunków-proaktywny) |
+| **D2** | Dyplomata | jeden krok wobec spotkanych: handel, pakt o nieagresji, sojusz obronny, wojna, pokój | `ProposeTreatyCommand`, `DeclareWarCommand` | co 50 lat we własnym kroku (rozłożone); od razu po wypowiedzianej wojnie albo napadzie; pokój także w każdym kroku świata między kampaniami, gdy strona jest zmęczona albo wynik pozwala żądać warunków (od 4e PR 2) | [10-dyplomata.md](10-dyplomata.md#d2-przegląd-stosunków-proaktywny) |
+| **K1** | Dowódca | wysłać kampanię: wojownicy jednej osady przeciw osadzie wroga (od 4e PR 2) | `LaunchCampaignCommand` | własny krok i miesiąc po alarmie (wojna, napaść) | [11-dowodca.md](11-dowodca.md) |
 
 **Własny krok na decyzje wolne:** własny krok cywilizacji, który zaczyna okres o długości kroku jej ery (`WorldClock.PlansNow`). Na
 Ziemi to każdy własny krok (poza krótszym krokiem zaraz po zmianie ery); na planecie z porami roku na żywo krok jest krótszy, a
@@ -127,6 +128,7 @@ w `docs/systems/`:
 | 2026-11-06 | zegar (ADR 0018) | Rytm każdej cywilizacji: decyzje proaktywne we własnym kroku, reaktywne (alarmy wojny i napadu, propozycje, wybór badania) w każdym kroku świata; nowe reakcje D2 i G2; odstępy AI w własnych krokach (`reviewEverySteps`, `searchEverySteps`, `minStepsBetweenMoves`); zwiad, widzenie i pogłoski w własnym kroku; nowe statystyki, wykres rytmów i ludności przed/po. |
 | 2026-11-06 | wartości (PR B, ADR 0019) | Uczony od nowa (priorytet z położenia, braków i charakteru, koszt jako przeszkoda łagodzona ciekawością); skarbnik: cele towarów, koordynacja sieci, koniec przełączania „praca ↔ brak”, premia za handel; strateg: wagi nauki i wpływu; „zostać” z połową wagi ekspansji; obce obozy i wojownicy tylko z pól widzianych teraz; 11 liczb z kodu do `data/ai.json` (sekcja `scholar`); test martwych wartości; nowe statystyki z 3 seedów, wykresy decyzji i „przed/po”. |
 | 2026-11-06 | ziemia i migracje (PR C) | Gubernator wycenia ziemię z technologiami zbierania cywilizacji, rybacy liczą wodę; G4 osiedlenie dla prawdziwej liczby producentów i w porównaniu ze zbieractwem i ekspansywnością (`settleOverGatheringPercent`); nowe decyzje G7 (wioska wysyła osadników) i G8 (wyprawa w nieznane); osadnicy omijają strefy własnych osad; zwiad i marsz na stulecie (`data/perception.json`); nowe parametry w `data/ai.json`; punkty 4, 5, 6 i 8 oceny zamknięte, nowy punkt 10 (wydajność); statystyki z 3 seedów, wykres ziemi i migracji, wykres decyzji z G7 i G8. |
+| 2026-11-07 | epizody i kampanie (etap 4e, PR 2) | Nowy doradca: dowódca (K1) wysyła kampanie (szansa z tego, co widzi, próg 60%; cel niewidoczny: idą zobaczyć i zawracają przed silniejszym). Dyplomata myśli o pokoju w każdym kroku świata między kampaniami (zmęczenie ≥ 60 albo wynik ≥ 20). Alarmy dają krok świata po miesiącu (reakcje szybciej). Zmęczenie z miesięcy kampanii, nie z lat. Parametry dowódcy chwilowo w `data/war.json` (do `ai.json` w PR 5). |
 | 2026-11-07 | wojna z celem (etap 4e, PR 1) | Dyplomata: cel wojny (ziemia przy roszczeniu, inaczej odwet), zmęczenie wojną (lata + straty, `data/war.json`) zamiast lat wojny w ocenie pokoju, nowy czynnik „warunki pokoju”, pokój proponowany z warunkami (osada, okup, biały) i przy zmęczeniu ≥ 60 w każdym kroku; agresja jako powód wojny. Nowe parametry w `07-parametry.md`, statystyki wojen w `09-statystyki.md`, nowy wykres decyzji. |
 | 2026-11-06 | koniec etapu 4F (PR 5) | Bez zmian w decyzjach AI. Statystyki z 3 seedów po całym etapie 4F (obozy przenoszą się 5–9 razy rzadziej przy wolniejszym przyroście), nowy wykres decyzji, sekcja „Demografia” w statystykach; graf technologii i fachów z danych: `docs/systems/graf-technologii.md`. |
 | 2026-11-06 | demografia (etap 4F, PR 4) | Bez zmian w decyzjach AI i w `data/ai.json`. Ludzie rosną wolniej (+1,0‰ na rok na start), więc po kilku turach rzadziej są obce odłamy: w teście martwych wartości sytuacja „wypędzenie” dostaje w razie potrzeby małą placówkę sąsiada i stary uraz (sympatia −5000). |

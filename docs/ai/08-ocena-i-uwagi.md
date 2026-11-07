@@ -197,13 +197,20 @@ decyzją AI (ile uczyć). To ostatnie zostawiam do decyzji Patryka: reguła dzia
 **Skutek uboczny do obserwacji:** w środkowych stuleciach jest więcej obozów i przeprowadzek niż przed PR 2, bo obóz osiada dopiero,
 gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkich. Liczby: `09-statystyki.md`.
 
-## 12. Wojna: zmęczenie rośnie głównie z lat (etap 4e, PR 1)
+## 12. Wojna: zmęczenie rosło głównie z lat (etap 4e, PR 1; poprawione w PR 2)
 
 - **Co jest za proste:** w epoce kamienia krok ma 50 lat, a zmęczenie rośnie o 1 punkt na rok, więc po 2 krokach każda strona ma 100
   niezależnie od strat i wyniku. Pokój przychodzi „z nudów”, a nie z przegranych bitew. Straty w napaściach są małe (kilka osób).
 - **Cel wojny wybiera dyplomata z prostej reguły** (roszczenie → ziemia, inaczej odwet). Nie waży łupów ani wartości osady.
-- **Plan:** w PR 2–4 bitwy wypraw dadzą prawdziwe straty, a dowódca będzie liczył szanse i cel; w PR 5 strojenie `wearinessPerYear`
-  (np. 0,3) i `wearinessPerLossPercent`, żeby straty ważyły więcej niż czas.
+- **PR 2 (ADR 0022):** walka toczy się w kampaniach co miesiąc, zmęczenie rośnie z miesięcy kampanii i strat, a wojna bez kampanii
+  wygasa po 5 latach. Wojny trwają teraz 5–6 lat (w tym kilka do kilkunastu miesięcy kampanii).
+- **Co dalej jest za proste:**
+  - przegrany prawie nigdy nie przyjmuje warunków (opinia o wrogu −100 daje czynnik 0,3, a oddanie czegoś jeszcze go obniża), a po
+    odmowie ta sama propozycja nie wraca przez 100 lat, więc wojny kończą się zwykle cichym białym pokojem bez okupu;
+  - dowódca widzi tylko cele w zasięgu wzroku; resztę „idzie zobaczyć”;
+  - jedna osada na kampanię, walka jednym rzutem, bez terenu i morale.
+- **Plan:** PR 3 (armie z wielu osad, uzbrojenie, tragarze), PR 4 (bitwa w rundach), PR 5 (dowódca co miesiąc), PR 6 (strojenie,
+  m.in. czynnik „przegrywam” w ocenie pokoju i krótszy `retryYears` dla pokoju).
 
 ## Decyzje Patryka (2026-11-06)
 
