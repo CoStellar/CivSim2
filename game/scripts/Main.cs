@@ -47,6 +47,7 @@ public partial class Main : Node2D
     private double _frameMsMax;
     private int _slowFrames;
     private long _benchmarkStart;
+    private int _benchmarkGc;
     private double _statusTimer;
     private string? _screenshot;
     private int _screenshotFrames = -1;
@@ -662,6 +663,7 @@ public partial class Main : Node2D
         if (_frames == 0)
         {
             _benchmarkStart = Stopwatch.GetTimestamp();
+            _benchmarkGc = GC.CollectionCount(2);
 
             // Fly over the map at the widest zoom: the worst case for the renderer.
             _camera.Zoom = Vector2.One * MinZoom;
@@ -689,7 +691,7 @@ public partial class Main : Node2D
             double wall = Stopwatch.GetElapsedTime(_benchmarkStart).TotalSeconds;
             GD.Print(string.Create(
                 CultureInfo.InvariantCulture,
-                $"benchmark: {_frames} frames, client work avg {_frameMsSum / _frames:F3} ms, max {_frameMsMax:F3} ms, frames over 16 ms: {_slowFrames}, wall {_frames / wall:F1} fps, chunks drawn {_map.VisibleChunks}, turn {_session?.View?.Turn}"));
+                $"benchmark: {_frames} frames, client work avg {_frameMsSum / _frames:F3} ms, max {_frameMsMax:F3} ms, frames over 16 ms: {_slowFrames}, wall {_frames / wall:F1} fps, chunks drawn {_map.VisibleChunks}, turn {_session?.View?.Turn}, full GCs {GC.CollectionCount(2) - _benchmarkGc}"));
             GetTree().Quit();
         }
     }

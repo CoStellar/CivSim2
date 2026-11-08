@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using CivSim.Core.State;
 
 namespace CivSim.Core.Simulation;
@@ -46,9 +47,9 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
                 stock[g] = view[g].Hundredths;
             }
 
-            settlements.Add(new SettlementSnapshot(st.Id, st.Owner, st.World, st.Cell.Col, st.Cell.Row, st.Name, st.Level, ImmutableArray.Create(stock))
+            settlements.Add(new SettlementSnapshot(st.Id, st.Owner, st.World, st.Cell.Col, st.Cell.Row, st.Name, st.Level, ImmutableCollectionsMarshal.AsImmutableArray(stock))
             {
-                Population = ImmutableArray.Create(st.PopulationView.ToArray()),
+                Population = ImmutableCollectionsMarshal.AsImmutableArray(st.PopulationView.ToArray()),
                 Health = st.Health,
                 Mood = st.Mood,
                 Loyalty = st.Loyalty,

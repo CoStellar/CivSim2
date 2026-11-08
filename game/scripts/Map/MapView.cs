@@ -524,8 +524,11 @@ public partial class MapView : Node2D
 
         public void UpdateLines(ClientWorld world, float riverWidth, float borderWidth, byte[]? hiddenBy)
         {
-            var rivers = new List<(Transform2D, Color)>();
-            var borders = new List<(Transform2D, Color)>();
+            // Shared scratch lists (the main thread only): no new lists for every chunk update.
+            List<(Transform2D, Color)> rivers = ScratchRivers;
+            List<(Transform2D, Color)> borders = ScratchBorders;
+            rivers.Clear();
+            borders.Clear();
             for (int r = 0; r < H; r++)
             {
                 for (int c = 0; c < W; c++)
@@ -584,6 +587,9 @@ public partial class MapView : Node2D
             LinesDirty = false;
             EverLined = true;
         }
+
+        private static readonly List<(Transform2D, Color)> ScratchRivers = [];
+        private static readonly List<(Transform2D, Color)> ScratchBorders = [];
 
         // Corners of the six edges N, NE, SE, S, SW, NW (indexes into HexLayout.Corners).
         private static readonly (int A, int B)[] AllEdges = [(4, 5), (5, 0), (0, 1), (1, 2), (2, 3), (3, 4)];

@@ -70,20 +70,32 @@ public partial class MapObjects : Node2D
         return row >= 0 && row < _world.Height && OverlayColors.Hidden(fog.Cells, _fogAlpha, _world.Index(col, row));
     }
 
-    /// <summary>Sets what to draw; redraws only when the data, the layers or the visible area changed.</summary>
+    /// <summary>
+    /// Sets what to draw; redraws only when the layers or the fog changed, the view left the area drawn last time (drawn
+    /// with a margin, so panning and following a civilization rarely redraw) or the zoom changed, and for new data at most
+    /// every <see cref="DataRedrawSeconds"/> (stage 5b: a steadier frame rate).
+    /// </summary>
     public void Show(ClientSession session, ClientWorld world, LayerStack layers, Vector2 period, Rect2 view, float zoom)
     {
-        bool changed = !ReferenceEquals(session.View, _lastView) || !ReferenceEquals(session.Details, _lastDetails)
-            || layers.Version != _lastLayers || session.FogVersion != _lastFog || view != _view || period != _period || !ReferenceEquals(world, _world);
+        long now = System.Diagnostics.Stopwatch.GetTimestamp();
+        bool data = !ReferenceEquals(session.View, _lastView) || !ReferenceEquals(session.Details, _lastDetails);
+        bool dataDue = data && System.Diagnostics.Stopwatch.GetElapsedTime(_lastDataRedraw, now).TotalSeconds >= DataRedrawSeconds;
+        bool moved = !_view.Encloses(view) || Mathf.Abs(zoom - _zoom) > _zoom * 0.02f;
+        bool changed = dataDue || moved || layers.Version != _lastLayers || session.FogVersion != _lastFog || period != _period || !ReferenceEquals(world, _world);
         if (!changed)
         {
             return;
         }
 
+        if (data)
+        {
+            _lastDataRedraw = now;
+        }
+
         _session = session;
         _world = world;
         _period = period;
-        _view = view;
+        _view = view.Grow(Mathf.Max(view.Size.X, view.Size.Y) * ViewMargin);
         _zoom = zoom;
         _lastView = session.View;
         _lastDetails = session.Details;
@@ -95,6 +107,29 @@ public partial class MapObjects : Node2D
             Place(p, layers, p.Layer, sprites: !p.Lines);
         }
     }
+
+    // The picture of a settlement of a level and status, looked up once (no new name string per settlement and redraw).
+    private Texture2D? SettlementArt(int level, int status)
+    {
+        int key = (level * 3) + status;
+        if (!_settlementArt.TryGetValue(key, out Texture2D? tex))
+        {
+            tex = _art.Get("objects", $"settlement_{LevelArt[level]}_{StatusArt[status]}");
+            _settlementArt[key] = tex;
+        }
+
+        return tex;
+    }
+
+    private readonly Dictionary<int, Texture2D?> _settlementArt = [];
+
+    // New data redraws the objects at most this often (the server sends views a few times a second at top speed).
+    private const double DataRedrawSeconds = 0.25;
+
+    // The objects are drawn this far (share of the view's larger side) beyond each edge of the view.
+    private const float ViewMargin = 0.35f;
+
+    private long _lastDataRedraw;
 
     private static void Place(LayerPainter p, LayerStack layers, MapLayer layer, bool sprites)
     {
@@ -116,25 +151,31 @@ public partial class MapObjects : Node2D
         p.QueueRedraw();
     }
 
-    // Draws `draw` at every copy of `pos` that can be on screen (the map repeats every period east–west).
-    private void Each(Vector2 pos, float margin, Action<Vector2> draw)
+    // Every copy of `pos` that can be on screen (the map repeats every period east–west); no allocation, unlike a callback.
+    private CopyList Copies(Vector2 pos, float margin)
     {
-        if (_period.X <= 0)
+        if (_period.X <= 0 || pos.Y < _view.Position.Y - margin || pos.Y > _view.End.Y + margin)
         {
-            return;
+            return new CopyList(pos, 0, 1, 0);
         }
 
         int k0 = Mathf.FloorToInt((_view.Position.X - margin - pos.X) / _period.X) + 1;
         int k1 = Mathf.FloorToInt((_view.End.X + margin - pos.X) / _period.X);
-        if (pos.Y < _view.Position.Y - margin || pos.Y > _view.End.Y + margin)
-        {
-            return;
-        }
+        return new CopyList(pos, _period.X, k0, k1);
+    }
 
-        for (int k = k0; k <= k1; k++)
-        {
-            draw(pos + new Vector2(k * _period.X, 0));
-        }
+    private readonly struct CopyList(Vector2 pos, float period, int k0, int k1)
+    {
+        public CopyEnumerator GetEnumerator() => new(pos, period, k0, k1);
+    }
+
+    private struct CopyEnumerator(Vector2 pos, float period, int k0, int k1)
+    {
+        private int _k = k0 - 1;
+
+        public readonly Vector2 Current => pos + new Vector2(_k * period, 0);
+
+        public bool MoveNext() => ++_k <= k1;
     }
 
     /// <summary>Draws one layer (called from its node's _Draw).</summary>
@@ -195,7 +236,7 @@ public partial class MapObjects : Node2D
             }
 
             Vector2 c = HexLayout.Center(f.Col, f.Row);
-            Each(c, 48, at =>
+            foreach (Vector2 at in Copies(c, 48))
             {
                 if (field is not null)
                 {
@@ -208,7 +249,7 @@ public partial class MapObjects : Node2D
                 {
                     p.DrawRect(new Rect2(at - new Vector2(10, 8), new Vector2(20, 16)), far);
                 }
-            });
+            }
         }
     }
 
@@ -280,9 +321,9 @@ public partial class MapObjects : Node2D
             Color civ = OverlayColors.CivColor(s.Owner);
             bool capital = s.Status == 0 && _capitals.Contains(s.Id);
             Texture2D? tex = Textured
-                ? _art.Get("objects", $"settlement_{LevelArt[Math.Clamp(s.Level, 0, LevelArt.Length - 1)]}_{StatusArt[Math.Clamp(s.Status, 0, 2)]}")
+                ? SettlementArt(Math.Clamp(s.Level, 0, LevelArt.Length - 1), Math.Clamp(s.Status, 0, 2))
                 : null;
-            Each(HexLayout.Center(s.Col, s.Row), 48, at =>
+            foreach (Vector2 at in Copies(HexLayout.Center(s.Col, s.Row), 48))
             {
                 if (tex is not null)
                 {
@@ -295,12 +336,12 @@ public partial class MapObjects : Node2D
                         }
                     }
 
-                    return;
+                    continue;
                 }
 
                 if (!p.Lines)
                 {
-                    return;
+                    continue;
                 }
 
                 // Far away: a square in the owner's colour, larger for higher levels; abandoned grey, ruins dark (GDD 5.5).
@@ -313,7 +354,7 @@ public partial class MapObjects : Node2D
                 {
                     CapitalMark(p, at - new Vector2(0, half * 2.2f), half * 0.9f);
                 }
-            });
+            }
         }
     }
 
@@ -394,14 +435,14 @@ public partial class MapObjects : Node2D
 
             Vector2 text = font.GetStringSize(c.Name, HorizontalAlignment.Left, -1, size);
             Color color = OverlayColors.CivColor(c.Id);
-            Each(at, text.X + 48, pos =>
+            foreach (Vector2 pos in Copies(at, text.X + 48))
             {
                 Vector2 origin = pos - new Vector2(text.X / 2, 30 + (size * 0.6f));
                 var plate = new Rect2(origin - new Vector2(size * 0.4f, text.Y * 0.8f), new Vector2(text.X + (size * 0.8f), text.Y * 1.1f));
                 p.DrawRect(plate, new Color(0.11f, 0.09f, 0.06f));
                 p.DrawRect(plate, color, filled: false, width: Mathf.Max(2, size / 8f));
                 p.DrawString(font, origin, c.Name, HorizontalAlignment.Left, -1, size, color);
-            });
+            }
         }
     }
 
@@ -490,7 +531,7 @@ public partial class MapObjects : Node2D
             }
 
             Color civ = OverlayColors.CivColor(j.Owner);
-            Each(HexLayout.Center(j.Col, j.Row), 48, at =>
+            foreach (Vector2 at in Copies(HexLayout.Center(j.Col, j.Row), 48))
             {
                 if (tex is not null)
                 {
@@ -504,7 +545,7 @@ public partial class MapObjects : Node2D
                 {
                     p.DrawCircle(at, 9 / Mathf.Max(0.35f, _zoom * 2), civ);
                 }
-            });
+            }
         }
 
         PaintArmies(p, details);
@@ -526,7 +567,7 @@ public partial class MapObjects : Node2D
             int figures = a.Warriors >= 40 ? 3 : a.Warriors >= 15 ? 2 : 1;
             if (!Fogged(a.Col, a.Row))
             {
-                Each(HexLayout.Center(a.Col, a.Row), 48, at =>
+                foreach (Vector2 at in Copies(HexLayout.Center(a.Col, a.Row), 48))
                 {
                     for (int f = 0; f < figures; f++)
                     {
@@ -543,12 +584,12 @@ public partial class MapObjects : Node2D
                             p.DrawCircle(spot, 7 / Mathf.Max(0.35f, _zoom * 2), civ);
                         }
                     }
-                });
+                }
             }
 
             if (a.Carriers > 0 && !Fogged(a.ConvoyCol, a.ConvoyRow))
             {
-                Each(HexLayout.Center(a.ConvoyCol, a.ConvoyRow), 48, at =>
+                foreach (Vector2 at in Copies(HexLayout.Center(a.ConvoyCol, a.ConvoyRow), 48))
                 {
                     if (carrier is not null)
                     {
@@ -561,7 +602,7 @@ public partial class MapObjects : Node2D
                     {
                         p.DrawCircle(at, 5 / Mathf.Max(0.35f, _zoom * 2), civ);
                     }
-                });
+                }
             }
         }
     }
@@ -602,7 +643,7 @@ public partial class MapObjects : Node2D
     {
         Vector2 from = HexLayout.Center(col, row);
         Vector2 to = Nearest(from, HexLayout.Center(targetCol, targetRow));
-        Each(from, (to - from).Length() + 48, at =>
+        foreach (Vector2 at in Copies(from, (to - from).Length() + 48))
         {
             Vector2 end = at + (to - from);
             p.DrawDashedLine(at, end, civ, width, 4 * width);
@@ -610,7 +651,7 @@ public partial class MapObjects : Node2D
             Vector2 side = new(-dir.Y, dir.X);
             float head = 5 * width;
             p.DrawColoredPolygon([end, end - (dir * head) + (side * head * 0.6f), end - (dir * head) - (side * head * 0.6f)], civ);
-        });
+        }
     }
 
     private void PaintEvents(LayerPainter p)
@@ -666,7 +707,7 @@ public partial class MapObjects : Node2D
             foreach (CellEventView e in cells)
             {
                 bool main = ReferenceEquals(e, center);
-                Each(HexLayout.Center(e.Col, e.Row), 48, at =>
+                foreach (Vector2 at in Copies(HexLayout.Center(e.Col, e.Row), 48))
                 {
                     if (main && icon is not null)
                     {
@@ -679,7 +720,7 @@ public partial class MapObjects : Node2D
                     {
                         p.DrawCircle(at + new Vector2(10, -10), (main ? 6 : 2.5f) / Mathf.Max(0.35f, _zoom * 2), dot);
                     }
-                });
+                }
             }
         }
     }
@@ -725,7 +766,7 @@ public partial class MapObjects : Node2D
 
             (Color color, bool dashed) = RelationStyle(r);
             Vector2 to = Nearest(a.At, b.At);
-            Each(a.At, (to - a.At).Length() + 48, at =>
+            foreach (Vector2 at in Copies(a.At, (to - a.At).Length() + 48))
             {
                 Vector2 end = at + (to - a.At);
                 if (dashed)
@@ -736,7 +777,7 @@ public partial class MapObjects : Node2D
                 {
                     p.DrawLine(at, end, color, width);
                 }
-            });
+            }
         }
     }
 

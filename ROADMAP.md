@@ -223,7 +223,7 @@ Przed nowymi erami. Analiza biegu: tura 93 ms (cel 50), FPS ok. 52, 8 z 12 cywil
 - [x] **Stolice i stabilne nazwy:** stolica przenosi się z obozu do największej wioski, gdy lud osiądzie, potem tylko przy utracie; złoty znak nad stolicą; nazwa cywilizacji nad środkiem skupiska osad wokół stolicy, bez skakania
 - [x] **Hamulec neolitu:** zasięg władzy od stolicy, dalekie osady odłączają się jako nowe plemiona; brak imperiów przed epoką brązu (zmiana GDD)
 - [x] **Spokojniejszy ekran:** przywódcy jednym komunikatem na turę, drobne zdarzenia w podsumowaniach na cywilizację
-- [ ] **Wydajność:** płynniejszy obraz (rzadsze i mniejsze przerysowania, mniej sprzątania pamięci), tura < 50 ms
+- [x] **Wydajność:** płynniejszy obraz (rzadsze i mniejsze przerysowania, mniej sprzątania pamięci), tura < 50 ms (seed 42, 8000 tur: śr. 12 ms, było 41 ms; FPS do sprawdzenia u Patryka)
 - [ ] **Długi bieg:** koniec, gdy świat stoi w miejscu; test na kontynentach (wojny, inwazje, wojny z zemsty)
 
 ## Etapy 6–12 — Ery 3–9

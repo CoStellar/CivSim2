@@ -171,5 +171,11 @@ zoomie i włącza kolejne warstwy pól, symulacja w tle na maks. Porównanie z g
 | Standard 258×160 | 300 | 10,4 ms / 9,0 ms | 4,5 / 4,0 |
 | Ogromna 514×320 | 150 | 28,3 ms / 11,0 ms | 1,7 / 1,5 |
 
+**Etap 5b (po 4-godzinnym biegu):** obiekty mapy (osady, napisy, jednostki, zdarzenia) są rysowane z zapasem 35% poza ekranem
+i przerysowywane tylko, gdy kamera wyjdzie poza ten zapas, zmieni się zoom, warstwy lub mgła, a nowe dane najwyżej co 0,25 s
+(wcześniej przy każdej migawce i w każdej klatce ruchu kamery, także przy śledzeniu cywilizacji). Rysowanie kopii obiektu na
+zawiniętej mapie nie tworzy już obiektów w pamięci (wcześniej funkcja na każdy obiekt), a listy rzek i granic są wspólne.
+W chmurze nie da się uruchomić Godota, więc wynik FPS sprawdza Patryk: `--benchmark` wypisuje teraz też liczbę pełnych GC.
+
 Prawdziwe FPS zależą od karty graficznej; do sprawdzenia u Patryka (`-- --map-size huge --benchmark 600`). Spadek klatek przy
 renderowaniu programowym to koszt shadera z grafikami; praca procesora spadła dzięki limitom czasu.
