@@ -11,6 +11,7 @@ import sys
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 
 INK, MUTED, GRID, SURFACE = '#0b0b0b', '#52514e', '#dddcd6', '#fcfcfb'
 SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#8a8984']
@@ -81,7 +82,7 @@ for i, (key, label) in enumerate(memory):
 style(ax, 'Pamięć w czasie', 'MB')
 ax.set_xlabel(xlabel, color=MUTED, fontsize=8)
 ax.set_ylim(bottom=0)
-ax.legend(fontsize=8, frameon=False, loc='upper left')
+ax.legend(fontsize=8, frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.14), ncol=5)
 save(fig, '1_pamiec.png')
 
 # 2. Program performance: small multiples, one measure each.
@@ -122,6 +123,7 @@ for ax, (keys, labels, title, unit) in zip(axes.flat, panels):
     ax.set_ylim(bottom=0)
     if len(keys) > 1:
         ax.legend(fontsize=7, frameon=False)
+    ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
 for ax in axes[-1]:
     ax.set_xlabel(xlabel, color=MUTED, fontsize=8)
 save(fig, '3_symulacja.png')
@@ -196,7 +198,7 @@ Folder: `{os.path.basename(os.path.abspath(RUN))}`
 | Czas biegu | {hours[-1]:.2f} h |
 | Tury | {stats[-1]['turn']} (rok {stats[-1]['year']}) |
 | Czas tury | średnio {sum(turn_ms) / len(turn_ms):.1f} ms, 95% tur poniżej {turn_sorted[int(len(turn_sorted) * 0.95) - 1 if len(turn_sorted) > 1 else 0]:.1f} ms, najdłuższa {turn_sorted[-1]:.0f} ms |
-| Pamięć procesu | start {ws[0]:.0f} MB, koniec {ws[-1]:.0f} MB, szczyt {max(ws):.0f} MB |
+| Pamięć procesu | pierwszy pomiar {ws[0]:.0f} MB, koniec {ws[-1]:.0f} MB, szczyt {max(ws):.0f} MB |
 | Pamięć w drugiej połowie | {verdict}; obiekty .NET {heap_growth:+.0f} MB/h |
 | Procesor | średnio {sum(col(stats, 'cpu_pct')) / len(stats):.0f}% całego komputera |
 | Okno | średnio {fps:.1f} FPS, {slow} z {frames} klatek wolniejszych niż 30 FPS |
