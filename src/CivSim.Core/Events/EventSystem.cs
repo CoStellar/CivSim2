@@ -24,6 +24,19 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
     private readonly GameContent _content = content ?? throw new ArgumentNullException(nameof(content));
     private readonly IReadOnlyList<EventDefinition> _events = events ?? content.Events;
     private readonly List<(int Settlement, int Event)> _struck = [];
+    private readonly Dictionary<string, string> _groups = new(StringComparer.Ordinal);
+
+    // The chronicle group of an event: several strikes in a turn are summed up in one line (stage 5b).
+    private string GroupOf(EventDefinition ev)
+    {
+        if (!_groups.TryGetValue(ev.Key, out string? group))
+        {
+            group = ev.Name + " in {0} settlements";
+            _groups[ev.Key] = group;
+        }
+
+        return group;
+    }
     private HexCoord[] _area = [];
     private long[] _civPeople = []; // people of each civilization (by id) this turn, for CivilizationPeopleAtLeast
 
@@ -315,9 +328,12 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
 
         if (chronicle)
         {
-            context.Chronicle(ev.Chronicle
-                .Replace("{settlement}", s.Name, StringComparison.Ordinal)
-                .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal));
+            context.Chronicle(
+                ev.Chronicle
+                    .Replace("{settlement}", s.Name, StringComparison.Ordinal)
+                    .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal),
+                GroupOf(ev),
+                owner?.Id.Value ?? -1);
         }
     }
 
@@ -358,8 +374,6 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             }
 
             int months = WorldClock.MonthsOf(state, state.Settlements[source]);
-
-            int reached = 0;
             foreach (int m in networks[networkOf[source]])
             {
                 if (_struck.Contains((m, e)) || rng.NextInt(100) >= ev.SpreadPercent)
@@ -375,12 +389,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
 
                 Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
                 _struck.Add((m, e));
-                reached++;
-            }
-
-            if (reached > 0)
-            {
-                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {reached} more settlement{(reached == 1 ? string.Empty : "s")}.");
+                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {target.Name}.", GroupOf(ev), target.Owner.Value);
             }
 
             AlongTradeRoutes(context, networks, networkOf, source, e, months, rng);
@@ -425,7 +434,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
             _struck.Add((other, e));
             string partner = state.FindCivilization(target.Owner)?.Name ?? "no one";
-            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).");
+            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).", GroupOf(ev), target.Owner.Value);
         }
     }
 

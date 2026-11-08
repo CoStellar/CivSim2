@@ -153,10 +153,11 @@ public sealed class LongRunRecorder : IDisposable
             : line.Contains("pidemic", StringComparison.Ordinal) ? 9
             : line.StartsWith("A drought ", StringComparison.Ordinal)
                 || line.StartsWith("A wildfire ", StringComparison.Ordinal)
-                || line.StartsWith("The river flooded ", StringComparison.Ordinal) ? 10
+                || line.StartsWith("The river flooded ", StringComparison.Ordinal)
+                || (line.Contains(" in ", StringComparison.Ordinal) && line.Contains(" settlements: ", StringComparison.Ordinal)) ? 10 // "Drought in 3 settlements: ..."
             : line.StartsWith("Unrest spread in ", StringComparison.Ordinal)
                 || line.StartsWith("Calm returned to ", StringComparison.Ordinal) ? 8
-            : line.Contains(" founded ", StringComparison.Ordinal) ? 7
+            : line.Contains(" founded", StringComparison.Ordinal) ? 7
             : 11;
     }
 

@@ -25,6 +25,9 @@ public class LongRunTests
     [InlineData("unrest", "Unrest spread in the Chiefdom of Arvi.")]
     [InlineData("epidemic", "An epidemic broke out in Kora.")]
     [InlineData("nature", "A drought dried the land around Kora.")]
+    [InlineData("nature", "Drought in 3 settlements: Arvi (2), Belo.")]
+    [InlineData("epidemic", "Epidemic in 4 settlements: Arvi.")]
+    [InlineData("settlement", "2 new settlements were founded: Arvi, Belo.")]
     [InlineData("nature", "The river flooded Kora (Arvi); the fields are lost.")]
     [InlineData("other", "World generated.")]
     public void EventsGetAKind(string kind, string line) => Assert.Equal(kind, LongRunRecorder.KindOf(line));

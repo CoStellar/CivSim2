@@ -810,6 +810,8 @@ Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie
 10. **Nauka i wpływy:** postęp badań, dyfuzja technologii, przeliczenie stref wpływów, zmiana ery.
 11. **Zapis:** statystyki, kronika, nowa migawka dla grafiki, autozapis co 10 tur.
 
+**Spokojna kronika** (decyzja Patryka z 2026-11-08): częste zdarzenia jednego rodzaju z tej samej tury (nowi przywódcy, klęski, epidemie, nowe i przeniesione osady, osiadanie, wieści o dalekich ludach) kronika łączy w jedno zdanie z listą cywilizacji, np. „Drought in 4 settlements: Osxou (2), Korkbri”. Pojedyncze zdarzenie zostaje opisane jak dotąd.
+
 ### 11.2 Prędkości i tryby
 
 - **Obserwator:** pauza, ×1 (jedna tura na 2 s), ×2, ×5 i maksymalna. Przy maksymalnej grafika odświeża mapę co kilka tur.

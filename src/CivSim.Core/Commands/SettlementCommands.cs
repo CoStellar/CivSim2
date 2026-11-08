@@ -11,6 +11,12 @@ public interface IChronicledCommand
 {
     /// <summary>Applies the command like <see cref="ICommand.Apply"/> and returns a chronicle line, or null for none.</summary>
     string? ApplyWithChronicle(GameState state, CivId civ);
+
+    /// <summary>
+    /// The chronicle group of the line (see <see cref="Simulation.TurnContext.Chronicle(string, string, int)"/>) for
+    /// common commands whose lines are summed up when there are several in a turn; null for a line of its own.
+    /// </summary>
+    string? ChronicleGroup => null;
 }
 
 /// <summary>Checks shared by the settlement commands.</summary>
@@ -140,6 +146,9 @@ internal static class SettlementRules
 /// </summary>
 public sealed record MoveSettlementCommand(GameContent Content, SettlementId Settlement, HexCoord Target) : ICommand, IChronicledCommand
 {
+    /// <inheritdoc />
+    public string? ChronicleGroup => "{0} settlements moved";
+
     /// <summary>Moves of at least this many cells are written to the chronicle.</summary>
     public const int ChronicleDistance = 8;
 
@@ -189,6 +198,9 @@ public sealed record MoveSettlementCommand(GameContent Content, SettlementId Set
 /// </summary>
 public sealed record SplitSettlementCommand(GameContent Content, SettlementId Settlement, HexCoord Target, int Percent) : ICommand, IChronicledCommand
 {
+    /// <inheritdoc />
+    public string? ChronicleGroup => "{0} new settlements were founded";
+
     /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Movement;
 

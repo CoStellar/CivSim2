@@ -19,6 +19,30 @@ public class TurnRunnerTests
     }
 
     [Fact]
+    public void CommonChronicleLinesAreSummedUpInOneLine()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(1));
+        string a = state.Civilizations[0].Name;
+        string b = state.Civilizations[1].Name;
+        const string Droughts = "Drought in {0} settlements";
+        var runner = new TurnRunner(state);
+        runner.AddSystem(new GroupedChronicler(
+            ("A drought struck Kora.", Droughts, 0),
+            ("A new leader in Arvi.", "New leaders in {0} peoples", 1),
+            ("A drought struck Bela.", Droughts, 1),
+            ("A drought struck Rao.", Droughts, 0),
+            ("A drought struck the wilds.", Droughts, -1)));
+        runner.RunTurn();
+        Assert.Equal(
+            ["Before.", $"Drought in 4 settlements: {a} (2), {b}, no one.", "A new leader in Arvi.", "After."],
+            runner.LastChronicle);
+
+        // Next turn the groups start afresh.
+        runner.RunTurn();
+        Assert.Equal(4, runner.LastChronicle.Count);
+    }
+
+    [Fact]
     public void OddMapHeightIsRejected()
     {
         Assert.Throws<System.ArgumentException>(() => GameState.CreateNew(new GameSettings(1, 64, 41, 2)));

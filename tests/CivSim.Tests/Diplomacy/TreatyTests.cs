@@ -392,7 +392,8 @@ public class TreatyTests
 
         int depopulation = Content.Effect("depopulation").Id;
         Assert.Contains(state.Effects.All, e => e.DefinitionId == depopulation && e.TargetId == tools.Id.Value);
-        Assert.Contains(runner.LastChronicle, l => l.StartsWith("Merchants carried the epidemic", System.StringComparison.Ordinal));
+        string partner = state.FindCivilization(tools.Owner)!.Name; // several strikes in a turn are summed up in one line
+        Assert.Contains(runner.LastChronicle, l => l.StartsWith("Epidemic in ", System.StringComparison.Ordinal) && l.Contains(partner, System.StringComparison.Ordinal));
     }
 
     [Fact]

@@ -102,6 +102,7 @@ public sealed class TurnRunner
             LastReport.SetPhaseTicks(phase, Stopwatch.GetTimestamp() - phaseStart);
         }
 
+        _context.FinishGroups();
         LastReport.TotalTicks = Stopwatch.GetTimestamp() - turnStart;
         return LastReport;
     }
@@ -126,7 +127,14 @@ public sealed class TurnRunner
                 {
                     if (chronicled.ApplyWithChronicle(State, envelope.Civ) is { } line)
                     {
-                        _context.Chronicle(line);
+                        if (chronicled.ChronicleGroup is { } group)
+                        {
+                            _context.Chronicle(line, group, envelope.Civ.Value);
+                        }
+                        else
+                        {
+                            _context.Chronicle(line);
+                        }
                     }
                 }
                 else

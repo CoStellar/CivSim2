@@ -260,6 +260,12 @@ public sealed class LeaderSystem : ITurnSystem
 {
     private readonly GameContent _content;
     private readonly DeterministicRandom _random = new(0);
+    private TurnContext? _context;
+    private int _civ;
+    private Action<string>? _line;
+
+    // Leaders change often in long steps: several in a turn are summed up in one line (stage 5b).
+    private void Line(string text) => _context!.Chronicle(text, "New leaders in {0} peoples", _civ);
 
     /// <summary>Creates the system.</summary>
     public LeaderSystem(GameContent content)
@@ -283,7 +289,9 @@ public sealed class LeaderSystem : ITurnSystem
             }
 
             Leaders.Reseed(state, civ, state.Month, _random);
-            Leaders.Live(_content, state, civ, state.Month, civ.StepMonths, _random, context.Chronicle);
+            _context = context;
+            _civ = civ.Id.Value;
+            Leaders.Live(_content, state, civ, state.Month, civ.StepMonths, _random, _line ??= Line);
         }
     }
 }
