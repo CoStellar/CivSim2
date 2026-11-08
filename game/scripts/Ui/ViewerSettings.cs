@@ -91,12 +91,22 @@ public sealed class StartSettings
     /// <summary>Where the CSV goes; empty = user folder.</summary>
     public string ReportPath { get; set; } = string.Empty;
 
+    /// <summary>Long run length, e.g. "4h", "30m", "90s" or hours as a number ("2.5"); empty or "0" = no long run.</summary>
+    public string LongRun { get; set; } = string.Empty;
+
+    /// <summary>Folder for the long run's files; empty = long_runs/ next to the project (user folder in an exported game).</summary>
+    public string LongRunFolder { get; set; } = string.Empty;
+
+    /// <summary>Seconds between rows of the long run's stats.csv.</summary>
+    public int LongRunEvery { get; set; } = 10;
+
     /// <summary>Command-line names of the start settings (after <c>--</c>); any of them skips the start menu.</summary>
     public static readonly string[] ArgumentNames =
     [
         "--seed", "--map-size", "--civs", "--world-type", "--planet", "--water", "--moisture", "--inland", "--relief", "--resources",
         "--tilt", "--eccentricity", "--luminosity", "--distance", "--year", "--light", "--co2", "--pressure", "--volcanism",
         "--star-variability", "--star-cycle", "--speed", "--turn-limit", "--report",
+        "--long-run", "--long-run-folder", "--long-run-every",
     ];
 
     /// <summary>
@@ -136,6 +146,9 @@ public sealed class StartSettings
                 case "--turn-limit": s.TurnLimit = long.Parse(v, CultureInfo.InvariantCulture); break;
                 case "--report": s.Report = true; s.ReportPath = v; break;
                 case "--art-pack": s.ArtPack = v; break;
+                case "--long-run": s.LongRun = v; break;
+                case "--long-run-folder": s.LongRunFolder = v; break;
+                case "--long-run-every": s.LongRunEvery = int.Parse(v, CultureInfo.InvariantCulture); break;
             }
         }
 
@@ -173,6 +186,14 @@ public sealed class StartSettings
         string report = Report
             ? (string.IsNullOrWhiteSpace(ReportPath) ? ProjectSettings.GlobalizePath("user://turn_report.csv") : ReportPath.Trim())
             : string.Empty;
+        long longRun = ParseDuration(LongRun);
+        string? longRunFolder = null;
+        if (longRun > 0)
+        {
+            string root = string.IsNullOrWhiteSpace(LongRunFolder) ? DefaultLongRunRoot() : LongRunFolder.Trim();
+            longRunFolder = Path.Combine(root, string.Create(CultureInfo.InvariantCulture, $"{DateTime.Now:yyyy-MM-dd_HH-mm}_seed{seed}_{MapSize}"));
+        }
+
         return o with
         {
             Civilizations = Civilizations > 0 ? Math.Min(64, Civilizations) : o.Civilizations,
@@ -196,8 +217,38 @@ public sealed class StartSettings
             StarCycleYears = Int(StarCycle, "Star cycle"),
             TurnLimit = Math.Max(0, TurnLimit),
             ReportPath = string.IsNullOrEmpty(report) ? null : report,
+            LongRunFolder = longRunFolder,
+            LongRunSeconds = longRun,
+            LongRunSampleSeconds = Math.Clamp(LongRunEvery, 1, 3600),
         };
     }
+
+    /// <summary>
+    /// Seconds of a long run: "4h", "30m", "90s", or a number of hours ("2.5"). Empty or "0" = 0 (no long run).
+    /// Throws <see cref="FormatException"/> with a readable message for anything else.
+    /// </summary>
+    public static long ParseDuration(string? text)
+    {
+        string t = (text ?? string.Empty).Trim().ToLowerInvariant().Replace(',', '.');
+        if (t.Length == 0)
+        {
+            return 0;
+        }
+
+        int unit = t[^1] switch { 'h' => 3600, 'm' => 60, 's' => 1, _ => 0 };
+        string number = unit == 0 ? t : t[..^1].Trim();
+        if (!decimal.TryParse(number, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal value) || value > 1000 * 3600)
+        {
+            throw new FormatException($"Long run: '{text}' is not a length of time (use for example 4h, 30m or 90s).");
+        }
+
+        return (long)Math.Round(value * (unit == 0 ? 3600 : unit));
+    }
+
+    // Next to the project while developing (I:\CivSim\CivSim2\long_runs), the user folder in an exported game.
+    private static string DefaultLongRunRoot() => OS.HasFeature("editor")
+        ? ProjectSettings.GlobalizePath("res://../long_runs")
+        : ProjectSettings.GlobalizePath("user://long_runs");
 
     private static int? Int(string text, string what) => (int?)Scaled(text, 1, what);
 

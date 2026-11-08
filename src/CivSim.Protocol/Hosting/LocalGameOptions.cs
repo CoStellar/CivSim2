@@ -72,6 +72,18 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     /// <summary>When set, the host appends one CSV line per turn here (turn, year, turn time, people, settlements).</summary>
     public string? ReportPath { get; init; }
 
+    /// <summary>
+    /// Long run: when set, the host writes statistics, turn times, events and a log into this folder while the game runs
+    /// (stats.csv, turns.csv, events.csv, log.txt, summary.txt). Null = no long run.
+    /// </summary>
+    public string? LongRunFolder { get; init; }
+
+    /// <summary>A long run ends after this many seconds (0 = when the window closes).</summary>
+    public long LongRunSeconds { get; init; }
+
+    /// <summary>Seconds between rows of the long run's stats.csv.</summary>
+    public int LongRunSampleSeconds { get; init; } = 10;
+
     /// <summary>Map size words in the order of the start menu.</summary>
     public static IReadOnlyList<string> SizeNames { get; } = ["test", "standard", "large", "huge"];
 

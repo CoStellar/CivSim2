@@ -140,6 +140,8 @@ Do testów i zrzutów: `--screenshot plik.png` (z `--screenshot-turn N`: po N tu
 `--overlay WARSTWA` (tylko ta warstwa pól), `--layer WARSTWA` (włącza warstwę), `--watch CYW` (śledzi i włącza mgłę), `--opacity WARSTWA=PROCENT`, `--layer-settings` (otwiera okno ustawień warstw), `--art-pack FOLDER`,
 `--benchmark KLATKI`.
 
+Długi bieg na godziny z zapisem statystyk, zdarzeń i logu: `--long-run 4h` (opis w [long-run.md](long-run.md)).
+
 ## Zasady
 - **Granica klient–serwer:** `game/` nie widzi `CivSim.Core` (ADR 0010). Szczegóły dla obserwatora liczy na serwerze
   `ObserverViewBuilder`; gracz (etap 13) ich nie dostaje, a próba śledzenia innej cywilizacji jest odrzucana.

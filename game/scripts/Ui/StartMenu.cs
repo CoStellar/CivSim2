@@ -221,9 +221,12 @@ public partial class StartMenu : CanvasLayer
         g.AddChild(new Label { Text = "Reports" });
         g.AddChild(report);
         Text(g, "Report file", _settings.ReportPath, v => _settings.ReportPath = v, "user://turn_report.csv");
+        Text(g, "Long run (4h, 30m)", _settings.LongRun, v => _settings.LongRun = v, "off");
+        Text(g, "Long run folder", _settings.LongRunFolder, v => _settings.LongRunFolder = v, "long_runs/ by the project");
         box.AddChild(new Label
         {
-            Text = "The simulation pauses when it reaches the turn limit; press a speed to go on. The report has one line per turn: turn, year, turn time, people, settlements.",
+            Text = "The simulation pauses when it reaches the turn limit; press a speed to go on. The report has one line per turn: turn, year, turn time, people, settlements. " +
+                "A long run records memory, processor, frame rate, turn times, events and a log for the time given, then closes the game; it starts at maximum speed unless another start speed is chosen.",
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(330, 0),
             Modulate = new Color(0.7f, 0.7f, 0.7f),

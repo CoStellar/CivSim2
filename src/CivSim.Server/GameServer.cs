@@ -100,6 +100,24 @@ public sealed class GameServer
     /// <summary>True when a client that fell behind has caught up and waits for the view it missed.</summary>
     public bool HasDeferredViews => _clients.Exists(c => c.Deferred && c.Connection.IsOpen && c.Connection.Backlog <= MaxBacklog);
 
+    /// <summary>Most unread messages any open client has (long-run statistics).</summary>
+    public int MaxClientBacklog
+    {
+        get
+        {
+            int max = 0;
+            foreach (Client c in _clients)
+            {
+                max = c.Connection.IsOpen ? Math.Max(max, c.Connection.Backlog) : max;
+            }
+
+            return max;
+        }
+    }
+
+    /// <summary>Clients that fell behind and wait for the view they missed (long-run statistics).</summary>
+    public int ClientsBehind => _clients.FindAll(c => c.Deferred && c.Connection.IsOpen).Count;
+
     /// <summary>Number of connected observers.</summary>
     public int ConnectedObservers => _clients.FindAll(c => c.IsObserver).Count;
 

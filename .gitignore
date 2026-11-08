@@ -29,3 +29,4 @@ reports/
 # OS
 .DS_Store
 Thumbs.db
+/long_runs/
