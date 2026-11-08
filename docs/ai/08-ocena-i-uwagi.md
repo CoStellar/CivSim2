@@ -27,6 +27,7 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji obniża stabilność od PR 3 (pkt 15) |
 | Stabilność (etap 4f, PR 3, PR 5) | **AI reaguje prosto** | przeciążenie hamuje ekspansję, niepokoje: bezpieczeństwo w górę, wojna w dół, spokojniejszy ustrój (pkt 16) |
 | Bunty i secesja (etap 4f, PR 4) | **reguła, nie decyzja** | nowe ludy powstają z dalekich osad; AI rodzica może się mścić (pkt 17) |
+| Testy wsadowe (etap 4g) | **4 dziury** | 100 gier: wioski głodują bez reakcji, wojen o łupy nie ma, podbojów nie ma, sojusze rzadko działają (pkt 18) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -291,6 +292,19 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   - nie ma wojny domowej (dwie strony walczące o całość): to mogłoby być rozszerzenie po etapie 4g.
 - **Do obserwacji:** secesje są duże (połowa państwa naraz). Jeśli Patryk woli mniejsze, wystarczy obniżyć `secessionLoyaltyBelow`
   albo dać buntownikom osobny, mniejszy zasięg zamiast `linkCells` (dziś to samo, co w sieci handlowej).
+
+## 18. Co pokazało 100 gier (etap 4g)
+
+Pełny raport: [12-testy-wsadowe.md](12-testy-wsadowe.md). Najważniejsze dziury, od najpoważniejszej:
+
+1. **Wioski głodują bez reakcji:** mediana 322 razy na grę wioska głoduje 3 własne kroki z rzędu; G7 (osadnicy) nie patrzy na głód.
+   Obozy reagują dobrze (mediana 4).
+2. **Żadna zamieszkana osada nie zmienia właściciela na wojnie** (0 w 100 grach): podbój tylko celu wojny o ziemię, a ten jest rzadki.
+3. **Nikt nie wypowiada wojny o łupy** (0 w 100 grach); 94% wojen to odwet.
+4. **Sojusze rzadko działają:** mediana 1 sojusz na grę, sojusznik przystąpił do wojny w 17 grach.
+
+Co działa: wojny się kończą (pokojów tyle, co wojen), dyplomacja i handel w każdej grze, w 95 grach wymiera co najmniej jeden lud,
+ustroje zmieniają się około raz na lud na 1000 lat, czas tury 27 ms.
 
 ## Decyzje Patryka (2026-11-06)
 

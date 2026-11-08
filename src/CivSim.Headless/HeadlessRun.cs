@@ -67,6 +67,9 @@ public sealed record HeadlessResult(
 
     /// <summary>Game time at the end of the run, in years.</summary>
     public long Years { get; init; }
+
+    /// <summary>Wars, conquests, deaths, eras and hunger over the run (stage 4g batch tests).</summary>
+    public GameTally? Tally { get; init; }
 }
 
 /// <summary>Runs a game without a window and writes the optional CSV report.</summary>
@@ -122,6 +125,7 @@ public static class HeadlessRun
         campaignCsv?.Start();
         var tally = new TreatyTally();
         var stabilityTally = new StabilityTally(runner.State.Month);
+        var gameTally = new GameTally(runner.State.Month, content.Eras.Count, content.SettlementLevel("village").Id);
         int secessions = 0;
         int coups = 0;
         if (stats is not null)
@@ -164,6 +168,7 @@ public static class HeadlessRun
 
             tally.Count(runner.LastChronicle);
             stabilityTally.Count(runner.State, content);
+            gameTally.Count(runner.State, runner.LastChronicle);
             foreach (string line in runner.LastChronicle)
             {
                 secessions += line.Contains(" broke away from the ", StringComparison.Ordinal) ? 1 : 0;
@@ -255,6 +260,7 @@ public static class HeadlessRun
             World = world,
             PngFiles = pngs,
             WorldProblems = problems,
+            Tally = gameTally,
             Settlements = runner.State.Settlements.Count,
             People = People(runner.State),
             AliveCivilizations = runner.State.Civilizations.Count(c => c.IsAlive),

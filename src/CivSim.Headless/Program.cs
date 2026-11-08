@@ -23,6 +23,11 @@ public static class Program
             return string.IsNullOrEmpty(error) ? 0 : 2;
         }
 
+        if (options.Batch > 0)
+        {
+            return BatchRun.Execute(options, Console.Out);
+        }
+
         Console.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
             $"{CoreInfo.Name} headless: seed {options.Seed}, {options.Turns} turns, map {options.MapSize}"));
