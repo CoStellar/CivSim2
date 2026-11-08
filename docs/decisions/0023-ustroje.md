@@ -67,6 +67,16 @@ doradców), impulsywność AI, sposób sukcesji, zdolność administracyjną i s
 - Odłączają się tylko osady, które nie biorą udziału w kampanii (ani jako źródło, ani jako cel), żeby wojna nie zmieniała stron
   w połowie marszu.
 
+## Uzupełnienie: AI państwa i koniec pętli odwetu (PR 5 etapu 4f)
+
+- Pokój zamyka rachunek krzywd przez jeden miesiąc w relacji (`Relation.SettledMonth`), a nie przez kasowanie wspomnień: wspomnienie
+  nadal obniża sympatię i zaufanie i gaśnie w swoim tempie, tylko przestaje być powodem do wojny o odwet. Tak sympatia (pamięć) i prawo
+  do odwetu (rachunek) są osobno, a zapis rośnie o jedną liczbę na relację (format 30).
+- Wybór ustroju przez AI to zwykła komenda gracza (`ChangeGovernmentCommand`) z histerezą 30%, bo zmiana kosztuje 2 lata bezkrólewia;
+  bez histerezy lud na granicy dwóch ustrojów zmieniałby go w każdym przeglądzie.
+- Nowe progi AI są w `data/ai.json` (nie w `stability.json`), bo to oceny AI, nie zasady państwa; test martwych wartości dostał
+  sytuację „państwo w niepokojach”, w której każda z nich zmienia decyzję.
+
 ## Rozważane alternatywy
 
 - **Ustroje w kodzie** (`enum` z wartościami): szybciej, ale łamie zasadę „zawartość w danych” i blokuje ustroje kolejnych er.

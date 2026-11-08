@@ -165,6 +165,11 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                     e.Apply(FactorId.Treaty, Math.Max(100, Factor.Neutral - civ.Trait(Trait.Loyalty)), civ.Trait(Trait.Loyalty));
                 }
 
+                if (civ.Stability < _content.Stability.UnrestBelow)
+                {
+                    e.Apply(FactorId.Stability, _content.Ai.UnrestWarPercent * 10, civ.Stability); // stage 4f PR 5: no war in unrest
+                }
+
                 e.Weigh(GoalWeight(civ, Goal.Conquest), CharacterMultiplier(civ, Goal.Conquest));
                 break;
             case TreatyKind.Peace:
@@ -206,7 +211,8 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             Consider(state, civ, r.Other, y, TreatyKind.Trade, rules.ProposeAbove);
             Consider(state, civ, r.Other, y, TreatyKind.NonAggression, rules.ProposeAbove);
             Consider(state, civ, r.Other, y, TreatyKind.DefensiveAlliance, rules.ProposeAbove);
-            if (Treaties.CannotDeclareWar(state, civ.Id, r.Other) is null)
+            if (Treaties.CannotDeclareWar(state, civ.Id, r.Other) is null && civ.PendingGovernment == CivilizationState.NoGovernment
+                && !Governance.Stability.InAnarchy(civ, state.Month))
             {
                 Evaluation war = Evaluate(state, civ, r.Other, TreatyKind.War);
                 if (war.Value >= rules.DeclareWarAbove)

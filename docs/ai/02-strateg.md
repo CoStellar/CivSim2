@@ -1,4 +1,4 @@
-# Strateg (S1)
+# Strateg (S1, S2)
 
 [← spis treści](README.md) · kod: `src/CivSim.Core/Ai/StrategistAdvisor.cs` · GDD 8.1, 7.6 · ADR 0017
 
@@ -60,6 +60,16 @@ Charakter **nie** wpływa na wagi stratega. Wpływa osobno, jako mnożnik w ocen
 bezpieczeństwo ×1,1; republika miejska: dobrobyt i nauka ×1,2, podbój ×0,9. Przykład: wodzostwo z obozami pełnymi w 70% ma
 ekspansję 1300 × 1,2 = 1560, a podbój 1200 zamiast 1000.
 
+**Państwo przechyla wagi** (etap 4f PR 5, GDD 7.3): po ustroju strateg patrzy na stabilność i administrację.
+
+- **Przeciążone państwo rozrasta się wolniej:** gdy zużyta administracja przekracza pojemność ustroju, waga ekspansji jest mnożona
+  przez `max(overloadExpansionMinPercent, pojemność × 100 / zużycie) / 100`. Przykład: wodzostwo (pojemność 200) zużywa 300 →
+  ekspansja × 67%; zużywa 600 → × 50% (podłoga 50%).
+- **Niepokoje każą dbać o bezpieczeństwo:** gdy stabilność jest poniżej 30 (`unrestBelow` w `data/stability.json`), waga
+  bezpieczeństwa × `unrestSecurityPercent` / 100 = × 1,5 (najwyżej 3000).
+
+W zapisie „Dlaczego?” dochodzą wtedy notatki *administration* (zużycie w % pojemności) i *stability*.
+
 ### Cel ekspansji
 
 Najlepsze **wolne** (niczyje) pole lądu, które cywilizacja **zna** (pamięć mapy), w promieniu wędrówki (40 pól, `journeyCells`)
@@ -82,7 +92,7 @@ Cel działa w G2, G3 i G5 jako **premia +15%** dla miejsc bliżej celu niż obec
 Ocena = waga ekspansji. Notatki: zatłoczenie w %, najedzenie w ‰, wartość pola celu. Przykład z gry (seed 7, tura 1):
 `Civilization 1, Strategist, SetStrategy, cel 7119, ocena 1000: crowding 33%, fed 1000, food 59917`.
 
-### Kto czyta wynik
+### Kto czyta wynik (S1)
 
 | Wynik | Czyta | Skutek |
 | --- | --- | --- |
@@ -107,3 +117,40 @@ flowchart LR
   K["spotkani: ich technologie i liczba"] --> WN["waga nauki 1,0–1,5<br/>waga wpływu 1,0–1,3"] --> U1["U1"]
   WG --> DP["D1, D2: handel, pakt, sojusz, pokój"]
 ```
+
+## S2: Wybór ustroju
+
+**Komenda:** `ChangeGovernmentCommand(ustrój)` (ta sama, którą wyda gracz). Kod: `StrategistAdvisor.ChooseGovernment`.
+Od etapu 4f PR 5 (GDD 7.2: „AI wybiera ustrój według cech”).
+
+### Kiedy
+
+W każdym przeglądzie stratega (S1), zaraz po ustawieniu wag. Rzadko: wodzostwo co 11 kroków, rada co 22.
+
+### Wzór
+
+```
+dopasowanie(ustrój) = Σ cecha × skłonność ustroju do cechy      (charakter z cechami przywódcy, skłonności z governments.json)
+                    + w niepokojach: premia stabilności ustroju × governmentStabilityWeight (40)
+```
+
+Strateg bierze najlepiej dopasowany ustrój dostępny w swojej erze. Zmienia go tylko, gdy:
+
+1. jest inny niż obecny;
+2. pasuje **wyraźnie lepiej**: `najlepszy × 100 > obecny × (100 + governmentChangeMarginPercent)`, czyli o ponad 30% (histereza,
+   żeby lud nie skakał między ustrojami co przegląd; zmiana kosztuje 2 lata anarchii);
+3. zmiana jest dozwolona (`Governments.CannotChange`: nie w anarchii, nie w trakcie innej zmiany, ustrój dostępny w erze);
+4. od ostatniej zmiany ustroju (także po przewrocie) minęło co najmniej `governmentKeepYears` (200 lat): reformy potrzebują czasu.
+   Bez tego w pierwszej próbie lud w niepokojach brał radę (premia stabilności), a gdy wracał spokój, wracał do wodzostwa
+   (pasuje do cech) i znów wpadał w niepokoje: w seedzie 7 jeden lud zmienił ustrój 10 razy.
+
+Przykład: ostrożny (900) i otwarty (900) lud pod wodzem: rada 1800 wobec wodzostwa 0 → zmiana. Lud ostrożny 150, otwarty 150,
+agresywny 140, ekspansywny 140: rada 300 wobec 280 to za mało (potrzeba 364). Ten sam lud w niepokojach: rada 300 + 10 × 40 = 700
+wobec 280 → zmiana, bo rada daje +10 stabilności.
+
+Nowy przywódca przesuwa charakter (cechy przywódcy), więc **zmiana władcy może po latach przynieść zmianę ustroju**.
+
+### Zapis „Dlaczego?”
+
+Ocena = dopasowanie najlepszego. Notatki: *suitability* (najlepszy wobec obecnego, %), *stability*.
+

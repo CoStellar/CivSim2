@@ -221,6 +221,12 @@ public sealed class Relation
     /// <summary>Remembered events, oldest first.</summary>
     public IReadOnlyList<RelationMemory> Memories => _memories;
 
+    /// <summary>
+    /// The month of the last peace with them (stage 4f PR 5): wrongs remembered from before it are settled and no longer a
+    /// reason for war, though they still colour the opinion until they fade. -1 = never at peace after a war.
+    /// </summary>
+    public long SettledMonth { get; set; } = -1;
+
     /// <summary>True after real contact (diplomacy is possible, GDD 8.5).</summary>
     public bool HasMet => Level == ContactLevel.Met;
 

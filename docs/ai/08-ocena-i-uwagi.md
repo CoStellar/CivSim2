@@ -23,9 +23,9 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Wyprawy (G8) | **nowe, rzadkie** | 8–97 na grę; zależą od ciekawości i ekspansywności |
 | Rytm decyzji | **dobre (od ADR 0018, PR C)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i marsz obozu na stulecie |
 | Wydajność | **do pilnowania (PR C)** | 3–4× więcej osad; stare systemy porównują każdą osadę z każdą (patrz pkt 10) |
-| Ustroje (etap 4f, PR 1) | **proste, na start** | ustrój przechyla wagi, ostrożność i tempo; AI jeszcze go nie zmienia sama (PR 5); pętla odwetu widoczniejsza (pkt 14) |
+| Ustroje (etap 4f, PR 1, PR 5) | **proste** | ustrój przechyla wagi, ostrożność i tempo; od PR 5 strateg zmienia go, gdy inny pasuje wyraźnie lepiej (S2); pętla odwetu zamknięta (pkt 14) |
 | Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji obniża stabilność od PR 3 (pkt 15) |
-| Stabilność (etap 4f, PR 3) | **AI jej nie widzi** | stabilność i niepokoje działają, ale strateg i dyplomata reagują dopiero w PR 5 (pkt 16) |
+| Stabilność (etap 4f, PR 3, PR 5) | **AI reaguje prosto** | przeciążenie hamuje ekspansję, niepokoje: bezpieczeństwo w górę, wojna w dół, spokojniejszy ustrój (pkt 16) |
 | Bunty i secesja (etap 4f, PR 4) | **reguła, nie decyzja** | nowe ludy powstają z dalekich osad; AI rodzica może się mścić (pkt 17) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
@@ -249,6 +249,9 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   cywilizacja 10 (wodzostwo); seed 7: 23 z 30 cywilizacja 0; seed 42: 11 z 26. W PR 6 bez ustrojów było podobnie, tylko rzadziej
   (seed 7: 32 wojny, 25 z zerwaniem umowy). Do strojenia w PR 5 etapu 4f: odwet powinien gasnąć po wojnie, a zerwanie rozejmu
   kosztować więcej.
+- **Zamknięte w PR 5 etapu 4f:** podpisany pokój zamyka rachunek krzywd (`Relation.SettledMonth`): napaść, agresja i secesja sprzed
+  pokoju przestają być powodem do odwetu (nadal obniżają sympatię i zaufanie). Nowa krzywda po pokoju jest nowym powodem. Wyniki w
+  [statystykach](09-statystyki.md#ai-wobec-państwa-etap-4f-pr-5). Biały pokój po cichej wojnie też jest pokojem, więc też zamyka rachunek.
 
 ## 15. Przywódcy (etap 4f, PR 2)
 
@@ -262,13 +265,18 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
 - **Ryzyko:** cechy przywódcy dodają losowości do wojen (patrz [statystyki](09-statystyki.md#przywódcy-etap-4f-pr-2)); to zamierzone,
   ale po strojeniu w PR 5 trzeba sprawdzić, czy ostrożny lud z wojowniczym wodzem nie wpada w pętlę odwetu częściej niż inne.
 
-## 16. Stabilność bez reakcji AI (etap 4f, PR 3)
+## 16. Stabilność i AI (etap 4f, PR 3; reakcja AI od PR 5)
 
 - **Co działa:** stabilność 0–100 z nastroju osad ważonego wpływem warstw, premii ustroju i kar (administracja, kryzys sukcesji,
   bezkrólewie, utrata stolicy); poniżej 30 niepokoje obniżają wydajność. W 3 grach 8–12% lat cywilizacji to niepokoje.
 - **Czego brakuje (celowo, PR 5):** AI nie widzi stabilności. Strateg nie hamuje ekspansji przy przeciążonej administracji i nie
   zmienia ustroju, gdy jest źle; dyplomata nie unika wojny przy niskiej stabilności. Dziś stabilność jest więc karą, której AI nie
   rozumie: wielkie plemiona żyją stale z karą za administrację.
+- **Od PR 5:** strateg mnoży ekspansję przez pojemność / zużycie administracji (nie mniej niż 50%), w niepokojach podnosi
+  bezpieczeństwo × 1,5 i w każdym przeglądzie sprawdza, czy inny ustrój nie pasuje wyraźnie lepiej (w niepokojach liczy się premia
+  stabilności ustroju). Dyplomata w niepokojach ocenia wojnę o połowę niżej i nie rozważa jej w bezkrólewiu.
+- **Nadal za proste:** AI nie ma działań „na stabilność” (np. świąt, ustępstw dla warstw, rezygnacji z dalekich osad); reaguje tylko
+  wagami i ustrojem. Zmiana ustroju kosztuje 2 lata bezkrólewia (−20), więc w niepokojach może chwilowo pogorszyć sprawę.
 - **Co jest za proste:** nastrój warstwy = nastrój osady (warstwy nie mają jeszcze osobnych potrzeb politycznych); lojalność osad
   jest liczona, ale niczego jeszcze nie zmienia (bunty w PR 4).
 

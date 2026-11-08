@@ -29,7 +29,7 @@ Propozycja dla Patryka z 2026-11-07: dokument „Etap 4f: państwo — propozycj
    stabilność w stanie cywilizacji (zapis, hash, podgląd); niepokoje jako efekt z `data/effects.json`.
 4. **Bunty i secesja** (`feat/state-revolts`, zrobione; losowanie z pochodnego strumienia `Leaders` zamiast nowego strumienia): nowe `CivilizationState` w trakcie gry (id = następny wolny, limit 64 z bitów w `DiplomacySystem`), przeniesienie
    osad, relacje i wspomnienie secesji, `NameLanguage.Mutate`, przewrót (nowy przywódca, ustrój, bezkrólewie).
-5. **AI państwa i strojenie:** wybór ustroju przez stratega, reakcje na stabilność, pętla odwetu (gaśnięcie urazu po wojnie, koszt
+5. **AI państwa i strojenie** (`feat/state-ai`, zrobione; gaśnięcie urazu = pokój zamyka rachunek, `Relation.SettledMonth`): wybór ustroju przez stratega, reakcje na stabilność, pętla odwetu (gaśnięcie urazu po wojnie, koszt
    zerwania rozejmu), `DeadValueTests`, `docs/ai/`, statystyki z 3 seedów.
 
 ## Pułapki

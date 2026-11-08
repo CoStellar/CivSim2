@@ -187,7 +187,7 @@ odłączają się jako nowe cywilizacje z językiem rodzica i własnym tytułem.
 - [x] **PR 2:** przywódca z imieniem z języka ludu, wiekiem i cechami (`data/leaders.json`); starzenie i śmierć rok po roku, sukcesja według ustroju (rada wybiera pasującego, wódz: kryzys, konsul: kadencja); cechy przywódcy przesuwają charakter; przywódca w panelu podglądu; zapis 27, protokół 11 (`feat/state-leaders`)
 - [x] **PR 3:** stolica, administracja (koszt drogi od stolicy), stabilność 0–100 z nastroju ważonego wpływem warstw; niepokoje poniżej 30 (wydajność −1% za punkt), bezkrólewie 2 lata po zmianie ustroju, lojalność osad; zapis 28, protokół 12 (`feat/state-stability`)
 - [x] **PR 4:** bunty poniżej 15: przewrót w rdzeniu albo secesja dalekich osad jako nowa cywilizacja (język z mutacją, własny ustrój i tytuł); rodzic pamięta secesję (powód odwetu); zapis 29, protokół 13 (`feat/state-revolts`)
-- [ ] **PR 5:** AI państwa (wybór ustroju, reakcja na niską stabilność), pętla odwetu (wojna co 50 lat z tym samym sąsiadem), test martwych wartości, `docs/ai/`, statystyki z 3 seedów
+- [x] **PR 5:** AI państwa: strateg hamuje ekspansję przy przeciążeniu, w niepokojach dba o bezpieczeństwo i wybiera ustrój pasujący do ludu (S2, histereza 30%); dyplomata unika wojny w niepokojach i bezkrólewiu; pokój zamyka rachunek krzywd (koniec pętli odwetu); test martwych wartości, `docs/ai/`, statystyki z 3 seedów; zapis 30 (`feat/state-ai`)
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 

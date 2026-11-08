@@ -360,6 +360,16 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        // A troubled state (stage 4f PR 5): every people is in unrest and its administration overloaded; the second
+        // people was attacked by the first and could take revenge.
+        GameState troubled = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
+        Troubled(troubled);
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(troubled, ms);
+            saved.Add(ms.ToArray());
+        }
+
         // Stone Age hunters who could learn tanning (stage 4F: technologies need their people).
         Record(saved, 15, [1, 4], neolithic: false, extremes: false, width: 130, height: 80, peoples: 10, hunters: true);
 
@@ -591,6 +601,18 @@ public class DeadValueTests
         CivSim.Core.Map.HexGlobe geo = state.Worlds[0].Geometry;
         army.Cell = geo.Index(geo.Neighbor(strong.Cell, CivSim.Core.Map.HexDirection.N));
         army.Phase = CivSim.Core.Episodes.CampaignPhase.March;
+    }
+
+    private static void Troubled(GameState state)
+    {
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            c.Stability = 10;
+            c.AdminUsed = 3 * Math.Max(1, CivSim.Core.Governance.Stability.Capacity(Content, c));
+        }
+
+        CivilizationState[] alive = state.Civilizations.Where(c => c.IsAlive && state.Settlements.Any(x => x.Owner == c.Id && x.IsActive)).ToArray();
+        CivSim.Core.Diplomacy.Contacts.RecordAttack(Content, state, alive[0].Id, alive[1].Id);
     }
 
     private static void Hungry(SettlementState s)
