@@ -74,6 +74,33 @@ public class RevoltTests
     }
 
     [Fact]
+    public void FarRebelsDriftAwayEvenFromACalmState()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(34), Content, out _);
+        CivilizationState civ = state.Civilizations[0];
+        civ.StepMonths = 600;
+        civ.Stability = 80; // calm: no revolt
+        Found(state, civ, 0, 14, 300, 0);
+        int before = state.Civilizations.Count;
+
+        civ.RevoltCalmUntilMonth = state.Month + 1;
+        Assert.Null(Revolts.Drift(Content, state, civ, new DeterministicRandom(1))); // not in the calm after a revolt
+        civ.RevoltCalmUntilMonth = 0;
+
+        string? line = null;
+        for (ulong seed = 1; seed < 200 && line is null; seed++)
+        {
+            Assert.Null(Revolts.Check(Content, state, civ, new DeterministicRandom(seed)));
+            line = Revolts.Drift(Content, state, civ, new DeterministicRandom(seed));
+        }
+
+        Assert.NotNull(line);
+        Assert.Contains("broke away", line, System.StringComparison.Ordinal);
+        Assert.Equal(before + 1, state.Civilizations.Count);
+        Assert.True(state.Month < civ.RevoltCalmUntilMonth);
+    }
+
+    [Fact]
     public void RebelsBreakAwayAsANewCivilization()
     {
         GameState state = GameState.CreateNew(GameSettings.Test(33), Content, out _);

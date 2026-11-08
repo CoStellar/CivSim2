@@ -67,6 +67,12 @@ public sealed record StabilityRules
     /// <summary>A new people's character traits differ from its parent's by up to this much each, per mille.</summary>
     public int SecessionCharacterShift { get; init; } = 150;
 
+    /// <summary>
+    /// Chance per year, per mille, that rebels (settlements with loyalty below <see cref="SecessionLoyaltyBelow"/>, most of
+    /// all those beyond the government's reach) drift away as a new civilization even while the state is calm (GDD 7.3).
+    /// </summary>
+    public int DriftPerMillePerYear { get; init; }
+
     /// <summary>Loyalty of a settlement lost per 10 points of road cost from the capital (loyalty = stability minus this).</summary>
     public int LoyaltyPer10RoadCost { get; init; } = 5;
 }

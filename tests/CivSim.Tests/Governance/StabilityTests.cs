@@ -152,6 +152,32 @@ public class StabilityTests
     }
 
     [Fact]
+    public void SettlementsBeyondTheReachOfTheGovernmentOweItNoLoyalty()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(24), Content, out _);
+        CivilizationState civ = state.Civilizations[0];
+        civ.Government = Gov("elder_council");
+        int reach = Content.Governments[civ.Government].Reach;
+        Assert.True(reach > 0 && reach < Content.Stability.RoadSearchCost);
+        SettlementState camp = state.Settlements.First(s => s.Owner == civ.Id);
+        camp.Mood = 100;
+        SettlementState near = Found(state, civ, 1, 50, 100);
+        SettlementState far = Found(state, civ, state.Worlds[0].Geometry.Width / 2, 50, 100);
+        var roads = new RoadCosts();
+        Stability.Update(Content, state, civ, roads, null);
+
+        int toFar = roads.To(state.Worlds[0].Geometry.Index(far.Cell), Content.Stability.RoadSearchCost);
+        Assert.True(toFar > reach, $"road {toFar}, reach {reach}");
+        Assert.True(near.Loyalty > 0);
+        Assert.Equal(0, far.Loyalty);
+        Assert.Equal(civ.Stability, camp.Loyalty);
+
+        // The chiefdom reaches farther than the council; despotism (bronze age) farther still.
+        Assert.True(Content.Governments[Gov("chiefdom")].Reach > reach);
+        Assert.True(Content.Governments[Gov("despotism")].Reach > Content.Governments[Gov("chiefdom")].Reach);
+    }
+
+    [Fact]
     public void LowStabilityBringsUnrestThatLowersOutput()
     {
         GameState state = GameState.CreateNew(GameSettings.Test(25), Content, out _);

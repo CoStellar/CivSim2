@@ -175,12 +175,15 @@ public static class Stability
         civ.AdminUsed = (int)Math.Min(int.MaxValue, used);
         int before = civ.Stability;
         civ.Stability = Parts(content, state, civ, civ.AdminUsed, state.Month).Total;
+        int reach = civ.Government >= 0 && civ.Government < content.Governments.Count ? content.Governments[civ.Government].Reach : 0;
         foreach (SettlementState s in state.Settlements)
         {
             if (s.IsActive && s.Owner == civ.Id)
             {
                 int cost = RoadCost(state, roads, capital, s, rules.RoadSearchCost);
-                s.Loyalty = Math.Clamp(civ.Stability - (cost * rules.LoyaltyPer10RoadCost / 10), 0, 100);
+                s.Loyalty = reach > 0 && cost > reach && s.Id.Value != civ.Capital
+                    ? 0 // beyond the government's reach
+                    : Math.Clamp(civ.Stability - (cost * rules.LoyaltyPer10RoadCost / 10), 0, 100);
             }
         }
 
@@ -403,7 +406,7 @@ public sealed class StabilitySystem : ITurnSystem
             }
 
             Revolts.Reseed(state, civ, state.Month, _random);
-            if (Revolts.Check(_content, state, civ, _random) is { } revolt)
+            if ((Revolts.Check(_content, state, civ, _random) ?? Revolts.Drift(_content, state, civ, _random)) is { } revolt)
             {
                 context.Chronicle(revolt);
             }

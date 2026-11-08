@@ -1,5 +1,5 @@
 {
-  "comment": "Forms of government (GDD 7.2; stage 4f, ADR 0023). title: the civilization's title, {people} is the people's name. fromEra: the first era (key from eras.json) in which a civilization may take it. enactYears: years before a state decision (a new government, a declared war: its armies wait) takes effect; very fast 0, fast 1, medium 2, slow 4. reviewPercent: the strategist and the diplomat review this many percent of their usual interval (lower = a faster state). cautionShift: added to the civilization's caution (per mille) when the AI decides whether to take its best option outright; negative = more impulsive. goalPercent: percent applied to the strategist's goal weights (expansion, security, prosperity, science, influence, conquest); missing goals stay 100. leaning: how much each trait draws a new people to this government at the start; the government with the highest sum of trait x leaning wins (ties: the first). Despotism and the city republic come with the bronze age (stage 6). Leaders (stage 4f PR 2, GDD 7.5): leaderTitle styles the leader; succession: council (the council weighs several candidates and takes the one closest to the people's character), strongest (the strongest warrior), hereditary (the heir), election (a new leader every termYears); successorAge: age range of a new leader; crisisPercent: chance a change of leader brings a succession crisis lasting crisisYears (it lowers stability). Stability (stage 4f PR 3, GDD 7.3, data/stability.json): stabilityBonus is added to stability; administration is the points of administration the state manages before it is overloaded; strataInfluence is the political influence of each stratum (key from strata.json; missing = 1): stability weighs the mood of each settlement by its people times their influence.",
+  "comment": "Forms of government (GDD 7.2; stage 4f, ADR 0023). title: the civilization's title, {people} is the people's name. fromEra: the first era (key from eras.json) in which a civilization may take it. enactYears: years before a state decision (a new government, a declared war: its armies wait) takes effect; very fast 0, fast 1, medium 2, slow 4. reviewPercent: the strategist and the diplomat review this many percent of their usual interval (lower = a faster state). cautionShift: added to the civilization's caution (per mille) when the AI decides whether to take its best option outright; negative = more impulsive. goalPercent: percent applied to the strategist's goal weights (expansion, security, prosperity, science, influence, conquest); missing goals stay 100. leaning: how much each trait draws a new people to this government at the start; the government with the highest sum of trait x leaning wins (ties: the first). Despotism and the city republic come with the bronze age (stage 6). Leaders (stage 4f PR 2, GDD 7.5): leaderTitle styles the leader; succession: council (the council weighs several candidates and takes the one closest to the people's character), strongest (the strongest warrior), hereditary (the heir), election (a new leader every termYears); successorAge: age range of a new leader; crisisPercent: chance a change of leader brings a succession crisis lasting crisisYears (it lowers stability). Stability (stage 4f PR 3, GDD 7.3, data/stability.json): stabilityBonus is added to stability; administration is the points of administration the state manages before it is overloaded; reach is the road cost from the capital (see stability.json) beyond which a settlement owes the state no loyalty (0 = no limit): small for tribal governments, so a neolithic people cannot hold a whole island and its far villages drift away as new peoples (stage 5b); strataInfluence is the political influence of each stratum (key from strata.json; missing = 1): stability weighs the mood of each settlement by its people times their influence.",
   "governments": [
     {
       "key": "elder_council",
@@ -19,6 +19,7 @@
       "termYears": 0,
       "stabilityBonus": 10,
       "administration": 250,
+      "reach": 28,
       "strataInfluence": {"thinkers": 4, "leaders": 4}
     },
     {
@@ -39,6 +40,7 @@
       "termYears": 0,
       "stabilityBonus": 0,
       "administration": 200,
+      "reach": 32,
       "strataInfluence": {"warriors": 4, "leaders": 4}
     },
     {
@@ -59,6 +61,7 @@
       "termYears": 0,
       "stabilityBonus": -5,
       "administration": 350,
+      "reach": 45,
       "strataInfluence": {"warriors": 3, "leaders": 6}
     },
     {
@@ -79,6 +82,7 @@
       "termYears": 10,
       "stabilityBonus": 5,
       "administration": 300,
+      "reach": 35,
       "strataInfluence": {"artisans": 4, "thinkers": 2, "leaders": 2}
     }
   ]

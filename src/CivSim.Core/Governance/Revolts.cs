@@ -43,11 +43,44 @@ public static class Revolts
             return 0;
         }
 
+        return PerStep(rules.RevoltPerMillePerYear, civ);
+    }
+
+    /// <summary>
+    /// Lets the rebels of a calm <paramref name="civ"/> (see <see cref="Rebels"/>; most of all the settlements beyond the
+    /// government's reach) drift away as a new civilization with <see cref="StabilityRules.DriftPerMillePerYear"/> a year
+    /// (GDD 7.3, stage 5b). Not in the calm after a revolt nor when the game is full. Returns the chronicle line, or null.
+    /// </summary>
+    public static string? Drift(GameContent content, GameState state, CivilizationState civ, DeterministicRandom random)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(civ);
+        ArgumentNullException.ThrowIfNull(random);
+        StabilityRules rules = content.Stability;
+        if (rules.DriftPerMillePerYear <= 0 || state.Month < civ.RevoltCalmUntilMonth || state.Civilizations.Count >= rules.MaxCivilizations)
+        {
+            return null;
+        }
+
+        int chance = PerStep(rules.DriftPerMillePerYear, civ);
+        if (random.NextInt(1000) >= chance || Rebels(content, state, civ) is not { } rebels)
+        {
+            return null;
+        }
+
+        civ.RevoltCalmUntilMonth = state.Month + (rules.RevoltCalmYears * 12L);
+        return Secede(content, state, civ, rebels, random);
+    }
+
+    // The chance, per mille, of something with perMilleYear a year happening in the step of civ (at least a year).
+    private static int PerStep(int perMilleYear, CivilizationState civ)
+    {
         int years = Math.Max(12, civ.StepMonths) / 12;
         long calm = 1_000_000;
         for (int y = 0; y < years && calm > 0; y++)
         {
-            calm = calm * (1000 - rules.RevoltPerMillePerYear) / 1000;
+            calm = calm * (1000 - perMilleYear) / 1000;
         }
 
         return (int)((1_000_000 - calm) / 1000);

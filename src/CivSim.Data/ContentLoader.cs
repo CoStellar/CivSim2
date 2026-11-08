@@ -767,6 +767,7 @@ public static class ContentLoader
                 TermYears = r.Int("termYears", 0, 100),
                 StabilityBonus = r.Int("stabilityBonus", -100, 100),
                 Administration = r.Int("administration", 1, 1_000_000),
+                Reach = r.Int("reach", 0, 1000),
                 StrataInfluence = StrataMap(e, "strataInfluence", at, strata, 1, 0, 100, errors),
             });
             i++;
@@ -942,6 +943,7 @@ public static class ContentLoader
             SecessionMinPeople = r.Int("secessionMinPeople", 0, 1_000_000),
             MaxCivilizations = r.Int("maxCivilizations", 1, 64),
             SecessionCharacterShift = r.Int("secessionCharacterShift", 0, 1000),
+            DriftPerMillePerYear = r.Int("driftPerMillePerYear", 0, 1000),
         };
     }
 
