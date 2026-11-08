@@ -122,6 +122,21 @@ public enum FactorId : byte
 
     /// <summary>The war score from our side, -100..100 (stage 4e PR 6: a side that is losing looks for peace).</summary>
     WarScore = 38,
+
+    /// <summary>The civilization's stability 0–100 (stage 4f PR 5: a troubled state avoids war and seeks a calmer government).</summary>
+    Stability = 39,
+
+    /// <summary>Administration used per 100 of the government's capacity (stage 4f PR 5: an overloaded state expands less).</summary>
+    Administration = 40,
+
+    /// <summary>How well a government suits the civilization, against the present one, percent (stage 4f PR 5).</summary>
+    Suitability = 41,
+
+    /// <summary>Food seen in the enemy's settlements against ours, percent (a war for loot; AI fixes after stage 4g).</summary>
+    Loot = 42,
+
+    /// <summary>The strategist's expansion weight, per mille (a war for land; AI fixes after stage 4g).</summary>
+    Expansion = 43,
 }
 
 /// <summary>

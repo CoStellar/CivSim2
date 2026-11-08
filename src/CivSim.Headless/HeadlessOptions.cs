@@ -28,6 +28,15 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>CSV file with every war campaign of the run (stage 4e PR 3): army, arms, food, hunger, carriers; or null for none.</summary>
     public string? CampaignsPath { get; init; }
 
+    /// <summary>Games to run in a batch (stage 4g), seeds <see cref="Seed"/> onwards; 0 = one ordinary game.</summary>
+    public int Batch { get; init; }
+
+    /// <summary>CSV file with one row per game of the batch.</summary>
+    public string? BatchPath { get; init; }
+
+    /// <summary>Games of a batch run at once (threads).</summary>
+    public int Jobs { get; init; } = 1;
+
     /// <summary>Write a stats row every this many turns.</summary>
     public int StatsEvery { get; init; } = 10;
 
@@ -104,6 +113,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>Usage text.</summary>
     public const string Usage =
         "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--quiet]\n" +
+        "       [--batch GAMES --batch-out games.csv [--jobs N]] (stage 4g: GAMES games on seeds from --seed on, one CSV row each)\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
         "       [--luminosity SUNS] [--distance AU] [--year EARTH_YEARS] [--light 0.356-1.107] (at most two; the rest follows)\n" +
@@ -140,6 +150,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         WorldRelief? relief = null;
         WorldResources resources = WorldResources.Normal;
         int? civs = null;
+        int batch = 0;
+        string? batchOut = null;
+        int jobs = 1;
         error = null;
 
         for (int i = 0; i < args.Count; i++)
@@ -433,6 +446,31 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                 case "--quiet":
                     quiet = true;
                     break;
+                case "--batch":
+                    if (!int.TryParse(Next(), NumberStyles.None, CultureInfo.InvariantCulture, out batch) || batch is < 1 or > 10_000)
+                    {
+                        error = "--batch must be 1 to 10000 games.";
+                        return null;
+                    }
+
+                    break;
+                case "--batch-out":
+                    batchOut = Next();
+                    if (string.IsNullOrWhiteSpace(batchOut))
+                    {
+                        error = "--batch-out needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--jobs":
+                    if (!int.TryParse(Next(), NumberStyles.None, CultureInfo.InvariantCulture, out jobs) || jobs is < 1 or > 256)
+                    {
+                        error = "--jobs must be 1 to 256.";
+                        return null;
+                    }
+
+                    break;
                 case "--help" or "-h":
                     error = string.Empty;
                     return null;
@@ -440,6 +478,12 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     error = $"Unknown option '{arg}'.";
                     return null;
             }
+        }
+
+        if (batch > 0 && batchOut is null)
+        {
+            error = "--batch needs --batch-out.";
+            return null;
         }
 
         return new HeadlessOptions(seed, turns, size, report, quiet)
@@ -464,6 +508,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             Relief = relief,
             Resources = resources,
             Civilizations = civs,
+            Batch = batch,
+            BatchPath = batchOut,
+            Jobs = jobs,
         };
     }
 

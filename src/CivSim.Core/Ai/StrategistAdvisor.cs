@@ -99,6 +99,21 @@ public sealed class StrategistAdvisor : Advisor
                 weights[g] = Governance.Governments.Weight(Content, civ, (Goal)g, weights[g]);
             }
 
+            // The state (stage 4f PR 5): an overloaded administration holds expansion back, unrest makes security matter.
+            int capacity = Governance.Stability.Capacity(Content, civ);
+            bool overloaded = civ.AdminUsed > capacity;
+            if (overloaded)
+            {
+                long keep = Math.Max(rules.OverloadExpansionMinPercent, (long)capacity * 100 / civ.AdminUsed);
+                weights[(int)Goal.Expansion] = (int)(weights[(int)Goal.Expansion] * keep / 100);
+            }
+
+            bool unrest = civ.Stability < Content.Stability.UnrestBelow;
+            if (unrest)
+            {
+                weights[(int)Goal.Security] = (int)Math.Min(SetStrategyCommand.MaxWeight, (long)weights[(int)Goal.Security] * rules.UnrestSecurityPercent / 100);
+            }
+
             expansion = weights[(int)Goal.Expansion];
 
             (int target, long targetValue) = Target(state, civ, heart);
@@ -113,8 +128,71 @@ public sealed class StrategistAdvisor : Advisor
             why.Note(FactorId.Crowding, crowding / 10);
             why.Note(FactorId.Fed, fedPerMille);
             why.Note(FactorId.Food, targetValue);
+            if (overloaded || unrest)
+            {
+                why.Note(FactorId.Administration, capacity == int.MaxValue ? 0 : (long)civ.AdminUsed * 100 / Math.Max(1, capacity));
+                why.Note(FactorId.Stability, civ.Stability);
+            }
+
             Issue(state, queue, civ.Id, new SetStrategyCommand(Content, weights, target, next, civ.Era), AiAction.SetStrategy, heart.Id.Value, target, why);
+            ChooseGovernment(state, queue, civ, heart, unrest);
         }
+    }
+
+    /// <summary>
+    /// S2 (stage 4f PR 5, GDD 7.2): in each review the strategist weighs the governments open in its era: suitability =
+    /// sum of trait × leaning (the character with the leader's traits) plus, in unrest, a weight per point of the
+    /// government's stability bonus. It brings in the best one only when it suits by a margin better than the present one.
+    /// </summary>
+    private void ChooseGovernment(GameState state, CommandQueue queue, CivilizationState civ, SettlementState heart, bool unrest)
+    {
+        // A new government is kept for a while (the end of its anarchy marks the change; a coup counts too).
+        long settled = civ.AnarchyUntilMonth - (Content.Stability.AnarchyYears * 12L) + (Content.Ai.GovernmentKeepYears * 12L);
+        if (Content.Governments.Count < 2 || Governance.Governments.Of(Content, civ) is not { } present
+            || (civ.AnarchyUntilMonth > 0 && state.Month < settled))
+        {
+            return;
+        }
+
+        long now = Suitability(present, civ, unrest);
+        GovernmentDefinition? best = null;
+        long bestScore = long.MinValue;
+        foreach (GovernmentDefinition g in Content.Governments)
+        {
+            if (g.Id == present.Id || g.FromEra > civ.Era)
+            {
+                continue;
+            }
+
+            long score = Suitability(g, civ, unrest);
+            if (score > bestScore)
+            {
+                best = g;
+                bestScore = score;
+            }
+        }
+
+        if (best is null || bestScore * 100 <= Math.Max(1, now) * (100 + Content.Ai.GovernmentChangeMarginPercent)
+            || Governance.Governments.CannotChange(Content, state, civ.Id, best.Id) is not null)
+        {
+            return;
+        }
+
+        Evaluation why = Evaluation.Of(bestScore);
+        why.Note(FactorId.Suitability, now <= 0 ? 0 : bestScore * 100 / now);
+        why.Note(FactorId.Stability, civ.Stability);
+        Issue(state, queue, civ.Id, new Governance.ChangeGovernmentCommand(Content, best.Id), AiAction.ChangeGovernment, heart.Id.Value, best.Id, why);
+    }
+
+    private long Suitability(GovernmentDefinition g, CivilizationState civ, bool unrest)
+    {
+        long score = 0;
+        for (int t = 0; t < g.Leaning.Count; t++)
+        {
+            score += (long)g.Leaning[t] * civ.Trait((Trait)t);
+        }
+
+        return score + (unrest ? (long)g.StabilityBonus * Content.Ai.GovernmentStabilityWeight : 0);
     }
 
     // The best known free land (nobody's) within a journey of the heart, on a sparse lattice; nearer land counts more.

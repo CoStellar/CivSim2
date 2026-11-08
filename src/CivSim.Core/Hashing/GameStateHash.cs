@@ -225,6 +225,7 @@ public static class GameStateHash
                 h.Add(r.RumorCell);
                 h.Add(r.RumorPeople);
                 h.Add(r.RumorFrom);
+                h.Add(r.SettledMonth);
                 h.Add(r.Memories.Count);
                 foreach (Diplomacy.RelationMemory m in r.Memories)
                 {

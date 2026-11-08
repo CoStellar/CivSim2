@@ -219,7 +219,8 @@ public sealed record RelationSaveData(
     [property: Key(9)] int RumorCell,
     [property: Key(10)] int RumorPeople,
     [property: Key(11)] int RumorFrom,
-    [property: Key(12)] List<RelationMemorySaveData> Memories);
+    [property: Key(12)] List<RelationMemorySaveData> Memories,
+    [property: Key(13)] long SettledMonth = -1);
 
 /// <summary>Saved remembered event of a relation (stage 4c).</summary>
 [MessagePackObject]

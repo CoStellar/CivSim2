@@ -212,6 +212,33 @@ public sealed record AiRules
     public int InfluenceWeightMax { get; init; } = 1300;
 
     /// <summary>
+    /// The least percent of the expansion weight an overloaded state keeps (S1, stage 4f PR 5): the weight is multiplied by
+    /// capacity / administration used, but not below this.
+    /// </summary>
+    public int OverloadExpansionMinPercent { get; init; } = 50;
+
+    /// <summary>Percent applied to the security weight while the civilization is in unrest (S1, stage 4f PR 5).</summary>
+    public int UnrestSecurityPercent { get; init; } = 150;
+
+    /// <summary>Percent applied to the score of a war the diplomat considers while its civilization is in unrest (D2, stage 4f PR 5).</summary>
+    public int UnrestWarPercent { get; init; } = 50;
+
+    /// <summary>
+    /// How much better, percent, another government must suit the civilization than the present one before the strategist
+    /// brings it in (S2, stage 4f PR 5; hysteresis against changing back and forth).
+    /// </summary>
+    public int GovernmentChangeMarginPercent { get; init; } = 30;
+
+    /// <summary>
+    /// Points of suitability per point of a government's stability bonus while the civilization is in unrest (S2): a
+    /// troubled state looks for a calmer government.
+    /// </summary>
+    public int GovernmentStabilityWeight { get; init; } = 40;
+
+    /// <summary>Years a new government is kept before the strategist weighs another one (stage 4f PR 5: reforms need time).</summary>
+    public int GovernmentKeepYears { get; init; } = 200;
+
+    /// <summary>
     /// Share of the expansion weight and expansiveness that a move gets over staying (G2, G3): 100 = staying has no
     /// expansion weight at all, 0 = both sides are weighed alike (before 2026-11-06).
     /// </summary>
@@ -249,6 +276,12 @@ public sealed record AiRules
 
     /// <summary>A village sends at most one group of settlers in this many years (rule 6; staggered by village).</summary>
     public int VillageSettlersEveryYears { get; init; } = 100;
+
+    /// <summary>A village fed below this share (percent) sends settlers to feed fewer mouths (AI fixes after stage 4g).</summary>
+    public int VillageHungryFedPercent { get; init; } = 70;
+
+    /// <summary>A hungry village sends at most one group of settlers in this many years (staggered by village).</summary>
+    public int VillageHungrySettlersEveryYears { get; init; } = 20;
 
     /// <summary>
     /// A camp sends explorers when expansion weight × expansiveness × curiosity (per mille, 1000 = neutral) reaches this.

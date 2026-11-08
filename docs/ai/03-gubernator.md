@@ -278,17 +278,26 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
   - jest **zatłoczona**: `ludzie ≥ pojemność × próg`, gdzie próg = 80% (`villageSettlersAbovePercent`) / zapał, nie mniej niż 50%
     i nie więcej niż 100% (jak próg odłamu G5), **albo**
   - jej pola są **wyjałowione**: żyzność pól strefy (tylko pól, które z natury dają się uprawiać) spadła poniżej 70%
-    (`villageWornBelowPercent`) ich naturalnej żyzności.
+    (`villageWornBelowPercent`) ich naturalnej żyzności, **albo**
+  - jest **głodna** (poprawki po 4g): ludzie zjedli mniej niż 70% potrzeby (`villageHungryFedPercent`). Głodna wioska może wysłać
+    grupę **raz na 20 lat** (`villageHungrySettlersEveryYears`) zamiast raz na 100.
 - **Dokąd:** jak odłam G5: najlepsze znane, wolne pole w zasięgu jednego ruchu (10 pól), co najmniej 4 pola od własnych osad i poza strefami własnych osad, które
   wyżywi grupę (`BestSite(splitting: true)`).
-- **Kto idzie:** co najmniej 60 osób (`villageSettlersPeople`), najwyżej 90% wioski. Każda warstwa daje swoją część zaokrągloną w dół,
+- **Kto idzie:** co najmniej 60 osób (`villageSettlersPeople`), najwyżej 90% wioski. Głodna wioska wysyła tyle procent ludzi, ile
+  procent jedzenia jej brakuje (najedzona w 60% wysyła 40%), najwyżej połowę i nie więcej, niż wyżywi nowe miejsce (gdy nie wyżywi,
+  grupa maleje aż do 60 osób). Każda warstwa daje swoją część zaokrągloną w dół,
   więc udział rośnie, aż grupa jest pełna. Zakładają **obóz** (albo zajmują pustą osadę na tym polu, akcja `Occupy`), a ten dalej sam
   decyduje (przeprowadzka, wędrówka, osiedlenie).
 - **Dlaczego przerwa i pełna grupa** (poprawka po pierwszych pomiarach): bez przerwy każda pełna wioska wysyłała osadników w każdym
   kroku, a udział liczony w całych procentach (60 z 2000 osób to 3%, a po zaokrągleniu w każdej warstwie zostawało kilkanaście osób)
   dawał grupki poniżej progu łączenia (G1, 15 osób), które za chwilę wracały. W 1000 turach było ~21 000 takich powrotów, a gra była 4× wolniejsza. Drugi błąd: osadnicy zakładali obóz
   4–5 pól od wioski, czyli w jej strefie wpływów, i nie mieli z czego zbierać (najedzeni w 0–8%). Dlatego cel musi leżeć poza strefami.
-- **Zapis:** akcja `SendSettlers`, notatki `crowding` (zapełnienie w %) i `worn land` (żyzność pól w % naturalnej).
+- **Zapis:** akcja `SendSettlers`, notatki `crowding` (zapełnienie w %), `worn land` (żyzność pól w % naturalnej) i `fed` (najedzenie w ‰).
+- **Mała głodna wioska** (poprawki po 4g): wioska głodna, ale mniejsza niż 60 osób (`minSplitPeople`, za mało na grupę osadników),
+  przenosi się w całości do najbliższej własnej osady w zasięgu jednego ruchu, która jest najedzona co najmniej w 70% (akcja `JoinCamp`,
+  `AbandonSettlementCommand`, kronika „The people of X left for Y.”). Drugie 100 gier pokazało, że 4 z 5 głodujących wiosek są tak małe.
+- **Dlaczego głód** (poprawki po 4g): w 100 grach wioski głodowały bez żadnej reakcji (mediana 322 przypadków na grę, gdy obozy
+  reagowały). Wioska nie może się przenieść, więc jedyne, co może zrobić od razu, to zmniejszyć liczbę ust.
 - **Czego nie ma:** przeprowadzki całej wioski. Wioska z wyjałowioną ziemią „ucieka” przez osadników; sama zostaje.
 
 ## G8: Wyprawa w nieznane (od PR C)

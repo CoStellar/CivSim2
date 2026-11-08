@@ -354,14 +354,27 @@ public sealed class GovernorAdvisor : Advisor
     {
         WorldState world = state.Worlds[s.World.Value];
         int people = s.TotalPopulation();
+        bool hungry = s.FedPerMille < _content.Ai.VillageHungryFedPercent * 10;
         if (people < _rules.MinSplitPeople)
         {
+            // A small hungry village (too few for a group of settlers) gives up: its people go to the nearest own settlement
+            // that is better fed (AI fixes after stage 4g: in the 100 games most starving villages were this small).
+            if (hungry && NearestOwnCamp(state, world, civ, s) is { } into && into.FedPerMille >= _content.Ai.VillageHungryFedPercent * 10)
+            {
+                Evaluation join = Evaluation.Of(people);
+                join.Note(FactorId.People, people);
+                join.Note(FactorId.Fed, s.FedPerMille);
+                Issue(state, queue, civ.Id, new AbandonSettlementCommand(_content, s.Id, into.Id), AiAction.JoinCamp, s.Id.Value, into.Id.Value, join);
+                _joined.Add(into.Id.Value);
+            }
+
             return;
         }
 
         // At most one group per period of years (rule 6), staggered by village so that not all villages go at once.
-        // The village plans once per own step, or once per era-length period with live seasons.
-        long period = _content.Ai.VillageSettlersEveryYears * 12L;
+        // The village plans once per own step, or once per era-length period with live seasons. A hungry village sends
+        // settlers sooner (AI fixes after stage 4g): fewer mouths to feed.
+        long period = (hungry ? _content.Ai.VillageHungrySettlersEveryYears : _content.Ai.VillageSettlersEveryYears) * 12L;
         long window = Math.Max(civ.StepMonths, Simulation.WorldClock.EraMonths(_content, civ.Era));
         long offset = s.Id.Value * 97L % period;
         if (window < period && (state.Month + offset) / period == (state.Month - window + offset) / period)
@@ -375,25 +388,38 @@ public sealed class GovernorAdvisor : Advisor
         bool crowded = people * 100L >= max * settleAbove;
         int worn = WornPercent(world, s);
         bool wornOut = worn < _content.Ai.VillageWornBelowPercent;
-        if (!crowded && !wornOut)
+        if (!crowded && !wornOut && !hungry)
         {
             return;
         }
 
-        // A group the size of a new camp leaves, however big the village is.
-        // Each stratum gives its share rounded down, so the share grows until the group is whole.
+        // A group the size of a new camp leaves, however big the village is; a hungry village sends the share of mouths it
+        // cannot feed, at most half of it. Each stratum gives its share rounded down, so the share grows until the group is whole.
         int percent = (int)Math.Clamp(_content.Ai.VillageSettlersPeople * 100L / people, 1, 90);
         while (percent < 90 && GroupPeople(s, percent) < _content.Ai.VillageSettlersPeople)
         {
             percent++;
         }
 
-        long need = GroupFoodNeed(s, percent) * _rules.SplitNeedsFoodPercent / 100;
+        int least = percent;
+        if (hungry)
+        {
+            percent = Math.Max(percent, Math.Min(50, (1000 - s.FedPerMille) / 10));
+        }
+
         (HexCoord site, Evaluation go) = BestSite(state, world, civ, s, splitting: true, RandomFor(state, s.Id.Value));
-        if (go.Value > 0 && SiteFood(world, site) >= need)
+        long food = go.Value > 0 ? SiteFood(world, site) : 0;
+        while (percent > least && GroupFoodNeed(s, percent) * _rules.SplitNeedsFoodPercent / 100 > food)
+        {
+            percent--; // a hungry village sends as many as the new place can feed
+        }
+
+        long need = GroupFoodNeed(s, percent) * _rules.SplitNeedsFoodPercent / 100;
+        if (go.Value > 0 && food >= need)
         {
             go.Note(FactorId.Crowding, people * 100L / Math.Max(1, max));
             go.Note(FactorId.WornLand, worn);
+            go.Note(FactorId.Fed, s.FedPerMille);
             (ICommand command, AiAction action) = MoveTo(state, world, s, site, percent);
             Issue(state, queue, civ.Id, command, action == AiAction.SplitCamp ? AiAction.SendSettlers : action, s.Id.Value, world.Geometry.Index(site), go);
             Take(world, site);

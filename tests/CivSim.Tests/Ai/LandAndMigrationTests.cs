@@ -75,8 +75,54 @@ public class LandAndMigrationTests
         Assert.Equal(0, Settlers(people: 300));
     }
 
+    [Fact]
+    public void AHungryVillageSendsSettlersToFeedFewerMouths()
+    {
+        // AI fixes after stage 4g: a village fed at half is not crowded, but it sends a group out to feed fewer mouths.
+        Assert.Equal(1, Settlers(people: 300, fedPercent: 50));
+        Assert.Equal(0, Settlers(people: 300, fedPercent: Content.Ai.VillageHungryFedPercent));
+    }
+
+    [Fact]
+    public void ASmallHungryVillageJoinsABetterFedSettlementOfItsOwn()
+    {
+        // Too few for settlers (below minSplitPeople): the whole village leaves for its neighbour, if that one is fed.
+        Assert.Equal(1, SmallVillageJoins(neighbourFedPercent: 100));
+        Assert.Equal(0, SmallVillageJoins(neighbourFedPercent: 50));
+    }
+
+    private static int SmallVillageJoins(int neighbourFedPercent)
+    {
+        GameState state = NewState(22);
+        CivilizationState civ = state.Civilizations[0];
+        Technologies.EnsureSize(Content, civ);
+        Technologies.Learn(Content, state, civ, Content.Technology("agriculture").Id);
+        SettlementState village = state.Settlements.First(s => s.Owner == civ.Id && s.IsActive);
+        village.Level = SettleCommand.VillageLevel(Content, village.Level);
+        Span<int> few = village.Population;
+        few.Clear();
+        few[0] = Content.Population.MinSplitPeople - 10;
+        village.FoodNeeded = 1000;
+        village.FoodEaten = 400;
+        WorldState earth = state.Worlds[0];
+        HexCoord near = earth.Geometry.Neighbor(earth.Geometry.Neighbor(village.Cell, HexDirection.N), HexDirection.N);
+        SettlementState neighbour = state.FoundSettlement(civ.Id, earth.Id, near, "Neighbour", village.Level, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
+        neighbour.Population[0] = 300;
+        neighbour.FoodNeeded = 1000;
+        neighbour.FoodEaten = neighbourFedPercent * 10;
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            c.StepMonths = 0;
+        }
+
+        civ.StepMonths = Content.Ai.VillageSettlersEveryYears * 12;
+        var council = new AiCouncil(Content);
+        council.IssueCommands(state, new CommandQueue());
+        return council.Log.Entries.Count(d => d.Action == AiAction.JoinCamp && d.Subject == village.Id.Value && d.Target == neighbour.Id.Value);
+    }
+
     // Decisions to send settlers from a village of `people` that knows all land around it.
-    private static int Settlers(int people)
+    private static int Settlers(int people, int fedPercent = 100)
     {
         GameState state = NewState(22);
         CivilizationState civ = state.Civilizations[0];
@@ -89,6 +135,8 @@ public class LandAndMigrationTests
         Span<int> crowd = village.Population;
         crowd.Clear();
         crowd[0] = people;
+        village.FoodNeeded = 1000;
+        village.FoodEaten = fedPercent * 10;
         foreach (CivilizationState c in state.Civilizations)
         {
             c.StepMonths = 0; // only this civilization plans now

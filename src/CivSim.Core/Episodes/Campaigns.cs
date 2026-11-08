@@ -418,8 +418,14 @@ public static class Campaigns
     /// <summary>All food in <paramref name="goods"/> (index = good).</summary>
     public static Amount FoodIn(GameContent content, Amount[] goods)
     {
-        ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(goods);
+        return FoodIn(content, (ReadOnlySpan<Amount>)goods);
+    }
+
+    /// <summary>All food in <paramref name="goods"/> (index = good), e.g. a settlement's stock.</summary>
+    public static Amount FoodIn(GameContent content, ReadOnlySpan<Amount> goods)
+    {
+        ArgumentNullException.ThrowIfNull(content);
         Amount total = Amount.Zero;
         for (int g = 0; g < goods.Length && g < content.Goods.Count; g++)
         {

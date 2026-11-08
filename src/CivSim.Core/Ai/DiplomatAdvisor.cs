@@ -5,6 +5,7 @@ using CivSim.Core.Commands;
 using CivSim.Core.Content;
 using CivSim.Core.Diplomacy;
 using CivSim.Core.Economy;
+using CivSim.Core.Episodes;
 using CivSim.Core.Numerics;
 using CivSim.Core.Population;
 using CivSim.Core.State;
@@ -24,6 +25,10 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
     /// <summary>Score of a step before its factors, per mille.</summary>
     public const long Base = 1000;
 
+    // Keys of the wars of greed among the steps of one review (key = civilization index × 8 + kind; treaty kinds use 0–4).
+    private const int LootKey = 6;
+    private const int ConquestKey = 7;
+
     private readonly GameContent _content = content;
     private readonly SettlementsByCiv _byCiv = new();
     private readonly Dictionary<int, Amount[]> _prices = [];
@@ -32,6 +37,10 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
     private int[] _gateB = [];
     private long[] _seen = [];
     private long[] _own = [];
+    private long[] _seenFood = [];
+    private long[] _food = [];
+    private int[] _fed = [];
+    private int[] _conquest = [];
     private int _n;
     private List<List<int>>? _networks;
     private int[] _networkOf = [];
@@ -160,11 +169,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                 bool cause = Treaties.HasGrievance(state, civ.Id, other);
                 e.Apply(FactorId.Cause, cause ? Factor.Neutral : 0, cause ? 1 : 0);
                 e.Apply(FactorId.Strength, rules.Advantage, Percent(_own[x], EnemyStrength(state, civ, x, other)));
-                if (Binds(state, civ.Id, other))
-                {
-                    e.Apply(FactorId.Treaty, Math.Max(100, Factor.Neutral - civ.Trait(Trait.Loyalty)), civ.Trait(Trait.Loyalty));
-                }
-
+                HoldBack(ref e, state, civ, other);
                 e.Weigh(GoalWeight(civ, Goal.Conquest), CharacterMultiplier(civ, Goal.Conquest));
                 break;
             case TreatyKind.Peace:
@@ -206,12 +211,27 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             Consider(state, civ, r.Other, y, TreatyKind.Trade, rules.ProposeAbove);
             Consider(state, civ, r.Other, y, TreatyKind.NonAggression, rules.ProposeAbove);
             Consider(state, civ, r.Other, y, TreatyKind.DefensiveAlliance, rules.ProposeAbove);
-            if (Treaties.CannotDeclareWar(state, civ.Id, r.Other) is null)
+            if (Treaties.CannotDeclareWar(state, civ.Id, r.Other) is null && civ.PendingGovernment == CivilizationState.NoGovernment
+                && !Governance.Stability.InAnarchy(civ, state.Month))
             {
                 Evaluation war = Evaluate(state, civ, r.Other, TreatyKind.War);
                 if (war.Value >= rules.DeclareWarAbove)
                 {
                     Chooser.Offer((y * 8) + (int)TreatyKind.War, war);
+                }
+
+                // Wars of greed (AI fixes after stage 4g): for the food of a richer, weaker neighbour, or for a village of
+                // theirs our army would take.
+                Evaluation loot = EvaluateLoot(state, civ, r.Other);
+                if (loot.Value >= rules.DeclareWarAbove)
+                {
+                    Chooser.Offer((y * 8) + LootKey, loot);
+                }
+
+                Evaluation land = EvaluateConquest(state, civ, r.Other);
+                if (land.Value >= rules.DeclareWarAbove)
+                {
+                    Chooser.Offer((y * 8) + ConquestKey, land);
                 }
             }
         }
@@ -226,7 +246,16 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         CivId other = state.Civilizations[key / 8].Id;
         var kind = (TreatyKind)(key % 8);
         Evaluation why = Chooser.EvaluationAt(pick);
-        if (kind == TreatyKind.War)
+        if (key % 8 == LootKey)
+        {
+            Issue(state, queue, civ.Id, new DeclareWarCommand(_content, other, WarGoal.Loot), AiAction.DeclareWar, -1, other.Value, why);
+        }
+        else if (key % 8 == ConquestKey)
+        {
+            int target = _conquest[key / 8];
+            Issue(state, queue, civ.Id, new DeclareWarCommand(_content, other, WarGoal.Land, target), AiAction.DeclareWar, target, other.Value, why);
+        }
+        else if (kind == TreatyKind.War)
         {
             // GDD 9.3: the goal follows the cause: land when they hold a settlement we claim, otherwise revenge.
             int claimed = Treaties.ClaimedSettlement(state, civ.Id, other);
@@ -316,23 +345,36 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             _gateA = new int[pairs];
             _gateB = new int[pairs];
             _seen = new long[pairs];
+            _seenFood = new long[pairs];
             _own = new long[_n];
+            _food = new long[_n];
+            _fed = new int[_n];
+            _conquest = new int[_n];
         }
 
         _byCiv.Build(state);
         for (int x = 0; x < _n; x++)
         {
             _own[x] = 0;
+            _food[x] = 0;
+            long eaten = 0;
+            long needed = 0;
             foreach (int s in _byCiv.Of(x))
             {
-                _own[x] += SettlementAssets.Warriors(_content, state.Settlements[s]);
+                SettlementState st = state.Settlements[s];
+                _own[x] += SettlementAssets.Warriors(_content, st);
+                _food[x] += Campaigns.FoodIn(_content, st.Stock).Hundredths;
+                eaten += Math.Min(st.FoodEaten, st.FoodNeeded);
+                needed += st.FoodNeeded;
             }
+
+            _fed[x] = needed <= 0 ? 100 : (int)(eaten * 100 / needed);
 
             for (int y = 0; y < _n; y++)
             {
                 int k = (x * _n) + y;
                 _near[k] = x == y ? 0 : _byCiv.Nearest(state, x, y, out _gateA[k], out _gateB[k]);
-                _seen[k] = x == y ? 0 : SeenWarriors(state, state.Civilizations[x], y);
+                _seen[k] = x == y ? 0 : SeenWarriors(state, state.Civilizations[x], y, out _seenFood[k]);
             }
         }
 
@@ -342,9 +384,10 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
 
     // Warriors of civilization `y` in camps `civ` saw in its last own step: the AI knows only what it saw, and only what
     // it sees now tells it how strong they are today.
-    private long SeenWarriors(GameState state, CivilizationState civ, int y)
+    private long SeenWarriors(GameState state, CivilizationState civ, int y, out long food)
     {
         long sum = 0;
+        food = 0;
         WorldState earth = state.Worlds[0];
         foreach (int s in _byCiv.Of(y))
         {
@@ -353,6 +396,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             if (Perception.MapMemory.SeesNow(state, civ, cell))
             {
                 sum += SettlementAssets.Warriors(_content, st);
+                food += Campaigns.FoodIn(_content, st.Stock).Hundredths; // the stores are in sight too
             }
         }
 
@@ -420,7 +464,11 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                 continue;
             }
 
-            int f = state.Treaties.AtWar(civ.Id, r.Other)
+            // A common enemy counts in full (AI fixes after stage 4g): a people at war with us or with the partner (wars are
+            // known to all), or one we have a grievance against.
+            bool enemy = state.Treaties.AtWar(civ.Id, r.Other) || state.Treaties.AtWar(state.Civilizations[y].Id, r.Other)
+                || Treaties.HasGrievance(state, civ.Id, r.Other);
+            int f = enemy
                 ? _content.Treaties.Threat.Evaluate(long.MaxValue / 2)
                 : _content.Treaties.Threat.Evaluate(Percent(_seen[(x * _n) + z], _own[x]));
             threat = Math.Max(threat, f);
@@ -449,6 +497,139 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         }
 
         return sum;
+    }
+
+    // A war for loot (AI fixes after stage 4g; GDD 9.3 allows it without a cause): a hungry people against a neighbour
+    // whose stores it sees fuller than its own and whom it can beat. The witnesses remember it the most (data/war.json).
+    private Evaluation EvaluateLoot(GameState state, CivilizationState civ, CivId other)
+    {
+        TreatyRules rules = _content.Treaties;
+        int x = state.IndexOfCivilization(civ.Id);
+        int y = state.IndexOfCivilization(other);
+        int k = (x * _n) + y;
+        Evaluation e = Evaluation.Of(Base);
+        e.Apply(FactorId.Opinion, rules.Greed, civ.Relation(other)?.Sympathy ?? 0);
+        e.Apply(FactorId.Distance, _near[k] <= rules.ReachCells ? Factor.Neutral : 0, _near[k]);
+        e.Apply(FactorId.Fed, rules.LootNeed, _fed[x]);
+        e.Apply(FactorId.Loot, rules.LootGain, Percent(_seenFood[k], _food[x]));
+        e.Apply(FactorId.Strength, rules.Advantage, Percent(_own[x], EnemyStrength(state, civ, x, other)));
+        Greedy(ref e, state, civ, other);
+        e.Weigh(GoalWeight(civ, Goal.Conquest), CharacterMultiplier(civ, Goal.Conquest));
+        return e;
+    }
+
+    // A war for land (conquest, AI fixes after stage 4g): the enemy village in sight and within the commander's reach that
+    // our army, gathered as the commander would gather it, would most likely take; worth more the more we want to expand.
+    private Evaluation EvaluateConquest(GameState state, CivilizationState civ, CivId other)
+    {
+        int x = state.IndexOfCivilization(civ.Id);
+        int y = state.IndexOfCivilization(other);
+        int chance = BestConquest(state, civ, x, y, out _conquest[y]);
+        Evaluation e = Evaluation.Of(Base);
+        if (_conquest[y] < 0)
+        {
+            e.Apply(FactorId.WinChance, 0, 0);
+            return e;
+        }
+
+        int expansion = GoalWeight(civ, Goal.Expansion);
+        e.Apply(FactorId.Opinion, _content.Treaties.Greed, civ.Relation(other)?.Sympathy ?? 0);
+        e.Apply(FactorId.WinChance, _content.Treaties.ConquestChance, chance);
+        e.Apply(FactorId.Expansion, expansion, expansion);
+        Greedy(ref e, state, civ, other);
+        e.Weigh(GoalWeight(civ, Goal.Conquest), CharacterMultiplier(civ, Goal.Conquest));
+        return e;
+    }
+
+    // Greed never breaks a treaty (the first 100 games with greed: a war in three broke a pact); unrest holds it back.
+    private void Greedy(ref Evaluation e, GameState state, CivilizationState civ, CivId other)
+    {
+        if (Binds(state, civ.Id, other))
+        {
+            e.Apply(FactorId.Treaty, 0, civ.Trait(Trait.Loyalty));
+        }
+
+        if (civ.Stability < _content.Stability.UnrestBelow)
+        {
+            e.Apply(FactorId.Stability, _content.Ai.UnrestWarPercent * 10, civ.Stability);
+        }
+    }
+
+    // A treaty that war would break, and unrest (stage 4f PR 5), hold a war back.
+    private void HoldBack(ref Evaluation e, GameState state, CivilizationState civ, CivId other)
+    {
+        if (Binds(state, civ.Id, other))
+        {
+            e.Apply(FactorId.Treaty, Math.Max(100, Factor.Neutral - civ.Trait(Trait.Loyalty)), civ.Trait(Trait.Loyalty));
+        }
+
+        if (civ.Stability < _content.Stability.UnrestBelow)
+        {
+            e.Apply(FactorId.Stability, _content.Ai.UnrestWarPercent * 10, civ.Stability);
+        }
+    }
+
+    // The village of civilization `y` that `civ` would most likely take, as its commander sees it, and that chance, percent;
+    // `target` = -1 when none is in sight and in reach.
+    private int BestConquest(GameState state, CivilizationState civ, int x, int y, out int target)
+    {
+        target = -1;
+        int best = -1;
+        int limit = Campaigns.Era(_content, civ).ArmyLimit;
+        foreach (int t in _byCiv.Of(y))
+        {
+            SettlementState village = state.Settlements[t];
+            if (_content.SettlementLevels[village.Level].Mobile || village.World != WorldId.Earth)
+            {
+                continue;
+            }
+
+            WorldState world = state.Worlds[0];
+            SettlementState? home = null;
+            int nearest = int.MaxValue;
+            foreach (int s in _byCiv.Of(x))
+            {
+                SettlementState own = state.Settlements[s];
+                int d = own.World == world.Id ? world.Geometry.Distance(own.Cell, village.Cell) : int.MaxValue;
+                if (d < nearest && Campaigns.Sendable(_content, own) > 0)
+                {
+                    nearest = d;
+                    home = own;
+                }
+            }
+
+            if (home is null || nearest > _content.Perception.JourneyCells)
+            {
+                continue;
+            }
+
+            // The army: warriors of our settlements within the muster range of the one nearest to the village.
+            int warriors = 0;
+            long attack = 0;
+            foreach (int s in _byCiv.Of(x))
+            {
+                SettlementState own = state.Settlements[s];
+                int n = Math.Min(Campaigns.Sendable(_content, own), limit - warriors);
+                if (n > 0 && own.World == world.Id && world.Geometry.Distance(home.Cell, own.Cell) <= _content.War.MusterCells)
+                {
+                    warriors += n;
+                    attack += Campaigns.ArmedStrength(_content, civ, own, n, useUp: false);
+                }
+            }
+
+            if (warriors < _content.War.MinWarriors || Campaigns.Expect(_content, state, civ, village, warriors, attack, 100, -1) is not { } battle)
+            {
+                continue;
+            }
+
+            if (battle.ChancePercent > best)
+            {
+                best = battle.ChancePercent;
+                target = village.Id.Value;
+            }
+        }
+
+        return best;
     }
 
     private bool Binds(GameState state, CivId civ, CivId other)

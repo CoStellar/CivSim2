@@ -13,20 +13,21 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Gubernator: przeprowadzki, odłamy, wypędzenia | **dobre, rozsądnie złożone** | liczy jedzenie, wygodę, odległość, kierunek, opinię, siłę |
 | Gubernator: osiedlenie (G4) | **dobre (od PR C)** | plon dla prawdziwych rolników, porównanie ze zbieractwem i ekspansywnością |
 | Gubernator: łupy (G6), dołączanie (G1) | proste, ale wystarczy | rzadkie albo oczywiste sytuacje |
-| Wioski | **proste (od PR C)** | wysyłają osadników (G7), gdy są zatłoczone albo pola wyjałowione; budowy i dzielnice w późniejszych etapach |
+| Wioski | **proste (od PR C, głód po 4g)** | wysyłają osadników (G7), gdy są zatłoczone, pola wyjałowione albo głodują; mała głodna wioska przenosi się do sąsiedniej; budowy i dzielnice w późniejszych etapach |
 | Strateg | **dobre (od PR B)** | każda z 6 wag na coś wpływa; nauka rośnie, gdy spotkani wiedzą więcej, wpływ z liczbą spotkanych; podbój czeka na 4e |
 | Charakter | **żywy (od PR B)** | każda cecha zmienia decyzję (test `DeadValueTests`); ciekawość zmniejsza strach przed kosztem technologii |
-| Dyplomata (4d) | **dobre, z jedną dziurą** | ta sama ocena dla obu stron, reaguje na wojnę i napad poza rytmem (ADR 0018); ale „widzi” dzisiejszą siłę z pamiętanych pól |
+| Dyplomata (4d, po 4g) | **dobre** | ta sama ocena dla obu stron, reaguje na wojnę i napad poza rytmem (ADR 0018); od 4g także wojny z chciwości (łupy, ziemia) i sojusze przeciw wspólnemu wrogowi |
 | Skarbnik | **dobre (od PR B), jedna słabość** | osady sieci koordynują się, jedzenie kontra wyroby, premia za handel; zostało przełączanie odzież ↔ chleb |
 | Uczony | **dobre (od PR B)** | priorytet z położenia, braków i charakteru, koszt jako przeszkoda; rolnictwo przychodzi wcześniej (do oceny) |
 | Wiedza AI | **częściowo naprawione (PR B, PR C)** | obce obozy i ich siła tylko z pól widzianych w ostatnim kroku; ziemia wyceniana z technologiami cywilizacji; jedzenie pól nadal dzisiejsze |
 | Wyprawy (G8) | **nowe, rzadkie** | 8–97 na grę; zależą od ciekawości i ekspansywności |
 | Rytm decyzji | **dobre (od ADR 0018, PR C)** | każda cywilizacja w rytmie swojej ery, reakcje poza rytmem; zwiad i marsz obozu na stulecie |
 | Wydajność | **do pilnowania (PR C)** | 3–4× więcej osad; stare systemy porównują każdą osadę z każdą (patrz pkt 10) |
-| Ustroje (etap 4f, PR 1) | **proste, na start** | ustrój przechyla wagi, ostrożność i tempo; AI jeszcze go nie zmienia sama (PR 5); pętla odwetu widoczniejsza (pkt 14) |
+| Ustroje (etap 4f, PR 1, PR 5) | **proste** | ustrój przechyla wagi, ostrożność i tempo; od PR 5 strateg zmienia go, gdy inny pasuje wyraźnie lepiej (S2); pętla odwetu zamknięta (pkt 14) |
 | Przywódcy (etap 4f, PR 2) | **proste** | cechy przywódcy przesuwają charakter, rada wybiera pasującego; kryzys sukcesji obniża stabilność od PR 3 (pkt 15) |
-| Stabilność (etap 4f, PR 3) | **AI jej nie widzi** | stabilność i niepokoje działają, ale strateg i dyplomata reagują dopiero w PR 5 (pkt 16) |
+| Stabilność (etap 4f, PR 3, PR 5) | **AI reaguje prosto** | przeciążenie hamuje ekspansję, niepokoje: bezpieczeństwo w górę, wojna w dół, spokojniejszy ustrój (pkt 16) |
 | Bunty i secesja (etap 4f, PR 4) | **reguła, nie decyzja** | nowe ludy powstają z dalekich osad; AI rodzica może się mścić (pkt 17) |
+| Testy wsadowe (etap 4g) | **4 dziury poprawione** | po poprawkach: głodujące wioski 21 zamiast 322 na grę, wojny o łupy w 81 grach, podboje w 19, sojusze 4 na grę (pkt 18) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -249,6 +250,9 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   cywilizacja 10 (wodzostwo); seed 7: 23 z 30 cywilizacja 0; seed 42: 11 z 26. W PR 6 bez ustrojów było podobnie, tylko rzadziej
   (seed 7: 32 wojny, 25 z zerwaniem umowy). Do strojenia w PR 5 etapu 4f: odwet powinien gasnąć po wojnie, a zerwanie rozejmu
   kosztować więcej.
+- **Zamknięte w PR 5 etapu 4f:** podpisany pokój zamyka rachunek krzywd (`Relation.SettledMonth`): napaść, agresja i secesja sprzed
+  pokoju przestają być powodem do odwetu (nadal obniżają sympatię i zaufanie). Nowa krzywda po pokoju jest nowym powodem. Wyniki w
+  [statystykach](09-statystyki.md#ai-wobec-państwa-etap-4f-pr-5). Biały pokój po cichej wojnie też jest pokojem, więc też zamyka rachunek.
 
 ## 15. Przywódcy (etap 4f, PR 2)
 
@@ -262,13 +266,18 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
 - **Ryzyko:** cechy przywódcy dodają losowości do wojen (patrz [statystyki](09-statystyki.md#przywódcy-etap-4f-pr-2)); to zamierzone,
   ale po strojeniu w PR 5 trzeba sprawdzić, czy ostrożny lud z wojowniczym wodzem nie wpada w pętlę odwetu częściej niż inne.
 
-## 16. Stabilność bez reakcji AI (etap 4f, PR 3)
+## 16. Stabilność i AI (etap 4f, PR 3; reakcja AI od PR 5)
 
 - **Co działa:** stabilność 0–100 z nastroju osad ważonego wpływem warstw, premii ustroju i kar (administracja, kryzys sukcesji,
   bezkrólewie, utrata stolicy); poniżej 30 niepokoje obniżają wydajność. W 3 grach 8–12% lat cywilizacji to niepokoje.
 - **Czego brakuje (celowo, PR 5):** AI nie widzi stabilności. Strateg nie hamuje ekspansji przy przeciążonej administracji i nie
   zmienia ustroju, gdy jest źle; dyplomata nie unika wojny przy niskiej stabilności. Dziś stabilność jest więc karą, której AI nie
   rozumie: wielkie plemiona żyją stale z karą za administrację.
+- **Od PR 5:** strateg mnoży ekspansję przez pojemność / zużycie administracji (nie mniej niż 50%), w niepokojach podnosi
+  bezpieczeństwo × 1,5 i w każdym przeglądzie sprawdza, czy inny ustrój nie pasuje wyraźnie lepiej (w niepokojach liczy się premia
+  stabilności ustroju). Dyplomata w niepokojach ocenia wojnę o połowę niżej i nie rozważa jej w bezkrólewiu.
+- **Nadal za proste:** AI nie ma działań „na stabilność” (np. świąt, ustępstw dla warstw, rezygnacji z dalekich osad); reaguje tylko
+  wagami i ustrojem. Zmiana ustroju kosztuje 2 lata bezkrólewia (−20), więc w niepokojach może chwilowo pogorszyć sprawę.
 - **Co jest za proste:** nastrój warstwy = nastrój osady (warstwy nie mają jeszcze osobnych potrzeb politycznych); lojalność osad
   jest liczona, ale niczego jeszcze nie zmienia (bunty w PR 4).
 
@@ -283,6 +292,31 @@ gdy ma rolnika, a rolnictwo rozchodzi się z mistrzami, nie od razu do wszystkic
   - nie ma wojny domowej (dwie strony walczące o całość): to mogłoby być rozszerzenie po etapie 4g.
 - **Do obserwacji:** secesje są duże (połowa państwa naraz). Jeśli Patryk woli mniejsze, wystarczy obniżyć `secessionLoyaltyBelow`
   albo dać buntownikom osobny, mniejszy zasięg zamiast `linkCells` (dziś to samo, co w sieci handlowej).
+
+## 18. Co pokazało 100 gier (etap 4g)
+
+Pełny raport: [12-testy-wsadowe.md](12-testy-wsadowe.md). Najważniejsze dziury, od najpoważniejszej:
+
+1. **Wioski głodują bez reakcji:** mediana 322 razy na grę wioska głoduje 3 własne kroki z rzędu; G7 (osadnicy) nie patrzy na głód.
+   Obozy reagują dobrze (mediana 4).
+2. **Żadna zamieszkana osada nie zmienia właściciela na wojnie** (0 w 100 grach): podbój tylko celu wojny o ziemię, a ten jest rzadki.
+3. **Nikt nie wypowiada wojny o łupy** (0 w 100 grach); 94% wojen to odwet.
+4. **Sojusze rzadko działają:** mediana 1 sojusz na grę, sojusznik przystąpił do wojny w 17 grach.
+
+Co działa: wojny się kończą (pokojów tyle, co wojen), dyplomacja i handel w każdej grze, w 95 grach wymiera co najmniej jeden lud,
+ustroje zmieniają się około raz na lud na 1000 lat, czas tury 27 ms.
+
+**Po poprawkach AI (gałąź `feat/ai-fixes`, decyzja Patryka „Poprawki AI wszystkie”):** wszystkie cztery punkty poprawione, porównanie
+na tych samych 100 seedach w [12-testy-wsadowe.md](12-testy-wsadowe.md#po-poprawkach-ai-decyzja-patryka-z-2026-11-07-poprawki-ai-wszystkie):
+
+1. Głodujące wioski: mediana **21** zamiast 322 (głodna wioska wysyła osadników co 20 lat, mała przenosi się do najedzonej sąsiedniej osady).
+2. Podboje: osada zdobyta na wojnie w **19** grach zamiast 0 (wojna o wioskę, którą armia zdobędzie z szansą ≥ 75%). Wciąż rzadkie; do
+   sprawdzenia w erze brązu.
+3. Wojny o łupy: w **81** grach (mediana 4), tylko gdy lud głoduje, a sąsiad ma pełniejsze spichlerze i jest słabszy.
+4. Sojusze: mediana **4** zamiast 1, sojusznik przystąpił do wojny w **38** grach zamiast 17.
+
+Za proste albo do pilnowania: wojny z chciwości nigdy nie łamią umowy (zasada w kodzie, nie cecha charakteru; lojalność liczy się tylko
+przy odwecie), a ocena łupów zakłada, że AI widzi zapasy w osadach, które widzi teraz (bez szpiegów i pogłosek).
 
 ## Decyzje Patryka (2026-11-06)
 

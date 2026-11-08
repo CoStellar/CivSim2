@@ -112,10 +112,32 @@ public class WarTests
         Assert.Contains(witness.Relation(a.Id)!.Memories, m => m.Kind == RelationEvent.Aggression);
 
         // Revenge: b now has a grievance against a; witnesses do not hold it against b.
-        Treaties.Sign(Content, state, a.Id, b.Id, TreatyKind.Peace);
-        state.Treaties.Remove(a.Id, b.Id, TreatyKind.Peace);
+        state.Treaties.Remove(a.Id, b.Id, TreatyKind.War); // the war fades without a peace
+        Assert.True(Treaties.HasGrievance(state, b.Id, a.Id));
         Run(state, b.Id, new DeclareWarCommand(Content, a.Id, WarGoal.Revenge));
         Assert.DoesNotContain(witness.Relation(b.Id)!.Memories, m => m.Kind == RelationEvent.Aggression);
+    }
+
+    [Fact]
+    public void APeaceSettlesOldGrievancesButNotNewOnes()
+    {
+        (GameState state, _) = Empty(58);
+        CivilizationState a = state.Civilizations[0];
+        CivilizationState b = state.Civilizations[1];
+        Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot));
+        Assert.True(Treaties.HasGrievance(state, b.Id, a.Id));
+
+        // The peace closes the account (stage 4f PR 5): no revenge for what came before it.
+        Treaties.Sign(Content, state, a.Id, b.Id, TreatyKind.Peace);
+        Assert.Equal(state.Month, b.Relation(a.Id)!.SettledMonth);
+        Assert.False(Treaties.HasGrievance(state, b.Id, a.Id));
+        Assert.Equal("There is nothing to avenge.", Treaties.CannotDeclareWar(Content, state, b.Id, a.Id, WarGoal.Revenge, -1));
+
+        // A new attack after the peace is a new grievance.
+        state.Treaties.Remove(a.Id, b.Id, TreatyKind.Peace);
+        state.SetCountersForLoad(state.Month + 12, state.NextSettlementId, state.StepMonths);
+        Run(state, a.Id, new DeclareWarCommand(Content, b.Id, WarGoal.Loot));
+        Assert.True(Treaties.HasGrievance(state, b.Id, a.Id));
     }
 
     [Fact]

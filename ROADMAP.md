@@ -187,7 +187,17 @@ odłączają się jako nowe cywilizacje z językiem rodzica i własnym tytułem.
 - [x] **PR 2:** przywódca z imieniem z języka ludu, wiekiem i cechami (`data/leaders.json`); starzenie i śmierć rok po roku, sukcesja według ustroju (rada wybiera pasującego, wódz: kryzys, konsul: kadencja); cechy przywódcy przesuwają charakter; przywódca w panelu podglądu; zapis 27, protokół 11 (`feat/state-leaders`)
 - [x] **PR 3:** stolica, administracja (koszt drogi od stolicy), stabilność 0–100 z nastroju ważonego wpływem warstw; niepokoje poniżej 30 (wydajność −1% za punkt), bezkrólewie 2 lata po zmianie ustroju, lojalność osad; zapis 28, protokół 12 (`feat/state-stability`)
 - [x] **PR 4:** bunty poniżej 15: przewrót w rdzeniu albo secesja dalekich osad jako nowa cywilizacja (język z mutacją, własny ustrój i tytuł); rodzic pamięta secesję (powód odwetu); zapis 29, protokół 13 (`feat/state-revolts`)
-- [ ] **PR 5:** AI państwa (wybór ustroju, reakcja na niską stabilność), pętla odwetu (wojna co 50 lat z tym samym sąsiadem), test martwych wartości, `docs/ai/`, statystyki z 3 seedów
+- [x] **PR 5:** AI państwa: strateg hamuje ekspansję przy przeciążeniu, w niepokojach dba o bezpieczeństwo i wybiera ustrój pasujący do ludu (S2, histereza 30%); dyplomata unika wojny w niepokojach i bezkrólewiu; pokój zamyka rachunek krzywd (koniec pętli odwetu); test martwych wartości, `docs/ai/`, statystyki z 3 seedów; zapis 30 (`feat/state-ai`)
+
+## Etap 4g — Testy wsadowe: 100 gier i raport (GDD 8.7)
+
+- [x] Tryb wsadowy w `CivSim.Headless` (`--batch N --batch-out games.csv --jobs N`): N gier na kolejnych seedach naraz, wiersz CSV na grę
+  (wojny według celu, umowy, podboje, wymarłe ludy, secesje, przewroty, zmiany ustroju, stabilność, ery, głód bez reakcji), każda gra
+  bit w bit jak pojedyncza (`feat/batch-games`)
+- [x] 100 gier i raport dla Patryka: [`docs/ai/12-testy-wsadowe.md`](docs/ai/12-testy-wsadowe.md), wykres `docs/ai/img/100_gier.png`, dane `docs/ai/dane/100_gier.csv`
+- [x] Poprawki z raportu (decyzja Patryka z 2026-11-07: „Poprawki AI wszystkie”): głodna wioska wysyła osadników, mała przenosi się do
+  najedzonej sąsiedniej osady; wojny o łupy i o ziemię (wioska, którą armia zdobędzie) bez łamania umów; pakty i sojusze przeciw wspólnemu
+  wrogowi. Porównanie 100 gier w `docs/ai/12-testy-wsadowe.md`: głodujące wioski 21 zamiast 322 na grę, łupy w 81 grach, podboje w 19, sojusze 4 na grę (`feat/ai-fixes`)
 
 ## Etap 5 — Lepszy podgląd: warstwy, grafiki zastępcze, menu startowe (decyzja Patryka z 2026-11-06)
 
