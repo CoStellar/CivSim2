@@ -27,6 +27,7 @@ public sealed class LocalServerHost : IDisposable
     public static readonly TimeSpan MaxSpeedViewInterval = TimeSpan.FromMilliseconds(250);
 
     private readonly ConcurrentQueue<IConnection> _pending = new();
+    private readonly ConcurrentQueue<string> _clientLog = new();
     private readonly Thread _thread;
     private readonly GameServer _server;
     private volatile bool _stopping;
@@ -35,6 +36,8 @@ public sealed class LocalServerHost : IDisposable
     private long _turnLimit;
     private string? _reportPath;
     private StreamWriter? _report;
+    private LongRunRecorder? _longRun;
+    private volatile bool _longRunFinished;
 
     private LocalServerHost(GameServer server)
     {
@@ -47,6 +50,27 @@ public sealed class LocalServerHost : IDisposable
 
     /// <summary>Set when the simulation thread stopped because of an exception.</summary>
     public string? Error => _error;
+
+    /// <summary>Folder of the long run's files, or null when this game is not a long run.</summary>
+    public string? LongRunFolder => _longRun?.Folder;
+
+    /// <summary>True when the long run reached its time limit and wrote its summary (the client may quit).</summary>
+    public bool LongRunFinished => _longRunFinished;
+
+    /// <summary>The client reports each frame's work time and the time since the previous frame for the long run's statistics. Thread-safe; does nothing outside a long run.</summary>
+    public void ReportFrame(double workMs, double gapMs) => _longRun?.Frame(workMs, gapMs);
+
+    /// <summary>The client reports its engine's memory and object counts for the long run. Thread-safe; does nothing outside a long run.</summary>
+    public void ReportEngine(long staticMb, long videoMb, long objects, long nodes) => _longRun?.Engine(staticMb, videoMb, objects, nodes);
+
+    /// <summary>The client adds a line to the long run's log (for example its own warnings). Thread-safe; does nothing outside a long run.</summary>
+    public void LogLongRun(string text)
+    {
+        if (_longRun is not null)
+        {
+            _clientLog.Enqueue(text);
+        }
+    }
 
     /// <summary>
     /// Generates a new world from <paramref name="options"/> and starts the simulation thread (paused).
@@ -62,6 +86,20 @@ public sealed class LocalServerHost : IDisposable
             _turnLimit = Math.Max(0, options.TurnLimit),
             _reportPath = string.IsNullOrWhiteSpace(options.ReportPath) ? null : options.ReportPath,
         };
+        if (!string.IsNullOrWhiteSpace(options.LongRunFolder))
+        {
+            host._longRun = new LongRunRecorder(
+                options.LongRunFolder,
+                TimeSpan.FromSeconds(Math.Max(0, options.LongRunSeconds)),
+                TimeSpan.FromSeconds(Math.Max(1, options.LongRunSampleSeconds)),
+                content.Stability.UnrestBelow);
+            host._longRun.Log(string.Create(
+                CultureInfo.InvariantCulture,
+                $"start: seed {options.Seed}, map {options.Width}x{options.Height}, {options.Civilizations} civilizations, planet {options.Planet}, world {options.WorldType}, " +
+                $"limit {(options.LongRunSeconds > 0 ? options.LongRunSeconds + " s" : "none")}, row every {Math.Max(1, options.LongRunSampleSeconds)} s, " +
+                $"{Environment.ProcessorCount} processor threads, {Environment.OSVersion}, .NET {Environment.Version}"));
+        }
+
         host._thread.Start();
         return host;
     }
@@ -204,16 +242,20 @@ public sealed class LocalServerHost : IDisposable
                 {
                     lastTurn = Stopwatch.GetTimestamp();
                     bool max = _server.Speed == SimulationSpeed.Max;
-                    _server.AdvanceTurn(sendViews: !max);
+                    Core.Simulation.TurnReport report = _server.AdvanceTurn(sendViews: !max);
                     unsent = max;
                     ran = true;
                     Report();
+                    _longRun?.TurnDone(_server.State, report, _server.Runner.LastChronicle);
                     if (_turnLimit > 0 && _server.State.Turn == _turnLimit)
                     {
                         _server.Pause($"Turn limit {_turnLimit} reached; the simulation is paused.");
+                        _longRun?.Log($"turn limit {_turnLimit} reached; the simulation is paused");
                         unsent = true;
                     }
                 }
+
+                LongRunTick();
 
                 if (unsent && (_server.Speed != SimulationSpeed.Max || Stopwatch.GetElapsedTime(lastSend) >= MaxSpeedViewInterval))
                 {
@@ -239,11 +281,34 @@ public sealed class LocalServerHost : IDisposable
 #pragma warning restore CA1031
         {
             _error = ex.ToString();
+            _longRun?.Log("error on the simulation thread: " + ex);
+            _longRun?.Finish(_server, "error on the simulation thread");
         }
         finally
         {
             _report?.Dispose();
             _report = null;
+            _longRun?.Finish(_server, "the game was closed before the time limit");
+        }
+    }
+
+    // Long run: the client's log lines, a stats row every few seconds, and the end at the time limit.
+    private void LongRunTick()
+    {
+        if (_longRun is null || _longRun.Finished)
+        {
+            return;
+        }
+
+        while (_clientLog.TryDequeue(out string? line))
+        {
+            _longRun.Log(line);
+        }
+
+        if (_longRun.Tick(_server))
+        {
+            _server.Pause("Long run finished: the statistics are in " + _longRun.Folder);
+            _longRunFinished = true;
         }
     }
 

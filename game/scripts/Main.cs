@@ -60,6 +60,8 @@ public partial class Main : Node2D
     private readonly List<(MapLayer Layer, int Opacity)> _opacities = [];
     private bool _openLayerSettings;
     private bool _renameDialog;
+    private double _engineTimer;
+    private long _lastFrame;
 
     /// <inheritdoc />
     public override void _Ready()
@@ -220,6 +222,16 @@ public partial class Main : Node2D
         _host = LocalServerHost.Start(options, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
         SimulationSpeed speed = StartSettings.ParseSpeed(settings.Speed);
+        if (_host.LongRunFolder is { } folder)
+        {
+            // A long run that starts paused would record nothing: it runs at maximum speed unless a speed was chosen.
+            speed = speed == SimulationSpeed.Paused ? SimulationSpeed.Max : speed;
+            _host.LogLongRun(string.Create(
+                CultureInfo.InvariantCulture,
+                $"viewer: Godot {Engine.GetVersionInfo()["string"]}, {RenderingServer.GetVideoAdapterName()} ({RenderingServer.GetVideoAdapterVendor()}), window {GetWindow().Size.X}x{GetWindow().Size.Y}, start speed {speed}"));
+            GD.Print($"long run: writing to {folder}");
+        }
+
         if (speed != SimulationSpeed.Paused)
         {
             _session.SetSpeed(speed);
@@ -403,7 +415,9 @@ public partial class Main : Node2D
             _host = null;
         }
 
-        Benchmark(Stopwatch.GetElapsedTime(start).TotalMilliseconds);
+        double workMs = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
+        LongRun(workMs, delta);
+        Benchmark(workMs);
         Screenshot();
     }
 
@@ -606,6 +620,36 @@ public partial class Main : Node2D
     {
         Vector2 size = GetViewportRect().Size / _camera.Zoom;
         return new Rect2(_camera.Position - (size / 2), size);
+    }
+
+    // Long run: frame times and the engine's memory go to the host's statistics; at the time limit the game closes.
+    private void LongRun(double workMs, double delta)
+    {
+        if (_host?.LongRunFolder is null)
+        {
+            return;
+        }
+
+        // Measured here: the engine's own delta is capped, so it hides long stalls.
+        long now = Stopwatch.GetTimestamp();
+        _host.ReportFrame(workMs, _lastFrame == 0 ? delta * 1000 : Stopwatch.GetElapsedTime(_lastFrame, now).TotalMilliseconds);
+        _lastFrame = now;
+        _engineTimer -= delta;
+        if (_engineTimer <= 0)
+        {
+            _engineTimer = 1;
+            _host.ReportEngine(
+                (long)(OS.GetStaticMemoryUsage() / (1024 * 1024)),
+                (long)(Performance.GetMonitor(Performance.Monitor.RenderVideoMemUsed) / (1024 * 1024)),
+                (long)Performance.GetMonitor(Performance.Monitor.ObjectCount),
+                (long)Performance.GetMonitor(Performance.Monitor.ObjectNodeCount));
+        }
+
+        if (_host.LongRunFinished)
+        {
+            GD.Print($"long run finished: {_host.LongRunFolder}");
+            GetTree().Quit();
+        }
     }
 
     private void Benchmark(double frameMs)
