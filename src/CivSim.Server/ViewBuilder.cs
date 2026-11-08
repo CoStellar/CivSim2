@@ -56,6 +56,16 @@ public static class ViewBuilder
             });
         }
 
+        // The capital is shown only where the viewer sees the settlement itself.
+        for (int k = 0; k < civs.Count; k++)
+        {
+            int capital = snapshot.Civilizations[k].Capital;
+            if (capital >= 0 && settlements.Exists(s => s.Id == capital))
+            {
+                civs[k] = civs[k] with { Capital = capital };
+            }
+        }
+
         return new GameViewMessage(snapshot.Turn, viewer.Value, worlds, civs, Settlements: settlements, Month: snapshot.Month, LiveSeasons: snapshot.LiveSeasons);
     }
 }

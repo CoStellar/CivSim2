@@ -39,6 +39,9 @@ flowchart LR
 - **Stolica:** na start pierwszy obóz. Gdy stolica przestaje być zamieszkaną osadą cywilizacji, stolicą zostaje największa osada
   (najwięcej ludzi, przy remisie najniższy numer). Zdobyta przez wroga stolica obniża stabilność o 15 przez 5 lat; opuszczona przez
   własnych ludzi (przeprowadzka, połączenie) nie.
+- **Stolica osiada** (etap 5b, 2026-11-08): stolica, która jest jeszcze wędrującym obozem, przenosi się do największej wioski, gdy
+  tylko cywilizacja jakąś ma (kronika: „X made Y its capital”, bez kary). Osiadła stolica już się nie przenosi, nawet gdy inna wioska
+  urośnie większa. Podgląd rysuje nad stolicą złoty romb, a widok niesie jej numer (`CivilizationView.Capital`, tylko gdy widz widzi tę osadę).
 - **Koszt drogi:** najtańsza droga po lądzie od stolicy, suma kosztów ruchu wchodzonych pól (biom 1–3, wzgórza +1, góry +2),
   szukana do 60. Osada dalej albo za wodą liczy się jako 60.
 - **Administracja:** każda osada zużywa 10 punktów plus 1 za punkt kosztu drogi. Limit z ustroju: rada starszych 250, wodzostwo 200,

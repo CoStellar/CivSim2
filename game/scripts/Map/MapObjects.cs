@@ -261,6 +261,15 @@ public partial class MapObjects : Node2D
             return;
         }
 
+        _capitals.Clear();
+        foreach (CivilizationView c in _session.View.Civilizations)
+        {
+            if (c.IsAlive && c.Capital >= 0)
+            {
+                _capitals.Add(c.Capital);
+            }
+        }
+
         foreach (SettlementView s in settlements)
         {
             if (s.World != _world!.Id || Fogged(s.Col, s.Row))
@@ -269,6 +278,7 @@ public partial class MapObjects : Node2D
             }
 
             Color civ = OverlayColors.CivColor(s.Owner);
+            bool capital = s.Status == 0 && _capitals.Contains(s.Id);
             Texture2D? tex = Textured
                 ? _art.Get("objects", $"settlement_{LevelArt[Math.Clamp(s.Level, 0, LevelArt.Length - 1)]}_{StatusArt[Math.Clamp(s.Status, 0, 2)]}")
                 : null;
@@ -279,6 +289,10 @@ public partial class MapObjects : Node2D
                     if (!p.Lines)
                     {
                         p.DrawTexture(tex, at - new Vector2(24, 21), civ);
+                        if (capital)
+                        {
+                            CapitalMark(p, at + new Vector2(0, -26), 7);
+                        }
                     }
 
                     return;
@@ -295,11 +309,37 @@ public partial class MapObjects : Node2D
                 var rect = new Rect2(at - new Vector2(half, half), new Vector2(2 * half, 2 * half));
                 p.DrawRect(rect, Colors.Black);
                 p.DrawRect(rect.Grow(-Mathf.Max(1, half / 5)), fill);
+                if (capital)
+                {
+                    CapitalMark(p, at - new Vector2(0, half * 2.2f), half * 0.9f);
+                }
             });
         }
     }
 
-    // The name of each civilization on a banner above its most populous settlement, so peoples stand out at any zoom.
+    // The capital: a gold diamond with a dark outline above the settlement (GDD 7.3, stage 5b).
+    private static void CapitalMark(LayerPainter p, Vector2 at, float r)
+    {
+        Vector2[] outer = [at + new Vector2(0, -r - 2), at + new Vector2(r + 2, 0), at + new Vector2(0, r + 2), at + new Vector2(-r - 2, 0)];
+        Vector2[] inner = [at + new Vector2(0, -r), at + new Vector2(r, 0), at + new Vector2(0, r), at + new Vector2(-r, 0)];
+        p.DrawColoredPolygon(outer, new Color(0.11f, 0.09f, 0.06f));
+        p.DrawColoredPolygon(inner, new Color(1f, 0.82f, 0.25f));
+    }
+
+    // Settlements of one civilization this close (pixels, about six hexes) form one cluster around its capital.
+    private const float ClusterLinkPixels = 240;
+
+    // A banner stays where it is while its new place is this close (pixels, about three hexes): no jumping.
+    private const float BannerKeepPixels = 130;
+
+    private readonly Dictionary<int, Vector2> _bannerAt = [];
+    private readonly Dictionary<int, List<(Vector2 At, int People, int Id)>> _byOwner = [];
+    private readonly List<Vector2> _cluster = [];
+    private readonly HashSet<int> _capitals = [];
+    private bool[] _taken = [];
+
+    // The name of each civilization on a banner over the middle of the cluster of settlements around its capital (or its
+    // largest settlement before it has one). The banner moves only when that middle moves by a few hexes (stage 5b).
     private void PaintCivilizationNames(LayerPainter p)
     {
         if (_session?.View is not { } view || view.Settlements is not { } settlements)
@@ -307,7 +347,11 @@ public partial class MapObjects : Node2D
             return;
         }
 
-        var best = new Dictionary<int, (Vector2 At, int People)>();
+        foreach (List<(Vector2 At, int People, int Id)> list in _byOwner.Values)
+        {
+            list.Clear();
+        }
+
         foreach (SettlementView s in settlements)
         {
             if (s.World != _world!.Id || s.Status != 0 || Fogged(s.Col, s.Row))
@@ -321,10 +365,13 @@ public partial class MapObjects : Node2D
                 people += n;
             }
 
-            if (!best.TryGetValue(s.Owner, out var b) || people > b.People)
+            if (!_byOwner.TryGetValue(s.Owner, out List<(Vector2 At, int People, int Id)>? own))
             {
-                best[s.Owner] = (HexLayout.Center(s.Col, s.Row), people);
+                own = [];
+                _byOwner[s.Owner] = own;
             }
+
+            own.Add((HexLayout.Center(s.Col, s.Row), people, s.Id));
         }
 
         Font font = Ui.PixelTheme.Current?.DefaultFont ?? ThemeDB.FallbackFont;
@@ -332,14 +379,22 @@ public partial class MapObjects : Node2D
         size -= size % 16; // whole multiples of the pixel font's grid stay sharp
         foreach (CivilizationView c in view.Civilizations)
         {
-            if (!c.IsAlive || !best.TryGetValue(c.Id, out var at))
+            if (!c.IsAlive || !_byOwner.TryGetValue(c.Id, out List<(Vector2 At, int People, int Id)>? own) || own.Count == 0)
             {
+                _bannerAt.Remove(c.Id);
                 continue;
+            }
+
+            Vector2 target = ClusterMiddle(own, c.Capital);
+            if (!_bannerAt.TryGetValue(c.Id, out Vector2 at) || Wrapped(target - at).Length() > BannerKeepPixels)
+            {
+                at = target;
+                _bannerAt[c.Id] = at;
             }
 
             Vector2 text = font.GetStringSize(c.Name, HorizontalAlignment.Left, -1, size);
             Color color = OverlayColors.CivColor(c.Id);
-            Each(at.At, text.X + 48, pos =>
+            Each(at, text.X + 48, pos =>
             {
                 Vector2 origin = pos - new Vector2(text.X / 2, 30 + (size * 0.6f));
                 var plate = new Rect2(origin - new Vector2(size * 0.4f, text.Y * 0.8f), new Vector2(text.X + (size * 0.8f), text.Y * 1.1f));
@@ -348,6 +403,75 @@ public partial class MapObjects : Node2D
                 p.DrawString(font, origin, c.Name, HorizontalAlignment.Left, -1, size, color);
             });
         }
+    }
+
+    // The middle of the settlements linked to the capital (each within ClusterLinkPixels of another one of them).
+    private Vector2 ClusterMiddle(List<(Vector2 At, int People, int Id)> own, int capital)
+    {
+        int start = 0;
+        for (int k = 0; k < own.Count; k++)
+        {
+            if (own[k].Id == capital)
+            {
+                start = k;
+                break;
+            }
+
+            if (capital < 0 && own[k].People > own[start].People)
+            {
+                start = k;
+            }
+        }
+
+        // Positions relative to the capital, unwrapped east–west, so a cluster across the map's edge stays whole.
+        Vector2 origin = own[start].At;
+        _cluster.Clear();
+        _cluster.Add(Vector2.Zero);
+        if (_taken.Length < own.Count)
+        {
+            _taken = new bool[own.Count * 2];
+        }
+
+        bool[] taken = _taken;
+        Array.Clear(taken, 0, own.Count);
+        taken[start] = true;
+        for (int head = 0; head < _cluster.Count; head++)
+        {
+            for (int k = 0; k < own.Count; k++)
+            {
+                if (taken[k])
+                {
+                    continue;
+                }
+
+                Vector2 rel = Wrapped(own[k].At - origin);
+                if (_cluster[head].DistanceTo(rel) <= ClusterLinkPixels)
+                {
+                    taken[k] = true;
+                    _cluster.Add(rel);
+                }
+            }
+        }
+
+        Vector2 sum = Vector2.Zero;
+        foreach (Vector2 v in _cluster)
+        {
+            sum += v;
+        }
+
+        Vector2 middle = origin + (sum / _cluster.Count);
+        return _period.X > 0 ? new Vector2(Mathf.PosMod(middle.X, _period.X), middle.Y) : middle;
+    }
+
+    // The shortest east–west form of a difference between two points (the map repeats every period).
+    private Vector2 Wrapped(Vector2 d)
+    {
+        if (_period.X > 0)
+        {
+            d.X = Mathf.PosMod(d.X + (_period.X / 2), _period.X) - (_period.X / 2);
+        }
+
+        return d;
     }
 
     private void PaintUnits(LayerPainter p)

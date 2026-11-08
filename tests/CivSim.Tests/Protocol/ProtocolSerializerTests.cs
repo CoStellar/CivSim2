@@ -43,6 +43,7 @@ public class ProtocolSerializerTests
             2, 9, "Rome", true, "Stone Age", ["Fire"], "Pottery", 40, 120, ["Aggression"], [700], ["Expansion"], [1200], ["Gatherers"], [80],
             ["Tribal Camp"], [2], 5000, 6000, ["Grain"], [12000], [new RelationDetail(1, 2, 2500, -400, RelationView.Trade, ["ActiveTrade 100%"])])];
         yield return [new GameViewMessage(6, -1, [], [new CivilizationView(1, "Rome", true) { Era = "Neolithic", People = 340, Settlements = 3, Technologies = 5 }])];
+        yield return [new GameViewMessage(7, -1, [], [new CivilizationView(1, "Rome", true) { Capital = 4 }])];
         yield return [new MapChunkMessage(0, 2, 5, 32, 0, 2, 1, [2, 0], [120, 0], [-3, 0], [50, 0], [12, 0], [1, 0], [0, 0], [70, 0], [3, 0], [500, 0], [0, 0], [-1, -1], [1, 0, 2, 0, 0, 0])];
     }
 

@@ -33,7 +33,7 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
         var civs = ImmutableArray.CreateBuilder<CivilizationSnapshot>(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
-            civs.Add(new CivilizationSnapshot(c.Id, c.Name, c.Controller, c.IsAlive) { DiedOutMonth = c.DiedOutMonth });
+            civs.Add(new CivilizationSnapshot(c.Id, c.Name, c.Controller, c.IsAlive) { DiedOutMonth = c.DiedOutMonth, Capital = c.Capital });
         }
 
         var settlements = ImmutableArray.CreateBuilder<SettlementSnapshot>(state.Settlements.Count);
@@ -82,6 +82,9 @@ public sealed record CivilizationSnapshot(CivId Id, string Name, PlayerId Contro
 {
     /// <summary>Game month in which the civilization died out (when not alive).</summary>
     public long DiedOutMonth { get; init; }
+
+    /// <summary>Settlement id of the capital, or -1 when none (GDD 7.3).</summary>
+    public int Capital { get; init; } = -1;
 }
 
 /// <summary>Immutable copy of a settlement. <paramref name="Stock"/> holds hundredths per good id.</summary>

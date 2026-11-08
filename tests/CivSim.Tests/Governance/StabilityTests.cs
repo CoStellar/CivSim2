@@ -55,6 +55,30 @@ public class StabilityTests
     }
 
     [Fact]
+    public void TheCapitalMovesToTheLargestVillageWhenThePeopleSettle()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(23), Content, out _);
+        CivilizationState civ = state.Civilizations[0];
+        SettlementState camp = state.Settlements.First(s => s.Owner == civ.Id);
+        SettlementState small = Found(state, civ, 3, 200, 50);
+        SettlementState large = Found(state, civ, -3, 400, 50);
+        Assert.Null(Stability.KeepCapital(Content, state, civ)); // only camps: the capital stays with the leader's camp
+
+        small.Level = Core.Economy.SettleCommand.VillageLevel(Content, small.Level);
+        large.Level = Core.Economy.SettleCommand.VillageLevel(Content, large.Level);
+        string? line = Stability.KeepCapital(Content, state, civ);
+        Assert.Equal(large.Id.Value, civ.Capital);
+        Assert.Equal($"{Governments.Title(Content, civ)} made {large.Name} its capital.", line);
+        Assert.Equal(0, civ.CapitalLostUntilMonth); // no loss of stability
+
+        // A settled capital stays, even when another village grows larger.
+        small.Population[Stratum("producers")] = 900;
+        Assert.Null(Stability.KeepCapital(Content, state, civ));
+        Assert.Equal(large.Id.Value, civ.Capital);
+        Assert.NotEqual(camp.Id.Value, civ.Capital);
+    }
+
+    [Fact]
     public void StabilityWeighsTheMoodByTheInfluenceOfTheStrata()
     {
         GameState state = GameState.CreateNew(GameSettings.Test(22), Content, out _);
