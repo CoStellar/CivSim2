@@ -319,6 +319,7 @@ Ludzie przechodzą między warstwami powoli (kilka procent na turę), w stronę 
   Dane: do ok. 1800 roku umierała mniej więcej połowa dzieci (zbieracze-łowcy średnio 48,8%, Volk i Atkinson 2013), świat w 1950: ok. 25%, w 2020: 4,3%; średni przyrost ludności od 10 000 lat p.n.e. do 1700 roku ok. 0,4‰ na rok (Our World in Data). Ery 3–10 wejdą z ich etapami.
 - **Pojemność mieszkań** osady ogranicza wzrost. Ponad limit rośnie przeludnienie: więcej chorób i niższe zadowolenie.
 - **Zdrowie osady** zależy od gęstości, wody pitnej, sanitacji (akwedukty, kanalizacja) i medycyny. Niskie zdrowie zwiększa szansę na epidemię.
+- **Głód:** z ludzi, którym zabrakło jedzenia w turze, umiera 80% w osiadłej osadzie i 50% w koczowniczym obozie (łowcy się rozpraszają, wędrują dalej i mają mniej dzieci; decyzja Patryka z 2026-11-08).
 - **Migracja:** ludzie uciekają z osad głodujących, ogarniętych wojną lub niezadowolonych do lepszych, także do innych cywilizacji, jeśli granice są otwarte.
 - **Lojalność podbitych:** podbita ludność przez kilka pokoleń jest mniej lojalna: pracuje mniej wydajnie i łatwiej się buntuje.
 
@@ -349,6 +350,7 @@ Cywilizacja nie jest przywiązana do miejsca. Startuje jako koczownicze plemię,
 - **Zasięg** rośnie z siłą cywilizacji (liczba wojowników i armii), z narzędziami i bronią (technologie) oraz ze środkami ruchu (konie, łodzie, drogi).
 - **Każde pole kosztuje** tyle, ile wynosi koszt dotarcia po terenie (rozdział 3). Na otwartym stepie strefa sięga daleko, w górach, dżungli i na bagnach jest wąska.
 - **Siła wpływu słabnie z odległością.** Na polu, gdzie strefy się nakładają, przeważa silniejszy wpływ. Przy podobnych wartościach pole jest sporne i wywołuje spór graniczny (8.5).
+- **Własna ziemia** (decyzja Patryka z 2026-11-08, po długim biegu): pole osady i pola, do których dociera kosztem najwyżej 2, należą do niej przed każdą obcą strefą, która nie jest tam własną ziemią. Sąsiedzi nie mogą bez wojny zabrać plemieniu ziemi, na której żyje. Wcześniej rolnicy z silną strefą zabierali małym bandom wszystkie pola i te wymierały z głodu (8 z 12 cywilizacji w 4-godzinnym biegu).
 - **Strefa kurczy się po klęskach:** przegrana bitwa, głód czy epidemia od razu oddają pola sąsiadom.
 
 **Migracja** to zwykłe działanie oceniane przez AI (8.3). AI porównuje wartość obecnego terenu (żywność, woda, surowce, zagrożenie, wyczerpanie zasobów) z najlepszym znanym celem i odejmuje koszt drogi: zapasy na wędrówkę, ryzyko i porzucone budynki. Ekspansywność przywódcy zachęca do przeprowadzki, ostrożność ją hamuje.

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.IO;
+using CivSim.Core.Commands;
 using CivSim.Core.Content;
 using CivSim.Core.Economy;
 using CivSim.Core.Hashing;
@@ -152,6 +153,29 @@ public class PopulationTests
         Assert.Equal(0, camp.TotalPopulation());
         Assert.False(civ.IsAlive);
         Assert.Contains(runner.LastChronicle, l => l.Contains("died out", System.StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void HungryHuntersScatterRatherThanStarveLikeVillagers()
+    {
+        static int Survivors(bool village)
+        {
+            TurnRunner runner = NewGame(4);
+            SettlementState s = runner.State.Settlements[0];
+            if (village)
+            {
+                s.Level = SettleCommand.VillageLevel(Content, s.Level);
+            }
+
+            runner.State.Effects.Add(Content.Effect("damage"), s.World, s.Id.Value, -100, EffectInstance.Permanent);
+            s.Stock.Clear();
+            int before = s.TotalPopulation();
+            runner.RunTurn();
+            return s.TotalPopulation() * 100 / before;
+        }
+
+        Assert.True(Content.Population.CampStarvationDeathPercent < Content.Population.StarvationDeathPercent);
+        Assert.True(Survivors(village: false) > Survivors(village: true));
     }
 
     [Fact]

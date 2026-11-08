@@ -219,7 +219,7 @@ Gotowe, gdy: Patryk uruchamia podgląd, ustawia świat i symulację w menu, star
 Przed nowymi erami. Analiza biegu: tura 93 ms (cel 50), FPS ok. 52, 8 z 12 cywilizacji wymiera w 2,5 minuty, 4 neolityczne „imperia” po ok. 140 osad, prawie zero wojen, ok. 67 zdarzeń na turę.
 
 - [x] **Zdarzenia:** epidemie tylko w cywilizacjach od 10 000 ludzi (i osadach od 300), nie przechodzą do mniejszych; susza, pożar i powódź 5× rzadziej
-- [ ] **Plemiona łowców:** większe i trwalsze (150–500 osób zależnie od dzikiej żywności), żeby nie ginęły od pierwszego pecha (zmiana GDD)
+- [x] **Plemiona łowców trwalsze:** „własna ziemia” (sąsiedzi nie zabierają bandzie pól, na których żyje) i łagodniejszy głód w obozach; w 8 grach 0 wymarłych cywilizacji zamiast 2,8
 - [ ] **Stolice i stabilne nazwy:** stała stolica (zmienia się przy utracie), nazwa cywilizacji nad jej głównym skupiskiem osad, bez skakania
 - [ ] **Hamulec neolitu:** zasięg władzy od stolicy, dalekie osady odłączają się jako nowe plemiona; brak imperiów przed epoką brązu (zmiana GDD)
 - [ ] **Spokojniejszy ekran:** przywódcy jednym komunikatem na turę, drobne zdarzenia w podsumowaniach na cywilizację

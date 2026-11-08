@@ -68,6 +68,40 @@ public class MigrationTests
     }
 
     [Fact]
+    public void ABandKeepsItsHomeGroundNextToAStrongerNeighbour()
+    {
+        GameState state = NewGame(2).State;
+        WorldState world = state.Worlds[0];
+        SettlementState band = state.Settlements[0];
+        HexGlobe geo = world.Geometry;
+
+        // A crowd of warriors of another people camps four cells away: its zone is far stronger everywhere around.
+        HexCoord near = Enumerable.Range(0, geo.CellCount).Select(geo.FromIndex)
+            .First(c => geo.Distance(c, band.Cell) == 4 && !Content.Biomes[world.Map.Biome[geo.Index(c)]].IsWater);
+        CivId other = state.Civilizations.First(c => c.Id != band.Owner).Id;
+        SettlementState crowd = state.FoundSettlement(other, world.Id, near, "Crowd", Content.NewTribeLevel, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
+        crowd.Population[2] = 10_000;
+        new Influence(Content).Recompute(state);
+
+        // The band's own cell and its cheap neighbours stay its own (home ground); the rest goes to the crowd.
+        Assert.Equal(band.Id.Value + 1, world.Map.Claim[geo.Index(band.Cell)]);
+        var ring = new HexCoord[6];
+        geo.Ring(band.Cell, 1, ring);
+        var influence = new Influence(Content);
+        foreach (HexCoord c in ring)
+        {
+            int i = geo.Index(c);
+            int cost = influence.EnterCost(world.Map, i);
+            if (cost >= 0 && cost <= Content.Population.InfluenceHomeCost)
+            {
+                Assert.Equal(band.Id.Value + 1, world.Map.Claim[i]);
+            }
+        }
+
+        Assert.Contains(Enumerable.Range(0, geo.CellCount), i => world.Map.Claim[i] == crowd.Id.Value + 1);
+    }
+
+    [Fact]
     public void WarriorsWidenTheZone()
     {
         var influence = new Influence(Content);
