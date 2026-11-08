@@ -224,7 +224,7 @@ Przed nowymi erami. Analiza biegu: tura 93 ms (cel 50), FPS ok. 52, 8 z 12 cywil
 - [x] **Hamulec neolitu:** zasięg władzy od stolicy, dalekie osady odłączają się jako nowe plemiona; brak imperiów przed epoką brązu (zmiana GDD)
 - [x] **Spokojniejszy ekran:** przywódcy jednym komunikatem na turę, drobne zdarzenia w podsumowaniach na cywilizację
 - [x] **Wydajność:** płynniejszy obraz (rzadsze i mniejsze przerysowania, mniej sprzątania pamięci), tura < 50 ms (seed 42, 8000 tur: śr. 12 ms, było 41 ms; FPS do sprawdzenia u Patryka)
-- [ ] **Długi bieg:** koniec, gdy świat stoi w miejscu; test na kontynentach (wojny, inwazje, wojny z zemsty)
+- [x] **Długi bieg:** koniec, gdy świat stoi w miejscu (10 000 lat bez zmian); test na kontynentach (seed 7): wojna z zemsty tylko na sąsiadów w zasięgu, o połowę mniej wojen bez walki
 
 ## Etapy 6–12 — Ery 3–9
 

@@ -97,6 +97,48 @@ public class LongRunTests
     }
 
     [Fact]
+    public void ALongRunEndsWhenTheWorldStandsStill()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "civsim_longrun_still_" + Environment.ProcessId + "_" + Stopwatch.GetTimestamp());
+        try
+        {
+            LocalGameOptions options = LocalGameOptions.ForSize("test", 5) with
+            {
+                LongRunFolder = folder,
+                LongRunSeconds = 3600,
+                LongRunSampleSeconds = 1,
+                LongRunStillYears = 1, // the first quiet step ends it
+            };
+            using (LocalServerHost host = LocalServerHost.Start(options))
+            {
+                IConnection viewer = host.Connect();
+                viewer.Send(new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer));
+                viewer.Send(new SetSpeedMessage(SimulationSpeed.Max));
+                var clock = Stopwatch.StartNew();
+                while (!host.LongRunFinished)
+                {
+                    Assert.True(clock.Elapsed < TimeSpan.FromSeconds(30), "the long run did not end");
+                    while (viewer.TryReceive(out _))
+                    {
+                    }
+
+                    Thread.Sleep(10);
+                }
+            }
+
+            string summary = File.ReadAllText(Path.Combine(folder, "summary.txt"));
+            Assert.Contains("ended:            the world stood still", summary, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void ClosingTheGameEarlyStillWritesTheSummary()
     {
         string folder = Path.Combine(Path.GetTempPath(), "civsim_longrun_closed_" + Environment.ProcessId + "_" + Stopwatch.GetTimestamp());

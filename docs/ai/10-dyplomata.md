@@ -62,7 +62,7 @@ Czynniki każdego kroku:
 | **umowa handlowa** | opinia × bliskość (bramy ≤ 16 pól, inaczej 0) × zysk z handlu | dobrobyt | handlowość |
 | **pakt o nieagresji** | opinia × zaufanie × bliskość (≤ 16 pól) × zagrożenie od nich | bezpieczeństwo | ostrożność |
 | **sojusz obronny** | opinia × zaufanie do sojuszu × największe zagrożenie od **innej** cywilizacji (wspólny wróg = 1500, patrz niżej) | bezpieczeństwo | **lojalność** |
-| **wojna o odwet** | wrogość × powód (0 bez powodu) × przewaga × (gdy łamie umowę: 1000 − lojalność, min. 100) × (w niepokojach 0,5) | podbój | agresja |
+| **wojna o odwet** | wrogość × zasięg (0, gdy najbliższe osady są dalej niż `reachCells` = 16 pól; od etapu 5b) × powód (0 bez powodu) × przewaga × (gdy łamie umowę: 1000 − lojalność, min. 100) × (w niepokojach 0,5) | podbój | agresja |
 | **wojna o łupy** (po 4g) | chciwość × bliskość (≤ 16 pól) × potrzeba łupów × łupy × przewaga × (umowa z nimi: 0) × (w niepokojach 0,5) | podbój | agresja |
 | **wojna o ziemię** (po 4g) | chciwość × szansa podboju najlepszej wioski × waga ekspansji stratega (czynnik *expansion*) × (umowa z nimi: 0) × (w niepokojach 0,5) | podbój | agresja |
 | **pokój** | zmęczenie wojną × wynik wojny (od 4e PR 6) × opinia o pokoju × warunki pokoju | bezpieczeństwo | ostrożność |

@@ -84,6 +84,12 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     /// <summary>Seconds between rows of the long run's stats.csv.</summary>
     public int LongRunSampleSeconds { get; init; } = 10;
 
+    /// <summary>
+    /// A long run also ends when nothing changed in the world for this many game years: no war, peace, treaty, secession,
+    /// coup, people dying out or new era (stage 5b). 0 = never.
+    /// </summary>
+    public long LongRunStillYears { get; init; } = 10_000;
+
     /// <summary>Map size words in the order of the start menu.</summary>
     public static IReadOnlyList<string> SizeNames { get; } = ["test", "standard", "large", "huge"];
 

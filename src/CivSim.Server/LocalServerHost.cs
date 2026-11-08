@@ -92,11 +92,12 @@ public sealed class LocalServerHost : IDisposable
                 options.LongRunFolder,
                 TimeSpan.FromSeconds(Math.Max(0, options.LongRunSeconds)),
                 TimeSpan.FromSeconds(Math.Max(1, options.LongRunSampleSeconds)),
-                content.Stability.UnrestBelow);
+                content.Stability.UnrestBelow,
+                Math.Max(0, options.LongRunStillYears));
             host._longRun.Log(string.Create(
                 CultureInfo.InvariantCulture,
                 $"start: seed {options.Seed}, map {options.Width}x{options.Height}, {options.Civilizations} civilizations, planet {options.Planet}, world {options.WorldType}, " +
-                $"limit {(options.LongRunSeconds > 0 ? options.LongRunSeconds + " s" : "none")}, row every {Math.Max(1, options.LongRunSampleSeconds)} s, " +
+                $"limit {(options.LongRunSeconds > 0 ? options.LongRunSeconds + " s" : "none")}, ends after {(options.LongRunStillYears > 0 ? options.LongRunStillYears + " still years" : "no still years")}, row every {Math.Max(1, options.LongRunSampleSeconds)} s, " +
                 $"{Environment.ProcessorCount} processor threads, {Environment.OSVersion}, .NET {Environment.Version}"));
         }
 

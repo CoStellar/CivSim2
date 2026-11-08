@@ -166,6 +166,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
                 break;
             case TreatyKind.War:
                 e.Apply(FactorId.Opinion, rules.Hostility, sympathy);
+                e.Apply(FactorId.Distance, near <= rules.ReachCells ? Factor.Neutral : 0, near); // stage 5b: no war on those out of reach
                 bool cause = Treaties.HasGrievance(state, civ.Id, other);
                 e.Apply(FactorId.Cause, cause ? Factor.Neutral : 0, cause ? 1 : 0);
                 e.Apply(FactorId.Strength, rules.Advantage, Percent(_own[x], EnemyStrength(state, civ, x, other)));
