@@ -88,9 +88,54 @@ public class EventTests
         world.Map.River.Set(world.Geometry.EdgeIndex(world.Geometry.Edge(camp.Cell, HexDirection.N)), 1);
         Assert.True(system.YearChanceMillionths(state, world, camp, Event("flood")) > 0);
 
+        // Epidemics need a large civilization (GDD 10.2): give the owner a big village far away.
+        Camp(state, camp.Owner, land.First(c => world.Geometry.Distance(camp.Cell, c) > 10), 20_000);
+        Assert.Equal(0, system.YearChanceMillionths(state, world, camp, Event("epidemic"))); // under 300 people
+        camp.Population[0] = 400;
         long small = system.YearChanceMillionths(state, world, camp, Event("epidemic"));
         camp.Population[0] = 1500;
+        Assert.True(small > 0);
         Assert.True(system.YearChanceMillionths(state, world, camp, Event("epidemic")) > small); // crowding
+    }
+
+    [Fact]
+    public void EpidemicsSpareSmallCivilizations()
+    {
+        (GameState state, WorldState world, HexCoord[] land) = Empty(77);
+        var system = new EventSystem(Content);
+        SettlementState village = Camp(state, state.Civilizations[0].Id, land[0], 5_000);
+        Assert.Equal(0, system.YearChanceMillionths(state, world, village, Event("epidemic")));
+
+        // The same village in a civilization of more than 10 000 people can fall ill.
+        Camp(state, village.Owner, land.First(c => world.Geometry.Distance(village.Cell, c) > 10), 6_000);
+        Assert.True(system.YearChanceMillionths(state, world, village, Event("epidemic")) > 0);
+    }
+
+    [Fact]
+    public void AnEpidemicDoesNotSpreadIntoASmallCivilization()
+    {
+        (GameState state, WorldState world, HexCoord[] land) = Empty(78);
+        HexCoord a = land[0];
+        HexCoord b = land.First(c => world.Geometry.Distance(a, c) is > 0 and <= 4);
+        SettlementState big = Camp(state, state.Civilizations[0].Id, a, 200);
+        SettlementState linked = Camp(state, state.Civilizations[0].Id, b, 100);
+        EventDefinition epidemic = Event("epidemic") with
+        {
+            TimesPer10000Years = 10_000,
+            Conditions =
+            [
+                new EventCondition(EventConditionKind.PeopleAtLeast, 101, [], 100, true),
+                new EventCondition(EventConditionKind.CivilizationPeopleAtLeast, 1_000, [], 100, true),
+            ],
+            SpreadPercent = 100,
+        };
+        Run(state, new EventSystem(Content, [epidemic]));
+        int depopulation = Content.Effect("depopulation").Id;
+        Assert.DoesNotContain(state.Effects.All, e => e.DefinitionId == depopulation); // 300 people: too small
+
+        big.Population[0] = 2_000;
+        Run(state, new EventSystem(Content, [epidemic]));
+        Assert.Contains(state.Effects.All, e => e.DefinitionId == depopulation && e.TargetId == linked.Id.Value);
     }
 
     [Fact]

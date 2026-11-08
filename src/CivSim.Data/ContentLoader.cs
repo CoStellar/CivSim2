@@ -1433,7 +1433,7 @@ public static class ContentLoader
                 {
                     EventConditionKind.HumidityBelow or EventConditionKind.HumidityAbove => cr.Int("value", 0, 100),
                     EventConditionKind.BiomeNear => cr.Int("value", 0, 10),
-                    EventConditionKind.PeopleAtLeast => cr.Int("value", 1, 1_000_000_000),
+                    EventConditionKind.PeopleAtLeast or EventConditionKind.CivilizationPeopleAtLeast => cr.Int("value", 1, 1_000_000_000),
                     _ => 0,
                 };
                 var biomeIds = new List<int>();
