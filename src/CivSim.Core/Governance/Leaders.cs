@@ -40,6 +40,24 @@ public static class Leaders
         }
     }
 
+    /// <summary>
+    /// A new leader comes to power outside the usual succession (a coup or a new people after a secession; stage 4f PR 4):
+    /// the age range of the government's successors, no crisis.
+    /// </summary>
+    public static void Seize(GameContent content, GameState state, CivilizationState civ, DeterministicRandom random, long month)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(civ);
+        ArgumentNullException.ThrowIfNull(random);
+        if (content.Leaders.Traits.Count == 0)
+        {
+            return;
+        }
+
+        Crown(content, state, civ, random, month, Governments.Of(content, civ)?.SuccessorAge ?? content.Leaders.StartAge, council: false);
+    }
+
     /// <summary>The leader as a short text, e.g. "Chief Tarok, 54, conqueror, builder"; empty without a leader.</summary>
     public static string Describe(GameContent content, GameState state, CivilizationState civ)
     {
@@ -141,8 +159,8 @@ public static class Leaders
         return sb.Append(')').ToString();
     }
 
-    // "Chief Tarok".
-    private static string Styled(GameContent content, CivilizationState civ) =>
+    /// <summary>The leader with the government's title, e.g. "Chief Tarok".</summary>
+    public static string Styled(GameContent content, CivilizationState civ) =>
         Governments.Of(content, civ) is { } g ? $"{g.LeaderTitle} {civ.LeaderName}" : civ.LeaderName;
 
     // A new leader: a name, an age in the range and traits. A council weighs several candidates and takes the one whose

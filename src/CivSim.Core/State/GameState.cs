@@ -254,6 +254,18 @@ public sealed class GameState
         _civilizations.Add(civ);
     }
 
+    /// <summary>
+    /// Adds a civilization born during the game (a secession, stage 4f PR 4) with the next free id; ids stay dense and in
+    /// order, so it is iterated last.
+    /// </summary>
+    public CivilizationState AddCivilization(string name)
+    {
+        int id = _civilizations.Count == 0 ? 0 : _civilizations[^1].Id.Value + 1;
+        var civ = new CivilizationState(new CivId(id), name, PlayerId.Ai);
+        _civilizations.Add(civ);
+        return civ;
+    }
+
     /// <summary>Finds a civilization by id, or null.</summary>
     public CivilizationState? FindCivilization(CivId id)
     {

@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 3
-(gałąź `feat/state-stability`, stabilność); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z etapu 4f PR 4
+(gałąź `feat/state-revolts`, bunty i secesja); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -16,9 +16,26 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Bunty i secesja (etap 4f, PR 4)
+
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-revolts`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 3.
+
+| Seed | Lata gry | Secesje | Przewroty | Średnia stabilność | Lat w niepokojach | Wojny | Z udziałem nowego ludu |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | 21 700 (21 000) | 1 | 4 | 50 (47) | 2% (8%) | 19 (16) | 7 |
+| 23 | 25 750 (24 275) | 1 | 3 | 53 (49) | 4% (12%) | 9 (15) | 3 |
+| 42 | 14 525 (18 951) | 1 | 2 | 51 (46) | 3% (12%) | 40 (31) | 8 |
+
+- **Secesje są duże:** 11–27 osad naraz (np. „Qusspeagu and 23 other settlements broke away from the Chiefdom of Hardtusu and founded
+  the Council of Hardtu”). Dalekie osady przeciążonego wodzostwa mają najniższą lojalność.
+- **Przewroty zmieniają ustrój** (wodzostwo ↔ rada starszych), a rada ma premię +10, więc po buncie stabilność wraca. Dlatego niepokoi
+  się 2–4% lat cywilizacji zamiast 8–12%.
+- **Nowy lud bywa trwalszy niż rodzic:** w seedzie 7 rodzic (Hardtusu) wymarł w turze 383, a lud, który się od niego odłączył, żyje.
+  Nowe ludy biorą udział w 3–8 wojnach na grę: rodzic wypędza ich obozy ze swojej strefy (G2), co daje powód do odwetu.
+
 ## Stabilność (etap 4f, PR 3)
 
-3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-stability`. Wykres decyzji wyżej jest z tych gier. W nawiasach PR 2.
+3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/state-stability`. W nawiasach PR 2.
 
 ![Stabilność w 3 grach](img/stabilnosc_3_seedy.png)
 

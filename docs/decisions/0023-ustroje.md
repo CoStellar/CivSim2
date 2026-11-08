@@ -55,6 +55,18 @@ doradców), impulsywność AI, sposób sukcesji, zdolność administracyjną i s
 - Limity administracji dobrane tak, żeby plemię z kilkunastoma obozami było lekko przeciążone, a z kilkudziesięcioma dostawało pełną
   karę 25: imperia epoki kamienia żyją blisko progu niepokojów, ale nie spadają poniżej niego same z siebie.
 
+## Uzupełnienie: bunty i secesja (PR 4 etapu 4f)
+
+- Nowa cywilizacja w trakcie gry dostaje kolejny numer (`GameState.AddCivilization`); numery zostają gęste i rosnące, więc iteracja
+  po cywilizacjach nadal jest w stałej kolejności. Systemy, które trzymają tablice na cywilizację, dopasowują je co turę (sprawdzone);
+  statystyki Headless mają kolumny tylko dla cywilizacji z pierwszego dnia.
+- Język nowej cywilizacji to lista mutacji (`LanguageMutations`) nad ziarnem języka przodka, a nie nowe ziarno: tylko tak nazwy
+  zostają spokrewnione i da się je odtworzyć po wczytaniu zapisu.
+- Bunt losuje z generatora pochodnego strumienia `Leaders` (inne przesunięcie numeru), zamiast z nowego strumienia: liczba strumieni
+  w zapisie się nie zmienia, a efekt (niezależne, odtwarzalne losowanie) jest ten sam.
+- Odłączają się tylko osady, które nie biorą udziału w kampanii (ani jako źródło, ani jako cel), żeby wojna nie zmieniała stron
+  w połowie marszu.
+
 ## Rozważane alternatywy
 
 - **Ustroje w kodzie** (`enum` z wartościami): szybciej, ale łamie zasadę „zawartość w danych” i blokuje ustroje kolejnych er.

@@ -165,7 +165,8 @@ public sealed record CivilizationDetailsMessage(
     [property: Key(26)] string StabilityParts = "",
     [property: Key(27)] string Capital = "",
     [property: Key(28)] int AdminUsed = 0,
-    [property: Key(29)] int AdminCapacity = 0) : IProtocolMessage;
+    [property: Key(29)] int AdminCapacity = 0,
+    [property: Key(30)] string Origin = "") : IProtocolMessage;
 
 /// <summary>
 /// What the followed civilization thinks of another: contact, sympathy and trust (hundredths, −10 000 … +10 000),

@@ -202,6 +202,14 @@ public static class GameStateHash
             h.Add(c.AdminUsed);
             h.Add(c.AnarchyUntilMonth);
             h.Add(c.CapitalLostUntilMonth);
+            h.Add(c.ParentCiv);
+            h.Add(c.FoundedMonth);
+            h.Add(c.RevoltCalmUntilMonth);
+            h.Add(c.LanguageMutations.Length);
+            foreach (ulong m in c.LanguageMutations)
+            {
+                h.Add(m);
+            }
             h.Add(c.Relations.Count);
             foreach (Diplomacy.Relation r in c.Relations)
             {

@@ -933,6 +933,13 @@ public static class ContentLoader
             OverloadPenaltyPer100Percent = r.Int("overloadPenaltyPer100Percent", 0, 1000),
             OverloadMaxPenalty = r.Int("overloadMaxPenalty", 0, 100),
             LoyaltyPer10RoadCost = r.Int("loyaltyPer10RoadCost", 0, 1000),
+            RevoltBelow = r.Int("revoltBelow", 0, 100),
+            RevoltPerMillePerYear = r.Int("revoltPerMillePerYear", 0, 1000),
+            RevoltCalmYears = r.Int("revoltCalmYears", 0, 1000),
+            SecessionLoyaltyBelow = r.Int("secessionLoyaltyBelow", 0, 100),
+            SecessionMinPeople = r.Int("secessionMinPeople", 0, 1_000_000),
+            MaxCivilizations = r.Int("maxCivilizations", 1, 64),
+            SecessionCharacterShift = r.Int("secessionCharacterShift", 0, 1000),
         };
     }
 

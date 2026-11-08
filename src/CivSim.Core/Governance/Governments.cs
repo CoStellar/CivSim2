@@ -53,15 +53,21 @@ public static class Governments
     }
 
     /// <summary>The government open in <paramref name="era"/> that the character of <paramref name="civ"/> leans to most (0 when none).</summary>
-    public static int Leaning(GameContent content, CivilizationState civ, int era)
+    public static int Leaning(GameContent content, CivilizationState civ, int era) => Leaning(content, civ, era, -1);
+
+    /// <summary>
+    /// The government open in <paramref name="era"/>, other than <paramref name="except"/>, that the character of
+    /// <paramref name="civ"/> leans to most; <paramref name="except"/> itself when no other is open (0 when there are none).
+    /// </summary>
+    public static int Leaning(GameContent content, CivilizationState civ, int era, int except)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(civ);
-        int best = 0;
+        int best = except >= 0 ? except : 0;
         long bestScore = long.MinValue;
         foreach (GovernmentDefinition g in content.Governments)
         {
-            if (g.FromEra > era)
+            if (g.FromEra > era || g.Id == except)
             {
                 continue;
             }
@@ -159,6 +165,20 @@ public static class Governments
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// Brings in <paramref name="government"/> at once (a coup, stage 4f PR 4), with the anarchy that follows any change.
+    /// Returns the chronicle line.
+    /// </summary>
+    public static string EnactNow(GameContent content, GameState state, CivilizationState civ, int government)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(civ);
+        civ.PendingGovernment = CivilizationState.NoGovernment;
+        civ.PendingGovernmentMonth = 0;
+        return Enact(content, state, civ, government);
     }
 
     // The new government takes effect; anarchy follows for some years (GDD 7.2, stage 4f PR 3).

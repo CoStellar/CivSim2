@@ -151,6 +151,11 @@ public partial class CivilizationPanel : VBoxContainer
         string color = OverlayColors.CivColor(d.CivId).ToHtml(false);
         sb.Append(inv, $"[b][color=#{color}]{(d.Title.Length > 0 ? d.Title : d.Name)}[/color][/b]{(d.IsAlive ? string.Empty : "  (died out)")}\n");
         sb.Append(inv, $"Era: {d.Era}\n");
+        if (d.Origin.Length > 0)
+        {
+            sb.Append(inv, $"{d.Origin}\n");
+        }
+
         if (d.Government.Length > 0)
         {
             sb.Append(inv, $"Government: {d.Government}\n");

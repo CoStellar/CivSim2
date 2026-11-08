@@ -62,7 +62,8 @@ Czynniki każdego kroku:
 | **pokój** | zmęczenie wojną × wynik wojny (od 4e PR 6) × opinia o pokoju × warunki pokoju | bezpieczeństwo | ostrożność |
 
 **Powód wojny** (GDD 9.3): trwający spór graniczny z nimi (mieszkają w naszej osadzie) albo **jakiekolwiek** pamiętane wspomnienie
-ich napaści albo agresji (od 4e: wypowiedzianej nam wojny o ziemię lub łupy; `Treaties.HasGrievance`). Bez powodu wojna ma ocenę 0.
+ich napaści albo agresji (od 4e: wypowiedzianej nam wojny o ziemię lub łupy; `Treaties.HasGrievance`), a od 4f PR 4 także secesji
+(odłączył się od nas). Bez powodu wojna ma ocenę 0. Wojna z ludem, który się odłączył, nie zaczyna się sama: wybiera ją dyplomata rodzica.
 
 **Cel wojny** (od 4e, GDD 9.3, ADR 0021): **ziemia**, gdy mieszkają w osadzie, do której mamy roszczenie (`Treaties.ClaimedSettlement`; cel to ta
 osada), w innym razie **odwet**. Wojny o łupy dyplomata sam nie wypowiada (to decyzja dowódcy w PR 4).

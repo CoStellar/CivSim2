@@ -207,7 +207,19 @@ public sealed class ObserverViewBuilder(GameContent content)
             StabilityParts(state, c),
             c.Capital >= 0 ? state.FindSettlement(new SettlementId(c.Capital))?.Name ?? string.Empty : string.Empty,
             c.AdminUsed,
-            Core.Governance.Stability.Capacity(_content, c) == int.MaxValue ? 0 : Core.Governance.Stability.Capacity(_content, c));
+            Core.Governance.Stability.Capacity(_content, c) == int.MaxValue ? 0 : Core.Governance.Stability.Capacity(_content, c),
+            Origin(state, c));
+    }
+
+    // "Broke away from the Kingdom of Karrut in year 4200" for a people born of a secession, else empty.
+    private string Origin(GameState state, CivilizationState c)
+    {
+        if (c.ParentCiv < 0 || state.FindCivilization(new CivId(c.ParentCiv)) is not { } parent)
+        {
+            return string.Empty;
+        }
+
+        return string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Broke away from the {Core.Governance.Governments.Title(_content, parent)} in year {c.FoundedMonth / 12}");
     }
 
     // "mood 62, government +10, administration -8, crisis -15": what the stability is made of now.
