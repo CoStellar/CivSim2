@@ -17,6 +17,9 @@ public sealed class ClientSession
 
     private readonly IConnection _connection;
     private readonly List<ChronicleEntry> _chronicle = [];
+
+    /// <summary>Chronicle lines kept (the newest; constant memory however long the game runs).</summary>
+    public const int ChronicleKept = 2000;
     private readonly Queue<double> _turnMs = new();
     private long _lastTurn;
     private long _sequence;
@@ -166,6 +169,11 @@ public sealed class ClientSession
                 if (v.Chronicle is { Count: > 0 } lines)
                 {
                     _chronicle.AddRange(lines);
+                    if (_chronicle.Count > ChronicleKept)
+                    {
+                        _chronicle.RemoveRange(0, _chronicle.Count - ChronicleKept);
+                    }
+
                     ChronicleAdded?.Invoke(lines);
                 }
 

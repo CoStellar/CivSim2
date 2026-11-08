@@ -222,7 +222,7 @@ public sealed class LocalServerHost : IDisposable
                     unsent = false;
                 }
 
-                if (!ran && !unsent && _server.HasUnsentChronicle)
+                if (!ran && !unsent && (_server.HasUnsentChronicle || _server.HasDeferredViews))
                 {
                     _server.SendViews();
                 }

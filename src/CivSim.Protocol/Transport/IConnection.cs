@@ -17,6 +17,12 @@ public interface IConnection
     /// <summary>Takes the next received message, if any. Thread-safe.</summary>
     bool TryReceive(out IProtocolMessage? message);
 
+    /// <summary>
+    /// Messages sent from this end that the other end has not taken yet. The server sends no new views to a client that
+    /// falls behind, so a slow or hidden window never piles up updates in memory.
+    /// </summary>
+    int Backlog { get; }
+
     /// <summary>Closes both ends.</summary>
     void Close();
 }

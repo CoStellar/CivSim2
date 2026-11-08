@@ -87,8 +87,18 @@ public sealed class GameServer
     /// <summary>True when chronicle lines wait to be sent (for example after a speed change while paused).</summary>
     public bool HasUnsentChronicle => _chronicle.Count > 0 && _clients.Exists(c => c.Player is not null);
 
-    /// <summary>Chronicle lines kept for clients that join later.</summary>
+    /// <summary>Chronicle lines kept for clients that join later, and at most waiting for a client that fell behind.</summary>
     public const int ChronicleHistory = 500;
+
+    /// <summary>
+    /// A client with more unread messages than this gets no new view until it catches up; the map chunks and chronicle lines
+    /// it missed are kept for it and sent once, with the latest view. Without this a window that reads slower than the
+    /// simulation runs (maximum speed, a minimized window) piled up gigabytes of old views.
+    /// </summary>
+    public const int MaxBacklog = 256;
+
+    /// <summary>True when a client that fell behind has caught up and waits for the view it missed.</summary>
+    public bool HasDeferredViews => _clients.Exists(c => c.Deferred && c.Connection.IsOpen && c.Connection.Backlog <= MaxBacklog);
 
     /// <summary>Number of connected observers.</summary>
     public int ConnectedObservers => _clients.FindAll(c => c.IsObserver).Count;
@@ -106,7 +116,7 @@ public sealed class GameServer
     public void Accept(IConnection connection)
     {
         ArgumentNullException.ThrowIfNull(connection);
-        _clients.Add(new Client(connection));
+        _clients.Add(new Client(connection, _pendingChunks));
     }
 
     /// <summary>
@@ -260,7 +270,6 @@ public sealed class GameServer
             SendContent(client);
             client.Connection.Send(BuildView(client, Runner.Snapshots.Latest ?? GameSnapshot.From(State), joining: true));
             client.JustJoined = true;
-        client.ChronicleSeen = _chronicle.Count;
             client.ChronicleSeen = _chronicle.Count;
             SendAllChunks(client);
             SendObserverDetails(client);
@@ -397,7 +406,7 @@ public sealed class GameServer
     }
 
     // A joining client gets the whole kept history; later views carry only the new lines.
-    private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false, bool skipChronicle = false)
+    private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false)
     {
         GameViewMessage view = ViewBuilder.Build(
             snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width);
@@ -407,10 +416,8 @@ public sealed class GameServer
             view = view with { Civilizations = _observerView.Civilizations(State, view.Civilizations) };
         }
 
-        // A client that just joined got the history, which held the lines waiting then; only later lines are new to it.
-        ChronicleEntry[] lines = joining ? _history.ToArray()
-            : skipChronicle ? _chronicle.GetRange(Math.Min(client.ChronicleSeen, _chronicle.Count), _chronicle.Count - Math.Min(client.ChronicleSeen, _chronicle.Count)).ToArray()
-            : _chronicle.ToArray();
+        // A joining client gets the kept history; later views carry the lines collected for this client since its last view.
+        ChronicleEntry[] lines = joining ? _history.ToArray() : client.Unsent.ToArray();
         return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
     }
 
@@ -497,12 +504,41 @@ public sealed class GameServer
     public void SendViews()
     {
         GameSnapshot snapshot = Runner.Snapshots.Latest ?? GameSnapshot.From(State);
+
+        // Every client collects what changed since its last view: chunks and chronicle lines (a client that just joined
+        // got the history, which held the lines waiting then, so only later lines are new to it).
+        foreach (Client client in _clients)
+        {
+            if (client.Player is null)
+            {
+                continue;
+            }
+
+            client.Collect(_pendingChunks, _chronicle, client.JustJoined ? Math.Min(client.ChronicleSeen, _chronicle.Count) : 0);
+            client.JustJoined = false;
+        }
+
+        foreach (bool[] world in _pendingChunks)
+        {
+            Array.Clear(world);
+        }
+
+        _chronicle.Clear();
         foreach (Client client in _clients)
         {
             if (client.Player is null || !client.Connection.IsOpen)
             {
                 continue;
             }
+
+            // Behind: no new view until it reads what it has (the latest view goes out once it catches up).
+            if (client.Connection.Backlog > MaxBacklog)
+            {
+                client.Deferred = true;
+                continue;
+            }
+
+            client.Deferred = false;
 
             // The fog of war follows the civilization's memory: newly known (or forgotten) cells go out with their chunks.
             if (!client.IsObserver && client.Civ is CivId civId && State.FindCivilization(civId) is { } civ && client.Known is not null)
@@ -513,35 +549,29 @@ public sealed class GameServer
                 {
                     if (known[i] != client.Known[i])
                     {
-                        _pendingChunks[0][earth.Map.Chunks.ChunkOfIndex(i)] = true;
+                        client.Chunks[0][earth.Map.Chunks.ChunkOfIndex(i)] = true;
                     }
                 }
 
                 client.Known = known;
             }
 
-            client.Connection.Send(BuildView(client, snapshot, skipChronicle: client.JustJoined));
-            client.JustJoined = false;
-            for (int w = 0; w < _pendingChunks.Length; w++)
+            client.Connection.Send(BuildView(client, snapshot));
+            client.Unsent.Clear();
+            for (int w = 0; w < client.Chunks.Length; w++)
             {
-                for (int chunk = 0; chunk < _pendingChunks[w].Length; chunk++)
+                for (int chunk = 0; chunk < client.Chunks[w].Length; chunk++)
                 {
-                    if (_pendingChunks[w][chunk])
+                    if (client.Chunks[w][chunk])
                     {
                         SendChunk(client, State.Worlds[w], chunk);
+                        client.Chunks[w][chunk] = false;
                     }
                 }
             }
 
             SendObserverDetails(client);
         }
-
-        foreach (bool[] world in _pendingChunks)
-        {
-            Array.Clear(world);
-        }
-
-        _chronicle.Clear();
     }
 
     // Observers also get the developer layers and, when they watch a civilization, its fog (stage 5).
@@ -576,9 +606,40 @@ public sealed class GameServer
         }
     }
 
-    private sealed class Client(IConnection connection)
+    private sealed class Client(IConnection connection, bool[][] chunkShape)
     {
         private readonly Dictionary<long, long> _clientSequences = [];
+
+        // Map chunks changed since this client's last view, per world.
+        public bool[][] Chunks { get; } = Array.ConvertAll(chunkShape, w => new bool[w.Length]);
+
+        // Chronicle lines since this client's last view (the newest ChronicleHistory lines when it fell behind).
+        public List<ChronicleEntry> Unsent { get; } = [];
+
+        // It fell behind and missed a view.
+        public bool Deferred { get; set; }
+
+        // Takes the changed chunks and the new chronicle lines (from index `from`).
+        public void Collect(bool[][] changed, List<ChronicleEntry> lines, int from)
+        {
+            for (int w = 0; w < changed.Length && w < Chunks.Length; w++)
+            {
+                for (int c = 0; c < changed[w].Length; c++)
+                {
+                    Chunks[w][c] |= changed[w][c];
+                }
+            }
+
+            for (int k = from; k < lines.Count; k++)
+            {
+                Unsent.Add(lines[k]);
+            }
+
+            if (Unsent.Count > ChronicleHistory)
+            {
+                Unsent.RemoveRange(0, Unsent.Count - ChronicleHistory);
+            }
+        }
 
         public IConnection Connection { get; } = connection;
 
