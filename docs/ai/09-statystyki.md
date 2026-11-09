@@ -3,7 +3,7 @@
 [← spis treści](README.md)
 
 Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, seedy 7, 23 i 42; do etapu 5b 1000 kroków świata, od etapu 6 PR 1
-18 000 taktów (30 minut przy ×1). Wykres decyzji jest z etapu 6 PR 1 (gałąź `feat/live-clock`); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
+18 000 taktów (30 minut przy ×1). Wykres decyzji jest z gałęzi `feat/battle-time` (etap 6, bitwa w czasie, 2026-11-09); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -15,6 +15,22 @@ dotnet run --project src/CivSim.Headless -c Release -- --seed 7 --turns 1000 --m
 Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv, why42.csv>` (potrzebuje matplotlib).
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
+
+## Po bitwie w czasie (etap 6, gałąź `feat/battle-time`)
+
+3 seedy, 18 000 taktów (30 min przy ×1). Wykres decyzji wyżej jest z tych gier. W nawiasach kampanie i bitwy z PR 3b (#70), zmierzone
+na tym samym komputerze.
+
+| Seed | Decyzje | Wypowiedzenia wojny | Kampanie | Bitwy (wygrane) | Odwołania | Propozycje umów | Zmiany ustroju | Ludy żywe na końcu | Secesje |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 7 | 7379 | 16 | 13 (27) | 4 / 3 (11 / 11) | 6 | 64 | 47 | 34 | 23 |
+| 23 | 9233 | 25 | 36 (10) | 21 / 21 (5 / 5) | 8 | 160 | 39 | 49 | 38 |
+| 42 | 7484 | 10 | 14 (10) | 6 / 5 (4 / 4) | 4 | 97 | 25 | 37 | 27 |
+
+- **Wzory decyzji bez zmian.** Bitwa trwa teraz kilka sekund (runda na sekundę), więc gry potoczyły się inaczej: w seedzie 23 wojen
+  i kampanii jest więcej, w seedzie 7 mniej. To rozrzut przebiegu, a nie trend (te same wzory, inne losowanie w czasie).
+- **Pierwsze przegrane bitwy atakujących** (seedy 7 i 42): wcześniej wszystkie bitwy wygrywali atakujący.
+- Strojenie wojny (ile bitew na 30 minut, dowódca): etap 7 (decyzja Patryka z 2026-11-09).
 
 ## Po czasie polityki w latach akcji (etap 6 PR 2)
 
