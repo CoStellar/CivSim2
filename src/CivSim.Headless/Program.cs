@@ -28,6 +28,11 @@ public static class Program
             return BatchRun.Execute(options, Console.Out);
         }
 
+        if (options.ReplayPath is not null)
+        {
+            return ReplayRun.Execute(options.ReplayPath, Console.Out);
+        }
+
         Console.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
             $"{CoreInfo.Name} headless: seed {options.Seed}, {options.Turns} turns, map {options.MapSize}"));
