@@ -237,7 +237,8 @@ Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neo
 **Brama: Patryk ogląda i mówi, czy to działa jak trzeba.**
 
 - [x] **Takt i pulsy** (ADR 0025, PR 1 `feat/live-clock`): stały takt dla akcji, pulsy cywilizacji rozłożone między takty, licznik lat jako etykieta; koniec osobnego zegara epizodów; liczniki wojny w taktach; prędkości ×1/×2/×4; nowe złote hashe, zapis 31, protokół 14 (liczenie pulsów równolegle: PR 8)
-- [ ] **Tempa pod pulsy:** przyrost, zbieranie, nauka przeliczone z lat na pulsy, proporcje i przyczyny bez zmian; tempo AI blisko celu z GDD 1.1
+- [x] **Czas polityki** (PR 2 `feat/live-pace`, decyzja Patryka z 2026-11-09): rozejmy, propozycje, pamięć krzywd, kryzysy, bezkrólewie, bunty, roszczenia, opóźnienie ustroju i przegląd dyplomaty w latach akcji (rok = 6 s przy ×1); za długie wartości skrócone
+- [ ] **Tempa rozwoju pod cel z GDD 1.1** (przyrost, nauka; dobre AI ok. 15 min do wszystkich technologii brązu): przy etapie 7, gdy będzie epoka brązu (dziś neolit po 6–7,5 min, wszystkie technologie er 1–2 po 7–9 min)
 - [ ] **Oddziały:** osadnicy, wojownicy, zwiadowcy, tragarze jako jednostki w ruchu (grupy ludzi); kampania wojenna = oddziały w ruchu
 - [ ] **Zadania na obszarze:** wydobycie, pola, łowiska, budowy w miejscu; ludzie z osady sami tam chodzą; te same komendy dla AI i gracza
 - [ ] **Start:** losowa kolejność, wybór miejsca (5 s mapy, potem szare bloki, 10–15 s), strefy blokady, wybór AI z błędem; epoka kamienia jako opis „historii plemienia”

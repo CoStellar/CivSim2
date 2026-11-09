@@ -1,5 +1,7 @@
 # Wszystkie liczby, od których zależą decyzje AI
 
+**Etap 6 PR 2 (decyzja Patryka z 2026-11-09):** wszystkie czasy wojny, dyplomacji i polityki (rozejm, ponowienie propozycji, pamięć krzywd, kryzys, bezkrólewie, spokój po buncie, roszczenia, przegląd dyplomaty, trzymanie ustroju) liczą się w **latach akcji**: 1 rok = 12 miesięcy akcji = 60 taktów = 6 s przy ×1 (`data/time.json`). Długie wartości skrócone (w tabelach „było …”).
+
 [← spis treści](README.md)
 
 Każdy parametr: gdzie jest, jaka wartość, w jakiej jednostce i na którą decyzję wpływa. Zmiana wartości w pliku JSON nie wymaga
@@ -56,7 +58,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `unrestWarPercent` | 50 | % | D2 | w niepokojach ocena wojny razy tyle (etap 4f PR 5) |
 | `governmentChangeMarginPercent` | 30 | % | S2 | o ile lepiej musi pasować nowy ustrój, żeby strateg go wprowadził (histereza; etap 4f PR 5) |
 | `governmentStabilityWeight` | 40 | punkty dopasowania | S2 | w niepokojach każdy punkt premii stabilności ustroju dodaje tyle do dopasowania (etap 4f PR 5) |
-| `governmentKeepYears` | 200 | lata | S2 | tyle lat po zmianie ustroju (także po przewrocie) strateg nie rozważa kolejnej (etap 4f PR 5) |
+| `governmentKeepYears` | 20 (było 200) | lata akcji | S2 | tyle lat akcji (20 = 2 min przy ×1) po zmianie ustroju (także po przewrocie) strateg nie rozważa kolejnej (etap 4f PR 5; etap 6 PR 2) |
 
 ### `data/ai.json` → `commander` (dowódca, etap 4e PR 5)
 
@@ -118,11 +120,11 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 
 | Klucz | Wartość | Jednostka | Decyzje | Znaczenie |
 | --- | --- | --- | --- | --- |
-| `reviewEveryYears` | 50 | lata | D2 | co ile lat przegląd stosunków |
+| `reviewEveryYears` | 50 | lata akcji | D2 | co ile lat akcji przegląd stosunków (50 = 5 min przy ×1; etap 6 PR 2) |
 | `proposeAbove` | 1 | ocena | D2 | próg propozycji umowy i pokoju |
 | `acceptAbove` | 0,8 | ocena | D1 | próg przyjęcia |
 | `declareWarAbove` | 1,5 | ocena | D2 | próg wypowiedzenia wojny |
-| `retryYears` | 100 | lata | D2 | po odmowie nie proponuje tego samego |
+| `retryYears` | 20 (było 100) | lata akcji | D2 | po odmowie nie proponuje tego samego (20 = 2 min przy ×1) |
 | `peaceRetryYears` | 1 | lata | D2 | po odmowie pokoju proponuje go znowu po roku (od 4e PR 6) |
 | `reachCells` | 16 | pola | D1, D2, handel | zasięg handlu i paktu; od etapu 5b także wojny o odwet (jak wcześniej wojny o łupy) |
 | `tradeSharePercent` | 50 | **% na krok** | handel | jaka część nadwyżki idzie przez bramę (w kroku, który ma któraś ze stron) |
@@ -216,7 +218,7 @@ Pozostałe reguły (mistrzowie, uczniowie, przenoszenie) nie są decyzjami AI, t
 | `settlements.json` `settle.minPeople` | 60 | G4 | najmniejszy obóz, który może osiąść |
 | `settlements.json` poziomy | obóz: do 150 osób, magazyn 300, ruchomy; wioska: do 1000, 2000, wymaga rolnictwa | G4, G5, G6, S1 | pojemność i magazyn |
 | `settlements.json` `carrying.perPerson` | 10 | G1, G2, G5, G6 | ile dóbr niesie osoba |
-| `settlements.json` `abandonment.claimYears` | 100 | R4 | jak długo trwa roszczenie do porzuconej osady |
+| `settlements.json` `abandonment.claimYears` | 20 (było 100) | R4 | jak długo trwa roszczenie do porzuconej osady, w latach akcji (2 min przy ×1) |
 | `perception.json` `sightCells` | 6 | W1 | widzenie osady |
 | `perception.json` `scoutCells` | 15 | W1 | zasięg jednego zwiadowcy |
 | `perception.json` `scoutsPerCentury` | 2 | W1 | zwiadowców na stulecie z każdej osady (PR C, tempo na rok) |

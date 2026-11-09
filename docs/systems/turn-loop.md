@@ -49,6 +49,10 @@ flowchart TD
 - **Akcja w taktach:** epizody (kampanie) robią krok, gdy `NextTick ≤ takt`; krok kampanii to miesiąc akcji = `ticksPerActionMonth`
   taktów. Liczniki wojny (`Treaty.SinceTick`, `ReadyTick`, `LastCampaignTick`, cicha wojna `quietPeaceYears` z `war.json`)
   liczą się w taktach przez `TimeRules.ActionTicks(miesiące)`. **Wojna nie zatrzymuje świata** (znany problem 4 naprawiony).
+- **Miesiące akcji** (`GameState.ActionMonth` = takt / `ticksPerActionMonth`, etap 6 PR 2): zegar polityki i dyplomacji. Rozejmy,
+  propozycje, pamięć krzywd, kryzysy, bezkrólewie, spokój po buncie, roszczenia, opóźnienie ustroju i przegląd dyplomaty liczą się
+  w nich (decyzja Patryka z 2026-11-09: rok akcji = 6 s przy ×1). Licznik lat (`Month`) zostaje dla rozwoju (ludność, nauka, klimat,
+  ruiny, wiek przywódców).
 - **Alarmy** (wypowiedziana wojna, napad) dalej budzą radę w najbliższej fazie decyzji, czyli w następnym takcie.
 - `WorldClock.MonthsOf(state, civ)` i `MonthsOf(state, osada)` podają miesiące do przeliczania temp na rok; osada opuszczona liczy
   się miesiącami pulsu świata. `WorldClock.PlansNow` mówi, czy to puls na decyzje wolne.

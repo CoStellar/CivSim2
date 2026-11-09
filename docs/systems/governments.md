@@ -3,6 +3,8 @@
 **W jednym zdaniu:** każda cywilizacja ma ustrój z danych, który daje jej tytuł („Chiefdom of Karrut”), opóźnia decyzje państwowe
 i zmienia tempo oraz charakter decyzji AI (GDD 7.2; etap 4f, ADR 0023).
 
+> **Czas (etap 6 PR 2, decyzja Patryka z 2026-11-09):** Opóźnienie zmiany ustroju (`enactYears`) i bezkrólewie po niej liczą się w latach akcji; strateg trzyma nowy ustrój 20 lat akcji (było 200 lat). Rok akcji = 12 miesięcy akcji = 60 taktów = 6 s przy ×1 (`data/time.json`, ADR 0025).
+
 **Faza tury:** State (`GovernmentSystem`: wchodzą zmiany ustroju, które dojrzały); skutki w fazie Decisions (strateg, dyplomata,
 dowódca, wybór opcji) i przy komendach (wypowiedzenie wojny, wysłanie wyprawy).
 

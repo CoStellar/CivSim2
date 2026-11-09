@@ -2,6 +2,8 @@
 
 **W jednym zdaniu:** osada, z której wszyscy odeszli albo wymarli, nie znika od razu: stoi opuszczona, potem zostają z niej ruiny, a w tym czasie każdy, czyja to ziemia, może się do niej wprowadzić albo zabrać to, co zostało.
 
+> **Czas (etap 6 PR 2, decyzja Patryka z 2026-11-09):** Roszczenie do porzuconej albo zdobytej osady trwa 20 lat akcji (było 100 lat); rozpad ruin dalej idzie w latach licznika. Rok akcji = 12 miesięcy akcji = 60 taktów = 6 s przy ×1 (`data/time.json`, ADR 0025).
+
 **Fazy tury:** 1. Świat (niszczenie: opuszczona → ruiny → znika), 4. Rozstrzyganie komend (porzucenie, przejęcie, plądrowanie, podbój), 8. Ludność (osada bez ludzi zostaje opuszczona; cywilizacja bez ludzi wymiera).
 
 ## Dane wejściowe i wyjściowe
