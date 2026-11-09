@@ -26,6 +26,14 @@ public sealed record HeadlessResult(
     long ManagedMemoryBytes,
     long WorkingSetBytes)
 {
+    /// <summary>
+    /// Turns (ticks) longer than 25 ms, the budget of a tick at x4 (10 ticks a second at x1): late at x4 (stage 6, T1).
+    /// </summary>
+    public int TurnsOver25Ms { get; init; }
+
+    /// <summary>Turns (ticks) longer than 30 ms, the tick budget of stage 6 (T12).</summary>
+    public int TurnsOver30Ms { get; init; }
+
     /// <summary>Summary of the generated world.</summary>
     public WorldGenReport? World { get; init; }
 
@@ -257,6 +265,8 @@ public static class HeadlessRun
             managed,
             Environment.WorkingSet)
         {
+            TurnsOver25Ms = turnMs.Count(ms => ms > 25),
+            TurnsOver30Ms = turnMs.Count(ms => ms > 30),
             World = world,
             PngFiles = pngs,
             WorldProblems = problems,

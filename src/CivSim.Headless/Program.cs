@@ -40,6 +40,8 @@ public static class Program
         Console.WriteLine(string.Create(inv, $"turn time avg:      {r.AverageTurnMs:F4} ms"));
         Console.WriteLine(string.Create(inv, $"turn time p95:      {r.P95TurnMs:F4} ms"));
         Console.WriteLine(string.Create(inv, $"turn time max:      {r.MaxTurnMs:F4} ms"));
+        Console.WriteLine(string.Create(inv, $"turns over 25 ms:   {r.TurnsOver25Ms} ({(r.Turns == 0 ? 0 : r.TurnsOver25Ms * 100.0 / r.Turns):F2}%, late at x4)"));
+        Console.WriteLine(string.Create(inv, $"turns over 30 ms:   {r.TurnsOver30Ms} ({(r.Turns == 0 ? 0 : r.TurnsOver30Ms * 100.0 / r.Turns):F2}%)"));
         Console.WriteLine(string.Create(inv, $"allocated per turn: {r.AllocatedBytesPerTurn} bytes"));
         Console.WriteLine(string.Create(inv, $"managed memory:     {r.ManagedMemoryBytes / 1024.0 / 1024.0:F1} MB"));
         Console.WriteLine(string.Create(inv, $"working set:        {r.WorkingSetBytes / 1024.0 / 1024.0:F1} MB"));

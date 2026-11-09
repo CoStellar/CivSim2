@@ -53,6 +53,12 @@ flowchart TD
   propozycje, pamięć krzywd, kryzysy, bezkrólewie, spokój po buncie, roszczenia, opóźnienie ustroju i przegląd dyplomaty liczą się
   w nich (decyzja Patryka z 2026-11-09: rok akcji = 6 s przy ×1). Licznik lat (`Month`) zostaje dla rozwoju (ludność, nauka, klimat,
   ruiny, wiek przywódców).
+- **Takty spóźnione przy ×4 (T1, etap 6 PR 2):** pętla serwera (`LocalServerHost`) jest najwyżej jeden takt do tyłu: gdy takt trwa
+  dłużej niż dwa odstępy, zegar nie nadrabia, tylko liczy od teraz. Spirali zaległości więc nie ma; ciężki takt na chwilę zwalnia
+  grę. Pomiar 2026-11-09 (Release, po kolei, mapa standard, 18 000 taktów; `CivSim.Headless` wypisuje `turns over 25 ms` i
+  `turns over 30 ms`): przy ×4 takt ma 25 ms, dłużej trwało 0,27% taktów (seed 7), 3,30% (seed 23) i 0,37% (seed 42); dłużej niż
+  30 ms 0,08% / 0,74% / 0,12%. Średnio 7,3 / 10,9 / 8,2 ms, 95% poniżej 15,7 / 23,3 / 16,2 ms. Najdłuższe (ok. 125–136 ms) to
+  pierwszy takt i puls świata z wieloma ludami; przyspieszenie w PR 8 (równoległe pulsy, sieci handlowe przyrostowo).
 - **Alarmy** (wypowiedziana wojna, napad) dalej budzą radę w najbliższej fazie decyzji, czyli w następnym takcie.
 - `WorldClock.MonthsOf(state, civ)` i `MonthsOf(state, osada)` podają miesiące do przeliczania temp na rok; osada opuszczona liczy
   się miesiącami pulsu świata. `WorldClock.PlansNow` mówi, czy to puls na decyzje wolne.
