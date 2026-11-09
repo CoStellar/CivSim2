@@ -104,4 +104,4 @@ Pomiar z 2026-11-09 (3 seedy 7 / 23 / 42, mapa standard, 18 000 taktów = 30 min
 - zwiad oddziałami jest rzadszy niż dawne wyprawy w pulsie: cywilizacje znają ok. 450 pól zamiast ok. 1100, mniej się spotykają
   (umowy handlowe 28 / 40 / 39 zamiast 60 / 73 / 65), neolit po 8,5 / 8,1 / 7,3 min zamiast 6,6 / 7,5 / 5,8 min (PR 1);
 - odpoczynek zwiadowców 1 rok zamiast 5 (seedy 7 i 42) prawie nic nie zmienia (neolit 8,1 i 7,2 min): o wiedzy decyduje
-  raczej długość wyprawy (`tripCells`).
+  raczej długość wyprawy (`tripCells`). Strojenie zwiadu i temp: etap 7 (decyzja Patryka z 2026-11-09).

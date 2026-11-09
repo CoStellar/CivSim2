@@ -260,6 +260,10 @@ wojny według „Co erę” w `docs/systems/war.md`.
 Osady (decyzja Patryka z 2026-11-09): wioska zostaje tam, gdzie powstała, ale rośnie w miasto i zajmuje coraz większy obszar; gdy
 dwie osady zetkną się przez rozrost, większa wciela mniejszą jako swoją część.
 
+Strojenie temp (decyzja Patryka z 2026-11-09: dopracowanie w etapie 7): zwiad oddziałami po PR 3a daje mniej wiedzy i kontaktów niż
+dawne wyprawy w pulsie (ok. 450 znanych pól zamiast 1100, neolit 0,6–1,9 min później); dłuższe wyprawy (`tripCells`), więcej grup
+na osadę albo inne tempo razem z celem „brąz w 15–40 min”.
+
 Gotowe, gdy: cel „wszystkie technologie epoki brązu” osiąga dobre AI w ok. 15 min, średnie w 20–25 min, słabe w 30–40 min (GDD 1.1).
 
 ## Etap 8 — Grywalne demo solo
