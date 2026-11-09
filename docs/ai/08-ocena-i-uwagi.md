@@ -341,9 +341,14 @@ a krok świata częściej trwa miesiąc (wojny), więc 2000 tur to ok. 11 600 la
 
 - **Co się zmieniło:** AI decyduje w pulsach (co 3 s przy ×1), a kampanie i liczniki wojny idą w taktach. Same wzory decyzji są
   bez zmian, więc w pulsie AI zachowuje się jak w dawnym kroku.
-- **Za szybkie w czasie rzeczywistym:** wszystko, co liczy się w latach licznika: przegląd dyplomaty co 50 lat (ok. 6 s w neolicie),
-  rozejm po wojnie, pamięć krzywd, przewodnictwo przywódców (ok. 40 lat panowania = ok. 5 s). Gracz nie zdąży tego zauważyć. To
-  zadanie PR 2 (tempa pod pulsy): przenieść te odstępy na takty albo pulsy i ustawić je w sekundach.
+- **Za szybkie w czasie rzeczywistym** (PR 1): wszystko, co liczyło się w latach licznika: przegląd dyplomaty co 50 lat (ok. 6 s w
+  neolicie), rozejm po wojnie, pamięć krzywd. **PR 2 (decyzja Patryka z 2026-11-09):** te czasy idą teraz w latach akcji (rok = 6 s),
+  a za długie wartości są skrócone. Panowanie przywódców zostaje w latach licznika (ok. 5 s): w pierwszych erach postaci z imieniem
+  znikną (PR 7).
+- **Skutek PR 2, uczciwie:** dyplomacja zwolniła bardzo mocno. W 30 minutach (3 seedy) umów handlowych jest 60–73 zamiast 273–295,
+  sojuszy 11–17 zamiast 233–263, wojen 41–52 zamiast 66–152, a sojusznicy prawie nie przystępują do wojen. Powód: planowy przegląd
+  stosunków przychodzi raz na 5 minut (rada 7,5 min), a reszta to tylko reakcje na alarmy. Dla gracza to raczej dobrze (świat AI nie
+  „miga” umowami), ale świat może wydać się senny. Jeśli tak, najprostsza zmiana to `reviewEveryYears` 50 → 10–20 (1–2 min).
 - **Wojny trwają ok. 250 lat licznika** (mediana, seed 7, 9000 taktów), bo cicha wojna kończy się po 300 taktach (30 s), a w neolicie
   licznik idzie ok. 8 lat na sekundę. Czy 30 s bez walki to dobry czas na koniec wojny, do decyzji Patryka w PR 2.
 - **Uczciwie:** dawne testy jednostkowe AI liczą na „puls co takt” (`TestContent`); zachowanie z prawdziwym zegarem sprawdzają testy

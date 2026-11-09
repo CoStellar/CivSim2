@@ -39,6 +39,7 @@ public static class GameStateHash
         h.Add((int)state.Settings.Resources);
         h.Add(state.Turn);
         h.Add(state.StepMonths);
+        h.Add(state.ActionMonth);
         h.Add(state.WorldMonths);
         h.Add(state.Episodes.NextId);
         h.Add(state.Episodes.Count);

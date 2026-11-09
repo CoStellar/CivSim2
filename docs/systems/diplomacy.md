@@ -2,6 +2,8 @@
 
 **W jednym zdaniu:** cywilizacje, które naprawdę się poznały, żyją w pokoju, mogą podpisać umowę handlową, pakt o nieagresji i sojusz obronny albo wypowiedzieć sobie wojnę; propozycję każdej umowy ocenia dyplomata drugiej strony tą samą oceną co proponujący, a umowa handlowa pozwala kupcom wymieniać nadwyżki między najbliższymi osadami partnerów (etap 4d, GDD 9.1–9.2).
 
+> **Czas (etap 6 PR 2, decyzja Patryka z 2026-11-09):** Rozejm po pokoju (20 lat), ponowienie propozycji po odmowie (20 lat), wygasanie propozycji bez odpowiedzi i przegląd stosunków (co 50 lat) liczą się w latach akcji. Rok akcji = 12 miesięcy akcji = 60 taktów = 6 s przy ×1 (`data/time.json`, ADR 0025).
+
 **Faza tury:**
 - 3. Decyzje: dyplomata AI (`DiplomatAdvisor`) odpowiada na propozycje i raz na `reviewEveryYears` lat proponuje umowę albo wypowiada wojnę.
 - 4. Rozstrzyganie komend (kategoria Diplomacy, przed gospodarką i ruchem): `ProposeTreatyCommand`, `AnswerProposalCommand`, `DeclareWarCommand`.

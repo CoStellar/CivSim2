@@ -4,6 +4,8 @@
 a jej stabilność 0–100 to nastrój osad ważony wpływem warstw, plus premia ustroju, minus przeciążenie administracji, kryzys sukcesji,
 bezkrólewie i utrata stolicy; poniżej 30 zaczynają się niepokoje (GDD 7.3; etap 4f PR 3).
 
+> **Czas (etap 6 PR 2, decyzja Patryka z 2026-11-09):** Kryzys sukcesji, bezkrólewie, utrata stolicy i spokój po buncie liczą się w latach akcji; kara liczy się w pulsie za tę część jego 6 miesięcy akcji, w której trwa. Rok akcji = 12 miesięcy akcji = 60 taktów = 6 s przy ×1 (`data/time.json`, ADR 0025).
+
 **Faza tury:** State (`StabilitySystem`, po `LeaderSystem`). Stolica sprawdzana w każdym kroku świata; administracja, stabilność
 i lojalność we własnym kroku cywilizacji (ADR 0018).
 

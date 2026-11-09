@@ -132,7 +132,7 @@ public sealed record OccupySettlementCommand(GameContent Content, SettlementId F
             target.ClaimCiv = SettlementState.NoClaim;
         }
 
-        if (target.HasClaim(state.Month))
+        if (target.HasClaim(state.ActionMonth))
         {
             return $"{state.FindCivilization(civ)!.Name} took over {target.Name}, claimed by {state.FindCivilization(new CivId(target.ClaimCiv))!.Name}.";
         }

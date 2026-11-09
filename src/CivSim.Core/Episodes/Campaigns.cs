@@ -1015,7 +1015,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             // Decision of 2026-11-07: a conquered village keeps its people, who now belong to the winner.
             target.Owner = e.Civ;
             target.ClaimCiv = defender.Value;
-            target.ClaimUntilMonth = state.Month + (_content.Assets.ClaimYears * 12L);
+            target.ClaimUntilMonth = state.ActionMonth + (_content.Assets.ClaimYears * 12L);
         }
         else if (camp)
         {

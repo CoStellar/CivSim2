@@ -27,7 +27,7 @@ public class SettlementAssetTests
         SettlementLevelDefinition camp = Content.SettlementLevel("camp");
         Assert.True(camp.AbandonedYears > 0 && camp.RuinsUntilYears > camp.AbandonedYears);
         Assert.True(Content.SettlementLevel("city").RuinsUntilYears > camp.RuinsUntilYears);
-        Assert.Equal(100, Content.Assets.ClaimYears);
+        Assert.Equal(20, Content.Assets.ClaimYears); // years of action since stage 6 PR 2 (2 minutes at x1)
         Assert.Equal(Amount.FromUnits(10), Content.Assets.CarryPerPerson);
     }
 
@@ -76,7 +76,7 @@ public class SettlementAssetTests
 
         runner.RunTurn();
         Assert.Equal(SettlementStatus.Abandoned, camp.Status);
-        Assert.True(camp.HasClaim(state.Month));
+        Assert.True(camp.HasClaim(state.ActionMonth)); // claims count in months of action
 
         while ((state.Month - camp.AbandonedMonth) / 12 < level.AbandonedYears)
         {
@@ -119,7 +119,7 @@ public class SettlementAssetTests
         Assert.True(empty.IsActive);
         Assert.Equal(other.Owner, empty.Owner);
         Assert.Equal(SettlementStatus.Abandoned, other.Status);
-        Assert.True(empty.HasClaim(state.Month));
+        Assert.True(empty.HasClaim(state.ActionMonth));
         Assert.Contains("claimed by", line, System.StringComparison.Ordinal);
     }
 

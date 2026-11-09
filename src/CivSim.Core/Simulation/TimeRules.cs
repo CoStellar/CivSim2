@@ -17,6 +17,9 @@ public sealed class TimeRules
     /// <summary>Ticks of one month of action: one step of a war campaign, and the unit of war timers (readiness, quiet war).</summary>
     public int TicksPerActionMonth { get; init; } = 5;
 
+    /// <summary>Months of action one pulse lasts (at least 1).</summary>
+    public int PulseActionMonths => System.Math.Max(1, TicksPerPulse / System.Math.Max(1, TicksPerActionMonth));
+
     /// <summary>Ticks of <paramref name="months"/> months of action.</summary>
     public long ActionTicks(long months) => months * TicksPerActionMonth;
 }

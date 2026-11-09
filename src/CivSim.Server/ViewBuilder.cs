@@ -52,7 +52,8 @@ public static class ViewBuilder
                 Status = (int)st.Status,
                 AbandonedMonth = st.AbandonedMonth,
                 ClaimCiv = st.ClaimCiv,
-                ClaimUntilMonth = st.ClaimUntilMonth,
+                // Claims run in months of action; the viewer gets them on its year counter (remaining months from now).
+                ClaimUntilMonth = snapshot.Month + (st.ClaimUntilMonth - snapshot.ActionMonth),
             });
         }
 

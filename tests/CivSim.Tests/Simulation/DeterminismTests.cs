@@ -75,5 +75,8 @@ public class DeterminismTests
     // Stage 4f PR 2: leaders joined the state; their traits shift the character the AI decides with.
     // ADR 0025 (stage 6 PR 1): one turn is now a tick; civilizations pulse every 30 ticks, each in a tick of its own, and
     // war timers and episodes count in ticks (100 turns = 100 ticks, about 4 pulses of every civilization).
-    private const ulong GoldenHash = 11428154306949210205UL;
+    // Stage 6 PR 2 (decision of 2026-11-09): truces, proposals, memories, crises, anarchy, revolts, claims and the
+    // diplomat's review count in months of action (one year = 6 s at x1); long durations shortened; the months of action
+    // joined the hash.
+    private const ulong GoldenHash = 4987176402803861661UL;
 }

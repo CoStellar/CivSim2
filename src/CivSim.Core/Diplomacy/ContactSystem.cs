@@ -43,7 +43,7 @@ public static class Contacts
         r.RumorCell = -1;
         r.RumorPeople = 0;
         r.RumorFrom = -1;
-        r.Recount(state.Month);
+        r.Recount(state.ActionMonth);
         return true;
     }
 
@@ -77,10 +77,10 @@ public static class Contacts
         int years = def.Years + (int)((long)(def.VengefulYears - def.Years) * v.Trait(Ai.Trait.Vengefulness) / 1000);
         Relation r = v.Relation(attacker)!;
         r.Remember(
-            new RelationMemory { Kind = RelationEvent.Attack, Sympathy = def.Sympathy, Trust = def.Trust, EndMonth = state.Month, FadeMonths = Math.Max(1, years * 12) },
+            new RelationMemory { Kind = RelationEvent.Attack, Sympathy = def.Sympathy, Trust = def.Trust, EndMonth = state.ActionMonth, FadeMonths = Math.Max(1, years * 12) },
             content.Relations.MaxMemories,
-            state.Month);
-        r.Recount(state.Month);
+            state.ActionMonth);
+        r.Recount(state.ActionMonth);
 
         // The attacker sees its victims too.
         CivilizationState? a = state.FindCivilization(attacker);
@@ -184,7 +184,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
         Borders(context, state, n);
         Disputes(state, n);
         Rumors(context, state);
-        long month = state.Month;
+        long month = state.ActionMonth; // memories fade in months of action (decision of 2026-11-09)
         foreach (CivilizationState civ in state.Civilizations)
         {
             foreach (Relation r in civ.Relations)
@@ -343,7 +343,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
     private void Disputes(GameState state, int n)
     {
         Array.Clear(_dispute, 0, n * n);
-        long month = state.Month;
+        long month = state.ActionMonth; // claims and disputes count in months of action (decision of 2026-11-09)
         foreach (SettlementState s in state.Settlements)
         {
             if (!s.IsActive || !s.HasClaim(month) || s.ClaimCiv == s.Owner.Value || s.ClaimCiv < 0 || s.ClaimCiv >= _indexOfId.Length

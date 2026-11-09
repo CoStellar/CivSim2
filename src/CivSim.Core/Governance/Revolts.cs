@@ -38,7 +38,7 @@ public static class Revolts
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(civ);
         StabilityRules rules = content.Stability;
-        if (civ.Stability >= rules.RevoltBelow || state.Month < civ.RevoltCalmUntilMonth)
+        if (civ.Stability >= rules.RevoltBelow || state.ActionMonth < civ.RevoltCalmUntilMonth)
         {
             return 0;
         }
@@ -58,7 +58,7 @@ public static class Revolts
         ArgumentNullException.ThrowIfNull(civ);
         ArgumentNullException.ThrowIfNull(random);
         StabilityRules rules = content.Stability;
-        if (rules.DriftPerMillePerYear <= 0 || state.Month < civ.RevoltCalmUntilMonth || state.Civilizations.Count >= rules.MaxCivilizations)
+        if (rules.DriftPerMillePerYear <= 0 || state.ActionMonth < civ.RevoltCalmUntilMonth || state.Civilizations.Count >= rules.MaxCivilizations)
         {
             return null;
         }
@@ -69,7 +69,7 @@ public static class Revolts
             return null;
         }
 
-        civ.RevoltCalmUntilMonth = state.Month + (rules.RevoltCalmYears * 12L);
+        civ.RevoltCalmUntilMonth = state.ActionMonth + (rules.RevoltCalmYears * 12L);
         return Secede(content, state, civ, rebels, random);
     }
 
@@ -110,7 +110,7 @@ public static class Revolts
         ArgumentNullException.ThrowIfNull(civ);
         ArgumentNullException.ThrowIfNull(random);
         StabilityRules rules = content.Stability;
-        civ.RevoltCalmUntilMonth = state.Month + (rules.RevoltCalmYears * 12L);
+        civ.RevoltCalmUntilMonth = state.ActionMonth + (rules.RevoltCalmYears * 12L);
         List<SettlementState>? rebels = Rebels(content, state, civ);
         return rebels is not null && state.Civilizations.Count < rules.MaxCivilizations
             ? Secede(content, state, civ, rebels, random)
@@ -233,7 +233,7 @@ public static class Revolts
         Leaders.Seize(content, state, child, random, state.Month);
         child.NextStepMonth = parent.NextStepMonth;
         child.StepStartMonth = parent.StepStartMonth;
-        child.RevoltCalmUntilMonth = state.Month + (rules.RevoltCalmYears * 12L);
+        child.RevoltCalmUntilMonth = state.ActionMonth + (rules.RevoltCalmYears * 12L);
 
         var moved = new HashSet<int>();
         SettlementState largest = rebels[0];
@@ -289,7 +289,7 @@ public static class Revolts
         }
         else
         {
-            civ.AnarchyUntilMonth = Math.Max(civ.AnarchyUntilMonth, state.Month + (content.Stability.AnarchyYears * 12L));
+            civ.AnarchyUntilMonth = Math.Max(civ.AnarchyUntilMonth, state.ActionMonth + (content.Stability.AnarchyYears * 12L));
         }
 
         Leaders.Seize(content, state, civ, random, state.Month);
@@ -314,7 +314,7 @@ public static class Revolts
             n.RumorCell = r.RumorCell;
             n.RumorPeople = r.RumorPeople;
             n.RumorFrom = r.RumorFrom;
-            n.Recount(state.Month);
+            n.Recount(state.ActionMonth);
         }
 
         Contacts.Meet(content, state, child, parent.Id, ContactWay.Border);
@@ -323,10 +323,10 @@ public static class Revolts
         int years = def.Years + (int)((long)(def.VengefulYears - def.Years) * parent.Trait(Ai.Trait.Vengefulness) / 1000);
         Relation memory = parent.Relation(child.Id)!;
         memory.Remember(
-            new RelationMemory { Kind = RelationEvent.Secession, Sympathy = def.Sympathy, Trust = def.Trust, EndMonth = state.Month, FadeMonths = Math.Max(1, years * 12) },
+            new RelationMemory { Kind = RelationEvent.Secession, Sympathy = def.Sympathy, Trust = def.Trust, EndMonth = state.ActionMonth, FadeMonths = Math.Max(1, years * 12) },
             content.Relations.MaxMemories,
-            state.Month);
-        memory.Recount(state.Month);
+            state.ActionMonth);
+        memory.Recount(state.ActionMonth);
     }
 
     private static bool Targeted(GameState state, int settlement)

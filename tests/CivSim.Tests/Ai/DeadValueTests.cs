@@ -382,6 +382,18 @@ public class DeadValueTests
         // Stone Age hunters who could learn tanning (stage 4F: technologies need their people).
         Record(saved, 15, [1, 4], neolithic: false, extremes: false, width: 130, height: 80, peoples: 10, hunters: true);
 
+        // Political time (stage 6 PR 2, decision of 2026-11-09: politics counts in months of action): a troubled state
+        // whose peoples left anarchy ten years of action ago (so how long a new government is kept decides whether the
+        // strategist may change it again), at a month of action in which only the stagger decides whose diplomat
+        // reviews its relations.
+        GameState political = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
+        Political(political);
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(political, ms);
+            saved.Add(ms.ToArray());
+        }
+
         Assert.True(saved.Count > stone);
         return [.. saved];
     }
@@ -631,6 +643,43 @@ public class DeadValueTests
 
         CivilizationState[] alive = state.Civilizations.Where(c => c.IsAlive && state.Settlements.Any(x => x.Owner == c.Id && x.IsActive)).ToArray();
         CivSim.Core.Diplomacy.Contacts.RecordAttack(Content, state, alive[0].Id, alive[1].Id);
+    }
+
+    private static void Political(GameState state)
+    {
+        Troubled(state);
+
+        // 900 months of action is a multiple of the 75-year review of a council (50 years x 150%) for the people with id 0;
+        // with the 7-year stagger no other people's planned review falls in it.
+        long now = 900;
+        state.SetActionMonthForLoad(now);
+        GovernmentDefinition chief = Content.Governments.Single(g => g.Key == "chiefdom");
+        GovernmentDefinition council = Content.Governments.Single(g => g.Key == "elder_council");
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            c.StepMonths = Math.Max(c.StepMonths, CivSim.Core.Simulation.WorldClock.RhythmMonths(Content, state, c));
+            c.AnarchyUntilMonth = now - 120 + (Content.Stability.AnarchyYears * 12L); // anarchy began 10 years of action ago
+            c.StrategyReviewMonth = 0;
+            if (c.Id.Value == 2)
+            {
+                // A chiefdom whose character suits a council far better: it would change again once it may.
+                c.Government = chief.Id;
+                for (int t = 0; t < c.Traits.Length && t < council.Leaning.Count; t++)
+                {
+                    c.Traits[t] = council.Leaning[t] > chief.Leaning[t] ? 1000 : 0;
+                }
+            }
+            else
+            {
+                c.Government = council.Id;
+            }
+        }
+
+        // No alarms: the diplomats act only in their planned reviews.
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            c.Alarms = Alarm.None;
+        }
     }
 
     private static void HungryVillages(GameState state)

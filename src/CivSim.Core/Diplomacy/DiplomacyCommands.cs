@@ -34,7 +34,7 @@ public sealed record ProposeTreatyCommand(GameContent Content, CivId Other, Trea
     public void Apply(GameState state, CivId civ)
     {
         ArgumentNullException.ThrowIfNull(state);
-        state.Treaties.Propose(new TreatyProposal(civ, Other, Kind, state.Month, ProposalStatus.Pending, Terms));
+        state.Treaties.Propose(new TreatyProposal(civ, Other, Kind, state.ActionMonth, ProposalStatus.Pending, Terms));
     }
 }
 
@@ -78,7 +78,7 @@ public sealed record AnswerProposalCommand(GameContent Content, CivId From, Trea
         int k = book.FindProposal(From, civ, Kind);
         if (!Accept)
         {
-            book.SetProposal(k, book.Proposals[k] with { Status = ProposalStatus.Declined, Month = state.Month });
+            book.SetProposal(k, book.Proposals[k] with { Status = ProposalStatus.Declined, Month = state.ActionMonth });
             return null;
         }
 

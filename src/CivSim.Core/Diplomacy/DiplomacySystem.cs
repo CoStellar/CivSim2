@@ -26,14 +26,15 @@ public sealed class DiplomacySystem(GameContent content) : ITurnSystem
         GameState state = context.State;
         TreatyBook book = state.Treaties;
         long month = state.Month;
-        book.RemoveAll(t => !Alive(state, t.A) || !Alive(state, t.B) || (t.UntilMonth > 0 && month >= t.UntilMonth));
-        book.RemoveProposals(p => !Alive(state, p.From) || !Alive(state, p.To) || (p.Status == ProposalStatus.Declined && month >= p.Month + (_content.Treaties.RetryYearsFor(p.Kind) * 12L)));
+        long am = state.ActionMonth; // truces and proposals count in months of action (decision of 2026-11-09)
+        book.RemoveAll(t => !Alive(state, t.A) || !Alive(state, t.B) || (t.UntilMonth > 0 && am >= t.UntilMonth));
+        book.RemoveProposals(p => !Alive(state, p.From) || !Alive(state, p.To) || (p.Status == ProposalStatus.Declined && am >= p.Month + (_content.Treaties.RetryYearsFor(p.Kind) * 12L)));
         for (int k = 0; k < book.Proposals.Count; k++)
         {
             TreatyProposal p = book.Proposals[k];
-            if (p.Status == ProposalStatus.Pending && p.Month < month)
+            if (p.Status == ProposalStatus.Pending && p.Month < am)
             {
-                book.SetProposal(k, p with { Status = ProposalStatus.Declined, Month = month });
+                book.SetProposal(k, p with { Status = ProposalStatus.Declined, Month = am });
             }
         }
 
@@ -43,7 +44,7 @@ public sealed class DiplomacySystem(GameContent content) : ITurnSystem
             {
                 if (!book.Has(civ.Id, r.Other, TreatyKind.Trade))
                 {
-                    Contacts.End(r, RelationEvent.ActiveTrade, month);
+                    Contacts.End(r, RelationEvent.ActiveTrade, am);
                 }
             }
         }
@@ -104,11 +105,11 @@ public sealed class DiplomacySystem(GameContent content) : ITurnSystem
                 bool common = civ.IsAlive && r.HasMet && z >= 0 && (_enemies[x] & _enemies[z]) != 0 && (_enemies[x] & (1UL << z)) == 0;
                 if (common)
                 {
-                    Contacts.Sustain(_content.Relations, r, RelationEvent.CommonEnemy, month, months);
+                    Contacts.Sustain(_content.Relations, r, RelationEvent.CommonEnemy, state.ActionMonth, months);
                 }
                 else
                 {
-                    Contacts.End(r, RelationEvent.CommonEnemy, month);
+                    Contacts.End(r, RelationEvent.CommonEnemy, state.ActionMonth);
                 }
             }
         }

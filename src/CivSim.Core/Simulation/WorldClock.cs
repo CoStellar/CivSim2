@@ -128,6 +128,7 @@ public static class WorldClock
             }
         }
 
+        state.ActionMonth = tick / Math.Max(1, time.TicksPerActionMonth);
         int world = WorldPulse(time, tick) ? WorldPulseMonths(content, state) : 0;
         state.WorldMonths = world;
         state.StepMonths = world;

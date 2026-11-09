@@ -2,7 +2,8 @@
 
 **Status:** przyjęta, 2026-11-09 (decyzja Patryka). Wdrożona w etapie 6 PR 1 (`feat/live-clock`): takt, pulsy, licznik lat, epizody
 i liczniki wojny w taktach. Zastępuje ADR 0018 i 0022 (kroki w latach, krótki zegar epizodów) i turę decyzyjną ADR 0013. Tempa dalej
-są „na rok” (ADR 0011) i przeliczane przez miesiące pulsu; strojenie pod minuty to etap 6 PR 2.
+są „na rok” (ADR 0011) i przeliczane przez miesiące pulsu. Etap 6 PR 2 (decyzja Patryka z 2026-11-09): czasy wojny, dyplomacji i polityki
+liczą się w latach akcji (`GameState.ActionMonth`; rok akcji = 60 taktów = 6 s przy ×1).
 
 ## Kontekst
 

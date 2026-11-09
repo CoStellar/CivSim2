@@ -2,6 +2,8 @@
 
 **W jednym zdaniu:** na starcie nikt nikogo nie zna; cywilizacja poznaje inną, gdy jej osady albo zwiadowcy zobaczą obcy obóz, gdy ich strefy wpływów się zetkną albo gdy ktoś napadnie jej obóz, słyszy pogłoski o ludach, które poznali jej znajomi, i pamięta wydarzenia (napaść, spór o osadę), z których wynikają dwie liczby: sympatia i zaufanie (etap 4c, GDD 8.5).
 
+> **Czas (etap 6 PR 2, decyzja Patryka z 2026-11-09):** Pamięć zdarzeń (napad 30–60 lat, złamana umowa 40, agresja 20, secesja 40–80, pomoc w wojnie 40, wspólny wróg 10, spór i handel 20) blaknie w latach akcji; wcześniej było to 100–400 lat licznika. Rok akcji = 12 miesięcy akcji = 60 taktów = 6 s przy ×1 (`data/time.json`, ADR 0025).
+
 **Faza tury:** 2. Percepcja, zaraz po pamięci mapy (`ContactSystem`). Napaść zapisuje komenda `ConquerSettlementCommand` w fazie 4.
 
 ## Dane wejściowe i wyjściowe

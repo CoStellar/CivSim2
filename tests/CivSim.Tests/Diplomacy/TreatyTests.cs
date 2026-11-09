@@ -138,7 +138,7 @@ public class TreatyTests
         runner.RunTurn();
         Assert.Equal(ProposalStatus.Declined, state.Treaties.Proposals[0].Status);
 
-        while (state.Treaties.Proposals.Count > 0 && state.Month < 12L * 1000)
+        while (state.Treaties.Proposals.Count > 0 && state.ActionMonth < 12L * 1000) // months of action (decision of 2026-11-09)
         {
             runner.RunTurn();
         }
@@ -213,13 +213,13 @@ public class TreatyTests
         Assert.StartsWith($"{b.Name} and {a.Name} made peace after", line, System.StringComparison.Ordinal);
         Assert.False(state.Treaties.AtWar(a.Id, b.Id));
         Treaty truce = state.Treaties.Find(a.Id, b.Id, TreatyKind.Peace)!;
-        Assert.Equal(state.Month + (Content.Treaties.Kinds[(int)TreatyKind.Peace].Years * 12L), truce.UntilMonth);
+        Assert.Equal(state.ActionMonth + (Content.Treaties.Kinds[(int)TreatyKind.Peace].Years * 12L), truce.UntilMonth); // months of action
         Assert.True(state.Treaties.ForbidsAttack(a.Id, b.Id));
 
         var runner = new TurnRunner(state);
         runner.AddSystem(new DiplomacySystem(Content));
         runner.AddSystem(new CalendarSystem(Content));
-        while (state.Month < truce.UntilMonth)
+        while (state.ActionMonth < truce.UntilMonth)
         {
             runner.RunTurn();
         }
@@ -566,7 +566,7 @@ public class TreatyTests
     {
         ContentException e = Assert.Throws<ContentException>(() => WithData(
             "{\"kind\": \"trade\"},", string.Empty,
-            "\"years\": 100, ", string.Empty,
+            "\"years\": 20, ", string.Empty,
             "\"x0\": 120, \"f0\": \"0\", \"x1\": 250", "\"x0\": 250, \"f0\": \"0\", \"x1\": 120"));
         Assert.Contains(e.Errors, x => x.Contains("missing kind 'trade'", System.StringComparison.Ordinal));
         Assert.Contains(e.Errors, x => x.Contains("peace needs years", System.StringComparison.Ordinal));

@@ -16,6 +16,20 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Po czasie polityki w latach akcji (etap 6 PR 2)
+
+3 seedy, 18 000 taktów (30 min przy ×1), gałąź `feat/live-pace`. W nawiasach PR 1.
+
+| Seed | Decyzje | Wypowiedzenia wojny | Kampanie | Propozycje umów | Zmiany ustroju | Ludy żywe na końcu | Secesje |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 7 | 7963 (13 735) | 41 (152) | 73 (329) | 199 (2111) | 69 (78) | 55 (64) | 45 (52) |
+| 23 | 11 110 (17 083) | 52 (66) | 107 (122) | 261 (1639) | 67 (71) | 63 (64) | 52 (52) |
+| 42 | 11 403 (17 355) | 43 (104) | 68 (300) | 224 (1780) | 70 (75) | 62 (58) | 52 (46) |
+
+- Planowy przegląd dyplomaty co 5 minut (zamiast co kilka sekund) to główna przyczyna: propozycji umów jest 7–10 razy mniej.
+- Wojny i kampanie: mniej, bo krzywdy szybciej blakną i rzadziej ktoś planowo o nich myśli; wojny wciąż wybuchają (41–52 na grę).
+- Ocena i możliwa zmiana (`reviewEveryYears`): `08` pkt 20.
+
 ## Po zegarze gry na żywo (etap 6 PR 1, ADR 0025)
 
 3 seedy, mapa standard, **18 000 taktów = 30 minut gry przy ×1**, gałąź `feat/live-clock`. Wykres decyzji wyżej jest z tych gier.

@@ -69,13 +69,13 @@ public class GovernmentTests
         var change = new ChangeGovernmentCommand(Content, Id("chiefdom"));
         Assert.True(change.Validate(state, civ.Id).Success);
         Assert.Contains("began to change its government to chiefdom", change.ApplyWithChronicle(state, civ.Id), System.StringComparison.Ordinal);
-        Assert.Equal(state.Month + 48, civ.PendingGovernmentMonth);
+        Assert.Equal(state.ActionMonth + 48, civ.PendingGovernmentMonth); // months of action (decision of 2026-11-09)
         Assert.False(change.Validate(state, civ.Id).Success, "already under way");
         Assert.NotNull(Treaties.CannotDeclareWar(Content, state, civ.Id, state.Civilizations[1].Id, WarGoal.Loot, -1));
 
         var lines = new List<string>();
         Assert.Equal(0, Governments.EnactDue(Content, state, lines.Add));
-        state.SetCountersForLoad(state.Month + 48, state.NextSettlementId, state.StepMonths);
+        state.SetActionMonthForLoad(state.ActionMonth + 48);
         Assert.Equal(1, Governments.EnactDue(Content, state, lines.Add));
         Assert.Equal(Id("chiefdom"), civ.Government);
         Assert.Equal(CivilizationState.NoGovernment, civ.PendingGovernment);

@@ -140,7 +140,7 @@ public class RevoltTests
         Assert.True(Treaties.HasGrievance(state, parent.Id, child.Id));
         Assert.True(child.Relation(parent.Id)!.HasMet);
         Assert.False(state.Treaties.AtWar(parent.Id, child.Id));
-        Assert.True(state.Month < parent.RevoltCalmUntilMonth);
+        Assert.True(state.ActionMonth < parent.RevoltCalmUntilMonth);
 
         // The game goes on with the new people, and a save keeps it.
         for (int i = 0; i < 5; i++)
