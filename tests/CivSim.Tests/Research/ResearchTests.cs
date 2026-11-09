@@ -18,7 +18,7 @@ namespace CivSim.Tests.Research;
 /// <summary>Technologies, research, inspirations, diffusion and eras (stage 3f).</summary>
 public class ResearchTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Tech(string key) => Content.Technology(key).Id;
 

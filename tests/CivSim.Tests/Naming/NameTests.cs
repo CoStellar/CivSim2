@@ -16,7 +16,7 @@ namespace CivSim.Tests.Naming;
 /// <summary>Peoples' languages and names (GDD 5.6).</summary>
 public class NameTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static GameState NewGame(ulong seed) => GameState.CreateNew(GameSettings.Test(seed), Content, out WorldGenReport _);
 

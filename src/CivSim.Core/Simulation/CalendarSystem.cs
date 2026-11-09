@@ -5,8 +5,8 @@ using CivSim.Core.State;
 namespace CivSim.Core.Simulation;
 
 /// <summary>
-/// Moves game time forward by the finished world step in the record phase, before the snapshot is published, and starts
-/// the next world step (ADR 0018): who steps in it and how long it lasts.
+/// Moves the year counter forward after a world pulse in the record phase, before the snapshot is published, and starts
+/// the next tick (ADR 0025): who pulses in it and whether the world does.
 /// </summary>
 public sealed class CalendarSystem(GameContent content) : ITurnSystem
 {
@@ -20,12 +20,7 @@ public sealed class CalendarSystem(GameContent content) : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
-        if (state.StepMonths == 0)
-        {
-            WorldClock.Begin(_content, state); // a state made without content: start its clock now
-        }
-
-        WorldClock.Shorten(_content, state); // a campaign or a war of this step needs a step soon (ADR 0022)
+        // ADR 0025: the year counter moves only in the world's pulse; the next tick starts here.
         state.Month += state.StepMonths;
         WorldClock.Begin(_content, state);
     }

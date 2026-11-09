@@ -16,7 +16,7 @@ namespace CivSim.Tests.Research;
 /// <summary>Technologies need their people (stage 4F, PR 3, ADR 0020).</summary>
 public class PeopleRequirementTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Skill(string key) => Content.Skills.Single(s => s.Key == key).Id;
 

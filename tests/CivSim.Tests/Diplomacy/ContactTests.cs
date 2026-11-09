@@ -17,7 +17,7 @@ namespace CivSim.Tests.Diplomacy;
 /// <summary>Discovery of civilizations, rumors and the memory of relations (GDD 8.5; stage 4c).</summary>
 public class ContactTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static GameState NewState(ulong seed) => GameState.CreateNew(GameSettings.Test(seed), Content, out _);
 

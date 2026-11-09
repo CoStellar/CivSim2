@@ -21,7 +21,7 @@ public class ProtocolSerializerTests
         yield return [new CommandRejectedMessage(7, "Nope")];
         yield return [new EndTurnMessage(12)];
         yield return [new GameViewMessage(3, 1, [new WorldView(0, "Earth", 64, 40)], [new CivilizationView(1, "Rome", true)])];
-        yield return [new GameViewMessage(4, -1, [], [], 1234, SimulationSpeed.X5, [new ChronicleEntry(4, "Speed set to X5.")])];
+        yield return [new GameViewMessage(4, -1, [], [], 1234, SimulationSpeed.X4, [new ChronicleEntry(4, "Speed set to X4.")])];
         yield return [new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer)];
         yield return [new SetSpeedMessage(SimulationSpeed.Max)];
         yield return [new ContentMessage([new BiomeInfo(0, "deep_ocean", "Deep Ocean", true, 0x0a2647)], [new DepositInfo(1, "game", "Game", 0x8a562d)], ["None"], ["Flat"])];
@@ -117,8 +117,9 @@ public class ProtocolSerializerTests
         // Version 9 added war campaigns (armies and their carriers) to the observer layers (stage 4e PR 3).
         // Version 10 added the title and the government of each civilization for observers (stage 4f).
         // Version 11 added the leader of the followed civilization (stage 4f PR 2).
+        // Version 14: live speeds x1/x2/x4 (ADR 0025; x4 replaced x5).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("0D000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("0E000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

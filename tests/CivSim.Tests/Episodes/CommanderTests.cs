@@ -17,7 +17,7 @@ namespace CivSim.Tests.Episodes;
 /// <summary>The commander: the battle it expects, road and food, and its look every month of a campaign (stage 4e PR 5).</summary>
 public class CommanderTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static BattleRules Rules => Content.War.Battle;
 

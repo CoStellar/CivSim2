@@ -1,6 +1,6 @@
 # ADR 0018: Zegar świata i rytmy cywilizacji, decyzje reaktywne i proaktywne
 
-**Status:** przyjęta, 2026-11-06 (decyzja Patryka). Zastępuje część ADR 0013 o „turze decyzyjnej” (`IsDecisionTurn`).
+**Status:** zastąpiona przez ADR 0025 (2026-11-09: takty i pulsy gry na żywo); wcześniej przyjęta, 2026-11-06 (decyzja Patryka). Zastępuje część ADR 0013 o „turze decyzyjnej” (`IsDecisionTurn`).
 
 ## Kontekst
 

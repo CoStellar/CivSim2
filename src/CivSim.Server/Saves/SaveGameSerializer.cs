@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 30;
+    public const int FormatVersion = 31;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -62,7 +62,7 @@ public static class SaveGameSerializer
                 c.Government, c.PendingGovernment, c.PendingGovernmentMonth,
                 c.LeaderName, c.LeaderBornMonth, c.LeaderSinceMonth, c.LeaderTraits, c.LeaderShift, c.Leaders, c.CrisisUntilMonth,
                 c.Capital, c.Stability, c.AdminUsed, c.AnarchyUntilMonth, c.CapitalLostUntilMonth,
-                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations));
+                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations, c.LastPulseTick));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -226,6 +226,7 @@ public static class SaveGameSerializer
                 FoundedMonth = c.FoundedMonth,
                 RevoltCalmUntilMonth = c.RevoltCalmUntilMonth,
                 LanguageMutations = c.LanguageMutations ?? [],
+                LastPulseTick = c.LastPulseTick,
             };
             LoadRelations(civ, c.Relations);
             state.AddCivilizationForLoad(civ);
@@ -334,7 +335,7 @@ public static class SaveGameSerializer
         {
             list.Add(new TreatySaveData(t.A.Value, t.B.Value, (byte)t.Kind, t.Initiator.Value, t.SinceMonth, t.UntilMonth,
                 t.GatewayA, t.GatewayB, t.LastFlowMonth, t.LastWorth, t.TotalWorth, (byte)t.Goal, t.GoalSettlement, t.Score,
-                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms), t.Campaigns, t.CampaignMonths, t.LastCampaignMonth, t.ReadyMonth));
+                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms), t.Campaigns, t.CampaignMonths, t.LastCampaignTick, t.ReadyTick, t.SinceTick));
         }
 
         return list;
@@ -356,9 +357,9 @@ public static class SaveGameSerializer
         var list = new List<EpisodeSaveData>(state.Episodes.Count);
         foreach (Core.Episodes.Episode e in state.Episodes.All)
         {
-            list.Add(new EpisodeSaveData(e.Id, (byte)e.Kind, e.Civ.Value, e.Other.Value, e.StartMonth, e.NextMonth, e.TickMonths,
+            list.Add(new EpisodeSaveData(e.Id, (byte)e.Kind, e.Civ.Value, e.Other.Value, e.StartMonth, e.NextTick, e.TickMonths,
                 e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, Hundredths(e.Loot),
-                e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilMonth,
+                e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilTick,
                 Hundredths(e.Food), e.HungryMonths, e.Forays, e.Foraging, e.ConvoyFrom, e.ConvoyCell, e.ConvoyCarriers,
                 Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed));
         }
@@ -377,7 +378,7 @@ public static class SaveGameSerializer
                     Civ = new CivId(e.Civ),
                     Other = new CivId(e.Other),
                     StartMonth = e.StartMonth,
-                    NextMonth = e.NextMonth,
+                    NextTick = e.NextTick,
                     TickMonths = e.TickMonths,
                     Home = e.Home,
                     Target = e.Target,
@@ -392,7 +393,7 @@ public static class SaveGameSerializer
                     Mustered = e.Mustered,
                     ArmsPercent = e.ArmsPercent,
                     Morale = e.Morale,
-                    MusterUntilMonth = e.MusterUntilMonth,
+                    MusterUntilTick = e.MusterUntilTick,
                     Food = Amounts(e.Food),
                     HungryMonths = e.HungryMonths,
                     Forays = e.Forays,
@@ -466,8 +467,9 @@ public static class SaveGameSerializer
                 Terms = LoadTerms(t.Terms),
                 Campaigns = t.Campaigns,
                 CampaignMonths = t.CampaignMonths,
-                LastCampaignMonth = t.LastCampaignMonth,
-                ReadyMonth = t.ReadyMonth,
+                LastCampaignTick = t.LastCampaignTick,
+                ReadyTick = t.ReadyTick,
+                SinceTick = t.SinceTick,
             });
         }
 

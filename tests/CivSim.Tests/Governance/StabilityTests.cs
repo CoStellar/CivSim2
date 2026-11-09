@@ -15,7 +15,7 @@ namespace CivSim.Tests.Governance;
 /// <summary>Capital, administration, stability, loyalty and unrest (GDD 7.3; stage 4f PR 3).</summary>
 public class StabilityTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Gov(string key) => Content.Governments.Single(g => g.Key == key).Id;
 

@@ -113,7 +113,7 @@ public sealed record DeclareWarCommand(GameContent Content, CivId Target, WarGoa
         int months = state.FindCivilization(civ) is { } c ? Governance.Governments.EnactMonths(Content, c) : 0;
         if (months > 0 && state.Treaties.Find(civ, Target, TreatyKind.War) is { } war)
         {
-            war.ReadyMonth = state.Month + months;
+            war.ReadyTick = state.Turn + Content.Time.ActionTicks(months); // ADR 0025: months of action, in ticks
             line += string.Create(System.Globalization.CultureInfo.InvariantCulture, $" Its warriors will be ready in {months / 12} year{(months == 12 ? string.Empty : "s")}.");
         }
 

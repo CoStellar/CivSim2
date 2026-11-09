@@ -94,7 +94,7 @@ public class ObserverLayerTests
     {
         // A window that stops reading (minimized, too slow at full speed) used to collect every view in memory: 37 GB after
         // a few hours. Now the server waits until it reads, and then sends the latest view with what it missed.
-        GameContent content = ContentLoader.Load();
+        GameContent content = TestContent.Load();
         GameServer server = GameServer.CreateNew(GameSettings.Test(5), content);
         (InMemoryConnection viewer, InMemoryConnection end) = InMemoryConnection.CreatePair();
         server.Accept(end);

@@ -52,7 +52,9 @@ public class WorldGeneratorTests
     // ADR 0022: the months the world computes and the episodes are in the hash (the map is unchanged).
     // Stage 4f: the government of every civilization and the readiness of wars are in the hash (the map is unchanged).
     // Stage 4f PR 2: every civilization's leader is in the hash (the map is unchanged).
-    private const ulong GoldenWorldHash = 4316276120475864014UL;
+    // ADR 0025: the tick of every civilization's last pulse is in the hash, and the world's first pulse covers the step
+    // of the most advanced civilization (the map is unchanged).
+    private const ulong GoldenWorldHash = 13178019916619486158UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

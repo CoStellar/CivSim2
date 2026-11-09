@@ -54,7 +54,7 @@ sequenceDiagram
   a cudze tylko na polach, które zna, i bez magazynu. Obserwator widzi wszystko. `ContentMessage` niesie też towary i nazwy poziomów osad.
 - **Mapa** (protokół v4): fragmenty niosą dziką żywność i siłę wpływu. Gracz może wysłać komendy `MoveSettlementDto` i `SplitSettlementDto`; serwer sprawdza je tak samo jak komendy AI.
 - **`LocalServerHost`:** uruchamia serwer w osobnym wątku i daje klientowi połączenie w pamięci (ADR 0010). Tury idą
-  w tempie wybranej prędkości, tylko gdy podłączony jest obserwator; przy maks. widok wychodzi najwyżej co 250 ms.
+  w tempie wybranej prędkości, tylko gdy podłączony jest obserwator; przy maks. widok wychodzi najwyżej co 250 ms, przy ×1/×2/×4 najwyżej co 100 ms (ADR 0025: takt co 100 ms przy ×1, więc przy ×4 widok co czwarty takt).
 - **Klient, który nie nadąża** (poprawka z 2026-11-07, po 37 GB pamięci w kilkugodzinnej grze Patryka): połączenie mówi, ile wysłanych
   wiadomości druga strona jeszcze nie odebrała (`IConnection.Backlog`). Gdy klient ma ich więcej niż 256 (`GameServer.MaxBacklog`),
   serwer nie wysyła mu nowych widoków, tylko zbiera dla niego zmienione fragmenty mapy i najnowsze 500 wpisów kroniki. Gdy klient

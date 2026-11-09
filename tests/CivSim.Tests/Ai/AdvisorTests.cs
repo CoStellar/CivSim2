@@ -16,7 +16,7 @@ namespace CivSim.Tests.Ai;
 /// <summary>The advisor council and its "Why?" log (GDD 8.1, 8.7; stage 4a).</summary>
 public class AdvisorTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static (TurnRunner Runner, AiCouncil Council) NewGame(ulong seed, GameContent content)
     {
@@ -106,7 +106,7 @@ public class AdvisorTests
         }
 
         File.WriteAllText(Path.Combine(folder, "ai.json"), json);
-        return ContentLoader.Load(folder);
+        return ContentLoader.Load(folder).WithTime(TestContent.EveryTick);
     }
 
     // The real ai.json with the draw among the best switched off.

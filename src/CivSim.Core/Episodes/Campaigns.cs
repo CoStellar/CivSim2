@@ -50,7 +50,7 @@ public static class Campaigns
             return "We are not at war with them.";
         }
 
-        if (state.Treaties.Find(civ, t.Owner, TreatyKind.War) is { } war && !war.ReadyFor(civ, state.Month))
+        if (state.Treaties.Find(civ, t.Owner, TreatyKind.War) is { } war && !war.ReadyFor(civ, state.Turn))
         {
             return "Our people are not ready for war yet.";
         }
@@ -539,7 +539,7 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
             Civ = civ,
             Other = target.Owner,
             StartMonth = state.Month,
-            NextMonth = state.Month + rules.CampaignStepMonths,
+            NextTick = state.Turn + Content.Time.ActionTicks(rules.CampaignStepMonths),
             TickMonths = rules.CampaignStepMonths,
             Home = home.Id.Value,
             Target = target.Id.Value,
@@ -553,7 +553,7 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
             Food = food,
             Cell = geo.Index(home.Cell),
             Phase = musterMonths > 0 ? CampaignPhase.Muster : CampaignPhase.March,
-            MusterUntilMonth = state.Month + musterMonths,
+            MusterUntilTick = state.Turn + Content.Time.ActionTicks(musterMonths),
             Loot = new Amount[Content.Goods.Count],
             ConvoyFood = new Amount[Content.Goods.Count],
         });
@@ -561,7 +561,7 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
         if (war is not null)
         {
             war.Campaigns++;
-            war.LastCampaignMonth = state.Month;
+            war.LastCampaignTick = state.Turn;
         }
 
         string from = count == 1 ? home.Name : $"{count} settlements gathering at {home.Name}";
@@ -644,13 +644,13 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         for (int k = 0; k < book.All.Count; k++)
         {
             Episode e = book.All[k];
-            if (e.Ended || e.Kind != EpisodeKind.Campaign || e.NextMonth > state.Month)
+            if (e.Ended || e.Kind != EpisodeKind.Campaign || e.NextTick > state.Turn)
             {
                 continue;
             }
 
             Step(context, state, e);
-            e.NextMonth = state.Month + e.TickMonths;
+            e.NextTick = state.Turn + _content.Time.ActionTicks(e.TickMonths);
         }
 
         book.RemoveEnded();
@@ -669,7 +669,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         if (war is not null)
         {
             war.CampaignMonths += e.TickMonths;
-            war.LastCampaignMonth = state.Month;
+            war.LastCampaignTick = state.Turn;
         }
 
         WorldState world = state.Worlds[0];
@@ -686,7 +686,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             {
                 e.Phase = CampaignPhase.Return;
             }
-            else if (state.Month >= e.MusterUntilMonth)
+            else if (state.Turn >= e.MusterUntilTick)
             {
                 e.Phase = CampaignPhase.March;
             }

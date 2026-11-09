@@ -16,7 +16,7 @@ namespace CivSim.Tests.Population;
 
 public class PopulationTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static TurnRunner NewGame(ulong seed, GameSettings? settings = null)
     {

@@ -148,16 +148,16 @@ public enum SimulationSpeed
     /// <summary>No turns run.</summary>
     Paused = 0,
 
-    /// <summary>One turn every 2 seconds.</summary>
+    /// <summary>Live speed (ADR 0025): data/time.json ticksPerSecond ticks a second.</summary>
     X1 = 1,
 
-    /// <summary>One turn every second.</summary>
+    /// <summary>Twice the live speed.</summary>
     X2 = 2,
 
-    /// <summary>One turn every 0.4 seconds.</summary>
-    X5 = 5,
+    /// <summary>Four times the live speed.</summary>
+    X4 = 4,
 
-    /// <summary>As fast as possible; the map is refreshed every few turns.</summary>
+    /// <summary>As fast as possible; the map is refreshed every few ticks.</summary>
     Max = 100,
 }
 

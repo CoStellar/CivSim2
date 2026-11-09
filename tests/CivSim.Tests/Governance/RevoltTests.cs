@@ -18,7 +18,7 @@ namespace CivSim.Tests.Governance;
 /// <summary>Revolts: chance, rebels, secession as a new civilization, coup (GDD 7.3; stage 4f PR 4).</summary>
 public class RevoltTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Gov(string key) => Content.Governments.Single(g => g.Key == key).Id;
 

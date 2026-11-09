@@ -20,7 +20,7 @@ namespace CivSim.Tests.Episodes;
 /// <summary>Arms, armies of several settlements, carriers and hunger on campaigns (stage 4e PR 3).</summary>
 public class ArmyTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Warriors => Content.Strata.Single(s => s.Key == "warriors").Id;
 

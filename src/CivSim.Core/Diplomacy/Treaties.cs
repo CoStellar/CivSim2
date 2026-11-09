@@ -229,20 +229,23 @@ public sealed class Treaty
     /// <summary>War: months of campaigning by either side.</summary>
     public int CampaignMonths { get; set; }
 
-    /// <summary>War: game month of the last campaign step, or -1 when nobody has campaigned.</summary>
-    public long LastCampaignMonth { get; set; } = -1;
+    /// <summary>Tick it was signed or declared (ADR 0025: war timers count in ticks).</summary>
+    public long SinceTick { get; set; }
+
+    /// <summary>War: tick of the last campaign step, or -1 when nobody has campaigned.</summary>
+    public long LastCampaignTick { get; set; } = -1;
 
     /// <summary>
-    /// War: the month from which the side that declared it may send its armies (GDD 7.2: a state decision takes effect
-    /// after its government's enactment delay; stage 4f), or -1 when at once.
+    /// War: the tick from which the side that declared it may send its armies (GDD 7.2: a state decision takes effect
+    /// after its government's enactment delay; stage 4f; in ticks of action since ADR 0025), or -1 when at once.
     /// </summary>
-    public long ReadyMonth { get; set; } = -1;
+    public long ReadyTick { get; set; } = -1;
 
-    /// <summary>War: true when <paramref name="civ"/> may send armies in <paramref name="month"/> (the defender always may).</summary>
-    public bool ReadyFor(CivId civ, long month) => civ != Initiator || month >= ReadyMonth;
+    /// <summary>War: true when <paramref name="civ"/> may send armies in <paramref name="tick"/> (the defender always may).</summary>
+    public bool ReadyFor(CivId civ, long tick) => civ != Initiator || tick >= ReadyTick;
 
-    /// <summary>War: the month the war counts as quiet from (ADR 0022): its start, its readiness, or its last campaign.</summary>
-    public long QuietSince => Math.Max(Math.Max(SinceMonth, ReadyMonth), LastCampaignMonth);
+    /// <summary>War: the tick the war counts as quiet from (ADR 0022, 0025): its start, its readiness, or its last campaign.</summary>
+    public long QuietSince => Math.Max(Math.Max(SinceTick, ReadyTick), LastCampaignTick);
 
     /// <summary>Peace: the terms it was made on.</summary>
     public PeaceTerms Terms { get; set; } = PeaceTerms.White;

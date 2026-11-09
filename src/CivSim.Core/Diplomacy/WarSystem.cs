@@ -39,12 +39,13 @@ public sealed class WarSystem : ITurnSystem
         long month = state.Month;
         bool any = false;
 
-        // ADR 0022: a war in which nobody campaigned for some years ends in a white peace.
-        long quiet = _content.War.QuietPeaceYears * 12L;
+        // ADR 0022: a war in which nobody campaigned for some years ends in a white peace (ADR 0025: years of action, in ticks).
+        long quiet = _content.Time.ActionTicks(_content.War.QuietPeaceYears * 12L);
+        long tick = state.Turn;
         for (int k = state.Treaties.All.Count - 1; k >= 0; k--)
         {
             Treaty t = state.Treaties.All[k];
-            if (t.Kind == TreatyKind.War && month - t.QuietSince >= quiet
+            if (t.Kind == TreatyKind.War && tick - t.QuietSince >= quiet
                 && !state.Episodes.Campaigning(t.A, t.B) && !state.Episodes.Campaigning(t.B, t.A))
             {
                 string line = Treaties.Sign(_content, state, t.A, t.B, TreatyKind.Peace, PeaceTerms.White);
@@ -64,14 +65,14 @@ public sealed class WarSystem : ITurnSystem
             any = true;
         }
 
-        if (!any || _weariness is null || _content.War.MoodAtFullWeariness == 0)
+        if (!any || _weariness is null || _content.War.MoodAtFullWeariness == 0 || state.WorldMonths == 0)
         {
             return;
         }
 
-        // Until just after the next step of a civilization, so that the mood of that step still feels it (ADR 0022).
-        long next = Simulation.WorldClock.NextCivilizationMonth(state);
-        long until = next == long.MaxValue ? month + 1 : next + 1;
+        // In the world's pulse, until just after the next one, so that every pulse of a civilization in between still
+        // feels it (ADR 0025).
+        long until = month + state.WorldMonths + 1;
         foreach (CivilizationState civ in state.Civilizations)
         {
             if (!civ.IsAlive)

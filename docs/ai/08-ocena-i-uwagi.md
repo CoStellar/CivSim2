@@ -337,6 +337,18 @@ a krok świata częściej trwa miesiąc (wojny), więc 2000 tur to ok. 11 600 la
   małą. Kandydat do następnego kroku: dyplomata pyta dowódcę (K1) o szansę przed wypowiedzeniem wojny o odwet, jak przy wojnie o ziemię.
 - Przy 64 ludach (limit gry) dryf i secesje stają; większe państwa mogą wtedy znowu rosnąć. W 2000 turach limit osiągnęła 1 z 8 gier (seed 102).
 
+## 20. Zegar gry na żywo (etap 6 PR 1, ADR 0025)
+
+- **Co się zmieniło:** AI decyduje w pulsach (co 3 s przy ×1), a kampanie i liczniki wojny idą w taktach. Same wzory decyzji są
+  bez zmian, więc w pulsie AI zachowuje się jak w dawnym kroku.
+- **Za szybkie w czasie rzeczywistym:** wszystko, co liczy się w latach licznika: przegląd dyplomaty co 50 lat (ok. 6 s w neolicie),
+  rozejm po wojnie, pamięć krzywd, przewodnictwo przywódców (ok. 40 lat panowania = ok. 5 s). Gracz nie zdąży tego zauważyć. To
+  zadanie PR 2 (tempa pod pulsy): przenieść te odstępy na takty albo pulsy i ustawić je w sekundach.
+- **Wojny trwają ok. 250 lat licznika** (mediana, seed 7, 9000 taktów), bo cicha wojna kończy się po 300 taktach (30 s), a w neolicie
+  licznik idzie ok. 8 lat na sekundę. Czy 30 s bez walki to dobry czas na koniec wojny, do decyzji Patryka w PR 2.
+- **Uczciwie:** dawne testy jednostkowe AI liczą na „puls co takt” (`TestContent`); zachowanie z prawdziwym zegarem sprawdzają testy
+  zegara, epizodów, determinizmu i gry całe w Headless.
+
 ## Decyzje Patryka (2026-11-06)
 
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.

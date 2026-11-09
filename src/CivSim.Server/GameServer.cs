@@ -39,6 +39,9 @@ public sealed class GameServer
     }
 
     /// <summary>Creates a server for an existing (e.g. loaded) game.</summary>
+    /// <summary>Ticks in a real second at speed x1 (data/time.json; 10 without content).</summary>
+    public int TicksPerSecond => _content?.Time.TicksPerSecond ?? 10;
+
     public GameServer(GameState state, GameContent? content = null)
     {
         ArgumentNullException.ThrowIfNull(state);

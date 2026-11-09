@@ -152,7 +152,7 @@ public class GameServerTests
     [Fact]
     public void TheViewShowsCapitalsTheViewerCanSee()
     {
-        Core.Content.GameContent content = global::CivSim.Data.ContentLoader.Load();
+        Core.Content.GameContent content = TestContent.Load();
         GameState state = GameState.CreateNew(GameSettings.Test(3), content, out _);
         Core.Simulation.GameSnapshot snapshot = Core.Simulation.GameSnapshot.From(state);
 

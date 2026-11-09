@@ -11,7 +11,7 @@ public class ContentLoaderTests
     [Fact]
     public void DefaultDataLoadsWithoutErrors()
     {
-        GameContent content = ContentLoader.Load();
+        GameContent content = TestContent.Load();
         Assert.Equal(14, content.Biomes.Count);
         Assert.Equal(22, content.Deposits.Count);
         for (int i = 0; i < content.Biomes.Count; i++)

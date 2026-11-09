@@ -8,7 +8,7 @@ AI robi to, czego on nie zdąży; backend liczy się w taktach i pulsach, lata t
 epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery. Dawne etapy 6–13 (ery 3–9, tryb gracza
 na końcu) są zastąpione. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”. Szczegóły zasad: `docs/GDD.md` (1.1, 6.4).
 
-**Aktualny etap: 6 (backend gry na żywo): czeka na plan i start; etapy 0–5b zrobione**
+**Aktualny etap: 6 (backend gry na żywo): plan w `docs/prompts/09-etap-gra-na-zywo.md`; PR 1 (takt i pulsy) gotowy**
 
 ---
 
@@ -236,7 +236,7 @@ Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neo
 świata, cywilizacje różnią się tempem zależnie od terenu i kierunku, a takt mieści się w celu wydajności.
 **Brama: Patryk ogląda i mówi, czy to działa jak trzeba.**
 
-- [ ] **Takt i pulsy** (ADR 0025): stały takt dla akcji, pulsy cywilizacji rozłożone między takty i liczone równolegle, licznik lat jako etykieta; koniec osobnego zegara epizodów; nowe złote hashe i format zapisu
+- [x] **Takt i pulsy** (ADR 0025, PR 1 `feat/live-clock`): stały takt dla akcji, pulsy cywilizacji rozłożone między takty, licznik lat jako etykieta; koniec osobnego zegara epizodów; liczniki wojny w taktach; prędkości ×1/×2/×4; nowe złote hashe, zapis 31, protokół 14 (liczenie pulsów równolegle: PR 8)
 - [ ] **Tempa pod pulsy:** przyrost, zbieranie, nauka przeliczone z lat na pulsy, proporcje i przyczyny bez zmian; tempo AI blisko celu z GDD 1.1
 - [ ] **Oddziały:** osadnicy, wojownicy, zwiadowcy, tragarze jako jednostki w ruchu (grupy ludzi); kampania wojenna = oddziały w ruchu
 - [ ] **Zadania na obszarze:** wydobycie, pola, łowiska, budowy w miejscu; ludzie z osady sami tam chodzą; te same komendy dla AI i gracza

@@ -16,7 +16,7 @@ namespace CivSim.Tests.Episodes;
 /// <summary>Battles in rounds, terrain, conquest of villages and flight from camps (stage 4e PR 4).</summary>
 public class BattleTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static BattleRules Rules => Content.War.Battle;
 

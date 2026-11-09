@@ -20,7 +20,7 @@ public partial class StartMenu : CanvasLayer
     private static readonly string[] Inlands = ["normal", "dry", "humid"];
     private static readonly string[] Reliefs = ["preset", "flat", "normal", "mountainous"];
     private static readonly string[] ResourceLevels = ["normal", "scarce", "rich"];
-    private static readonly string[] SpeedWords = ["pause", "x1", "x2", "x5", "max"];
+    private static readonly string[] SpeedWords = ["pause", "x1", "x2", "x4", "max"];
     private static readonly Dictionary<string, int> DefaultCivs = new() { ["test"] = 4, ["standard"] = 12, ["large"] = 20, ["huge"] = 32 };
 
     private readonly LocalSetupInfo _setup;

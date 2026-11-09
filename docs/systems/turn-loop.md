@@ -1,6 +1,6 @@
 # Pętla tury
 
-**W jednym zdaniu:** przesuwa grę o jeden krok świata: uruchamia 11 faz w stałej kolejności, rozstrzyga komendy, mierzy czas i publikuje migawkę; zegar świata (ADR 0018) mówi, które cywilizacje liczą się w tym kroku i za ile miesięcy.
+**W jednym zdaniu:** przesuwa grę o jeden **takt** (ADR 0025): uruchamia 11 faz w stałej kolejności, rozstrzyga komendy, mierzy czas i publikuje migawkę; zegar mówi, które cywilizacje mają w tym takcie puls (i za ile miesięcy), czy świat ma swój puls i które epizody robią krok.
 
 **Faza tury:** wszystkie (to ona je wywołuje).
 
@@ -20,32 +20,43 @@ flowchart TD
   P11 --> S["SnapshotBuffer<br/>ostatnia gotowa migawka dla serwera i podglądu"]
 ```
 
-## Zegar świata i rytmy cywilizacji (ADR 0018)
+## Zegar gry na żywo: takty i pulsy (ADR 0025, etap 6 PR 1; wcześniej ADR 0018 i 0022)
 
 ```mermaid
 flowchart TD
-  B["WorldClock.Begin w miesiącu M"] --> Q{"cywilizacja:<br/>NextStepMonth ≤ M?"}
-  Q -- tak --> K["ma krok: rytm R = tura jej ery<br/>koniec = (M div R + 1) × R<br/>StepMonths = koniec − M, Steps + 1"]
+  B["WorldClock.Begin w takcie t"] --> Q{"cywilizacja:<br/>pierwszy takt albo<br/>t mod P = jej przesunięcie?"}
+  Q -- tak --> K["puls: StepMonths = tura jej ery<br/>(neolit 300 mies.), Steps + 1"]
   Q -- nie --> W["czeka: StepMonths = 0"]
-  K --> N["krok świata = najbliższy NextStepMonth − M"]
-  W --> N
-  N --> F["fazy 1–11: systemy cywilizacji liczą tylko te z krokiem,<br/>za ich StepMonths; świat za krok świata"]
-  F --> C["kalendarz: M += krok świata, znów Begin"]
+  B --> WP{"t mod P = 0?"}
+  WP -- tak --> WM["puls świata: WorldMonths =<br/>tura ery najbardziej rozwiniętej"]
+  WP -- nie --> W0["WorldMonths = 0"]
+  K --> F["fazy 1–11: systemy cywilizacji liczą tylko te z pulsem;<br/>świat tylko w swoim pulsie; epizody, gdy NextTick ≤ t"]
+  W --> F
+  WM --> F
+  W0 --> F
+  F --> C["kalendarz: Month += WorldMonths (licznik lat),<br/>tura +1, znów Begin"]
 ```
 
-- `GameState.Month` to licznik. Pętla przeskakuje od razu do najbliższego miesiąca, w którym ktoś ma krok.
-- `CivilizationState`: `NextStepMonth` (początek następnego kroku), `StepStartMonth`, `StepMonths` (miesiące w tym kroku świata,
-  0 = czeka), `Steps` (licznik własnych kroków), `Alarms` (powody do reakcji poza rytmem: `WarDeclared`, `Attacked`).
-- Rytm = `monthsPerTurn` ery z `data/eras.json`; na planecie z porami roku na żywo nie dłużej niż krok pory roku (ADR 0013).
-- Kroki są przypięte do wielokrotności rytmu, więc cywilizacje tej samej ery liczą się razem, a po zmianie ery pierwszy krok
-  jest krótszy, nigdy dłuższy. Suma kroków cywilizacji = czas od startu (test `ANewEraStartsWithAShorterStepAndNoTimeIsLost`).
+- **Takt** = jeden obrót pętli (`GameState.Turn`). Serwer robi `ticksPerSecond` taktów na sekundę przy ×1 (×2 i ×4 dwa i cztery
+  razy więcej; „Max” tak szybko, jak się da). Liczby w `data/time.json`: 10 taktów na sekundę, puls co 30 taktów (P), miesiąc akcji = 5 taktów.
+- **Puls cywilizacji** to dawny krok cywilizacji: cywilizacja liczy gospodarkę, ludność, naukę, widzenie i decyzje AI za
+  `monthsPerTurn` swojej ery (neolit 25 lat), dokładnie jak w ADR 0018. Pierwszy puls przychodzi od razu (także nowej cywilizacji z
+  secesji), potem co P taktów w jej własnym takcie: `WorldClock.PulseOffset` = 1 + (id × 7 mod (P − 1)), nigdy w takcie świata.
+  Dzięki temu praca rozkłada się równo na takty.
+- **Puls świata** co P taktów (takty 0, 30, 60…): klimat, morze, odrastanie poza strefami, strefy wpływów liczą się za
+  `WorldMonths` = tura ery najbardziej rozwiniętej żywej cywilizacji. Po takcie kalendarz przesuwa o tyle **licznik lat**
+  (`GameState.Month`), który jest tylko liczbą dla gracza.
+- **Akcja w taktach:** epizody (kampanie) robią krok, gdy `NextTick ≤ takt`; krok kampanii to miesiąc akcji = `ticksPerActionMonth`
+  taktów. Liczniki wojny (`Treaty.SinceTick`, `ReadyTick`, `LastCampaignTick`, cicha wojna `quietPeaceYears` z `war.json`)
+  liczą się w taktach przez `TimeRules.ActionTicks(miesiące)`. **Wojna nie zatrzymuje świata** (znany problem 4 naprawiony).
+- **Alarmy** (wypowiedziana wojna, napad) dalej budzą radę w najbliższej fazie decyzji, czyli w następnym takcie.
 - `WorldClock.MonthsOf(state, civ)` i `MonthsOf(state, osada)` podają miesiące do przeliczania temp na rok; osada opuszczona liczy
-  się czasem świata. `WorldClock.PlansNow` mówi, czy to krok na decyzje wolne (początek okresu długości ery).
-- Kto liczy się czasem cywilizacji: zbieranie, rolnictwo i zużycie pól, sieć handlowa, receptury, jedzenie, psucie w osadach z
-  ludźmi, ludność, zdarzenia, nauka, widzenie i zwiad, marsz wędrówki, pogłoski, handel z partnerem (gdy krok ma któraś ze stron).
-  Kto czasem świata: klimat, pory roku, morze, odrastanie dzikiej żywności poza strefami, odpoczynek ziemi, rozpad ruin,
-  wygasanie efektów, strefy wpływów, granice i spory, wojny i wspólny wróg.
-- Nowy stan gry (`CreateNew`) i każdy krok kalendarza wołają `Begin`, więc stan zawsze opisuje krok, który zaraz się policzy.
+  się miesiącami pulsu świata. `WorldClock.PlansNow` mówi, czy to puls na decyzje wolne.
+- Nowy stan gry (`CreateNew`) i każdy krok kalendarza wołają `Begin`; drugie wywołanie w tym samym takcie nic nie zmienia
+  (`CivilizationState.LastPulseTick`).
+- Testy jednostkowe systemów używają `TestContent.Load()`: prawdziwe dane, ale puls co takt i miesiąc akcji = 1 takt, więc
+  jedna tura testu to jeden krok każdej cywilizacji jak przed ADR 0025. Testy zegara, epizodów, determinizmu i całych gier
+  używają prawdziwego `data/time.json`.
 
 ## Zasady i wzory
 - Kolejność faz z GDD 11.1 jest zapisana w `TurnPhase`. Każdy system (`ITurnSystem`) mówi, w której fazie działa;
@@ -74,9 +85,9 @@ Brak.
 ## Testy
 - `TurnRunnerTests`: kolejność faz, pomiar czasu, komendy poprawne i odrzucone, migawki.
 - `CommandQueueTests`: kolejność kategorii, rotacja cywilizacji, sprawiedliwość rotacji.
-- `WorldClockTests`: rytmy przypięte do kalendarza, krótszy pierwszy krok po zmianie ery bez utraty czasu, cywilizacja czekająca
-  się nie zmienia, tylko alarm budzi radę poza rytmem, przegląd dyplomaty raz na 50 lat przy krokach półrocznych, zapis i odczyt
-  przy mieszanych rytmach.
+- `WorldClockTests`: pulsy w taktach własnych cywilizacji i puls świata przesuwający licznik lat, nowa era zmienia puls i licznik,
+  cywilizacja czekająca między pulsami się nie zmienia, tylko alarm budzi radę poza rytmem, przegląd dyplomaty raz na 50 lat przy
+  krokach półrocznych, zapis i odczyt przy mieszanych rytmach.
 - `DeterminismTests`: dwa przebiegi po 1000 tur z tym samym seedem dają ten sam hash; różne seedy dają różne;
   „złoty” hash po 100 turach musi być identyczny na Windowsie, Linuksie i macOS.
 

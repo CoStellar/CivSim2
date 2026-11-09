@@ -17,7 +17,7 @@ namespace CivSim.Tests.Population;
 /// <summary>Learning skills (stage 4F, PR 2, ADR 0020): masters, apprentices, moving, loss, skilled work.</summary>
 public class SkillLearningTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Skill(string key) => Content.Skills.Single(s => s.Key == key).Id;
 

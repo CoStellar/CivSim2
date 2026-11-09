@@ -12,7 +12,7 @@ namespace CivSim.Tests.Ai;
 /// <summary>What technologies are worth to the scholar, and what a civilization sees now (AI rework, PR B).</summary>
 public class AiValueTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static (GameState State, CivilizationState Civ) NewCiv()
     {

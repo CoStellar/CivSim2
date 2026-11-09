@@ -11,7 +11,7 @@ namespace CivSim.Tests.Research;
 /// <summary>The tree of technologies and skills can be climbed from nothing (stage 4F, PR 5, ADR 0020).</summary>
 public class TechnologyGraphTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     [Fact]
     public void EveryTechnologyAndSkillIsReachableFromNothing()

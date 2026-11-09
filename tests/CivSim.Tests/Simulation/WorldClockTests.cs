@@ -13,10 +13,13 @@ using Xunit;
 
 namespace CivSim.Tests.Simulation;
 
-/// <summary>The world clock and the rhythms of civilizations (ADR 0018).</summary>
+/// <summary>The clock of the live game: ticks, pulses of civilizations and of the world (ADR 0025; before it ADR 0018).</summary>
 public class WorldClockTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
+
+    // The live clock as in data/time.json (pulses every 30 ticks, each civilization in a tick of its own).
+    private static readonly GameContent Live = ContentLoader.Load();
 
     private static GameState NewState(ulong seed) => GameState.CreateNew(GameSettings.Test(seed), Content, out WorldGenReport _);
 
@@ -27,86 +30,110 @@ public class WorldClockTests
         civ.NextStepMonth = 0;
         civ.StepStartMonth = -1;
         civ.Steps = 0;
+        civ.LastPulseTick = -1;
         WorldClock.Begin(Content, state);
     }
 
     [Fact]
-    public void EachCivilizationStepsInItsOwnRhythmPinnedToTheCalendar()
+    public void CivilizationsPulseInTicksOfTheirOwnAndTheWorldMovesTheYearCounter()
     {
-        GameState state = NewState(1);
+        GameState state = GameState.CreateNew(GameSettings.Test(1), Live, out WorldGenReport _);
         CivilizationState stone = state.Civilizations[0];
         CivilizationState neolithic = state.Civilizations[1];
-        StartIn(state, neolithic, 1);
+        neolithic.Era = 1;
+        neolithic.LastPulseTick = -1; // as if it had started in the Neolithic: its first pulse is computed again
         var runner = new TurnRunner(state);
-        runner.AddSystem(new CalendarSystem(Content));
+        runner.AddSystem(new CalendarSystem(Live));
+        WorldClock.Begin(Live, state);
+        int p = Live.Time.TicksPerPulse;
+        int stoneAt = WorldClock.PulseOffset(Live.Time, stone);
+        int neolithicAt = WorldClock.PulseOffset(Live.Time, neolithic);
+        Assert.NotEqual(stoneAt, neolithicAt); // neighbouring ids pulse in different ticks
+        Assert.NotEqual(0, stoneAt);            // and never in the world's tick
 
-        var seen = new List<(long Month, int World, int Stone, int Neolithic)>();
-        for (int t = 0; t < 4; t++)
+        var stonePulses = new List<long>();
+        var worldPulses = new List<(long Tick, int Months)>();
+        for (int t = 0; t < 2 * p; t++)
         {
-            seen.Add((state.Month, state.StepMonths, stone.StepMonths, neolithic.StepMonths));
+            if (stone.StepMonths > 0)
+            {
+                stonePulses.Add(state.Turn);
+                Assert.Equal(600, stone.StepMonths); // a Stone Age pulse covers 50 years
+            }
+
+            if (neolithic.StepMonths > 0)
+            {
+                Assert.Equal(300, neolithic.StepMonths); // a Neolithic one 25 years
+            }
+
+            if (state.WorldMonths > 0)
+            {
+                worldPulses.Add((state.Turn, state.WorldMonths));
+            }
+
             runner.RunTurn();
         }
 
-        // The world steps every 25 years; the Stone Age tribe only every 50 years (years 0 and 50), each time for 50 years.
-        Assert.Equal([(0L, 300, 600, 300), (300L, 300, 0, 300), (600L, 300, 600, 300), (900L, 300, 0, 300)], seen);
-        Assert.Equal(3, stone.Steps);       // years 0, 50 and the one now beginning, 100
-        Assert.Equal(5, neolithic.Steps);
+        // The first pulse comes at once, then one in every 30 ticks in its own tick; the world pulses in ticks 0 and 30,
+        // each time moving the year counter by the step of the most advanced (the Neolithic): 25 years.
+        Assert.Equal([0L, stoneAt, stoneAt + p], stonePulses);
+        Assert.Equal([(0L, 300), (p, 300)], worldPulses);
+        Assert.Equal(600, state.Month);
     }
 
     [Fact]
-    public void ANewEraStartsWithAShorterStepAndNoTimeIsLost()
+    public void ANewEraChangesThePulseAndTheYearCounter()
     {
-        GameState state = NewState(2);
+        GameState state = GameState.CreateNew(GameSettings.Test(2), Live, out WorldGenReport _);
         CivilizationState civ = state.Civilizations[0];
-        foreach (CivilizationState c in state.Civilizations)
-        {
-            StartIn(state, c, 1);
-        }
-
         var runner = new TurnRunner(state);
-        runner.AddSystem(new CalendarSystem(Content));
-        long counted = civ.StepMonths;
-        runner.RunTurn();                       // year 25: the second Neolithic step begins
-        counted += civ.StepMonths;
-        civ.Era = 2;                            // the Bronze Age (20 years) arrives during that step
-        var steps = new List<int>();
-        while (state.Month < 1440)
+        runner.AddSystem(new CalendarSystem(Live));
+        WorldClock.Begin(Live, state);
+        civ.Era = 2; // the Bronze Age (20 years) arrives
+        var pulses = new List<int>();
+        int world = 0;
+        for (int t = 0; t < 3 * Live.Time.TicksPerPulse; t++)
         {
             runner.RunTurn();
             if (civ.StepMonths > 0)
             {
-                steps.Add(civ.StepMonths);
-                counted += civ.StepMonths;
+                pulses.Add(civ.StepMonths);
             }
+
+            world = state.WorldMonths > 0 ? state.WorldMonths : world;
         }
 
-        // From year 50 the steps are pinned to multiples of 20 years: 10 years to year 60, then 20-year steps.
-        Assert.Equal([120, 240, 240, 240], steps.Take(4).ToList());
-        Assert.Equal(civ.NextStepMonth, counted); // every month from the start was computed exactly once
+        Assert.All(pulses.Skip(1), m => Assert.Equal(240, m));
+        Assert.Equal(240, world); // the year counter now moves by the Bronze Age step
     }
 
     [Fact]
-    public void AWaitingCivilizationDoesNotChangeBetweenItsSteps()
+    public void AWaitingCivilizationDoesNotChangeBetweenItsPulses()
     {
-        GameState state = NewState(3);
+        GameState state = GameState.CreateNew(GameSettings.Test(3), Live, out WorldGenReport _);
         var runner = new TurnRunner(state);
-        CoreSystems.Register(runner, Content);
+        CoreSystems.Register(runner, Live);
+        WorldClock.Begin(Live, state);
         CivilizationState stone = state.Civilizations[0];
-        StartIn(state, state.Civilizations[1], 1);
-        runner.RunTurn(); // year 0: both step; the Stone Age tribe computes 50 years at once
+        runner.RunTurn(); // tick 0: everybody's first pulse
+        while (stone.StepMonths > 0)
+        {
+            runner.RunTurn();
+        }
 
-        Assert.Equal(0, stone.StepMonths); // year 25: it waits
         SettlementState[] camps = state.Settlements.Where(s => s.Owner == stone.Id && s.IsActive).ToArray();
         int[] people = camps.Select(s => s.TotalPopulation()).ToArray();
         long[] stock = camps.Select(s => s.TotalStock().Hundredths).ToArray();
         long science = stone.ResearchProgress;
-        runner.RunTurn();
+        while (stone.StepMonths == 0 && stone.Alarms == Alarm.None)
+        {
+            Assert.Equal(people, camps.Select(s => s.TotalPopulation()).ToArray());
+            Assert.Equal(stock, camps.Select(s => s.TotalStock().Hundredths).ToArray());
+            Assert.Equal(science, stone.ResearchProgress);
+            runner.RunTurn();
+        }
 
-        Assert.Equal(people, camps.Select(s => s.TotalPopulation()).ToArray());
-        Assert.Equal(stock, camps.Select(s => s.TotalStock().Hundredths).ToArray());
-        Assert.Equal(science, stone.ResearchProgress);
-        Assert.All(camps, s => Assert.Equal(s.Cell, state.FindSettlement(s.Id)!.Cell));
-        Assert.True(stone.StepMonths > 0); // year 50: its turn again
+        Assert.True(stone.StepMonths > 0); // its tick again
     }
 
     [Fact]

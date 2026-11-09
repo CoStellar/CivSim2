@@ -47,10 +47,10 @@ public sealed class Episode
     /// <summary>Game month it began.</summary>
     public long StartMonth { get; init; }
 
-    /// <summary>Game month of its next step.</summary>
-    public long NextMonth { get; set; }
+    /// <summary>Tick of its next step (ADR 0025: episodes run on ticks, the world never waits for them).</summary>
+    public long NextTick { get; set; }
 
-    /// <summary>Length of its steps, months.</summary>
+    /// <summary>Length of its steps, months of action (each lasts data/time.json ticksPerActionMonth ticks).</summary>
     public int TickMonths { get; init; } = 1;
 
     /// <summary>Campaign: settlement the warriors came from (and go back to).</summary>
@@ -92,8 +92,8 @@ public sealed class Episode
     /// <summary>Campaign: morale, 0..100; strength in a fight is multiplied by it.</summary>
     public int Morale { get; set; } = 100;
 
-    /// <summary>Campaign: game month the muster ends and the march begins.</summary>
-    public long MusterUntilMonth { get; set; }
+    /// <summary>Campaign: tick the muster ends and the march begins.</summary>
+    public long MusterUntilTick { get; set; }
 
     /// <summary>Campaign: food it carries, index = good.</summary>
     public Amount[] Food { get; set; } = [];
@@ -164,15 +164,15 @@ public sealed class EpisodeBook
     /// <summary>Removes the episodes that ended; returns how many.</summary>
     public int RemoveEnded() => _episodes.RemoveAll(e => e.Ended);
 
-    /// <summary>The month of the nearest step of any episode, or <see cref="long.MaxValue"/> when none runs.</summary>
-    public long NextMonth()
+    /// <summary>The tick of the nearest step of any episode, or <see cref="long.MaxValue"/> when none runs.</summary>
+    public long NextTick()
     {
         long next = long.MaxValue;
         foreach (Episode e in _episodes)
         {
             if (!e.Ended)
             {
-                next = Math.Min(next, e.NextMonth);
+                next = Math.Min(next, e.NextTick);
             }
         }
 
