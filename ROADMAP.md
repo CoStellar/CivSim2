@@ -3,11 +3,12 @@
 **Zakres:** budujemy wyłącznie funkcje oznaczone w `docs/GDD.md` (rozdział 16) jako **CORE** i **CORE (uproszczone)**.
 Moduły to przyszłe aktualizacje i nie wchodzą do tego planu. Kultury i religii nie ma w grze.
 
-Priorytet: **symulacja**. Etapy 0–12 to rdzeń, lepszy podgląd z grafikami zastępczymi (etap 5), wszystkie ery i podgląd deweloperski. Pixel art i interfejs gracza
-wchodzą na końcu, w etapie 13 (decyzja Patryka z 2026-11-06). Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
-Szczegóły zasad: `docs/GDD.md`.
+**Kierunek od 2026-11-09 (ADR 0024, 0025): gra na żywo** między RTS-em a strategią. Gracz rządzi cywilizacją i steruje oddziałami,
+AI robi to, czego on nie zdąży; backend liczy się w taktach i pulsach, lata to tylko licznik. Kolejność: backend na żywo (etap 6),
+epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery. Dawne etapy 6–13 (ery 3–9, tryb gracza
+na końcu) są zastąpione. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”. Szczegóły zasad: `docs/GDD.md` (1.1, 6.4).
 
-**Aktualny etap: 3 (gospodarka i ludność): wszystkie PR-y 3a–3h gotowe, próba 2000 tur przeszła; następny etap 4 (AI i dyplomacja)**
+**Aktualny etap: 6 (backend gry na żywo): czeka na plan i start; etapy 0–5b zrobione**
 
 ---
 
@@ -226,25 +227,52 @@ Przed nowymi erami. Analiza biegu: tura 93 ms (cel 50), FPS ok. 52, 8 z 12 cywil
 - [x] **Wydajność:** płynniejszy obraz (rzadsze i mniejsze przerysowania, mniej sprzątania pamięci), tura < 50 ms (seed 42, 8000 tur: śr. 12 ms, było 41 ms; FPS do sprawdzenia u Patryka)
 - [x] **Długi bieg:** koniec, gdy świat stoi w miejscu (10 000 lat bez zmian); test na kontynentach (seed 7): wojna z zemsty tylko na sąsiadów w zasięgu, o połowę mniej wojen bez walki
 
-## Etapy 6–12 — Ery 3–9
+## Etap 6 — Backend gry na żywo (decyzje Patryka z 2026-11-09, ADR 0024 i 0025)
 
-Jedna era na etap. W każdym: technologie i zasoby w danych → potrzebne mechaniki z zakresu CORE → AI → podgląd deweloperski → balans w 100 grach.
-**W każdym etapie ery zaktualizuj też moduł wojny** (prośba Patryka z 2026-11-07): nowe uzbrojenie, fachy (np. kowale) i jednostki, limit wodza
-i liczba ludzi na polu, zaopatrzenie; lista w `docs/systems/war.md`, sekcja „Co erę”.
-Kolejne ustroje i warstwy ludności dochodzą razem z erami, w ramach wersji uproszczonych z GDD.
+Cel: sprawdzić w backendzie i w podglądzie deweloperskim, czy gra działa tak, jak chce Patryk, zanim powstanie interfejs gracza.
+Plan PR-ów zrobimy na starcie etapu (`docs/prompts/09-etap-gra-na-zywo.md`) i pokażemy Patrykowi.
 
-## Etap 13 — Tryb gracza i grafika (na sam koniec CORE)
+Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neolitu, oddziały chodzą w sekundach, wojna nie zatrzymuje
+świata, cywilizacje różnią się tempem zależnie od terenu i kierunku, a takt mieści się w celu wydajności.
+**Brama: Patryk ogląda i mówi, czy to działa jak trzeba.**
 
-Decyzja Patryka z 2026-11-06: najważniejsza jest dobrze działająca symulacja, więc tryb gracza to ostatni etap CORE, po wszystkich erach.
+- [ ] **Takt i pulsy** (ADR 0025): stały takt dla akcji, pulsy cywilizacji rozłożone między takty i liczone równolegle, licznik lat jako etykieta; koniec osobnego zegara epizodów; nowe złote hashe i format zapisu
+- [ ] **Tempa pod pulsy:** przyrost, zbieranie, nauka przeliczone z lat na pulsy, proporcje i przyczyny bez zmian; tempo AI blisko celu z GDD 1.1
+- [ ] **Oddziały:** osadnicy, wojownicy, zwiadowcy, tragarze jako jednostki w ruchu (grupy ludzi); kampania wojenna = oddziały w ruchu
+- [ ] **Zadania na obszarze:** wydobycie, pola, łowiska, budowy w miejscu; ludzie z osady sami tam chodzą; te same komendy dla AI i gracza
+- [ ] **Start:** losowa kolejność, wybór miejsca (5 s mapy, potem szare bloki, 10–15 s), strefy blokady, wybór AI z błędem; epoka kamienia jako opis „historii plemienia”
+- [ ] **Technologie (GDD 6.4):** doświadczenie w technologii, kierunek rozwoju zwiększa szansę pokrewnych odkryć, koszt zależny od rozwinięcia poprzedniej, podgląd technologii (5% × liczba cywilizacji, które ją znają)
+- [ ] **Karty decyzji w backendzie:** wydarzenie, rekomendacja doradcy, licznik, decyzja AI po czasie
+- [ ] **Bez postaci z imieniem w pierwszych erach** (przegląd przywódców z etapu 4f)
+- [ ] **Wydajność:** mapa standard, 6–8 cywilizacji, 300 oddziałów, takt < 30 ms w najgorszym przypadku; klient rysuje tylko zmiany i płynny ruch
+- [ ] **Podgląd deweloperski:** wybór miejsca i proste rozkazy do testów, pauza, prędkości ×1/×2/×4
+- [ ] Dokumentacja: `docs/systems/` (zegar, oddziały, zadania), `docs/ai/`, `known-issues.md`
 
-Gotowe, gdy: da się rozegrać pełną grę od ery kamienia do ery informacji. **Brama: grywalna gra.**
+## Etap 7 — Epoka brązu
 
-- [ ] Pixel art Patryka w warstwach w miejsce grafik zastępczych z etapu 5, shader koloru cywilizacji
-- [ ] Jeden motyw interfejsu (ramki 9-slice), statyczne grafiki, czcionka Pixelify Sans (GDD 12.4)
-- [ ] Rozkazy gracza, delegowanie poziomów decyzji do AI, drzewo technologii, zapis w dowolnym momencie
-- [ ] Strojenie wydajności mapy ogromnej
-- [ ] Grafiki dla wszystkich er (teren, osady, ulepszenia, jednostki); motywy interfejsu dla er zostają modułem
-- [ ] Warunki zwycięstwa: punktowe i bez końca; narzędzia „widoku boga” potrzebne do testów
+Pogłębiona era 3: technologie, fachy, miasta i awans osad (GDD 5.3), pismo, wytop i metal, fortyfikacje (mur) i zbrojownia, moduł
+wojny według „Co erę” w `docs/systems/war.md`.
+
+Gotowe, gdy: cel „wszystkie technologie epoki brązu” osiąga dobre AI w ok. 15 min, średnie w 20–25 min, słabe w 30–40 min (GDD 1.1).
+
+## Etap 8 — Grywalne demo solo
+
+Interfejs gracza: wybór miejsca na starcie, sterowanie oddziałami, zadania na obszarze, miasta, fortyfikacje i uzbrojenie, kierunek
+rozwoju, karty decyzji, delegowanie poziomów decyzji do AI, pauza i prędkości, pasek celu partii, poziomy trudności (tempo AI),
+widz po upadku ludu. Pixel art Patryka w miejsce grafik zastępczych tam, gdzie jest gotowy.
+
+Gotowe, gdy: da się rozegrać partię solo od neolitu do celu „wszystkie technologie brązu”. **Brama: grywalna gra.**
+
+## Etap 9 — Gra w sieci
+
+Kilku graczy na jednym serwerze (ADR 0008, 0010), prędkość ustala gospodarz, kilka pauz na gracza, karty decyzji nie zatrzymują
+świata, rozłączoną cywilizację przejmuje AI, widzowie.
+
+## Kolejne ery
+
+Jedna era na etap, pogłębiona (decyzja Patryka z 2026-11-09: bez cięcia, nawet jeśli to rok pracy): technologie i fachy, nowe
+mechaniki tam, gdzie era ich wymaga, moduł wojny „Co erę”, nowy cel na pasku (pierwszy metal, elektryczność…). Kosmos i inne
+planety później.
 
 ## Aktualizacje po CORE (poza tym planem)
 
