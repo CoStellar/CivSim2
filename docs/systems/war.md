@@ -55,6 +55,12 @@ flowchart TD
   ludzi (100 = jeden wojownik z kamiennym grotem; szczęście losowane z 50–150%, ułamek człowieka losowo). Każdy procent straconych ludzi
   w rundzie to −3 morale; strona z morale poniżej 40 ucieka (obie: ta z mniejszym morale) i traci jeszcze 10% ludzi w ucieczce. Gdy nikt
   nie ucieknie przez 6 rund, obrońcy się utrzymali. Obrońcy to wojownicy i 25% reszty mieszkańców (z morale 100); giną najpierw wojownicy.
+- **Bitwa w czasie** (etap 6, decyzja Patryka z 2026-11-09): kampania przy celu przechodzi w fazę `Battle` i walczy **jedną rundę co
+  `battle.roundTicks` (10) taktów**, czyli rundę na sekundę przy ×1 (najwyżej 6 s). Polegli każdej rundy giną od razu, więc armia
+  maleje na mapie, a obrońców ubywa. W trakcie bitwy nikt nie może jej odwołać (ani dowódca, ani gracz) ani posłać na inny cel.
+  Pokój albo utrata celu (osada pusta albo w innych rękach) przerywa bitwę: wojownicy wracają w porządku, a straty do tej chwili
+  idą do wyniku wojny. Wzory rund są te same (`Battles.Begin` i `Battles.Round`; `Battles.Fight` i `Battles.Expect` liczą tak jak
+  wcześniej). `roundTicks` = 0 rozgrywa całą bitwę naraz. Bitwa w toku jest w zapisie (format 35).
 - **Atak** (PR 5; od PR 3b etapu 6: w zasięgu rodzaju armii): armia, która doszła do pola obok celu, atakuje w następnym miesiącu; do tego czasu jej dowódca może ją odwołać
   (`RecallCampaignCommand`, decyzja K2). Armia widzi osady do `armySightCells` (1) pola od siebie. Spodziewana bitwa dowódcy
   (`Battles.Expect`): te same rundy ze stałym szczęściem, 5 poziomów na stronę, 25 bitew, bez losowania.
@@ -105,6 +111,8 @@ Przy każdym etapie nowej ery (etapy 6–12) sprawdź i uzupełnij:
 - `CommanderTests` (PR 5): spodziewana bitwa bez losowania jest blisko wyników prawdziwych bitew; dowódca nie wysyła armii na silniejszy cel
   ani dalej, niż starczy jedzenia; odwołuje armię, której jedzenie nie wystarczy na drogę; armia atakuje miesiąc po dojściu; odwołać może
   tylko właściciel. `DeadValueTests` ma sytuację wojny, w której każdy próg dowódcy zmienia decyzję.
+- `BattleTimeTests` (etap 6): rundy po kolei dają tę samą bitwę co naraz; runda co sekundę, armia maleje, odwołanie niemożliwe;
+  pokój w trakcie przerywa bitwę; bitwa w toku przetrwa zapis.
 - `BattleTests` (PR 4): dane bitwy; równa bitwa kończy się ucieczką i kosztuje obie strony, wynik ok. 50/50 i powtarzalny; dużo silniejsza
   strona wygrywa tanio, niskie morale ucieka szybciej; bez ucieczki obrońcy się utrzymują; wzgórza i rzeka pomagają obrońcom; wojna o
   ziemię zabiera wioskę z ludźmi; ludzie pobitego obozu uciekają do najbliższej osady; błędy w danych.

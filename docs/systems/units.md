@@ -51,7 +51,7 @@ osadnicy, zwiadowcy, wojownicy (15 taktów, zasięg 1), tragarze (10 taktów).
 | `Found` | osadnicy idą do celu i zakładają obóz | obóz założony → oddział znika; miejsce zajęte → nowy cel do 3 pól, bez niego → `Return`; brak drogi → zakłada obóz tam, gdzie stoi, jeśli wolno, inaczej `Idle` |
 | `Scout` | zwiadowcy idą prosto w swoim kierunku, przy wodzie skręcają | po 15 polach albo zamknięci wodą → `Return` |
 | `Return` | wraca do domu i dołącza | w domu → oddział znika (zwiadowcy: osada może wysłać następnych); dom zniknął → najbliższa własna osada, bez niej obóz na miejscu; armia kampanii: w domu → `Idle`, kampania sprowadza ocalałych |
-| `Attack` | armia idzie do celu, aż cel jest w zasięgu jej rodzaju, i stoi | kampania: miesiąc akcji w zasięgu → bitwa; wygrana → `Return`, przegrana → `Flee`; brak drogi → `Idle` i kampania wraca |
+| `Attack` | armia idzie do celu, aż cel jest w zasięgu jej rodzaju, i stoi; w bitwie stoi dalej (kampania w fazie `Battle`, runda co sekundę) | kampania: miesiąc akcji w zasięgu → bitwa; wygrana → `Return`, przegrana → `Flee`; brak drogi → `Idle` i kampania wraca |
 | `Flee` | pobita armia ucieka do domu; nikt jej nie zawróci (ani gracz, ani dowódca) | w domu → `Idle`, ocalali wracają do osad |
 
 Odpoczynek to stan osady, nie oddziału: wojownicy, którzy wrócili, odpoczywają `restMonths` (6) miesięcy akcji i ich osada nie może
@@ -128,6 +128,7 @@ najbliższy własny obóz gubernatora, zbiórka wojowników dowódcy, napad gło
 - `WarUnitsTests` (PR 3b): pobita armia ucieka i nikt jej nie zawróci; wojownicy odpoczywają po powrocie; tragarze idą jako oddział,
   dochodzą do armii i wracają do warstwy w domu; rozkaz ataku na inną osadę wroga; rodzaj z zasięgiem 3 staje 3 pola przed celem;
   kampania maszeruje jako najlepszy znany rodzaj; zwiadowcy biorą myśliwych i ich przyprowadzają.
+- `BattleTimeTests`: bitwa runda po rundzie w czasie, armia maleje, nikt jej nie odwoła, zapis w trakcie bitwy.
 - `ArmyTests`, `CommanderTests`, `EpisodeTests`: zbiórka pieszo, marsz i bitwa po miesiącu w zasięgu, kampania w taktach.
 
 ## Wydajność i wyniki
