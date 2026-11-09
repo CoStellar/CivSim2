@@ -99,3 +99,9 @@ kolumn, podsumowanie), wcześniejsze zamknięcie, gra bez długiego biegu nic ni
 
 Koszt zapisu: wiersz `turns.csv` na turę i wiersz `stats.csv` co 10 s (przejście po osadach i cywilizacjach),
 pomijalny w porównaniu z turą (kilkadziesiąt ms na mapie standard).
+
+## Raporty z biegów
+
+Analiza każdego biegu, który coś pokazał, trafia do `docs/long-runs/<data>_<opis>/` (README z wnioskami, wykresy PNG,
+`summary.txt`; surowe CSV zostają u Patryka). Wykryte problemy dopisz do [`docs/known-issues.md`](../known-issues.md).
+Pierwszy raport: [4 h, seed 42, 2026-11-08](../long-runs/2026-11-08_4h_seed42/README.md).
