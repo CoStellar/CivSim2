@@ -394,6 +394,28 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        // Full villages (stage 6 PR 3a: settlers walk, so the recorded villages are fewer and their peoples less driven
+        // to expand): the market with every village just below its limit, so each is crowded and only the settlers'
+        // period decides whether it sends a group now.
+        GameState full = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
+        Market(full);
+        foreach (SettlementState s in full.Settlements.Where(x => x.IsActive && !Content.SettlementLevels[x.Level].Mobile))
+        {
+            int room = Content.SettlementLevels[s.Level].MaxPopulation * 99 / 100;
+            int total = s.TotalPopulation();
+            Span<int> crowd = s.Population;
+            for (int k = 0; k < crowd.Length; k++)
+            {
+                crowd[k] = total == 0 ? 0 : (int)((long)crowd[k] * room / total);
+            }
+        }
+
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(full, ms);
+            saved.Add(ms.ToArray());
+        }
+
         Assert.True(saved.Count > stone);
         return [.. saved];
     }

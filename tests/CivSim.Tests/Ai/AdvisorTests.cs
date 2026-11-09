@@ -106,7 +106,7 @@ public class AdvisorTests
         }
 
         File.WriteAllText(Path.Combine(folder, "ai.json"), json);
-        return ContentLoader.Load(folder).WithTime(TestContent.EveryTick);
+        return TestContent.Fit(ContentLoader.Load(folder));
     }
 
     // The real ai.json with the draw among the best switched off.

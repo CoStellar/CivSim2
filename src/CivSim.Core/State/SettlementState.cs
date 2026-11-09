@@ -80,6 +80,21 @@ public sealed class SettlementState
     /// <summary>Read-only view of the people per stratum.</summary>
     public ReadOnlySpan<int> PopulationView => _population;
 
+    /// <summary>On a journey (stage 6 PR 3a): the next cell it will camp on, or -1 when not chosen yet.</summary>
+    public int JourneyNext { get; set; } = -1;
+
+    /// <summary>On a journey: ticks the way to <see cref="JourneyNext"/> costs.</summary>
+    public int JourneyStepTicks { get; set; }
+
+    /// <summary>On a journey: ticks already spent on the way to <see cref="JourneyNext"/>.</summary>
+    public int JourneyProgress { get; set; }
+
+    /// <summary>True while a party of its scouts is out (stage 6 PR 3a).</summary>
+    public bool ScoutOut { get; set; }
+
+    /// <summary>Month of action its last scouts came back in, or -1 before any went out (stage 6 PR 3a).</summary>
+    public long ScoutBackMonth { get; set; } = -1;
+
     /// <summary>People who know each skill (stage 4F), index = skill id; they are counted in their stratum too.</summary>
     public Span<int> Skilled => _skilled;
 

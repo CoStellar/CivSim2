@@ -43,7 +43,16 @@ public static class SettlementAssets
     {
         ArgumentNullException.ThrowIfNull(from);
         ArgumentNullException.ThrowIfNull(to);
-        Span<Amount> stock = from.Stock;
+        return Carry(from.Stock, to.Stock, capacity, sharePercent);
+    }
+
+    /// <summary>
+    /// Moves goods from <paramref name="stock"/> to <paramref name="into"/> (index = good), at most
+    /// <paramref name="capacity"/> in total and at most <paramref name="sharePercent"/> of each good, cut in the same
+    /// proportion when the load is too heavy (stage 6 PR 3a: units carry goods too). Returns what was moved.
+    /// </summary>
+    public static Amount Carry(Span<Amount> stock, Span<Amount> into, Amount capacity, int sharePercent = 100)
+    {
         long wanted = 0;
         for (int g = 0; g < stock.Length; g++)
         {
@@ -57,24 +66,24 @@ public static class SettlementAssets
 
         long room = Math.Min(wanted, capacity.Hundredths);
         Amount moved = Amount.Zero;
-        for (int g = 0; g < stock.Length; g++)
+        for (int g = 0; g < stock.Length && g < into.Length; g++)
         {
             Amount share = stock[g].MultiplyPercent(sharePercent, Rounding.Floor);
             Amount taken = Amount.FromHundredths(IntMath.MulDiv(share.Hundredths, room, wanted, Rounding.Floor));
             if (taken > Amount.Zero)
             {
                 stock[g] -= taken;
-                to.Stock[g] += taken;
+                into[g] += taken;
                 moved += taken;
             }
         }
 
         // Rounding down can leave a few hundredths of room: fill it in good id order.
-        for (int g = 0; g < stock.Length && moved.Hundredths < room; g++)
+        for (int g = 0; g < stock.Length && g < into.Length && moved.Hundredths < room; g++)
         {
             Amount extra = Amount.FromHundredths(Math.Min(room - moved.Hundredths, stock[g].Hundredths));
             stock[g] -= extra;
-            to.Stock[g] += extra;
+            into[g] += extra;
             moved += extra;
         }
 

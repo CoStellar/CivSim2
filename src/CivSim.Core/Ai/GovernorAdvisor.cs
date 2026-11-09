@@ -357,17 +357,8 @@ public sealed class GovernorAdvisor : Advisor
         bool hungry = s.FedPerMille < _content.Ai.VillageHungryFedPercent * 10;
         if (people < _rules.MinSplitPeople)
         {
-            // A small hungry village (too few for a group of settlers) gives up: its people go to the nearest own settlement
-            // that is better fed (AI fixes after stage 4g: in the 100 games most starving villages were this small).
-            if (hungry && NearestOwnCamp(state, world, civ, s) is { } into && into.FedPerMille >= _content.Ai.VillageHungryFedPercent * 10)
-            {
-                Evaluation join = Evaluation.Of(people);
-                join.Note(FactorId.People, people);
-                join.Note(FactorId.Fed, s.FedPerMille);
-                Issue(state, queue, civ.Id, new AbandonSettlementCommand(_content, s.Id, into.Id), AiAction.JoinCamp, s.Id.Value, into.Id.Value, join);
-                _joined.Add(into.Id.Value);
-            }
-
+            // Decision of 2026-11-09 (stage 6 PR 3a): a village stays where it was founded; a small one too few for a
+            // group of settlers holds on (it is left only when nobody is left in it), it does not move into another.
             return;
         }
 

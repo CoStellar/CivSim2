@@ -53,6 +53,7 @@ public static class CoreSystems
         runner.AddSystem(new Perception.PerceptionSystem(content));
         runner.AddSystem(new Diplomacy.ContactSystem(content));
         runner.AddSystem(new Perception.JourneySystem(content));
+        runner.AddSystem(new Units.UnitSystem(content));
         runner.AddSystem(new Episodes.CampaignSystem(content));
         runner.AddSystem(new WorldGen.SeasonSystem(content));
         runner.AddSystem(new EffectExpirySystem());

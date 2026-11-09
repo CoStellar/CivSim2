@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "comment": "Units (stage 6 PR 3a, ADR 0024, decisions of 2026-11-09): groups of people who walk over the map in the ticks of the live game (time.json: 10 ticks = 1 s at x1). ticksPerCell is the time to cross one flat, open cell: settlers 20 ticks (0.5 cell a second), scouts 10 (1 cell a second); a migrating camp (a journey of a whole camp) journeyTicksPerCell. Terrain makes a cell slower (percent of a flat cell): hills, mountains, forests (forestBiomes), sea ice, and crossing a river on the edge between two cells adds riverPercent. Routes are searched with A* over walkable cells the civilization knows, looking at most at routeNodeLimit cells. Scouts: every settlement keeps one scout party walking: a new one sets out scoutEveryYears years of action (one year = 6 s at x1) after the last came back, walks scoutTripCells cells into the land in one direction (turning at water) and comes back the way it went; it sees sightCells around itself. Settlers carry food for settlerFoodMonths months of action and eat it (as warriors do, war.json foodPerWarriorPerYear); without food hungerDeathPercent of them die every month of action. If their place is taken when they arrive they look for another within foundSearchCells cells, else they go home.",
+  "kinds": [
+    {"kind": "settlers", "name": "Settlers", "ticksPerCell": 20, "sightCells": 2},
+    {"kind": "scouts", "name": "Scouts", "ticksPerCell": 10, "sightCells": 1}
+  ],
+  "journeyTicksPerCell": 20,
+  "terrain": {"hillsPercent": 150, "mountainsPercent": 300, "forestPercent": 130, "icePercent": 200, "riverPercent": 100, "forestBiomes": ["taiga", "deciduous_forest", "jungle", "swamp"]},
+  "routeNodeLimit": 20000,
+  "scouts": {"everyYears": 5, "tripCells": 15},
+  "settlers": {"foodMonths": 6, "hungerDeathPercent": 5, "foundSearchCells": 3}
+}

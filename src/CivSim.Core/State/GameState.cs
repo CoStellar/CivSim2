@@ -79,6 +79,9 @@ public sealed class GameState
     /// <summary>Sets the months of action, as saved (loading).</summary>
     public void SetActionMonthForLoad(long actionMonth) => ActionMonth = actionMonth;
 
+    /// <summary>Units walking over the map (stage 6 PR 3a): settlers and scouts.</summary>
+    public Units.UnitBook Units { get; } = new();
+
     /// <summary>Running episodes: war campaigns and, later, other events with a course (ADR 0022).</summary>
     public Episodes.EpisodeBook Episodes { get; } = new();
 

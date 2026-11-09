@@ -41,6 +41,48 @@ public static class GameStateHash
         h.Add(state.StepMonths);
         h.Add(state.ActionMonth);
         h.Add(state.WorldMonths);
+        h.Add(state.Units.NextId);
+        h.Add(state.Units.Count);
+        foreach (Units.Unit u in state.Units.All)
+        {
+            h.Add(u.Id);
+            h.Add((int)u.Kind);
+            h.Add(u.Owner.Value);
+            h.Add(u.World.Value);
+            h.Add(u.Cell);
+            h.Add(u.Target);
+            h.Add((int)u.Order);
+            h.Add(u.Home);
+            foreach (int p in u.People)
+            {
+                h.Add(p);
+            }
+
+            foreach (int p in u.Skilled)
+            {
+                h.Add(p);
+            }
+
+            foreach (int p in u.Trainees)
+            {
+                h.Add(p);
+            }
+
+            foreach (Numerics.Amount a in u.Cargo)
+            {
+                h.Add(a.Hundredths);
+            }
+
+            h.Add(u.Progress);
+            h.Add(u.Next);
+            h.Add(u.Direction);
+            h.Add(u.Trail.Count);
+            foreach (int c in u.Trail)
+            {
+                h.Add(c);
+            }
+        }
+
         h.Add(state.Episodes.NextId);
         h.Add(state.Episodes.Count);
         foreach (Episodes.Episode e in state.Episodes.All)
@@ -263,6 +305,11 @@ public static class GameStateHash
             h.Add(s.MovedMonth);
             h.Add(s.RecipeId);
             h.Add(s.JourneyTarget);
+            h.Add(s.JourneyNext);
+            h.Add(s.JourneyStepTicks);
+            h.Add(s.JourneyProgress);
+            h.Add(s.ScoutOut ? 1 : 0);
+            h.Add(s.ScoutBackMonth);
             h.Add(s.RunsMade);
             h.Add((int)s.Status);
             h.Add(s.AbandonedMonth);

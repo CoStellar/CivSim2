@@ -84,10 +84,11 @@ public class LandAndMigrationTests
     }
 
     [Fact]
-    public void ASmallHungryVillageJoinsABetterFedSettlementOfItsOwn()
+    public void ASmallHungryVillageStaysWhereItIs()
     {
-        // Too few for settlers (below minSplitPeople): the whole village leaves for its neighbour, if that one is fed.
-        Assert.Equal(1, SmallVillageJoins(neighbourFedPercent: 100));
+        // Decision of 2026-11-09 (stage 6 PR 3a): a village does not move into another, even a small hungry one next
+        // to a well-fed neighbour (before, it joined it).
+        Assert.Equal(0, SmallVillageJoins(neighbourFedPercent: 100));
         Assert.Equal(0, SmallVillageJoins(neighbourFedPercent: 50));
     }
 
