@@ -68,7 +68,9 @@ w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
 5. **Zawartość w danych.** Technologie, zasoby, budynki, receptury, jednostki, ustroje, polityki, zdarzenia,
    biomy i motywy UI są w plikach JSON w `data/`, walidowanych przy starcie. Nowa technologia nie wymaga kodu.
 6. **Tempa na rok.** Wszystkie tempa (wzrost, psucie, odrastanie) definiuj na rok i przeliczaj przez długość tury ery.
-   *Zmieni się w etapie 6 (ADR 0025): akcja w taktach, rozwój w pulsach cywilizacji, lata tylko jako licznik dla gracza.*
+   *Od etapu 6 PR 1 (ADR 0025): pętla liczy się w taktach (`data/time.json`); cywilizacja liczy rozwój w pulsach za miesiące swojej ery,
+   akcja (kampanie, liczniki wojny) w taktach przez `TimeRules.ActionTicks`, a `GameState.Month` to tylko licznik lat dla gracza.
+   Testy jednostkowe systemów biorą `TestContent.Load()` (puls co takt).*
 7. **Wydajność od pierwszego dnia:**
    - pola mapy w płaskich tablicach (struktura tablic), byty identyfikowane liczbami;
    - zero alokacji w głównej pętli tury, pule obiektów;

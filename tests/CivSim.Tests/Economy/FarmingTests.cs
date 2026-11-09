@@ -14,7 +14,7 @@ namespace CivSim.Tests.Economy;
 /// <summary>Settling down and farming (stage 3f, GDD 4.4 and 5.3).</summary>
 public class FarmingTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Village => Content.SettlementLevel("village").Id;
 

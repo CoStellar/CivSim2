@@ -14,7 +14,7 @@ namespace CivSim.Tests.Ai;
 /// <summary>Character, the strategist and its effects on the other advisors (GDD 7.6, 8.1, 8.4; stage 4b).</summary>
 public class StrategyTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static (TurnRunner Runner, AiCouncil Council) NewGame(ulong seed)
     {

@@ -12,7 +12,7 @@ namespace CivSim.Tests.WorldGen;
 /// <summary>Planets, sunlight, climate and seasons (stages 1b and 1c-A).</summary>
 public class PlanetTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static double Ratio(long fixedValue) => fixedValue / (double)FixedTrig.One;
 

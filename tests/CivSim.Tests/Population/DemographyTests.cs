@@ -12,7 +12,7 @@ namespace CivSim.Tests.Population;
 /// <summary>Births, child mortality and adult deaths (stage 4F, PR 4, ADR 0020, GDD 5.2).</summary>
 public class DemographyTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static (GameState State, CivilizationState Civ, SettlementState Camp) Camp(ulong seed)
     {

@@ -63,7 +63,7 @@ public sealed class CommanderAdvisor : Advisor
             foreach (Treaty war in state.Treaties.All)
             {
                 // A war we declared waits for our government's enactment delay (GDD 7.2; stage 4f).
-                if (war.Kind != TreatyKind.War || !war.Involves(civ.Id) || !war.ReadyFor(civ.Id, state.Month))
+                if (war.Kind != TreatyKind.War || !war.Involves(civ.Id) || !war.ReadyFor(civ.Id, state.Turn))
                 {
                     continue;
                 }
@@ -84,7 +84,7 @@ public sealed class CommanderAdvisor : Advisor
     {
         foreach (Treaty war in state.Treaties.All)
         {
-            if (war.Kind == TreatyKind.War && war.Initiator == civ.Id && war.ReadyMonth == state.Month)
+            if (war.Kind == TreatyKind.War && war.Initiator == civ.Id && war.ReadyTick == state.Turn)
             {
                 return true;
             }

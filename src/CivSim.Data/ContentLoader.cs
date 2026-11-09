@@ -54,6 +54,7 @@ public static class ContentLoader
         List<GovernmentDefinition> governments = LoadGovernments(Path.Combine(directory, "governments.json"), eras, strata, errors);
         StabilityRules stability = LoadStability(Path.Combine(directory, "stability.json"), effects, errors);
         LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
+        Core.Simulation.TimeRules time = LoadTime(Path.Combine(directory, "time.json"), errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -100,6 +101,7 @@ public static class ContentLoader
             War = war,
             Governments = governments,
             Leaders = leaders,
+            Time = time,
             Stability = stability,
             Events = events,
             Technologies = technologies,
@@ -899,6 +901,24 @@ public static class ContentLoader
     }
 
     // Stability and administration of data/stability.json (stage 4f PR 3, GDD 7.3).
+    // Time of the live game (ADR 0025, stage 6): ticks, pulses and months of action.
+    private static Core.Simulation.TimeRules LoadTime(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Simulation.TimeRules();
+        }
+
+        var r = new Reader(doc.RootElement, Path.GetFileName(path), errors);
+        return new Core.Simulation.TimeRules
+        {
+            TicksPerSecond = r.Int("ticksPerSecond", 1, 1000),
+            TicksPerPulse = r.Int("ticksPerPulse", 1, 10000),
+            TicksPerActionMonth = r.Int("ticksPerActionMonth", 1, 1000),
+        };
+    }
+
     private static StabilityRules LoadStability(string path, List<EffectDefinition> effects, List<string> errors)
     {
         using JsonDocument? doc = Open(path, errors);

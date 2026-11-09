@@ -15,7 +15,7 @@ namespace CivSim.Tests.Events;
 /// <summary>Drought, wildfire, flood and epidemic from data/events.json (stage 3h, GDD 10).</summary>
 public class EventTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static EventDefinition Event(string key) => Content.Events.First(e => e.Key == key);
 

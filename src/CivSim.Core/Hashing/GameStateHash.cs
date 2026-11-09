@@ -49,7 +49,7 @@ public static class GameStateHash
             h.Add(e.Civ.Value);
             h.Add(e.Other.Value);
             h.Add(e.StartMonth);
-            h.Add(e.NextMonth);
+            h.Add(e.NextTick);
             h.Add(e.TickMonths);
             h.Add(e.Home);
             h.Add(e.Target);
@@ -66,7 +66,7 @@ public static class GameStateHash
             h.Add(e.Mustered);
             h.Add(e.ArmsPercent);
             h.Add(e.Morale);
-            h.Add(e.MusterUntilMonth);
+            h.Add(e.MusterUntilTick);
             h.Add(e.HungryMonths);
             h.Add(e.Forays);
             h.Add(e.Foraging ? 1 : 0);
@@ -176,6 +176,7 @@ public static class GameStateHash
             h.Add(c.StepStartMonth);
             h.Add(c.StepMonths);
             h.Add(c.Steps);
+            h.Add(c.LastPulseTick);
             h.Add((int)c.Alarms);
             h.Add(c.Government);
             h.Add(c.PendingGovernment);
@@ -333,8 +334,9 @@ public static class GameStateHash
             AddTerms(ref h, t.Terms);
             h.Add(t.Campaigns);
             h.Add(t.CampaignMonths);
-            h.Add(t.LastCampaignMonth);
-            h.Add(t.ReadyMonth);
+            h.Add(t.LastCampaignTick);
+            h.Add(t.ReadyTick);
+            h.Add(t.SinceTick);
         }
 
         h.Add(state.Treaties.Proposals.Count);

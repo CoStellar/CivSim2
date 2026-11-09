@@ -14,7 +14,7 @@ namespace CivSim.Tests.Ai;
 /// <summary>The AI and the state: overload, unrest and the choice of government (GDD 7.2, 7.3; stage 4f PR 5).</summary>
 public class StateAiTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Gov(string key) => Content.Governments.Single(g => g.Key == key).Id;
 

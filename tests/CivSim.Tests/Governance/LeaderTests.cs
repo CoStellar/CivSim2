@@ -15,7 +15,7 @@ namespace CivSim.Tests.Governance;
 /// <summary>Leaders: names, traits in the character, death and succession by government (GDD 7.5; stage 4f PR 2).</summary>
 public class LeaderTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Gov(string key) => Content.Governments.Single(g => g.Key == key).Id;
 

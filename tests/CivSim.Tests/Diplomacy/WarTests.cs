@@ -18,7 +18,7 @@ namespace CivSim.Tests.Diplomacy;
 /// <summary>War goals, score, weariness and peace terms (GDD 9.3; stage 4e PR 1, ADR 0021).</summary>
 public class WarTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static (GameState State, HexCoord[] Land) Empty(ulong seed)
     {

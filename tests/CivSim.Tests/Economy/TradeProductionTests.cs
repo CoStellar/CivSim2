@@ -15,7 +15,7 @@ namespace CivSim.Tests.Economy;
 /// <summary>Trade network, internal prices, production and their AI (stage 3e).</summary>
 public class TradeProductionTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Good(string key) => Content.Good(key).Id;
 

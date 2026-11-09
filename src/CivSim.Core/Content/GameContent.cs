@@ -79,6 +79,20 @@ public sealed class GameContent
     /// <summary>War: goals, score, weariness, terms of peace (data/war.json, stage 4e).</summary>
     public Diplomacy.WarRules War { get; init; } = new();
 
+    /// <summary>Time of the live game: ticks, pulses, months of action (data/time.json, ADR 0025).</summary>
+    public Simulation.TimeRules Time { get => _time; init => _time = value; }
+
+    private Simulation.TimeRules _time = new();
+
+    /// <summary>A copy of this content with other time rules (tests run every civilization's pulse in every tick with it).</summary>
+    public GameContent WithTime(Simulation.TimeRules time)
+    {
+        ArgumentNullException.ThrowIfNull(time);
+        var copy = (GameContent)MemberwiseClone();
+        copy._time = time;
+        return copy;
+    }
+
     /// <summary>Research and diffusion rules (stage 3f).</summary>
     public ResearchRules Research { get; init; } = new();
 

@@ -73,5 +73,7 @@ public class DeterminismTests
     // Stage 4f (ADR 0023): governments joined the state and change the AI (goal weights, caution, pace of reviews) and
     // the readiness of declared wars.
     // Stage 4f PR 2: leaders joined the state; their traits shift the character the AI decides with.
-    private const ulong GoldenHash = 6486417576566684861UL;
+    // ADR 0025 (stage 6 PR 1): one turn is now a tick; civilizations pulse every 30 ticks, each in a tick of its own, and
+    // war timers and episodes count in ticks (100 turns = 100 ticks, about 4 pulses of every civilization).
+    private const ulong GoldenHash = 11428154306949210205UL;
 }

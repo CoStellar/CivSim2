@@ -527,7 +527,7 @@ public partial class Main : Node2D
                 _session.SetSpeed(SimulationSpeed.X2);
                 break;
             case Key.Key4:
-                _session.SetSpeed(SimulationSpeed.X5);
+                _session.SetSpeed(SimulationSpeed.X4);
                 break;
             case Key.Key5:
                 _session.SetSpeed(SimulationSpeed.Max);

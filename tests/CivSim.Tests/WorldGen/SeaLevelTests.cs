@@ -12,7 +12,7 @@ namespace CivSim.Tests.WorldGen;
 /// <summary>The sea level follows the ice (stage 1c-C).</summary>
 public class SeaLevelTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     [Fact]
     public void TheSeaFallsWithTheIce()

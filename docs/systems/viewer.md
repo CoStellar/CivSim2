@@ -129,7 +129,7 @@ w folderze paczki i w konsoli. Paczka może też zmienić ramki interfejsu (`ui/
 | WASD, strzałki, przeciąganie prawym lub środkowym przyciskiem | przesuwanie mapy |
 | kółko myszy, `+` / `-` | zoom |
 | lewy przycisk | wybór pola (zakładka Cell) |
-| Spacja / 1–5 | pauza i ×1 / pauza, ×1, ×2, ×5, maks. |
+| Spacja / 1–5 | pauza i ×1 / pauza, ×1, ×2, ×4, maks. (×1 = 10 taktów na sekundę, ADR 0025) |
 | F | śledź następną cywilizację (po ostatniej: nikogo) |
 | G / T | kamera na śledzoną cywilizację / jazda za nią |
 | Tab | okno ustawień warstw |

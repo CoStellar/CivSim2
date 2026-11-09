@@ -13,7 +13,7 @@ namespace CivSim.Tests.WorldGen;
 /// <summary>Milankovitch cycles, ice ages and the climate changing during the game (stage 1c-B).</summary>
 public class ClimateCycleTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     [Fact]
     public void TheGameStartsAtAWarmMomentOfTheCycles()

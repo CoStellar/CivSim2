@@ -214,7 +214,7 @@ public static class Treaties
         TreatyBook book = state.Treaties;
         string a = Name(state, from);
         string b = Name(state, to);
-        var treaty = new Treaty(from, to, kind, from, state.Month);
+        var treaty = new Treaty(from, to, kind, from, state.Month) { SinceTick = state.Turn };
         int years = content.Treaties.Kinds[(int)kind].Years;
         treaty.UntilMonth = years > 0 ? state.Month + (years * 12L) : 0;
         if (kind == TreatyKind.Peace)
@@ -234,7 +234,7 @@ public static class Treaties
                 treaty.WearinessB = war.WearinessB;
                 treaty.Campaigns = war.Campaigns;
                 treaty.CampaignMonths = war.CampaignMonths;
-                treaty.LastCampaignMonth = war.LastCampaignMonth;
+                treaty.LastCampaignTick = war.LastCampaignTick;
             }
 
             // The peace settles the old wrongs on both sides (stage 4f PR 5).
@@ -280,7 +280,7 @@ public static class Treaties
         ArgumentNullException.ThrowIfNull(state);
         TreatyBook book = state.Treaties;
         bool broke = EndTreaties(content, book, civ, target);
-        Treaty declared = book.Add(new Treaty(civ, target, TreatyKind.War, civ, state.Month));
+        Treaty declared = book.Add(new Treaty(civ, target, TreatyKind.War, civ, state.Month) { SinceTick = state.Turn });
         declared.Goal = goal;
         declared.GoalSettlement = goal == WarGoal.Land ? goalSettlement : -1;
         declared.PeopleA = Wars.PeopleOf(state, declared.A);
@@ -440,7 +440,7 @@ public static class Treaties
             if (rng.NextInt(1000) < chance)
             {
                 EndTreaties(content, book, ally, aggressor);
-                Treaty joined = book.Add(new Treaty(ally, aggressor, TreatyKind.War, ally, state.Month));
+                Treaty joined = book.Add(new Treaty(ally, aggressor, TreatyKind.War, ally, state.Month) { SinceTick = state.Turn });
                 joined.Goal = WarGoal.Revenge;
                 joined.PeopleA = Wars.PeopleOf(state, joined.A);
                 joined.PeopleB = Wars.PeopleOf(state, joined.B);

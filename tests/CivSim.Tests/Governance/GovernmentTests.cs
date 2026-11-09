@@ -18,7 +18,7 @@ namespace CivSim.Tests.Governance;
 /// <summary>Forms of government: start, title, enactment, pace of the AI (GDD 7.2; stage 4f PR 1, ADR 0023).</summary>
 public class GovernmentTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Id(string key) => Content.Governments.Single(g => g.Key == key).Id;
 
@@ -99,11 +99,11 @@ public class GovernmentTests
         string? line = new DeclareWarCommand(Content, b.Id, WarGoal.Loot).ApplyWithChronicle(state, a.Id);
         Assert.EndsWith("Its warriors will be ready in 4 years.", line, System.StringComparison.Ordinal);
         Treaty war = state.Treaties.Find(a.Id, b.Id, TreatyKind.War)!;
-        Assert.Equal(state.Month + 48, war.ReadyMonth);
-        Assert.Equal(war.ReadyMonth, war.QuietSince);
+        Assert.Equal(state.Turn + Content.Time.ActionTicks(48), war.ReadyTick); // ADR 0025: months of action, in ticks
+        Assert.Equal(war.ReadyTick, war.QuietSince);
         Assert.Equal("Our people are not ready for war yet.", Campaigns.CannotLaunch(Content, state, a.Id, home.Id.Value, target.Id.Value, 20));
         Assert.Null(Campaigns.CannotLaunch(Content, state, b.Id, target.Id.Value, home.Id.Value, 20)); // the defender may answer at once
-        Assert.True(war.ReadyFor(a.Id, war.ReadyMonth));
+        Assert.True(war.ReadyFor(a.Id, war.ReadyTick));
     }
 
     [Fact]

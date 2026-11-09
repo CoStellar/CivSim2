@@ -69,8 +69,9 @@ public sealed record TreatySaveData(
     [property: Key(20)] PeaceTermsSaveData? Terms = null,
     [property: Key(21)] int Campaigns = 0,
     [property: Key(22)] int CampaignMonths = 0,
-    [property: Key(23)] long LastCampaignMonth = -1,
-    [property: Key(24)] long ReadyMonth = -1);
+    [property: Key(23)] long LastCampaignTick = -1,
+    [property: Key(24)] long ReadyTick = -1,
+    [property: Key(25)] long SinceTick = 0);
 
 /// <summary>Saved episode (ADR 0022): today a war campaign.</summary>
 [MessagePackObject]
@@ -80,7 +81,7 @@ public sealed record EpisodeSaveData(
     [property: Key(2)] int Civ,
     [property: Key(3)] int Other,
     [property: Key(4)] long StartMonth,
-    [property: Key(5)] long NextMonth,
+    [property: Key(5)] long NextTick,
     [property: Key(6)] int TickMonths,
     [property: Key(7)] int Home,
     [property: Key(8)] int Target,
@@ -95,7 +96,7 @@ public sealed record EpisodeSaveData(
     [property: Key(17)] int Mustered = 0,
     [property: Key(18)] int ArmsPercent = 100,
     [property: Key(19)] int Morale = 100,
-    [property: Key(20)] long MusterUntilMonth = 0,
+    [property: Key(20)] long MusterUntilTick = 0,
     [property: Key(21)] long[]? Food = null,
     [property: Key(22)] int HungryMonths = 0,
     [property: Key(23)] int Forays = 0,
@@ -202,7 +203,8 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(40)] int ParentCiv = -1,
     [property: Key(41)] long FoundedMonth = 0,
     [property: Key(42)] long RevoltCalmUntilMonth = 0,
-    [property: Key(43)] ulong[]? LanguageMutations = null);
+    [property: Key(43)] ulong[]? LanguageMutations = null,
+    [property: Key(44)] long LastPulseTick = -1);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]

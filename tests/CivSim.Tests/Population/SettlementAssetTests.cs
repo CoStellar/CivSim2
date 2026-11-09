@@ -15,7 +15,7 @@ namespace CivSim.Tests.Population;
 /// <summary>Settlements as property (GDD 5.5) and migration with conquest (GDD 5.4, simplified).</summary>
 public class SettlementAssetTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static GameState NewState(ulong seed) => GameState.CreateNew(GameSettings.Test(seed), Content, out WorldGenReport _);
 

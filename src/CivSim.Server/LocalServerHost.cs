@@ -26,6 +26,9 @@ public sealed class LocalServerHost : IDisposable
     /// <summary>At maximum speed the map is sent to clients at most this often.</summary>
     public static readonly TimeSpan MaxSpeedViewInterval = TimeSpan.FromMilliseconds(250);
 
+    /// <summary>At the live speeds the map is sent to clients at most this often (ADR 0025: ticks come faster than views are useful).</summary>
+    public static readonly TimeSpan LiveViewInterval = TimeSpan.FromMilliseconds(100);
+
     private readonly ConcurrentQueue<IConnection> _pending = new();
     private readonly ConcurrentQueue<string> _clientLog = new();
     private readonly Thread _thread;
@@ -205,15 +208,23 @@ public sealed class LocalServerHost : IDisposable
         }
     }
 
-    /// <summary>Time between turns at a speed, or null when paused.</summary>
-    public static TimeSpan? TurnInterval(SimulationSpeed speed) => speed switch
+    /// <summary>
+    /// Time between ticks at a speed (ADR 0025: <paramref name="ticksPerSecond"/> ticks a second at x1, two and four
+    /// times as many at x2 and x4), or null when paused.
+    /// </summary>
+    public static TimeSpan? TurnInterval(SimulationSpeed speed, int ticksPerSecond)
     {
-        SimulationSpeed.X1 => TimeSpan.FromSeconds(2),
-        SimulationSpeed.X2 => TimeSpan.FromSeconds(1),
-        SimulationSpeed.X5 => TimeSpan.FromMilliseconds(400),
-        SimulationSpeed.Max => TimeSpan.Zero,
-        _ => null,
-    };
+        int multiplier = speed switch
+        {
+            SimulationSpeed.X1 => 1,
+            SimulationSpeed.X2 => 2,
+            SimulationSpeed.X4 => 4,
+            _ => 0,
+        };
+        return speed == SimulationSpeed.Max ? TimeSpan.Zero
+            : multiplier == 0 ? null
+            : TimeSpan.FromTicks(TimeSpan.TicksPerSecond / (Math.Max(1, ticksPerSecond) * (long)multiplier));
+    }
 
     private static T Parse<T>(string text)
         where T : struct, Enum
@@ -238,13 +249,14 @@ public sealed class LocalServerHost : IDisposable
                 }
 
                 bool ran = _server.Pump();
-                TimeSpan? interval = TurnInterval(_server.Speed);
+                TimeSpan? interval = TurnInterval(_server.Speed, _server.TicksPerSecond);
                 if (!ran && interval is { } wait && _server.ConnectedObservers > 0 && Stopwatch.GetElapsedTime(lastTurn) >= wait)
                 {
-                    lastTurn = Stopwatch.GetTimestamp();
-                    bool max = _server.Speed == SimulationSpeed.Max;
-                    Core.Simulation.TurnReport report = _server.AdvanceTurn(sendViews: !max);
-                    unsent = max;
+                    // Keep the pace even when a tick runs late (at most one tick behind; Max runs as fast as it can).
+                    long now = Stopwatch.GetTimestamp();
+                    lastTurn = wait == TimeSpan.Zero || Stopwatch.GetElapsedTime(lastTurn) >= wait * 2 ? now : lastTurn + (long)(wait.TotalSeconds * Stopwatch.Frequency);
+                    Core.Simulation.TurnReport report = _server.AdvanceTurn(sendViews: false);
+                    unsent = true;
                     ran = true;
                     Report();
                     _longRun?.TurnDone(_server.State, report, _server.Runner.LastChronicle);
@@ -258,7 +270,8 @@ public sealed class LocalServerHost : IDisposable
 
                 LongRunTick();
 
-                if (unsent && (_server.Speed != SimulationSpeed.Max || Stopwatch.GetElapsedTime(lastSend) >= MaxSpeedViewInterval))
+                TimeSpan viewInterval = _server.Speed == SimulationSpeed.Max ? MaxSpeedViewInterval : LiveViewInterval;
+                if (unsent && (_server.Speed == SimulationSpeed.Paused || Stopwatch.GetElapsedTime(lastSend) >= viewInterval))
                 {
                     _server.SendViews();
                     lastSend = Stopwatch.GetTimestamp();

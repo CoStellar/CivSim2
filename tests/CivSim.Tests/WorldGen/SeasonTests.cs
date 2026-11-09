@@ -14,7 +14,7 @@ namespace CivSim.Tests.WorldGen;
 /// <summary>Live seasons and the two clocks (decision of 2026-11-05).</summary>
 public class SeasonTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static TurnRunner NewGame(string planet)
     {

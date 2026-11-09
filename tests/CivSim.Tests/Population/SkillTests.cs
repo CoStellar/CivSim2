@@ -17,7 +17,7 @@ namespace CivSim.Tests.Population;
 /// <summary>Skills of stage 4F, PR 1: data, settlement counts, trimming, save and hash.</summary>
 public class SkillTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Skill(string key) => Content.Skills.Single(s => s.Key == key).Id;
 

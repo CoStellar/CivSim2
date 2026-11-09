@@ -21,7 +21,7 @@ namespace CivSim.Tests.Diplomacy;
 /// <summary>Treaties, war, the diplomat and trade between civilizations (GDD 9.1-9.2; stage 4d).</summary>
 public class TreatyTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     // A fresh test world without the starting camps; its land cells; civilizations by index.
     private static (GameState State, HexCoord[] Land) Empty(ulong seed)

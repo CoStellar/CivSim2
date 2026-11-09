@@ -17,7 +17,7 @@ namespace CivSim.Tests.Episodes;
 /// <summary>Supply and peace after the tuning of the war (stage 4e PR 6).</summary>
 public class WarTuningTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Food => Content.Goods.Single(g => g.Key == "wild_plants").Id;
 

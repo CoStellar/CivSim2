@@ -20,7 +20,7 @@ namespace CivSim.Tests.Economy;
 
 public class StorageTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static TurnRunner NewGame(ulong seed)
     {
@@ -247,7 +247,7 @@ public class StorageTests
 
 public class EffectBookTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     [Fact]
     public void SumEffectsAddUp()

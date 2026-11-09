@@ -1,6 +1,6 @@
 # ADR 0022: Epizody — krótki zegar dla zdarzeń z przebiegiem
 
-**Status:** przyjęta, 2026-11-07 (Patryk przyjął wszystkie rekomendacje z dokumentu „Czas w grze: długie kroki i krótkie zdarzenia —
+**Status:** zastąpiona przez ADR 0025 (2026-11-09: epizody liczą się w taktach, świat nie czeka); wcześniej przyjęta, 2026-11-07 (Patryk przyjął wszystkie rekomendacje z dokumentu „Czas w grze: długie kroki i krótkie zdarzenia —
 propozycja”). Uzupełnia ADR 0018 (zegar świata). Zasady w GDD 6.2, 5.4 i 9.3.
 
 ## Kontekst

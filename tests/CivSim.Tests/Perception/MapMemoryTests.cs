@@ -13,7 +13,7 @@ namespace CivSim.Tests.Perception;
 /// <summary>Sight, scouts, map memory and journeys (stage 3g, GDD 8.2).</summary>
 public class MapMemoryTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static GameState NewGame(ulong seed) => GameState.CreateNew(GameSettings.Test(seed), Content, out _);
 

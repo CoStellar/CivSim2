@@ -26,7 +26,7 @@ namespace CivSim.Tests.Ai;
 /// </summary>
 public class DeadValueTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
     private static readonly Lazy<byte[][]> Situations = new(MakeSituations);
 
     // Turns the civilizations live on from each situation when a value works over time.

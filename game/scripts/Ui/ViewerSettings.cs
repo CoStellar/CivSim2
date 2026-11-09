@@ -79,7 +79,7 @@ public sealed class StartSettings
     /// <summary>Period of the star's cycle in years.</summary>
     public string StarCycle { get; set; } = string.Empty;
 
-    /// <summary>pause, x1, x2, x5 or max.</summary>
+    /// <summary>pause, x1, x2, x4 or max.</summary>
     public string Speed { get; set; } = "pause";
 
     /// <summary>Pause after this many turns (0 = never).</summary>
@@ -166,7 +166,7 @@ public sealed class StartSettings
     {
         "x1" => SimulationSpeed.X1,
         "x2" => SimulationSpeed.X2,
-        "x5" => SimulationSpeed.X5,
+        "x4" or "x5" => SimulationSpeed.X4, // "x5" is the old word, kept for saved settings
         "max" => SimulationSpeed.Max,
         _ => SimulationSpeed.Paused,
     };

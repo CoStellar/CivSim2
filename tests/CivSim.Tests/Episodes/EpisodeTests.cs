@@ -19,7 +19,7 @@ namespace CivSim.Tests.Episodes;
 /// <summary>Episodes with a clock of their own and the first war campaigns (ADR 0022; stage 4e PR 2).</summary>
 public class EpisodeTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = ContentLoader.Load(); // the live clock (ADR 0025): episodes step on ticks
 
     private static int Warriors => Content.Strata.Single(s => s.Key == "warriors").Id;
 
@@ -99,7 +99,7 @@ public class EpisodeTests
     }
 
     [Fact]
-    public void ACampaignAddsMonthlyStepsWhileTheWorldWaits()
+    public void ACampaignStepsOnTicksAndTheWorldGoesOn()
     {
         (GameState state, SettlementState home, SettlementState target) = Front(71);
         CivilizationState a = state.Civilizations[0];
@@ -115,54 +115,51 @@ public class EpisodeTests
         Assert.Equal(10, SettlementAssetsWarriors(home)); // 20 left, 10 stayed home
 
         TurnRunner runner = Runner(state);
-        WorldClock.Begin(Content, state);
-        Assert.Equal(1, state.StepMonths); // the next step is the campaign's, a month away
-        long start = state.Month;
-        int steps = 0;
-        while (state.Episodes.Count > 0 && steps < 50)
+        long startMonth = state.Month;
+        long startTick = state.Turn;
+        Episode campaign = state.Episodes.All[0];
+        Assert.Equal(startTick + Content.Time.TicksPerActionMonth, campaign.NextTick); // a month of action is a few ticks
+        int ticks = 0;
+        while (state.Episodes.Count > 0 && ticks < 1000)
         {
             runner.RunTurn();
-            steps++;
-            if (state.Episodes.Count > 0)
-            {
-                Assert.Equal(0, state.WorldMonths); // the world waits while only the campaign steps
-            }
+            ticks++;
         }
 
+        // ADR 0025: the world never waits for a campaign; the year counter moved on in the world's pulses meanwhile.
         Assert.Equal(0, state.Episodes.Count);
-        Assert.True(state.Month - start < 12, $"the campaign took {state.Month - start} months");
+        Assert.True(ticks < 200, $"the campaign took {ticks} ticks");
+        Assert.True(state.Month > startMonth, "the world went on");
         Assert.True(SettlementAssetsWarriors(home) > 10, "the survivors came home");
         Treaty war = state.Treaties.Find(a.Id, target.Owner, TreatyKind.War)!;
         Assert.Equal(1, war.Campaigns);
         Assert.True(war.CampaignMonths > 0);
+        Assert.Equal(ticks / Content.Time.TicksPerActionMonth, war.CampaignMonths, 1.0); // a campaign month per few ticks
         Assert.NotEqual(0, war.Score);
     }
 
     [Fact]
-    public void AQuietWarEndsAfterFiveYearsNotAtTheNextLongStep()
+    public void AQuietWarEndsAfterFiveYearsOfAction()
     {
         (GameState state, _, SettlementState target) = Front(72);
         CivilizationState a = state.Civilizations[0];
         TurnRunner runner = Runner(state);
-        long declared = state.Month;
+        long declared = state.Turn;
         Treaties.DeclareWar(Content, state, a.Id, target.Owner, WarGoal.Loot, -1);
         foreach (CivilizationState c in state.Civilizations)
         {
             c.Alarms = Alarm.None;
         }
-        WorldClock.Begin(Content, state);
-        var trace = new System.Text.StringBuilder();
-        for (int k = 0; k < 10 && state.Treaties.AtWar(a.Id, target.Owner); k++)
+
+        long quiet = Content.Time.ActionTicks(Content.War.QuietPeaceYears * 12L);
+        for (long k = 0; k < quiet * 2 && state.Treaties.AtWar(a.Id, target.Owner); k++)
         {
-            trace.Append(System.FormattableString.Invariant($"[{state.Month}+{state.StepMonths}/{state.WorldMonths}]"));
             runner.RunTurn();
         }
 
-        Assert.True(!state.Treaties.AtWar(a.Id, target.Owner), trace.ToString());
-
         Assert.False(state.Treaties.AtWar(a.Id, target.Owner));
         Assert.True(state.Treaties.Has(a.Id, target.Owner, TreatyKind.Peace));
-        Assert.Equal(declared + (Content.War.QuietPeaceYears * 12L), state.Treaties.Find(a.Id, target.Owner, TreatyKind.Peace)!.SinceMonth);
+        Assert.Equal(declared + quiet, state.Treaties.Find(a.Id, target.Owner, TreatyKind.Peace)!.SinceTick); // in the very tick it ran out
     }
 
     [Fact]

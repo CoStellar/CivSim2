@@ -20,7 +20,7 @@ namespace CivSim.Tests.Ai;
 /// </summary>
 public class GreedAndAllianceTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static int Warriors => Content.Strata.Single(x => x.Key == "warriors").Id;
 

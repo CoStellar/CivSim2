@@ -17,7 +17,7 @@ namespace CivSim.Tests.Ai;
 /// <summary>How the AI values land with its technologies, and how villages send settlers (PR C).</summary>
 public class LandAndMigrationTests
 {
-    private static readonly GameContent Content = ContentLoader.Load();
+    private static readonly GameContent Content = TestContent.Load();
 
     private static GameState NewState(ulong seed) => GameState.CreateNew(GameSettings.Test(seed), Content, out WorldGenReport _);
 

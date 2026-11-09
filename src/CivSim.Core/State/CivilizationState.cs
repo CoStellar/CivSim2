@@ -91,6 +91,9 @@ public sealed class CivilizationState
     /// </summary>
     public int StepMonths { get; set; }
 
+    /// <summary>Tick of its last pulse (ADR 0025), or -1 before the first.</summary>
+    public long LastPulseTick { get; set; } = -1;
+
     /// <summary>Own steps taken since the start (the counter of its own rhythm).</summary>
     public long Steps { get; set; }
 

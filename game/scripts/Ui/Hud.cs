@@ -20,8 +20,8 @@ public partial class Hud : CanvasLayer
 {
     private static readonly (SimulationSpeed Speed, string Label, string Tip)[] Speeds =
     [
-        (SimulationSpeed.Paused, "❚❚", "Pause (Space, 1)"), (SimulationSpeed.X1, "▶", "One turn every 2 s (2)"),
-        (SimulationSpeed.X2, "▶▶", "One turn every second (3)"), (SimulationSpeed.X5, "▶▶▶", "Five turns every 2 s (4)"),
+        (SimulationSpeed.Paused, "❚❚", "Pause (Space, 1)"), (SimulationSpeed.X1, "▶", "Live speed x1 (2)"),
+        (SimulationSpeed.X2, "▶▶", "Live speed x2 (3)"), (SimulationSpeed.X4, "▶▶▶", "Live speed x4 (4)"),
         (SimulationSpeed.Max, "»", "As fast as possible (5)"),
     ];
 
