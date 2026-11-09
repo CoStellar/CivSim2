@@ -2,8 +2,8 @@
 
 [← spis treści](README.md)
 
-Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, 1000 kroków świata, seedy 7, 23 i 42. Wykres decyzji jest z poprawek po 100 grach
-(etap 4g, gałąź `feat/ai-fixes`); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
+Trzy gry bez grafiki: mapa standard (256×160), 12 cywilizacji, seedy 7, 23 i 42; do etapu 5b 1000 kroków świata, od etapu 6 PR 1
+18 000 taktów (30 minut przy ×1). Wykres decyzji jest z etapu 6 PR 1 (gałąź `feat/live-clock`); sekcje niżej mówią, z którego etapu są ich liczby. Tabela liczby decyzji niżej
 jest jeszcze z końca etapu 4F (`feat/demography`; w nawiasach liczby po PR 3, commit `f993e4d`); po PR 1 liczba decyzji zmieniła się o mniej
 niż 10% (4900–8000 na grę).
 Polecenie:
@@ -15,6 +15,23 @@ dotnet run --project src/CivSim.Headless -c Release -- --seed 7 --turns 1000 --m
 Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv, why42.csv>` (potrzebuje matplotlib).
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
+
+## Po zegarze gry na żywo (etap 6 PR 1, ADR 0025)
+
+3 seedy, mapa standard, **18 000 taktów = 30 minut gry przy ×1**, gałąź `feat/live-clock`. Wykres decyzji wyżej jest z tych gier.
+W nawiasach etap 5b (1000 kroków świata, tabela niżej). Polecenie jak wyżej, ale `--turns 18000` (Headless liczy teraz takty).
+
+| Seed | Decyzje | Wypowiedzenia wojny | Kampanie | Propozycje umów | Ludy żywe na końcu | Secesje | Lata gry |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 7 | 13 735 (5232) | 152 (54) | 329 (58) | 2111 (565) | 64 (39) | 52 (27) | 18 275 (12 100) |
+| 23 | 17 083 (6400) | 66 (54) | 122 (40) | 1639 (566) | 64 (45) | 52 (34) | 18 750 (12 100) |
+| 42 | 17 355 (5442) | 104 (59) | 300 (62) | 1780 (539) | 58 (33) | 46 (21) | 17 925 (10 551) |
+
+- **Więcej wszystkiego, bo więcej lat i ludów:** 30 minut to ok. 18 tys. lat zamiast 10–12 tys., bo wojny nie spowalniają już
+  licznika lat. Ludów jest 58–64 (w dwóch seedach limit 64, znany problem 5), więc i decyzji jest 2–3 razy więcej.
+- **Wzory decyzji bez zmian;** inaczej jest tylko kiedy: w pulsie (co 3 s) i, dla kampanii, co miesiąc akcji (0,5 s).
+- **Neolit po 5,8–7,5 minuty, wszystkie technologie er 1–2 po 6,7–9 minutach** (wykres w `docs/systems/turn-loop.md`).
+- Odstępy w latach licznika są teraz bardzo krótkie w czasie rzeczywistym (ocena pkt 20): do strojenia w PR 2.
 
 ## Po 4-godzinnym biegu (etap 5b)
 

@@ -18,7 +18,7 @@ na podstawie jakich danych, według jakiego wzoru, z jakimi progami i gdzie to j
 5. [Wszystkie liczby](07-parametry.md): każdy parametr z plikiem, wartością i decyzją, na którą wpływa. Także liczby zaszyte w kodzie.
 6. [Ocena i uwagi](08-ocena-i-uwagi.md): co naprawdę działa, co jest tylko „na papierze”, gdzie AI jest za proste, a gdzie
    zbyt skomplikowane. **To najważniejsza strona do Twojej oceny.**
-7. [Statystyki](09-statystyki.md): ile i jakich decyzji AI podejmuje w prawdziwych grach (3 seedy po 1000 tur).
+7. [Statystyki](09-statystyki.md): ile i jakich decyzji AI podejmuje w prawdziwych grach (3 seedy; od etapu 6: 30 minut gry przy ×1).
    [Testy wsadowe](12-testy-wsadowe.md): 100 gier AI kontra AI i co z nich wynika (etap 4g).
 8. Plan zmian po uwagach Patryka (czas w latach, priorytety, migracje): [`docs/prompts/04-ai-czas-wartosci-migracje.md`](../prompts/04-ai-czas-wartosci-migracje.md).
    Zrobione: zegar (ADR 0018), wartości (PR B, ADR 0019), ziemia i migracje (PR C) i etap 4F (ludzie i fachy, ADR 0020). Następne: 4e (wojna).

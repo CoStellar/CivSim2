@@ -54,6 +54,10 @@ flowchart TD
   się miesiącami pulsu świata. `WorldClock.PlansNow` mówi, czy to puls na decyzje wolne.
 - Nowy stan gry (`CreateNew`) i każdy krok kalendarza wołają `Begin`; drugie wywołanie w tym samym takcie nic nie zmienia
   (`CivilizationState.LastPulseTick`).
+- **Tempo na żywo** (3 seedy, mapa standard, 18 000 taktów = 30 min przy ×1, etap 6 PR 1): neolit po 5,8–7,5 min, wszystkie
+  14 technologii er 1–2 po 6,7–9 min, licznik lat po 30 min ok. 18 tys. lat. Strojenie pod cel z GDD 1.1 w PR 2.
+
+  ![Postęp w minutach gry](img/zegar_na_zywo_minuty.png)
 - Testy jednostkowe systemów używają `TestContent.Load()`: prawdziwe dane, ale puls co takt i miesiąc akcji = 1 takt, więc
   jedna tura testu to jeden krok każdej cywilizacji jak przed ADR 0025. Testy zegara, epizodów, determinizmu i całych gier
   używają prawdziwego `data/time.json`.
