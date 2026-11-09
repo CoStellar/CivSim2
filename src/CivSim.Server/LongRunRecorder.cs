@@ -77,6 +77,9 @@ public sealed class LongRunRecorder : IDisposable
     private readonly long _firstWorkingSet;
     private int _behindLogged;
     private bool _finished;
+    private readonly long _stillYears;
+    private long _year;
+    private long _lastChangeYear = -1;
 
     // Totals over the whole run.
     private long _totalTurns;
@@ -101,8 +104,9 @@ public sealed class LongRunRecorder : IDisposable
     /// Opens the files in <paramref name="folder"/> (created when missing). <paramref name="limit"/> zero means no time
     /// limit; <paramref name="sampleEvery"/> is the time between rows of <c>stats.csv</c>.
     /// </summary>
-    public LongRunRecorder(string folder, TimeSpan limit, TimeSpan sampleEvery, int unrestBelow = 30)
+    public LongRunRecorder(string folder, TimeSpan limit, TimeSpan sampleEvery, int unrestBelow = 30, long stillYears = 0)
     {
+        _stillYears = stillYears;
         ArgumentException.ThrowIfNullOrWhiteSpace(folder);
         Folder = Path.GetFullPath(folder);
         Directory.CreateDirectory(Folder);
@@ -153,10 +157,11 @@ public sealed class LongRunRecorder : IDisposable
             : line.Contains("pidemic", StringComparison.Ordinal) ? 9
             : line.StartsWith("A drought ", StringComparison.Ordinal)
                 || line.StartsWith("A wildfire ", StringComparison.Ordinal)
-                || line.StartsWith("The river flooded ", StringComparison.Ordinal) ? 10
+                || line.StartsWith("The river flooded ", StringComparison.Ordinal)
+                || (line.Contains(" in ", StringComparison.Ordinal) && line.Contains(" settlements: ", StringComparison.Ordinal)) ? 10 // "Drought in 3 settlements: ..."
             : line.StartsWith("Unrest spread in ", StringComparison.Ordinal)
                 || line.StartsWith("Calm returned to ", StringComparison.Ordinal) ? 8
-            : line.Contains(" founded ", StringComparison.Ordinal) ? 7
+            : line.Contains(" founded", StringComparison.Ordinal) ? 7
             : 11;
     }
 
@@ -215,6 +220,12 @@ public sealed class LongRunRecorder : IDisposable
         double ms = Stopwatch.GetElapsedTime(0, report.TotalTicks).TotalMilliseconds;
         double elapsed = Elapsed.TotalSeconds;
         long year = state.Month / 12;
+        _year = year;
+        if (_lastChangeYear < 0)
+        {
+            _lastChangeYear = year;
+        }
+
         _turnMs.Add(ms);
         _totalTurns++;
         _totalTurnMs += ms;
@@ -233,6 +244,11 @@ public sealed class LongRunRecorder : IDisposable
         foreach (string line in chronicle)
         {
             int kind = KindIndex(line);
+            if (kind <= 6)
+            {
+                _lastChangeYear = year; // a war, peace, treaty, secession, coup, death or new era: the world moves
+            }
+
             _eventCount++;
             _kindCount[kind]++;
             if (kind is 9 or 10)
@@ -286,6 +302,14 @@ public sealed class LongRunRecorder : IDisposable
         if (_limit > TimeSpan.Zero && Elapsed >= _limit)
         {
             Finish(server, string.Create(CultureInfo.InvariantCulture, $"time limit {Hours(_limit)} reached"));
+            return true;
+        }
+
+        if (_stillYears > 0 && _lastChangeYear >= 0 && _year - _lastChangeYear >= _stillYears)
+        {
+            Finish(server, string.Create(
+                CultureInfo.InvariantCulture,
+                $"the world stood still: no war, peace, treaty, secession, coup, people dying out or new era for {_year - _lastChangeYear} years"));
             return true;
         }
 

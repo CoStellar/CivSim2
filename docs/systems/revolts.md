@@ -24,12 +24,17 @@ flowchart LR
   B --> R{Buntownicy: osady poza stolicą z lojalnością poniżej 5}
   R -->|największa grupa sąsiadów ma 200+ ludzi i jest miejsce na cywilizację| N[Secesja: nowa cywilizacja]
   R -->|brak| P[Przewrót: nowy przywódca, inny ustrój, bezkrólewie 2 lata]
+  D[Spokojne państwo: osady poza zasięgiem ustroju mają lojalność 0] -->|dryf 2‰ na rok kroku| R2{Buntownicy jak wyżej}
+  R2 -->|grupa 200+ ludzi| N
   N --> J[Język córka, nazwa od rodzica, inny ustrój, charakter rodzica ±0,15]
   N --> K[Kopia technologii, mapy i kontaktów rodzica]
   N --> M[Rodzic pamięta secesję: powód do wojny o odwet, ale wojna tylko z decyzji dyplomaty]
 ```
 
 ## Zasady i wzory
+
+- **Dryf** (etap 5b, `Revolts.Drift`): gdy bunt nie wybuchł, buntownicy odłączają się także w spokojnym państwie z szansą
+  `driftPerMillePerYear` (2‰ na rok, złożone na krok); głównie osady dalej niż zasięg ustroju (`reach`, zob. `stability.md`).
 
 - **Szansa buntu:** gdy stabilność < 15 i minęły 20 lata od poprzedniego buntu: 20‰ na rok, w kroku dłuższym niż rok złożone
   (1 − 0,98^lata; krok 50 lat → około 64%).

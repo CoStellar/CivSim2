@@ -10,8 +10,9 @@ namespace CivSim.Core.Population;
 /// <summary>
 /// Influence zones (GDD 5.4): the cells a settlement's people gather on, hunt on and defend. A settlement reaches as
 /// far as its range allows, paying the movement cost of every cell entered; its strength fades with distance. Where
-/// zones overlap the stronger settlement takes the cell (ties go to the lower settlement id). Water stops influence
-/// until boats arrive with technologies.
+/// zones overlap the stronger settlement takes the cell (ties go to the lower settlement id), except on home ground:
+/// the cells a settlement reaches for at most the home cost are its own before any zone that is not home ground there.
+/// Water stops influence until boats arrive with technologies.
 /// </summary>
 public sealed class Influence
 {
@@ -22,6 +23,7 @@ public sealed class Influence
     private int[] _cost = [];
     private int[] _bestStrength = [];
     private int[] _bestClaim = [];
+    private bool[] _bestHome = [];
 
     /// <summary>Creates the calculator.</summary>
     public Influence(GameContent content)
@@ -85,11 +87,13 @@ public sealed class Influence
             _cost = new int[n];
             _bestStrength = new int[n];
             _bestClaim = new int[n];
+            _bestHome = new bool[n];
             Array.Fill(_cost, int.MaxValue);
         }
 
         Array.Clear(_bestStrength);
         Array.Clear(_bestClaim);
+        Array.Clear(_bestHome);
         foreach (SettlementState s in state.Settlements)
         {
             if (s.World != world.Id || s.TotalPopulation() == 0)
@@ -137,10 +141,12 @@ public sealed class Influence
             }
 
             int strength = (range - cost + 1) * _rules.InfluencePerStep;
-            if (strength > _bestStrength[cell])
+            bool home = cost <= _rules.InfluenceHomeCost;
+            if (home != _bestHome[cell] ? home : strength > _bestStrength[cell])
             {
                 _bestStrength[cell] = strength;
                 _bestClaim[cell] = s.Id.Value + 1;
+                _bestHome[cell] = home;
             }
 
             geo.GetNeighbors(geo.FromIndex(cell), neighbours);

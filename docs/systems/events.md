@@ -31,10 +31,10 @@ flowchart LR
 - **Siła:** każda znana technologia z `softenedBy` obniża siłę wszystkich efektów o swój procent. Gdy tura trwa dłużej niż efekt, efekt zostaje na całą turę, a jego siła jest przeliczana przez (lata efektu / lata tury). Krótka susza w 50-letniej turze waży więc mało, a w późniejszych erach z krótkimi turami działa w pełni przez kilka tur. To ta sama zasada co „tempa na rok”.
 - **Cel efektu** wynika z typu efektu: efekt osady spada na trafioną osadę, efekt cywilizacji na właściciela, efekt pola na każde pole lądu w promieniu `radiusCells`.
 - **Zdarzenia (dane, do strojenia):**
-  - **Susza** (15 na 10 tys. lat; ×3 przy wilgotności < 35, wykluczona przy > 75, ×0,5 przy rzece): −40% wydobycia i plonów w promieniu 4 pól przez 8 lat; nawadnianie łagodzi o 50%, garncarstwo o 20%.
-  - **Pożar** (10; tylko z lasem lub sawanną w promieniu 2; ×2,5 przy wilgotności < 50): osada −30% wydajności przez 3 lata, −50% wydobycia w promieniu 2 przez 15 lat (las odrasta); kamieniarstwo łagodzi o 50%.
-  - **Powódź** (30; tylko przy rzece; ×2 przy wilgotności > 60): ubytek 60‰ ludzi na rok przez rok, −50% wydobycia w promieniu 1 przez rok, potem +4 żyzności na polach w promieniu 1.
-  - **Epidemia** (2; ×1,5 od 300 ludzi, ×2 od 1000, ×2 w osiadłej wiosce): ubytek 100‰ na rok przez 2 lata, nastrój −15 przez 3 lata; każda inna osada tej samej sieci handlowej zaraża się z szansą 15%.
+  - **Susza** (3 na 10 tys. lat, do 2026-11-08 było 15; ×3 przy wilgotności < 35, wykluczona przy > 75, ×0,5 przy rzece): −40% wydobycia i plonów w promieniu 4 pól przez 8 lat; nawadnianie łagodzi o 50%, garncarstwo o 20%.
+  - **Pożar** (2, było 10; tylko z lasem lub sawanną w promieniu 2; ×2,5 przy wilgotności < 50): osada −30% wydajności przez 3 lata, −50% wydobycia w promieniu 2 przez 15 lat (las odrasta); kamieniarstwo łagodzi o 50%.
+  - **Powódź** (6, było 30; tylko przy rzece; ×2 przy wilgotności > 60): ubytek 60‰ ludzi na rok przez rok, −50% wydobycia w promieniu 1 przez rok, potem +4 żyzności na polach w promieniu 1.
+  - **Epidemia** (2; **tylko w cywilizacji, która ma razem co najmniej 10 000 ludzi, i tylko w osadzie od 300 ludzi**; ×1,5 od 300 ludzi, ×2 od 1000, ×2 w osiadłej wiosce): ubytek 100‰ na rok przez 2 lata, nastrój −15 przez 3 lata; każda inna osada tej samej sieci handlowej zaraża się z szansą 15% (także mniejsza niż 300 ludzi), a kupcy przenoszą ją do partnera handlowego, ale **nigdy do cywilizacji poniżej 10 000 ludzi** (warunek `civilization_people_at_least`, decyzja Patryka 2026-11-08 po długim biegu).
 - **Kronika:** każde zdarzenie pisze jedną linię; rozprzestrzenienie epidemii to jedna linia „spread from X to N more settlements”.
 - **Rolnictwo** liczy teraz efekty: wydajność osady (`output_percent`) i wydobycie z pola (`extraction_percent`), tak jak zbieranie.
 - **Poza CORE** (GDD 16, „Moduł”): ulewa, tornado, trzęsienie ziemi, wulkan, meteoryty, nieurodzaj, kryzys, rewolty, wielcy ludzie. Każde to nowy wpis w `events.json` (czasem nowy rodzaj warunku albo statystyki efektu w kodzie). Zniszczenie budynków przyjdzie z budynkami.
@@ -44,9 +44,10 @@ flowchart LR
 - `data/effects.json`: używane typy `extraction_reduction`, `damage`, `depopulation`, `mood_drop`.
 
 ## Testy
-- `EventTests`: dane się wczytują; szansa rośnie w suchym klimacie i z tłokiem, powódź wymaga rzeki; szansa na turę z szansy na rok; technologia łagodzi, długa tura rozcieńcza; susza obniża plony wioski; powódź podnosi żyzność i nakłada ubytek; epidemia przechodzi na połączoną osadę, ale nie na odległą; determinizm.
+- `EventTests`: dane się wczytują; szansa rośnie w suchym klimacie i z tłokiem, powódź wymaga rzeki; szansa na turę z szansy na rok; technologia łagodzi, długa tura rozcieńcza; susza obniża plony wioski; powódź podnosi żyzność i nakłada ubytek; epidemia przechodzi na połączoną osadę, ale nie na odległą; epidemia omija cywilizacje poniżej 10 000 ludzi i nie przechodzi do nich; determinizm.
 - `EffectBookTests`, `StorageTests`: sprawdzają już tylko własne efekty, bo zdarzenia dokładają swoje.
 
 ## Wydajność i strojenie
 - Seed 7, mapa standard, 1000 tur (ta sama maszyna): tura 18,7 ms (bez etapu 3h 19,6 ms; szybciej, bo `EffectBook.Total` ma teraz indeks po celu), faza świata 1,45 ms (było 0,79), alokacje 350 KB na turę (było 280 KB: teksty kroniki i budowa sieci handlowych, gdy epidemia się rozprzestrzenia).
-- Przebieg: ok. 5 susz, 2–3 pożary, 4 powodzie i 2 epidemie (plus ok. 1,6 rozprzestrzenienia) na turę na całym świecie. Ludność po 1000 turach ok. 89 tys. (bez zdarzeń ok. 111 tys.; ten koszt ok. 20% Patryk zaakceptował 2026-11-05); żadna cywilizacja nie znika przez zdarzenia (11 z 12 żyje w obu przebiegach).
+- **Po zmianie z 2026-11-08** (2500 tur, mapa standard): katastrof 5× mniej (seed 42: 35 300 → 7 500; seed 7: 11 200 → 7 300); epidemie dotykają tylko cywilizacji rolniczych od ok. 13 tys. ludzi, plemiona łowców są od nich wolne; wymarłych cywilizacji mniej (seed 42: 2 → 1, seed 7: 3 → 2). Czas tury bez zmian.
+- Przebieg (przed zmianą z 2026-11-08): ok. 5 susz, 2–3 pożary, 4 powodzie i 2 epidemie (plus ok. 1,6 rozprzestrzenienia) na turę na całym świecie. Ludność po 1000 turach ok. 89 tys. (bez zdarzeń ok. 111 tys.; ten koszt ok. 20% Patryk zaakceptował 2026-11-05); żadna cywilizacja nie znika przez zdarzenia (11 z 12 żyje w obu przebiegach).

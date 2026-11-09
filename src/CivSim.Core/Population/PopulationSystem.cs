@@ -143,7 +143,8 @@ public sealed class PopulationSystem : ITurnSystem
     {
         // People who got no food: most of them die during the turn.
         long unfed = IntMath.MulDiv(people, 1000 - s.FedPerMille, 1000, Rounding.Ceiling);
-        long starved = IntMath.MulDiv(unfed, _rules.StarvationDeathPercent, 100, Rounding.Ceiling);
+        int starvation = _content.SettlementLevels[s.Level].Mobile ? _rules.CampStarvationDeathPercent : _rules.StarvationDeathPercent;
+        long starved = IntMath.MulDiv(unfed, starvation, 100, Rounding.Ceiling);
         long survivors = people - starved;
 
         // Everyone else: births × (1 − child mortality) − adult deaths per year (ADR 0020).

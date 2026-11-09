@@ -71,6 +71,12 @@ public sealed record PopulationRules
     /// <summary>Share of the people who got no food in a turn who die, in percent.</summary>
     public int StarvationDeathPercent { get; init; } = 80;
 
+    /// <summary>
+    /// The same share in a mobile camp: hunters who run short scatter, wander farther and have fewer children instead of
+    /// starving where they stand (decision of 2026-11-08 after the long run).
+    /// </summary>
+    public int CampStarvationDeathPercent { get; init; } = 50;
+
     /// <summary>Extra deaths per thousand per year for every health point below <see cref="LowHealthBelow"/>.</summary>
     public Amount LowHealthDeathsPerMillePerPoint { get; init; } = Amount.FromHundredths(20);
 
@@ -142,6 +148,13 @@ public sealed record PopulationRules
 
     /// <summary>Influence strength per point of range left on a cell.</summary>
     public int InfluencePerStep { get; init; } = 30;
+
+    /// <summary>
+    /// Home ground: the cells a settlement reaches for at most this movement cost (its own cell always) belong to it
+    /// before any stronger zone of another settlement, so a band is never squeezed off the land it lives on
+    /// (decision of 2026-11-08 after the long run: small peoples died out with no land left to gather on).
+    /// </summary>
+    public int InfluenceHomeCost { get; init; } = 2;
 
     /// <summary>Furthest a camp moves in one turn, in cells.</summary>
     public int MaxMoveCells { get; init; } = 10;

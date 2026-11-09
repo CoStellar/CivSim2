@@ -214,6 +214,18 @@ Gotowe, gdy: Patryk uruchamia podgląd, ustawia świat i symulację w menu, star
 - [x] Aktualizacja `docs/systems/viewer.md`
 - [ ] Patryk ogląda podgląd u siebie (FPS na karcie graficznej, czy warstwy i panele są wygodne)
 
+## Etap 5b — Poprawki po 4-godzinnym biegu (decyzja Patryka z 2026-11-08: „wszystko robimy”)
+
+Przed nowymi erami. Analiza biegu: tura 93 ms (cel 50), FPS ok. 52, 8 z 12 cywilizacji wymiera w 2,5 minuty, 4 neolityczne „imperia” po ok. 140 osad, prawie zero wojen, ok. 67 zdarzeń na turę.
+
+- [x] **Zdarzenia:** epidemie tylko w cywilizacjach od 10 000 ludzi (i osadach od 300), nie przechodzą do mniejszych; susza, pożar i powódź 5× rzadziej
+- [x] **Plemiona łowców trwalsze:** „własna ziemia” (sąsiedzi nie zabierają bandzie pól, na których żyje) i łagodniejszy głód w obozach; w 8 grach 0 wymarłych cywilizacji zamiast 2,8
+- [x] **Stolice i stabilne nazwy:** stolica przenosi się z obozu do największej wioski, gdy lud osiądzie, potem tylko przy utracie; złoty znak nad stolicą; nazwa cywilizacji nad środkiem skupiska osad wokół stolicy, bez skakania
+- [x] **Hamulec neolitu:** zasięg władzy od stolicy, dalekie osady odłączają się jako nowe plemiona; brak imperiów przed epoką brązu (zmiana GDD)
+- [x] **Spokojniejszy ekran:** przywódcy jednym komunikatem na turę, drobne zdarzenia w podsumowaniach na cywilizację
+- [x] **Wydajność:** płynniejszy obraz (rzadsze i mniejsze przerysowania, mniej sprzątania pamięci), tura < 50 ms (seed 42, 8000 tur: śr. 12 ms, było 41 ms; FPS do sprawdzenia u Patryka)
+- [x] **Długi bieg:** koniec, gdy świat stoi w miejscu (10 000 lat bez zmian); test na kontynentach (seed 7): wojna z zemsty tylko na sąsiadów w zasięgu, o połowę mniej wojen bez walki
+
 ## Etapy 6–12 — Ery 3–9
 
 Jedna era na etap. W każdym: technologie i zasoby w danych → potrzebne mechaniki z zakresu CORE → AI → podgląd deweloperski → balans w 100 grach.

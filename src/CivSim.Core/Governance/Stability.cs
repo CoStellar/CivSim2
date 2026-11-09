@@ -17,7 +17,7 @@ public readonly record struct StabilityParts(int Mood, int Bonus, int Overload, 
 
 /// <summary>
 /// Capital, administration and stability (GDD 7.3; stage 4f PR 3). The capital is the leader's settlement: the first camp,
-/// and when it is lost the largest settlement left. Every settlement uses administration points, more the farther it is
+/// the largest village once the people settle down (stage 5b), and when it is lost the largest settlement left. Every settlement uses administration points, more the farther it is
 /// from the capital by road; a state over its government's capacity loses stability. Stability is the mood of the
 /// settlements weighed by the political influence of their strata; below a threshold unrest lowers output.
 /// </summary>
@@ -45,7 +45,8 @@ public static class Stability
 
     /// <summary>
     /// Moves the capital of <paramref name="civ"/> when it is no longer a lived-in settlement of its own: to the largest
-    /// one left. A capital taken by another civilization lowers stability for some years. Returns the chronicle line or null.
+    /// one left. A capital taken by another civilization lowers stability for some years. A capital that is still a
+    /// wandering camp moves to the largest settled village as soon as there is one (stage 5b). Returns the chronicle line or null.
     /// </summary>
     public static string? KeepCapital(GameContent content, GameState state, CivilizationState civ)
     {
@@ -55,7 +56,19 @@ public static class Stability
         SettlementState? old = civ.Capital == CivilizationState.NoCapital ? null : state.FindSettlement(new SettlementId(civ.Capital));
         if (old is { IsActive: true } && old.Owner == civ.Id)
         {
-            return null;
+            if (!content.SettlementLevels[old.Level].Mobile)
+            {
+                return null;
+            }
+
+            int settled = Largest(state, civ.Id, content);
+            if (settled == CivilizationState.NoCapital)
+            {
+                return null;
+            }
+
+            civ.Capital = settled;
+            return $"{Governments.Title(content, civ)} made {state.FindSettlement(new SettlementId(settled))!.Name} its capital.";
         }
 
         int next = Largest(state, civ.Id);
@@ -162,12 +175,15 @@ public static class Stability
         civ.AdminUsed = (int)Math.Min(int.MaxValue, used);
         int before = civ.Stability;
         civ.Stability = Parts(content, state, civ, civ.AdminUsed, state.Month).Total;
+        int reach = civ.Government >= 0 && civ.Government < content.Governments.Count ? content.Governments[civ.Government].Reach : 0;
         foreach (SettlementState s in state.Settlements)
         {
             if (s.IsActive && s.Owner == civ.Id)
             {
                 int cost = RoadCost(state, roads, capital, s, rules.RoadSearchCost);
-                s.Loyalty = Math.Clamp(civ.Stability - (cost * rules.LoyaltyPer10RoadCost / 10), 0, 100);
+                s.Loyalty = reach > 0 && cost > reach && s.Id.Value != civ.Capital
+                    ? 0 // beyond the government's reach
+                    : Math.Clamp(civ.Stability - (cost * rules.LoyaltyPer10RoadCost / 10), 0, 100);
             }
         }
 
@@ -215,13 +231,13 @@ public static class Stability
     }
 
     // The lived-in settlement of the civilization with the most people (ties: the lowest id), or NoCapital.
-    private static int Largest(GameState state, CivId civ)
+    private static int Largest(GameState state, CivId civ, GameContent? settledOnly = null)
     {
         int best = CivilizationState.NoCapital;
         int most = -1;
         foreach (SettlementState s in state.Settlements)
         {
-            if (!s.IsActive || s.Owner != civ)
+            if (!s.IsActive || s.Owner != civ || (settledOnly is not null && settledOnly.SettlementLevels[s.Level].Mobile))
             {
                 continue;
             }
@@ -390,7 +406,7 @@ public sealed class StabilitySystem : ITurnSystem
             }
 
             Revolts.Reseed(state, civ, state.Month, _random);
-            if (Revolts.Check(_content, state, civ, _random) is { } revolt)
+            if ((Revolts.Check(_content, state, civ, _random) ?? Revolts.Drift(_content, state, civ, _random)) is { } revolt)
             {
                 context.Chronicle(revolt);
             }

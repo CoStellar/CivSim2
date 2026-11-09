@@ -22,6 +22,12 @@ public enum EventConditionKind
 
     /// <summary>The settlement has settled down (its level cannot move).</summary>
     Settled,
+
+    /// <summary>
+    /// The settlement's owner has at least <see cref="EventCondition.Value"/> people in all its settlements. An event
+    /// that requires it never strikes a smaller civilization, not even by spreading.
+    /// </summary>
+    CivilizationPeopleAtLeast,
 }
 
 /// <summary>

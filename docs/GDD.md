@@ -319,6 +319,7 @@ Ludzie przechodzą między warstwami powoli (kilka procent na turę), w stronę 
   Dane: do ok. 1800 roku umierała mniej więcej połowa dzieci (zbieracze-łowcy średnio 48,8%, Volk i Atkinson 2013), świat w 1950: ok. 25%, w 2020: 4,3%; średni przyrost ludności od 10 000 lat p.n.e. do 1700 roku ok. 0,4‰ na rok (Our World in Data). Ery 3–10 wejdą z ich etapami.
 - **Pojemność mieszkań** osady ogranicza wzrost. Ponad limit rośnie przeludnienie: więcej chorób i niższe zadowolenie.
 - **Zdrowie osady** zależy od gęstości, wody pitnej, sanitacji (akwedukty, kanalizacja) i medycyny. Niskie zdrowie zwiększa szansę na epidemię.
+- **Głód:** z ludzi, którym zabrakło jedzenia w turze, umiera 80% w osiadłej osadzie i 50% w koczowniczym obozie (łowcy się rozpraszają, wędrują dalej i mają mniej dzieci; decyzja Patryka z 2026-11-08).
 - **Migracja:** ludzie uciekają z osad głodujących, ogarniętych wojną lub niezadowolonych do lepszych, także do innych cywilizacji, jeśli granice są otwarte.
 - **Lojalność podbitych:** podbita ludność przez kilka pokoleń jest mniej lojalna: pracuje mniej wydajnie i łatwiej się buntuje.
 
@@ -349,6 +350,7 @@ Cywilizacja nie jest przywiązana do miejsca. Startuje jako koczownicze plemię,
 - **Zasięg** rośnie z siłą cywilizacji (liczba wojowników i armii), z narzędziami i bronią (technologie) oraz ze środkami ruchu (konie, łodzie, drogi).
 - **Każde pole kosztuje** tyle, ile wynosi koszt dotarcia po terenie (rozdział 3). Na otwartym stepie strefa sięga daleko, w górach, dżungli i na bagnach jest wąska.
 - **Siła wpływu słabnie z odległością.** Na polu, gdzie strefy się nakładają, przeważa silniejszy wpływ. Przy podobnych wartościach pole jest sporne i wywołuje spór graniczny (8.5).
+- **Własna ziemia** (decyzja Patryka z 2026-11-08, po długim biegu): pole osady i pola, do których dociera kosztem najwyżej 2, należą do niej przed każdą obcą strefą, która nie jest tam własną ziemią. Sąsiedzi nie mogą bez wojny zabrać plemieniu ziemi, na której żyje. Wcześniej rolnicy z silną strefą zabierali małym bandom wszystkie pola i te wymierały z głodu (8 z 12 cywilizacji w 4-godzinnym biegu).
 - **Strefa kurczy się po klęskach:** przegrana bitwa, głód czy epidemia od razu oddają pola sąsiadom.
 
 **Migracja** to zwykłe działanie oceniane przez AI (8.3). AI porównuje wartość obecnego terenu (żywność, woda, surowce, zagrożenie, wyczerpanie zasobów) z najlepszym znanym celem i odejmuje koszt drogi: zapasy na wędrówkę, ryzyko i porzucone budynki. Ekspansywność przywódcy zachęca do przeprowadzki, ostrożność ją hamuje.
@@ -536,7 +538,8 @@ Karrut”. Zmiana ustroju zmienia tytuł, rdzeń zostaje.
 ### 7.3 Stabilność i administracja
 
 - **Stabilność (0–100)** to średnia zadowolenia warstw ważona ich wpływem politycznym. Wpływ warstw zależy od ustroju (rada starszych: starszyzna i myśliciele; wodzostwo: wojownicy i wódz). Dopóki warstwy nie mają osobnego nastroju, nastrój warstwy to nastrój jej osady (decyzja Patryka z 2026-11-07). Do tego premia ustroju, minus przeciążenie administracji, kryzys sukcesji i bezkrólewie. Każda osada ma też lojalność = stabilność minus kara za odległość od stolicy, więc pierwsze odpadają dalekie osady.
-- **Stolica** to osada przywódcy: na start pierwszy obóz, potem największa osada; gdy stolica padnie, przenosi się do największej, a stabilność spada na kilka lat.
+- **Zasięg władzy** (decyzja Patryka z 2026-11-08): każdy ustrój sięga tylko na określoną odległość od stolicy (koszt drogi: rada starszych 28, wodzostwo 32, republika miejska 35, despotia 45). Osada dalej nie jest lojalna wcale, a nawet w spokojnym państwie co roku z małą szansą (0,2%) takie dalekie osady odłączają się jako nowe plemię (dryf, jak secesja, ale bez buntu). Dzięki temu w neolicie powstaje wiele plemion zamiast imperiów na całą wyspę; większe państwa przyjdą z ustrojami epoki brązu.
+- **Stolica** to osada przywódcy: na start pierwszy obóz, a gdy lud osiądzie, największa wioska (potem już się nie przenosi sama); gdy stolica padnie, przenosi się do największej osady, a stabilność spada na kilka lat. Na mapie stolica ma złoty znak, a nazwa cywilizacji stoi nad środkiem skupiska osad wokół stolicy (decyzja Patryka z 2026-11-08).
 - **Secesja** (decyzja Patryka z 2026-11-07): sąsiadujące ze sobą zbuntowane osady tworzą jedną nową cywilizację z językiem rodzica z mutacją (5.6), innym ustrojem niż rodzic („odłam o innych poglądach”), charakterem przesuniętym od rodzica i kopią technologii i mapy. Wojna nie zaczyna się sama: wybiera ją dyplomata rodzica, a wspomnienie secesji bardzo psuje opinię. Gdy gra ma już 64 cywilizacje, zamiast secesji jest przewrót. Poniżej 30 zaczynają się niepokoje (strajki, niższa wydajność), poniżej 15 bunty, secesja odległych osad lub wojna domowa. Dzięki temu imperia rosną i upadają, a długa symulacja nie kończy się jednym hegemonem.
 - **Zdolność administracyjna:** każda osada zużywa punkty administracji, tym więcej, im dalej leży od stolicy (liczone kosztem drogi, nie w linii prostej). Przekroczenie limitu oznacza korupcję, niższe podatki i spadek stabilności. Limit podnoszą pismo, urzędnicy, drogi, ustrój i później telegraf.
 - **Grupy interesu:** warstwy ludności zachowują się jak frakcje. Wpływowa i niezadowolona warstwa może wymusić zmianę polityki, zorganizować zamach albo rewolucję.
@@ -787,7 +790,7 @@ Efekt to modyfikator z celem (pole, osada, armia, cywilizacja), siłą, czasem t
 
 Wszystkie zdarzenia są w plikach danych: warunki, szanse, efekty i komunikat do kroniki. Nowe zdarzenia dodajesz bez programowania.
 
-- **W CORE (etap 3h):** susza, pożar, powódź i epidemia. Szansa to „ile razy na 10 tys. lat”, mnożona przez warunki osady (wilgotność, rzeka, las w pobliżu, liczba ludzi, osiadłość). Technologie łagodzą skutki (nawadnianie i garncarstwo suszę, kamieniarstwo pożar). Skutki to efekty z 10.1 (redukcja wydobycia, uszkodzenie, depopulacja, spadek nastroju); gdy tura trwa dłużej niż efekt, jego siła jest przeliczana przez długość tury. Powódź zostawia żyźniejszą ziemię, epidemia przechodzi po sieci handlowej. Ulewa i spowolnienie ruchu przyjdą z armiami i drogami, zniszczenie z budynkami.
+- **W CORE (etap 3h):** susza, pożar, powódź i epidemia. Szansa to „ile razy na 10 tys. lat”, mnożona przez warunki osady (wilgotność, rzeka, las w pobliżu, liczba ludzi, osiadłość). Technologie łagodzą skutki (nawadnianie i garncarstwo suszę, kamieniarstwo pożar). Skutki to efekty z 10.1 (redukcja wydobycia, uszkodzenie, depopulacja, spadek nastroju); gdy tura trwa dłużej niż efekt, jego siła jest przeliczana przez długość tury. Powódź zostawia żyźniejszą ziemię, epidemia przechodzi po sieci handlowej. Klęski naturalne są rzadkie (susza 3, pożar 2, powódź 6 razy na 10 tys. lat na osadę), a epidemie uderzają tylko w duże cywilizacje (od 10 000 ludzi razem) i ich osady od 300 ludzi; zaraza nie przechodzi do mniejszej cywilizacji, nawet szlakiem handlowym (decyzja Patryka 2026-11-08). Ulewa i spowolnienie ruchu przyjdą z armiami i drogami, zniszczenie z budynkami.
 
 ## 11. Pętla symulacji
 
@@ -806,6 +809,8 @@ Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie
 9. **Państwo:** podatki i budżet, administracja, stabilność, bunty i secesje, sukcesja przywódcy.
 10. **Nauka i wpływy:** postęp badań, dyfuzja technologii, przeliczenie stref wpływów, zmiana ery.
 11. **Zapis:** statystyki, kronika, nowa migawka dla grafiki, autozapis co 10 tur.
+
+**Spokojna kronika** (decyzja Patryka z 2026-11-08): częste zdarzenia jednego rodzaju z tej samej tury (nowi przywódcy, klęski, epidemie, nowe i przeniesione osady, osiadanie, wieści o dalekich ludach) kronika łączy w jedno zdanie z listą cywilizacji, np. „Drought in 4 settlements: Osxou (2), Korkbri”. Pojedyncze zdarzenie zostaje opisane jak dotąd.
 
 ### 11.2 Prędkości i tryby
 

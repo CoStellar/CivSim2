@@ -213,6 +213,9 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
 public sealed record SettleCommand(GameContent Content, SettlementId Settlement) : ICommand, IChronicledCommand
 {
     /// <inheritdoc />
+    public string? ChronicleGroup => "{0} camps settled down as villages";
+
+    /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Economy;
 
     /// <summary>The level a camp settles down to: the first level after it that cannot move.</summary>

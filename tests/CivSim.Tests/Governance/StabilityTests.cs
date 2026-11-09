@@ -55,6 +55,30 @@ public class StabilityTests
     }
 
     [Fact]
+    public void TheCapitalMovesToTheLargestVillageWhenThePeopleSettle()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(23), Content, out _);
+        CivilizationState civ = state.Civilizations[0];
+        SettlementState camp = state.Settlements.First(s => s.Owner == civ.Id);
+        SettlementState small = Found(state, civ, 3, 200, 50);
+        SettlementState large = Found(state, civ, -3, 400, 50);
+        Assert.Null(Stability.KeepCapital(Content, state, civ)); // only camps: the capital stays with the leader's camp
+
+        small.Level = Core.Economy.SettleCommand.VillageLevel(Content, small.Level);
+        large.Level = Core.Economy.SettleCommand.VillageLevel(Content, large.Level);
+        string? line = Stability.KeepCapital(Content, state, civ);
+        Assert.Equal(large.Id.Value, civ.Capital);
+        Assert.Equal($"{Governments.Title(Content, civ)} made {large.Name} its capital.", line);
+        Assert.Equal(0, civ.CapitalLostUntilMonth); // no loss of stability
+
+        // A settled capital stays, even when another village grows larger.
+        small.Population[Stratum("producers")] = 900;
+        Assert.Null(Stability.KeepCapital(Content, state, civ));
+        Assert.Equal(large.Id.Value, civ.Capital);
+        Assert.NotEqual(camp.Id.Value, civ.Capital);
+    }
+
+    [Fact]
     public void StabilityWeighsTheMoodByTheInfluenceOfTheStrata()
     {
         GameState state = GameState.CreateNew(GameSettings.Test(22), Content, out _);
@@ -125,6 +149,32 @@ public class StabilityTests
         Assert.True(toFar > toNear, $"road {toNear} to the near one, {toFar} to the far one");
         Assert.Equal((3 * Content.Stability.AdminPerSettlement) + ((toNear + toFar) * Content.Stability.AdminPerRoadCost), civ.AdminUsed);
         Assert.True(far.Loyalty <= near.Loyalty && near.Loyalty <= camp.Loyalty);
+    }
+
+    [Fact]
+    public void SettlementsBeyondTheReachOfTheGovernmentOweItNoLoyalty()
+    {
+        GameState state = GameState.CreateNew(GameSettings.Test(24), Content, out _);
+        CivilizationState civ = state.Civilizations[0];
+        civ.Government = Gov("elder_council");
+        int reach = Content.Governments[civ.Government].Reach;
+        Assert.True(reach > 0 && reach < Content.Stability.RoadSearchCost);
+        SettlementState camp = state.Settlements.First(s => s.Owner == civ.Id);
+        camp.Mood = 100;
+        SettlementState near = Found(state, civ, 1, 50, 100);
+        SettlementState far = Found(state, civ, state.Worlds[0].Geometry.Width / 2, 50, 100);
+        var roads = new RoadCosts();
+        Stability.Update(Content, state, civ, roads, null);
+
+        int toFar = roads.To(state.Worlds[0].Geometry.Index(far.Cell), Content.Stability.RoadSearchCost);
+        Assert.True(toFar > reach, $"road {toFar}, reach {reach}");
+        Assert.True(near.Loyalty > 0);
+        Assert.Equal(0, far.Loyalty);
+        Assert.Equal(civ.Stability, camp.Loyalty);
+
+        // The chiefdom reaches farther than the council; despotism (bronze age) farther still.
+        Assert.True(Content.Governments[Gov("chiefdom")].Reach > reach);
+        Assert.True(Content.Governments[Gov("despotism")].Reach > Content.Governments[Gov("chiefdom")].Reach);
     }
 
     [Fact]

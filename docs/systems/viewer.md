@@ -77,7 +77,7 @@ heksami (z-index = miejsce na liście). Warstwy pól leżą zawsze pod rysowanym
 | Rivers | rysowana | wł. | z bliska grafiki rzek w shaderze, z daleka linie |
 | Fields | rysowana | wł. | pola uprawne wiosek (grafika pola, mocniejsza przy większej obsadzie rolników) |
 | Borders | rysowana | wł. | granice cywilizacji po krawędziach heksów, kolor cywilizacji z ciemnym obrysem |
-| Settlements | rysowana | wł. | obozy, wioski, miasteczka w stanach zamieszkana / opuszczona / ruiny; daleko kwadraty; nad największą osadą każdej cywilizacji tabliczka z jej nazwą |
+| Settlements | rysowana | wł. | obozy, wioski, miasteczka w stanach zamieszkana / opuszczona / ruiny; daleko kwadraty; stolica ze złotym rombem; tabliczka z nazwą cywilizacji nad środkiem skupiska jej osad wokół stolicy (osady połączone co najwyżej ok. 6 heksów), przesuwana dopiero, gdy środek ucieknie o ok. 3 heksy (etap 5b: wcześniej skakała za największą osadą) |
 | Units | rysowana | wł. | wędrujące obozy (etap 3g) i przerywana strzałka do celu; armie kampanii (etap 4e PR 3: 1–3 wojowników według siły, grubsza strzałka do celu albo do domu) i tragarze z jedzeniem |
 | Events | rysowana | wł. | efekty zdarzeń: jedna ikona na zdarzenie (na środkowym polu), na pozostałych polach kropka |
 | Relations | rysowana | wył. | linie między największymi osadami cywilizacji, które się spotkały: wojna czerwona, sojusz niebieski, pakt turkusowy, handel złoty, pokój biały, sam kontakt szary przerywany |
@@ -170,6 +170,12 @@ zoomie i włącza kolejne warstwy pól, symulacja w tle na maks. Porównanie z g
 | --- | --- | --- | --- |
 | Standard 258×160 | 300 | 10,4 ms / 9,0 ms | 4,5 / 4,0 |
 | Ogromna 514×320 | 150 | 28,3 ms / 11,0 ms | 1,7 / 1,5 |
+
+**Etap 5b (po 4-godzinnym biegu):** obiekty mapy (osady, napisy, jednostki, zdarzenia) są rysowane z zapasem 35% poza ekranem
+i przerysowywane tylko, gdy kamera wyjdzie poza ten zapas, zmieni się zoom, warstwy lub mgła, a nowe dane najwyżej co 0,25 s
+(wcześniej przy każdej migawce i w każdej klatce ruchu kamery, także przy śledzeniu cywilizacji). Rysowanie kopii obiektu na
+zawiniętej mapie nie tworzy już obiektów w pamięci (wcześniej funkcja na każdy obiekt), a listy rzek i granic są wspólne.
+W chmurze nie da się uruchomić Godota, więc wynik FPS sprawdza Patryk: `--benchmark` wypisuje teraz też liczbę pełnych GC.
 
 Prawdziwe FPS zależą od karty graficznej; do sprawdzenia u Patryka (`-- --map-size huge --benchmark 600`). Spadek klatek przy
 renderowaniu programowym to koszt shadera z grafikami; praca procesora spadła dzięki limitom czasu.

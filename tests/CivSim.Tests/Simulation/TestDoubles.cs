@@ -53,3 +53,20 @@ internal sealed record LoggingCommand(CommandCategory Category, string Tag, List
 
     public void Apply(GameState state, CivId civ) => Log.Add(Tag);
 }
+
+/// <summary>Writes the given chronicle lines in groups each turn: (text, group, civilization).</summary>
+internal sealed class GroupedChronicler(params (string Text, string Group, int Civ)[] lines) : ITurnSystem
+{
+    public TurnPhase Phase => TurnPhase.World;
+
+    public void Execute(TurnContext context)
+    {
+        context.Chronicle("Before.");
+        foreach ((string text, string group, int civ) in lines)
+        {
+            context.Chronicle(text, group, civ);
+        }
+
+        context.Chronicle("After.");
+    }
+}

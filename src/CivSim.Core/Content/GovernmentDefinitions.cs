@@ -126,6 +126,11 @@ public sealed record GovernmentDefinition(int Id, string Key, string Name)
     /// <summary>Administration points this government can manage before the state is overloaded (GDD 7.3).</summary>
     public int Administration { get; init; } = 100;
 
+    /// <summary>
+    /// Road cost from the capital beyond which a settlement owes the state no loyalty (GDD 7.3, stage 5b); 0 = no limit.
+    /// </summary>
+    public int Reach { get; init; }
+
     /// <summary>Political influence of each stratum (index = stratum id) in stability (GDD 7.3); 1 when not set.</summary>
     public IReadOnlyList<int> StrataInfluence { get; init; } = [];
 

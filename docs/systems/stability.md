@@ -31,6 +31,8 @@ flowchart LR
   O --> S
   X[Kryzys sukcesji, bezkrólewie, utrata stolicy] --> S
   S --> Y[Lojalność osady = stabilność - kara za drogę]
+  Y -->|dalej niż zasięg ustroju| Z[Lojalność 0]
+  Z --> D[Dryf: 0,2% na rok odłączenia jako nowe plemię]
   S -->|poniżej 30| U[Niepokoje: wydajność -1% za punkt]
 ```
 
@@ -39,6 +41,9 @@ flowchart LR
 - **Stolica:** na start pierwszy obóz. Gdy stolica przestaje być zamieszkaną osadą cywilizacji, stolicą zostaje największa osada
   (najwięcej ludzi, przy remisie najniższy numer). Zdobyta przez wroga stolica obniża stabilność o 15 przez 5 lat; opuszczona przez
   własnych ludzi (przeprowadzka, połączenie) nie.
+- **Stolica osiada** (etap 5b, 2026-11-08): stolica, która jest jeszcze wędrującym obozem, przenosi się do największej wioski, gdy
+  tylko cywilizacja jakąś ma (kronika: „X made Y its capital”, bez kary). Osiadła stolica już się nie przenosi, nawet gdy inna wioska
+  urośnie większa. Podgląd rysuje nad stolicą złoty romb, a widok niesie jej numer (`CivilizationView.Capital`, tylko gdy widz widzi tę osadę).
 - **Koszt drogi:** najtańsza droga po lądzie od stolicy, suma kosztów ruchu wchodzonych pól (biom 1–3, wzgórza +1, góry +2),
   szukana do 60. Osada dalej albo za wodą liczy się jako 60.
 - **Administracja:** każda osada zużywa 10 punktów plus 1 za punkt kosztu drogi. Limit z ustroju: rada starszych 250, wodzostwo 200,
@@ -52,7 +57,13 @@ flowchart LR
   w roku wojny cała.
 - **Jak często:** we własnym kroku cywilizacji, ale najwyżej raz w roku: w wojnie (kroki miesięczne) w pierwszym miesiącu roku.
 - **Bezkrólewie:** po zmianie ustroju 2 lata: kara 20 i brak decyzji państwowych (bez wypowiadania wojen i kolejnej zmiany ustroju).
-- **Lojalność osady** = stabilność − 5 za każde 10 punktów drogi od stolicy (0–100). Bunty i secesja dalekich osad przyjdą w PR 4.
+- **Lojalność osady** = stabilność − 5 za każde 10 punktów drogi od stolicy (0–100).
+- **Zasięg władzy** (etap 5b): pole `reach` ustroju w `data/governments.json` (rada 28, wodzostwo 32, republika 35, despotia 45;
+  0 = bez limitu). Osada (poza stolicą) dalej niż zasięg ma lojalność 0, więc zawsze jest buntownikiem.
+- **Dryf** (etap 5b, `Revolts.Drift`): gdy nie wybuchł bunt, buntownicy (największa grupa z co najmniej 200 ludźmi) odłączają się
+  jako nowa cywilizacja z szansą `driftPerMillePerYear` (2 promile) na rok, liczoną na cały krok cywilizacji; nie w spokoju po buncie
+  i nie, gdy gra ma 64 cywilizacje. Wynik na 8 grach × 2000 tur: ok. 41 cywilizacji po ~8 osad zamiast 18 po ~20,
+  2× więcej wojen i 4× więcej podbojów.
 - **Niepokoje:** poniżej 30 efekt `unrest` (z `data/effects.json`) obniża wydajność wszystkich osad o 1% za każdy punkt poniżej 30,
   do następnego kroku cywilizacji. Kronika zapisuje początek („Unrest spread...”) i koniec („Calm returned...”).
 
@@ -66,7 +77,7 @@ flowchart LR
 
 ## Pliki danych
 
-`data/stability.json`, pola `stabilityBonus`, `administration`, `strataInfluence` w `data/governments.json`, efekt `unrest`
+`data/stability.json`, pola `stabilityBonus`, `administration`, `reach`, `strataInfluence` w `data/governments.json`, efekt `unrest`
 w `data/effects.json`.
 
 ## Testy

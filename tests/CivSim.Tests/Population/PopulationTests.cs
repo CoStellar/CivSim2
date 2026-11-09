@@ -155,6 +155,29 @@ public class PopulationTests
     }
 
     [Fact]
+    public void HungryHuntersScatterRatherThanStarveLikeVillagers()
+    {
+        static int Survivors(bool village)
+        {
+            TurnRunner runner = NewGame(4);
+            SettlementState s = runner.State.Settlements[0];
+            if (village)
+            {
+                s.Level = SettleCommand.VillageLevel(Content, s.Level);
+            }
+
+            runner.State.Effects.Add(Content.Effect("damage"), s.World, s.Id.Value, -100, EffectInstance.Permanent);
+            s.Stock.Clear();
+            int before = s.TotalPopulation();
+            runner.RunTurn();
+            return s.TotalPopulation() * 100 / before;
+        }
+
+        Assert.True(Content.Population.CampStarvationDeathPercent < Content.Population.StarvationDeathPercent);
+        Assert.True(Survivors(village: false) > Survivors(village: true));
+    }
+
+    [Fact]
     public void PeopleNeverAppearOrVanishThroughRounding()
     {
         TurnRunner runner = NewGame(5);

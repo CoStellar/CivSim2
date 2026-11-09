@@ -503,6 +503,7 @@ public static class ContentLoader
             VillageDeathsPerMille = growth.Amount("villageDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             VillageBirthsPerMille = growth.Amount("villageBirthsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             StarvationDeathPercent = growth.Int("starvationDeathPercent", 0, 100),
+            CampStarvationDeathPercent = growth.Int("campStarvationDeathPercent", 0, 100),
             LowHealthDeathsPerMillePerPoint = growth.Amount("lowHealthDeathsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
             MoodBirthsPerMillePerPoint = growth.Amount("moodBirthsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
             StrataShiftPercentPerYear = growth.Amount("strataShiftPercentPerYear", Amount.Zero, Amount.FromUnits(100)),
@@ -534,6 +535,7 @@ public static class ContentLoader
             HillsCost = influence.Int("hillsCost", 0, 10),
             MountainsCost = influence.Int("mountainsCost", 0, 10),
             InfluencePerStep = influence.Int("strengthPerStep", 1, 255),
+            InfluenceHomeCost = influence.Int("homeCost", 0, 20),
             MaxMoveCells = migration.Int("maxMoveCells", 0, 50),
             MoveWhenFedBelowPercent = migration.Int("moveWhenFedBelowPercent", 0, 100),
             MoveWhenBetterByPercent = migration.Int("moveWhenBetterByPercent", 0, 1000),
@@ -765,6 +767,7 @@ public static class ContentLoader
                 TermYears = r.Int("termYears", 0, 100),
                 StabilityBonus = r.Int("stabilityBonus", -100, 100),
                 Administration = r.Int("administration", 1, 1_000_000),
+                Reach = r.Int("reach", 0, 1000),
                 StrataInfluence = StrataMap(e, "strataInfluence", at, strata, 1, 0, 100, errors),
             });
             i++;
@@ -940,6 +943,7 @@ public static class ContentLoader
             SecessionMinPeople = r.Int("secessionMinPeople", 0, 1_000_000),
             MaxCivilizations = r.Int("maxCivilizations", 1, 64),
             SecessionCharacterShift = r.Int("secessionCharacterShift", 0, 1000),
+            DriftPerMillePerYear = r.Int("driftPerMillePerYear", 0, 1000),
         };
     }
 
@@ -1433,7 +1437,7 @@ public static class ContentLoader
                 {
                     EventConditionKind.HumidityBelow or EventConditionKind.HumidityAbove => cr.Int("value", 0, 100),
                     EventConditionKind.BiomeNear => cr.Int("value", 0, 10),
-                    EventConditionKind.PeopleAtLeast => cr.Int("value", 1, 1_000_000_000),
+                    EventConditionKind.PeopleAtLeast or EventConditionKind.CivilizationPeopleAtLeast => cr.Int("value", 1, 1_000_000_000),
                     _ => 0,
                 };
                 var biomeIds = new List<int>();

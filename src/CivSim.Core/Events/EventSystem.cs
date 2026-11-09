@@ -24,7 +24,21 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
     private readonly GameContent _content = content ?? throw new ArgumentNullException(nameof(content));
     private readonly IReadOnlyList<EventDefinition> _events = events ?? content.Events;
     private readonly List<(int Settlement, int Event)> _struck = [];
+    private readonly Dictionary<string, string> _groups = new(StringComparer.Ordinal);
+
+    // The chronicle group of an event: several strikes in a turn are summed up in one line (stage 5b).
+    private string GroupOf(EventDefinition ev)
+    {
+        if (!_groups.TryGetValue(ev.Key, out string? group))
+        {
+            group = ev.Name + " in {0} settlements";
+            _groups[ev.Key] = group;
+        }
+
+        return group;
+    }
     private HexCoord[] _area = [];
+    private long[] _civPeople = []; // people of each civilization (by id) this turn, for CivilizationPeopleAtLeast
 
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.World;
@@ -42,6 +56,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
         DeterministicRandom rng = state.Random[RandomStreamId.Events];
         IReadOnlyList<SettlementState> all = state.Settlements;
         _struck.Clear();
+        CountCivilizationPeople(state);
         for (int si = 0; si < all.Count; si++)
         {
             SettlementState s = all[si];
@@ -56,7 +71,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             for (int e = 0; e < _events.Count; e++)
             {
                 EventDefinition ev = _events[e];
-                long chance = TurnChanceMillionths(YearChanceMillionths(state, world, s, ev), months);
+                long chance = TurnChanceMillionths(Chance(world, s, ev), months);
                 if (chance > 0 && rng.NextInt((int)Million) < chance)
                 {
                     Strike(context, world, s, ev, months);
@@ -75,6 +90,13 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(s);
         ArgumentNullException.ThrowIfNull(ev);
+        CountCivilizationPeople(state);
+        return Chance(world, s, ev);
+    }
+
+    // Yearly chance with the civilization head counts already taken this turn.
+    private long Chance(WorldState world, SettlementState s, EventDefinition ev)
+    {
         long chance = ev.TimesPer10000Years * 100L; // per 10 000 years -> millionths per year
         foreach (EventCondition c in ev.Conditions)
         {
@@ -167,6 +189,8 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
                 return s.TotalPopulation() >= c.Value;
             case EventConditionKind.Settled:
                 return !_content.SettlementLevels[s.Level].Mobile;
+            case EventConditionKind.CivilizationPeopleAtLeast:
+                return CivilizationPeople(s.Owner) >= c.Value;
             case EventConditionKind.River:
                 for (int d = 0; d < 6; d++)
                 {
@@ -195,6 +219,48 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             default:
                 return false;
         }
+    }
+
+    // Head count of every civilization, from its active settlements; the array is reused between turns.
+    private void CountCivilizationPeople(GameState state)
+    {
+        int size = 0;
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            size = Math.Max(size, c.Id.Value + 1);
+        }
+
+        if (_civPeople.Length < size)
+        {
+            _civPeople = new long[size];
+        }
+
+        Array.Clear(_civPeople);
+        foreach (SettlementState s in state.Settlements)
+        {
+            int owner = s.Owner.Value;
+            if (s.IsActive && owner >= 0 && owner < _civPeople.Length)
+            {
+                _civPeople[owner] += s.TotalPopulation();
+            }
+        }
+    }
+
+    private long CivilizationPeople(CivId civ) => civ.Value >= 0 && civ.Value < _civPeople.Length ? _civPeople[civ.Value] : 0;
+
+    // A spreading event jumps to small settlements of a struck network (disease does not ask how big a village is),
+    // but never into a civilization below a required size (GDD 10.2: epidemics strike only large civilizations).
+    private bool CanSpreadTo(SettlementState target, EventDefinition ev)
+    {
+        foreach (EventCondition c in ev.Conditions)
+        {
+            if (c.Required && c.Kind == EventConditionKind.CivilizationPeopleAtLeast && CivilizationPeople(target.Owner) < c.Value)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private int Area(HexGlobe geo, HexCoord center, int radius)
@@ -262,9 +328,12 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
 
         if (chronicle)
         {
-            context.Chronicle(ev.Chronicle
-                .Replace("{settlement}", s.Name, StringComparison.Ordinal)
-                .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal));
+            context.Chronicle(
+                ev.Chronicle
+                    .Replace("{settlement}", s.Name, StringComparison.Ordinal)
+                    .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal),
+                GroupOf(ev),
+                owner?.Id.Value ?? -1);
         }
     }
 
@@ -305,8 +374,6 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             }
 
             int months = WorldClock.MonthsOf(state, state.Settlements[source]);
-
-            int reached = 0;
             foreach (int m in networks[networkOf[source]])
             {
                 if (_struck.Contains((m, e)) || rng.NextInt(100) >= ev.SpreadPercent)
@@ -315,14 +382,14 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
                 }
 
                 SettlementState target = state.Settlements[m];
+                if (!CanSpreadTo(target, ev))
+                {
+                    continue;
+                }
+
                 Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
                 _struck.Add((m, e));
-                reached++;
-            }
-
-            if (reached > 0)
-            {
-                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {reached} more settlement{(reached == 1 ? string.Empty : "s")}.");
+                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {target.Name}.", GroupOf(ev), target.Owner.Value);
             }
 
             AlongTradeRoutes(context, networks, networkOf, source, e, months, rng);
@@ -359,10 +426,15 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             }
 
             SettlementState target = state.Settlements[other];
+            if (!CanSpreadTo(target, ev))
+            {
+                continue;
+            }
+
             Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
             _struck.Add((other, e));
             string partner = state.FindCivilization(target.Owner)?.Name ?? "no one";
-            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).");
+            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).", GroupOf(ev), target.Owner.Value);
         }
     }
 

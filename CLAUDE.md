@@ -2,6 +2,7 @@
 
 Czytasz ten plik na początku każdej sesji. Jest źródłem zasad pracy w tym repo.
 Pełny projekt gry: `docs/GDD.md`. Plan prac i stan: `ROADMAP.md`. Decyzje architektoniczne: `docs/decisions/`.
+Znane problemy aplikacji (z przyczynami i planem): `docs/known-issues.md`. Raporty z długich biegów: `docs/long-runs/`.
 
 ## Projekt w skrócie
 
@@ -31,7 +32,7 @@ CivSim 2 to symulator rozwoju gospodarczego: **nie ma kultury ani religii** jako
 
 ## Jak wygląda każda sesja
 
-1. **Start:** przeczytaj `CLAUDE.md`, aktualny etap w `ROADMAP.md`, odpowiedni rozdział `docs/GDD.md`,
+1. **Start:** przeczytaj `CLAUDE.md`, aktualny etap w `ROADMAP.md`, `docs/known-issues.md`, odpowiedni rozdział `docs/GDD.md`,
    ostatnie commity (`git log --oneline -20`) i graf wiedzy (`/understand-chat`, gdy potrzebujesz kontekstu).
 2. **Plan sesji** (po polsku, zanim zaczniesz pisać kod):
    - **Ja zrobię:** lista zadań z `ROADMAP.md`.
@@ -41,7 +42,7 @@ CivSim 2 to symulator rozwoju gospodarczego: **nie ma kultury ani religii** jako
 3. **Praca:** osobna gałąź `feat/<krótki-opis>` albo `fix/<...>`, małe commity.
 4. **PR:** opis po polsku: co, dlaczego, jak sprawdzić, wyniki testów, benchmark, raport `/understand-diff`.
    Nigdy nie pushuj bezpośrednio do `main`. Merge robi Patryk.
-5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/systems/` (a gdy etap zmienia AI, także `docs/ai/`),
+5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/known-issues.md` (naprawione i nowe problemy), zaktualizuj `docs/systems/` (a gdy etap zmienia AI, także `docs/ai/`),
    upewnij się, że graf wiedzy jest aktualny, i napisz krótkie podsumowanie: co działa, co zostało, co Patryk ma zrobić.
 
 Jeśli zadanie zmienia zasady z `docs/GDD.md`, **najpierw zaproponuj zmianę Patrykowi**, potem ją wprowadź

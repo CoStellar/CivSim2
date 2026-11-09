@@ -28,6 +28,7 @@ zmienia zasady gry, więc decydujesz Ty. **Stan: po PR C (ziemia i migracje)**; 
 | Stabilność (etap 4f, PR 3, PR 5) | **AI reaguje prosto** | przeciążenie hamuje ekspansję, niepokoje: bezpieczeństwo w górę, wojna w dół, spokojniejszy ustrój (pkt 16) |
 | Bunty i secesja (etap 4f, PR 4) | **reguła, nie decyzja** | nowe ludy powstają z dalekich osad; AI rodzica może się mścić (pkt 17) |
 | Testy wsadowe (etap 4g) | **4 dziury poprawione** | po poprawkach: głodujące wioski 21 zamiast 322 na grę, wojny o łupy w 81 grach, podboje w 19, sojusze 4 na grę (pkt 18) |
+| Po 4-godzinnym biegu (etap 5b) | **odwet tylko w zasięgu** | wojna o odwet wymaga sąsiada w zasięgu 16 pól; zasięg władzy i dryf dają ~40 małych ludów zamiast ~11 dużych, więc wojen i podbojów jest dużo więcej (pkt 19) |
 
 ## 1. Wagi i cechy, które nic nie zmieniają (zamknięte w PR B)
 
@@ -317,6 +318,24 @@ na tych samych 100 seedach w [12-testy-wsadowe.md](12-testy-wsadowe.md#po-popraw
 
 Za proste albo do pilnowania: wojny z chciwości nigdy nie łamią umowy (zasada w kodzie, nie cecha charakteru; lojalność liczy się tylko
 przy odwecie), a ocena łupów zakłada, że AI widzi zapasy w osadach, które widzi teraz (bez szpiegów i pogłosek).
+
+## 19. Po 4-godzinnym biegu Patryka (etap 5b)
+
+**Co zmieniono w AI:** jedna rzecz. Wojna o odwet (D2) dostała ten sam warunek zasięgu co wojna o łupy: najbliższe osady obu ludów
+najwyżej 16 pól od siebie (`reachCells`). Wcześniej lud mógł wypowiedzieć wojnę z zemsty komuś za morzem albo na drugim końcu
+kontynentu; armia nie miała jak dojść, więc po 5 latach bez walki wojna kończyła się sama białym pokojem (problem 8 Patryka).
+Na kontynentach (seed 7, 6000 tur) wojen o odwet jest 178 zamiast 336.
+
+**Co zmieniło się wokół AI (reguły, nie decyzje):** zasięg władzy ustroju i dryf dalekich osad (`docs/systems/stability.md`),
+silniejsze plemiona łowców (własna ziemia), stolice. Skutek dla AI: zamiast ~11 dużych ludów jest ~40 małych (8 gier × 2000 tur),
+więc dyplomaci mają dużo więcej sąsiadów. Wojen jest ok. 12× więcej (201 zamiast 16,5 na grę), podbojów 20× więcej (29,6 zamiast 1,5),
+a krok świata częściej trwa miesiąc (wojny), więc 2000 tur to ok. 11 600 lat zamiast 48 000.
+
+**Za proste albo do pilnowania:**
+- Nadal około 2/3 wojen o odwet kończy się bez kampanii. Teraz to głównie wojny rodzica z ludem, który się od niego odłączył
+  (secesja to powód odwetu, decyzja Patryka z 2026-11-07), gdy rodzic nie ma wolnych wojowników albo dowódca uznaje szansę za zbyt
+  małą. Kandydat do następnego kroku: dyplomata pyta dowódcę (K1) o szansę przed wypowiedzeniem wojny o odwet, jak przy wojnie o ziemię.
+- Przy 64 ludach (limit gry) dryf i secesje stają; większe państwa mogą wtedy znowu rosnąć. W 2000 turach limit osiągnęła 1 z 8 gier (seed 102).
 
 ## Decyzje Patryka (2026-11-06)
 

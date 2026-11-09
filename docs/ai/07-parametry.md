@@ -124,7 +124,7 @@ w zapisanych sytuacjach z gier. Parametr, który niczego nie zmienia, wywala tes
 | `declareWarAbove` | 1,5 | ocena | D2 | próg wypowiedzenia wojny |
 | `retryYears` | 100 | lata | D2 | po odmowie nie proponuje tego samego |
 | `peaceRetryYears` | 1 | lata | D2 | po odmowie pokoju proponuje go znowu po roku (od 4e PR 6) |
-| `reachCells` | 16 | pola | D1, D2, handel | zasięg handlu i paktu |
+| `reachCells` | 16 | pola | D1, D2, handel | zasięg handlu i paktu; od etapu 5b także wojny o odwet (jak wcześniej wojny o łupy) |
 | `tradeSharePercent` | 50 | **% na krok** | handel | jaka część nadwyżki idzie przez bramę (w kroku, który ma któraś ze stron) |
 | `witnessPercent` | 50 | % | D3 | jak mocno złamanie umowy pamiętają świadkowie |
 | `allyJoinBasePerMille` | 300 | ‰ | D3 | szansa dołączenia sojusznika przy lojalności 0 |

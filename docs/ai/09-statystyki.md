@@ -16,6 +16,22 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Po 4-godzinnym biegu (etap 5b)
+
+3 seedy, mapa standard, 1000 kroków świata, gałąź `claude/project-thread-04udi9` (PR #63). Wykres decyzji wyżej jest z tych gier.
+W nawiasach stan przed etapem 5b (commit `14cd39c`).
+
+| Seed | Decyzje | Wypowiedzenia wojny | Kampanie | Propozycje umów | Ludy żywe na końcu | Secesje | Lata gry |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 7 | 5232 (9289) | 54 (11) | 58 (4) | 565 (91) | 39 (10) | 27 (0) | 12 100 (25 450) |
+| 23 | 6400 (10057) | 54 (3) | 40 (2) | 566 (75) | 45 (10) | 34 (0) | 12 100 (26 975) |
+| 42 | 5442 (13977) | 59 (3) | 62 (1) | 539 (392) | 33 (12) | 21 (0) | 10 551 (27 375) |
+
+- **Mniej decyzji, bo mniej lat:** wojny skracają kroki świata do miesiąca, więc 1000 kroków to ok. 11–12 tys. lat zamiast 25–27 tys.
+  Na rok gry decyzji jest więcej niż wcześniej.
+- **Dużo więcej dyplomacji i wojny:** ok. 40 małych ludów zamiast 10–12 dużych; każdy ma więcej sąsiadów. Kampanii jest kilkanaście
+  razy więcej (wcześniej 1–4 na grę).
+
 ## Poprawki po 100 grach (etap 4g)
 
 3 seedy, mapa standard, 1000 kroków świata, gałąź `feat/ai-fixes`. Wykres decyzji wyżej jest z tych gier. W nawiasach 4f PR 5.

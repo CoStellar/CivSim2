@@ -435,7 +435,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
                     string? line = Hear(state, earth, rules, a, b, c);
                     if (line is not null)
                     {
-                        context.Chronicle(line);
+                        context.Chronicle(line, "{0} peoples heard of distant peoples", a.Id.Value);
                         heardOne = true;
                         break;
                     }

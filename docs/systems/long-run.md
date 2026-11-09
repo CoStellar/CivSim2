@@ -23,6 +23,9 @@ Potem F5 i można odejść od komputera. Albo w menu startowym, kolumna „Simul
 | `--long-run-every 10` | co ile sekund nowy wiersz w `stats.csv` (domyślnie 10 → 1440 wierszy na 4 h) |
 
 Bieg rusza z prędkością **maksymalną**, chyba że w menu lub `--speed` wybrano inną. Po czasie gra się zamyka.
+Bieg kończy się też wcześniej, gdy **świat stoi w miejscu** (etap 5b): przez 10 000 lat gry nie było żadnej wojny, pokoju,
+traktatu, secesji, przewrotu, wymarcia ani nowej ery (`LocalGameOptions.LongRunStillYears`, 0 = wyłączone). Powód końca jest
+w `summary.txt` („ended: the world stood still…”) i w `log.txt`.
 Zamknięcie okna wcześniej (albo Esc do menu) też kończy zapis i zostawia podsumowanie. Dane trafiają na dysk
 po każdym wierszu `stats.csv`, więc awaria gubi najwyżej ostatnie sekundy.
 
@@ -96,3 +99,9 @@ kolumn, podsumowanie), wcześniejsze zamknięcie, gra bez długiego biegu nic ni
 
 Koszt zapisu: wiersz `turns.csv` na turę i wiersz `stats.csv` co 10 s (przejście po osadach i cywilizacjach),
 pomijalny w porównaniu z turą (kilkadziesiąt ms na mapie standard).
+
+## Raporty z biegów
+
+Analiza każdego biegu, który coś pokazał, trafia do `docs/long-runs/<data>_<opis>/` (README z wnioskami, wykresy PNG,
+`summary.txt`; surowe CSV zostają u Patryka). Wykryte problemy dopisz do [`docs/known-issues.md`](../known-issues.md).
+Pierwszy raport: [4 h, seed 42, 2026-11-08](../long-runs/2026-11-08_4h_seed42/README.md).
