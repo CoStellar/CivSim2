@@ -80,7 +80,7 @@ public static class SaveGameSerializer
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
                 st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty, st.JourneyNext, st.JourneyStepTicks, st.JourneyProgress,
-                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth));
+                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth, [.. st.JourneyPath], st.JourneyPathAt, st.JourneyPathGoal));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -265,7 +265,10 @@ public static class SaveGameSerializer
                 ScoutOut = st.ScoutOut,
                 ScoutBackMonth = st.ScoutBackMonth,
                 RestUntilMonth = st.RestUntilMonth,
+                JourneyPathAt = st.JourneyPathAt,
+                JourneyPathGoal = st.JourneyPathGoal,
             };
+            settlement.JourneyPath.AddRange(st.JourneyPath ?? []);
             for (int g = 0; g < st.Stock.Length; g++)
             {
                 settlement.Stock[g] = Core.Numerics.Amount.FromHundredths(st.Stock[g]);

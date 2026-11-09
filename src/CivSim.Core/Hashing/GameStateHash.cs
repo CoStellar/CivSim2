@@ -339,6 +339,13 @@ public static class GameStateHash
             h.Add(s.JourneyNext);
             h.Add(s.JourneyStepTicks);
             h.Add(s.JourneyProgress);
+            h.Add(s.JourneyPathAt);
+            h.Add(s.JourneyPathGoal);
+            h.Add(s.JourneyPath.Count);
+            foreach (int cell in s.JourneyPath)
+            {
+                h.Add(cell);
+            }
             h.Add(s.ScoutOut ? 1 : 0);
             h.Add(s.ScoutBackMonth);
             h.Add(s.RestUntilMonth);
