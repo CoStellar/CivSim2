@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using CivSim.Core.State;
 using CivSim.Core.WorldGen;
 
@@ -9,6 +10,36 @@ namespace CivSim.Headless;
 /// <summary>Command-line options of the headless runner.</summary>
 public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, string? ReportPath, bool Quiet)
 {
+    /// <summary>CSV file with population and food per civilization, or null for none.</summary>
+    public string? StatsPath { get; init; }
+
+    /// <summary>CSV file with every AI decision and its three main reasons ("Why?", GDD 8.7), or null for none.</summary>
+    public string? DecisionsPath { get; init; }
+
+    /// <summary>CSV file with what every civilization knows of the others (stage 4c), written with the stats cadence, or null for none.</summary>
+    public string? RelationsPath { get; init; }
+
+    /// <summary>CSV file with the treaties and wars in force (stage 4d), written with the stats cadence, or null for none.</summary>
+    public string? TreatiesPath { get; init; }
+
+    /// <summary>CSV file with every war of the run (stage 4e): goal, score, dead, weariness, terms; or null for none.</summary>
+    public string? WarsPath { get; init; }
+
+    /// <summary>CSV file with every war campaign of the run (stage 4e PR 3): army, arms, food, hunger, carriers; or null for none.</summary>
+    public string? CampaignsPath { get; init; }
+
+    /// <summary>Games to run in a batch (stage 4g), seeds <see cref="Seed"/> onwards; 0 = one ordinary game.</summary>
+    public int Batch { get; init; }
+
+    /// <summary>CSV file with one row per game of the batch.</summary>
+    public string? BatchPath { get; init; }
+
+    /// <summary>Games of a batch run at once (threads).</summary>
+    public int Jobs { get; init; } = 1;
+
+    /// <summary>Write a stats row every this many turns.</summary>
+    public int StatsEvery { get; init; } = 10;
+
     /// <summary>Folder for PNG map previews, or null for none.</summary>
     public string? PngFolder { get; init; }
 
@@ -18,17 +49,32 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>Shape of the land.</summary>
     public WorldType WorldType { get; init; } = WorldType.Continents;
 
-    /// <summary>Share of water in percent.</summary>
-    public int WaterPercent { get; init; } = 60;
+    /// <summary>Share of water in percent, or null for the planet preset's.</summary>
+    public int? WaterPercent { get; init; }
 
-    /// <summary>Average temperature of the planet.</summary>
-    public WorldClimate Climate { get; init; }
+    /// <summary>Planet preset key from data/planets.json.</summary>
+    public string Planet { get; init; } = "earth";
 
-    /// <summary>How much rain the planet gets.</summary>
-    public WorldMoisture Moisture { get; init; }
+    /// <summary>Axial tilt in tenths of a degree, or null for the preset's.</summary>
+    public int? AxialTiltTenths { get; init; }
 
-    /// <summary>Share of hills and mountains.</summary>
-    public WorldRelief Relief { get; init; }
+    /// <summary>Orbit eccentricity in thousandths, or null for the preset's.</summary>
+    public int? EccentricityPerMille { get; init; }
+
+    /// <summary>
+    /// Star, orbit and air on top of the preset (stage 1c-A): at most two of brightness, distance, year and light, and
+    /// the air values. Null values come from the preset (see <see cref="PlanetSetup.Build"/>).
+    /// </summary>
+    public PlanetOverrides PlanetValues { get; init; } = new();
+
+    /// <summary>How much rain the planet gets, or null for the preset's.</summary>
+    public WorldMoisture? Moisture { get; init; }
+
+    /// <summary>How fast humidity falls away from the sea.</summary>
+    public WorldInland Inland { get; init; }
+
+    /// <summary>Share of hills and mountains, or null for the preset's.</summary>
+    public WorldRelief? Relief { get; init; }
 
     /// <summary>How many deposits there are.</summary>
     public WorldResources Resources { get; init; }
@@ -36,27 +82,43 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>Number of civilizations, or null for the map size default.</summary>
     public int? Civilizations { get; init; }
 
-    /// <summary>Game settings for these options.</summary>
-    public GameSettings ToSettings()
+    /// <summary>Notes on planet values that <see cref="ToSettings"/> had to adjust (for example to stay in the habitable zone).</summary>
+    public IReadOnlyList<string> PlanetNotes { get; private set; } = [];
+
+    /// <summary>Game settings for these options: the planet preset first, then every value given on the command line.</summary>
+    public GameSettings ToSettings(Core.Content.GameContent content)
     {
-        GameSettings s = MapSizes.Settings(MapSize, Seed);
+        ArgumentNullException.ThrowIfNull(content);
+        Core.Content.PlanetPreset preset = content.Planets.FirstOrDefault(p => p.Key == Planet)
+            ?? throw new ArgumentException($"Unknown planet '{Planet}'. Known: {string.Join(", ", content.Planets.Select(p => p.Key))}.");
+        GameSettings s = MapSizes.Settings(MapSize, Seed).WithPreset(preset);
+        (PlanetParameters planet, IReadOnlyList<string> notes) = PlanetSetup.Build(
+            preset.Planet,
+            preset.AutoCo2,
+            PlanetValues with { AxialTiltTenths = AxialTiltTenths, EccentricityThousandths = EccentricityPerMille });
+        PlanetNotes = notes;
         return s with
         {
+            Planet = planet,
             CivilizationCount = Civilizations ?? s.CivilizationCount,
             WorldType = WorldType,
-            WaterPercent = WaterPercent,
-            Climate = Climate,
-            Moisture = Moisture,
-            Relief = Relief,
+            WaterPercent = WaterPercent ?? s.WaterPercent,
+            Moisture = Moisture ?? s.Moisture,
+            Inland = Inland,
+            Relief = Relief ?? s.Relief,
             Resources = Resources,
         };
     }
 
     /// <summary>Usage text.</summary>
     public const string Usage =
-        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--quiet]\n" +
+        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--quiet]\n" +
+        "       [--batch GAMES --batch-out games.csv [--jobs N]] (stage 4g: GAMES games on seeds from --seed on, one CSV row each)\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
-        "       [--climate temperate|cold|hot] [--moisture normal|dry|wet] [--relief normal|flat|mountainous]\n" +
+        "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
+        "       [--luminosity SUNS] [--distance AU] [--year EARTH_YEARS] [--light 0.356-1.107] (at most two; the rest follows)\n" +
+        "       [--co2 BAR | --greenhouse DEGREES] [--pressure BAR] [--volcanism PERCENT] [--star-variability PER_MILLE] [--star-cycle YEARS]\n" +
+        "       [--moisture normal|dry|wet] [--inland normal|dry|humid] [--relief normal|flat|mountainous]\n" +
         "       [--resources normal|scarce|rich] [--civs 1-64]\n" +
         "       --turns 0 only generates the world.";
 
@@ -67,16 +129,30 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         int turns = 100;
         MapSize size = MapSize.Standard;
         string? report = null;
+        string? stats = null;
+        string? decisions = null;
+        string? relations = null;
+        string? treaties = null;
+        string? wars = null;
+        string? campaigns = null;
+        int statsEvery = 10;
         bool quiet = false;
         string? png = null;
         int pngScale = 3;
         WorldType worldType = WorldType.Continents;
-        int water = 60;
-        WorldClimate climate = WorldClimate.Temperate;
-        WorldMoisture moisture = WorldMoisture.Normal;
-        WorldRelief relief = WorldRelief.Normal;
+        int? water = null;
+        string planet = "earth";
+        int? tilt = null;
+        int? eccentricity = null;
+        var values = new PlanetOverrides();
+        WorldMoisture? moisture = null;
+        WorldInland inland = WorldInland.Normal;
+        WorldRelief? relief = null;
         WorldResources resources = WorldResources.Normal;
         int? civs = null;
+        int batch = 0;
+        string? batchOut = null;
+        int jobs = 1;
         error = null;
 
         for (int i = 0; i < args.Count; i++)
@@ -113,6 +189,68 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     }
 
                     break;
+                case "--stats":
+                    stats = Next();
+                    if (string.IsNullOrWhiteSpace(stats))
+                    {
+                        error = "--stats needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--wars":
+                    wars = Next();
+                    if (string.IsNullOrWhiteSpace(wars))
+                    {
+                        error = "--wars needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--campaigns":
+                    campaigns = Next();
+                    if (string.IsNullOrWhiteSpace(campaigns))
+                    {
+                        error = "--campaigns needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--treaties":
+                    treaties = Next();
+                    if (string.IsNullOrWhiteSpace(treaties))
+                    {
+                        error = "--treaties needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--relations":
+                    relations = Next();
+                    if (string.IsNullOrWhiteSpace(relations))
+                    {
+                        error = "--relations needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--decisions":
+                    decisions = Next();
+                    if (string.IsNullOrWhiteSpace(decisions))
+                    {
+                        error = "--decisions needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--stats-every":
+                    if (!int.TryParse(Next(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out statsEvery) || statsEvery < 1)
+                    {
+                        error = "--stats-every must be a positive whole number.";
+                        return null;
+                    }
+
+                    break;
                 case "--report":
                     report = Next();
                     if (string.IsNullOrWhiteSpace(report))
@@ -140,11 +278,13 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
                     break;
                 case "--water":
-                    if (!int.TryParse(Next(), NumberStyles.None, CultureInfo.InvariantCulture, out water) || water is < 30 or > 80)
+                    if (!int.TryParse(Next(), NumberStyles.None, CultureInfo.InvariantCulture, out int w) || w is < 30 or > 80)
                     {
                         error = "--water must be 30 to 80 (percent).";
                         return null;
                     }
+
+                    water = w;
 
                     break;
                 case "--world-type":
@@ -165,28 +305,125 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     }
 
                     break;
-                case "--climate":
-                    if (!TryEnum(Next(), out climate))
+                case "--planet":
+                    planet = Next()?.ToLowerInvariant() ?? string.Empty;
+                    break;
+                case "--tilt":
+                    if (!TryScaled(Next(), 10, PlanetParameters.TiltRange, out int t))
                     {
-                        error = "--climate must be temperate, cold or hot.";
+                        error = "--tilt must be 0 to 180 degrees (one decimal place).";
+                        return null;
+                    }
+
+                    tilt = t;
+                    break;
+                case "--year":
+                case "--luminosity":
+                case "--distance":
+                case "--light":
+                    if (!TryScaled(Next(), 1000, (1, 100_000_000), out int th))
+                    {
+                        error = $"{arg} must be a positive number (three decimal places).";
+                        return null;
+                    }
+
+                    values = arg switch
+                    {
+                        "--year" => values with { YearThousandths = th },
+                        "--luminosity" => values with { LuminosityThousandths = th },
+                        "--distance" => values with { DistanceThousandths = th },
+                        _ => values with { LightThousandths = th },
+                    };
+                    break;
+                case "--co2":
+                    if (!TryScaled(Next(), 1_000_000, PlanetParameters.Co2Range, out int co2))
+                    {
+                        error = "--co2 must be 0.000001 to 10 bar.";
+                        return null;
+                    }
+
+                    values = values with { Co2Microbar = co2 };
+                    break;
+                case "--greenhouse":
+                    if (!TryScaled(Next(), 10, PlanetParameters.GreenhouseRange, out int gh))
+                    {
+                        error = "--greenhouse must be 0 to 150 degrees (one decimal place).";
+                        return null;
+                    }
+
+                    values = values with { GreenhouseTenths = gh };
+                    break;
+                case "--pressure":
+                    if (!TryScaled(Next(), 100, (10, 15_000), out int pr))
+                    {
+                        error = "--pressure must be 0.1 to 150 bar (two decimal places).";
+                        return null;
+                    }
+
+                    values = values with { PressureHundredths = pr };
+                    break;
+                case "--star-variability":
+                    if (!TryScaled(Next(), 1, PlanetParameters.StarVariabilityRange, out int sv))
+                    {
+                        error = "--star-variability must be 0 to 100 (per mille either way).";
+                        return null;
+                    }
+
+                    values = values with { StarVariabilityPerMille = sv };
+                    break;
+                case "--star-cycle":
+                    if (!TryScaled(Next(), 1, PlanetParameters.StarCycleRange, out int sc))
+                    {
+                        error = "--star-cycle must be 1000 to 10000000 years.";
+                        return null;
+                    }
+
+                    values = values with { StarCycleYears = sc };
+                    break;
+                case "--volcanism":
+                    if (!TryScaled(Next(), 1, PlanetParameters.VolcanismRange, out int vol))
+                    {
+                        error = "--volcanism must be 0 to 5000 (percent of Earth's).";
+                        return null;
+                    }
+
+                    values = values with { VolcanismPercent = vol };
+                    break;
+                case "--eccentricity":
+                    if (!TryScaled(Next(), 1000, PlanetParameters.EccentricityRange, out int e))
+                    {
+                        error = "--eccentricity must be 0 to 0.3.";
+                        return null;
+                    }
+
+                    eccentricity = e;
+                    break;
+                case "--inland":
+                    if (!TryEnum(Next(), out inland))
+                    {
+                        error = "--inland must be normal, dry or humid.";
                         return null;
                     }
 
                     break;
                 case "--moisture":
-                    if (!TryEnum(Next(), out moisture))
+                    if (!TryEnum(Next(), out WorldMoisture m))
                     {
                         error = "--moisture must be normal, dry or wet.";
                         return null;
                     }
 
+                    moisture = m;
+
                     break;
                 case "--relief":
-                    if (!TryEnum(Next(), out relief))
+                    if (!TryEnum(Next(), out WorldRelief r))
                     {
                         error = "--relief must be normal, flat or mountainous.";
                         return null;
                     }
+
+                    relief = r;
 
                     break;
                 case "--resources":
@@ -209,6 +446,31 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                 case "--quiet":
                     quiet = true;
                     break;
+                case "--batch":
+                    if (!int.TryParse(Next(), NumberStyles.None, CultureInfo.InvariantCulture, out batch) || batch is < 1 or > 10_000)
+                    {
+                        error = "--batch must be 1 to 10000 games.";
+                        return null;
+                    }
+
+                    break;
+                case "--batch-out":
+                    batchOut = Next();
+                    if (string.IsNullOrWhiteSpace(batchOut))
+                    {
+                        error = "--batch-out needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--jobs":
+                    if (!int.TryParse(Next(), NumberStyles.None, CultureInfo.InvariantCulture, out jobs) || jobs is < 1 or > 256)
+                    {
+                        error = "--jobs must be 1 to 256.";
+                        return null;
+                    }
+
+                    break;
                 case "--help" or "-h":
                     error = string.Empty;
                     return null;
@@ -218,18 +480,57 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             }
         }
 
+        if (batch > 0 && batchOut is null)
+        {
+            error = "--batch needs --batch-out.";
+            return null;
+        }
+
         return new HeadlessOptions(seed, turns, size, report, quiet)
         {
             PngFolder = png,
             PngScale = pngScale,
+            StatsPath = stats,
+            DecisionsPath = decisions,
+            RelationsPath = relations,
+            TreatiesPath = treaties,
+            WarsPath = wars,
+            CampaignsPath = campaigns,
+            StatsEvery = statsEvery,
             WorldType = worldType,
             WaterPercent = water,
-            Climate = climate,
+            Planet = planet,
+            AxialTiltTenths = tilt,
+            EccentricityPerMille = eccentricity,
+            PlanetValues = values,
             Moisture = moisture,
+            Inland = inland,
             Relief = relief,
             Resources = resources,
             Civilizations = civs,
+            Batch = batch,
+            BatchPath = batchOut,
+            Jobs = jobs,
         };
+    }
+
+    // Parses a decimal like "23.4" into a whole number of 1/scale units inside the range.
+    private static bool TryScaled(string? text, int scale, (int Min, int Max) range, out int value)
+    {
+        value = 0;
+        if (!decimal.TryParse(text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal d))
+        {
+            return false;
+        }
+
+        decimal scaled = d * scale;
+        if (scaled != decimal.Truncate(scaled) || scaled < range.Min || scaled > range.Max)
+        {
+            return false;
+        }
+
+        value = (int)scaled;
+        return true;
     }
 
     // Parses a lower-case enum name; numbers are rejected so only the documented words work.
@@ -247,13 +548,13 @@ public enum MapSize
     /// <summary>64×40, 4 civilizations: quick checks.</summary>
     Test,
 
-    /// <summary>256×160, 12 civilizations.</summary>
+    /// <summary>258×160, 12 civilizations.</summary>
     Standard,
 
-    /// <summary>384×240, 20 civilizations.</summary>
+    /// <summary>386×240, 20 civilizations.</summary>
     Large,
 
-    /// <summary>512×320, 32 civilizations.</summary>
+    /// <summary>514×320, 32 civilizations.</summary>
     Huge,
 }
 
@@ -263,10 +564,10 @@ public static class MapSizes
     /// <summary>Settings for a preset.</summary>
     public static GameSettings Settings(MapSize size, ulong seed) => size switch
     {
-        MapSize.Test => new GameSettings(seed, 64, 40, 4),
-        MapSize.Standard => new GameSettings(seed, 256, 160, 12),
-        MapSize.Large => new GameSettings(seed, 384, 240, 20),
-        MapSize.Huge => new GameSettings(seed, 512, 320, 32),
+        MapSize.Test => new GameSettings(seed, 66, 40, 4),
+        MapSize.Standard => new GameSettings(seed, 258, 160, 12),
+        MapSize.Large => new GameSettings(seed, 386, 240, 20),
+        MapSize.Huge => new GameSettings(seed, 514, 320, 32),
         _ => throw new ArgumentOutOfRangeException(nameof(size)),
     };
 

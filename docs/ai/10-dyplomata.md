@@ -1,0 +1,166 @@
+# Dyplomata (D1–D3)
+
+[← spis treści](README.md) · kod: `src/CivSim.Core/Ai/DiplomatAdvisor.cs`, `src/CivSim.Core/Diplomacy/` · dane: `data/diplomacy.json` ·
+GDD 8.1, 9.1, 9.2, 9.3 · etap 4d (PR #34), cel wojny i warunki pokoju: etap 4e PR 1 (`data/war.json`, ADR 0021)
+
+Dyplomata prowadzi stosunki z cywilizacjami, które jego cywilizacja **naprawdę spotkała** (R1). Ma dwa rodzaje decyzji:
+**reaktywne** (odpowiedź na propozycję w każdym kroku świata; przegląd po wypowiedzianej wojnie albo napadzie) i **proaktywne**
+(przegląd stosunków, co 50 lat we własnym kroku). Rytmy: [wspólne mechanizmy, pkt 7](01-wspolne-mechanizmy.md#7-rytm-cywilizacji-decyzje-proaktywne-i-reaktywne-adr-0018).
+
+## Umowy i stany
+
+| Rodzaj | Co daje | Zakazuje wypędzania obozów drugiej strony | Złamanie wojną to „zdrada” |
+| --- | --- | --- | --- |
+| wojna | stan; wypędzanie obozów wroga jest wtedy warte +50% (G2) | — | — |
+| pokój | kończy wojnę; rozejm na 100 lat | tak | tak |
+| umowa handlowa | wymiana nadwyżek między „bramami” (D-handel niżej) | nie | nie |
+| pakt o nieagresji | — | tak | tak |
+| sojusz obronny (wymaga paktu) | sojusznik może dołączyć do wojny | tak | tak |
+
+Dziś żadna umowa nie wymaga technologii (pole `requires` istnieje w danych).
+
+## Wspólna ocena kroku dyplomatycznego
+
+`Evaluate`, `DiplomatAdvisor.cs:93`. Ta sama ocena służy do **proponowania** i do **odpowiadania**: druga strona liczy dokładnie to
+samo, ze swojego punktu widzenia (GDD 9.1).
+
+```
+ocena = 1000 × czynniki × waga celu × mnożnik charakteru
+```
+
+Dane wejściowe liczone raz na krok świata, gdy ktoś ma przegląd albo odpowiedź (`Prepare`):
+
+- **odległość** = najmniejsza odległość między osadami obu cywilizacji (te dwie osady to „bramy”),
+- **nasi wojownicy** = suma wojowników we wszystkich naszych osadach,
+- **ich widziani wojownicy** = suma wojowników w ich osadach stojących na polach, które **widzieliśmy w ostatnim własnym kroku**
+  (`MapMemory.SeesNow`, od PR B; wcześniej wystarczyło pole pamiętane do 300 lat),
+- **sympatia** i **zaufanie** z pamięci relacji (−100 … +100).
+
+Krzywe (proste, w tysięcznych; poza zakresem płaskie):
+
+| Czynnik | Wejście | Od | Do |
+| --- | --- | --- | --- |
+| opinia | sympatia | −50 → 0 | +50 → 2000 |
+| zaufanie | zaufanie | −50 → 0 | +50 → 2000 |
+| zaufanie do sojuszu | zaufanie | 0 → 500 (po 4g; wcześniej 0 → 0) | +30 → 1500 |
+| zagrożenie | ich widziani wojownicy / nasi, % | 0% → 800 (po 4g; wcześniej 50% → 500) | 200% → 1500 |
+| zysk z handlu | ile obie strony zyskałyby, % wartości towarów | 0% → 0 | 40% → 1500 |
+| wrogość | sympatia | −50 → 2000 | 0 → 0 (sympatia ≥ 0 wyklucza wojnę) |
+| przewaga | nasi / (ich + ich sojusznicy), % | 120% → 0 | 250% → 1500 |
+| zmęczenie wojną (od 4e) | nasze zmęczenie wojną, 0…100 (lata wojny + straty, `data/war.json`) | 0 → 0 | 100 → 1500 |
+| opinia o pokoju | sympatia | −100 → 300 | +50 → 1500 |
+| chciwość (po 4g) | sympatia | −50 → 1500 | +50 → 300 (nawet przyjaciela można napaść, ale rzadziej) |
+| potrzeba łupów (po 4g) | jak najedzeni są nasi ludzie, % (suma zjedzonego / suma potrzebnego we wszystkich naszych osadach) | 60% → 2000 | 95% → 0 |
+| łupy (po 4g) | jedzenie widziane w ich osadach / jedzenie w naszych, % | 100% → 500 | 400% → 1500 |
+| szansa podboju (po 4g) | szansa, że nasza armia zdobędzie ich wioskę, % (bitwa w głowie jak u dowódcy, `Campaigns.Expect`) | 75% → 0 | 98% → 1500 |
+| warunki pokoju (od 4e) | ile warunki są dla nas warte w punktach wyniku wojny (oddanie osady 40, okup: 20 + 2 × procent; ujemne, gdy dajemy) | −50 → 400 | +50 → 1600 |
+
+Czynniki każdego kroku:
+
+| Krok | Czynniki | Cel (waga) | Cecha (mnożnik) |
+| --- | --- | --- | --- |
+| **umowa handlowa** | opinia × bliskość (bramy ≤ 16 pól, inaczej 0) × zysk z handlu | dobrobyt | handlowość |
+| **pakt o nieagresji** | opinia × zaufanie × bliskość (≤ 16 pól) × zagrożenie od nich | bezpieczeństwo | ostrożność |
+| **sojusz obronny** | opinia × zaufanie do sojuszu × największe zagrożenie od **innej** cywilizacji (wspólny wróg = 1500, patrz niżej) | bezpieczeństwo | **lojalność** |
+| **wojna o odwet** | wrogość × zasięg (0, gdy najbliższe osady są dalej niż `reachCells` = 16 pól; od etapu 5b) × powód (0 bez powodu) × przewaga × (gdy łamie umowę: 1000 − lojalność, min. 100) × (w niepokojach 0,5) | podbój | agresja |
+| **wojna o łupy** (po 4g) | chciwość × bliskość (≤ 16 pól) × potrzeba łupów × łupy × przewaga × (umowa z nimi: 0) × (w niepokojach 0,5) | podbój | agresja |
+| **wojna o ziemię** (po 4g) | chciwość × szansa podboju najlepszej wioski × waga ekspansji stratega (czynnik *expansion*) × (umowa z nimi: 0) × (w niepokojach 0,5) | podbój | agresja |
+| **pokój** | zmęczenie wojną × wynik wojny (od 4e PR 6) × opinia o pokoju × warunki pokoju | bezpieczeństwo | ostrożność |
+
+**Powód wojny** (GDD 9.3): trwający spór graniczny z nimi (mieszkają w naszej osadzie) albo **jakiekolwiek** pamiętane wspomnienie
+ich napaści albo agresji (od 4e: wypowiedzianej nam wojny o ziemię lub łupy; `Treaties.HasGrievance`), a od 4f PR 4 także secesji
+(odłączył się od nas). Bez powodu wojna ma ocenę 0. **Od 4f PR 5 pokój zamyka rachunek:** napaść, agresja i secesja sprzed ostatniego
+podpisanego pokoju z tą cywilizacją nie są już powodem (`Relation.SettledMonth`); spór graniczny trwa, dopóki trwa. Wspomnienie
+nadal obniża sympatię i zaufanie, tylko nie daje prawa do odwetu. Wojna z ludem, który się odłączył, nie zaczyna się sama: wybiera ją dyplomata rodzica.
+
+**Cel wojny** (od 4e, GDD 9.3, ADR 0021): wojna o odwet ma cel **ziemia**, gdy mieszkają w osadzie, do której mamy roszczenie
+(`Treaties.ClaimedSettlement`; cel to ta osada), w innym razie **odwet**.
+
+**Wojny z chciwości** (poprawki po 4g, `EvaluateLoot`, `EvaluateConquest`): GDD 9.3 pozwala na wojnę o łupy i o ziemię bez powodu,
+ale do etapu 4g AI ich nie wypowiadało (100 gier: 0 wojen o łupy, 0 zdobytych osad). Teraz w każdym przeglądzie dyplomata liczy dla
+każdego sąsiada w pokoju dwie dodatkowe wojny:
+
+- **o łupy:** głodny lud (najedzony poniżej 95%) przeciw sąsiadowi, w którego widzianych osadach jest więcej jedzenia niż u nas
+  i którego może pokonać. Świadkowie pamiętają ją najmocniej (100%).
+- **o ziemię:** wioska sąsiada, którą widzimy teraz i która leży w zasięgu dowódcy (40 pól od naszej najbliższej osady). Armię
+  liczymy tak jak dowódca: wojownicy do wysłania z osad do 6 pól od tej najbliższej, do limitu wodza. Bierzemy wioskę z najlepszą
+  szansą. Cel wojny to ta wioska: dowódca idzie na nią (K1), a zwycięska bitwa ją zdobywa (zasada z 4e). Przy wyniku ≥ 20 pokój
+  ją oddaje.
+
+Chciwość **nigdy nie łamie umowy**: pakt, sojusz albo rozejm z sąsiadem wyklucza obie wojny (czynnik *treaty* 0). Pierwsza wersja
+pozwalała na to jak przy odwecie (1000 − lojalność) i w 100 grach co trzecia wojna łamała pakt, a wojen było 2,5 raza więcej (mediana 44).
+Wtedy też próg szansy podboju podniesiony z 60% do 75%, bo większość wojen o ziemię kończyła się bez zdobycia wioski.
+
+**Wspólny wróg w sojuszu** (poprawki po 4g): w czynniku „największe zagrożenie od innej cywilizacji” w pełni (1500) liczy się lud,
+z którym jesteśmy w wojnie, lud w wojnie z **partnerem** (wojny są jawne) i lud, wobec którego mamy powód do odwetu. Razem z
+łagodniejszymi krzywymi zagrożenia i zaufania do sojuszu daje to sojusze tam, gdzie jest przeciw komu się bronić. Wcześniej słabszy
+sąsiad prawie zawsze odrzucał pakt (zagrożenie 0,5, bo silniejszy go nie widział jako groźnego), a bez paktu nie ma sojuszu:
+1 sojusz w 3 grach.
+
+## D1: Odpowiedź na propozycję (reaktywna)
+
+- **Kiedy:** **w każdym kroku świata**, dla każdej oczekującej propozycji do cywilizacji AI, także gdy ta czeka na swój krok.
+  Propozycja złożona w kroku świata N dostaje odpowiedź w kroku N+1; bez odpowiedzi wygasa jako odrzucona.
+- **Decyzja:** przyjmij, gdy `ocena ≥ 800` (`acceptAbove: 0.8`) i umowę wciąż można podpisać. Bez losowania.
+- **Komenda:** `AnswerProposalCommand` (działanie `AcceptTreaty` / `DeclineTreaty`). Odrzuconej propozycji ta sama strona nie
+  powtarza przez 100 lat (`retryYears`), a odrzuconego **pokoju** tylko przez rok (`peaceRetryYears`, od 4e PR 6: wynik wojny zmienia się
+  co miesiąc kampanii, więc pokój odrzucony dziś może być przyjęty za rok).
+- **Wynik wojny** (od 4e PR 6, krzywa `warScore`): strona, która przegrywa, chce pokoju bardziej: wynik z jej strony −50 i gorzej daje czynnik 5,
+  0 i lepiej czynnik 1 (liniowo pomiędzy). Wcześniej przegrany prawie nigdy nie przyjmował warunków, bo nienawiść do wroga (opinia −100)
+  dawała czynnik 0,3, a oddanie czegoś jeszcze go obniżało. Od PR 6 opinia −100 daje 0,5 (`peaceOpinion`).
+
+## D2: Przegląd stosunków (proaktywny)
+
+- **Ustrój** (etap 4f): odstęp przeglądów razy `reviewPercent / 100` (rada starszych co 75 lat, wodzostwo co 37,5 roku). W czasie
+  zmiany ustroju cywilizacja nie wypowiada wojen (`CannotDeclareWar`: „We are changing our government.”), a od PR 3 także przez
+  2 lata bezkrólewia po zmianie („Our state is in anarchy.”). Od PR 5 dyplomata w ogóle nie rozważa wtedy wojny (wcześniej liczył
+  ją i dostawał odmowę), a **w niepokojach** (stabilność poniżej 30) ocena wojny × `unrestWarPercent` (50%), czynnik *stability*.
+- **Kiedy (proaktywnie):** raz na 50 lat (`reviewEveryYears`), rozłożone między cywilizacje, we własnym kroku: gdy
+  `(miesiąc + 84 × numer cywilizacji) mod 600 < długość jej kroku w miesiącach` (84 miesiące = 7 lat, `reviewStaggerYears`). W epoce kamienia (krok 50 lat) więc w **każdym
+  własnym kroku**; w neolicie co drugim; przy krokach półrocznych w jednym ze 100 (od ADR 0018 bez powtórek w roku przeglądu).
+- **Kiedy (reaktywnie, ADR 0018):** w najbliższym kroku świata po tym, jak ktoś **wypowiedział jej wojnę** albo **napadł jej obóz**,
+  także poza rytmem. Wtedy rozważa te same kroki (pokój, sojusz z kimś trzecim, odwet wojną). Od 4e PR 2 alarm daje krok świata
+  w następnym miesiącu.
+- **Kiedy (tylko pokój, od 4e PR 2):** w **każdym kroku świata** (także w krokach kampanii, co miesiąc), gdy w którejś wojnie nie mamy
+  własnej kampanii w drodze, a nasze zmęczenie wojną ≥ 60 albo wynik wojny ≥ ±20 (można żądać lub oferować warunki). Wtedy rozważa
+  tylko pokój w takich wojnach (`ReviewWars`).
+- **Kandydaci:** dla każdej spotkanej cywilizacji:
+  - w wojnie z nią: tylko **pokój** (D3), jeśli ocena ≥ 1000, a gdy nasze zmęczenie wojną ≥ 60 (`war.json` `peaceAbove`), przy każdej
+    ocenie powyżej zera;
+  - w pokoju: **handel**, **pakt**, **sojusz** (każdy tylko jeśli można go zaproponować: nie obowiązuje, nie czeka, nie odrzucony
+    w ostatnich 100 latach, sojusz po pakcie), jeśli ocena ≥ 1000 (`proposeAbove: 1`); **wojna o odwet**, **o łupy** i **o ziemię**
+    (po 4g), każda jeśli ocena ≥ 1500 (`declareWarAbove: 1.5`).
+- **Wybór:** **jeden** krok spośród wszystkich cywilizacji i rodzajów: 3 najlepsze, ostrożność albo losowanie
+  ([wybór](01-wspolne-mechanizmy.md#3-wybór-chooser-i-advisorpick)).
+- **Komenda:** `ProposeTreatyCommand` (`ProposeTreaty`) albo `DeclareWarCommand` (`DeclareWar`).
+
+## D3: Wojna i pokój — co się dzieje po decyzji
+
+- **Wypowiedzenie wojny (z celem, od 4e):** ofiara pamięta „agresję” (sympatia −30, zaufanie −15, 100 lat) w procencie z celu:
+  ziemia i łupy 100%, odwet 50%; świadkowie (znają obie strony): łupy 100%, ziemia 50%, odwet 0%. Wszystkie umowy z ofiarą znikają. Jeśli któraś zakazywała wojny, ofiara pamięta „złamanie traktatu”
+  (sympatia −20, zaufanie −40, 200 lat), a każda cywilizacja, która zna obie, pamięta to w 50% (`witnessPercent`).
+- **Sojusznicy ofiary:** każdy dołącza do wojny z szansą `300‰ + 700‰ × lojalność/1000` (`allyJoinBasePerMille`). Dołączył: ofiara
+  pamięta „pomoc w wojnie”. Nie dołączył: sojusz się rozpada, ofiara pamięta „złamanie traktatu”. Sojusznik obu stron zostaje z boku.
+- **W wojnie:** gubernator (G2) może wypędzać obozy wroga z premią ×1,5 (`warRaidPercent`); dowódca (K1) wysyła kampanie
+  ([dowódca](11-dowodca.md)). Wojna, w której przez 5 lat nikt nie prowadził kampanii, kończy się sama białym pokojem.
+- **Wynik i zmęczenie (od 4e):** napaść w czasie wojny daje zwycięskiej stronie +10 do wyniku, zdobyta osada +15 więcej (−100…+100).
+  Zmęczenie strony = miesiące kampanii w tej wojnie × 5 + procent jej ludzi zabitych w wojnie × 3 (najwyżej 100; od 4e PR 2,
+  wcześniej lata wojny × 1). Nastrój wszystkich jej osad spada o
+  zmęczenie × 20 / 100 (efekt `war_weariness`).
+- **Pokój z warunkami (od 4e):** proponujący liczy warunki z wyniku (`Wars.TermsFor`): przy wyniku co najmniej ±20 przegrany oddaje
+  osadę, o którą była wojna o ziemię, a w innym razie płaci jednorazowy okup: (wynik − 20 + 1) × 0,5% każdego zapasu (najwyżej 40%);
+  przy bliższym wyniku biały pokój. Druga strona ocenia propozycję z tymi warunkami (D1). Podpisany pokój wykonuje warunki i daje rozejm na 100 lat.
+- **Wspólny wróg:** cywilizacje walczące z tym samym wrogiem (a nie ze sobą) mają trwające wspomnienie „wspólny wróg” (+20 sympatii).
+
+## Handel między cywilizacjami (zasada, nie decyzja)
+
+Decyzją jest tylko podpisanie umowy (D1/D2). Sam handel dzieje się automatycznie (`ForeignTradeSystem`) w każdym kroku, w którym krok ma któraś ze stron (za miesiące dłuższego
+z ich kroków; ADR 0018): bramy wymieniają
+do 50% nadwyżki (`tradeSharePercent`) tych towarów, które druga strona wycenia wyżej po stracie w transporcie (2% na pole), i tylko
+tyle, ile drugiej bramie brakuje; barter po równej wartości. Tura z wymianą podtrzymuje wspomnienie „aktywny handel”
+(do +30 sympatii, +20 zaufania). Partnerzy handlowi liczą się też jako sąsiedzi przy dyfuzji technologii (U1) i mogą przenieść epidemię.
+
+## Zapis „Dlaczego?”
+
+Czynniki: `opinion`, `trust`, `distance`, `threat`, `trade gain`, `cause`, `strength`, `treaty`, `war weariness`, `peace terms`, waga i charakter.
+Cel wpisu to numer drugiej cywilizacji. Przykłady z gier są w [statystykach](09-statystyki.md).

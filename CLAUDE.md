@@ -2,12 +2,14 @@
 
 Czytasz ten plik na początku każdej sesji. Jest źródłem zasad pracy w tym repo.
 Pełny projekt gry: `docs/GDD.md`. Plan prac i stan: `ROADMAP.md`. Decyzje architektoniczne: `docs/decisions/`.
+Znane problemy aplikacji (z przyczynami i planem): `docs/known-issues.md`. Raporty z długich biegów: `docs/long-runs/`.
 
 ## Projekt w skrócie
 
-CivSim 2 to turowa gra 4X w pixel arcie na heksagonalnej mapie-planecie (zawija się w obu kierunkach).
+CivSim 2 to strategia na żywo (między RTS-em a 4X, decyzja Patryka z 2026-11-09, ADR 0024 i 0025) w pixel arcie na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się, przez bieguny przechodzi się na drugą stronę planety).
 Cywilizacje przechodzą od koczowniczych plemion do ery kosmicznej. **Najpierw powstaje symulator**
-(wszystkie cywilizacje prowadzi AI), dopiero potem tryb gracza na tych samych zasadach.
+(wszystkie cywilizacje prowadzi AI), na nim tryb gracza na tych samych zasadach. Kolejność od 2026-11-09: backend gry na żywo (etap 6),
+epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery (`ROADMAP.md`).
 
 ## Zakres
 
@@ -31,7 +33,7 @@ CivSim 2 to symulator rozwoju gospodarczego: **nie ma kultury ani religii** jako
 
 ## Jak wygląda każda sesja
 
-1. **Start:** przeczytaj `CLAUDE.md`, aktualny etap w `ROADMAP.md`, odpowiedni rozdział `docs/GDD.md`,
+1. **Start:** przeczytaj `CLAUDE.md`, aktualny etap w `ROADMAP.md`, `docs/known-issues.md`, odpowiedni rozdział `docs/GDD.md`,
    ostatnie commity (`git log --oneline -20`) i graf wiedzy (`/understand-chat`, gdy potrzebujesz kontekstu).
 2. **Plan sesji** (po polsku, zanim zaczniesz pisać kod):
    - **Ja zrobię:** lista zadań z `ROADMAP.md`.
@@ -41,8 +43,8 @@ CivSim 2 to symulator rozwoju gospodarczego: **nie ma kultury ani religii** jako
 3. **Praca:** osobna gałąź `feat/<krótki-opis>` albo `fix/<...>`, małe commity.
 4. **PR:** opis po polsku: co, dlaczego, jak sprawdzić, wyniki testów, benchmark, raport `/understand-diff`.
    Nigdy nie pushuj bezpośrednio do `main`. Merge robi Patryk.
-5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/systems/`, upewnij się, że graf
-   wiedzy jest aktualny, i napisz krótkie podsumowanie: co działa, co zostało, co Patryk ma zrobić.
+5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/known-issues.md` (naprawione i nowe problemy), zaktualizuj `docs/systems/` (a gdy etap zmienia AI, także `docs/ai/`),
+   upewnij się, że graf wiedzy jest aktualny, i napisz krótkie podsumowanie: co działa, co zostało, co Patryk ma zrobić.
 
 Jeśli zadanie zmienia zasady z `docs/GDD.md`, **najpierw zaproponuj zmianę Patrykowi**, potem ją wprowadź
 w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
@@ -62,17 +64,19 @@ w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
      tam, gdzie liczby ułamkowe są nieuniknione (klimat, oceny AI), używaj fixed-point albo zaokrąglaj deterministycznie;
    - iteracja zawsze w stałej kolejności identyfikatorów; nie polegaj na kolejności `Dictionary`/`HashSet`;
    - AI liczone równolegle wyłącznie czyta migawkę, a jej komendy są sortowane przed rozstrzygnięciem;
-   - test determinizmu (hash stanu po N turach dla dwóch przebiegów) musi przechodzić w każdym PR.
+   - test determinizmu (hash stanu po N turach dla dwóch przebiegów) musi przechodzić lokalnie przed każdym PR.
 5. **Zawartość w danych.** Technologie, zasoby, budynki, receptury, jednostki, ustroje, polityki, zdarzenia,
    biomy i motywy UI są w plikach JSON w `data/`, walidowanych przy starcie. Nowa technologia nie wymaga kodu.
 6. **Tempa na rok.** Wszystkie tempa (wzrost, psucie, odrastanie) definiuj na rok i przeliczaj przez długość tury ery.
+   *Zmieni się w etapie 6 (ADR 0025): akcja w taktach, rozwój w pulsach cywilizacji, lata tylko jako licznik dla gracza.*
 7. **Wydajność od pierwszego dnia:**
    - pola mapy w płaskich tablicach (struktura tablic), byty identyfikowane liczbami;
    - zero alokacji w głównej pętli tury, pule obiektów;
    - mapa podzielona na fragmenty 32×32, przeliczane tylko przy zmianach (dirty flags);
    - historia i statystyki o stałej pamięci (próbkowanie coraz rzadsze z wiekiem).
-8. **Mapa:** heksy flat-top, współrzędne osiowe (q, r), torus (zawijanie w obu osiach, parzysta liczba rzędów).
-   Wszystkie odległości i sąsiedztwa idą przez jeden moduł `HexTorus`, nigdy ręcznie.
+8. **Mapa:** heksy flat-top, współrzędne osiowe (q, r), kula (ADR 0012): zawijanie wschód–zachód, przejście przez biegun
+   na drugą stronę planety, rzędy jako pasy o równej powierzchni. Szerokość = 4k + 2, wysokość parzysta.
+   Wszystkie odległości i sąsiedztwa idą przez jeden moduł `HexGlobe`, nigdy ręcznie.
 9. **Wiele światów:** stan gry od początku przechowuje listę światów (planet); Ziemia to świat 0.
 10. **Gotowość na multiplayer (klient–serwer).** Gry sieciowej nie budujemy (to przyszła aktualizacja), ale od etapu 0:
     - gra zawsze działa jako klient i serwer; w grze jednoosobowej serwer startuje lokalnie w tym samym procesie,
@@ -115,14 +119,15 @@ docs/                   GDD, decyzje, opisy systemów, prompty
 | Ogromna | 512×320 | 32 | < 250 ms | < 3 GB |
 
 - PR, który pogarsza czas tury lub pamięć o więcej niż 10%, wymaga wyjaśnienia w opisie.
-- CI (GitHub Actions): build i testy na Ubuntu, Windows i macOS; benchmark na Ubuntu.
+- Testy i benchmarki uruchamiamy **lokalnie** przed każdym PR i wpisujemy wyniki do opisu (decyzja Patryka z 2026-11-05: nie polegamy na CI). Testy mają być krótkie: cały zestaw w kilka sekund, długie przebiegi tylko w benchmarku `CivSim.Headless`.
 
 ## Zrozumiałość kodu: Understand Anything
 
 Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla Claude Code).
 
-- Instalacja (raz, w Claude Code):
-  `/plugin marketplace add Lum1104/Understand-Anything` i `/plugin install understand-anything`.
+- Instalacja: plugin jest wpisany w `.claude/settings.json` (marketplace `Egonex-AI/Understand-Anything`, dawniej `Lum1104`;
+  zatwierdzona wersja 2.9.8, 2026-11-05). Nowa sesja w tym folderze proponuje instalację. Ręcznie w terminalu:
+  `/plugin marketplace add Egonex-AI/Understand-Anything` i `/plugin install understand-anything`.
   To projekt społeczności, nie Anthropic. Przed instalacją pokaż Patrykowi wersję, którą instalujesz.
 - Pierwsza analiza: `/understand`. Zużywa sporo tokenów; kolejne analizują tylko zmienione pliki.
 - Włącz automatyczną aktualizację po commitach: `/understand --auto-update`.
@@ -137,7 +142,14 @@ Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla
 - Każdy system rdzenia ma plik `docs/systems/<system>.md` według szablonu z `docs/systems/README.md`,
   z diagramem przepływu danych w Mermaid.
 - Ważna decyzja techniczna = nowy plik ADR w `docs/decisions/` (numerowany, po polsku).
+- **Pełny opis decyzji AI: `docs/ai/`** (po polsku, dla Patryka). Każda decyzja AI ma tam identyfikator, warunki, wzory, progi,
+  parametry, miejsce w kodzie i przykład z dziennika „Dlaczego?”, a `08-ocena-i-uwagi.md` uczciwie ocenia, co jest za proste albo zbędne.
+  **Obowiązkowo aktualizuj go na końcu każdego etapu (i w każdym PR), który zmienia AI:** nowe lub zmienione decyzje, czynniki, parametry
+  w `data/ai.json` i innych plikach, kolejność doradców, wiedza AI. Odśwież statystyki z 3 seedów (`--decisions`), wykres PNG,
+  commit w nagłówku `docs/ai/README.md` i dopisz wiersz w jego historii zmian. Nie wolno niczego pominąć.
 - Publiczne klasy i metody w kodzie mają krótkie komentarze XML po angielsku.
+- **Moduł wojny co erę** (prośba Patryka z 2026-11-07): w każdym etapie nowej ery zaktualizuj uzbrojenie, fachy i jednostki wojska, limity wodza
+  i pola oraz zaopatrzenie według listy w `docs/systems/war.md`, sekcja „Co erę”.
 
 ## Grafika (kiedy prosisz Patryka o pliki)
 
@@ -146,14 +158,14 @@ Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla
   Maska: `art/templates/hex_template_48x42.png`.
 - Warstwy od dołu: biom → teren (rzeźba, cechy, rzeki na krawędziach) → obiekty → jednostki.
 - Kolor cywilizacji: zarezerwowane odcienie magenty `#FF00FF`, `#C000C0`, `#800080` (podmieniane shaderem).
-- Do etapu 4 podgląd używa kolorowych heksów generowanych w kodzie; pixel art wchodzi od etapu 5.
+- Do etapu 4 podgląd używa kolorowych heksów generowanych w kodzie. Od etapu 5 używa grafik zastępczych (placeholderów), które robisz Ty (Claude Code) w palecie i w rozmiarach z GDD 12.3. Pixel art Patryka wchodzi w etapie 13 (tryb gracza, na końcu CORE) i podmienia je pod tymi samymi nazwami.
 
 ## Czego nie robić
 
 - Nie dodawaj religii ani kultury.
 - Nie implementuj modułów z rozdziału 16 GDD bez zgody Patryka.
 - Nie dawaj AI żadnych premii ani ukrytej wiedzy; widzi tylko to, co odkryła jej cywilizacja.
-- Nie buduj interfejsu gracza ani grafiki przed etapem 5 (wyjątek: podgląd deweloperski).
+- Nie buduj interfejsu gracza przed etapem 8 (wyjątki: podgląd deweloperski z menu startowym, widokiem warstw i narzędziami do testów etapu 6 oraz grafiki zastępcze z etapu 5).
 - Nie planuj eksportu do przeglądarki (Godot nie eksportuje oficjalnie C# do web).
-- Nie buduj gry w sieci (przyszła aktualizacja) i nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio).
+- Nie buduj gry w sieci przed etapem 9 i nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio).
 - Nie zmieniaj zasad gry bez zgody Patryka.

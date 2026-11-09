@@ -33,6 +33,12 @@ public sealed class ClientWorld
         DepositDepth = new byte[n];
         Owner = new short[n];
         Array.Fill(Owner, (short)-1);
+        WildFood = new ushort[n];
+        Influence = new byte[n];
+        Seasonality = new byte[n];
+        GrowingSeason = new byte[n];
+        SeasonTemperature = new sbyte[n];
+        SeasonGrowth = new byte[n];
         River = new byte[n * MapChunkMessage.RiverEdgesPerCell];
         ChunksX = (width + ChunkSize - 1) / ChunkSize;
         ChunksY = (height + ChunkSize - 1) / ChunkSize;
@@ -96,6 +102,24 @@ public sealed class ClientWorld
     /// <summary>Owner civilization id or -1.</summary>
     public short[] Owner { get; }
 
+    /// <summary>Wild food left, per mille of an untouched cell.</summary>
+    public ushort[] WildFood { get; }
+
+    /// <summary>Influence strength of the owner, 0–255.</summary>
+    public byte[] Influence { get; }
+
+    /// <summary>Difference between summer and winter, °C (stage 1b).</summary>
+    public byte[] Seasonality { get; }
+
+    /// <summary>Share of the year plants can grow, 0–100%.</summary>
+    public byte[] GrowingSeason { get; }
+
+    /// <summary>Temperature of the current turn's season, °C (the annual mean when seasons are averaged).</summary>
+    public sbyte[] SeasonTemperature { get; }
+
+    /// <summary>Share of the current turn plants grow, 0–100% (the growing season when seasons are averaged).</summary>
+    public byte[] SeasonGrowth { get; }
+
     /// <summary>River size on the N, NE and SE edge of each cell.</summary>
     public byte[] River { get; }
 
@@ -124,6 +148,12 @@ public sealed class ClientWorld
                 DepositRichness[i] = m.DepositRichness[k];
                 DepositDepth[i] = m.DepositDepth[k];
                 Owner[i] = m.Owner[k];
+                WildFood[i] = m.WildFood is { } wild ? wild[k] : (ushort)1000;
+                Influence[i] = m.Influence is { } inf ? inf[k] : (byte)0;
+                Seasonality[i] = m.Seasonality is { } sea ? sea[k] : (byte)0;
+                GrowingSeason[i] = m.GrowingSeason is { } gro ? gro[k] : (byte)100;
+                SeasonTemperature[i] = m.SeasonTemperature is { } st ? st[k] : Temperature[i];
+                SeasonGrowth[i] = m.SeasonGrowth is { } sg ? sg[k] : GrowingSeason[i];
                 for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)
                 {
                     River[(i * MapChunkMessage.RiverEdgesPerCell) + e] = m.River[(k * MapChunkMessage.RiverEdgesPerCell) + e];

@@ -20,10 +20,10 @@ public partial class TurnChart : Control
     public override void _Draw()
     {
         Vector2 size = Size;
-        DrawRect(new Rect2(Vector2.Zero, size), new Color(0, 0, 0, 0.55f));
+        DrawRect(new Rect2(Vector2.Zero, size), new Color(0.114f, 0.09f, 0.063f));
         if (_values.Length == 0)
         {
-            DrawString(ThemeDB.FallbackFont, new Vector2(8, 18), "Turn time: no turns yet", HorizontalAlignment.Left, -1, 14, Colors.White);
+            DrawString(GetThemeDefaultFont(), new Vector2(8, 18), "Turn time: no turns yet", HorizontalAlignment.Left, -1, 14, Colors.White);
             return;
         }
 
@@ -47,6 +47,6 @@ public partial class TurnChart : Control
         string label = string.Create(
             CultureInfo.InvariantCulture,
             $"Turn time: last {_values[^1]:F3} ms, avg {sum / _values.Length:F3} ms, max {max:F3} ms");
-        DrawString(ThemeDB.FallbackFont, new Vector2(8, 18), label, HorizontalAlignment.Left, -1, 14, Colors.White);
+        DrawString(GetThemeDefaultFont(), new Vector2(8, 18), label, HorizontalAlignment.Left, -1, 14, Colors.White);
     }
 }

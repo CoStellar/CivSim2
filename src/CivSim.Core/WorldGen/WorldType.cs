@@ -29,19 +29,6 @@ public enum TerrainFeature : byte
     IceField = 3,
 }
 
-/// <summary>Average temperature of the planet (world setting).</summary>
-public enum WorldClimate
-{
-    /// <summary>Default: Earth-like.</summary>
-    Temperate = 0,
-
-    /// <summary>6 °C colder: bigger ice caps, more tundra and taiga.</summary>
-    Cold = 1,
-
-    /// <summary>6 °C warmer: small ice caps, more jungle, savanna and desert.</summary>
-    Hot = 2,
-}
-
 /// <summary>How much rain the planet gets (world setting).</summary>
 public enum WorldMoisture
 {
@@ -53,6 +40,19 @@ public enum WorldMoisture
 
     /// <summary>15 points more humidity: more forest, jungle and swamp, more rivers.</summary>
     Wet = 2,
+}
+
+/// <summary>How fast humidity falls away from the sea, inland (world setting).</summary>
+public enum WorldInland
+{
+    /// <summary>Default: −3 per cell from water, at most −36.</summary>
+    Normal = 0,
+
+    /// <summary>−4 per cell, at most −60: big deserts and steppes inside continents.</summary>
+    Dry = 1,
+
+    /// <summary>−2 per cell, at most −20: forests reach deep inland.</summary>
+    Humid = 2,
 }
 
 /// <summary>Share of hills and mountains on land (world setting).</summary>

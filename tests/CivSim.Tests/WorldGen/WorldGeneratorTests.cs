@@ -46,7 +46,13 @@ public class WorldGeneratorTests
         Assert.Equal(GoldenWorldHash, GameStateHash.Compute(Generate(GameSettings.Test(2026)).State));
     }
 
-    private const ulong GoldenWorldHash = 12075115992158537892UL;
+    // ADR 0018: the state hash includes the clock of every civilization (the map itself is unchanged).
+    // Peoples' languages (GDD 5.6): names, language seeds and name counters are in the hash (the map is unchanged).
+    // Stage 4F: every tribe starts with 2 thinkers and a leader too (the map is unchanged).
+    // ADR 0022: the months the world computes and the episodes are in the hash (the map is unchanged).
+    // Stage 4f: the government of every civilization and the readiness of wars are in the hash (the map is unchanged).
+    // Stage 4f PR 2: every civilization's leader is in the hash (the map is unchanged).
+    private const ulong GoldenWorldHash = 4316276120475864014UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]
@@ -55,7 +61,7 @@ public class WorldGeneratorTests
     [InlineData(WorldType.Continents, 30)]
     public void EveryWorldTypeIsValid(WorldType type, int water)
     {
-        var settings = new GameSettings(11, 128, 80, 8) { WorldType = type, WaterPercent = water };
+        var settings = new GameSettings(11, 130, 80, 8) { WorldType = type, WaterPercent = water };
         (GameState state, WorldGenReport report) = Generate(settings);
         Assert.Empty(Validate(state, report));
         Assert.InRange(report.WaterPercent, water - WorldValidator.WaterTolerance, water + WorldValidator.WaterTolerance);
@@ -85,7 +91,7 @@ public class WorldGeneratorTests
     [Fact]
     public void StandardMapHasRiversLakesDepositsAndFairStarts()
     {
-        (GameState state, WorldGenReport report) = Generate(new GameSettings(1, 256, 160, 12));
+        (GameState state, WorldGenReport report) = Generate(new GameSettings(1, 258, 160, 12));
         Assert.Empty(Validate(state, report));
         Assert.True(report.Rivers >= 20, $"only {report.Rivers} rivers");
         Assert.True(report.Lakes >= 1, "no lakes");
@@ -139,7 +145,7 @@ public class WorldGeneratorTests
     {
         (GameState state, _) = Generate(GameSettings.Test(4));
         WorldMap map = state.Worlds[0].Map;
-        HexTorus geo = map.Geometry;
+        HexGlobe geo = map.Geometry;
         int rivers = 0;
         for (int e = 0; e < geo.EdgeCount; e++)
         {
@@ -157,7 +163,7 @@ public class WorldGeneratorTests
         Assert.True(rivers > 0);
     }
 
-    private static GameSettings Medium => new(21, 128, 80, 8);
+    private static GameSettings Medium => new(21, 130, 80, 8);
 
     private static int CountBiomes(WorldGenReport r, params string[] keys)
     {
@@ -193,22 +199,28 @@ public class WorldGeneratorTests
     }
 
     [Theory]
-    [InlineData(WorldClimate.Cold, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce)]
-    [InlineData(WorldClimate.Hot, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich)]
-    [InlineData(WorldClimate.Cold, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich)]
-    [InlineData(WorldClimate.Hot, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal)]
-    public void EveryWorldSettingIsValid(WorldClimate climate, WorldMoisture moisture, WorldRelief relief, WorldResources resources)
+    [InlineData(90, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce, WorldInland.Dry)]
+    [InlineData(110, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich, WorldInland.Humid)]
+    [InlineData(90, WorldMoisture.Wet, WorldRelief.Normal, WorldResources.Rich, WorldInland.Normal)]
+    [InlineData(110, WorldMoisture.Dry, WorldRelief.Mountainous, WorldResources.Normal, WorldInland.Dry)]
+    [InlineData(100, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Normal, WorldInland.Humid)]
+    public void EveryWorldSettingIsValid(int lightPercent, WorldMoisture moisture, WorldRelief relief, WorldResources resources, WorldInland inland)
     {
-        GameSettings settings = Medium with { Climate = climate, Moisture = moisture, Relief = relief, Resources = resources };
+        GameSettings settings = Medium with { Planet = Light(lightPercent * 10), Moisture = moisture, Relief = relief, Resources = resources, Inland = inland };
         (GameState state, WorldGenReport report) = Generate(settings);
         Assert.Empty(Validate(state, report));
     }
 
+    // Earth with this light (thousandths of Earth's) at the same star, Earth's CO₂ and air.
+    private static PlanetParameters Light(int thousandths) =>
+        PlanetSetup.Build(PlanetParameters.Earth, autoCo2: false, new PlanetOverrides { LightThousandths = thousandths }).Planet;
+
     [Fact]
-    public void ColdWorldsHaveMoreIceAndTundraThanHotOnes()
+    public void DimStarsGiveMoreIceAndTundraThanBrightOnes()
     {
-        WorldGenReport cold = Generate(Medium with { Climate = WorldClimate.Cold }).Report;
-        WorldGenReport hot = Generate(Medium with { Climate = WorldClimate.Hot }).Report;
+        // Earth's CO₂ kept as it is (no carbon cycle), so only the light changes.
+        WorldGenReport cold = Generate(Medium with { Planet = Light(900) }).Report;
+        WorldGenReport hot = Generate(Medium with { Planet = Light(1100) }).Report;
         Assert.True(CountBiomes(cold, "ice", "tundra") > CountBiomes(hot, "ice", "tundra") * 3 / 2);
         Assert.True(CountBiomes(hot, "jungle", "savanna", "desert") > CountBiomes(cold, "jungle", "savanna", "desert") * 3 / 2);
     }
@@ -220,6 +232,26 @@ public class WorldGeneratorTests
         WorldGenReport wet = Generate(Medium with { Moisture = WorldMoisture.Wet }).Report;
         Assert.True(wet.RiverEdges > dry.RiverEdges * 3 / 2, $"wet {wet.RiverEdges}, dry {dry.RiverEdges}");
         Assert.True(CountBiomes(dry, "desert", "steppe") > CountBiomes(wet, "desert", "steppe"));
+    }
+
+    [Fact]
+    public void DryInlandWorldsHaveLessHumidityThanHumidOnes()
+    {
+        long dry = TotalHumidity(Generate(Medium with { Inland = WorldInland.Dry }).State);
+        long normal = TotalHumidity(Generate(Medium).State);
+        long humid = TotalHumidity(Generate(Medium with { Inland = WorldInland.Humid }).State);
+        Assert.True(dry < normal && normal < humid, $"{dry} / {normal} / {humid}");
+    }
+
+    private static long TotalHumidity(GameState state)
+    {
+        long sum = 0;
+        foreach (byte v in state.Worlds[0].Map.Humidity.Values)
+        {
+            sum += v;
+        }
+
+        return sum;
     }
 
     [Fact]
@@ -255,10 +287,12 @@ public class WorldGeneratorTests
     {
         GameSettings settings = GameSettings.Test(8) with
         {
-            Climate = WorldClimate.Hot,
+            Planet = new PlanetParameters(978, 46, 1_364_640, 36_941, 756, 120, 250),
+            PlanetName = "Uranus",
             Moisture = WorldMoisture.Wet,
             Relief = WorldRelief.Mountainous,
             Resources = WorldResources.Scarce,
+            Inland = WorldInland.Humid,
         };
         GameState state = Generate(settings).State;
         using var ms = new MemoryStream();

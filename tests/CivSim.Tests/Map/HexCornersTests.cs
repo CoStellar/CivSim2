@@ -7,11 +7,11 @@ namespace CivSim.Tests.Map;
 public class HexCornersTests
 {
     [Theory]
-    [InlineData(8, 6)]
-    [InlineData(64, 40)]
+    [InlineData(10, 6)]
+    [InlineData(66, 40)]
     public void CornerGraphIsConsistent(int width, int height)
     {
-        var geo = new HexTorus(width, height);
+        var geo = new HexGlobe(width, height);
         var corners = new HexCorners(geo);
         Assert.Equal(geo.CellCount * 2, corners.Count);
         Span<HexCoord> cells = stackalloc HexCoord[3];
@@ -22,6 +22,11 @@ public class HexCornersTests
         Span<HexEdge> backEdges = stackalloc HexEdge[3];
         for (int k = 0; k < corners.Count; k++)
         {
+            if (corners.IsPolar(k))
+            {
+                continue; // approximate over the poles; rivers do not use them
+            }
+
             // The three cells around a corner touch each other.
             corners.Cells(k, cells);
             Assert.Equal(1, geo.Distance(cells[0], cells[1]));
@@ -31,6 +36,11 @@ public class HexCornersTests
             corners.Neighbors(k, nbr, edges);
             for (int d = 0; d < 3; d++)
             {
+                if (corners.IsPolar(nbr[d]))
+                {
+                    continue;
+                }
+
                 // Neighbouring corners are mutual and the edge between them is the side shared by two cells of both corners.
                 corners.Neighbors(nbr[d], back, backEdges);
                 Assert.Contains(k, back.ToArray());

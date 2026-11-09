@@ -2,7 +2,10 @@ using CivSim.Core.State;
 
 namespace CivSim.Core.Commands;
 
-/// <summary>Renames the issuing civilization. The first real command; also used by determinism tests.</summary>
+/// <summary>
+/// Renames the issuing civilization (GDD 5.6: whoever dislikes a generated name changes it); the name must be free.
+/// The first real command; also used by determinism tests.
+/// </summary>
 public sealed record RenameCivilizationCommand(string NewName) : ICommand
 {
     /// <summary>Longest allowed name.</summary>
@@ -23,6 +26,13 @@ public sealed record RenameCivilizationCommand(string NewName) : ICommand
         if (string.IsNullOrWhiteSpace(NewName) || NewName.Length > MaxLength)
         {
             return CommandResult.Fail($"Name must be 1-{MaxLength} characters.");
+        }
+
+        // Names are unique among civilizations and settlements (GDD 5.6).
+        string name = NewName.Trim();
+        if (!string.Equals(name, target.Name, System.StringComparison.OrdinalIgnoreCase) && Naming.Names.Used(state).Contains(name))
+        {
+            return CommandResult.Fail($"The name {name} is already taken.");
         }
 
         return CommandResult.Ok;

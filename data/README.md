@@ -7,15 +7,26 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 
 | File | Content | Stage |
 | --- | --- | --- |
-| `biomes.json` | biomes, movement cost, base yields, colours for the debug viewer | 1 |
-| `resources.json` | raw resources and goods, category, spoilage per year, storage class | 1 / 3 |
-| `eras.json` | eras, years per turn, entry thresholds, UI theme id | 3 |
-| `technologies.json` | technology graph, costs, inspirations, unlocks | 3 |
-| `recipes.json` | production recipes (inputs → outputs, workers, time) | 3 |
+| `biomes.json` | biomes, movement cost, base yields, materials gathered (wood), colours for the debug viewer | 1, 3e |
+| `resources.json` | natural deposits placed by the world generator | 1 |
+| `goods.json` | goods in settlement warehouses, category, spoilage per year (only food spoils in CORE), base value for internal prices | 3a, 3e |
+| `perception.json` | sight, scouts, oral memory, journeys | 3g |
+| `ai.json` | how AI advisors pick among their best actions | 4a |
+| `relations.json` | first contact, rumors, remembered events, sympathy and trust | 4c |
+| `diplomacy.json` | treaties and war, the diplomat's curves and thresholds, trade between civilizations | 4d |
+| `stability.json` | stability: unrest threshold and output loss, penalties (crisis, anarchy, lost capital), administration cost per settlement and road cost, loyalty; revolts, secession and coups | 4f |
+| `leaders.json` | leaders: traits that shift the character, number of traits, start age, death chance by age, council candidates | 4f |
+| `governments.json` | forms of government: title, era, enactment delay, pace and caution of the AI, goal weights, start leaning | 4f |
+| `trade.json` | trade network links, transport loss per cell, food reserve, price range | 3e |
+| `settlements.json` | settlement levels (population, storage capacity, mobile) and the new tribe's camp | 3a |
+| `eras.json` | eras, turn length in months, threshold technology | 3a, 3f |
+| `technologies.json` | technology graph, costs, inspirations, diffusion, unlocks (recipes, gathering, effects) | 3f |
+| `recipes.json` | one-step production recipes (inputs → outputs, workers, years) | 3a |
 | `buildings.json` | buildings and tile improvements | 3 |
-| `strata.json` | population strata and their needs (3 at start, more per era) | 3 |
-| `events.json` | random events: conditions, chances, effects, chronicle text | 3 |
-| `effects.json` | effect definitions (damage, mobility, depopulation…) | 3 |
+| `strata.json` | population strata, target shares and needs (3 at start, more per era) | 3b |
+| `population.json` | growth, hunger, health, mood and gathering rules, the new tribe's people | 3b |
+| `events.json` | random events: conditions, chances, softening technologies, effects, fertility, spreading, chronicle text | 3h |
+| `effects.json` | effect types: target, changed stat, stacking rule | 3a |
 | `governments.json` | governments: decision speed, stability decay | 4 |
 | `units.json` | units by era, strength, upkeep, tile capacity | 4 |
 | `leader_traits.json` | leader traits and AI weight modifiers | 4 |

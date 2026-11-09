@@ -23,6 +23,11 @@ public static class Program
             return string.IsNullOrEmpty(error) ? 0 : 2;
         }
 
+        if (options.Batch > 0)
+        {
+            return BatchRun.Execute(options, Console.Out);
+        }
+
         Console.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
             $"{CoreInfo.Name} headless: seed {options.Seed}, {options.Turns} turns, map {options.MapSize}"));
@@ -38,6 +43,17 @@ public static class Program
         Console.WriteLine(string.Create(inv, $"allocated per turn: {r.AllocatedBytesPerTurn} bytes"));
         Console.WriteLine(string.Create(inv, $"managed memory:     {r.ManagedMemoryBytes / 1024.0 / 1024.0:F1} MB"));
         Console.WriteLine(string.Create(inv, $"working set:        {r.WorkingSetBytes / 1024.0 / 1024.0:F1} MB"));
+        Console.WriteLine(string.Create(inv, $"game time:          {r.Years} years"));
+        Console.WriteLine(string.Create(inv, $"settlements:        {r.Settlements}, food in stock {r.FoodUnits}"));
+        Console.WriteLine(string.Create(inv, $"people:             {r.People}, civilizations alive {r.AliveCivilizations}"));
+        Console.WriteLine(string.Create(inv, $"governments:        {r.Governments}"));
+        Console.WriteLine(string.Create(inv, $"leaders:            {r.Leaders.Successions} successions, about {r.Leaders.AverageReignYears} years per reign"));
+        Console.WriteLine(string.Create(inv, $"stability:          average {r.Stability.Average}, unrest in {r.Stability.UnrestPercent}% of civilization-years, {r.Stability.CapitalsLost} capitals lost"));
+        Console.WriteLine(string.Create(inv, $"revolts:            {r.Revolts.Secessions} secessions (new civilizations), {r.Revolts.Coups} coups"));
+        Console.WriteLine(string.Create(inv, $"contacts:           {r.Contacts.Met} known with contact, {r.Contacts.Rumors} only from rumors (one way each)"));
+        TreatyTally t = r.Treaties;
+        Console.WriteLine(string.Create(inv, $"diplomacy:          {t.Signed[2]} trade agreements, {t.Signed[3]} pacts, {t.Signed[4]} alliances, {t.Wars} wars declared ({t.Broken} breaking a treaty), {t.Signed[1]} peaces, {t.AlliesJoined} allies joined, {t.AlliesFailed} let down, {t.Epidemics} epidemics carried by merchants"));
+        Console.WriteLine(string.Create(inv, $"in force at end:    {t.InForce[0]} wars, {t.InForce[1]} truces, {t.InForce[2]} trade, {t.InForce[3]} pacts, {t.InForce[4]} alliances; goods traded worth {t.TotalWorth / 100} in all"));
         if (r.World is { } w)
         {
             Console.WriteLine(string.Create(inv, $"world gen time:     {w.ElapsedMs:F1} ms"));

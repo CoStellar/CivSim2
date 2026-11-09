@@ -28,6 +28,24 @@ public enum MapView
 
     /// <summary>Surface deposits as coloured dots over a grey map.</summary>
     Resources,
+
+    /// <summary>Influence zones in each civilization's colour (stronger near the camps) and the camps themselves.</summary>
+    Influence,
+
+    /// <summary>Wild food left: green = untouched, brown = eaten (Stage 3c).</summary>
+    WildFood,
+
+    /// <summary>Difference between summer and winter, °C: blue = mild, purple = extreme (stage 1b).</summary>
+    Seasons,
+
+    /// <summary>Share of the year plants can grow: brown = never, green = all year (stage 1b).</summary>
+    Growing,
+
+    /// <summary>The biome map wrapped on a ball: four views (two sides, north pole, south pole), stage 1b.</summary>
+    Globe,
+
+    /// <summary>Temperature of the current season (live seasons; the annual mean otherwise).</summary>
+    SeasonNow,
 }
 
 /// <summary>
@@ -46,6 +64,9 @@ public sealed class MapRenderer
     private readonly int _halfW;
     private readonly int _halfH;
 
+    /// <summary>Settlements drawn on the influence view (cell and whether anyone lives there).</summary>
+    public IReadOnlyList<(HexCoord Cell, bool Inhabited)> Settlements { get; init; } = [];
+
     /// <summary>Creates a renderer. <paramref name="scale"/> (k) of 3 gives 12-px-wide hexes.</summary>
     public MapRenderer(WorldState world, GameContent content, IReadOnlyList<HexCoord> starts, int scale = 3)
     {
@@ -58,10 +79,14 @@ public sealed class MapRenderer
     }
 
     /// <summary>Writes every view as <c>&lt;prefix&gt;_&lt;view&gt;.png</c> in <paramref name="folder"/>. Returns the paths.</summary>
-    public IReadOnlyList<string> SaveAll(string folder, string prefix)
+    public IReadOnlyList<string> SaveAll(string folder, string prefix) => Save(folder, prefix, Enum.GetValues<MapView>());
+
+    /// <summary>Writes the given views as <c>&lt;prefix&gt;_&lt;view&gt;.png</c> in <paramref name="folder"/>. Returns the paths.</summary>
+    public IReadOnlyList<string> Save(string folder, string prefix, IEnumerable<MapView> views)
     {
+        ArgumentNullException.ThrowIfNull(views);
         var paths = new List<string>();
-        foreach (MapView view in Enum.GetValues<MapView>())
+        foreach (MapView view in views)
         {
             string path = Path.Combine(folder, $"{prefix}_{view.ToString().ToLowerInvariant()}.png");
             PngWriter.Save(Render(view), path);
@@ -74,7 +99,12 @@ public sealed class MapRenderer
     /// <summary>Renders one view.</summary>
     public RgbImage Render(MapView view)
     {
-        HexTorus geo = _world.Geometry;
+        if (view == MapView.Globe)
+        {
+            return RenderGlobe();
+        }
+
+        HexGlobe geo = _world.Geometry;
         var image = new RgbImage((geo.Width * 3 * _k) + _k, (geo.Height * 2 * _halfH) + _halfH);
         Array.Fill(image.Pixels, (byte)20);
         for (int i = 0; i < geo.CellCount; i++)
@@ -99,6 +129,17 @@ public sealed class MapRenderer
                     int r = Math.Max(1, _k - 1);
                     FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, _world.Map.DepositDepth[i] == 0 ? color : Darken(color, 50));
                 }
+            }
+        }
+
+        if (view is MapView.Influence or MapView.SeasonNow)
+        {
+            foreach ((HexCoord cell, bool inhabited) in Settlements)
+            {
+                (int cx, int cy) = Center(cell);
+                int r = _k;
+                FillRect(image, cx - r - 1, cy - r - 1, (2 * r) + 3, (2 * r) + 3, 0x000000);
+                FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, inhabited ? 0xFFFFFFu : 0x777777u);
             }
         }
 
@@ -168,9 +209,127 @@ public sealed class MapRenderer
                 return water ? 0x0A2647u : Lerp(0x5A4A3A, 0x40D040, m.Fertility[i], 100);
             case MapView.Resources:
                 return water ? 0x16283Au : (Relief)m.Relief[i] == Relief.Mountains ? 0x5C5C5Cu : 0x3C3C3Cu;
+            case MapView.WildFood:
+                return water ? 0x0A2647u : _content.Biomes[biome].Food == 0 ? 0x4A4A4Au : Lerp(0x7A4A1E, 0x2E8B3A, m.WildFood[i], WorldMap.FullWildFood);
+            case MapView.Seasons:
+            {
+                int sw = m.Seasonality[i];
+                uint c = sw < 40 ? Lerp(0x2E6FB8, 0xE8E8E8, sw, 40) : Lerp(0xE8E8E8, 0x8A1E8C, Math.Min(80, sw - 40), 80);
+                return water ? Darken(c, 35) : c;
+            }
+
+            case MapView.SeasonNow:
+            {
+                int t = m.LiveSeasons ? m.SeasonTemperature[i] : m.Temperature[i];
+                uint c = t < 10 ? Lerp(0x2040C0, 0xE8E8E8, Math.Max(0, t + 30), 40) : Lerp(0xE8E8E8, 0xD02010, Math.Min(30, t - 10), 30);
+                return water ? Darken(c, 35) : c;
+            }
+
+            case MapView.Growing:
+                return water ? 0x0A2647u : Lerp(0x6A5236, 0x2FA83A, m.GrowingSeason[i], 100);
+            case MapView.Influence:
+            {
+                uint ground = water ? 0x0A2647u : Darken(_content.Biomes[biome].Color, 45);
+                short owner = m.Owner[i];
+                return owner < 0 ? ground : Lerp(ground, CivColor(owner), 80 + Math.Min(160, (int)m.Influence[i]), 255);
+            }
             default:
                 return 0;
         }
+    }
+
+    /// <summary>
+    /// The planet's year as a strip of frames: the temperature of each season, with the settlements as white dots
+    /// (live seasons). <paramref name="frames"/> are one per step of the year.
+    /// </summary>
+    public static RgbImage Strip(IReadOnlyList<RgbImage> frames)
+    {
+        ArgumentNullException.ThrowIfNull(frames);
+        int w = frames[0].Width;
+        int h = frames[0].Height;
+        int cols = Math.Min(4, frames.Count);
+        int rows = (frames.Count + cols - 1) / cols;
+        var strip = new RgbImage((w + 4) * cols, (h + 4) * rows);
+        for (int f = 0; f < frames.Count; f++)
+        {
+            int ox = (f % cols) * (w + 4);
+            int oy = (f / cols) * (h + 4);
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    int src = ((y * w) + x) * 3;
+                    strip.Set(ox + x, oy + y, ((uint)frames[f].Pixels[src] << 16) | ((uint)frames[f].Pixels[src + 1] << 8) | frames[f].Pixels[src + 2]);
+                }
+            }
+        }
+
+        return strip;
+    }
+
+    // Four orthographic views of the planet: from the equator at longitude 0° and 180°, and from above each pole.
+    // A preview only (doubles are fine here: nothing feeds back into the game).
+    private RgbImage RenderGlobe()
+    {
+        HexGlobe geo = _world.Geometry;
+        int r = Math.Max(60, geo.Height * _k * 3 / 4);
+        int size = (2 * r) + 8;
+        var image = new RgbImage(size * 4, size);
+        Array.Fill(image.Pixels, (byte)12);
+        (double Lat, double Lon)[] views = [(0, 0), (0, Math.PI), (Math.PI / 2, 0), (-Math.PI / 2, 0)];
+        for (int v = 0; v < views.Length; v++)
+        {
+            (double lat0, double lon0) = views[v];
+            for (int py = -r; py <= r; py++)
+            {
+                for (int px = -r; px <= r; px++)
+                {
+                    double x = px / (double)r;
+                    double y = -py / (double)r;
+                    double rho2 = (x * x) + (y * y);
+                    if (rho2 > 1)
+                    {
+                        continue;
+                    }
+
+                    // Inverse orthographic projection.
+                    double z = Math.Sqrt(1 - rho2);
+                    double sinLat = (y * Math.Cos(lat0)) + (z * Math.Sin(lat0));
+                    double lon = lon0 + Math.Atan2(x, (z * Math.Cos(lat0)) - (y * Math.Sin(lat0)));
+                    int row = Math.Clamp((int)((1 - sinLat) * geo.Height / 2), 0, geo.Height - 1);
+                    double turn = lon / (2 * Math.PI);
+                    int col = (int)Math.Floor((turn - Math.Floor(turn)) * geo.Width) % geo.Width;
+                    uint c = CellColor(MapView.Biomes, geo.Index(new HexCoord(col, row)));
+                    c = Darken(c, (int)((1 - z) * 45)); // light falls off towards the edge
+                    image.Set((v * size) + 4 + r + px, 4 + r + py, c);
+                }
+            }
+        }
+
+        return image;
+    }
+
+    // Same colours as the viewer: hues spaced by the golden ratio.
+    private static uint CivColor(int civ)
+    {
+        double h = (civ * 0.618034) % 1.0 * 6.0;
+        double s = 0.75;
+        double v = 0.95;
+        int sector = (int)h;
+        double f = h - sector;
+        double p = v * (1 - s);
+        double q = v * (1 - (s * f));
+        double t = v * (1 - (s * (1 - f)));
+        (double r, double g, double b) = sector switch
+        {
+            0 => (v, t, p),
+            1 => (q, v, p),
+            2 => (p, v, t),
+            3 => (p, q, v),
+            4 => (t, p, v),
+            _ => (v, p, q),
+        };
+        return ((uint)(r * 255) << 16) | ((uint)(g * 255) << 8) | (uint)(b * 255);
     }
 
     private (int X, int Y) Center(HexCoord c) => ((c.Col * 3 * _k) + _halfW, (c.Row * 2 * _halfH) + _halfH + ((c.Col & 1) * _halfH));
@@ -194,7 +353,7 @@ public sealed class MapRenderer
 
     private void DrawRivers(RgbImage image)
     {
-        HexTorus geo = _world.Geometry;
+        HexGlobe geo = _world.Geometry;
         int r = _halfW;
         int h = _halfH;
 

@@ -24,7 +24,9 @@ reports/
 # Understand Anything (commit the graph, not the scratch files)
 .understand-anything/intermediate/
 .understand-anything/diff-overlay.json
+.understand-anything/.trash-*/
 
 # OS
 .DS_Store
 Thumbs.db
+/long_runs/

@@ -1,10 +1,12 @@
 # CivSim 2 — Dokument projektu gry (GDD)
 
-Wersja z 3 listopada 2026 · źródło: dokument projektu w Claude
+Wersja z 3 listopada 2026, zmiana kierunku na grę na żywo 9 listopada 2026 (ADR 0024, 0025) · źródło: dokument projektu w Claude
 
 ## 1. Wizja i filary
 
-CivSim 2 to turowa gra 4X w pixel arcie, a przede wszystkim symulator rozwoju gospodarczego na mapie heksagonalnej, w której cywilizacje przechodzą od plemienia z epoki kamienia do kolonizacji kosmosu. Najpierw powstaje **symulator**, w którym cywilizacje same podejmują sensowne decyzje. Dopiero na nim budujemy **grę**, w której gracz prowadzi jedną z nich na tych samych zasadach.
+CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod spodem symulator rozwoju gospodarczego na mapie heksagonalnej, w której cywilizacje przechodzą od neolitu do kolonizacji kosmosu. Gracz to byt ponad światem: rządzi całą cywilizacją i steruje jej oddziałami, a czego nie zdąży zrobić, robi za niego ta sama AI, która prowadzi resztę świata (decyzja Patryka z 2026-11-09, ADR 0024; szczegóły w 1.1). Symulator, w którym cywilizacje same podejmują sensowne decyzje, jest fundamentem gry.
+
+*Do 2026-11-09 GDD opisywał turową grę 4X na ok. 10 h z trybem gracza na samym końcu. Rozdziały 6.2, 11 i 13 opisują jeszcze obecny kod (kroki w latach); po etapie 6 zastąpi je model z ADR 0025.*
 
 **Filary (każda decyzja projektowa musi przejść przez nie wszystkie):**
 
@@ -14,15 +16,36 @@ CivSim 2 to turowa gra 4X w pixel arcie, a przede wszystkim symulator rozwoju go
 4. **Czytelna głębia.** Mechanik może być dużo, ale gracz zawsze widzi, *dlaczego* coś się stało, np. „miasto głoduje, bo susza obniżyła zbiory o 40%”.
 5. **Zawartość w danych, nie w kodzie.** Technologie, zasoby, budynki, jednostki i zdarzenia definiujemy w plikach JSON. Nowa technologia nie wymaga programowania.
 
-**Inspiracje:** Civilization (ery, drzewo technologii, dyplomacja, mapa hex), Factorio (łańcuchy produkcji, przepływy towarów), Dwarf Fortress i Crusader Kings (historie wyłaniające się z symulacji), Old World (charakter przywódców).
+**Inspiracje:** Civilization (ery, drzewo technologii, dyplomacja, mapa hex), Factorio (łańcuchy produkcji, przepływy towarów), Dwarf Fortress i Crusader Kings (historie wyłaniające się z symulacji), Old World (charakter przywódców), Rise of Nations (całe dzieje w jednej partii na żywo), gry Paradoxu (czas na żywo z pauzą, rządzenie zamiast klikania).
 
 **Czego NIE robimy (żeby projekt był do skończenia):**
 
 - Multiplayera bez serwera (peer-to-peer, lockstep). Gra sieciowa działa wyłącznie jako klient–serwer (2.1).
-- Walki w czasie rzeczywistym. Wszystko rozstrzyga się w turach.
+- Walki zręcznościowej. Gra toczy się na żywo, ale bitwy liczy symulacja; gracz decyduje o celu, odwrocie, posiłkach i uzbrojeniu.
 - Grafiki 3D i animowanych przerywników.
-- Zarządzania pojedynczym człowiekiem. Ludność to grupy, nie osoby (wyjątek: przywódcy i wielcy ludzie).
+- Zarządzania pojedynczym człowiekiem. Ludność to grupy, a jednostki to oddziały, nie osoby (wyjątek: przywódcy i wielcy ludzie, i to dopiero w późniejszych erach).
 - Fabuły pisanej ręcznie. Historie mają wynikać z symulacji. Nie ma też kultury ani religii jako mechanik gry.
+
+### 1.1 Gra na żywo (decyzje Patryka z 2026-11-09, ADR 0024 i 0025)
+
+**Przebieg partii.**
+1. **Wybór miejsca.** Kolejność losowana (gracz może wybrać, że idzie pierwszy). Wybierający przez ok. 5 s widzi mapę, potem tylko ląd jako szare bloki i ma 10–15 s na wybór miejsca z pamięci. Wokół wybranego miejsca powstaje losowa strefa blokady: kolejne cywilizacje mogą stanąć blisko, ale nie za blisko. AI wybiera według oceny terenu z losowym błędem.
+2. **Start od zera w neolicie.** Epoka kamienia to tylko „historia plemienia” (opis), bez rozgrywki. Różnice daje teren.
+3. **Gra na żywo** do celu ustalonego na starcie na pasku postępu: pierwszy metal, pierwsza elektryczność, lot w kosmos albo podbój obszaru na innej planecie. Pierwsza wersja dla graczy kończy się na epoce brązu: celem jest odkrycie wszystkich jej technologii.
+
+**Co robi gracz.**
+- Steruje oddziałami w ruchu jak w RTS-ie: osadnicy, wojownicy, zwiadowcy, tragarze z jedzeniem, później łodzie i inne.
+- Zleca **zadania na obszarze**: wydobycie surowca, pola, łowiska, potem budowy w danym miejscu (mur, zbrojownia). Ludzie z osady sami tam chodzą.
+- Zakłada miasta i awansuje je, buduje fortyfikacje, uzbraja się.
+- Wybiera kierunek rozwoju ludu (góry i kopanie, morze i łodzie…), który z czasem owocuje (6.4).
+- Odpowiada na **karty decyzji**: ważna sprawa z rekomendacją doradcy i przyczyną, licznik ok. 20 s, potem decyduje AI.
+- Każdy poziom decyzji (7.1) może oddać AI; czego nie zdąży, robi AI.
+
+**Tempo.** Nie ma budżetu minut na erę: każda cywilizacja przechodzi do kolejnej ery we własnym tempie, zależnym od terenu i umiejętności gracza. Z erą zmienia się tempo gry i to, na czym gracz się skupia. Lata są tylko licznikiem dla gracza („historia ludu”); zwalniają w późniejszych erach. Backend liczy się w taktach i pulsach cywilizacji (ADR 0025). W pierwszych erach nie ma postaci z imieniem.
+
+**Tempo AI (poziomy trudności) w wersji do epoki brązu:** dobre AI odkrywa wszystkie technologie brązu w ok. 15 min, średnie w 20–25 min, słabe w 30–40 min.
+
+**Tryby.** Najpierw gra solo (ta sama gra z większą liczbą graczy AI), potem w sieci. Pauza w singlu zawsze, prędkości ×1/×2/×4. Na start mapa standard i 6–8 cywilizacji. Gracz, którego lud upadł, zostaje **widzem** i widzi wszystkie cywilizacje graczy.
 
 ## 2. Technologia i architektura
 
@@ -103,14 +126,49 @@ Wartości są robocze. Dostroimy je po pierwszych pomiarach na Twoim komputerze.
 
 Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem biomy, rzeki i surowce. Każde pole ma kilkanaście wartości, które zmieniają się w trakcie gry: żyzność spada, złoża się wyczerpują, lasy się wycina i odrastają.
 
-**Siatka:** heksy z płaskim bokiem na górze, współrzędne osiowe (q, r) w logice, tablica wierszy w pamięci. Mapa zawija się w obu kierunkach jak planeta: idąc na wschód albo na północ, wraca się do punktu wyjścia (torus). Równik biegnie przez środek mapy, a oba bieguny spotykają się na jej górnej i dolnej krawędzi, więc szew jest zawsze zimny i spójny klimatycznie. Liczba rzędów jest zawsze parzysta, żeby heksy łączyły się bez przerwy.
+**Siatka:** heksy z płaskim bokiem na górze, współrzędne osiowe (q, r) w logice, tablica wierszy w pamięci. **Mapa to kula** (ADR 0012, decyzja Patryka z 2026-11-05): wschód–zachód zawija się, górny rząd dotyka bieguna północnego, dolny południowego, a kto przejdzie przez biegun, schodzi po drugiej stronie planety (przesunięty o pół obwodu). Rzędy to pasy o równej powierzchni na kuli, więc okolice biegunów zajmują mniej rzędów niż równik. Równik biegnie przez środek mapy. Szerokość jest zawsze o 2 większa od wielokrotności 4, a wysokość parzysta, żeby heksy schodziły się nad biegunami bez przerwy.
 
 | Rozmiar | Wymiary | Pola | Cywilizacje (domyślnie) | Przeznaczenie |
 | --- | --- | --- | --- | --- |
-| Testowa | 64×40 | 2 560 | 4 | testy i debugowanie |
-| Standard | 256×160 | 40 960 | 12 | zwykła gra |
-| Duża | 384×240 | 92 160 | 20 | długa gra |
-| Ogromna | 512×320 | 163 840 | 32 | symulacja świata do ery kosmicznej |
+| Testowa | 66×40 | 2 640 | 4 | testy i debugowanie |
+| Standard | 258×160 | 41 280 | 12 | zwykła gra |
+| Duża | 386×240 | 92 640 | 20 | długa gra |
+| Ogromna | 514×320 | 164 480 | 32 | symulacja świata do ery kosmicznej |
+
+**Planeta** (etapy 1b i 1c-A, decyzje Patryka z 2026-11-05, ADR 0014): każda planeta leży w strefie zamieszkiwalnej swojej gwiazdy i na każdej jest życie. Gwiazda, odległość i rok są powiązane prawdziwymi wzorami: światło `S = L / d²`, masa gwiazdy z jasności (ciąg główny), rok z trzeciego prawa Keplera. Dowolne dwie z wielkości jasność, odległość, rok wyznaczają trzecią: gracz zmienia jedną, druga się dopasowuje, a gdy planeta wypadłaby ze strefy (S od 0,356 do 1,107), staje na jej granicy. Parametry ustawia się presetem (`data/planets.json`), a potem każdą wartość można zmienić:
+
+| Parametr | Zakres | Ziemia | Mars | Uran | Co zmienia |
+| --- | --- | --- | --- | --- | --- |
+| Nachylenie osi | 0–180° | 23,4° | 25,2° | 97,8° | pory roku; przy dużym nachyleniu bieguny są cieplejsze od równika, ale z dekadami dnia i nocy |
+| Jasność gwiazdy | 0,04–7000 L☉ | 1 | 1 | 1365 (7,1 M☉) | światło, masa gwiazdy, rok |
+| Odległość od gwiazdy | w strefie zamieszkiwalnej | 1 AU | 1,524 AU | 36,9 AU | światło i rok |
+| Długość roku | 0,1–500 lat ziemskich (wynika z dwóch powyższych) | 1 | 1,88 | 84 | tylko pory roku: dłuższy rok to większa różnica lato–zima; zegar gry zostaje w latach ziemskich |
+| Światło na planecie | 0,356–1,107 Ziemi | 1 | 0,43 | 1 | średnia temperatura |
+| Mimośród orbity | 0–0,3 | 0,017 | 0,093 | 0,046 | jedna półkula ma ostrzejsze pory roku |
+| Aktywność wulkaniczna | 0–5000% Ziemi | 100% | 1000% | 100% | ile CO₂ dają wulkany (cykl węglowy, niżej) |
+| Pozostałe gazy (azot, tlen) | 0,1–50 bar | 1 bar | 1 bar | 1 bar | ciśnienie razem z CO₂ |
+| CO₂ | z cyklu węglowego albo ręcznie | 280 ppm | ok. 9 bar | 756 ppm | efekt cieplarniany (Ziemia 33 °C) i ciśnienie |
+| Woda, wilgotność, górzystość | jak niżej | 60%, normalna, normalna | 30%, sucha, górzysta | 60%, normalna, normalna | ląd planety |
+
+**Atmosfera z cyklu węglowego:** wulkany stale dodają CO₂, a deszcz i skały je zabierają (wietrzenie), szybciej tam, gdzie cieplej, i tylko tam, gdzie woda jest ciekła. Na starcie świata obie strony są w równowadze. Dlatego planety daleko od gwiazdy mają grubą atmosferę CO₂, a bliskie cienką; na planecie leżącej na boku (bez zimnych biegunów) wietrzeje cała powierzchnia. Gruba atmosfera przenosi więcej ciepła ku biegunom i łagodzi pory roku (siła pór roku = 100% · √(1 bar / ciśnienie)). CO₂ jest stanem świata, nie stałą: od etapu 1c-B zmienia się w trakcie gry, a w erze przemysłowej spalanie i wycinanie lasów będą je zwiększać, więc cywilizacje mogą wpływać na klimat.
+
+**Temperatura** wynika z bilansu energii w pasach szerokości (Budyko–Sellers): słońce grzeje, planeta wypromieniowuje ciepło w kosmos, wiatry i prądy przenoszą je ku biegunom, a lód odbija więcej światła i dlatego czapy lodowe rosną. Ziemia: 27 °C na równiku, 10 °C na 45°, −22 °C na biegunach.
+
+**Epoki lodowe** (etap 1c-B, ADR 0015, decyzja Patryka z 2026-11-05): orbita planety powoli się chwieje (cykle Milankovicia): nachylenie osi o ±1,2° co 41 tys. lat, mimośród rośnie i maleje co 100 i 405 tys. lat, a pora roku najbliżej gwiazdy obiega rok co 23 tys. lat. Gdy lata na 65° szerokości słabną, rosną lądolody, ale tylko na lądzie i tylko na planetach, które mają dość zimne bieguny (planeta leżąca na boku epok lodowych nie ma). Lądolód rośnie wolno (dziesiątki tysięcy lat), a znika szybko, gdy lato wraca. W szczycie epoki lodowej brzeg lodu schodzi do 40° szerokości, oceany pochłaniają jedną trzecią CO₂, a Ziemia jest o ok. 5 °C chłodniejsza. Gra zaczyna się w ciepłym momencie cyklu; na Ziemi pierwsze zlodowacenie zaczyna się po ok. 15–20 tys. lat, a jego szczyt przychodzi po ok. 110 tys. lat. Klimat przeliczamy co 500 lat gry: temperatura, pory roku, sezon wzrostu, biomy lądu, a przez nie dzika żywność. Gwiazda może też zmieniać jasność (ustawienie: siła i okres; domyślnie stała). **Poziom morza** opada razem z lodem (etap 1c-C): w szczycie zlodowacenia o ok. 120 m, więc płytkie szelfy stają się lądem i powstają pomosty lądowe między kontynentami; gdy lód topnieje, morze je zabiera. Gdy stopnieje także stały lód lądowy ze startu (cieplejszy klimat, w przyszłości również od przemysłu), morze wznosi się nawet o ok. 70 m ponad poziom startowy i zalewa niskie wybrzeża. Morza zamarzają tam, gdzie średnia roczna spada do −8 °C, więc w zimnych okresach lód morski łączy lądy (jako droga dla wędrówek od etapu 3g); bardzo zimna planeta bez cyklu węglowego może zamarznąć cała. Mieszkańcy zalanej osady przenoszą się z tym, co uniosą, na najbliższe suche pole, a to, co zostawili, staje się ruinami pod wodą.
+
+Mars w presecie to planeta podobna do Marsa w odległości Marsa od Słońca (zimniejsza, suchsza i bardziej górzysta niż Ziemia, z bardzo aktywnymi wulkanami, dzięki którym gruba atmosfera CO₂ utrzymuje ją przy życiu), nie dzisiejszy Mars. Uran w presecie ma rok Urana przy świetle Ziemi; wymaga to jasnej, ciężkiej gwiazdy, która w rzeczywistości żyje tylko ok. 50 mln lat (w grze naginamy).
+
+**Pory roku na żywo przy długim roku** (ADR 0013, „dwa zegary”): gdy rok planety trwa co najmniej 8 lat ziemskich, tura trwa 1/8 roku planety (Uran: 10,5 roku) i pora roku zmienia się z tury na turę: zimą nic nie rośnie, polowanie daje 20% dzikiej żywności. Plemiona same przenoszą się tam, gdzie jest jedzenie i znośna temperatura; ogień, odzież i domy (efekt `cold_tolerance`) pozwolą później żyć w zimniejszych miejscach. Decyzje wolne (odłamy, łączenie) zapadają raz na długość kroku ery cywilizacji (ADR 0018).
+
+**Na pozostałych planetach pory roku są uśrednione** (tura trwa tam do 50 lat). Generator liczy dla każdej szerokości geograficznej nasłonecznienie w 48 punktach orbity (oś, mimośród, światło gwiazdy) i z tego:
+
+- **średnią temperaturę** z bilansu energii (wyżej),
+- **różnicę lato–zima** (większą w głębi lądu, małą nad wodą, większą przy długim roku, mniejszą pod grubą atmosferą),
+- **sezon wzrostu**: część roku między 5 °C a 45 °C, gdy rośliny rosną.
+
+Biomy biorą to pod uwagę: ląd, którego lato nie przekracza zera, jest lodem; ląd z sezonem wzrostu krótszym niż 15% roku jest tundrą; ogromne różnice lato–zima działają jak susza (lasy ustępują stepom i pustyniom). Dzika żywność rośnie tylko w sezonie wzrostu: sezon od 60% roku daje pełne plony, brak sezonu 40%. **Długie zimy** (decyzja Patryka z 2026-11-05: trudniejszy wariant symulacji): martwa pora dłuższa niż 0,75 roku zmniejsza dziką żywność proporcjonalnie, więc na planetach z długim rokiem plemiona ledwo przeżywają, dopóki technologie (przechowywanie) nie podniosą tego progu.
+
+**Kontynenty:** ląd rośnie wokół kilku losowych zarodków na kuli (kontynenty 5–6, pangea 1, archipelag 18–24), a szum rzeźbi wybrzeża i wnętrza. Plemiona startują tylko tam, gdzie sezon wzrostu trwa co najmniej 40% roku.
 
 **Żeby świat nie był odkryty po 2–3 erach:**
 
@@ -125,8 +183,8 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 
 | Wartość | Zakres | Zmienia się w grze? |
 | --- | --- | --- |
-| Wysokość | 0–255 (poziom morza ok. 100) | tylko przez kataklizmy |
-| Temperatura | −30…+40 °C (średnia roczna) | tak, zmiany klimatu w erze przemysłowej |
+| Wysokość | 0–255 (poziom morza ok. 100; w epokach lodowych do 97) | tylko przez kataklizmy |
+| Temperatura | −30…+40 °C (średnia roczna) | tak: epoki lodowe co 500 lat gry, zmiany klimatu w erze przemysłowej |
 | Wilgotność | 0–100 | tak, susze, nawadnianie |
 | Biom | jeden z 14 | tak, np. las → równina po wycięciu, pustynnienie |
 | Cecha terenu | las, dżungla, bagno, oaza, rafa, pole lodowe | tak |
@@ -147,8 +205,9 @@ Mapa to siatka heksów generowana z seeda: najpierw geologia i klimat, potem bio
 | Liczba cywilizacji | 1–64 | zależna od rozmiaru (4/12/20/32) | ile plemion startuje |
 | Typ świata | kontynenty, pangea, archipelag | kontynenty | kształt lądów |
 | Procent wody | 30–80% | 60% | poziom morza |
-| Temperatura | zimna, umiarkowana, gorąca | umiarkowana | −6 / 0 / +6 °C: czapy lodowe, tundra, pustynie, dżungle |
+| Planeta | ziemia, mars, uran + nachylenie osi, mimośród, dwie z: jasność gwiazdy, odległość, rok, światło; wulkanizm, pozostałe gazy, CO₂ | ziemia | patrz tabela „Planeta” wyżej |
 | Wilgotność | sucha, normalna, mokra | normalna | −15 / 0 / +15 wilgotności: pustynie, lasy, liczba rzek |
+| Wilgotność w głębi lądu | sucha, normalna, wilgotna | normalna | spadek wilgotności z odległością od morza: −4 za pole do −60 / −3 do −36 / −2 do −20 (pola mapy standardowej, więc duże mapy nie mają suchszych środków kontynentów) |
 | Górzystość | płaska, normalna, górzysta | normalna | góry i wzgórza: 4+12%, 8+20%, 14+26% lądu |
 | Złoża | skąpe, normalne, bogate | normalne | 60% / 100% / 160% liczby złóż |
 
@@ -158,8 +217,8 @@ Te same ustawienia opisują w przyszłości inne planety (temperatura, woda).
 
 1. Kontynenty i płyty z szumu wielooktawowego, z ustawieniem typu świata (pangea, kontynenty, archipelag).
 2. Wysokość i poziom morza według zadanego procentu wody (domyślnie 60%).
-3. Temperatura z szerokości geograficznej i wysokości.
-4. Wilgotność z odległości od morza i przeważających wiatrów (cień opadowy za górami).
+3. Atmosfera z cyklu węglowego, potem temperatura z bilansu energii, pory roku i sezon wzrostu z nasłonecznienia planety (oś, rok, orbita, gwiazda), wysokości i odległości od morza.
+4. Wilgotność z odległości od morza (według ustawienia „wilgotność w głębi lądu”), pasów szerokości geograficznej i przeważających wiatrów (cień opadowy za górami).
 5. Biomy z tabeli temperatura × wilgotność (diagram Whittakera).
 6. Rzeki płyną po krawędziach heksów, od źródeł w górach do morza; jeziora powstają w zagłębieniach. Pola przylegające do rzeki mają słodką wodę i wyższą żyzność.
 7. Cechy terenu i żyzność (najwyższa w dolinach rzek).
@@ -169,7 +228,7 @@ Te same ustawienia opisują w przyszłości inne planety (temperatura, woda).
 
 **Ruch i widoczność:** każdy biom i rzeźba ma koszt ruchu (łąka 1, las 2, góry 3, przejście przez krawędź z rzeką +1 bez mostu). Drogi go obniżają. Każda cywilizacja ma własną mgłę wojny w trzech stanach: nieodkryte, zapamiętane (ostatni widziany stan) i widoczne.
 
-**Światy i kosmos.** Symulacja od początku obsługuje wiele światów. Każda planeta lub księżyc to osobna mapa-torus z własnym rozmiarem i parametrami (temperatura, atmosfera, woda, grawitacja), tworzona tym samym generatorem. Ziemia jest pierwszym światem, a w erze kosmicznej dochodzą kolejne. Widok przełącza się między powierzchnią wybranego świata a widokiem kosmosu (planety, orbity, statki). Decyzje są jednolite: te same komendy, doradcy, zasoby i sieci handlowe działają na wszystkich światach, a transport kosmiczny łączy ich gospodarki.
+**Światy i kosmos.** Symulacja od początku obsługuje wiele światów. Każda planeta lub księżyc to osobna mapa-kula z własnym rozmiarem i parametrami (temperatura, atmosfera, woda, grawitacja), tworzona tym samym generatorem. Ziemia jest pierwszym światem, a w erze kosmicznej dochodzą kolejne. Widok przełącza się między powierzchnią wybranego świata a widokiem kosmosu (planety, orbity, statki). Decyzje są jednolite: te same komendy, doradcy, zasoby i sieci handlowe działają na wszystkich światach, a transport kosmiczny łączy ich gospodarki.
 
 ## 4. Zasoby i ekonomia
 
@@ -204,7 +263,7 @@ Każdy surowiec jest niewidoczny i niedostępny do zbierania, dopóki cywilizacj
 
 - **Magazyn osady** ma osobną pojemność na cztery kategorie: żywność (spichlerz), materiały sypkie i masowe (skład), towary cenne (skarbiec), płyny i gazy (zbiorniki, od ery przemysłowej).
 - **Nadmiar ponad pojemność przepada** albo jest sprzedawany z rabatem, jeśli osada jest w sieci handlowej.
-- **Psucie się na turę:** zboże 1%, chleb 4%, mięso 5%, ryby 8%. Solenie, chłodnie i konserwy obniżają te wartości. Drewno, kamień i metale się nie psują, a narzędzia i broń zużywają się tylko w użyciu.
+- **Psucie się na rok** (przeliczane przez długość tury, jak każde tempo): zboże 1%, chleb 4%, mięso 5%, ryby 8%. Solenie, chłodnie i konserwy obniżają te wartości. Drewno, kamień i metale się nie psują, a narzędzia i broń zużywają się tylko w użyciu.
 - **Energia elektryczna** nie jest magazynowana bez magazynów energii (od ery informacji). Co turę produkcja musi pokryć zużycie, inaczej budynki pracują z mniejszą wydajnością.
 
 ### 4.4 Wydobycie i produkcja
@@ -212,12 +271,15 @@ Każdy surowiec jest niewidoczny i niedostępny do zbierania, dopóki cywilizacj
 - **Wydobycie:** pole z ulepszeniem (farma, kopalnia, tartak, pastwisko, łowisko) obsadzone ludnością.
 - **Wydajność pola** = baza biomu × żyzność lub zasobność złoża × mnożnik technologii × efekty (susza, powódź) × nastrój pracowników.
 - **Złoża kopalne się wyczerpują.** Kopalnia z zasobnością 2000 jednostek przy wydobyciu 10/turę działa 200 tur, potem trzeba szukać nowych złóż lub sprowadzać surowiec. Lasy, łowiska i zwierzyna odnawiają się, chyba że eksploatacja przekroczy tempo odnawiania.
+- **Dzika żywność wokół obozów się wyczerpuje.** Każde pole ma zapas zwierzyny i roślin (0–100%). Zbieranie go zmniejsza, a nieużywane pole odrasta według tempa na rok. Plemię, które zbiera za dużo, wyjada okolicę, głoduje i musi wędrować; porzucona okolica po kilku stuleciach wraca do pełni.
+- **Ziemia uprawna jałowieje** (zgoda Patryka z 2026-11-05). Pole uprawiane rok po roku traci żyzność, a pole leżące odłogiem ją odzyskuje. Nawadnianie, płodozmian i nawozy (późniejsze technologie) spowalniają jałowienie. Wyjałowione pola to jeden z powodów spadków ludności i wędrówek rolników.
+- **Lata dobre i złe:** plony z roku na rok wahają się regionalnie (kilkanaście procent w górę i w dół). Duże klęski to osobne zdarzenia (rozdział 10).
 - **Produkcja to receptury** (styl Factorio): wejścia → wyjścia, wymagana grupa pracowników, czas. Przykład: dymarka: 2 ruda żelaza + 1 węgiel drzewny → 1 żelazo, 2 rzemieślników, 1 tura.
 - **Łańcuchy wydłużają się z erami.** Węgiel drzewny z drewna → żelazo → stal → maszyny → fabryka elektroniki. Jedno brakujące ogniwo zatrzymuje cały łańcuch, więc AI musi planować zapasy.
 
 ### 4.5 Rozdział przy niedoborach
 
-Gdy towaru brakuje, sieć rozdziela go według priorytetów, które ustawia gracz lub AI. Domyślna kolejność:
+Gdy towaru brakuje, sieć rozdziela go według priorytetów, które ustawia gracz lub AI (etap 3e: na razie stała kolejność domyślna; potrzeby wyższe ludzi, np. odzież i narzędzia, idą zaraz po wyżywieniu). Domyślna kolejność:
 
 1. Wyżywienie ludności (głód to najszybszy spadek populacji i stabilności).
 2. Utrzymanie: budynki i armia.
@@ -225,9 +287,13 @@ Gdy towaru brakuje, sieć rozdziela go według priorytetów, które ustawia grac
 4. Produkcja przetwórcza.
 5. Eksport i rezerwy.
 
+**Sieć handlowa w CORE** (etap 3e, decyzje Patryka z 2026-11-05): sieć tworzą osady jednej cywilizacji połączone łańcuchem, w którym sąsiednie osady dzieli najwyżej 8 pól. Przy każdym przekazaniu ginie 2% towaru na pole odległości (10 pól: 18%). Każda osada zatrzymuje jedzenie na turę i rok zapasu, zanim odda resztę. Nadwyżka ponad pojemność magazynu najpierw jedzie do osady sieci z wolnym miejscem; reszta przepada (bez pieniędzy nie ma sprzedaży z rabatem). Handel między cywilizacjami przyjdzie z umowami w etapie 4.
+
+**Produkcja w CORE** (etap 3e): rzemieślnicy osady wykonują jedną recepturę; cykli jest tyle, ile pozwalają rzemieślnicy i wejścia w magazynie. Surowce do receptur zbierają wytwórcy przy okazji jedzenia: drewno w lasach, krzemień i kamień ze złóż (złoża nieodnawialne się wyczerpują). Recepturę wybiera AI według cen wewnętrznych: najbardziej opłaca się to, czego ludziom brakuje.
+
 ### 4.6 Ceny i pieniądz
 
-- Każdy towar ma **cenę wewnętrzną w sieci handlowej**, liczoną z podaży, popytu i zapasów. AI używa jej do oceny, co opłaca się produkować, kupować i sprzedawać.
+- Każdy towar ma **cenę wewnętrzną w sieci handlowej**, liczoną z podaży, popytu i zapasów. AI używa jej do oceny, co opłaca się produkować, kupować i sprzedawać. W CORE (etap 3e): cena = wartość towaru × roczny popyt sieci / zapasy sieci, w granicach 25–400% wartości.
 - Do odkrycia mennictwa handel jest barterowy (wymiana po cenach wewnętrznych obu stron). Potem pojawia się złoto jako waluta, podatki i budżet. Później bankowość, kredyt i inflacja.
 
 ## 5. Ludność i osady
@@ -249,11 +315,34 @@ Ludność to liczba ludzi w każdej osadzie, podzielona na warstwy zawodowe, z k
 
 Ludzie przechodzą między warstwami powoli (kilka procent na turę), w stronę lepiej opłacanych i tam, gdzie są wolne miejsca pracy. Edukacja przyspiesza przejście do warstw wyższych.
 
+**Fachy (decyzja Patryka z 2026-11-06, ADR 0020).** Warstwa mówi, czego ludzie potrzebują i jaki mają głos; **fach** mówi, co umieją (krzemieniarz, myśliwy, rolnik, garncarz, hutnik, kowal, drwal, cieśla, skryba, uczony…). Fachowców i uczniów liczymy w każdej osadzie, a każdy fach należy do jednej warstwy. Do warstw z tabeli dochodzą **myśliciele** (w epoce kamienia starszyzna, potem myśliciele, skrybowie, uczeni; to nie kapłani, gra nie ma religii) i **przywódcy** (wódz i starszyzna, naczelnicy, urzędnicy, politycy).
+
+- Fach otwiera technologia. Gdy cywilizacja ją odkryje, w osadzie z największą liczbą myślicieli pojawia się 2 pierwszych mistrzów.
+- **Nauka fachu:** mistrz uczy do 3 uczniów naraz, przez lata zapisane w danych (krzemieniarz 3, garncarz 5, kowal 10, uczony 15). Uczeń w tym czasie pracuje za pół. Ludzie uczą się tylko tam, gdzie fach jest potrzebny (surowce i miejsca pracy).
+- **Przenoszenie:** fachowcy przenoszą się do innej osady własnej sieci handlowej, gdy u siebie mają co najmniej 3 mistrzów i o co najmniej 2 osoby więcej, niż jest miejsc pracy, a tam fach jest potrzebny i brakuje mistrza albo rąk. Idzie najwyżej połowa nadwyżki, najbliżej najpierw, raz na krok cywilizacji. Od obcych fach przychodzi tylko przez handel.
+- **Utrata:** fachowcy umierają jak wszyscy. Gdy umrze ostatni, technologia zostaje znana, ale nieużywana, dopóki fach nie wróci od sąsiadów albo z nowego odkrycia (ciemne wieki, 6.1).
+- **Jakość narzędzi:** kamień → miedź → brąz → żelazo → stal; ten sam fach z lepszymi narzędziami robi więcej (np. drwal: brąz 100%, żelazo 150%, stal 200%).
+
 ### 5.2 Wzrost i zdrowie
 
-- **Przyrost** = urodzenia − zgony ± migracja. Urodzenia rosną z nadwyżką żywności i zadowoleniem, zgony z głodem, chorobami, wojną i brakiem schronienia.
+- **Przyrost** = urodzenia × (1 − śmiertelność dzieci) − zgony dorosłych ± migracja (decyzja Patryka z 2026-11-06, ADR 0020). Urodzenia rosną z nadwyżką żywności i zadowoleniem, zgony z głodem, chorobami, wojną i brakiem schronienia. Technologie zmieniają urodzenia, śmiertelność dzieci i zgony dorosłych jako efekty w danych. Wartości według danych historycznych (najedzona, zdrowa osada):
+
+| Era | Technologia | Śmiertelność dzieci (do 15 lat) | Zgony dorosłych | Urodzenia | Przyrost |
+| --- | --- | --- | --- | --- | --- |
+| Kamień | start | 49% | 29,6‰ | 60‰ | +1,0‰ |
+| Kamień | ogień | 48% | 29,6‰ | 60‰ | +1,6‰ |
+| Neolit | garncarstwo | 48% | 29‰ | 60‰ (wioska 65‰: krótsze przerwy między dziećmi) | +2,2‰ (wioska +2,8‰: +5‰ urodzeń, −2‰ z ciasnoty) |
+| Brąz | higiena | 47% | 28,5‰ | 60‰ | +3,3‰ |
+| Żelazo | medycyna | 46% | 28‰ | 60‰ | +4,4‰ |
+| Renesans | – | 43% | 28‰ | 60‰ | +6,2‰ |
+| Przemysł | kanalizacja, szczepienie na ospę | 25% | 15‰ | 40‰ | +15‰ |
+| Nowoczesna | antybiotyki, szczepionki | 4% | 9‰ | 20‰ | +10‰ |
+| Informacji | – | 1% | 8‰ | 14‰ | +5,9‰ |
+
+  Dane: do ok. 1800 roku umierała mniej więcej połowa dzieci (zbieracze-łowcy średnio 48,8%, Volk i Atkinson 2013), świat w 1950: ok. 25%, w 2020: 4,3%; średni przyrost ludności od 10 000 lat p.n.e. do 1700 roku ok. 0,4‰ na rok (Our World in Data). Ery 3–10 wejdą z ich etapami.
 - **Pojemność mieszkań** osady ogranicza wzrost. Ponad limit rośnie przeludnienie: więcej chorób i niższe zadowolenie.
 - **Zdrowie osady** zależy od gęstości, wody pitnej, sanitacji (akwedukty, kanalizacja) i medycyny. Niskie zdrowie zwiększa szansę na epidemię.
+- **Głód:** z ludzi, którym zabrakło jedzenia w turze, umiera 80% w osiadłej osadzie i 50% w koczowniczym obozie (łowcy się rozpraszają, wędrują dalej i mają mniej dzieci; decyzja Patryka z 2026-11-08).
 - **Migracja:** ludzie uciekają z osad głodujących, ogarniętych wojną lub niezadowolonych do lepszych, także do innych cywilizacji, jeśli granice są otwarte.
 - **Lojalność podbitych:** podbita ludność przez kilka pokoleń jest mniej lojalna: pracuje mniej wydajnie i łatwiej się buntuje.
 
@@ -271,6 +360,8 @@ Każda osada ma pole centralne i strefę wpływów opisaną w 5.4. Od poziomu mi
 | Megalopolis | powyżej 1 mln | nowoczesna infrastruktura | do 12 dzielnic, lotnisko, wieżowce |
 | Kolonia pozaziemska | dowolna | era kosmiczna | osobna mapa księżyca lub planety |
 
+**Osiedlanie w CORE** (etap 3f): obóz co najmniej 60 osób cywilizacji znającej rolnictwo może osiąść jako wioska (AI robi to, gdy ziemia jego strefy wyżywiłaby uprawą półtora raza więcej ludzi). Wytwórcy wioski uprawiają najlepsze żyzne pola strefy (do 40 rolników na pole), a reszta zbiera; uprawiane pola jałowieją, odłogi odzyskują żyzność. Wioska nie wędruje, ale wysyła odłamy jako nowe obozy.
+
 **Koczownicy na starcie:** w erze kamienia plemię nie ma stałej osady i przemieszcza się za zwierzyną. Każda cywilizacja zaczyna jako plemię z jednym obozem, a osiedlenie się nie wiąże jej z miejscem na zawsze (5.4).
 
 ### 5.4 Koczownicy, migracje i strefa wpływów
@@ -282,6 +373,7 @@ Cywilizacja nie jest przywiązana do miejsca. Startuje jako koczownicze plemię,
 - **Zasięg** rośnie z siłą cywilizacji (liczba wojowników i armii), z narzędziami i bronią (technologie) oraz ze środkami ruchu (konie, łodzie, drogi).
 - **Każde pole kosztuje** tyle, ile wynosi koszt dotarcia po terenie (rozdział 3). Na otwartym stepie strefa sięga daleko, w górach, dżungli i na bagnach jest wąska.
 - **Siła wpływu słabnie z odległością.** Na polu, gdzie strefy się nakładają, przeważa silniejszy wpływ. Przy podobnych wartościach pole jest sporne i wywołuje spór graniczny (8.5).
+- **Własna ziemia** (decyzja Patryka z 2026-11-08, po długim biegu): pole osady i pola, do których dociera kosztem najwyżej 2, należą do niej przed każdą obcą strefą, która nie jest tam własną ziemią. Sąsiedzi nie mogą bez wojny zabrać plemieniu ziemi, na której żyje. Wcześniej rolnicy z silną strefą zabierali małym bandom wszystkie pola i te wymierały z głodu (8 z 12 cywilizacji w 4-godzinnym biegu).
 - **Strefa kurczy się po klęskach:** przegrana bitwa, głód czy epidemia od razu oddają pola sąsiadom.
 
 **Migracja** to zwykłe działanie oceniane przez AI (8.3). AI porównuje wartość obecnego terenu (żywność, woda, surowce, zagrożenie, wyczerpanie zasobów) z najlepszym znanym celem i odejmuje koszt drogi: zapasy na wędrówkę, ryzyko i porzucone budynki. Ekspansywność przywódcy zachęca do przeprowadzki, ostrożność ją hamuje.
@@ -289,9 +381,18 @@ Cywilizacja nie jest przywiązana do miejsca. Startuje jako koczownicze plemię,
 | Rodzaj migracji | Kto | Co się dzieje |
 | --- | --- | --- |
 | Sezonowa | koczownicy | obóz przesuwa się o kilka pól, mały koszt |
+
+**Co znaczy obóz na mapie** (decyzja Patryka z 2026-11-07, ADR 0022): obóz to **obszar sezonowych wędrówek** grupy, a nie jedno miejsce. Ludzie wędrują po swoich polach kilka razy w roku i to mieści się w zbieraniu ze strefy. Przeprowadzka obozu na mapie to przesunięcie całego obszaru wędrówek, co zdarza się raz na pokolenia; dlatego liczy się w krokach ery, a nie co sezon.
 | Odłam | duże plemię lub osada | część ludności odchodzi i zakłada nową grupę: kolonię albo osobną cywilizację |
 | Całkowita | cała cywilizacja | wszyscy ruszają w drogę; osady zostają opuszczone i każdy może je przejąć (5.5) |
 | Z podbojem | dowolna, gdy cel jest zajęty | atak na mieszkańców celu; po zwycięstwie wygnanie ich, wcielenie (lojalność podbitych, 5.2) albo nałożenie trybutu |
+
+**W CORE (przebudowa AI, PR C):**
+
+- **Ocena ziemi** liczy jedzenie pól z technologiami cywilizacji (np. łowiectwo, rybołówstwo) i dolicza pola wody, jeśli cywilizacja łowi ryby.
+- **Osiedlenie to wybór:** plon z rolnictwa liczony dla prawdziwej liczby rolników obozu musi wyżywić obóz i być nie gorszy od zbieractwa; ekspansywna cywilizacja dłużej koczuje.
+- **Wioska wysyła osadników** (60 osób, najwyżej raz na 100 lat), gdy jest zatłoczona albo jej pola są wyjałowione. Osadnicy zakładają obóz poza strefą wpływów własnych osad. Przeprowadzki całej wioski jeszcze nie ma.
+- **Wyprawa w nieznane:** ciekawa i ekspansywna cywilizacja wysyła część najedzonego obozu tam, gdzie wokół jest dużo nieznanej ziemi, bez przymusu głodu.
 
 **Osiedlenie się jest odwracalne, ale coraz droższe.** Pola uprawne, budynki i liczna ludność podnoszą koszt przeprowadzki. Dlatego całkowite migracje same zanikają w późniejszych erach, poza sytuacjami kryzysowymi: wojną, zmianą klimatu, klęską.
 
@@ -319,9 +420,29 @@ Osada to majątek cywilizacji: pola uprawne, budynki, mury i zapasy. Można ją 
 - **Powroty koczowników:** plemiona koczownicze wracają sezonowo do tych samych obozowisk. Obozowisko, które stoi puste, nie niszczeje szybko, a doświadczenie z jego okolicy (znane łowiska, złoża) zostaje w pamięci plemienia.
 - **Ruiny jako źródło surowców:** rozbiórka daje kamień i cegły, a plądrowanie może dać zapasy lub skarby pozostawione w pośpiechu.
 
+**Wersja CORE (wdrożona w etapie 3d, zgoda Patryka z 2026-11-05):** dwa stany, opuszczona i ruiny, z czasami zależnymi od poziomu osady (obóz 50/100 lat, wioska 50/300, miasto 100/500, metropolia 100/1000; im bardziej rozwinięta osada, tym trwalsza). Ludzie niosą 10 jednostek na osobę; to ogólna zasada każdej wędrówki, którą technologie podnoszą efektem `carrying`. Roszczenie jest na razie tylko zapisane. Podbój przy migracji: atak wojowników na obronę (wojownicy + część pozostałych), pokonani uciekają, zwycięzcy zajmują pole; wcielenie i trybut później. Cywilizacja bez ludzi wymiera i zostaje na liście jako wymarła.
+
 **AI:** w ocenie migracji (5.4) opuszczona osada w celu podnosi jego wartość o zaoszczędzony koszt budowy. AI sama decyduje, czy zająć cudzą osadę mimo roszczenia, a jej charakter (ostrożność, agresja) waży ryzyko konfliktu z dawnym właścicielem.
 
 **Grafika:** każdy poziom osady potrzebuje dwóch dodatkowych wariantów: opuszczonej i zrujnowanej.
+
+### 5.6 Nazwy: języki ludów (decyzje Patryka z 2026-11-06)
+
+Każda cywilizacja ma **własny wymyślony język**, wylosowany na starcie z ziarna świata: zestaw spółgłosek i samogłosek, wzorce sylab
+(twarde lub miękkie, krótkie lub długie słowa) i ulubione końcówki. Z tego języka powstają **wszystkie jej nazwy**: nazwa ludu i nazwy
+osad, więc lud ma spójne „brzmienie”, a różne ludy brzmią różnie (np. twardy język: lud *Karrut*, osady *Tarok*, *Urkan*; miękki: lud
+*Elawi*, osady *Mirae*, *Soluan*).
+
+- **Osady dostają nazwy** z języka właściciela przy założeniu (także obozy po odłamie); przy przenosinach obozu nazwa zostaje.
+- **Odłamy, które staną się nowymi cywilizacjami** (secesja, etap 4f), dziedziczą język rodzica z drobnymi zmianami (inne końcówki,
+  zamienione głoski), więc ich nazwy są „spokrewnione” z rodzicem.
+- **Bez listy zakazanych słów.** Gdy komuś nazwa się nie podoba, zmienia ją sam: przy zmianie gra proponuje kilka innych nazw w tym
+  samym języku, a można też wpisać własną. Zmiana to komenda (cywilizacji albo osady), jak każda zmiana stanu.
+- **Tytuł z ustroju** (np. *Kingdom of Karrut*) przyjdzie razem z ustrojami w etapie 4f; do tego czasu nazwa to sam rdzeń
+  (*the Karrut*). Rdzeń się nie zmienia, więc kronika pozostaje czytelna.
+- Technicznie: zasady języków (głoski, wzorce, końcówki) w `data/names.json`; nazwy liczone z ziarna świata i numeru cywilizacji
+  bez zużywania strumieni losowania symulacji (ten sam seed = te same nazwy); tylko litery łacińskie bez znaków diakrytycznych
+  (gra jest po angielsku). Później możliwe „paczki nazw” na zasadzie paczek grafik.
 
 ## 6. Technologie i ery
 
@@ -337,13 +458,21 @@ Każda technologia w pliku JSON ma:
 - **inspiracje:** warunki sytuacyjne obniżające koszt, np. „masz miedź i cynę w sieci handlowej: −30%”, „sąsiad zna technologię: −20%”, „przeżyłeś epidemię: medycyna −15%”;
 - **odblokowania:** surowce (widoczność i wydobycie), ulepszenia pól, budynki, receptury, jednostki, polityki, ustroje, warstwy ludności.
 
-**Zasady badania:** naukę produkują uczeni i budynki. Cywilizacja bada jedną technologię naraz i może mieć kolejkę. Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
+**Wymóg ludzi (decyzja Patryka z 2026-11-06, ADR 0020):** technologia może wymagać fachowców, np. wytop brązu 20 hutników i cyny w sieci handlowej. Wymóg liczymy w całej cywilizacji, a dla technologii „miejskich” (pismo, filozofia) w jednej osadzie. Rozwój idzie łańcuchem: technologia → ludzie uczą się fachu → fachowcy pozwalają na następną technologię (graf: `docs/prompts/06-etap-fachy.md`).
+
+**Zasady badania:** naukę produkują uczeni i budynki; do ery żelaza głównie myśliciele w proporcji myśliciel 30 : rzemieślnik 5 : reszta 1 (w danych razy 2: 60, 10 i 2 punkty na tysiąc ludzi na rok, żeby cywilizacja o zwykłym składzie badała jak przedtem). Cywilizacja bada jedną technologię naraz i może mieć kolejkę. AI wybiera badanie według priorytetu (co technologia da jej cywilizacji) i kosztu jako przeszkody (8.3). Do ery żelaza część technologii odkrywa się też przypadkiem przez użytkowanie, np. dużo wytopu miedzi przybliża obróbkę brązu. Upadek cywilizacji (utrata bibliotek i uczonych) może cofnąć niektóre technologie i wywołać „ciemne wieki”.
 
 ### 6.2 Ery
 
-Wszystkie tempa w grze (wzrost, psucie, odrastanie lasów) są zdefiniowane na rok i przeliczane przez długość tury. Dzięki temu zmiana długości tury między erami nie psuje ekonomii.
+**Zmiana z 2026-11-09 (ADR 0025):** w grze na żywo backend liczy się w taktach (akcja) i pulsach cywilizacji (rozwój), a lata są tylko licznikiem dla gracza; poniższy model kroków w latach opisuje obecny kod do etapu 6.
 
-| # | Era | Lat na turę | Próg wejścia | Co się zmienia |
+Wszystkie tempa w grze (wzrost, psucie, odrastanie lasów) są zdefiniowane na rok i przeliczane przez długość kroku. Dzięki temu zmiana długości kroku między erami nie psuje ekonomii.
+
+**Zegar świata i rytm cywilizacji** (ADR 0018, decyzja Patryka z 2026-11-06): czas gry to licznik lat, który sam niczego nie liczy. Każda cywilizacja liczy swój stan (gospodarkę, ludność, naukę, zwiad) i podejmuje zaplanowane decyzje tylko we **własnych krokach**, co tyle lat, ile podaje tabela dla **jej** ery. Kroki są przypięte do kalendarza (rytm 25 lat: lata 0, 25, 50…), a krok liczy dokładnie czas od poprzedniego, więc po zmianie ery pierwszy krok może być krótszy i nikt nie traci lat. Świat (klimat, morze, odrastanie dzikiej żywności poza osadami) i widok liczą się w latach, w których ktoś ma krok. Na wydarzenia (wypowiedziana wojna, napad, propozycja umowy, koniec badania) cywilizacja reaguje od razu, także poza swoim rytmem (decyzje reaktywne, 8.1).
+
+**Dwa zegary: długie kroki i epizody** (ADR 0022, decyzja Patryka z 2026-11-07). Długie kroki ery są dobre dla rzeczy, które same są średnią z wielu lat: urodzeń i zgonów, zbierania, plonów, handlu, nauki, klimatu. Zdarzenia z przebiegiem, które w rzeczywistości trwają dni, tygodnie albo miesiące, liczą się w **epizodach**: epizod ma uczestników (cywilizacje, osady, wyprawę), własny krok w miesiącach i koniec. Zegar świata zatrzymuje się na każdym kroku epizodu, ale liczy wtedy **tylko epizod**; reszta świata i inne cywilizacje czekają. Uczestnicy decydują w każdym kroku epizodu (np. dowódca co miesiąc kampanii). Pierwszy epizod to **kampania wojenna** (9.3, krok co miesiąc); susza, głód, epidemia i wyprawy odkrywców dostaną epizody później.
+
+| # | Era | Lat na krok | Próg wejścia | Co się zmienia |
 | --- | --- | --- | --- | --- |
 | 1 | Kamienia | 50 | start | koczownictwo, zbieractwo, plemiona |
 | 2 | Neolit | 25 | Rolnictwo + osiedlenie | wioski, hodowla, pierwsze zapasy |
@@ -376,7 +505,20 @@ Era cywilizacji zmienia się po zbadaniu technologii progowej i 60% technologii 
 | Nawadnianie | Neolit | Rolnictwo + rzeka obok | kanały, +żyzność, odporność na suszę |
 | Wymiana barterowa | Neolit | Garncarstwo | handel z innymi plemionami |
 
+**W CORE (etap 3f):** naukę w erach 1–2 wytwarzają wszyscy ludzie (rzemieślnicy dziesięć razy więcej niż wytwórcy), bo uczonych i budynków jeszcze nie ma. Od etapu fachów (ADR 0020) naukę dają głównie myśliciele, a technologie er 1–2 mają wymogi ludzi. Koszt spada o inspiracje (np. krzemień w strefie wpływów: obróbka krzemienia −30%) i o 20% za każdego sąsiada, który zna technologię (najwyżej 2 sąsiadów, sąsiad: osada w promieniu 12 pól), nie niżej niż do 25% kosztu. Odkryć przypadkiem nie ma (rozdział 16: „Wytnij”). Odblokowania z tabeli działają tak: ogień +10% plonów i +4 °C tolerancji zimna; obróbka krzemienia: zbieranie krzemienia i narzędzia kamienne; łowiectwo zespołowe: więcej mięsa i skór ze zwierzyny; rybołówstwo: ryby z wybrzeży, jezior i łowisk; garbarstwo: odzież ze skór i +4 °C; tradycje: +5 nastroju; rolnictwo: zboże z dzikiego zboża; udomowienie: stada (bydło, owce, konie) i +25% udźwigu; garncarstwo: glina, ceramika i 25% wolniejsze psucie jedzenia; tkactwo: tkaniny; kamieniarstwo: kamień; nawadnianie: +5% plonów; pieczenie chleba (dodane, żeby chleb miał swoją technologię): chleb. Wymiana barterowa zacznie działać z handlem między cywilizacjami w etapie 4. Rolnictwo pozwala też osiąść w wiosce i uprawiać pola (5.3).
+
 Ery 3–10 rozpiszemy etapami: każdy etap roadmapy (rozdział 14) zaczyna się od pełnej listy technologii swojej ery.
+
+### 6.4 Doświadczenie, kierunek rozwoju i podgląd technologii (decyzje Patryka z 2026-11-09, ADR 0024)
+
+Zasady do wdrożenia w etapie 6 (szczegóły i liczby: przy wdrożeniu, z propozycją dla Patryka). Zastępują zniżkę „20% za sąsiada” i zakaz odkryć przypadkiem z 6.3.
+
+- **Technologia to brama, ale też umiejętność.** Po odkryciu ma **doświadczenie**, które rośnie od używania (ludzie przy pracy, wytworzone dobra) i wzmacnia jej efekt: rolnictwo przez dekady daje większe plony, łodzie rybaków stają się mocniejsze. Rekomendacja na start: do ok. +50% efektu na najwyższym poziomie, powolny spadek, gdy technologia leży odłogiem.
+- **Technologię można rozwijać albo tylko zaliczyć**, jeśli jest potrzebna jedynie do wejścia w nową erę.
+- **Koszt.** Technologia ma stały koszt bazowy. Im lepiej rozwinięta technologia poprzedzająca, tym taniej.
+- **Kierunek rozwoju.** To, czym lud się zajmuje (góry i kopanie, morze i rybołówstwo…), zwiększa szansę na pokrewne odkrycia: kto przetrwał w górach (np. dzięki dowozowi jedzenia), ma większą szansę pierwszy odkryć rzemiosło i złoża rud, więc szybciej dojdzie do metali; rybacy szybciej budują coraz lepsze łodzie.
+- **Podejrzenie technologii.** Przez kontakt (zwiadowca, kupiec, sąsiedztwo) cywilizacja może podejrzeć technologię, którą ktoś już zna: zniżka = 5% × liczba cywilizacji, które ją już znają (zna ją jedna: 5%, zna dziewięć: 45%). Przodujący płaci najwięcej; nikt nie jest „niesiony” przez innych.
+- **Wzór:** koszt = koszt bazowy × (1 − zniżka za podgląd) × (1 − zniżka za rozwinięcie poprzedniej). Przykład: 1000 punktów, zna ją 6 cywilizacji (30%), poprzednia dobrze rozwinięta (20%): 1000 × 0,7 × 0,8 = 560.
 
 ## 7. Zarządzanie cywilizacją
 
@@ -396,7 +538,7 @@ Państwem rządzi się na pięciu poziomach decyzji, od strategii po pojedyncze 
 
 Ustrój decyduje o dwóch rzeczach naraz: jak szybko państwo podejmuje i wdraża decyzje oraz ile kosztuje to ludność. Ustroje szybkie przyspieszają rozwój, ale gromadzą **napięcie społeczne**, które z czasem zamienia się w niepokoje i rewolucje (7.3).
 
-- **Czas wdrożenia:** każda decyzja państwowa (polityka, reforma, wypowiedzenie wojny, mobilizacja, duża budowa) zaczyna działać dopiero po opóźnieniu: bardzo szybko 0 tur, szybko 1, średnio 2, wolno 4.
+- **Czas wdrożenia:** każda decyzja państwowa (polityka, reforma, wypowiedzenie wojny, mobilizacja, duża budowa) zaczyna działać dopiero po opóźnieniu: bardzo szybko 0 lat, szybko 1 rok, średnio 2 lata, wolno 4 lata (decyzja Patryka z 2026-11-07: w latach, nie w turach, bo tura epoki kamienia trwa 50 lat). Dziś działa na zmianę ustroju i na wypowiedzenie wojny: wojna zaczyna się od razu, ale armie strony, która ją wypowiedziała, ruszają po opóźnieniu.
 - **Tempo AI:** ustrój zmienia częstotliwość pracy doradców (8.1). Despotia reaguje od razu, ale impulsywnie (więcej losowości w wyborze). Demokracja reaguje wolno, ale konsekwentnie (silniejsza histereza planów, 8.6).
 - **Napięcie społeczne** rośnie co turę o wartość zależną od ustroju i polityk, a spada przy zadowolonej ludności. Wysokie napięcie obniża stabilność i zwiększa szansę na rewoltę.
 - **Ustrój określa też:** liczbę slotów polityk, wpływ polityczny każdej warstwy, sposób sukcesji, zdolność administracyjną i koszt zmiany ustroju (okres anarchii).
@@ -416,11 +558,25 @@ Ustrój decyduje o dwóch rzeczach naraz: jak szybko państwo podejmuje i wdraż
 | Autorytaryzm | Nowoczesność | bardzo szybko | mobilizację, wojsko | emigracja, stagnacja nauki |
 | Technokracja | Informacja | średnio | naukę, wydajność | nierówności, opór niższych warstw |
 
+**Tytuł w nazwie cywilizacji** (decyzja z 2026-11-06, do zrobienia w etapie 4f): każdy ustrój ma w danych wzór tytułu, który składa
+się z rdzeniem nazwy ludu (5.6), np. wodzostwo „Chiefdom of Karrut”, despotia „Kingdom of Karrut”, republika miejska „Republic of
+Karrut”. Zmiana ustroju zmienia tytuł, rdzeń zostaje.
+
+**Decyzje Patryka z 2026-11-07 (etap 4f, dokument „Etap 4f: państwo — propozycja”, wszystkie rekomendacje przyjęte):**
+
+- Teraz działają rada starszych i wodzostwo; despotia i republika miejska są w danych i otwierają się z epoką brązu (etap 6).
+- Lud dostaje ustrój na start z charakteru: agresja i ekspansywność → wodzostwo, ostrożność i otwartość → rada starszych.
+- Ustrój zmienia strateg (rzadko, z histerezą) albo bunt. Zmiana kosztuje bezkrólewie: 2 lata niższej stabilności i brak decyzji państwowych.
+- Liczby ustrojów (wdrożenie, premia stabilności, administracja, wpływ warstw, sukcesja, tempo AI) są w `data/governments.json`.
+
 **Polityki** działają tak samo: każda ma efekt, czas wdrożenia, koszt utrzymania, wpływ na nastrój poszczególnych warstw i dopływ napięcia. Przykład: gospodarka planowa daje +30% produkcji przemysłowej, ale obniża podaż dóbr codziennych i każdej tury dokłada napięcia.
 
 ### 7.3 Stabilność i administracja
 
-- **Stabilność (0–100)** to średnia zadowolenia warstw ważona ich wpływem politycznym. Poniżej 30 zaczynają się niepokoje (strajki, niższa wydajność), poniżej 15 bunty, secesja odległych osad lub wojna domowa. Dzięki temu imperia rosną i upadają, a długa symulacja nie kończy się jednym hegemonem.
+- **Stabilność (0–100)** to średnia zadowolenia warstw ważona ich wpływem politycznym. Wpływ warstw zależy od ustroju (rada starszych: starszyzna i myśliciele; wodzostwo: wojownicy i wódz). Dopóki warstwy nie mają osobnego nastroju, nastrój warstwy to nastrój jej osady (decyzja Patryka z 2026-11-07). Do tego premia ustroju, minus przeciążenie administracji, kryzys sukcesji i bezkrólewie. Każda osada ma też lojalność = stabilność minus kara za odległość od stolicy, więc pierwsze odpadają dalekie osady.
+- **Zasięg władzy** (decyzja Patryka z 2026-11-08): każdy ustrój sięga tylko na określoną odległość od stolicy (koszt drogi: rada starszych 28, wodzostwo 32, republika miejska 35, despotia 45). Osada dalej nie jest lojalna wcale, a nawet w spokojnym państwie co roku z małą szansą (0,2%) takie dalekie osady odłączają się jako nowe plemię (dryf, jak secesja, ale bez buntu). Dzięki temu w neolicie powstaje wiele plemion zamiast imperiów na całą wyspę; większe państwa przyjdą z ustrojami epoki brązu.
+- **Stolica** to osada przywódcy: na start pierwszy obóz, a gdy lud osiądzie, największa wioska (potem już się nie przenosi sama); gdy stolica padnie, przenosi się do największej osady, a stabilność spada na kilka lat. Na mapie stolica ma złoty znak, a nazwa cywilizacji stoi nad środkiem skupiska osad wokół stolicy (decyzja Patryka z 2026-11-08).
+- **Secesja** (decyzja Patryka z 2026-11-07): sąsiadujące ze sobą zbuntowane osady tworzą jedną nową cywilizację z językiem rodzica z mutacją (5.6), innym ustrojem niż rodzic („odłam o innych poglądach”), charakterem przesuniętym od rodzica i kopią technologii i mapy. Wojna nie zaczyna się sama: wybiera ją dyplomata rodzica, a wspomnienie secesji bardzo psuje opinię. Gdy gra ma już 64 cywilizacje, zamiast secesji jest przewrót. Poniżej 30 zaczynają się niepokoje (strajki, niższa wydajność), poniżej 15 bunty, secesja odległych osad lub wojna domowa. Dzięki temu imperia rosną i upadają, a długa symulacja nie kończy się jednym hegemonem.
 - **Zdolność administracyjna:** każda osada zużywa punkty administracji, tym więcej, im dalej leży od stolicy (liczone kosztem drogi, nie w linii prostej). Przekroczenie limitu oznacza korupcję, niższe podatki i spadek stabilności. Limit podnoszą pismo, urzędnicy, drogi, ustrój i później telegraf.
 - **Grupy interesu:** warstwy ludności zachowują się jak frakcje. Wpływowa i niezadowolona warstwa może wymusić zmianę polityki, zorganizować zamach albo rewolucję.
 
@@ -432,7 +588,7 @@ Ustrój decyduje o dwóch rzeczach naraz: jak szybko państwo podejmuje i wdraż
 
 ### 7.5 Przywódca
 
-Każda cywilizacja ma przywódcę z imieniem, wiekiem i 2–3 cechami (np. zdobywca, budowniczy, uczony, kupiec, ostrożny, paranoik). Przywódca się starzeje i umiera. Sukcesja zależy od ustroju: dziedziczna grozi kryzysem, wybory zmieniają cechy co kadencję. Cechy przywódcy wpływają bezpośrednio na wagi decyzji AI (rozdział 8), więc zmiana władcy zmienia politykę państwa.
+Każda cywilizacja ma przywódcę z imieniem, wiekiem i 2–3 cechami (zdobywca, budowniczy, uczony, kupiec, ostrożny, paranoik; decyzja Patryka z 2026-11-07: każda cecha przesuwa 1–2 cechy charakteru o 0,2 na czas rządów). Przywódca się starzeje i umiera. Sukcesja zależy od ustroju: dziedziczna grozi kryzysem, wybory zmieniają cechy co kadencję. Cechy przywódcy wpływają bezpośrednio na wagi decyzji AI (rozdział 8), więc zmiana władcy zmienia politykę państwa.
 
 ### 7.6 Kierunki rozwoju
 
@@ -458,7 +614,9 @@ Każda cywilizacja komputerowa to zespół „doradców” na poziomach z rozdzi
 
 ### 8.1 Doradcy
 
-| Doradca | Decyduje o | Co ile tur |
+Doradcy pracują w **rytmie swojej cywilizacji** (6.2, ADR 0018): „co ile tur” w tabeli to własne kroki cywilizacji. Decyzje **proaktywne** (plany: strategia, przegląd stosunków, osadnictwo, receptury) zapadają tylko we własnym kroku. Decyzje **reaktywne** zapadają w najbliższym kroku świata, także poza rytmem: odpowiedź na propozycję, wybór badania po skończonym, reakcja na wypowiedzianą wojnę i na napad (przegląd stosunków, obozy szukają bezpieczniejszego miejsca; od 4e także obrona).
+
+| Doradca | Decyduje o | Co ile własnych kroków |
 | --- | --- | --- |
 | Strateg | wagi celów: ekspansja, bezpieczeństwo, dobrobyt, nauka, wpływ, podbój | 10–20 (i natychmiast po wstrząsie: wojna, klęska, nowa era) |
 | Dyplomata | sojusze, umowy, wypowiedzenia wojny, pokój | 5 |
@@ -488,6 +646,7 @@ AI widzi tylko to, co odkryła jej cywilizacja. Z tego co turę buduje:
 | Nawigacja | Żegluga oceaniczna | wybrzeża, prądy, szlaki morskie | trwała |
 | Rozpoznanie z powietrza | Lotnictwo, potem satelity | aktualny obraz dużych obszarów, ruchy armii | stała aktualizacja |
 
+- **W CORE (etap 3g, tempa na rok od przebudowy AI, PR C):** osada widzi 6 pól wokół, a 2 razy na stulecie wysyła zwiadowcę na 15 pól w losowym kierunku; pamięć ustna trzyma pole 300 lat od ostatniej obserwacji. Obóz może wyruszyć w kilkuturową wędrówkę do znanego miejsca do 40 pól dalej, po lądzie, lodzie morskim i pomostach lądowych; idzie 20 pól na stulecie (najmniej 1, najwyżej 10 pól na krok).
 - **Pewność informacji maleje z wiekiem.** Armia widziana 10 tur temu to dla AI już tylko przypuszczenie. Teren starzeje się wolno, ruchy wojsk szybko.
 - **Zobaczyć to nie wszystko.** Złoże trafia do pamięci tylko wtedy, gdy cywilizacja zna już ten surowiec (4.2). Ruda żelaza widziana w epoce kamienia to dla niej zwykłe wzgórze.
 - **Misje zwiadowcze:** dowódca ocenia wartość zwiadu jak każde inne działanie. Liczy się dużo nieznanych pól w kierunku rozwoju (7.6), przestarzałe informacje przy granicy i zagrożenie bez aktualnego rozpoznania.
@@ -519,6 +678,15 @@ Każde możliwe działanie ma listę czynników. Każdy czynnik zamienia jedną 
 
 **Wybór:** AI nie bierze zawsze najlepszego działania. Losuje spośród 3 najlepszych z prawdopodobieństwem zależnym od ocen (losowość z seeda, więc deterministyczna). Ostrożny przywódca prawie zawsze bierze najlepsze, nieprzewidywalny częściej ryzykuje.
 
+**Wartość i priorytet (decyzja Patryka z 2026-11-06, ADR 0019).** Każda wartość AI (waga celu, cecha charakteru, parametr) musi coś zmieniać, a pilnuje tego test. Dlatego każda opcja mówi, **któremu celowi służy**, a ocena to **priorytet × przeszkoda**:
+
+- **Uczony:** priorytet technologii to to, co da tej cywilizacji na rok: dodatkowe plony na polach jej strefy, receptury dla jej rzemieślników, efekty (np. odporność na zimno tylko tam, gdzie zima jest za mroźna), wioski według żyzności strefy, plus część wartości technologii, do której prowadzi. Każda część jest ważona wagą swojego celu i charakterem. Koszt jest przeszkodą, którą ciekawość świata zmniejsza. Wybór nadal losowy spośród 3 najlepszych.
+- **Skarbnik:** jedzenie służy bezpieczeństwu, pozostałe towary dobrobytowi; osady jednej sieci wybierają receptury po kolei i widzą wybory poprzednich; cywilizacja, której towary płyną do partnera handlowego, ceni wyroby na wymianę wyżej (z handlowością).
+- **Strateg:** waga nauki rośnie, gdy spotkane cywilizacje znają więcej technologii; waga wpływu rośnie z liczbą spotkanych cywilizacji.
+- **Wiedza:** obce obozy i ich wojowników AI liczy tylko z pól, które widziała w swoim ostatnim kroku.
+
+Wszystkie liczby strojenia są w `data/ai.json`; pełny opis decyzji w `docs/ai/`.
+
 ### 8.4 Charakter cywilizacji
 
 Osiem cech w skali 0–1: agresja, ekspansywność, handlowość, naukowość, otwartość na obcych, ostrożność, mściwość, lojalność wobec sojuszników. Charakter = doświadczenie cywilizacji (zmienia się powoli z doświadczeniem, np. częste najazdy zwiększają ostrożność) + cechy obecnego przywódcy (zmieniają się skokowo przy sukcesji).
@@ -537,14 +705,16 @@ Każda cywilizacja prowadzi dla każdej znanej sobie osobną listę wydarzeń z 
 
 | Wydarzenie | Sympatia | Zaufanie | Wygasa po |
 | --- | --- | --- | --- |
-| Atak na nas | −50 | −20 | 150 tur (mściwi: 300) |
-| Złamanie traktatu | −20 | −40 | 200 tur |
-| Spór graniczny | −1 na turę | — | trwa, dopóki trwa spór |
-| Aktywny handel | +0,5 na turę (max +30) | +0,2 na turę | 20 tur po zerwaniu |
-| Wspólny wróg | +20 | +10 | koniec wojny + 50 tur |
-| Pomoc w wojnie | +30 | +25 | 200 tur |
+| Atak na nas | −50 | −20 | 150 lat (mściwi: 300) |
+| Złamanie traktatu | −20 | −40 | 200 lat |
+| Spór graniczny | −1 na rok (max −30) | — | trwa, dopóki trwa spór, potem 20 lat |
+| Aktywny handel | +0,5 na rok (max +30) | +0,2 na rok (max +20) | 20 lat po zerwaniu |
+| Wspólny wróg | +20 | +10 | koniec wojny + 50 lat |
+| Pomoc w wojnie | +30 | +25 | 200 lat |
 | Inny ustrój | −10 | — | trwa, dopóki różnica |
 
+Czasy i tempa są w latach, nie w turach (zasada „tempa na rok”, decyzja Patryka z 2026-11-06): tura w epoce kamienia trwa 50 lat, więc
+uraz pamiętany 150 lat to tam 3 tury, a w erze przemysłowej 150 tur. Wspomnienie po zakończeniu słabnie liniowo do zera.
 Wartości są robocze, dostroimy je w testach.
 
 ### 8.6 Plany i konsekwencja
@@ -567,6 +737,7 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Umowy (odblokowywane technologiami):** otwarte granice, umowa handlowa, pakt o nieagresji, sojusz obronny, sojusz pełny, trybut i wasalstwo, później organizacje międzynarodowe i federacje.
 - **Negocjacje:** każda propozycja jest oceniana przez dyplomatę drugiej strony tak samo jak inne działania (8.3). AI też składa propozycje graczowi.
 - **Reputacja:** złamanie umowy obniża zaufanie nie tylko u poszkodowanego, ale u wszystkich, którzy o tym wiedzą.
+- **W CORE (etap 4d):** umowy na start to pokój (rozejm po wojnie), wojna, umowa handlowa, pakt o nieagresji i sojusz obronny (decyzja Patryka z 2026-11-05). Sojusz wymaga paktu. Pakt, sojusz i rozejm blokują napady. Wojna do etapu 4e jest tylko stanem dyplomatycznym. Świadkowie złamania umowy pamiętają połowę urazy. Szczegóły i wartości: `docs/systems/diplomacy.md`.
 
 ### 9.2 Handel
 
@@ -574,6 +745,7 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Umowy państwowe:** stałe dostawy, np. 10 zboża na turę za 3 żelaza, negocjowane przez dyplomatów.
 - **Szlaki handlowe** to jednostki na mapie (karawany, statki, później pociągi i kontenerowce). Można je napaść, zablokować lub chronić. Kontynuacja pomysłu jednostek handlowych ze starego CivSim.
 - **Efekty uboczne:** handel podnosi sympatię, przyspiesza dyfuzję technologii (6.1) i przenosi choroby.
+- **W CORE (etap 4d):** handel między cywilizacjami bez karawan (decyzja Patryka z 2026-11-05): przy umowie handlowej najbliższe osady partnerów wymieniają nadwyżki barterem po cenach wewnętrznych obu stron, ze stratą 2% na pole jak w sieci handlowej.
 
 ### 9.3 Wojna
 
@@ -583,6 +755,22 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 - **Zaopatrzenie:** armia zjada żywność i zużywa broń. Poza zasięgiem zaopatrzenia (drogi, rzeki, własne terytorium) co turę traci siłę i morale. Łupienie wrogich pól daje doraźne zaopatrzenie.
 - **Bitwa:** kilka rund z losowością. Liczą się siła, teren (wzgórza, las, rzeka), mury, morale i dowódca. Przy niskim morale oddział ucieka zamiast ginąć.
 - **Oblężenie:** miasto z murami trzeba oblęgać przez kilka tur. W tym czasie miasto zjada zapasy, a oblężnik zużywa własne zaopatrzenie.
+
+**Wojna w erach 1–2 (etap 4e, decyzje Patryka z 2026-11-07, ADR 0021 i 0022):**
+
+- **Wojna to stan, walka to kampanie.** Każda kampania to epizod z krokiem co miesiąc (6.2): zbiórka, marsz, bitwa albo najazd, powrót. Wojna w epoce kamienia trwa zwykle od kilku miesięcy do kilku lat.
+- **Stan wojny bez kampanii wygasa sam:** gdy przez 5 lat żadna strona nie prowadzi kampanii, strony zawierają biały pokój.
+
+- **Cel:** ziemia (konkretna osada wroga), łupy (zapasy) albo odwet (za napaść lub zabraną osadę). Wojna o łupy bez powodu psuje opinię świadków najbardziej, odwet wcale. AI (poprawki po 100 grach, etap 4g): odwet wypowiada tylko z powodem, o łupy, gdy jej lud głoduje, a sąsiad ma pełniejsze spichlerze i jest słabszy, a o ziemię, gdy widzi wioskę sąsiada, którą jej armia zdobędzie, i chce się rozszerzać (`docs/ai/10-dyplomata.md`).
+- **Uzbrojenie z technologii, na jakie lud stać:** gołe ręce (50% siły), drewniane włócznie hartowane w ogniu, proce, włócznie i topory z kamiennym grotem (100%). Każdy poziom uzbrojenia to wpis w danych: technologia, dobro zużywane przez wojowników i procent siły. Prawdziwa broń z metalu przychodzi z kowalami w erze 3 (brąz ok. 150%, żelazo ok. 200%).
+- **Wyprawa:** wojownicy z osad zbierają się w jedną armię pod wodzem (w erach 1–2 do 50 wojowników na jednym polu). Mechanika jest gotowa na późniejsze ery: limit wodza i liczba oddziałów na polu są w danych er, a większa armia zajmie kilka sąsiednich pól (front). Co najmniej 1/3 wojowników każdej osady zostaje w domu.
+- **Zaopatrzenie:** armia niesie jedzenie. Z osad najeźdźcy blisko trasy marszu wychodzą tragarze (jak zwiadowcy) i donoszą jedzenie tą samą trasą. Armia bez jedzenia traci morale, walczy słabiej i musi napadać okoliczne wioski wroga, żeby się wyżywić.
+- **Dowódca nie rusza na wojnę, którą na pewno przegra:** przed wyprawą i przed bitwą liczy spodziewany wynik z tego, co widzi (siła wroga z ostatniego kroku, teren, uzbrojenie, morale, jedzenie), i rusza dopiero przy dobrej szansie.
+- **Podbój:** zdobyta wioska zostaje z mieszkańcami i przechodzi do zwycięzcy; z obozu pokonani uciekają do najbliższej własnej osady. Niewolnictwo i jeńcy w przyszłości.
+- **Pokój:** z celu i wyniku wojny: oddanie spornej osady, jednorazowy okup w dobrach albo biały pokój; potem rozejm.
+- **Zmęczenie wojną** rośnie z miesięcy kampanii i ze strat (nie z lat kalendarza) i obniża nastrój w osadach (a przez nastrój urodzenia).
+- **Później:** oblężenia i mury (z budynkami), plemiona niezależne (z secesją w 4f), trybut i wasalstwo (moduły).
+- **Co erę** moduł wojny trzeba zaktualizować: nowe uzbrojenie, fachy i jednostki, limity wodza i pola, zaopatrzenie (`docs/systems/war.md`, sekcja „Co erę”).
 
 ### 9.4 Jednostki
 
@@ -638,9 +826,13 @@ Efekt to modyfikator z celem (pole, osada, armia, cywilizacja), siłą, czasem t
 
 Wszystkie zdarzenia są w plikach danych: warunki, szanse, efekty i komunikat do kroniki. Nowe zdarzenia dodajesz bez programowania.
 
+- **W CORE (etap 3h):** susza, pożar, powódź i epidemia. Szansa to „ile razy na 10 tys. lat”, mnożona przez warunki osady (wilgotność, rzeka, las w pobliżu, liczba ludzi, osiadłość). Technologie łagodzą skutki (nawadnianie i garncarstwo suszę, kamieniarstwo pożar). Skutki to efekty z 10.1 (redukcja wydobycia, uszkodzenie, depopulacja, spadek nastroju); gdy tura trwa dłużej niż efekt, jego siła jest przeliczana przez długość tury. Powódź zostawia żyźniejszą ziemię, epidemia przechodzi po sieci handlowej. Klęski naturalne są rzadkie (susza 3, pożar 2, powódź 6 razy na 10 tys. lat na osadę), a epidemie uderzają tylko w duże cywilizacje (od 10 000 ludzi razem) i ich osady od 300 ludzi; zaraza nie przechodzi do mniejszej cywilizacji, nawet szlakiem handlowym (decyzja Patryka 2026-11-08). Ulewa i spowolnienie ruchu przyjdą z armiami i drogami, zniszczenie z budynkami.
+
 ## 11. Pętla symulacji
 
-Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie tego samego stanu świata, a potem rdzeń rozstrzyga je w stałej kolejności. Dzięki temu AI każdej cywilizacji może liczyć się równolegle na osobnych rdzeniach procesora, a wynik i tak jest deterministyczny.
+**Zmiana z 2026-11-09 (ADR 0025):** po etapie 6 pętla to stały takt (ruch, budowa, walka oddziałów; np. co 0,1 s przy ×1) i pulsy cywilizacji rozłożone między takty (gospodarka, ludność, nauka, AI; np. co ok. 3 s), liczone równolegle. Opis niżej to obecny kod.
+
+Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie tego samego stanu świata, a potem rdzeń rozstrzyga je w stałej kolejności. Jedna tura pętli to **krok świata** (6.2, ADR 0018): trwa do najbliższego roku, w którym któraś cywilizacja ma swój krok. W fazach 2–10 liczą się tylko cywilizacje, które mają krok w tej turze (za cały swój krok), oraz reakcje pozostałych na alarmy; świat liczy się zawsze, za długość kroku świata. Dzięki temu AI każdej cywilizacji może liczyć się równolegle na osobnych rdzeniach procesora, a wynik i tak jest deterministyczny.
 
 ### 11.1 Kolejność faz tury
 
@@ -655,6 +847,8 @@ Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie
 9. **Państwo:** podatki i budżet, administracja, stabilność, bunty i secesje, sukcesja przywódcy.
 10. **Nauka i wpływy:** postęp badań, dyfuzja technologii, przeliczenie stref wpływów, zmiana ery.
 11. **Zapis:** statystyki, kronika, nowa migawka dla grafiki, autozapis co 10 tur.
+
+**Spokojna kronika** (decyzja Patryka z 2026-11-08): częste zdarzenia jednego rodzaju z tej samej tury (nowi przywódcy, klęski, epidemie, nowe i przeniesione osady, osiadanie, wieści o dalekich ludach) kronika łączy w jedno zdanie z listą cywilizacji, np. „Drought in 4 settlements: Osxou (2), Korkbri”. Pojedyncze zdarzenie zostaje opisane jak dotąd.
 
 ### 11.2 Prędkości i tryby
 
@@ -701,25 +895,30 @@ Nad tym gra rysuje sama, bez Twoich grafik: granice, strefę wpływów, kierunki
 
 ### 12.3 Lista grafik na pierwsze etapy
 
-Do etapu 4 podgląd używa prostych kolorowych heksów, więc grafiki zaczynają być potrzebne od etapu 5. Możesz rysować wcześniej, jeśli masz ochotę.
+Do etapu 4 podgląd używa prostych kolorowych heksów. Od etapu 5 używa grafik zastępczych, które robię ja, w tych samych rozmiarach i pod tymi samymi nazwami co w tabeli. Twoje grafiki są potrzebne w etapie 13 (tryb gracza, na końcu CORE) i podmieniają zastępcze bez zmian w kodzie. Możesz rysować wcześniej, jeśli masz ochotę.
 
 | Zestaw | Rozmiar | Sztuk | Kiedy potrzebne |
 | --- | --- | --- | --- |
-| Biomy | 48×42 | 14 × 3 warianty = 42 | Etap 5 (najpierw po 1 wariancie: 14) |
-| Rzeźba: wzgórza, góry | 48×42 | 2 × 2 warianty | Etap 5 |
-| Cechy terenu | 48×42 | 6 | Etap 5 |
-| Rzeki | 48×42 | 12 (6 krawędzi × 2 szerokości) | Etap 5 |
-| Ikony złóż | 24×24 | 12 (era kamienia i neolit) | Etap 5 |
-| Osady: obóz, wioska, miasteczko (+ opuszczona i ruiny) | 48×42 | 3 × 3 stany = 9 | Etap 5 |
-| Ulepszenia pól | 48×42 | 6 | Etap 5 |
-| Motyw interfejsu ery | elementy 9-slice: rogi 16×16, krawędzie, tła, przyciski w 3 stanach | ok. 10 na erę; na start 2 ery | Etap 5 |
-| Ikony interfejsu | 16×16 | ok. 30 | Etap 5 |
-| Jednostki (z kolorem cywilizacji) | 32×32 | 6 + 2 klatki ruchu | Etap 6 |
-| Portrety przywódców | 64×64 | 8 | Etap 6 |
+| Biomy | 48×42 | 14 × 3 warianty = 42 | Etap 13 (najpierw po 1 wariancie: 14) |
+| Rzeźba: wzgórza, góry | 48×42 | 2 × 2 warianty | Etap 13 |
+| Cechy terenu | 48×42 | 6 | Etap 13 |
+| Rzeki | 48×42 | 12 (6 krawędzi × 2 szerokości) | Etap 13 |
+| Ikony złóż | 24×24 | 12 (era kamienia i neolit) | Etap 13 |
+| Osady: obóz, wioska, miasteczko (+ opuszczona i ruiny) | 48×42 | 3 × 3 stany = 9 | Etap 13 |
+| Ulepszenia pól | 48×42 | 6 | Etap 13 |
+| Motyw interfejsu ery | elementy 9-slice: rogi 16×16, krawędzie, tła, przyciski w 3 stanach | ok. 10 na erę; na start 2 ery | Etap 13 |
+| Ikony interfejsu | 16×16 | ok. 30 | Etap 13 |
+| Jednostki (z kolorem cywilizacji) | 32×32 | 6 + 2 klatki ruchu | Etap 13 |
+| Portrety przywódców | 64×64 | 8 | Etap 13 |
+
+**Paczki grafik** (decyzja Patryka z 2026-11-06): każdy może wrzucić własne grafiki do folderu paczki (`art/packs/` albo folder
+użytkownika) pod nazwami i w rozmiarach z `art/placeholder/manifest.json` i wybrać ją w menu. Gra sprawdza pliki przy uruchomieniu,
+pomija złe (zły rozmiar, nazwa, format) i wypisuje, które nie działają. Kolejność: paczka → grafiki Patryka → grafiki zastępcze.
 
 ### 12.4 Interfejs
 
 - Pełny ekran, skalowanie UI także całkowite. Cały interfejs po angielsku, czcionka pixelowa.
+- **Czcionka: Pixelify Sans** (decyzja Patryka z 2026-11-06). Darmowa z Google Fonts, licencja SIL Open Font License 1.1, więc można ją dołączyć do gry razem z plikiem licencji. Grube wersje na nagłówki i liczby, zwykła na teksty. Rysujemy ją bez wygładzania, w rozmiarach będących wielokrotnością siatki czcionki, żeby piksele były ostre jak w grafikach. Pliki czcionki są w zasobach klienta od etapu 5 (`game/fonts/`, razem z licencją; prośba Patryka z 2026-11-06 o pikselowy interfejs podglądu) i są przypisane w motywie Theme, więc motyw ery może ją w przyszłości zmienić.
 - **Układ ekranu:** górny pasek (era, rok, kluczowe zasoby, nauka, stabilność), minimapa w prawym dolnym rogu, panel wybranego pola lub osady po lewej, kronika i powiadomienia po prawej, na dole oś czasu z prędkością symulacji.
 - **Widoki mapy** (przełączane klawiszem): polityczny, zasoby, żyzność, zagrożenie AI, relacje dyplomatyczne, handel. Osobny przełącznik: powierzchnia wybranego świata albo widok kosmosu.
 - **Ekrany:** drzewo technologii, przegląd gospodarki (bilans towarów), dyplomacja, wykresy historii, kronika.
@@ -749,11 +948,14 @@ Gra ma dwa tryby na tym samym rdzeniu: obserwatora, w którym oglądasz i badasz
 ### 13.1 Tryby
 
 - **Obserwator (symulator):** wszystkie cywilizacje prowadzi AI. Możesz podglądać mapy wpływów i oceny decyzji, cofać się w historii (wykresy, kronika) i używać „widoku boga”: wywołać zdarzenie, zmienić pole, dodać cywilizację. Ten tryb powstaje pierwszy.
-- **Gracz:** prowadzisz jedną cywilizację i widzisz tylko to, co ona. Każdy poziom decyzji (7.1) możesz oddać AI i odebrać w dowolnej chwili.
-- **Multiplayer (aktualizacja po CORE):** kilku graczy w sieci na jednym serwerze, tury równoczesne, pozostałe cywilizacje prowadzi AI (2.1).
+- **Gracz:** prowadzisz jedną cywilizację na żywo (1.1) i widzisz tylko to, co ona. Każdy poziom decyzji (7.1) możesz oddać AI i odebrać w dowolnej chwili. Pauza zawsze, prędkości ×1/×2/×4.
+- **Widz:** gracz, którego lud upadł, widzi wszystkie cywilizacje graczy, jak obserwator.
+- **Multiplayer (po grze solo):** kilku graczy w sieci na jednym serwerze, na żywo, prędkość ustala gospodarz; pozostałe cywilizacje prowadzi AI (2.1).
 - **Później:** scenariusze (gotowa mapa i sytuacja) oraz edytor mapy.
 
 ### 13.2 Warunki zwycięstwa (do wyboru przy starcie)
+
+**Od 2026-11-09 (ADR 0024):** cel partii ustala się na starcie na pasku postępu: pierwszy metal, pierwsza elektryczność, lot w kosmos albo podbój obszaru na innej planecie. W pierwszej wersji dla graczy celem jest odkrycie wszystkich technologii epoki brązu. Tabela niżej zostaje jako lista celów na późniejsze ery.
 
 | Zwycięstwo | Warunek |
 | --- | --- |
@@ -776,19 +978,18 @@ Gra ma dwa tryby na tym samym rdzeniu: obserwatora, w którym oglądasz i badasz
 
 ## 14. Roadmapa i podział pracy
 
-Etapy 0–4 dają działający symulator, etap 5 grywalne demo do ery neolitu. Potem każda kolejna era (3–9) to osobny etap tworzony tym samym cyklem. Moduły z rozdziału 16, w tym gra w sieci i kosmos, przyjdą jako późniejsze aktualizacje. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
+Etapy 0–5b dały działający symulator er 1–2 z podglądem. **Od 2026-11-09 (ADR 0024, 0025) cel to gra na żywo**, więc kolejność się zmienia: najpierw backend gry na żywo i sprawdzenie, czy działa tak, jak chce Patryk (etap 6), potem epoka brązu (etap 7), potem grywalne demo solo (etap 8). Gra w sieci przychodzi po grze solo (etap 9), a kolejne ery jedna po drugiej, pogłębione, bez pośpiechu. Kosmos i późne ery to dalsza przyszłość. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 
-**Priorytet: symulacja.** Do etapu 4 włącznie budujemy wyłącznie rdzeń i prosty podgląd deweloperski: kolorowe heksy, wykresy, kronika, inspektor pola i nakładki AI. Pixel art i interfejs gracza wchodzą od etapu 5, kiedy symulacja działa stabilnie na mapie ogromnej. Twoja rola w etapach 0–4 to decyzje o zasadach i ocena, czy przebiegi symulacji wyglądają sensownie.
+**Priorytet: gra, która działa jak w 1.1.** Do etapu 7 włącznie budujemy rdzeń i podgląd deweloperski (z wyborem miejsca i rozkazami do testów). Interfejs gracza wchodzi w etapie 8, pixel art Patryka razem z nim albo zaraz po nim.
 
 ```mermaid
 flowchart LR
-  E0["Etap 0 · Fundamenty<br/>repo, CLAUDE.md, CI, testy<br/>Gotowe: 10 000 pustych tur"] --> E1["Etap 1 · Mapa<br/>hex, generator, biomy, rzeki<br/>Gotowe: 100 map bez błędów"]
-  E1 --> E2["Etap 2 · Podgląd symulacji<br/>kolorowe heksy, wykresy, kronika<br/>Gotowe: 60 FPS, mapa ogromna"]
-  E2 --> E3["Etap 3 · Gospodarka<br/>zasoby, ludność, osady, ery 1–2<br/>Gotowe: plemiona rosną same"]
-  E3 --> E4["Etap 4 · AI i dyplomacja<br/>BRAMA: demo symulatora"]
-  E4 --> E5["Etap 5 · Tryb gracza<br/>pixel art, UI<br/>BRAMA: grywalne demo"]
-  E5 --> E6["Etapy 6–12 · ery 3–9<br/>jedna era na etap"]
-  E6 -.-> U["Aktualizacje po CORE<br/>moduły: sieć, kosmos, …"]
+  E0["Etapy 0–5b · symulator er 1–2<br/>mapa, gospodarka, AI, wojna,<br/>państwo, podgląd"] --> E6["Etap 6 · Backend na żywo<br/>takt, pulsy, oddziały, zadania,<br/>wybór miejsca, doświadczenie technologii<br/>BRAMA: czy działa jak trzeba"]
+  E6 --> E7["Etap 7 · Epoka brązu<br/>miasta, metal, mur, zbrojownia,<br/>cel: wszystkie technologie brązu"]
+  E7 --> E8["Etap 8 · Grywalne demo solo<br/>interfejs gracza, karty decyzji,<br/>widz, poziomy AI<br/>BRAMA: grywalna gra"]
+  E8 --> E9["Etap 9 · Gra w sieci"]
+  E9 -.-> E10["Kolejne ery<br/>jedna era na etap"]
+  E10 -.-> U["Kiedyś: kosmos,<br/>inne planety"]
 ```
 
 W każdym etapie ja piszę kod, testy i pliki danych, a na starcie etapu dostajesz listę grafik z rozmiarami i wskazówkami. Ty decydujesz o kierunku, rysujesz, uruchamiasz grę i oceniasz, czy jest fajna.
@@ -818,10 +1019,12 @@ Te punkty przyjąłem roboczo albo zostawiłem otwarte. Odznacz, gdy decyzja zap
 - [x] **Armie:** grupy oddziałów, mogą zajmować kilka pól, rysowane zgodnie z siłą.
 - [x] **Religia:** usunięta z projektu. Wróci jako osobny moduł.
 - [x] **Kosmos:** nowy etap gry, inne planety jako osobne światy z przełączanym widokiem i jednolitymi decyzjami.
-- [x] **Mapa:** zawija się w obu kierunkach jak planeta.
+- [x] **Mapa:** kula: zawija się wschód–zachód, przez bieguny przechodzi się na drugą stronę planety (ADR 0012).
 - [x] **Platformy:** Windows, Linux, macOS.
 - [x] **Język gry:** wyłącznie angielski.
-- [x] **Długość gry:** standardowa gra około 10 godzin, zapis w dowolnym momencie.
+- [x] **Długość gry:** ~~standardowa gra około 10 godzin~~ (zmienione 2026-11-09): partia na żywo do celu z paska postępu; w wersji do epoki brązu ok. 15–40 min zależnie od tempa AI; zapis w dowolnym momencie.
+- [x] **Kształt gry:** gra na żywo między RTS-em a strategią, gracz ponad światem (2026-11-09, ADR 0024).
+- [x] **Czas w backendzie:** takt, pulsy cywilizacji, lata tylko jako licznik (2026-11-09, ADR 0025).
 - [x] **Paleta:** z grafik starego CivSim (rozdział 12.1).
 - [x] **Rozmiar heksa:** 48×42.
 - [x] **Pogłoski o obcych cywilizacjach:** zostają (8.5).
@@ -833,7 +1036,7 @@ Te punkty przyjąłem roboczo albo zostawiłem otwarte. Odznacz, gdy decyzja zap
 
 CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. Wszystko inne to moduły dobudowywane później bez przebudowy, bo architektura (dane w JSON, efekty, komendy) zostawia na nie miejsce. W kolumnie „Decyzja” jest moja rekomendacja; zmień ją z listy, jeśli się nie zgadzasz.
 
-- **CORE:** budujemy w etapach 0–5.
+- **CORE:** budujemy w etapach z `ROADMAP.md` (od 2026-11-09: backend na żywo, era brązu, demo, potem kolejne ery).
 - **CORE (uproszczone):** w CORE, ale w prostszej wersji; pełna wersja to późniejszy moduł.
 - **Moduł:** przyszła aktualizacja po ukończeniu CORE; teraz jej nie planujemy.
 - **Wytnij:** rezygnujemy, bo dubluje inną funkcję albo nie jest warta kosztu.
@@ -846,9 +1049,10 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Gotowość klient–serwer (protokół, serwer lokalny) | 2.1 | CORE | tanio teraz, bardzo drogo później |
 | Gra w sieci (lobby, serwer dedykowany) | 2.1 | Moduł | dopiero gdy gra jednoosobowa jest fajna |
 | Understand Anything i opisy systemów | 14 | CORE | warunek, żebyś rozumiał kod |
-| Mapa hex na torusie, fragmenty 32×32 | 3 | CORE | baza wszystkiego |
+| Mapa hex na kuli (ADR 0012), fragmenty 32×32 | 3 | CORE | baza wszystkiego |
+| Planeta: nachylenie osi, rok, jasność gwiazdy, orbita, uśrednione pory roku, presety | 3 | CORE | decyzja Patryka z 2026-11-05 (etap 1b) |
 | Generator: klimat, biomy, rzeki na krawędziach, złoża | 3 | CORE | bez tego nie ma sytuacji, na które AI reaguje |
-| Mapy duża i ogromna | 3 | CORE (uproszczone) | architektura od razu, strojenie wydajności ogromnej dopiero przed etapem 5 |
+| Mapy duża i ogromna | 3 | CORE (uproszczone) | architektura od razu, strojenie wydajności ogromnej dopiero w etapie 13 |
 | Cuda natury | 3 | Moduł | ozdoba, nie zmienia symulacji |
 | Mechaniki późnych er: elektryczność, zanieczyszczenie, promieniowanie, zmiany klimatu | 3, 4, 10 | Moduł | dotyczą dopiero ery przemysłowej i późniejszych |
 | Wiele światów i kosmos | 3 | Moduł | ostatnia era; w CORE tylko lista światów w stanie gry |
@@ -860,7 +1064,9 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Ceny wewnętrzne | 4 | CORE | AI potrzebuje ich do decyzji |
 | Pieniądz, podatki, budżet, kredyt | 4, 7.4 | Moduł | wchodzi z antykiem; wcześniej wystarcza barter |
 | Ludność: wzrost, głód, migracje między osadami | 5 | CORE | serce symulacji |
-| Warstwy zawodowe z potrzebami | 5.1 | CORE (uproszczone) | 3 warstwy na start (wytwórcy, rzemieślnicy, wojownicy), kolejne dokładają ery |
+| Warstwy zawodowe z potrzebami | 5.1 | CORE (uproszczone) | na start wytwórcy, rzemieślnicy, wojownicy, myśliciele i przywódcy (ADR 0020), kolejne dokładają ery |
+| Fachy, nauka fachu i wymogi ludzi w technologiach | 5.1, 6.1 | CORE (uproszczone) | decyzja Patryka z 2026-11-06: rozwój zależy od wykształconych ludzi |
+| Śmiertelność dzieci i urodzenia zależne od technologii | 5.2 | CORE | decyzja Patryka z 2026-11-06, wartości z danych historycznych |
 | Zdrowie i sanitacja | 5.2 | CORE (uproszczone) | jedna wartość zdrowia, wpływa na epidemie |
 | Lojalność podbitej ludności | 5.2 | Moduł | ważne przy podbojach, nie na start |
 | Poziomy osad | 5.3 | CORE | widać rozwój cywilizacji |
@@ -870,7 +1076,7 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Niszczenie, ruiny, archeologia | 5.5 | CORE (uproszczone) | dwa stany: opuszczona i ruiny; archeologia jako moduł |
 | Drzewo technologii w danych, ery, długość tury | 6 | CORE | szkielet postępu |
 | Inspiracje i dyfuzja technologii | 6.1 | CORE | filar „decyzje wynikają z sytuacji” |
-| Odkrycia przypadkiem przez użytkowanie | 6.1 | Wytnij | dubluje inspiracje |
+| Doświadczenie w technologii, kierunek rozwoju, podgląd technologii | 6.4 | CORE | decyzja Patryka z 2026-11-09 (ADR 0024); zastępuje „odkrycia przypadkiem” (wcześniej: Wytnij) |
 | Ciemne wieki (utrata technologii) | 6.1 | Moduł | ciekawe, ale trudne do zbalansowania |
 | Poziomy decyzji i delegowanie do AI | 7.1 | CORE | AI i gracz używają tych samych poziomów |
 | Ustroje z tempem decyzji | 7.2 | CORE (uproszczone) | 3–4 ustroje z er 1–3, reszta razem z erami |
@@ -880,7 +1086,7 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Grupy interesu, zamachy, rewolucje | 7.3 | Moduł | wymaga rozbudowanych warstw |
 | Przywódca z cechami i sukcesją | 7.5 | CORE | zasila charakter AI |
 | Kierunek ekspansji | 7.6 | CORE | spójny rozrost cywilizacji |
-| Strefy wycinki, wydobycia, ochronne, korytarze dróg | 7.6 | Moduł | przydają się głównie graczowi |
+| Zadania na obszarze (wydobycie, pola, łowiska, budowy w miejscu) | 1.1, 7.6 | CORE | decyzja Patryka z 2026-11-09: tak gracz zleca pracę; korytarze dróg zostają modułem |
 | Doradcy AI, mapy wpływów, ocena działań, plany | 8 | CORE | mózg symulatora |
 | Charakter cywilizacji i pamięć relacji | 8.4, 8.5 | CORE | różne cywilizacje = różne historie |
 | Zwiad i pamięć mapy | 8.2 | CORE (uproszczone) | pamięć ustna i mapy rysowane; kolejne poziomy z erami |
@@ -891,17 +1097,18 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Handel automatycznych kupców | 9.2 | CORE (uproszczone) | jako przepływ między sieciami, bez jednostek na mapie |
 | Karawany i statki jako jednostki na mapie | 9.2 | Moduł | ładne, ale kosztowne |
 | Wojna: cel, wynik, zmęczenie | 9.3 | CORE | wojny muszą się kończyć |
-| Armie | 9.3 | CORE (uproszczone) | na jednym polu, rysowane według siły; armie wielopolowe jako moduł |
+| Armie | 9.3 | CORE (uproszczone) | oddziały sterowane na żywo jak w RTS-ie (ADR 0024); w erach 1–2 na jednym polu; armie wielopolowe jako moduł |
 | Zaopatrzenie armii | 9.3 | CORE (uproszczone) | tylko kara za walkę daleko poza własnym terytorium |
+| Fortyfikacje (mur) i zbrojownia | 1.1, 9.3 | CORE (uproszczone) | decyzja Patryka z 2026-11-09: gracz buduje fortyfikacje i uzbraja się od epoki brązu |
 | Oblężenia | 9.3 | Moduł | ważne dopiero przy murach i miastach |
 | Plemiona niezależne | 9.4 | CORE | wynikają z koczowników za darmo |
 | Mechanizm efektów + susza, pożar, powódź, epidemia | 10 | CORE | główne źródła kryzysów i migracji |
 | Pozostałe zdarzenia i wielcy ludzie | 10 | Moduł | każde zdarzenie to mały dodatek w danych |
 | Podgląd deweloperski i tryb obserwatora | 13 | CORE | tak ocenisz symulację |
 | Narzędzia „widoku boga” | 13.1 | CORE (uproszczone) | tylko te potrzebne do testów |
-| Tryb gracza | 13.1 | CORE | po symulatorze, w etapie 5 |
-| Warunki zwycięstwa | 13.2 | CORE (uproszczone) | punktowe i bez końca; pozostałe razem z modułami |
-| Poziomy trudności | 13.3 | Moduł | ma sens dopiero przy dopracowanym AI |
+| Tryb gracza (na żywo, oddziały, karty decyzji, widzowie) | 1.1, 13.1 | CORE | decyzja Patryka z 2026-11-09: grywalne demo po erze brązu (etap 8), nie na końcu |
+| Cel partii na pasku postępu | 1.1, 13.2 | CORE (uproszczone) | na start: wszystkie technologie epoki brązu; kolejne cele (metal, elektryczność, kosmos) z erami |
+| Poziomy trudności | 13.3 | CORE (uproszczone) | tempo AI do celu: dobre ok. 15 min, średnie 20–25, słabe 30–40 (decyzja z 2026-11-09) |
 | Pixel art w warstwach, kolor cywilizacji | 12 | CORE | podstawa wyglądu gry |
 | Motywy interfejsu dla każdej ery, animacje | 12.4 | Moduł | w CORE jeden motyw i statyczne grafiki |
 

@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "comment": "Skills (stage 4F, ADR 0020, GDD 5.1): what people know, inside their stratum. A skill belongs to one stratum and is opened by one technology: the goods that technology adds to gathering come in only with its skilled people, and its recipes are worked only by them. People of a stratum without any of these skills are its plain members (gatherers among producers, warriors among warriors). jobsPercent: share of the stratum's people of a settlement the skill can use (full gathering of the technology's goods needs that many; apprentices are taken on up to it; a settlement whose recipe needs the skill can use all its artisans). trainingYears: years an apprentice learns. the jobs of one stratum's skills add up to at most 100%, so that every skill finds people (producers: farmers 50, hunters 20, fishers 15, herders 15; artisans: 75 in all, and a settlement's recipe can use all its artisans). rules: farmingSkill is the skill whose people farm a village's fields (GDD 4.4; the other producers gather); firstMasters appear when the civilization learns the technology, in its settlement with most people of the stratum; each master teaches up to apprenticesPerMaster; an apprentice works apprenticeWorkPercent of a skilled worker; skilled people move to a settlement of their own civilization within the trade link distance (data/trade.json linkCells) that needs them when their settlement has at least moveMinMasters and moveSpareAbove more than it can use, moveSharePercent of the spare at most, once per own step; while the civilization has settlements that need a skill and have no master of it, masters teach teachForOthersPercent more than their settlement can use, plus moveSpareAbove, so that skilled people can move; a civilization that lost a skill gets one master back per own step from a trade partner that has at least moveMinMasters. Elders (thinkers) and chiefs (leaders) come with their strata in PR 3.",
+  "rules": {
+    "firstMasters": 2,
+    "apprenticesPerMaster": 3,
+    "apprenticeWorkPercent": 50,
+    "moveMinMasters": 3,
+    "moveSpareAbove": 2,
+    "moveSharePercent": 50,
+    "teachForOthersPercent": 50,
+    "farmingSkill": "farmer"
+  },
+  "skills": [
+    { "key": "hunter", "name": "Hunter", "stratum": "producers", "technology": "cooperative_hunting", "trainingYears": 3, "jobsPercent": 20 },
+    { "key": "fisher", "name": "Fisher", "stratum": "producers", "technology": "fishing", "trainingYears": 3, "jobsPercent": 15 },
+    { "key": "farmer", "name": "Farmer", "stratum": "producers", "technology": "agriculture", "trainingYears": 5, "jobsPercent": 50 },
+    { "key": "herder", "name": "Herder", "stratum": "producers", "technology": "animal_husbandry", "trainingYears": 5, "jobsPercent": 15 },
+    { "key": "knapper", "name": "Knapper", "stratum": "artisans", "technology": "flint_knapping", "trainingYears": 3, "jobsPercent": 15 },
+    { "key": "tanner", "name": "Tanner", "stratum": "artisans", "technology": "tanning", "trainingYears": 3, "jobsPercent": 10 },
+    { "key": "potter", "name": "Potter", "stratum": "artisans", "technology": "pottery", "trainingYears": 5, "jobsPercent": 15 },
+    { "key": "weaver", "name": "Weaver", "stratum": "artisans", "technology": "weaving", "trainingYears": 5, "jobsPercent": 10 },
+    { "key": "mason", "name": "Mason", "stratum": "artisans", "technology": "stonemasonry", "trainingYears": 5, "jobsPercent": 15 },
+    { "key": "baker", "name": "Baker", "stratum": "artisans", "technology": "bread_baking", "trainingYears": 3, "jobsPercent": 10 }
+  ]
+}

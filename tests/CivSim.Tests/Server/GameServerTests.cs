@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using CivSim.Core.Commands;
 using CivSim.Core.Hashing;
@@ -146,5 +147,25 @@ public class GameServerTests
 
         Assert.Equal(21, server.State.Turn);
         Assert.Equal(GameStateHash.Compute(direct.State), GameStateHash.Compute(server.State));
+    }
+
+    [Fact]
+    public void TheViewShowsCapitalsTheViewerCanSee()
+    {
+        Core.Content.GameContent content = global::CivSim.Data.ContentLoader.Load();
+        GameState state = GameState.CreateNew(GameSettings.Test(3), content, out _);
+        Core.Simulation.GameSnapshot snapshot = Core.Simulation.GameSnapshot.From(state);
+
+        GameViewMessage observer = ViewBuilder.Build(snapshot, new CivId(-1));
+        foreach (CivilizationState c in state.Civilizations)
+        {
+            Assert.Equal(c.Capital, observer.Civilizations.Single(v => v.Id == c.Id.Value).Capital);
+        }
+
+        // A player who knows no foreign land sees only its own capital.
+        WorldState earth = state.Worlds[0];
+        GameViewMessage player = ViewBuilder.Build(snapshot, state.Civilizations[0].Id, new bool[earth.Width * earth.Height], earth.Width);
+        Assert.Equal(state.Civilizations[0].Capital, player.Civilizations[0].Capital);
+        Assert.All(player.Civilizations.Skip(1), v => Assert.Equal(-1, v.Capital));
     }
 }

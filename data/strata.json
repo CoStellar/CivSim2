@@ -1,0 +1,103 @@
+{
+  "version": 2,
+  "comment": "Population strata and their needs (GDD 5.1; CORE simplified: five strata at the start (stage 4F, ADR 0020: thinkers and leaders added), later eras add more). gathers: the stratum works the land (only producers in eras 1-2). fights (optional): the stratum widens the influence zone (GDD 5.4). targetShare: share of the population this stratum drifts towards, in percent; the shares must add up to 100. needs: amounts per person per year. 'category' means any good of that storage class (food = any food, eaten most perishable first); 'good' means one good. basic needs decide hunger and health, higher needs raise mood. crafts (optional, stage 3e): the stratum works the settlement's recipe. sciencePerThousandPerYear (stage 3f): research points a thousand people of the stratum add per year. Stage 4F (ADR 0020): science comes mostly from thinkers; the shares keep Patryk's ratio thinker 30 : artisan 5 : others 1, times 2, so that a civilization of the usual mix researches about as fast as before (4.1 points per thousand people a year, was 4.2). Thinkers are the elders who keep and pass on what the people know (no priests: the game has no religion); leaders are the chief and the elders who decide (governments come with stage 4f).",
+  "strata": [
+    {
+      "key": "producers",
+      "name": "Producers",
+      "gathers": true,
+      "targetShare": "77",
+      "needs": [
+        {
+          "category": "food",
+          "perYear": "1",
+          "kind": "basic"
+        },
+        {
+          "good": "hide_clothing",
+          "perYear": "0.05",
+          "kind": "higher"
+        }
+      ],
+      "sciencePerThousandPerYear": 2
+    },
+    {
+      "key": "artisans",
+      "name": "Artisans",
+      "gathers": false,
+      "targetShare": "5",
+      "needs": [
+        {
+          "category": "food",
+          "perYear": "1",
+          "kind": "basic"
+        },
+        {
+          "good": "stone_tools",
+          "perYear": "0.05",
+          "kind": "higher"
+        }
+      ],
+      "crafts": true,
+      "sciencePerThousandPerYear": 10
+    },
+    {
+      "key": "warriors",
+      "name": "Warriors",
+      "gathers": false,
+      "fights": true,
+      "targetShare": "14",
+      "needs": [
+        {
+          "category": "food",
+          "perYear": "1.2",
+          "kind": "basic"
+        },
+        {
+          "good": "stone_tools",
+          "perYear": "0.1",
+          "kind": "higher"
+        }
+      ],
+      "sciencePerThousandPerYear": 2
+    },
+    {
+      "key": "thinkers",
+      "name": "Thinkers",
+      "gathers": false,
+      "targetShare": "3",
+      "needs": [
+        {
+          "category": "food",
+          "perYear": "1",
+          "kind": "basic"
+        },
+        {
+          "good": "hide_clothing",
+          "perYear": "0.05",
+          "kind": "higher"
+        }
+      ],
+      "sciencePerThousandPerYear": 60
+    },
+    {
+      "key": "leaders",
+      "name": "Leaders",
+      "gathers": false,
+      "targetShare": "1",
+      "needs": [
+        {
+          "category": "food",
+          "perYear": "1.2",
+          "kind": "basic"
+        },
+        {
+          "good": "stone_tools",
+          "perYear": "0.1",
+          "kind": "higher"
+        }
+      ],
+      "sciencePerThousandPerYear": 2
+    }
+  ]
+}

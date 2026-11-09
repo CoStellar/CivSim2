@@ -64,5 +64,14 @@ public class DeterminismTests
         Assert.Equal(GoldenHash, RunAndHash(2026, 100));
     }
 
-    private const ulong GoldenHash = 12160441512145905948UL;
+    // ADR 0018: the world clock and the civilizations' own rhythms joined the state (in a world where everyone is in the
+    // same era the simulation runs as before).
+    // Names from peoples' languages (GDD 5.6): names, language seeds and name counters joined the hash; the simulation
+    // itself is unchanged (statistics of 300 turns identical before and after).
+    // ADR 0022 (episodes): the months the world computes and the running episodes joined the hash; alarms bring a step a
+    // month later, and wars are fought in campaigns.
+    // Stage 4f (ADR 0023): governments joined the state and change the AI (goal weights, caution, pace of reviews) and
+    // the readiness of declared wars.
+    // Stage 4f PR 2: leaders joined the state; their traits shift the character the AI decides with.
+    private const ulong GoldenHash = 6486417576566684861UL;
 }

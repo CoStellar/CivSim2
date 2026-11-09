@@ -37,6 +37,9 @@ public sealed class TurnRunner
     /// <summary>Latest finished snapshot for readers on other threads.</summary>
     public SnapshotBuffer<GameSnapshot> Snapshots { get; } = new();
 
+    /// <summary>Chronicle lines written by systems in the last completed turn.</summary>
+    public IReadOnlyList<string> LastChronicle => _context.ChronicleLines;
+
     /// <summary>Report of the last completed turn (reused object).</summary>
     public TurnReport LastReport { get; } = new();
 
@@ -59,6 +62,7 @@ public sealed class TurnRunner
     {
         long turnStart = Stopwatch.GetTimestamp();
         LastReport.Reset(State.Turn + 1);
+        _context.ChronicleList.Clear();
 
         for (int p = 0; p < TurnPhases.Count; p++)
         {
@@ -98,6 +102,7 @@ public sealed class TurnRunner
             LastReport.SetPhaseTicks(phase, Stopwatch.GetTimestamp() - phaseStart);
         }
 
+        _context.FinishGroups();
         LastReport.TotalTicks = Stopwatch.GetTimestamp() - turnStart;
         return LastReport;
     }
@@ -118,7 +123,25 @@ public sealed class TurnRunner
             CommandResult result = envelope.Command.Validate(State, envelope.Civ);
             if (result.Success)
             {
-                envelope.Command.Apply(State, envelope.Civ);
+                if (envelope.Command is IChronicledCommand chronicled)
+                {
+                    if (chronicled.ApplyWithChronicle(State, envelope.Civ) is { } line)
+                    {
+                        if (chronicled.ChronicleGroup is { } group)
+                        {
+                            _context.Chronicle(line, group, envelope.Civ.Value);
+                        }
+                        else
+                        {
+                            _context.Chronicle(line);
+                        }
+                    }
+                }
+                else
+                {
+                    envelope.Command.Apply(State, envelope.Civ);
+                }
+
                 LastReport.AppliedCommands++;
             }
             else

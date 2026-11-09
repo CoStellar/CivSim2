@@ -1,0 +1,15 @@
+{
+  "comment": "Leaders (GDD 7.5; stage 4f PR 2). Every civilization has a leader with a name from its people's language, an age and traitCount traits. While a leader rules, each trait adds its shifts (per mille) to the civilization's character (aggression, expansiveness, tradefulness, curiosity, openness, caution, vengefulness, loyalty), so a new ruler changes the policy at once (Patryk's decision 2026-11-07: each trait shifts 1-2 character traits by 0.2). Leaders age and may die every year: deathByAge gives the chance per year (per mille) at an age, linear between the points. startAge: age of the first leaders. councilCandidates: how many candidates a council weighs. Who comes next and whether there is a crisis is set by the government (governments.json).",
+  "traitCount": [2, 3],
+  "startAge": [25, 45],
+  "councilCandidates": 3,
+  "deathByAge": [[20, 10], [40, 20], [50, 35], [60, 60], [70, 120], [80, 250], [90, 500]],
+  "traits": [
+    {"key": "conqueror", "name": "conqueror", "shifts": {"aggression": 200}},
+    {"key": "builder", "name": "builder", "shifts": {"expansiveness": 200}},
+    {"key": "scholar", "name": "scholar", "shifts": {"curiosity": 200}},
+    {"key": "merchant", "name": "merchant", "shifts": {"tradefulness": 200, "openness": 200}},
+    {"key": "cautious", "name": "cautious", "shifts": {"caution": 200}},
+    {"key": "paranoid", "name": "paranoid", "shifts": {"openness": -200, "vengefulness": 200}}
+  ]
+}

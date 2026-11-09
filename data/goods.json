@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "comment": "Goods stored in settlement warehouses (GDD 4.1-4.3). era: 1 = Stone Age, 2 = Neolithic. category: food, bulk, valuable or liquid (GDD 4.3; CORE uses one shared capacity per settlement). spoilagePerYear: percent lost per year (at most 2 decimal places), 0 = does not spoil. CORE simplified (GDD 16): only food spoils. Rates are per year and converted by the turn length of the era. value (stage 3e): base worth in barter units (wild plants = 1); the internal price of a trade network moves around it with supply and demand.",
+  "goods": [
+    {"key": "wild_plants", "name": "Wild Plants", "era": 1, "category": "food", "spoilagePerYear": "10", "color": "#7ba154", "value": "1"},
+    {"key": "meat", "name": "Meat", "era": 1, "category": "food", "spoilagePerYear": "5", "color": "#b70a09", "value": "1.5"},
+    {"key": "fish", "name": "Fish", "era": 1, "category": "food", "spoilagePerYear": "8", "color": "#b9d8e6", "value": "1.2"},
+    {"key": "wood", "name": "Wood", "era": 1, "category": "bulk", "spoilagePerYear": "0", "color": "#693829", "value": "0.5"},
+    {"key": "stone", "name": "Stone", "era": 1, "category": "bulk", "spoilagePerYear": "0", "color": "#7c898e", "value": "0.3"},
+    {"key": "flint", "name": "Flint", "era": 1, "category": "bulk", "spoilagePerYear": "0", "color": "#565453", "value": "1"},
+    {"key": "hides", "name": "Hides", "era": 1, "category": "bulk", "spoilagePerYear": "0", "color": "#8a562d", "value": "2"},
+    {"key": "stone_tools", "name": "Stone Tools", "era": 1, "category": "valuable", "spoilagePerYear": "0", "color": "#a9a2a0", "value": "8"},
+    {"key": "hide_clothing", "name": "Hide Clothing", "era": 1, "category": "valuable", "spoilagePerYear": "0", "color": "#bb6e46", "value": "6"},
+    {"key": "grain", "name": "Grain", "era": 2, "category": "food", "spoilagePerYear": "1", "color": "#ead220", "value": "1"},
+    {"key": "bread", "name": "Bread", "era": 2, "category": "food", "spoilagePerYear": "4", "color": "#e4bf44", "value": "2"},
+    {"key": "clay", "name": "Clay", "era": 2, "category": "bulk", "spoilagePerYear": "0", "color": "#c97115", "value": "0.3"},
+    {"key": "flax", "name": "Flax", "era": 2, "category": "bulk", "spoilagePerYear": "0", "color": "#4f842f", "value": "1"},
+    {"key": "wool", "name": "Wool", "era": 2, "category": "bulk", "spoilagePerYear": "0", "color": "#fbf9fb", "value": "2"},
+    {"key": "pottery", "name": "Pottery", "era": 2, "category": "valuable", "spoilagePerYear": "0", "color": "#944010", "value": "5"},
+    {"key": "cloth", "name": "Cloth", "era": 2, "category": "valuable", "spoilagePerYear": "0", "color": "#e4f1f7", "value": "8"}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "comment": "Effect types (GDD 10.1). Events, buildings, technologies and policies apply them with a strength and a duration in years. target: cell, settlement or civilization. stat: what the effect changes (output_percent, movement_blocked, movement_cost, extraction_percent, depopulation_per_mille_per_year, mood, carry_capacity_percent, cold_tolerance_degrees, spoilage_percent). Effects on a civilization with output_percent or mood count for all its settlements; spoilage_percent changes how fast its food spoils (stage 3f); child_mortality_per_mille (tenths of a percent of children who die before 15), adult_deaths_per_ten_thousand and births_per_ten_thousand change population growth (stage 4F, ADR 0020; −10 child mortality = 1 point less).. stacking: sum (strengths add up), replace (the newest wins) or strongest (the largest absolute strength wins). Destruction (GDD 10.1) is an instant action of an event, not a lasting effect.",
+  "effects": [
+    {"key": "damage", "name": "Damage", "target": "settlement", "stat": "output_percent", "stacking": "strongest"},
+    {"key": "movement_restriction", "name": "Movement Restriction", "target": "cell", "stat": "movement_blocked", "stacking": "strongest"},
+    {"key": "movement_slowdown", "name": "Movement Slowdown", "target": "cell", "stat": "movement_cost", "stacking": "strongest"},
+    {"key": "extraction_reduction", "name": "Extraction Reduction", "target": "cell", "stat": "extraction_percent", "stacking": "strongest"},
+    {"key": "depopulation", "name": "Depopulation", "target": "settlement", "stat": "depopulation_per_mille_per_year", "stacking": "sum"},
+    {"key": "mood_drop", "name": "Mood Drop", "target": "settlement", "stat": "mood", "stacking": "sum"},
+    {"key": "carrying", "name": "Carrying", "target": "civilization", "stat": "carry_capacity_percent", "stacking": "sum"},
+    {"key": "cold_tolerance", "name": "Cold Tolerance", "target": "civilization", "stat": "cold_tolerance_degrees", "stacking": "sum"},
+    {"key": "cooking", "name": "Cooking", "target": "civilization", "stat": "output_percent", "stacking": "sum"},
+    {"key": "tradition", "name": "Tradition", "target": "civilization", "stat": "mood", "stacking": "sum"},
+    {"key": "storage", "name": "Storage", "target": "civilization", "stat": "spoilage_percent", "stacking": "sum"},
+    {"key": "child_care", "name": "Child Care", "target": "civilization", "stat": "child_mortality_per_mille", "stacking": "sum"},
+    {"key": "clean_living", "name": "Clean Living", "target": "civilization", "stat": "adult_deaths_per_ten_thousand", "stacking": "sum"},
+    {"key": "fertility", "name": "Fertility", "target": "civilization", "stat": "births_per_ten_thousand", "stacking": "sum"},
+    {"key": "war_weariness", "name": "War Weariness", "target": "civilization", "stat": "mood", "stacking": "replace"},
+    {"key": "unrest", "name": "Unrest", "target": "civilization", "stat": "output_percent", "stacking": "replace"}
+  ]
+}

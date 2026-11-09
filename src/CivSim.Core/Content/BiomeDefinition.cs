@@ -41,6 +41,12 @@ public sealed record BiomeDefinition(
 {
     /// <summary>True for water biomes.</summary>
     public bool IsWater => Kind != BiomeKind.Land;
+
+    /// <summary>
+    /// Materials gatherers bring from an untouched cell per year besides food (stage 3e): wood from forests. They come
+    /// with the food work, in the same share as the food taken.
+    /// </summary>
+    public IReadOnlyList<GoodQuantity> Gather { get; init; } = [];
 }
 
 /// <summary>Terrain relief on top of the biome (GDD 3).</summary>
@@ -68,4 +74,8 @@ public sealed record DepositDefinition(
     int MaxRichness,
     int Depth,
     bool Renewable,
-    uint Color);
+    uint Color)
+{
+    /// <summary>Goods per year gatherers take from the cell before any technology (meat from game...).</summary>
+    public IReadOnlyList<GoodQuantity> Gather { get; init; } = [];
+}

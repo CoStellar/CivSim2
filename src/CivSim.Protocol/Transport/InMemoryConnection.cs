@@ -57,6 +57,9 @@ public sealed class InMemoryConnection : IConnection
     }
 
     /// <inheritdoc />
+    public int Backlog => _outbox.Count;
+
+    /// <inheritdoc />
     public void Close() => _shared.Closed = true;
 
     private sealed class SharedState

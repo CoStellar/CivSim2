@@ -16,6 +16,12 @@ namespace CivSim.Protocol.Messages;
 [Union(7, typeof(ContentMessage))]
 [Union(8, typeof(MapChunkMessage))]
 [Union(9, typeof(SetSpeedMessage))]
+[Union(10, typeof(ObserverDetailsMessage))]
+[Union(11, typeof(WatchCivilizationMessage))]
+[Union(12, typeof(FogMessage))]
+[Union(13, typeof(CivilizationDetailsMessage))]
+[Union(14, typeof(NameSuggestionsRequestMessage))]
+[Union(15, typeof(NameSuggestionsMessage))]
 public interface IProtocolMessage
 {
 }
@@ -75,7 +81,38 @@ public sealed record GameViewMessage(
     [property: Key(3)] IReadOnlyList<CivilizationView> Civilizations,
     [property: Key(4)] long TurnMicroseconds = 0,
     [property: Key(5)] SimulationSpeed Speed = SimulationSpeed.Paused,
-    [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null) : IProtocolMessage;
+    [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null,
+    [property: Key(7)] IReadOnlyList<SettlementView>? Settlements = null,
+    [property: Key(8)] long Month = 0,
+    [property: Key(9)] bool LiveSeasons = false) : IProtocolMessage;
+
+/// <summary>
+/// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per
+/// stratum id), health, mood and food (hundredths, last turn) are filled only for the viewer's own settlements and
+/// for observers; foreign settlements show only where they are. Status (0 active, 1 abandoned, 2 ruins) and the claim
+/// (civilization id or -1, last month) are public.
+/// </summary>
+[MessagePackObject]
+public sealed record SettlementView(
+    [property: Key(0)] int Id,
+    [property: Key(1)] int Owner,
+    [property: Key(2)] int World,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] string Name,
+    [property: Key(6)] int Level,
+    [property: Key(7)] long[]? Stock,
+    [property: Key(8)] int[]? Population = null,
+    [property: Key(9)] int Health = 0,
+    [property: Key(10)] int Mood = 0,
+    [property: Key(11)] long FoodGathered = 0,
+    [property: Key(12)] long FoodNeeded = 0,
+    [property: Key(13)] long FoodEaten = 0,
+    [property: Key(14)] int Status = 0,
+    [property: Key(15)] long AbandonedMonth = 0,
+    [property: Key(16)] int ClaimCiv = -1,
+    [property: Key(17)] long ClaimUntilMonth = 0,
+    [property: Key(18)] int Loyalty = 0);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
@@ -85,9 +122,25 @@ public sealed record ChronicleEntry([property: Key(0)] long Turn, [property: Key
 [MessagePackObject]
 public sealed record WorldView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] int Width, [property: Key(3)] int Height);
 
-/// <summary>What the viewer knows about one civilization.</summary>
+/// <summary>
+/// What the viewer knows about one civilization. Era, people (in lived-in settlements), settlements, known
+/// technologies, the title with the government (e.g. "Chiefdom of Karrut") and the government are filled for
+/// observers only (stages 5 and 4f); otherwise empty or -1. <see cref="Capital"/> is the settlement id of the capital
+/// when the viewer sees that settlement, otherwise -1 (stage 5b).
+/// </summary>
 [MessagePackObject]
-public sealed record CivilizationView([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive);
+public sealed record CivilizationView(
+    [property: Key(0)] int Id,
+    [property: Key(1)] string Name,
+    [property: Key(2)] bool IsAlive,
+    [property: Key(3)] long DiedOutMonth = 0,
+    [property: Key(4)] string Era = "",
+    [property: Key(5)] long People = -1,
+    [property: Key(6)] int Settlements = -1,
+    [property: Key(7)] int Technologies = -1,
+    [property: Key(8)] string Title = "",
+    [property: Key(9)] string Government = "",
+    [property: Key(10)] int Capital = -1);
 
 /// <summary>Observer speeds (GDD 11.2).</summary>
 public enum SimulationSpeed
@@ -121,7 +174,14 @@ public sealed record ContentMessage(
     [property: Key(0)] IReadOnlyList<BiomeInfo> Biomes,
     [property: Key(1)] IReadOnlyList<DepositInfo> Deposits,
     [property: Key(2)] IReadOnlyList<string> Features,
-    [property: Key(3)] IReadOnlyList<string> Reliefs) : IProtocolMessage;
+    [property: Key(3)] IReadOnlyList<string> Reliefs,
+    [property: Key(4)] IReadOnlyList<GoodInfo>? Goods = null,
+    [property: Key(5)] IReadOnlyList<string>? SettlementLevels = null,
+    [property: Key(6)] IReadOnlyList<string>? Strata = null) : IProtocolMessage;
+
+/// <summary>A good as the client sees it. Ids match the indexes of <see cref="SettlementView.Stock"/>.</summary>
+[MessagePackObject]
+public sealed record GoodInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] bool IsFood, [property: Key(4)] uint Color);
 
 /// <summary>A biome as the client sees it.</summary>
 [MessagePackObject]
@@ -157,7 +217,13 @@ public sealed record MapChunkMessage(
     [property: Key(16)] int[] DepositRichness,
     [property: Key(17)] byte[] DepositDepth,
     [property: Key(18)] short[] Owner,
-    [property: Key(19)] byte[] River) : IProtocolMessage
+    [property: Key(19)] byte[] River,
+    [property: Key(20)] ushort[]? WildFood = null,
+    [property: Key(21)] byte[]? Influence = null,
+    [property: Key(22)] byte[]? Seasonality = null,
+    [property: Key(23)] byte[]? GrowingSeason = null,
+    [property: Key(24)] sbyte[]? SeasonTemperature = null,
+    [property: Key(25)] byte[]? SeasonGrowth = null) : IProtocolMessage
 {
     /// <summary>Visibility: never seen.</summary>
     public const byte Unknown = 0;

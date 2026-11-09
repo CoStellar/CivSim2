@@ -7,6 +7,8 @@
 | `legacy/` | Grafiki ze starego CivSim jako materiał odniesienia (32×32) |
 | `src/` | Pliki źródłowe LibreSprite (`.ase`) |
 | `export/` | PNG gotowe do gry, w podkatalogach według warstw |
+| `placeholder/` | Grafiki zastępcze etapu 5 (skrypt `generate.py`) i `manifest.json`: lista wszystkich nazw i rozmiarów grafik gry |
+| `packs/` | Paczki grafik (szaty graficzne) do wyboru w menu; kolejność: paczka → `export/` → `placeholder/` (opis w `packs/README.md`) |
 
 ## Zasady
 
@@ -14,11 +16,12 @@
   Maska w szablonie jest wyliczona co do piksela i sprawdzona: heksy łączą się bez szpar i nakładania.
 - **Narzędzie:** LibreSprite (darmowy fork Aseprite). Źródła `.ase` w `src/`, gotowe PNG w `export/`.
 - **Paleta:** tylko kolory z `civsim2_palette.gpl`. Ostatnie 8 kolorów (rozszerzenie) czeka na akceptację.
-- **Warstwy (od dołu):** `biome/` → `terrain/` (rzeźba, cechy, rzeki na krawędziach) → `objects/` → `units/`.
+- **Warstwy (od dołu):** `biome/` → `terrain/` (rzeźba, cechy, rzeki na krawędziach) → `objects/` → `units/`; do tego `effects/`
+  (znaczniki zdarzeń) i `ui/` (ikony warstw 16×16, ramki interfejsu 9-slice).
 - **Kolor cywilizacji:** `#FF00FF`, `#C000C0`, `#800080`. Shader podmienia je na barwy cywilizacji.
 - **Światło z lewej góry**, kontury ciemniejszym odcieniem wypełnienia, bez półprzezroczystych krawędzi.
 - **Rozmiary:** biomy, teren, osady, ulepszenia 48×42; jednostki 32×32; ikony złóż 24×24; ikony UI 16×16; portrety 64×64.
 - **Interfejs:** motyw na każdą erę, ramki 9-slice (rogi 16×16, krawędzie, tło, przyciski w 3 stanach).
 - **Nazwy plików:** `kategoria_nazwa_wariant.png`, po angielsku, np. `terrain_grassland_02.png`.
 
-Pixel art jest potrzebny od etapu 5. Wcześniej podgląd rysuje kolorowe heksy z kodu.
+Pixel art jest potrzebny w etapie 13 (tryb gracza, na końcu CORE). Od etapu 5 podgląd używa grafik zastępczych tych samych rozmiarów i nazw, które Twoje pliki później podmienią; wcześniej rysuje kolorowe heksy z kodu.

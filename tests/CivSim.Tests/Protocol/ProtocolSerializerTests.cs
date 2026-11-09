@@ -16,6 +16,8 @@ public class ProtocolSerializerTests
         yield return [new WelcomeMessage(ProtocolInfo.Version, 1, 2)];
         yield return [new ConnectionRejectedMessage("Full")];
         yield return [new SubmitCommandMessage(2, 7, new RenameCivilizationDto("Rome"))];
+        yield return [new SubmitCommandMessage(2, 8, new MoveSettlementDto(3, 10, 12))];
+        yield return [new SubmitCommandMessage(2, 9, new SplitSettlementDto(3, 14, 12, 40))];
         yield return [new CommandRejectedMessage(7, "Nope")];
         yield return [new EndTurnMessage(12)];
         yield return [new GameViewMessage(3, 1, [new WorldView(0, "Earth", 64, 40)], [new CivilizationView(1, "Rome", true)])];
@@ -23,6 +25,25 @@ public class ProtocolSerializerTests
         yield return [new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer)];
         yield return [new SetSpeedMessage(SimulationSpeed.Max)];
         yield return [new ContentMessage([new BiomeInfo(0, "deep_ocean", "Deep Ocean", true, 0x0a2647)], [new DepositInfo(1, "game", "Game", 0x8a562d)], ["None"], ["Flat"])];
+        yield return [new GameViewMessage(5, 2, [], [], Settlements: [new SettlementView(0, 2, 0, 10, 12, "Camp", 0, [4000, 0, 250]), new SettlementView(3, 1, 0, 4, 4, "Other", 1, null)], Month: 3000)];
+        yield return [new ContentMessage([], [], [], [], [new GoodInfo(0, "grain", "Grain", true, 0xead220)], ["Tribal Camp"])];
+        yield return [new ObserverDetailsMessage(
+            9,
+            [new JourneyView(3, 1, 0, 10, 12, 20, 14, 80)],
+            [new FieldView(0, 11, 12, 1, 60)],
+            [new CellEventView(0, 5, 6, "extraction_reduction", -50, 1200)],
+            [new RelationView(0, 1, RelationView.Met, 2500, -300, RelationView.Trade | RelationView.NonAggression)],
+            [new ArmyView(4, 1, 2, 10, 12, 16, 12, 45, 1, 92, 80, 2, 0, 6, 8, 12)])];
+        yield return [new WatchCivilizationMessage(2)];
+        yield return [new FogMessage(2, 0, 9, [0, 1, 2, 2])];
+        yield return [new NameSuggestionsRequestMessage(NameTarget.Settlement, 4, 1, 6)];
+        yield return [new NameSuggestionsMessage(NameTarget.Civilization, 2, 0, ["Karrut", "Elawi"])];
+        yield return [new SubmitCommandMessage(2, 10, new RenameSettlementDto(4, "Tarok"))];
+        yield return [new CivilizationDetailsMessage(
+            2, 9, "Rome", true, "Stone Age", ["Fire"], "Pottery", 40, 120, ["Aggression"], [700], ["Expansion"], [1200], ["Gatherers"], [80],
+            ["Tribal Camp"], [2], 5000, 6000, ["Grain"], [12000], [new RelationDetail(1, 2, 2500, -400, RelationView.Trade, ["ActiveTrade 100%"])])];
+        yield return [new GameViewMessage(6, -1, [], [new CivilizationView(1, "Rome", true) { Era = "Neolithic", People = 340, Settlements = 3, Technologies = 5 }])];
+        yield return [new GameViewMessage(7, -1, [], [new CivilizationView(1, "Rome", true) { Capital = 4 }])];
         yield return [new MapChunkMessage(0, 2, 5, 32, 0, 2, 1, [2, 0], [120, 0], [-3, 0], [50, 0], [12, 0], [1, 0], [0, 0], [70, 0], [3, 0], [500, 0], [0, 0], [-1, -1], [1, 0, 2, 0, 0, 0])];
     }
 
@@ -37,7 +58,7 @@ public class ProtocolSerializerTests
 
         // Records holding lists or arrays compare by reference, so compare their encoded bytes instead.
         Assert.Equal(frame, ProtocolSerializer.Serialize(back));
-        if (message is GameViewMessage or ContentMessage or MapChunkMessage)
+        if (message is GameViewMessage or ContentMessage or MapChunkMessage or ObserverDetailsMessage or FogMessage or CivilizationDetailsMessage or NameSuggestionsMessage)
         {
             return;
         }
@@ -83,10 +104,21 @@ public class ProtocolSerializerTests
     [Fact]
     public void WireFormatIsStable()
     {
-        // Compatibility guard: version 2 frames must keep encoding the same way.
+        // Compatibility guard: version 3 frames must keep encoding the same way.
         // Version 2 added the client role to Hello (observer mode) and the map, content and speed messages.
+        // Version 3 added settlements and game time to the view and goods and settlement levels to the content.
+        // Version 4 added wild food and influence strength to map chunks.
+        // Version 5 added settlement status and claims, the died-out month and the settlement asset commands.
+        // Version 6 added seasons and the growing season to map chunks (globe, stage 1b).
+        // Version 7 added the live season (temperature and growth of the current turn) to map chunks and the view.
+        // Version 8 added the observer layers (journeys, fields, events, relations), the followed civilization (fog and
+        // details) and era, people, settlements and technologies of each civilization for observers (stage 5),
+        // and renaming settlements with name suggestions from the peoples' languages (GDD 5.6).
+        // Version 9 added war campaigns (armies and their carriers) to the observer layers (stage 4e PR 3).
+        // Version 10 added the title and the government of each civilization for observers (stage 4f).
+        // Version 11 added the leader of the followed civilization (stage 4f PR 2).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("02000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("0D000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

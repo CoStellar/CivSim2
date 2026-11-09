@@ -19,7 +19,7 @@ public static class MapViewBuilder
     {
         ArgumentNullException.ThrowIfNull(world);
         WorldMap map = world.Map;
-        HexTorus geo = map.Geometry;
+        HexGlobe geo = map.Geometry;
         (int x0, int y0, int w, int h) = map.Chunks.Bounds(chunk);
         int n = w * h;
         var visibility = new byte[n];
@@ -35,6 +35,12 @@ public static class MapViewBuilder
         var depth = new byte[n];
         var owner = new short[n];
         var river = new byte[n * MapChunkMessage.RiverEdgesPerCell];
+        var wild = new ushort[n];
+        var influence = new byte[n];
+        var seasons = new byte[n];
+        var seasonTemperature = new sbyte[n];
+        var seasonGrowth = new byte[n];
+        var growing = new byte[n];
         bool any = false;
         for (int r = 0; r < h; r++)
         {
@@ -61,6 +67,12 @@ public static class MapViewBuilder
                 richness[k] = map.DepositRichness[i];
                 depth[k] = map.DepositDepth[i];
                 owner[k] = map.Owner[i];
+                wild[k] = map.WildFood[i];
+                influence[k] = map.Influence[i];
+                seasons[k] = map.Seasonality[i];
+                growing[k] = map.GrowingSeason[i];
+                seasonTemperature[k] = map.LiveSeasons ? map.SeasonTemperature[i] : map.Temperature[i];
+                seasonGrowth[k] = map.LiveSeasons ? map.SeasonGrowth[i] : map.GrowingSeason[i];
                 for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)
                 {
                     river[(k * MapChunkMessage.RiverEdgesPerCell) + e] = map.River[(i * HexEdge.PerCell) + e];
@@ -75,6 +87,6 @@ public static class MapViewBuilder
 
         return new MapChunkMessage(
             world.Id.Value, turn, chunk, x0, y0, w, h, visibility, elevation, temperature, humidity, biome, relief, feature,
-            fertility, deposit, richness, depth, owner, river);
+            fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing, seasonTemperature, seasonGrowth);
     }
 }

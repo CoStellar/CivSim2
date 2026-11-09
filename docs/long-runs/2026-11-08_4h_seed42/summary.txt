@@ -1,0 +1,11 @@
+CivSim 2 long run
+ended:            time limit 4h 00m 00s reached
+run time:         4h 00m 00s
+turns:            152848 (10.6 per second)
+turn time:        avg 93.0 ms, max 475 ms
+memory (process): start 558 MB, end 1059 MB, peak 1105 MB
+frames:           745453 (51.8 per second), slow (under 30 fps) 110350
+garbage collections: gen0 96739, gen1 48887, gen2 10484, pauses 68.2 s
+events:           10230848 (wars 2, peaces 2, treaties 64, secessions 0, coups 5, died out 8, eras 4, epidemics 2896448, disasters 6306868)
+stats rows:       1433
+world at the end: turn 152848, year 3823725, 4 of 12 civilizations alive

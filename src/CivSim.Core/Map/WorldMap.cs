@@ -12,10 +12,13 @@ public sealed class WorldMap
     /// <summary>Value of <see cref="Owner"/> for a cell nobody owns.</summary>
     public const short NoOwner = -1;
 
+    /// <summary>Value of <see cref="WildFood"/> when game and wild plants are untouched (per mille).</summary>
+    public const ushort FullWildFood = 1000;
+
     private readonly List<IMapLayerInfo> _layers = [];
 
     /// <summary>Creates an empty map (all zeros, no owners) for <paramref name="geometry"/>. Every chunk starts dirty.</summary>
-    public WorldMap(HexTorus geometry)
+    public WorldMap(HexGlobe geometry)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         Geometry = geometry;
@@ -35,11 +38,25 @@ public sealed class WorldMap
         Owner = Add(new MapLayer<short>("owner", this, 1, NoOwner));
         Pollution = Add(new MapLayer<byte>("pollution", this, 1, 0));
         River = Add(new MapLayer<byte>("river", this, HexEdge.PerCell, 0));
+        WildFood = Add(new MapLayer<ushort>("wild_food", this, 1, FullWildFood));
+        Claim = Add(new MapLayer<int>("claim", this, 1, 0));
+        Influence = Add(new MapLayer<byte>("influence", this, 1, 0));
+        Seasonality = Add(new MapLayer<byte>("seasonality", this, 1, 0));
+        GrowingSeason = Add(new MapLayer<byte>("growing_season", this, 1, 100));
+        SeasonTemperature = Add(new MapLayer<sbyte>("season_temperature", this, 1, 0));
+        SeasonGrowth = Add(new MapLayer<byte>("season_growth", this, 1, 100));
+        NextSeasonTemperature = Add(new MapLayer<sbyte>("next_season_temperature", this, 1, 0));
+        NextSeasonGrowth = Add(new MapLayer<byte>("next_season_growth", this, 1, 100));
+        ClimateSine = Add(new MapLayer<short>("climate_sine", this, 1, 0));
+        TemperatureOffset = Add(new MapLayer<sbyte>("temperature_offset", this, 1, 0));
+        Continentality = Add(new MapLayer<byte>("continentality", this, 1, 100));
+        NaturalFertility = Add(new MapLayer<byte>("natural_fertility", this, 1, 0));
+        FertilityRemainder = Add(new MapLayer<sbyte>("fertility_remainder", this, 1, 0));
         MarkAllDirty();
     }
 
     /// <summary>Geometry (size, neighbours, distances).</summary>
-    public HexTorus Geometry { get; }
+    public HexGlobe Geometry { get; }
 
     /// <summary>Chunk grid.</summary>
     public MapChunks Chunks { get; }
@@ -85,6 +102,66 @@ public sealed class WorldMap
 
     /// <summary>River size on each canonical edge (index = cell × 3 + side), 0 = no river.</summary>
     public MapLayer<byte> River { get; }
+
+    /// <summary>
+    /// What is left of the cell's game and wild plants, per mille of an untouched cell (GDD 4.4). Gathering eats it,
+    /// unused cells grow back.
+    /// </summary>
+    public MapLayer<ushort> WildFood { get; }
+
+    /// <summary>Settlement whose people work the cell: settlement id + 1, or 0 for none (GDD 5.4).</summary>
+    public MapLayer<int> Claim { get; }
+
+    /// <summary>Strength of the owner's influence on the cell, 0–255 (GDD 5.4); 0 where nobody owns it.</summary>
+    public MapLayer<byte> Influence { get; }
+
+    /// <summary>Difference between the warmest and the coldest time of the year, °C (GDD 3, stage 1b).</summary>
+    public MapLayer<byte> Seasonality { get; }
+
+    /// <summary>Share of the year warm enough for plants to grow, 0–100%.</summary>
+    public MapLayer<byte> GrowingSeason { get; }
+
+    /// <summary>
+    /// Sine of the cell's climate latitude (the latitude bent by noise so climate zones follow wavy lines), in parts of
+    /// <see cref="ClimateSineOne"/> (stage 1c-B: the climate is solved again during the game).
+    /// </summary>
+    public MapLayer<short> ClimateSine { get; }
+
+    /// <summary>What height and local noise add to the latitude's temperature, °C (stage 1c-B).</summary>
+    public MapLayer<sbyte> TemperatureOffset { get; }
+
+    /// <summary>How continental the climate is, percent: 25 over water, up to 100 deep inland (stage 1c-B).</summary>
+    public MapLayer<byte> Continentality { get; }
+
+    /// <summary>Fertility the land returns to when nobody farms it (stage 3f: farmed land wears out, GDD 4.4).</summary>
+    public MapLayer<byte> NaturalFertility { get; }
+
+    /// <summary>Hundredths of a fertility point gained or lost but not yet a whole point (−99…99).</summary>
+    public MapLayer<sbyte> FertilityRemainder { get; }
+
+    /// <summary>Value of <see cref="ClimateSine"/> at the poles.</summary>
+    public const int ClimateSineOne = 32_767;
+
+    /// <summary>
+    /// Length of this planet's year in Earth years × 100. The dead season (no growth) lasts
+    /// <c>(100 − growing season)% × year</c>: a long year means winters of many years (stage 1b).
+    /// </summary>
+    public int YearHundredths { get; set; } = 100;
+
+    /// <summary>True when seasons are played turn by turn on this world (long years, <see cref="WorldGen.SeasonRules"/>).</summary>
+    public bool LiveSeasons { get; set; }
+
+    /// <summary>Temperature in the middle of the current turn, °C (live seasons only).</summary>
+    public MapLayer<sbyte> SeasonTemperature { get; }
+
+    /// <summary>Share of the current turn in which plants grow, 0–100% (live seasons only).</summary>
+    public MapLayer<byte> SeasonGrowth { get; }
+
+    /// <summary>Temperature in the middle of the next turn, °C (live seasons only; what the AI expects).</summary>
+    public MapLayer<sbyte> NextSeasonTemperature { get; }
+
+    /// <summary>Share of the next turn in which plants grow, 0–100% (live seasons only).</summary>
+    public MapLayer<byte> NextSeasonGrowth { get; }
 
     /// <summary>All layers in their fixed order (for hashing and saving).</summary>
     public IReadOnlyList<IMapLayerInfo> Layers => _layers;

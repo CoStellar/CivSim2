@@ -12,7 +12,7 @@ public sealed class MapChunks
     public const int Size = 32;
 
     /// <summary>Creates the chunk grid for <paramref name="geometry"/>.</summary>
-    public MapChunks(HexTorus geometry)
+    public MapChunks(HexGlobe geometry)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         Geometry = geometry;
@@ -21,7 +21,7 @@ public sealed class MapChunks
     }
 
     /// <summary>The map geometry.</summary>
-    public HexTorus Geometry { get; }
+    public HexGlobe Geometry { get; }
 
     /// <summary>Chunks per row.</summary>
     public int ChunksX { get; }

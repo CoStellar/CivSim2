@@ -15,7 +15,7 @@ public static class WorldValidator
     public static List<string> Validate(GameContent content, WorldMap map, WorldGenReport report, WorldGenOptions options)
     {
         var problems = new List<string>();
-        HexTorus geo = map.Geometry;
+        HexGlobe geo = map.Geometry;
         int water = 0;
         for (int i = 0; i < geo.CellCount; i++)
         {

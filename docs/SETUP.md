@@ -52,7 +52,8 @@ Jeśli widzisz mapę, wszystko działa: Godot, .NET, lokalny serwer i połączen
 
 ### Inny świat w podglądzie
 
-W Godocie: **Project → Project Settings → Application → Run → Main Run Args**, np.:
+W Godocie: **Project → Project Settings**, włącz **Advanced Settings** (prawy górny róg) i wpisz `main run args` w pole **Filter Settings**
+(to pole jest w sekcji **Editor → Run**). Albo: **Debug → Customize Run Instances… → Enable Main Run Args**. Wpisz np.:
 
 ```
 -- --seed 42 --map-size huge --climate cold --relief mountainous --civs 20
@@ -60,6 +61,7 @@ W Godocie: **Project → Project Settings → Application → Run → Main Run A
 
 Te same ustawienia co w trybie bez okna (niżej): `--seed`, `--map-size` (test, standard, large, huge), `--world-type`,
 `--water`, `--climate`, `--moisture`, `--relief`, `--resources`, `--civs`, oraz `--speed` (paused, x1, x2, x5, max).
+Osobne `--` na początku jest zalecane. Bez niego też zadziała, z wyjątkiem `--benchmark`, które Godot bierze wtedy za własną opcję.
 `--benchmark 600` przelatuje kamerą nad mapą przez 600 klatek, wypisuje w panelu Output średni czas klatki i zamyka grę.
 
 ## Co jest gdzie
@@ -67,7 +69,7 @@ Te same ustawienia co w trybie bez okna (niżej): `--seed`, `--map-size` (test, 
 | Folder | Co tam jest | Czy tu pracujesz |
 | --- | --- | --- |
 | `game/` | projekt Godota (sceny, skrypty klienta) | tak, w edytorze Godota |
-| `art/` | Twoje pliki LibreSprite i paleta | tak; do etapu 5 grafika nie trafia jeszcze do `game/` |
+| `art/` | Twoje pliki LibreSprite i paleta | tak; do etapu 13 Twoja grafika nie trafia jeszcze do `game/` |
 | `src/`, `tests/` | symulacja, serwer, testy (C#) | nie, to moja część |
 | `data/` | zawartość gry w JSON | czasem, przy balansie |
 | `docs/` | GDD, decyzje, opisy systemów | czytasz i akceptujesz zmiany |
@@ -104,12 +106,14 @@ dotnet run -c Release --project src/CivSim.Headless -- --seed 1 --turns 10000 --
 - `--turns`: ile tur policzyć,
 - `--map-size`: `test`, `standard`, `large` albo `huge`,
 - `--report`: plik CSV z czasem każdej fazy każdej tury (otworzysz go w Excelu albo LibreOffice),
+- `--stats`: plik CSV z ludnością każdej cywilizacji, zapasem jedzenia, średnim zdrowiem i nastrojem; `--stats-every N` zapisuje co N tur (domyślnie 10),
 - `--world-type`: `continents` (domyślnie), `pangea` albo `archipelago`,
 - `--water`: procent wody, 30–80 (domyślnie 60),
-- `--png <folder>`: zapisuje podgląd mapy jako 6 obrazów PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża),
+- `--png <folder>`: zapisuje podgląd mapy jako obrazy PNG (biomy, wysokość, temperatura, wilgotność, żyzność, złoża, strefy wpływów, dzika żywność); przy `--turns` większym od 0 dodatkowo strefy i dzika żywność po ostatniej turze,
 - `--png-scale`: wielkość heksa na obrazie (1–12, domyślnie 3, czyli heks szeroki na 12 px),
 - `--climate`: `temperate` (domyślnie), `cold` albo `hot`,
 - `--moisture`: `normal` (domyślnie), `dry` albo `wet`,
+- `--inland`: wilgotność w głębi lądu, `normal` (domyślnie), `dry` (suche wnętrza kontynentów) albo `humid` (lasy daleko od morza); działa też w podglądzie w Godocie,
 - `--relief`: `normal` (domyślnie), `flat` albo `mountainous`,
 - `--resources`: `normal` (domyślnie), `scarce` albo `rich`,
 - `--civs`: liczba cywilizacji 1–64 (domyślnie zależna od rozmiaru mapy).

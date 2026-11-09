@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "comment": "Discovery of civilizations and the memory of relations (GDD 8.5; stage 4c). Nobody knows anybody at the start. A civilization meets another when its settlements or scouts see one of the other's settlements, when their influence zones touch, or when the other attacks one of its camps. Rumors: every turn a civilization may hear of a people that a civilization it met has met, with rumorChancePercentPerCentury per such people (converted to the turn length); the place is off by up to rumorErrorPercent of the distance and the strength by up to rumorErrorPercent; diplomacy needs real contact. First opinion: from -openingSympathy (openness 0) to +openingSympathy (openness 1000), plus borderOpening when the first contact is touching borders. Sympathy and trust run from -100 to 100. Every known civilization keeps up to maxMemories remembered events; an event gives its sympathy and trust at once (ongoing events grow by sympathyPerYear / trustPerYear up to that value while they last) and fades linearly to nothing over years once it is over (vengefulYears for the most vengeful civilization). Durations are in years, not turns (CLAUDE.md rule 6: turns change length with the era). Values are working values from GDD 8.5. aggression: a war declared for land or loot, remembered by the victim and (war.json goals) by everyone who knows both (stage 4e). secession: the parent remembers the people that broke away from it (stage 4f PR 4); it is a reason for a war of revenge. Today only attack and border_dispute happen; trade, treaties, wars and governments come in stages 4d-4f.",
+  "rumorChancePercentPerCentury": 20,
+  "rumorErrorPercent": 50,
+  "openingSympathy": 20,
+  "borderOpening": -5,
+  "maxMemories": 12,
+  "events": [
+    {"kind": "attack", "sympathy": -50, "trust": -20, "years": 150, "vengefulYears": 300},
+    {"kind": "broken_treaty", "sympathy": -20, "trust": -40, "years": 200},
+    {"kind": "border_dispute", "sympathy": -30, "sympathyPerYear": -1, "years": 20},
+    {"kind": "active_trade", "sympathy": 30, "sympathyPerYear": 0.5, "trust": 20, "trustPerYear": 0.2, "years": 20},
+    {"kind": "common_enemy", "sympathy": 20, "trust": 10, "years": 50},
+    {"kind": "war_help", "sympathy": 30, "trust": 25, "years": 200},
+    {"kind": "other_government", "sympathy": -10, "years": 0},
+    {"kind": "aggression", "sympathy": -30, "trust": -15, "years": 100},
+    {"kind": "secession", "sympathy": -60, "trust": -40, "years": 200, "vengefulYears": 400}
+  ]
+}

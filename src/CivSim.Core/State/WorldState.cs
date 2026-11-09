@@ -12,7 +12,7 @@ public sealed class WorldState
         Name = name;
         Width = width;
         Height = height;
-        Geometry = new HexTorus(width, height);
+        Geometry = new HexGlobe(width, height);
         Map = new WorldMap(Geometry);
     }
 
@@ -29,8 +29,11 @@ public sealed class WorldState
     public int Height { get; }
 
     /// <summary>Neighbours, distances and areas on this world.</summary>
-    public HexTorus Geometry { get; }
+    public HexGlobe Geometry { get; }
 
     /// <summary>Per-cell data (elevation, biome, rivers...).</summary>
     public WorldMap Map { get; }
+
+    /// <summary>The slow climate: ice sheets and CO₂ (stage 1c-B).</summary>
+    public WorldGen.ClimateState Climate { get; } = new();
 }

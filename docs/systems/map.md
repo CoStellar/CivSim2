@@ -1,6 +1,6 @@
 # Mapa
 
-**W jednym zdaniu:** `HexTorus` odpowiada na wszystkie pytania „gdzie” (sąsiedzi, odległości, linie, obszary), a `WorldMap` przechowuje dane każdego pola w płaskich tablicach podzielonych na fragmenty 32×32.
+**W jednym zdaniu:** `HexGlobe` odpowiada na wszystkie pytania „gdzie” (sąsiedzi, odległości, linie, obszary), a `WorldMap` przechowuje dane każdego pola w płaskich tablicach podzielonych na fragmenty 32×32.
 
 **Faza tury:** wszystkie. To biblioteka geometrii, z której korzystają generator świata, ruch, widoczność, strefy wpływów i AI.
 
@@ -15,24 +15,30 @@
 flowchart LR
   P["Pole w pamięci<br/>(kolumna, rząd)"] -- ToAxial --> A["Współrzędne osiowe (q, r)<br/>do obliczeń"]
   A -- "+ kierunek / linia / pierścień" --> A2["Nowe (q, r)<br/>może wyjść poza mapę"]
-  A2 -- "FromAxial (zawija)" --> P2["Pole w mapie"]
+  A2 -- "FromAxial (wschód–zachód, przez biegun)" --> P2["Pole w mapie"]
 ```
 
 ## Zasady i wzory
 - **Układ:** heksy flat-top, kolumny co 36 px, co druga kolumna (nieparzysta) przesunięta o pół heksa w dół (21 px), jak w szablonie
   `art/templates/hex_template_48x42.png`. W pamięci pola leżą rzędami: `indeks = rząd × szerokość + kolumna`.
 - **Obliczenia** idą we współrzędnych osiowych (q, r), a wynik jest zawsze zawijany z powrotem do mapy.
-- **Torus:** idąc na wschód lub zachód wraca się przez szew pionowy, idąc na północ lub południe przez szew poziomy (tam spotykają się bieguny).
-- **Rozmiar:** obie strony muszą być parzyste. Wysokość wymaga GDD; szerokość musi być parzysta, bo inaczej przesunięte kolumny
-  nie zeszłyby się na szwie. Wszystkie rozmiary z GDD (64×40, 256×160, 384×240, 512×320) to spełniają.
+- **Kula** (ADR 0012): idąc na wschód lub zachód wraca się przez szew pionowy. Krok poza górny rząd w kolumnie *c* prowadzi do górnego rzędu
+  w kolumnie *c + szerokość/2* (druga strona planety), a kierunek północ–południe się odwraca: wracając, idzie się znów „na północ”.
+  `CrossesPole` mówi, czy krok przechodzi przez biegun, a `Back` podaje kierunek powrotny (przez biegun to odbity kierunek, nie przeciwny).
+- **Szerokość geograficzna:** `SinLatitude` daje sinus szerokości środka pola. Rzędy to pasy o równej powierzchni na kuli: sinus spada równo
+  z rzędu na rząd, kolumny nieparzyste leżą pół rzędu niżej.
+- **Rozmiar:** szerokość = 4k + 2 (połowa szerokości nieparzysta, inaczej kolumny przesunięte i nieprzesunięte nie zeszłyby się nad biegunem),
+  wysokość parzysta. Rozmiary z GDD: 66×40, 258×160, 386×240, 514×320.
 - **Kierunki:** N, NE, SE, S, SW, NW (zgodnie z ruchem wskazówek zegara od północy).
-- **Odległość:** najmniejsza liczba kroków, także „na skróty” przez szwy. Sprawdzona testem: dla każdej pary pól na kilku małych mapach
+- **Odległość:** najmniejsza liczba kroków, także „na skróty” przez szew i przez bieguny. Sprawdzona testem: dla każdej pary pól na kilku małych mapach
   wynik jest równy prawdziwemu przejściu krok po kroku (BFS).
 - **Linia:** pola na najkrótszej prostej, liczona wyłącznie na liczbach całkowitych, więc taka sama na każdym systemie.
 - **Pierścień i obszar:** pola dokładnie w promieniu *r* (6·r pól) i w promieniu do *r* (1 + 3·r·(r+1) pól, np. 37 pól dla r = 3).
-  Do promienia `MaxUniqueRadius` żadne pole się nie powtarza.
+  Do promienia `MaxUniqueRadius` (`(szerokość − 2) / 4`) żadne pole się nie powtarza, także przy biegunach.
 - **Krawędzie** (pod rzeki): każda krawędź ma jednego właściciela, pole, które ma ją po stronie N, NE albo SE. Dzięki temu rzeka między dwoma
-  polami jest zapisana raz, a mapa ma dokładnie 3 krawędzie na pole.
+  polami jest zapisana raz, a mapa ma dokładnie 3 krawędzie na pole. Nad biegunem północnym stykają się dwie strony N: właścicielem jest pole z zachodniej połowy mapy.
+  Nad biegunem południowym stykają się dwie strony S: krawędź zapisujemy jako stronę S pola z zachodniej połowy i trzymamy w wolnym miejscu N
+  po wschodniej stronie górnego rzędu. Narożniki rzędów polarnych są przybliżone (`HexCorners.IsPolar`); rzeki ich nie używają.
 - Metody nie alokują pamięci (piszą wyniki do podanego bufora), poza wygodną wersją `Line`, która zwraca listę.
 
 **Dane pól** (`WorldMap`):
@@ -41,7 +47,8 @@ flowchart LR
   Osady, ulepszenia i efekty dojdą w etapie 3.
 - Zmiana wartości przez `Set` zaznacza jej fragment jako zmieniony, ale tylko wtedy, gdy wartość naprawdę się zmieniła.
   Generator i wczytywanie piszą hurtowo (`Raw`) i zaznaczają całą mapę.
-- **Fragmenty 32×32:** mapa testowa ma 2×2 fragmenty (dolne są niepełne, 32×8), standardowa 8×5, duża 12×8, ogromna 16×10.
+- **Fragmenty 32×32:** mapa testowa ma 3×2 fragmenty (prawe mają 2 kolumny, dolne 8 rzędów), standardowa 9×5, duża 13×8, ogromna 17×10.
+- Warstwy pór roku (etap 1b): `seasonality` (różnica lato–zima, °C) i `growing_season` (część roku z wzrostem roślin, %).
 - Po każdej turze migawka dostaje listę zmienionych fragmentów, a flagi są czyszczone. Nowa albo wczytana mapa ma wszystkie fragmenty zmienione,
   więc pierwszy widok zawsze dostaje całość.
 - Mapa wchodzi do hasha stanu i do zapisu gry (warstwa po warstwie, po nazwie). Format zapisu: wersja 3 (od generatora świata dochodzą typ świata, procent wody i pole startowe każdej cywilizacji).
@@ -56,7 +63,7 @@ każdy narożnik styka się z 3 polami i ma 3 sąsiednie narożniki połączone 
 `WorldMapTests`: siatka fragmentów dla wszystkich rozmiarów z GDD, niepełne fragmenty brzegowe, flagi zmian, `Set` zaznacza tylko swój fragment
 i tylko przy zmianie, migawka z listą zmian, mapa w hashu i w zapisie.
 
-`HexTorusTests`: złe rozmiary, indeksy, zawijanie, zgodność układu z szablonem grafiki, wzajemność sąsiadów, odległość = BFS dla wszystkich par,
+`HexGlobeTests`: złe rozmiary (także szerokość 4k), indeksy, zawijanie i przejście przez bieguny, pasy równej powierzchni, zgodność układu z szablonem grafiki, wzajemność sąsiadów, odległość = BFS dla wszystkich par,
 linia (ciągła, właściwa długość, 2000 losowych par), pierścienie, obszar, unikalność do `MaxUniqueRadius`, krawędzie.
 
 ## Wydajność
