@@ -517,7 +517,7 @@ Zasady do wdrożenia w etapie 6 (szczegóły i liczby: przy wdrożeniu, z propoz
 - **Technologię można rozwijać albo tylko zaliczyć**, jeśli jest potrzebna jedynie do wejścia w nową erę.
 - **Koszt.** Technologia ma stały koszt bazowy. Im lepiej rozwinięta technologia poprzedzająca, tym taniej.
 - **Kierunek rozwoju.** To, czym lud się zajmuje (góry i kopanie, morze i rybołówstwo…), zwiększa szansę na pokrewne odkrycia: kto przetrwał w górach (np. dzięki dowozowi jedzenia), ma większą szansę pierwszy odkryć rzemiosło i złoża rud, więc szybciej dojdzie do metali; rybacy szybciej budują coraz lepsze łodzie.
-- **Podejrzenie technologii.** Przez kontakt (zwiadowca, kupiec, sąsiedztwo) cywilizacja może podejrzeć technologię, którą ktoś już zna: 5% zniżki za każdą cywilizację, która ją zna, najwyżej 50%. Przodujący płaci najwięcej; nikt nie jest „niesiony” przez innych. Przy 6–8 cywilizacjach najwyższa zniżka to 25–35%; czy liczyć ją od udziału znających (żeby ostatni miał zawsze ok. 50%), ustalimy przy strojeniu.
+- **Podejrzenie technologii.** Przez kontakt (zwiadowca, kupiec, sąsiedztwo) cywilizacja może podejrzeć technologię, którą ktoś już zna: zniżka = 5% × liczba cywilizacji, które ją już znają (zna ją jedna: 5%, zna dziewięć: 45%). Przodujący płaci najwięcej; nikt nie jest „niesiony” przez innych.
 - **Wzór:** koszt = koszt bazowy × (1 − zniżka za podgląd) × (1 − zniżka za rozwinięcie poprzedniej). Przykład: 1000 punktów, zna ją 6 cywilizacji (30%), poprzednia dobrze rozwinięta (20%): 1000 × 0,7 × 0,8 = 560.
 
 ## 7. Zarządzanie cywilizacją

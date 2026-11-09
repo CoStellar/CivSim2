@@ -44,8 +44,7 @@ i to, na czym gracz się skupia. W pierwszych erach nie ma postaci z imieniem (p
 - **doświadczenie w technologii** rośnie od używania i wzmacnia jej efekt (rolnictwo: plony, łodzie: siła);
 - kierunek rozwoju zwiększa szansę na pokrewne odkrycia (góry → rzemiosło i rudy, rybołówstwo → lepsze łodzie);
 - technologię można rozwijać albo tylko „zaliczyć”, jeśli jest potrzebna do nowej ery;
-- **podejrzenie technologii** przez kontakt (zwiadowca, kupiec, sąsiedztwo): 5% zniżki za każdą cywilizację, która już ją zna,
-  do 50%; przodujący płaci najwięcej, nikt nie jest „niesiony”;
+- **podejrzenie technologii** przez kontakt (zwiadowca, kupiec, sąsiedztwo): zniżka = 5% × liczba cywilizacji, które już ją znają; przodujący płaci najwięcej, nikt nie jest „niesiony”;
 - koszt = koszt bazowy × (1 − zniżka za podgląd) × (1 − zniżka za rozwinięcie poprzedniej).
 
 **Koniec partii.** Cel ustalany na starcie na pasku postępu: pierwszy metal, pierwsza elektryczność, lot w kosmos albo podbój

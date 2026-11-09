@@ -241,7 +241,7 @@ Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neo
 - [ ] **Oddziały:** osadnicy, wojownicy, zwiadowcy, tragarze jako jednostki w ruchu (grupy ludzi); kampania wojenna = oddziały w ruchu
 - [ ] **Zadania na obszarze:** wydobycie, pola, łowiska, budowy w miejscu; ludzie z osady sami tam chodzą; te same komendy dla AI i gracza
 - [ ] **Start:** losowa kolejność, wybór miejsca (5 s mapy, potem szare bloki, 10–15 s), strefy blokady, wybór AI z błędem; epoka kamienia jako opis „historii plemienia”
-- [ ] **Technologie (GDD 6.4):** doświadczenie w technologii, kierunek rozwoju zwiększa szansę pokrewnych odkryć, koszt zależny od rozwinięcia poprzedniej, podgląd technologii (5% za znającą cywilizację, do 50%)
+- [ ] **Technologie (GDD 6.4):** doświadczenie w technologii, kierunek rozwoju zwiększa szansę pokrewnych odkryć, koszt zależny od rozwinięcia poprzedniej, podgląd technologii (5% × liczba cywilizacji, które ją znają)
 - [ ] **Karty decyzji w backendzie:** wydarzenie, rekomendacja doradcy, licznik, decyzja AI po czasie
 - [ ] **Bez postaci z imieniem w pierwszych erach** (przegląd przywódców z etapu 4f)
 - [ ] **Wydajność:** mapa standard, 6–8 cywilizacji, 300 oddziałów, takt < 30 ms w najgorszym przypadku; klient rysuje tylko zmiany i płynny ruch
