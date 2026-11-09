@@ -84,6 +84,18 @@ public partial class MapObjects : Node2D
         bool changed = dataDue || moved || layers.Version != _lastLayers || session.FogVersion != _lastFog || period != _period || !ReferenceEquals(world, _world);
         if (!changed)
         {
+            // Walking units (stage 6 PR 3a) glide between the views: only their layer is drawn again, every frame.
+            if (_session is not null && _walkers.Count > 0)
+            {
+                foreach (LayerPainter p in _painters)
+                {
+                    if (p.Layer == MapLayer.Units && p.Visible)
+                    {
+                        p.QueueRedraw();
+                    }
+                }
+            }
+
             return;
         }
 
@@ -515,8 +527,111 @@ public partial class MapObjects : Node2D
         return d;
     }
 
+    // Where each walking unit was drawn when the last view came and where that view puts it (stage 6 PR 3a): it glides from
+    // the one to the other in the time between two views, so it moves smoothly though the server sends a few views a second.
+    private readonly Dictionary<long, (Vector2 From, Vector2 To)> _walkers = [];
+    private readonly HashSet<long> _walkersSeen = [];
+    private GameViewMessage? _walkersView;
+    private long _walkersAt;
+
+    // Seconds between two views of the server (its view interval) the glide lasts.
+    private const double GlideSeconds = 0.1;
+
+    private float Glide()
+    {
+        double t = System.Diagnostics.Stopwatch.GetElapsedTime(_walkersAt).TotalSeconds / GlideSeconds;
+        return (float)Math.Clamp(t, 0, 1);
+    }
+
+    private void TrackWalkers(GameViewMessage view)
+    {
+        if (ReferenceEquals(view, _walkersView))
+        {
+            return;
+        }
+
+        float g = Glide();
+        _walkersSeen.Clear();
+        foreach (UnitView u in view.Units ?? [])
+        {
+            Vector2 at = HexLayout.Center(u.Col, u.Row);
+            Vector2 to = at + (Wrapped(HexLayout.Center(u.NextCol, u.NextRow) - at) * (u.ProgressPermille / 1000f));
+            Vector2 from = _walkers.TryGetValue(u.Id, out (Vector2 From, Vector2 To) old) ? old.From + (Wrapped(old.To - old.From) * g) : to;
+            _walkers[u.Id] = (from, from + Wrapped(to - from));
+            _walkersSeen.Add(u.Id);
+        }
+
+        if (_walkersSeen.Count != _walkers.Count)
+        {
+            var gone = new List<long>();
+            foreach (long id in _walkers.Keys)
+            {
+                if (!_walkersSeen.Contains(id))
+                {
+                    gone.Add(id);
+                }
+            }
+
+            foreach (long id in gone)
+            {
+                _walkers.Remove(id);
+            }
+        }
+
+        _walkersView = view;
+        _walkersAt = System.Diagnostics.Stopwatch.GetTimestamp();
+    }
+
+    // Settlers and scouts walking (stage 6 PR 3a): the migrants' and the scout's figure in the owner's colour, a dot from afar.
+    private void PaintWalkers(LayerPainter p)
+    {
+        if (_session?.View is not { Units: { Count: > 0 } units } view)
+        {
+            _walkers.Clear();
+            return;
+        }
+
+        TrackWalkers(view);
+        float g = Glide();
+        Texture2D? settlers = Textured ? _art.Get("units", "unit_migrants_idle_01") : null;
+        Texture2D? scout = Textured ? _art.Get("units", "unit_scout_idle_01") : null;
+        foreach (UnitView u in units)
+        {
+            if (u.World != _world!.Id || Fogged(u.Col, u.Row) || !_walkers.TryGetValue(u.Id, out (Vector2 From, Vector2 To) w))
+            {
+                continue;
+            }
+
+            Vector2 pos = w.From + ((w.To - w.From) * g);
+            if (_period.X > 0)
+            {
+                pos.X = Mathf.PosMod(pos.X, _period.X);
+            }
+
+            Color civ = OverlayColors.CivColor(u.Owner);
+            Texture2D? tex = u.Kind == 1 ? scout : settlers;
+            foreach (Vector2 at in Copies(pos, 48))
+            {
+                if (tex is not null)
+                {
+                    if (!p.Lines)
+                    {
+                        p.DrawTexture(tex, at + new Vector2(-16, -11), civ);
+                    }
+                }
+                else if (p.Lines)
+                {
+                    float r = (u.Kind == 1 ? 5 : 8) / Mathf.Max(0.35f, _zoom * 2);
+                    p.DrawCircle(at, r + 1, Colors.Black);
+                    p.DrawCircle(at, r, civ);
+                }
+            }
+        }
+    }
+
     private void PaintUnits(LayerPainter p)
     {
+        PaintWalkers(p);
         if (_session?.Details is not { } details)
         {
             return;

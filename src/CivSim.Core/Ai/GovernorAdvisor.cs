@@ -834,9 +834,10 @@ public sealed class GovernorAdvisor : Advisor
     {
         SettlementState? nearest = null;
         int best = _rules.MaxMoveCells + 1;
-        foreach (SettlementState other in state.Settlements)
+        foreach (int i in state.Grid.Within(world, from.Cell, _rules.MaxMoveCells))
         {
-            if (other.Owner == civ.Id && other.IsActive && other.Id != from.Id && other.World == from.World
+            SettlementState other = state.Settlements[i];
+            if (other.Owner == civ.Id && other.IsActive && other.Id != from.Id
                 && other.TotalPopulation() >= _rules.MergeBelowPeople)
             {
                 int d = world.Geometry.Distance(from.Cell, other.Cell);

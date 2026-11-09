@@ -7,9 +7,9 @@ using CivSim.Core.State;
 namespace CivSim.Core.Units;
 
 /// <summary>
-/// A* over the hex map with terrain costs (stage 6 PR 3a): the cheapest way over walkable cells the civilization knows.
-/// A step into a cell costs the ticks to cross it (<see cref="StepTicks"/>: base ticks × terrain percent, plus a river on
-/// the edge crossed); the estimate is the hex distance × the base ticks, which never overestimates (no cell is cheaper
+/// A* over the hex map with terrain costs (stage 6 PR 3a, T3): the cheapest way over walkable cells the civilization knows.
+/// A step into a cell costs the ticks to cross it (<see cref="StepTicks"/>: base ticks × the biome's movement cost, plus
+/// hills or mountains, plus a river on the edge crossed); the estimate is the hex distance × the base ticks, which never overestimates (no cell is cheaper
 /// than flat open land), so the way found is the cheapest. Arrays are kept between searches and reset by a run stamp, and
 /// the open set is a binary heap on plain arrays: a search allocates nothing but its result. A search looks at most at
 /// <see cref="UnitRules.RouteNodeLimit"/> cells. Deterministic: ties are broken by the order cells were reached.
@@ -27,6 +27,9 @@ public sealed class RouteFinder
     private long _order;
     private readonly System.Collections.Generic.List<int> _path = [];
 
+    /// <summary>How many searches this finder ran (tests check that units do not search in every tick).</summary>
+    public long Searches { get; private set; }
+
     /// <summary>
     /// Ticks to step from <paramref name="from"/> into <paramref name="to"/> (neighbours) for a unit that needs
     /// <paramref name="baseTicks"/> for a flat, open cell; 0 when <paramref name="to"/> is not walkable.
@@ -42,19 +45,18 @@ public sealed class RouteFinder
         }
 
         UnitRules rules = content.Units;
-        int percent = 100;
-        if (content.Biomes[map.Biome[to]].IsWater)
+        BiomeDefinition biome = content.Biomes[map.Biome[to]];
+        int percent;
+        if (biome.IsWater)
         {
             percent = rules.IcePercent; // walkable water is sea ice
         }
         else
         {
+            // The biome's cost (biomes.json movementCost: 1 open land, 2 forest or desert, 3 swamp, jungle, ice), and relief on top.
             byte relief = map.Relief[to];
-            percent = relief >= (byte)Relief.Mountains ? rules.MountainsPercent : relief == (byte)Relief.Hills ? rules.HillsPercent : 100;
-            if (IsForest(rules, map.Biome[to]))
-            {
-                percent = Math.Max(percent, rules.ForestPercent);
-            }
+            percent = (Math.Max(1, biome.MovementCost) * 100)
+                + (relief >= (byte)Relief.Mountains ? rules.MountainsExtraPercent : relief == (byte)Relief.Hills ? rules.HillsExtraPercent : 0);
         }
 
         if (rules.RiverPercent > 0 && map.River[world.Geometry.EdgeIndex(world.Geometry.Edge(from, side))] != 0)
@@ -139,6 +141,7 @@ public sealed class RouteFinder
             return from;
         }
 
+        Searches++;
         _run++;
         _heapCount = 0;
         _order = 0;
@@ -281,18 +284,5 @@ public sealed class RouteFinder
         }
 
         return top;
-    }
-
-    private static bool IsForest(UnitRules rules, int biome)
-    {
-        foreach (int f in rules.ForestBiomes)
-        {
-            if (f == biome)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

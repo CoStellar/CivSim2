@@ -38,23 +38,20 @@ public sealed record UnitRules
     /// <summary>Ticks a migrating camp (a journey) needs to cross one flat, open cell.</summary>
     public int JourneyTicksPerCell { get; init; } = 20;
 
-    /// <summary>Cost of crossing hills, percent of a flat cell.</summary>
-    public int HillsPercent { get; init; } = 150;
+    /// <summary>
+    /// Extra cost of hills, percent of a flat cell, on top of the biome's cost (biomes.json movementCost × 100: grassland 100,
+    /// forests 200, swamp and jungle 300).
+    /// </summary>
+    public int HillsExtraPercent { get; init; } = 50;
 
-    /// <summary>Cost of crossing mountains, percent of a flat cell.</summary>
-    public int MountainsPercent { get; init; } = 300;
-
-    /// <summary>Cost of crossing a forest (biomes in <see cref="ForestBiomes"/>), percent of a flat cell.</summary>
-    public int ForestPercent { get; init; } = 130;
+    /// <summary>Extra cost of mountains, percent of a flat cell, on top of the biome's cost.</summary>
+    public int MountainsExtraPercent { get; init; } = 200;
 
     /// <summary>Cost of walking over sea ice, percent of a flat cell.</summary>
     public int IcePercent { get; init; } = 200;
 
     /// <summary>Extra cost of crossing a river on the edge between two cells, percent of a flat cell.</summary>
     public int RiverPercent { get; init; } = 100;
-
-    /// <summary>Biomes that count as forest, by index.</summary>
-    public IReadOnlyList<int> ForestBiomes { get; init; } = [];
 
     /// <summary>Most cells one route search may look at (keeps a tick short).</summary>
     public int RouteNodeLimit { get; init; } = 20000;

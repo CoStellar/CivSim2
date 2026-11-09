@@ -266,9 +266,10 @@ public sealed class CommanderAdvisor : Advisor
     private void Gather(GameState state, CivilizationState civ, WorldState world, SettlementState home, int limit, ref int warriors, ref long attack, ref Amount food, ref int farthest)
     {
         _near.Clear();
-        foreach (SettlementState s in state.Settlements)
+        foreach (int i in state.Grid.Within(world, home.Cell, Content.War.MusterCells))
         {
-            if (s != home && s.IsActive && s.Owner == civ.Id && s.World == world.Id && !state.Episodes.OutFrom(civ.Id, s.Id.Value))
+            SettlementState s = state.Settlements[i];
+            if (s != home && s.IsActive && s.Owner == civ.Id && !state.Episodes.OutFrom(civ.Id, s.Id.Value))
             {
                 int d = world.Geometry.Distance(home.Cell, s.Cell);
                 if (d <= Content.War.MusterCells && Campaigns.Sendable(Content, s) > 0)

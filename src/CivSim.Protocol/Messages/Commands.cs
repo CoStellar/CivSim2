@@ -14,6 +14,9 @@ namespace CivSim.Protocol.Messages;
 [Union(5, typeof(PlunderSettlementDto))]
 [Union(6, typeof(ConquerSettlementDto))]
 [Union(7, typeof(RenameSettlementDto))]
+[Union(8, typeof(MoveUnitDto))]
+[Union(9, typeof(FoundCampDto))]
+[Union(10, typeof(ReturnUnitDto))]
 public interface ICommandDto
 {
 }
@@ -49,3 +52,15 @@ public sealed record PlunderSettlementDto([property: Key(0)] int SettlementId, [
 /// <summary>Attack a camp of another civilization and take its land (GDD 5.4: migration with conquest).</summary>
 [MessagePackObject]
 public sealed record ConquerSettlementDto([property: Key(0)] int SettlementId, [property: Key(1)] int TargetSettlementId) : ICommandDto;
+
+/// <summary>Send a unit to a known cell (stage 6 PR 3a).</summary>
+[MessagePackObject]
+public sealed record MoveUnitDto([property: Key(0)] long UnitId, [property: Key(1)] int Col, [property: Key(2)] int Row) : ICommandDto;
+
+/// <summary>Settlers found a camp where they stand (stage 6 PR 3a).</summary>
+[MessagePackObject]
+public sealed record FoundCampDto([property: Key(0)] long UnitId) : ICommandDto;
+
+/// <summary>A unit goes back to its home settlement and joins it (stage 6 PR 3a).</summary>
+[MessagePackObject]
+public sealed record ReturnUnitDto([property: Key(0)] long UnitId) : ICommandDto;

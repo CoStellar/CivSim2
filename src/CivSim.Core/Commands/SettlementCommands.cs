@@ -227,9 +227,10 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
         }
 
         WorldState world = state.Worlds[s.World.Value];
-        foreach (SettlementState other in state.Settlements)
+        foreach (int i in state.Grid.Within(world, Target, Math.Max(0, rules.MinDistanceBetweenOwnCamps - 1)))
         {
-            if (other.Owner == civ && other.World == s.World && other.TotalPopulation() > 0
+            SettlementState other = state.Settlements[i];
+            if (other.Owner == civ && other.TotalPopulation() > 0
                 && world.Geometry.Distance(other.Cell, Target) < rules.MinDistanceBetweenOwnCamps)
             {
                 return CommandResult.Fail($"New camps must be at least {rules.MinDistanceBetweenOwnCamps} cells from the others.");
@@ -251,20 +252,10 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
 
         // Stage 6 PR 3a (ADR 0024): the people leave as a unit of settlers that walks to the place and founds the camp
         // there (UnitSystem); until then they do not work anywhere.
-        var settlers = new Units.Unit
-        {
-            Kind = Units.UnitKind.Settlers,
-            Owner = civ,
-            World = from.World,
-            Cell = world.Geometry.Index(from.Cell),
-            Target = world.Geometry.Index(Target),
-            Home = from.Id.Value,
-            Order = Units.UnitOrder.Found,
-            People = new int[from.PopulationView.Length],
-            Skilled = new int[from.SkilledView.Length],
-            Trainees = new int[from.SkilledView.Length],
-            Cargo = new Amount[from.StockView.Length],
-        };
+        Units.Unit settlers = state.Units.Add(
+            Units.UnitKind.Settlers, civ, from.World, world.Geometry.Index(from.Cell), from.Id.Value, Units.UnitOrder.Found,
+            from.PopulationView.Length, from.SkilledView.Length, from.StockView.Length);
+        settlers.Target = world.Geometry.Index(Target);
         Span<int> people = from.Population;
         for (int k = 0; k < people.Length; k++)
         {
@@ -276,7 +267,6 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
         CivSim.Core.Population.Skills.MoveOut(from, settlers.Skilled, settlers.Trainees, Percent);
         SettlementAssets.Carry(from.Stock, settlers.Cargo, SettlementAssets.CarryCapacity(Content, state, civ, settlers.TotalPeople()), Percent);
         TakeTripFood(state, civ, from, world, settlers);
-        state.Units.Add(settlers);
         return $"{settlers.TotalPeople()} settlers left {from.Name} {SettlementRules.Direction(world, from.Cell, Target)}.";
     }
 

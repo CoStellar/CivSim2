@@ -43,6 +43,9 @@ public class LongRunTests
                 LongRunFolder = folder,
                 LongRunSeconds = 3,
                 LongRunSampleSeconds = 1,
+
+                // Only the time limit ends this run: on a fast machine a small world can pass 10 000 quiet years in 3 s.
+                LongRunStillYears = 0,
             };
             using (LocalServerHost host = LocalServerHost.Start(options))
             {

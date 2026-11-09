@@ -118,8 +118,9 @@ public class ProtocolSerializerTests
         // Version 10 added the title and the government of each civilization for observers (stage 4f).
         // Version 11 added the leader of the followed civilization (stage 4f PR 2).
         // Version 14: live speeds x1/x2/x4 (ADR 0025; x4 replaced x5).
+        // Version 15: units in the view and the unit commands (stage 6 PR 3a).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("0E000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("0F000000" + "920093" + "01A14100", Convert.ToHexString(frame));
     }
 
     [Fact]

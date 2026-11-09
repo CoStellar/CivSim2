@@ -951,35 +951,16 @@ public static class ContentLoader
 
         JsonElement terrain = doc.RootElement.TryGetProperty("terrain", out JsonElement te) ? te : default;
         var t = new Reader(terrain, $"{file}: terrain", errors);
-        var forests = new List<int>();
-        if (terrain.ValueKind == JsonValueKind.Object && terrain.TryGetProperty("forestBiomes", out JsonElement fb))
-        {
-            foreach (JsonElement b in fb.EnumerateArray())
-            {
-                int index = biomes.FindIndex(x => x.Key == b.GetString());
-                if (index < 0)
-                {
-                    errors.Add($"{file}: terrain.forestBiomes: unknown biome '{b.GetString()}'.");
-                }
-                else
-                {
-                    forests.Add(index);
-                }
-            }
-        }
-
         var scouts = new Reader(doc.RootElement.TryGetProperty("scouts", out JsonElement se) ? se : default, $"{file}: scouts", errors);
         var settlers = new Reader(doc.RootElement.TryGetProperty("settlers", out JsonElement st) ? st : default, $"{file}: settlers", errors);
         return new Core.Units.UnitRules
         {
             Kinds = kinds!,
             JourneyTicksPerCell = r.Int("journeyTicksPerCell", 1, 10000),
-            HillsPercent = t.Int("hillsPercent", 100, 10000),
-            MountainsPercent = t.Int("mountainsPercent", 100, 10000),
-            ForestPercent = t.Int("forestPercent", 100, 10000),
+            HillsExtraPercent = t.Int("hillsExtraPercent", 0, 10000),
+            MountainsExtraPercent = t.Int("mountainsExtraPercent", 0, 10000),
             IcePercent = t.Int("icePercent", 100, 10000),
             RiverPercent = t.Int("riverPercent", 0, 10000),
-            ForestBiomes = forests,
             RouteNodeLimit = r.Int("routeNodeLimit", 100, 10_000_000),
             ScoutEveryYears = scouts.Int("everyYears", 0, 1000),
             ScoutTripCells = scouts.Int("tripCells", 1, 200),

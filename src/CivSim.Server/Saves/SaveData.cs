@@ -290,7 +290,10 @@ public sealed record UnitSaveData(
     [property: Key(12)] int Progress,
     [property: Key(13)] int Next,
     [property: Key(14)] int Direction,
-    [property: Key(15)] int[] Trail);
+    [property: Key(15)] int[] Trail,
+    [property: Key(16)] int[]? Path = null,
+    [property: Key(17)] int PathAt = 0,
+    [property: Key(18)] int PathGoal = -1);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

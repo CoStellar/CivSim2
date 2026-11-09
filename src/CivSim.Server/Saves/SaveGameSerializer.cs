@@ -363,10 +363,12 @@ public static class SaveGameSerializer
     private static List<UnitSaveData> SaveUnits(GameState state)
     {
         var list = new List<UnitSaveData>(state.Units.Count);
-        foreach (Core.Units.Unit u in state.Units.All)
+        for (int k = 0; k < state.Units.Count; k++)
         {
+            Core.Units.Unit u = state.Units[k];
             list.Add(new UnitSaveData(u.Id, (byte)u.Kind, u.Owner.Value, u.World.Value, u.Cell, u.Target, (byte)u.Order, u.Home,
-                [.. u.People], [.. u.Skilled], [.. u.Trainees], Hundredths(u.Cargo), u.Progress, u.Next, u.Direction, [.. u.Trail]));
+                u.People.ToArray(), u.Skilled.ToArray(), u.Trainees.ToArray(), Hundredths(u.Cargo.ToArray()), u.Progress, u.Next, u.Direction,
+                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal));
         }
 
         return list;
@@ -375,29 +377,25 @@ public static class SaveGameSerializer
     private static void LoadUnits(GameState state, SaveData data)
     {
         state.Units.SetNextIdForLoad(data.NextUnitId);
-        foreach (UnitSaveData u in data.Units ?? [])
+        foreach (UnitSaveData d in data.Units ?? [])
         {
-            state.Units.Restore(
-                new Core.Units.Unit
-                {
-                    Id = u.Id,
-                    Kind = (Core.Units.UnitKind)u.Kind,
-                    Owner = new CivId(u.Owner),
-                    World = new WorldId(u.World),
-                    Cell = u.Cell,
-                    Target = u.Target,
-                    Order = (Core.Units.UnitOrder)u.Order,
-                    Home = u.Home,
-                    People = u.People ?? [],
-                    Skilled = u.Skilled ?? [],
-                    Trainees = u.Trainees ?? [],
-                    Cargo = Amounts(u.Cargo),
-                    Progress = u.Progress,
-                    Next = u.Next,
-                    Direction = u.Direction,
-                    Trail = [.. u.Trail ?? []],
-                },
-                data.NextUnitId);
+            int[] people = d.People ?? [];
+            int[] skilled = d.Skilled ?? [];
+            Core.Units.Unit u = state.Units.Restore(
+                d.Id, (Core.Units.UnitKind)d.Kind, new CivId(d.Owner), new WorldId(d.World), d.Cell, d.Home,
+                (Core.Units.UnitOrder)d.Order, people.Length, skilled.Length, d.Cargo?.Length ?? 0);
+            people.CopyTo(u.People);
+            skilled.CopyTo(u.Skilled);
+            (d.Trainees ?? []).AsSpan(0, Math.Min(d.Trainees?.Length ?? 0, u.Trainees.Length)).CopyTo(u.Trainees);
+            Amounts(d.Cargo).CopyTo(u.Cargo);
+            u.Target = d.Target;
+            u.Progress = d.Progress;
+            u.Next = d.Next;
+            u.Direction = d.Direction;
+            u.Trail.AddRange(d.Trail ?? []);
+            u.Path.AddRange(d.Path ?? []);
+            u.PathAt = d.PathAt;
+            u.PathGoal = d.PathGoal;
         }
     }
 

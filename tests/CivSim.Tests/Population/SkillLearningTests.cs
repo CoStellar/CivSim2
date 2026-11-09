@@ -157,7 +157,7 @@ public class SkillLearningTests
         village.Skilled[Skill("farmer")] = 3;
         var split = new SplitSettlementCommand(Content, village.Id, land[30], 10);
         split.Apply(state, civ.Id);
-        CivSim.Core.Units.Unit settlers = state.Units.All[^1]; // stage 6 PR 3a: they walk as a unit first
+        CivSim.Core.Units.Unit settlers = state.Units[state.Units.Count - 1]; // stage 6 PR 3a: they walk as a unit first
 
         Assert.Equal(1, settlers.Skilled[Skill("farmer")]);
         Assert.Equal(2, village.SkilledView[Skill("farmer")]);

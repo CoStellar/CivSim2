@@ -43,8 +43,9 @@ public static class GameStateHash
         h.Add(state.WorldMonths);
         h.Add(state.Units.NextId);
         h.Add(state.Units.Count);
-        foreach (Units.Unit u in state.Units.All)
+        for (int k = 0; k < state.Units.Count; k++)
         {
+            Units.Unit u = state.Units[k];
             h.Add(u.Id);
             h.Add((int)u.Kind);
             h.Add(u.Owner.Value);
@@ -81,6 +82,15 @@ public static class GameStateHash
             {
                 h.Add(c);
             }
+
+            h.Add(u.Path.Count);
+            foreach (int c in u.Path)
+            {
+                h.Add(c);
+            }
+
+            h.Add(u.PathAt);
+            h.Add(u.PathGoal);
         }
 
         h.Add(state.Episodes.NextId);

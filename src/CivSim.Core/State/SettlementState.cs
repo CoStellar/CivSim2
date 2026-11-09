@@ -57,7 +57,30 @@ public sealed class SettlementState
     public WorldId World { get; }
 
     /// <summary>Centre cell.</summary>
-    public HexCoord Cell { get; set; }
+    public HexCoord Cell
+    {
+        get => _cell;
+        set
+        {
+            if (value != _cell)
+            {
+                _cell = value;
+                System.Threading.Interlocked.Increment(ref _layoutVersion);
+            }
+        }
+    }
+
+    private HexCoord _cell;
+    private static long _layoutVersion;
+
+    /// <summary>
+    /// Grows whenever any settlement (of any game in the process) moves to another cell: the spatial grid
+    /// (<see cref="Map.SettlementGrid"/>) rebuilds itself then. It only invalidates a cache, so it changes no result.
+    /// </summary>
+    public static long LayoutVersion => System.Threading.Interlocked.Read(ref _layoutVersion);
+
+    /// <summary>Marks that settlements were founded or removed (<see cref="LayoutVersion"/>).</summary>
+    internal static void LayoutChanged() => System.Threading.Interlocked.Increment(ref _layoutVersion);
 
     /// <summary>Display name.</summary>
     public string Name { get; set; }
