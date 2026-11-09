@@ -253,7 +253,7 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
         // Stage 6 PR 3a (ADR 0024): the people leave as a unit of settlers that walks to the place and founds the camp
         // there (UnitSystem); until then they do not work anywhere.
         Units.Unit settlers = state.Units.Add(
-            Units.UnitKind.Settlers, civ, from.World, world.Geometry.Index(from.Cell), from.Id.Value, Units.UnitOrder.Found,
+            Content.Units.First(Units.UnitRole.Settlers), civ, from.World, world.Geometry.Index(from.Cell), from.Id.Value, Units.UnitOrder.Found,
             from.PopulationView.Length, from.SkilledView.Length, from.StockView.Length);
         settlers.Target = world.Geometry.Index(Target);
         Span<int> people = from.Population;
@@ -276,7 +276,7 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
     {
         CivilizationState owner = state.Civilizations[civ.Value];
         int ticks = new Units.RouteFinder().RouteTicks(
-            Content, state, owner, world, settlers.Cell, settlers.Target, Content.Units.Of(Units.UnitKind.Settlers).TicksPerCell);
+            Content, state, owner, world, settlers.Cell, settlers.Target, Content.Units.First(Units.UnitRole.Settlers).TicksPerCell);
         int perMonth = Math.Max(1, Content.Time.TicksPerActionMonth);
         int months = Content.Units.SettlerFoodMonths + (ticks > 0 ? (ticks + perMonth - 1) / perMonth : 0);
         Amount want = Episodes.Campaigns.FoodFor(Content, settlers.TotalPeople(), months);

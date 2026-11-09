@@ -368,7 +368,7 @@ public static class SaveGameSerializer
             Core.Units.Unit u = state.Units[k];
             list.Add(new UnitSaveData(u.Id, (byte)u.Kind, u.Owner.Value, u.World.Value, u.Cell, u.Target, (byte)u.Order, u.Home,
                 u.People.ToArray(), u.Skilled.ToArray(), u.Trainees.ToArray(), Hundredths(u.Cargo.ToArray()), u.Progress, u.Next, u.Direction,
-                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal));
+                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal, (int)u.Role));
         }
 
         return list;
@@ -382,7 +382,7 @@ public static class SaveGameSerializer
             int[] people = d.People ?? [];
             int[] skilled = d.Skilled ?? [];
             Core.Units.Unit u = state.Units.Restore(
-                d.Id, (Core.Units.UnitKind)d.Kind, new CivId(d.Owner), new WorldId(d.World), d.Cell, d.Home,
+                d.Id, d.Kind, (Core.Units.UnitRole)(d.Role < 0 ? d.Kind : d.Role), new CivId(d.Owner), new WorldId(d.World), d.Cell, d.Home,
                 (Core.Units.UnitOrder)d.Order, people.Length, skilled.Length, d.Cargo?.Length ?? 0);
             people.CopyTo(u.People);
             skilled.CopyTo(u.Skilled);

@@ -51,7 +51,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 continue;
             }
 
-            if (meal && u.Kind == UnitKind.Settlers)
+            if (meal && u.Role == UnitRole.Settlers)
             {
                 Eat(context, state, u, civ);
                 if (u.Gone)
@@ -127,10 +127,11 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
     {
         WorldState world = state.Worlds[u.World.Value];
         HexGlobe geo = world.Geometry;
-        int baseTicks = _content.Units.Of(u.Kind).TicksPerCell;
+        UnitKindDefinition kind = _content.Units.Of(u.Kind);
+        int baseTicks = kind.TicksPerCell;
         if (u.Next < 0)
         {
-            if (u.Kind == UnitKind.Scouts && (u.Order == UnitOrder.Scout || (u.Order == UnitOrder.Return && u.Trail.Count > 0)))
+            if (u.Role == UnitRole.Scouts && (u.Order == UnitOrder.Scout || (u.Order == UnitOrder.Return && u.Trail.Count > 0)))
             {
                 u.Next = ScoutStep(state, u, world); // out in its direction, back over its trail
             }
@@ -166,7 +167,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         HexCoord at = geo.FromIndex(u.Cell);
         HexCoord next = geo.FromIndex(u.Next);
         int side = Side(geo, at, next);
-        int cost = side < 0 ? baseTicks : RouteFinder.StepTicks(_content, world, at, (HexDirection)side, u.Next, baseTicks);
+        int cost = side < 0 ? baseTicks : RouteFinder.StepTicks(_content, world, at, (HexDirection)side, u.Next, baseTicks, kind);
         u.StepCost = cost;
         if (cost == 0)
         {
@@ -183,20 +184,20 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         u.Progress = 0;
         u.Cell = u.Next;
         u.Next = -1;
-        if (u.Kind == UnitKind.Scouts && u.Order == UnitOrder.Scout)
+        if (u.Role == UnitRole.Scouts && u.Order == UnitOrder.Scout)
         {
             u.Trail.Add(u.Cell);
         }
 
         See(state, u, civ, world);
-        if (u.Kind == UnitKind.Scouts && u.Order == UnitOrder.Scout)
+        if (u.Role == UnitRole.Scouts && u.Order == UnitOrder.Scout)
         {
             if (u.Trail.Count > _content.Units.ScoutTripCells)
             {
                 u.Order = UnitOrder.Return; // far enough: back the way it came
             }
         }
-        else if (u.Kind == UnitKind.Scouts && u.Order == UnitOrder.Return && u.Trail.Count > 0)
+        else if (u.Role == UnitRole.Scouts && u.Order == UnitOrder.Return && u.Trail.Count > 0)
         {
             // back over its trail (ScoutStep): home when the trail ends
         }
@@ -216,7 +217,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             if (attempt == 1 || u.PathGoal != goal || u.PathAt >= u.Path.Count
                 || Side(geo, geo.FromIndex(u.Cell), geo.FromIndex(u.Path[u.PathAt])) < 0)
             {
-                System.Collections.Generic.List<int>? way = _routes.Path(_content, state, civ, world, u.Cell, goal, baseTicks);
+                System.Collections.Generic.List<int>? way = _routes.Path(_content, state, civ, world, u.Cell, goal, baseTicks, _content.Units.Of(u.Kind));
                 u.Path.Clear();
                 u.PathAt = 0;
                 u.PathGoal = goal;
@@ -231,7 +232,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
 
             int next = u.Path[u.PathAt];
             int side = Side(geo, geo.FromIndex(u.Cell), geo.FromIndex(next));
-            if (side >= 0 && RouteFinder.StepTicks(_content, world, geo.FromIndex(u.Cell), (HexDirection)side, next, baseTicks) > 0)
+            if (side >= 0 && RouteFinder.StepTicks(_content, world, geo.FromIndex(u.Cell), (HexDirection)side, next, baseTicks, _content.Units.Of(u.Kind)) > 0)
             {
                 u.PathAt++;
                 return next;
@@ -390,7 +391,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 }
 
                 return;
-            case UnitOrder.Return when u.Kind == UnitKind.Scouts:
+            case UnitOrder.Return when u.Role == UnitRole.Scouts:
                 ScoutHome(state, u);
                 return;
             case UnitOrder.Return:
@@ -564,7 +565,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             }
 
             Unit scout = state.Units.Add(
-                UnitKind.Scouts, s.Owner, s.World, geo.Index(s.Cell), s.Id.Value, UnitOrder.Scout,
+                rules.First(UnitRole.Scouts), s.Owner, s.World, geo.Index(s.Cell), s.Id.Value, UnitOrder.Scout,
                 _content.Strata.Count, _content.Skills.Count, _content.Goods.Count);
             scout.Direction = rng.NextInt(6);
             if (scout.Trail.Capacity < rules.ScoutTripCells + 2)

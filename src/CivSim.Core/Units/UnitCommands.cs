@@ -56,7 +56,7 @@ public sealed record MoveUnitCommand(GameContent Content, long Unit, HexCoord Ta
             return CommandResult.Fail("Units can only be sent to known land.");
         }
 
-        return target != u.Cell && new RouteFinder().RouteTicks(Content, state, c, world, u.Cell, target, Content.Units.Of(u.Kind).TicksPerCell) < 0
+        return target != u.Cell && new RouteFinder().RouteTicks(Content, state, c, world, u.Cell, target, Content.Units.Of(u.Kind).TicksPerCell, Content.Units.Of(u.Kind)) < 0
             ? CommandResult.Fail("The unit knows no way there.")
             : CommandResult.Ok;
     }
@@ -88,7 +88,7 @@ public sealed record FoundCampCommand(GameContent Content, long Unit) : ICommand
             return own;
         }
 
-        if (u.Kind != UnitKind.Settlers)
+        if (u.Role != UnitRole.Settlers)
         {
             return CommandResult.Fail("Only settlers found camps.");
         }

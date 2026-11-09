@@ -240,7 +240,7 @@ public sealed record MapChunkMessage(
 }
 
 /// <summary>
-/// A unit as a viewer sees it (stage 6 PR 3a): kind (0 settlers, 1 scouts), owner, the cell it stands on, the cell it walks
+/// A unit as a viewer sees it (stage 6 PR 3a–3b): kind (index in units.json), owner, the cell it stands on, the cell it walks
 /// to next and how far it got (0–1000), its people and what it does (0 idle, 1 move, 2 found, 3 scout, 4 return).
 /// </summary>
 [MessagePackObject]
@@ -255,4 +255,9 @@ public sealed record UnitView(
     [property: Key(7)] int NextRow,
     [property: Key(8)] int ProgressPermille,
     [property: Key(9)] int People,
-    [property: Key(10)] int Order);
+    [property: Key(10)] int Order)
+{
+    /// <summary>What its kind is for: 0 settlers, 1 scouts, 2 army, 3 carriers (stage 6 PR 3b).</summary>
+    [Key(11)]
+    public int Role { get; init; }
+}

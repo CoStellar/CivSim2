@@ -46,8 +46,11 @@ public readonly struct Unit : IEquatable<Unit>
     /// <summary>Its id (unique in a game, never reused).</summary>
     public long Id => _book.IdOf[Slot];
 
-    /// <summary>What kind of unit.</summary>
-    public UnitKind Kind => _book.KindOf[Slot];
+    /// <summary>Its kind (<see cref="UnitKindDefinition.Id"/> in units.json).</summary>
+    public int Kind => _book.KindOf[Slot];
+
+    /// <summary>What its kind is for.</summary>
+    public UnitRole Role => _book.RoleOf[Slot];
 
     /// <summary>The civilization it belongs to.</summary>
     public CivId Owner { get => new(_book.OwnerOf[Slot]); set => _book.OwnerOf[Slot] = value.Value; }
@@ -166,7 +169,8 @@ public sealed class UnitBook
     private int _count;
 
     internal long[] IdOf = [];
-    internal UnitKind[] KindOf = [];
+    internal byte[] KindOf = [];
+    internal UnitRole[] RoleOf = [];
     internal int[] OwnerOf = [];
     internal int[] WorldOf = [];
     internal int[] CellOf = [];
@@ -213,11 +217,11 @@ public sealed class UnitBook
     /// Adds a unit with the next id: it stands on <paramref name="cell"/> with no people and no goods yet (sized by
     /// <paramref name="strata"/>, <paramref name="skills"/> and <paramref name="goods"/>, the same for every unit of a game).
     /// </summary>
-    public Unit Add(UnitKind kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods) =>
+    public Unit Add(UnitKindDefinition kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods) =>
         Place(NextId++, kind, owner, world, cell, home, order, strata, skills, goods);
 
-    /// <summary>Restores a saved unit with its id (loading; units arrive oldest first).</summary>
-    public Unit Restore(long id, UnitKind kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
+    /// <summary>Restores a saved unit with its id, kind and role (loading; units arrive oldest first).</summary>
+    public Unit Restore(long id, int kind, UnitRole role, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
     {
         if (_count > 0 && IdOf[_order[_count - 1]] >= id)
         {
@@ -225,7 +229,7 @@ public sealed class UnitBook
         }
 
         NextId = Math.Max(NextId, id + 1);
-        return Place(id, kind, owner, world, cell, home, order, strata, skills, goods);
+        return Place(id, new UnitKindDefinition { Id = kind, Role = role }, owner, world, cell, home, order, strata, skills, goods);
     }
 
     /// <summary>Sets the next id (loading).</summary>
@@ -259,13 +263,13 @@ public sealed class UnitBook
         return null;
     }
 
-    /// <summary>True when a unit of <paramref name="kind"/> from settlement <paramref name="home"/> is out.</summary>
-    public bool OutFrom(UnitKind kind, int home)
+    /// <summary>True when a unit of <paramref name="role"/> from settlement <paramref name="home"/> is out.</summary>
+    public bool OutFrom(UnitRole role, int home)
     {
         for (int k = 0; k < _count; k++)
         {
             int s = _order[k];
-            if (!GoneOf[s] && KindOf[s] == kind && HomeOf[s] == home)
+            if (!GoneOf[s] && RoleOf[s] == role && HomeOf[s] == home)
             {
                 return true;
             }
@@ -304,8 +308,9 @@ public sealed class UnitBook
 
     internal Span<Amount> CargoOf(int slot) => _cargo.AsSpan(slot * _goods, _goods);
 
-    private Unit Place(long id, UnitKind kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
+    private Unit Place(long id, UnitKindDefinition kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
     {
+        ArgumentNullException.ThrowIfNull(kind);
         if (_strata < 0)
         {
             _strata = Math.Max(0, strata);
@@ -325,7 +330,8 @@ public sealed class UnitBook
 
         _order[_count++] = slot;
         IdOf[slot] = id;
-        KindOf[slot] = kind;
+        KindOf[slot] = (byte)kind.Id;
+        RoleOf[slot] = kind.Role;
         OwnerOf[slot] = owner.Value;
         WorldOf[slot] = world.Value;
         CellOf[slot] = cell;
@@ -356,6 +362,7 @@ public sealed class UnitBook
             int size = Math.Max(16, IdOf.Length * 2);
             Array.Resize(ref IdOf, size);
             Array.Resize(ref KindOf, size);
+            Array.Resize(ref RoleOf, size);
             Array.Resize(ref OwnerOf, size);
             Array.Resize(ref WorldOf, size);
             Array.Resize(ref CellOf, size);
