@@ -98,4 +98,10 @@ najbliższy własny obóz gubernatora, zbiórka wojowników dowódcy, napad gło
 - `SaveGameTests.LoadedGameContinuesExactlyLikeTheOriginal` (z oddziałami w drodze).
 
 ## Wydajność i wyniki
-Pomiar w opisie PR 3a (3 seedy, mapa standard, 18 000 taktów, Release, po kolei).
+Pomiar z 2026-11-09 (3 seedy 7 / 23 / 42, mapa standard, 18 000 taktów = 30 min przy ×1, Release, po kolei):
+- takt średnio 4,9 / 6,7 / 5,6 ms, 95% poniżej 10,8 / 14,9 / 12,8 ms, dłużej niż 25 ms (spóźnione przy ×4) 0,07 / 0,23 / 0,11%;
+  na mapie chodzi ok. 300 zwiadowców;
+- zwiad oddziałami jest rzadszy niż dawne wyprawy w pulsie: cywilizacje znają ok. 450 pól zamiast ok. 1100, mniej się spotykają
+  (umowy handlowe 28 / 40 / 39 zamiast 60 / 73 / 65), neolit po 8,5 / 8,1 / 7,3 min zamiast 6,6 / 7,5 / 5,8 min (PR 1);
+- odpoczynek zwiadowców 1 rok zamiast 5 (seedy 7 i 42) prawie nic nie zmienia (neolit 8,1 i 7,2 min): o wiedzy decyduje
+  raczej długość wyprawy (`tripCells`).
