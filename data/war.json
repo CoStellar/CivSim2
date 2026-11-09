@@ -31,6 +31,7 @@
   "musterCells": 6,
   "battle": {
     "rounds": 6,
+    "roundTicks": 10,
     "casualtyPercent": 10,
     "rollPercent": [50, 150],
     "moralePerLossPercent": 3,

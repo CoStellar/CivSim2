@@ -2123,6 +2123,7 @@ public static class ContentLoader
         return new Core.Episodes.BattleRules
         {
             Rounds = b.Int("rounds", 1, 100),
+            RoundTicks = b.Int("roundTicks", 0, 1000),
             CasualtyPercent = b.Int("casualtyPercent", 0, 100),
             RollPercent = b.Range("rollPercent", 0, 1000),
             MoralePerLossPercent = b.Int("moralePerLossPercent", 0, 100),

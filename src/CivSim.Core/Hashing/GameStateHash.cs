@@ -137,6 +137,21 @@ public static class GameStateHash
             h.Add(e.Convoy);
             h.Add(e.InRangeSince);
             h.Add(e.Fleeing ? 1 : 0);
+            Episodes.BattleState fight = e.Fight;
+            h.Add(fight.Rounds);
+            h.Add(fight.MenA);
+            h.Add(fight.MenD);
+            h.Add(fight.StrengthA);
+            h.Add(fight.StrengthD);
+            h.Add(fight.MoraleA);
+            h.Add(fight.MoraleD);
+            h.Add(fight.LostA);
+            h.Add(fight.LostD);
+            h.Add(fight.Broken);
+            h.Add(fight.Over ? 1 : 0);
+            h.Add(e.RoundTick);
+            h.Add(e.FightLost);
+            h.Add(e.FightKilled);
             h.Add(e.Members.Length);
             for (int m = 0; m < e.Members.Length; m++)
             {

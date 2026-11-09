@@ -582,7 +582,7 @@ public partial class Hud : CanvasLayer
         {
             if (world == 0 && a.Col == col && a.Row == row)
             {
-                string phase = a.Phase switch { 1 => "going home", 2 => "gathering", _ => "marching" };
+                string phase = a.Phase switch { 1 => "going home", 2 => "gathering", 3 => "fighting", _ => "marching" };
                 sb.Append(inv, $"Army of {FindCiv(session, a.Owner)} against {FindCiv(session, a.Enemy)}: {a.Warriors} warriors {phase}, arms {a.ArmsPercent}%, morale {a.Morale}%, food for {a.FoodMonths} months\n");
             }
 

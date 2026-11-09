@@ -701,6 +701,12 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
 
             // Stage 6 PR 3b: the army and its carriers walk as units in every tick; the campaign follows where they stand.
             Follow(state, e);
+            if (e.Phase == CampaignPhase.Battle && e.RoundTick <= state.Turn)
+            {
+                BattleRound(context, state, e); // a round a second (stage 6), between the monthly steps
+                Follow(state, e);
+            }
+
             if (e.NextTick > state.Turn)
             {
                 continue;
@@ -798,6 +804,10 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         else if (e.Phase == CampaignPhase.March)
         {
             March(context, state, e, civ, war, world, hungry);
+        }
+        else if (e.Phase == CampaignPhase.Battle)
+        {
+            // The battle runs round by round (BattleRound); the warriors keep eating meanwhile.
         }
         else
         {
@@ -942,9 +952,73 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         }
 
         e.InRangeSince = -1;
+        BeginBattle(state, e, target);
+        BattleRound(context, state, e); // the first round at once, the next every RoundTicks ticks
+    }
+
+    // Stage 6 (decision of 2026-11-09): the battle is fought a round every BattleRules.RoundTicks ticks, so it lasts some
+    // seconds and the army can be seen fighting; nobody can call it back meanwhile.
+    private void BeginBattle(GameState state, Episode e, SettlementState target)
+    {
+        BattleRules rules = _content.War.Battle;
+        long attack = Campaigns.BattleStrength(_content, e);
+        long defence = Campaigns.DefenceInPlace(_content, state, target, e.Cell) * rules.DefenderMorale / 100;
+        Contacts.RecordAttack(_content, state, target.Owner, e.Civ);
+        e.Fight = Battles.Begin(rules, e.Warriors, attack, e.Morale, Campaigns.Defenders(_content, target), defence);
+        e.FightLost = 0;
+        e.FightKilled = 0;
+        e.Battles++;
+        e.Phase = CampaignPhase.Battle;
+        e.RoundTick = state.Turn;
+    }
+
+    // One round of the battle at the campaign's target: the dead fall at once (the army shrinks on the map); when the
+    // battle is over, its end is decided as before (stage 4e PR 4).
+    private void BattleRound(TurnContext context, GameState state, Episode e)
+    {
+        CivilizationState? civ = state.FindCivilization(e.Civ);
+        SettlementState? target = state.FindSettlement(new SettlementId(e.Target));
+        Treaty? war = state.Treaties.Find(e.Civ, e.Other, TreatyKind.War);
+        if (civ is not { IsAlive: true } || war is null || target is not { IsActive: true } || target.Owner != e.Other)
+        {
+            // Peace, or the place is gone or changed hands: the battle breaks off and the warriors go home.
+            if (war is not null && target is not null && (e.FightLost > 0 || e.FightKilled > 0))
+            {
+                Wars.RecordFight(_content, state, target.Owner, e.Civ, false, e.FightKilled, e.FightLost);
+            }
+
+            e.Phase = CampaignPhase.Return;
+            e.Foraging = false;
+            e.Target = e.GoalTarget;
+            return;
+        }
+
+        BattleRules rules = _content.War.Battle;
+        BattleState b = e.Fight;
+        do
+        {
+            DeterministicRandom rng = state.Random.Derive(RandomStreamId.Combat, FightSalt | (ulong)e.Id, (state.Turn * 128L) + b.Rounds);
+            (int lostA, int lostD) = Battles.Round(rules, rng, ref b);
+            int lost = Math.Min(e.Warriors, lostA);
+            e.Warriors -= lost;
+            e.Dead += lost;
+            e.FightLost += lost;
+            int killed = Campaigns.KillDefenders(_content, target, lostD);
+            e.Killed += killed;
+            e.FightKilled += killed;
+        }
+        while (!b.Over && rules.RoundTicks <= 0);
+
+        e.Fight = b;
+        e.Morale = b.MoraleA;
+        if (!b.Over)
+        {
+            e.RoundTick = state.Turn + rules.RoundTicks;
+            return;
+        }
 
         bool foray = e.Foraging;
-        (string text, bool won) = Fight(state, e, civ, target, war);
+        (string text, bool won) = Conclude(state, e, civ, target, war, b.Result);
         context.Chronicle(text);
         if (foray)
         {
@@ -1175,26 +1249,15 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
 
     private static void Finish(Episode e) => e.Ended = true; // its units are released after the step (Release)
 
-    // The fight at the target (until battles in rounds, PR 4): the chance to win is the attackers' share of the armed
-    // strength (arms from technology and stores, times morale).
-    private (string Text, bool Won) Fight(GameState state, Episode e, CivilizationState civ, SettlementState target, Treaty war)
+    // The end of a battle at the target (stage 4e PR 4; fought round by round since stage 6): the score, and what the
+    // winners take.
+    private (string Text, bool Won) Conclude(GameState state, Episode e, CivilizationState civ, SettlementState target, Treaty war, BattleResult battle)
     {
-        BattleRules rules = _content.War.Battle;
         string attackers = civ.Name;
         CivId defender = target.Owner;
         string defenders = state.FindCivilization(defender)?.Name ?? defender.ToString();
-        long attack = Campaigns.BattleStrength(_content, e);
-        long defence = Campaigns.DefenceInPlace(_content, state, target, e.Cell) * rules.DefenderMorale / 100;
-        Contacts.RecordAttack(_content, state, defender, e.Civ);
-        DeterministicRandom rng = state.Random.Derive(RandomStreamId.Combat, FightSalt | (ulong)e.Id, state.Turn);
-        BattleResult battle = Battles.Fight(rules, rng, e.Warriors, attack, e.Morale, Campaigns.Defenders(_content, target), defence);
-        int lost = Math.Min(e.Warriors, battle.AttackersLost);
-        e.Warriors -= lost;
-        e.Dead += lost;
-        e.Battles++;
-        e.Morale = battle.AttackerMorale;
-        int killed = Campaigns.KillDefenders(_content, target, battle.DefendersLost);
-        e.Killed += killed;
+        int lost = e.FightLost;
+        int killed = e.FightKilled;
         string rounds = battle.Rounds == 1 ? "1 round" : $"{battle.Rounds} rounds";
         if (!battle.AttackersWon)
         {

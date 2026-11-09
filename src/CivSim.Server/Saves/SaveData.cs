@@ -116,7 +116,11 @@ public sealed record EpisodeSaveData(
     [property: Key(34)] long Army = -1,
     [property: Key(35)] long Convoy = -1,
     [property: Key(36)] long InRangeSince = -1,
-    [property: Key(37)] bool Fleeing = false);
+    [property: Key(37)] bool Fleeing = false,
+    [property: Key(38)] long[]? Fight = null,
+    [property: Key(39)] long RoundTick = 0,
+    [property: Key(40)] int FightLost = 0,
+    [property: Key(41)] int FightKilled = 0);
 
 /// <summary>Saved terms of a peace (stage 4e).</summary>
 [MessagePackObject]
