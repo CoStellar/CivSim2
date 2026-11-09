@@ -20,14 +20,14 @@ z listy (albo przenieś do „Naprawione” z numerem PR), a gdy znajdziesz nowy
 | 6 | **Przywódcy przy długich turach.** Przy turach 25–50 lat przywódca zmienia się prawie co turę, więc jego cechy mało znaczą. | długi bieg 4 h | Kronika łączy już te zmiany w jedną linię na turę (etap 5b), ale sama mechanika się nie zmieniła. | Decyzja Patryka z 2026-11-09: w pierwszych erach bez postaci z imieniem (etap 6, ADR 0024). |
 | 7 | **Jeden niestabilny test serwera.** | pamięć projektu | `ObserverLayerTests.ObserverGetsLayersAndTheFogOfAWatchedCivilization` raz na kilka przebiegów pada w całym zestawie, a sam przechodzi. | Znaleźć przyczynę (prawdopodobnie zależność od czasu); nie wyłączać testu. |
 | 8 | **Ekonomia i decyzje AI to nadal większość czasu tury.** | długi bieg 4 h, benchmark 5b | Po 5b tura średnio 12 ms (95% poniżej 48 ms). `TradeNetworks.Build` liczy sieci od zera 6 razy na turę (każda osada z każdą); alokacje ~0,55 MB na turę, głównie migawka. | Gdy tura znów urośnie (więcej er, większe mapy): pamięć sieci handlowych w obrębie tury, pula tablic migawki. |
-| 9 | **Zwiadowcy nie mają ludzi.** | etap 6 PR 3a | Oddział zwiadowców to na razie znak zwiadu: nie wyjmuje ludzi z osady i nic nie je. | PR 3b (wojownicy i tragarze jako oddziały): zwiadowcy z łowców osady. |
 | 10 | **Wędrówka obozu liczy drogę przy każdym polu.** | etap 6 PR 3a | Oddziały liczą drogę raz na cel (T3), obóz w wędrówce jeszcze po staremu, raz na pole (raz na ok. 20 taktów na wędrujący obóz; obozy wędrują rzadko). Sprawdzenie rozkazów wędrówki i kampanii to nadal przeszukanie wszerz z limitem odległości. | Przy PR 3b: wędrówka obozu jako oddział z zapamiętaną drogą. |
-| 11 | **Wojownicy maszerują szybciej niż osadnicy.** | etap 6 PR 3a | Kampania idzie 3 pola na miesiąc akcji (5 taktów), osadnicy 1 pole na 20 taktów. | PR 3b: kampania jako oddziały z prędkością z `units.json`. |
 
 ## Naprawione
 
 | Problem | PR | Szczegóły |
 | --- | --- | --- |
+| Zwiadowcy bez ludzi; wojownicy maszerowali 12 razy szybciej niż osadnicy (9, 11 z PR 3a) | etap 6 PR 3b | zwiadowcy biorą myśliwych; armie i tragarze jako oddziały z prędkością z `units.json` |
+| Zapytanie siatki osad z bardzo dużym promieniem zawieszało takt | #69 | promień większy niż mapa przegląda każdy kubełek raz |
 | Zalew epidemii i katastrof (~67 zdarzeń na turę) | #63 (`14cd39c`) | epidemie tylko w dużych cywilizacjach, katastrofy 5× rzadsze |
 | Wymieranie plemion łowców (8 z 12 ludów w 135 s) | #63 (`9071460`) | własna ziemia bandy, łagodniejszy głód |
 | Skaczące nazwy cywilizacji, brak stolic | #63 (`40ab078`) | stolica w największej wiosce, nazwa nad skupiskiem wokół stolicy |

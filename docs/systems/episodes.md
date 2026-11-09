@@ -17,7 +17,7 @@
 flowchart TD
   T["Takt t (ADR 0025)"] --> D["Decyzje: cywilizacje z pulsem + alarmy<br/>dowódca wysyła kampanię, dyplomata myśli o pokoju"]
   D --> C{"Kampania: NextTick ≤ t?"}
-  C -- tak --> S["krok kampanii = miesiąc akcji:<br/>jedzenie, zbiórka, marsz 3 pola, walka u celu,<br/>tragarze, powrót; NextTick += 5 taktów"]
+  C -- tak --> S["krok kampanii = miesiąc akcji:<br/>jedzenie, zbiórka, rozkaz dla oddziału armii, walka w zasięgu,<br/>tragarze, powrót; NextTick += 5 taktów"]
   C -- nie --> N["czeka do swojego taktu"]
   S --> W["WarSystem: cicha wojna (5 lat akcji = 300 taktów)<br/>kończy się białym pokojem"]
   N --> W
@@ -25,22 +25,23 @@ flowchart TD
 
 ## Zasady i wzory
 - **Takty, nie lata:** epizod ma `NextTick` (następny krok) i `TickMonths` (miesiące akcji na krok, dziś 1). Miesiąc akcji trwa
-  `ticksPerActionMonth` taktów (`data/time.json`, dziś 5). Zbiórka trwa do `MusterUntilTick`.
+  `ticksPerActionMonth` taktów (`data/time.json`, dziś 5). Od etapu 6 PR 3b armia i tragarze to oddziały, które idą co takt
+  (`docs/systems/units.md`); kampania w każdym takcie bierze ich pole (`Episode.Cell`, `ConvoyCell`), a w swoim kroku daje im rozkazy.
 - **Świat nie czeka:** puls świata i pulsy cywilizacji idą swoim rytmem (`docs/systems/turn-loop.md`). Dawne skracanie kroku świata
   (`WorldClock.Shorten`) i krok samych epizodów zniknęły; znany problem 4 („wojny spowalniają czas gry”) jest naprawiony.
 - **Kampania** (`LaunchCampaignCommand`, `CampaignSystem`):
   - wychodzą wojownicy osady wyjścia i osad do 6 pól od niej (PR 3): z każdej najwyżej 2/3 (1/3 zostaje w domu), razem co najmniej 5 i najwyżej limit wodza ery (50);
-  - zbiórka (faza `Muster`): tyle miesięcy, ile najdalsza osada idzie do osady wyjścia; potem marsz;
+  - zbiórka (faza `Muster`): wojownicy innych osad idą do osady wyjścia jako własne oddziały; marsz zaczyna się, gdy wszyscy tam stoją (od etapu 6 PR 3b; `MusterUntilTick` nieużywany);
   - każdy krok: armia je (najpierw niesione jedzenie, potem jedzenie z łupów); głodna traci morale, napada pobliską wioskę wroga, przy morale < 30 zawraca; tragarze idą za nią (szczegóły: `docs/systems/war.md`);
-  - marsz: 3 pola na miesiąc po znanych polach (ok. 150 km na pole; ok. 15 km dziennie);
-  - u celu wojownicy stają na polu obok i atakują w następnym miesiącu; dowódca, który teraz widzi osadę, może ich odwołać (od PR 5, decyzja K2 w `docs/ai/11-dowodca.md`);
+  - marsz (od etapu 6 PR 3b): oddział armii idzie najtańszą znaną drogą, 15 taktów na płaskie pole (3 miesiące akcji);
+  - u celu wojownicy stają, gdy cel jest w zasięgu ich rodzaju (wojownicy: pole obok), i atakują miesiąc akcji później; pobici uciekają (`Flee`), ocaleni po powrocie odpoczywają `restMonths`; dowódca, który teraz widzi osadę, może ich odwołać (od PR 5, decyzja K2 w `docs/ai/11-dowodca.md`);
   - walka (od PR 4): bitwa w rundach na strumieniu `combat` (`Battles.Fight`, szczegóły w `docs/systems/war.md`): siła z uzbrojeniem, morale, głodem i terenem obrońców, straty co rundę, ucieczka przy niskim morale;
   - wygrana: łupy (tyle, ile uniosą wojownicy, ten sam udział każdego zapasu); w wojnie o ziemię zdobyta wioska przechodzi z ludźmi do zwycięzcy, a pokonani mają do niej roszczenie; ludzie pobitego obozu uciekają do swojej najbliższej osady;
   - powrót: ocaleni wracają do osad, z których przyszli (w proporcji), łupy i resztka jedzenia do osady wyjścia (albo do najbliższej własnej, gdy domu już nie ma).
-- **Wojna** (`WarSystem`): wojna bez kampanii przez 5 lat akcji (`quietPeaceYears` × 12 × `ticksPerActionMonth` = 300 taktów, 30 s przy ×1) kończy się białym pokojem; liczy się od `Treaty.QuietSince` = najpóźniejsze z: wypowiedzenia (`SinceTick`), gotowości (`ReadyTick`) i ostatniego kroku kampanii (`LastCampaignTick`); zmęczenie = miesiące kampanii × 5 + procent zabitych × 3.
+- **Wojna** (`WarSystem`): wojna bez kampanii przez 5 lat akcji (`quietPeaceYears` × 12 × `ticksPerActionMonth` = 300 taktów, 30 s przy ×1) kończy się białym pokojem; liczy się od `Treaty.QuietSince` = najpóźniejsze z: wypowiedzenia (`SinceTick`), gotowości (`ReadyTick`) i ostatniego kroku kampanii (`LastCampaignTick`); zmęczenie = miesiące kampanii × 0,6 (od etapu 6 PR 3b; było 5) + procent zabitych × 3.
 
 ## Pliki danych
-- `data/war.json`: `campaignStepMonths` 1, `marchCellsPerMonth` 3, `quietPeaceYears` 5, `wearinessPerCampaignMonth` 5, `sendPercent` 67, `minWarriors` 5, `armySightCells` 1 (reguły); progi dowódcy w `data/ai.json` → `commander` (od PR 5).
+- `data/war.json`: `campaignStepMonths` 1, `restMonths` 6, `quietPeaceYears` 5, `wearinessPerCampaignMonth` 0,6, `sendPercent` 67, `minWarriors` 5, `armySightCells` 1 (reguły); progi dowódcy w `data/ai.json` → `commander` (od PR 5).
 
 ## Testy
 - `ArmyTests` (PR 3): patrz `docs/systems/war.md`.
