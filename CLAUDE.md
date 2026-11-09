@@ -6,9 +6,10 @@ Znane problemy aplikacji (z przyczynami i planem): `docs/known-issues.md`. Rapor
 
 ## Projekt w skrócie
 
-CivSim 2 to turowa gra 4X w pixel arcie na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się, przez bieguny przechodzi się na drugą stronę planety).
+CivSim 2 to strategia na żywo (między RTS-em a 4X, decyzja Patryka z 2026-11-09, ADR 0024 i 0025) w pixel arcie na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się, przez bieguny przechodzi się na drugą stronę planety).
 Cywilizacje przechodzą od koczowniczych plemion do ery kosmicznej. **Najpierw powstaje symulator**
-(wszystkie cywilizacje prowadzi AI), dopiero potem tryb gracza na tych samych zasadach.
+(wszystkie cywilizacje prowadzi AI), na nim tryb gracza na tych samych zasadach. Kolejność od 2026-11-09: backend gry na żywo (etap 6),
+epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery (`ROADMAP.md`).
 
 ## Zakres
 
@@ -67,6 +68,7 @@ w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
 5. **Zawartość w danych.** Technologie, zasoby, budynki, receptury, jednostki, ustroje, polityki, zdarzenia,
    biomy i motywy UI są w plikach JSON w `data/`, walidowanych przy starcie. Nowa technologia nie wymaga kodu.
 6. **Tempa na rok.** Wszystkie tempa (wzrost, psucie, odrastanie) definiuj na rok i przeliczaj przez długość tury ery.
+   *Zmieni się w etapie 6 (ADR 0025): akcja w taktach, rozwój w pulsach cywilizacji, lata tylko jako licznik dla gracza.*
 7. **Wydajność od pierwszego dnia:**
    - pola mapy w płaskich tablicach (struktura tablic), byty identyfikowane liczbami;
    - zero alokacji w głównej pętli tury, pule obiektów;
@@ -163,7 +165,7 @@ Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla
 - Nie dodawaj religii ani kultury.
 - Nie implementuj modułów z rozdziału 16 GDD bez zgody Patryka.
 - Nie dawaj AI żadnych premii ani ukrytej wiedzy; widzi tylko to, co odkryła jej cywilizacja.
-- Nie buduj interfejsu gracza przed etapem 13 (wyjątki: podgląd deweloperski z menu startowym i widokiem warstw oraz grafiki zastępcze z etapu 5).
+- Nie buduj interfejsu gracza przed etapem 8 (wyjątki: podgląd deweloperski z menu startowym, widokiem warstw i narzędziami do testów etapu 6 oraz grafiki zastępcze z etapu 5).
 - Nie planuj eksportu do przeglądarki (Godot nie eksportuje oficjalnie C# do web).
-- Nie buduj gry w sieci (przyszła aktualizacja) i nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio).
+- Nie buduj gry w sieci przed etapem 9 i nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio).
 - Nie zmieniaj zasad gry bez zgody Patryka.

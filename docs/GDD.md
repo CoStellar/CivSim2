@@ -1,10 +1,12 @@
 # CivSim 2 — Dokument projektu gry (GDD)
 
-Wersja z 3 listopada 2026 · źródło: dokument projektu w Claude
+Wersja z 3 listopada 2026, zmiana kierunku na grę na żywo 9 listopada 2026 (ADR 0024, 0025) · źródło: dokument projektu w Claude
 
 ## 1. Wizja i filary
 
-CivSim 2 to turowa gra 4X w pixel arcie, a przede wszystkim symulator rozwoju gospodarczego na mapie heksagonalnej, w której cywilizacje przechodzą od plemienia z epoki kamienia do kolonizacji kosmosu. Najpierw powstaje **symulator**, w którym cywilizacje same podejmują sensowne decyzje. Dopiero na nim budujemy **grę**, w której gracz prowadzi jedną z nich na tych samych zasadach.
+CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod spodem symulator rozwoju gospodarczego na mapie heksagonalnej, w której cywilizacje przechodzą od neolitu do kolonizacji kosmosu. Gracz to byt ponad światem: rządzi całą cywilizacją i steruje jej oddziałami, a czego nie zdąży zrobić, robi za niego ta sama AI, która prowadzi resztę świata (decyzja Patryka z 2026-11-09, ADR 0024; szczegóły w 1.1). Symulator, w którym cywilizacje same podejmują sensowne decyzje, jest fundamentem gry.
+
+*Do 2026-11-09 GDD opisywał turową grę 4X na ok. 10 h z trybem gracza na samym końcu. Rozdziały 6.2, 11 i 13 opisują jeszcze obecny kod (kroki w latach); po etapie 6 zastąpi je model z ADR 0025.*
 
 **Filary (każda decyzja projektowa musi przejść przez nie wszystkie):**
 
@@ -14,15 +16,36 @@ CivSim 2 to turowa gra 4X w pixel arcie, a przede wszystkim symulator rozwoju go
 4. **Czytelna głębia.** Mechanik może być dużo, ale gracz zawsze widzi, *dlaczego* coś się stało, np. „miasto głoduje, bo susza obniżyła zbiory o 40%”.
 5. **Zawartość w danych, nie w kodzie.** Technologie, zasoby, budynki, jednostki i zdarzenia definiujemy w plikach JSON. Nowa technologia nie wymaga programowania.
 
-**Inspiracje:** Civilization (ery, drzewo technologii, dyplomacja, mapa hex), Factorio (łańcuchy produkcji, przepływy towarów), Dwarf Fortress i Crusader Kings (historie wyłaniające się z symulacji), Old World (charakter przywódców).
+**Inspiracje:** Civilization (ery, drzewo technologii, dyplomacja, mapa hex), Factorio (łańcuchy produkcji, przepływy towarów), Dwarf Fortress i Crusader Kings (historie wyłaniające się z symulacji), Old World (charakter przywódców), Rise of Nations (całe dzieje w jednej partii na żywo), gry Paradoxu (czas na żywo z pauzą, rządzenie zamiast klikania).
 
 **Czego NIE robimy (żeby projekt był do skończenia):**
 
 - Multiplayera bez serwera (peer-to-peer, lockstep). Gra sieciowa działa wyłącznie jako klient–serwer (2.1).
-- Walki w czasie rzeczywistym. Wszystko rozstrzyga się w turach.
+- Walki zręcznościowej. Gra toczy się na żywo, ale bitwy liczy symulacja; gracz decyduje o celu, odwrocie, posiłkach i uzbrojeniu.
 - Grafiki 3D i animowanych przerywników.
-- Zarządzania pojedynczym człowiekiem. Ludność to grupy, nie osoby (wyjątek: przywódcy i wielcy ludzie).
+- Zarządzania pojedynczym człowiekiem. Ludność to grupy, a jednostki to oddziały, nie osoby (wyjątek: przywódcy i wielcy ludzie, i to dopiero w późniejszych erach).
 - Fabuły pisanej ręcznie. Historie mają wynikać z symulacji. Nie ma też kultury ani religii jako mechanik gry.
+
+### 1.1 Gra na żywo (decyzje Patryka z 2026-11-09, ADR 0024 i 0025)
+
+**Przebieg partii.**
+1. **Wybór miejsca.** Kolejność losowana (gracz może wybrać, że idzie pierwszy). Wybierający przez ok. 5 s widzi mapę, potem tylko ląd jako szare bloki i ma 10–15 s na wybór miejsca z pamięci. Wokół wybranego miejsca powstaje losowa strefa blokady: kolejne cywilizacje mogą stanąć blisko, ale nie za blisko. AI wybiera według oceny terenu z losowym błędem.
+2. **Start od zera w neolicie.** Epoka kamienia to tylko „historia plemienia” (opis), bez rozgrywki. Różnice daje teren.
+3. **Gra na żywo** do celu ustalonego na starcie na pasku postępu: pierwszy metal, pierwsza elektryczność, lot w kosmos albo podbój obszaru na innej planecie. Pierwsza wersja dla graczy kończy się na epoce brązu: celem jest odkrycie wszystkich jej technologii.
+
+**Co robi gracz.**
+- Steruje oddziałami w ruchu jak w RTS-ie: osadnicy, wojownicy, zwiadowcy, tragarze z jedzeniem, później łodzie i inne.
+- Zleca **zadania na obszarze**: wydobycie surowca, pola, łowiska, potem budowy w danym miejscu (mur, zbrojownia). Ludzie z osady sami tam chodzą.
+- Zakłada miasta i awansuje je, buduje fortyfikacje, uzbraja się.
+- Wybiera kierunek rozwoju ludu (góry i kopanie, morze i łodzie…), który z czasem owocuje (6.4).
+- Odpowiada na **karty decyzji**: ważna sprawa z rekomendacją doradcy i przyczyną, licznik ok. 20 s, potem decyduje AI.
+- Każdy poziom decyzji (7.1) może oddać AI; czego nie zdąży, robi AI.
+
+**Tempo.** Nie ma budżetu minut na erę: każda cywilizacja przechodzi do kolejnej ery we własnym tempie, zależnym od terenu i umiejętności gracza. Z erą zmienia się tempo gry i to, na czym gracz się skupia. Lata są tylko licznikiem dla gracza („historia ludu”); zwalniają w późniejszych erach. Backend liczy się w taktach i pulsach cywilizacji (ADR 0025). W pierwszych erach nie ma postaci z imieniem.
+
+**Tempo AI (poziomy trudności) w wersji do epoki brązu:** dobre AI odkrywa wszystkie technologie brązu w ok. 15 min, średnie w 20–25 min, słabe w 30–40 min.
+
+**Tryby.** Najpierw gra solo (ta sama gra z większą liczbą graczy AI), potem w sieci. Pauza w singlu zawsze, prędkości ×1/×2/×4. Na start mapa standard i 6–8 cywilizacji. Gracz, którego lud upadł, zostaje **widzem** i widzi wszystkie cywilizacje graczy.
 
 ## 2. Technologia i architektura
 
@@ -441,6 +464,8 @@ Każda technologia w pliku JSON ma:
 
 ### 6.2 Ery
 
+**Zmiana z 2026-11-09 (ADR 0025):** w grze na żywo backend liczy się w taktach (akcja) i pulsach cywilizacji (rozwój), a lata są tylko licznikiem dla gracza; poniższy model kroków w latach opisuje obecny kod do etapu 6.
+
 Wszystkie tempa w grze (wzrost, psucie, odrastanie lasów) są zdefiniowane na rok i przeliczane przez długość kroku. Dzięki temu zmiana długości kroku między erami nie psuje ekonomii.
 
 **Zegar świata i rytm cywilizacji** (ADR 0018, decyzja Patryka z 2026-11-06): czas gry to licznik lat, który sam niczego nie liczy. Każda cywilizacja liczy swój stan (gospodarkę, ludność, naukę, zwiad) i podejmuje zaplanowane decyzje tylko we **własnych krokach**, co tyle lat, ile podaje tabela dla **jej** ery. Kroki są przypięte do kalendarza (rytm 25 lat: lata 0, 25, 50…), a krok liczy dokładnie czas od poprzedniego, więc po zmianie ery pierwszy krok może być krótszy i nikt nie traci lat. Świat (klimat, morze, odrastanie dzikiej żywności poza osadami) i widok liczą się w latach, w których ktoś ma krok. Na wydarzenia (wypowiedziana wojna, napad, propozycja umowy, koniec badania) cywilizacja reaguje od razu, także poza swoim rytmem (decyzje reaktywne, 8.1).
@@ -483,6 +508,17 @@ Era cywilizacji zmienia się po zbadaniu technologii progowej i 60% technologii 
 **W CORE (etap 3f):** naukę w erach 1–2 wytwarzają wszyscy ludzie (rzemieślnicy dziesięć razy więcej niż wytwórcy), bo uczonych i budynków jeszcze nie ma. Od etapu fachów (ADR 0020) naukę dają głównie myśliciele, a technologie er 1–2 mają wymogi ludzi. Koszt spada o inspiracje (np. krzemień w strefie wpływów: obróbka krzemienia −30%) i o 20% za każdego sąsiada, który zna technologię (najwyżej 2 sąsiadów, sąsiad: osada w promieniu 12 pól), nie niżej niż do 25% kosztu. Odkryć przypadkiem nie ma (rozdział 16: „Wytnij”). Odblokowania z tabeli działają tak: ogień +10% plonów i +4 °C tolerancji zimna; obróbka krzemienia: zbieranie krzemienia i narzędzia kamienne; łowiectwo zespołowe: więcej mięsa i skór ze zwierzyny; rybołówstwo: ryby z wybrzeży, jezior i łowisk; garbarstwo: odzież ze skór i +4 °C; tradycje: +5 nastroju; rolnictwo: zboże z dzikiego zboża; udomowienie: stada (bydło, owce, konie) i +25% udźwigu; garncarstwo: glina, ceramika i 25% wolniejsze psucie jedzenia; tkactwo: tkaniny; kamieniarstwo: kamień; nawadnianie: +5% plonów; pieczenie chleba (dodane, żeby chleb miał swoją technologię): chleb. Wymiana barterowa zacznie działać z handlem między cywilizacjami w etapie 4. Rolnictwo pozwala też osiąść w wiosce i uprawiać pola (5.3).
 
 Ery 3–10 rozpiszemy etapami: każdy etap roadmapy (rozdział 14) zaczyna się od pełnej listy technologii swojej ery.
+
+### 6.4 Doświadczenie, kierunek rozwoju i podgląd technologii (decyzje Patryka z 2026-11-09, ADR 0024)
+
+Zasady do wdrożenia w etapie 6 (szczegóły i liczby: przy wdrożeniu, z propozycją dla Patryka). Zastępują zniżkę „20% za sąsiada” i zakaz odkryć przypadkiem z 6.3.
+
+- **Technologia to brama, ale też umiejętność.** Po odkryciu ma **doświadczenie**, które rośnie od używania (ludzie przy pracy, wytworzone dobra) i wzmacnia jej efekt: rolnictwo przez dekady daje większe plony, łodzie rybaków stają się mocniejsze. Rekomendacja na start: do ok. +50% efektu na najwyższym poziomie, powolny spadek, gdy technologia leży odłogiem.
+- **Technologię można rozwijać albo tylko zaliczyć**, jeśli jest potrzebna jedynie do wejścia w nową erę.
+- **Koszt.** Technologia ma stały koszt bazowy. Im lepiej rozwinięta technologia poprzedzająca, tym taniej.
+- **Kierunek rozwoju.** To, czym lud się zajmuje (góry i kopanie, morze i rybołówstwo…), zwiększa szansę na pokrewne odkrycia: kto przetrwał w górach (np. dzięki dowozowi jedzenia), ma większą szansę pierwszy odkryć rzemiosło i złoża rud, więc szybciej dojdzie do metali; rybacy szybciej budują coraz lepsze łodzie.
+- **Podejrzenie technologii.** Przez kontakt (zwiadowca, kupiec, sąsiedztwo) cywilizacja może podejrzeć technologię, którą ktoś już zna: 5% zniżki za każdą cywilizację, która ją zna, najwyżej 50%. Przodujący płaci najwięcej; nikt nie jest „niesiony” przez innych. Przy 6–8 cywilizacjach najwyższa zniżka to 25–35%; czy liczyć ją od udziału znających (żeby ostatni miał zawsze ok. 50%), ustalimy przy strojeniu.
+- **Wzór:** koszt = koszt bazowy × (1 − zniżka za podgląd) × (1 − zniżka za rozwinięcie poprzedniej). Przykład: 1000 punktów, zna ją 6 cywilizacji (30%), poprzednia dobrze rozwinięta (20%): 1000 × 0,7 × 0,8 = 560.
 
 ## 7. Zarządzanie cywilizacją
 
@@ -794,6 +830,8 @@ Wszystkie zdarzenia są w plikach danych: warunki, szanse, efekty i komunikat do
 
 ## 11. Pętla symulacji
 
+**Zmiana z 2026-11-09 (ADR 0025):** po etapie 6 pętla to stały takt (ruch, budowa, walka oddziałów; np. co 0,1 s przy ×1) i pulsy cywilizacji rozłożone między takty (gospodarka, ludność, nauka, AI; np. co ok. 3 s), liczone równolegle. Opis niżej to obecny kod.
+
 Tury są **równoczesne**: wszystkie cywilizacje podejmują decyzje na podstawie tego samego stanu świata, a potem rdzeń rozstrzyga je w stałej kolejności. Jedna tura pętli to **krok świata** (6.2, ADR 0018): trwa do najbliższego roku, w którym któraś cywilizacja ma swój krok. W fazach 2–10 liczą się tylko cywilizacje, które mają krok w tej turze (za cały swój krok), oraz reakcje pozostałych na alarmy; świat liczy się zawsze, za długość kroku świata. Dzięki temu AI każdej cywilizacji może liczyć się równolegle na osobnych rdzeniach procesora, a wynik i tak jest deterministyczny.
 
 ### 11.1 Kolejność faz tury
@@ -910,11 +948,14 @@ Gra ma dwa tryby na tym samym rdzeniu: obserwatora, w którym oglądasz i badasz
 ### 13.1 Tryby
 
 - **Obserwator (symulator):** wszystkie cywilizacje prowadzi AI. Możesz podglądać mapy wpływów i oceny decyzji, cofać się w historii (wykresy, kronika) i używać „widoku boga”: wywołać zdarzenie, zmienić pole, dodać cywilizację. Ten tryb powstaje pierwszy.
-- **Gracz:** prowadzisz jedną cywilizację i widzisz tylko to, co ona. Każdy poziom decyzji (7.1) możesz oddać AI i odebrać w dowolnej chwili.
-- **Multiplayer (aktualizacja po CORE):** kilku graczy w sieci na jednym serwerze, tury równoczesne, pozostałe cywilizacje prowadzi AI (2.1).
+- **Gracz:** prowadzisz jedną cywilizację na żywo (1.1) i widzisz tylko to, co ona. Każdy poziom decyzji (7.1) możesz oddać AI i odebrać w dowolnej chwili. Pauza zawsze, prędkości ×1/×2/×4.
+- **Widz:** gracz, którego lud upadł, widzi wszystkie cywilizacje graczy, jak obserwator.
+- **Multiplayer (po grze solo):** kilku graczy w sieci na jednym serwerze, na żywo, prędkość ustala gospodarz; pozostałe cywilizacje prowadzi AI (2.1).
 - **Później:** scenariusze (gotowa mapa i sytuacja) oraz edytor mapy.
 
 ### 13.2 Warunki zwycięstwa (do wyboru przy starcie)
+
+**Od 2026-11-09 (ADR 0024):** cel partii ustala się na starcie na pasku postępu: pierwszy metal, pierwsza elektryczność, lot w kosmos albo podbój obszaru na innej planecie. W pierwszej wersji dla graczy celem jest odkrycie wszystkich technologii epoki brązu. Tabela niżej zostaje jako lista celów na późniejsze ery.
 
 | Zwycięstwo | Warunek |
 | --- | --- |
@@ -937,20 +978,18 @@ Gra ma dwa tryby na tym samym rdzeniu: obserwatora, w którym oglądasz i badasz
 
 ## 14. Roadmapa i podział pracy
 
-Etapy 0–4 dają działający symulator er 1–2. Etap 5 to lepszy podgląd: menu startowe z ustawieniami świata i symulacji, widok nakładających się warstw z przezroczystością i grafiki zastępcze. Potem każda kolejna era (3–9) to osobny etap (6–12) tworzony tym samym cyklem. Tryb gracza z pixel artem to ostatni etap CORE (13), bo najważniejsza jest dobrze działająca symulacja (decyzja Patryka z 2026-11-06). Moduły z rozdziału 16, w tym gra w sieci i kosmos, przyjdą jako późniejsze aktualizacje. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
+Etapy 0–5b dały działający symulator er 1–2 z podglądem. **Od 2026-11-09 (ADR 0024, 0025) cel to gra na żywo**, więc kolejność się zmienia: najpierw backend gry na żywo i sprawdzenie, czy działa tak, jak chce Patryk (etap 6), potem epoka brązu (etap 7), potem grywalne demo solo (etap 8). Gra w sieci przychodzi po grze solo (etap 9), a kolejne ery jedna po drugiej, pogłębione, bez pośpiechu. Kosmos i późne ery to dalsza przyszłość. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”.
 
-**Priorytet: symulacja.** Do etapu 12 włącznie budujemy wyłącznie rdzeń i podgląd deweloperski: kolorowe heksy (od etapu 5 grafiki zastępcze), wykresy, kronika, inspektor pola, warstwy i menu startowe. Pixel art i interfejs gracza wchodzą w etapie 13, kiedy symulacja wszystkich er działa stabilnie na mapie ogromnej. Twoja rola w etapach 0–12 to decyzje o zasadach i ocena, czy przebiegi symulacji wyglądają sensownie.
+**Priorytet: gra, która działa jak w 1.1.** Do etapu 7 włącznie budujemy rdzeń i podgląd deweloperski (z wyborem miejsca i rozkazami do testów). Interfejs gracza wchodzi w etapie 8, pixel art Patryka razem z nim albo zaraz po nim.
 
 ```mermaid
 flowchart LR
-  E0["Etap 0 · Fundamenty<br/>repo, CLAUDE.md, CI, testy<br/>Gotowe: 10 000 pustych tur"] --> E1["Etap 1 · Mapa<br/>hex, generator, biomy, rzeki<br/>Gotowe: 100 map bez błędów"]
-  E1 --> E2["Etap 2 · Podgląd symulacji<br/>kolorowe heksy, wykresy, kronika<br/>Gotowe: 60 FPS, mapa ogromna"]
-  E2 --> E3["Etap 3 · Gospodarka<br/>zasoby, ludność, osady, ery 1–2<br/>Gotowe: plemiona rosną same"]
-  E3 --> E4["Etap 4 · AI i dyplomacja<br/>BRAMA: demo symulatora"]
-  E4 --> E5["Etap 5 · Lepszy podgląd<br/>menu startowe, warstwy,<br/>grafiki zastępcze"]
-  E5 --> E6["Etapy 6–12 · ery 3–9<br/>jedna era na etap"]
-  E6 --> E13["Etap 13 · Tryb gracza<br/>pixel art, UI<br/>BRAMA: grywalna gra"]
-  E13 -.-> U["Aktualizacje po CORE<br/>moduły: sieć, kosmos, …"]
+  E0["Etapy 0–5b · symulator er 1–2<br/>mapa, gospodarka, AI, wojna,<br/>państwo, podgląd"] --> E6["Etap 6 · Backend na żywo<br/>takt, pulsy, oddziały, zadania,<br/>wybór miejsca, doświadczenie technologii<br/>BRAMA: czy działa jak trzeba"]
+  E6 --> E7["Etap 7 · Epoka brązu<br/>miasta, metal, mur, zbrojownia,<br/>cel: wszystkie technologie brązu"]
+  E7 --> E8["Etap 8 · Grywalne demo solo<br/>interfejs gracza, karty decyzji,<br/>widz, poziomy AI<br/>BRAMA: grywalna gra"]
+  E8 --> E9["Etap 9 · Gra w sieci"]
+  E9 -.-> E10["Kolejne ery<br/>jedna era na etap"]
+  E10 -.-> U["Kiedyś: kosmos,<br/>inne planety"]
 ```
 
 W każdym etapie ja piszę kod, testy i pliki danych, a na starcie etapu dostajesz listę grafik z rozmiarami i wskazówkami. Ty decydujesz o kierunku, rysujesz, uruchamiasz grę i oceniasz, czy jest fajna.
@@ -983,7 +1022,9 @@ Te punkty przyjąłem roboczo albo zostawiłem otwarte. Odznacz, gdy decyzja zap
 - [x] **Mapa:** kula: zawija się wschód–zachód, przez bieguny przechodzi się na drugą stronę planety (ADR 0012).
 - [x] **Platformy:** Windows, Linux, macOS.
 - [x] **Język gry:** wyłącznie angielski.
-- [x] **Długość gry:** standardowa gra około 10 godzin, zapis w dowolnym momencie.
+- [x] **Długość gry:** ~~standardowa gra około 10 godzin~~ (zmienione 2026-11-09): partia na żywo do celu z paska postępu; w wersji do epoki brązu ok. 15–40 min zależnie od tempa AI; zapis w dowolnym momencie.
+- [x] **Kształt gry:** gra na żywo między RTS-em a strategią, gracz ponad światem (2026-11-09, ADR 0024).
+- [x] **Czas w backendzie:** takt, pulsy cywilizacji, lata tylko jako licznik (2026-11-09, ADR 0025).
 - [x] **Paleta:** z grafik starego CivSim (rozdział 12.1).
 - [x] **Rozmiar heksa:** 48×42.
 - [x] **Pogłoski o obcych cywilizacjach:** zostają (8.5).
@@ -995,7 +1036,7 @@ Te punkty przyjąłem roboczo albo zostawiłem otwarte. Odznacz, gdy decyzja zap
 
 CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. Wszystko inne to moduły dobudowywane później bez przebudowy, bo architektura (dane w JSON, efekty, komendy) zostawia na nie miejsce. W kolumnie „Decyzja” jest moja rekomendacja; zmień ją z listy, jeśli się nie zgadzasz.
 
-- **CORE:** budujemy w etapach 0–13.
+- **CORE:** budujemy w etapach z `ROADMAP.md` (od 2026-11-09: backend na żywo, era brązu, demo, potem kolejne ery).
 - **CORE (uproszczone):** w CORE, ale w prostszej wersji; pełna wersja to późniejszy moduł.
 - **Moduł:** przyszła aktualizacja po ukończeniu CORE; teraz jej nie planujemy.
 - **Wytnij:** rezygnujemy, bo dubluje inną funkcję albo nie jest warta kosztu.
@@ -1035,7 +1076,7 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Niszczenie, ruiny, archeologia | 5.5 | CORE (uproszczone) | dwa stany: opuszczona i ruiny; archeologia jako moduł |
 | Drzewo technologii w danych, ery, długość tury | 6 | CORE | szkielet postępu |
 | Inspiracje i dyfuzja technologii | 6.1 | CORE | filar „decyzje wynikają z sytuacji” |
-| Odkrycia przypadkiem przez użytkowanie | 6.1 | Wytnij | dubluje inspiracje |
+| Doświadczenie w technologii, kierunek rozwoju, podgląd technologii | 6.4 | CORE | decyzja Patryka z 2026-11-09 (ADR 0024); zastępuje „odkrycia przypadkiem” (wcześniej: Wytnij) |
 | Ciemne wieki (utrata technologii) | 6.1 | Moduł | ciekawe, ale trudne do zbalansowania |
 | Poziomy decyzji i delegowanie do AI | 7.1 | CORE | AI i gracz używają tych samych poziomów |
 | Ustroje z tempem decyzji | 7.2 | CORE (uproszczone) | 3–4 ustroje z er 1–3, reszta razem z erami |
@@ -1045,7 +1086,7 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Grupy interesu, zamachy, rewolucje | 7.3 | Moduł | wymaga rozbudowanych warstw |
 | Przywódca z cechami i sukcesją | 7.5 | CORE | zasila charakter AI |
 | Kierunek ekspansji | 7.6 | CORE | spójny rozrost cywilizacji |
-| Strefy wycinki, wydobycia, ochronne, korytarze dróg | 7.6 | Moduł | przydają się głównie graczowi |
+| Zadania na obszarze (wydobycie, pola, łowiska, budowy w miejscu) | 1.1, 7.6 | CORE | decyzja Patryka z 2026-11-09: tak gracz zleca pracę; korytarze dróg zostają modułem |
 | Doradcy AI, mapy wpływów, ocena działań, plany | 8 | CORE | mózg symulatora |
 | Charakter cywilizacji i pamięć relacji | 8.4, 8.5 | CORE | różne cywilizacje = różne historie |
 | Zwiad i pamięć mapy | 8.2 | CORE (uproszczone) | pamięć ustna i mapy rysowane; kolejne poziomy z erami |
@@ -1056,17 +1097,18 @@ CORE to minimum, przy którym symulator żyje i spełnia filary z rozdziału 1. 
 | Handel automatycznych kupców | 9.2 | CORE (uproszczone) | jako przepływ między sieciami, bez jednostek na mapie |
 | Karawany i statki jako jednostki na mapie | 9.2 | Moduł | ładne, ale kosztowne |
 | Wojna: cel, wynik, zmęczenie | 9.3 | CORE | wojny muszą się kończyć |
-| Armie | 9.3 | CORE (uproszczone) | na jednym polu, rysowane według siły; armie wielopolowe jako moduł |
+| Armie | 9.3 | CORE (uproszczone) | oddziały sterowane na żywo jak w RTS-ie (ADR 0024); w erach 1–2 na jednym polu; armie wielopolowe jako moduł |
 | Zaopatrzenie armii | 9.3 | CORE (uproszczone) | tylko kara za walkę daleko poza własnym terytorium |
+| Fortyfikacje (mur) i zbrojownia | 1.1, 9.3 | CORE (uproszczone) | decyzja Patryka z 2026-11-09: gracz buduje fortyfikacje i uzbraja się od epoki brązu |
 | Oblężenia | 9.3 | Moduł | ważne dopiero przy murach i miastach |
 | Plemiona niezależne | 9.4 | CORE | wynikają z koczowników za darmo |
 | Mechanizm efektów + susza, pożar, powódź, epidemia | 10 | CORE | główne źródła kryzysów i migracji |
 | Pozostałe zdarzenia i wielcy ludzie | 10 | Moduł | każde zdarzenie to mały dodatek w danych |
 | Podgląd deweloperski i tryb obserwatora | 13 | CORE | tak ocenisz symulację |
 | Narzędzia „widoku boga” | 13.1 | CORE (uproszczone) | tylko te potrzebne do testów |
-| Tryb gracza | 13.1 | CORE | na końcu, w etapie 13, po symulacji wszystkich er |
-| Warunki zwycięstwa | 13.2 | CORE (uproszczone) | punktowe i bez końca; pozostałe razem z modułami |
-| Poziomy trudności | 13.3 | Moduł | ma sens dopiero przy dopracowanym AI |
+| Tryb gracza (na żywo, oddziały, karty decyzji, widzowie) | 1.1, 13.1 | CORE | decyzja Patryka z 2026-11-09: grywalne demo po erze brązu (etap 8), nie na końcu |
+| Cel partii na pasku postępu | 1.1, 13.2 | CORE (uproszczone) | na start: wszystkie technologie epoki brązu; kolejne cele (metal, elektryczność, kosmos) z erami |
+| Poziomy trudności | 13.3 | CORE (uproszczone) | tempo AI do celu: dobre ok. 15 min, średnie 20–25, słabe 30–40 (decyzja z 2026-11-09) |
 | Pixel art w warstwach, kolor cywilizacji | 12 | CORE | podstawa wyglądu gry |
 | Motywy interfejsu dla każdej ery, animacje | 12.4 | Moduł | w CORE jeden motyw i statyczne grafiki |
 
