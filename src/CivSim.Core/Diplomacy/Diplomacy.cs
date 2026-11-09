@@ -37,7 +37,7 @@ public static class Treaties
                 return "That proposal is already waiting for an answer.";
             }
 
-            if (state.Month < p.Month + (content.Treaties.RetryYearsFor(kind) * 12L))
+            if (state.ActionMonth < p.Month + (content.Treaties.RetryYearsFor(kind) * 12L))
             {
                 return "They declined that proposal not long ago.";
             }
@@ -114,7 +114,7 @@ public static class Treaties
             return "We are changing our government."; // GDD 7.2: no state decisions while a new government comes in
         }
 
-        if (Governance.Stability.InAnarchy(a, state.Month))
+        if (Governance.Stability.InAnarchy(a, state.ActionMonth))
         {
             return "Our state is in anarchy."; // GDD 7.2: no state decisions during anarchy
         }
@@ -171,7 +171,7 @@ public static class Treaties
         ArgumentNullException.ThrowIfNull(state);
         foreach (SettlementState s in state.Settlements)
         {
-            if (s.IsActive && s.Owner == other && s.ClaimCiv == civ.Value && s.HasClaim(state.Month))
+            if (s.IsActive && s.Owner == other && s.ClaimCiv == civ.Value && s.HasClaim(state.ActionMonth))
             {
                 return s.Id.Value;
             }
@@ -216,7 +216,7 @@ public static class Treaties
         string b = Name(state, to);
         var treaty = new Treaty(from, to, kind, from, state.Month) { SinceTick = state.Turn };
         int years = content.Treaties.Kinds[(int)kind].Years;
-        treaty.UntilMonth = years > 0 ? state.Month + (years * 12L) : 0;
+        treaty.UntilMonth = years > 0 ? state.ActionMonth + (years * 12L) : 0; // months of action (decision of 2026-11-09)
         if (kind == TreatyKind.Peace)
         {
             Treaty? war = book.Find(from, to, TreatyKind.War);
@@ -242,7 +242,7 @@ public static class Treaties
             {
                 if (state.FindCivilization(x)?.Relation(y) is { } settled)
                 {
-                    settled.SettledMonth = state.Month;
+                    settled.SettledMonth = state.ActionMonth;
                 }
             }
 
@@ -354,12 +354,12 @@ public static class Treaties
                 Kind = kind,
                 Sympathy = def.Sympathy * percent / 100,
                 Trust = def.Trust * percent / 100,
-                EndMonth = state.Month,
+                EndMonth = state.ActionMonth,
                 FadeMonths = Math.Max(1, def.Years * 12),
             },
             content.Relations.MaxMemories,
-            state.Month);
-        r.Recount(state.Month);
+            state.ActionMonth);
+        r.Recount(state.ActionMonth);
     }
 
     // GDD 9.3: the victim and everyone who knows both remember a war for land or loot (data/war.json goals).

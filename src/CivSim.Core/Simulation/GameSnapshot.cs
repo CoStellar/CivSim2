@@ -13,6 +13,9 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
     /// <summary>Game time in months since the start.</summary>
     public long Month { get; init; }
 
+    /// <summary>Months of action (ADR 0025): the clock of claims, truces and other political timers.</summary>
+    public long ActionMonth { get; init; }
+
     /// <summary>True when seasons are played turn by turn on the first world.</summary>
     public bool LiveSeasons { get; init; }
 
@@ -66,6 +69,7 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
         return new GameSnapshot(state.Turn, worlds.MoveToImmutable(), civs.MoveToImmutable())
         {
             Month = state.Month,
+            ActionMonth = state.ActionMonth,
             LiveSeasons = state.Worlds[0].Map.LiveSeasons,
             Settlements = settlements.MoveToImmutable(),
         };

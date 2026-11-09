@@ -74,21 +74,29 @@ public class StrategyTests
     [Fact]
     public void TheExpansionTargetIsKnownFreeLand()
     {
+        // The target is chosen in the strategist's review from what the people knows then; it stays until the next
+        // review while oral memory may fade (stage 6 PR 2: checked when it is chosen, not 40 turns later).
         (TurnRunner runner, _) = NewGame(31);
+        GameState state = runner.State;
+        WorldState earth = state.Worlds[0];
+        var last = new System.Collections.Generic.Dictionary<int, int>();
+        int targets = 0;
         for (int t = 0; t < 40; t++)
         {
             runner.RunTurn();
-        }
+            foreach (CivilizationState civ in state.Civilizations.Where(c => c.IsAlive && c.ExpansionTarget >= 0))
+            {
+                if (last.TryGetValue(civ.Id.Value, out int before) && before == civ.ExpansionTarget)
+                {
+                    continue;
+                }
 
-        GameState state = runner.State;
-        WorldState earth = state.Worlds[0];
-        int targets = 0;
-        foreach (CivilizationState civ in state.Civilizations.Where(c => c.IsAlive && c.ExpansionTarget >= 0))
-        {
-            targets++;
-            int cell = civ.ExpansionTarget;
-            Assert.False(Content.Biomes[earth.Map.Biome[cell]].IsWater);
-            Assert.True(Core.Perception.MapMemory.Knows(Content, state, civ, cell));
+                last[civ.Id.Value] = civ.ExpansionTarget;
+                targets++;
+                int cell = civ.ExpansionTarget;
+                Assert.False(Content.Biomes[earth.Map.Biome[cell]].IsWater);
+                Assert.True(Core.Perception.MapMemory.Knows(Content, state, civ, cell));
+            }
         }
 
         Assert.True(targets > 0, "no strategist found free land");

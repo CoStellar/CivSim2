@@ -115,14 +115,17 @@ public class StabilityTests
         Assert.Equal(Content.Stability.OverloadPenaltyPer100Percent, Stability.Parts(Content, state, civ, capacity * 2, state.Month).Overload);
         Assert.Equal(Content.Stability.OverloadMaxPenalty, Stability.Parts(Content, state, civ, capacity * 100, state.Month).Overload);
 
-        // A crisis of 5 years counts for a tenth of a 50-year step and fully in a month of war.
-        civ.CrisisUntilMonth = state.Month + 60;
-        Assert.Equal(Content.Stability.CrisisPenalty / 10, Stability.Parts(Content, state, civ, 0, state.Month).Crisis);
-        civ.StepMonths = 1;
-        Assert.Equal(Content.Stability.CrisisPenalty, Stability.Parts(Content, state, civ, 0, state.Month).Crisis);
+        // ADR 0025: a crisis of 5 years of action counts in full in every pulse it covers, and in part in the pulse it
+        // ends in (the live clock: a pulse lasts 6 months of action).
+        civ.CrisisUntilMonth = state.ActionMonth + 60;
+        Assert.Equal(Content.Stability.CrisisPenalty, Stability.Parts(Content, state, civ, 0, state.ActionMonth).Crisis);
+        GameContent live = ContentLoader.Load();
+        Assert.Equal(6, live.Time.PulseActionMonths);
+        civ.CrisisUntilMonth = state.ActionMonth + 3;
+        Assert.Equal(live.Stability.CrisisPenalty / 2, Stability.Parts(live, state, civ, 0, state.ActionMonth).Crisis);
 
-        civ.AnarchyUntilMonth = state.Month + 24;
-        Assert.Equal(Content.Stability.AnarchyPenalty, Stability.Parts(Content, state, civ, 0, state.Month).Anarchy);
+        civ.AnarchyUntilMonth = state.ActionMonth + 24;
+        Assert.Equal(Content.Stability.AnarchyPenalty, Stability.Parts(Content, state, civ, 0, state.ActionMonth).Anarchy);
         Assert.NotNull(Treaties.CannotDeclareWar(Content, state, civ.Id, state.Civilizations[1].Id, WarGoal.Loot, -1));
         Assert.Equal("Our state is in anarchy.", Governments.CannotChange(Content, state, civ.Id, Gov("elder_council")));
     }

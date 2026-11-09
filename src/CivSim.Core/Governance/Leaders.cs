@@ -130,7 +130,7 @@ public static class Leaders
             crisis = g is not null && g.CrisisYears > 0 && random.NextInt(100) < g.CrisisPercent;
             if (crisis)
             {
-                civ.CrisisUntilMonth = Math.Max(civ.CrisisUntilMonth, when + (g!.CrisisYears * 12L));
+                civ.CrisisUntilMonth = Math.Max(civ.CrisisUntilMonth, state.ActionMonth + (g!.CrisisYears * 12L)); // months of action
             }
 
             successions++;

@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 31;
+    public const int FormatVersion = 32;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -94,7 +94,7 @@ public static class SaveGameSerializer
             s.Planet.AxialTiltTenths, s.Planet.LuminosityThousandths, s.Planet.DistanceThousandths, s.Planet.EccentricityThousandths, s.PlanetName,
             s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent,
             s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state), state.StepMonths,
-            state.WorldMonths, SaveEpisodes(state), state.Episodes.NextId);
+            state.WorldMonths, SaveEpisodes(state), state.Episodes.NextId, state.ActionMonth);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -234,6 +234,7 @@ public static class SaveGameSerializer
 
         state.SetCountersForLoad(data.Month, data.NextSettlementId, data.StepMonths);
         state.SetWorldMonthsForLoad(data.WorldMonths);
+        state.SetActionMonthForLoad(data.ActionMonth);
         LoadEpisodes(state, data);
         foreach (SettlementSaveData st in data.Settlements ?? [])
         {

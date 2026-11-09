@@ -173,7 +173,7 @@ public class ContactTests
         CivilizationState claimer = state.FindCivilization(lost.Owner)!;
         Contacts.Meet(Content, state, claimer, taker.Owner, ContactWay.Sighted);
         lost.ClaimCiv = lost.Owner.Value;
-        lost.ClaimUntilMonth = state.Month + 10_000;
+        lost.ClaimUntilMonth = state.ActionMonth + 10_000;
         lost.Owner = taker.Owner;
 
         SightOnly(state).RunTurn();
@@ -285,7 +285,7 @@ public class ContactTests
 
             string path = Path.Combine(dir, "relations.json");
             string text = File.ReadAllText(path)
-                .Replace("{\"kind\": \"war_help\", \"sympathy\": 30, \"trust\": 25, \"years\": 200},", string.Empty, System.StringComparison.Ordinal)
+                .Replace("{\"kind\": \"war_help\", \"sympathy\": 30, \"trust\": 25, \"years\": 40},", string.Empty, System.StringComparison.Ordinal)
                 .Replace("\"sympathyPerYear\": -1", "\"sympathyPerYear\": 1", System.StringComparison.Ordinal);
             File.WriteAllText(path, text);
 

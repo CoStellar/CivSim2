@@ -100,7 +100,7 @@ public static class SettlementAssets
         if (state.FindCivilization(s.Owner) is { IsAlive: true })
         {
             s.ClaimCiv = s.Owner.Value;
-            s.ClaimUntilMonth = state.Month + (content.Assets.ClaimYears * 12L);
+            s.ClaimUntilMonth = state.ActionMonth + (content.Assets.ClaimYears * 12L);
         }
         else
         {

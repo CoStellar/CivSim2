@@ -41,7 +41,8 @@ public sealed record SaveData(
     [property: Key(32)] int StepMonths = 0,
     [property: Key(33)] int WorldMonths = 0,
     [property: Key(34)] IReadOnlyList<EpisodeSaveData>? Episodes = null,
-    [property: Key(35)] long NextEpisodeId = 0);
+    [property: Key(35)] long NextEpisodeId = 0,
+    [property: Key(36)] long ActionMonth = 0);
 
 /// <summary>Saved treaty or war between two civilizations (stage 4d).</summary>
 [MessagePackObject]

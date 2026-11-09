@@ -149,7 +149,7 @@ public sealed class StrategistAdvisor : Advisor
         // A new government is kept for a while (the end of its anarchy marks the change; a coup counts too).
         long settled = civ.AnarchyUntilMonth - (Content.Stability.AnarchyYears * 12L) + (Content.Ai.GovernmentKeepYears * 12L);
         if (Content.Governments.Count < 2 || Governance.Governments.Of(Content, civ) is not { } present
-            || (civ.AnarchyUntilMonth > 0 && state.Month < settled))
+            || (civ.AnarchyUntilMonth > 0 && state.ActionMonth < settled))
         {
             return;
         }

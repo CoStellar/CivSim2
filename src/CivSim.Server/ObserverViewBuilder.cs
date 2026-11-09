@@ -225,7 +225,7 @@ public sealed class ObserverViewBuilder(GameContent content)
     // "mood 62, government +10, administration -8, crisis -15": what the stability is made of now.
     private string StabilityParts(GameState state, CivilizationState c)
     {
-        Core.Governance.StabilityParts p = Core.Governance.Stability.Parts(_content, state, c, c.AdminUsed, state.Month);
+        Core.Governance.StabilityParts p = Core.Governance.Stability.Parts(_content, state, c, c.AdminUsed, state.ActionMonth);
         var inv = System.Globalization.CultureInfo.InvariantCulture;
         var sb = new System.Text.StringBuilder();
         sb.Append(inv, $"mood {p.Mood}");

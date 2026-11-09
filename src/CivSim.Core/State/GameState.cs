@@ -69,6 +69,16 @@ public sealed class GameState
     /// </summary>
     public int WorldMonths { get; internal set; }
 
+    /// <summary>
+    /// Months of action since the start (ADR 0025): <see cref="Turn"/> divided by data/time.json ticksPerActionMonth. War,
+    /// diplomacy and politics count their timers in these (decision of 2026-11-09: one year of action = 6 s at x1), not in
+    /// the year counter <see cref="Month"/>. Set by <see cref="Simulation.WorldClock.Begin"/>.
+    /// </summary>
+    public long ActionMonth { get; internal set; }
+
+    /// <summary>Sets the months of action, as saved (loading).</summary>
+    public void SetActionMonthForLoad(long actionMonth) => ActionMonth = actionMonth;
+
     /// <summary>Running episodes: war campaigns and, later, other events with a course (ADR 0022).</summary>
     public Episodes.EpisodeBook Episodes { get; } = new();
 

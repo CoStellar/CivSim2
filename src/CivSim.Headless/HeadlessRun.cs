@@ -301,7 +301,7 @@ public static class HeadlessRun
                 _sum += c.Stability * months;
                 _months += months;
                 _unrest += c.Stability < content.Stability.UnrestBelow ? months : 0;
-                _lost += c.CapitalLostUntilMonth == state.Month + (content.Stability.CapitalLostYears * 12L) ? 1 : 0;
+                _lost += c.CapitalLostUntilMonth == state.ActionMonth + (content.Stability.CapitalLostYears * 12L) ? 1 : 0;
             }
         }
 

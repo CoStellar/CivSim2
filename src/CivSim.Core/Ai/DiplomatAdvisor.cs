@@ -93,7 +93,8 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             // war on it or attacked one of its camps, whatever its rhythm.
             // The government sets the pace (GDD 7.2): a council reviews less often, a chief more often.
             long own = Math.Max(1, every * Governance.Governments.ReviewPercent(_content, civ) / 100);
-            bool planned = Simulation.WorldClock.Steps(civ) && (state.Month + (civ.Id.Value * (long)_content.Ai.ReviewStaggerYears * 12)) % own < civ.StepMonths;
+            // Decision of 2026-11-09: the review comes once every reviewEveryYears years of action, in the pulse that holds it.
+            bool planned = Simulation.WorldClock.Steps(civ) && (state.ActionMonth + (civ.Id.Value * (long)_content.Ai.ReviewStaggerYears * 12)) % own < _content.Time.PulseActionMonths;
             bool alarmed = (civ.Alarms & (Simulation.Alarm.WarDeclared | Simulation.Alarm.Attacked)) != 0;
             if (!planned && !alarmed)
             {
@@ -213,7 +214,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
             Consider(state, civ, r.Other, y, TreatyKind.NonAggression, rules.ProposeAbove);
             Consider(state, civ, r.Other, y, TreatyKind.DefensiveAlliance, rules.ProposeAbove);
             if (Treaties.CannotDeclareWar(state, civ.Id, r.Other) is null && civ.PendingGovernment == CivilizationState.NoGovernment
-                && !Governance.Stability.InAnarchy(civ, state.Month))
+                && !Governance.Stability.InAnarchy(civ, state.ActionMonth))
             {
                 Evaluation war = Evaluate(state, civ, r.Other, TreatyKind.War);
                 if (war.Value >= rules.DeclareWarAbove)
