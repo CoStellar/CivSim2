@@ -362,6 +362,8 @@ Każda osada ma pole centralne i strefę wpływów opisaną w 5.4. Od poziomu mi
 
 **Osiedlanie w CORE** (etap 3f): obóz co najmniej 60 osób cywilizacji znającej rolnictwo może osiąść jako wioska (AI robi to, gdy ziemia jego strefy wyżywiłaby uprawą półtora raza więcej ludzi). Wytwórcy wioski uprawiają najlepsze żyzne pola strefy (do 40 rolników na pole), a reszta zbiera; uprawiane pola jałowieją, odłogi odzyskują żyzność. Wioska nie wędruje, ale wysyła odłamy jako nowe obozy.
 
+**Wioska zostaje** (decyzja Patryka z 2026-11-09, etap 6 PR 3a): obozy wędrują, bo są ruchome, ale osiadła wioska zostaje do końca. Może rosnąć i może zostać porzucona, ale nie przenosi się, także do innej osady. Odłamy wychodzą jako oddziały osadników i zakładają obóz dopiero na miejscu. Później (etap 7) wioska rośnie w miasto i zajmuje większy obszar; gdy dwie osady zetkną się przez rozrost, większa wciela mniejszą jako swoją część.
+
 **Koczownicy na starcie:** w erze kamienia plemię nie ma stałej osady i przemieszcza się za zwierzyną. Każda cywilizacja zaczyna jako plemię z jednym obozem, a osiedlenie się nie wiąże jej z miejscem na zawsze (5.4).
 
 ### 5.4 Koczownicy, migracje i strefa wpływów

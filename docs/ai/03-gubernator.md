@@ -292,10 +292,13 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
   kroku, a udział liczony w całych procentach (60 z 2000 osób to 3%, a po zaokrągleniu w każdej warstwie zostawało kilkanaście osób)
   dawał grupki poniżej progu łączenia (G1, 15 osób), które za chwilę wracały. W 1000 turach było ~21 000 takich powrotów, a gra była 4× wolniejsza. Drugi błąd: osadnicy zakładali obóz
   4–5 pól od wioski, czyli w jej strefie wpływów, i nie mieli z czego zbierać (najedzeni w 0–8%). Dlatego cel musi leżeć poza strefami.
+- **Od etapu 6 PR 3a** osadnicy wychodzą jako oddział (`docs/systems/units.md`): idą do celu w taktach, niosą jedzenie na drogę i
+  zakładają obóz dopiero na miejscu. Gdy miejsce jest zajęte, szukają wolnego do 3 pól dalej, a bez niego wracają do domu.
 - **Zapis:** akcja `SendSettlers`, notatki `crowding` (zapełnienie w %), `worn land` (żyzność pól w % naturalnej) i `fed` (najedzenie w ‰).
-- **Mała głodna wioska** (poprawki po 4g): wioska głodna, ale mniejsza niż 60 osób (`minSplitPeople`, za mało na grupę osadników),
-  przenosi się w całości do najbliższej własnej osady w zasięgu jednego ruchu, która jest najedzona co najmniej w 70% (akcja `JoinCamp`,
-  `AbandonSettlementCommand`, kronika „The people of X left for Y.”). Drugie 100 gier pokazało, że 4 z 5 głodujących wiosek są tak małe.
+- **Mała głodna wioska** (do etapu 6 PR 3a): wioska głodna, ale mniejsza niż 60 osób (`minSplitPeople`), przenosiła się w całości
+  do najbliższej własnej osady (`JoinCamp`). **Usunięte** decyzją Patryka z 2026-11-09: wioska zostaje tam, gdzie powstała, do końca.
+  Może rosnąć, a gdy nikt w niej nie zostanie, jest porzucona. Mała głodna wioska trzyma się więc na miejscu; mniej ust daje jej
+  głód (umieralność), a w etapie 7 rozrost wiosek w miasta (`ROADMAP.md`).
 - **Dlaczego głód** (poprawki po 4g): w 100 grach wioski głodowały bez żadnej reakcji (mediana 322 przypadków na grę, gdy obozy
   reagowały). Wioska nie może się przenieść, więc jedyne, co może zrobić od razu, to zmniejszyć liczbę ust.
 - **Czego nie ma:** przeprowadzki całej wioski. Wioska z wyjałowioną ziemią „ucieka” przez osadników; sama zostaje.
