@@ -134,6 +134,18 @@ public sealed class Episode
     /// <summary>Campaign: loads of food carriers handed over.</summary>
     public int Convoys { get; set; }
 
+    /// <summary>Id of the unit the army walks as (stage 6 PR 3b), or -1.</summary>
+    public long Army { get; set; } = -1;
+
+    /// <summary>Id of the carriers' unit bringing food (stage 6 PR 3b), or -1.</summary>
+    public long Convoy { get; set; } = -1;
+
+    /// <summary>Tick since which the army stands within reach of its target (it attacks a month of action later), or -1.</summary>
+    public long InRangeSince { get; set; } = -1;
+
+    /// <summary>True when the army flees after a lost battle (stage 6 PR 3b): nobody can turn it.</summary>
+    public bool Fleeing { get; set; }
+
     /// <summary>True once it is over (removed at the end of the step).</summary>
     public bool Ended { get; set; }
 }

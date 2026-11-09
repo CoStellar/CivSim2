@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 33;
+    public const int FormatVersion = 34;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -80,7 +80,7 @@ public static class SaveGameSerializer
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
                 st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty, st.JourneyNext, st.JourneyStepTicks, st.JourneyProgress,
-                st.ScoutOut, st.ScoutBackMonth));
+                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -264,6 +264,7 @@ public static class SaveGameSerializer
                 JourneyProgress = st.JourneyProgress,
                 ScoutOut = st.ScoutOut,
                 ScoutBackMonth = st.ScoutBackMonth,
+                RestUntilMonth = st.RestUntilMonth,
             };
             for (int g = 0; g < st.Stock.Length; g++)
             {
@@ -366,9 +367,14 @@ public static class SaveGameSerializer
         for (int k = 0; k < state.Units.Count; k++)
         {
             Core.Units.Unit u = state.Units[k];
+            if (u.Gone)
+            {
+                continue; // leaves the book at the end of the tick
+            }
+
             list.Add(new UnitSaveData(u.Id, (byte)u.Kind, u.Owner.Value, u.World.Value, u.Cell, u.Target, (byte)u.Order, u.Home,
                 u.People.ToArray(), u.Skilled.ToArray(), u.Trainees.ToArray(), Hundredths(u.Cargo.ToArray()), u.Progress, u.Next, u.Direction,
-                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal));
+                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal, (int)u.Role, u.Episode));
         }
 
         return list;
@@ -382,7 +388,7 @@ public static class SaveGameSerializer
             int[] people = d.People ?? [];
             int[] skilled = d.Skilled ?? [];
             Core.Units.Unit u = state.Units.Restore(
-                d.Id, (Core.Units.UnitKind)d.Kind, new CivId(d.Owner), new WorldId(d.World), d.Cell, d.Home,
+                d.Id, d.Kind, (Core.Units.UnitRole)(d.Role < 0 ? d.Kind : d.Role), new CivId(d.Owner), new WorldId(d.World), d.Cell, d.Home,
                 (Core.Units.UnitOrder)d.Order, people.Length, skilled.Length, d.Cargo?.Length ?? 0);
             people.CopyTo(u.People);
             skilled.CopyTo(u.Skilled);
@@ -396,6 +402,7 @@ public static class SaveGameSerializer
             u.Path.AddRange(d.Path ?? []);
             u.PathAt = d.PathAt;
             u.PathGoal = d.PathGoal;
+            u.Episode = d.Episode;
         }
     }
 
@@ -408,7 +415,7 @@ public static class SaveGameSerializer
                 e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, Hundredths(e.Loot),
                 e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilTick,
                 Hundredths(e.Food), e.HungryMonths, e.Forays, e.Foraging, e.ConvoyFrom, e.ConvoyCell, e.ConvoyCarriers,
-                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed));
+                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed, e.Army, e.Convoy, e.InRangeSince, e.Fleeing));
         }
 
         return list;
@@ -454,6 +461,10 @@ public static class SaveGameSerializer
                     Battles = e.Battles,
                     Wins = e.Wins,
                     Killed = e.Killed,
+                    Army = e.Army,
+                    Convoy = e.Convoy,
+                    InRangeSince = e.InRangeSince,
+                    Fleeing = e.Fleeing,
                 },
                 e.Id);
         }

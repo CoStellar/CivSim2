@@ -582,7 +582,8 @@ public partial class MapObjects : Node2D
         _walkersAt = System.Diagnostics.Stopwatch.GetTimestamp();
     }
 
-    // Settlers and scouts walking (stage 6 PR 3a): the migrants' and the scout's figure in the owner's colour, a dot from afar.
+    // Units walking (stage 6 PR 3a–3b) by role: settlers and carriers as migrants, scouts as a scout, armies as one to
+    // three warriors by size (GDD 9.3), in the owner's colour; dots from afar.
     private void PaintWalkers(LayerPainter p)
     {
         if (_session?.View is not { Units: { Count: > 0 } units } view)
@@ -609,21 +610,26 @@ public partial class MapObjects : Node2D
             }
 
             Color civ = OverlayColors.CivColor(u.Owner);
-            Texture2D? tex = u.Kind == 1 ? scout : settlers;
+            Texture2D? tex = u.Role is 1 or 2 ? scout : settlers;
+            int figures = u.Role == 2 ? (u.People >= 40 ? 3 : u.People >= 15 ? 2 : 1) : 1;
             foreach (Vector2 at in Copies(pos, 48))
             {
-                if (tex is not null)
+                for (int f = 0; f < figures; f++)
                 {
-                    if (!p.Lines)
+                    Vector2 spot = at + new Vector2((f - ((figures - 1) / 2f)) * 10, f == 1 ? -4 : 0);
+                    if (tex is not null)
                     {
-                        p.DrawTexture(tex, at + new Vector2(-16, -11), civ);
+                        if (!p.Lines)
+                        {
+                            p.DrawTexture(tex, spot + new Vector2(-16, -11), civ);
+                        }
                     }
-                }
-                else if (p.Lines)
-                {
-                    float r = (u.Kind == 1 ? 5 : 8) / Mathf.Max(0.35f, _zoom * 2);
-                    p.DrawCircle(at, r + 1, Colors.Black);
-                    p.DrawCircle(at, r, civ);
+                    else if (p.Lines)
+                    {
+                        float r = (u.Role == 1 ? 5 : u.Role == 2 ? 7 : 8) / Mathf.Max(0.35f, _zoom * 2);
+                        p.DrawCircle(spot, r + 1, Colors.Black);
+                        p.DrawCircle(spot, r, civ);
+                    }
                 }
             }
         }
@@ -663,63 +669,7 @@ public partial class MapObjects : Node2D
             }
         }
 
-        PaintArmies(p, details);
-    }
-
-    // War campaigns (stage 4e PR 3): one to three warriors by strength (GDD 9.3: drawn by strength), carriers with bundles.
-    private void PaintArmies(LayerPainter p, ObserverDetailsMessage details)
-    {
-        if (details.Armies is not { Count: > 0 } armies || _world!.Id != 0)
-        {
-            return;
-        }
-
-        Texture2D? warrior = Textured ? _art.Get("units", "unit_scout_idle_01") : null;
-        Texture2D? carrier = Textured ? _art.Get("units", "unit_migrants_idle_01") : null;
-        foreach (ArmyView a in armies)
-        {
-            Color civ = OverlayColors.CivColor(a.Owner);
-            int figures = a.Warriors >= 40 ? 3 : a.Warriors >= 15 ? 2 : 1;
-            if (!Fogged(a.Col, a.Row))
-            {
-                foreach (Vector2 at in Copies(HexLayout.Center(a.Col, a.Row), 48))
-                {
-                    for (int f = 0; f < figures; f++)
-                    {
-                        Vector2 spot = at + new Vector2((f - ((figures - 1) / 2f)) * 10, f == 1 ? -4 : 0);
-                        if (warrior is not null)
-                        {
-                            if (!p.Lines)
-                            {
-                                p.DrawTexture(warrior, spot + new Vector2(-16, -11), civ);
-                            }
-                        }
-                        else if (p.Lines)
-                        {
-                            p.DrawCircle(spot, 7 / Mathf.Max(0.35f, _zoom * 2), civ);
-                        }
-                    }
-                }
-            }
-
-            if (a.Carriers > 0 && !Fogged(a.ConvoyCol, a.ConvoyRow))
-            {
-                foreach (Vector2 at in Copies(HexLayout.Center(a.ConvoyCol, a.ConvoyRow), 48))
-                {
-                    if (carrier is not null)
-                    {
-                        if (!p.Lines)
-                        {
-                            p.DrawTexture(carrier, at + new Vector2(-16, -11), civ);
-                        }
-                    }
-                    else if (p.Lines)
-                    {
-                        p.DrawCircle(at, 5 / Mathf.Max(0.35f, _zoom * 2), civ);
-                    }
-                }
-            }
-        }
+        // Armies and carriers are units since stage 6 PR 3b (PaintWalkers); the campaign layer still carries their details.
     }
 
     // The way of each wandering camp to its target: a line in the owner's colour ending in an arrow head.

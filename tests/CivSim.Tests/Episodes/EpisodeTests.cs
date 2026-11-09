@@ -84,6 +84,7 @@ public class EpisodeTests
         SettlementState s = state.FoundSettlement(civ.Id, state.Worlds[0].Id, cell, civ.Name + " Village", Content.SettlementLevel("village").Id, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
         s.Population[Content.Strata[0].Id] = producers;
         s.Population[Warriors] = warriors;
+        s.ScoutOut = true; // no scouts in these tests (stage 6 PR 3b: they take people)
         s.Stock[Content.Goods.Single(g => g.Key == "wild_plants").Id] = Amount.FromUnits(200);
         return s;
     }
@@ -91,6 +92,7 @@ public class EpisodeTests
     private static TurnRunner Runner(GameState state)
     {
         var runner = new TurnRunner(state);
+        runner.AddSystem(new Core.Units.UnitSystem(Content)); // stage 6 PR 3b: the army walks as a unit
         runner.AddSystem(new CampaignSystem(Content));
         runner.AddSystem(new WarSystem(Content));
         runner.AddSystem(new CalendarSystem(Content));
@@ -120,7 +122,7 @@ public class EpisodeTests
         Episode campaign = state.Episodes.All[0];
         Assert.Equal(startTick + Content.Time.TicksPerActionMonth, campaign.NextTick); // a month of action is a few ticks
         int ticks = 0;
-        while (state.Episodes.Count > 0 && ticks < 1000)
+        while (state.Episodes.Count > 0 && ticks < 2000)
         {
             runner.RunTurn();
             ticks++;
@@ -128,7 +130,8 @@ public class EpisodeTests
 
         // ADR 0025: the world never waits for a campaign; the year counter moved on in the world's pulses meanwhile.
         Assert.Equal(0, state.Episodes.Count);
-        Assert.True(ticks < 200, $"the campaign took {ticks} ticks");
+        // Stage 6 PR 3b: the army walks as a unit, 15 ticks per flat cell, there and back (a few hundred ticks).
+        Assert.True(ticks < 1000, $"the campaign took {ticks} ticks");
         Assert.True(state.Month > startMonth, "the world went on");
         Assert.True(SettlementAssetsWarriors(home) > 10, "the survivors came home");
         Treaty war = state.Treaties.Find(a.Id, target.Owner, TreatyKind.War)!;

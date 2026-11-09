@@ -106,7 +106,7 @@ public class UnitTests
         (WorldState world, HexCoord center) = FlatLand(state, 8);
         HexGlobe geo = world.Geometry;
         HexCoord target = geo.Wrap(center.Col + 6, center.Row);
-        Unit u = state.Units.Add(UnitKind.Settlers, civ.Id, world.Id, geo.Index(center), state.Settlements[0].Id.Value, UnitOrder.Move,
+        Unit u = state.Units.Add(Live.Units.First(UnitRole.Settlers), civ.Id, world.Id, geo.Index(center), state.Settlements[0].Id.Value, UnitOrder.Move,
             Live.Strata.Count, Live.Skills.Count, Live.Goods.Count);
         u.Target = geo.Index(target);
 
@@ -137,6 +137,7 @@ public class UnitTests
         HexGlobe geo = world.Geometry;
         SettlementState home = state.Settlements[0];
         home.Population[0] += 100; // enough people to split
+        home.ScoutOut = true; // no scouts leave in this test (they take people, stage 6 PR 3b)
         int before = home.TotalPopulation();
 
         // Settlers that left home stand where they are told.
@@ -194,7 +195,7 @@ public class UnitTests
     {
         GameState state = NewGame(24);
         CivilizationState civ = state.Civilizations[0];
-        Unit u = state.Units.Add(UnitKind.Scouts, civ.Id, state.Worlds[0].Id, state.Worlds[0].Geometry.Index(state.Settlements[0].Cell), 0, UnitOrder.Idle,
+        Unit u = state.Units.Add(Live.Units.First(UnitRole.Scouts), civ.Id, state.Worlds[0].Id, state.Worlds[0].Geometry.Index(state.Settlements[0].Cell), 0, UnitOrder.Idle,
             Live.Strata.Count, Live.Skills.Count, Live.Goods.Count);
         Assert.False(new ReturnUnitCommand(Live, u.Id).Validate(state, state.Civilizations[1].Id).Success);
         Assert.False(new ReturnUnitCommand(Live, 999).Validate(state, civ.Id).Success);
@@ -205,39 +206,41 @@ public class UnitTests
     public void ThePoolReusesSlotsAndKeepsTheOrderOfIds()
     {
         var book = new UnitBook();
-        Unit a = book.Add(UnitKind.Scouts, new CivId(0), WorldId.Earth, 1, 0, UnitOrder.Idle, 2, 1, 3);
-        Unit b = book.Add(UnitKind.Settlers, new CivId(1), WorldId.Earth, 2, 0, UnitOrder.Idle, 2, 1, 3);
+        Unit a = book.Add(Live.Units.First(UnitRole.Scouts), new CivId(0), WorldId.Earth, 1, 0, UnitOrder.Idle, 2, 1, 3);
+        Unit b = book.Add(Live.Units.First(UnitRole.Settlers), new CivId(1), WorldId.Earth, 2, 0, UnitOrder.Idle, 2, 1, 3);
         b.People[1] = 7;
         a.Gone = true;
         Assert.Equal(1, book.RemoveGone());
-        Unit c = book.Add(UnitKind.Settlers, new CivId(2), WorldId.Earth, 3, 0, UnitOrder.Idle, 2, 1, 3);
+        Unit c = book.Add(Live.Units.First(UnitRole.Settlers), new CivId(2), WorldId.Earth, 3, 0, UnitOrder.Idle, 2, 1, 3);
         Assert.Equal(a.Slot, c.Slot); // the slot of the gone scout
         Assert.Equal(0, c.People[1]);  // and nothing of it is left
         Assert.Equal([1L, 2L], book.All.Select(u => u.Id).ToArray());
         Assert.Equal(7, book.Find(1)!.Value.People[1]);
         Assert.Null(book.Find(0));
-        Assert.Throws<ArgumentException>(() => book.Add(UnitKind.Scouts, new CivId(0), WorldId.Earth, 1, 0, UnitOrder.Idle, 3, 1, 3));
+        Assert.Throws<ArgumentException>(() => book.Add(Live.Units.First(UnitRole.Scouts), new CivId(0), WorldId.Earth, 1, 0, UnitOrder.Idle, 3, 1, 3));
     }
 
     [Fact]
     public void WalkingUnitsAllocateNothingInATick()
     {
-        // A game in which every settlement keeps scouts walking; only the units are run.
-        GameState state = GameState.CreateNew(GameSettings.Test(25), Live, out WorldGenReport _);
+        // A game in which every settlement keeps scouts walking (long trips, so they are still out while measured).
+        GameContent content = Live.WithUnits(Live.Units with { ScoutTripCells = 150 });
+        GameState state = GameState.CreateNew(GameSettings.Test(25), content, out WorldGenReport _);
         foreach (CivilizationState civ in state.Civilizations)
         {
             KnowAll(state, civ);
         }
 
         var runner = new TurnRunner(state);
-        CoreSystems.Register(runner, Live);
+        CoreSystems.Register(runner, content);
         for (int t = 0; t < 1500; t++)
         {
             runner.RunTurn(); // a game with scouts out
         }
 
+
         // The measured system walks the same units alone for a while first: its pool, trails and route arrays reach their size.
-        var system = new UnitSystem(Live);
+        var system = new UnitSystem(content);
         var warm = (TurnContext)Activator.CreateInstance(
             typeof(TurnContext), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance, null, [state], null)!;
         for (int t = 0; t < 300; t++)

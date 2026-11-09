@@ -20,8 +20,14 @@ public enum UnitOrder : byte
     /// <summary>Scouts: walk out in <see cref="Unit.Direction"/> until the trip is done.</summary>
     Scout = 3,
 
-    /// <summary>Walks back to its home settlement and joins it.</summary>
+    /// <summary>Walks back to its home settlement and joins it (an army or carriers: stands there for its campaign).</summary>
     Return = 4,
+
+    /// <summary>An army: walks towards <see cref="Unit.Target"/> until it is within its kind's range, and stands (stage 6 PR 3b).</summary>
+    Attack = 5,
+
+    /// <summary>An army beaten in battle: flees home; nobody can turn it (stage 6 PR 3b).</summary>
+    Flee = 6,
 }
 
 /// <summary>
@@ -46,8 +52,11 @@ public readonly struct Unit : IEquatable<Unit>
     /// <summary>Its id (unique in a game, never reused).</summary>
     public long Id => _book.IdOf[Slot];
 
-    /// <summary>What kind of unit.</summary>
-    public UnitKind Kind => _book.KindOf[Slot];
+    /// <summary>Its kind (<see cref="UnitKindDefinition.Id"/> in units.json).</summary>
+    public int Kind => _book.KindOf[Slot];
+
+    /// <summary>What its kind is for.</summary>
+    public UnitRole Role => _book.RoleOf[Slot];
 
     /// <summary>The civilization it belongs to.</summary>
     public CivId Owner { get => new(_book.OwnerOf[Slot]); set => _book.OwnerOf[Slot] = value.Value; }
@@ -106,6 +115,9 @@ public readonly struct Unit : IEquatable<Unit>
 
     /// <summary>The goal <see cref="Path"/> was found for, or -1 when it has none.</summary>
     public int PathGoal { get => _book.PathGoalOf[Slot]; set => _book.PathGoalOf[Slot] = value; }
+
+    /// <summary>Id of the campaign (episode) it belongs to, or -1 (stage 6 PR 3b: armies, gathering warriors, carriers).</summary>
+    public long Episode { get => _book.EpisodeOf[Slot]; set => _book.EpisodeOf[Slot] = value; }
 
     /// <summary>True once it is gone (founded its camp, joined its home, died out); removed at the end of the tick.</summary>
     public bool Gone { get => _book.GoneOf[Slot]; set => _book.GoneOf[Slot] = value; }
@@ -166,7 +178,8 @@ public sealed class UnitBook
     private int _count;
 
     internal long[] IdOf = [];
-    internal UnitKind[] KindOf = [];
+    internal byte[] KindOf = [];
+    internal UnitRole[] RoleOf = [];
     internal int[] OwnerOf = [];
     internal int[] WorldOf = [];
     internal int[] CellOf = [];
@@ -178,6 +191,7 @@ public sealed class UnitBook
     internal int[] CostOf = [];
     internal byte[] DirectionOf = [];
     internal bool[] GoneOf = [];
+    internal long[] EpisodeOf = [];
     internal List<int>[] TrailOf = [];
     internal List<int>[] PathOf = [];
     internal int[] PathAtOf = [];
@@ -213,11 +227,11 @@ public sealed class UnitBook
     /// Adds a unit with the next id: it stands on <paramref name="cell"/> with no people and no goods yet (sized by
     /// <paramref name="strata"/>, <paramref name="skills"/> and <paramref name="goods"/>, the same for every unit of a game).
     /// </summary>
-    public Unit Add(UnitKind kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods) =>
+    public Unit Add(UnitKindDefinition kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods) =>
         Place(NextId++, kind, owner, world, cell, home, order, strata, skills, goods);
 
-    /// <summary>Restores a saved unit with its id (loading; units arrive oldest first).</summary>
-    public Unit Restore(long id, UnitKind kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
+    /// <summary>Restores a saved unit with its id, kind and role (loading; units arrive oldest first).</summary>
+    public Unit Restore(long id, int kind, UnitRole role, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
     {
         if (_count > 0 && IdOf[_order[_count - 1]] >= id)
         {
@@ -225,7 +239,7 @@ public sealed class UnitBook
         }
 
         NextId = Math.Max(NextId, id + 1);
-        return Place(id, kind, owner, world, cell, home, order, strata, skills, goods);
+        return Place(id, new UnitKindDefinition { Id = kind, Role = role }, owner, world, cell, home, order, strata, skills, goods);
     }
 
     /// <summary>Sets the next id (loading).</summary>
@@ -259,13 +273,13 @@ public sealed class UnitBook
         return null;
     }
 
-    /// <summary>True when a unit of <paramref name="kind"/> from settlement <paramref name="home"/> is out.</summary>
-    public bool OutFrom(UnitKind kind, int home)
+    /// <summary>True when a unit of <paramref name="role"/> from settlement <paramref name="home"/> is out.</summary>
+    public bool OutFrom(UnitRole role, int home)
     {
         for (int k = 0; k < _count; k++)
         {
             int s = _order[k];
-            if (!GoneOf[s] && KindOf[s] == kind && HomeOf[s] == home)
+            if (!GoneOf[s] && RoleOf[s] == role && HomeOf[s] == home)
             {
                 return true;
             }
@@ -304,8 +318,9 @@ public sealed class UnitBook
 
     internal Span<Amount> CargoOf(int slot) => _cargo.AsSpan(slot * _goods, _goods);
 
-    private Unit Place(long id, UnitKind kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
+    private Unit Place(long id, UnitKindDefinition kind, CivId owner, WorldId world, int cell, int home, UnitOrder order, int strata, int skills, int goods)
     {
+        ArgumentNullException.ThrowIfNull(kind);
         if (_strata < 0)
         {
             _strata = Math.Max(0, strata);
@@ -325,7 +340,8 @@ public sealed class UnitBook
 
         _order[_count++] = slot;
         IdOf[slot] = id;
-        KindOf[slot] = kind;
+        KindOf[slot] = (byte)kind.Id;
+        RoleOf[slot] = kind.Role;
         OwnerOf[slot] = owner.Value;
         WorldOf[slot] = world.Value;
         CellOf[slot] = cell;
@@ -337,6 +353,7 @@ public sealed class UnitBook
         CostOf[slot] = 0;
         DirectionOf[slot] = 0;
         GoneOf[slot] = false;
+        EpisodeOf[slot] = -1;
         TrailOf[slot].Clear();
         PathOf[slot].Clear();
         PathAtOf[slot] = 0;
@@ -356,6 +373,7 @@ public sealed class UnitBook
             int size = Math.Max(16, IdOf.Length * 2);
             Array.Resize(ref IdOf, size);
             Array.Resize(ref KindOf, size);
+            Array.Resize(ref RoleOf, size);
             Array.Resize(ref OwnerOf, size);
             Array.Resize(ref WorldOf, size);
             Array.Resize(ref CellOf, size);
@@ -367,6 +385,7 @@ public sealed class UnitBook
             Array.Resize(ref CostOf, size);
             Array.Resize(ref DirectionOf, size);
             Array.Resize(ref GoneOf, size);
+            Array.Resize(ref EpisodeOf, size);
             Array.Resize(ref PathAtOf, size);
             Array.Resize(ref PathGoalOf, size);
             int old = TrailOf.Length;

@@ -194,7 +194,7 @@ public class MigrationTests
 
         // Stage 6 PR 3a: the group leaves as a unit of settlers with its people and goods ...
         CivSim.Core.Units.Unit settlers = state.Units[state.Units.Count - 1];
-        Assert.Equal(CivSim.Core.Units.UnitKind.Settlers, settlers.Kind);
+        Assert.Equal(CivSim.Core.Units.UnitRole.Settlers, settlers.Role);
         Assert.Equal(32, settlers.People[0]);
         Assert.Equal(8, settlers.People[2]);
         Assert.Equal(60, camp.TotalPopulation());

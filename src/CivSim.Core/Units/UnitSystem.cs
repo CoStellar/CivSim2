@@ -51,7 +51,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 continue;
             }
 
-            if (meal && u.Kind == UnitKind.Settlers)
+            if (meal && u.Role == UnitRole.Settlers)
             {
                 Eat(context, state, u, civ);
                 if (u.Gone)
@@ -74,8 +74,10 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         {
             case UnitOrder.Move:
             case UnitOrder.Found:
+            case UnitOrder.Attack:
                 return u.Target;
             case UnitOrder.Return:
+            case UnitOrder.Flee:
                 SettlementState? home = u.Home >= 0 ? state.FindSettlement(new SettlementId(u.Home)) : null;
                 return home is { IsActive: true } ? state.Worlds[u.World.Value].Geometry.Index(home.Cell) : u.Cell;
             default:
@@ -127,10 +129,19 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
     {
         WorldState world = state.Worlds[u.World.Value];
         HexGlobe geo = world.Geometry;
-        int baseTicks = _content.Units.Of(u.Kind).TicksPerCell;
+        UnitKindDefinition kind = _content.Units.Of(u.Kind);
+        int baseTicks = kind.TicksPerCell;
+        if (u.Order == UnitOrder.Attack && u.Target >= 0 && geo.Distance(geo.FromIndex(u.Cell), geo.FromIndex(u.Target)) <= kind.RangeCells)
+        {
+            // An army within its range of the target stands there (its campaign decides when it fights, stage 6 PR 3b).
+            u.Next = -1;
+            u.Progress = 0;
+            return;
+        }
+
         if (u.Next < 0)
         {
-            if (u.Kind == UnitKind.Scouts && (u.Order == UnitOrder.Scout || (u.Order == UnitOrder.Return && u.Trail.Count > 0)))
+            if (u.Role == UnitRole.Scouts && (u.Order == UnitOrder.Scout || (u.Order == UnitOrder.Return && u.Trail.Count > 0)))
             {
                 u.Next = ScoutStep(state, u, world); // out in its direction, back over its trail
             }
@@ -166,7 +177,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         HexCoord at = geo.FromIndex(u.Cell);
         HexCoord next = geo.FromIndex(u.Next);
         int side = Side(geo, at, next);
-        int cost = side < 0 ? baseTicks : RouteFinder.StepTicks(_content, world, at, (HexDirection)side, u.Next, baseTicks);
+        int cost = side < 0 ? baseTicks : RouteFinder.StepTicks(_content, world, at, (HexDirection)side, u.Next, baseTicks, kind);
         u.StepCost = cost;
         if (cost == 0)
         {
@@ -183,20 +194,20 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         u.Progress = 0;
         u.Cell = u.Next;
         u.Next = -1;
-        if (u.Kind == UnitKind.Scouts && u.Order == UnitOrder.Scout)
+        if (u.Role == UnitRole.Scouts && u.Order == UnitOrder.Scout)
         {
             u.Trail.Add(u.Cell);
         }
 
         See(state, u, civ, world);
-        if (u.Kind == UnitKind.Scouts && u.Order == UnitOrder.Scout)
+        if (u.Role == UnitRole.Scouts && u.Order == UnitOrder.Scout)
         {
             if (u.Trail.Count > _content.Units.ScoutTripCells)
             {
                 u.Order = UnitOrder.Return; // far enough: back the way it came
             }
         }
-        else if (u.Kind == UnitKind.Scouts && u.Order == UnitOrder.Return && u.Trail.Count > 0)
+        else if (u.Role == UnitRole.Scouts && u.Order == UnitOrder.Return && u.Trail.Count > 0)
         {
             // back over its trail (ScoutStep): home when the trail ends
         }
@@ -216,7 +227,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             if (attempt == 1 || u.PathGoal != goal || u.PathAt >= u.Path.Count
                 || Side(geo, geo.FromIndex(u.Cell), geo.FromIndex(u.Path[u.PathAt])) < 0)
             {
-                System.Collections.Generic.List<int>? way = _routes.Path(_content, state, civ, world, u.Cell, goal, baseTicks);
+                System.Collections.Generic.List<int>? way = _routes.Path(_content, state, civ, world, u.Cell, goal, baseTicks, _content.Units.Of(u.Kind));
                 u.Path.Clear();
                 u.PathAt = 0;
                 u.PathGoal = goal;
@@ -231,7 +242,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
 
             int next = u.Path[u.PathAt];
             int side = Side(geo, geo.FromIndex(u.Cell), geo.FromIndex(next));
-            if (side >= 0 && RouteFinder.StepTicks(_content, world, geo.FromIndex(u.Cell), (HexDirection)side, next, baseTicks) > 0)
+            if (side >= 0 && RouteFinder.StepTicks(_content, world, geo.FromIndex(u.Cell), (HexDirection)side, next, baseTicks, _content.Units.Of(u.Kind)) > 0)
             {
                 u.PathAt++;
                 return next;
@@ -287,6 +298,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         {
             home.ScoutOut = false;
             home.ScoutBackMonth = state.ActionMonth;
+            Unload(u, home); // the hunters are back (stage 6 PR 3b); an abandoned home still takes them (they find it empty)
         }
     }
 
@@ -371,7 +383,11 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         switch (u.Order)
         {
             case UnitOrder.Move:
+            case UnitOrder.Flee:
                 u.Order = UnitOrder.Idle;
+                return;
+            case UnitOrder.Return when u.Episode >= 0:
+                u.Order = UnitOrder.Idle; // an army home: its campaign brings the survivors in (CampaignSystem)
                 return;
             case UnitOrder.Found:
                 int site = FindSite(state, civ, world, u.Cell);
@@ -390,7 +406,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 }
 
                 return;
-            case UnitOrder.Return when u.Kind == UnitKind.Scouts:
+            case UnitOrder.Return when u.Role == UnitRole.Scouts:
                 ScoutHome(state, u);
                 return;
             case UnitOrder.Return:
@@ -402,13 +418,28 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
     // There is no known way to the goal: settlers try to found where they stand, others stop.
     private void NoWay(TurnContext context, GameState state, Unit u, CivilizationState civ, WorldState world)
     {
-        if (u.Order is UnitOrder.Found or UnitOrder.Return && CanFound(_content, state, civ.Id, world, u.Cell))
+        if (u.Role == UnitRole.Settlers && u.Order is UnitOrder.Found or UnitOrder.Return && CanFound(_content, state, civ.Id, world, u.Cell))
         {
             Found(context, state, u, civ, world);
             return;
         }
 
-        u.Order = UnitOrder.Idle;
+        if (u.Episode < 0 && u.Order == UnitOrder.Return)
+        {
+            // No known way home: scouts and carriers find their way back by themselves (their people are not lost).
+            if (u.Role == UnitRole.Scouts)
+            {
+                ScoutHome(state, u);
+            }
+            else if (u.Role != UnitRole.Settlers)
+            {
+                Rejoin(context, state, u, civ, world, now: true);
+            }
+
+            return;
+        }
+
+        u.Order = UnitOrder.Idle; // an army or gathering warriors: their campaign sees it stand and decides
     }
 
     // The nearest cell within the search radius where the settlers may found (the goal itself first), or -1.
@@ -460,7 +491,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
     }
 
     // Back home: the people, their skills and their goods join the settlement again (or the nearest own one).
-    private void Rejoin(TurnContext context, GameState state, Unit u, CivilizationState civ, WorldState world)
+    private void Rejoin(TurnContext context, GameState state, Unit u, CivilizationState civ, WorldState world, bool now = false)
     {
         SettlementState? home = u.Home >= 0 ? state.FindSettlement(new SettlementId(u.Home)) : null;
         if (home is not { IsActive: true })
@@ -484,7 +515,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
 
         if (home is null)
         {
-            if (CanFound(_content, state, civ.Id, world, u.Cell))
+            if (u.Role == UnitRole.Settlers && CanFound(_content, state, civ.Id, world, u.Cell))
             {
                 Found(context, state, u, civ, world);
             }
@@ -496,7 +527,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             return;
         }
 
-        if (world.Geometry.Index(home.Cell) != u.Cell && u.Home != home.Id.Value)
+        if (!now && world.Geometry.Index(home.Cell) != u.Cell && u.Home != home.Id.Value)
         {
             u.Home = home.Id.Value; // walk to the new home first
             u.ForgetPath();
@@ -535,6 +566,42 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         u.Cargo.Clear();
     }
 
+    // The party's people (stage 6 PR 3b): people of the kind's skill first (hunters), from their stratum, then others of
+    // that stratum who have no skill; they come back with the party (ScoutHome).
+    private void TakeScouts(SettlementState s, Unit scout, UnitKindDefinition kind)
+    {
+        int want = kind.People;
+        if (want <= 0)
+        {
+            return;
+        }
+
+        int stratum = kind.Skill >= 0 ? _content.Skills[kind.Skill].StratumId : 0;
+        Span<int> people = s.Population;
+        Span<int> skilled = s.Skilled;
+        if (stratum >= people.Length)
+        {
+            return;
+        }
+
+        int bound = 0;
+        for (int k = 0; k < skilled.Length && k < _content.Skills.Count; k++)
+        {
+            bound += _content.Skills[k].StratumId == stratum ? skilled[k] : 0;
+        }
+
+        int experts = kind.Skill >= 0 && kind.Skill < skilled.Length ? Math.Min(want, skilled[kind.Skill]) : 0;
+        int plain = Math.Min(want - experts, Math.Max(0, people[stratum] - bound));
+        if (experts > 0)
+        {
+            skilled[kind.Skill] -= experts;
+            scout.Skilled[kind.Skill] = experts;
+        }
+
+        people[stratum] -= experts + plain;
+        scout.People[stratum] = experts + plain;
+    }
+
     // In its civilization's pulse every settlement with no scouts out sends a party once its last one has rested.
     private void SendScouts(GameState state)
     {
@@ -563,9 +630,16 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 continue;
             }
 
+            UnitKindDefinition kind = rules.Best(UnitRole.Scouts, civ.Knows);
+            if (s.TotalPopulation() < kind.People * 4)
+            {
+                continue; // too few people to spare a party
+            }
+
             Unit scout = state.Units.Add(
-                UnitKind.Scouts, s.Owner, s.World, geo.Index(s.Cell), s.Id.Value, UnitOrder.Scout,
+                kind, s.Owner, s.World, geo.Index(s.Cell), s.Id.Value, UnitOrder.Scout,
                 _content.Strata.Count, _content.Skills.Count, _content.Goods.Count);
+            TakeScouts(s, scout, kind);
             scout.Direction = rng.NextInt(6);
             if (scout.Trail.Capacity < rules.ScoutTripCells + 2)
             {

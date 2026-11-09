@@ -28,6 +28,7 @@ public static class CommandMapper
             MoveUnitDto m when content is not null => new Core.Units.MoveUnitCommand(content, m.UnitId, new HexCoord(m.Col, m.Row)),
             FoundCampDto f when content is not null => new Core.Units.FoundCampCommand(content, f.UnitId),
             ReturnUnitDto r when content is not null => new Core.Units.ReturnUnitCommand(content, r.UnitId),
+            AttackDto a when content is not null => new Core.Units.AttackCommand(content, a.UnitId, new SettlementId(a.TargetSettlementId)),
             _ => null,
         };
     }

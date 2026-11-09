@@ -61,7 +61,7 @@ public class MapMemoryTests
         var runner = new CivSim.Core.Simulation.TurnRunner(state);
         runner.AddSystem(new CivSim.Core.Units.UnitSystem(Content));
         runner.RunTurn();
-        Assert.Contains(state.Units.All, u => u.Kind == CivSim.Core.Units.UnitKind.Scouts && u.Owner == civ.Id);
+        Assert.Contains(state.Units.All, u => u.Role == CivSim.Core.Units.UnitRole.Scouts && u.Owner == civ.Id);
         for (int t = 0; t < 100; t++)
         {
             runner.RunTurn();

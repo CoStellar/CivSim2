@@ -112,7 +112,11 @@ public sealed record EpisodeSaveData(
     [property: Key(30)] int LastPrey = -1,
     [property: Key(31)] int Battles = 0,
     [property: Key(32)] int Wins = 0,
-    [property: Key(33)] int Killed = 0);
+    [property: Key(33)] int Killed = 0,
+    [property: Key(34)] long Army = -1,
+    [property: Key(35)] long Convoy = -1,
+    [property: Key(36)] long InRangeSince = -1,
+    [property: Key(37)] bool Fleeing = false);
 
 /// <summary>Saved terms of a peace (stage 4e).</summary>
 [MessagePackObject]
@@ -270,7 +274,8 @@ public sealed record SettlementSaveData(
     [property: Key(28)] int JourneyStepTicks = 0,
     [property: Key(29)] int JourneyProgress = 0,
     [property: Key(30)] bool ScoutOut = false,
-    [property: Key(31)] long ScoutBackMonth = -1);
+    [property: Key(31)] long ScoutBackMonth = -1,
+    [property: Key(32)] long RestUntilMonth = -1);
 
 /// <summary>Saved unit (stage 6 PR 3a).</summary>
 [MessagePackObject]
@@ -293,7 +298,9 @@ public sealed record UnitSaveData(
     [property: Key(15)] int[] Trail,
     [property: Key(16)] int[]? Path = null,
     [property: Key(17)] int PathAt = 0,
-    [property: Key(18)] int PathGoal = -1);
+    [property: Key(18)] int PathGoal = -1,
+    [property: Key(19)] int Role = -1,
+    [property: Key(20)] long Episode = -1);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

@@ -118,6 +118,12 @@ public sealed class SettlementState
     /// <summary>Month of action its last scouts came back in, or -1 before any went out (stage 6 PR 3a).</summary>
     public long ScoutBackMonth { get; set; } = -1;
 
+    /// <summary>
+    /// Month of action until which its warriors rest after a campaign and cannot be sent again (stage 6 PR 3b, war.json
+    /// restMonths), or -1.
+    /// </summary>
+    public long RestUntilMonth { get; set; } = -1;
+
     /// <summary>People who know each skill (stage 4F), index = skill id; they are counted in their stratum too.</summary>
     public Span<int> Skilled => _skilled;
 

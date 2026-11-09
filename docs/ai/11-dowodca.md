@@ -44,11 +44,15 @@ Test `CommanderTests` sprawdza, że spodziewana szansa jest blisko tego, jak cz�
   jest poniżej 60% (`commander.minWinChancePercent`) albo spodziewane straty powyżej 50% armii (`commander.maxLossPercent`).
   Najpierw liczy bez rzeki (rzeka pomaga tylko obrońcom, więc jeśli już wtedy przegrywa, nie szuka drogi), potem z polem, z którego przyjdzie atak.
 - **Droga:** musi istnieć droga po znanych polach (najkrótsza, do 40 pól).
-- **Jedzenie i zaopatrzenie** (od PR 5): armia bierze jedzenie najwyżej na 3 miesiące (`supply.carryFoodMonths`), tyle, ile uniosą wojownicy, i najwyżej
+- **Odpoczynek** (etap 6 PR 3b): osada, której wojownicy odpoczywają po kampanii (`restMonths`, 6 miesięcy akcji), nie jest osadą
+  wyjścia ani nie dołącza do zbiórki.
+- **Czas marszu** (etap 6 PR 3b): miesiące akcji drogi armii z A* (takty drogi jej rodzaju po terenie / takty miesiąca akcji); pola
+  poza zasięgiem tragarzy i zbiórka po otwartym terenie (15 taktów na pole = 3 miesiące akcji). Wcześniej 3 pola na miesiąc.
+- **Jedzenie i zaopatrzenie** (od PR 5): armia bierze jedzenie najwyżej na 36 miesięcy (`supply.carryFoodMonths`, od etapu 6 PR 3b; było 3), tyle, ile uniosą wojownicy, i najwyżej
   połowę zapasów osad (`supplySharePercent`). Tragarze dochodzą do 12 pól od naszej osady (`supply.carrierCells`). Dowódca liczy, ile pól
-  celu leży **poza zasięgiem tragarzy** (odległość celu od najbliższej naszej osady minus 12), ile to miesięcy marszu (3 pola na miesiąc),
+  celu leży **poza zasięgiem tragarzy** (odległość celu od najbliższej naszej osady minus 12), ile to miesięcy marszu (3 miesiące na pole od etapu 6 PR 3b),
   i wysyła armię tylko wtedy, gdy jedzenie wystarczy na te miesiące **tam i z powrotem** i jeszcze na 1 miesiąc (`commander.minFoodMonths`):
-  `miesiące jedzenia ≥ 2 × miesiące poza zasięgiem + 1`. Przy zapasie na 3 miesiące cel może leżeć najwyżej 3 pola poza zasięgiem tragarzy.
+  `miesiące jedzenia ≥ 2 × miesiące poza zasięgiem + 1`. Przy zapasie na 36 miesięcy cel może leżeć najwyżej 5 pól poza zasięgiem tragarzy.
 - **Jedzenie na całą wyprawę** (od PR 6): zapasy, które mogą dać nasze osady do 12 pól od osady wyjścia albo od celu (połowa ich jedzenia),
   muszą wystarczyć na zbiórkę, marsz tam, miesiąc u celu, marsz z powrotem i jeszcze 1 miesiąc (`minFoodMonths`). Wcześniej dowódca liczył
   tylko to, co wojownicy niosą, a tragarze nie mieli skąd brać jedzenia, więc armie głodowały w zasięgu własnych osad.
@@ -75,11 +79,13 @@ Test `CommanderTests` sprawdza, że spodziewana szansa jest blisko tego, jak cz�
 
 ## Co się dzieje po decyzji
 
-- Wojownicy wychodzą od razu, biorą uzbrojenie (zużywają dobra) i jedzenie na 3 miesiące; z dalszych osad najpierw idą do osady
-  wyjścia (zbiórka trwa tyle miesięcy, ile marszu ma najdalsza), potem marsz 3 pola na miesiąc (`marchCellsPerMonth`) po znanych polach.
+- Wojownicy wychodzą od razu, biorą uzbrojenie (zużywają dobra) i jedzenie na 36 miesięcy; z dalszych osad najpierw idą do osady
+  wyjścia jako oddziały (zbiórka trwa, aż wszyscy dojdą), potem armia idzie jako oddział najtańszą znaną drogą (etap 6 PR 3b,
+  `docs/systems/units.md`).
 - Gdy jedzenia zostaje na mniej niż 2 miesiące, najbliższa nasza osada z jedzeniem (do 12 pól) wysyła tragarzy; głodna armia traci
   morale, napada pobliską wioskę wroga po jedzenie, a przy morale poniżej 30 zawraca (to reguły systemu, nie decyzje dowódcy).
-- U celu: armia staje obok i w następnym miesiącu atakuje, chyba że dowódca ją odwoła (K2). Bitwa w rundach na strumieniu `combat` (PR 4, [war.md](../systems/war.md)).
+- U celu: armia staje, gdy cel jest w zasięgu jej rodzaju (wojownicy: pole obok), i miesiąc akcji później atakuje, chyba że dowódca ją
+  odwoła (K2). Pobita armia ucieka i dowódca już jej nie zawraca; ocaleni odpoczywają w domu. Bitwa w rundach na strumieniu `combat` (PR 4, [war.md](../systems/war.md)).
 - Wygrana: łupy (tyle, ile uniosą wojownicy), w wojnie o ziemię zdobycie wioski z ludźmi; wynik wojny +10 (+15 za osadę).
 - Powrót: ocaleni i łupy do domu. Każdy miesiąc kampanii dodaje 5 punktów zmęczenia obu stronom wojny.
 

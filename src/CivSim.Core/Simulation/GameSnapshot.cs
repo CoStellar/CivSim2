@@ -77,7 +77,7 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
             Map.HexCoord at = geo.FromIndex(u.Cell);
             Map.HexCoord next = u.Next >= 0 ? geo.FromIndex(u.Next) : at;
             units.Add(new UnitSnapshot(
-                u.Id, u.Kind, u.Owner, u.World, at.Col, at.Row, next.Col, next.Row,
+                u.Id, u.Kind, u.Role, u.Owner, u.World, at.Col, at.Row, next.Col, next.Row,
                 u.Next >= 0 && u.StepCost > 0 ? (int)System.Math.Min(1000, u.Progress * 1000L / u.StepCost) : 0,
                 u.TotalPeople(), u.Order, u.Cell));
         }
@@ -151,5 +151,5 @@ public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId Wo
 /// (<paramref name="ProgressPermille"/>, 0–1000), so a client can draw it between the two cells.
 /// </summary>
 public sealed record UnitSnapshot(
-    long Id, Units.UnitKind Kind, CivId Owner, WorldId World, int Col, int Row, int NextCol, int NextRow, int ProgressPermille,
+    long Id, int Kind, Units.UnitRole Role, CivId Owner, WorldId World, int Col, int Row, int NextCol, int NextRow, int ProgressPermille,
     int People, Units.UnitOrder Order, int Cell);

@@ -55,7 +55,7 @@ public static class ContentLoader
         StabilityRules stability = LoadStability(Path.Combine(directory, "stability.json"), effects, errors);
         LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
         Core.Simulation.TimeRules time = LoadTime(Path.Combine(directory, "time.json"), errors);
-        Core.Units.UnitRules units = LoadUnits(Path.Combine(directory, "units.json"), biomes, errors);
+        Core.Units.UnitRules units = LoadUnits(Path.Combine(directory, "units.json"), biomes, technologies, skills, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -904,7 +904,7 @@ public static class ContentLoader
 
     // Stability and administration of data/stability.json (stage 4f PR 3, GDD 7.3).
     // Units (stage 6 PR 3a): speeds, terrain costs, scouting and settlers.
-    private static Core.Units.UnitRules LoadUnits(string path, List<BiomeDefinition> biomes, List<string> errors)
+    private static Core.Units.UnitRules LoadUnits(string path, List<BiomeDefinition> biomes, List<TechnologyDefinition> technologies, List<SkillDefinition> skills, List<string> errors)
     {
         using JsonDocument? doc = Open(path, errors);
         if (doc is null)
@@ -914,38 +914,98 @@ public static class ContentLoader
 
         string file = Path.GetFileName(path);
         var r = new Reader(doc.RootElement, file, errors);
-        int count = Enum.GetValues<Core.Units.UnitKind>().Length;
-        var kinds = new Core.Units.UnitKindDefinition?[count];
+        // Kinds (stage 6 PR 3b): data, listed from the simplest; each has a role, and the first kind of every role needs nothing.
+        var kinds = new List<Core.Units.UnitKindDefinition>();
+        var keys = new HashSet<string>();
         if (TryArray(doc.RootElement, "kinds", path, errors, out JsonElement array))
         {
-            int i = 0;
             foreach (JsonElement e in array.EnumerateArray())
             {
-                string at = $"{file}: kinds[{i}]";
+                string at = $"{file}: kinds[{kinds.Count}]";
                 var x = new Reader(e, at, errors);
-                Core.Units.UnitKind kind = x.Enum<Core.Units.UnitKind>("kind");
-                if (kinds[(int)kind] is not null)
+                int tech = -1;
+                if (e.TryGetProperty("requires", out JsonElement rq) && rq.ValueKind == JsonValueKind.String)
                 {
-                    errors.Add($"{at}.kind: '{e.GetProperty("kind")}' is listed twice.");
+                    tech = technologies.FindIndex(t => t.Key == rq.GetString());
+                    if (tech < 0)
+                    {
+                        errors.Add($"{at}.requires: unknown technology '{rq.GetString()}'.");
+                    }
                 }
 
-                kinds[(int)kind] = new Core.Units.UnitKindDefinition
+                int skill = -1;
+                if (e.TryGetProperty("skill", out JsonElement sk) && sk.ValueKind == JsonValueKind.String)
                 {
-                    Kind = kind,
+                    skill = skills.FindIndex(x => x.Key == sk.GetString());
+                    if (skill < 0)
+                    {
+                        errors.Add($"{at}.skill: unknown skill '{sk.GetString()}'.");
+                    }
+                }
+
+                var biomePercent = new int[biomes.Count];
+                int hills = -1;
+                int mountains = -1;
+                int river = -1;
+                if (e.TryGetProperty("terrain", out JsonElement kt) && kt.ValueKind == JsonValueKind.Object)
+                {
+                    var tr = new Reader(kt, $"{at}.terrain", errors);
+                    hills = tr.OptionalInt("hillsExtraPercent", 0, 10000) ?? -1;
+                    mountains = tr.OptionalInt("mountainsExtraPercent", 0, 10000) ?? -1;
+                    river = tr.OptionalInt("riverPercent", 0, 10000) ?? -1;
+                    if (kt.TryGetProperty("biomes", out JsonElement kb) && kb.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (JsonProperty b in kb.EnumerateObject())
+                        {
+                            int index = biomes.FindIndex(x => x.Key == b.Name);
+                            if (index < 0 || b.Value.ValueKind != JsonValueKind.Number || !b.Value.TryGetInt32(out int pct) || pct < 10 || pct > 10000)
+                            {
+                                errors.Add($"{at}.terrain.biomes.{b.Name}: needs a known biome and a percent of 10 to 10000.");
+                            }
+                            else
+                            {
+                                biomePercent[index] = pct;
+                            }
+                        }
+                    }
+                }
+
+                kinds.Add(new Core.Units.UnitKindDefinition
+                {
+                    Id = kinds.Count,
+                    Key = x.Key("key", keys),
                     Name = x.String("name"),
+                    Role = x.Enum<Core.Units.UnitRole>("role"),
+                    RequiresTechnology = tech,
                     TicksPerCell = x.Int("ticksPerCell", 1, 10000),
                     SightCells = x.Int("sightCells", 0, 20),
-                };
-                i++;
+                    RangeCells = x.OptionalInt("rangeCells", 1, 50) ?? 1,
+                    People = x.OptionalInt("people", 0, 1000) ?? 0,
+                    Skill = skill,
+                    HillsExtraPercent = hills,
+                    MountainsExtraPercent = mountains,
+                    RiverPercent = river,
+                    BiomePercent = biomePercent,
+                });
             }
         }
 
-        for (int k = 0; k < count; k++)
+        if (kinds.Count > 255)
         {
-            if (kinds[k] is null)
+            errors.Add($"{file}: kinds: at most 255.");
+        }
+
+        foreach (Core.Units.UnitRole role in Enum.GetValues<Core.Units.UnitRole>())
+        {
+            Core.Units.UnitKindDefinition? first = kinds.Find(k => k.Role == role);
+            if (first is null)
             {
-                errors.Add($"{file}: kinds: missing kind '{ToSnake(((Core.Units.UnitKind)k).ToString())}'.");
-                kinds[k] = new Core.Units.UnitKindDefinition { Kind = (Core.Units.UnitKind)k };
+                errors.Add($"{file}: kinds: no kind with the role '{ToSnake(role.ToString())}'.");
+                kinds.Add(new Core.Units.UnitKindDefinition { Id = kinds.Count, Key = ToSnake(role.ToString()), Role = role });
+            }
+            else if (first.RequiresTechnology >= 0)
+            {
+                errors.Add($"{file}: kinds: the first kind with the role '{ToSnake(role.ToString())}' must need no technology.");
             }
         }
 
@@ -955,7 +1015,7 @@ public static class ContentLoader
         var settlers = new Reader(doc.RootElement.TryGetProperty("settlers", out JsonElement st) ? st : default, $"{file}: settlers", errors);
         return new Core.Units.UnitRules
         {
-            Kinds = kinds!,
+            Kinds = kinds,
             JourneyTicksPerCell = r.Int("journeyTicksPerCell", 1, 10000),
             HillsExtraPercent = t.Int("hillsExtraPercent", 0, 10000),
             MountainsExtraPercent = t.Int("mountainsExtraPercent", 0, 10000),
@@ -2201,7 +2261,6 @@ public static class ContentLoader
             ConvoyBelowMonths = supply.Int("convoyBelowMonths", 0, 120),
             CarrierCells = supply.Int("carrierCells", 0, 1000),
             CarriersPercent = supply.Int("carriersPercent", 0, 100),
-            ConvoyCellsPerMonth = supply.Int("convoyCellsPerMonth", 1, 100),
             HungerMoralePerMonth = supply.Int("hungerMoralePerMonth", 0, 100),
             FedMoralePerMonth = supply.Int("fedMoralePerMonth", 0, 100),
             RetreatMorale = supply.Int("retreatMorale", 0, 100),
@@ -2210,7 +2269,7 @@ public static class ContentLoader
             ScorePerSettlement = r.Int("scorePerSettlement", 0, 100),
             WearinessPerCampaignMonth = r.SignedHundredths("wearinessPerCampaignMonth", 0, 10_000) ?? defaults.WearinessPerCampaignMonth,
             CampaignStepMonths = r.Int("campaignStepMonths", 1, 120),
-            MarchCellsPerMonth = r.Int("marchCellsPerMonth", 1, 100),
+            RestMonths = r.Int("restMonths", 0, 1200),
             QuietPeaceYears = r.Int("quietPeaceYears", 1, 1000),
             ArmySightCells = r.Int("armySightCells", 0, 100),
             SendPercent = r.Int("sendPercent", 1, 100),

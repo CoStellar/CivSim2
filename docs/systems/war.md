@@ -35,7 +35,14 @@ flowchart TD
   pamiętają ją w procencie z celu: ziemia 100/50, łupy 100/100, odwet 50/0.
 - **Wynik** (`Treaty.Score`, z perspektywy strony A, −100…+100, `Wars.RecordFight`): napaść w czasie wojny daje zwycięzcy +10, a zdobyta osada +15 więcej.
   Straty to ludzie zabici w walce (wojownicy obu stron i uciekający), liczone osobno dla stron.
-- **Zmęczenie** (`Wars.ComputeWeariness`, co krok świata w `WarSystem`): `miesiące kampanii w tej wojnie × 5 + procent ludzi strony zabitych w wojnie × 3`, najwyżej 100 (od PR 2; w PR 1 liczyły się lata wojny).
+- **Zmęczenie** (`Wars.ComputeWeariness`, co krok świata w `WarSystem`): `miesiące kampanii w tej wojnie × 0,6 + procent ludzi strony zabitych w wojnie × 3`, najwyżej 100 (od PR 2; w PR 1 liczyły się lata wojny; od etapu 6 PR 3b 0,6 zamiast 5 na miesiąc, bo armie idą ok. 9 razy wolniej).
+- **Armia jako oddział** (etap 6 PR 3b, `docs/systems/units.md`): kampania prowadzi oddział armii, który idzie w taktach (wojownicy 15
+  taktów na płaskie pole, 0,67 pola/s przy ×1; teren z biomów, A*). Wojownicy innych osad idą na zbiórkę jako własne oddziały. Armia
+  staje, gdy cel jest w zasięgu jej rodzaju (`rangeCells`), i walczy miesiąc akcji później. Pobita armia ucieka (`Flee`) i nikt jej
+  nie zawróci. Ocaleni odpoczywają w swoich osadach `restMonths` (6) miesięcy akcji, zanim osada znów kogoś wyśle. Tragarze to
+  oddział (10 taktów na pole), który idzie za armią i wraca do domu. Wartości liczone na miesiąc kampanii przeskalowane do
+  wolniejszego marszu: `carryFoodMonths` 3 → 36, `convoyBelowMonths` 3 → 18, `hungerMoralePerMonth` 20 → 3, `fedMoralePerMonth`
+  10 → 2, `wearinessPerCampaignMonth` 5 → 0,6. Usunięte: `marchCellsPerMonth`, `convoyCellsPerMonth`.
 - **Kampanie** (PR 2, `docs/systems/episodes.md`): armia maszeruje co miesiąc, walczy u celu i wraca z łupami; w wojnie o ziemię zdobyta wioska przechodzi z ludźmi.
 - **Uzbrojenie** (PR 3, `armaments` w `data/war.json`): gołe ręce 50%, drewniane włócznie hartowane w ogniu 70% (ogień, 0,2 drewna na wojownika),
   proce 80% (garbarstwo, 0,1 skóry), włócznie i topory z kamiennym grotem 100% (obróbka krzemienia, 0,2 narzędzi kamiennych). Każdy wojownik
@@ -48,7 +55,7 @@ flowchart TD
   ludzi (100 = jeden wojownik z kamiennym grotem; szczęście losowane z 50–150%, ułamek człowieka losowo). Każdy procent straconych ludzi
   w rundzie to −3 morale; strona z morale poniżej 40 ucieka (obie: ta z mniejszym morale) i traci jeszcze 10% ludzi w ucieczce. Gdy nikt
   nie ucieknie przez 6 rund, obrońcy się utrzymali. Obrońcy to wojownicy i 25% reszty mieszkańców (z morale 100); giną najpierw wojownicy.
-- **Atak** (PR 5): armia, która doszła do pola obok celu, atakuje w następnym miesiącu; do tego czasu jej dowódca może ją odwołać
+- **Atak** (PR 5; od PR 3b etapu 6: w zasięgu rodzaju armii): armia, która doszła do pola obok celu, atakuje w następnym miesiącu; do tego czasu jej dowódca może ją odwołać
   (`RecallCampaignCommand`, decyzja K2). Armia widzi osady do `armySightCells` (1) pola od siebie. Spodziewana bitwa dowódcy
   (`Battles.Expect`): te same rundy ze stałym szczęściem, 5 poziomów na stronę, 25 bitew, bez losowania.
 - **Po bitwie** (PR 4): wygrana w wojnie o ziemię zabiera wioskę, o którą jest wojna, z ludźmi; ludzie pokonanego obozu uciekają z tym, co
@@ -77,7 +84,9 @@ Przy każdym etapie nowej ery (etapy 6–12) sprawdź i uzupełnij:
 
 - [ ] **Uzbrojenie** (`data/war.json`, `armaments`): nowe poziomy z technologii ery (brąz, żelazo, stal, proch…), dobro, zużycie, procent siły.
 - [ ] **Fachy wojska** (`data/skills.json`): np. kowal po wytopie metali, płatnerz, rusznikarz; wymogi ludzi w technologiach wojskowych.
-- [ ] **Jednostki** (GDD 9.4): nowe rodzaje oddziałów ery (strzelcy, jazda, oblężnicze, łodzie).
+- [ ] **Jednostki** (GDD 9.4): nowe rodzaje oddziałów ery (strzelcy, jazda, oblężnicze, łodzie) jako wpisy w `units.json` (od etapu 6
+  PR 3b: rola `army`, `requires`, prędkość, **zasięg walki** `rangeCells`, własny teren). Przy erach z prochem: sprawdzić, czy bitwa
+  w rundach (`war.json` `battle`) ma dostać parametry na rodzaj (ogień z dystansu przed starciem, osłona, przewaga zasięgu).
 - [ ] **Limity** (`data/eras.json`): limit wodza (`armyLimit`) i liczba ludzi na polu (`troopsPerCell`), czyli kiedy armia robi front.
 - [ ] **Zaopatrzenie:** zasięg tragarzy, drogi i rzeki, wozy, tabory.
 - [ ] **Mury i oblężenia** od ery z budynkami.

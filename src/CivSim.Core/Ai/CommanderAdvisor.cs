@@ -27,6 +27,7 @@ namespace CivSim.Core.Ai;
 public sealed class CommanderAdvisor : Advisor
 {
     private readonly PathFinder _paths = new();
+    private readonly Core.Units.RouteFinder _routes = new();
     private readonly List<(int Home, int Target, int Warriors, int First, int Count)> _options = [];
     private readonly List<CampaignMuster> _musters = [];
     private readonly List<(int Distance, int Id)> _near = [];
@@ -103,7 +104,8 @@ public sealed class CommanderAdvisor : Advisor
         int limit = Campaigns.Era(Content, civ).ArmyLimit;
         foreach (SettlementState home in state.Settlements)
         {
-            if (!home.IsActive || home.Owner != civ.Id || home.World != world.Id || state.Episodes.OutFrom(civ.Id, home.Id.Value))
+            if (!home.IsActive || home.Owner != civ.Id || home.World != world.Id || state.Episodes.OutFrom(civ.Id, home.Id.Value)
+                || Campaigns.Rests(state, home))
             {
                 continue;
             }
@@ -127,7 +129,7 @@ public sealed class CommanderAdvisor : Advisor
             Amount food = Campaigns.SpareFood(Content, home);
             int farthest = 0;
             Gather(state, civ, world, home, limit, ref warriors, ref attack, ref food, ref farthest);
-            if (Weigh(state, civ, world, home, target, warriors, attack, food, Campaigns.MarchMonths(Content, farthest)) is not { } e)
+            if (Weigh(state, civ, world, home, target, warriors, attack, food, Campaigns.MarchMonths(Content, farthest, Campaigns.ArmyKind(Content, civ))) is not { } e)
             {
                 _musters.RemoveRange(first, _musters.Count - first);
                 continue;
@@ -184,14 +186,18 @@ public sealed class CommanderAdvisor : Advisor
         Amount carried = Amount.Min(food, Amount.Min(Campaigns.FoodFor(Content, warriors, Content.War.CarryFoodMonths), SettlementAssets.CarryCapacity(Content, state, civ.Id, warriors)));
         int foodMonths = Campaigns.MonthsOf(Content, carried, warriors);
         int beyond = Campaigns.BeyondSupplyCells(Content, state, civ.Id, world.Geometry.Index(target.Cell));
-        if (foodMonths < (2 * Campaigns.MarchMonths(Content, beyond)) + rules.MinFoodMonths)
+        Core.Units.UnitKindDefinition kind = Campaigns.ArmyKind(Content, civ);
+        if (foodMonths < (2 * Campaigns.MarchMonths(Content, beyond, kind)) + rules.MinFoodMonths)
         {
             return null;
         }
 
         // Food for the whole campaign (stage 4e PR 6): the gathering, the march there, a month at the target and the march
         // back, from what the warriors take and what carriers can bring from our settlements near home and near the target.
-        int months = musterMonths + (2 * Campaigns.MarchMonths(Content, path.Count)) + 1 + rules.MinFoodMonths;
+        // Stage 6 PR 3b: the march takes the ticks of the army's way over the land (A*, its kind's speed and terrain).
+        int ticks = _routes.RouteTicks(Content, state, civ, world, world.Geometry.Index(home.Cell), world.Geometry.Index(target.Cell), kind.TicksPerCell, kind);
+        int march = ticks >= 0 ? Campaigns.MarchMonthsOf(Content, ticks) : Campaigns.MarchMonths(Content, path.Count, kind);
+        int months = musterMonths + (2 * march) + 1 + rules.MinFoodMonths;
         if (Campaigns.MonthsOf(Content, Reachable(state, civ, world, home, target), warriors) < months)
         {
             return null;
@@ -237,7 +243,8 @@ public sealed class CommanderAdvisor : Advisor
             ExpectedBattle? battle = Campaigns.Expect(Content, state, civ, target, e.Warriors, Campaigns.BattleStrength(Content, e), e.Morale, from);
             int left = Campaigns.FoodMonthsLeft(Content, e);
             int beyond = Campaigns.BeyondSupplyCells(Content, state, civ.Id, cell);
-            int need = Campaigns.MarchMonths(Content, Math.Min(distance, beyond)) + Campaigns.MarchMonths(Content, beyond);
+            Core.Units.UnitKindDefinition kind = Campaigns.ArmyKind(Content, civ);
+            int need = Campaigns.MarchMonths(Content, Math.Min(distance, beyond), kind) + Campaigns.MarchMonths(Content, beyond, kind);
             bool hopeless = battle is { } b && b.ChancePercent < rules.RecallChancePercent;
             bool starving = !e.Foraging && left < need;
             if (!hopeless && !starving)
@@ -269,7 +276,7 @@ public sealed class CommanderAdvisor : Advisor
         foreach (int i in state.Grid.Within(world, home.Cell, Content.War.MusterCells))
         {
             SettlementState s = state.Settlements[i];
-            if (s != home && s.IsActive && s.Owner == civ.Id && !state.Episodes.OutFrom(civ.Id, s.Id.Value))
+            if (s != home && s.IsActive && s.Owner == civ.Id && !state.Episodes.OutFrom(civ.Id, s.Id.Value) && !Campaigns.Rests(state, s))
             {
                 int d = world.Geometry.Distance(home.Cell, s.Cell);
                 if (d <= Content.War.MusterCells && Campaigns.Sendable(Content, s) > 0)
