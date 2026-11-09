@@ -17,6 +17,7 @@ namespace CivSim.Protocol.Messages;
 [Union(8, typeof(MoveUnitDto))]
 [Union(9, typeof(FoundCampDto))]
 [Union(10, typeof(ReturnUnitDto))]
+[Union(11, typeof(AttackDto))]
 public interface ICommandDto
 {
 }
@@ -64,3 +65,7 @@ public sealed record FoundCampDto([property: Key(0)] long UnitId) : ICommandDto;
 /// <summary>A unit goes back to its home settlement and joins it (stage 6 PR 3a).</summary>
 [MessagePackObject]
 public sealed record ReturnUnitDto([property: Key(0)] long UnitId) : ICommandDto;
+
+/// <summary>Send the army of a campaign against another settlement of the same enemy (stage 6 PR 3b).</summary>
+[MessagePackObject]
+public sealed record AttackDto([property: Key(0)] long UnitId, [property: Key(1)] int TargetSettlementId) : ICommandDto;
