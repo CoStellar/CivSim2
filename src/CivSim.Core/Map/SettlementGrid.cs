@@ -60,6 +60,19 @@ public sealed class SettlementGrid
         _run++;
         IReadOnlyList<SettlementState> all = _state.Settlements;
 
+        // No cell is farther than a band of the map's height and width: a larger radius (int.MaxValue: "the nearest
+        // anywhere") looks at every bucket once, and the band below must not overflow.
+        if (radius >= geo.Width + geo.Height)
+        {
+            for (int b = 0; b < head.Length; b++)
+            {
+                Visit(head, b, geo, center, radius, all);
+            }
+
+            _found.Sort();
+            return _found;
+        }
+
         // A cell within the radius has an image (around the globe or across a pole) whose column and offset row each differ
         // by at most the radius (HexGlobe.NearestImage), so for every row of the band the columns around the wrapped
         // column hold every candidate.

@@ -36,7 +36,7 @@ public class SettlementGridTests
             state.FoundSettlement(state.Civilizations[k % state.Civilizations.Count].Id, world.Id, cell, $"g{k}", 0, Content.Goods.Count);
         }
 
-        foreach (int radius in new[] { 0, 1, 3, 7, 12, 20, 40 })
+        foreach (int radius in new[] { 0, 1, 3, 7, 12, 20, 40, 1000, int.MaxValue })
         {
             for (int q = 0; q < 60; q++)
             {
