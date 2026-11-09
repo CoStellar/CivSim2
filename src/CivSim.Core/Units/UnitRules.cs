@@ -55,8 +55,11 @@ public sealed class UnitKindDefinition
     /// </summary>
     public int RangeCells { get; init; } = 1;
 
-    /// <summary>Scouts: people of the settlement in one party (hunters first), who come back with it.</summary>
+    /// <summary>Scouts: people of the settlement in one party (people of <see cref="Skill"/> first), who come back with it.</summary>
     public int People { get; init; }
+
+    /// <summary>Scouts: the skill whose people go first (hunters), or -1.</summary>
+    public int Skill { get; init; } = -1;
 
     /// <summary>Extra cost of hills for this kind, percent, or -1 for <see cref="UnitRules.HillsExtraPercent"/>.</summary>
     public int HillsExtraPercent { get; init; } = -1;
@@ -128,7 +131,7 @@ public sealed record UnitRules
             kinds.Add(new UnitKindDefinition
             {
                 Id = k.Id, Key = k.Key, Name = k.Name, Role = k.Role, RequiresTechnology = k.RequiresTechnology, TicksPerCell = ticksPerCell,
-                SightCells = k.SightCells, RangeCells = k.RangeCells, People = k.People, HillsExtraPercent = k.HillsExtraPercent,
+                SightCells = k.SightCells, RangeCells = k.RangeCells, People = k.People, Skill = k.Skill, HillsExtraPercent = k.HillsExtraPercent,
                 MountainsExtraPercent = k.MountainsExtraPercent, RiverPercent = k.RiverPercent, BiomePercent = k.BiomePercent,
             });
         }

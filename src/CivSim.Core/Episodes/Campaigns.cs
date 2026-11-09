@@ -66,6 +66,11 @@ public static class Campaigns
             return "Warriors of that settlement are already out.";
         }
 
+        if (Rests(state, h))
+        {
+            return "The warriors of that settlement still rest from their last campaign.";
+        }
+
         if (warriors < 1 || warriors > Sendable(content, h))
         {
             return "Not enough warriors stay home.";
@@ -99,6 +104,11 @@ public static class Campaigns
                 return "Warriors of that settlement are already out.";
             }
 
+            if (Rests(state, s))
+            {
+                return "The warriors of that settlement still rest from their last campaign.";
+            }
+
             if (m.Warriors < 1 || m.Warriors > Sendable(content, s))
             {
                 return "Not enough warriors stay home.";
@@ -120,6 +130,21 @@ public static class Campaigns
         return MapMemory.Path(content, state, c, world, world.Geometry.Index(h.Cell), world.Geometry.Index(t.Cell)) is null
             ? "We know no way there."
             : null;
+    }
+
+    /// <summary>True while the warriors of <paramref name="s"/> rest after a campaign (stage 6 PR 3b, war.json restMonths).</summary>
+    public static bool Rests(GameState state, SettlementState s)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(s);
+        return s.RestUntilMonth > state.ActionMonth;
+    }
+
+    /// <summary>The kind <paramref name="civ"/>'s armies march as: the last army kind of units.json whose technology it knows.</summary>
+    public static Units.UnitKindDefinition ArmyKind(GameContent content, CivilizationState? civ)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return civ is null ? content.Units.First(Units.UnitRole.Army) : content.Units.Best(Units.UnitRole.Army, civ.Knows);
     }
 
     /// <summary>The most warriors <paramref name="s"/> may send (a third stays home: decision of 2026-11-07).</summary>
@@ -344,11 +369,22 @@ public static class Campaigns
         return nearest == int.MaxValue ? 0 : Math.Max(0, nearest - content.War.CarrierCells);
     }
 
-    /// <summary>Months an army needs to march <paramref name="cells"/> cells.</summary>
-    public static int MarchMonths(GameContent content, int cells)
+    /// <summary>
+    /// Months of action an army needs to march <paramref name="cells"/> cells of open land (stage 6 PR 3b: the army walks as a
+    /// unit of its kind; <see cref="MarchMonthsOf"/> for a known way with its terrain).
+    /// </summary>
+    public static int MarchMonths(GameContent content, int cells, Units.UnitKindDefinition? kind = null)
     {
         ArgumentNullException.ThrowIfNull(content);
-        return cells <= 0 ? 0 : (int)IntMath.MulDiv(cells, 1, content.War.MarchCellsPerMonth, Rounding.Ceiling);
+        kind ??= content.Units.First(Units.UnitRole.Army);
+        return cells <= 0 ? 0 : MarchMonthsOf(content, (long)cells * kind.TicksPerCell);
+    }
+
+    /// <summary>Months of action <paramref name="ticks"/> ticks of marching take.</summary>
+    public static int MarchMonthsOf(GameContent content, long ticks)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return ticks <= 0 ? 0 : (int)Math.Min(int.MaxValue, IntMath.MulDiv(ticks, 1, Math.Max(1, content.Time.TicksPerActionMonth), Rounding.Ceiling));
     }
 
     /// <summary>Months the food of a campaign lasts: what it carries, the food among its loot and what carriers bring.</summary>
@@ -510,7 +546,6 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
         var food = new Amount[Content.Goods.Count];
         long strength = 0;
         int total = 0;
-        int farthest = 0;
         for (int i = 0; i < count; i++)
         {
             SettlementState s = i == 0 ? home : state.FindSettlement(Others![i - 1].Settlement)!;
@@ -520,7 +555,6 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
             members[i] = s.Id.Value;
             sent[i] = taken;
             total += taken;
-            farthest = Math.Max(farthest, geo.Distance(s.Cell, home.Cell));
         }
 
         // Food for the first months, as much as the warriors carry, from every settlement in turn.
@@ -531,8 +565,7 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
             packed += Campaigns.TakeFood(Content, state.FindSettlement(new SettlementId(members[i]))!, food, want - packed);
         }
 
-        int musterMonths = (int)IntMath.MulDiv(farthest, 1, rules.MarchCellsPerMonth, Rounding.Ceiling);
-        state.Episodes.Begin(new Episode
+        Episode e = state.Episodes.Begin(new Episode
         {
             Kind = EpisodeKind.Campaign,
             Civ = civ,
@@ -551,11 +584,29 @@ public sealed record LaunchCampaignCommand(GameContent Content, SettlementId Hom
             Morale = 100,
             Food = food,
             Cell = geo.Index(home.Cell),
-            Phase = musterMonths > 0 ? CampaignPhase.Muster : CampaignPhase.March,
-            MusterUntilTick = state.Turn + Content.Time.ActionTicks(musterMonths),
+            Phase = count > 1 ? CampaignPhase.Muster : CampaignPhase.March,
             Loot = new Amount[Content.Goods.Count],
             ConvoyFood = new Amount[Content.Goods.Count],
         });
+
+        // Stage 6 PR 3b: the army is a unit at home; the warriors of the other settlements walk there as units of their own
+        // (the muster ends when all of them stand at home).
+        Units.UnitKindDefinition kind = Campaigns.ArmyKind(Content, c);
+        Units.Unit army = state.Units.Add(
+            kind, civ, home.World, geo.Index(home.Cell), home.Id.Value, Units.UnitOrder.Idle, Content.Strata.Count, Content.Skills.Count, Content.Goods.Count);
+        army.Episode = e.Id;
+        army.People[0] = sent[0];
+        e.Army = army.Id;
+        for (int i = 1; i < count; i++)
+        {
+            SettlementState s = state.FindSettlement(new SettlementId(members[i]))!;
+            Units.Unit joining = state.Units.Add(
+                kind, civ, s.World, geo.Index(s.Cell), s.Id.Value, Units.UnitOrder.Move, Content.Strata.Count, Content.Skills.Count, Content.Goods.Count);
+            joining.Target = geo.Index(home.Cell);
+            joining.Episode = e.Id;
+            joining.People[0] = sent[i];
+        }
+
         Treaty? war = state.Treaties.Find(civ, target.Owner, TreatyKind.War);
         if (war is not null)
         {
@@ -614,9 +665,10 @@ public sealed record RecallCampaignCommand(long Episode) : ICommand, IChronicled
 }
 
 /// <summary>
-/// Combat phase (GDD 11.1 phase 6; stage 4e PR 2–3, ADR 0022): every campaign whose step is due eats, gathers, marches
-/// <see cref="WarRules.MarchCellsPerMonth"/> cells over known land, fights when it reaches its target, takes what its
-/// warriors can carry and goes home, where the survivors go back to their settlements. Carriers from the nearest own
+/// Combat phase (GDD 11.1 phase 6; stage 4e PR 2–3, ADR 0022, stage 6 PR 3b): the army of a campaign walks as a unit in
+/// every tick (UnitSystem); every campaign whose step (a month of action) is due eats, gathers its warriors, sends its army
+/// on towards its target, fights a month after the target is within its kind's range, takes what its warriors can carry and
+/// goes home (fleeing when beaten), where the survivors go back to their settlements and rest. Carriers from the nearest own
 /// settlement bring food after it; a hungry campaign loses morale, raids nearby enemy settlements for food and turns back
 /// when its morale is gone. A campaign turns back when peace is made, the target is gone or the way is lost.
 /// </summary>
@@ -624,7 +676,6 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
 {
     private const ulong FightSalt = 0xCA0000UL;
     private readonly GameContent _content = content ?? throw new ArgumentNullException(nameof(content));
-    private readonly PathFinder _paths = new();
 
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.Combat;
@@ -643,16 +694,69 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         for (int k = 0; k < book.All.Count; k++)
         {
             Episode e = book.All[k];
-            if (e.Ended || e.Kind != EpisodeKind.Campaign || e.NextTick > state.Turn)
+            if (e.Ended || e.Kind != EpisodeKind.Campaign)
+            {
+                continue;
+            }
+
+            // Stage 6 PR 3b: the army and its carriers walk as units in every tick; the campaign follows where they stand.
+            Follow(state, e);
+            if (e.NextTick > state.Turn)
             {
                 continue;
             }
 
             Step(context, state, e);
             e.NextTick = state.Turn + _content.Time.ActionTicks(e.TickMonths);
+            if (e.Ended)
+            {
+                Release(state, e);
+            }
         }
 
         book.RemoveEnded();
+        state.Units.RemoveGone(); // units that joined or were released this tick leave the book now (saves see only the living)
+    }
+
+    // Where the army and the carriers stand now (views, sight and the commander read the campaign's cells).
+    private static void Follow(GameState state, Episode e)
+    {
+        if (e.Army >= 0 && state.Units.Find(e.Army) is { } army)
+        {
+            e.Cell = army.Cell;
+            army.People[0] = e.Warriors;
+        }
+
+        if (e.Convoy >= 0 && state.Units.Find(e.Convoy) is { } convoy)
+        {
+            e.ConvoyCell = convoy.Cell;
+        }
+    }
+
+    // A campaign that ended lets go of its units: the army and gathering warriors are gone (their men went home with the
+    // campaign); carriers on the way walk home with what they carry.
+    private void Release(GameState state, Episode e)
+    {
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            Units.Unit u = state.Units[k];
+            if (u.Episode != e.Id || u.Gone)
+            {
+                continue;
+            }
+
+            if (u.Role == Units.UnitRole.Carriers)
+            {
+                SendCarriersHome(state, e, u);
+            }
+            else
+            {
+                u.Gone = true;
+            }
+        }
+
+        e.Army = -1;
+        e.Convoy = -1;
     }
 
     private void Step(TurnContext context, GameState state, Episode e)
@@ -683,9 +787,10 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         {
             if (war is null)
             {
+                Gathered(state, e, all: true); // peace while gathering: everyone counts as home
                 e.Phase = CampaignPhase.Return;
             }
-            else if (state.Turn >= e.MusterUntilTick)
+            else if (Gathered(state, e, all: false))
             {
                 e.Phase = CampaignPhase.March;
             }
@@ -703,6 +808,34 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         {
             Supply(state, e, civ, world);
         }
+    }
+
+    // The muster (stage 6 PR 3b): warriors of the other settlements walk to the army at home; those who stand there join
+    // it. True when nobody is still on the way (with all, everyone joins at once).
+    private bool Gathered(GameState state, Episode e, bool all)
+    {
+        Units.Unit? army = e.Army >= 0 ? state.Units.Find(e.Army) : null;
+        bool done = true;
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            Units.Unit u = state.Units[k];
+            if (u.Episode != e.Id || u.Gone || u.Role != Units.UnitRole.Army || (army is { } a && u.Id == a.Id))
+            {
+                continue;
+            }
+
+            bool there = army is not { } at || u.Cell == at.Cell || (u.Order == Units.UnitOrder.Idle && u.Target == u.Cell);
+            if (all || there || u.Order == Units.UnitOrder.Idle)
+            {
+                u.Gone = true; // joined (an idle one that found no way counts as home too: its men were counted at the start)
+            }
+            else
+            {
+                done = false;
+            }
+        }
+
+        return done;
     }
 
     // A month of food for every warrior: first what they carry, then the food among the loot. Hunger costs morale.
@@ -770,20 +903,45 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             return;
         }
 
-        List<int>? path = _paths.Find(_content, state, civ, world, e.Cell, world.Geometry.Index(target.Cell));
-        if (path is null)
+        // Stage 6 PR 3b: the army walks as a unit (UnitSystem) towards its target until the target is within its kind's
+        // range; it attacks a month of action after it got there, so that its commander can still call it back (PR 5).
+        Units.Unit? army = e.Army >= 0 ? state.Units.Find(e.Army) : null;
+        if (army is not { } a)
         {
             e.Phase = CampaignPhase.Return;
             return;
         }
 
-        if (path.Count >= 2)
+        int goal = world.Geometry.Index(target.Cell);
+        int range = _content.Units.Of(a.Kind).RangeCells;
+        if (world.Geometry.Distance(world.Geometry.FromIndex(a.Cell), target.Cell) > range)
         {
-            // Not there yet: march, at most to the cell next to the settlement. The warriors attack in the next step,
-            // so their commander, who sees it now, can still call them back (stage 4e PR 5).
-            e.Cell = path[Math.Min(_content.War.MarchCellsPerMonth, path.Count - 1) - 1];
+            e.InRangeSince = -1;
+            if (a.Order == Units.UnitOrder.Idle && a.Target == goal)
+            {
+                e.Phase = CampaignPhase.Return; // it found no known way there (UnitSystem stops it)
+            }
+            else if (a.Order != Units.UnitOrder.Attack || a.Target != goal)
+            {
+                a.Order = Units.UnitOrder.Attack;
+                a.Target = goal;
+                a.ForgetPath();
+            }
+
             return;
         }
+
+        if (e.InRangeSince < 0)
+        {
+            e.InRangeSince = state.Turn;
+        }
+
+        if (state.Turn - e.InRangeSince < _content.Time.ActionTicks(1))
+        {
+            return; // in reach: the attack comes a month of action later
+        }
+
+        e.InRangeSince = -1;
 
         bool foray = e.Foraging;
         (string text, bool won) = Fight(state, e, civ, target, war);
@@ -795,10 +953,12 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             e.Foraging = false;
             e.Target = e.GoalTarget;
             e.Phase = won ? CampaignPhase.March : CampaignPhase.Return; // fed, they march on to their goal
+            e.Fleeing = !won;
             return;
         }
 
         e.Phase = CampaignPhase.Return;
+        e.Fleeing = !won; // beaten: they flee home, nobody turns them (stage 6 PR 3b)
     }
 
     // The nearest known settlement of the enemy within reach of a hungry campaign, other than its goal.
@@ -826,14 +986,24 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         return best;
     }
 
-    // Carriers: when food runs low, the nearest own settlement sends some; they walk after the army and hand it over.
+    // Carriers (stage 6 PR 3b: a unit): when food runs low, the own settlement in reach that can send the most food sends
+    // some; they walk after the army (their way is found again at most once a month of action, as the army moves) and hand
+    // the food over when they stand next to it, then walk home.
     private void Supply(GameState state, Episode e, CivilizationState civ, WorldState world)
     {
         WarRules rules = _content.War;
-        if (e.ConvoyFrom >= 0)
+        if (e.Convoy >= 0)
         {
-            List<int>? path = e.ConvoyCell == e.Cell ? null : _paths.Find(_content, state, civ, world, e.ConvoyCell, e.Cell);
-            if (e.ConvoyCell == e.Cell || (path is not null && path.Count <= rules.ConvoyCellsPerMonth))
+            Units.Unit? convoy = state.Units.Find(e.Convoy);
+            if (convoy is not { } c)
+            {
+                e.Convoy = -1;
+                e.ConvoyFrom = -1;
+                e.ConvoyCarriers = 0;
+                return;
+            }
+
+            if (world.Geometry.Distance(world.Geometry.FromIndex(c.Cell), world.Geometry.FromIndex(e.Cell)) <= 1)
             {
                 for (int g = 0; g < e.Food.Length && g < e.ConvoyFood.Length; g++)
                 {
@@ -842,15 +1012,17 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
                 }
 
                 e.Convoys++;
-                EndConvoy(state, e, world);
+                SendCarriersHome(state, e, c);
             }
-            else if (path is null)
+            else if (c.Order == Units.UnitOrder.Idle && c.Target == e.Cell)
             {
-                EndConvoy(state, e, world); // they lost the army: they go home with the food
+                SendCarriersHome(state, e, c); // they found no way to the army: they go home with the food
             }
-            else
+            else if (c.Target != e.Cell)
             {
-                e.ConvoyCell = path[rules.ConvoyCellsPerMonth - 1];
+                c.Order = Units.UnitOrder.Move;
+                c.Target = e.Cell; // the army moved: after it
+                c.ForgetPath();
             }
 
             return;
@@ -886,37 +1058,52 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         e.ConvoyCarriers = Campaigns.TakeCarriers(_content, from, (int)IntMath.MulDiv(load.Hundredths, 1, perPerson, Rounding.Ceiling));
         e.ConvoyFrom = from.Id.Value;
         e.ConvoyCell = world.Geometry.Index(from.Cell);
+        Units.Unit unit = state.Units.Add(
+            _content.Units.Best(Units.UnitRole.Carriers, civ.Knows), e.Civ, from.World, e.ConvoyCell, from.Id.Value, Units.UnitOrder.Move,
+            _content.Strata.Count, _content.Skills.Count, _content.Goods.Count);
+        unit.Target = e.Cell;
+        unit.Episode = e.Id;
+        unit.People[NonFightingStratum()] = e.ConvoyCarriers; // they join their home again when they come back (UnitSystem)
+        e.Convoy = unit.Id;
     }
 
-    // The carriers go home: the food they still have goes back into the stores.
-    private void EndConvoy(GameState state, Episode e, WorldState world)
+    // The carriers leave the campaign and walk home with the food they still have; they join their settlement there.
+    private void SendCarriersHome(GameState state, Episode e, Units.Unit carriers)
     {
-        SettlementState? home = state.FindSettlement(new SettlementId(e.ConvoyFrom));
-        if (home is not { IsActive: true } || home.Owner != e.Civ)
+        Span<Amount> cargo = carriers.Cargo;
+        for (int g = 0; g < e.ConvoyFood.Length && g < cargo.Length; g++)
         {
-            home = Nearest(state, world, e.Civ, e.ConvoyCell, int.MaxValue);
-        }
-
-        if (home is not null)
-        {
-            Campaigns.GiveCarriers(_content, home, e.ConvoyCarriers);
-            Span<Amount> stock = home.Stock;
-            for (int g = 0; g < e.ConvoyFood.Length && g < stock.Length; g++)
-            {
-                stock[g] += e.ConvoyFood[g];
-            }
+            cargo[g] += e.ConvoyFood[g];
         }
 
         Array.Clear(e.ConvoyFood);
+        carriers.Episode = -1;
+        carriers.Order = Units.UnitOrder.Return;
+        carriers.ForgetPath();
+        e.Convoy = -1;
         e.ConvoyCarriers = 0;
         e.ConvoyFrom = -1;
+    }
+
+    // The first stratum whose people do not fight (carriers come from it and go back to it, as Campaigns.GiveCarriers).
+    private int NonFightingStratum()
+    {
+        for (int k = 0; k < _content.Strata.Count; k++)
+        {
+            if (!_content.Strata[k].Fights)
+            {
+                return k;
+            }
+        }
+
+        return 0;
     }
 
     private void GoHome(TurnContext context, GameState state, Episode e, CivilizationState civ, WorldState world)
     {
         if (e.Warriors <= 0)
         {
-            Finish(state, e, world);
+            Finish(e);
             return;
         }
 
@@ -926,22 +1113,40 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             home = Nearest(state, world, e.Civ, e.Cell, int.MaxValue);
             if (home is null)
             {
-                Finish(state, e, world); // nowhere to go back to: the warriors scatter
+                Finish(e); // nowhere to go back to: the warriors scatter
                 return;
             }
 
             e.Home = home.Id.Value;
         }
 
-        List<int>? path = _paths.Find(_content, state, civ, world, e.Cell, world.Geometry.Index(home.Cell));
-        if (path is not null && path.Count > _content.War.MarchCellsPerMonth)
+        // Stage 6 PR 3b: the army walks home as a unit (fleeing after a lost battle); it is home when it stands there.
+        int at = world.Geometry.Index(home.Cell);
+        if (e.Army >= 0 && state.Units.Find(e.Army) is { } army && army.Cell != at)
         {
-            e.Cell = path[_content.War.MarchCellsPerMonth - 1];
-            return;
+            Units.UnitOrder order = e.Fleeing ? Units.UnitOrder.Flee : Units.UnitOrder.Return;
+            if (army.Order == Units.UnitOrder.Idle && army.Home == home.Id.Value && army.Target == at)
+            {
+                // It found no known way home: the survivors come home by themselves.
+            }
+            else
+            {
+                if (army.Order != order || army.Home != home.Id.Value)
+                {
+                    army.Order = order;
+                    army.Home = home.Id.Value;
+                    army.Target = at;
+                    army.ForgetPath();
+                }
+
+                return;
+            }
         }
 
-        // The survivors go back to the settlements they came from, in proportion; the rest, the food and the loot stay here.
+        // The survivors go back to the settlements they came from, in proportion, and rest there; the food and the loot
+        // stay here.
         int left = e.Warriors;
+        long rest = state.ActionMonth + _content.War.RestMonths;
         for (int i = 1; i < e.Members.Length && e.Mustered > 0; i++)
         {
             SettlementState? m = state.FindSettlement(new SettlementId(e.Members[i]));
@@ -949,11 +1154,13 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
             if (m is { IsActive: true } && m.Owner == e.Civ && share > 0)
             {
                 Campaigns.GiveWarriors(_content, m, share);
+                m.RestUntilMonth = Math.Max(m.RestUntilMonth, rest);
                 left -= share;
             }
         }
 
         Campaigns.GiveWarriors(_content, home, left);
+        home.RestUntilMonth = Math.Max(home.RestUntilMonth, rest);
         Span<Amount> stock = home.Stock;
         for (int g = 0; g < stock.Length; g++)
         {
@@ -963,18 +1170,10 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         Array.Clear(e.Loot);
         Array.Clear(e.Food);
         context.Chronicle($"{civ.Name}'s warriors came home to {home.Name}: {e.Warriors} of them.");
-        Finish(state, e, world);
+        Finish(e);
     }
 
-    private void Finish(GameState state, Episode e, WorldState world)
-    {
-        if (e.ConvoyFrom >= 0)
-        {
-            EndConvoy(state, e, world);
-        }
-
-        e.Ended = true;
-    }
+    private static void Finish(Episode e) => e.Ended = true; // its units are released after the step (Release)
 
     // The fight at the target (until battles in rounds, PR 4): the chance to win is the attackers' share of the armed
     // strength (arms from technology and stores, times morale).

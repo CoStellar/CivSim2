@@ -80,8 +80,10 @@ public class CommanderTests
         List<CommandEnvelope> commands = Decide(state);
         Assert.Contains(commands, c => c.Command is RecallCampaignCommand r && r.Episode == e.Id);
 
-        // Fed for the way there and back (two months to the target, two back to the reach of carriers), the army marches on.
-        e.Food[Content.Good("wild_plants").Id] = Campaigns.FoodFor(Content, e.Warriors, 4);
+        // Fed for the way there and back (4 cells to the target, 6 back to the reach of carriers: a month of action per cell
+        // in these tests, where units walk a cell in a tick), the army marches on.
+        int need = Campaigns.MarchMonths(Content, 4) + Campaigns.MarchMonths(Content, 6);
+        e.Food[Content.Good("wild_plants").Id] = Campaigns.FoodFor(Content, e.Warriors, need);
         Assert.DoesNotContain(Decide(state), c => c.Command is RecallCampaignCommand);
     }
 
@@ -96,10 +98,19 @@ public class CommanderTests
         Treaties.DeclareWar(Content, state, a.Id, b.Id, WarGoal.Loot, -1);
         new LaunchCampaignCommand(Content, home.Id, target.Id, 50).ApplyWithChronicle(state, a.Id);
         TurnRunner runner = ArmyTests.Runner(state);
-        ArmyTests.FirstStep(runner);
         Episode e = state.Episodes.All[0];
-        Assert.Equal(1, state.Worlds[0].Geometry.Distance(state.Worlds[0].Geometry.FromIndex(e.Cell), target.Cell));
+
+        // Stage 6 PR 3b: the army walks as a unit until the target is within its range (1 cell for warriors) ...
+        HexGlobe geo = state.Worlds[0].Geometry;
+        for (int t = 0; t < 100 && geo.Distance(geo.FromIndex(e.Cell), target.Cell) > 1; t++)
+        {
+            runner.RunTurn();
+        }
+
+        Assert.Equal(1, geo.Distance(geo.FromIndex(e.Cell), target.Cell));
         Assert.Equal(0, e.Battles);
+
+        // ... and attacks a month of action later (one tick in these tests).
         runner.RunTurn();
         Assert.Equal(1, e.Battles);
     }

@@ -91,6 +91,8 @@ public static class GameStateHash
 
             h.Add(u.PathAt);
             h.Add(u.PathGoal);
+            h.Add(u.Episode);
+            h.Add((int)u.Role);
         }
 
         h.Add(state.Episodes.NextId);
@@ -131,6 +133,10 @@ public static class GameStateHash
             h.Add(e.ConvoyCell);
             h.Add(e.ConvoyCarriers);
             h.Add(e.Convoys);
+            h.Add(e.Army);
+            h.Add(e.Convoy);
+            h.Add(e.InRangeSince);
+            h.Add(e.Fleeing ? 1 : 0);
             h.Add(e.Members.Length);
             for (int m = 0; m < e.Members.Length; m++)
             {
@@ -320,6 +326,7 @@ public static class GameStateHash
             h.Add(s.JourneyProgress);
             h.Add(s.ScoutOut ? 1 : 0);
             h.Add(s.ScoutBackMonth);
+            h.Add(s.RestUntilMonth);
             h.Add(s.RunsMade);
             h.Add((int)s.Status);
             h.Add(s.AbandonedMonth);

@@ -20,8 +20,14 @@ public enum UnitOrder : byte
     /// <summary>Scouts: walk out in <see cref="Unit.Direction"/> until the trip is done.</summary>
     Scout = 3,
 
-    /// <summary>Walks back to its home settlement and joins it.</summary>
+    /// <summary>Walks back to its home settlement and joins it (an army or carriers: stands there for its campaign).</summary>
     Return = 4,
+
+    /// <summary>An army: walks towards <see cref="Unit.Target"/> until it is within its kind's range, and stands (stage 6 PR 3b).</summary>
+    Attack = 5,
+
+    /// <summary>An army beaten in battle: flees home; nobody can turn it (stage 6 PR 3b).</summary>
+    Flee = 6,
 }
 
 /// <summary>
@@ -110,6 +116,9 @@ public readonly struct Unit : IEquatable<Unit>
     /// <summary>The goal <see cref="Path"/> was found for, or -1 when it has none.</summary>
     public int PathGoal { get => _book.PathGoalOf[Slot]; set => _book.PathGoalOf[Slot] = value; }
 
+    /// <summary>Id of the campaign (episode) it belongs to, or -1 (stage 6 PR 3b: armies, gathering warriors, carriers).</summary>
+    public long Episode { get => _book.EpisodeOf[Slot]; set => _book.EpisodeOf[Slot] = value; }
+
     /// <summary>True once it is gone (founded its camp, joined its home, died out); removed at the end of the tick.</summary>
     public bool Gone { get => _book.GoneOf[Slot]; set => _book.GoneOf[Slot] = value; }
 
@@ -182,6 +191,7 @@ public sealed class UnitBook
     internal int[] CostOf = [];
     internal byte[] DirectionOf = [];
     internal bool[] GoneOf = [];
+    internal long[] EpisodeOf = [];
     internal List<int>[] TrailOf = [];
     internal List<int>[] PathOf = [];
     internal int[] PathAtOf = [];
@@ -343,6 +353,7 @@ public sealed class UnitBook
         CostOf[slot] = 0;
         DirectionOf[slot] = 0;
         GoneOf[slot] = false;
+        EpisodeOf[slot] = -1;
         TrailOf[slot].Clear();
         PathOf[slot].Clear();
         PathAtOf[slot] = 0;
@@ -374,6 +385,7 @@ public sealed class UnitBook
             Array.Resize(ref CostOf, size);
             Array.Resize(ref DirectionOf, size);
             Array.Resize(ref GoneOf, size);
+            Array.Resize(ref EpisodeOf, size);
             Array.Resize(ref PathAtOf, size);
             Array.Resize(ref PathGoalOf, size);
             int old = TrailOf.Length;

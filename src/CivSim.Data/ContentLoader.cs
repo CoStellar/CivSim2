@@ -55,7 +55,7 @@ public static class ContentLoader
         StabilityRules stability = LoadStability(Path.Combine(directory, "stability.json"), effects, errors);
         LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
         Core.Simulation.TimeRules time = LoadTime(Path.Combine(directory, "time.json"), errors);
-        Core.Units.UnitRules units = LoadUnits(Path.Combine(directory, "units.json"), biomes, technologies, errors);
+        Core.Units.UnitRules units = LoadUnits(Path.Combine(directory, "units.json"), biomes, technologies, skills, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -904,7 +904,7 @@ public static class ContentLoader
 
     // Stability and administration of data/stability.json (stage 4f PR 3, GDD 7.3).
     // Units (stage 6 PR 3a): speeds, terrain costs, scouting and settlers.
-    private static Core.Units.UnitRules LoadUnits(string path, List<BiomeDefinition> biomes, List<TechnologyDefinition> technologies, List<string> errors)
+    private static Core.Units.UnitRules LoadUnits(string path, List<BiomeDefinition> biomes, List<TechnologyDefinition> technologies, List<SkillDefinition> skills, List<string> errors)
     {
         using JsonDocument? doc = Open(path, errors);
         if (doc is null)
@@ -930,6 +930,16 @@ public static class ContentLoader
                     if (tech < 0)
                     {
                         errors.Add($"{at}.requires: unknown technology '{rq.GetString()}'.");
+                    }
+                }
+
+                int skill = -1;
+                if (e.TryGetProperty("skill", out JsonElement sk) && sk.ValueKind == JsonValueKind.String)
+                {
+                    skill = skills.FindIndex(x => x.Key == sk.GetString());
+                    if (skill < 0)
+                    {
+                        errors.Add($"{at}.skill: unknown skill '{sk.GetString()}'.");
                     }
                 }
 
@@ -971,6 +981,7 @@ public static class ContentLoader
                     SightCells = x.Int("sightCells", 0, 20),
                     RangeCells = x.OptionalInt("rangeCells", 1, 50) ?? 1,
                     People = x.OptionalInt("people", 0, 1000) ?? 0,
+                    Skill = skill,
                     HillsExtraPercent = hills,
                     MountainsExtraPercent = mountains,
                     RiverPercent = river,
@@ -2250,7 +2261,6 @@ public static class ContentLoader
             ConvoyBelowMonths = supply.Int("convoyBelowMonths", 0, 120),
             CarrierCells = supply.Int("carrierCells", 0, 1000),
             CarriersPercent = supply.Int("carriersPercent", 0, 100),
-            ConvoyCellsPerMonth = supply.Int("convoyCellsPerMonth", 1, 100),
             HungerMoralePerMonth = supply.Int("hungerMoralePerMonth", 0, 100),
             FedMoralePerMonth = supply.Int("fedMoralePerMonth", 0, 100),
             RetreatMorale = supply.Int("retreatMorale", 0, 100),
@@ -2259,7 +2269,7 @@ public static class ContentLoader
             ScorePerSettlement = r.Int("scorePerSettlement", 0, 100),
             WearinessPerCampaignMonth = r.SignedHundredths("wearinessPerCampaignMonth", 0, 10_000) ?? defaults.WearinessPerCampaignMonth,
             CampaignStepMonths = r.Int("campaignStepMonths", 1, 120),
-            MarchCellsPerMonth = r.Int("marchCellsPerMonth", 1, 100),
+            RestMonths = r.Int("restMonths", 0, 1200),
             QuietPeaceYears = r.Int("quietPeaceYears", 1, 1000),
             ArmySightCells = r.Int("armySightCells", 0, 100),
             SendPercent = r.Int("sendPercent", 1, 100),

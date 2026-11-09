@@ -122,9 +122,6 @@ public sealed record WarRules
     /// <summary>At most this share of a settlement's people who do not fight carry food, percent.</summary>
     public int CarriersPercent { get; init; } = 10;
 
-    /// <summary>Cells carriers walk per month (lighter than an army on the way back, faster than it on the way out).</summary>
-    public int ConvoyCellsPerMonth { get; init; } = 4;
-
     /// <summary>Morale points a hungry campaign loses per month (morale runs from 0 to 100).</summary>
     public int HungerMoralePerMonth { get; init; } = 20;
 
@@ -157,8 +154,11 @@ public sealed record WarRules
     /// <summary>Length of a campaign's steps, months (ADR 0022).</summary>
     public int CampaignStepMonths { get; init; } = 1;
 
-    /// <summary>Cells a campaign marches per month.</summary>
-    public int MarchCellsPerMonth { get; init; } = 3;
+    /// <summary>
+    /// Months of action the warriors of a settlement rest after they came home from a campaign and cannot be sent again
+    /// (stage 6 PR 3b, decision of 2026-11-09).
+    /// </summary>
+    public int RestMonths { get; init; } = 6;
 
     /// <summary>A war in which nobody campaigned for this many years ends in a white peace.</summary>
     public int QuietPeaceYears { get; init; } = 5;

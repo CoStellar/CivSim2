@@ -78,6 +78,7 @@ public class ArmyTests
         var cell = new HexCoord(start.Col, start.Row + offset);
         SettlementState s = state.FoundSettlement(civ.Id, state.Worlds[0].Id, cell, civ.Name + " " + offset, Content.SettlementLevel("village").Id, Content.Goods.Count, Content.Strata.Count, Content.Skills.Count);
         s.Population[Producers] = producers;
+        s.ScoutOut = true; // no scouts in these tests: they would take people (stage 6 PR 3b)
         s.Population[Warriors] = warriors;
         s.Stock[Good("wild_plants")] = Amount.FromUnits(food);
         return s;
@@ -91,6 +92,7 @@ public class ArmyTests
         }
 
         var runner = new TurnRunner(state);
+        runner.AddSystem(new Core.Units.UnitSystem(Content)); // stage 6 PR 3b: armies and carriers walk as units
         runner.AddSystem(new CampaignSystem(Content));
         runner.AddSystem(new WarSystem(Content));
         runner.AddSystem(new CalendarSystem(Content));
@@ -105,11 +107,11 @@ public class ArmyTests
         runner.RunTurn();
     }
 
-    // Runs until no campaign is out (at most 60 steps); returns the chronicle.
+    // Runs until no campaign is out (at most 200 ticks); returns the chronicle.
     internal static List<string> RunOut(TurnRunner runner, GameState state, System.Action? each = null)
     {
         var lines = new List<string>();
-        for (int k = 0; k < 60 && state.Episodes.Count > 0; k++)
+        for (int k = 0; k < 200 && state.Episodes.Count > 0; k++)
         {
             runner.RunTurn();
             lines.AddRange(runner.LastChronicle);
@@ -176,8 +178,13 @@ public class ArmyTests
         Assert.Equal((10, 5), (home.Population[Warriors], ally.Population[Warriors]));
         Assert.True(Campaigns.FoodIn(Content, e.Food) > Amount.Zero, "they took food along");
 
+        // Stage 6 PR 3b: the ally's warriors walk to the home settlement as a unit; the march starts once they stand there.
         TurnRunner runner = Runner(state);
-        FirstStep(runner);
+        for (int t = 0; t < 30 && e.Phase == CampaignPhase.Muster; t++)
+        {
+            runner.RunTurn();
+        }
+
         Assert.Equal(CampaignPhase.March, e.Phase);
         RunOut(runner, state);
         Assert.True(home.Population[Warriors] > 10, "survivors came home");
@@ -242,7 +249,7 @@ public class ArmyTests
         Episode e = state.Episodes.All[0];
         TurnRunner runner = Runner(state);
         FirstStep(runner);
-        Assert.Equal(80, e.Morale);
+        Assert.Equal(100 - Content.War.HungerMoralePerMonth, e.Morale);
         Assert.Equal(1, e.HungryMonths);
         List<string> lines = RunOut(runner, state);
         Assert.Contains(lines, l => l.Contains("Hunger broke", System.StringComparison.Ordinal));

@@ -56,7 +56,8 @@ public class WorldGeneratorTests
     // of the most advanced civilization (the map is unchanged).
     // Stage 6 PR 2: the months of action are in the hash (the map is unchanged).
     // Stage 6 PR 3a: units, the scouts and journeys of settlements are in the hash (the map is unchanged).
-    private const ulong GoldenWorldHash = 15338822255152381382UL;
+    // Stage 6 PR 3b: the warriors' rest of every settlement is in the hash (the map is unchanged).
+    private const ulong GoldenWorldHash = 18392618435672352902UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

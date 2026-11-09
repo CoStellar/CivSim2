@@ -156,12 +156,13 @@ public class WarTests
         Assert.Equal(Content.War.ScorePerWin + Content.War.ScorePerSettlement, Wars.ScoreFor(war, a.Id));
         Assert.Equal(-Wars.ScoreFor(war, a.Id), Wars.ScoreFor(war, b.Id));
 
-        // 4 months of campaigning (5 points each) and 10 of 100 people dead (3 points per percent): 20 + 30 = 50 for b;
-        // a lost 4 of 200 (2%): 20 + 6 = 26. Years of war alone count for nothing (ADR 0022).
-        war.CampaignMonths = 4;
+        // 40 months of campaigning (0.6 points each since stage 6 PR 3b: armies walk slower) and 10 of 100 people dead
+        // (3 points per percent): 24 + 30 = 54 for b; a lost 4 of 200 (2%): 24 + 6 = 30. Years of war alone count for
+        // nothing (ADR 0022).
+        war.CampaignMonths = 40;
         long month = war.SinceMonth + (20 * 12);
-        Assert.Equal(50, Wars.ComputeWeariness(Content.War, war, b.Id, month));
-        Assert.Equal(26, Wars.ComputeWeariness(Content.War, war, a.Id, month));
+        Assert.Equal(54, Wars.ComputeWeariness(Content.War, war, b.Id, month));
+        Assert.Equal(30, Wars.ComputeWeariness(Content.War, war, a.Id, month));
     }
 
     [Fact]

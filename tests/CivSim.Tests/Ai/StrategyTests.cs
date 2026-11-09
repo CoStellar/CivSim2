@@ -140,14 +140,19 @@ public class StrategyTests
     [Fact]
     public void ArtisansNoLongerSwitchRecipesEveryTurn()
     {
-        (TurnRunner runner, AiCouncil council) = NewGame(7);
+        // Several games: in the Stone Age only a few settlements have artisans who can make anything (stage 6 PR 3b: with
+        // scouts taking hunters along, one game alone may have none in 400 turns).
         int switches = 0;
         int crafting = 0;
-        for (int t = 0; t < 400; t++)
+        foreach (ulong seed in new ulong[] { 7, 8, 9, 10 })
         {
-            runner.RunTurn();
-            switches += council.Log.Entries.Count(d => d.Action == AiAction.SetRecipe);
-            crafting += runner.State.Settlements.Count(s => s.IsActive && s.RecipeId >= 0);
+            (TurnRunner runner, AiCouncil council) = NewGame(seed);
+            for (int t = 0; t < 400; t++)
+            {
+                runner.RunTurn();
+                switches += council.Log.Entries.Count(d => d.Action == AiAction.SetRecipe);
+                crafting += runner.State.Settlements.Count(s => s.IsActive && s.RecipeId >= 0);
+            }
         }
 
         Assert.True(crafting > 0, "nobody crafted");
