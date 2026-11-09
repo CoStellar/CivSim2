@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 32;
+    public const int FormatVersion = 33;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -79,7 +79,8 @@ public static class SaveGameSerializer
                 st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
-                st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty));
+                st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty, st.JourneyNext, st.JourneyStepTicks, st.JourneyProgress,
+                st.ScoutOut, st.ScoutBackMonth));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -94,7 +95,7 @@ public static class SaveGameSerializer
             s.Planet.AxialTiltTenths, s.Planet.LuminosityThousandths, s.Planet.DistanceThousandths, s.Planet.EccentricityThousandths, s.PlanetName,
             s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent,
             s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state), state.StepMonths,
-            state.WorldMonths, SaveEpisodes(state), state.Episodes.NextId, state.ActionMonth);
+            state.WorldMonths, SaveEpisodes(state), state.Episodes.NextId, state.ActionMonth, SaveUnits(state), state.Units.NextId);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -236,6 +237,7 @@ public static class SaveGameSerializer
         state.SetWorldMonthsForLoad(data.WorldMonths);
         state.SetActionMonthForLoad(data.ActionMonth);
         LoadEpisodes(state, data);
+        LoadUnits(state, data);
         foreach (SettlementSaveData st in data.Settlements ?? [])
         {
             var settlement = new SettlementState(
@@ -257,6 +259,11 @@ public static class SaveGameSerializer
                 RecipeId = st.RecipeId,
                 RunsMade = st.RunsMade,
                 JourneyTarget = st.JourneyTarget,
+                JourneyNext = st.JourneyNext,
+                JourneyStepTicks = st.JourneyStepTicks,
+                JourneyProgress = st.JourneyProgress,
+                ScoutOut = st.ScoutOut,
+                ScoutBackMonth = st.ScoutBackMonth,
             };
             for (int g = 0; g < st.Stock.Length; g++)
             {
@@ -351,6 +358,45 @@ public static class SaveGameSerializer
         }
 
         return list;
+    }
+
+    private static List<UnitSaveData> SaveUnits(GameState state)
+    {
+        var list = new List<UnitSaveData>(state.Units.Count);
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            Core.Units.Unit u = state.Units[k];
+            list.Add(new UnitSaveData(u.Id, (byte)u.Kind, u.Owner.Value, u.World.Value, u.Cell, u.Target, (byte)u.Order, u.Home,
+                u.People.ToArray(), u.Skilled.ToArray(), u.Trainees.ToArray(), Hundredths(u.Cargo.ToArray()), u.Progress, u.Next, u.Direction,
+                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal));
+        }
+
+        return list;
+    }
+
+    private static void LoadUnits(GameState state, SaveData data)
+    {
+        state.Units.SetNextIdForLoad(data.NextUnitId);
+        foreach (UnitSaveData d in data.Units ?? [])
+        {
+            int[] people = d.People ?? [];
+            int[] skilled = d.Skilled ?? [];
+            Core.Units.Unit u = state.Units.Restore(
+                d.Id, (Core.Units.UnitKind)d.Kind, new CivId(d.Owner), new WorldId(d.World), d.Cell, d.Home,
+                (Core.Units.UnitOrder)d.Order, people.Length, skilled.Length, d.Cargo?.Length ?? 0);
+            people.CopyTo(u.People);
+            skilled.CopyTo(u.Skilled);
+            (d.Trainees ?? []).AsSpan(0, Math.Min(d.Trainees?.Length ?? 0, u.Trainees.Length)).CopyTo(u.Trainees);
+            Amounts(d.Cargo).CopyTo(u.Cargo);
+            u.Target = d.Target;
+            u.Progress = d.Progress;
+            u.Next = d.Next;
+            u.Direction = d.Direction;
+            u.Trail.AddRange(d.Trail ?? []);
+            u.Path.AddRange(d.Path ?? []);
+            u.PathAt = d.PathAt;
+            u.PathGoal = d.PathGoal;
+        }
     }
 
     private static List<EpisodeSaveData> SaveEpisodes(GameState state)

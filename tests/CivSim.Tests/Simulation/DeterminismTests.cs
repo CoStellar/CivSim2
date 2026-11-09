@@ -78,5 +78,6 @@ public class DeterminismTests
     // Stage 6 PR 2 (decision of 2026-11-09): truces, proposals, memories, crises, anarchy, revolts, claims and the
     // diplomat's review count in months of action (one year = 6 s at x1); long durations shortened; the months of action
     // joined the hash.
-    private const ulong GoldenHash = 4987176402803861661UL;
+    // Stage 6 PR 3a: the units (settlers and scouts) and the scouts and journeys of settlements joined the hash.
+    private const ulong GoldenHash = 4957131654966915325UL;
 }

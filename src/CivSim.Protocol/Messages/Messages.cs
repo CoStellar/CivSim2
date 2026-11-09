@@ -84,7 +84,8 @@ public sealed record GameViewMessage(
     [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null,
     [property: Key(7)] IReadOnlyList<SettlementView>? Settlements = null,
     [property: Key(8)] long Month = 0,
-    [property: Key(9)] bool LiveSeasons = false) : IProtocolMessage;
+    [property: Key(9)] bool LiveSeasons = false,
+    [property: Key(10)] IReadOnlyList<UnitView>? Units = null) : IProtocolMessage;
 
 /// <summary>
 /// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per
@@ -237,3 +238,21 @@ public sealed record MapChunkMessage(
     /// <summary>River edges per cell (N, NE, SE sides; the other three belong to neighbours).</summary>
     public const int RiverEdgesPerCell = 3;
 }
+
+/// <summary>
+/// A unit as a viewer sees it (stage 6 PR 3a): kind (0 settlers, 1 scouts), owner, the cell it stands on, the cell it walks
+/// to next and how far it got (0–1000), its people and what it does (0 idle, 1 move, 2 found, 3 scout, 4 return).
+/// </summary>
+[MessagePackObject]
+public sealed record UnitView(
+    [property: Key(0)] long Id,
+    [property: Key(1)] int Kind,
+    [property: Key(2)] int Owner,
+    [property: Key(3)] int World,
+    [property: Key(4)] int Col,
+    [property: Key(5)] int Row,
+    [property: Key(6)] int NextCol,
+    [property: Key(7)] int NextRow,
+    [property: Key(8)] int ProgressPermille,
+    [property: Key(9)] int People,
+    [property: Key(10)] int Order);

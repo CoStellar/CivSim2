@@ -1,6 +1,7 @@
 using System;
 using CivSim.Core.Content;
 using CivSim.Core.Map;
+using CivSim.Core.Numerics;
 using CivSim.Core.Population;
 using CivSim.Core.State;
 
@@ -199,7 +200,7 @@ public sealed record MoveSettlementCommand(GameContent Content, SettlementId Set
 public sealed record SplitSettlementCommand(GameContent Content, SettlementId Settlement, HexCoord Target, int Percent) : ICommand, IChronicledCommand
 {
     /// <inheritdoc />
-    public string? ChronicleGroup => "{0} new settlements were founded";
+    public string? ChronicleGroup => "{0} groups of settlers set out";
 
     /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Movement;
@@ -226,9 +227,10 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
         }
 
         WorldState world = state.Worlds[s.World.Value];
-        foreach (SettlementState other in state.Settlements)
+        foreach (int i in state.Grid.Within(world, Target, Math.Max(0, rules.MinDistanceBetweenOwnCamps - 1)))
         {
-            if (other.Owner == civ && other.World == s.World && other.TotalPopulation() > 0
+            SettlementState other = state.Settlements[i];
+            if (other.Owner == civ && other.TotalPopulation() > 0
                 && world.Geometry.Distance(other.Cell, Target) < rules.MinDistanceBetweenOwnCamps)
             {
                 return CommandResult.Fail($"New camps must be at least {rules.MinDistanceBetweenOwnCamps} cells from the others.");
@@ -246,22 +248,50 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
     {
         ArgumentNullException.ThrowIfNull(state);
         SettlementState from = state.FindSettlement(Settlement)!;
-        CivilizationState owner = state.FindCivilization(civ)!;
-        // The new camp gets the next name of its people's language (GDD 5.6).
-        SettlementState camp = state.FoundSettlement(
-            civ, from.World, Target, Naming.Names.NextPlace(Content.Names, state, owner), Content.NewTribeLevel, from.StockView.Length, from.PopulationView.Length, from.SkilledView.Length);
-        camp.MovedMonth = state.Month;
+        WorldState world = state.Worlds[from.World.Value];
+
+        // Stage 6 PR 3a (ADR 0024): the people leave as a unit of settlers that walks to the place and founds the camp
+        // there (UnitSystem); until then they do not work anywhere.
+        Units.Unit settlers = state.Units.Add(
+            Units.UnitKind.Settlers, civ, from.World, world.Geometry.Index(from.Cell), from.Id.Value, Units.UnitOrder.Found,
+            from.PopulationView.Length, from.SkilledView.Length, from.StockView.Length);
+        settlers.Target = world.Geometry.Index(Target);
         Span<int> people = from.Population;
         for (int k = 0; k < people.Length; k++)
         {
             int leaving = (int)((long)people[k] * Percent / 100);
             people[k] -= leaving;
-            camp.Population[k] = leaving;
+            settlers.People[k] = leaving;
         }
 
-        CivSim.Core.Population.Skills.Move(from, camp, Percent);
+        CivSim.Core.Population.Skills.MoveOut(from, settlers.Skilled, settlers.Trainees, Percent);
+        SettlementAssets.Carry(from.Stock, settlers.Cargo, SettlementAssets.CarryCapacity(Content, state, civ, settlers.TotalPeople()), Percent);
+        TakeTripFood(state, civ, from, world, settlers);
+        return $"{settlers.TotalPeople()} settlers left {from.Name} {SettlementRules.Direction(world, from.Cell, Target)}.";
+    }
 
-        SettlementAssets.Carry(from, camp, SettlementAssets.CarryCapacity(Content, state, civ, camp.TotalPopulation()), Percent);
-        return $"{camp.TotalPopulation()} people left {from.Name} and founded {camp.Name}.";
+    // Settlers take food for the walk (the known way, in months of action) and settlerFoodMonths to spare: what their
+    // share of the goods does not cover comes from the home stores, at most war.json supplySharePercent of each food.
+    private void TakeTripFood(GameState state, CivId civ, SettlementState from, WorldState world, Units.Unit settlers)
+    {
+        CivilizationState owner = state.Civilizations[civ.Value];
+        int ticks = new Units.RouteFinder().RouteTicks(
+            Content, state, owner, world, settlers.Cell, settlers.Target, Content.Units.Of(Units.UnitKind.Settlers).TicksPerCell);
+        int perMonth = Math.Max(1, Content.Time.TicksPerActionMonth);
+        int months = Content.Units.SettlerFoodMonths + (ticks > 0 ? (ticks + perMonth - 1) / perMonth : 0);
+        Amount want = Episodes.Campaigns.FoodFor(Content, settlers.TotalPeople(), months);
+        Amount carried = Amount.Zero;
+        for (int g = 0; g < settlers.Cargo.Length && g < Content.Goods.Count; g++)
+        {
+            if (Content.Goods[g].IsFood)
+            {
+                carried += settlers.Cargo[g];
+            }
+        }
+
+        if (carried < want)
+        {
+            Episodes.Campaigns.TakeFood(Content, from, settlers.Cargo, want - carried);
+        }
     }
 }

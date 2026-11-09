@@ -377,11 +377,10 @@ public static class Campaigns
     /// Moves food out of <paramref name="s"/> into <paramref name="into"/> (index = good), at most <paramref name="want"/>
     /// and at most <see cref="WarRules.SupplySharePercent"/> of each food good, goods in id order; returns how much.
     /// </summary>
-    public static Amount TakeFood(GameContent content, SettlementState s, Amount[] into, Amount want)
+    public static Amount TakeFood(GameContent content, SettlementState s, Span<Amount> into, Amount want)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(s);
-        ArgumentNullException.ThrowIfNull(into);
         Span<Amount> stock = s.Stock;
         Amount taken = Amount.Zero;
         for (int g = 0; g < stock.Length && g < into.Length && taken < want; g++)
@@ -808,9 +807,10 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         HexCoord at = world.Geometry.FromIndex(e.Cell);
         SettlementState? best = null;
         int bestDistance = int.MaxValue;
-        foreach (SettlementState s in state.Settlements)
+        foreach (int i in state.Grid.Within(world, at, _content.War.ForageCells))
         {
-            if (!s.IsActive || s.Owner != e.Other || s.World != world.Id || s.Id.Value == e.GoalTarget || s.Id.Value == e.LastPrey)
+            SettlementState s = state.Settlements[i];
+            if (!s.IsActive || s.Owner != e.Other || s.Id.Value == e.GoalTarget || s.Id.Value == e.LastPrey)
             {
                 continue;
             }
@@ -1144,9 +1144,10 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         int bestDistance = int.MaxValue;
         Amount bestFood = Amount.Zero;
         long perPerson = Math.Max(1, SettlementAssets.CarryCapacity(_content, state, e.Civ, 1).Hundredths);
-        foreach (SettlementState s in state.Settlements)
+        foreach (int i in state.Grid.Within(world, at, _content.War.CarrierCells))
         {
-            if (!s.IsActive || s.Owner != e.Civ || s.World != world.Id)
+            SettlementState s = state.Settlements[i];
+            if (!s.IsActive || s.Owner != e.Civ)
             {
                 continue;
             }
@@ -1176,9 +1177,10 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         HexCoord at = world.Geometry.FromIndex(cell);
         SettlementState? best = null;
         int bestDistance = int.MaxValue;
-        foreach (SettlementState s in state.Settlements)
+        foreach (int i in state.Grid.Within(world, at, maxDistance))
         {
-            if (s.IsActive && s.Owner == civ && s.World == world.Id)
+            SettlementState s = state.Settlements[i];
+            if (s.IsActive && s.Owner == civ)
             {
                 int d = world.Geometry.Distance(at, s.Cell);
                 if (d < bestDistance && d <= maxDistance)

@@ -95,7 +95,10 @@ public class StrategyTests
                 targets++;
                 int cell = civ.ExpansionTarget;
                 Assert.False(Content.Biomes[earth.Map.Biome[cell]].IsWater);
-                Assert.True(Core.Perception.MapMemory.Knows(Content, state, civ, cell));
+                // The strategy command is applied in the turn after the review, one step of the people later.
+                int seen = civ.SeenYear[cell];
+                Assert.True(seen > 0, "never seen");
+                Assert.True((state.Month / 12) - (seen - 1) <= Content.Perception.OralMemoryYears + (civ.StepMonths / 12), "forgotten");
             }
         }
 

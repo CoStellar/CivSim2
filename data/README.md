@@ -10,7 +10,7 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `biomes.json` | biomes, movement cost, base yields, materials gathered (wood), colours for the debug viewer | 1, 3e |
 | `resources.json` | natural deposits placed by the world generator | 1 |
 | `goods.json` | goods in settlement warehouses, category, spoilage per year (only food spoils in CORE), base value for internal prices | 3a, 3e |
-| `perception.json` | sight, scouts, oral memory, journeys | 3g |
+| `perception.json` | sight, oral memory, journeys (scouts are units since stage 6 PR 3a: `units.json`) | 3g, 6 |
 | `ai.json` | how AI advisors pick among their best actions | 4a |
 | `relations.json` | first contact, rumors, remembered events, sympathy and trust | 4c |
 | `diplomacy.json` | treaties and war, the diplomat's curves and thresholds, trade between civilizations | 4d |
@@ -29,7 +29,7 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `events.json` | random events: conditions, chances, softening technologies, effects, fertility, spreading, chronicle text | 3h |
 | `effects.json` | effect types: target, changed stat, stacking rule | 3a |
 | `governments.json` | governments: decision speed, stability decay | 4 |
-| `units.json` | units by era, strength, upkeep, tile capacity | 4 |
+| `units.json` | units walking in ticks (stage 6 PR 3a): kinds with ticks per flat cell and sight, a migrating camp's ticks per cell, terrain on top of the biome's `movementCost` (hills, mountains, sea ice, rivers), the route search limit, scouts (rest, trip length), settlers (spare food, hunger, search for a free place); warriors and carriers in PR 3b | 6 |
 | `leader_traits.json` | leader traits and AI weight modifiers | 4 |
 | `ui_theme.json` | the single UI theme (9-slice assets, accents) | 5 |
 

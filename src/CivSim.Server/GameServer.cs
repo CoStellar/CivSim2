@@ -429,8 +429,10 @@ public sealed class GameServer
     // A joining client gets the whole kept history; later views carry only the new lines.
     private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false)
     {
+        CivilizationState? seer = client.IsObserver || client.Civ is not CivId id ? null : State.FindCivilization(id);
         GameViewMessage view = ViewBuilder.Build(
-            snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width);
+            snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width,
+            seer is null ? null : cell => Core.Perception.MapMemory.SeesNow(State, seer, cell));
         long micros = (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
         if (client.IsObserver && _observerView is not null)
         {

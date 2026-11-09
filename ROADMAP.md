@@ -237,15 +237,18 @@ Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neo
 **Brama: Patryk ogląda i mówi, czy to działa jak trzeba.**
 
 - [x] **Takt i pulsy** (ADR 0025, PR 1 `feat/live-clock`): stały takt dla akcji, pulsy cywilizacji rozłożone między takty, licznik lat jako etykieta; koniec osobnego zegara epizodów; liczniki wojny w taktach; prędkości ×1/×2/×4; nowe złote hashe, zapis 31, protokół 14 (liczenie pulsów równolegle: PR 8)
-- [x] **Czas polityki** (PR 2 `feat/live-pace`, decyzja Patryka z 2026-11-09): rozejmy, propozycje, pamięć krzywd, kryzysy, bezkrólewie, bunty, roszczenia, opóźnienie ustroju i przegląd dyplomaty w latach akcji (rok = 6 s przy ×1); za długie wartości skrócone
+- [x] **Czas polityki** (PR 2 `feat/live-pace`, decyzja Patryka z 2026-11-09): rozejmy, propozycje, pamięć krzywd, kryzysy, bezkrólewie, bunty, roszczenia, opóźnienie ustroju i przegląd dyplomaty w latach akcji (rok = 6 s przy ×1); za długie wartości skrócone; **T1** pomiar spóźnionych taktów przy ×4 (0,3–3,3%, spirali zaległości nie ma)
 - [ ] **Tempa rozwoju pod cel z GDD 1.1** (przyrost, nauka; dobre AI ok. 15 min do wszystkich technologii brązu): przy etapie 7, gdy będzie epoka brązu (dziś neolit po 6–7,5 min, wszystkie technologie er 1–2 po 7–9 min)
-- [ ] **Oddziały:** osadnicy, wojownicy, zwiadowcy, tragarze jako jednostki w ruchu (grupy ludzi); kampania wojenna = oddziały w ruchu
-- [ ] **Zadania na obszarze:** wydobycie, pola, łowiska, budowy w miejscu; ludzie z osady sami tam chodzą; te same komendy dla AI i gracza
+- [x] **Oddziały, część 1** (PR 3a `feat/units`): osadnicy i zwiadowcy jako widoczne oddziały w taktach; droga A* z kosztem terenu z biomów, liczona raz na cel (**T3**); pula oddziałów w płaskich tablicach, takt bez alokacji (**T4**); rozkazy i przejścia (**T5**: stoi, idzie, zakłada, zwiaduje, wraca); dane w `units.json` (**T9**); siatka przestrzenna osad (**T2**); rozkazy gracza i AI (idź, załóż obóz, wracaj); wędrówki obozów pole po polu; wioski już się nie przenoszą (decyzja Patryka z 2026-11-09); podgląd rysuje oddziały płynnie; zapis 33, protokół 15
+- [ ] **Oddziały, część 2** (PR 3b): wojownicy i tragarze jako oddziały, kampania wojenna = oddziały w ruchu; stany walki, ucieczki i odpoczynku (T5)
+- [ ] **Powtórka i hasz systemów** (**T11**, mały PR po 3a): zapis partii = seed + rozkazy; hasz co N taktów z podziałem na systemy
+- [ ] **Dane:** schemat JSON (literówka w kluczu = błąd przy wczytaniu) i przeładowanie danych w podglądzie (**T14**)
+- [ ] **Zadania na obszarze:** wydobycie, pola, łowiska, budowy w miejscu; ludzie z osady sami tam chodzą; te same komendy dla AI i gracza; mapy wpływu i zagrożenia dla dowódcy (**T6**), zadania w danych (**T9**)
 - [ ] **Start:** losowa kolejność, wybór miejsca (5 s mapy, potem szare bloki, 10–15 s), strefy blokady, wybór AI z błędem; epoka kamienia jako opis „historii plemienia”
 - [ ] **Technologie (GDD 6.4):** doświadczenie w technologii, kierunek rozwoju zwiększa szansę pokrewnych odkryć, koszt zależny od rozwinięcia poprzedniej, podgląd technologii (5% × liczba cywilizacji, które ją znają)
 - [ ] **Karty decyzji w backendzie:** wydarzenie, rekomendacja doradcy, licznik, decyzja AI po czasie
 - [ ] **Bez postaci z imieniem w pierwszych erach** (przegląd przywódców z etapu 4f)
-- [ ] **Wydajność:** mapa standard, 6–8 cywilizacji, 300 oddziałów, takt < 30 ms w najgorszym przypadku; klient rysuje tylko zmiany i płynny ruch
+- [ ] **Wydajność:** mapa standard, 6–8 cywilizacji, 300 oddziałów, takt < 30 ms w najgorszym przypadku; klient rysuje tylko zmiany i płynny ruch; sieci handlowe przyrostowo (**T7**), pule pamięci migawki (**T8**), MultiMesh w podglądzie (**T10**), budżet czasu w każdym PR (**T12**, od PR 3a), pulsy równolegle (**T13**), pole przepływu, jeśli pomiar pokaże potrzebę (**T3b**)
 - [ ] **Podgląd deweloperski:** wybór miejsca i proste rozkazy do testów, pauza, prędkości ×1/×2/×4
 - [ ] Dokumentacja: `docs/systems/` (zegar, oddziały, zadania), `docs/ai/`, `known-issues.md`
 
@@ -253,6 +256,13 @@ Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neo
 
 Pogłębiona era 3: technologie, fachy, miasta i awans osad (GDD 5.3), pismo, wytop i metal, fortyfikacje (mur) i zbrojownia, moduł
 wojny według „Co erę” w `docs/systems/war.md`.
+
+Osady (decyzja Patryka z 2026-11-09): wioska zostaje tam, gdzie powstała, ale rośnie w miasto i zajmuje coraz większy obszar; gdy
+dwie osady zetkną się przez rozrost, większa wciela mniejszą jako swoją część.
+
+Strojenie temp (decyzja Patryka z 2026-11-09: dopracowanie w etapie 7): zwiad oddziałami po PR 3a daje mniej wiedzy i kontaktów niż
+dawne wyprawy w pulsie (ok. 450 znanych pól zamiast 1100, neolit 0,6–1,9 min później); dłuższe wyprawy (`tripCells`), więcej grup
+na osadę albo inne tempo razem z celem „brąz w 15–40 min”.
 
 Gotowe, gdy: cel „wszystkie technologie epoki brązu” osiąga dobre AI w ok. 15 min, średnie w 20–25 min, słabe w 30–40 min (GDD 1.1).
 

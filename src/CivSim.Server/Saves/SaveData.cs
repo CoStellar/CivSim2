@@ -42,7 +42,9 @@ public sealed record SaveData(
     [property: Key(33)] int WorldMonths = 0,
     [property: Key(34)] IReadOnlyList<EpisodeSaveData>? Episodes = null,
     [property: Key(35)] long NextEpisodeId = 0,
-    [property: Key(36)] long ActionMonth = 0);
+    [property: Key(36)] long ActionMonth = 0,
+    [property: Key(37)] List<UnitSaveData>? Units = null,
+    [property: Key(38)] long NextUnitId = 0);
 
 /// <summary>Saved treaty or war between two civilizations (stage 4d).</summary>
 [MessagePackObject]
@@ -263,7 +265,35 @@ public sealed record SettlementSaveData(
     [property: Key(23)] int JourneyTarget = -1,
     [property: Key(24)] int[]? Skilled = null,
     [property: Key(25)] int[]? Trainees = null,
-    [property: Key(26)] int Loyalty = 50);
+    [property: Key(26)] int Loyalty = 50,
+    [property: Key(27)] int JourneyNext = -1,
+    [property: Key(28)] int JourneyStepTicks = 0,
+    [property: Key(29)] int JourneyProgress = 0,
+    [property: Key(30)] bool ScoutOut = false,
+    [property: Key(31)] long ScoutBackMonth = -1);
+
+/// <summary>Saved unit (stage 6 PR 3a).</summary>
+[MessagePackObject]
+public sealed record UnitSaveData(
+    [property: Key(0)] long Id,
+    [property: Key(1)] byte Kind,
+    [property: Key(2)] int Owner,
+    [property: Key(3)] int World,
+    [property: Key(4)] int Cell,
+    [property: Key(5)] int Target,
+    [property: Key(6)] byte Order,
+    [property: Key(7)] int Home,
+    [property: Key(8)] int[] People,
+    [property: Key(9)] int[] Skilled,
+    [property: Key(10)] int[] Trainees,
+    [property: Key(11)] long[] Cargo,
+    [property: Key(12)] int Progress,
+    [property: Key(13)] int Next,
+    [property: Key(14)] int Direction,
+    [property: Key(15)] int[] Trail,
+    [property: Key(16)] int[]? Path = null,
+    [property: Key(17)] int PathAt = 0,
+    [property: Key(18)] int PathGoal = -1);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

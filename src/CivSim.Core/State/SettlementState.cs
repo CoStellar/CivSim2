@@ -57,7 +57,30 @@ public sealed class SettlementState
     public WorldId World { get; }
 
     /// <summary>Centre cell.</summary>
-    public HexCoord Cell { get; set; }
+    public HexCoord Cell
+    {
+        get => _cell;
+        set
+        {
+            if (value != _cell)
+            {
+                _cell = value;
+                System.Threading.Interlocked.Increment(ref _layoutVersion);
+            }
+        }
+    }
+
+    private HexCoord _cell;
+    private static long _layoutVersion;
+
+    /// <summary>
+    /// Grows whenever any settlement (of any game in the process) moves to another cell: the spatial grid
+    /// (<see cref="Map.SettlementGrid"/>) rebuilds itself then. It only invalidates a cache, so it changes no result.
+    /// </summary>
+    public static long LayoutVersion => System.Threading.Interlocked.Read(ref _layoutVersion);
+
+    /// <summary>Marks that settlements were founded or removed (<see cref="LayoutVersion"/>).</summary>
+    internal static void LayoutChanged() => System.Threading.Interlocked.Increment(ref _layoutVersion);
 
     /// <summary>Display name.</summary>
     public string Name { get; set; }
@@ -79,6 +102,21 @@ public sealed class SettlementState
 
     /// <summary>Read-only view of the people per stratum.</summary>
     public ReadOnlySpan<int> PopulationView => _population;
+
+    /// <summary>On a journey (stage 6 PR 3a): the next cell it will camp on, or -1 when not chosen yet.</summary>
+    public int JourneyNext { get; set; } = -1;
+
+    /// <summary>On a journey: ticks the way to <see cref="JourneyNext"/> costs.</summary>
+    public int JourneyStepTicks { get; set; }
+
+    /// <summary>On a journey: ticks already spent on the way to <see cref="JourneyNext"/>.</summary>
+    public int JourneyProgress { get; set; }
+
+    /// <summary>True while a party of its scouts is out (stage 6 PR 3a).</summary>
+    public bool ScoutOut { get; set; }
+
+    /// <summary>Month of action its last scouts came back in, or -1 before any went out (stage 6 PR 3a).</summary>
+    public long ScoutBackMonth { get; set; } = -1;
 
     /// <summary>People who know each skill (stage 4F), index = skill id; they are counted in their stratum too.</summary>
     public Span<int> Skilled => _skilled;

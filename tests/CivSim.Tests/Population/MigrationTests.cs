@@ -182,28 +182,47 @@ public class MigrationTests
         camp.Population.Clear();
         camp.Population[0] = 80;
         camp.Population[2] = 20;
+        camp.Stock[Content.Good("meat").Id] = Core.Numerics.Amount.FromUnits(400); // food for the walk
         Core.Numerics.Amount meat = camp.StockView[Content.Good("meat").Id];
         HexCoord target = FindLand(state, state.Worlds[0], camp.Cell, Content.Population.MinDistanceBetweenOwnCamps + 1, camp.Owner);
 
-        var split = new SplitSettlementCommand(Content, camp.Id, target, 40);
+        // The live clock (a month of action = 5 ticks): the settlers eat on the way as they would in a game.
+        GameContent live = Content.WithTime(new TimeRules());
+        var split = new SplitSettlementCommand(live, camp.Id, target, 40);
         Assert.True(split.Validate(state, camp.Owner).Success, split.Validate(state, camp.Owner).Reason);
         string? line = split.ApplyWithChronicle(state, camp.Owner);
+
+        // Stage 6 PR 3a: the group leaves as a unit of settlers with its people and goods ...
+        CivSim.Core.Units.Unit settlers = state.Units[state.Units.Count - 1];
+        Assert.Equal(CivSim.Core.Units.UnitKind.Settlers, settlers.Kind);
+        Assert.Equal(32, settlers.People[0]);
+        Assert.Equal(8, settlers.People[2]);
+        Assert.Equal(60, camp.TotalPopulation());
+        Assert.Equal(meat, camp.StockView[Content.Good("meat").Id] + settlers.Cargo[Content.Good("meat").Id]);
+        Assert.Contains("settlers left", line, System.StringComparison.Ordinal);
+
+        // ... walks there and founds the camp.
+        int before = state.Settlements.Count;
+        var runner = new TurnRunner(state);
+        runner.AddSystem(new CivSim.Core.Units.UnitSystem(live));
+        for (int t = 0; t < 1000 && state.Settlements.Count == before; t++)
+        {
+            runner.RunTurn();
+        }
 
         SettlementState child = state.Settlements[^1];
         Assert.Equal(camp.Owner, child.Owner);
         Assert.Equal(target, child.Cell);
-        Assert.Equal(32, child.PopulationView[0]);
-        Assert.Equal(8, child.PopulationView[2]);
-        Assert.Equal(60, camp.TotalPopulation());
-        Assert.Equal(meat, camp.StockView[Content.Good("meat").Id] + child.StockView[Content.Good("meat").Id]);
-        Assert.Contains("founded", line, System.StringComparison.Ordinal);
+        Assert.Equal(40, child.TotalPopulation());
     }
 
     [Fact]
     public void TribesSpreadOverTheLandOnTheirOwn()
     {
         TurnRunner runner = NewGame(8);
-        for (int t = 0; t < 60; t++)
+
+        // Stage 6 PR 3a: settlers walk to their place before they found a camp.
+        for (int t = 0; t < 600 && runner.State.Settlements.Count <= runner.State.Civilizations.Count; t++)
         {
             runner.RunTurn();
         }

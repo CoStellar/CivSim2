@@ -16,7 +16,8 @@ public static class ViewBuilder
     /// null for observers (they see everything); for a player it marks the Earth cells the player knows, and
     /// foreign settlements elsewhere are left out. Warehouse contents are sent only for the player's own settlements.
     /// </summary>
-    public static GameViewMessage Build(GameSnapshot snapshot, CivId viewer, bool[]? knownEarthCells = null, int earthWidth = 0)
+    public static GameViewMessage Build(
+        GameSnapshot snapshot, CivId viewer, bool[]? knownEarthCells = null, int earthWidth = 0, System.Func<int, bool>? seesNow = null)
     {
         var worlds = new List<WorldView>(snapshot.Worlds.Length);
         foreach (WorldSnapshot w in snapshot.Worlds)
@@ -67,6 +68,20 @@ public static class ViewBuilder
             }
         }
 
-        return new GameViewMessage(snapshot.Turn, viewer.Value, worlds, civs, Settlements: settlements, Month: snapshot.Month, LiveSeasons: snapshot.LiveSeasons);
+        // Units (stage 6 PR 3a): a player sees its own and the foreign ones on Earth cells it sees now.
+        var units = new List<UnitView>(snapshot.Units.Length);
+        foreach (UnitSnapshot u in snapshot.Units)
+        {
+            if (!observer && u.Owner != viewer && (u.World != WorldId.Earth || seesNow is null || !seesNow(u.Cell)))
+            {
+                continue;
+            }
+
+            units.Add(new UnitView(
+                u.Id, (int)u.Kind, u.Owner.Value, u.World.Value, u.Col, u.Row, u.NextCol, u.NextRow, u.ProgressPermille, u.People, (int)u.Order));
+        }
+
+        return new GameViewMessage(
+            snapshot.Turn, viewer.Value, worlds, civs, Settlements: settlements, Month: snapshot.Month, LiveSeasons: snapshot.LiveSeasons, Units: units);
     }
 }

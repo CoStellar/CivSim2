@@ -79,6 +79,20 @@ public sealed class GameContent
     /// <summary>War: goals, score, weariness, terms of peace (data/war.json, stage 4e).</summary>
     public Diplomacy.WarRules War { get; init; } = new();
 
+    /// <summary>Units: speeds, terrain, scouting, settlers (data/units.json, stage 6 PR 3a).</summary>
+    public Units.UnitRules Units { get => _units; init => _units = value; }
+
+    private Units.UnitRules _units = new();
+
+    /// <summary>A copy of this content with other unit rules (tests walk a cell in a tick with it, as their pulse is a tick).</summary>
+    public GameContent WithUnits(Units.UnitRules units)
+    {
+        ArgumentNullException.ThrowIfNull(units);
+        var copy = (GameContent)MemberwiseClone();
+        copy._units = units;
+        return copy;
+    }
+
     /// <summary>Time of the live game: ticks, pulses, months of action (data/time.json, ADR 0025).</summary>
     public Simulation.TimeRules Time { get => _time; init => _time = value; }
 

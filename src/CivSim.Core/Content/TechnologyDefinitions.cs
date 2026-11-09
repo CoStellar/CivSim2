@@ -121,15 +121,6 @@ public sealed record PerceptionRules
     /// <summary>Years a seen cell stays known without being seen again (oral memory).</summary>
     public int OralMemoryYears { get; init; } = 300;
 
-    /// <summary>Cells a scout walks on one trip.</summary>
-    public int ScoutCells { get; init; } = 15;
-
-    /// <summary>Scout trips of a lived-in settlement per century (rule 6: a rate per year, PR C; 2 = one per 50 years).</summary>
-    public int ScoutsPerCentury { get; init; } = 2;
-
-    /// <summary>Cells a camp on a journey walks per century (rule 6, PR C; 20 = the old 10 cells per 50-year step).</summary>
-    public int MarchCellsPerCentury { get; init; } = 20;
-
     /// <summary>Farthest a camp may set out for in one journey.</summary>
     public int JourneyCells { get; init; } = 40;
 }

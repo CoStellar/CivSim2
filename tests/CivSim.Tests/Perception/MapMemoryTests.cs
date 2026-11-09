@@ -56,9 +56,15 @@ public class MapMemoryTests
         GameState state = NewGame(63);
         CivilizationState civ = state.Civilizations[0];
         int before = Known(state, civ);
-        for (int t = 0; t < 5; t++)
+
+        // Stage 6 PR 3a: scouts are visible units that walk out and see the land next to their way.
+        var runner = new CivSim.Core.Simulation.TurnRunner(state);
+        runner.AddSystem(new CivSim.Core.Units.UnitSystem(Content));
+        runner.RunTurn();
+        Assert.Contains(state.Units.All, u => u.Kind == CivSim.Core.Units.UnitKind.Scouts && u.Owner == civ.Id);
+        for (int t = 0; t < 100; t++)
         {
-            MapMemory.Scout(Content, state);
+            runner.RunTurn();
         }
 
         Assert.True(Known(state, civ) > before);
@@ -99,12 +105,23 @@ public class MapMemoryTests
         Assert.True(journey.Validate(state, civ.Id).Success);
         journey.Apply(state, civ.Id);
 
+        // Stage 6 PR 3a: the camp walks cell by cell in ticks, a flat cell in journeyTicksPerCell ticks or more.
         var runner = new TurnRunner(state);
         runner.AddSystem(new JourneySystem(Content));
-        runner.RunTurn();
-        Assert.Equal(Content.Population.MaxMoveCells, geo.Distance(from, camp.Cell));
-        runner.RunTurn();
-        runner.RunTurn();
+        int ticks = 0;
+        while (camp.Cell == from)
+        {
+            runner.RunTurn();
+            ticks++;
+        }
+
+        Assert.True(ticks >= Content.Units.JourneyTicksPerCell, $"the first cell took {ticks} ticks");
+        Assert.Equal(1, geo.Distance(from, camp.Cell));
+        for (int t = 0; t < 25 * 10 * Content.Units.JourneyTicksPerCell && camp.JourneyTarget != SettlementState.NoJourney; t++)
+        {
+            runner.RunTurn();
+        }
+
         Assert.Equal(target, camp.Cell);
         Assert.Equal(SettlementState.NoJourney, camp.JourneyTarget);
     }

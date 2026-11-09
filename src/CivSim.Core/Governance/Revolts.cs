@@ -241,6 +241,8 @@ public static class Revolts
         {
             s.Owner = child.Id;
             s.JourneyTarget = SettlementState.NoJourney;
+            s.JourneyNext = -1;
+            s.JourneyProgress = 0;
             moved.Add(s.Id.Value + 1); // the claim layer stores settlement id + 1
             if (s.TotalPopulation() > largest.TotalPopulation())
             {

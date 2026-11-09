@@ -55,6 +55,7 @@ public static class ContentLoader
         StabilityRules stability = LoadStability(Path.Combine(directory, "stability.json"), effects, errors);
         LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
         Core.Simulation.TimeRules time = LoadTime(Path.Combine(directory, "time.json"), errors);
+        Core.Units.UnitRules units = LoadUnits(Path.Combine(directory, "units.json"), biomes, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -102,6 +103,7 @@ public static class ContentLoader
             Governments = governments,
             Leaders = leaders,
             Time = time,
+            Units = units,
             Stability = stability,
             Events = events,
             Technologies = technologies,
@@ -901,6 +903,73 @@ public static class ContentLoader
     }
 
     // Stability and administration of data/stability.json (stage 4f PR 3, GDD 7.3).
+    // Units (stage 6 PR 3a): speeds, terrain costs, scouting and settlers.
+    private static Core.Units.UnitRules LoadUnits(string path, List<BiomeDefinition> biomes, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Units.UnitRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        int count = Enum.GetValues<Core.Units.UnitKind>().Length;
+        var kinds = new Core.Units.UnitKindDefinition?[count];
+        if (TryArray(doc.RootElement, "kinds", path, errors, out JsonElement array))
+        {
+            int i = 0;
+            foreach (JsonElement e in array.EnumerateArray())
+            {
+                string at = $"{file}: kinds[{i}]";
+                var x = new Reader(e, at, errors);
+                Core.Units.UnitKind kind = x.Enum<Core.Units.UnitKind>("kind");
+                if (kinds[(int)kind] is not null)
+                {
+                    errors.Add($"{at}.kind: '{e.GetProperty("kind")}' is listed twice.");
+                }
+
+                kinds[(int)kind] = new Core.Units.UnitKindDefinition
+                {
+                    Kind = kind,
+                    Name = x.String("name"),
+                    TicksPerCell = x.Int("ticksPerCell", 1, 10000),
+                    SightCells = x.Int("sightCells", 0, 20),
+                };
+                i++;
+            }
+        }
+
+        for (int k = 0; k < count; k++)
+        {
+            if (kinds[k] is null)
+            {
+                errors.Add($"{file}: kinds: missing kind '{ToSnake(((Core.Units.UnitKind)k).ToString())}'.");
+                kinds[k] = new Core.Units.UnitKindDefinition { Kind = (Core.Units.UnitKind)k };
+            }
+        }
+
+        JsonElement terrain = doc.RootElement.TryGetProperty("terrain", out JsonElement te) ? te : default;
+        var t = new Reader(terrain, $"{file}: terrain", errors);
+        var scouts = new Reader(doc.RootElement.TryGetProperty("scouts", out JsonElement se) ? se : default, $"{file}: scouts", errors);
+        var settlers = new Reader(doc.RootElement.TryGetProperty("settlers", out JsonElement st) ? st : default, $"{file}: settlers", errors);
+        return new Core.Units.UnitRules
+        {
+            Kinds = kinds!,
+            JourneyTicksPerCell = r.Int("journeyTicksPerCell", 1, 10000),
+            HillsExtraPercent = t.Int("hillsExtraPercent", 0, 10000),
+            MountainsExtraPercent = t.Int("mountainsExtraPercent", 0, 10000),
+            IcePercent = t.Int("icePercent", 100, 10000),
+            RiverPercent = t.Int("riverPercent", 0, 10000),
+            RouteNodeLimit = r.Int("routeNodeLimit", 100, 10_000_000),
+            ScoutEveryYears = scouts.Int("everyYears", 0, 1000),
+            ScoutTripCells = scouts.Int("tripCells", 1, 200),
+            SettlerFoodMonths = settlers.Int("foodMonths", 0, 120),
+            HungerDeathPercent = settlers.Int("hungerDeathPercent", 0, 100),
+            FoundSearchCells = settlers.Int("foundSearchCells", 0, 20),
+        };
+    }
+
     // Time of the live game (ADR 0025, stage 6): ticks, pulses and months of action.
     private static Core.Simulation.TimeRules LoadTime(string path, List<string> errors)
     {
@@ -1535,9 +1604,6 @@ public static class ContentLoader
             SightCells = r.Int("sightCells", 0, 50),
             OralMemoryYears = r.Int("oralMemoryYears", 1, 1_000_000),
             JourneyCells = r.Int("journeyCells", 1, 200),
-            ScoutCells = r.Int("scoutCells", 0, 200),
-            ScoutsPerCentury = r.Int("scoutsPerCentury", 0, 1200),
-            MarchCellsPerCentury = r.Int("marchCellsPerCentury", 1, 100_000),
         };
     }
 

@@ -25,6 +25,9 @@ public static class CommandMapper
             OccupySettlementDto o when content is not null => new OccupySettlementCommand(content, new SettlementId(o.SettlementId), new SettlementId(o.TargetSettlementId), o.Percent),
             PlunderSettlementDto p when content is not null => new PlunderSettlementCommand(content, new SettlementId(p.SettlementId), new SettlementId(p.TargetSettlementId)),
             ConquerSettlementDto c when content is not null => new ConquerSettlementCommand(content, new SettlementId(c.SettlementId), new SettlementId(c.TargetSettlementId)),
+            MoveUnitDto m when content is not null => new Core.Units.MoveUnitCommand(content, m.UnitId, new HexCoord(m.Col, m.Row)),
+            FoundCampDto f when content is not null => new Core.Units.FoundCampCommand(content, f.UnitId),
+            ReturnUnitDto r when content is not null => new Core.Units.ReturnUnitCommand(content, r.UnitId),
             _ => null,
         };
     }
