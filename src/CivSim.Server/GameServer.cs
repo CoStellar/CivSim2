@@ -124,6 +124,19 @@ public sealed class GameServer
     /// <summary>Number of connected observers.</summary>
     public int ConnectedObservers => _clients.FindAll(c => c.IsObserver).Count;
 
+    /// <summary>The recording of this game for replays (T11), or null when it is not recorded.</summary>
+    public Replays.ReplayRecorder? Replay { get; private set; }
+
+    /// <summary>
+    /// Starts recording the game for replays (T11) from its state now: <paramref name="newGame"/> when it was just generated
+    /// from its settings (the replay generates it again), false for a loaded game (the replay starts from a save).
+    /// </summary>
+    public Replays.ReplayRecorder StartRecording(bool newGame, int checkpointTicks = Replays.ReplayRecorder.DefaultCheckpointTicks)
+    {
+        Replay = new Replays.ReplayRecorder(State, newGame, checkpointTicks);
+        return Replay;
+    }
+
     /// <summary>The turn runner (systems and AI register here).</summary>
     public TurnRunner Runner { get; }
 
@@ -180,6 +193,7 @@ public sealed class GameServer
     {
         TurnReport report = Runner.RunTurn();
         _lastTurnTicks = report.TotalTicks;
+        Replay?.AfterTick(State);
         foreach (string line in Runner.LastChronicle)
         {
             AddChronicle(line);
@@ -317,6 +331,7 @@ public sealed class GameServer
         client.Player = new PlayerId(_nextPlayerId++);
         client.Civ = civ.Id;
         civ.Controller = client.Player.Value;
+        Replay?.Control(State.Turn, civ.Id, client.Player.Value);
         client.ReadyForTurn = -1;
         client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, client.Player.Value.Value, civ.Id.Value));
         client.Known = KnownCells(civ);
@@ -473,6 +488,7 @@ public sealed class GameServer
             return;
         }
 
+        Replay?.Command(State.Turn, player, civ, submit.Command!);
         CommandEnvelope envelope = Runner.Commands.Enqueue(player, civ, command);
         client.RememberSequence(envelope.Sequence, submit.ClientSequence);
     }
@@ -494,6 +510,7 @@ public sealed class GameServer
             return;
         }
 
+        Replay?.Rename(State.Turn, target, submit.Command!);
         command!.Apply(State, target);
         string after = submit.Command is RenameSettlementDto r3 ? State.FindSettlement(new SettlementId(r3.SettlementId))!.Name : State.FindCivilization(target)!.Name;
         AddChronicle($"{before} was renamed {after}.");
@@ -626,6 +643,7 @@ public sealed class GameServer
         if (client.Civ is { } civ && State.FindCivilization(civ) is { } state)
         {
             state.Controller = PlayerId.Ai;
+            Replay?.Control(State.Turn, civ, PlayerId.Ai);
         }
     }
 

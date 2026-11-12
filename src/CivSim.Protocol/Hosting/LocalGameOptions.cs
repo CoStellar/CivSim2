@@ -73,6 +73,12 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     public string? ReportPath { get; init; }
 
     /// <summary>
+    /// When set, the host records the game (T11: seed, settings, every command, state hashes every minute) and writes the
+    /// replay here when it stops. A long run writes one to its folder (replay.civreplay) even without this.
+    /// </summary>
+    public string? ReplayPath { get; init; }
+
+    /// <summary>
     /// Long run: when set, the host writes statistics, turn times, events and a log into this folder while the game runs
     /// (stats.csv, turns.csv, events.csv, log.txt, summary.txt). Null = no long run.
     /// </summary>

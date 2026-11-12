@@ -17,6 +17,62 @@ public static class GameStateHash
         ArgumentNullException.ThrowIfNull(state);
         var h = new StateHasher();
 
+        Clock(ref h, state);
+        Units(ref h, state);
+        EpisodesPart(ref h, state);
+        RandomPart(ref h, state);
+        Worlds(ref h, state);
+        Civilizations(ref h, state);
+        Settlements(ref h, state);
+        Effects(ref h, state);
+        Treaties(ref h, state);
+        return h.Value;
+    }
+
+    /// <summary>Names of the parts of the state <see cref="Sections"/> hashes one by one, in order (T11).</summary>
+    public static readonly string[] SectionNames = ["clock", "units", "episodes", "random", "worlds", "civilizations", "settlements", "effects", "treaties"];
+
+    /// <summary>
+    /// The hash of every part of the state on its own (T11), in the order of <see cref="SectionNames"/>: when two runs drift
+    /// apart, the parts whose hashes differ say which systems to look at. <see cref="Compute"/> hashes the same parts in one
+    /// stream.
+    /// </summary>
+    public static ulong[] Sections(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var result = new ulong[SectionNames.Length];
+        var h = new StateHasher();
+        Clock(ref h, state);
+        result[0] = h.Value;
+        h = new StateHasher();
+        Units(ref h, state);
+        result[1] = h.Value;
+        h = new StateHasher();
+        EpisodesPart(ref h, state);
+        result[2] = h.Value;
+        h = new StateHasher();
+        RandomPart(ref h, state);
+        result[3] = h.Value;
+        h = new StateHasher();
+        Worlds(ref h, state);
+        result[4] = h.Value;
+        h = new StateHasher();
+        Civilizations(ref h, state);
+        result[5] = h.Value;
+        h = new StateHasher();
+        Settlements(ref h, state);
+        result[6] = h.Value;
+        h = new StateHasher();
+        Effects(ref h, state);
+        result[7] = h.Value;
+        h = new StateHasher();
+        Treaties(ref h, state);
+        result[8] = h.Value;
+        return result;
+    }
+
+    private static void Clock(ref StateHasher h, GameState state)
+    {
         h.Add(state.Settings.Seed);
         h.Add(state.Settings.MapWidth);
         h.Add(state.Settings.MapHeight);
@@ -41,6 +97,10 @@ public static class GameStateHash
         h.Add(state.StepMonths);
         h.Add(state.ActionMonth);
         h.Add(state.WorldMonths);
+    }
+
+    private static void Units(ref StateHasher h, GameState state)
+    {
         h.Add(state.Units.NextId);
         h.Add(state.Units.Count);
         for (int k = 0; k < state.Units.Count; k++)
@@ -94,7 +154,10 @@ public static class GameStateHash
             h.Add(u.Episode);
             h.Add((int)u.Role);
         }
+    }
 
+    private static void EpisodesPart(ref StateHasher h, GameState state)
+    {
         h.Add(state.Episodes.NextId);
         h.Add(state.Episodes.Count);
         foreach (Episodes.Episode e in state.Episodes.All)
@@ -169,7 +232,10 @@ public static class GameStateHash
                 h.Add(a.Hundredths);
             }
         }
+    }
 
+    private static void RandomPart(ref StateHasher h, GameState state)
+    {
         Span<RandomState> rng = stackalloc RandomState[RandomStreams.Count];
         state.Random.CopyStates(rng);
         foreach (RandomState r in rng)
@@ -179,7 +245,10 @@ public static class GameStateHash
             h.Add(r.S2);
             h.Add(r.S3);
         }
+    }
 
+    private static void Worlds(ref StateHasher h, GameState state)
+    {
         h.Add(state.Worlds.Count);
         foreach (WorldState w in state.Worlds)
         {
@@ -203,7 +272,10 @@ public static class GameStateHash
             h.Add(w.Climate.SeaLevel);
             h.Add(w.Climate.StartLandIce);
         }
+    }
 
+    private static void Civilizations(ref StateHasher h, GameState state)
+    {
         h.Add(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
@@ -312,7 +384,10 @@ public static class GameStateHash
                 }
             }
         }
+    }
 
+    private static void Settlements(ref StateHasher h, GameState state)
+    {
         h.Add(state.Month);
         h.Add(state.NextSettlementId);
         h.Add(state.Settlements.Count);
@@ -381,7 +456,10 @@ public static class GameStateHash
                 h.Add(a.Hundredths);
             }
         }
+    }
 
+    private static void Effects(ref StateHasher h, GameState state)
+    {
         h.Add(state.Effects.NextId);
         h.Add(state.Effects.Count);
         foreach (EffectInstance e in state.Effects.All)
@@ -394,7 +472,10 @@ public static class GameStateHash
             h.Add(e.Strength);
             h.Add(e.EndMonth);
         }
+    }
 
+    private static void Treaties(ref StateHasher h, GameState state)
+    {
         h.Add(state.Treaties.All.Count);
         foreach (Diplomacy.Treaty t in state.Treaties.All)
         {
@@ -436,8 +517,6 @@ public static class GameStateHash
             h.Add((int)p.Status);
             AddTerms(ref h, p.Terms);
         }
-
-        return h.Value;
     }
 
     private static void AddTerms(ref StateHasher h, Diplomacy.PeaceTerms terms)

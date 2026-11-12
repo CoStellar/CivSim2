@@ -41,7 +41,10 @@ sequenceDiagram
 - **Serwer jest autorytatywny:** sprawdza, czy gracz przywitał się, czy rządzi wskazaną cywilizacją i czy komenda jest znana.
   Zasady gry sprawdza rdzeń w fazie 4; odrzucenia wracają do gracza z jego numerem komendy.
 - **Przydział cywilizacji:** nowy gracz dostaje pierwszą żywą cywilizację prowadzoną przez AI.
-  Kto rządzi cywilizacją, to dane sesji, a nie stan gry: nie wchodzi do hasha ani do zapisu.
+  Kto rządzi cywilizacją, to dane sesji, a nie stan gry: nie wchodzi do hasha ani do zapisu (powtórka zapisuje przejęcie jako zdarzenie,
+  `docs/systems/replay.md`).
+- **Powtórka** (T11): serwer na życzenie (`GameServer.StartRecording`) zapisuje każdy rozkaz gracza, zmianę nazwy obserwatora i
+  przejęcie cywilizacji z numerem taktu; host podglądu zapisuje plik przy zamknięciu (`LocalGameOptions.ReplayPath`, długi bieg zawsze).
 - **Rozłączenie:** cywilizację przejmuje AI (GDD 2.1).
 - **Koniec tury:** gdy wszyscy przywitani gracze wysłali `EndTurn` dla bieżącej tury. Limit czasu tury dojdzie razem z grą sieciową;
   `AdvanceTurn()` pozwala uruchomić turę bez graczy (obserwator, Headless).
