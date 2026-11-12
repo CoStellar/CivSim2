@@ -38,6 +38,7 @@ public sealed class LocalServerHost : IDisposable
     private long _turn;
     private long _turnLimit;
     private string? _reportPath;
+    private string? _replayPath;
     private StreamWriter? _report;
     private LongRunRecorder? _longRun;
     private volatile bool _longRunFinished;
@@ -88,7 +89,14 @@ public sealed class LocalServerHost : IDisposable
         {
             _turnLimit = Math.Max(0, options.TurnLimit),
             _reportPath = string.IsNullOrWhiteSpace(options.ReportPath) ? null : options.ReportPath,
+            _replayPath = !string.IsNullOrWhiteSpace(options.ReplayPath) ? options.ReplayPath
+                : !string.IsNullOrWhiteSpace(options.LongRunFolder) ? System.IO.Path.Combine(options.LongRunFolder, "replay.civreplay") : null,
         };
+        if (host._replayPath is not null)
+        {
+            host._server.StartRecording(newGame: true);
+        }
+
         if (!string.IsNullOrWhiteSpace(options.LongRunFolder))
         {
             host._longRun = new LongRunRecorder(
@@ -205,6 +213,23 @@ public sealed class LocalServerHost : IDisposable
         if (_thread.IsAlive)
         {
             _thread.Join(TimeSpan.FromSeconds(5));
+        }
+
+        // The replay (T11) is written once the simulation thread has stopped, so the recording is complete.
+        if (_replayPath is not null && !_thread.IsAlive && _server.Replay is { } replay)
+        {
+            try
+            {
+                replay.Write(_replayPath);
+            }
+            catch (System.IO.IOException ex)
+            {
+                _error ??= $"The replay could not be written: {ex.Message}";
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _error ??= $"The replay could not be written: {ex.Message}";
+            }
         }
     }
 
