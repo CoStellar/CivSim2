@@ -58,7 +58,7 @@ Numery T są wpisane w tabelę PR-ów wyżej. Kolejność ważności: **T2 > T7 
 | T11 | **Zapis partii = seed + lista rozkazów** (powtórka) i **hasz stanu co N taktów z podziałem na systemy** | odtwarzanie błędów, powtórki, wykrywanie rozjazdu determinizmu z wskazaniem systemu | 3 albo osobny mały PR po 2 | test: powtórka z rozkazów daje ten sam hasz |
 | T12 | **Budżet czasu w teście/benchmarku:** takt < 30 ms i puls w budżecie, sprawdzane przy każdym PR (lokalnie, bez CI) | wydajność od pierwszego dnia | od 3, pełny w 8 | wynik w opisie każdego PR |
 | T13 | **Pulsy równolegle** (`Parallel.For` po cywilizacjach, każda pisze do swojego bufora, wyniki łączone w kolejności id, losowanie ze strumieni cywilizacji) | ADR 0025; zgodne z zasadą 4 z `CLAUDE.md` | 8 | ten sam hasz przy 1 i N wątkach |
-| T14 | **Dane:** schemat JSON (walidacja kluczy, literówka = błąd przy wczytaniu) i przeładowanie danych w podglądzie bez restartu | szybsze strojenie temp z PR 2 i dalej | 2 albo osobny mały PR | zła nazwa klucza daje czytelny błąd; zmiana JSON widoczna po przeładowaniu |
+| T14 | **Dane:** schemat JSON (walidacja kluczy, literówka = błąd przy wczytaniu) i przeładowanie danych w podglądzie bez restartu | szybsze strojenie temp z PR 2 i dalej | 2 albo osobny mały PR | zła nazwa klucza daje czytelny błąd; zmiana JSON widoczna po przeładowaniu **Zrobione** (`feat/data-schema`, `docs/systems/data-schema.md`). |
 
 ### Czego unikać (stałe zasady etapu)
 

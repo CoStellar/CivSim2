@@ -135,6 +135,7 @@ w folderze paczki i w konsoli. Paczka może też zmienić ramki interfejsu (`ui/
 | Tab | okno ustawień warstw |
 | I / L / C | panel informacji / kronika / wykres czasu tury |
 | Esc | koniec gry, menu startowe |
+| F5 | wczytaj `data/` od nowa i zacznij tę samą partię (te same ustawienia i seed); przy błędach w danych okno z listą i przyciskiem „Reload data” (T14, `data-schema.md`) |
 
 Do testów i zrzutów: `--screenshot plik.png` (z `--screenshot-turn N`: po N turach), `--menu-screenshot plik.png`, `--zoom Z`,
 `--overlay WARSTWA` (tylko ta warstwa pól), `--layer WARSTWA` (włącza warstwę), `--watch CYW` (śledzi i włącza mgłę), `--opacity WARSTWA=PROCENT`, `--layer-settings` (otwiera okno ustawień warstw), `--art-pack FOLDER`,
