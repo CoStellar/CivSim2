@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using CivSim.Game.Map;
 using CivSim.Game.Net;
 using CivSim.Game.Ui;
@@ -55,6 +56,9 @@ public partial class Main : Node2D
     private MapLayer? _startOverlay;
     private string? _menuScreenshot;
     private StartSettings? _menuSettings;
+    private StartSettings? _lastSettings;
+    private AcceptDialog? _dataDialog;
+    private Action? _retry;
     private long _screenshotTurn;
     private readonly List<MapLayer> _extraLayers = [];
     private int _watch = WelcomeMessage.NoCiv;
@@ -174,6 +178,11 @@ public partial class Main : Node2D
     private void ShowMenu()
     {
         StopGame();
+        if (!DataReady(ShowMenu))
+        {
+            return;
+        }
+
         _menu = new StartMenu(LocalServerHost.Describe(_dataDirectory), _menuSettings ?? _saved.Start.Copy(), _dataDirectory, _art, ArtPack.Discover(ArtLibrary.FindArtDirectory()));
         _menuSettings = null;
         _menu.StartRequested += settings => StartGame(settings, save: true);
@@ -218,8 +227,14 @@ public partial class Main : Node2D
             _saved.Save();
         }
 
+        if (!DataReady(() => StartGame(settings, save)))
+        {
+            return;
+        }
+
         _menu?.QueueFree();
         _menu = null;
+        _lastSettings = settings.Copy();
         _host = LocalServerHost.Start(options, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
         SimulationSpeed speed = StartSettings.ParseSpeed(settings.Speed);
@@ -354,6 +369,50 @@ public partial class Main : Node2D
         target.X += Mathf.Round((_camera.Position.X - target.X) / _map.Period.X) * _map.Period.X;
         _camera.Position = jump ? target : _camera.Position.Lerp(target, 0.08f);
     }
+
+    // F5 (stage 6, T14): read data/ again and start the same game (same settings and seed) with it, without closing
+    // the viewer. Bad data keeps the current game running and shows what is wrong.
+    private void ReloadData()
+    {
+        if (_lastSettings is not { } settings || !DataReady(ReloadData))
+        {
+            return;
+        }
+
+        GD.Print("viewer: data reloaded, same game started again");
+        StopGame();
+        StartGame(settings, save: false);
+    }
+
+    // True when the data files load; otherwise shows every problem with a button to try again after fixing the files.
+    private bool DataReady(Action retry)
+    {
+        IReadOnlyList<string> errors = LocalServerHost.CheckData(_dataDirectory);
+        _dataDialog?.QueueFree();
+        _dataDialog = null;
+        if (errors.Count == 0)
+        {
+            return true;
+        }
+
+        const int Shown = 30;
+        string text = string.Join("\n", errors.Take(Shown)) + (errors.Count > Shown ? $"\n... and {errors.Count - Shown} more" : string.Empty);
+        GD.PrintErr("viewer: game data is invalid:\n" + string.Join("\n", errors));
+        _dataDialog = new AcceptDialog
+        {
+            Title = $"Game data has {errors.Count} problem{(errors.Count == 1 ? string.Empty : "s")} ({_dataDirectory})",
+            DialogText = text + "\n\nFix the files and press Reload data.",
+            OkButtonText = "Reload data",
+            Exclusive = true,
+        };
+        _dataDialog.Confirmed += () => CallDeferred(MethodName.RunRetry);
+        _retry = retry;
+        AddChild(_dataDialog);
+        _dataDialog.PopupCentered();
+        return false;
+    }
+
+    private void RunRetry() => _retry?.Invoke();
 
     private void StopGame()
     {
@@ -552,6 +611,9 @@ public partial class Main : Node2D
                 break;
             case Key.C:
                 _hud?.TogglePanel('C');
+                break;
+            case Key.F5:
+                ReloadData();
                 break;
             case Key.Escape when _menu is null:
                 ShowMenu();
