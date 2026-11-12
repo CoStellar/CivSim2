@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "skills.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "firstMasters": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "apprenticesPerMaster": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "apprenticeWorkPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "moveMinMasters": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "moveSpareAbove": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "moveSharePercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "teachForOthersPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "farmingSkill": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "stratum": {
+            "type": "string"
+          },
+          "technology": {
+            "type": "string"
+          },
+          "trainingYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "jobsPercent": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

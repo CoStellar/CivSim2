@@ -1,0 +1,563 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "diplomacy.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "reviewEveryYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "proposeAbove": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "acceptAbove": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "declareWarAbove": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "retryYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "peaceRetryYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "reachCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "tradeSharePercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "witnessPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "allyJoinBasePerMille": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "warRaidPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "curves": {
+      "type": "object",
+      "properties": {
+        "opinion": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "trust": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "allianceTrust": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "threat": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "tradeGain": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "hostility": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "advantage": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "warWeariness": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "peaceOpinion": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "peaceTerms": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "warScore": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "greed": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "lootNeed": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "lootGain": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "conquestChance": {
+          "type": "object",
+          "properties": {
+            "x0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f0": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "x1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "f1": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "treaties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "years": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "bindsAgainstWar": {
+            "type": "boolean"
+          },
+          "requires": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

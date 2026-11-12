@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "units.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "ticksPerCell": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "sightCells": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "people": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "skill": {
+            "type": "string"
+          },
+          "rangeCells": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "requires": {
+            "type": "string"
+          },
+          "terrain": {
+            "type": "object",
+            "properties": {
+              "hillsExtraPercent": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "mountainsExtraPercent": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "riverPercent": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "biomes": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "journeyTicksPerCell": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "terrain": {
+      "type": "object",
+      "properties": {
+        "hillsExtraPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "mountainsExtraPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "icePercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "riverPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "routeNodeLimit": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "scouts": {
+      "type": "object",
+      "properties": {
+        "everyYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "tripCells": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "settlers": {
+      "type": "object",
+      "properties": {
+        "foodMonths": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "hungerDeathPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "foundSearchCells": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

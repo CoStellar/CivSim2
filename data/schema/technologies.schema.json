@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "technologies.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "diffusionPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "maxNeighbours": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "contactCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "minCostPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "eraSharePercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "technologies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "era": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "field": {
+            "type": "string"
+          },
+          "cost": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inspirations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "degrees": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "percent": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "deposit": {
+                  "type": "string"
+                },
+                "biome": {
+                  "type": "string"
+                },
+                "good": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "people": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "unlocks": {
+            "type": "object",
+            "properties": {
+              "effects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "effect": {
+                      "type": "string"
+                    },
+                    "strength": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "recipes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "gather": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "requiresPeople": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "stratum": {
+                  "type": "string"
+                },
+                "inOneSettlement": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "requiresAny": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiresPeopleAny": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "stratum": {
+                  "type": "string"
+                },
+                "inOneSettlement": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
