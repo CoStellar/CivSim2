@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CivSim.Core.Map;
 using CivSim.Core.Numerics;
 
@@ -111,6 +112,18 @@ public sealed class SettlementState
 
     /// <summary>On a journey: ticks already spent on the way to <see cref="JourneyNext"/>.</summary>
     public int JourneyProgress { get; set; }
+
+    /// <summary>
+    /// On a journey (stage 6 PR 3b, known issue 10): the cells of the way to <see cref="JourneyPathGoal"/>, found once for
+    /// the goal (A*) and walked camp after camp; searched again only for a new goal or when the way closes.
+    /// </summary>
+    public List<int> JourneyPath { get; } = [];
+
+    /// <summary>On a journey: index in <see cref="JourneyPath"/> of the first cell after the one the camp stands on.</summary>
+    public int JourneyPathAt { get; set; }
+
+    /// <summary>On a journey: the goal <see cref="JourneyPath"/> leads to, or -1 when there is no way remembered.</summary>
+    public int JourneyPathGoal { get; set; } = -1;
 
     /// <summary>True while a party of its scouts is out (stage 6 PR 3a).</summary>
     public bool ScoutOut { get; set; }

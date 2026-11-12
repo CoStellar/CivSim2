@@ -23,6 +23,9 @@ public enum CampaignPhase : byte
 
     /// <summary>Warriors of several settlements gather at the settlement the campaign leaves from (stage 4e PR 3).</summary>
     Muster = 2,
+
+    /// <summary>Fighting a battle at its target, a round every few ticks (stage 6); nobody can call it back meanwhile.</summary>
+    Battle = 3,
 }
 
 /// <summary>
@@ -145,6 +148,18 @@ public sealed class Episode
 
     /// <summary>True when the army flees after a lost battle (stage 6 PR 3b): nobody can turn it.</summary>
     public bool Fleeing { get; set; }
+
+    /// <summary>The battle it fights in <see cref="CampaignPhase.Battle"/> (stage 6: a round every few ticks).</summary>
+    public BattleState Fight { get; set; }
+
+    /// <summary>Tick of the next round of <see cref="Fight"/>.</summary>
+    public long RoundTick { get; set; }
+
+    /// <summary>Its warriors killed in the battle under way.</summary>
+    public int FightLost { get; set; }
+
+    /// <summary>Enemies it killed in the battle under way.</summary>
+    public int FightKilled { get; set; }
 
     /// <summary>True once it is over (removed at the end of the step).</summary>
     public bool Ended { get; set; }

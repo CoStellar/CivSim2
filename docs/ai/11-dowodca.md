@@ -72,7 +72,8 @@ Test `CommanderTests` sprawdza, że spodziewana szansa jest blisko tego, jak cz�
 - **Jedzenie:** gdy armia nie napada właśnie wioski po jedzenie, dowódca liczy miesiące jedzenia, które ma (niesione, w łupach i u tragarzy w drodze),
   i miesiące marszu poza zasięgiem tragarzy: do celu i od celu z powrotem. Gdy jedzenia jest mniej, woła armię do domu, zanim zacznie głodować.
 - **Komenda:** `RecallCampaignCommand` (działanie `RecallCampaign`): armia zawraca, ocaleni wracają do swoich osad. Serwer przyjmuje ją
-  tylko od właściciela kampanii, która się zbiera albo maszeruje.
+  tylko od właściciela kampanii, która się zbiera albo maszeruje. Armii w bitwie (faza `Battle`, od etapu 6 runda co sekundę) nie da się
+  odwołać: dowódca może ją zawołać przed pierwszą rundą, potem decyduje bitwa.
 - **Atak:** armia, która doszła do pola obok celu, atakuje dopiero w następnym miesiącu. Ten miesiąc daje dowódcy czas, żeby zobaczyć cel i
   ewentualnie zawołać armię (wcześniej system sam zawracał armię przed silnym celem; od PR 5 to decyzja dowódcy, a gracz w trybie gracza
   zdecyduje sam).
@@ -85,7 +86,7 @@ Test `CommanderTests` sprawdza, że spodziewana szansa jest blisko tego, jak cz�
 - Gdy jedzenia zostaje na mniej niż 2 miesiące, najbliższa nasza osada z jedzeniem (do 12 pól) wysyła tragarzy; głodna armia traci
   morale, napada pobliską wioskę wroga po jedzenie, a przy morale poniżej 30 zawraca (to reguły systemu, nie decyzje dowódcy).
 - U celu: armia staje, gdy cel jest w zasięgu jej rodzaju (wojownicy: pole obok), i miesiąc akcji później atakuje, chyba że dowódca ją
-  odwoła (K2). Pobita armia ucieka i dowódca już jej nie zawraca; ocaleni odpoczywają w domu. Bitwa w rundach na strumieniu `combat` (PR 4, [war.md](../systems/war.md)).
+  odwoła (K2). Pobita armia ucieka i dowódca już jej nie zawraca; ocaleni odpoczywają w domu. Bitwa w rundach na strumieniu `combat` (PR 4, [war.md](../systems/war.md)); od etapu 6 jedna runda na sekundę, armia maleje na mapie.
 - Wygrana: łupy (tyle, ile uniosą wojownicy), w wojnie o ziemię zdobycie wioski z ludźmi; wynik wojny +10 (+15 za osadę).
 - Powrót: ocaleni i łupy do domu. Każdy miesiąc kampanii dodaje 5 punktów zmęczenia obu stronom wojny.
 

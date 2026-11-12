@@ -127,6 +127,58 @@ public class MapMemoryTests
     }
 
     [Fact]
+    public void AJourneyFindsItsWayOnceAndSkipsCampsInTheWay()
+    {
+        // Stage 6 PR 3b (known issue 10): the way is found once for the goal, remembered (also in a save) and walked camp
+        // after camp; a cell someone camped on meanwhile is passed, not a reason to search again.
+        GameState state = NewGame(66);
+        WorldState world = state.Worlds[0];
+        HexGlobe geo = world.Geometry;
+        SettlementState camp = state.Settlements[0];
+        CivilizationState civ = state.FindCivilization(camp.Owner)!;
+        HexCoord target = camp.Cell;
+        int grass = Content.Biome("grassland").Id;
+        for (int k = 0; k < 8; k++)
+        {
+            target = geo.Neighbor(target, HexDirection.SE);
+            world.Map.Biome.Set(geo.Index(target), (byte)grass);
+            civ.SeenYear[geo.Index(target)] = 1;
+        }
+
+        new JourneyCommand(Content, camp.Id, target).Apply(state, civ.Id);
+        var runner = new TurnRunner(state);
+        runner.AddSystem(new JourneySystem(Content));
+        runner.RunTurn();
+
+        Assert.Equal(geo.Index(target), camp.JourneyPathGoal);
+        int[] way = [.. camp.JourneyPath];
+        Assert.Equal(8, way.Length);
+        Assert.Equal(way[0], camp.JourneyNext);
+
+        // Someone pitches on the third cell of the way: the camp walks past it to the fourth.
+        SettlementState other = state.Settlements[1];
+        other.Cell = geo.FromIndex(way[2]);
+        HexCoord before = camp.Cell;
+        for (int t = 0; t < 40 * Content.Units.JourneyTicksPerCell && geo.Distance(before, camp.Cell) < 4; t++)
+        {
+            runner.RunTurn();
+        }
+
+        Assert.Equal(way, camp.JourneyPath); // never searched again
+        Assert.NotEqual(other.Cell, camp.Cell);
+        Assert.Equal(way[3], geo.Index(camp.Cell));
+        Assert.Equal(4, camp.JourneyPathAt);
+
+        using var stream = new System.IO.MemoryStream();
+        CivSim.Server.Saves.SaveGameSerializer.Save(state, stream);
+        stream.Position = 0;
+        GameState loaded = CivSim.Server.Saves.SaveGameSerializer.Load(stream);
+        SettlementState again = loaded.FindSettlement(camp.Id)!;
+        Assert.Equal(way, again.JourneyPath);
+        Assert.Equal((4, camp.JourneyPathGoal), (again.JourneyPathAt, again.JourneyPathGoal));
+    }
+
+    [Fact]
     public void SeaIceCanBeWalked()
     {
         GameState state = NewGame(65);

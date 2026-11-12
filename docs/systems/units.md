@@ -51,7 +51,7 @@ osadnicy, zwiadowcy, wojownicy (15 taktów, zasięg 1), tragarze (10 taktów).
 | `Found` | osadnicy idą do celu i zakładają obóz | obóz założony → oddział znika; miejsce zajęte → nowy cel do 3 pól, bez niego → `Return`; brak drogi → zakłada obóz tam, gdzie stoi, jeśli wolno, inaczej `Idle` |
 | `Scout` | zwiadowcy idą prosto w swoim kierunku, przy wodzie skręcają | po 15 polach albo zamknięci wodą → `Return` |
 | `Return` | wraca do domu i dołącza | w domu → oddział znika (zwiadowcy: osada może wysłać następnych); dom zniknął → najbliższa własna osada, bez niej obóz na miejscu; armia kampanii: w domu → `Idle`, kampania sprowadza ocalałych |
-| `Attack` | armia idzie do celu, aż cel jest w zasięgu jej rodzaju, i stoi | kampania: miesiąc akcji w zasięgu → bitwa; wygrana → `Return`, przegrana → `Flee`; brak drogi → `Idle` i kampania wraca |
+| `Attack` | armia idzie do celu, aż cel jest w zasięgu jej rodzaju, i stoi; w bitwie stoi dalej (kampania w fazie `Battle`, runda co sekundę) | kampania: miesiąc akcji w zasięgu → bitwa; wygrana → `Return`, przegrana → `Flee`; brak drogi → `Idle` i kampania wraca |
 | `Flee` | pobita armia ucieka do domu; nikt jej nie zawróci (ani gracz, ani dowódca) | w domu → `Idle`, ocalali wracają do osad |
 
 Odpoczynek to stan osady, nie oddziału: wojownicy, którzy wrócili, odpoczywają `restMonths` (6) miesięcy akcji i ich osada nie może
@@ -128,6 +128,7 @@ najbliższy własny obóz gubernatora, zbiórka wojowników dowódcy, napad gło
 - `WarUnitsTests` (PR 3b): pobita armia ucieka i nikt jej nie zawróci; wojownicy odpoczywają po powrocie; tragarze idą jako oddział,
   dochodzą do armii i wracają do warstwy w domu; rozkaz ataku na inną osadę wroga; rodzaj z zasięgiem 3 staje 3 pola przed celem;
   kampania maszeruje jako najlepszy znany rodzaj; zwiadowcy biorą myśliwych i ich przyprowadzają.
+- `BattleTimeTests`: bitwa runda po rundzie w czasie, armia maleje, nikt jej nie odwoła, zapis w trakcie bitwy.
 - `ArmyTests`, `CommanderTests`, `EpisodeTests`: zbiórka pieszo, marsz i bitwa po miesiącu w zasięgu, kampania w taktach.
 
 ## Wydajność i wyniki
@@ -142,3 +143,7 @@ Pomiar z 2026-11-09 (3 seedy 7 / 23 / 42, mapa standard, 18 000 taktów = 30 min
 Pomiar PR 3b (2026-11-09, te same seedy i warunki): takt średnio 4,9 / 7,2 / 4,9 ms, 95% poniżej 11,3 / 15,5 / 10,9 ms, dłużej niż
 25 ms 0,09 / 0,29 / 0,12%. W 30 minut: 27 / 10 / 10 kampanii, 11 / 5 / 4 bitwy (wszystkie wygrane), 13 / 7 / 4 dostawy tragarzy;
 wojny 23 / 12 / 17 (PR 3a: 22 / 29 / 23). Neolit po 8,6 / 8,4 / 7,1 min (bez zmian względem PR 3a).
+
+Pomiar bitwy w czasie (2026-11-09, ten sam komputer dla obu gałęzi, PR 3b → `feat/battle-time`): takt średnio 4,3 → 4,0 /
+5,9 → 6,5 / 4,2 → 4,3 ms, 95% poniżej 8,6 / 15,3 / 9,9 ms, dłużej niż 25 ms 0,07 / 0,08 / 0,09%, alokacje na takt 319 / 429 / 353 KB
+(bez wzrostu). W seedzie 23 takt jest dłuższy, bo gra ma 3,5 razy więcej kampanii (36 zamiast 10), a nie przez koszt bitwy.

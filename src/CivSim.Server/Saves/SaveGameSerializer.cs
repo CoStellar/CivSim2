@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 34;
+    public const int FormatVersion = 35;
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -80,7 +80,7 @@ public static class SaveGameSerializer
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
                 st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty, st.JourneyNext, st.JourneyStepTicks, st.JourneyProgress,
-                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth));
+                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth, [.. st.JourneyPath], st.JourneyPathAt, st.JourneyPathGoal));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -265,7 +265,10 @@ public static class SaveGameSerializer
                 ScoutOut = st.ScoutOut,
                 ScoutBackMonth = st.ScoutBackMonth,
                 RestUntilMonth = st.RestUntilMonth,
+                JourneyPathAt = st.JourneyPathAt,
+                JourneyPathGoal = st.JourneyPathGoal,
             };
+            settlement.JourneyPath.AddRange(st.JourneyPath ?? []);
             for (int g = 0; g < st.Stock.Length; g++)
             {
                 settlement.Stock[g] = Core.Numerics.Amount.FromHundredths(st.Stock[g]);
@@ -415,7 +418,8 @@ public static class SaveGameSerializer
                 e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, Hundredths(e.Loot),
                 e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilTick,
                 Hundredths(e.Food), e.HungryMonths, e.Forays, e.Foraging, e.ConvoyFrom, e.ConvoyCell, e.ConvoyCarriers,
-                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed, e.Army, e.Convoy, e.InRangeSince, e.Fleeing));
+                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed, e.Army, e.Convoy, e.InRangeSince, e.Fleeing,
+                SaveFight(e.Fight), e.RoundTick, e.FightLost, e.FightKilled));
         }
 
         return list;
@@ -465,12 +469,37 @@ public static class SaveGameSerializer
                     Convoy = e.Convoy,
                     InRangeSince = e.InRangeSince,
                     Fleeing = e.Fleeing,
+                    Fight = LoadFight(e.Fight),
+                    RoundTick = e.RoundTick,
+                    FightLost = e.FightLost,
+                    FightKilled = e.FightKilled,
                 },
                 e.Id);
         }
 
         state.Episodes.SetNextIdForLoad(data.NextEpisodeId);
     }
+
+    // A battle under way (stage 6) as numbers: rounds, men, strengths, morale, losses, who broke, over.
+    private static long[] SaveFight(Core.Episodes.BattleState b) =>
+        [b.Rounds, b.MenA, b.MenD, b.StrengthA, b.StrengthD, b.MoraleA, b.MoraleD, b.LostA, b.LostD, b.Broken, b.Over ? 1 : 0];
+
+    private static Core.Episodes.BattleState LoadFight(long[]? v) => v is not { Length: >= 11 }
+        ? default
+        : new Core.Episodes.BattleState
+        {
+            Rounds = (int)v[0],
+            MenA = (int)v[1],
+            MenD = (int)v[2],
+            StrengthA = v[3],
+            StrengthD = v[4],
+            MoraleA = (int)v[5],
+            MoraleD = (int)v[6],
+            LostA = (int)v[7],
+            LostD = (int)v[8],
+            Broken = (int)v[9],
+            Over = v[10] != 0,
+        };
 
     private static long[] Hundredths(Core.Numerics.Amount[] amounts)
     {
