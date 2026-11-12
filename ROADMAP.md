@@ -8,7 +8,7 @@ AI robi to, czego on nie zdąży; backend liczy się w taktach i pulsach, lata t
 epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery. Dawne etapy 6–13 (ery 3–9, tryb gracza
 na końcu) są zastąpione. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”. Szczegóły zasad: `docs/GDD.md` (1.1, 6.4).
 
-**Aktualny etap: 6 (backend gry na żywo): plan w `docs/prompts/09-etap-gra-na-zywo.md`; PR 1 (takt i pulsy) gotowy**
+**Aktualny etap: 6 (backend gry na żywo): plan w `docs/prompts/09-etap-gra-na-zywo.md`; gotowe PR 1, 2, 3a, 3b, bitwa w czasie i T11 (powtórka); następny PR 4 (zadania na obszarze)**
 
 ---
 
@@ -242,7 +242,7 @@ Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neo
 - [x] **Oddziały, część 1** (PR 3a `feat/units`): osadnicy i zwiadowcy jako widoczne oddziały w taktach; droga A* z kosztem terenu z biomów, liczona raz na cel (**T3**); pula oddziałów w płaskich tablicach, takt bez alokacji (**T4**); rozkazy i przejścia (**T5**: stoi, idzie, zakłada, zwiaduje, wraca); dane w `units.json` (**T9**); siatka przestrzenna osad (**T2**); rozkazy gracza i AI (idź, załóż obóz, wracaj); wędrówki obozów pole po polu; wioski już się nie przenoszą (decyzja Patryka z 2026-11-09); podgląd rysuje oddziały płynnie; zapis 33, protokół 15
 - [x] **Oddziały, część 2** (PR 3b `feat/units-war`): rodzaje oddziałów w danych z rolą, technologią, zasięgiem walki i własnym terenem (gotowe na strzelców, jazdę, wojska zmotoryzowane); armia i tragarze jako oddziały (wojownicy 0,67 pola/s, decyzja Patryka); zbiórka pieszo, bitwa w zasięgu po miesiącu, ucieczka bez zawracania, odpoczynek wojowników; rozkazy armii (atak na inną osadę, odwołanie); zwiadowcy biorą myśliwych; wartości wojny na miesiąc przeskalowane; zapis 34, protokół 16
 - [x] **Bitwa w czasie i wędrówka z pamięcią drogi** (`feat/battle-time`, decyzja Patryka z 2026-11-09, T5): bitwa to faza kampanii z jedną rundą na sekundę (`battle.roundTicks`), armia maleje na mapie, w trakcie bitwy bez odwołania; pokój przerywa bitwę; wędrówka obozu liczy drogę raz na cel i ją zapamiętuje (znany problem 10); zapis 35
-- [ ] **Powtórka i hasz systemów** (**T11**, mały PR po 3a): zapis partii = seed + rozkazy; hasz co N taktów z podziałem na systemy
+- [x] **Powtórka i hasz systemów** (**T11**, `feat/replay`): zapis partii = seed + rozkazy (plik `.civreplay`, Headless `--record` i `--replay`, długi bieg zapisuje powtórkę w swoim folderze); hasz co 600 taktów z podziałem na 9 części stanu; odtworzenie pokazuje pierwszy takt i części, które się różnią (`docs/systems/replay.md`)
 - [x] **Dane** (**T14**, `feat/data-schema`): schemat JSON dla każdego pliku w `data/schema/` (literówka w kluczu = błąd przy wczytaniu z podpowiedzią nazwy), F5 w podglądzie wczytuje dane od nowa i zaczyna tę samą partię, złe dane pokazują listę błędów zamiast zamykać podgląd (`docs/systems/data-schema.md`)
 - [ ] **Zadania na obszarze:** wydobycie, pola, łowiska, budowy w miejscu; ludzie z osady sami tam chodzą; te same komendy dla AI i gracza; mapy wpływu i zagrożenia dla dowódcy (**T6**), zadania w danych (**T9**)
 - [ ] **Start:** losowa kolejność, wybór miejsca (5 s mapy, potem szare bloki, 10–15 s), strefy blokady, wybór AI z błędem; epoka kamienia jako opis „historii plemienia”
