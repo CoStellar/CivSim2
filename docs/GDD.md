@@ -35,7 +35,7 @@ CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod sp
 
 **Co robi gracz.**
 - Steruje oddziałami w ruchu jak w RTS-ie: osadnicy, wojownicy, zwiadowcy, tragarze z jedzeniem, później łodzie i inne.
-- Zleca **zadania na obszarze**: wydobycie surowca, pola, łowiska, potem budowy w danym miejscu (mur, zbrojownia). Ludzie z osady sami tam chodzą.
+- Zleca **zadania na obszarze**: wydobycie surowca, pola, łowiska, budowy w danym miejscu (palisada, potem mur i zbrojownia). Ludzie z osady sami tam chodzą (4.4, „Zadania na obszarze”).
 - Zakłada miasta i awansuje je, buduje fortyfikacje, uzbraja się.
 - Wybiera kierunek rozwoju ludu (góry i kopanie, morze i łodzie…), który z czasem owocuje (6.4).
 - Odpowiada na **karty decyzji**: ważna sprawa z rekomendacją doradcy i przyczyną, licznik ok. 20 s, potem decyduje AI.
@@ -276,6 +276,18 @@ Każdy surowiec jest niewidoczny i niedostępny do zbierania, dopóki cywilizacj
 - **Lata dobre i złe:** plony z roku na rok wahają się regionalnie (kilkanaście procent w górę i w dół). Duże klęski to osobne zdarzenia (rozdział 10).
 - **Produkcja to receptury** (styl Factorio): wejścia → wyjścia, wymagana grupa pracowników, czas. Przykład: dymarka: 2 ruda żelaza + 1 węgiel drzewny → 1 żelazo, 2 rzemieślników, 1 tura.
 - **Łańcuchy wydłużają się z erami.** Węgiel drzewny z drewna → żelazo → stal → maszyny → fabryka elektroniki. Jedno brakujące ogniwo zatrzymuje cały łańcuch, więc AI musi planować zapasy.
+
+#### Zadania na obszarze (decyzje Patryka z 2026-11-12, etap 6 PR 4)
+
+Tak gracz i AI zlecają pracę w grze na żywo (1.1, ADR 0024). Te same komendy dla obu.
+
+- **Żywność ze strefy zostaje automatyczna.** Zbieracze i łowcy dalej zbierają rośliny, mięso i skóry z całej strefy wpływów, bez zadań. Gracz nie musi pilnować jedzenia.
+- **Reszta przez zadania.** Drewno, krzemień i kamień, ryby, pola uprawne, a od epoki brązu ruda, powstają tylko tam, gdzie osada ma zadanie. Bez zadania wycinki osada nie ma drewna ze strefy.
+- **Zadanie = miejsce + rodzaj + ludzie.** Pole (z najbliższą okolicą) w zasięgu osady, rodzaj z `data/tasks.json` (wycinka, kamieniołom i krzemień, łowisko, pole uprawne, budowa) i liczba ludzi z osady.
+- **Ludzie chodzą tam sami:** jedna grupa robocza na zadanie idzie jako oddział, zostaje na miejscu i wraca po zakończeniu. Urobek trafia do magazynu osady bez tragarzy na mapie.
+- **Złoża się wyczerpują, las i łowiska odrastają** (4.4). Wyczerpane zadanie kończy się samo, a AI szuka nowego miejsca.
+- **Budowa w miejscu** już w neolicie: np. palisada na polu osady albo obok niej. Mur i zbrojownia w epoce brązu (etap 7).
+- **Zagrożenie:** wróg może napaść grupę roboczą; grupa ucieka do osady. Dowódca i gubernator AI omijają pola zagrożone według mapy zagrożenia (T6), liczonej tylko z tego, co cywilizacja widzi.
 
 ### 4.5 Rozdział przy niedoborach
 
