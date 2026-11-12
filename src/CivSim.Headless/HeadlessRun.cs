@@ -113,6 +113,7 @@ public static class HeadlessRun
 
         var runner = new TurnRunner(state);
         Core.Ai.AiCouncil council = CoreSystems.Register(runner, content);
+        Server.Replays.ReplayRecorder? recorder = options.RecordPath is null ? null : new Server.Replays.ReplayRecorder(state, newGame: true);
         var turnMs = new double[Math.Max(1, options.Turns)];
         long totalAllocated = 0;
 
@@ -151,6 +152,7 @@ public static class HeadlessRun
             long allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
             TurnReport report = runner.RunTurn();
             long allocated = GC.GetAllocatedBytesForCurrentThread() - allocatedBefore;
+            recorder?.AfterTick(runner.State);
             totalAllocated += allocated;
             turnMs[i] = Stopwatch.GetElapsedTime(0, report.TotalTicks).TotalMilliseconds;
 
@@ -255,6 +257,12 @@ public static class HeadlessRun
         int n = turnMs.Length;
         warCsv?.Ongoing(runner.State);
         campaignCsv?.Ongoing();
+        if (recorder is not null)
+        {
+            recorder.Write(options.RecordPath!);
+            log.WriteLine(string.Create(CultureInfo.InvariantCulture, $"replay:             {options.RecordPath} ({recorder.Checkpoints.Count} checkpoints, {recorder.Events.Count} events)"));
+        }
+
         return new HeadlessResult(
             runner.State.Turn,
             GameStateHash.Compute(runner.State),

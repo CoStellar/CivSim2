@@ -32,6 +32,42 @@ public class LocalServerHostTests
     }
 
     [Fact]
+    public void TheHostWritesAReplayThatPlaysTheSameGame()
+    {
+        // T11: with ReplayPath the host records the game and writes the replay when it stops.
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"civsim-replay-{Environment.ProcessId}-{Environment.CurrentManagedThreadId}.civreplay");
+        long turn;
+        ulong hash;
+        LocalServerHost host = LocalServerHost.Start(LocalGameOptions.ForSize("test", 3) with { ReplayPath = path });
+        try
+        {
+            IConnection viewer = host.Connect();
+            viewer.Send(new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer));
+            viewer.Send(new SetSpeedMessage(SimulationSpeed.Max));
+            WaitFor(viewer, l => l.Exists(m => m is GameViewMessage v && v.Turn >= 30));
+        }
+        finally
+        {
+            host.Dispose();
+        }
+
+        try
+        {
+            Assert.Null(host.Error);
+            var result = CivSim.Server.Replays.ReplayPlayer.PlayFile(path, TestContent.Load());
+            turn = result.State.Turn;
+            hash = Core.Hashing.GameStateHash.Compute(result.State);
+            Assert.True(result.Matches, result.Divergence?.ToString());
+            Assert.True(turn >= 30, $"replayed to tick {turn}");
+            Assert.NotEqual(0UL, hash);
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void ObserverGetsContentTheWholeMapAndControlsSpeed()
     {
         using LocalServerHost host = LocalServerHost.Start(LocalGameOptions.ForSize("test", 3));

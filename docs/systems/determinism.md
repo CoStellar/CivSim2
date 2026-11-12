@@ -43,6 +43,9 @@ flowchart LR
   Przyda się przy rozdziale towarów przy niedoborach (GDD 4.5).
 - Odczyt z danych JSON (`Amount.Parse`) przyjmuje najwyżej dwie cyfry po kropce i nie zależy od ustawień regionalnych systemu.
 
+- **Hasz z podziałem na części** (T11, `GameStateHash.Sections`): 9 części stanu liczonych osobno; hasz całości to te same części
+  w jednym strumieniu. Powtórka (`docs/systems/replay.md`) porównuje je co 600 taktów i wskazuje część, która rozjechała się pierwsza.
+
 ## Pliki danych
 Brak. Ilości w plikach `data/` zapisujemy jako tekst, np. `"2.50"`, i czytamy przez `Amount.Parse`.
 
