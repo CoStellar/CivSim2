@@ -156,7 +156,8 @@ public sealed class GovernorAdvisor : Advisor
             // its camps: the camps look for safer land at once (reactive decision, ADR 0018).
             bool steps = Simulation.WorldClock.Steps(civ);
             bool attacked = civ.IsAlive && (civ.Alarms & Simulation.Alarm.Attacked) != 0;
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || !(steps || attacked))
+            // A civilization led by a player is weighed too: Issue keeps off the levers its player holds (ADR 0027).
+            if (!civ.IsAlive || !(steps || attacked))
             {
                 continue;
             }

@@ -188,3 +188,22 @@ notatki, na końcu czynniki równe 1000.
 
 Uwaga: dziennik pokazuje czynnik „character” także tam, gdzie nie wpłynął na wybór (bo wszystkie opcje miały ten sam). Patrz
 [uwagi](08-ocena-i-uwagi.md#7-dziennik-dlaczego-czasem-wprowadza-w-błąd).
+
+## 10. Dźwignie sternika (ADR 0027)
+
+Od etapu 6 PR P1 gracz ma pięć dźwigni (GDD 1.2). AI decyduje każdą dźwignię, której gracz nie wziął, tymi samymi wzorami co dla
+cywilizacji komputerowej. Kod: `src/CivSim.Core/Ai/Levers.cs` (`Levers.Of`, `Levers.AiLeads`), brama w `Advisor.Issue`; dźwignie
+gracza w `CivilizationState.PlayerLevers`, zmienia je `SetLeverCommand` (komenda, więc powtórka odtwarza ją w tym samym takcie).
+
+| Dźwignia | Decyzje AI | Kiedy AI jej nie rusza |
+| --- | --- | --- |
+| 1. Gdzie żyjemy | G1 przeprowadzka, G2 osiedlenie, G3 odłam i osadnicy, G4 wędrówka, połączenie obozów, G7 osadnicy wiosek, zwiad | gracz trzyma dźwignię 1 |
+| 2. Dokąd zmierzamy | S1 strategia, U1 następna technologia (także samoczynny wybór badania w `ScholarAdvisor`) | gracz trzyma dźwignię 2 |
+| 3. Co robimy na ziemi | (zadania na obszarze: AI zleca je od PR 4b) | gracz trzyma dźwignię 3 |
+| 4. Z kim i jak | G5 łupienie, G6 podbój i zajęcie, D1 odpowiedzi na propozycje, D2 propozycje i wojna, K1 kampania, K2 odwołanie | gracz trzyma dźwignię 4 |
+| 5. Karty | S2 zmiana ustroju (do kart w PR 7) | gracz trzyma dźwignię 5 |
+| (żadna) | T1 receptury | nigdy: gospodarkę liczy symulacja (GDD 1.2) |
+
+Doradcy oceniają też cywilizację gracza w całości (wynik jest w dzienniku „Dlaczego?” tylko dla wydanych komend); gracz dostaje ostatnie
+30 decyzji AI dla swojej cywilizacji w widoku (`GameViewMessage.AiDecisions`, `src/CivSim.Server/HelmsmanLog.cs`).
+

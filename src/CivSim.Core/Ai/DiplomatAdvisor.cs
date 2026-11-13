@@ -62,7 +62,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         {
             TreatyProposal p = book.Proposals[k];
             CivilizationState? to = state.FindCivilization(p.To);
-            if (p.Status != ProposalStatus.Pending || to is not { IsAlive: true } || to.Controller != PlayerId.Ai)
+            if (p.Status != ProposalStatus.Pending || to is not { IsAlive: true } || !Levers.AiLeads(to, Lever.WithWhom))
             {
                 continue;
             }
@@ -83,7 +83,7 @@ public sealed class DiplomatAdvisor(GameContent content) : Advisor(content, Advi
         for (int x = 0; x < n; x++)
         {
             CivilizationState civ = state.Civilizations[x];
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || civ.Relations.Count == 0)
+            if (!civ.IsAlive || !Levers.AiLeads(civ, Lever.WithWhom) || civ.Relations.Count == 0)
             {
                 continue;
             }

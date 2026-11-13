@@ -120,7 +120,12 @@ public sealed class TurnRunner
     {
         foreach (CommandEnvelope envelope in _context.CommandList)
         {
-            CommandResult result = envelope.Command.Validate(State, envelope.Civ);
+            // A player's order holds (stage 6 PR P1): an AI command against it, also one decided in this very tick, is refused.
+            bool ai = envelope.Player == PlayerId.Ai;
+            CommandResult result = ai && Ai.PlayerOrders.HeldAgainstAi(State, envelope.Civ, envelope.Command)
+                ? CommandResult.Fail("A player's order holds.")
+                : envelope.Command.Validate(State, envelope.Civ);
+            long unitsBefore = State.Units.NextId;
             if (result.Success)
             {
                 if (envelope.Command is IChronicledCommand chronicled)
@@ -140,6 +145,11 @@ public sealed class TurnRunner
                 else
                 {
                     envelope.Command.Apply(State, envelope.Civ);
+                }
+
+                if (!ai)
+                {
+                    Ai.PlayerOrders.Mark(State, envelope.Civ, envelope.Command, unitsBefore);
                 }
 
                 LastReport.AppliedCommands++;

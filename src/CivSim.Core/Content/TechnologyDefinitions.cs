@@ -133,6 +133,12 @@ public sealed record AiRules
     /// </summary>
     public int PickAmongTop { get; init; } = 1;
 
+    /// <summary>
+    /// How long a player's order on a settlement holds the AI off it, in years of action (stage 6 PR P1, Ai.PlayerOrders): the AI does
+    /// not move, split, join or raid from a settlement the player just gave an order to, nor from a camp the player's settlers founded.
+    /// </summary>
+    public int PlayerOrderHoldYears { get; init; } = 10;
+
     /// <summary>Own steps of a civilization between two of its strategy reviews (GDD 8.1: 10-20; ADR 0018); reviews are spread over the civilizations.</summary>
     public int ReviewEverySteps { get; init; } = 15;
 

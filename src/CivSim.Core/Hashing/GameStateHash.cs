@@ -119,6 +119,11 @@ public static class GameStateHash
                 h.Add(u.Task); // only work groups have a task (stage 6 PR 4a): hashes of games without them stay the same
             }
 
+            if (u.ByPlayer)
+            {
+                h.Add(1); // ordered by a player (stage 6 PR P1)
+            }
+
             foreach (int p in u.People)
             {
                 h.Add(p);
@@ -193,6 +198,11 @@ public static class GameStateHash
             h.Add(e.HungryMonths);
             h.Add(e.Forays);
             h.Add(e.Foraging ? 1 : 0);
+            if (e.ByPlayer)
+            {
+                h.Add(1); // directed by a player (stage 6 PR P1)
+            }
+
             h.Add(e.LastPrey);
             h.Add(e.Battles);
             h.Add(e.Wins);
@@ -288,6 +298,11 @@ public static class GameStateHash
             h.Add(c.Name);
             h.Add(c.LanguageSeed);
             h.Add(c.NamesIssued);
+            if (c.PlayerLevers != Ai.Lever.None)
+            {
+                h.Add((int)c.PlayerLevers); // the AI keeps off these (ADR 0027); games without players hash as before
+            }
+
             h.Add(c.IsAlive);
             h.Add(c.StartCell.Col);
             h.Add(c.StartCell.Row);
@@ -414,6 +429,11 @@ public static class GameStateHash
             h.Add(s.FoodEaten);
             h.Add(s.HigherNeedsPerMille);
             h.Add(s.MovedMonth);
+            if (s.PlayerOrderTick >= 0)
+            {
+                h.Add(s.PlayerOrderTick); // a player's order holds the AI off it (stage 6 PR P1); games without players hash as before
+            }
+
             h.Add(s.RecipeId);
             h.Add(s.JourneyTarget);
             h.Add(s.JourneyNext);

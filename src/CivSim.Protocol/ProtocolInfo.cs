@@ -4,5 +4,5 @@ namespace CivSim.Protocol;
 public static class ProtocolInfo
 {
     /// <summary>Protocol version. Bump on every incompatible message change and add a compatibility test.</summary>
-    public const int Version = 17; // 17: StartTaskDto and the task of work groups in UnitView (stage 6 PR 4a)
+    public const int Version = 18; // 17: area tasks (stage 6 PR 4a); 18: levers of the helmsman, the AI's decisions for a player, choosing a civilization (PR P)
 }

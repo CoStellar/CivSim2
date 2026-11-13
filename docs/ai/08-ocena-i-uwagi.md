@@ -354,6 +354,20 @@ a krok świata częściej trwa miesiąc (wojny), więc 2000 tur to ok. 11 600 la
 - **Uczciwie:** dawne testy jednostkowe AI liczą na „puls co takt” (`TestContent`); zachowanie z prawdziwym zegarem sprawdzają testy
   zegara, epizodów, determinizmu i gry całe w Headless.
 
+## 21. Dźwignie sternika (etap 6 PR P1, ADR 0027)
+
+- **Co się zmieniło:** do tej pory doradcy pomijali cywilizację gracza w całości, więc gdy gracz przejmował lud, nikt nie przenosił
+  obozów, nie badał i nie odpowiadał na propozycje. Teraz AI prowadzi wszystko poza dźwigniami, które gracz wziął.
+- **Uczciwie, co jest za proste:**
+  - ~~przyjęta komenda gracza nie blokuje AI~~ **poprawione tego samego dnia** (pytanie Patryka: „czy decyzja gracza zawsze zostanie
+    wykonana do końca?”): rozkaz gracza trzyma osadę przez `playerOrderHoldYears` (10 lat akcji = 60 s), oddział do końca jego drogi, a
+    kampanię do jej końca; AI nie wydaje przeciw nim komend, a komenda AI z tego samego taktu jest odrzucana (`Ai.PlayerOrders`). Przed
+    poprawką AI w pierwszym pulsie scalało z powrotem mały obóz założony przez osadników gracza i dzieliło go (test bez przytrzymania);
+  - propozycje umów do gracza, który trzyma dźwignię 4, czekają bez odpowiedzi, aż wygasną (odpowiedź przyjdzie z kartami w PR 7);
+  - gracz, który trzyma dźwignię 2 i nie wybiera badania, nie bada nic.
+- **Decyzja do oceny przy prototypie:** czy rozkaz gracza na dźwigni AI ma ją „przytrzymać” na kilka pulsów (pierwszy pomysł z planu)
+  zamiast wymagać wzięcia dźwigni.
+
 ## Decyzje Patryka (2026-11-06)
 
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.

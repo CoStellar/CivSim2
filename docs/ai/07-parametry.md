@@ -12,6 +12,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | Klucz | Wartość | Jednostka | Decyzje | Znaczenie |
 | --- | --- | --- | --- | --- |
 | `pickAmongTop` | 3 | działania | wszystkie | spośród ilu najlepszych AI losuje (1 = zawsze najlepsze) |
+| `playerOrderHoldYears` | 10 | lata akcji (10 = 60 s przy ×1) | G1–G7, zwiad | jak długo AI nie rusza osady, której gracz wydał rozkaz, i obozu założonego przez osadników gracza (etap 6 PR P1, `docs/systems/levers.md`) |
 | `reviewEverySteps` | 15 | własne kroki | S1 | co ile własnych kroków cywilizacji strateg robi przegląd (ADR 0018) |
 | `directionBonusPercent` | 15 | % | G2, G3, G5 | premia dla miejsc w stronę celu ekspansji |
 | `recipeSwitchBetterByPercent` | 25 | % | T1 | o ile nowa receptura musi być lepsza |

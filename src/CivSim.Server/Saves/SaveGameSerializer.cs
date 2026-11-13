@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 36; // 36: work groups keep their area task (stage 6 PR 4a)
+    public const int FormatVersion = 38; // 36: area tasks (PR 4a); 37: the levers a player holds (PR P1); 38: a player's orders hold (PR P1)
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -62,7 +62,7 @@ public static class SaveGameSerializer
                 c.Government, c.PendingGovernment, c.PendingGovernmentMonth,
                 c.LeaderName, c.LeaderBornMonth, c.LeaderSinceMonth, c.LeaderTraits, c.LeaderShift, c.Leaders, c.CrisisUntilMonth,
                 c.Capital, c.Stability, c.AdminUsed, c.AnarchyUntilMonth, c.CapitalLostUntilMonth,
-                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations, c.LastPulseTick));
+                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations, c.LastPulseTick, (byte)c.PlayerLevers));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -80,7 +80,7 @@ public static class SaveGameSerializer
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
                 st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty, st.JourneyNext, st.JourneyStepTicks, st.JourneyProgress,
-                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth, [.. st.JourneyPath], st.JourneyPathAt, st.JourneyPathGoal));
+                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth, [.. st.JourneyPath], st.JourneyPathAt, st.JourneyPathGoal, st.PlayerOrderTick));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -228,6 +228,7 @@ public static class SaveGameSerializer
                 RevoltCalmUntilMonth = c.RevoltCalmUntilMonth,
                 LanguageMutations = c.LanguageMutations ?? [],
                 LastPulseTick = c.LastPulseTick,
+                PlayerLevers = (Core.Ai.Lever)c.PlayerLevers,
             };
             LoadRelations(civ, c.Relations);
             state.AddCivilizationForLoad(civ);
@@ -267,6 +268,7 @@ public static class SaveGameSerializer
                 RestUntilMonth = st.RestUntilMonth,
                 JourneyPathAt = st.JourneyPathAt,
                 JourneyPathGoal = st.JourneyPathGoal,
+                PlayerOrderTick = st.PlayerOrderTick,
             };
             settlement.JourneyPath.AddRange(st.JourneyPath ?? []);
             for (int g = 0; g < st.Stock.Length; g++)
@@ -377,7 +379,7 @@ public static class SaveGameSerializer
 
             list.Add(new UnitSaveData(u.Id, (byte)u.Kind, u.Owner.Value, u.World.Value, u.Cell, u.Target, (byte)u.Order, u.Home,
                 u.People.ToArray(), u.Skilled.ToArray(), u.Trainees.ToArray(), Hundredths(u.Cargo.ToArray()), u.Progress, u.Next, u.Direction,
-                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal, (int)u.Role, u.Episode, u.Task));
+                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal, (int)u.Role, u.Episode, u.Task, u.ByPlayer));
         }
 
         return list;
@@ -407,6 +409,7 @@ public static class SaveGameSerializer
             u.PathGoal = d.PathGoal;
             u.Episode = d.Episode;
             u.Task = d.Task;
+            u.ByPlayer = d.ByPlayer;
         }
     }
 
@@ -420,7 +423,7 @@ public static class SaveGameSerializer
                 e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilTick,
                 Hundredths(e.Food), e.HungryMonths, e.Forays, e.Foraging, e.ConvoyFrom, e.ConvoyCell, e.ConvoyCarriers,
                 Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed, e.Army, e.Convoy, e.InRangeSince, e.Fleeing,
-                SaveFight(e.Fight), e.RoundTick, e.FightLost, e.FightKilled));
+                SaveFight(e.Fight), e.RoundTick, e.FightLost, e.FightKilled, e.ByPlayer));
         }
 
         return list;
@@ -474,6 +477,7 @@ public static class SaveGameSerializer
                     RoundTick = e.RoundTick,
                     FightLost = e.FightLost,
                     FightKilled = e.FightKilled,
+                    ByPlayer = e.ByPlayer,
                 },
                 e.Id);
         }

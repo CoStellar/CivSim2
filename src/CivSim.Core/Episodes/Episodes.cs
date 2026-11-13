@@ -110,6 +110,9 @@ public sealed class Episode
     /// <summary>Campaign: true while it marches on a settlement for food (<see cref="Target"/>) instead of its goal.</summary>
     public bool Foraging { get; set; }
 
+    /// <summary>Campaign: a player directed it (stage 6 PR P1): the AI does not recall it or make peace with its enemy until it ends.</summary>
+    public bool ByPlayer { get; set; }
+
     /// <summary>Campaign: the settlement it last raided for food, or -1 (it does not raid the same one twice in a row).</summary>
     public int LastPrey { get; set; } = -1;
 
@@ -190,6 +193,20 @@ public sealed class EpisodeBook
 
     /// <summary>Removes the episodes that ended; returns how many.</summary>
     public int RemoveEnded() => _episodes.RemoveAll(e => e.Ended);
+
+    /// <summary>The episode with <paramref name="id"/>, or null.</summary>
+    public Episode? Find(long id)
+    {
+        foreach (Episode e in _episodes)
+        {
+            if (e.Id == id)
+            {
+                return e;
+            }
+        }
+
+        return null;
+    }
 
     /// <summary>The tick of the nearest step of any episode, or <see cref="long.MaxValue"/> when none runs.</summary>
     public long NextTick()

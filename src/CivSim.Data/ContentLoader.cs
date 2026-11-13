@@ -1793,6 +1793,7 @@ public static class ContentLoader
         return new AiRules
         {
             PickAmongTop = r.Int("pickAmongTop", 1, 3),
+            PlayerOrderHoldYears = r.Int("playerOrderHoldYears", 0, 1000),
             ReviewEverySteps = r.Int("reviewEverySteps", 1, 100),
             DirectionBonusPercent = r.Int("directionBonusPercent", 0, 100),
             RecipeSwitchBetterByPercent = r.Int("recipeSwitchBetterByPercent", 0, 500),

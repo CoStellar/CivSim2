@@ -498,6 +498,11 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             civ.Id, u.World, world.Geometry.FromIndex(u.Cell), Naming.Names.NextPlace(_content.Names, state, civ), _content.NewTribeLevel,
             _content.Goods.Count, _content.Strata.Count, _content.Skills.Count);
         camp.MovedMonth = state.Month;
+        if (u.ByPlayer)
+        {
+            camp.PlayerOrderTick = state.Turn; // the player chose this place: the AI does not merge or move the new camp at once
+        }
+
         Unload(u, camp);
         u.Gone = true;
         context.Chronicle($"{camp.TotalPopulation()} settlers of {civ.Name} founded {camp.Name}.");

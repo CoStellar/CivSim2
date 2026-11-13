@@ -53,7 +53,7 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
             SettlementState first = state.Settlements[members[0]];
             CivilizationState? civ = state.FindCivilization(first.Owner);
             // A planned decision: only in the own steps that start an era-length period (ADR 0018).
-            if (civ is null || civ.Controller != PlayerId.Ai || !Simulation.WorldClock.PlansNow(_content, state, civ))
+            if (civ is null || !Simulation.WorldClock.PlansNow(_content, state, civ)) // recipes are the simulation's, also for players (ADR 0027)
             {
                 continue;
             }

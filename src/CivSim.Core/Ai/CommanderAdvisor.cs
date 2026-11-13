@@ -50,7 +50,7 @@ public sealed class CommanderAdvisor : Advisor
 
         foreach (CivilizationState civ in state.Civilizations)
         {
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai)
+            if (!civ.IsAlive || !Levers.AiLeads(civ, Lever.WithWhom))
             {
                 continue;
             }

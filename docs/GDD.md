@@ -65,6 +65,8 @@ CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod sp
 | 4. Z kim i jak | wojna, pokój, cel wojny, armia na cel, umowy; później sojusze, szlaki, federacje | dyplomata, dowódca | armie, bitwa, granice, karawany |
 | 5. Karty | zdarzenia (susza, głód, secesja, umowa, bunt); od brązu prawa, ustroje, polityki | rekomendowana opcja po 20 s | efekt karty od razu |
 
+**Decyzja gracza jest wykonywana do końca** (pytanie Patryka z 2026-11-13): AI nie cofa ani nie poprawia rozkazu gracza, także w tym samym takcie. Rozkaz trzyma osadę przez 10 lat akcji (60 s przy ×1; obóz założony przez osadników gracza też), oddział do końca jego drogi, grupę roboczą i jej dom do powrotu, a kampanię do jej końca (dowódca jej nie odwołuje, dyplomata nie zawiera w tym czasie pokoju z jej wrogiem). Świat dalej działa: głód, przegrana bitwa, zajęte miejsce osiedlenia, wyczerpane złoże przerywają rozkaz z przyczyną w kronice.
+
 **Czego gracz nie robi nigdy:** nie steruje pojedynczym człowiekiem ani nie przydziela pracowników; nie prowadzi walki ręcznie; nie ustawia cen, receptur ani rozdziału towarów; nie zatrzymuje historii (pauza w singlu, ale karta wygasa); nie dostaje ukrytej wiedzy ani premii.
 
 **Przebieg partii:** ustawienia (cel na pasku, mapa, cywilizacje, trudność) → start (losowa kolejność, 15 s z mapą bez złóż, trzy zdania historii plemienia) → pierwsze 5 minut z czymś do zrobienia od razu (technologia w 1. min, wioska w 3., era 1 w 5.) → środek (3–6 osad, kontakt, umowa albo najazd, systemy odmrażane z erą) → koniec (ekran z wykresem technologii wszystkich, mapą z powtórki, kroniką z decyzjami gracza; upadły lud ogląda jako widz). Partia do brązu 15–40 min; każda kolejna era 15–30 min; zapis w dowolnej chwili.

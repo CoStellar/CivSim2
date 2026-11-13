@@ -25,6 +25,8 @@ public sealed class GameServer
 
     private readonly List<Client> _clients = [];
     private readonly GameContent? _content;
+    private readonly Core.Ai.AiCouncil? _council;
+    private readonly HelmsmanLog? _helmsman;
     private readonly List<ChronicleEntry> _chronicle = [];
     private readonly List<ChronicleEntry> _history = [];
     private readonly bool[][] _pendingChunks;
@@ -49,7 +51,8 @@ public sealed class GameServer
         _content = content;
         if (content is not null)
         {
-            CoreSystems.Register(Runner, content);
+            _council = CoreSystems.Register(Runner, content);
+            _helmsman = new HelmsmanLog(content);
             _observerView = new ObserverViewBuilder(content);
         }
         _pendingChunks = new bool[state.Worlds.Count][];
@@ -124,6 +127,9 @@ public sealed class GameServer
     /// <summary>Number of connected observers.</summary>
     public int ConnectedObservers => _clients.FindAll(c => c.IsObserver).Count;
 
+    /// <summary>Connected players who lead a civilization (stage 6 PR P: the live clock runs for them too).</summary>
+    public int ConnectedLeaders => _clients.FindAll(c => c.Civ is not null).Count;
+
     /// <summary>The recording of this game for replays (T11), or null when it is not recorded.</summary>
     public Replays.ReplayRecorder? Replay { get; private set; }
 
@@ -193,6 +199,10 @@ public sealed class GameServer
     {
         TurnReport report = Runner.RunTurn();
         _lastTurnTicks = report.TotalTicks;
+        if (_council is not null && _council.Log.Entries.Count > 0 && _clients.Exists(c => c.Civ is not null))
+        {
+            _helmsman!.Add(State, _council.Log); // what the AI did on the levers the players did not take (ADR 0027)
+        }
         Replay?.AfterTick(State);
         foreach (string line in Runner.LastChronicle)
         {
@@ -241,7 +251,8 @@ public sealed class GameServer
                 HandleSubmit(client, submit);
                 break;
             case SetSpeedMessage speed:
-                if (client.IsObserver)
+                // Observers set the speed; so does a player who plays alone (stage 6 PR P: pause and speeds in the solo game, ADR 0024).
+                if (client.IsObserver || (client.Civ is not null && _clients.FindAll(c => c.Civ is not null).Count == 1))
                 {
                     if (speed.Speed != Speed)
                     {
@@ -251,7 +262,7 @@ public sealed class GameServer
                 }
                 else
                 {
-                    client.Connection.Send(new ConnectionRejectedMessage("Only observers can change the speed."));
+                    client.Connection.Send(new ConnectionRejectedMessage("Only observers and a player who plays alone can change the speed."));
                 }
 
                 break;
@@ -312,18 +323,26 @@ public sealed class GameServer
         }
 
         CivilizationState? civ = null;
-        foreach (CivilizationState c in State.Civilizations)
+        if (hello.CivId != HelloMessage.AnyCiv)
         {
-            if (c.IsAlive && c.Controller == PlayerId.Ai)
+            // The player asked for one civilization (stage 6 PR P: "lead civilization N" in the start menu).
+            civ = State.FindCivilization(new CivId(hello.CivId)) is { IsAlive: true } chosen && chosen.Controller == PlayerId.Ai ? chosen : null;
+        }
+        else
+        {
+            foreach (CivilizationState c in State.Civilizations)
             {
-                civ = c;
-                break;
+                if (c.IsAlive && c.Controller == PlayerId.Ai)
+                {
+                    civ = c;
+                    break;
+                }
             }
         }
 
         if (civ is null)
         {
-            client.Connection.Send(new ConnectionRejectedMessage("No free civilization."));
+            client.Connection.Send(new ConnectionRejectedMessage(hello.CivId == HelloMessage.AnyCiv ? "No free civilization." : $"Civilization {hello.CivId} is not free."));
             client.Connection.Close();
             return;
         }
@@ -457,7 +476,13 @@ public sealed class GameServer
 
         // A joining client gets the kept history; later views carry the lines collected for this client since its last view.
         ChronicleEntry[] lines = joining ? _history.ToArray() : client.Unsent.ToArray();
-        return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
+        view = view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
+        if (seer is not null)
+        {
+            view = view with { PlayerLevers = (int)seer.PlayerLevers, AiDecisions = _helmsman?.For(seer.Id) ?? [] };
+        }
+
+        return view;
     }
 
     private void HandleSubmit(Client client, SubmitCommandMessage submit)

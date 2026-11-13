@@ -206,6 +206,9 @@ public sealed class SettlementState
     /// <summary>Game month of the last move (or of founding); the tribe AI waits a while between moves.</summary>
     public long MovedMonth { get; set; }
 
+    /// <summary>Tick of the last order a player gave this settlement, or -1 (stage 6 PR P1): the AI leaves it alone for a while (Ai.PlayerOrders).</summary>
+    public long PlayerOrderTick { get; set; } = -1;
+
     /// <summary>Health 0–100 (GDD 5.2, CORE simplified: one value). Set by the population system.</summary>
     public int Health { get; set; } = 100;
 

@@ -18,6 +18,12 @@
         "string"
       ]
     },
+    "playerOrderHoldYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
     "reviewEverySteps": {
       "type": [
         "number",

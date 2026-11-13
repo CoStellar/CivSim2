@@ -19,6 +19,7 @@ namespace CivSim.Protocol.Messages;
 [Union(10, typeof(ReturnUnitDto))]
 [Union(11, typeof(AttackDto))]
 [Union(12, typeof(StartTaskDto))]
+[Union(13, typeof(SetLeverDto))]
 public interface ICommandDto
 {
 }
@@ -77,3 +78,10 @@ public sealed record AttackDto([property: Key(0)] long UnitId, [property: Key(1)
 /// </summary>
 [MessagePackObject]
 public sealed record StartTaskDto([property: Key(0)] int SettlementId, [property: Key(1)] string Kind, [property: Key(2)] int Col, [property: Key(3)] int Row, [property: Key(4)] int People = 0) : ICommandDto;
+
+/// <summary>
+/// The player takes a lever from the AI (<c>Take</c> true) or gives it back (ADR 0027, stage 6 PR P). <c>Lever</c> is one flag of
+/// <see cref="LeverFlags"/>. The AI decides every lever the player does not hold.
+/// </summary>
+[MessagePackObject]
+public sealed record SetLeverDto([property: Key(0)] int Lever, [property: Key(1)] bool Take) : ICommandDto;
