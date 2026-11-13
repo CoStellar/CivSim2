@@ -44,7 +44,7 @@ public class LocalServerHostTests
             IConnection viewer = host.Connect();
             viewer.Send(new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer));
             viewer.Send(new SetSpeedMessage(SimulationSpeed.Max));
-            WaitFor(viewer, l => l.Exists(m => m is GameViewMessage v && v.Turn >= 30));
+            WaitFor(viewer, l => l.Exists(m => m is GameViewMessage v && v.Turn >= 650)); // past the first checkpoint (tick 600), so the replay compares a hash
         }
         finally
         {
@@ -54,11 +54,11 @@ public class LocalServerHostTests
         try
         {
             Assert.Null(host.Error);
-            var result = CivSim.Server.Replays.ReplayPlayer.PlayFile(path, TestContent.Load());
+            var result = CivSim.Server.Replays.ReplayPlayer.PlayFile(path, CivSim.Data.ContentLoader.Load()); // the content the host played with (not TestContent: its pulse in every tick drifts at the first checkpoint, tick 600)
             turn = result.State.Turn;
             hash = Core.Hashing.GameStateHash.Compute(result.State);
             Assert.True(result.Matches, result.Divergence?.ToString());
-            Assert.True(turn >= 30, $"replayed to tick {turn}");
+            Assert.True(turn >= 650, $"replayed to tick {turn}");
             Assert.NotEqual(0UL, hash);
         }
         finally
