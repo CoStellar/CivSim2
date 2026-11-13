@@ -7,6 +7,7 @@ Znane problemy aplikacji (z przyczynami i planem): `docs/known-issues.md`. Rapor
 ## Projekt w skrócie
 
 CivSim 2 to strategia na żywo (między RTS-em a 4X, decyzja Patryka z 2026-11-09, ADR 0024 i 0025) w pixel arcie na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się, przez bieguny przechodzi się na drugą stronę planety).
+**Symulacja jest panem, gracz sternikiem** (ADR 0027, GDD 1.2): gracz ma pięć dźwigni (gdzie żyjemy, dokąd zmierzamy, co robimy na ziemi, z kim i jak, karty), każdą może oddać AI, a każda jego decyzja ma widoczny skutek i przyczynę w kronice; każda mechanika i każdy PR przechodzi „test sternika” z GDD 1.2.
 Cywilizacje przechodzą od koczowniczych plemion do ery kosmicznej. **Najpierw powstaje symulator**
 (wszystkie cywilizacje prowadzi AI), na nim tryb gracza na tych samych zasadach. Kolejność od 2026-11-09: backend gry na żywo (etap 6),
 epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery (`ROADMAP.md`).

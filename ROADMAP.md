@@ -3,12 +3,12 @@
 **Zakres:** budujemy wyłącznie funkcje oznaczone w `docs/GDD.md` (rozdział 16) jako **CORE** i **CORE (uproszczone)**.
 Moduły to przyszłe aktualizacje i nie wchodzą do tego planu. Kultury i religii nie ma w grze.
 
-**Kierunek od 2026-11-09 (ADR 0024, 0025): gra na żywo** między RTS-em a strategią. Gracz rządzi cywilizacją i steruje oddziałami,
-AI robi to, czego on nie zdąży; backend liczy się w taktach i pulsach, lata to tylko licznik. Kolejność: backend na żywo (etap 6),
+**Kierunek od 2026-11-09 (ADR 0024, 0025): gra na żywo**, a od 2026-11-13 (ADR 0027) **symulacja jest panem, gracz sternikiem**: pięć dźwigni
+(GDD 1.2), każdą można oddać AI, sterowanie oddziałami to narzędzie, nie filar; backend liczy się w taktach i pulsach, lata to tylko licznik. Kolejność: backend na żywo (etap 6),
 epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery. Dawne etapy 6–13 (ery 3–9, tryb gracza
 na końcu) są zastąpione. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”. Szczegóły zasad: `docs/GDD.md` (1.1, 6.4).
 
-**Aktualny etap: 6 (backend gry na żywo): plan w `docs/prompts/09-etap-gra-na-zywo.md`; gotowe PR 1, 2, 3a, 3b, bitwa w czasie i T11 (powtórka); następny PR 4 (zadania na obszarze)**
+**Aktualny etap: 6 (backend gry na żywo): plan w `docs/prompts/09-etap-gra-na-zywo.md` (T1–T14) i `docs/prompts/10-plan-gry.md` (kolejność od PR 4a, ADR 0026); gotowe PR 1, 2, 3a, 3b, bitwa w czasie, T11 (powtórka), T14 (schematy); następne: 4a zadania, P prototyp sterowania, T tempo i skala**
 
 ---
 
@@ -232,9 +232,10 @@ Przed nowymi erami. Analiza biegu: tura 93 ms (cel 50), FPS ok. 52, 8 z 12 cywil
 Cel: sprawdzić w backendzie i w podglądzie deweloperskim, czy gra działa tak, jak chce Patryk, zanim powstanie interfejs gracza.
 Plan PR-ów zrobimy na starcie etapu (`docs/prompts/09-etap-gra-na-zywo.md`) i pokażemy Patrykowi.
 
-Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neolitu, oddziały chodzą w sekundach, wojna nie zatrzymuje
-świata, cywilizacje różnią się tempem zależnie od terenu i kierunku, a takt mieści się w celu wydajności.
-**Brama: Patryk ogląda i mówi, czy to działa jak trzeba.**
+Gotowe, gdy: na mapie małej 4–6 cywilizacji rozwija się na żywo od neolitu, oddziały chodzą w sekundach, wojna nie zatrzymuje
+świata, cywilizacje różnią się tempem zależnie od terenu i kierunku, tempo spełnia cele z ADR 0026 (pierwsza technologia ≤ 1 min,
+wioska ≤ 3 min, era 1 ≤ 5 min, 3–6 osad w 15. minucie), a takt mieści się w celu wydajności.
+**Brama (ADR 0026): Patryk gra 15 minut w prototypie sterowania i mówi, co nudzi i czego brakuje.**
 
 - [x] **Takt i pulsy** (ADR 0025, PR 1 `feat/live-clock`): stały takt dla akcji, pulsy cywilizacji rozłożone między takty, licznik lat jako etykieta; koniec osobnego zegara epizodów; liczniki wojny w taktach; prędkości ×1/×2/×4; nowe złote hashe, zapis 31, protokół 14 (liczenie pulsów równolegle: PR 8)
 - [x] **Czas polityki** (PR 2 `feat/live-pace`, decyzja Patryka z 2026-11-09): rozejmy, propozycje, pamięć krzywd, kryzysy, bezkrólewie, bunty, roszczenia, opóźnienie ustroju i przegląd dyplomaty w latach akcji (rok = 6 s przy ×1); za długie wartości skrócone; **T1** pomiar spóźnionych taktów przy ×4 (0,3–3,3%, spirali zaległości nie ma)
@@ -245,17 +246,19 @@ Gotowe, gdy: na mapie standard 6–8 cywilizacji AI rozwija się na żywo od neo
 - [x] **Powtórka i hasz systemów** (**T11**, `feat/replay`): zapis partii = seed + rozkazy (plik `.civreplay`, Headless `--record` i `--replay`, długi bieg zapisuje powtórkę w swoim folderze); hasz co 600 taktów z podziałem na 9 części stanu; odtworzenie pokazuje pierwszy takt i części, które się różnią (`docs/systems/replay.md`)
 - [x] **Dane** (**T14**, `feat/data-schema`): schemat JSON dla każdego pliku w `data/schema/` (literówka w kluczu = błąd przy wczytaniu z podpowiedzią nazwy), F5 w podglądzie wczytuje dane od nowa i zaczyna tę samą partię, złe dane pokazują listę błędów zamiast zamykać podgląd (`docs/systems/data-schema.md`)
 - [ ] **Zadania na obszarze** (decyzje Patryka z 2026-11-12, GDD 4.4, plan 4a–4d w `docs/prompts/09`): żywność ze strefy automatycznie, drewno, krzemień, ryby i pola tylko z zadań; jedna grupa robocza na zadanie; budowa w miejscu (palisada); te same komendy dla AI i gracza; mapy wpływu i zagrożenia (**T6**), napaść na grupy robocze; zadania w danych (**T9**)
-- [ ] **Start:** losowa kolejność, wybór miejsca (5 s mapy, potem szare bloki, 10–15 s), strefy blokady, wybór AI z błędem; epoka kamienia jako opis „historii plemienia”
-- [ ] **Technologie (GDD 6.4):** doświadczenie w technologii, kierunek rozwoju zwiększa szansę pokrewnych odkryć, koszt zależny od rozwinięcia poprzedniej, podgląd technologii (5% × liczba cywilizacji, które ją znają)
-- [ ] **Karty decyzji w backendzie:** wydarzenie, rekomendacja doradcy, licznik, decyzja AI po czasie
-- [ ] **Bez postaci z imieniem w pierwszych erach** (przegląd przywódców z etapu 4f)
+- [ ] **Prototyp sterowania** (PR P `feat/play-civ`, ADR 0026): „prowadź cywilizację” w podglądzie przez rolę `Player`, widok przez mgłę, rozkazy protokołu klikane na mapie, panel „co AI zrobiła za mnie”, pauza; grafika osady wg technologii, pasek postępu, kamienie milowe w kronice
+- [ ] **Tempo i skala** (PR T `feat/pace`, ADR 0026): raport `--milestones` na 10 seedach; przyrost gaśnie z gęstością osad, limit osadników z administracji, gwarancja startu, mapa mała jako domyślna; zamrożenie do brązu: klimat dynamiczny, ustroje i stabilność, wpływ warstw, pakty i sojusze, sieci z cenami, dryf, pożar i powódź, odbudowa ruin
+- [ ] **Start** (uproszczony, ADR 0026): losowa kolejność, 15 s z mapą bez złóż i żyzności, strefy blokady, wybór AI z błędem; trzy zdania „historii plemienia"
+- [ ] **Technologie (GDD 6.4, ADR 0026):** doświadczenie w technologii, kierunek rozwoju, koszt zależny od rozwinięcia poprzedniej, podgląd technologii (5% × liczba znających z kontaktu, limit 50%); każda technologia odblokowuje jedną widoczną rzecz (`unlocks.visible`); tkactwo i chleb wycięte do brązu
+- [ ] **Karty decyzji w backendzie** (ADR 0026): tylko ze zdarzeń w `cards.json`, najwyżej jedna na 30 s, licznik 20 s czasu gry, decyzja AI po czasie; secesja jako karta
+- [ ] **Bez postaci z imieniem i z jednym ustrojem (rada starszych) do epoki brązu** (ADR 0026); wódz i ustroje jako karty od brązu
 - [ ] **Wydajność:** mapa standard, 6–8 cywilizacji, 300 oddziałów, takt < 30 ms w najgorszym przypadku; klient rysuje tylko zmiany i płynny ruch; sieci handlowe przyrostowo (**T7**), pule pamięci migawki (**T8**), MultiMesh w podglądzie (**T10**), budżet czasu w każdym PR (**T12**, od PR 3a), pulsy równolegle (**T13**), pole przepływu, jeśli pomiar pokaże potrzebę (**T3b**)
 - [ ] **Podgląd deweloperski:** wybór miejsca i proste rozkazy do testów, pauza, prędkości ×1/×2/×4
 - [ ] Dokumentacja: `docs/systems/` (zegar, oddziały, zadania), `docs/ai/`, `known-issues.md`
 
 ## Etap 7 — Epoka brązu
 
-Pogłębiona era 3: technologie, fachy, miasta i awans osad (GDD 5.3), pismo, wytop i metal, fortyfikacje (mur) i zbrojownia, moduł
+Zaczyna się od „wioska rośnie w miasto, większa wciela mniejszą” (ADR 0026), bo to domyka problem za wielu osad. Potem pogłębiona era 3: technologie, fachy, miasta i awans osad (GDD 5.3), pismo, wytop i metal, fortyfikacje (mur) i zbrojownia, moduł
 wojny według „Co erę” w `docs/systems/war.md`.
 
 Osady (decyzja Patryka z 2026-11-09): wioska zostaje tam, gdzie powstała, ale rośnie w miasto i zajmuje coraz większy obszar; gdy
@@ -272,6 +275,8 @@ Gotowe, gdy: cel „wszystkie technologie epoki brązu” osiąga dobre AI w ok.
 Interfejs gracza: wybór miejsca na starcie, sterowanie oddziałami, zadania na obszarze, miasta, fortyfikacje i uzbrojenie, kierunek
 rozwoju, karty decyzji, delegowanie poziomów decyzji do AI, pauza i prędkości, pasek celu partii, poziomy trudności (tempo AI),
 widz po upadku ludu. Pixel art Patryka w miejsce grafik zastępczych tam, gdzie jest gotowy.
+
+Z ADR 0026: dwa przełączniki delegowania (osady same zlecają zadania, dowódca sam prowadzi wojnę) zamiast pięciu poziomów; pasek z erą i minutą partii; jedna liczba na osadę ze strzałką; „dlaczego” przy zdarzeniach; ekran końca partii; poziomy trudności jako błąd AI z `ai.json`.
 
 Gotowe, gdy: da się rozegrać partię solo od neolitu do celu „wszystkie technologie brązu”. **Brama: grywalna gra.**
 
