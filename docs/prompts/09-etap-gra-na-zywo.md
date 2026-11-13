@@ -68,6 +68,27 @@ Numery T są wpisane w tabelę PR-ów wyżej. Kolejność ważności: **T2 > T7 
 - GOAP, MCTS i uczenia maszynowego w AI: zostaje Utility AI z krzywymi z danych (`ai.json`, `DeadValueTests`).
 - Sieć w etapie 9: serwer autorytatywny z różnicami stanu, nie lockstep (zasada 10 z `CLAUDE.md`, bez zmian).
 
+## PR 4: zadania na obszarze (decyzje Patryka z 2026-11-12, GDD 4.4)
+
+Patryk wybrał rekomendacje: żywność ze strefy automatycznie, reszta przez zadania; jedna grupa robocza na zadanie, bez tragarzy;
+grupy można napaść, AI omija zagrożone pola (T6); w PR 4 wycinka, kamieniołom i krzemień, pola, łowiska **i budowa w miejscu** (palisada).
+
+Podział (każdy osobny PR do `development`):
+
+| PR | Gałąź | Co |
+| --- | --- | --- |
+| 4a | `feat/area-tasks` | `data/tasks.json` (rodzaj, dobro, biomy lub złoże, ludzie, wydajność na osobę na rok, wyczerpanie lub odrastanie, technologia); stan zadań w płaskich tablicach; komendy `StartTaskCommand` / `EndTaskCommand` (gracz i AI); grupa robocza jako oddział (rola `workers` w `units.json`); urobek w pulsie; drewno i krzemień tylko z zadań; zapis, hasz (nowa część `tasks`), protokół, podgląd (grupa na mapie, obszar zadania) |
+| 4b | `feat/area-tasks-ai` | gubernator wybiera zadania z cen wewnętrznych i potrzeb (Utility AI, parametry w `ai.json`, `DeadValueTests`); łowiska i pola uprawne jako zadania (rolnictwo z obecnego `Farming` przeniesione na pola zadań); statystyki z 3 seedów, `docs/ai/` |
+| 4c | `feat/threat-map` | **T6** mapy wpływu i zagrożenia w pulsie z tego, co cywilizacja widzi; napaść na grupę roboczą, ucieczka; dowódca i gubernator omijają zagrożone pola; dziennik „Dlaczego?” |
+| 4d | `feat/build-on-site` | budowa w miejscu: postęp budowy z pracy grupy, palisada (obrona osady w bitwie), dane budowli w JSON gotowe na mur i zbrojownię z etapu 7 |
+
+Do ustalenia po drodze (z rekomendacją; liczby zmienię w danych po pokazaniu efektu):
+
+- Zasięg zadania: pole w strefie wpływów osady albo do 2 pól za nią; obszar = pole i 6 sąsiadów. *Rekomendacja: tak.*
+- Wielkość grupy: domyślnie 10 osób na zadanie, najwyżej 1 zadanie na 25 mieszkańców. *Rekomendacja: tak, do strojenia.*
+- Krzemień: złoża z `resources.json` (dziś zbierany ze strefy) wyczerpują się; kamień z wzgórz i gór bez wyczerpania w neolicie.
+- Palisada: +50% obrony osady w bitwie, budowa ok. 2 lat akcji grupą 10 osób, potrzebuje drewna.
+
 ## Do decyzji Patryka po drodze
 
 - Liczby z `data/time.json` (takt, puls, miesiąc akcji) po obejrzeniu PR 1.
