@@ -227,6 +227,9 @@ public sealed class Relation
     /// </summary>
     public long SettledMonth { get; set; } = -1;
 
+    /// <summary>Tick of the player's last diplomatic decision about this civilization (war, a proposal, an answer), or -1 (stage 6 PR P1).</summary>
+    public long PlayerOrderTick { get; set; } = -1;
+
     /// <summary>True after real contact (diplomacy is possible, GDD 8.5).</summary>
     public bool HasMet => Level == ContactLevel.Met;
 

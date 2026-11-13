@@ -393,6 +393,11 @@ public static class GameStateHash
                 h.Add(r.RumorPeople);
                 h.Add(r.RumorFrom);
                 h.Add(r.SettledMonth);
+                if (r.PlayerOrderTick >= 0)
+                {
+                    h.Add(r.PlayerOrderTick); // a player's diplomatic decision holds (stage 6 PR P1)
+                }
+
                 h.Add(r.Memories.Count);
                 foreach (Diplomacy.RelationMemory m in r.Memories)
                 {

@@ -361,6 +361,45 @@ public sealed class GameServer
         SendAllChunks(client);
     }
 
+    // Lever 2 of a player (stage 6 PR P1): the research now and what may be researched next, cheapest first.
+    private ResearchView? ResearchOf(CivilizationState civ)
+    {
+        if (_content is null)
+        {
+            return null;
+        }
+
+        var options = new List<TechnologyOption>();
+        foreach (TechnologyDefinition t in _content.Technologies)
+        {
+            if (Core.Research.Technologies.Available(_content, civ, t.Id) && Core.Research.Technologies.CanResearch(_content, State, civ, t.Id))
+            {
+                options.Add(new TechnologyOption(t.Key, t.Name, t.Era, t.Cost.Hundredths / 100));
+            }
+        }
+
+        options.Sort((a, b) => a.Cost != b.Cost ? a.Cost.CompareTo(b.Cost) : string.CompareOrdinal(a.Key, b.Key));
+        bool researching = civ.Researching >= 0 && civ.Researching < _content.Technologies.Count;
+        TechnologyDefinition? now = researching ? _content.Technologies[civ.Researching] : null;
+        int permille = now is null || now.Cost.Hundredths <= 0 ? 0 : (int)Math.Min(1000, civ.ResearchProgress * 1000 / now.Cost.Hundredths);
+        return new ResearchView(now?.Key ?? string.Empty, permille, options);
+    }
+
+    // Lever 4 of a player: proposals waiting for its answer.
+    private List<ProposalView> ProposalsTo(CivId civ)
+    {
+        var list = new List<ProposalView>();
+        foreach (Core.Diplomacy.TreatyProposal p in State.Treaties.Proposals)
+        {
+            if (p.To == civ && p.Status == Core.Diplomacy.ProposalStatus.Pending)
+            {
+                list.Add(new ProposalView(p.From.Value, (int)p.Kind, p.Month));
+            }
+        }
+
+        return list;
+    }
+
     // What the player's civilization knows (map memory, stage 3g); without content, the cells around its start.
     private bool[] KnownCells(CivilizationState civ)
     {
@@ -479,7 +518,13 @@ public sealed class GameServer
         view = view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
         if (seer is not null)
         {
-            view = view with { PlayerLevers = (int)seer.PlayerLevers, AiDecisions = _helmsman?.For(seer.Id) ?? [] };
+            view = view with
+            {
+                PlayerLevers = (int)seer.PlayerLevers,
+                AiDecisions = _helmsman?.For(seer.Id) ?? [],
+                Research = ResearchOf(seer),
+                Proposals = ProposalsTo(seer.Id),
+            };
         }
 
         return view;

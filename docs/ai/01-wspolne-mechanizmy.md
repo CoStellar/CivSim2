@@ -207,3 +207,7 @@ gracza w `CivilizationState.PlayerLevers`, zmienia je `SetLeverCommand` (komenda
 Doradcy oceniają też cywilizację gracza w całości (wynik jest w dzienniku „Dlaczego?” tylko dla wydanych komend); gracz dostaje ostatnie
 30 decyzji AI dla swojej cywilizacji w widoku (`GameViewMessage.AiDecisions`, `src/CivSim.Server/HelmsmanLog.cs`).
 
+**Rozkaz gracza trzyma** (`Ai.PlayerOrders`, parametr `playerOrderHoldYears`): niezależnie od dźwigni AI nie wydaje komend przeciw
+osadzie, oddziałowi i kampanii, którym gracz wydał rozkaz, ani przeciw jego decyzji dyplomatycznej wobec danego ludu (D1 i D2 wobec
+tego ludu stoją 60 s; D2 nie proponuje pokoju wrogowi kampanii gracza). Szczegóły: `docs/systems/levers.md`.
+

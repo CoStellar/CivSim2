@@ -384,6 +384,10 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
     {
         switch (u.Order)
         {
+            case UnitOrder.Move when u.Role == UnitRole.Scouts:
+                u.Order = UnitOrder.Return; // sent somewhere to look (stage 6 PR P1): they saw it, they bring it home
+                u.ForgetPath();
+                return;
             case UnitOrder.Move:
             case UnitOrder.Flee:
                 u.Order = UnitOrder.Idle;

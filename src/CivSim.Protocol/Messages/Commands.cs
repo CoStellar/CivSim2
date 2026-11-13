@@ -20,6 +20,13 @@ namespace CivSim.Protocol.Messages;
 [Union(11, typeof(AttackDto))]
 [Union(12, typeof(StartTaskDto))]
 [Union(13, typeof(SetLeverDto))]
+[Union(14, typeof(SetResearchDto))]
+[Union(15, typeof(DeclareWarDto))]
+[Union(16, typeof(ProposeTreatyDto))]
+[Union(17, typeof(AnswerProposalDto))]
+[Union(18, typeof(LaunchCampaignDto))]
+[Union(19, typeof(ChangeGovernmentDto))]
+[Union(20, typeof(SettleDto))]
 public interface ICommandDto
 {
 }
@@ -85,3 +92,34 @@ public sealed record StartTaskDto([property: Key(0)] int SettlementId, [property
 /// </summary>
 [MessagePackObject]
 public sealed record SetLeverDto([property: Key(0)] int Lever, [property: Key(1)] bool Take) : ICommandDto;
+
+/// <summary>Lever 2 (stage 6 PR P1): research <c>Technology</c> next (a key of technologies.json). The AI's scholar keeps the choice until it is learned.</summary>
+[MessagePackObject]
+public sealed record SetResearchDto([property: Key(0)] string Technology) : ICommandDto;
+
+/// <summary>
+/// Lever 4 (stage 6 PR P1): declare war on civilization <c>Target</c> with a goal: 0 land (<c>GoalSettlement</c> = the settlement wanted),
+/// 1 loot, 2 revenge (war.json).
+/// </summary>
+[MessagePackObject]
+public sealed record DeclareWarDto([property: Key(0)] int Target, [property: Key(1)] int Goal = 2, [property: Key(2)] int GoalSettlement = -1) : ICommandDto;
+
+/// <summary>Lever 4: propose a treaty to <c>Other</c>: 1 peace (white), 2 trade, 3 non-aggression, 4 defensive alliance (diplomacy.json).</summary>
+[MessagePackObject]
+public sealed record ProposeTreatyDto([property: Key(0)] int Other, [property: Key(1)] int Kind) : ICommandDto;
+
+/// <summary>Lever 4: accept or refuse the pending proposal of <c>From</c> of treaty <c>Kind</c> (see <see cref="ProposalView"/>).</summary>
+[MessagePackObject]
+public sealed record AnswerProposalDto([property: Key(0)] int From, [property: Key(1)] int Kind, [property: Key(2)] bool Accept) : ICommandDto;
+
+/// <summary>Lever 4: send <c>Warriors</c> warriors of settlement <c>Home</c> on a campaign against settlement <c>Target</c> of an enemy at war.</summary>
+[MessagePackObject]
+public sealed record LaunchCampaignDto([property: Key(0)] int Home, [property: Key(1)] int Target, [property: Key(2)] int Warriors) : ICommandDto;
+
+/// <summary>Lever 5 (until cards, PR 7): bring in government <c>Government</c> (a key of governments.json) open in the civilization's era.</summary>
+[MessagePackObject]
+public sealed record ChangeGovernmentDto([property: Key(0)] string Government) : ICommandDto;
+
+/// <summary>Lever 1: a camp of farmers settles down as a village where it stands (GDD 5.4).</summary>
+[MessagePackObject]
+public sealed record SettleDto([property: Key(0)] int SettlementId) : ICommandDto;
