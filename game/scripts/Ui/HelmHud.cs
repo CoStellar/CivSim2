@@ -35,6 +35,7 @@ public partial class HelmHud : CanvasLayer
     private HelmSelection _selection = new(null, null);
     private (int World, int Col, int Row)? _selectedCell;
     private HelmAction? _pending;
+    private long? _unitId;
     private string _ordersKey = string.Empty;
     private string _researchKey = string.Empty;
     private string _diplomacyKey = string.Empty;
@@ -169,6 +170,7 @@ public partial class HelmHud : CanvasLayer
     public void Select(int world, int col, int row)
     {
         _selectedCell = (world, col, row);
+        _unitId = null;
         _ordersKey = string.Empty;
         Refresh();
     }
@@ -240,6 +242,16 @@ public partial class HelmHud : CanvasLayer
         }
 
         _selection = HelmActions.Select(view, _session.CivId, cell.World, cell.Col, cell.Row);
+        if (_unitId is long id)
+        {
+            // A selected unit stays selected while it walks away from the clicked cell.
+            UnitView? walking = view.Units?.FirstOrDefault(u => u.Id == id);
+            _unitId = walking?.Id;
+            _selection = _selection with { Unit = walking ?? _selection.Unit };
+        }
+
+        _unitId ??= _selection.Unit?.Id;
+        _selectionTitle.Text = SelectionTitle(_selection);
         string key = $"{_selection.Settlement?.Id}|{_selection.Unit?.Id}|{_selection.Unit?.Order}|{view.PlayerLevers}|{_pending?.Key}";
         if (key == _ordersKey)
         {
@@ -250,22 +262,9 @@ public partial class HelmHud : CanvasLayer
         Clear(_orders);
         if (_selection.IsEmpty)
         {
-            _selectionTitle.Text = "Nothing of ours here. Click one of your camps or units.";
             return;
         }
 
-        var parts = new List<string>();
-        if (_selection.Settlement is { } s)
-        {
-            parts.Add($"{s.Name} ({HelmActions.People(s)} people)");
-        }
-
-        if (_selection.Unit is { } u)
-        {
-            parts.Add($"{UnitRoleName(u.Role)} of {u.People} ({OrderName(u.Order)})");
-        }
-
-        _selectionTitle.Text = string.Join(" · ", parts);
         int lastLever = 0;
         foreach (HelmAction action in HelmActions.For(_selection, _session.Content))
         {
@@ -286,6 +285,31 @@ public partial class HelmHud : CanvasLayer
             b.Pressed += () => Choose(a);
             _orders.AddChild(b);
         }
+    }
+
+    // What is selected, in one line; settlers show how long their food lasts (they go hungry when it runs out).
+    private static string SelectionTitle(HelmSelection selection)
+    {
+        if (selection.IsEmpty)
+        {
+            return "Nothing of ours here. Click one of your camps or units.";
+        }
+
+        var parts = new List<string>();
+        if (selection.Settlement is { } s)
+        {
+            parts.Add($"{s.Name} ({HelmActions.People(s)} people)");
+        }
+
+        if (selection.Unit is { } u)
+        {
+            string food = u.FoodMonths < 0 ? string.Empty
+                : u.FoodMonths == 0 ? ", no food left: they go hungry"
+                : string.Create(CultureInfo.InvariantCulture, $", food for {u.FoodMonths} months (~{u.FoodMonths * 0.5:0} s at x1)");
+            parts.Add($"{UnitRoleName(u.Role)} of {u.People} ({OrderName(u.Order)}{food})");
+        }
+
+        return string.Join(" · ", parts);
     }
 
     private void RefreshResearch(GameViewMessage view)

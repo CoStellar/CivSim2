@@ -12,6 +12,27 @@
     "comment": {
       "type": "string"
     },
+    "looks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "technology": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "abandonment": {
       "type": "object",
       "properties": {

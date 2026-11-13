@@ -23,6 +23,7 @@ public sealed class GameServer
     /// <summary>Start cells within this radius are known to a player until fog of war arrives (Stage 3).</summary>
     public const int StartKnowledgeRadius = 4;
 
+    private readonly MilestoneTracker? _milestones;
     private readonly List<Client> _clients = [];
     private readonly GameContent? _content;
     private readonly Core.Ai.AiCouncil? _council;
@@ -40,10 +41,10 @@ public sealed class GameServer
     {
     }
 
-    /// <summary>Creates a server for an existing (e.g. loaded) game.</summary>
     /// <summary>Ticks in a real second at speed x1 (data/time.json; 10 without content).</summary>
     public int TicksPerSecond => _content?.Time.TicksPerSecond ?? 10;
 
+    /// <summary>Creates a server for an existing (e.g. loaded) game.</summary>
     public GameServer(GameState state, GameContent? content = null)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -54,6 +55,8 @@ public sealed class GameServer
             _council = CoreSystems.Register(Runner, content);
             _helmsman = new HelmsmanLog(content);
             _observerView = new ObserverViewBuilder(content);
+            _milestones = new MilestoneTracker(content);
+            _milestones.Prime(state); // a loaded game does not announce again what it has already reached
         }
         _pendingChunks = new bool[state.Worlds.Count][];
         for (int w = 0; w < state.Worlds.Count; w++)
@@ -207,6 +210,14 @@ public sealed class GameServer
         foreach (string line in Runner.LastChronicle)
         {
             AddChronicle(line);
+        }
+
+        if (_milestones is not null && State.Turn % TicksPerSecond == 0)
+        {
+            foreach (MilestoneReached m in _milestones.Check(State))
+            {
+                AddChronicle(m.Text); // the rise of each people, with the minute of the game (stage 6 PR P2b)
+            }
         }
 
         GameSnapshot? snapshot = Runner.Snapshots.Latest;
@@ -459,7 +470,8 @@ public sealed class GameServer
         }
 
         client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels, strata,
-            [.. System.Linq.Enumerable.Select(_content.Tasks.Kinds, t => new TaskInfo(t.Id, t.Key, t.Name, t.Good))]));
+            [.. System.Linq.Enumerable.Select(_content.Tasks.Kinds, t => new TaskInfo(t.Id, t.Key, t.Name, t.Good))],
+            [.. System.Linq.Enumerable.Select(_content.SettlementLooks, l => l.Key)]));
     }
 
     private void SendAllChunks(Client client)
@@ -500,6 +512,24 @@ public sealed class GameServer
         }
     }
 
+    // What each settlement looks like (stage 6 PR P2b): from its level and what its owner knows.
+    private GameViewMessage WithLooks(GameViewMessage view)
+    {
+        if (_content is not { SettlementLooks.Count: > 0 } content || view.Settlements is not { Count: > 0 } list)
+        {
+            return view;
+        }
+
+        var looked = new List<SettlementView>(list.Count);
+        foreach (SettlementView s in list)
+        {
+            CivilizationState? owner = State.FindCivilization(new CivId(s.Owner));
+            looked.Add(s with { Look = content.SettlementLook(s.Level, t => owner is not null && owner.Knows(t)) });
+        }
+
+        return view with { Settlements = looked };
+    }
+
     // A joining client gets the whole kept history; later views carry only the new lines.
     private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false)
     {
@@ -507,6 +537,7 @@ public sealed class GameServer
         GameViewMessage view = ViewBuilder.Build(
             snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width,
             seer is null ? null : cell => Core.Perception.MapMemory.SeesNow(State, seer, cell));
+        view = WithLooks(view);
         long micros = (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
         if (client.IsObserver && _observerView is not null)
         {

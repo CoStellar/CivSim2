@@ -135,6 +135,25 @@ public partial class MapObjects : Node2D
 
     private readonly Dictionary<int, Texture2D?> _settlementArt = [];
 
+    // The picture of a settlement's look (stage 6 PR P2b: camp, hearth, village, walled village, town), or null when the content
+    // has no looks or an art pack lacks the picture (then the level's picture is drawn).
+    private Texture2D? LookArt(int look, int status)
+    {
+        if (look < 0 || _session?.Content?.SettlementLooks is not { } looks || look >= looks.Count)
+        {
+            return null;
+        }
+
+        int key = -1 - ((look * 3) + status);
+        if (!_settlementArt.TryGetValue(key, out Texture2D? tex))
+        {
+            tex = _art.Get("objects", $"settlement_{looks[look]}_{StatusArt[status]}");
+            _settlementArt[key] = tex;
+        }
+
+        return tex;
+    }
+
     // New data redraws the objects at most this often (the server sends views a few times a second at top speed).
     private const double DataRedrawSeconds = 0.25;
 
@@ -333,7 +352,7 @@ public partial class MapObjects : Node2D
             Color civ = OverlayColors.CivColor(s.Owner);
             bool capital = s.Status == 0 && _capitals.Contains(s.Id);
             Texture2D? tex = Textured
-                ? SettlementArt(Math.Clamp(s.Level, 0, LevelArt.Length - 1), Math.Clamp(s.Status, 0, 2))
+                ? LookArt(s.Look, Math.Clamp(s.Status, 0, 2)) ?? SettlementArt(Math.Clamp(s.Level, 0, LevelArt.Length - 1), Math.Clamp(s.Status, 0, 2))
                 : null;
             foreach (Vector2 at in Copies(HexLayout.Center(s.Col, s.Row), 48))
             {

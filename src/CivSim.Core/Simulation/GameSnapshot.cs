@@ -82,6 +82,7 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
                 u.TotalPeople(), u.Order, u.Cell)
             {
                 Task = u.Task,
+                FoodMonths = u.Role == CivSim.Core.Units.UnitRole.Settlers ? u.FoodMonths : -1,
                 TargetCol = u.Role == CivSim.Core.Units.UnitRole.Workers && u.Target >= 0 ? geo.FromIndex(u.Target).Col : -1,
                 TargetRow = u.Role == CivSim.Core.Units.UnitRole.Workers && u.Target >= 0 ? geo.FromIndex(u.Target).Row : -1,
             });
@@ -167,4 +168,7 @@ public sealed record UnitSnapshot(
 
     /// <summary>Row of the task's cell, or -1.</summary>
     public int TargetRow { get; init; } = -1;
+
+    /// <summary>Months of action the settlers' food lasts, or -1 for other units (stage 6 PR P2b).</summary>
+    public int FoodMonths { get; init; } = -1;
 }

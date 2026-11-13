@@ -71,6 +71,7 @@ public static class ContentLoader
                 levels[l] = levels[l] with { RequiresTechnology = tech };
             }
         }
+        List<SettlementLookDefinition> looks = LoadSettlementLooks(Path.Combine(directory, "settlements.json"), levels, technologies, errors);
         (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons, Core.WorldGen.ClimateCycleRules cycles) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
@@ -82,6 +83,7 @@ public static class ContentLoader
             Goods = goods,
             Recipes = recipes,
             SettlementLevels = levels,
+            SettlementLooks = looks,
             Eras = eras,
             Effects = effects,
             NewTribeLevel = tribeLevel,
@@ -637,6 +639,56 @@ public static class ContentLoader
         }
 
         return result;
+    }
+
+    // settlements.json looks (stage 6 PR P2b): optional; levels by key, technologies resolved later.
+    private static List<SettlementLookDefinition> LoadSettlementLooks(string path, List<SettlementLevelDefinition> levels, List<TechnologyDefinition> technologies, List<string> errors)
+    {
+        var looks = new List<SettlementLookDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !doc.RootElement.TryGetProperty("looks", out JsonElement array))
+        {
+            return looks;
+        }
+
+        string file = Path.GetFileName(path);
+        if (array.ValueKind != JsonValueKind.Array)
+        {
+            errors.Add($"{file}: looks must be an array.");
+            return looks;
+        }
+
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{file}: looks[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            string levelKey = r.String("level");
+            int level = levels.FindIndex(l => l.Key == levelKey);
+            if (level < 0)
+            {
+                errors.Add($"{file}: looks[{i}].level: unknown level '{levelKey}'.");
+            }
+
+            string tech = e.TryGetProperty("technology", out JsonElement t) && t.ValueKind == JsonValueKind.String ? t.GetString()! : string.Empty;
+            int techId = tech.Length == 0 ? -1 : technologies.FindIndex(x => x.Key == tech);
+            if (tech.Length > 0 && techId < 0)
+            {
+                errors.Add($"{file}: looks[{i}].technology: unknown technology '{tech}'.");
+            }
+
+            if (looks.Count > 0 && level < looks[^1].MinLevel)
+            {
+                errors.Add($"{file}: looks[{i}] must not need a lower level than the look before it.");
+            }
+
+            looks.Add(new SettlementLookDefinition(i, key, name, System.Math.Max(0, level)) { TechnologyKey = tech, Technology = techId });
+            i++;
+        }
+
+        return looks;
     }
 
     private static (List<SettlementLevelDefinition> Levels, int TribeLevel, List<GoodQuantity> TribeStock, AssetRules Assets) LoadSettlements(

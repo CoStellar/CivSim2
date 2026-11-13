@@ -128,6 +128,12 @@ public readonly struct Unit : IEquatable<Unit>
     /// <summary>A player gave this unit an order (stage 6 PR P1): the camp its settlers found and the home of its work group are held from the AI.</summary>
     public bool ByPlayer { get => _book.ByPlayerOf[Slot]; set => _book.ByPlayerOf[Slot] = value; }
 
+    /// <summary>
+    /// Months of action the settlers' food lasts, or -1 for other units (stage 6 PR P2b, shown to the player). Worked out by the unit
+    /// system every tick from the cargo; not saved and not in the state hash, since it follows from the cargo.
+    /// </summary>
+    public int FoodMonths { get => _book.FoodMonthsOf[Slot]; set => _book.FoodMonthsOf[Slot] = value; }
+
     /// <summary>True once it is gone (founded its camp, joined its home, died out); removed at the end of the tick.</summary>
     public bool Gone { get => _book.GoneOf[Slot]; set => _book.GoneOf[Slot] = value; }
 
@@ -203,6 +209,7 @@ public sealed class UnitBook
     internal long[] EpisodeOf = [];
     internal int[] TaskOf = [];
     internal bool[] ByPlayerOf = [];
+    internal int[] FoodMonthsOf = [];
     internal List<int>[] TrailOf = [];
     internal List<int>[] PathOf = [];
     internal int[] PathAtOf = [];
@@ -367,6 +374,7 @@ public sealed class UnitBook
         EpisodeOf[slot] = -1;
         TaskOf[slot] = -1;
         ByPlayerOf[slot] = false;
+        FoodMonthsOf[slot] = -1;
         TrailOf[slot].Clear();
         PathOf[slot].Clear();
         PathAtOf[slot] = 0;
@@ -387,6 +395,7 @@ public sealed class UnitBook
             Array.Resize(ref IdOf, size);
             Array.Resize(ref TaskOf, size);
             Array.Resize(ref ByPlayerOf, size);
+            Array.Resize(ref FoodMonthsOf, size);
             Array.Resize(ref KindOf, size);
             Array.Resize(ref RoleOf, size);
             Array.Resize(ref OwnerOf, size);

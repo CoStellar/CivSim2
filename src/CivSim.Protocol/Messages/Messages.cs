@@ -172,7 +172,8 @@ public sealed record SettlementView(
     [property: Key(15)] long AbandonedMonth = 0,
     [property: Key(16)] int ClaimCiv = -1,
     [property: Key(17)] long ClaimUntilMonth = 0,
-    [property: Key(18)] int Loyalty = 0);
+    [property: Key(18)] int Loyalty = 0,
+    [property: Key(19)] int Look = -1);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
@@ -238,7 +239,8 @@ public sealed record ContentMessage(
     [property: Key(4)] IReadOnlyList<GoodInfo>? Goods = null,
     [property: Key(5)] IReadOnlyList<string>? SettlementLevels = null,
     [property: Key(6)] IReadOnlyList<string>? Strata = null,
-    [property: Key(7)] IReadOnlyList<TaskInfo>? Tasks = null) : IProtocolMessage;
+    [property: Key(7)] IReadOnlyList<TaskInfo>? Tasks = null,
+    [property: Key(8)] IReadOnlyList<string>? SettlementLooks = null) : IProtocolMessage;
 
 /// <summary>A kind of area task as the client sees it (stage 6 PR 4a): ids match <see cref="UnitView.Task"/>; the key goes into StartTaskDto.</summary>
 [MessagePackObject]
@@ -336,4 +338,8 @@ public sealed record UnitView(
     /// <summary>Row of the cell a work group works on, or -1.</summary>
     [Key(14)]
     public int TargetRow { get; set; } = -1;
+
+    /// <summary>Months of action the settlers' food lasts (one month of action = 5 ticks), or -1 (stage 6 PR P2b).</summary>
+    [Key(15)]
+    public int FoodMonths { get; set; } = -1;
 }

@@ -338,7 +338,7 @@ def deposit(key, color):
     c.save("objects", f"deposit_{key}")
 
 
-# ---------------------------------------------------------------- objects: settlements (48×42, 3 levels × 3 states)
+# ---------------------------------------------------------------- objects: settlements (48×42, 5 looks × 3 states; stage 6 PR P2b)
 
 def tent(c, x, y, s, cloth, flag):
     for i in range(s):
@@ -372,7 +372,7 @@ def settlement(level, state):
     if ruins:
         stone = nearest((120, 121, 121))
         rnd = random.Random(f"ruins-{level}")
-        n = {"camp": 5, "village": 9, "town": 14}[level]
+        n = {"camp": 4, "hearth": 5, "village": 9, "walled": 11, "town": 14}[level]
         for _ in range(n):
             x, y = rnd.randrange(12, 36), rnd.randrange(14, 32)
             c.rect(x, y, x + rnd.randrange(1, 3), y + 1, stone)
@@ -380,14 +380,32 @@ def settlement(level, state):
         c.outline(nearest((47, 46, 45)))
         c.save("objects", f"settlement_{level}_{state}")
         return
-    if level == "camp":
+    if level in ("camp", "hearth"):
         cloth = nearest((170, 101, 39)) if not abandoned else nearest((147, 138, 130))
         tent(c, 18, 30, 12, cloth, not abandoned)
         tent(c, 32, 34, 10, cloth, False)
-        fire = nearest((236, 39, 30)) if not abandoned else nearest((79, 75, 69))
-        c.rect(24, 33, 26, 35, fire)
-        c.px(25, 32, nearest((234, 210, 32)) if not abandoned else fire)
-    elif level == "village":
+        if level == "hearth":  # the camp has learned fire: a hearth between the tents
+            stones = nearest((120, 121, 121))
+            c.rect(21, 37, 29, 38, stones)
+            fire = nearest((236, 39, 30)) if not abandoned else nearest((79, 75, 69))
+            c.rect(22, 33, 28, 36, fire)
+            c.rect(24, 30, 26, 32, nearest((234, 210, 32)) if not abandoned else fire)
+            c.px(25, 29, nearest((234, 210, 32)) if not abandoned else fire)
+            if not abandoned:  # smoke
+                smoke = nearest((147, 138, 130))
+                for x, y in ((26, 26), (27, 24), (26, 22), (27, 20)):
+                    c.px(x, y, smoke)
+    elif level in ("village", "walled"):
+        if level == "walled":  # stonemasonry: a low stone wall round the houses
+            stone = nearest((147, 138, 130)) if not abandoned else nearest((101, 99, 98))
+            for y in range(14, 39):
+                for x in range(9, 40):
+                    if inside(x, y, 3) and not inside(x, y, 5):
+                        c.px(x, y, stone if not abandoned or (x * 3 + y) % 7 else (0, 0, 0))
+        else:  # fields beside the houses
+            crop = nearest((234, 210, 32)) if not abandoned else nearest((147, 138, 130))
+            for x in range(30, 39, 2):
+                c.line(x, 18, x, 22, crop)
         for x, y in ((15, 29), (27, 27), (33, 34), (20, 36)):
             house(c, x, y, roof, wall, abandoned and x == 27)
     else:
@@ -679,7 +697,7 @@ def main():
             river(edge, width)
     for d in deposits:
         deposit(d["key"], hexrgb(d["color"]))
-    for level in ("camp", "village", "town"):
+    for level in ("camp", "hearth", "village", "walled", "town"):
         for state in ("active", "abandoned", "ruins"):
             settlement(level, state)
     field()
