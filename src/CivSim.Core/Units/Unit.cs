@@ -125,6 +125,9 @@ public readonly struct Unit : IEquatable<Unit>
     /// <summary>The area task (index in tasks.json kinds) a work group does, or -1 (stage 6 PR 4a).</summary>
     public int Task { get => _book.TaskOf[Slot]; set => _book.TaskOf[Slot] = value; }
 
+    /// <summary>A player gave this unit an order (stage 6 PR P1): the camp its settlers found and the home of its work group are held from the AI.</summary>
+    public bool ByPlayer { get => _book.ByPlayerOf[Slot]; set => _book.ByPlayerOf[Slot] = value; }
+
     /// <summary>True once it is gone (founded its camp, joined its home, died out); removed at the end of the tick.</summary>
     public bool Gone { get => _book.GoneOf[Slot]; set => _book.GoneOf[Slot] = value; }
 
@@ -199,6 +202,7 @@ public sealed class UnitBook
     internal bool[] GoneOf = [];
     internal long[] EpisodeOf = [];
     internal int[] TaskOf = [];
+    internal bool[] ByPlayerOf = [];
     internal List<int>[] TrailOf = [];
     internal List<int>[] PathOf = [];
     internal int[] PathAtOf = [];
@@ -362,6 +366,7 @@ public sealed class UnitBook
         GoneOf[slot] = false;
         EpisodeOf[slot] = -1;
         TaskOf[slot] = -1;
+        ByPlayerOf[slot] = false;
         TrailOf[slot].Clear();
         PathOf[slot].Clear();
         PathAtOf[slot] = 0;
@@ -381,6 +386,7 @@ public sealed class UnitBook
             int size = Math.Max(16, IdOf.Length * 2);
             Array.Resize(ref IdOf, size);
             Array.Resize(ref TaskOf, size);
+            Array.Resize(ref ByPlayerOf, size);
             Array.Resize(ref KindOf, size);
             Array.Resize(ref RoleOf, size);
             Array.Resize(ref OwnerOf, size);

@@ -41,6 +41,33 @@ flowchart LR
 - **Zegar na żywo dla gracza:** host liczy takty, gdy podłączony jest obserwator albo gracz. Gracz, który gra sam, ustawia pauzę
   i prędkość (×1/×2/×4); w grze kilku graczy prędkość ustala gospodarz (etap 9). Gra startuje zatrzymana.
 
+## Rozkaz gracza trzyma (pytanie Patryka z 2026-11-13)
+
+**Pytanie:** czy decyzja gracza zawsze zostanie wykonana do końca, czy AI może ją zmienić w trakcie? Przegląd każdej komendy gracza:
+
+| Rozkaz gracza | Co mogło go zmienić przed poprawką | Teraz |
+| --- | --- | --- |
+| odłam: osadnicy idą założyć obóz (np. daleko) | AI nie wydaje rozkazów oddziałom, więc droga była bezpieczna; ale **gubernator w pierwszym pulsie scalał nowy mały obóz z powrotem** (poniżej 15 ludzi) albo go dzielił | obóz założony przez osadników gracza jest trzymany przez 10 lat akcji (60 s) |
+| przeprowadzka obozu | **komenda AI z tego samego taktu** wykonywała się po komendzie gracza i przestawiała obóz; w kolejnych pulsach gubernator mógł go od razu przenieść | komenda AI z tego samego taktu jest odrzucana; osada trzymana 60 s |
+| połączenie obozów, napaść, zajęcie, podbój | wykonują się od razu; AI mogło w tym samym takcie wydać inną komendę z tej osady | osada trzymana 60 s |
+| zadanie na obszarze | AI mogło scalić albo przenieść dom grupy (grupa wracała) | dom trzymany, dopóki grupa gracza jest w terenie |
+| atak armii na inny cel | **dowódca AI mógł ją odwołać** („beznadziejne”, „brak jedzenia”); **dyplomata AI mógł zawrzeć pokój** w trakcie marszu | kampania trzymana do końca: bez odwołania i bez pokoju z jej wrogiem |
+| idź / załóż / wróć oddziałem | AI nie wydaje rozkazów oddziałom | bez zmian (oddział oznaczony, jego obóz trzymany) |
+
+**Co dalej przerywa rozkaz** (to świat, nie AI; zawsze z przyczyną w kronice): miejsce osiedlenia zajęte (osadnicy szukają wolnego do 3 pól albo wracają), brak drogi, głód osadników, głód armii (wypad po jedzenie, złamane morale), przegrana bitwa, cel zniknął, wróg zawarł pokój sam (gracz nie trzyma się pokoju, ale wróg może go zaproponować; przyjęcie przez AI gracza jest wstrzymane), wyczerpane złoże, brak jedzenia grupy roboczej, secesja osady.
+
+**Jak to działa:** `src/CivSim.Core/Ai/PlayerOrders.cs`. Po każdej przyjętej komendzie gracza `TurnRunner` znakuje to, czego dotyczyła
+(`SettlementState.PlayerOrderTick`, `Unit.ByPlayer`, `Episode.ByPlayer`). Doradcy nie wydają komend przeciw oznaczonym rzeczom
+(`Advisor.Issue`), a komenda AI wydana w tym samym takcie jest odrzucana przy rozstrzyganiu („A player's order holds.”). Czas: `ai.json`
+`playerOrderHoldYears` (10). Znaczniki działają niezależnie od dźwigni i od tego, kto prowadzi lud (wygasają same).
+
+**Luki, których ta poprawka nie zamyka** (`docs/known-issues.md` 14 i 15): gracz nie ma komend dla dźwigni 2, 4 i 5 (badanie, wojna,
+umowy, ustrój), a zwiadowcy i osadnicy po rozkazie „idź” czekają bez końca.
+
+Testy: `tests/CivSim.Tests/Ai/PlayerOrderTests.cs` (6): ten sam takt (gracz wygrywa, komenda AI odrzucona), czas przytrzymania i jego
+koniec, obóz z osadników gracza trzymany i nie scalany, dom grupy roboczej trzymany, kampania bez odwołania i bez pokoju, cała gra z AI:
+nowy obóz gracza nietknięty przez cały czas przytrzymania (bez przytrzymania AI od razu go scala i dzieli).
+
 ## Test sternika (ADR 0027)
 
 1. **Dźwignia:** wszystkie pięć; to sam mechanizm „biorę / oddaję”.

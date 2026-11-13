@@ -115,6 +115,11 @@ public abstract class Advisor : ICommandSource
             return; // the player holds this lever (ADR 0027): the AI keeps off it
         }
 
+        if (PlayerOrders.HeldAgainstAi(state, civ, command))
+        {
+            return; // a player's order on this settlement, unit or campaign still holds (stage 6 PR P1)
+        }
+
         queue.Enqueue(PlayerId.Ai, civ, command);
         Log?.Add(Decision.From(state.Turn + 1, civ, Kind, action, subject, target, why));
     }

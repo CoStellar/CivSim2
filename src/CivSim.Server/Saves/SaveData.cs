@@ -120,7 +120,8 @@ public sealed record EpisodeSaveData(
     [property: Key(38)] long[]? Fight = null,
     [property: Key(39)] long RoundTick = 0,
     [property: Key(40)] int FightLost = 0,
-    [property: Key(41)] int FightKilled = 0);
+    [property: Key(41)] int FightKilled = 0,
+    [property: Key(42)] bool ByPlayer = false);
 
 /// <summary>Saved terms of a peace (stage 4e).</summary>
 [MessagePackObject]
@@ -283,7 +284,8 @@ public sealed record SettlementSaveData(
     [property: Key(32)] long RestUntilMonth = -1,
     [property: Key(33)] int[]? JourneyPath = null,
     [property: Key(34)] int JourneyPathAt = 0,
-    [property: Key(35)] int JourneyPathGoal = -1);
+    [property: Key(35)] int JourneyPathGoal = -1,
+    [property: Key(36)] long PlayerOrderTick = -1);
 
 /// <summary>Saved unit (stage 6 PR 3a).</summary>
 [MessagePackObject]
@@ -309,7 +311,8 @@ public sealed record UnitSaveData(
     [property: Key(18)] int PathGoal = -1,
     [property: Key(19)] int Role = -1,
     [property: Key(20)] long Episode = -1,
-    [property: Key(21)] int Task = -1);
+    [property: Key(21)] int Task = -1,
+    [property: Key(22)] bool ByPlayer = false);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

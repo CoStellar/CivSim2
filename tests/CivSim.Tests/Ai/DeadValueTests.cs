@@ -416,6 +416,20 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        // A player's order (stage 6 PR P1): every settlement of the journey situation got an order from a player in this tick, so the
+        // governor leaves them alone for playerOrderHoldYears years of action (0: it decides at once, as without the order).
+        GameState ordered = SaveGameSerializer.Load(new MemoryStream(saved[stone])); // the camp that would go on a journey (Craft)
+        foreach (SettlementState s in ordered.Settlements)
+        {
+            s.PlayerOrderTick = ordered.Turn;
+        }
+
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(ordered, ms);
+            saved.Add(ms.ToArray());
+        }
+
         Assert.True(saved.Count > stone);
         return [.. saved];
     }
