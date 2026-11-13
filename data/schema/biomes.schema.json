@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "biomes.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "biomes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "movementCost": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "baseFertility": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "food": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "color": {
+            "type": "string"
+          },
+          "temperature": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "humidity": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "gather": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "settlements.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "abandonment": {
+      "type": "object",
+      "properties": {
+        "claimYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "carrying": {
+      "type": "object",
+      "properties": {
+        "perPerson": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "newTribe": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "settle": {
+      "type": "object",
+      "properties": {
+        "minPeople": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "population": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "storage": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "mobile": {
+            "type": "boolean"
+          },
+          "abandonedYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "ruinsUntilYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "requires": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

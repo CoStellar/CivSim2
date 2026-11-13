@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "planets.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "seasons": {
+      "type": "object",
+      "properties": {
+        "stepsPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "minStepMonths": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "winterFoodPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "climateCycles": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "updateYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "tiltAmplitude": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "tiltPeriodYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "longEccentricityPerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "longEccentricityYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "shortEccentricityPerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "shortEccentricityYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "precessionYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "glacialBelowPerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "fullGlacialVolumePerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "warmAbovePerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "meltYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "growYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "sunlightYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "fullSheetVolumePerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "sheetEdgeDegrees": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "glacialCo2DropPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "glaciationSummerDegrees": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "glacialSeaDropMeters": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "seaMetersPerStep": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "meltSeaRiseMeters": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "planets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "axialTilt": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "eccentricityPerMille": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "luminosity": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "distance": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "otherGases": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "volcanism": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "water": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "moisture": {
+            "type": "string"
+          },
+          "relief": {
+            "type": "string"
+          },
+          "yearLength": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "light": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "co2": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "starVariabilityPerMille": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "starCycleYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

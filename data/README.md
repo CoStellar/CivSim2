@@ -1,6 +1,7 @@
 # Game content (data)
 
-Only CORE features are covered here (see `docs/GDD.md`, section 16). All game content lives here as JSON, validated on load. Adding a technology, resource or event
+Only CORE features are covered here (see `docs/GDD.md`, section 16). All game content lives here as JSON, validated on load.
+Every file has a JSON Schema in `schema/` (stage 6, T14): an unknown or misspelled key is a load error. A new key must be added to the file's schema; a new file gets a first schema from `python3 docs/systems/tools/infer_schema.py data data/schema new.json` (see `docs/systems/data-schema.md`). Adding a technology, resource or event
 must not require code changes. All names and texts are in English.
 
 Planned files (created stage by stage, see `ROADMAP.md`):

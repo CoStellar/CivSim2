@@ -116,6 +116,23 @@ public sealed class LocalServerHost : IDisposable
         return host;
     }
 
+    /// <summary>
+    /// Loads the data files of <paramref name="dataDirectory"/> (null = next to the program) and returns every problem found,
+    /// empty when the data is valid (stage 6, T14: the viewer shows these instead of stopping, and reloads data with F5).
+    /// </summary>
+    public static IReadOnlyList<string> CheckData(string? dataDirectory = null)
+    {
+        try
+        {
+            ContentLoader.Load(dataDirectory);
+            return [];
+        }
+        catch (ContentException ex)
+        {
+            return ex.Errors;
+        }
+    }
+
     /// <summary>The planet presets the start menu offers (stage 5), read from the data files.</summary>
     public static LocalSetupInfo Describe(string? dataDirectory = null)
     {

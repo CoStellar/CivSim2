@@ -1,0 +1,434 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "population.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "growth": {
+      "type": "object",
+      "properties": {
+        "birthsPerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "childMortalityPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "adultDeathsPerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "villageDeathsPerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "villageBirthsPerMille": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "starvationDeathPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "campStarvationDeathPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "lowHealthDeathsPerMillePerPoint": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "moodBirthsPerMillePerPoint": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "strataShiftPercentPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "hungerPenaltyPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "crowdingPenaltyPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "lowHealthBelow": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "gathering": {
+      "type": "object",
+      "properties": {
+        "plantsGood": {
+          "type": "string"
+        },
+        "meatGood": {
+          "type": "string"
+        },
+        "hidesGood": {
+          "type": "string"
+        },
+        "foodPerWorkerPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "foodPerBiomeFoodPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "plantsPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "hidesPerMeat": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "hillsPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "mountainsPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "survivableDeadSeasonYears": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "wildFood": {
+      "type": "object",
+      "properties": {
+        "depletionPerMillePerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "regrowthPercentPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "goodAndBadYears": {
+      "type": "object",
+      "properties": {
+        "yieldSwingPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "influence": {
+      "type": "object",
+      "properties": {
+        "baseRange": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "warriorsPerRange": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "maxRange": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "hillsCost": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "mountainsCost": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "strengthPerStep": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "homeCost": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "migration": {
+      "type": "object",
+      "properties": {
+        "maxMoveCells": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "moveWhenFedBelowPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "moveWhenBetterByPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "minStepsBetweenMoves": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "distancePenaltyPercentPerCell": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "splitAbovePercentOfLevel": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "splitPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "minSplitPeople": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "minDistanceBetweenOwnCamps": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "splitNeedsFoodPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "mergeBelowPeople": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "ownCampsiteBonusPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "attackAboveStrengthPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "comfort": {
+      "type": "object",
+      "properties": {
+        "coldBelow": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "hotAbove": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "percentPerDegree": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "minPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "conquest": {
+      "type": "object",
+      "properties": {
+        "defenderNonWarriorPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "winnerWarriorLossPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "loserWarriorLossPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "fleeingLossPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "newTribe": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "farming": {
+      "type": "object",
+      "properties": {
+        "grainGood": {
+          "type": "string"
+        },
+        "grainPerFarmerPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "farmersPerCell": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "minFertility": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "exhaustionPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "recoveryPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

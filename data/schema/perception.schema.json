@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "perception.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "sightCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "oralMemoryYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "journeyCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

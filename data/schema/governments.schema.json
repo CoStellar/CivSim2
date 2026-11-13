@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "governments.json",
+  "type": "object",
+  "properties": {
+    "comment": {
+      "type": "string"
+    },
+    "governments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "fromEra": {
+            "type": "string"
+          },
+          "enactYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "reviewPercent": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "cautionShift": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "goalPercent": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "leaning": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "leaderTitle": {
+            "type": "string"
+          },
+          "succession": {
+            "type": "string"
+          },
+          "successorAge": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "crisisPercent": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "crisisYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "termYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "stabilityBonus": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "administration": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "reach": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "strataInfluence": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

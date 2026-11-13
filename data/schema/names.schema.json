@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "names.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "consonants": {
+      "type": "object",
+      "properties": {
+        "hard": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "soft": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "vowels": {
+      "type": "object",
+      "properties": {
+        "hard": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "soft": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "codas": {
+      "type": "object",
+      "properties": {
+        "hard": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "soft": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "peopleEndings": {
+      "type": "object",
+      "properties": {
+        "hard": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "soft": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "placeEndings": {
+      "type": "object",
+      "properties": {
+        "hard": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "soft": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "patterns": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "language": {
+      "type": "object",
+      "properties": {
+        "consonants": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "vowels": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "codas": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "peopleEndings": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "placeEndings": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "doubledPercent": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "peopleEndingPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "placeEndingPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "peopleSyllables": {
+      "type": "array",
+      "items": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "placeSyllables": {
+      "type": "array",
+      "items": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "length": {
+      "type": "array",
+      "items": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "mutation": {
+      "type": "object",
+      "properties": {
+        "consonants": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "vowels": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "endings": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "trade.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "linkCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "lossPercentPerCell": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "foodReserveYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "priceRangePercent": {
+      "type": "array",
+      "items": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

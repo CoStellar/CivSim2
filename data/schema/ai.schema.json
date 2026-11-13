@@ -1,0 +1,407 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ai.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "pickAmongTop": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "reviewEverySteps": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "directionBonusPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "recipeSwitchBetterByPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "crowdingLowPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "crowdingHighPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "expansionWeightMin": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "expansionWeightMax": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "fedWellPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "fedBadlyPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "hungerWeightMax": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "splitMinPercentOfLevel": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "searchEverySteps": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "starvingFedPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "goalOfFood": {
+      "type": "string"
+    },
+    "goalOfGoods": {
+      "type": "string"
+    },
+    "tradeGoodsBonusPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "scienceBehindTechs": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "scienceWeightMax": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "influenceMetCivs": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "influenceWeightMax": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "overloadExpansionMinPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "unrestSecurityPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "unrestWarPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "governmentChangeMarginPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "governmentStabilityWeight": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "governmentKeepYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "moveExpansionSharePercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "journeyBetterByPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "journeyPenaltyPerMillePerCell": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "farSearchEveryCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "targetZeroAtJourneys": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "settleFarmYieldPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "settleOverGatheringPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "villageSettlersAbovePercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "villageWornBelowPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "villageSettlersPeople": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "villageSettlersEveryYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "villageHungryFedPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "villageHungrySettlersEveryYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "exploreAbovePerMille": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "exploreLookCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "exploreUnknownPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "exploreGroupPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "plunderBelowStoragePercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "uncomfortableBelowPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "opinionSwingPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "reviewStaggerYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "commander": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "minWinChancePercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "maxLossPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "minFoodMonths": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "recallChancePercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "scholar": {
+      "type": "object",
+      "properties": {
+        "baseWorthPerPerson": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "fieldWorthPerPerson": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "gatherWorthPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "missingInputPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "villageWorthPerPerson": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "leadsToPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "curiosityCostReliefPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stat": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "perHundredPeoplePerPoint": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "onlyWhenCold": {
+                "type": "boolean"
+              },
+              "lowerIsBetter": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

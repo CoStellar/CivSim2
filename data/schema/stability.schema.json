@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stability.json",
+  "type": "object",
+  "properties": {
+    "comment": {
+      "type": "string"
+    },
+    "unrestBelow": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "unrestOutputPercentPerPoint": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "unrestEffect": {
+      "type": "string"
+    },
+    "crisisPenalty": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "anarchyPenalty": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "anarchyYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "capitalLostPenalty": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "capitalLostYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "adminPerSettlement": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "adminPerRoadCost": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "roadSearchCost": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "overloadPenaltyPer100Percent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "overloadMaxPenalty": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "loyaltyPer10RoadCost": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "revoltBelow": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "revoltPerMillePerYear": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "revoltCalmYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "secessionLoyaltyBelow": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "secessionMinPeople": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "maxCivilizations": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "secessionCharacterShift": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "driftPerMillePerYear": {
+      "type": [
+        "number",
+        "string"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

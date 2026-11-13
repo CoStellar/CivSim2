@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "resources.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "deposits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "biomes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "relief": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "perThousandCells": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "richness": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          },
+          "depth": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "renewable": {
+            "type": "boolean"
+          },
+          "color": {
+            "type": "string"
+          },
+          "gather": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

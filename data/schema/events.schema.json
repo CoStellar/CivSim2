@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "events.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "timesPer10000Years": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "percent": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "biomes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "required": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "softenedBy": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "technology": {
+                  "type": "string"
+                },
+                "percent": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "effect": {
+                  "type": "string"
+                },
+                "strength": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "years": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "radiusCells": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "chronicle": {
+            "type": "string"
+          },
+          "fertilityGain": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "fertilityRadius": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "spreadPercent": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

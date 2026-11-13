@@ -1,0 +1,350 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "war.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "goal": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "victimPercent": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "witnessPercent": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "scorePerWin": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "scorePerSettlement": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "wearinessPerCampaignMonth": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "campaignStepMonths": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "restMonths": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "quietPeaceYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "armySightCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "sendPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "minWarriors": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "wearinessPerLossPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "peaceAbove": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "moodAtFullWeariness": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "termsAboveScore": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "ransomPercentPerScorePoint": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "maxRansomPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "cedeWorth": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "armaments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "strengthPercent": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "technology": {
+            "type": "string"
+          },
+          "good": {
+            "type": "string"
+          },
+          "perWarrior": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "musterCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "battle": {
+      "type": "object",
+      "properties": {
+        "rounds": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "roundTicks": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "casualtyPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "rollPercent": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "moralePerLossPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "breakMorale": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "defenderMorale": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "hungryStrengthPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "routLossPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "terrain": {
+          "type": "object",
+          "properties": {
+            "hillsPercent": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "mountainsPercent": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "riverPercent": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "biomes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "biome": {
+                    "type": "string"
+                  },
+                  "percent": {
+                    "type": [
+                      "number",
+                      "string"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "supply": {
+      "type": "object",
+      "properties": {
+        "foodPerWarriorPerYear": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "carryFoodMonths": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "supplySharePercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "convoyBelowMonths": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "carrierCells": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "carriersPercent": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "hungerMoralePerMonth": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "fedMoralePerMonth": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "retreatMorale": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "forageCells": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

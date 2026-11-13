@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "leaders.json",
+  "type": "object",
+  "properties": {
+    "comment": {
+      "type": "string"
+    },
+    "traitCount": {
+      "type": "array",
+      "items": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "startAge": {
+      "type": "array",
+      "items": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "councilCandidates": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "deathByAge": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      }
+    },
+    "traits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shifts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

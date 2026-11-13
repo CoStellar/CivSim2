@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "eras.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "eras": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "monthsPerTurn": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "armyLimit": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "troopsPerCell": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "threshold": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

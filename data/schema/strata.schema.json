@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "strata.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "strata": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gathers": {
+            "type": "boolean"
+          },
+          "targetShare": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "needs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string"
+                },
+                "perYear": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "good": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "sciencePerThousandPerYear": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "crafts": {
+            "type": "boolean"
+          },
+          "fights": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

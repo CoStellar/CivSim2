@@ -26,6 +26,7 @@ public static class ContentLoader
     {
         directory ??= DefaultDirectory;
         var errors = new List<string>();
+        SchemaValidator.ValidateDirectory(directory, errors);
         List<GoodDefinition> goods = LoadGoods(Path.Combine(directory, "goods.json"), errors);
         List<BiomeDefinition> biomes = LoadBiomes(Path.Combine(directory, "biomes.json"), goods, errors);
         List<DepositDefinition> deposits = LoadDeposits(Path.Combine(directory, "resources.json"), biomes, goods, errors);
