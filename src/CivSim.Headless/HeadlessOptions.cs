@@ -28,6 +28,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>CSV file with every war campaign of the run (stage 4e PR 3): army, arms, food, hunger, carriers; or null for none.</summary>
     public string? CampaignsPath { get; init; }
 
+    /// <summary>Benchmark (stage 6 PR 4a): start up to this many woodcutting work groups through commands (0 = none).</summary>
+    public int WorkGroups { get; init; }
+
     /// <summary>Replay file to record the run into (T11: settings, events, state hashes every minute), or null for none.</summary>
     public string? RecordPath { get; init; }
 
@@ -118,7 +121,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
     /// <summary>Usage text.</summary>
     public const string Usage =
-        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--record game.civreplay] [--replay game.civreplay] [--quiet]\n" +
+        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--work-groups N] [--record game.civreplay] [--replay game.civreplay] [--quiet]\n" +
         "       [--batch GAMES --batch-out games.csv [--jobs N]] (stage 4g: GAMES games on seeds from --seed on, one CSV row each)\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
@@ -141,6 +144,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         string? treaties = null;
         string? wars = null;
         string? campaigns = null;
+        int workGroups = 0;
         string? record = null;
         string? replay = null;
         int statsEvery = 10;
@@ -229,6 +233,14 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     if (string.IsNullOrWhiteSpace(replay))
                     {
                         error = "--replay needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--work-groups":
+                    if (!int.TryParse(Next(), NumberStyles.Integer, CultureInfo.InvariantCulture, out workGroups) || workGroups < 0 || workGroups > 100_000)
+                    {
+                        error = "--work-groups needs a number of groups (0-100000).";
                         return null;
                     }
 
@@ -522,6 +534,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             TreatiesPath = treaties,
             WarsPath = wars,
             CampaignsPath = campaigns,
+            WorkGroups = workGroups,
             RecordPath = record,
             ReplayPath = replay,
             StatsEvery = statsEvery,

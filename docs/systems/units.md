@@ -2,7 +2,7 @@
 
 **W jednym zdaniu:** oddział to grupa ludzi, która chodzi po mapie w taktach gry na żywo: osadnicy idą zakładać obóz, zwiadowcy
 idą w nieznane i wracają z tym, co widzieli, armie kampanii maszerują, walczą, uciekają i wracają, a tragarze noszą im jedzenie;
-drogę liczy A* z kosztem terenu, raz na cel (etap 6 PR 3a–3b, ADR 0024, decyzje Patryka z 2026-11-09).
+drogę liczy A* z kosztem terenu, raz na cel (etap 6 PR 3a–3b, ADR 0024, decyzje Patryka z 2026-11-09). Od PR 4a także grupy robocze zadań na obszarze (rola `workers`, rozkaz `Work`, `docs/systems/tasks.md`).
 
 **Faza tury:** 5. Ruch, co takt (`UnitSystem`, zaraz po wędrówkach obozów). Zwiadowców wysyła osada w pulsie swojej cywilizacji.
 Rozkazy (`MoveUnitCommand`, `FoundCampCommand`, `ReturnUnitCommand`, `AttackCommand`) i odłam (`SplitSettlementCommand`) przychodzą w

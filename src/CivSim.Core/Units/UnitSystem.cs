@@ -60,6 +60,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 }
             }
 
+
             Walk(context, state, u, civ);
         }
 
@@ -75,6 +76,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             case UnitOrder.Move:
             case UnitOrder.Found:
             case UnitOrder.Attack:
+            case UnitOrder.Work:
                 return u.Target;
             case UnitOrder.Return:
             case UnitOrder.Flee:
@@ -386,6 +388,10 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             case UnitOrder.Flee:
                 u.Order = UnitOrder.Idle;
                 return;
+            case UnitOrder.Work:
+                u.Next = -1; // at work on its task's cell (TaskSystem brings its yield home in the pulse)
+                u.Progress = 0;
+                return;
             case UnitOrder.Return when u.Episode >= 0:
                 u.Order = UnitOrder.Idle; // an army home: its campaign brings the survivors in (CampaignSystem)
                 return;
@@ -436,6 +442,13 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 Rejoin(context, state, u, civ, world, now: true);
             }
 
+            return;
+        }
+
+        if (u.Role == UnitRole.Workers)
+        {
+            u.Order = UnitOrder.Return; // no known way to its task: it comes home
+            u.ForgetPath();
             return;
         }
 

@@ -428,6 +428,9 @@ def person(c, x, y, tunic, carry=None):
     if carry == "bundle":
         c.rect(x + 3, y - 10, x + 6, y - 6, nearest((170, 101, 39)))
         c.px(x + 3, y - 10, nearest((229, 168, 98)))
+    elif carry == "axe":  # a work group (area tasks, stage 6 PR 4a): a short haft with a stone head
+        c.line(x + 4, y - 11, x + 4, y - 3, nearest((122, 45, 2)))
+        c.rect(x + 5, y - 12, x + 6, y - 10, nearest((169, 162, 160)))
     elif carry == "spear":
         c.line(x + 4, y - 14, x + 4, y, nearest((122, 45, 2)))
         c.rect(x + 3, y - 16, x + 5, y - 15, nearest((169, 162, 160)))
@@ -439,6 +442,9 @@ def unit(name):
         person(c, 9, 29, CIV, "bundle")
         person(c, 20, 30, CIV, "bundle")
         person(c, 15, 25, CIV)
+    elif name == "workers":
+        person(c, 9, 30, CIV, "axe")
+        person(c, 19, 29, CIV, "axe")
     else:
         person(c, 14, 29, CIV, "spear")
     c.outline(nearest((29, 23, 16)))
@@ -677,7 +683,7 @@ def main():
         for state in ("active", "abandoned", "ruins"):
             settlement(level, state)
     field()
-    for name in ("migrants", "scout"):
+    for name in ("migrants", "scout", "workers"):
         unit(name)
     for e in effects:
         if e["target"] in ("cell", "settlement"):

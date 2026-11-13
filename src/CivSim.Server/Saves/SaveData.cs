@@ -307,7 +307,8 @@ public sealed record UnitSaveData(
     [property: Key(17)] int PathAt = 0,
     [property: Key(18)] int PathGoal = -1,
     [property: Key(19)] int Role = -1,
-    [property: Key(20)] long Episode = -1);
+    [property: Key(20)] long Episode = -1,
+    [property: Key(21)] int Task = -1);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

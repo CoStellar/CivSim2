@@ -79,7 +79,12 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
             units.Add(new UnitSnapshot(
                 u.Id, u.Kind, u.Role, u.Owner, u.World, at.Col, at.Row, next.Col, next.Row,
                 u.Next >= 0 && u.StepCost > 0 ? (int)System.Math.Min(1000, u.Progress * 1000L / u.StepCost) : 0,
-                u.TotalPeople(), u.Order, u.Cell));
+                u.TotalPeople(), u.Order, u.Cell)
+            {
+                Task = u.Task,
+                TargetCol = u.Role == CivSim.Core.Units.UnitRole.Workers && u.Target >= 0 ? geo.FromIndex(u.Target).Col : -1,
+                TargetRow = u.Role == CivSim.Core.Units.UnitRole.Workers && u.Target >= 0 ? geo.FromIndex(u.Target).Row : -1,
+            });
         }
 
         return new GameSnapshot(state.Turn, worlds.MoveToImmutable(), civs.MoveToImmutable())
@@ -152,4 +157,14 @@ public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId Wo
 /// </summary>
 public sealed record UnitSnapshot(
     long Id, int Kind, Units.UnitRole Role, CivId Owner, WorldId World, int Col, int Row, int NextCol, int NextRow, int ProgressPermille,
-    int People, Units.UnitOrder Order, int Cell);
+    int People, Units.UnitOrder Order, int Cell)
+{
+    /// <summary>A work group's task (index in tasks.json kinds), or -1 (stage 6 PR 4a).</summary>
+    public int Task { get; init; } = -1;
+
+    /// <summary>Column and row of the cell a work group works on (its task's cell), or -1.</summary>
+    public int TargetCol { get; init; } = -1;
+
+    /// <summary>Row of the task's cell, or -1.</summary>
+    public int TargetRow { get; init; } = -1;
+}

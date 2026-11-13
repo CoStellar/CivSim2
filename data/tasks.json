@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "comment": "Area tasks (stage 6 PR 4a, GDD 4.4 'Zadania na obszarze', decisions of 2026-11-12, ADR 0026 and 0027: lever 3 'what we do on the land'). A settlement sends a work group (a unit of the role workers, units.json) to a cell near it; the group walks there, stays and works, and what it makes goes to its home settlement's stock in its civilization's pulse. The player and the AI give the same commands (start a task, call the group back). A task may be given on a cell claimed by the settlement or at most rangeBeyondZoneCells cells beyond its zone, that its civilization knows. A settlement may run one task for every peoplePerTask of its people; a group takes at most maxPeoplePerGroup people (defaultPeoplePerGroup when the command gives none), people of the kind's skill first (from their own stratum), the rest producers who are not hunters, fishers or farmers. The group eats with its settlement in the pulse, from its home's stock (war.json foodPerWarriorPerYear a person); if home has too little it comes back. Kinds: key, name, source (biome = the biome of the cell must give the good in biomes.json gather, the yield is perPersonPerYear for every unit of that biome value: deciduous forest 6 x 0.5 = 3 wood a person a year; deposit = the cell has the deposit on the surface, the yield is perPersonPerYear and the deposit loses its richness, a task ends when it runs out), good, deposit (deposit kinds), requires (a technology), skill (its people go first). zoneGathersMaterials: while true, settlements still gather wood, flint and stone from their whole zone as before (until the AI gives tasks itself, PR 4b, problem 9 of the plan review); PR 4b sets it to false. Values to tune.",
+  "zoneGathersMaterials": true,
+  "rangeBeyondZoneCells": 2,
+  "peoplePerTask": 25,
+  "defaultPeoplePerGroup": 10,
+  "maxPeoplePerGroup": 30,
+  "kinds": [
+    {"key": "woodcutting", "name": "Woodcutting", "source": "biome", "good": "wood", "perPersonPerYear": "0.5"},
+    {"key": "flint_mine", "name": "Flint Mine", "source": "deposit", "deposit": "flint", "good": "flint", "perPersonPerYear": "1", "requires": "flint_knapping", "skill": "knapper"},
+    {"key": "quarry", "name": "Quarry", "source": "deposit", "deposit": "stone", "good": "stone", "perPersonPerYear": "1", "requires": "stonemasonry", "skill": "mason"}
+  ]
+}

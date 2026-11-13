@@ -93,6 +93,20 @@ public sealed class GameContent
         return copy;
     }
 
+    /// <summary>Area tasks: woodcutting, mines, quarries (data/tasks.json, stage 6 PR 4a).</summary>
+    public Units.TaskRules Tasks { get => _tasks; init => _tasks = value; }
+
+    private Units.TaskRules _tasks = new();
+
+    /// <summary>A copy of this content with other task rules (tests switch off gathering materials from the zone with it).</summary>
+    public GameContent WithTasks(Units.TaskRules tasks)
+    {
+        ArgumentNullException.ThrowIfNull(tasks);
+        var copy = (GameContent)MemberwiseClone();
+        copy._tasks = tasks;
+        return copy;
+    }
+
     /// <summary>Time of the live game: ticks, pulses, months of action (data/time.json, ADR 0025).</summary>
     public Simulation.TimeRules Time { get => _time; init => _time = value; }
 

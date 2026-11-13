@@ -57,6 +57,7 @@ public static class ContentLoader
         LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
         Core.Simulation.TimeRules time = LoadTime(Path.Combine(directory, "time.json"), errors);
         Core.Units.UnitRules units = LoadUnits(Path.Combine(directory, "units.json"), biomes, technologies, skills, errors);
+        Core.Units.TaskRules tasks = LoadTasks(Path.Combine(directory, "tasks.json"), goods, biomes, deposits, technologies, skills, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -105,6 +106,7 @@ public static class ContentLoader
             Leaders = leaders,
             Time = time,
             Units = units,
+            Tasks = tasks,
             Stability = stability,
             Events = events,
             Technologies = technologies,
@@ -1028,6 +1030,117 @@ public static class ContentLoader
             SettlerFoodMonths = settlers.Int("foodMonths", 0, 120),
             HungerDeathPercent = settlers.Int("hungerDeathPercent", 0, 100),
             FoundSearchCells = settlers.Int("foundSearchCells", 0, 20),
+        };
+    }
+
+    // Area tasks of data/tasks.json (stage 6 PR 4a, GDD 4.4): kinds of work a settlement sends a work group to do near it.
+    private static Core.Units.TaskRules LoadTasks(string path, List<GoodDefinition> goods, List<BiomeDefinition> biomes, List<DepositDefinition> deposits,
+        List<TechnologyDefinition> technologies, List<SkillDefinition> skills, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Units.TaskRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        var kinds = new List<Core.Units.TaskKindDefinition>();
+        var keys = new HashSet<string>();
+        if (TryArray(doc.RootElement, "kinds", path, errors, out JsonElement array))
+        {
+            foreach (JsonElement e in array.EnumerateArray())
+            {
+                string at = $"{file}: kinds[{kinds.Count}]";
+                var x = new Reader(e, at, errors);
+                string key = x.Key("key", keys);
+                string sourceName = x.String("source");
+                Core.Units.TaskSource source = sourceName == "deposit" ? Core.Units.TaskSource.Deposit : Core.Units.TaskSource.Biome;
+                if (sourceName is not ("biome" or "deposit"))
+                {
+                    errors.Add($"{at}.source: must be 'biome' or 'deposit'.");
+                }
+
+                string goodKey = x.String("good");
+                int good = goods.FindIndex(g => g.Key == goodKey);
+                if (good < 0)
+                {
+                    errors.Add($"{at}.good: unknown good '{goodKey}'.");
+                }
+
+                int deposit = 0;
+                if (source == Core.Units.TaskSource.Deposit)
+                {
+                    string depositKey = x.String("deposit");
+                    DepositDefinition? d = deposits.Find(d => d.Key == depositKey);
+                    if (d is null)
+                    {
+                        errors.Add($"{at}.deposit: unknown deposit '{depositKey}'.");
+                    }
+                    else
+                    {
+                        deposit = d.Id;
+                        if (d.Renewable)
+                        {
+                            errors.Add($"{at}.deposit: '{depositKey}' is renewable; deposit tasks use up what they take.");
+                        }
+                    }
+                }
+                else if (good >= 0 && !biomes.Exists(b => b.Gather.Any(g => g.GoodId == good)))
+                {
+                    errors.Add($"{at}.good: no biome gathers '{goodKey}' (biomes.json gather), so the task fits no cell.");
+                }
+
+                int tech = -1;
+                if (e.TryGetProperty("requires", out JsonElement rq) && rq.ValueKind == JsonValueKind.String)
+                {
+                    tech = technologies.FindIndex(t => t.Key == rq.GetString());
+                    if (tech < 0)
+                    {
+                        errors.Add($"{at}.requires: unknown technology '{rq.GetString()}'.");
+                    }
+                }
+
+                int skill = -1;
+                if (e.TryGetProperty("skill", out JsonElement sk) && sk.ValueKind == JsonValueKind.String)
+                {
+                    skill = skills.FindIndex(s => s.Key == sk.GetString());
+                    if (skill < 0)
+                    {
+                        errors.Add($"{at}.skill: unknown skill '{sk.GetString()}'.");
+                    }
+                }
+
+                kinds.Add(new Core.Units.TaskKindDefinition
+                {
+                    Id = kinds.Count,
+                    Key = key,
+                    Name = x.String("name"),
+                    Source = source,
+                    Good = Math.Max(0, good),
+                    Deposit = deposit,
+                    PerPersonPerYear = x.Amount("perPersonPerYear", Amount.FromHundredths(1), Amount.FromHundredths(100_000)),
+                    RequiresTechnology = tech,
+                    Skill = skill,
+                });
+            }
+        }
+
+        int perGroup = r.Int("defaultPeoplePerGroup", 1, 1000);
+        int maxPerGroup = r.Int("maxPeoplePerGroup", 1, 1000);
+        if (perGroup > maxPerGroup)
+        {
+            errors.Add($"{file}: defaultPeoplePerGroup: at most maxPeoplePerGroup ({maxPerGroup}).");
+        }
+
+        return new Core.Units.TaskRules
+        {
+            Kinds = kinds,
+            ZoneGathersMaterials = r.Bool("zoneGathersMaterials"),
+            RangeBeyondZoneCells = r.Int("rangeBeyondZoneCells", 0, 6),
+            PeoplePerTask = r.Int("peoplePerTask", 1, 10000),
+            DefaultPeoplePerGroup = perGroup,
+            MaxPeoplePerGroup = maxPerGroup,
         };
     }
 

@@ -114,6 +114,11 @@ public static class GameStateHash
             h.Add(u.Target);
             h.Add((int)u.Order);
             h.Add(u.Home);
+            if (u.Role == CivSim.Core.Units.UnitRole.Workers)
+            {
+                h.Add(u.Task); // only work groups have a task (stage 6 PR 4a): hashes of games without them stay the same
+            }
+
             foreach (int p in u.People)
             {
                 h.Add(p);

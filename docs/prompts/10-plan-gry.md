@@ -77,7 +77,7 @@ rzemiosło, społeczeństwo. Kierunek rozwoju (GDD 6.4) = gałąź tańsza, bo l
 
 | # | Gałąź | Co | Brama / jak sprawdzić |
 | --- | --- | --- | --- |
-| 4a | `feat/area-tasks` | zadania w `tasks.json`, komendy, grupa robocza jako oddział; zbieranie ze strefy zostaje pod flagą do 4b; pomiar taktu z 200 grupami | takt < 30 ms przy 200 grupach |
+| 4a | `feat/area-tasks` | zadania w `tasks.json`, komendy, grupa robocza jako oddział; zbieranie ze strefy zostaje pod flagą do 4b; pomiar taktu z 200 grupami | takt < 30 ms przy 200 grupach. **Zrobione** (`docs/systems/tasks.md`): 197 grup, średni takt 2,0 ms; takty > 30 ms to tylko puls świata (znany problem 12) |
 | **P** | `feat/play-civ` | **prototyp sterowania**: „prowadź cywilizację” w menu, rola `Player`, widok przez mgłę, rozkazy z protokołu klikane na mapie, panel „co AI zrobiła za mnie”, pauza; grafiki osady wg technologii, pasek postępu, kamienie milowe w kronice | Patryk gra 15 min; lista „co nudzi, czego brakuje” |
 | **T** | `feat/pace` | **tempo i skala**: `--milestones`, cele z zasady 2, przyrost gaśnie z gęstością osad, limit osadników z administracji, gwarancja startu, mapa mała, zamrożenia z zasady 11 | tabela minut dla 10 seedów; 3–6 osad w 15. minucie; zero martwych startów |
 | 4b | `feat/area-tasks-ai` | gubernator zleca zadania; pola i łowiska jako zadania; koniec zbierania ze strefy poza żywnością | statystyki AI z 3 seedów bez spadku ludności > 10% |

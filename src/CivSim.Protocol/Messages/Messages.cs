@@ -178,7 +178,12 @@ public sealed record ContentMessage(
     [property: Key(3)] IReadOnlyList<string> Reliefs,
     [property: Key(4)] IReadOnlyList<GoodInfo>? Goods = null,
     [property: Key(5)] IReadOnlyList<string>? SettlementLevels = null,
-    [property: Key(6)] IReadOnlyList<string>? Strata = null) : IProtocolMessage;
+    [property: Key(6)] IReadOnlyList<string>? Strata = null,
+    [property: Key(7)] IReadOnlyList<TaskInfo>? Tasks = null) : IProtocolMessage;
+
+/// <summary>A kind of area task as the client sees it (stage 6 PR 4a): ids match <see cref="UnitView.Task"/>; the key goes into StartTaskDto.</summary>
+[MessagePackObject]
+public sealed record TaskInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] int Good);
 
 /// <summary>A good as the client sees it. Ids match the indexes of <see cref="SettlementView.Stock"/>.</summary>
 [MessagePackObject]
@@ -241,7 +246,7 @@ public sealed record MapChunkMessage(
 
 /// <summary>
 /// A unit as a viewer sees it (stage 6 PR 3a–3b): kind (index in units.json), owner, the cell it stands on, the cell it walks
-/// to next and how far it got (0–1000), its people and what it does (0 idle, 1 move, 2 found, 3 scout, 4 return).
+/// to next and how far it got (0–1000), its people and what it does (0 idle, 1 move, 2 found, 3 scout, 4 return, 5 attack, 6 flee, 7 work).
 /// </summary>
 [MessagePackObject]
 public sealed record UnitView(
@@ -257,7 +262,19 @@ public sealed record UnitView(
     [property: Key(9)] int People,
     [property: Key(10)] int Order)
 {
-    /// <summary>What its kind is for: 0 settlers, 1 scouts, 2 army, 3 carriers (stage 6 PR 3b).</summary>
+    /// <summary>What its kind is for: 0 settlers, 1 scouts, 2 army, 3 carriers (stage 6 PR 3b), 4 work group (stage 6 PR 4a).</summary>
     [Key(11)]
     public int Role { get; init; }
+
+    /// <summary>A work group's task (index in the content's task kinds), or -1 (stage 6 PR 4a).</summary>
+    [Key(12)]
+    public int Task { get; set; } = -1;
+
+    /// <summary>Column of the cell a work group works on, or -1.</summary>
+    [Key(13)]
+    public int TargetCol { get; set; } = -1;
+
+    /// <summary>Row of the cell a work group works on, or -1.</summary>
+    [Key(14)]
+    public int TargetRow { get; set; } = -1;
 }
