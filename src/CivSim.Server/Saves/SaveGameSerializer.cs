@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 38; // 36: area tasks (PR 4a); 37: the levers a player holds (PR P1); 38: a player's orders hold (PR P1)
+    public const int FormatVersion = 39; // 36: area tasks (PR 4a); 37: the levers a player holds (PR P1); 38: a player's orders hold (PR P1); 39: a player's diplomatic decisions hold
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -584,7 +584,7 @@ public static class SaveGameSerializer
             }
 
             list.Add(new RelationSaveData(r.Other.Value, (byte)r.Level, (byte)r.Way, r.FirstMonth, r.MetMonth, r.LastContactMonth,
-                r.Opening, r.Sympathy, r.Trust, r.RumorCell, r.RumorPeople, r.RumorFrom, memories, r.SettledMonth));
+                r.Opening, r.Sympathy, r.Trust, r.RumorCell, r.RumorPeople, r.RumorFrom, memories, r.SettledMonth, r.PlayerOrderTick));
         }
 
         return list;
@@ -607,6 +607,7 @@ public static class SaveGameSerializer
             r.RumorPeople = d.RumorPeople;
             r.RumorFrom = d.RumorFrom;
             r.SettledMonth = d.SettledMonth;
+            r.PlayerOrderTick = d.PlayerOrderTick;
             foreach (RelationMemorySaveData m in d.Memories ?? [])
             {
                 r.Remember(new Core.Diplomacy.RelationMemory

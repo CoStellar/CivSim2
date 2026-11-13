@@ -363,8 +363,11 @@ a krok świata częściej trwa miesiąc (wojny), więc 2000 tur to ok. 11 600 la
     wykonana do końca?”): rozkaz gracza trzyma osadę przez `playerOrderHoldYears` (10 lat akcji = 60 s), oddział do końca jego drogi, a
     kampanię do jej końca; AI nie wydaje przeciw nim komend, a komenda AI z tego samego taktu jest odrzucana (`Ai.PlayerOrders`). Przed
     poprawką AI w pierwszym pulsie scalało z powrotem mały obóz założony przez osadników gracza i dzieliło go (test bez przytrzymania);
-  - propozycje umów do gracza, który trzyma dźwignię 4, czekają bez odpowiedzi, aż wygasną (odpowiedź przyjdzie z kartami w PR 7);
-  - gracz, który trzyma dźwignię 2 i nie wybiera badania, nie bada nic.
+  - ~~propozycje umów do gracza, który trzyma dźwignię 4, czekają bez odpowiedzi~~ gracz odpowiada `AnswerProposalDto` i widzi je w
+    `GameViewMessage.Proposals` (PR P1, część 2); jeśli nie odpowie, wygasają jak dotąd;
+  - gracz, który trzyma dźwignię 2 i nie wybiera badania, nie bada nic (wybiera `SetResearchDto` z listy w widoku);
+  - decyzja dyplomatyczna gracza (wojna, propozycja, odpowiedź) wobec ludu X trzyma 60 s także wtedy, gdy gracz potem oddał dźwignię 4:
+    AI nie odwraca jej od razu. To świadome, ale do oceny w prototypie (może oddanie dźwigni powinno zdejmować przytrzymanie).
 - **Decyzja do oceny przy prototypie:** czy rozkaz gracza na dźwigni AI ma ją „przytrzymać” na kilka pulsów (pierwszy pomysł z planu)
   zamiast wymagać wzięcia dźwigni.
 

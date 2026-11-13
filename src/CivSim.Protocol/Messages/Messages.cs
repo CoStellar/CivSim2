@@ -92,7 +92,27 @@ public sealed record GameViewMessage(
     [property: Key(9)] bool LiveSeasons = false,
     [property: Key(10)] IReadOnlyList<UnitView>? Units = null,
     [property: Key(11)] int PlayerLevers = 0,
-    [property: Key(12)] IReadOnlyList<AiDecisionView>? AiDecisions = null) : IProtocolMessage;
+    [property: Key(12)] IReadOnlyList<AiDecisionView>? AiDecisions = null,
+    [property: Key(13)] ResearchView? Research = null,
+    [property: Key(14)] IReadOnlyList<ProposalView>? Proposals = null) : IProtocolMessage;
+
+/// <summary>
+/// What the player's civilization researches and what it may research next (stage 6 PR P1, lever 2): the technology now (key, or empty),
+/// how far it got (0–1000) and the technologies it may start now, cheapest first.
+/// </summary>
+[MessagePackObject]
+public sealed record ResearchView(
+    [property: Key(0)] string Researching,
+    [property: Key(1)] int ProgressPermille,
+    [property: Key(2)] IReadOnlyList<TechnologyOption> Options);
+
+/// <summary>A technology the player may research now: key (for SetResearchDto), name, era and base cost in research points.</summary>
+[MessagePackObject]
+public sealed record TechnologyOption([property: Key(0)] string Key, [property: Key(1)] string Name, [property: Key(2)] int Era, [property: Key(3)] long Cost);
+
+/// <summary>A pending proposal to the player's civilization (stage 6 PR P1, lever 4): from whom, which treaty (1 peace, 2 trade, 3 non-aggression, 4 alliance), since when.</summary>
+[MessagePackObject]
+public sealed record ProposalView([property: Key(0)] int From, [property: Key(1)] int Kind, [property: Key(2)] long Month);
 
 /// <summary>
 /// A decision the AI made for the player's civilization (ADR 0027, stage 6 PR P): when, on which lever (1–5; 0 = the simulation's,

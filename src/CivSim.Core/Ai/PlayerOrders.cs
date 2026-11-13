@@ -15,7 +15,9 @@ namespace CivSim.Core.Ai;
 /// <item>a settlement the player gave an order to (moved, split, joined, raided from, gave a task) and a camp the player's settlers
 /// founded, for <see cref="AiRules.PlayerOrderHoldYears"/> years of action, and as long as a work group the player sent from it is out;</item>
 /// <item>a unit the player gave an order to, until it is gone (settlers, scouts, work groups);</item>
-/// <item>a war campaign the player directed, until it ends: the AI does not recall it and does not make peace with its enemy meanwhile.</item>
+/// <item>a war campaign the player directed or sent out, until it ends: the AI does not recall it and does not make peace with its enemy meanwhile;</item>
+/// <item>the player's last diplomatic decision about another civilization (war, a proposal, an answer), for the same years: the AI
+/// does not declare war on it, propose to it or answer it.</item>
 /// </list>
 /// The AI does not issue commands against what is held (<see cref="Advisor"/>), and the turn refuses any it issued in the same tick
 /// (<see cref="Simulation.TurnRunner"/>). The world itself still acts: hunger, a lost battle, a place taken by others.
@@ -47,10 +49,14 @@ public static class PlayerOrders
                 return Held(t.Content, state, t.Settlement);
             case RecallCampaignCommand r:
                 return state.Episodes.Find(r.Episode) is { ByPlayer: true, Ended: false };
-            case ProposeTreatyCommand { Kind: TreatyKind.Peace } peace:
-                return PlayerCampaignAgainst(state, civ, peace.Other);
-            case AnswerProposalCommand { Kind: TreatyKind.Peace, Accept: true } yes:
-                return PlayerCampaignAgainst(state, civ, yes.From);
+            case ProposeTreatyCommand propose:
+                return DiplomacyHeld(propose.Content, state, civ, propose.Other)
+                    || (propose.Kind == TreatyKind.Peace && PlayerCampaignAgainst(state, civ, propose.Other));
+            case AnswerProposalCommand answer:
+                return DiplomacyHeld(answer.Content, state, civ, answer.From)
+                    || (answer is { Kind: TreatyKind.Peace, Accept: true } && PlayerCampaignAgainst(state, civ, answer.From));
+            case DeclareWarCommand war:
+                return DiplomacyHeld(war.Content, state, civ, war.Target);
             default:
                 return false;
         }
@@ -99,6 +105,26 @@ public static class PlayerOrders
                 break;
             case AttackCommand at:
                 MarkUnit(state, at.Unit);
+                break;
+            case DeclareWarCommand war:
+                HoldDiplomacy(state, civ, war.Target);
+                break;
+            case ProposeTreatyCommand propose:
+                HoldDiplomacy(state, civ, propose.Other);
+                break;
+            case AnswerProposalCommand answer:
+                HoldDiplomacy(state, civ, answer.From);
+                break;
+            case LaunchCampaignCommand launch:
+                Hold(state, launch.Home);
+                foreach (Episode e in state.Episodes.All)
+                {
+                    if (!e.Ended && e.Civ == civ && e.Home == launch.Home.Value && e.Kind == EpisodeKind.Campaign && e.Id >= state.Episodes.NextId - 1)
+                    {
+                        e.ByPlayer = true; // the campaign the player just sent out
+                    }
+                }
+
                 break;
         }
     }
@@ -166,6 +192,43 @@ public static class PlayerOrders
         for (long id = unitsBefore; id < state.Units.NextId; id++)
         {
             MarkUnit(state, id);
+        }
+    }
+
+    // The player's last decision about <paramref name="other"/> (war, a proposal, an answer) still holds: the AI leaves that
+    // relation alone (no war, no proposal, no answer) for the hold time.
+    private static bool DiplomacyHeld(GameContent content, GameState state, CivId civ, CivId other)
+    {
+        if (state.FindCivilization(civ) is not { } c)
+        {
+            return false;
+        }
+
+        foreach (Relation r in c.Relations)
+        {
+            if (r.Other == other)
+            {
+                return r.PlayerOrderTick >= 0 && state.Turn < r.PlayerOrderTick + HoldTicks(content);
+            }
+        }
+
+        return false;
+    }
+
+    private static void HoldDiplomacy(GameState state, CivId civ, CivId other)
+    {
+        if (state.FindCivilization(civ) is not { } c)
+        {
+            return;
+        }
+
+        foreach (Relation r in c.Relations)
+        {
+            if (r.Other == other)
+            {
+                r.PlayerOrderTick = state.Turn;
+                return;
+            }
         }
     }
 

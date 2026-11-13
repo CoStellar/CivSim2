@@ -61,8 +61,26 @@ flowchart LR
 (`Advisor.Issue`), a komenda AI wydana w tym samym takcie jest odrzucana przy rozstrzyganiu („A player's order holds.”). Czas: `ai.json`
 `playerOrderHoldYears` (10). Znaczniki działają niezależnie od dźwigni i od tego, kto prowadzi lud (wygasają same).
 
-**Luki, których ta poprawka nie zamyka** (`docs/known-issues.md` 14 i 15): gracz nie ma komend dla dźwigni 2, 4 i 5 (badanie, wojna,
-umowy, ustrój), a zwiadowcy i osadnicy po rozkazie „idź” czekają bez końca.
+**Decyzja dyplomatyczna gracza trzyma** (PR P1, część 2): wypowiedzenie wojny, propozycja umowy albo odpowiedź gracza wobec ludu X
+znakuje relację (`Relation.PlayerOrderTick`, zapis, hasz tylko gdy ustawiony). Przez 10 lat akcji (60 s) AI nie wypowiada X wojny,
+nie proponuje mu niczego i nie odpowiada na jego propozycje (propozycje czekają na gracza). Do tego, dopóki trwa kampania gracza przeciw X,
+AI nie proponuje X pokoju i nie przyjmuje jego pokoju.
+
+**Komendy gracza dla każdej dźwigni** (`docs/known-issues.md` 14, naprawione): te same komendy, które wydaje AI, w protokole 19:
+
+| Dźwignia | Komenda w protokole | Komenda rdzenia | Co gracz widzi, żeby wybrać |
+| --- | --- | --- | --- |
+| 1. Gdzie żyjemy | `SettleDto` (osiąść na stałe), wcześniej: odłam, przeprowadzka, połączenie, oddziały | `SettleCommand` | osady i oddziały na mapie |
+| 2. Dokąd zmierzamy | `SetResearchDto(technologia)` | `SetResearchCommand` | `GameViewMessage.Research`: co badamy, postęp w promilach, dostępne technologie od najtańszej |
+| 3. Co robimy na ziemi | `StartTaskDto` (z PR 4a) | `StartTaskCommand` | złoża i grupy robocze |
+| 4. Z kim i jak | `DeclareWarDto(cel, powód, osada)`, `ProposeTreatyDto(lud, umowa)`, `AnswerProposalDto(od, umowa, tak/nie)`, `LaunchCampaignDto(dom, cel, wojownicy)` | `DeclareWarCommand`, `ProposeTreatyCommand`, `AnswerProposalCommand`, `LaunchCampaignCommand` | `GameViewMessage.Proposals`: propozycje czekające na odpowiedź |
+| 5. Karty | `ChangeGovernmentDto(ustrój)` do czasu kart (PR 7) | `ChangeGovernmentCommand` | ustrój w widoku ludu |
+
+Rodzaj umowy albo powód wojny spoza zakresu jest odrzucany (nigdy zgadywany); nieznana technologia daje komendę, która nie przechodzi
+sprawdzenia. Strategia (wagi doradców) nie ma komendy gracza: to wewnętrzna rada AI; gracz, który wziął dźwignię 2, wybiera badanie wprost.
+
+**Zwiadowcy wracają sami** (`docs/known-issues.md` 15, w części): po dojściu na pole z rozkazu „idź” zwiadowcy wracają do domu z tym, co
+zobaczyli, a osada może wysłać następnych. Osadnicy po „idź” dalej czekają na „załóż obóz” (licznik jedzenia w podglądzie: PR P2).
 
 Testy: `tests/CivSim.Tests/Ai/PlayerOrderTests.cs` (6): ten sam takt (gracz wygrywa, komenda AI odrzucona), czas przytrzymania i jego
 koniec, obóz z osadników gracza trzymany i nie scalany, dom grupy roboczej trzymany, kampania bez odwołania i bez pokoju, cała gra z AI:
@@ -83,7 +101,9 @@ Brak (dźwignie to zasada gry, nie zawartość).
 `tests/CivSim.Tests/Ai/LeverTests.cs`: każda akcja AI ma dźwignię; gracz bez dźwigni = partia AI (ten sam hasz); AI nie rusza wziętej
 dźwigni i decyduje pozostałe (dwa warianty); komenda tylko dla ludu gracza; zapis i hasz; wybór ludu w `Hello`, odmowa zajętego ludu,
 widok z dźwigniami i decyzjami AI. `LocalServerHostTests.PlayerOnlyReceivesCellsItKnows`: gracz sam ustawia prędkość, przy drugim
-graczu już nie.
+graczu już nie. `tests/CivSim.Tests/Ai/PlayerCommandTests.cs` (4): każda komenda dźwigni z protokołu daje komendę AI
+(a zła odmowę), AI nie cofa dyplomacji gracza, wybór badania gracza trwa do nauczenia i widok pokazuje opcje, zwiadowcy wracają po „idź”
+(bez poprawki test pada).
 
 ## Wydajność
 Doradcy liczą teraz także lud gracza (wcześniej go pomijali): to jedna cywilizacja więcej, tyle samo co przy AI. `HelmsmanLog` zbiera
