@@ -29,6 +29,7 @@ public static class CommandMapper
             FoundCampDto f when content is not null => new Core.Units.FoundCampCommand(content, f.UnitId),
             ReturnUnitDto r when content is not null => new Core.Units.ReturnUnitCommand(content, r.UnitId),
             AttackDto a when content is not null => new Core.Units.AttackCommand(content, a.UnitId, new SettlementId(a.TargetSettlementId)),
+            StartTaskDto t when content is not null => new Core.Units.StartTaskCommand(content, new SettlementId(t.SettlementId), t.Kind ?? string.Empty, new HexCoord(t.Col, t.Row), t.People),
             _ => null,
         };
     }

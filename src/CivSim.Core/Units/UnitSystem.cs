@@ -59,6 +59,10 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                     continue;
                 }
             }
+            else if (meal && u.Role == UnitRole.Workers)
+            {
+                EatAtHome(context, state, u, civ);
+            }
 
             Walk(context, state, u, civ);
         }
@@ -75,6 +79,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             case UnitOrder.Move:
             case UnitOrder.Found:
             case UnitOrder.Attack:
+            case UnitOrder.Work:
                 return u.Target;
             case UnitOrder.Return:
             case UnitOrder.Flee:
@@ -377,6 +382,40 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         }
     }
 
+    // A work group eats a month of food from its home's stock; when home has none it comes back (stage 6 PR 4a).
+    private void EatAtHome(TurnContext context, GameState state, Unit u, CivilizationState civ)
+    {
+        if (u.Order != UnitOrder.Work)
+        {
+            return;
+        }
+
+        SettlementState? home = u.Home >= 0 ? state.FindSettlement(new SettlementId(u.Home)) : null;
+        if (home is not { IsActive: true })
+        {
+            return; // TaskSystem sends it to the nearest own settlement
+        }
+
+        Amount need = CivSim.Core.Episodes.Campaigns.FoodFor(_content, u.TotalPeople(), 1);
+        Span<Amount> stock = home.Stock;
+        for (int g = 0; g < stock.Length && g < _content.Goods.Count && need > Amount.Zero; g++)
+        {
+            if (_content.Goods[g].IsFood && stock[g] > Amount.Zero)
+            {
+                Amount n = Amount.Min(stock[g], need);
+                stock[g] -= n;
+                need -= n;
+            }
+        }
+
+        if (need > Amount.Zero)
+        {
+            u.Order = UnitOrder.Return;
+            u.ForgetPath();
+            context.Chronicle($"The work group of {home.Name} ran out of food and comes home.");
+        }
+    }
+
     // The unit stands on its goal: settlers found their camp, a unit sent home joins it, a moved unit waits.
     private void Arrive(TurnContext context, GameState state, Unit u, CivilizationState civ, WorldState world)
     {
@@ -385,6 +424,10 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             case UnitOrder.Move:
             case UnitOrder.Flee:
                 u.Order = UnitOrder.Idle;
+                return;
+            case UnitOrder.Work:
+                u.Next = -1; // at work on its task's cell (TaskSystem brings its yield home in the pulse)
+                u.Progress = 0;
                 return;
             case UnitOrder.Return when u.Episode >= 0:
                 u.Order = UnitOrder.Idle; // an army home: its campaign brings the survivors in (CampaignSystem)
@@ -436,6 +479,13 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 Rejoin(context, state, u, civ, world, now: true);
             }
 
+            return;
+        }
+
+        if (u.Role == UnitRole.Workers)
+        {
+            u.Order = UnitOrder.Return; // no known way to its task: it comes home
+            u.ForgetPath();
             return;
         }
 

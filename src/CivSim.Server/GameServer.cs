@@ -400,7 +400,8 @@ public sealed class GameServer
             strata.Add(s.Name);
         }
 
-        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels, strata));
+        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels, strata,
+            [.. System.Linq.Enumerable.Select(_content.Tasks.Kinds, t => new TaskInfo(t.Id, t.Key, t.Name, t.Good))]));
     }
 
     private void SendAllChunks(Client client)

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tasks.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "zoneGathersMaterials": {
+      "type": "boolean"
+    },
+    "rangeBeyondZoneCells": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "peoplePerTask": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "defaultPeoplePerGroup": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "maxPeoplePerGroup": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "good": {
+            "type": "string"
+          },
+          "perPersonPerYear": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "deposit": {
+            "type": "string"
+          },
+          "requires": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

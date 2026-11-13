@@ -20,6 +20,9 @@ public enum UnitRole : byte
 
     /// <summary>People who carry food from a settlement to an army and go home.</summary>
     Carriers = 3,
+
+    /// <summary>A work group of an area task: it walks to the task's cell, works there and comes home when called back (stage 6 PR 4a).</summary>
+    Workers = 4,
 }
 
 /// <summary>

@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 35;
+    public const int FormatVersion = 36; // 36: work groups keep their area task (stage 6 PR 4a)
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -377,7 +377,7 @@ public static class SaveGameSerializer
 
             list.Add(new UnitSaveData(u.Id, (byte)u.Kind, u.Owner.Value, u.World.Value, u.Cell, u.Target, (byte)u.Order, u.Home,
                 u.People.ToArray(), u.Skilled.ToArray(), u.Trainees.ToArray(), Hundredths(u.Cargo.ToArray()), u.Progress, u.Next, u.Direction,
-                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal, (int)u.Role, u.Episode));
+                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal, (int)u.Role, u.Episode, u.Task));
         }
 
         return list;
@@ -406,6 +406,7 @@ public static class SaveGameSerializer
             u.PathAt = d.PathAt;
             u.PathGoal = d.PathGoal;
             u.Episode = d.Episode;
+            u.Task = d.Task;
         }
     }
 

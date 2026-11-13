@@ -18,6 +18,7 @@ namespace CivSim.Protocol.Messages;
 [Union(9, typeof(FoundCampDto))]
 [Union(10, typeof(ReturnUnitDto))]
 [Union(11, typeof(AttackDto))]
+[Union(12, typeof(StartTaskDto))]
 public interface ICommandDto
 {
 }
@@ -69,3 +70,10 @@ public sealed record ReturnUnitDto([property: Key(0)] long UnitId) : ICommandDto
 /// <summary>Send the army of a campaign against another settlement of the same enemy (stage 6 PR 3b).</summary>
 [MessagePackObject]
 public sealed record AttackDto([property: Key(0)] long UnitId, [property: Key(1)] int TargetSettlementId) : ICommandDto;
+
+/// <summary>
+/// Start an area task (stage 6 PR 4a, GDD 4.4): the settlement sends a work group of <c>People</c> people (0 = the default size) to the cell
+/// to do the task <c>Kind</c> (a key of tasks.json, e.g. <c>woodcutting</c>). Call the group back with <see cref="ReturnUnitDto"/>.
+/// </summary>
+[MessagePackObject]
+public sealed record StartTaskDto([property: Key(0)] int SettlementId, [property: Key(1)] string Kind, [property: Key(2)] int Col, [property: Key(3)] int Row, [property: Key(4)] int People = 0) : ICommandDto;
