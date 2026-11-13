@@ -17,6 +17,15 @@ Trzy z ośmiu cywilizacji przez całe 15 minut mają 21–78 ludzi. Decyzje AI: 
 gracz chciałby dostać jako kartę (wojna, pokój, umowa, ustrój). Wniosek: 4 puste minuty, potem wykładniczy wybuch; gracz potrzebuje
 odwrotnej krzywej (coś do zrobienia od 1. minuty, 3–6 osad w 15. minucie).
 
+## Zasada nadrzędna (ADR 0027): symulacja jest panem, gracz sternikiem
+
+Pięć dźwigni gracza (GDD 1.2): gdzie żyjemy, dokąd zmierzamy, co robimy na ziemi, z kim i jak, karty. Każdą można oddać AI; gracz, który nie
+klika, ma dalej ciekawą partię; każda decyzja ma skutek widoczny w 2–3 minuty i przyczynę w kronice. Każdy PR odpowiada na pięć pytań „testu
+sternika” w opisie i w `docs/systems/`. Dla PR P: pięć kafelków dźwigni z „biorę / oddaję”, nie tylko rozkazy dla oddziałów; test
+automatyczny „15 minut z rolą gracza bez rozkazów daje te same kamienie milowe co AI”. Zadania zleca gracz tylko w osadach, które wziął
+w ręce; uczony proponuje trzy technologie (PR 6); prawa i ustroje tylko kartami (PR 7). Każda nowa era zaczyna się od wiersza tabeli er
+z GDD 1.2.
+
 ## Zasady z 2026-11-13 (ADR 0026)
 
 1. **Prototyp sterowania przed kolejnymi mechanikami.** Każdy PR etapu 6 od PR P ma punkt „jak sprawdzić ręcznie w prototypie”.

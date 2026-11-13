@@ -3,8 +3,8 @@
 **Zakres:** budujemy wyłącznie funkcje oznaczone w `docs/GDD.md` (rozdział 16) jako **CORE** i **CORE (uproszczone)**.
 Moduły to przyszłe aktualizacje i nie wchodzą do tego planu. Kultury i religii nie ma w grze.
 
-**Kierunek od 2026-11-09 (ADR 0024, 0025): gra na żywo** między RTS-em a strategią. Gracz rządzi cywilizacją i steruje oddziałami,
-AI robi to, czego on nie zdąży; backend liczy się w taktach i pulsach, lata to tylko licznik. Kolejność: backend na żywo (etap 6),
+**Kierunek od 2026-11-09 (ADR 0024, 0025): gra na żywo**, a od 2026-11-13 (ADR 0027) **symulacja jest panem, gracz sternikiem**: pięć dźwigni
+(GDD 1.2), każdą można oddać AI, sterowanie oddziałami to narzędzie, nie filar; backend liczy się w taktach i pulsach, lata to tylko licznik. Kolejność: backend na żywo (etap 6),
 epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery. Dawne etapy 6–13 (ery 3–9, tryb gracza
 na końcu) są zastąpione. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”. Szczegóły zasad: `docs/GDD.md` (1.1, 6.4).
 

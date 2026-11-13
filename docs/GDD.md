@@ -33,13 +33,7 @@ CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod sp
 2. **Start od zera w neolicie.** Epoka kamienia to tylko „historia plemienia” (opis), bez rozgrywki. Różnice daje teren.
 3. **Gra na żywo** do celu ustalonego na starcie na pasku postępu: pierwszy metal, pierwsza elektryczność, lot w kosmos albo podbój obszaru na innej planecie. Pierwsza wersja dla graczy kończy się na epoce brązu: celem jest odkrycie wszystkich jej technologii.
 
-**Co robi gracz.**
-- Steruje oddziałami w ruchu jak w RTS-ie: osadnicy, wojownicy, zwiadowcy, tragarze z jedzeniem, później łodzie i inne.
-- Zleca **zadania na obszarze**: wydobycie surowca, pola, łowiska, budowy w danym miejscu (palisada, potem mur i zbrojownia). Ludzie z osady sami tam chodzą (4.4, „Zadania na obszarze”).
-- Zakłada miasta i awansuje je, buduje fortyfikacje, uzbraja się.
-- Wybiera kierunek rozwoju ludu (góry i kopanie, morze i łodzie…), który z czasem owocuje (6.4).
-- Odpowiada na **karty decyzji**: tylko ze zdarzeń (wojna, pokój, umowa, secesja, głód, klęska), najwyżej jedna na 30 s, licznik 20 s czasu gry, potem decyduje AI (ADR 0026).
-- Dwa przełączniki delegowania (ADR 0026): „osady same zlecają zadania” i „dowódca sam prowadzi wojnę”; czego nie zdąży, robi AI.
+**Co robi gracz (ADR 0027: symulacja jest panem, gracz sternikiem; pełne zasady w 1.2).** Gracz ma pięć dźwigni: gdzie żyjemy (start, osadnicy, nowe osady), dokąd zmierzamy (kierunek rozwoju i wybór technologii z trzech propozycji), co robimy na ziemi (zadania na obszarze i budowy w miejscu), z kim i jak (wojna, pokój, cel wojny, armia na cel, umowy), odpowiedzi na karty (zdarzenia, a w późniejszych erach prawa i ustroje). Sterowanie oddziałami (idź, załóż, wróć, atakuj) to narzędzie dźwigni 1 i 4, nie osobna gra; bitwę liczy symulacja. Każdą dźwignię można wziąć i oddać AI w dowolnej chwili; gracz, który nie klika, ma dalej ciekawą partię.
 
 **Tempo.** Nie ma budżetu minut na erę: każda cywilizacja przechodzi do kolejnej ery we własnym tempie, zależnym od terenu i umiejętności gracza. Z erą zmienia się tempo gry i to, na czym gracz się skupia. Pasek pokazuje erę i minutę partii; lata są tylko podpisem w kronice i na wykresach (ADR 0026). Backend liczy się w taktach i pulsach cywilizacji (ADR 0025). W pierwszych erach nie ma postaci z imieniem, a do epoki brązu jest jeden ustrój (rada starszych); wódz i ustroje wchodzą jako karty od brązu (ADR 0026).
 
@@ -48,6 +42,54 @@ CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod sp
 **Tempo AI (poziomy trudności) w wersji do epoki brązu:** dobre AI odkrywa wszystkie technologie brązu w ok. 15 min, średnie w 20–25 min, słabe w 30–40 min.
 
 **Tryby.** Najpierw gra solo (ta sama gra z większą liczbą graczy AI), potem w sieci. Pauza w singlu zawsze, prędkości ×1/×2/×4. Na start mapa mała i 4–6 cywilizacji (ADR 0026); standard dla dłuższych partii. Gracz, którego lud upadł, zostaje **widzem** i widzi wszystkie cywilizacje graczy.
+
+### 1.2 Rozgrywka sternika (decyzja Patryka z 2026-11-13, ADR 0027)
+
+**Symulacja jest panem, gracz jest sternikiem.** Świat rozwija się sam, według tych samych zasad dla wszystkich; gracz wybiera kierunek i patrzy, jak jego wybory odbijają się w historii ludu. To historia, którą współtworzysz, nie historia, którą kontrolujesz. Obowiązuje w każdej erze i w każdym PR. Pełny opis: dokument „CivSim 2: rozgrywka sternika — zasady na wszystkie ery” w Claude Docs (https://claude.ai/artifact/RfXQsHCry1K2wCsJLkFcUr).
+
+**Cztery konsekwencje:**
+1. Gracz, który nie klika, ma dalej ciekawą partię. AI prowadzi wszystko, czego gracz nie wziął w ręce; każdą dźwignię można wziąć i oddać w dowolnej chwili.
+2. Mało dźwigni, każda mocna: pięć rodzajów decyzji. Nowa mechanika wchodzi do jednego z pięciu albo zostaje u AI.
+3. Każda decyzja ma skutek widoczny na mapie albo na pasku w 2–3 minuty, a kronika mówi dlaczego. Co tego nie spełnia, nie jest dźwignią gracza.
+4. Wierność przyczynom, nie latom. Lata są podpisem w kronice, nie zasadą gry.
+
+**Pętla:** patrz (mapa, pasek) → zdecyduj, gdy chcesz (dźwignia albo karta) → zobacz skutek w 2–3 minuty → przeczytaj dlaczego (kronika z przyczyną z dziennika decyzji). Miarą jakości gry jest to, czy po 15 minutach gracz potrafi opowiedzieć historię ludu i wskazać trzy miejsca, w których to on zadecydował.
+
+**Pięć dźwigni** (w każdej erze dochodzą opcje, nie rodzaje):
+
+| Dźwignia | Gracz | AI, gdy gracz nie | Widoczny skutek |
+| --- | --- | --- | --- |
+| 1. Gdzie żyjemy | start, cel osadników, nowa osada; później kolonie, planety | doradca osiedlenia | nowa osada, strefa wpływów |
+| 2. Dokąd zmierzamy | kierunek rozwoju (żywność, rzemiosło, społeczeństwo; później morze, handel, wojsko, nauka, przemysł), wybór technologii z trzech propozycji uczonego | uczony | pasek postępu, nowa rzecz na mapie po odkryciu |
+| 3. Co robimy na ziemi | zadania na obszarze i budowy w miejscu w osadach, które wziął w ręce | gubernator | grupa robocza, pola, budowle |
+| 4. Z kim i jak | wojna, pokój, cel wojny, armia na cel, umowy; później sojusze, szlaki, federacje | dyplomata, dowódca | armie, bitwa, granice, karawany |
+| 5. Karty | zdarzenia (susza, głód, secesja, umowa, bunt); od brązu prawa, ustroje, polityki | rekomendowana opcja po 20 s | efekt karty od razu |
+
+**Czego gracz nie robi nigdy:** nie steruje pojedynczym człowiekiem ani nie przydziela pracowników; nie prowadzi walki ręcznie; nie ustawia cen, receptur ani rozdziału towarów; nie zatrzymuje historii (pauza w singlu, ale karta wygasa); nie dostaje ukrytej wiedzy ani premii.
+
+**Przebieg partii:** ustawienia (cel na pasku, mapa, cywilizacje, trudność) → start (losowa kolejność, 15 s z mapą bez złóż, trzy zdania historii plemienia) → pierwsze 5 minut z czymś do zrobienia od razu (technologia w 1. min, wioska w 3., era 1 w 5.) → środek (3–6 osad, kontakt, umowa albo najazd, systemy odmrażane z erą) → koniec (ekran z wykresem technologii wszystkich, mapą z powtórki, kroniką z decyzjami gracza; upadły lud ogląda jako widz). Partia do brązu 15–40 min; każda kolejna era 15–30 min; zapis w dowolnej chwili.
+
+**Dźwignie w erach** (kierunek, nie liczby; każda era projektowana w swoim etapie od tego wiersza):
+
+| Era | Nowe w dźwigniach 1–5 | Odmrożone systemy | Skupienie gracza |
+| --- | --- | --- | --- |
+| Neolit | start, osadnicy, wędrówka obozu; 3 gałęzie; wycinka, krzemień, pole, łowisko, palisada; najazd, pokój, barter; susza, głód, epidemia, secesja | zadania, kontakt, wojna | przetrwać i osiąść |
+| Brąz | wioska rośnie w miasto, większa wciela mniejszą; + morze, wojsko; kopalnia miedzi i cyny, mur, zbrojownia, łódź; cel wojny, umowy handlowe; wódz, pierwsze prawa, bunt | ustrój i nastrój, ceny i handel | metal i pierwsze miasto |
+| Żelazo i antyk | prowincje, drogi; + nauka, handel; kopalnia żelaza, droga, port, akwedukt; sojusze, trybut, oblężenie; ustrój (republika, despotia), podatki | pakty i sojusze, warstwy z wpływem, dryf prowincji | państwo zamiast plemienia |
+| Średniowiecze | zamki, lenna; + rzemiosło cechowe, uniwersytet; zamek, młyn, trójpolówka; wasalstwo, małżeństwa dynastyczne jako karta; sukcesja (pierwsze postacie z imieniem), zaraza | postacie z imieniem, pamięć krzywd | utrzymać całość państwa |
+| Renesans | kolonie za morzem; + odkrycia, druk; stocznia, manufaktura; kolonie, monopol handlowy; reformy, bankructwo | budżet i pieniądz, długie szlaki | morze i pieniądz |
+| Przemysł | aglomeracje, kolej; + przemysł; kopalnia węgla, huta, fabryka, kolej; wojna totalna (fronty), bloki; prawa pracy, rewolucja | łańcuchy produkcji, fronty, klimat (emisje) | łańcuch od węgla do fabryki |
+| Nowoczesność | państwo na kontynencie; + elektryczność, lot; elektrownia, lotnisko, autostrada; organizacje międzynarodowe, sankcje; demokracja, kryzys | klimat dynamiczny, dyplomacja wielostronna | wzrost a stabilność |
+| Informacja | miasta-sieci; + informacja, kosmos; centrum danych, port kosmiczny; federacje; prywatność, automatyzacja | handel globalny w czasie rzeczywistym | przygotowanie do kosmosu |
+| Kosmos | inne planety; + terraformowanie; kopalnia na asteroidzie, kolonia; traktaty planetarne; kolonia chce niepodległości | wiele światów | kolonia samowystarczalna |
+
+Nowa opcja wchodzi tylko wtedy, gdy ma widoczny skutek i da się ją oddać AI. Era bez nowej opcji w którejś dźwigni jest w porządku; dźwignia bez widocznego skutku nie.
+
+**Ekran sternika** (jeden układ na wszystkie ery, motyw z erą): mapa; pasek u góry z pięcioma liczbami (era i minuta, postęp do celu mój i najlepszego sąsiada, żywność ze strzałką, nastrój ze strzałką, ludzie); kronika z minutą i przyczyną, decyzje gracza zaznaczone; karty (jedna naraz, licznik 20 s); panel doradców = pięć kafelków dźwigni z tym, co AI właśnie robi, i przyciskiem „biorę / oddaję” (to cały mechanizm delegowania); panel wybranej rzeczy z jedną liczbą i trzema rozkazami; pauza i prędkości. Podgląd deweloperski (etap 6) dostaje tylko to, co potrzebne do testu; pełny ekran w etapie 8.
+
+**Tempo, trudność, koniec, sieć:** tempo pod gracza (ADR 0026), nigdy odwrotnie; trudność = błąd AI, nigdy premie; cel na pasku widoczny dla wszystkich, co daje powód do najazdu, umowy i podglądania technologii; w sieci te same dźwignie i karty, rozłączonego prowadzi AI.
+
+**Test sternika** (każda mechanika, era i PR): 1) do której dźwigni należy, a jeśli do żadnej, liczy ją symulacja; 2) czy AI zrobi to samo, gdy gracz nie klika; 3) co widać w 2–3 minuty po decyzji; 4) co mówi kronika; 5) czy partia bez klikania dalej jest ciekawa (15 minut z rolą gracza bez rozkazów). Na bramie etapu Patryk gra 15 minut z dźwigniami i 15 bez; notatka „co nudzi, czego brakuje, gdzie nie wiedziałem dlaczego” to lista zadań na następny etap. `docs/systems/` każdej mechaniki ma sekcję „Test sternika”.
 
 ## 2. Technologia i architektura
 
