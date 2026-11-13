@@ -31,7 +31,12 @@ public interface IProtocolMessage
 public sealed record HelloMessage(
     [property: Key(0)] int ProtocolVersion,
     [property: Key(1)] string PlayerName,
-    [property: Key(2)] ClientRole Role = ClientRole.Player) : IProtocolMessage;
+    [property: Key(2)] ClientRole Role = ClientRole.Player,
+    [property: Key(3)] int CivId = -1) : IProtocolMessage
+{
+    /// <summary>A player who names no civilization gets the first free one.</summary>
+    public const int AnyCiv = -1;
+}
 
 /// <summary>What a client wants to be.</summary>
 public enum ClientRole
@@ -85,7 +90,41 @@ public sealed record GameViewMessage(
     [property: Key(7)] IReadOnlyList<SettlementView>? Settlements = null,
     [property: Key(8)] long Month = 0,
     [property: Key(9)] bool LiveSeasons = false,
-    [property: Key(10)] IReadOnlyList<UnitView>? Units = null) : IProtocolMessage;
+    [property: Key(10)] IReadOnlyList<UnitView>? Units = null,
+    [property: Key(11)] int PlayerLevers = 0,
+    [property: Key(12)] IReadOnlyList<AiDecisionView>? AiDecisions = null) : IProtocolMessage;
+
+/// <summary>
+/// A decision the AI made for the player's civilization (ADR 0027, stage 6 PR P): when, on which lever (1–5; 0 = the simulation's,
+/// such as recipes) and what, with its first reasons. Players see the last ones in the panel "what the AI did for me".
+/// </summary>
+[MessagePackObject]
+public sealed record AiDecisionView([property: Key(0)] long Turn, [property: Key(1)] int Lever, [property: Key(2)] string Text);
+
+/// <summary>The five levers of the helmsman (ADR 0027): bit flags of <see cref="GameViewMessage.PlayerLevers"/> and <see cref="SetLeverDto"/>.</summary>
+public static class LeverFlags
+{
+    /// <summary>1. Where we live.</summary>
+    public const int WhereWeLive = 1;
+
+    /// <summary>2. Where we are heading.</summary>
+    public const int WhereWeHead = 2;
+
+    /// <summary>3. What we do on the land.</summary>
+    public const int OnTheLand = 4;
+
+    /// <summary>4. With whom and how.</summary>
+    public const int WithWhom = 8;
+
+    /// <summary>5. Answers to cards.</summary>
+    public const int Cards = 16;
+
+    /// <summary>The five flags in the order of the levers (1–5).</summary>
+    public static readonly int[] All = [WhereWeLive, WhereWeHead, OnTheLand, WithWhom, Cards];
+
+    /// <summary>Names shown on the tiles.</summary>
+    public static readonly string[] Names = ["Where we live", "Where we are heading", "What we do on the land", "With whom and how", "Answers to cards"];
+}
 
 /// <summary>
 /// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per

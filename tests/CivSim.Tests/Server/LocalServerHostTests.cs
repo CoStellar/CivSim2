@@ -142,8 +142,14 @@ public class LocalServerHostTests
         Assert.Equal(127, known);
         Assert.True(total > known);
 
-        // Players cannot change the speed.
+        // A player who plays alone sets the speed (stage 6 PR P, ADR 0024: pause and speeds in the solo game); with a second player
+        // neither may (the host sets it in a game of several, stage 9).
         player.Send(new SetSpeedMessage(SimulationSpeed.Max));
+        Assert.Contains(WaitFor(player, l => l.Exists(m => m is GameViewMessage { Speed: SimulationSpeed.Max })), m => m is GameViewMessage);
+        IConnection second = host.Connect();
+        second.Send(new HelloMessage(ProtocolInfo.Version, "Ola"));
+        WaitFor(second, l => l.Exists(m => m is WelcomeMessage));
+        player.Send(new SetSpeedMessage(SimulationSpeed.X1));
         Assert.Contains(WaitFor(player, l => l.Exists(m => m is ConnectionRejectedMessage)), m => m is ConnectionRejectedMessage);
     }
 

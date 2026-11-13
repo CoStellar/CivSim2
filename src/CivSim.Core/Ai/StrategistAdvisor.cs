@@ -36,7 +36,7 @@ public sealed class StrategistAdvisor : Advisor
         {
             CivilizationState civ = state.Civilizations[c];
             // A planned decision: only in the civilization's own steps (ADR 0018).
-            if (!Simulation.WorldClock.Steps(civ) || civ.Controller != PlayerId.Ai || (state.Month < civ.StrategyReviewMonth && civ.Era == civ.StrategyEra))
+            if (!Simulation.WorldClock.Steps(civ) || (state.Month < civ.StrategyReviewMonth && civ.Era == civ.StrategyEra))
             {
                 continue;
             }

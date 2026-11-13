@@ -288,6 +288,11 @@ public static class GameStateHash
             h.Add(c.Name);
             h.Add(c.LanguageSeed);
             h.Add(c.NamesIssued);
+            if (c.PlayerLevers != Ai.Lever.None)
+            {
+                h.Add((int)c.PlayerLevers); // the AI keeps off these (ADR 0027); games without players hash as before
+            }
+
             h.Add(c.IsAlive);
             h.Add(c.StartCell.Col);
             h.Add(c.StartCell.Row);

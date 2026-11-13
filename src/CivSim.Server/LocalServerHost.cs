@@ -292,7 +292,7 @@ public sealed class LocalServerHost : IDisposable
 
                 bool ran = _server.Pump();
                 TimeSpan? interval = TurnInterval(_server.Speed, _server.TicksPerSecond);
-                if (!ran && interval is { } wait && _server.ConnectedObservers > 0 && Stopwatch.GetElapsedTime(lastTurn) >= wait)
+                if (!ran && interval is { } wait && (_server.ConnectedObservers > 0 || _server.ConnectedLeaders > 0) && Stopwatch.GetElapsedTime(lastTurn) >= wait)
                 {
                     // Keep the pace even when a tick runs late (at most one tick behind; Max runs as fast as it can).
                     long now = Stopwatch.GetTimestamp();

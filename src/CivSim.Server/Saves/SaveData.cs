@@ -171,7 +171,7 @@ public sealed record ClimateSaveData(
 [MessagePackObject]
 public sealed record MapLayerSaveData([property: Key(0)] string Name, [property: Key(1)] byte[] Bytes);
 
-/// <summary>Saved civilization. Controllers are not saved: on load every civilization starts AI-controlled until players rejoin.</summary>
+/// <summary>Saved civilization. Controllers are not saved: on load every civilization starts AI-controlled until players rejoin; the levers its player held are (ADR 0027).</summary>
 [MessagePackObject]
 public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive,
     [property: Key(3)] int StartCol,
@@ -215,7 +215,8 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(41)] long FoundedMonth = 0,
     [property: Key(42)] long RevoltCalmUntilMonth = 0,
     [property: Key(43)] ulong[]? LanguageMutations = null,
-    [property: Key(44)] long LastPulseTick = -1);
+    [property: Key(44)] long LastPulseTick = -1,
+    [property: Key(45)] byte PlayerLevers = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]

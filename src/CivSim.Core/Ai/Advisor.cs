@@ -110,6 +110,11 @@ public abstract class Advisor : ICommandSource
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(queue);
+        if (state.FindCivilization(civ) is { } c && !Levers.AiLeads(c, action))
+        {
+            return; // the player holds this lever (ADR 0027): the AI keeps off it
+        }
+
         queue.Enqueue(PlayerId.Ai, civ, command);
         Log?.Add(Decision.From(state.Turn + 1, civ, Kind, action, subject, target, why));
     }

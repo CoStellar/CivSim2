@@ -121,8 +121,10 @@ public class ProtocolSerializerTests
         // Version 15: units in the view and the unit commands (stage 6 PR 3a).
         // Version 16: the role of a unit in the view and the army commands (stage 6 PR 3b).
         // Version 17: area tasks: StartTaskDto, the task of work groups in UnitView, task kinds in the content (stage 6 PR 4a).
+        // Version 18: levers of the helmsman (SetLeverDto, the player's levers and the AI's decisions in the view) and the civilization
+        // a player asks for in Hello (stage 6 PR P, ADR 0027). Hello has four fields now.
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("11000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        Assert.Equal("12000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
     }
 
     [Fact]

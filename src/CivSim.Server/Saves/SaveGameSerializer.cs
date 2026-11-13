@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 36; // 36: work groups keep their area task (stage 6 PR 4a)
+    public const int FormatVersion = 37; // 36: work groups keep their area task (stage 6 PR 4a); 37: the levers a player holds (PR P)
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -62,7 +62,7 @@ public static class SaveGameSerializer
                 c.Government, c.PendingGovernment, c.PendingGovernmentMonth,
                 c.LeaderName, c.LeaderBornMonth, c.LeaderSinceMonth, c.LeaderTraits, c.LeaderShift, c.Leaders, c.CrisisUntilMonth,
                 c.Capital, c.Stability, c.AdminUsed, c.AnarchyUntilMonth, c.CapitalLostUntilMonth,
-                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations, c.LastPulseTick));
+                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations, c.LastPulseTick, (byte)c.PlayerLevers));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -228,6 +228,7 @@ public static class SaveGameSerializer
                 RevoltCalmUntilMonth = c.RevoltCalmUntilMonth,
                 LanguageMutations = c.LanguageMutations ?? [],
                 LastPulseTick = c.LastPulseTick,
+                PlayerLevers = (Core.Ai.Lever)c.PlayerLevers,
             };
             LoadRelations(civ, c.Relations);
             state.AddCivilizationForLoad(civ);
