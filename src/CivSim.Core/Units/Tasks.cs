@@ -430,6 +430,15 @@ public sealed class TaskSystem(GameContent content) : ITurnSystem
                 continue;
             }
 
+            // The group eats with its settlement, in its pulse, from the home's stock; without food it comes home (stage 6 PR 4a).
+            if (!Eat(home, u.TotalPeople(), months))
+            {
+                u.Order = UnitOrder.Return;
+                u.ForgetPath();
+                context.Chronicle($"The work group of {home.Name} ran out of food and comes home.");
+                continue;
+            }
+
             if (u.Cell != u.Target)
             {
                 continue; // still on its way
@@ -472,6 +481,24 @@ public sealed class TaskSystem(GameContent content) : ITurnSystem
                 End(context, u, home, kind);
             }
         }
+    }
+
+    // Takes the food of <paramref name="people"/> for <paramref name="months"/> months from the home's stock; false when it is short.
+    private bool Eat(SettlementState home, int people, int months)
+    {
+        Amount need = Episodes.Campaigns.FoodFor(_content, people, months);
+        Span<Amount> stock = home.Stock;
+        for (int g = 0; g < stock.Length && g < _content.Goods.Count && need > Amount.Zero; g++)
+        {
+            if (_content.Goods[g].IsFood && stock[g] > Amount.Zero)
+            {
+                Amount n = Amount.Min(stock[g], need);
+                stock[g] -= n;
+                need -= n;
+            }
+        }
+
+        return need <= Amount.Zero;
     }
 
     private static void End(TurnContext context, Unit u, SettlementState home, TaskKindDefinition kind)

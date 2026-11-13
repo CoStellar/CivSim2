@@ -113,6 +113,12 @@ public static class HeadlessRun
 
         var runner = new TurnRunner(state);
         Core.Ai.AiCouncil council = CoreSystems.Register(runner, content);
+        TaskBench? bench = options.WorkGroups > 0 ? new TaskBench(content, options.WorkGroups) : null;
+        if (bench is not null)
+        {
+            runner.AddCommandSource(bench); // benchmark only: work groups through the normal command (stage 6 PR 4a)
+        }
+
         Server.Replays.ReplayRecorder? recorder = options.RecordPath is null ? null : new Server.Replays.ReplayRecorder(state, newGame: true);
         var turnMs = new double[Math.Max(1, options.Turns)];
         long totalAllocated = 0;
@@ -257,6 +263,23 @@ public static class HeadlessRun
         int n = turnMs.Length;
         warCsv?.Ongoing(runner.State);
         campaignCsv?.Ongoing();
+        if (bench is not null)
+        {
+            int working = 0;
+            int groups = 0;
+            for (int k = 0; k < runner.State.Units.Count; k++)
+            {
+                Core.Units.Unit u = runner.State.Units[k];
+                if (u.Role == Core.Units.UnitRole.Workers)
+                {
+                    groups++;
+                    working += u.Cell == u.Target ? 1 : 0;
+                }
+            }
+
+            log.WriteLine(string.Create(CultureInfo.InvariantCulture, $"work groups:        {bench.Started} started, {groups} out at the end, {working} at work, {runner.State.Units.Count} units in all"));
+        }
+
         if (recorder is not null)
         {
             recorder.Write(options.RecordPath!);

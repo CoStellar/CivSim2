@@ -59,10 +59,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                     continue;
                 }
             }
-            else if (meal && u.Role == UnitRole.Workers)
-            {
-                EatAtHome(context, state, u, civ);
-            }
+
 
             Walk(context, state, u, civ);
         }
@@ -379,40 +376,6 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         {
             u.Gone = true;
             context.Chronicle($"Settlers of {civ.Name} starved on the way.");
-        }
-    }
-
-    // A work group eats a month of food from its home's stock; when home has none it comes back (stage 6 PR 4a).
-    private void EatAtHome(TurnContext context, GameState state, Unit u, CivilizationState civ)
-    {
-        if (u.Order != UnitOrder.Work)
-        {
-            return;
-        }
-
-        SettlementState? home = u.Home >= 0 ? state.FindSettlement(new SettlementId(u.Home)) : null;
-        if (home is not { IsActive: true })
-        {
-            return; // TaskSystem sends it to the nearest own settlement
-        }
-
-        Amount need = CivSim.Core.Episodes.Campaigns.FoodFor(_content, u.TotalPeople(), 1);
-        Span<Amount> stock = home.Stock;
-        for (int g = 0; g < stock.Length && g < _content.Goods.Count && need > Amount.Zero; g++)
-        {
-            if (_content.Goods[g].IsFood && stock[g] > Amount.Zero)
-            {
-                Amount n = Amount.Min(stock[g], need);
-                stock[g] -= n;
-                need -= n;
-            }
-        }
-
-        if (need > Amount.Zero)
-        {
-            u.Order = UnitOrder.Return;
-            u.ForgetPath();
-            context.Chronicle($"The work group of {home.Name} ran out of food and comes home.");
         }
     }
 

@@ -701,6 +701,11 @@
    "file": "units/unit_scout_idle_01.png",
    "width": 32,
    "height": 32
+  },
+  {
+   "file": "units/unit_workers_idle_01.png",
+   "width": 32,
+   "height": 32
   }
  ]
 }

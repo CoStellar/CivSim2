@@ -78,7 +78,7 @@ heksami (z-index = miejsce na liście). Warstwy pól leżą zawsze pod rysowanym
 | Fields | rysowana | wł. | pola uprawne wiosek (grafika pola, mocniejsza przy większej obsadzie rolników) |
 | Borders | rysowana | wł. | granice cywilizacji po krawędziach heksów, kolor cywilizacji z ciemnym obrysem |
 | Settlements | rysowana | wł. | obozy, wioski, miasteczka w stanach zamieszkana / opuszczona / ruiny; daleko kwadraty; stolica ze złotym rombem; tabliczka z nazwą cywilizacji nad środkiem skupiska jej osad wokół stolicy (osady połączone co najwyżej ok. 6 heksów), przesuwana dopiero, gdy środek ucieknie o ok. 3 heksy (etap 5b: wcześniej skakała za największą osadą) |
-| Units | rysowana | wł. | wędrujące obozy (etap 3g) i przerywana strzałka do celu; armie kampanii (etap 4e PR 3: 1–3 wojowników według siły, grubsza strzałka do celu albo do domu) i tragarze z jedzeniem |
+| Units | rysowana | wł. | wędrujące obozy (etap 3g) i przerywana strzałka do celu; armie kampanii (etap 4e PR 3: 1–3 wojowników według siły, grubsza strzałka do celu albo do domu) i tragarze z jedzeniem; grupy robocze zadań na obszarze (etap 6 PR 4a: dwie postacie z siekierkami, obrys pola zadania w kolorze ludu i przerywana strzałka, dopóki idą) |
 | Events | rysowana | wł. | efekty zdarzeń: jedna ikona na zdarzenie (na środkowym polu), na pozostałych polach kropka |
 | Relations | rysowana | wył. | linie między największymi osadami cywilizacji, które się spotkały: wojna czerwona, sojusz niebieski, pakt turkusowy, handel złoty, pokój biały, sam kontakt szary przerywany |
 

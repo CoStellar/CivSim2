@@ -31,6 +31,7 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `effects.json` | effect types: target, changed stat, stacking rule | 3a |
 | `governments.json` | governments: decision speed, stability decay | 4 |
 | `units.json` | units walking in ticks (stage 6 PR 3a): kinds with ticks per flat cell and sight, a migrating camp's ticks per cell, terrain on top of the biome's `movementCost` (hills, mountains, sea ice, rivers), the route search limit, scouts (rest, trip length), settlers (spare food, hunger, search for a free place); warriors and carriers in PR 3b | 6 |
+| `tasks.json` | area tasks (stage 6 PR 4a, GDD 4.4): kinds (woodcutting from the biome's wood, flint mine and quarry from surface deposits that run out), reach beyond the zone, one task per N people, group size, the switch for gathering materials from the whole zone (on until the AI gives tasks, PR 4b); work groups are units of the role `workers` in `units.json` | 6 |
 | `leader_traits.json` | leader traits and AI weight modifiers | 4 |
 | `ui_theme.json` | the single UI theme (9-slice assets, accents) | 5 |
 

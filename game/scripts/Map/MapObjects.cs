@@ -596,6 +596,7 @@ public partial class MapObjects : Node2D
         float g = Glide();
         Texture2D? settlers = Textured ? _art.Get("units", "unit_migrants_idle_01") : null;
         Texture2D? scout = Textured ? _art.Get("units", "unit_scout_idle_01") : null;
+        Texture2D? workers = Textured ? _art.Get("units", "unit_workers_idle_01") : null;
         foreach (UnitView u in units)
         {
             if (u.World != _world!.Id || Fogged(u.Col, u.Row) || !_walkers.TryGetValue(u.Id, out (Vector2 From, Vector2 To) w))
@@ -610,7 +611,7 @@ public partial class MapObjects : Node2D
             }
 
             Color civ = OverlayColors.CivColor(u.Owner);
-            Texture2D? tex = u.Role is 1 or 2 ? scout : settlers;
+            Texture2D? tex = u.Role is 1 or 2 ? scout : u.Role == 4 ? workers ?? settlers : settlers;
             int figures = u.Role == 2 ? (u.People >= 40 ? 3 : u.People >= 15 ? 2 : 1) : 1;
             foreach (Vector2 at in Copies(pos, 48))
             {
@@ -626,7 +627,7 @@ public partial class MapObjects : Node2D
                     }
                     else if (p.Lines)
                     {
-                        float r = (u.Role == 1 ? 5 : u.Role == 2 ? 7 : 8) / Mathf.Max(0.35f, _zoom * 2);
+                        float r = (u.Role == 1 ? 5 : u.Role == 2 ? 7 : u.Role == 4 ? 6 : 8) / Mathf.Max(0.35f, _zoom * 2);
                         p.DrawCircle(spot, r + 1, Colors.Black);
                         p.DrawCircle(spot, r, civ);
                     }
@@ -675,12 +676,13 @@ public partial class MapObjects : Node2D
     // The way of each wandering camp to its target: a line in the owner's colour ending in an arrow head.
     private void PaintUnitPaths(LayerPainter p)
     {
+        float width = Mathf.Max(2, 2.5f / _zoom);
+        PaintTaskCells(p, width);
         if (_session?.Details is not { } details)
         {
             return;
         }
 
-        float width = Mathf.Max(2, 2.5f / _zoom);
         foreach (JourneyView j in details.Journeys)
         {
             if (j.World != _world!.Id || Fogged(j.Col, j.Row))
@@ -699,6 +701,39 @@ public partial class MapObjects : Node2D
                 {
                     Arrow(p, a.Col, a.Row, a.TargetCol, a.TargetRow, OverlayColors.CivColor(a.Owner), width * 1.5f);
                 }
+            }
+        }
+    }
+
+    // Area tasks (stage 6 PR 4a): the cell a work group works on, outlined in its owner's colour, and its way there while it walks.
+    private void PaintTaskCells(LayerPainter p, float width)
+    {
+        if (_session?.View is not { Units: { Count: > 0 } units })
+        {
+            return;
+        }
+
+        foreach (UnitView u in units)
+        {
+            if (u.Role != 4 || u.TargetCol < 0 || u.World != _world!.Id || Fogged(u.TargetCol, u.TargetRow))
+            {
+                continue;
+            }
+
+            Color civ = OverlayColors.CivColor(u.Owner);
+            if (u.Col != u.TargetCol || u.Row != u.TargetRow)
+            {
+                Arrow(p, u.Col, u.Row, u.TargetCol, u.TargetRow, civ, width);
+            }
+
+            foreach (Vector2 at in Copies(HexLayout.Center(u.TargetCol, u.TargetRow), 48))
+            {
+                Vector2[] corners =
+                [
+                    at + new Vector2(-24, 0), at + new Vector2(-12, -21), at + new Vector2(12, -21),
+                    at + new Vector2(24, 0), at + new Vector2(12, 21), at + new Vector2(-12, 21), at + new Vector2(-24, 0),
+                ];
+                p.DrawPolyline(corners, civ, width);
             }
         }
     }

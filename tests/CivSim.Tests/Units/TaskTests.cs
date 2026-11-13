@@ -207,6 +207,7 @@ public class TaskTests
         HexCoord cell = world.Geometry.Wrap(home.Cell.Col + 2, home.Cell.Row);
         new StartTaskCommand(Live, home.Id, "woodcutting", cell).Apply(state, civ.Id);
         Unit u = Group(state);
+        civ.StepMonths = 12; // a pulse of a year in every tick (the group eats with its home)
         TurnRunner runner = Runner(state);
         for (int t = 0; t < 100; t++)
         {
@@ -239,6 +240,7 @@ public class TaskTests
             }
         }
 
+        civ.StepMonths = 12;
         TurnRunner runner = Runner(state);
         var lines = new System.Collections.Generic.List<string>();
         for (int t = 0; t < 200 && Workers(state) > 0; t++)
