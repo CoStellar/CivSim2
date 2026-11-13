@@ -29,7 +29,7 @@ CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod sp
 ### 1.1 Gra na żywo (decyzje Patryka z 2026-11-09, ADR 0024 i 0025)
 
 **Przebieg partii.**
-1. **Wybór miejsca.** Kolejność losowana (gracz może wybrać, że idzie pierwszy). Wybierający przez ok. 5 s widzi mapę, potem tylko ląd jako szare bloki i ma 10–15 s na wybór miejsca z pamięci. Wokół wybranego miejsca powstaje losowa strefa blokady: kolejne cywilizacje mogą stanąć blisko, ale nie za blisko. AI wybiera według oceny terenu z losowym błędem.
+1. **Wybór miejsca.** Kolejność losowana (gracz może wybrać, że idzie pierwszy). Wybierający ma 15 s i widzi mapę bez złóż i żyzności (biomy, woda, rzeźba); AI widzi tyle samo (ADR 0026: bez wyboru „z pamięci”). Wokół wybranego miejsca powstaje losowa strefa blokady: kolejne cywilizacje mogą stanąć blisko, ale nie za blisko. AI wybiera według oceny terenu z losowym błędem.
 2. **Start od zera w neolicie.** Epoka kamienia to tylko „historia plemienia” (opis), bez rozgrywki. Różnice daje teren.
 3. **Gra na żywo** do celu ustalonego na starcie na pasku postępu: pierwszy metal, pierwsza elektryczność, lot w kosmos albo podbój obszaru na innej planecie. Pierwsza wersja dla graczy kończy się na epoce brązu: celem jest odkrycie wszystkich jej technologii.
 
@@ -38,14 +38,16 @@ CivSim 2 to strategia na żywo w pixel arcie, między RTS-em a grą 4X, a pod sp
 - Zleca **zadania na obszarze**: wydobycie surowca, pola, łowiska, budowy w danym miejscu (palisada, potem mur i zbrojownia). Ludzie z osady sami tam chodzą (4.4, „Zadania na obszarze”).
 - Zakłada miasta i awansuje je, buduje fortyfikacje, uzbraja się.
 - Wybiera kierunek rozwoju ludu (góry i kopanie, morze i łodzie…), który z czasem owocuje (6.4).
-- Odpowiada na **karty decyzji**: ważna sprawa z rekomendacją doradcy i przyczyną, licznik ok. 20 s, potem decyduje AI.
-- Każdy poziom decyzji (7.1) może oddać AI; czego nie zdąży, robi AI.
+- Odpowiada na **karty decyzji**: tylko ze zdarzeń (wojna, pokój, umowa, secesja, głód, klęska), najwyżej jedna na 30 s, licznik 20 s czasu gry, potem decyduje AI (ADR 0026).
+- Dwa przełączniki delegowania (ADR 0026): „osady same zlecają zadania” i „dowódca sam prowadzi wojnę”; czego nie zdąży, robi AI.
 
-**Tempo.** Nie ma budżetu minut na erę: każda cywilizacja przechodzi do kolejnej ery we własnym tempie, zależnym od terenu i umiejętności gracza. Z erą zmienia się tempo gry i to, na czym gracz się skupia. Lata są tylko licznikiem dla gracza („historia ludu”); zwalniają w późniejszych erach. Backend liczy się w taktach i pulsach cywilizacji (ADR 0025). W pierwszych erach nie ma postaci z imieniem.
+**Tempo.** Nie ma budżetu minut na erę: każda cywilizacja przechodzi do kolejnej ery we własnym tempie, zależnym od terenu i umiejętności gracza. Z erą zmienia się tempo gry i to, na czym gracz się skupia. Pasek pokazuje erę i minutę partii; lata są tylko podpisem w kronice i na wykresach (ADR 0026). Backend liczy się w taktach i pulsach cywilizacji (ADR 0025). W pierwszych erach nie ma postaci z imieniem, a do epoki brązu jest jeden ustrój (rada starszych); wódz i ustroje wchodzą jako karty od brązu (ADR 0026).
+
+**Cele tempa (ADR 0026):** pierwsza technologia ≤ 1 min, pierwsza wioska ≤ 3 min, era 1 ≤ 5 min, 3–6 osad w 15. minucie, żadna cywilizacja poniżej 100 ludzi po 5 minutach; mierzone raportem `--milestones` na 10 seedach. Partia do brązu toczy się na mapie małej z 4–6 cywilizacjami.
 
 **Tempo AI (poziomy trudności) w wersji do epoki brązu:** dobre AI odkrywa wszystkie technologie brązu w ok. 15 min, średnie w 20–25 min, słabe w 30–40 min.
 
-**Tryby.** Najpierw gra solo (ta sama gra z większą liczbą graczy AI), potem w sieci. Pauza w singlu zawsze, prędkości ×1/×2/×4. Na start mapa standard i 6–8 cywilizacji. Gracz, którego lud upadł, zostaje **widzem** i widzi wszystkie cywilizacje graczy.
+**Tryby.** Najpierw gra solo (ta sama gra z większą liczbą graczy AI), potem w sieci. Pauza w singlu zawsze, prędkości ×1/×2/×4. Na start mapa mała i 4–6 cywilizacji (ADR 0026); standard dla dłuższych partii. Gracz, którego lud upadł, zostaje **widzem** i widzi wszystkie cywilizacje graczy.
 
 ## 2. Technologia i architektura
 
@@ -288,6 +290,7 @@ Tak gracz i AI zlecają pracę w grze na żywo (1.1, ADR 0024). Te same komendy 
 - **Złoża się wyczerpują, las i łowiska odrastają** (4.4). Wyczerpane zadanie kończy się samo, a AI szuka nowego miejsca.
 - **Budowa w miejscu** już w neolicie: np. palisada na polu osady albo obok niej. Mur i zbrojownia w epoce brązu (etap 7).
 - **Zagrożenie:** wróg może napaść grupę roboczą; grupa ucieka do osady. Dowódca i gubernator AI omijają pola zagrożone według mapy zagrożenia (T6), liczonej tylko z tego, co cywilizacja widzi.
+- **Zamrożone do epoki brązu (ADR 0026, flaga w danych, kod zostaje):** klimat dynamiczny (CO2, lody, cykl gwiazdy, poziom morza; zostaje pora roku), ustroje i stabilność (jedna liczba „nastrój”), wpływ polityczny warstw (zostają fachy i myśliciele), pakty i sojusze (zostają kontakt, wojna, pokój, barter), sieci handlowe z cenami (wspólny magazyn osad w promieniu N pól), dryf dalekich osad, pożar i powódź (zostają susza i epidemia jako karty), odbudowa ruin, wiele światów. Secesja to karta decyzji, najwyżej raz na 5 minut; limit cywilizacji liczy tylko żywe.
 
 ### 4.5 Rozdział przy niedoborach
 
@@ -503,6 +506,8 @@ Era cywilizacji zmienia się po zbadaniu technologii progowej i 60% technologii 
 
 ### 6.3 Pierwsze technologie (ery 1–2, do dopracowania)
 
+**Zasada z ADR 0026: każda technologia odblokowuje dokładnie jedną rzecz, którą widać** (zadanie na obszarze, oddział, budowla albo grafika osady; pole `unlocks.visible` w danych); mnożniki są dodatkiem. Do epoki brązu tkactwo i pieczenie chleba są wycięte (chleb jako efekt rolnictwa). Lista „co widać po odkryciu”: `docs/prompts/10-plan-gry.md`.
+
 | Technologia | Era | Wymaga | Odblokowuje |
 | --- | --- | --- | --- |
 | Ogień | Kamień | — (start) | gotowanie (+żywność), ochrona przed zimnem |
@@ -528,10 +533,10 @@ Ery 3–10 rozpiszemy etapami: każdy etap roadmapy (rozdział 14) zaczyna się 
 Zasady do wdrożenia w etapie 6 (szczegóły i liczby: przy wdrożeniu, z propozycją dla Patryka). Zastępują zniżkę „20% za sąsiada” i zakaz odkryć przypadkiem z 6.3.
 
 - **Technologia to brama, ale też umiejętność.** Po odkryciu ma **doświadczenie**, które rośnie od używania (ludzie przy pracy, wytworzone dobra) i wzmacnia jej efekt: rolnictwo przez dekady daje większe plony, łodzie rybaków stają się mocniejsze. Rekomendacja na start: do ok. +50% efektu na najwyższym poziomie, powolny spadek, gdy technologia leży odłogiem.
-- **Technologię można rozwijać albo tylko zaliczyć**, jeśli jest potrzebna jedynie do wejścia w nową erę.
+- Doświadczenie rośnie samo od używania; nie ma osobnej decyzji „rozwijać czy zaliczyć” (ADR 0026).
 - **Koszt.** Technologia ma stały koszt bazowy. Im lepiej rozwinięta technologia poprzedzająca, tym taniej.
 - **Kierunek rozwoju.** To, czym lud się zajmuje (góry i kopanie, morze i rybołówstwo…), zwiększa szansę na pokrewne odkrycia: kto przetrwał w górach (np. dzięki dowozowi jedzenia), ma większą szansę pierwszy odkryć rzemiosło i złoża rud, więc szybciej dojdzie do metali; rybacy szybciej budują coraz lepsze łodzie.
-- **Podejrzenie technologii.** Przez kontakt (zwiadowca, kupiec, sąsiedztwo) cywilizacja może podejrzeć technologię, którą ktoś już zna: zniżka = 5% × liczba cywilizacji, które ją już znają (zna ją jedna: 5%, zna dziewięć: 45%). Przodujący płaci najwięcej; nikt nie jest „niesiony” przez innych.
+- **Podejrzenie technologii.** Przez kontakt (zwiadowca, kupiec, sąsiedztwo) cywilizacja może podejrzeć technologię, którą ktoś już zna: zniżka = 5% × liczba cywilizacji, które ją już znają, **liczone tylko wśród cywilizacji z kontaktem i spoza własnej secesji, z limitem 50%** (ADR 0026; bez limitu secesje dawały 90%). Przodujący płaci najwięcej; nikt nie jest „niesiony” przez innych.
 - **Wzór:** koszt = koszt bazowy × (1 − zniżka za podgląd) × (1 − zniżka za rozwinięcie poprzedniej). Przykład: 1000 punktów, zna ją 6 cywilizacji (30%), poprzednia dobrze rozwinięta (20%): 1000 × 0,7 × 0,8 = 560.
 
 ## 7. Zarządzanie cywilizacją
@@ -539,6 +544,8 @@ Zasady do wdrożenia w etapie 6 (szczegóły i liczby: przy wdrożeniu, z propoz
 Państwem rządzi się na pięciu poziomach decyzji, od strategii po pojedyncze pole. Każdy z nich gracz może prowadzić sam albo oddać temu samemu AI, które prowadzi cywilizacje komputerowe. Ograniczeniem ekspansji nie jest sztywny limit, tylko zdolność administracyjna i stabilność.
 
 ### 7.1 Poziomy decyzji
+
+*Do epoki brązu (ADR 0026) gracz ma dwa przełączniki: „osady same zlecają zadania” (poziomy prowincja i pole) i „dowódca sam prowadzi wojnę” (armia). Strategia i państwo są zawsze u gracza przez karty, a czego nie zdąży, robi AI. Pełna tabela obowiązuje od późniejszych er.*
 
 | Poziom | Co obejmuje | Jak często | Domyślnie u gracza |
 | --- | --- | --- | --- |
