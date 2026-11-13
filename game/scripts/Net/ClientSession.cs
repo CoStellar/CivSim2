@@ -24,12 +24,19 @@ public sealed class ClientSession
     private long _lastTurn;
     private long _sequence;
 
-    /// <summary>Connects and says hello in the given role.</summary>
-    public ClientSession(IConnection connection, ClientRole role, string name)
+    /// <summary>Connects and says hello in the given role; a player names the civilization it leads (or any free one).</summary>
+    public ClientSession(IConnection connection, ClientRole role, string name, int civ = HelloMessage.AnyCiv)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
-        _connection.Send(new HelloMessage(ProtocolInfo.Version, name, role));
+        Role = role;
+        _connection.Send(new HelloMessage(ProtocolInfo.Version, name, role, civ));
     }
+
+    /// <summary>Observer (sees everything) or player (leads one civilization through its fog).</summary>
+    public ClientRole Role { get; }
+
+    /// <summary>True when this client leads a civilization (stage 6 PR P2).</summary>
+    public bool IsPlayer => Role == ClientRole.Player;
 
     /// <summary>Set after Welcome.</summary>
     public int PlayerId { get; private set; } = -1;
@@ -106,6 +113,19 @@ public sealed class ClientSession
     /// <summary>Renames a settlement of <paramref name="owner"/>.</summary>
     public void RenameSettlement(int owner, int settlement, string name) =>
         _connection.Send(new SubmitCommandMessage(owner, ++_sequence, new RenameSettlementDto(settlement, name)));
+
+    /// <summary>Sends a command for the civilization this player leads (stage 6 PR P2); the server checks it and may refuse it.</summary>
+    public void Command(ICommandDto command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        if (CivId >= 0)
+        {
+            _connection.Send(new SubmitCommandMessage(CivId, ++_sequence, command));
+        }
+    }
+
+    /// <summary>Takes a lever (1–5) or gives it back to the AI.</summary>
+    public void SetLever(int lever, bool take) => Command(new SetLeverDto(lever, take));
 
     /// <summary>Closes the connection (back to the start menu).</summary>
     public void Close() => _connection.Close();

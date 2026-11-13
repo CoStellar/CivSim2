@@ -37,11 +37,13 @@ public partial class Main : Node2D
     private MapView? _map;
     private Camera2D _camera = null!;
     private Hud? _hud;
+    private HelmHud? _helm;
     private StartMenu? _menu;
     private ArtLibrary _art = null!;
     private string _dataDirectory = string.Empty;
     private bool _dragging;
     private bool _bound;
+    private bool _playerCamera;
     private int _benchmarkFrames;
     private int _frames;
     private double _frameMsSum;
@@ -236,7 +238,10 @@ public partial class Main : Node2D
         _menu = null;
         _lastSettings = settings.Copy();
         _host = LocalServerHost.Start(options, _dataDirectory);
-        _session = new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
+        // Stage 6 PR P2: "lead civilization N" connects as its player (fog, levers, orders); 0 watches everything.
+        _session = settings.Lead > 0
+            ? new ClientSession(_host.Connect(), ClientRole.Player, "Player", settings.Lead - 1)
+            : new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
         SimulationSpeed speed = StartSettings.ParseSpeed(settings.Speed);
         if (_host.LongRunFolder is { } folder)
         {
@@ -290,6 +295,11 @@ public partial class Main : Node2D
         _hud.FollowChosen += Follow;
         _hud.GoToFollowed += () => GoToFollowed(jump: true);
         _session.ChronicleAdded += lines => _hud?.AddChronicle(lines);
+        if (_session.IsPlayer)
+        {
+            _helm = new HelmHud(_session);
+            AddChild(_helm);
+        }
         _bound = false;
         GD.Print($"CivSim 2 viewer: protocol v{ProtocolInfo.Version}, seed {options.Seed}, map {options.Width}x{options.Height}");
     }
@@ -333,7 +343,8 @@ public partial class Main : Node2D
     // Moves the camera to the followed civilization's most populous settlement: at once, or gently while tracking.
     private void GoToFollowed(bool jump)
     {
-        if (_session?.View?.Settlements is not { } settlements || _map is null || _session.WatchedCiv < 0)
+        int followed = _session is { IsPlayer: true } ? _session.CivId : _session?.WatchedCiv ?? -1;
+        if (_session?.View?.Settlements is not { } settlements || _map is null || followed < 0)
         {
             return;
         }
@@ -342,7 +353,7 @@ public partial class Main : Node2D
         int bestPeople = -1;
         foreach (SettlementView s in settlements)
         {
-            if (s.Owner != _session.WatchedCiv || s.Status != 0 || s.World != 0)
+            if (s.Owner != followed || s.Status != 0 || s.World != 0)
             {
                 continue;
             }
@@ -424,6 +435,8 @@ public partial class Main : Node2D
         _map = null;
         _hud?.QueueFree();
         _hud = null;
+        _helm?.QueueFree();
+        _helm = null;
         _bound = false;
     }
 
@@ -450,6 +463,16 @@ public partial class Main : Node2D
             {
                 Follow(_watch);
             }
+            else if (_session.IsPlayer)
+            {
+                _playerCamera = true; // centre on our people once our first settlement is in view
+            }
+        }
+
+        if (_playerCamera && _session.CivId >= 0 && _session.View?.Settlements is { Count: > 0 })
+        {
+            _playerCamera = false;
+            GoToFollowed(jump: true);
         }
 
         if (_hud.Tracking)
@@ -466,6 +489,7 @@ public partial class Main : Node2D
         {
             _statusTimer = 0.2;
             _hud.UpdateStatus(_session, _map, Engine.GetFramesPerSecond());
+            _helm?.Refresh();
                     }
 
         if (_host?.Error is { } error)
@@ -549,9 +573,23 @@ public partial class Main : Node2D
                 break;
             case InputEventMouseButton mb when mb.ButtonIndex is MouseButton.Right or MouseButton.Middle:
                 _dragging = mb.Pressed;
+                if (mb.Pressed && mb.ButtonIndex == MouseButton.Right && _helm is { Targeting: true })
+                {
+                    _helm.CancelTarget();
+                }
+
                 break;
             case InputEventMouseButton mb when mb.ButtonIndex == MouseButton.Left && mb.Pressed && _map is not null:
-                _map.SelectAt(GetGlobalMousePosition());
+                (int Col, int Row)? cell = _map.SelectAt(GetGlobalMousePosition());
+                if (cell is { } c && _helm is not null)
+                {
+                    // A player: the click is the target of a waiting order, or selects what of ours stands there.
+                    if (!_helm.TargetClicked(0, c.Col, c.Row))
+                    {
+                        _helm.Select(0, c.Col, c.Row);
+                    }
+                }
+
                 _hud?.ShowCellTab();
                 _statusTimer = 0;
                 break;
@@ -614,6 +652,9 @@ public partial class Main : Node2D
                 break;
             case Key.F5:
                 ReloadData();
+                break;
+            case Key.Escape when _helm is { Targeting: true }:
+                _helm.CancelTarget();
                 break;
             case Key.Escape when _menu is null:
                 ShowMenu();

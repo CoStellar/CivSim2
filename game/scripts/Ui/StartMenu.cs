@@ -211,6 +211,7 @@ public partial class StartMenu : CanvasLayer
     {
         GridContainer g = Column(out VBoxContainer box, "Simulation");
         Choice(g, "Start speed", SpeedWords, _settings.Speed, v => _settings.Speed = v);
+        Number(g, "Lead civilization (0 = watch)", _settings.Lead, 0, 64, v => _settings.Lead = (int)v);
         Number(g, "Turn limit (0 = none)", _settings.TurnLimit, 0, 1_000_000, v => _settings.TurnLimit = (long)v);
         var report = new CheckBox { Text = "Turn report (CSV)", ButtonPressed = _settings.Report };
         report.Toggled += on =>
@@ -225,7 +226,8 @@ public partial class StartMenu : CanvasLayer
         Text(g, "Long run folder", _settings.LongRunFolder, v => _settings.LongRunFolder = v, "long_runs/ by the project");
         box.AddChild(new Label
         {
-            Text = "The simulation pauses when it reaches the turn limit; press a speed to go on. The report has one line per turn: turn, year, turn time, people, settlements. " +
+            Text = "Lead civilization N to play it: you see the world through its eyes, take levers from the AI and give orders on the map; the AI leads every lever you leave. " +
+                "The simulation pauses when it reaches the turn limit; press a speed to go on. The report has one line per turn: turn, year, turn time, people, settlements. " +
                 "A long run records memory, processor, frame rate, turn times, events and a log for the time given, then closes the game; it starts at maximum speed unless another start speed is chosen.",
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(330, 0),

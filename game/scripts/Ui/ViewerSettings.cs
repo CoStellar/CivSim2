@@ -79,6 +79,9 @@ public sealed class StartSettings
     /// <summary>Period of the star's cycle in years.</summary>
     public string StarCycle { get; set; } = string.Empty;
 
+    /// <summary>Civilization to lead (stage 6 PR P2): 0 = watch every civilization as an observer, N = lead civilization number N (id N − 1).</summary>
+    public int Lead { get; set; }
+
     /// <summary>pause, x1, x2, x4 or max.</summary>
     public string Speed { get; set; } = "pause";
 
@@ -106,7 +109,7 @@ public sealed class StartSettings
         "--seed", "--map-size", "--civs", "--world-type", "--planet", "--water", "--moisture", "--inland", "--relief", "--resources",
         "--tilt", "--eccentricity", "--luminosity", "--distance", "--year", "--light", "--co2", "--pressure", "--volcanism",
         "--star-variability", "--star-cycle", "--speed", "--turn-limit", "--report",
-        "--long-run", "--long-run-folder", "--long-run-every",
+        "--long-run", "--long-run-folder", "--long-run-every", "--lead",
     ];
 
     /// <summary>
@@ -148,6 +151,7 @@ public sealed class StartSettings
                 case "--art-pack": s.ArtPack = v; break;
                 case "--long-run": s.LongRun = v; break;
                 case "--long-run-folder": s.LongRunFolder = v; break;
+                case "--lead": s.Lead = int.Parse(v, CultureInfo.InvariantCulture); break;
                 case "--long-run-every": s.LongRunEvery = int.Parse(v, CultureInfo.InvariantCulture); break;
             }
         }

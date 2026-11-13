@@ -143,6 +143,25 @@ Do testów i zrzutów: `--screenshot plik.png` (z `--screenshot-turn N`: po N tu
 
 Długi bieg na godziny z zapisem statystyk, zdarzeń i logu: `--long-run 4h` (opis w [long-run.md](long-run.md)).
 
+## Prowadzenie cywilizacji (etap 6 PR P2, ADR 0027)
+
+W menu startowym, w kolumnie „Simulation”, pole **Lead civilization (0 = watch)**: 0 to obserwator jak dotąd, N prowadzi lud nr N
+(z wiersza poleceń: `--lead N`). Klient łączy się wtedy jako gracz (`ClientRole.Player`, `Hello.CivId = N − 1`), widzi świat
+przez mgłę swojego ludu, a kamera ustawia się na jego największej osadzie.
+
+| Element | Gdzie | Co robi |
+| --- | --- | --- |
+| Pięć kafelków dźwigni | pod górnym paskiem | kto prowadzi dźwignię („you” / „AI”) i ostatnia decyzja AI na niej; klik bierze dźwignię albo ją oddaje (`SetLeverDto`) |
+| Pasek ery | pod kafelkami | era ludu, co badamy i ile procent |
+| Zakładka **Orders** | panel po prawej | rozkazy dla tego, co nasze stoi na klikniętym polu: obóz (przeprowadzka, osadnicy, połączenie, osiedlenie, zadania z `tasks.json`, napaść, wyprawa wojenna) albo oddział (idź, załóż obóz, wróć, atak); rozkaz z celem czeka na klik na mapie, Esc albo prawy przycisk anuluje |
+| Zakładka **Research** | jw. | dostępne technologie od najtańszej; klik wybiera badanie (`SetResearchDto`) |
+| Zakładka **Diplomacy** | jw. | propozycje do nas z „Yes / No” i znane ludy z „War” i propozycjami umów |
+| Zakładka **AI did** | jw. | ostatnie 30 decyzji AI za nas, z dźwignią i czasem |
+
+Odmowa serwera („Refused: …”) pokazuje się na czerwono w zakładce Orders przez 6 s. Wybór rozkazów, które pasują do zaznaczenia, i
+zamiana na komendy protokołu są w `src/CivSim.Protocol/Client/HelmActions.cs` (bez Godota, z testami), kontrolki w
+`game/scripts/Ui/HelmHud.cs`. Spacja i 1–5 ustawiają pauzę i prędkość także graczowi (gdy gra sam).
+
 ## Zasady
 - **Granica klient–serwer:** `game/` nie widzi `CivSim.Core` (ADR 0010). Szczegóły dla obserwatora liczy na serwerze
   `ObserverViewBuilder`; gracz (etap 13) ich nie dostaje, a próba śledzenia innej cywilizacji jest odrzucana.
@@ -157,6 +176,8 @@ Długi bieg na godziny z zapisem statystyk, zdarzeń i logu: `--long-run 4h` (op
 (presety w menu). Klient dostaje je od serwera albo przez `LocalServerHost.Describe`, nie czyta plików danych sam.
 
 ## Testy
+- `HelmActionsTests`: zaznaczony obóz daje rozkazy swoich dźwigni, oddział swoje; obcy obóz nie; rozkaz „przeprowadź” z panelu przechodzi
+  przez serwer i jest oznaczony jako rozkaz gracza; kafelki czytają dźwignie i ostatnią decyzję AI z widoku.
 - `ObserverLayerTests`: lista presetów i ich wartości, podgląd planety i błąd złego ustawienia, limit tur zatrzymuje symulację i raport
   CSV ma linię na turę, obserwator dostaje warstwy, mgłę i szczegóły śledzonej cywilizacji oraz statystyki w tabeli cywilizacji,
   gracz nie może śledzić innej cywilizacji.
