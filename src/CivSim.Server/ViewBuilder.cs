@@ -78,7 +78,7 @@ public static class ViewBuilder
             }
 
             units.Add(new UnitView(
-                u.Id, (int)u.Kind, u.Owner.Value, u.World.Value, u.Col, u.Row, u.NextCol, u.NextRow, u.ProgressPermille, u.People, (int)u.Order) { Role = (int)u.Role, Task = u.Task, TargetCol = u.TargetCol, TargetRow = u.TargetRow });
+                u.Id, (int)u.Kind, u.Owner.Value, u.World.Value, u.Col, u.Row, u.NextCol, u.NextRow, u.ProgressPermille, u.People, (int)u.Order) { Role = (int)u.Role, Task = u.Task, TargetCol = u.TargetCol, TargetRow = u.TargetRow, FoodMonths = u.Owner == viewer || observer ? u.FoodMonths : -1 });
         }
 
         return new GameViewMessage(

@@ -133,6 +133,9 @@ public sealed class GameContent
     /// <summary>Settlement levels from smallest to largest, index = id (<c>data/settlements.json</c>).</summary>
     public IReadOnlyList<SettlementLevelDefinition> SettlementLevels { get; init; } = [];
 
+    /// <summary>What settlements look like as their civilization advances (settlements.json looks, stage 6 PR P2b); may be empty.</summary>
+    public IReadOnlyList<SettlementLookDefinition> SettlementLooks { get; init; } = [];
+
     /// <summary>Eras in order, index = id (<c>data/eras.json</c>).</summary>
     public IReadOnlyList<EraDefinition> Eras { get; init; } = [];
 
@@ -189,6 +192,25 @@ public sealed class GameContent
 
     /// <summary>Finds an effect type by key, e.g. "damage".</summary>
     public EffectDefinition Effect(string key) => Find(Effects, e => e.Key, key, "effect");
+
+    /// <summary>
+    /// The look (id in <see cref="SettlementLooks"/>) of a settlement of <paramref name="level"/> whose owner knows the technologies
+    /// <paramref name="knows"/> says, or -1 when no look fits (then the level's art is drawn).
+    /// </summary>
+    public int SettlementLook(int level, System.Func<int, bool> knows)
+    {
+        System.ArgumentNullException.ThrowIfNull(knows);
+        int look = -1;
+        foreach (SettlementLookDefinition l in SettlementLooks)
+        {
+            if (level >= l.MinLevel && (l.Technology < 0 || knows(l.Technology)))
+            {
+                look = l.Id;
+            }
+        }
+
+        return look;
+    }
 
     /// <summary>Finds a settlement level by key, e.g. "camp".</summary>
     public SettlementLevelDefinition SettlementLevel(string key) => Find(SettlementLevels, l => l.Key, key, "settlement level");

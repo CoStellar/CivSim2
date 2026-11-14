@@ -158,6 +158,17 @@ przez mgłę swojego ludu, a kamera ustawia się na jego największej osadzie.
 | Zakładka **Diplomacy** | jw. | propozycje do nas z „Yes / No” i znane ludy z „War” i propozycjami umów |
 | Zakładka **AI did** | jw. | ostatnie 30 decyzji AI za nas, z dźwignią i czasem |
 
+**Rozwój widoczny (PR P2b, ADR 0026 zasada 12):**
+- *Wygląd osady* z `settlements.json` → `looks`: obóz → obóz z ogniskiem (ogień) → wioska z polami → wioska z kamiennym murem
+  (kamieniarstwo) → miasto. Rysowany jest ostatni wygląd, którego poziom osada osiągnęła i którego technologię zna jej lud
+  (`GameContent.SettlementLook`, serwer wpisuje `SettlementView.Look`, nazwy w `ContentMessage.SettlementLooks`). Grafika
+  `objects/settlement_<wygląd>_<stan>`; paczka bez nowego obrazka pokazuje obrazek poziomu.
+- *Kamienie milowe w kronice* (`Simulation/MilestoneTracker`, raz na sekundę gry na serwerze): pierwsza technologia, pierwsza wioska,
+  każda nowa era, pięć osad, pierwszy kontakt, pierwsza wojna, z minutą partii przy x1 („Minute 3: the Xs built their first village.”).
+  Tracker tylko czyta stan (hasz bez zmian), a po wczytaniu zapisu nie ogłasza drugi raz tego, co już było.
+- *Jedzenie osadników*: przy zaznaczonych osadnikach panel pisze, na ile miesięcy akcji (i sekund przy x1) starczy im jedzenia; zaznaczony
+  oddział zostaje zaznaczony, kiedy odchodzi z klikniętego pola.
+
 Odmowa serwera („Refused: …”) pokazuje się na czerwono w zakładce Orders przez 6 s. Wybór rozkazów, które pasują do zaznaczenia, i
 zamiana na komendy protokołu są w `src/CivSim.Protocol/Client/HelmActions.cs` (bez Godota, z testami), kontrolki w
 `game/scripts/Ui/HelmHud.cs`. Spacja i 1–5 ustawiają pauzę i prędkość także graczowi (gdy gra sam).
@@ -176,6 +187,8 @@ zamiana na komendy protokołu są w `src/CivSim.Protocol/Client/HelmActions.cs` 
 (presety w menu). Klient dostaje je od serwera albo przez `LocalServerHost.Describe`, nie czyta plików danych sam.
 
 ## Testy
+- `RiseTests`: wygląd osady wg poziomu i technologii, wygląd w widoku i nazwy w treści, kamień milowy raz z minutą i bez powtórki po
+  wczytaniu, licznik jedzenia osadników (jedzenie tak, skóry nie).
 - `HelmActionsTests`: zaznaczony obóz daje rozkazy swoich dźwigni, oddział swoje; obcy obóz nie; rozkaz „przeprowadź” z panelu przechodzi
   przez serwer i jest oznaczony jako rozkaz gracza; kafelki czytają dźwignie i ostatnią decyzję AI z widoku.
 - `ObserverLayerTests`: lista presetów i ich wartości, podgląd planety i błąd złego ustawienia, limit tur zatrzymuje symulację i raport

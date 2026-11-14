@@ -60,6 +60,10 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 }
             }
 
+            if (u.Role == UnitRole.Settlers)
+            {
+                u.FoodMonths = FoodMonths(u);
+            }
 
             Walk(context, state, u, civ);
         }
@@ -340,6 +344,27 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         {
             civ.SeenYear[geo.Index(area[k])] = stamp;
         }
+    }
+
+    // How many months of action the food the settlers carry lasts (what the player sees next to them).
+    private int FoodMonths(Unit u)
+    {
+        Amount month = CivSim.Core.Episodes.Campaigns.FoodFor(_content, u.TotalPeople(), 1);
+        if (month <= Amount.Zero)
+        {
+            return 0;
+        }
+
+        Amount food = Amount.Zero;
+        for (int g = 0; g < u.Cargo.Length && g < _content.Goods.Count; g++)
+        {
+            if (_content.Goods[g].IsFood)
+            {
+                food += u.Cargo[g];
+            }
+        }
+
+        return (int)Math.Min(int.MaxValue, food.Hundredths / month.Hundredths);
     }
 
     // Settlers eat a month of food from what they carry; without it some of them die.

@@ -373,6 +373,21 @@
    "height": 42
   },
   {
+   "file": "objects/settlement_hearth_abandoned.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_hearth_active.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_hearth_ruins.png",
+   "width": 48,
+   "height": 42
+  },
+  {
    "file": "objects/settlement_town_abandoned.png",
    "width": 48,
    "height": 42
@@ -399,6 +414,21 @@
   },
   {
    "file": "objects/settlement_village_ruins.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_walled_abandoned.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_walled_active.png",
+   "width": 48,
+   "height": 42
+  },
+  {
+   "file": "objects/settlement_walled_ruins.png",
    "width": 48,
    "height": 42
   },

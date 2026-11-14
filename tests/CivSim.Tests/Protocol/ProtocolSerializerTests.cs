@@ -123,9 +123,9 @@ public class ProtocolSerializerTests
         // Version 17: area tasks: StartTaskDto, the task of work groups in UnitView, task kinds in the content (stage 6 PR 4a).
         // Version 18: levers of the helmsman (SetLeverDto, the player's levers and the AI's decisions in the view) and the civilization
         // a player asks for in Hello (stage 6 PR P, ADR 0027). Hello has four fields now.
-        // Version 19: player commands for levers 1, 2, 4 and 5 and research and proposals in the player's view (stage 6 PR P1).
+        // Version 20: settlement looks and the settlers' food in the view (stage 6 PR P2b).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("13000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
+        Assert.Equal("14000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
     }
 
     [Fact]

@@ -15,7 +15,7 @@ Proste grafiki, które podgląd rysuje, dopóki nie ma pixel artu Patryka (etap 
 | `terrain/` | `terrain_oasis_01`, `terrain_reef_01`, `terrain_ice_field_01` (cechy terenu) | 48×42 | 3 |
 | `terrain/` | `terrain_river_<n,ne,se,s,sw,nw>_<stream,river>` (rzeka na jednej krawędzi) | 48×42 | 12 |
 | `objects/` | `deposit_<złoże>` (z `data/resources.json`) | 24×24 | 22 |
-| `objects/` | `settlement_<camp,village,town>_<active,abandoned,ruins>` | 48×42 | 9 |
+| `objects/` | `settlement_<camp,hearth,village,walled,town>_<active,abandoned,ruins>` (wygląd z `settlements.json` looks) | 48×42 | 15 |
 | `objects/` | `improvement_field_01` (pole uprawne) | 48×42 | 1 |
 | `units/` | `unit_migrants_idle_01` (wędrujący obóz), `unit_scout_idle_01` | 32×32 | 2 |
 | `effects/` | `event_<efekt>` (efekty zdarzeń na polach i osadach z `data/effects.json`) | 24×24 | 6 |
