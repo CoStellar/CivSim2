@@ -90,6 +90,12 @@
         "string"
       ]
     },
+    "settlersBelowAdminPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
     "searchEverySteps": {
       "type": [
         "number",

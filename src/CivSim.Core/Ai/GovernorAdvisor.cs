@@ -307,7 +307,7 @@ public sealed class GovernorAdvisor : Advisor
         long drive = Math.Max(1, (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral);
         long splitAbove = Math.Clamp(_rules.SplitAbovePercentOfLevel * Factor.Neutral / drive, _content.Ai.SplitMinPercentOfLevel, 100);
         bool crowded = people >= _rules.MinSplitPeople && people * 100L >= max * splitAbove;
-        if (crowded)
+        if (crowded && AdminRoom(civ))
         {
             // No fixed limit of camps: a group leaves only for land that can feed it.
             long need = GroupFoodNeed(s, _rules.SplitPercent) * _rules.SplitNeedsFoodPercent / 100;
@@ -348,6 +348,14 @@ public sealed class GovernorAdvisor : Advisor
         }
     }
 
+    // Settlers leave only while the state can rule more (stage 6 PR T2): the administration used is below the share of the capacity.
+    private bool AdminRoom(CivilizationState civ)
+    {
+        int limit = _content.Ai.SettlersBelowAdminPercent;
+        int capacity = Governance.Stability.Capacity(_content, civ);
+        return limit <= 0 || capacity == int.MaxValue || (long)civ.AdminUsed * 100 < (long)capacity * limit;
+    }
+
     // A village (GDD 5.3, PR C) does not move, but it sends settlers out: when it is crowded (earlier for an expansive
     // civilization), or when the land it farms is worn out. They found a camp on the best known free land within one
     // move, and that camp chooses where to live and whether to settle by itself.
@@ -380,9 +388,9 @@ public sealed class GovernorAdvisor : Advisor
         bool crowded = people * 100L >= max * settleAbove;
         int worn = WornPercent(world, s);
         bool wornOut = worn < _content.Ai.VillageWornBelowPercent;
-        if (!crowded && !wornOut && !hungry)
+        if ((!crowded && !wornOut && !hungry) || (!hungry && !AdminRoom(civ)))
         {
-            return;
+            return; // a full state sends no settlers (stage 6 PR T2); a hungry village still sends mouths away
         }
 
         // A group the size of a new camp leaves, however big the village is; a hungry village sends the share of mouths it

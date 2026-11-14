@@ -43,6 +43,14 @@ Wszystkie tempa są na rok i przeliczane przez długość kroku cywilizacji (ADR
 
 **Co z tego wychodzi** (seed 42, mapa standardowa, 2000 tur): każde plemię w ok. 10 turach (500 lat) dochodzi do granicy tego, co da się zebrać wokół obozu (115–310 osób), i tam zostaje. Zdrowie średnio ok. 64 przez tłok ponad 150 osób. Dalszy wzrost dadzą wędrówki i nowe obozy (3c).
 
+## Twardy limit poziomu (etap 6 PR T2)
+
+Decyzja Patryka z 2026-11-14: osada nigdy nie urośnie ponad liczbę ludzi swojego poziomu (`settlements.json`: obóz 150, wioska 1000…);
+nadmiar się rozprasza (`growth.levelLimitScatters`). Obóz na limicie wysyła osadników, jeśli państwo ma wolną administrację
+(`ai.json` `settlersBelowAdminPercent`), a jeśli nie, zostaje taki, jaki jest. Wioska czeka na technologię miasta. Bez limitu obóz,
+który nie mógł się podzielić, puchł do ponad 1800 ludzi. Ludy, które nie rosną, bo ich ziemia wyżywi tylko ok. 50–60 osób, zostają
+takie, jakie są: to ich wybór i cel podboju (ta sama decyzja).
+
 ## Pliki danych
 - `data/strata.json`: warstwy, czy zbierają, docelowy udział, potrzeby (kategoria albo konkretny towar, ilość na rok, podstawowa albo wyższa).
 - `data/population.json`: urodzenia (`birthsPerMille`, `villageBirthsPerMille`), śmiertelność dzieci (`childMortalityPercent`), zgony dorosłych (`adultDeathsPerMille`, `villageDeathsPerMille`), głód, zdrowie, nastrój, przesuwanie warstw, zbieranie i ludność nowego plemienia.

@@ -243,6 +243,11 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
   zatłoczony, gdy ludzie ≥ 60 i ludzie ≥ pojemność poziomu × próg   (obóz: pojemność 150)
   ```
 
+- **Wolna administracja (etap 6 PR T2, decyzja Patryka z 2026-11-14):** odłam rusza tylko wtedy, gdy administracja ludu zajmuje
+  mniej niż 35% tego, co udźwignie jego ustrój (`settlersBelowAdminPercent`, `AdminRoom`; punkty administracji: `stability.json`).
+  Przy pełnej administracji zatłoczony obóz zostaje; nie urośnie ponad 150, bo nadmiar się rozprasza (`population.json`
+  `levelLimitScatters`). Rada starszych (250 punktów) wypuszcza więc osadników, dopóki lud ma ok. 6 osad.
+
   | Ekspansywność | Waga ekspansji 1000 | Waga ekspansji 1600 |
   | --- | --- | --- |
   | 0 (mnożnik 0,5) | próg 100% → 150 osób | 100% → 150 osób |
@@ -281,6 +286,7 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
     (`villageWornBelowPercent`) ich naturalnej żyzności, **albo**
   - jest **głodna** (poprawki po 4g): ludzie zjedli mniej niż 70% potrzeby (`villageHungryFedPercent`). Głodna wioska może wysłać
     grupę **raz na 20 lat** (`villageHungrySettlersEveryYears`) zamiast raz na 100.
+  - Zatłoczona albo wyjałowiona wioska wysyła osadników tylko przy **wolnej administracji** (jak G5, etap 6 PR T2); głodna zawsze.
 - **Dokąd:** jak odłam G5: najlepsze znane, wolne pole w zasięgu jednego ruchu (10 pól), co najmniej 4 pola od własnych osad i poza strefami własnych osad, które
   wyżywi grupę (`BestSite(splitting: true)`).
 - **Kto idzie:** co najmniej 60 osób (`villageSettlersPeople`), najwyżej 90% wioski. Głodna wioska wysyła tyle procent ludzi, ile
