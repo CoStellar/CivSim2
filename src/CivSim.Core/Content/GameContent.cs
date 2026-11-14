@@ -59,7 +59,9 @@ public sealed class GameContent
     public IReadOnlyList<TechnologyDefinition> Technologies { get; init; } = [];
 
     /// <summary>Random events (data/events.json, stage 3h), index = id.</summary>
-    public IReadOnlyList<EventDefinition> Events { get; init; } = [];
+    public IReadOnlyList<EventDefinition> Events { get => _events; init => _events = value; }
+
+    private IReadOnlyList<EventDefinition> _events = [];
 
     /// <summary>Sight, map memory and journeys (data/perception.json, stage 3g).</summary>
     public PerceptionRules Perception { get; init; } = new();
@@ -170,7 +172,27 @@ public sealed class GameContent
     public WorldGen.SeasonRules Seasons { get; init; } = new();
 
     /// <summary>Milankovitch cycles and ice sheets (data/planets.json "climateCycles", stage 1c-B).</summary>
-    public WorldGen.ClimateCycleRules ClimateCycles { get; init; } = new();
+    public WorldGen.ClimateCycleRules ClimateCycles { get => _climateCycles; init => _climateCycles = value; }
+
+    private WorldGen.ClimateCycleRules _climateCycles = new();
+
+    /// <summary>
+    /// A copy of this content with every system frozen until a later era switched on (ADR 0026 rule 5: the dynamic climate, wildfire
+    /// and flood): the unit tests of those systems run them as the later eras will.
+    /// </summary>
+    public GameContent Thawed()
+    {
+        var copy = (GameContent)MemberwiseClone();
+        copy._climateCycles = _climateCycles with { Enabled = true };
+        var events = new EventDefinition[_events.Count];
+        for (int i = 0; i < events.Length; i++)
+        {
+            events[i] = _events[i] with { Enabled = true };
+        }
+
+        copy._events = events;
+        return copy;
+    }
 
     /// <summary>Planet presets (stage 1b).</summary>
     public IReadOnlyList<PlanetPreset> Planets { get; init; } = [];
