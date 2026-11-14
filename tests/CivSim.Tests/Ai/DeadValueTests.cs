@@ -416,6 +416,8 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        int fullIndex = saved.Count - 1;
+
         // A player's order (stage 6 PR P1): every settlement of the journey situation got an order from a player in this tick, so the
         // governor leaves them alone for playerOrderHoldYears years of action (0: it decides at once, as without the order).
         GameState ordered = SaveGameSerializer.Load(new MemoryStream(saved[stone])); // the camp that would go on a journey (Craft)
@@ -427,6 +429,21 @@ public class DeadValueTests
         using (var ms = new MemoryStream())
         {
             SaveGameSerializer.Save(ordered, ms);
+            saved.Add(ms.ToArray());
+        }
+
+        // A state half full (stage 6 PR T2): the full villages, every people using half of what its government administers, so
+        // settlersBelowAdminPercent decides whether the crowded villages may still send settlers.
+        GameState ruled = SaveGameSerializer.Load(new MemoryStream(saved[fullIndex]));
+        foreach (CivilizationState civ in ruled.Civilizations)
+        {
+            int capacity = CivSim.Core.Governance.Stability.Capacity(Content, civ);
+            civ.AdminUsed = capacity == int.MaxValue ? 0 : capacity / 2;
+        }
+
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(ruled, ms);
             saved.Add(ms.ToArray());
         }
 

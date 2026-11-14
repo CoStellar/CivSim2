@@ -74,6 +74,9 @@
             "number",
             "string"
           ]
+        },
+        "levelLimitScatters": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false
