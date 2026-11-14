@@ -39,6 +39,11 @@ flowchart LR
 - **Rolnictwo** liczy teraz efekty: wydajność osady (`output_percent`) i wydobycie z pola (`extraction_percent`), tak jak zbieranie.
 - **Poza CORE** (GDD 16, „Moduł”): ulewa, tornado, trzęsienie ziemi, wulkan, meteoryty, nieurodzaj, kryzys, rewolty, wielcy ludzie. Każde to nowy wpis w `events.json` (czasem nowy rodzaj warunku albo statystyki efektu w kodzie). Zniszczenie budynków przyjdzie z budynkami.
 
+## Zamrożone do brązu (etap 6 PR T3a, ADR 0026 zasada 5)
+
+Pożar i powódź mają w `events.json` `"enabled": false`: nigdy nie spadają (szansa 0), ale ich definicje i kod zostają. Susza i
+epidemia działają (później jako karty). Testy jednostkowe biorą `TestContent`, który odmraża je przez `GameContent.Thawed()`.
+
 ## Pliki danych
 - `data/events.json`: 4 zdarzenia (susza, pożar, powódź, epidemia) z warunkami, łagodzeniem, efektami, żyznością, rozprzestrzenianiem i tekstem do kroniki.
 - `data/effects.json`: używane typy `extraction_reduction`, `damage`, `depopulation`, `mood_drop`.

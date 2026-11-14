@@ -97,6 +97,11 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
     // Yearly chance with the civilization head counts already taken this turn.
     private long Chance(WorldState world, SettlementState s, EventDefinition ev)
     {
+        if (!ev.Enabled)
+        {
+            return 0; // frozen until a later era (ADR 0026)
+        }
+
         long chance = ev.TimesPer10000Years * 100L; // per 10 000 years -> millionths per year
         foreach (EventCondition c in ev.Conditions)
         {

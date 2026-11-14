@@ -1368,6 +1368,7 @@ public static class ContentLoader
             cycles = new Core.WorldGen.ClimateCycleRules
             {
                 UpdateYears = r.Int("updateYears", 10, 100_000),
+                Enabled = !cy.TryGetProperty("enabled", out JsonElement climateOn) || climateOn.ValueKind != JsonValueKind.False,
                 TiltAmplitudeTenths = (int)(r.Amount("tiltAmplitude", Amount.Zero, Amount.FromUnits(20)).Hundredths / 10),
                 TiltPeriodYears = r.Int("tiltPeriodYears", 1_000, 10_000_000),
                 LongEccentricityThousandths = r.Int("longEccentricityPerMille", 0, 100),
@@ -1793,7 +1794,8 @@ public static class ContentLoader
             int fertility = r.OptionalInt("fertilityGain", 0, 100) ?? 0;
             int fertilityRadius = r.OptionalInt("fertilityRadius", 0, 10) ?? 0;
             int spread = r.OptionalInt("spreadPercent", 0, 100) ?? 0;
-            result.Add(new EventDefinition(i, key, name, chance, conditions, softened, laid, fertility, fertilityRadius, spread, chronicle));
+            bool enabled = !e.TryGetProperty("enabled", out JsonElement on) || on.ValueKind != JsonValueKind.False;
+            result.Add(new EventDefinition(i, key, name, chance, conditions, softened, laid, fertility, fertilityRadius, spread, chronicle) { Enabled = enabled });
             i++;
         }
 
