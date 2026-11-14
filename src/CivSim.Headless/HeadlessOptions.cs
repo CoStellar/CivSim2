@@ -13,6 +13,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>CSV file with population and food per civilization, or null for none.</summary>
     public string? StatsPath { get; init; }
 
+    /// <summary>CSV file with the minute of each milestone per civilization (stage 6 PR T, pace report), or null for none.</summary>
+    public string? MilestonesPath { get; init; }
+
     /// <summary>CSV file with every AI decision and its three main reasons ("Why?", GDD 8.7), or null for none.</summary>
     public string? DecisionsPath { get; init; }
 
@@ -121,7 +124,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
     /// <summary>Usage text.</summary>
     public const string Usage =
-        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--work-groups N] [--record game.civreplay] [--replay game.civreplay] [--quiet]\n" +
+        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|small|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--milestones pace.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--work-groups N] [--record game.civreplay] [--replay game.civreplay] [--quiet]\n" +
         "       [--batch GAMES --batch-out games.csv [--jobs N]] (stage 4g: GAMES games on seeds from --seed on, one CSV row each)\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
@@ -140,6 +143,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         string? report = null;
         string? stats = null;
         string? decisions = null;
+        string? milestones = null;
         string? relations = null;
         string? treaties = null;
         string? wars = null;
@@ -196,7 +200,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                 case "--map-size":
                     if (!MapSizes.TryParse(Next(), out size))
                     {
-                        error = "--map-size must be test, standard, large or huge.";
+                        error = "--map-size must be test, small, standard, large or huge.";
                         return null;
                     }
 
@@ -268,6 +272,15 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     if (string.IsNullOrWhiteSpace(relations))
                     {
                         error = "--relations needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--milestones":
+                    milestones = Next();
+                    if (string.IsNullOrWhiteSpace(milestones))
+                    {
+                        error = "--milestones needs a file path.";
                         return null;
                     }
 
@@ -530,6 +543,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             PngScale = pngScale,
             StatsPath = stats,
             DecisionsPath = decisions,
+            MilestonesPath = milestones,
             RelationsPath = relations,
             TreatiesPath = treaties,
             WarsPath = wars,
@@ -592,6 +606,9 @@ public enum MapSize
     /// <summary>258×160, 12 civilizations.</summary>
     Standard,
 
+    /// <summary>130×80, 5 civilizations: the default for games up to the bronze age (ADR 0026 rule 2).</summary>
+    Small,
+
     /// <summary>386×240, 20 civilizations.</summary>
     Large,
 
@@ -606,6 +623,7 @@ public static class MapSizes
     public static GameSettings Settings(MapSize size, ulong seed) => size switch
     {
         MapSize.Test => new GameSettings(seed, 66, 40, 4),
+        MapSize.Small => new GameSettings(seed, 130, 80, 5),
         MapSize.Standard => new GameSettings(seed, 258, 160, 12),
         MapSize.Large => new GameSettings(seed, 386, 240, 20),
         MapSize.Huge => new GameSettings(seed, 514, 320, 32),
@@ -619,6 +637,9 @@ public static class MapSizes
         {
             case "test":
                 size = MapSize.Test;
+                return true;
+            case "small":
+                size = MapSize.Small;
                 return true;
             case "standard":
                 size = MapSize.Standard;

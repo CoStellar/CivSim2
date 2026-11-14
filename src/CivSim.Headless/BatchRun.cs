@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -27,6 +28,7 @@ public static class BatchRun
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(log);
         var rows = new string[options.Batch];
+        var pace = new IReadOnlyList<string>[options.Batch];
         int problems = 0;
         int done = 0;
         object gate = new();
@@ -41,6 +43,7 @@ public static class BatchRun
                 ReportPath = null,
                 StatsPath = null,
                 DecisionsPath = null,
+                MilestonesPath = options.MilestonesPath is null ? null : string.Empty, // collect rows; the batch writes them
                 RelationsPath = null,
                 TreatiesPath = null,
                 WarsPath = null,
@@ -51,6 +54,7 @@ public static class BatchRun
             };
             HeadlessResult r = HeadlessRun.Execute(one, TextWriter.Null);
             rows[k] = Row(seed, r);
+            pace[k] = r.MilestoneRows;
             if (r.WorldProblems.Count > 0)
             {
                 Interlocked.Increment(ref problems);
@@ -73,6 +77,20 @@ public static class BatchRun
         }
 
         log.WriteLine($"batch csv:          {options.BatchPath}");
+        if (options.MilestonesPath is not null)
+        {
+            using var writer = new StreamWriter(options.MilestonesPath, false, new UTF8Encoding(false));
+            writer.WriteLine(MilestoneCsv.Header);
+            foreach (IReadOnlyList<string> game in pace)
+            {
+                foreach (string row in game)
+                {
+                    writer.WriteLine(row);
+                }
+            }
+
+            log.WriteLine($"milestones csv:     {options.MilestonesPath}");
+        }
         return problems == 0 ? 0 : 1;
     }
 

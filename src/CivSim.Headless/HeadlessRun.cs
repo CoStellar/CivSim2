@@ -61,6 +61,9 @@ public sealed record HeadlessResult(
     /// <summary>Average stability over civilization-years, the percent of civilization-years in unrest and the capitals lost (stage 4f PR 3).</summary>
     public (int Average, int UnrestPercent, int CapitalsLost) Stability { get; init; }
 
+    /// <summary>Rows of the pace report (<see cref="MilestoneCsv"/>), empty without <c>--milestones</c>.</summary>
+    public IReadOnlyList<string> MilestoneRows { get; init; } = [];
+
     /// <summary>Secessions (new civilizations) and coups during the run (stage 4f PR 4).</summary>
     public (int Secessions, int Coups) Revolts { get; init; }
 
@@ -138,6 +141,7 @@ public static class HeadlessRun
         using StreamWriter? campaignFile = options.CampaignsPath is null ? null : CreateReport(options.CampaignsPath);
         CampaignCsv? campaignCsv = campaignFile is null ? null : new CampaignCsv(campaignFile);
         campaignCsv?.Start();
+        MilestoneCsv? pace = options.MilestonesPath is null ? null : new MilestoneCsv(content, runner.State, options.Seed);
         var tally = new TreatyTally();
         var stabilityTally = new StabilityTally(runner.State.Month);
         var gameTally = new GameTally(runner.State.Month, content.Eras.Count, content.SettlementLevel("village").Id);
@@ -159,6 +163,7 @@ public static class HeadlessRun
             TurnReport report = runner.RunTurn();
             long allocated = GC.GetAllocatedBytesForCurrentThread() - allocatedBefore;
             recorder?.AfterTick(runner.State);
+            pace?.AfterTick(runner.State);
             totalAllocated += allocated;
             turnMs[i] = Stopwatch.GetElapsedTime(0, report.TotalTicks).TotalMilliseconds;
 
@@ -280,6 +285,19 @@ public static class HeadlessRun
             log.WriteLine(string.Create(CultureInfo.InvariantCulture, $"work groups:        {bench.Started} started, {groups} out at the end, {working} at work, {runner.State.Units.Count} units in all"));
         }
 
+        IReadOnlyList<string> paceRows = pace?.Rows(runner.State) ?? [];
+        if (pace is not null && !string.IsNullOrEmpty(options.MilestonesPath))
+        {
+            using StreamWriter paceFile = CreateReport(options.MilestonesPath!);
+            paceFile.WriteLine(MilestoneCsv.Header);
+            foreach (string row in paceRows)
+            {
+                paceFile.WriteLine(row);
+            }
+
+            log.WriteLine($"milestones csv:     {options.MilestonesPath}");
+        }
+
         if (recorder is not null)
         {
             recorder.Write(options.RecordPath!);
@@ -296,6 +314,7 @@ public static class HeadlessRun
             managed,
             Environment.WorkingSet)
         {
+            MilestoneRows = paceRows,
             TurnsOver25Ms = turnMs.Count(ms => ms > 25),
             TurnsOver30Ms = turnMs.Count(ms => ms > 30),
             World = world,

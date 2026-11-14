@@ -189,7 +189,8 @@ public class PlayerOrderTests
         while (state.Turn < until - 1)
         {
             runner.RunTurn();
-            Assert.DoesNotContain(council.Log.Entries, d => d.Civ == civ.Id && d.Subject == founded.Id.Value);
+            // No lever decision on the camp; work orders that are no lever (artisans' recipes) stay the AI's.
+            Assert.DoesNotContain(council.Log.Entries, d => d.Civ == civ.Id && d.Subject == founded.Id.Value && Levers.Of(d.Action) != Lever.None);
             Assert.True(founded.IsActive && founded.Cell == site, $"tick {state.Turn}: the camp was moved or merged");
         }
     }
