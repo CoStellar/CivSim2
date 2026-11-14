@@ -34,6 +34,11 @@ flowchart LR
 - **Koszt dziś** = koszt bazowy × max(25%, 100% − Σ inspiracji − dyfuzja). Inspiracje (GDD 6.1): towar w magazynach cywilizacji, złoże, biom albo rzeka w strefie wpływów (woda tuż przy strefie też się liczy), zima obozu co najmniej tak zimna, liczba ludzi. **Dyfuzja:** −20% za każdego sąsiada, który zna technologię, najwyżej 2 sąsiadów; sąsiad = inna cywilizacja z osadą w promieniu 12 pól od naszej.
 - **Odblokowania:** receptury (każda receptura musi mieć technologię, sprawdza to ładowanie danych); dodatkowe zbieranie według złoża albo biomu (łowienie ryb działa na wodzie przy strefie wpływów, bo strefy nie wchodzą na wodę); stałe efekty cywilizacji: `cooking` (+% plonów), `cold_tolerance`, `tradition` (+nastrój), `storage` (−% psucia), `carrying`.
 - **Ery** (GDD 6.2): cywilizacja wchodzi w następną erę, gdy zna jej technologię progową (neolit: rolnictwo) i 60% technologii obecnej ery. Długość tury wyznacza nadal najbardziej zaawansowana żywa cywilizacja.
+- **Tempo (etap 6 PR T, ADR 0026 zasada 2):** koszty ery kamienia są 20 razy niższe niż przed PR T, rolnictwa 16 razy, reszty neolitu
+  8 razy (ogień i krzemień 300, rolnictwo 1700). Przyczyna: nauka rośnie z liczbą ludzi, a startowe plemię (ok. 50–100 osób) zbiera
+  ok. 200 punktów na minutę gry, więc pierwsza technologia przychodziła w 5. minucie (mediana na 10 seedach). Po zmianie: pierwsza
+  technologia 0,8 min, wioska 3,75 min, era 1 3,8 min (`docs/long-runs/2026-11-14_pace/`). Pomiar: `CivSim.Headless --map-size small
+  --turns 9000 --batch 10 --milestones pace.csv`, wykres: `docs/systems/tools/milestones_chart.py before.csv after.csv out.png`.
 - **AI** (doradca uczony `ScholarAdvisor`, od etapu 4a na wspólnej ocenie, `docs/systems/ai.md`): od PR B (ADR 0019) liczy priorytet każdej dostępnej technologii z tego, co da cywilizacji (zbieranie na polach jej strefy, receptury dla jej rzemieślników, efekty według potrzeb, wioski według żyzności, droga do kolejnych technologii), ważony celami stratega i charakterem; koszt po dzisiejszych zniżkach jest przeszkodą łagodzoną ciekawością. Nad morzem ważne jest rybołówstwo, w zimnie ogień, na żyznej ziemi rolnictwo. Pełny opis: `docs/ai/05-uczony.md`.
 - Odkrycia przypadkiem przez użytkowanie: w GDD 16 „Wytnij” (dubluje inspiracje).
 
