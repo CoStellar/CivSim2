@@ -511,6 +511,7 @@ public static class ContentLoader
             AdultDeathsPerMille = growth.Amount("adultDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             VillageDeathsPerMille = growth.Amount("villageDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             VillageBirthsPerMille = growth.Amount("villageBirthsPerMille", Amount.Zero, Amount.FromUnits(1000)),
+            LevelLimitScatters = growth.OptionalBool("levelLimitScatters"),
             StarvationDeathPercent = growth.Int("starvationDeathPercent", 0, 100),
             CampStarvationDeathPercent = growth.Int("campStarvationDeathPercent", 0, 100),
             LowHealthDeathsPerMillePerPoint = growth.Amount("lowHealthDeathsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
@@ -1857,6 +1858,7 @@ public static class ContentLoader
             FedBadlyPercent = r.Int("fedBadlyPercent", 0, 99),
             HungerWeightMax = r.Int("hungerWeightMax", 1000, 3000),
             SplitMinPercentOfLevel = r.Int("splitMinPercentOfLevel", 1, 100),
+            SettlersBelowAdminPercent = r.OptionalInt("settlersBelowAdminPercent", 0, 1000) ?? 0,
             SearchEverySteps = r.Int("searchEverySteps", 1, 20),
             StarvingFedPercent = r.Int("starvingFedPercent", 0, 100),
             GoalOfFood = r.Enum<Core.Ai.Goal>("goalOfFood"),
@@ -2714,6 +2716,8 @@ public static class ContentLoader
 
         /// <summary>An optional whole number; null when the property is missing.</summary>
         public int? OptionalInt(string name, int min, int max) => element.TryGetProperty(name, out _) ? Int(name, min, max) : null;
+
+        public bool OptionalBool(string name) => element.TryGetProperty(name, out _) && Bool(name);
 
         public int Int(string name, int min, int max)
         {

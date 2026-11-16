@@ -68,6 +68,12 @@ public sealed record PopulationRules
     /// <summary>Extra births per thousand per year in a settled village (shorter gaps between children; decision of 2026-11-07).</summary>
     public Amount VillageBirthsPerMille { get; init; } = Amount.FromUnits(5);
 
+    /// <summary>
+    /// When true, a settlement never grows past the people of its level; the people above it scatter (stage 6 PR T2, Patryk's decision
+    /// of 2026-11-14: a hard limit instead of camps that swell when they cannot split).
+    /// </summary>
+    public bool LevelLimitScatters { get; init; }
+
     /// <summary>Share of the people who got no food in a turn who die, in percent.</summary>
     public int StarvationDeathPercent { get; init; } = 80;
 
