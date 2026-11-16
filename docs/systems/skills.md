@@ -37,6 +37,8 @@ flowchart TD
 - **Przenoszenie:** osada z co najmniej 3 fachowcami i co najmniej 2 ponad miejsca pracy wysyła połowę nadwyżki (najmniej 1) do najbliższej własnej osady w zasięgu `linkCells` (8 pól), której brakuje rąk; fachowcy przechodzą razem ze swoim miejscem w warstwie. Listę osad, którym brakuje rąk, system buduje raz na turę; osada, której zabraknie rąk w trakcie przenosin, czeka do następnego kroku.
 - **Odłamy, osadnicy, zajęcia, łączenie, ucieczka:** fachowcy i uczniowie idą w tej samej proporcji co ludzie (w dół), ale grupa zabiera co najmniej 1 fachowca każdego fachu, jeśli w osadzie zostaje co najmniej 1 (osadnicy biorą rolnika).
 - **Utrata i powrót:** gdy umrze ostatni fachowiec, nikt nie uczy. Cywilizacja, która zna technologię, ale nie ma nikogo z fachem, dostaje 1 mistrza na krok, jeśli ma umowę handlową z cywilizacją, która ma co najmniej 3 fachowców.
+- **Grupy robocze** (etap 6 PR 4b-2): fachowcy w grupach osady (rolnicy w polu, łupacze w kopalni) liczą się do jej fachowców przy nauce
+  i przenosinach, a ludzie grup do jej miejsc pracy. Przenosić się mogą tylko fachowcy w domu.
 - **Przycinanie** (`Skills.Trim`): po zgonach, dryfie warstw i stratach fachowców i uczniów nigdy nie jest więcej niż ludzi warstwy (uczniowie odchodzą pierwsi; fach znika dopiero z ostatnim fachowcem).
 
 ## Pliki danych

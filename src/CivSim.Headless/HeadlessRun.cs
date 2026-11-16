@@ -403,6 +403,13 @@ public static class HeadlessRun
             people += s.TotalPopulation();
         }
 
+        // Work groups out on their tasks are their settlements' people too (stage 6 PR 4b-2: farmers in the fields).
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            CivSim.Core.Units.Unit u = state.Units[k];
+            people += !u.Gone && u.Role == CivSim.Core.Units.UnitRole.Workers ? u.TotalPeople() : 0;
+        }
+
         return people;
     }
 

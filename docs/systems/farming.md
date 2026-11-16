@@ -2,6 +2,11 @@
 
 **W jednym zdaniu:** obóz cywilizacji, która zna rolnictwo, osiada jako wioska; wytwórcy wioski uprawiają najlepsze żyzne pola jej strefy wpływów i dostają zboże, a uprawiana ziemia jałowieje i odzyskuje żyzność w odłogu (etap 3f, GDD 4.4 i 5.3).
 
+**Od etapu 6 PR 4b-2 (decyzja Patryka z 2026-11-16):** wioska nie uprawia już strefy sama (`tasks.json` `zoneFarms: false`). Każde pole to
+zadanie: grupa rolników idzie na pole i uprawia je według tej samej reguły (niżej), a `FarmingSystem` tylko liczy jałowienie i odłóg pól,
+na których grupy pracują ([`tasks.md`](tasks.md)). Opis niżej to reguła plonu i jałowienia; „najlepsze pola strefy” wybiera teraz AI
+(G9) albo gracz. Uprawa strefy zostaje w kodzie pod flagą.
+
 **Faza tury:** 7. Gospodarka, przed zbieraniem (rolnictwo i jałowienie). Osiedlenie: komenda `SettleCommand` w fazie decyzji (AI plemion).
 
 ## Dane wejściowe i wyjściowe

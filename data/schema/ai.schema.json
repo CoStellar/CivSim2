@@ -437,6 +437,12 @@
         "number",
         "string"
       ]
+    },
+    "fieldMoveBelowPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
     }
   },
   "additionalProperties": false

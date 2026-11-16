@@ -179,6 +179,7 @@ public readonly record struct Decision(
         FactorId.WornLand => "worn land",
         FactorId.Shortage => "stock months",
         FactorId.TaskYield => "yield a year",
+        FactorId.FieldPercent => "field vs best %",
         _ => id.ToString().ToLowerInvariant(),
     };
 }

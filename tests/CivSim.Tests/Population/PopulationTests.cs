@@ -208,10 +208,12 @@ public class PopulationTests
 
         // The largest camp: the first one may have been driven out or merged by then (AI choices since stage 4b).
         SettlementState camp = runner.State.Settlements.OrderByDescending(s => s.TotalPopulation()).ThenBy(s => s.Id.Value).First();
-        int total = camp.TotalPopulation();
+        // Its work groups are its people too (stage 6 PR 4b-2): the knappers in a flint mine are its artisans.
+        var groups = runner.State.Units.All.Where(u => !u.Gone && u.Role == CivSim.Core.Units.UnitRole.Workers && u.Home == camp.Id.Value).ToList();
+        int total = camp.TotalPopulation() + groups.Sum(u => u.TotalPeople());
         Assert.True(total > 0);
-        int artisans = camp.PopulationView[Stratum("artisans")] * 100 / total;
-        int warriors = camp.PopulationView[Stratum("warriors")] * 100 / total;
+        int artisans = (camp.PopulationView[Stratum("artisans")] + groups.Sum(u => u.People[Stratum("artisans")])) * 100 / total;
+        int warriors = (camp.PopulationView[Stratum("warriors")] + groups.Sum(u => u.People[Stratum("warriors")])) * 100 / total;
         Assert.InRange(artisans, 3, 7);
         Assert.InRange(warriors, 12, 18);
     }

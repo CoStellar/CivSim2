@@ -197,6 +197,9 @@ public sealed record AiRules
     /// <summary>G9: the smallest work group the AI sends.</summary>
     public int TaskMinPeople { get; init; } = 5;
 
+    /// <summary>A field group comes home when its grain per farmer is below this share of the best free farmland in reach, % (stage 6 PR 4b-2).</summary>
+    public int FieldMoveBelowPercent { get; init; } = 70;
+
     /// <summary>The goal food serves (hunger is a matter of safety): technologies and recipes that give food are weighed by it.</summary>
     public Ai.Goal GoalOfFood { get; init; } = Ai.Goal.Security;
 

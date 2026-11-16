@@ -29,6 +29,13 @@ public sealed class TaskPlanner
     private readonly long[] _use;
     private readonly long[] _oneWant; // one settlement's _want, added to the network's
     private readonly long[] _oneUse;
+    private int[] _workedStamp = [];
+    private int[] _workedWorld = [];
+    private int _stamp;
+    private readonly List<int> _ids = [];
+    private readonly List<(int Home, long Best)> _bestField = []; // ids of the network's settlements
+    private readonly List<int> _picked = []; // cells given a food task this plan
+    private readonly List<int> _sent = []; // settlements that sent a food group this plan (once per group)
     private readonly long[] _running;
     private readonly HexCoord[] _area;
 
@@ -57,14 +64,32 @@ public sealed class TaskPlanner
         ArgumentNullException.ThrowIfNull(civ);
         ArgumentNullException.ThrowIfNull(networks);
         Orders.Clear();
-        if (_content.Tasks.Kinds.Count == 0 || _content.Tasks.ZoneGathersMaterials)
+        _picked.Clear();
+        _sent.Clear();
+        _bestField.Clear();
+        if (_content.Tasks.Kinds.Count == 0)
         {
-            return; // while settlements still gather materials from their zone, the AI needs no groups (stage 6 PR 4a)
+            return;
         }
 
+        bool materials = !_content.Tasks.ZoneGathersMaterials; // while the zone gathers them the AI needs no groups (stage 6 PR 4a)
+        MarkWorked(state, civ.Id);
         foreach (List<int> members in networks)
         {
             if (members.Count == 0 || state.Settlements[members[0]].Owner != civ.Id)
+            {
+                continue;
+            }
+
+            _ids.Clear();
+            foreach (int m in members)
+            {
+                _ids.Add(state.Settlements[m].Id.Value); // work groups name their home by id; networks list places in the settlement list
+            }
+
+            Away(state, civ.Id, members);
+            Feed(state, civ, members);
+            if (!materials)
             {
                 continue;
             }
@@ -75,6 +100,223 @@ public sealed class TaskPlanner
             Recall(state, civ.Id, members);
             Start(state, civ, members);
         }
+    }
+
+    // True when the AI gives tasks of this kind: food kinds once the zone no longer farms or fishes, the others once it gathers no
+    // materials.
+    private bool Planned(TaskKindDefinition kind) => kind.Source switch
+    {
+        TaskSource.Farmland => !_content.Tasks.ZoneFarms,
+        TaskSource.Shore => !_content.Tasks.ZoneFishes,
+        _ => !kind.MakesFood && !_content.Tasks.ZoneGathersMaterials,
+    };
+
+    // Groups whose work is out of their home's reach (the camp moved on) and fields far worse than free land in reach come home
+    // (stage 6 PR 4b-2); the next plan sends their people again.
+    private void Away(GameState state, CivId owner, List<int> members)
+    {
+        UnitBook book = state.Units;
+        for (int k = 0; k < book.Count; k++)
+        {
+            Unit u = book[k];
+            if (u.Gone || u.Owner != owner || u.Role != UnitRole.Workers || u.Task < 0 || u.Task >= _content.Tasks.Kinds.Count
+                || u.Order != UnitOrder.Work || u.Target < 0 || !_ids.Contains(u.Home) || !Planned(_content.Tasks.Kinds[u.Task]))
+            {
+                continue;
+            }
+
+            SettlementState home = state.FindSettlement(new SettlementId(u.Home))!;
+            WorldState world = state.Worlds[home.World.Value];
+            TaskKindDefinition kind = _content.Tasks.Kinds[u.Task];
+            var why = Evaluation.Of(Factor.Neutral);
+            if (!AreaTasks.InReach(_content, world, home, u.Target))
+            {
+                why.Note(FactorId.FieldPercent, 0);
+                Orders.Add((new ReturnUnitCommand(_content, u.Id), AiAction.RecallTask, u.Home, u.Task, why));
+                continue;
+            }
+
+            if (kind.Source != TaskSource.Farmland || u.Cell != u.Target)
+            {
+                continue;
+            }
+
+            long here = Economy.FarmingSystem.GrainPerFarmer(_content, world.Map, u.Target);
+            long best = -1;
+            foreach ((int id, long value) in _bestField)
+            {
+                best = id == home.Id.Value ? value : best;
+            }
+
+            if (best < 0)
+            {
+                best = BestFreeField(state, home, world, kind); // once a home in a plan: its field groups share it
+                _bestField.Add((home.Id.Value, best));
+            }
+
+            if (best > 0 && here * 100 < best * _content.Ai.FieldMoveBelowPercent)
+            {
+                why.Note(FactorId.FieldPercent, here * 100 / best);
+                Orders.Add((new ReturnUnitCommand(_content, u.Id), AiAction.RecallTask, u.Home, u.Task, why));
+            }
+        }
+    }
+
+    // Grain a farmer would grow on the best known farmland in the settlement's reach that no group of ours works.
+    private long BestFreeField(GameState state, SettlementState s, WorldState world, TaskKindDefinition kind)
+    {
+        CivilizationState civ = state.FindCivilization(s.Owner)!;
+        int radius = Math.Min(world.Geometry.MaxUniqueRadius, _content.Population.InfluenceMaxRange + _content.Tasks.RangeBeyondZoneCells);
+        int count = world.Geometry.Range(s.Cell, radius, _area);
+        long best = 0;
+        for (int k = 0; k < count; k++)
+        {
+            int cell = world.Geometry.Index(_area[k]);
+            long perFarmer = Economy.FarmingSystem.GrainPerFarmer(_content, world.Map, cell);
+            if (perFarmer > best && AreaTasks.InReach(_content, world, s, cell) && Perception.MapMemory.Knows(_content, state, civ, cell)
+                && !Worked(state, s.Owner, world, cell) && Owned(world, cell, s.Owner))
+            {
+                best = perFarmer;
+            }
+        }
+
+        return best;
+    }
+
+    private static bool Owned(WorldState world, int cell, CivId civ)
+    {
+        short owner = world.Map.Owner[cell];
+        return owner == WorldMap.NoOwner || owner == civ.Value;
+    }
+
+    // True when a work group of ours works the cell or goes there (marked once a plan by MarkWorked).
+    private bool Worked(GameState state, CivId civ, WorldState world, int cell) =>
+        cell < _workedStamp.Length && _workedStamp[cell] == _stamp && _workedWorld[cell] == world.Id.Value;
+
+    // The cells our work groups work or walk to, for this plan.
+    private void MarkWorked(GameState state, CivId civ)
+    {
+        _stamp++;
+        UnitBook book = state.Units;
+        for (int k = 0; k < book.Count; k++)
+        {
+            Unit u = book[k];
+            if (u.Gone || u.Role != UnitRole.Workers || u.Owner != civ || u.Target < 0)
+            {
+                continue;
+            }
+
+            if (u.Target >= _workedStamp.Length)
+            {
+                Array.Resize(ref _workedStamp, state.Worlds[u.World.Value].Geometry.CellCount);
+                Array.Resize(ref _workedWorld, _workedStamp.Length);
+            }
+
+            _workedStamp[u.Target] = _stamp;
+            _workedWorld[u.Target] = u.World.Value;
+        }
+    }
+
+    // Food tasks (stage 6 PR 4b-2, G9): every farmer and fisher at home goes to work. A village's farmers go to its best fields, at
+    // most farmersPerCell on a field; fishers to the best fishing grounds; in groups of at least taskMinPeople.
+    private void Feed(GameState state, CivilizationState civ, List<int> members)
+    {
+        foreach (int m in members)
+        {
+            SettlementState s = state.Settlements[m];
+            if (!s.IsActive || s.Owner != civ.Id)
+            {
+                continue;
+            }
+
+            int room = -1; // counted when a kind has people to send (it walks every unit)
+            foreach (TaskKindDefinition kind in _content.Tasks.Kinds)
+            {
+                if (room == 0)
+                {
+                    break;
+                }
+
+                if (!kind.MakesFood || !Planned(kind) || (kind.RequiresTechnology >= 0 && !civ.Knows(kind.RequiresTechnology))
+                    || (kind.SettledOnly && _content.SettlementLevels[s.Level].Mobile))
+                {
+                    continue;
+                }
+
+                int experts = AreaTasks.Experts(_content, s, kind);
+                if (experts < _content.Ai.TaskMinPeople)
+                {
+                    continue;
+                }
+
+                if (room < 0)
+                {
+                    room = AreaTasks.Allowed(_content, state, s) - AreaTasks.RunningAt(state, s.Id.Value);
+                }
+
+                int cap = kind.Source == TaskSource.Farmland ? Math.Min(_content.Tasks.MaxPeoplePerGroup, _content.Population.FarmersPerCell)
+                    : _content.Tasks.MaxPeoplePerGroup;
+                while (experts >= _content.Ai.TaskMinPeople && room > 0)
+                {
+                    int size = Math.Min(experts, cap);
+                    if (PickFood(state, civ, s, kind, size) is not { } order)
+                    {
+                        break;
+                    }
+
+                    Orders.Add(order);
+                    _sent.Add(s.Id.Value);
+                    experts -= size;
+                    room--;
+                }
+            }
+        }
+    }
+
+    // The best known cell for a food task in the settlement's reach that no group works or was picked this plan.
+    private (ICommand, AiAction, int, int, Evaluation)? PickFood(GameState state, CivilizationState civ, SettlementState s, TaskKindDefinition kind, int size)
+    {
+        WorldState world = state.Worlds[s.World.Value];
+        int radius = Math.Min(world.Geometry.MaxUniqueRadius, _content.Population.InfluenceMaxRange + _content.Tasks.RangeBeyondZoneCells);
+        int count = world.Geometry.Range(s.Cell, radius, _area);
+        for (int tries = 0; tries < 4; tries++) // a cell the command refuses (no way there) is skipped, a few times at most
+        {
+            int bestCell = -1;
+            long bestYield = 0;
+            for (int k = 0; k < count; k++)
+            {
+                int cell = world.Geometry.Index(_area[k]);
+                if (_picked.Contains(cell) || !AreaTasks.Fits(_content, world, kind, cell) || !AreaTasks.InReach(_content, world, s, cell)
+                    || !Perception.MapMemory.Knows(_content, state, civ, cell) || !Owned(world, cell, civ.Id))
+                {
+                    continue;
+                }
+
+                long perPerson = AreaTasks.Yield(_content, world, kind, cell, 1, 12).Hundredths;
+                if (perPerson > bestYield && !Worked(state, civ.Id, world, cell))
+                {
+                    bestCell = cell;
+                    bestYield = perPerson;
+                }
+            }
+
+            if (bestCell < 0)
+            {
+                return null;
+            }
+
+            _picked.Add(bestCell);
+            var command = new StartTaskCommand(_content, s.Id, kind.Key, world.Geometry.FromIndex(bestCell), size);
+            if (command.Validate(state, civ.Id).Success)
+            {
+                var why = Evaluation.Of(Factor.Neutral);
+                why.Note(FactorId.TaskYield, AreaTasks.Yield(_content, world, kind, bestCell, size, 12).Hundredths);
+                why.Note(FactorId.Fed, s.FedPerMille);
+                return (command, AiAction.StartTask, s.Id.Value, kind.Id, why);
+            }
+        }
+
+        return null;
     }
 
     // What the network's artisans would use of every good in a year: per settlement, the most of any known recipe that adds value
@@ -181,7 +423,7 @@ public sealed class TaskPlanner
         {
             Unit u = book[k];
             if (u.Gone || u.Owner != owner || u.Role != UnitRole.Workers || u.Task < 0 || u.Task >= _content.Tasks.Kinds.Count
-                || !members.Contains(u.Home))
+                || !_ids.Contains(u.Home))
             {
                 continue;
             }
@@ -201,9 +443,14 @@ public sealed class TaskPlanner
         {
             Unit u = book[k];
             if (u.Gone || u.Owner != owner || u.Role != UnitRole.Workers || u.Task < 0 || u.Task >= _content.Tasks.Kinds.Count
-                || u.Order == UnitOrder.Return || !members.Contains(u.Home)) // a group of a settlement taken from us is not ours to call
+                || u.Order == UnitOrder.Return || !_ids.Contains(u.Home)) // a group of a settlement taken from us is not ours to call
             {
                 continue;
+            }
+
+            if (_content.Tasks.Kinds[u.Task].MakesFood)
+            {
+                continue; // fields and fishing grounds work as long as their people are there (Feed, Away)
             }
 
             int good = _content.Tasks.Kinds[u.Task].Good;
@@ -230,7 +477,7 @@ public sealed class TaskPlanner
             long bestGap = 0;
             foreach (TaskKindDefinition kind in _content.Tasks.Kinds)
             {
-                if (kind.Id >= 64 || (tried & (1L << kind.Id)) != 0 || (kind.RequiresTechnology >= 0 && !civ.Knows(kind.RequiresTechnology)))
+                if (kind.Id >= 64 || kind.MakesFood || (tried & (1L << kind.Id)) != 0 || (kind.RequiresTechnology >= 0 && !civ.Knows(kind.RequiresTechnology)))
                 {
                     continue;
                 }
@@ -253,7 +500,8 @@ public sealed class TaskPlanner
             foreach (int m in members)
             {
                 SettlementState s = state.Settlements[m];
-                if (s.FedPerMille < _content.Ai.TaskFedPercent * 10 || AreaTasks.RunningAt(state, s.Id.Value) >= AreaTasks.Allowed(_content, state, s))
+                if (s.FedPerMille < _content.Ai.TaskFedPercent * 10
+                    || AreaTasks.RunningAt(state, s.Id.Value) + Sent(s.Id.Value) >= AreaTasks.Allowed(_content, state, s))
                 {
                     continue;
                 }
@@ -265,6 +513,17 @@ public sealed class TaskPlanner
                 }
             }
         }
+    }
+
+    private int Sent(int settlement)
+    {
+        int n = 0;
+        foreach (int x in _sent)
+        {
+            n += x == settlement ? 1 : 0;
+        }
+
+        return n;
     }
 
     // The cell of the best yield in the settlement's reach that the command accepts, and a group as big as the shortfall.
@@ -285,7 +544,7 @@ public sealed class TaskPlanner
         for (int k = 0; k < count; k++)
         {
             int cell = world.Geometry.Index(_area[k]);
-            if (!AreaTasks.Fits(_content, world.Map, kind, cell) || !AreaTasks.InReach(_content, world, s, cell)
+            if (!AreaTasks.Fits(_content, world, kind, cell) || !AreaTasks.InReach(_content, world, s, cell)
                 || !Perception.MapMemory.Knows(_content, state, civ, cell))
             {
                 continue;
