@@ -273,6 +273,12 @@ public sealed class TaskPlanner
         }
     }
 
+    // Worn farmland is left to rest until it is back to fieldMoveBelowPercent of its natural fertility, the share at which a
+    // field group leaves it (playtest, 2026-11-16: a field worn just below the least fertility for farming ended, rested back
+    // one point and was taken again: 693 fields begun in 15 minutes by one people).
+    private bool Worn(WorldMap map, TaskKindDefinition kind, int cell) =>
+        kind.Source == TaskSource.Farmland && map.Fertility[cell] * 100L < map.NaturalFertility[cell] * (long)_content.Ai.FieldMoveBelowPercent;
+
     // The best known cell for a food task in the settlement's reach that no group works or was picked this plan.
     private (ICommand, AiAction, int, int, Evaluation)? PickFood(GameState state, CivilizationState civ, SettlementState s, TaskKindDefinition kind, int size)
     {
@@ -287,7 +293,7 @@ public sealed class TaskPlanner
             {
                 int cell = world.Geometry.Index(_area[k]);
                 if (_picked.Contains(cell) || !AreaTasks.Fits(_content, world, kind, cell) || !AreaTasks.InReach(_content, world, s, cell)
-                    || !Perception.MapMemory.Knows(_content, state, civ, cell) || !Owned(world, cell, civ.Id))
+                    || !Perception.MapMemory.Knows(_content, state, civ, cell) || !Owned(world, cell, civ.Id) || Worn(world.Map, kind, cell))
                 {
                     continue;
                 }

@@ -371,7 +371,9 @@ Patryka z 2026-11-16: każde pole to zadanie). G9 liczy więc w każdym planowan
    wolnego, znanego pola w zasięgu (wyjałowione pole); w następnym planowaniu jej ludzie idą na lepsze. Notatka `field vs best %`.
 2. **Nowa grupa (`StartTask`):** każdy rolnik i rybak, który jest w domu, idzie do pracy. Dla każdej osady i każdego rodzaju zadania
    na jedzenie, które lud zna (pole tylko z wioski): dopóki w domu jest co najmniej 5 fachowców (`taskMinPeople`) i osada ma wolne
-   zadanie, wysyła grupę na najlepsze wolne pole (najwięcej zboża albo ryb na osobę), najwyżej 30 osób (pole: najwyżej 40, czyli
+   zadanie, wysyła grupę na najlepsze wolne pole (najwięcej zboża albo ryb na osobę; pole uprawne tylko takie, które odpoczęło do co
+   najmniej 70% naturalnej żyzności, `fieldMoveBelowPercent`, poprawka z 2026-11-16: pole wyjałowione tuż pod minimum uprawy kończyło
+   się, odrastało o punkt i było brane znowu, 693 pola w 15 minut u jednego ludu), najwyżej 30 osób (pole: najwyżej 40, czyli
    `farmersPerCell`). Kilka grup w jednym planowaniu, każda na inne pole. Notatki `yield a year`, `fed`.
 3. **Materiały** (G9 wyżej) dostają to, co zostanie z wolnych zadań osady.
 
