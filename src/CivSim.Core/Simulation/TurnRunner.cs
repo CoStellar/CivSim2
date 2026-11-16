@@ -40,6 +40,9 @@ public sealed class TurnRunner
     /// <summary>Chronicle lines written by systems in the last completed turn.</summary>
     public IReadOnlyList<string> LastChronicle => _context.ChronicleLines;
 
+    /// <summary>Whom each line of <see cref="LastChronicle"/> is about (same index; playtest P-01).</summary>
+    public IReadOnlyList<ChronicleAbout> LastChronicleSubjects => _context.ChronicleSubjects;
+
     /// <summary>Report of the last completed turn (reused object).</summary>
     public TurnReport LastReport { get; } = new();
 
@@ -62,7 +65,7 @@ public sealed class TurnRunner
     {
         long turnStart = Stopwatch.GetTimestamp();
         LastReport.Reset(State.Turn + 1);
-        _context.ChronicleList.Clear();
+        _context.ClearChronicle();
 
         for (int p = 0; p < TurnPhases.Count; p++)
         {
@@ -134,11 +137,11 @@ public sealed class TurnRunner
                     {
                         if (chronicled.ChronicleGroup is { } group)
                         {
-                            _context.Chronicle(line, group, envelope.Civ.Value);
+                            _context.Chronicle(line, group, envelope.Civ.Value, ownOnly: chronicled.ChronicleInner);
                         }
                         else
                         {
-                            _context.Chronicle(line);
+                            _context.Chronicle(line, envelope.Civ.Value, inner: chronicled.ChronicleInner);
                         }
                     }
                 }

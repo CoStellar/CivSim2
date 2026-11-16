@@ -940,6 +940,7 @@ public static class ContentLoader
             StartAge = r.Range("startAge", 0, 120),
             CouncilCandidates = r.Int("councilCandidates", 1, 20),
             DeathByAge = death,
+            ChronicleEnabled = !doc.RootElement.TryGetProperty("chronicleEnabled", out JsonElement chronicle) || chronicle.ValueKind != JsonValueKind.False,
         };
     }
 

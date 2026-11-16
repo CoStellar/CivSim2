@@ -887,7 +887,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
     {
         if (e.Morale < _content.War.RetreatMorale)
         {
-            context.Chronicle($"Hunger broke the warriors of {civ.Name}: they turned back.");
+            context.Chronicle($"Hunger broke the warriors of {civ.Name}: they turned back.", civ.Id.Value);
             e.Phase = CampaignPhase.Return;
             return;
         }
@@ -896,7 +896,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
         {
             e.Foraging = true;
             e.Target = prey.Id.Value;
-            context.Chronicle($"The hungry warriors of {civ.Name} turned on {prey.Name} for food.");
+            context.Chronicle($"The hungry warriors of {civ.Name} turned on {prey.Name} for food.", civ.Id.Value, prey.Owner.Value);
         }
 
         SettlementState? target = state.FindSettlement(new SettlementId(e.Target));
@@ -1019,7 +1019,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
 
         bool foray = e.Foraging;
         (string text, bool won) = Conclude(state, e, civ, target, war, b.Result);
-        context.Chronicle(text);
+        context.Chronicle(text, civ.Id.Value, target.Owner.Value);
         if (foray)
         {
             e.Forays++;
@@ -1243,7 +1243,7 @@ public sealed class CampaignSystem(GameContent content) : ITurnSystem
 
         Array.Clear(e.Loot);
         Array.Clear(e.Food);
-        context.Chronicle($"{civ.Name}'s warriors came home to {home.Name}: {e.Warriors} of them.");
+        context.Chronicle($"{civ.Name}'s warriors came home to {home.Name}: {e.Warriors} of them.", civ.Id.Value);
         Finish(e);
     }
 

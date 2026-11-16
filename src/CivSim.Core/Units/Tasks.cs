@@ -529,7 +529,7 @@ public sealed class TaskSystem(GameContent content) : ITurnSystem
             {
                 u.Order = UnitOrder.Return;
                 u.ForgetPath();
-                context.Chronicle($"The work group of {home.Name} ran out of food and comes home.");
+                context.Chronicle($"The work group of {home.Name} ran out of food and comes home.", home.Owner.Value, inner: true);
             }
         }
     }
@@ -613,6 +613,6 @@ public sealed class TaskSystem(GameContent content) : ITurnSystem
     {
         u.Order = UnitOrder.Return;
         u.ForgetPath();
-        context.Chronicle($"{kind.Name} of {home.Name} ran out; the work group comes home.");
+        context.Chronicle($"{kind.Name} of {home.Name} ran out; the work group comes home.", home.Owner.Value, inner: true);
     }
 }

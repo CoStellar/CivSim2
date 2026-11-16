@@ -28,8 +28,9 @@ public sealed class GameServer
     private readonly GameContent? _content;
     private readonly Core.Ai.AiCouncil? _council;
     private readonly HelmsmanLog? _helmsman;
-    private readonly List<ChronicleEntry> _chronicle = [];
-    private readonly List<ChronicleEntry> _history = [];
+    // Chronicle lines with whom each is about: a player gets only what its people may know (playtest P-01).
+    private readonly List<(ChronicleEntry Entry, ChronicleAbout About)> _chronicle = [];
+    private readonly List<(ChronicleEntry Entry, ChronicleAbout About)> _history = [];
     private readonly bool[][] _pendingChunks;
     private readonly ObserverViewBuilder? _observerView;
     private long _lastTurnTicks;
@@ -207,16 +208,18 @@ public sealed class GameServer
             _helmsman!.Add(State, _council.Log); // what the AI did on the levers the players did not take (ADR 0027)
         }
         Replay?.AfterTick(State);
-        foreach (string line in Runner.LastChronicle)
+        IReadOnlyList<string> chronicle = Runner.LastChronicle;
+        IReadOnlyList<ChronicleAbout> subjects = Runner.LastChronicleSubjects;
+        for (int k = 0; k < chronicle.Count; k++)
         {
-            AddChronicle(line);
+            AddChronicle(chronicle[k], k < subjects.Count ? subjects[k] : new ChronicleAbout(-1));
         }
 
         if (_milestones is not null && State.Turn % TicksPerSecond == 0)
         {
             foreach (MilestoneReached m in _milestones.Check(State))
             {
-                AddChronicle(m.Text); // the rise of each people, with the minute of the game (stage 6 PR P2b)
+                AddChronicle(m.Text, new ChronicleAbout(m.Civ.Value)); // the rise of each people, with the minute of the game (stage 6 PR P2b)
             }
         }
 
@@ -500,10 +503,16 @@ public sealed class GameServer
         }
     }
 
-    /// <summary>Adds a line to the chronicle; it is sent with the next views.</summary>
-    public void AddChronicle(string text)
+    /// <summary>Adds a line about the whole game (every client may read it) to the chronicle; it is sent with the next views.</summary>
+    public void AddChronicle(string text) => AddChronicle(text, new ChronicleAbout(-1));
+
+    /// <summary>
+    /// Adds a line to the chronicle about whom <paramref name="about"/> says; it is sent with the next views, to a player
+    /// only when its people may know it (<see cref="ChronicleAbout.TextFor"/>; observers read everything).
+    /// </summary>
+    public void AddChronicle(string text, ChronicleAbout about)
     {
-        var entry = new ChronicleEntry(State.Turn, text);
+        var entry = (new ChronicleEntry(State.Turn, text), about);
         _chronicle.Add(entry);
         _history.Add(entry);
         if (_history.Count > ChronicleHistory)
@@ -545,7 +554,7 @@ public sealed class GameServer
         }
 
         // A joining client gets the kept history; later views carry the lines collected for this client since its last view.
-        ChronicleEntry[] lines = joining ? _history.ToArray() : client.Unsent.ToArray();
+        ChronicleEntry[] lines = joining ? [.. Readable(client, _history, 0)] : client.Unsent.ToArray();
         view = view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
         if (seer is not null)
         {
@@ -615,7 +624,7 @@ public sealed class GameServer
         Replay?.Rename(State.Turn, target, submit.Command!);
         command!.Apply(State, target);
         string after = submit.Command is RenameSettlementDto r3 ? State.FindSettlement(new SettlementId(r3.SettlementId))!.Name : State.FindCivilization(target)!.Name;
-        AddChronicle($"{before} was renamed {after}.");
+        AddChronicle($"{before} was renamed {after}.", new ChronicleAbout(target.Value));
         Runner.Snapshots.Publish(GameSnapshot.From(State));
         SendViews();
     }
@@ -656,7 +665,7 @@ public sealed class GameServer
                 continue;
             }
 
-            client.Collect(_pendingChunks, _chronicle, client.JustJoined ? Math.Min(client.ChronicleSeen, _chronicle.Count) : 0);
+            client.Collect(_pendingChunks, Readable(client, _chronicle, client.JustJoined ? Math.Min(client.ChronicleSeen, _chronicle.Count) : 0));
             client.JustJoined = false;
         }
 
@@ -739,6 +748,25 @@ public sealed class GameServer
         }
     }
 
+    // The lines from index `from` that the client may read: all for an observer; for a player those about its people and
+    // the peoples it met, on cells it knows or about the whole game (CLAUDE.md rule 10, playtest P-01).
+    private IEnumerable<ChronicleEntry> Readable(Client client, List<(ChronicleEntry Entry, ChronicleAbout About)> lines, int from)
+    {
+        CivilizationState? civ = client.IsObserver || client.Civ is not CivId id ? null : State.FindCivilization(id);
+        for (int k = from; k < lines.Count; k++)
+        {
+            (ChronicleEntry entry, ChronicleAbout about) = lines[k];
+            if (civ is null || _content is null)
+            {
+                yield return entry;
+            }
+            else if (about.TextFor(entry.Text, State, _content, civ) is { } text)
+            {
+                yield return ReferenceEquals(text, entry.Text) ? entry : entry with { Text = text };
+            }
+        }
+    }
+
     private void Disconnect(Client client)
     {
         // The AI takes over a disconnected civilization (GDD 2.1).
@@ -762,8 +790,8 @@ public sealed class GameServer
         // It fell behind and missed a view.
         public bool Deferred { get; set; }
 
-        // Takes the changed chunks and the new chronicle lines (from index `from`).
-        public void Collect(bool[][] changed, List<ChronicleEntry> lines, int from)
+        // Takes the changed chunks and the new chronicle lines this client may read.
+        public void Collect(bool[][] changed, IEnumerable<ChronicleEntry> lines)
         {
             for (int w = 0; w < changed.Length && w < Chunks.Length; w++)
             {
@@ -773,10 +801,7 @@ public sealed class GameServer
                 }
             }
 
-            for (int k = from; k < lines.Count; k++)
-            {
-                Unsent.Add(lines[k]);
-            }
+            Unsent.AddRange(lines);
 
             if (Unsent.Count > ChronicleHistory)
             {

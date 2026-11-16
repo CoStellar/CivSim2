@@ -81,6 +81,16 @@ flowchart TD
   osiadanie, wieści o dalekich ludach) idą przez `TurnContext.Chronicle(tekst, grupa, cywilizacja)`. Gdy w turze grupa ma jedno
   zdanie, zostaje ono bez zmian; gdy więcej, na końcu tury zamieniają się w jedno podsumowanie w miejscu pierwszego, np.
   „Drought in 4 settlements: Osxou (2), Korkbri, no one.”. Na 1500 turach seeda 42 kronika skurczyła się z ok. 10 400 do 3 400 linii.
+- **Kronika gracza przez mgłę** (testy gracza P-01, 2026-11-16; `CLAUDE.md` zasada 10). Każde zdanie ma opis „kogo dotyczy”
+  (`ChronicleAbout`: lud, drugi lud, pole świata 0, sprawy wewnętrzne). Serwer (`GameServer.Readable`) wysyła graczowi tylko:
+  - zdania o jego ludzie;
+  - zdania o ludach, które spotkał, przy czym muszą to być **wszystkie** ludy wymienione w zdaniu, inaczej „A wypowiedział wojnę B” zdradziłby nazwę B;
+  - sprawy wewnętrzne obcego ludu (osadnicy, grupy robocze, niepokój, wędrówki obozów; komendy z `ChronicleInner`) tylko wtedy, gdy dzieją się na polu z pamięci mapy gracza;
+  - zdania o całym świecie (np. świat powstał, morze się podniosło).
+
+  W podsumowaniu grupy zostają tylko ludy, które gracz zna. Gdy zostaje jeden lud z jednym zdaniem, gracz dostaje to zdanie zamiast podsumowania. Grupy `ownOnly` (wieści o dalekich ludach, zdarzenia, ruchy osad) czyta tylko lud, którego dotyczą. Obserwator czyta wszystko.
+  Śmierć i następstwo przywódców nie trafiają do kroniki do epoki brązu (`leaders.json`: `chronicleEnabled: false`; ADR 0024, 0026).
+  Pomiar (seed 7, lud 1, 15 min, grający jak AI): 2073 → 192 wpisy (138 → 12,8 na minutę), o własnym ludzie 21% → 67%, o niespotkanych ludach 1087 → 0.
 - **Komendy** (`ICommand`) to jedyny sposób zmiany stanu. Każda ma kategorię (dyplomacja, gospodarka, ruch),
   sprawdzenie zasad (`Validate`) i wykonanie (`Apply`). Każda komenda niesie gracza i cywilizację (`CommandEnvelope`).
 - **Kolejność rozstrzygania:** najpierw kategoria, potem cywilizacja, potem kolejność nadejścia.

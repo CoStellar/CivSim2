@@ -69,7 +69,7 @@ public sealed class ResearchSystem(GameContent content) : ITurnSystem
             civ.Researching = CivilizationState.NoResearch;
             foreach (string line in Technologies.Learn(_content, state, civ, learned))
             {
-                context.Chronicle(line);
+                context.Chronicle(line, civ.Id.Value);
             }
         }
     }

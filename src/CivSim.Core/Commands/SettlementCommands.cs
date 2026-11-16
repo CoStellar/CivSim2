@@ -18,6 +18,12 @@ public interface IChronicledCommand
     /// common commands whose lines are summed up when there are several in a turn; null for a line of its own.
     /// </summary>
     string? ChronicleGroup => null;
+
+    /// <summary>
+    /// True when the line tells of the inner life of the people (its camps moving, its groups setting out): other peoples
+    /// do not read it (playtest P-01).
+    /// </summary>
+    bool ChronicleInner => false;
 }
 
 /// <summary>Checks shared by the settlement commands.</summary>
@@ -150,6 +156,9 @@ public sealed record MoveSettlementCommand(GameContent Content, SettlementId Set
     /// <inheritdoc />
     public string? ChronicleGroup => "{0} settlements moved";
 
+    /// <inheritdoc />
+    public bool ChronicleInner => true;
+
     /// <summary>Moves of at least this many cells are written to the chronicle.</summary>
     public const int ChronicleDistance = 8;
 
@@ -201,6 +210,9 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
 {
     /// <inheritdoc />
     public string? ChronicleGroup => "{0} groups of settlers set out";
+
+    /// <inheritdoc />
+    public bool ChronicleInner => true;
 
     /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Movement;

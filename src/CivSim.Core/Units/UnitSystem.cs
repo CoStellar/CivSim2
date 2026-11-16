@@ -400,7 +400,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         if (u.TotalPeople() == 0)
         {
             u.Gone = true;
-            context.Chronicle($"Settlers of {civ.Name} starved on the way.");
+            context.Chronicle($"Settlers of {civ.Name} starved on the way.", civ.Id.Value, cell: u.Cell, inner: true);
         }
     }
 
@@ -437,7 +437,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
                 else
                 {
                     u.Order = UnitOrder.Return;
-                    context.Chronicle($"Settlers of {civ.Name} found no free land and turned home.");
+                    context.Chronicle($"Settlers of {civ.Name} found no free land and turned home.", civ.Id.Value, cell: u.Cell, inner: true);
                 }
 
                 return;
@@ -534,7 +534,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
 
         Unload(u, camp);
         u.Gone = true;
-        context.Chronicle($"{camp.TotalPopulation()} settlers of {civ.Name} founded {camp.Name}.");
+        context.Chronicle($"{camp.TotalPopulation()} settlers of {civ.Name} founded {camp.Name}.", civ.Id.Value, cell: u.Cell, inner: true);
     }
 
     // Back home: the people, their skills and their goods join the settlement again (or the nearest own one).
