@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>CivSim.Playtest</RootNamespace>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CivSim.Core\CivSim.Core.csproj" />
+    <ProjectReference Include="..\..\src\CivSim.Data\CivSim.Data.csproj" />
+    <ProjectReference Include="..\..\src\CivSim.Server\CivSim.Server.csproj" />
+    <ProjectReference Include="..\..\src\CivSim.Protocol\CivSim.Protocol.csproj" />
+    <ProjectReference Include="..\..\src\CivSim.Headless\CivSim.Headless.csproj" />
+  </ItemGroup>
+</Project>
