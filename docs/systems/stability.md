@@ -77,6 +77,13 @@ flowchart LR
 - Parametry w `data/ai.json` (`overloadExpansionMinPercent`, `unrestSecurityPercent`, `unrestWarPercent`,
   `governmentChangeMarginPercent`, `governmentStabilityWeight`, `governmentKeepYears`); opis w [`docs/ai/`](../ai/02-strateg.md).
 
+## Zamrożone do brązu (etap 6 PR T3b, ADR 0026 zasada 5)
+
+- `stability.json` `"revoltsEnabled": false`: nie ma przewrotów, secesji ani dryfu dalekich osad. Stabilność zostaje jedną liczbą,
+  „nastrojem”: administracja, niepokoje (spadek wydajności) i utrata stolicy działają.
+- `strata.json` `"politicalInfluence": false`: w nastroju każda warstwa waży 1 (`strataInfluence` z `governments.json` czeka na brąz).
+- Testy jednostkowe odmrażają oba przez `GameContent.Thawed()`.
+
 ## Pliki danych
 
 `data/stability.json`, pola `stabilityBonus`, `administration`, `reach`, `strataInfluence` w `data/governments.json`, efekt `unrest`

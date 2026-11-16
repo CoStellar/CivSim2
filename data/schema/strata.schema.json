@@ -71,6 +71,9 @@
         },
         "additionalProperties": false
       }
+    },
+    "politicalInfluence": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

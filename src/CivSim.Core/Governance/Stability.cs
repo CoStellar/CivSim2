@@ -107,7 +107,7 @@ public static class Stability
             ReadOnlySpan<int> people = s.PopulationView;
             for (int k = 0; k < people.Length; k++)
             {
-                long w = (long)people[k] * (g?.InfluenceOf(k) ?? 1);
+                long w = (long)people[k] * (content.StrataInfluenceEnabled ? g?.InfluenceOf(k) ?? 1 : 1); // equal weights while frozen (ADR 0026)
                 weight += w;
                 sum += w * s.Mood;
             }
@@ -403,6 +403,11 @@ public sealed class StabilitySystem : ITurnSystem
             if (Stability.UnrestLine(_content, civ, before) is { } unrest)
             {
                 context.Chronicle(unrest);
+            }
+
+            if (!_content.Stability.RevoltsEnabled)
+            {
+                continue; // no coups, secessions or drift of far settlements until the bronze age (ADR 0026 rule 5)
             }
 
             Revolts.Reseed(state, civ, state.Month, _random);

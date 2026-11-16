@@ -71,6 +71,11 @@ public static class Treaties
             return "War is declared, not signed.";
         }
 
+        if (!content.Treaties.Kinds[(int)kind].Enabled)
+        {
+            return "Such treaties come with a later age."; // frozen until the bronze age (ADR 0026)
+        }
+
         TreatyBook book = state.Treaties;
         bool war = book.AtWar(x, y);
         if (kind == TreatyKind.Peace)

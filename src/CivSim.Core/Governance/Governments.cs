@@ -99,6 +99,11 @@ public static class Governments
             return "Only a living civilization has a government.";
         }
 
+        if (!content.GovernmentsEnabled)
+        {
+            return "Other governments come with a later age."; // one government until the bronze age (ADR 0026)
+        }
+
         if (government < 0 || government >= content.Governments.Count)
         {
             return "Unknown government.";

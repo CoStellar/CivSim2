@@ -76,7 +76,9 @@ public sealed class GameContent
     public Naming.NameRules Names { get; init; } = new();
 
     /// <summary>Diplomacy and trade between civilizations (data/diplomacy.json, stage 4d).</summary>
-    public Diplomacy.TreatyRules Treaties { get; init; } = new();
+    public Diplomacy.TreatyRules Treaties { get => _treaties; init => _treaties = value; }
+
+    private Diplomacy.TreatyRules _treaties = new();
 
     /// <summary>War: goals, score, weariness, terms of peace (data/war.json, stage 4e).</summary>
     public Diplomacy.WarRules War { get; init; } = new();
@@ -159,11 +161,26 @@ public sealed class GameContent
     /// <summary>Forms of government, index = id (<c>data/governments.json</c>, stage 4f). Empty in hand-made test content.</summary>
     public IReadOnlyList<GovernmentDefinition> Governments { get; init; } = [];
 
+    /// <summary>
+    /// False while every people keeps the government it starts with until a later era (ADR 0026 rule 5, governments.json "enabled"):
+    /// nobody changes it; its administration still counts.
+    /// </summary>
+    public bool GovernmentsEnabled { get => _governmentsEnabled; init => _governmentsEnabled = value; }
+
+    private bool _governmentsEnabled = true;
+
+    /// <summary>False while every stratum weighs the same in stability (strata.json "politicalInfluence", ADR 0026 rule 5).</summary>
+    public bool StrataInfluenceEnabled { get => _strataInfluenceEnabled; init => _strataInfluenceEnabled = value; }
+
+    private bool _strataInfluenceEnabled = true;
+
     /// <summary>Leaders: traits, ages, death (<c>data/leaders.json</c>, stage 4f PR 2).</summary>
     public LeaderRules Leaders { get; init; } = new();
 
     /// <summary>Stability and administration (<c>data/stability.json</c>, stage 4f PR 3).</summary>
-    public StabilityRules Stability { get; init; } = new();
+    public StabilityRules Stability { get => _stability; init => _stability = value; }
+
+    private StabilityRules _stability = new();
 
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
@@ -178,7 +195,8 @@ public sealed class GameContent
 
     /// <summary>
     /// A copy of this content with every system frozen until a later era switched on (ADR 0026 rule 5: the dynamic climate, wildfire
-    /// and flood): the unit tests of those systems run them as the later eras will.
+    /// and flood, governments, the political influence of strata, coups, secessions and drift, pacts and alliances): the unit tests
+    /// of those systems run them as the later eras will.
     /// </summary>
     public GameContent Thawed()
     {
@@ -191,6 +209,16 @@ public sealed class GameContent
         }
 
         copy._events = events;
+        copy._governmentsEnabled = true;
+        copy._strataInfluenceEnabled = true;
+        copy._stability = _stability with { RevoltsEnabled = true };
+        var kinds = new Diplomacy.TreatyKindDefinition[_treaties.Kinds.Count];
+        for (int i = 0; i < kinds.Length; i++)
+        {
+            kinds[i] = _treaties.Kinds[i] with { Enabled = true };
+        }
+
+        copy._treaties = _treaties with { Kinds = kinds };
         return copy;
     }
 
