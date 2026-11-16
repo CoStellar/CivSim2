@@ -371,6 +371,19 @@ a krok świata częściej trwa miesiąc (wojny), więc 2000 tur to ok. 11 600 la
 - **Decyzja do oceny przy prototypie:** czy rozkaz gracza na dźwigni AI ma ją „przytrzymać” na kilka pulsów (pierwszy pomysł z planu)
   zamiast wymagać wzięcia dźwigni.
 
+## 22. Zadania na materiały, G9 (etap 6 PR 4b-1)
+
+- **Co się zmieniło:** strefa osady nie zbiera już drewna, krzemienia ani kamienia; gubernator wysyła po nie grupy robocze tymi samymi
+  komendami co gracz.
+- **Uczciwie, co jest za proste:**
+  - grupę wysyła **pierwsza** pasująca osada sieci (po kolejności na liście), a nie ta, której najmniej szkodzi brak ludzi;
+  - koszt grupy liczy tylko próg najedzenia (≥ 95%) i najmniejszą grupę (5 osób); AI nie porównuje, ile jedzenia straci osada, z tym,
+    ile da materiał. Pomiar z 3 seedów nie pokazał głodu (ludności przybyło), ale w gorszym roku to może się zmienić;
+  - potrzeba to „najbardziej głodna” znana receptura każdej osady, a nie ta, którą rzemieślnicy naprawdę robią. Gdy skarbnik wybierze
+    inną recepturę, grupa może zbierać materiał, którego nikt chwilowo nie zużywa (wraca dopiero przy zapasie na 4 lata);
+  - rytm „idą po krzemień, wracają i łupią” wynika z tego, że łupacze sami idą w grupie; to sensowne, ale nie jest zaplanowane.
+- **Do oceny przy prototypie:** czy gracz rozumie z kroniki, dlaczego grupa wróciła („zapas na 16 lat”).
+
 ## Decyzje Patryka (2026-11-06)
 
 1. **Każda wartość ma na coś wpływać.** Tak (tak miało być od początku). **Zrobione:** PR B, test `DeadValueTests`.

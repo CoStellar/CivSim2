@@ -99,6 +99,9 @@ public sealed class HelmsmanLog(GameContent content, int keep = 30)
                 return d.Target >= 0 && d.Target < _content.Technologies.Count ? _content.Technologies[d.Target].Name : null;
             case AiAction.ChangeGovernment:
                 return d.Target >= 0 && d.Target < _content.Governments.Count ? _content.Governments[d.Target].Name : null;
+            case AiAction.StartTask:
+            case AiAction.RecallTask:
+                return d.Target >= 0 && d.Target < _content.Tasks.Kinds.Count ? _content.Tasks.Kinds[d.Target].Name : null;
             case AiAction.ProposeTreaty:
             case AiAction.AcceptTreaty:
             case AiAction.DeclineTreaty:

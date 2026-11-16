@@ -185,6 +185,18 @@ public sealed record AiRules
     /// </summary>
     public int SettlersBelowAdminPercent { get; init; }
 
+    /// <summary>G9 (stage 6 PR 4b): a settlement sends a work group only while its people eat at least this percent of their need.</summary>
+    public int TaskFedPercent { get; init; } = 95;
+
+    /// <summary>G9: years of the artisans' use of a task's good the network wants in stock and on its way.</summary>
+    public int TaskReserveYears { get; init; } = 2;
+
+    /// <summary>G9: a group comes home when the network holds this many years of its good (or nobody uses it).</summary>
+    public int TaskRecallAboveYears { get; init; } = 4;
+
+    /// <summary>G9: the smallest work group the AI sends.</summary>
+    public int TaskMinPeople { get; init; } = 5;
+
     /// <summary>The goal food serves (hunger is a matter of safety): technologies and recipes that give food are weighed by it.</summary>
     public Ai.Goal GoalOfFood { get; init; } = Ai.Goal.Security;
 

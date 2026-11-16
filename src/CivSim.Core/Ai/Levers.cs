@@ -49,6 +49,7 @@ public static class Levers
         AiAction.SetResearch or AiAction.SetStrategy => Lever.WhereWeHead,
         AiAction.Plunder or AiAction.Conquer or AiAction.Occupy or AiAction.ProposeTreaty or AiAction.AcceptTreaty
             or AiAction.DeclineTreaty or AiAction.DeclareWar or AiAction.LaunchCampaign or AiAction.RecallCampaign => Lever.WithWhom,
+        AiAction.StartTask or AiAction.RecallTask => Lever.OnTheLand,
         AiAction.ChangeGovernment => Lever.Cards,
         _ => Lever.None, // SetRecipe: the economy is the simulation's (GDD 1.2: the player never sets recipes)
     };

@@ -16,6 +16,24 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Po zadaniach na materiały (etap 6 PR 4b-1, gałąź `feat/area-tasks-ai`)
+
+3 seedy, mapa standard, **3000 taktów** (5 minut przy ×1), po zamrożeniach T3. Wykres decyzji wyżej jest z tych gier (stąd tytuł
+„5 minut”). W nawiasach `development` przed tym PR (commit `274a20c`), te same seedy i ta sama długość.
+
+| Seed | Decyzje | Wysłane grupy robocze | Odwołane grupy | Receptury | Wyprawy | Ludność na końcu | Hasz stanu |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 7 | 1177 (1015) | 207 | 127 | 144 (222) | 161 (190) | 42 411 (37 179) | `71E21841A2BA7920` |
+| 23 | 1247 (1156) | 206 | 128 | 154 (214) | 260 (355) | 46 433 (38 865) | `2B99BDDD8036E4E6` |
+| 42 | 1289 (855) | 193 | 109 | 91 (60) | 410 (355) | 26 681 (17 404) | `64BD54E9E418995D` |
+
+- **Nowa decyzja G9 robi 300–335 decyzji na grę**, o połowę więcej niż skarbnik. Wysyłanych jest więcej niż odwoływanych: część grup
+  pracuje do końca gry.
+- **Ludność nie spadła**, choć strefa osady nie zbiera już materiałów: w 5 minut jest jej o 14–53% więcej. Ludzie w grupie jedzą
+  z zapasu grupy, a nie z magazynu osady, i osada ma dzięki temu mniej ust w domu.
+- Typowy wpis: `StartTask`, `stock months 0`, `yield a year 500`, `fed 1000` (osada najedzona, krzemienia brak, grupa zbierze 5
+  jednostek na rok); `RecallTask`, `stock months 210` (zapas na 17 lat).
+
 ## Po bitwie w czasie (etap 6, gałąź `feat/battle-time`)
 
 3 seedy, 18 000 taktów (30 min przy ×1). Wykres decyzji wyżej jest z tych gier. W nawiasach kampanie i bitwy z PR 3b (#70), zmierzone

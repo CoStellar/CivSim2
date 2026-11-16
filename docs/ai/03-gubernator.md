@@ -37,6 +37,8 @@ flowchart TD
 
 **Wioski** (od PR C) mają jedną decyzję, G7 (osadnicy), w każdym własnym kroku na decyzje wolne.
 
+**Zadania** (od etapu 6 PR 4b-1): G9 liczy się raz na cywilizację, po decyzjach wszystkich osad (niżej).
+
 **Rezerwacja pól.** Pole wybrane w G2, G3 albo G5 jest zajęte do końca tury dla wszystkich kolejnych obozów (`Take`). Do tego przy
 odłamach (G5) pola w promieniu 3 od każdego obozu cywilizacji (także od nowo wybranych) są wykluczone. Kto liczy wcześniej, wybiera
 pierwszy: cywilizacje po numerze, obozy po kolejności na liście osad.
@@ -323,6 +325,43 @@ Jeśli nikt nie przekroczył progu 30%, gubernator próbuje G3 (w kroku na decyz
   `exploreUnknownPercent`) jest **nieznane** i którego ziemia wyżywi grupę. Ocena = liczba nieznanych pól, premia za kierunek ekspansji;
   wybór jak zawsze (3 najlepsze, ostrożność albo losowanie).
 - **Kto idzie:** 25% obozu (`exploreGroupPercent`), komenda `SplitSettlementCommand` (nowy obóz). Notatka `unknown`.
+
+## G9: Zadania na materiały (od etapu 6 PR 4b-1)
+
+`StartTask` i `RecallTask`, dźwignia „co robimy na ziemi” (`OnTheLand`). `TaskPlanner.cs`, wołany z `GovernorAdvisor.PlanTasks`
+raz na cywilizację, w krokach planowania (`WorldClock.PlansNow`), po decyzjach osad.
+
+Od tego PR strefa osady **nie zbiera już sama materiałów** (`tasks.json` → `zoneGathersMaterials: false`). Drewno, kamień, krzemień
+i inne surowce przychodzą tylko z grup roboczych (zadań), które AI wysyła tak samo jak gracz (`StartTaskCommand`).
+
+Liczy się osobno dla każdej sieci osad (wspólny magazyn ludu):
+
+1. **Potrzeba na rok:** dla każdej osady z rzemieślnikami (także tymi, którzy są w grupie poza domem) i każdej znanej receptury:
+   ile materiału zużyłyby jej przebiegi w roku. Do „chcę mieć” wchodzą tylko receptury, które się opłacają (cena wyrobu na rynku
+   sieci > wartość wkładu); do „używam” wszystkie znane.
+2. **Zapas:** to, co sieć ma w magazynach, plus roczny urobek grup, które już pracują (× 2 lata rezerwy).
+3. **Odwołanie (`RecallTask`):** grupa wraca do domu, gdy nikt w sieci nie używa jej materiału albo zapas starcza na co najmniej
+   **4 lata** (`taskRecallAboveYears`). Notatka `stock months` (zapas w miesiącach zużycia).
+4. **Nowa grupa (`StartTask`):** materiał z największym brakiem do **2 lat** zapasu (`taskReserveYears`); gdy dla niego nie ma
+   pola w zasięgu (np. brak znanego złoża krzemienia), następny materiał. Wysyła ją pierwsza osada
+   sieci, która jest najedzona w ≥ 95% (`taskFedPercent`) i ma jeszcze miejsce na grupę (`AreaTasks.Allowed`). Pole: najlepszy
+   urobek na osobę w strefie osady i do `rangeBeyondZoneCells` pól za nią, tylko pola znane tej cywilizacji, w zasięgu i pasujące
+   do zadania.
+   ```
+   wielkość grupy = brak / (urobek na osobę × 2 lata), zaokrąglone w górę,
+                    co najmniej 5 osób (taskMinPeople), najwyżej wolni ludzie osady i maxPeoplePerGroup
+   ```
+   Osada, która nie ma 5 wolnych ludzi, nie wysyła nikogo. Notatki `stock months`, `yield a year` (urobek grupy na rok), `fed`.
+5. **Potrzeba sieci to suma osad** (każda osada liczy swoją najbardziej „głodną” recepturę), bo wszystkie biorą ze wspólnego magazynu.
+   Grupy osady, którą zajął inny lud, nie są już nasze: AI ich nie liczy i nie odwołuje.
+6. **Na sieć najwyżej jedna nowa grupa na planowanie**, żeby nie wysłać kilku grup na ten sam brak, zanim pierwsza zacznie pracę.
+
+**Dlaczego dwa progi (2 i 4 lata):** gdyby grupa wracała przy tym samym zapasie, przy którym wyrusza, AI wysyłałaby i odwoływała
+ją co krok. Przerwa między progami daje spokój; w grach z 3 seedów grupa wraca przy zapasie (mediana) 12–21 lat (wpisy `stock months`
+146–254). Powód: rzemieślnicy sami idą w grupie (łupacze do kopalni krzemienia), a w domu nikt wtedy nie łupie, więc zapas rośnie
+szybko; jeden krok planowania w epoce kamienia to dziesiątki lat gry. Wychodzi rytm „idą po krzemień, wracają i łupią”.
+
+**Czego nie ma:** zadań na jedzenie. Pola uprawne i łowiska jako zadania to PR 4b-2.
 
 ---
 

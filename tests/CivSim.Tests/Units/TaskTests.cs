@@ -75,7 +75,7 @@ public class TaskTests
     public void TaskDataLoads()
     {
         TaskRules rules = Live.Tasks;
-        Assert.True(rules.ZoneGathersMaterials); // until the AI gives tasks itself (PR 4b)
+        Assert.False(rules.ZoneGathersMaterials); // since PR 4b the governor gives tasks: materials come only from them
         TaskKindDefinition wood = rules.Find("woodcutting")!;
         Assert.Equal(TaskSource.Biome, wood.Source);
         Assert.Equal("wood", Live.Goods[wood.Good].Key);
@@ -290,8 +290,9 @@ public class TaskTests
     public void WithoutZoneGatheringWoodComesOnlyFromTasksButFoodStill()
     {
         GameContent off = Live.WithTasks(Live.Tasks with { ZoneGathersMaterials = false });
+        GameContent on = Live.WithTasks(Live.Tasks with { ZoneGathersMaterials = true });
         int wood = Live.Tasks.Find("woodcutting")!.Good;
-        (Amount OnWood, long OnFood) = Gather(Live, wood);
+        (Amount OnWood, long OnFood) = Gather(on, wood);
         (Amount OffWood, long OffFood) = Gather(off, wood);
         Assert.True(OnWood > Amount.Zero);
         Assert.Equal(Amount.Zero, OffWood);
@@ -300,6 +301,54 @@ public class TaskTests
     }
 
     // A year of gathering of the forest camp of NewGame with <paramref name="content"/>: its wood and its food.
+    // G9 (stage 6 PR 4b-1): a fed settlement whose knappers have no wood sends a woodcutting group; with wood for years, calls it back.
+    [Fact]
+    public void TheAiSendsAGroupForMissingWoodAndCallsItBackWhenThereIsPlenty()
+    {
+        (GameState state, SettlementState home, CivilizationState civ, _) = NewGame(41, people: 60);
+        int artisans = Live.Strata.ToList().FindIndex(x => x.Key == "artisans");
+        home.Population[artisans] = 20;
+        home.Skilled[Live.Skills.ToList().FindIndex(k => k.Key == "knapper")] = 20; // the knappers who would use the wood
+        CivSim.Core.Research.Technologies.Learn(Live, state, civ, Live.Technologies.ToList().FindIndex(t => t.Key == "flint_knapping"));
+        int wood = Live.Goods.ToList().FindIndex(g => g.Key == "wood");
+        home.Stock[wood] = Amount.Zero;
+        home.Stock[Live.Goods.ToList().FindIndex(g => g.Key == "stone_tools")] = Amount.Zero; // tools are dear, so knapping pays
+        home.FoodEaten = home.FoodNeeded; // everyone fed
+        var planner = new CivSim.Core.Ai.TaskPlanner(Live);
+
+        planner.Plan(state, civ, CivSim.Core.Economy.TradeNetworks.Build(Live, state));
+        var start = Assert.IsType<StartTaskCommand>(Assert.Single(planner.Orders).Command);
+        Assert.Equal("woodcutting", start.Kind);
+        Assert.True(start.People >= Live.Ai.TaskMinPeople);
+        start.Apply(state, civ.Id);
+
+        planner.Plan(state, civ, CivSim.Core.Economy.TradeNetworks.Build(Live, state));
+        Assert.DoesNotContain(planner.Orders, o => o.Command is StartTaskCommand st && st.Kind == "woodcutting"); // the group already covers it
+
+        home.Stock[wood] = Amount.FromHundredths(10_000_000);
+        planner.Plan(state, civ, CivSim.Core.Economy.TradeNetworks.Build(Live, state));
+        Assert.Contains(planner.Orders, o => o.Command is ReturnUnitCommand r && r.Unit == Group(state).Id);
+    }
+
+    // Hungry settlements send no one: a work group is mouths away from the food gatherers.
+    [Fact]
+    public void AHungrySettlementSendsNoGroup()
+    {
+        (GameState state, SettlementState home, CivilizationState civ, _) = NewGame(41, people: 60);
+        home.Population[Live.Strata.ToList().FindIndex(x => x.Key == "artisans")] = 20;
+        home.Skilled[Live.Skills.ToList().FindIndex(k => k.Key == "knapper")] = 20;
+        CivSim.Core.Research.Technologies.Learn(Live, state, civ, Live.Technologies.ToList().FindIndex(t => t.Key == "flint_knapping"));
+        home.Stock[Live.Goods.ToList().FindIndex(g => g.Key == "wood")] = Amount.Zero;
+        home.Stock[Live.Goods.ToList().FindIndex(g => g.Key == "stone_tools")] = Amount.Zero;
+        home.FoodNeeded = 1000;
+        home.FoodEaten = 900;
+        var planner = new CivSim.Core.Ai.TaskPlanner(Live);
+
+        planner.Plan(state, civ, CivSim.Core.Economy.TradeNetworks.Build(Live, state));
+
+        Assert.Empty(planner.Orders);
+    }
+
     private static (Amount Wood, long Food) Gather(GameContent content, int wood)
     {
         (GameState state, SettlementState home, CivilizationState civ, WorldState _) = NewGame(48);

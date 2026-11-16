@@ -413,6 +413,30 @@
         }
       },
       "additionalProperties": false
+    },
+    "taskFedPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "taskReserveYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "taskRecallAboveYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "taskMinPeople": {
+      "type": [
+        "number",
+        "string"
+      ]
     }
   },
   "additionalProperties": false

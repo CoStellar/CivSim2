@@ -89,6 +89,12 @@ public enum AiAction : byte
 
     /// <summary>The strategist brings in another form of government (stage 4f PR 5).</summary>
     ChangeGovernment = 19,
+
+    /// <summary>The governor sends a work group to an area task (stage 6 PR 4b, G9).</summary>
+    StartTask = 20,
+
+    /// <summary>The governor calls a work group home (stage 6 PR 4b, G9).</summary>
+    RecallTask = 21,
 }
 
 /// <summary>
@@ -171,6 +177,8 @@ public readonly record struct Decision(
         FactorId.ForTrade => "for trade",
         FactorId.OverGathering => "over gathering",
         FactorId.WornLand => "worn land",
+        FactorId.Shortage => "stock months",
+        FactorId.TaskYield => "yield a year",
         _ => id.ToString().ToLowerInvariant(),
     };
 }

@@ -62,6 +62,7 @@ public sealed class GovernorAdvisor : Advisor
         _reach = new HexCoord[HexGlobe.RangeSize(_rules.MaxMoveCells)];
         _farmArea = new HexCoord[HexGlobe.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
         _influence = new Influence(content);
+        _tasks = new TaskPlanner(content);
         _otherWorld = new Land(Research.TechBenefits.Empty(content));
         _near = new HexCoord[HexGlobe.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
         // Nearness: 1.0 next door, falling by the distance penalty per cell (data/population.json), 0 from 100/penalty cells on.
@@ -192,8 +193,28 @@ public sealed class GovernorAdvisor : Advisor
             }
 
             _joined.Clear();
+            if (steps && Simulation.WorldClock.PlansNow(_content, state, civ))
+            {
+                PlanTasks(state, queue, civ);
+            }
+        }
+
+        _networks = null;
+    }
+
+    // G9 (stage 6 PR 4b): work groups for the materials the civilization's artisans would work.
+    private void PlanTasks(GameState state, CommandQueue queue, CivilizationState civ)
+    {
+        _networks ??= TradeNetworks.Build(_content, state);
+        _tasks.Plan(state, civ, _networks);
+        foreach ((ICommand command, AiAction action, int subject, int target, Evaluation why) in _tasks.Orders)
+        {
+            Issue(state, queue, civ.Id, command, action, subject, target, why);
         }
     }
+
+    private readonly TaskPlanner _tasks;
+    private List<List<int>>? _networks;
 
     private void Decide(GameState state, CommandQueue queue, CivilizationState civ, SettlementState s, bool reacting)
     {
