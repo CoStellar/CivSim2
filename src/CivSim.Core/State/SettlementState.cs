@@ -188,6 +188,12 @@ public sealed class SettlementState
     /// <summary>Recipe the settlement's artisans work (index into <c>GameContent.Recipes</c>), or <see cref="NoRecipe"/> (stage 3e).</summary>
     public int RecipeId { get; set; } = NoRecipe;
 
+    /// <summary>
+    /// Month of action when the artisans took up <see cref="RecipeId"/>: they keep it at least <c>Ai.RecipeKeepYears</c>
+    /// (playtest, 2026-11-16: with grain from fields they swapped bread and clothing every few months).
+    /// </summary>
+    public long RecipeSinceMonth { get; set; }
+
     /// <summary>Value of <see cref="RecipeId"/> when nothing is made.</summary>
     public const int NoRecipe = -1;
 

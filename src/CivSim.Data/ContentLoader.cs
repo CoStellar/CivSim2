@@ -1918,6 +1918,7 @@ public static class ContentLoader
             ReviewEverySteps = r.Int("reviewEverySteps", 1, 100),
             DirectionBonusPercent = r.Int("directionBonusPercent", 0, 100),
             RecipeSwitchBetterByPercent = r.Int("recipeSwitchBetterByPercent", 0, 500),
+            RecipeKeepYears = r.Int("recipeKeepYears", 0, 100),
             CrowdingLowPercent = r.Int("crowdingLowPercent", 0, 99),
             CrowdingHighPercent = r.Int("crowdingHighPercent", 1, 100),
             ExpansionWeightMin = r.Int("expansionWeightMin", 100, 1000),
