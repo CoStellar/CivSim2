@@ -160,7 +160,7 @@ public sealed class StorageSystem : ITurnSystem
                 continue;
             }
 
-            int percent = TradeNetworks.ArrivingPercent(_content, world.Geometry.Distance(s.Cell, to.Cell));
+            int percent = TradeNetworks.InternalArrivingPercent(_content, world.Geometry.Distance(s.Cell, to.Cell));
             long sendMax = room.Hundredths * 100 / Math.Max(1, percent);
             Amount send = Amount.FromHundredths(Math.Min(excess.Hundredths, sendMax));
             Span<Amount> stock = s.Stock;

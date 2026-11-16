@@ -606,7 +606,7 @@ public enum MapSize
     /// <summary>258×160, 12 civilizations.</summary>
     Standard,
 
-    /// <summary>130×80, 5 civilizations: the default for games up to the bronze age (ADR 0026 rule 2).</summary>
+    /// <summary>98×60, 5 civilizations: the default for games up to the bronze age (ADR 0026 rule 2; 130×80 until 2026-11-16, too few contacts).</summary>
     Small,
 
     /// <summary>386×240, 20 civilizations.</summary>
@@ -623,7 +623,7 @@ public static class MapSizes
     public static GameSettings Settings(MapSize size, ulong seed) => size switch
     {
         MapSize.Test => new GameSettings(seed, 66, 40, 4),
-        MapSize.Small => new GameSettings(seed, 130, 80, 5),
+        MapSize.Small => new GameSettings(seed, 98, 60, 5),
         MapSize.Standard => new GameSettings(seed, 258, 160, 12),
         MapSize.Large => new GameSettings(seed, 386, 240, 20),
         MapSize.Huge => new GameSettings(seed, 514, 320, 32),

@@ -132,7 +132,9 @@ public sealed class GameContent
     public TechnologyDefinition Technology(string key) => Find(Technologies, t => t.Key, key, "technology");
 
     /// <summary>Trade network and internal prices (data/trade.json, stage 3e).</summary>
-    public TradeRules Trade { get; init; } = new();
+    public TradeRules Trade { get => _trade; init => _trade = value; }
+
+    private TradeRules _trade = new();
 
     /// <summary>Settlement levels from smallest to largest, index = id (<c>data/settlements.json</c>).</summary>
     public IReadOnlyList<SettlementLevelDefinition> SettlementLevels { get; init; } = [];
@@ -195,7 +197,7 @@ public sealed class GameContent
 
     /// <summary>
     /// A copy of this content with every system frozen until a later era switched on (ADR 0026 rule 5: the dynamic climate, wildfire
-    /// and flood, governments, the political influence of strata, coups, secessions and drift, pacts and alliances): the unit tests
+    /// and flood, governments, the political influence of strata, coups, secessions and drift, pacts and alliances, the shared store): the unit tests
     /// of those systems run them as the later eras will.
     /// </summary>
     public GameContent Thawed()
@@ -219,6 +221,7 @@ public sealed class GameContent
         }
 
         copy._treaties = _treaties with { Kinds = kinds };
+        copy._trade = _trade with { SharedStore = false };
         return copy;
     }
 

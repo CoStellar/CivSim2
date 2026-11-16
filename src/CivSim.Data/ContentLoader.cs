@@ -2493,6 +2493,7 @@ public static class ContentLoader
         {
             LinkCells = r.Int("linkCells", 1, 100),
             LossPercentPerCell = r.Int("lossPercentPerCell", 0, 90),
+            SharedStore = r.OptionalBool("sharedStore"),
             FoodReserveYears = r.Amount("foodReserveYears", Amount.Zero, Amount.FromUnits(20)),
             PriceRangePercent = r.Range("priceRangePercent", 1, 10_000),
         };

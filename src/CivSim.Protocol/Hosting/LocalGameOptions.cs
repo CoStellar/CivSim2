@@ -103,7 +103,7 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     public static LocalGameOptions ForSize(string size, ulong seed) => size switch
     {
         "test" => new LocalGameOptions(seed, 66, 40, 4),
-        "small" => new LocalGameOptions(seed, 130, 80, 5), // the default until the bronze age (ADR 0026 rule 2)
+        "small" => new LocalGameOptions(seed, 98, 60, 5), // the default until the bronze age (ADR 0026 rule 2)
         "large" => new LocalGameOptions(seed, 386, 240, 20),
         "huge" => new LocalGameOptions(seed, 514, 320, 32),
         _ => new LocalGameOptions(seed, 258, 160, 12),

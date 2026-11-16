@@ -44,9 +44,14 @@ public class FreezeTests
         Assert.False(Live.Treaties.Kinds[(int)TreatyKind.DefensiveAlliance].Enabled);
         Assert.True(Live.Treaties.Kinds[(int)TreatyKind.Peace].Enabled); // contact, war, peace and barter stay
         Assert.True(Live.Treaties.Kinds[(int)TreatyKind.Trade].Enabled);
+        Assert.True(Live.Trade.SharedStore); // one store for a people's settlements: no loss between them
+        Assert.Equal(100, CivSim.Core.Economy.TradeNetworks.InternalArrivingPercent(Live, 8));
+        Assert.True(CivSim.Core.Economy.TradeNetworks.ArrivingPercent(Live, 8) < 100); // trade with other peoples still loses
 
         GameContent thawed = Live.Thawed();
         Assert.True(thawed.GovernmentsEnabled && thawed.StrataInfluenceEnabled && thawed.Stability.RevoltsEnabled);
+        Assert.False(thawed.Trade.SharedStore);
+        Assert.True(CivSim.Core.Economy.TradeNetworks.InternalArrivingPercent(thawed, 8) < 100);
         Assert.All(thawed.Treaties.Kinds, k => Assert.True(k.Enabled));
     }
 
