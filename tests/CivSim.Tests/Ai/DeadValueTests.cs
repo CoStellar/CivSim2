@@ -8,6 +8,7 @@ using CivSim.Core.Ai;
 using CivSim.Core.Ai.Utility;
 using CivSim.Core.Commands;
 using CivSim.Core.Content;
+using CivSim.Core.Map;
 using CivSim.Core.Numerics;
 using CivSim.Core.Research;
 using CivSim.Core.Simulation;
@@ -447,8 +448,61 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        // Work groups (stage 6 PR 4b, G9): the full villages, everyone fed, and in the first settlement that can a woodcutting group
+        // already at work, so the size of a new group and when one comes home both have something to decide.
+        GameState working = SaveGameSerializer.Load(new MemoryStream(saved[fullIndex]));
+        foreach (SettlementState s in working.Settlements)
+        {
+            s.FoodEaten = s.FoodNeeded; // everyone ate all they needed
+        }
+
+        using (var ms = new MemoryStream())
+        {
+            // Fed and out of materials, no group yet: some settlement sends one (taskMinPeople decides whether and how big).
+            foreach (SettlementState s in working.Settlements)
+            {
+                foreach (CivSim.Core.Units.TaskKindDefinition kind in Content.Tasks.Kinds)
+                {
+                    s.Stock[kind.Good] = Amount.Zero;
+                }
+            }
+
+            SaveGameSerializer.Save(working, ms);
+            saved.Add(ms.ToArray());
+        }
+
+        StartOneGroup(working);
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(working, ms);
+            saved.Add(ms.ToArray());
+        }
+
         Assert.True(saved.Count > stone);
         return [.. saved];
+    }
+
+    // A woodcutting group from the first settlement with a cell it may work.
+    private static void StartOneGroup(GameState state)
+    {
+        CivSim.Core.Units.TaskKindDefinition wood = Content.Tasks.Find("woodcutting")!;
+        foreach (SettlementState s in state.Settlements.Where(x => x.IsActive))
+        {
+            WorldState world = state.Worlds[s.World.Value];
+            var area = new HexCoord[HexGlobe.RangeSize(3)];
+            int n = world.Geometry.Range(s.Cell, 3, area);
+            for (int k = 0; k < n; k++)
+            {
+                var start = new CivSim.Core.Units.StartTaskCommand(Content, s.Id, wood.Key, area[k], 6);
+                if (start.Validate(state, s.Owner).Success)
+                {
+                    start.Apply(state, s.Owner);
+                    return;
+                }
+            }
+        }
+
+        Assert.Fail("No settlement may send a woodcutting group.");
     }
 
     private static void Craft(GameState state, int shift)

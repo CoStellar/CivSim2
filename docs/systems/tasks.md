@@ -57,15 +57,18 @@ flowchart LR
   brakuje, wraca. Grupa robocza to realny koszt: 10 ludzi mniej zbiera jedzenie. Pomiar z 2026-11-13: zlecanie wycinki każdemu obozowi
   od 25 ludzi co sekundę zagłodziło świat (6 osad zamiast 232 po 15 minutach), więc AI w 4b musi liczyć ten koszt.
 - **Dom zniknął** (osada porzucona albo zdobyta): grupa idzie do najbliższej własnej osady (jak każdy oddział wracający do domu).
-- **Zbieranie ze strefy:** dopóki `zoneGathersMaterials` jest `true`, osady dalej zbierają drewno, krzemień i kamień z całej strefy,
-  jak przed tym PR. W 4b AI zacznie zlecać zadania i flaga przejdzie na `false`: wtedy drewno (dobra zadań z biomu) i złoża zadań
-  (krzemień, kamień) przychodzą tylko z zadań, a żywność dalej ze strefy (decyzja Patryka z 2026-11-12).
+- **Zbieranie ze strefy:** od PR 4b-1 `zoneGathersMaterials` jest `false`: drewno (dobra zadań z biomu) i złoża zadań (krzemień,
+  kamień) przychodzą **tylko z zadań**, a żywność dalej ze strefy (decyzja Patryka z 2026-11-12). Wartość `true` przywraca zbieranie
+  ze strefy jak w 4a (wtedy AI nie zleca zadań).
+- **AI (od PR 4b-1):** gubernator, decyzja G9 (`TaskPlanner.cs`, opis w `docs/ai/03-gubernator.md#g9`): sieć osad wysyła grupę po
+  materiał, którego ma na mniej niż 2 lata zużycia rzemieślników, z osady najedzonej w ≥ 95%, i odwołuje ją przy zapasie na 4 lata.
+  Te same komendy co gracz (`StartTaskCommand`, `ReturnUnitCommand`), dźwignia 3.
 
 ## Test sternika (ADR 0027)
 
 1. **Dźwignia:** 3 „co robimy na ziemi”.
-2. **AI robi to samo, gdy gracz nie klika:** w 4a jeszcze nie (AI nie zleca zadań, zbieranie ze strefy zostaje włączone, więc nic
-   się nie psuje); w 4b gubernator wydaje ten sam `StartTaskCommand`.
+2. **AI robi to samo, gdy gracz nie klika:** od 4b-1 gubernator wydaje ten sam `StartTaskCommand` i `ReturnUnitCommand` (G9); gracz,
+   który weźmie dźwignię 3, zleca zadania sam, a AI przestaje.
 3. **Widać w 2–3 minuty:** grupa idzie na pole (dwie postacie z siekierkami w kolorze ludu), pole zadania ma obrys w kolorze ludu,
    magazyn osady rośnie, puste złoże znika z mapy.
 4. **Kronika:** „The work group of X ran out of food and comes home”, „Flint Mine of X ran out; the work group comes home”.
