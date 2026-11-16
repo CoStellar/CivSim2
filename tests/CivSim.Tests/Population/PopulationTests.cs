@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.IO;
 using CivSim.Core.Content;
@@ -226,8 +227,10 @@ public class PopulationTests
 
         foreach (SettlementState s in runner.State.Settlements.Where(s => s.IsActive))
         {
-            // Two rings of land around a camp feed a few hundred people at most.
-            Assert.InRange(s.TotalPopulation(), 1, 1000);
+            // Two rings of land around a camp feed a few hundred people at most, and since stage 6 PR T2 no settlement grows past its
+            // level's limit (people who join between two counts may top it up a little).
+            int max = Content.SettlementLevels[s.Level].MaxPopulation;
+            Assert.True(s.TotalPopulation() >= 1 && s.TotalPopulation() <= Math.Max(1000, max + (max / 50)), $"{s.Name}: {s.TotalPopulation()} people, limit {max}");
         }
     }
 

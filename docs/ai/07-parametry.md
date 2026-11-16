@@ -24,6 +24,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `fedBadlyPercent` | 60 | % | S1 | do tego najedzenia waga głodu maksymalna |
 | `hungerWeightMax` | 1500 | ‰ | S1 | najwyższa waga bezpieczeństwa i dobrobytu |
 | `splitMinPercentOfLevel` | 50 | % | G5 | najniższy próg zatłoczenia dla odłamu |
+| `settlersBelowAdminPercent` | 35 | % | G5, G7 | osadnicy ruszają tylko przy administracji zajętej poniżej tego udziału pojemności ustroju; głodna wioska zawsze (etap 6 PR T2) |
 | `searchEverySteps` | 3 | własne kroki | G2 | co ile własnych kroków szuka nie mocno głodny obóz |
 | `starvingFedPercent` | 85 | % | G2 | poniżej tego najedzenia obóz szuka co turę |
 | `goalOfFood` | `security` | cel | T1, U1 | któremu celowi służy jedzenie (PR B) |

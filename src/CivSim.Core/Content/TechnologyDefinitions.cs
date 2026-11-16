@@ -178,6 +178,13 @@ public sealed record AiRules
     /// <summary>A camp never splits below this share of its level's people, however expansive its civilization.</summary>
     public int SplitMinPercentOfLevel { get; init; } = 50;
 
+    /// <summary>
+    /// The AI sends settlers (a crowded camp's group, a village's settlers) only while its administration uses less than this percent of
+    /// what its government manages (stage 6 PR T2, ADR 0026): a people fills what it can rule and then grows in place up to the
+    /// limit of its settlements' levels (population.json levelLimitScatters). A hungry village still sends mouths away. 0 = no limit.
+    /// </summary>
+    public int SettlersBelowAdminPercent { get; init; }
+
     /// <summary>The goal food serves (hunger is a matter of safety): technologies and recipes that give food are weighed by it.</summary>
     public Ai.Goal GoalOfFood { get; init; } = Ai.Goal.Security;
 

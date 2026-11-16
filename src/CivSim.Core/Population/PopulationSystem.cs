@@ -50,6 +50,12 @@ public sealed class PopulationSystem : ITurnSystem
 
             UpdateHealthAndMood(state, s, before);
             int after = NewTotal(state, s, before, months);
+            int limit = _content.SettlementLevels[s.Level].MaxPopulation;
+            if (_rules.LevelLimitScatters && limit > 0 && after > limit)
+            {
+                after = limit; // the people past the level's limit scatter (stage 6 PR T2)
+            }
+
             ChangeTotal(s, before, after);
             Drift(s, months);
             Skills.Trim(_content.Skills, s); // deaths and drift take the same share from the skills (stage 4F)
