@@ -177,7 +177,9 @@ public sealed class GameContent
     private bool _strataInfluenceEnabled = true;
 
     /// <summary>Leaders: traits, ages, death (<c>data/leaders.json</c>, stage 4f PR 2).</summary>
-    public LeaderRules Leaders { get; init; } = new();
+    public LeaderRules Leaders { get => _leaders; init => _leaders = value; }
+
+    private LeaderRules _leaders = new();
 
     /// <summary>Stability and administration (<c>data/stability.json</c>, stage 4f PR 3).</summary>
     public StabilityRules Stability { get => _stability; init => _stability = value; }
@@ -197,7 +199,7 @@ public sealed class GameContent
 
     /// <summary>
     /// A copy of this content with every system frozen until a later era switched on (ADR 0026 rule 5: the dynamic climate, wildfire
-    /// and flood, governments, the political influence of strata, coups, secessions and drift, pacts and alliances, the shared store): the unit tests
+    /// and flood, governments, the political influence of strata, coups, secessions and drift, pacts and alliances, the shared store, leaders in the chronicle): the unit tests
     /// of those systems run them as the later eras will.
     /// </summary>
     public GameContent Thawed()
@@ -222,6 +224,7 @@ public sealed class GameContent
 
         copy._treaties = _treaties with { Kinds = kinds };
         copy._trade = _trade with { SharedStore = false };
+        copy._leaders = _leaders with { ChronicleEnabled = true };
         return copy;
     }
 

@@ -244,7 +244,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
 
                 if (Contacts.Meet(_content, state, civ, s.Owner, ContactWay.Sighted))
                 {
-                    context.Chronicle(Sighted(state, earth, civ, s));
+                    context.Chronicle(Sighted(state, earth, civ, s), civ.Id.Value, s.Owner.Value, earth.Geometry.Index(s.Cell));
                 }
             }
         }
@@ -328,12 +328,12 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
                 bool firstB = Contacts.Meet(_content, state, b, a.Id, ContactWay.Border);
                 if (firstA && firstB)
                 {
-                    context.Chronicle($"First contact: the lands of {a.Name} and {b.Name} now touch.");
+                    context.Chronicle($"First contact: the lands of {a.Name} and {b.Name} now touch.", a.Id.Value, b.Id.Value);
                 }
                 else if (firstA || firstB)
                 {
                     (CivilizationState who, CivilizationState whom) = firstA ? (a, b) : (b, a);
-                    context.Chronicle($"First contact: {who.Name} met {whom.Name} where their lands touch.");
+                    context.Chronicle($"First contact: {who.Name} met {whom.Name} where their lands touch.", who.Id.Value, whom.Id.Value);
                 }
             }
         }
@@ -435,7 +435,7 @@ public sealed class ContactSystem(GameContent content) : ITurnSystem
                     string? line = Hear(state, earth, rules, a, b, c);
                     if (line is not null)
                     {
-                        context.Chronicle(line, "{0} peoples heard of distant peoples", a.Id.Value);
+                        context.Chronicle(line, "{0} peoples heard of distant peoples", a.Id.Value, ownOnly: true);
                         heardOne = true;
                         break;
                     }

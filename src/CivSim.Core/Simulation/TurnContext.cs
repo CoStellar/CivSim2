@@ -32,10 +32,39 @@ public sealed class TurnContext
     /// <summary>Chronicle lines written during this turn (cleared when the turn starts).</summary>
     public IReadOnlyList<string> ChronicleLines => ChronicleList;
 
+    /// <summary>
+    /// Whom each line of <see cref="ChronicleLines"/> is about (same index): a player sees only what its people knows
+    /// (stage 6, playtest P-01; <c>CLAUDE.md</c> rule 10: the player's view passes through the fog of war).
+    /// </summary>
+    public IReadOnlyList<ChronicleAbout> ChronicleSubjects => AboutList;
+
     internal List<string> ChronicleList { get; } = [];
 
-    /// <summary>Writes a line to the chronicle (GDD 11.1, phase 11). Use for rare, notable events only.</summary>
-    public void Chronicle(string text) => ChronicleList.Add(text);
+    internal List<ChronicleAbout> AboutList { get; } = [];
+
+    internal void ClearChronicle()
+    {
+        ChronicleList.Clear();
+        AboutList.Clear();
+    }
+
+    /// <summary>
+    /// Writes a line about the whole world, which every player may read (the world was made, the sea rose). Lines about
+    /// a people go through <see cref="Chronicle(string, int, int, int)"/>.
+    /// </summary>
+    public void Chronicle(string text) => Chronicle(text, -1);
+
+    /// <summary>
+    /// Writes a line to the chronicle (GDD 11.1, phase 11) about civilization <paramref name="civ"/> (-1 = the whole
+    /// world), a second one it concerns (<paramref name="other"/>, -1 = none) and the cell of world 0 where it happened
+    /// (<paramref name="cell"/>, -1 = none). A line about the <paramref name="inner"/> life of a people (its settlers,
+    /// its unrest) is read by other peoples only when it happens on a cell they know. Use for rare, notable events only.
+    /// </summary>
+    public void Chronicle(string text, int civ, int other = -1, int cell = -1, bool inner = false)
+    {
+        ChronicleList.Add(text);
+        AboutList.Add(new ChronicleAbout(civ, other, cell) { Inner = inner });
+    }
 
     /// <summary>
     /// Writes a common line (a new leader, a drought, a new camp) to the chronicle as part of <paramref name="group"/>:
@@ -43,8 +72,9 @@ public sealed class TurnContext
     /// place of the first, "<paramref name="group"/>: Name (count), Name.", where <c>{0}</c> in the group is the number
     /// of lines and the names are those of the civilizations (by <paramref name="civ"/>, in first-seen order; -1 = no one).
     /// The group is told apart by its text, so pass the same string each time (stage 5b: a calmer chronicle).
+    /// With <paramref name="ownOnly"/> a player reads only its own lines of the group (they name peoples others never met).
     /// </summary>
-    public void Chronicle(string text, string group, int civ)
+    public void Chronicle(string text, string group, int civ, bool ownOnly = false)
     {
         Group? g = null;
         for (int i = 0; i < _groupCount; i++)
@@ -68,7 +98,9 @@ public sealed class TurnContext
             g.Index = ChronicleList.Count;
             g.Count = 0;
             g.Civs.Clear();
+            g.OwnOnly = ownOnly;
             ChronicleList.Add(text);
+            AboutList.Add(new ChronicleAbout(civ) { Group = ownOnly ? new ChronicleGroup(group, [new ChronicleGroupMember(civ, 1, text)], ownOnly: true) : null });
         }
 
         g.Count++;
@@ -76,12 +108,12 @@ public sealed class TurnContext
         {
             if (g.Civs[i].Civ == civ)
             {
-                g.Civs[i] = (civ, g.Civs[i].Count + 1);
+                g.Civs[i] = (civ, g.Civs[i].Count + 1, g.Civs[i].Text);
                 return;
             }
         }
 
-        g.Civs.Add((civ, 1));
+        g.Civs.Add((civ, 1, text));
     }
 
     // Turns the groups of this turn with more than one line into their summary lines.
@@ -95,20 +127,16 @@ public sealed class TurnContext
                 continue;
             }
 
-            var sb = new StringBuilder();
-            sb.Append(string.Format(CultureInfo.InvariantCulture, g.Format, g.Count)).Append(": ");
-            for (int k = 0; k < g.Civs.Count; k++)
+            var members = new ChronicleGroupMember[g.Civs.Count];
+            for (int k = 0; k < members.Length; k++)
             {
-                (int civ, int count) = g.Civs[k];
-                sb.Append(k == 0 ? string.Empty : ", ")
-                    .Append(civ >= 0 && State.FindCivilization(new CivId(civ)) is { } c ? c.Name : "no one");
-                if (count > 1)
-                {
-                    sb.Append(" (").Append(count.ToString(CultureInfo.InvariantCulture)).Append(')');
-                }
+                (int civ, int count, string text) = g.Civs[k];
+                members[k] = new ChronicleGroupMember(civ, count, text);
             }
 
-            ChronicleList[g.Index] = sb.Append('.').ToString();
+            var summary = new ChronicleGroup(g.Format, members, g.OwnOnly);
+            ChronicleList[g.Index] = summary.Text(State, _ => true)!;
+            AboutList[g.Index] = new ChronicleAbout(-1) { Group = summary };
         }
 
         _groupCount = 0;
@@ -125,6 +153,8 @@ public sealed class TurnContext
 
         public int Count { get; set; }
 
-        public List<(int Civ, int Count)> Civs { get; } = [];
+        public bool OwnOnly { get; set; }
+
+        public List<(int Civ, int Count, string Text)> Civs { get; } = [];
     }
 }

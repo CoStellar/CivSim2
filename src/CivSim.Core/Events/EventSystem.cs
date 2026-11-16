@@ -338,7 +338,8 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
                     .Replace("{settlement}", s.Name, StringComparison.Ordinal)
                     .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal),
                 GroupOf(ev),
-                owner?.Id.Value ?? -1);
+                owner?.Id.Value ?? -1,
+                ownOnly: true);
         }
     }
 
@@ -394,7 +395,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
 
                 Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
                 _struck.Add((m, e));
-                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {target.Name}.", GroupOf(ev), target.Owner.Value);
+                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {target.Name}.", GroupOf(ev), target.Owner.Value, ownOnly: true);
             }
 
             AlongTradeRoutes(context, networks, networkOf, source, e, months, rng);
@@ -439,7 +440,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
             _struck.Add((other, e));
             string partner = state.FindCivilization(target.Owner)?.Name ?? "no one";
-            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).", GroupOf(ev), target.Owner.Value);
+            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).", GroupOf(ev), target.Owner.Value, ownOnly: true);
         }
     }
 

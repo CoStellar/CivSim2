@@ -14,6 +14,9 @@ namespace CivSim.Core.Commands;
 public sealed record AbandonSettlementCommand(GameContent Content, SettlementId Settlement, SettlementId Into) : ICommand, IChronicledCommand
 {
     /// <inheritdoc />
+    public bool ChronicleInner => true;
+
+    /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Movement;
 
     /// <inheritdoc />

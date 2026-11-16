@@ -389,7 +389,7 @@ public sealed class StabilitySystem : ITurnSystem
 
             if (Stability.KeepCapital(_content, state, civ) is { } line)
             {
-                context.Chronicle(line);
+                context.Chronicle(line, civ.Id.Value, inner: true);
             }
 
             // Steps shorter than a year (a war month by month) recompute once a year, in its first month.
@@ -402,7 +402,7 @@ public sealed class StabilitySystem : ITurnSystem
             Stability.Update(_content, state, civ, _roads, _unrest);
             if (Stability.UnrestLine(_content, civ, before) is { } unrest)
             {
-                context.Chronicle(unrest);
+                context.Chronicle(unrest, civ.Id.Value, inner: true);
             }
 
             if (!_content.Stability.RevoltsEnabled)
@@ -413,7 +413,7 @@ public sealed class StabilitySystem : ITurnSystem
             Revolts.Reseed(state, civ, state.Month, _random);
             if ((Revolts.Check(_content, state, civ, _random) ?? Revolts.Drift(_content, state, civ, _random)) is { } revolt)
             {
-                context.Chronicle(revolt);
+                context.Chronicle(revolt, civ.Id.Value);
             }
         }
     }

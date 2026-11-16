@@ -49,7 +49,7 @@ public sealed class WarSystem : ITurnSystem
                 && !state.Episodes.Campaigning(t.A, t.B) && !state.Episodes.Campaigning(t.B, t.A))
             {
                 string line = Treaties.Sign(_content, state, t.A, t.B, TreatyKind.Peace, PeaceTerms.White);
-                context.Chronicle(line + " Nobody had fought for years.");
+                context.Chronicle(line + " Nobody had fought for years.", t.A.Value, t.B.Value);
             }
         }
 

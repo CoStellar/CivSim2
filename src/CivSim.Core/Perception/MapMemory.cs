@@ -205,6 +205,9 @@ public sealed class PerceptionSystem(GameContent content) : ITurnSystem
 public sealed record JourneyCommand(GameContent Content, SettlementId Settlement, HexCoord Target) : ICommand, IChronicledCommand
 {
     /// <inheritdoc />
+    public bool ChronicleInner => true;
+
+    /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Movement;
 
     /// <inheritdoc />
@@ -320,7 +323,7 @@ public sealed class JourneySystem(GameContent content) : ITurnSystem
             if (done)
             {
                 s.JourneyTarget = SettlementState.NoJourney;
-                context.Chronicle($"{civ.Name} reached the end of its journey with {s.Name}.");
+                context.Chronicle($"{civ.Name} reached the end of its journey with {s.Name}.", civ.Id.Value, inner: true);
             }
         }
     }
