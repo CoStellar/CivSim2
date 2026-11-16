@@ -70,10 +70,28 @@
           },
           "skill": {
             "type": "string"
+          },
+          "settledOnly": {
+            "type": "boolean"
+          },
+          "waters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
           }
         },
         "additionalProperties": false
       }
+    },
+    "zoneFarms": {
+      "type": "boolean"
+    },
+    "zoneFishes": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

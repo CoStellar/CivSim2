@@ -18,6 +18,15 @@ public enum TaskSource : byte
 
     /// <summary>The cell has the deposit on the surface; the deposit loses its richness and the task ends when it runs out.</summary>
     Deposit = 1,
+
+    /// <summary>
+    /// A field (stage 6 PR 4b-2): fertile land, farmed as the farming rule of population.json says (grain by fertility and growing
+    /// season, at most farmersPerCell people, the land wears out and rests).
+    /// </summary>
+    Farmland = 2,
+
+    /// <summary>A fishing ground (stage 6 PR 4b-2): land next to water; the yield grows with the best water next to it (the kind's waters).</summary>
+    Shore = 3,
 }
 
 /// <summary>A kind of area task (stage 6 PR 4a, GDD 4.4): woodcutting, a flint mine, a quarry; later fields, fishing grounds, building.</summary>
@@ -49,6 +58,15 @@ public sealed class TaskKindDefinition
 
     /// <summary>Preferred skill of the group's people (their stratum works), or -1.</summary>
     public int Skill { get; init; } = -1;
+
+    /// <summary>Only a settlement that cannot move may run it (fields of a village, stage 6 PR 4b-2).</summary>
+    public bool SettledOnly { get; init; }
+
+    /// <summary>For <see cref="TaskSource.Shore"/>: the value of every biome's water next to the cell (index = biome id, 0 = none).</summary>
+    public IReadOnlyList<Amount> Waters { get; init; } = [];
+
+    /// <summary>True when the task makes food (fields, fishing grounds): the governor keeps its skilled people at it (G9, stage 6 PR 4b-2).</summary>
+    public bool MakesFood { get; init; }
 }
 
 /// <summary>Rules of area tasks (data/tasks.json, stage 6 PR 4a).</summary>
@@ -59,6 +77,12 @@ public sealed record TaskRules
 
     /// <summary>While true settlements still gather wood, flint and stone from their whole zone (until the AI gives tasks, PR 4b).</summary>
     public bool ZoneGathersMaterials { get; init; } = true;
+
+    /// <summary>While true a village's farmers farm the best land of its zone by themselves; false: only fields given as tasks (stage 6 PR 4b-2).</summary>
+    public bool ZoneFarms { get; init; } = true;
+
+    /// <summary>While true gatherers also fish the water next to the zone; false: fish only from fishing grounds given as tasks (stage 6 PR 4b-2).</summary>
+    public bool ZoneFishes { get; init; } = true;
 
     /// <summary>How far beyond the settlement's zone a task may be given, in cells.</summary>
     public int RangeBeyondZoneCells { get; init; } = 2;
@@ -132,9 +156,44 @@ public static class AreaTasks
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(map);
         ArgumentNullException.ThrowIfNull(kind);
-        return kind.Source == TaskSource.Deposit
-            ? map.Deposit[cell] == kind.Deposit && map.DepositDepth[cell] == 0 && map.DepositRichness[cell] > 0
-            : BiomeValue(content, map, kind, cell) > Amount.Zero;
+        return kind.Source switch
+        {
+            TaskSource.Deposit => map.Deposit[cell] == kind.Deposit && map.DepositDepth[cell] == 0 && map.DepositRichness[cell] > 0,
+            TaskSource.Farmland => Economy.FarmingSystem.GrainPerFarmer(content, map, cell) > 0,
+            TaskSource.Shore => false, // needs the map's geometry: see Fits(content, world, kind, cell)
+            _ => BiomeValue(content, map, kind, cell) > Amount.Zero,
+        };
+    }
+
+    /// <summary>Like <see cref="Fits(GameContent, WorldMap, TaskKindDefinition, int)"/>, with the neighbours a fishing ground needs.</summary>
+    public static bool Fits(GameContent content, WorldState world, TaskKindDefinition kind, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(kind);
+        return kind.Source == TaskSource.Shore
+            ? !content.Biomes[world.Map.Biome[cell]].IsWater && WaterValue(content, world, kind, cell) > Amount.Zero
+            : Fits(content, world.Map, kind, cell);
+    }
+
+    /// <summary>The best water next to <paramref name="cell"/> for a fishing ground (the kind's waters), or zero.</summary>
+    public static Amount WaterValue(GameContent content, WorldState world, TaskKindDefinition kind, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(kind);
+        Span<HexCoord> n6 = stackalloc HexCoord[6];
+        world.Geometry.GetNeighbors(world.Geometry.FromIndex(cell), n6);
+        Amount best = Amount.Zero;
+        for (int k = 0; k < n6.Length; k++)
+        {
+            int b = world.Map.Biome[world.Geometry.Index(n6[k])];
+            if (b < kind.Waters.Count && kind.Waters[b] > best)
+            {
+                best = kind.Waters[b];
+            }
+        }
+
+        return best;
     }
 
     /// <summary>The biome's gather value of the task's good on <paramref name="cell"/> (biomes.json gather).</summary>
@@ -252,13 +311,33 @@ public static class AreaTasks
     /// </summary>
     public static Amount Yield(GameContent content, WorldMap map, TaskKindDefinition kind, int cell, int people, int months)
     {
+        ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(kind);
         Amount perYear = kind.PerPersonPerYear * people;
         if (kind.Source == TaskSource.Biome)
         {
             perYear = perYear.MultiplyRatio(BiomeValue(content, map, kind, cell).Hundredths, 100, Rounding.Floor);
         }
+        else if (kind.Source == TaskSource.Farmland)
+        {
+            // A field: the farming rule (population.json farming), at most farmersPerCell farmers on the cell.
+            perYear = Amount.FromHundredths(Economy.FarmingSystem.GrainPerFarmer(content, map, cell) * Math.Min(people, content.Population.FarmersPerCell));
+        }
 
+        return perYear.MultiplyRatio(months, 12, Rounding.Floor);
+    }
+
+    /// <summary>Like <see cref="Yield(GameContent, WorldMap, TaskKindDefinition, int, int, int)"/>, with the water a fishing ground stands by.</summary>
+    public static Amount Yield(GameContent content, WorldState world, TaskKindDefinition kind, int cell, int people, int months)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(kind);
+        if (kind.Source != TaskSource.Shore)
+        {
+            return Yield(content, world.Map, kind, cell, people, months);
+        }
+
+        Amount perYear = (kind.PerPersonPerYear * people).MultiplyRatio(WaterValue(content, world, kind, cell).Hundredths, 100, Rounding.Floor);
         return perYear.MultiplyRatio(months, 12, Rounding.Floor);
     }
 }
@@ -318,11 +397,20 @@ public sealed record StartTaskCommand(GameContent Content, SettlementId Settleme
             return CommandResult.Fail($"Tasks reach at most {Content.Tasks.RangeBeyondZoneCells} cells beyond the settlement's land.");
         }
 
-        if (!AreaTasks.Fits(Content, world.Map, kind, cell))
+        if (kind.SettledOnly && Content.SettlementLevels[s.Level].Mobile)
         {
-            return CommandResult.Fail(kind.Source == TaskSource.Deposit
-                ? $"{kind.Name} needs {Content.Deposit(kind.Deposit).Name} on that cell."
-                : $"That land gives no {Content.Goods[kind.Good].Name}.");
+            return CommandResult.Fail($"Only a settled village runs {kind.Name}.");
+        }
+
+        if (!AreaTasks.Fits(Content, world, kind, cell))
+        {
+            return CommandResult.Fail(kind.Source switch
+            {
+                TaskSource.Deposit => $"{kind.Name} needs {Content.Deposit(kind.Deposit).Name} on that cell.",
+                TaskSource.Farmland => "That land is too poor to farm.",
+                TaskSource.Shore => $"{kind.Name} needs fishing water next to the cell.",
+                _ => $"That land gives no {Content.Goods[kind.Good].Name}.",
+            });
         }
 
         for (int k = 0; k < state.Units.Count; k++)
@@ -430,56 +518,76 @@ public sealed class TaskSystem(GameContent content) : ITurnSystem
                 continue;
             }
 
-            // The group eats with its settlement, in its pulse, from the home's stock; without food it comes home (stage 6 PR 4a).
-            if (!Eat(home, u.TotalPeople(), months))
+            // The group eats with its settlement, in its pulse, from the home's stock, after what it made this pulse came in (a field
+            // feeds its farmers first, stage 6 PR 4b-2); without food it comes home (stage 6 PR 4a).
+            if (u.Cell == u.Target)
+            {
+                Work(context, u, home, months);
+            }
+
+            if (!u.Gone && u.Order == UnitOrder.Work && !Eat(home, u.TotalPeople(), months))
             {
                 u.Order = UnitOrder.Return;
                 u.ForgetPath();
                 context.Chronicle($"The work group of {home.Name} ran out of food and comes home.", home.Owner.Value, inner: true);
-                continue;
             }
+        }
+    }
 
-            if (u.Cell != u.Target)
-            {
-                continue; // still on its way
-            }
+    // What the group at its task's cell makes in the pulse goes to its home; a task whose cell no longer gives its work ends.
+    private void Work(TurnContext context, Unit u, SettlementState home, int months)
+    {
+        GameState state = context.State;
+        TaskKindDefinition kind = _content.Tasks.Kinds[u.Task];
+        WorldState world = state.Worlds[u.World.Value];
+        WorldMap map = world.Map;
+        if (!AreaTasks.Fits(_content, world, kind, u.Cell))
+        {
+            End(context, u, home, kind);
+            return;
+        }
 
-            TaskKindDefinition kind = _content.Tasks.Kinds[u.Task];
-            WorldMap map = state.Worlds[u.World.Value].Map;
-            if (!AreaTasks.Fits(_content, map, kind, u.Cell))
-            {
-                End(context, u, home, kind);
-                continue;
-            }
+        Amount made = AreaTasks.Yield(_content, world, kind, u.Cell, u.TotalPeople(), months);
+        if (kind.MakesFood && state.Effects.Count > 0)
+        {
+            // Drought, wildfire and flood lower what the land gives; cooking and irrigation raise it (as farming in the zone did).
+            int percent = (100 + state.Effects.Total(_content.Effects, EffectStat.ExtractionPercent, EffectTarget.Cell, u.World, u.Cell))
+                * (100 + state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Settlement, home.World, home.Id.Value)
+                    + state.Effects.Total(_content.Effects, EffectStat.OutputPercent, EffectTarget.Civilization, WorldId.Earth, home.Owner.Value)) / 100;
+            made = made.MultiplyPercent(Math.Max(0, percent), Rounding.Floor);
+        }
 
-            Amount made = AreaTasks.Yield(_content, map, kind, u.Cell, u.TotalPeople(), months);
-            if (kind.Source == TaskSource.Deposit)
-            {
-                // Flint and stone run out (GDD 4.4): the richness is in whole units.
-                long left = map.DepositRichness[u.Cell];
-                long taken = Math.Min(left * 100, made.Hundredths);
-                made = Amount.FromHundredths(taken);
-                left -= (taken + 99) / 100;
-                if (left <= 0)
-                {
-                    map.Deposit.Set(u.Cell, 0);
-                    map.DepositRichness.Set(u.Cell, 0);
-                }
-                else
-                {
-                    map.DepositRichness.Set(u.Cell, (int)left);
-                }
-            }
+        if (kind.MakesFood && made > Amount.Zero)
+        {
+            home.FoodGathered += made.Hundredths;
+        }
 
-            if (made > Amount.Zero)
+        if (kind.Source == TaskSource.Deposit)
+        {
+            // Flint and stone run out (GDD 4.4): the richness is in whole units.
+            long left = map.DepositRichness[u.Cell];
+            long taken = Math.Min(left * 100, made.Hundredths);
+            made = Amount.FromHundredths(taken);
+            left -= (taken + 99) / 100;
+            if (left <= 0)
             {
-                home.Add(kind.Good, made);
+                map.Deposit.Set(u.Cell, 0);
+                map.DepositRichness.Set(u.Cell, 0);
             }
+            else
+            {
+                map.DepositRichness.Set(u.Cell, (int)left);
+            }
+        }
 
-            if (!AreaTasks.Fits(_content, map, kind, u.Cell))
-            {
-                End(context, u, home, kind);
-            }
+        if (made > Amount.Zero)
+        {
+            home.Add(kind.Good, made);
+        }
+
+        if (!AreaTasks.Fits(_content, world, kind, u.Cell))
+        {
+            End(context, u, home, kind);
         }
     }
 

@@ -6,6 +6,7 @@ using CivSim.Core.Map;
 using CivSim.Core.Numerics;
 using CivSim.Core.Simulation;
 using CivSim.Core.State;
+using CivSim.Core.Units;
 
 namespace CivSim.Core.Economy;
 
@@ -53,10 +54,15 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
                     s.FoodGathered = 0;
                 }
 
-                if (s.World == world.Id && s.IsActive && !_content.SettlementLevels[s.Level].Mobile && rules.GrainGood >= 0)
+                if (_content.Tasks.ZoneFarms && s.World == world.Id && s.IsActive && !_content.SettlementLevels[s.Level].Mobile && rules.GrainGood >= 0)
                 {
                     Farm(state, world, s, months);
                 }
+            }
+
+            if (!_content.Tasks.ZoneFarms)
+            {
+                MarkFieldTasks(state, world);
             }
 
             Wear(world.Map, state.WorldMonths);
@@ -64,11 +70,15 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
     }
 
     /// <summary>Grain a farmer grows per year on a cell (fertility and growing season), hundredths.</summary>
-    public long GrainPerFarmer(WorldMap map, int cell)
+    public long GrainPerFarmer(WorldMap map, int cell) => GrainPerFarmer(_content, map, cell);
+
+    /// <summary>Grain a farmer grows per year on a cell (fertility and growing season), hundredths; fields given as tasks use it too.</summary>
+    public static long GrainPerFarmer(GameContent content, WorldMap map, int cell)
     {
+        ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(map);
-        PopulationRules rules = _content.Population;
-        if (_content.Biomes[map.Biome[cell]].IsWater || map.Fertility[cell] < rules.MinFarmFertility)
+        PopulationRules rules = content.Population;
+        if (content.Biomes[map.Biome[cell]].IsWater || map.Fertility[cell] < rules.MinFarmFertility)
         {
             return 0;
         }
@@ -164,6 +174,30 @@ public sealed class FarmingSystem(GameContent content) : ITurnSystem
         {
             s.Add(rules.GrainGood, Amount.FromHundredths(grain));
             s.FoodGathered += grain;
+        }
+    }
+
+    // Fields given as tasks (stage 6 PR 4b-2): the cell of every field group at work wears like a farmed cell of the zone did, over
+    // its civilization's pulse; the task system brings in the grain.
+    private void MarkFieldTasks(GameState state, WorldState world)
+    {
+        UnitBook book = state.Units;
+        for (int k = 0; k < book.Count; k++)
+        {
+            Unit u = book[k];
+            if (u.Gone || u.Role != UnitRole.Workers || u.Order != UnitOrder.Work || u.World != world.Id || u.Cell != u.Target
+                || u.Task < 0 || u.Task >= _content.Tasks.Kinds.Count || _content.Tasks.Kinds[u.Task].Source != TaskSource.Farmland)
+            {
+                continue;
+            }
+
+            int months = WorldClock.MonthsOf(state, u.Owner);
+            int farmers = Math.Min(u.TotalPeople(), _content.Population.FarmersPerCell - _worked[u.Cell]);
+            if (farmers > 0)
+            {
+                _worked[u.Cell] += farmers;
+                _wornMonths[u.Cell] = months;
+            }
         }
     }
 

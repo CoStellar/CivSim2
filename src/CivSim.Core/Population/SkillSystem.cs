@@ -3,6 +3,7 @@ using CivSim.Core.Content;
 using CivSim.Core.Diplomacy;
 using CivSim.Core.Simulation;
 using CivSim.Core.State;
+using CivSim.Core.Units;
 
 namespace CivSim.Core.Population;
 
@@ -45,6 +46,7 @@ public sealed class SkillSystem : ITurnSystem
             Skills.Trim(_content.Skills, s); // also empty and abandoned places: nobody there knows anything
         }
 
+        CountAway(state);
         CountMissing(state);
         foreach (SettlementState s in state.Settlements)
         {
@@ -100,20 +102,21 @@ public sealed class SkillSystem : ITurnSystem
         for (int k = 0; k < skilled.Length && k < _content.Skills.Count; k++)
         {
             SkillDefinition def = _content.Skills[k];
-            if (skilled[k] == 0 || !civ.Knows(def.TechnologyId))
+            int masters = Have(s, k);
+            if (masters == 0 || !civ.Knows(def.TechnologyId))
             {
                 continue;
             }
 
             // Masters also teach for the settlements of their people that have nobody of the skill.
-            long need = Skills.Needed(_content, s, k);
+            long need = Need(s, k);
             if (_missing[(c * _content.Skills.Count) + k])
             {
                 need += (need * _rules.TeachForOthersPercent / 100) + _rules.MoveSpareAbove;
             }
 
-            long room = (long)skilled[k] * _rules.ApprenticesPerMaster - trainees[k];
-            long want = need - skilled[k] - trainees[k];
+            long room = (long)masters * _rules.ApprenticesPerMaster - trainees[k];
+            long want = need - masters - trainees[k];
             long take = Math.Min(Math.Min(room, want), Skills.Free(_content, s, def.StratumId));
             if (take > 0)
             {
@@ -123,6 +126,61 @@ public sealed class SkillSystem : ITurnSystem
     }
 
     private bool[] _missing = [];
+    private int[] _awaySkilled = []; // by settlement and skill: skilled people out in the settlement's work groups
+    private int[] _awayPeople = []; // by settlement and stratum
+
+    // Work groups are their settlements' people (stage 6 PR 4b-2): their masters still teach and their people still need the skill,
+    // or a village whose farmers all work the fields would train none and ask other settlements for theirs.
+    private void CountAway(GameState state)
+    {
+        int n = state.NextSettlementId; // arrays by settlement id
+        int skills = _content.Skills.Count;
+        int strata = _content.Strata.Count;
+        if (_awaySkilled.Length < n * skills || _awayPeople.Length < n * strata)
+        {
+            _awaySkilled = new int[n * skills];
+            _awayPeople = new int[n * strata];
+        }
+
+        Array.Clear(_awaySkilled);
+        Array.Clear(_awayPeople);
+        UnitBook book = state.Units;
+        for (int i = 0; i < book.Count; i++)
+        {
+            Unit u = book[i];
+            if (u.Gone || u.Role != UnitRole.Workers || u.Home < 0 || u.Home >= n || state.FindSettlement(new SettlementId(u.Home)) is not { } h || h.Owner != u.Owner)
+            {
+                continue;
+            }
+
+            for (int k = 0; k < skills && k < u.Skilled.Length; k++)
+            {
+                _awaySkilled[(u.Home * skills) + k] += u.Skilled[k];
+            }
+
+            for (int st = 0; st < strata && st < u.People.Length; st++)
+            {
+                _awayPeople[(u.Home * strata) + st] += u.People[st];
+            }
+        }
+    }
+
+    // Skilled people of the settlement, with those in its work groups.
+    private int Have(SettlementState s, int skill)
+    {
+        int at = (s.Id.Value * _content.Skills.Count) + skill;
+        return s.SkilledView[skill] + (at < _awaySkilled.Length ? _awaySkilled[at] : 0);
+    }
+
+    // People of the skill the settlement can use, with the people of its work groups.
+    private int Need(SettlementState s, int skill)
+    {
+        int need = Skills.Needed(_content, s, skill);
+        SkillDefinition def = _content.Skills[skill];
+        int at = (s.Id.Value * _content.Strata.Count) + def.StratumId;
+        int away = at < _awayPeople.Length ? _awayPeople[at] : 0;
+        return away == 0 || _content.SkillLinks.ForRecipe(s.RecipeId) == skill ? need : need + (int)((long)away * def.JobsPercent / 100);
+    }
 
     // For each civilization and skill it knows: is there a lived-in settlement that needs it and has nobody of it?
     private void CountMissing(GameState state)
@@ -145,7 +203,7 @@ public sealed class SkillSystem : ITurnSystem
             int c = state.IndexOfCivilization(s.Owner);
             for (int k = 0; c >= 0 && k < skills && k < s.SkilledView.Length; k++)
             {
-                if (s.SkilledView[k] == 0 && s.TraineesView[k] == 0 && s.PopulationView[_content.Skills[k].StratumId] > 0)
+                if (Have(s, k) == 0 && s.TraineesView[k] == 0 && s.PopulationView[_content.Skills[k].StratumId] > 0)
                 {
                     _missing[(c * skills) + k] = true;
                 }
@@ -160,8 +218,8 @@ public sealed class SkillSystem : ITurnSystem
         WorldState world = state.Worlds[from.World.Value];
         for (int k = 0; k < from.SkilledView.Length && k < _content.Skills.Count; k++)
         {
-            int have = from.SkilledView[k];
-            int spare = have - Skills.Needed(_content, from, k);
+            int have = from.SkilledView[k]; // only those at home can move
+            int spare = Math.Min(have, Have(from, k) - Need(from, k));
             if (have < _rules.MoveMinMasters || spare < _rules.MoveSpareAbove)
             {
                 continue;
@@ -174,7 +232,7 @@ public sealed class SkillSystem : ITurnSystem
             foreach (int i in _needy[(c * _content.Skills.Count) + k])
             {
                 SettlementState s = state.Settlements[i];
-                if (s == from || s.World != from.World || Skills.Needed(_content, s, k) - s.SkilledView[k] - s.TraineesView[k] <= 0)
+                if (s == from || s.World != from.World || Need(s, k) - Have(s, k) - s.TraineesView[k] <= 0)
                 {
                     continue;
                 }
@@ -192,7 +250,7 @@ public sealed class SkillSystem : ITurnSystem
                 continue;
             }
 
-            going = Math.Min(going, Skills.Needed(_content, to, k) - to.SkilledView[k] - to.TraineesView[k]);
+            going = Math.Min(going, Need(to, k) - Have(to, k) - to.TraineesView[k]);
             int stratum = _content.Skills[k].StratumId;
             from.Skilled[k] -= going;
             from.Population[stratum] -= going;
@@ -236,7 +294,7 @@ public sealed class SkillSystem : ITurnSystem
 
             for (int k = 0; k < skills && k < s.SkilledView.Length; k++)
             {
-                if (Skills.Needed(_content, s, k) - s.SkilledView[k] - s.TraineesView[k] > 0)
+                if (Need(s, k) - Have(s, k) - s.TraineesView[k] > 0)
                 {
                     _needy[(c * skills) + k].Add(i);
                 }

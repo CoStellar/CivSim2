@@ -361,7 +361,22 @@ ją co krok. Przerwa między progami daje spokój; w grach z 3 seedów grupa wra
 146–254). Powód: rzemieślnicy sami idą w grupie (łupacze do kopalni krzemienia), a w domu nikt wtedy nie łupie, więc zapas rośnie
 szybko; jeden krok planowania w epoce kamienia to dziesiątki lat gry. Wychodzi rytm „idą po krzemień, wracają i łupią”.
 
-**Czego nie ma:** zadań na jedzenie. Pola uprawne i łowiska jako zadania to PR 4b-2.
+### G9b: Pola i łowiska (od etapu 6 PR 4b-2)
+
+Od tego PR wioska nie uprawia strefy sama, a woda strefy nie daje ryb (`tasks.json` `zoneFarms`, `zoneFishes`: `false`, decyzja
+Patryka z 2026-11-16: każde pole to zadanie). G9 liczy więc w każdym planowaniu, przed materiałami:
+
+1. **Odwołanie (`RecallTask`):** grupa, której pole leży już poza zasięgiem domu (obóz się przeniósł), wraca (notatka
+   `field vs best % 0`). Grupa pola wraca też, gdy jej pole daje na rolnika mniej niż **70%** (`fieldMoveBelowPercent`) najlepszego
+   wolnego, znanego pola w zasięgu (wyjałowione pole); w następnym planowaniu jej ludzie idą na lepsze. Notatka `field vs best %`.
+2. **Nowa grupa (`StartTask`):** każdy rolnik i rybak, który jest w domu, idzie do pracy. Dla każdej osady i każdego rodzaju zadania
+   na jedzenie, które lud zna (pole tylko z wioski): dopóki w domu jest co najmniej 5 fachowców (`taskMinPeople`) i osada ma wolne
+   zadanie, wysyła grupę na najlepsze wolne pole (najwięcej zboża albo ryb na osobę), najwyżej 30 osób (pole: najwyżej 40, czyli
+   `farmersPerCell`). Kilka grup w jednym planowaniu, każda na inne pole. Notatki `yield a year`, `fed`.
+3. **Materiały** (G9 wyżej) dostają to, co zostanie z wolnych zadań osady.
+
+**Dlaczego bez progów jedzenia:** dawniej rolnicy uprawiali pola zawsze, gdy byli w wiosce. G9b robi to samo, tylko widocznie: rolnik
+w domu nic nie uprawia, więc AI wysyła go na pole. Gracz, który weźmie dźwignię 3, sam decyduje, które pola uprawiać.
 
 ---
 

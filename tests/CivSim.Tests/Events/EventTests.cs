@@ -15,7 +15,8 @@ namespace CivSim.Tests.Events;
 /// <summary>Drought, wildfire, flood and epidemic from data/events.json (stage 3h, GDD 10).</summary>
 public class EventTests
 {
-    private static readonly GameContent Content = TestContent.Load();
+    // Farming of the zone (the rule before fields became tasks in stage 6 PR 4b-2, still in the code behind tasks.json zoneFarms).
+    private static readonly GameContent Content = TestContent.ZoneFarming(TestContent.Load());
 
     private static EventDefinition Event(string key) => Content.Events.First(e => e.Key == key);
 

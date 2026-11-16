@@ -47,6 +47,8 @@ flowchart LR
 | wycinka (`woodcutting`) | biom: wartość `gather` drewna | drewno | 0,5 × wartość biomu (las liściasty 6 → 3, tajga 5 → 2,5, łąka 0,5 → 0,25) | — | — |
 | kopalnia krzemienia (`flint_mine`) | złoże krzemienia na powierzchni | krzemień | 1 | obróbka krzemienia | łupacz krzemienia |
 | kamieniołom (`quarry`) | złoże kamienia na powierzchni | kamień | 1 | kamieniarstwo | kamieniarz |
+| pole (`field`, od PR 4b-2) | żyzny ląd (żyzność ≥ 20), tylko wioska (`settledOnly`) | zboże | reguła rolnictwa z `farming.md`: 3 × (50 + żyzność) / 100 × sezon, najwyżej 40 rolników na pole | rolnictwo | rolnik |
+| łowisko (`fishing_ground`, od PR 4b-2) | ląd obok wody (`waters`: wybrzeże 4, jezioro 4, płytkie morze 2) | ryby | 0,75 × najlepsza woda obok (wybrzeże → 3) | rybołówstwo | rybak |
 
 - **Urobek w pulsie:** ludzie × urobek na osobę na rok × miesiące pulsu / 12. Przykład z testu: 10 ludzi w lesie liściastym przez rok
   = 10 × 0,5 × 6 = 30 drewna.
@@ -60,9 +62,19 @@ flowchart LR
 - **Zbieranie ze strefy:** od PR 4b-1 `zoneGathersMaterials` jest `false`: drewno (dobra zadań z biomu) i złoża zadań (krzemień,
   kamień) przychodzą **tylko z zadań**, a żywność dalej ze strefy (decyzja Patryka z 2026-11-12). Wartość `true` przywraca zbieranie
   ze strefy jak w 4a (wtedy AI nie zleca zadań).
+- **Pola i łowiska** (PR 4b-2, decyzja Patryka z 2026-11-16: każde pole to zadanie): `zoneFarms: false` i `zoneFishes: false`.
+  Wioska uprawia **tylko** pola, na które wysłała grupę; bez zadania pola nie ma zboża (wytwórcy w domu dalej zbierają dziką żywność).
+  Ryby przychodzą tylko z łowisk; woda strefy nie daje już ryb zbieraczom. Pole jałowieje i odpoczywa jak dawniej
+  (`FarmingSystem` znaczy pola grup przy pracy), a susza i nawadnianie zmieniają plon pola jak dawniej plon strefy. Pole, którego
+  żyzność spadnie poniżej 20, kończy się samo („Field of X ran out”). Grupa najpierw oddaje plon do magazynu, potem z niego je.
+- **Grupy to ludzie osady** (PR 4b-2): ludzie w grupach roboczych liczą się do urodzeń, zgonów dorosłych i limitu poziomu osady
+  (`PopulationSystem`), do dryfu warstw i do fachów (`SkillSystem`: mistrzowie w polu dalej uczą, a ich ludzie potrzebują fachu).
+  Głód zabija tylko w domu (grupa je w pulsie albo wraca), a w domu zostaje co najmniej 1 osoba. Bez tego wioska, której rolnicy
+  pracowali w polu, przestawała rosnąć i uczyć (ludność w 3 seedach spadała o 30–75%).
 - **AI (od PR 4b-1):** gubernator, decyzja G9 (`TaskPlanner.cs`, opis w `docs/ai/03-gubernator.md#g9`): sieć osad wysyła grupę po
   materiał, którego ma na mniej niż 2 lata zużycia rzemieślników, z osady najedzonej w ≥ 95%, i odwołuje ją przy zapasie na 4 lata.
-  Te same komendy co gracz (`StartTaskCommand`, `ReturnUnitCommand`), dźwignia 3.
+  Te same komendy co gracz (`StartTaskCommand`, `ReturnUnitCommand`), dźwignia 3. Od PR 4b-2 także pola i łowiska: każdy rolnik i
+  rybak w domu idzie na najlepsze wolne pole albo łowisko; grupa pola wraca, gdy jej pole daje mniej niż 70% najlepszego wolnego.
 
 ## Test sternika (ADR 0027)
 
