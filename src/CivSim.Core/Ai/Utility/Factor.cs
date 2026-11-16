@@ -143,6 +143,9 @@ public enum FactorId : byte
 
     /// <summary>What a new work group would make in a year, hundredths (stage 6 PR 4b).</summary>
     TaskYield = 45,
+
+    /// <summary>Grain of a field against the best free farmland in reach, % (G9 field move, stage 6 PR 4b-2; 0 = out of reach).</summary>
+    FieldPercent = 46,
 }
 
 /// <summary>

@@ -329,6 +329,7 @@ Tak gracz i AI zlecają pracę w grze na żywo (1.1, ADR 0024). Te same komendy 
 
 - **Żywność ze strefy zostaje automatyczna.** Zbieracze i łowcy dalej zbierają rośliny, mięso i skóry z całej strefy wpływów, bez zadań. Gracz nie musi pilnować jedzenia.
 - **Reszta przez zadania.** Drewno, krzemień i kamień, ryby, pola uprawne, a od epoki brązu ruda, powstają tylko tam, gdzie osada ma zadanie. Bez zadania wycinki osada nie ma drewna ze strefy.
+- **Każde pole to zadanie** (decyzja Patryka z 2026-11-16): wioska bez zadania pola nie ma zboża, a ryby dają tylko łowiska. AI wysyła na pola i łowiska wszystkich rolników i rybaków, którzy są w domu; gracz z dźwignią 3 robi to sam. Ludzie w grupach roboczych to dalej ludzie osady (urodzenia, limit poziomu, fachy).
 - **Zadanie = miejsce + rodzaj + ludzie.** Pole (z najbliższą okolicą) w zasięgu osady, rodzaj z `data/tasks.json` (wycinka, kamieniołom i krzemień, łowisko, pole uprawne, budowa) i liczba ludzi z osady.
 - **Ludzie chodzą tam sami:** jedna grupa robocza na zadanie idzie jako oddział, zostaje na miejscu i wraca po zakończeniu. Urobek trafia do magazynu osady bez tragarzy na mapie.
 - **Złoża się wyczerpują, las i łowiska odrastają** (4.4). Wyczerpane zadanie kończy się samo, a AI szuka nowego miejsca.

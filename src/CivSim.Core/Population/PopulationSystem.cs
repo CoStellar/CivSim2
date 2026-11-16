@@ -4,6 +4,7 @@ using CivSim.Core.Economy;
 using CivSim.Core.Numerics;
 using CivSim.Core.Simulation;
 using CivSim.Core.State;
+using CivSim.Core.Units;
 
 namespace CivSim.Core.Population;
 
@@ -31,6 +32,9 @@ public sealed class PopulationSystem : ITurnSystem
         _target = new int[content.Strata.Count];
     }
 
+    private int[] _away = [];
+    private int[] _awayStrata = [];
+
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.Population;
 
@@ -39,6 +43,7 @@ public sealed class PopulationSystem : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
+        CountAway(state);
         foreach (SettlementState s in state.Settlements)
         {
             int months = WorldClock.MonthsOf(state, s.Owner);
@@ -48,16 +53,19 @@ public sealed class PopulationSystem : ITurnSystem
                 continue;
             }
 
+            // The settlement's work groups are its people too (stage 6 PR 4b-2): they count for births, deaths and the level's
+            // limit, and the change falls on the people at home.
+            int away = s.Id.Value < _away.Length ? _away[s.Id.Value] : 0;
             UpdateHealthAndMood(state, s, before);
-            int after = NewTotal(state, s, before, months);
+            int after = NewTotal(state, s, before, away, months);
             int limit = _content.SettlementLevels[s.Level].MaxPopulation;
             if (_rules.LevelLimitScatters && limit > 0 && after > limit)
             {
                 after = limit; // the people past the level's limit scatter (stage 6 PR T2)
             }
 
-            ChangeTotal(s, before, after);
-            Drift(s, months);
+            ChangeTotal(s, before, Math.Max(away > 0 ? 1 : 0, after - away)); // someone keeps the home while its groups are out
+            Drift(s, months, away > 0 ? s.Id.Value : -1);
             Skills.Trim(_content.Skills, s); // deaths and drift take the same share from the skills (stage 4F)
         }
 
@@ -145,13 +153,15 @@ public sealed class PopulationSystem : ITurnSystem
         return survivingBirths - Math.Max(0, adultDeaths) - depopulation;
     }
 
-    private int NewTotal(GameState state, SettlementState s, int people, int months)
+    // People at home and in the settlement's work groups after the step: hunger kills at home only (a group eats from the stock in its
+    // pulse or comes home, stage 6 PR 4b-2); births and adult deaths count everyone.
+    private int NewTotal(GameState state, SettlementState s, int people, int away, int months)
     {
         // People who got no food: most of them die during the turn.
         long unfed = IntMath.MulDiv(people, 1000 - s.FedPerMille, 1000, Rounding.Ceiling);
         int starvation = _content.SettlementLevels[s.Level].Mobile ? _rules.CampStarvationDeathPercent : _rules.StarvationDeathPercent;
         long starved = IntMath.MulDiv(unfed, starvation, 100, Rounding.Ceiling);
-        long survivors = people - starved;
+        long survivors = people - starved + away;
 
         // Everyone else: births × (1 − child mortality) − adult deaths per year (ADR 0020).
         long rate = GrowthRate(state, s);
@@ -195,12 +205,52 @@ public sealed class PopulationSystem : ITurnSystem
         }
     }
 
-    // People move slowly towards the target mix of strata (GDD 5.1: a few percent per year).
-    private void Drift(SettlementState s, int months)
+    // The people of every settlement's work groups, by settlement and by stratum (stage 6 PR 4b-2).
+    private void CountAway(GameState state)
+    {
+        int settlements = state.NextSettlementId; // arrays by settlement id
+        if (_away.Length < settlements)
+        {
+            _away = new int[settlements];
+            _awayStrata = new int[settlements * _content.Strata.Count];
+        }
+
+        Array.Clear(_away);
+        Array.Clear(_awayStrata);
+        UnitBook book = state.Units;
+        for (int k = 0; k < book.Count; k++)
+        {
+            Unit u = book[k];
+            if (u.Gone || u.Role != UnitRole.Workers || u.Home < 0 || u.Home >= settlements || state.FindSettlement(new SettlementId(u.Home)) is not { } h || h.Owner != u.Owner)
+            {
+                continue;
+            }
+
+            for (int st = 0; st < u.People.Length && st < _content.Strata.Count; st++)
+            {
+                _away[u.Home] += u.People[st];
+                _awayStrata[(u.Home * _content.Strata.Count) + st] += u.People[st];
+            }
+        }
+    }
+
+    // People move slowly towards the target mix of strata (GDD 5.1: a few percent per year); with its work groups (index of the
+    // settlement whose groups count, or -1), the mix of home and groups together.
+    private void Drift(SettlementState s, int months, int withGroupsOf)
     {
         Span<int> people = s.Population;
-        int total = s.TotalPopulation();
-        if (total == 0)
+        int home = s.TotalPopulation();
+        int total = home;
+        int strata = _content.Strata.Count;
+        if (withGroupsOf >= 0)
+        {
+            for (int k = 0; k < strata; k++)
+            {
+                total += _awayStrata[(withGroupsOf * strata) + k];
+            }
+        }
+
+        if (home == 0)
         {
             return;
         }
@@ -211,6 +261,27 @@ public sealed class PopulationSystem : ITurnSystem
         }
 
         Amount.FromHundredths(total).SplitProportionally(_weights, _shares);
+        if (withGroupsOf >= 0)
+        {
+            // The mix of home and groups together: home's share of each stratum is the target less those away, scaled to home.
+            long left = 0;
+            for (int k = 0; k < _weights.Length; k++)
+            {
+                _weights[k] = Math.Max(0, (int)_shares[k].Hundredths - _awayStrata[(withGroupsOf * strata) + k]);
+                left += _weights[k];
+            }
+
+            if (left == 0)
+            {
+                for (int k = 0; k < _weights.Length; k++)
+                {
+                    _weights[k] = _content.Strata[k].TargetSharePercent;
+                }
+            }
+
+            Amount.FromHundredths(home).SplitProportionally(_weights, _shares);
+        }
+
         long closePerMille = Math.Min(1000, _rules.StrataShiftPercentPerYear.Hundredths * months / 12 / 10);
         int sum = 0;
         int largest = 0;
@@ -226,7 +297,7 @@ public sealed class PopulationSystem : ITurnSystem
         }
 
         // Rounding never creates or removes people.
-        people[largest] += total - sum;
+        people[largest] += home - sum;
     }
 
     private static bool HasPeople(GameState state, CivId civ)

@@ -54,7 +54,8 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `taskFedPercent` | 95 | % | G9 | osada wysyła grupę roboczą tylko, gdy jest najedzona co najmniej tak (etap 6 PR 4b-1) |
 | `taskReserveYears` | 2 | lata | G9 | na ile lat zużycia sieć chce mieć materiał; poniżej wysyła grupę, tak dużą, żeby brak zebrała w tym czasie (etap 6 PR 4b-1) |
 | `taskRecallAboveYears` | 4 | lata | G9 | grupa wraca, gdy zapas starcza na tyle lat; wyżej niż rezerwa, żeby AI nie wysyłała i nie odwoływała grupy co krok (etap 6 PR 4b-1) |
-| `taskMinPeople` | 5 | osoby | G9 | najmniejsza grupa robocza; osada bez tylu wolnych ludzi nie wysyła nikogo (etap 6 PR 4b-1) |
+| `taskMinPeople` | 5 | osoby | G9 | najmniejsza grupa robocza; osada bez tylu wolnych ludzi nie wysyła nikogo (etap 6 PR 4b-1); w G9b: najmniej rolników albo rybaków w domu, żeby wysłać grupę |
+| `fieldMoveBelowPercent` | 70 | % | G9b | grupa pola wraca, gdy jej pole daje na rolnika mniej niż tyle najlepszego wolnego pola w zasięgu (etap 6 PR 4b-2) |
 | `plunderBelowStoragePercent` | 50 | % | G6 | poniżej jakiego zapełnienia magazynu obóz zbiera porzucone dobra (dawniej w kodzie) |
 | `uncomfortableBelowPercent` | 100 | % | G2 | poniżej tej wygody obóz szuka nowego miejsca (dawniej w kodzie) |
 | `opinionSwingPercent` | 50 | % | G2 | jak mocno sympatia zmienia chęć wypędzenia: ±50% przy pełnej sympatii albo nienawiści (dawniej „/ 20” w kodzie) |

@@ -301,6 +301,138 @@ public class TaskTests
     }
 
     // A year of gathering of the forest camp of NewGame with <paramref name="content"/>: its wood and its food.
+    // A village of farmers: settled, knows agriculture, its farmers skilled (stage 6 PR 4b-2).
+    private static (GameState State, SettlementState Home, CivilizationState Civ, WorldState World, HexCoord Field) Village(ulong seed, int farmers)
+    {
+        (GameState state, SettlementState home, CivilizationState civ, WorldState world) = NewGame(seed, people: 100);
+        home.Level = CivSim.Core.Economy.SettleCommand.VillageLevel(Live, home.Level);
+        CivSim.Core.Research.Technologies.Learn(Live, state, civ, Live.Technologies.ToList().FindIndex(t => t.Key == "agriculture"));
+        home.Skilled[Live.SkillRules.FarmingSkill] = farmers;
+        var area = new HexCoord[HexGlobe.RangeSize(6)];
+        int n = world.Geometry.Range(home.Cell, 6, area);
+        for (int k = 0; k < n; k++)
+        {
+            int c = world.Geometry.Index(area[k]);
+            world.Map.Fertility.Set(c, 40); // poor land around, one good field
+            world.Map.NaturalFertility.Set(c, 40);
+            world.Map.GrowingSeason.Set(c, 100);
+        }
+
+        HexCoord field = world.Geometry.Wrap(home.Cell.Col + 1, home.Cell.Row);
+        int i = world.Geometry.Index(field);
+        byte meadow = (byte)Live.Biomes.ToList().FindIndex(b => b.Key == "grassland");
+        world.Map.Biome.Set(i, meadow);
+        world.Map.Fertility.Set(i, 80);
+        world.Map.NaturalFertility.Set(i, 80);
+        world.Map.GrowingSeason.Set(i, 100);
+        return (state, home, civ, world, field);
+    }
+
+    [Fact]
+    public void AFieldGrowsGrainByTheFarmingRuleAndItsLandWearsOut()
+    {
+        (GameState state, SettlementState home, CivilizationState civ, WorldState world, HexCoord field) = Village(43, farmers: 30);
+        TaskKindDefinition kind = Live.Tasks.Find("field")!;
+        int cell = world.Geometry.Index(field);
+        var start = new StartTaskCommand(Live, home.Id, "field", field, 30);
+        CommandResult ok = start.Validate(state, civ.Id);
+        Assert.True(ok.Success, ok.Reason);
+        start.Apply(state, civ.Id);
+        Unit u = Group(state);
+        Assert.Equal(30, u.Skilled[Live.SkillRules.FarmingSkill]); // the farmers go, with their skill
+
+        var runner = new TurnRunner(state);
+        runner.AddSystem(new UnitSystem(Live));
+        runner.AddSystem(new CivSim.Core.Economy.FarmingSystem(Live));
+        runner.AddSystem(new TaskSystem(Live));
+        civ.StepMonths = 0;
+        for (int t = 0; t < 200 && u.Cell != u.Target; t++)
+        {
+            runner.RunTurn();
+        }
+
+        Assert.Equal(u.Target, u.Cell);
+        civ.StepMonths = 12;
+        Amount before = home.Stock[kind.Good];
+        int fertility = world.Map.Fertility[cell];
+        for (int y = 0; y < 20; y++)
+        {
+            runner.RunTurn();
+        }
+
+        // 30 farmers × 3 grain × (50 + 80) / 100 a year, less what they ate; the field lost fertility over 20 years.
+        Amount grown = Amount.FromHundredths(CivSim.Core.Economy.FarmingSystem.GrainPerFarmer(Live, world.Map, cell) * 30);
+        Assert.True(home.Stock[kind.Good] > before, "the field brings grain home");
+        Assert.True(grown > Amount.Zero);
+        Assert.True(world.Map.Fertility[cell] < fertility, "farmed land wears out");
+    }
+
+    [Fact]
+    public void OnlyAVillageRunsAFieldAndWithoutFieldsItGrowsNoGrain()
+    {
+        (GameState state, SettlementState home, CivilizationState civ, WorldState world, HexCoord field) = Village(44, farmers: 30);
+        int grain = Live.Tasks.Find("field")!.Good;
+        home.Stock[grain] = Amount.Zero;
+        var runner = new TurnRunner(state);
+        runner.AddSystem(new CivSim.Core.Economy.FarmingSystem(Live));
+        civ.StepMonths = 12;
+        runner.RunTurn();
+        Assert.Equal(Amount.Zero, home.Stock[grain]); // zoneFarms false: no field task, no grain
+
+        home.Level = 0; // a camp moves on: it farms nothing
+        CommandResult camp = new StartTaskCommand(Live, home.Id, "field", field, 10).Validate(state, civ.Id);
+        Assert.False(camp.Success);
+        Assert.Contains("village", camp.Reason, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AFishingGroundNeedsWaterNextToItAndGivesFishByTheBestWater()
+    {
+        (GameState state, SettlementState home, CivilizationState civ, WorldState world) = NewGame(45);
+        CivSim.Core.Research.Technologies.Learn(Live, state, civ, Live.Technologies.ToList().FindIndex(t => t.Key == "flint_knapping"));
+        CivSim.Core.Research.Technologies.Learn(Live, state, civ, Live.Technologies.ToList().FindIndex(t => t.Key == "fishing"));
+        TaskKindDefinition kind = Live.Tasks.Find("fishing_ground")!;
+        HexGlobe geo = world.Geometry;
+        HexCoord shore = geo.Wrap(home.Cell.Col + 2, home.Cell.Row);
+        Assert.False(new StartTaskCommand(Live, home.Id, kind.Key, shore, 10).Validate(state, civ.Id).Success); // no water there yet
+
+        HexCoord sea = geo.Wrap(home.Cell.Col + 3, home.Cell.Row);
+        world.Map.Biome.Set(geo.Index(sea), (byte)Live.Biomes.ToList().FindIndex(b => b.Key == "coast"));
+        CommandResult ok = new StartTaskCommand(Live, home.Id, kind.Key, shore, 10).Validate(state, civ.Id);
+        Assert.True(ok.Success, ok.Reason);
+
+        // 10 fishers × 0.75 × the coast's 4 = 30 fish a year.
+        Assert.Equal(Amount.FromUnits(30), AreaTasks.Yield(Live, world, kind, geo.Index(shore), 10, 12));
+        Assert.Equal(Amount.Zero, AreaTasks.Yield(Live, world, kind, geo.Index(home.Cell), 10, 12));
+    }
+
+    [Fact]
+    public void TheAiSendsEveryFarmerOfAVillageToItsBestFields()
+    {
+        (GameState state, SettlementState home, CivilizationState civ, WorldState world, HexCoord field) = Village(46, farmers: 50);
+        var planner = new CivSim.Core.Ai.TaskPlanner(Live);
+        planner.Plan(state, civ, CivSim.Core.Economy.TradeNetworks.Build(Live, state));
+        var fields = planner.Orders.Select(o => o.Command).OfType<StartTaskCommand>().Where(c => c.Kind == "field").ToList();
+        Assert.NotEmpty(fields);
+        Assert.Equal(field, fields[0].Cell); // the best land first
+        Assert.Equal(50, fields.Sum(c => c.People)); // every farmer: 30 on the best field, the rest on the next
+        Assert.Equal(fields.Count, fields.Select(c => c.Cell).Distinct().Count());
+    }
+
+    [Fact]
+    public void WorkGroupsAreTheirSettlementsPeopleForTheLevelsLimit()
+    {
+        (GameState state, SettlementState home, CivilizationState civ, WorldState _) = NewGame(47, people: 140);
+        new StartTaskCommand(Live, home.Id, "woodcutting", state.Worlds[0].Geometry.Wrap(home.Cell.Col + 1, home.Cell.Row), 30).Apply(state, civ.Id);
+        int limit = Live.SettlementLevels[home.Level].MaxPopulation;
+        Assert.Equal(110, home.TotalPopulation());
+        var runner = new TurnRunner(state);
+        runner.AddSystem(new CivSim.Core.Population.PopulationSystem(Live));
+        civ.StepMonths = 12;
+        runner.RunTurn();
+        Assert.True(home.TotalPopulation() + 30 <= limit, $"home {home.TotalPopulation()} + group 30 over the camp's {limit}");
+    }
+
     // G9 (stage 6 PR 4b-1): a fed settlement whose knappers have no wood sends a woodcutting group; with wood for years, calls it back.
     [Fact]
     public void TheAiSendsAGroupForMissingWoodAndCallsItBackWhenThereIsPlenty()

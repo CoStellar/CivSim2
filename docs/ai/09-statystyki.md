@@ -16,6 +16,24 @@ Wykres: `python3 docs/ai/tools/decisions_chart.py <katalog z why7.csv, why23.csv
 
 ![Ile decyzji podjęło AI](img/decyzje_1000_tur.png)
 
+## Po polach i łowiskach (etap 6 PR 4b-2, gałąź `feat/fields-tasks`)
+
+3 seedy, mapa standard, 3000 taktów (5 minut przy ×1). Wykres decyzji wyżej jest z tych gier. W nawiasach `development` po 4b-1
+(commit `b64d5cd`). **Ludność liczy też ludzi w grupach roboczych** (od tego PR w raporcie Headless; w `development` policzone tak samo
+na potrzeby porównania).
+
+| Seed | Decyzje | Wysłane grupy (w tym pola / łowiska) | Odwołane grupy | Osiedlenia | Ludność na końcu | Hasz stanu |
+| --- | --- | --- | --- | --- | --- | --- |
+| 7 | 2756 (1177) | 1409 (1035 / 59) | 372 | 47 (50) | 42 757 (42 774) | `64148A26A1C275D9` |
+| 23 | 3494 (1247) | 1908 (1499 / 66) | 534 | 59 (55) | 53 266 (46 764) | `99187BFF591A2191` |
+| 42 | 2184 (1289) | 891 (687 / 18) | 232 | 32 (27) | 29 346 (26 855) | `BB6D264B6E7C3AFC` |
+
+- **Ludność bez spadku** (0 / +14 / +9%), choć wioski nie uprawiają już strefy same.
+- **Decyzji jest 2–3 razy więcej**, bo każda nowa grupa rolników to jedna decyzja: wioska rośnie i co kilka sekund wysyła na pole
+  nowo wyuczonych rolników (często po 5–15 osób). Na mapie jest przez to dużo małych grup pól (do oceny w prototypie, `08` pkt 22).
+- Typowe wpisy: `StartTask` pola, `yield a year 11340` (30 rolników, 113 zboża na rok), `fed 1000`; `RecallTask`, `field vs best % 68`
+  (pole daje 68% najlepszego wolnego) albo `field vs best % 0` (pole poza zasięgiem domu, bo strefa się zmieniła).
+
 ## Po zadaniach na materiały (etap 6 PR 4b-1, gałąź `feat/area-tasks-ai`)
 
 3 seedy, mapa standard, **3000 taktów** (5 minut przy ×1), po zamrożeniach T3. Wykres decyzji wyżej jest z tych gier (stąd tytuł

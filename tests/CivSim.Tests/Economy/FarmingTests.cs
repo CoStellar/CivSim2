@@ -14,7 +14,8 @@ namespace CivSim.Tests.Economy;
 /// <summary>Settling down and farming (stage 3f, GDD 4.4 and 5.3).</summary>
 public class FarmingTests
 {
-    private static readonly GameContent Content = TestContent.Load();
+    // Farming of the zone (the rule before fields became tasks in stage 6 PR 4b-2, still in the code behind tasks.json zoneFarms).
+    private static readonly GameContent Content = TestContent.ZoneFarming(TestContent.Load());
 
     private static int Village => Content.SettlementLevel("village").Id;
 

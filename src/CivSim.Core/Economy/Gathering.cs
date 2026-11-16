@@ -220,7 +220,7 @@ public sealed class GatheringSystem : ITurnSystem
         WorldMap map = world.Map;
         int claim = s.Id.Value + 1;
         int count = world.Geometry.Range(s.Cell, Math.Min(_rules.InfluenceMaxRange, world.Geometry.MaxUniqueRadius), _area);
-        bool shore = _current.FromWater;
+        bool shore = _current.FromWater && _content.Tasks.ZoneFishes; // since stage 6 PR 4b-2 fish come from fishing grounds
         if (shore && _addedStamp.Length != world.Geometry.CellCount)
         {
             _addedStamp = new long[world.Geometry.CellCount];
@@ -240,6 +240,10 @@ public sealed class GatheringSystem : ITurnSystem
                 }
 
                 _addedStamp[i] = _addedRun;
+            }
+            else if (!_content.Tasks.ZoneFishes && _content.Biomes[map.Biome[i]].IsWater)
+            {
+                continue; // water of the zone too: fish only from fishing grounds
             }
 
             int percent = CellPercent(state, world, s, i);

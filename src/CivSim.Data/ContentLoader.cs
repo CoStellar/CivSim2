@@ -1130,10 +1130,16 @@ public static class ContentLoader
                 var x = new Reader(e, at, errors);
                 string key = x.Key("key", keys);
                 string sourceName = x.String("source");
-                Core.Units.TaskSource source = sourceName == "deposit" ? Core.Units.TaskSource.Deposit : Core.Units.TaskSource.Biome;
-                if (sourceName is not ("biome" or "deposit"))
+                Core.Units.TaskSource source = sourceName switch
                 {
-                    errors.Add($"{at}.source: must be 'biome' or 'deposit'.");
+                    "deposit" => Core.Units.TaskSource.Deposit,
+                    "farmland" => Core.Units.TaskSource.Farmland,
+                    "shore" => Core.Units.TaskSource.Shore,
+                    _ => Core.Units.TaskSource.Biome,
+                };
+                if (sourceName is not ("biome" or "deposit" or "farmland" or "shore"))
+                {
+                    errors.Add($"{at}.source: must be 'biome', 'deposit', 'farmland' or 'shore'.");
                 }
 
                 string goodKey = x.String("good");
@@ -1161,7 +1167,7 @@ public static class ContentLoader
                         }
                     }
                 }
-                else if (good >= 0 && !biomes.Exists(b => b.Gather.Any(g => g.GoodId == good)))
+                else if (source == Core.Units.TaskSource.Biome && good >= 0 && !biomes.Exists(b => b.Gather.Any(g => g.GoodId == good)))
                 {
                     errors.Add($"{at}.good: no biome gathers '{goodKey}' (biomes.json gather), so the task fits no cell.");
                 }
@@ -1186,6 +1192,34 @@ public static class ContentLoader
                     }
                 }
 
+                var waters = new Amount[biomes.Count];
+                if (source == Core.Units.TaskSource.Shore)
+                {
+                    if (e.TryGetProperty("waters", out JsonElement wt) && wt.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (JsonProperty w in wt.EnumerateObject())
+                        {
+                            int b = biomes.FindIndex(x => x.Key == w.Name);
+                            if (b < 0 || !biomes[b].IsWater)
+                            {
+                                errors.Add($"{at}.waters: '{w.Name}' is not a water biome.");
+                                continue;
+                            }
+
+                            waters[b] = new Reader(wt, $"{at}.waters", errors).Amount(w.Name, Amount.FromHundredths(1), Amount.FromHundredths(100_000));
+                        }
+                    }
+                    else
+                    {
+                        errors.Add($"{at}.waters: a shore task needs the water biomes it fishes, with their values.");
+                    }
+                }
+
+                if (source is Core.Units.TaskSource.Farmland or Core.Units.TaskSource.Shore && good >= 0 && !goods[good].IsFood)
+                {
+                    errors.Add($"{at}.good: fields and fishing grounds make food; '{goodKey}' is not food.");
+                }
+
                 kinds.Add(new Core.Units.TaskKindDefinition
                 {
                     Id = kinds.Count,
@@ -1194,9 +1228,14 @@ public static class ContentLoader
                     Source = source,
                     Good = Math.Max(0, good),
                     Deposit = deposit,
-                    PerPersonPerYear = x.Amount("perPersonPerYear", Amount.FromHundredths(1), Amount.FromHundredths(100_000)),
+                    PerPersonPerYear = source == Core.Units.TaskSource.Farmland
+                        ? Amount.Zero // a field grows grain by the farming rule of population.json
+                        : x.Amount("perPersonPerYear", Amount.FromHundredths(1), Amount.FromHundredths(100_000)),
                     RequiresTechnology = tech,
                     Skill = skill,
+                    SettledOnly = e.TryGetProperty("settledOnly", out JsonElement so) && so.ValueKind == JsonValueKind.True,
+                    Waters = waters,
+                    MakesFood = good >= 0 && goods[good].IsFood,
                 });
             }
         }
@@ -1212,6 +1251,8 @@ public static class ContentLoader
         {
             Kinds = kinds,
             ZoneGathersMaterials = r.Bool("zoneGathersMaterials"),
+            ZoneFarms = r.Bool("zoneFarms"),
+            ZoneFishes = r.Bool("zoneFishes"),
             RangeBeyondZoneCells = r.Int("rangeBeyondZoneCells", 0, 6),
             PeoplePerTask = r.Int("peoplePerTask", 1, 10000),
             DefaultPeoplePerGroup = perGroup,
@@ -1888,6 +1929,7 @@ public static class ContentLoader
             TaskReserveYears = r.Int("taskReserveYears", 1, 100),
             TaskRecallAboveYears = r.Int("taskRecallAboveYears", 1, 1000),
             TaskMinPeople = r.Int("taskMinPeople", 1, 100),
+            FieldMoveBelowPercent = r.Int("fieldMoveBelowPercent", 1, 100),
             SearchEverySteps = r.Int("searchEverySteps", 1, 20),
             StarvingFedPercent = r.Int("starvingFedPercent", 0, 100),
             GoalOfFood = r.Enum<Core.Ai.Goal>("goalOfFood"),

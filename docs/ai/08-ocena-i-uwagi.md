@@ -383,6 +383,12 @@ a krok świata częściej trwa miesiąc (wojny), więc 2000 tur to ok. 11 600 la
     inną recepturę, grupa może zbierać materiał, którego nikt chwilowo nie zużywa (wraca dopiero przy zapasie na 4 lata);
   - rytm „idą po krzemień, wracają i łupią” wynika z tego, że łupacze sami idą w grupie; to sensowne, ale nie jest zaplanowane.
 - **Do oceny przy prototypie:** czy gracz rozumie z kroniki, dlaczego grupa wróciła („zapas na 16 lat”).
+- **Pola i łowiska (PR 4b-2), za proste albo do oceny:**
+  - nowo wyuczeni rolnicy idą osobną grupą (5–15 osób), zamiast dołączyć do grupy na polu, na którym jest jeszcze miejsce; wioska ma
+    przez to wiele małych grup i dużo decyzji w dzienniku. Kandydat: komenda „dołącz do grupy” albo większe `taskMinPeople` dla pól;
+  - wszyscy rolnicy idą w pole zawsze, nawet przy pełnym spichlerzu; AI nie liczy, czy zboże jest potrzebne (dawniej było tak samo);
+  - łowiska się nie wyczerpują (GDD 4.4 mówi, że odrastają): odrastanie ryb przyjdzie, gdy łowiska będą miały znaczenie dla wojny o wodę;
+  - wycofanie z wyjałowionego pola (70%) jest jedyną „rotacją”; nie ma płodozmianu ani odłogu planowanego przez AI.
 
 ## Decyzje Patryka (2026-11-06)
 

@@ -19,6 +19,10 @@ internal static class TestContent
     /// <summary>The real content with <see cref="EveryTick"/>.</summary>
     public static GameContent Load() => Fit(ContentLoader.Load());
 
+    /// <summary>Content whose villages farm their zone by themselves and whose gatherers fish, as before stage 6 PR 4b-2.</summary>
+    public static GameContent ZoneFarming(GameContent content) =>
+        content.WithTasks(content.Tasks with { ZoneFarms = true, ZoneFishes = true });
+
     /// <summary><paramref name="content"/> with the time and the unit speed of the unit tests.</summary>
     public static GameContent Fit(GameContent content)
     {
