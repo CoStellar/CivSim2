@@ -512,10 +512,11 @@ public sealed class GameServer
         }
     }
 
-    // What each settlement looks like (stage 6 PR P2b): from its level and what its owner knows.
+    // What each settlement looks like (stage 6 PR P2b): from its level and what its owner knows; and, where the view shows
+    // the people (own settlements, observers), how many warriors may set out now (playtest P-03).
     private GameViewMessage WithLooks(GameViewMessage view)
     {
-        if (_content is not { SettlementLooks.Count: > 0 } content || view.Settlements is not { Count: > 0 } list)
+        if (_content is not { } content || view.Settlements is not { Count: > 0 } list)
         {
             return view;
         }
@@ -524,7 +525,11 @@ public sealed class GameServer
         foreach (SettlementView s in list)
         {
             CivilizationState? owner = State.FindCivilization(new CivId(s.Owner));
-            looked.Add(s with { Look = content.SettlementLook(s.Level, t => owner is not null && owner.Knows(t)) });
+            int look = content.SettlementLooks.Count > 0 ? content.SettlementLook(s.Level, t => owner is not null && owner.Knows(t)) : s.Look;
+            int warriors = s.Population is not null && State.FindSettlement(new SettlementId(s.Id)) is { } st
+                ? Core.Episodes.Campaigns.Ready(content, State, st)
+                : -1;
+            looked.Add(s with { Look = look, Warriors = warriors });
         }
 
         return view with { Settlements = looked };

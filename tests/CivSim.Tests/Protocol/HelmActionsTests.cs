@@ -51,6 +51,29 @@ public class HelmActionsTests
     }
 
     [Fact]
+    public void AWarCampaignSendsTheWarriorsWhoMayGo()
+    {
+        // Playtest P-03: the button sent a fifth of the people, more than may go, and every campaign was refused.
+        (GameServer server, InMemoryConnection client) = Connect(81);
+        GameViewMessage view = Drain(client).OfType<GameViewMessage>().Last();
+        SettlementView camp = view.Settlements!.First(s => s.Owner == 0 && s.Status == 0);
+        SettlementState state = server.State.FindSettlement(new SettlementId(camp.Id))!;
+        int ready = CivSim.Core.Episodes.Campaigns.Ready(Content, server.State, state);
+        Assert.True(ready > 0);
+        Assert.Equal(ready, camp.Warriors);
+        Assert.All(view.Settlements!.Where(s => s.Owner != 0), s => Assert.Equal(-1, s.Warriors)); // not ours: hidden
+
+        var selection = new HelmSelection(camp, null);
+        HelmAction campaign = HelmActions.For(selection, null).Single(a => a.Key == "campaign");
+        Assert.Contains($"{ready} warriors", campaign.Help, System.StringComparison.Ordinal);
+        SettlementView enemy = view.Settlements!.FirstOrDefault(s => s.Owner != 0) ?? camp;
+        var dto = Assert.IsType<LaunchCampaignDto>(HelmActions.Build(campaign, selection, target: enemy));
+        Assert.Equal(ready, dto.Warriors);
+        Assert.Null(CivSim.Core.Episodes.Campaigns.CannotLaunch(Content, server.State, new CivId(0), camp.Id, enemy.Id, dto.Warriors) is { } why
+            && why.StartsWith("Not enough warriors", System.StringComparison.Ordinal) ? why : null);
+    }
+
+    [Fact]
     public void AMoveFromTheOrderPanelIsAcceptedAndHeldAsThePlayers()
     {
         (GameServer server, InMemoryConnection client) = Connect(82);

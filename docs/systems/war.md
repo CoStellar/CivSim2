@@ -84,6 +84,14 @@ flowchart TD
 - **Wykonanie** (`Wars.Keep`, przy podpisaniu): oddana osada przechodzi z ludźmi i fachowcami, roszczenia znikają. Rozejm (`TreatyKind.Peace`)
   zachowuje cel, wynik, straty, zmęczenie i warunki wojny (do raportu `--wars`).
 
+- **Wyprawa gracza** (testy gracza P-03 pkt 1, 2026-11-16):
+  - widok osady gracza (i obserwatora) ma pole `SettlementView.Warriors`, czyli ilu wojowników może wyruszyć teraz (`Campaigns.Ready`): `Sendable` (2/3 wojowników), najwyżej limit armii ery, a 0, gdy wojownicy są w drodze albo odpoczywają;
+  - przycisk „War campaign...” wysyła dokładnie tylu (wcześniej 1/5 ludzi, więc każda wyprawa była odrzucana);
+  - odmowy podają liczby, np. „Not enough warriors: 12 of 18 may go (a third stays home), 30 asked.”, „Too few warriors: 3, a campaign needs 5.”;
+  - protokół 21.
+
+  Pomiar (styl `warlord`, 10 seedów, 50 ludów, 15 min): ludy, które wypowiedziały wojnę i wysłały co najmniej jedną przyjętą wyprawę: 0 z 23 → 23 z 23; wypraw razem 0 → 577.
+
 ## Co erę (prośba Patryka z 2026-11-07)
 
 Przy każdym etapie nowej ery (etapy 6–12) sprawdź i uzupełnij:

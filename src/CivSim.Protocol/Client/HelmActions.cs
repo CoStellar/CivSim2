@@ -147,7 +147,12 @@ public static class HelmActions
             }
 
             list.Add(new HelmAction("raid", "Raid...", 4, HelmTarget.Settlement, "Warriors raid a settlement for its stores and come back."));
-            list.Add(new HelmAction("campaign", "War campaign...", 4, HelmTarget.Settlement, "Send an army against a settlement of an enemy we are at war with."));
+            int ready = selection.Settlement.Warriors;
+            list.Add(new HelmAction("campaign", "War campaign...", 4, HelmTarget.Settlement, ready < 0
+                ? "Send an army against a settlement of an enemy we are at war with."
+                : ready == 0
+                ? "No warriors may set out now (they are out, resting, or too few: a third stays home)."
+                : $"Send the {ready} warriors who may set out against a settlement of an enemy we are at war with."));
         }
 
         return list;
@@ -194,7 +199,7 @@ public static class HelmActions
             "join" => new AbandonSettlementDto(s.Id, target!.Id),
             "settle" => new SettleDto(s.Id),
             "raid" => new PlunderSettlementDto(s.Id, target!.Id),
-            "campaign" => new LaunchCampaignDto(s.Id, target!.Id, Math.Max(1, People(s) / 5)),
+            "campaign" => new LaunchCampaignDto(s.Id, target!.Id, Math.Max(1, s.Warriors >= 0 ? s.Warriors : People(s) / 5)),
             _ => null,
         };
     }
