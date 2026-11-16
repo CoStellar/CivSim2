@@ -205,7 +205,7 @@ public sealed class TradeSystem(GameContent content) : ITurnSystem
                     continue;
                 }
 
-                int percent = TradeNetworks.ArrivingPercent(_content, _dist[(r * n) + d]);
+                int percent = TradeNetworks.InternalArrivingPercent(_content, _dist[(r * n) + d]);
                 long send = Math.Min(spare, ((missing * 100) + percent - 1) / percent);
                 long got = Move(donor, receiver, send, percent, food, good);
                 arrived += got;

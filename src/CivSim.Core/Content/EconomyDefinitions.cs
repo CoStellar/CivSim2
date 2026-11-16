@@ -45,6 +45,12 @@ public sealed record TradeRules
     /// <summary>Percent of the goods lost per cell of distance when passed on (at most 90% in all).</summary>
     public int LossPercentPerCell { get; init; } = 2;
 
+    /// <summary>
+    /// True while the network of a civilization's settlements is one shared store until a later era (ADR 0026 rule 5): goods pass
+    /// between them without loss; trade with other peoples still loses <see cref="LossPercentPerCell"/> per cell.
+    /// </summary>
+    public bool SharedStore { get; init; }
+
     /// <summary>Years of food needs a settlement keeps before it gives food away.</summary>
     public Amount FoodReserveYears { get; init; } = Amount.FromUnits(1);
 

@@ -34,6 +34,13 @@ flowchart LR
 - **Nadwyżka magazynu** (decyzja Patryka: bez pieniędzy nie ma sprzedaży z rabatem): najpierw jedzie do osad sieci z wolnym miejscem, najbliższych najpierw, z tą samą utratą; reszta przepada.
 - **Surowce przy zbieraniu:** drewno z biomów (`gather`: las liściasty 6, tajga 5, dżungla 4… na rok z nietkniętego pola), krzemień (2) i kamień (3) ze złóż widocznych od startu, w tej samej części co zebrane jedzenie. Złoża nieodnawialne tracą zebrane jednostki i znikają, gdy się wyczerpią (GDD 4.4).
 
+## Wspólny magazyn do brązu (etap 6 PR T3c, ADR 0026 zasada 5)
+
+`trade.json` `"sharedStore": true`: sieć osad jednego ludu działa jak jeden magazyn. Towary przechodzą między osadami bez strat w drodze
+(`TradeNetworks.InternalArrivingPercent` = 100%; używają go dzielenie braków i przelewanie nadmiaru z pełnego magazynu). Handel z innymi
+ludami dalej traci `lossPercentPerCell` za pole. Ceny wewnętrzne zostają: to miara AI (skarbnik wybiera receptury według tego, czego
+brakuje), gracz ich nie widzi. Testy jednostkowe odmrażają straty przez `GameContent.Thawed()`.
+
 ## Pliki danych
 - `data/trade.json`: `linkCells`, `lossPercentPerCell`, `foodReserveYears`, `priceRangePercent`.
 - `data/goods.json`: `value` każdego towaru (dzikie rośliny = 1, narzędzia kamienne 8, odzież ze skór 6…).

@@ -38,6 +38,9 @@
           "string"
         ]
       }
+    },
+    "sharedStore": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false
