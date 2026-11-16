@@ -11,7 +11,15 @@ ADR 0027, GDD 1.2).
 - Zmienia: `CivilizationState.PlayerLevers` (komenda `SetLeverCommand`, w protokole `SetLeverDto`); zapis 37, hasz (tylko gdy jakaś
   dźwignia jest wzięta, więc gry bez gracza mają ten sam hasz).
 - Publikuje: w widoku gracza (`GameViewMessage`, protokół 18) `PlayerLevers` (flagi) i `AiDecisions` (ostatnie 30 decyzji AI dla jego
-  ludu: takt, dźwignia 1–5 albo 0, tekst z przyczyną; `HelmsmanLog`, dane sesji, bez zapisu i hasza).
+  ludu: takt, dźwignia 1–5, tekst z przyczyną; `HelmsmanLog`, dane sesji, bez zapisu i hasza).
+- Panel mówi po ludzku (testy gracza P-05, 2026-11-16):
+  - wpis to czynność i jedna przyczyna słowami, z pierwszego czynnika decyzji, który coś mówi graczowi („Split camp Bea: the camp is 57% full.”, „Research Fire: to keep us safe.”);
+  - wagi celów, charakter i odległości to skale AI, więc nie są przyczyną; gdy nic innego nie mówi, wpis dostaje przyczynę wspólną dla całego rodzaju decyzji („looking for better land”);
+  - liczby i wagi zostają w dzienniku `--decisions`;
+  - pomijane są decyzje bez dźwigni (receptury) i strategia, której cel przesunął się o mniej niż 8 pól (`HeadingCells`);
+  - ta sama czynność z tym samym celem w ciągu 30 s gry (`MergeSeconds`) dopisuje osadę do jednego wpisu.
+
+  Pomiar (seed 7, lud 1, 15 min, grający jak AI): 174 → 80 wpisów (11,6 → 5,3 na minutę), 0 wpisów z „goal weight”, „character”, „fed 1000”.
 
 ## Przepływ
 
