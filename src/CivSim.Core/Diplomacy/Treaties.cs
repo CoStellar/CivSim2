@@ -34,6 +34,9 @@ public sealed record TreatyKindDefinition
     /// <summary>The kind this definition describes.</summary>
     public TreatyKind Kind { get; init; }
 
+    /// <summary>False while the kind is frozen until a later era (ADR 0026 rule 5: pacts and alliances until the bronze age).</summary>
+    public bool Enabled { get; init; } = true;
+
     /// <summary>Technology both sides must know to sign it (GDD 9.1: treaties unlocked by technologies), or -1.</summary>
     public int RequiresTechnology { get; init; } = -1;
 

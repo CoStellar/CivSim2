@@ -72,6 +72,8 @@ public static class ContentLoader
             }
         }
         List<SettlementLookDefinition> looks = LoadSettlementLooks(Path.Combine(directory, "settlements.json"), levels, technologies, errors);
+        bool governmentsOn = TopFlag(Path.Combine(directory, "governments.json"), "enabled", errors);
+        bool influenceOn = TopFlag(Path.Combine(directory, "strata.json"), "politicalInfluence", errors);
         (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons, Core.WorldGen.ClimateCycleRules cycles) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
@@ -105,6 +107,8 @@ public static class ContentLoader
             Treaties = treaties,
             War = war,
             Governments = governments,
+            GovernmentsEnabled = governmentsOn,
+            StrataInfluenceEnabled = influenceOn,
             Leaders = leaders,
             Time = time,
             Units = units,
@@ -640,6 +644,24 @@ public static class ContentLoader
         }
 
         return result;
+    }
+
+    // A switch at the top of a data file (ADR 0026 rule 5: systems frozen until the bronze age); missing = on.
+    private static bool TopFlag(string path, string name, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !doc.RootElement.TryGetProperty(name, out JsonElement e))
+        {
+            return true;
+        }
+
+        if (e.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            errors.Add($"{Path.GetFileName(path)}: {name} must be true or false.");
+            return true;
+        }
+
+        return e.GetBoolean();
     }
 
     // settlements.json looks (stage 6 PR P2b): optional; levels by key, technologies resolved later.
@@ -1238,6 +1260,7 @@ public static class ContentLoader
 
         return new StabilityRules
         {
+            RevoltsEnabled = !doc.RootElement.TryGetProperty("revoltsEnabled", out JsonElement revolts) || revolts.ValueKind != JsonValueKind.False,
             UnrestBelow = r.Int("unrestBelow", 0, 100),
             UnrestOutputPercentPerPoint = r.Int("unrestOutputPercentPerPoint", 0, 100),
             UnrestEffect = unrest,
@@ -2166,6 +2189,7 @@ public static class ContentLoader
                 defs[(int)kind] = new Core.Diplomacy.TreatyKindDefinition
                 {
                     Kind = kind,
+                    Enabled = !e.TryGetProperty("enabled", out JsonElement treatyOn) || treatyOn.ValueKind != JsonValueKind.False,
                     RequiresTechnology = tech,
                     Years = x.OptionalInt("years", 0, 100_000) ?? 0,
                     BindsAgainstWar = binds,

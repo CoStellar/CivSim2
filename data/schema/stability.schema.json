@@ -134,6 +134,9 @@
         "number",
         "string"
       ]
+    },
+    "revoltsEnabled": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

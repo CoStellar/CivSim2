@@ -111,6 +111,10 @@ sąsiad prawie zawsze odrzucał pakt (zagrożenie 0,5, bo silniejszy go nie widz
 
 ## D2: Przegląd stosunków (proaktywny)
 
+> **Zamrożone do brązu (etap 6 PR T3b, ADR 0026 zasada 5):** pakt o nieagresji i sojusz obronny mają w `diplomacy.json` `"enabled": false`;
+> `Treaties.CannotSign` odmawia ich („Such treaties come with a later age.”), więc D2 rozważa tylko pokój, handel i wojnę. Zostają kontakt,
+> wojna, pokój i barter.
+
 - **Ustrój** (etap 4f): odstęp przeglądów razy `reviewPercent / 100` (rada starszych co 75 lat, wodzostwo co 37,5 roku). W czasie
   zmiany ustroju cywilizacja nie wypowiada wojen (`CannotDeclareWar`: „We are changing our government.”), a od PR 3 także przez
   2 lata bezkrólewia po zmianie („Our state is in anarchy.”). Od PR 5 dyplomata w ogóle nie rozważa wtedy wojny (wcześniej liczył

@@ -53,6 +53,12 @@ flowchart LR
 | Despotia | epoka brązu | 0 | 50% | −200‰ | podbój ×1,2, bezpieczeństwo ×1,1 |
 | Republika miejska | epoka brązu | 2 lata | 100% | +100‰ | dobrobyt i nauka ×1,2, podbój ×0,9 |
 
+## Zamrożone do brązu (etap 6 PR T3b, ADR 0026 zasada 5)
+
+`governments.json` `"enabled": false`: każdy lud zachowuje ustrój, z którym startuje (według charakteru: rada starszych albo wodzostwo),
+a `Governments.CannotChange` odmawia każdej zmiany („Other governments come with a later age.”), także graczowi i AI (S2). Pojemność administracji i zasięg ustroju
+działają dalej (na nich stoi hamulec rozrostu z T2). Testy jednostkowe odmrażają ustroje przez `GameContent.Thawed()`.
+
 ## Pliki danych
 
 `data/governments.json` (opis pól w `comment`). Ery w `fromEra` to klucze z `data/eras.json`.

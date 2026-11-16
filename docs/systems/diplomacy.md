@@ -62,6 +62,11 @@ flowchart LR
 - **Reakcje poza rytmem** (ADR 0018): odpowiedź na propozycję zapada w najbliższym kroku świata; cywilizacja, której wypowiedziano wojnę albo napadnięto obóz, robi przegląd stosunków od razu (alarm `WarDeclared` albo `Attacked`).
 - **Determinizm:** księga umów jest posortowana po parze i rodzaju, propozycje w kolejności złożenia; losowanie sojusznika ma generator z seeda, sojusznika, agresora i tury (strumień `ai`, sól `0xD4 << 40`); dyplomata losuje generatorem doradcy. Umowy i propozycje są w hashu stanu i w zapisie gry (format 18; od ADR 0018 format 19).
 
+## Zamrożone do brązu (etap 6 PR T3b, ADR 0026 zasada 5)
+
+Pakt o nieagresji i sojusz obronny mają w `diplomacy.json` `"enabled": false`: `Treaties.CannotSign` odmawia ich graczowi i AI („Such
+treaties come with a later age.”). Zostają kontakt, wojna, pokój i handel (barter). Testy jednostkowe odmrażają je przez `GameContent.Thawed()`.
+
 ## Pliki danych
 - `data/diplomacy.json`: progi, przegląd co ile lat, zasięg, udział nadwyżki, świadkowie, sojusznicy, krzywe ocen, lista umów (wszystkie 5 rodzajów muszą być; pokój musi mieć lata rozejmu).
 

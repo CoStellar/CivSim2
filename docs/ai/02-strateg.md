@@ -120,6 +120,10 @@ flowchart LR
 
 ## S2: Wybór ustroju
 
+> **Zamrożone do brązu (etap 6 PR T3b, ADR 0026 zasada 5):** `governments.json` `"enabled": false` — każdy lud zachowuje ustrój startowy
+> (według charakteru), a `Governments.CannotChange` odmawia każdej zmiany, więc S2 w prawdziwej grze nic nie wydaje. Opis poniżej dotyczy
+> późniejszych er; testy liczą S2 na danych odmrożonych (`GameContent.Thawed()`).
+
 **Komenda:** `ChangeGovernmentCommand(ustrój)` (ta sama, którą wyda gracz). Kod: `StrategistAdvisor.ChooseGovernment`.
 Od etapu 4f PR 5 (GDD 7.2: „AI wybiera ustrój według cech”).
 
