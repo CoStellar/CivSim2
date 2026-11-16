@@ -74,7 +74,21 @@ w tym czasie wysłać nikogo na kampanię (`SettlementState.RestUntilMonth`).
 - **Osadnicy:** odłam wyjmuje z osady procent każdej warstwy, fachowców i uczniów (`Skills.MoveOut`) i tyle dóbr, ile udźwigną
   (`carrying`). Do tego biorą jedzenie na drogę: miesiące akcji znanej drogi + `foodMonths` (6) zapasu; czego nie mają w swojej
   części, biorą z magazynu domu, najwyżej `supplySharePercent` każdego jedzenia. W drodze jedzą raz na miesiąc akcji tyle, co
-  wojownicy (`foodPerWarriorPerYear`); bez jedzenia co miesiąc ginie `hungerDeathPercent` (5%) każdej warstwy (co najmniej 1).
+  wojownicy (`foodPerWarriorPerYear`): najpierw zbierają dziką żywność pola, na którym stoją (`foragePercent` (100) miesiąca
+  tego, co daje pole: `CellFoodPerYear` × dzika żywność / 12, najwyżej `foodPerWorkerPerYear` / 12 na osobę; testy gracza P-02,
+  decyzja Patryka z 2026-11-16), potem jedzą to, co niosą; bez jedzenia co miesiąc ginie `hungerDeathPercent` (5%) każdej
+  warstwy (co najmniej 1). Przyczyna zmiany: obóz zbieraczy prawie nie ma zapasów, więc osadnicy nieśli jedzenie na ok. 6
+  miesięcy przy drodze ok. 48 miesięcy (8 pól) i na każdy założony obóz ginęły trzy grupy. Grupa w drodze bierze za mało, żeby
+  zużyć pole (zbieranie zużywa ok. 1‰ rocznie przy pełnym wykorzystaniu), więc dzika żywność pola się nie zmienia.
+  Pomiar (10 seedów, mapa mała, 9000 taktów = 15 min, razem z rolnictwem od 6 myślicieli):
+
+  | | przed | po |
+  | --- | --- | --- |
+  | grupy osadników zmarłe w drodze | 2904 | 42 |
+  | założone obozy | 917 | 1732 |
+  | ludy z wioską | 22/50 | 38/50 |
+  | ludy z wioską do 5. minuty | 7 | 31 |
+  | ludzie po 15 min (mediana gry) | 13 266 | 23 022 |
   W drodze nie pracują w żadnej osadzie.
 - **Zwiadowcy:** każda osada (co najmniej 4 × `people` osób) ma najwyżej jedną grupę w drodze (`ScoutOut`); nowa wychodzi w pulsie
   cywilizacji, gdy od powrotu poprzedniej minęło `everyYears` (5) lat akcji. Kierunek losowy (strumień „population”, w kolejności

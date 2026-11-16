@@ -1104,6 +1104,7 @@ public static class ContentLoader
             ScoutTripCells = scouts.Int("tripCells", 1, 200),
             SettlerFoodMonths = settlers.Int("foodMonths", 0, 120),
             HungerDeathPercent = settlers.Int("hungerDeathPercent", 0, 100),
+            ForagePercent = settlers.Int("foragePercent", 0, 100),
             FoundSearchCells = settlers.Int("foundSearchCells", 0, 20),
         };
     }

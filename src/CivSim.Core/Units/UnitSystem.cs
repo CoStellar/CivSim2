@@ -21,6 +21,7 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
 {
     private readonly GameContent _content = content ?? throw new ArgumentNullException(nameof(content));
     private readonly RouteFinder _routes = new();
+    private readonly Economy.GatheringSystem _land = new(content, new Economy.YieldYears(0)); // what a cell offers (P-02)
 
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.Movement;
@@ -367,11 +368,12 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
         return (int)Math.Min(int.MaxValue, food.Hundredths / month.Hundredths);
     }
 
-    // Settlers eat a month of food from what they carry; without it some of them die.
+    // Settlers eat a month of food: first what the land they stand on gives, then what they carry; without it some die.
     private void Eat(TurnContext context, GameState state, Unit u, CivilizationState civ)
     {
         int people = u.TotalPeople();
         Amount need = CivSim.Core.Episodes.Campaigns.FoodFor(_content, people, 1);
+        need -= Forage(state, u, people, need);
         for (int g = 0; g < u.Cargo.Length && g < _content.Goods.Count && need > Amount.Zero; g++)
         {
             if (_content.Goods[g].IsFood && u.Cargo[g] > Amount.Zero)
@@ -402,6 +404,23 @@ public sealed class UnitSystem(GameContent content) : ITurnSystem
             u.Gone = true;
             context.Chronicle($"Settlers of {civ.Name} starved on the way.");
         }
+    }
+
+    // Hunters and gatherers live off the land they cross (playtest P-02): a month of the wild food of their cell
+    // (units.json foragePercent of it), as much as their hands gather. They take too little in a month to wear the land
+    // down (GatheringSystem: about a per mille a year at full use), so the wild food stays as it is.
+    private Amount Forage(GameState state, Unit u, int people, Amount need)
+    {
+        if (_content.Units.ForagePercent == 0 || need <= Amount.Zero)
+        {
+            return Amount.Zero;
+        }
+
+        WorldMap map = state.Worlds[u.World.Value].Map;
+        Amount offer = _land.CellFoodPerYear(map, u.Cell)
+            .MultiplyRatio((long)map.WildFood[u.Cell] * _content.Units.ForagePercent, WorldMap.FullWildFood * 100L * 12, Rounding.Floor);
+        Amount hands = _content.Population.FoodPerWorkerPerYear.MultiplyRatio(people, 12, Rounding.Floor);
+        return Amount.Min(need, Amount.Min(offer, hands));
     }
 
     // The unit stands on its goal: settlers found their camp, a unit sent home joins it, a moved unit waits.

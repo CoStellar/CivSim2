@@ -173,6 +173,12 @@
             "number",
             "string"
           ]
+        },
+        "foragePercent": {
+          "type": [
+            "number",
+            "string"
+          ]
         }
       },
       "additionalProperties": false

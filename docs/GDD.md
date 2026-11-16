@@ -850,6 +850,8 @@ Relacje opierają się na pamięci z rozdziału 8.5, handel to fizyczne karawany
 | Cywilne | osadnicy, zwiadowcy, kupcy, szpiedzy, inżynierowie | nie walczą |
 | Kosmiczne | satelity, wahadłowce, statki kolonizacyjne | widok kosmosu i inne światy (rozdział 3) |
 
+**Osadnicy w drodze żyją z ziemi** (decyzja Patryka z 2026-11-16, testy gracza P-02): łowcy i zbieracze co miesiąc najpierw jedzą dziką żywność pola, na którym stoją (tyle, ile da pole w miesiąc i ile zbiorą ich ręce), a dopiero potem to, co niosą. Głodują więc na pustyni, lodzie i w górach, a nie na żyznej ziemi.
+
 **Plemiona niezależne:** koczownicy, którzy nie założyli cywilizacji, zostają na mapie jako plemiona. Mogą najechać, handlować, zostać wchłonięte albo z czasem utworzyć nową cywilizację.
 
 ## 10. Zdarzenia i efekty

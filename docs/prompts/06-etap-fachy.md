@@ -32,7 +32,7 @@ Gałąź: `feat/skills` (od `feat/ai-land`, PR #40; po jego scaleniu baza to `de
 | fishing | flint_knapping | 5 knapper |
 | tanning | cooperative_hunting | 10 hunter |
 | traditions | fire | 5 elder |
-| agriculture | fire, flint_knapping | 10 elder |
+| agriculture | fire, flint_knapping | 6 elder (było 10; testy gracza P-07, decyzja Patryka z 2026-11-16: na małej mapie ludy dochodziły do 10 myślicieli za późno) |
 | animal_husbandry | cooperative_hunting | 10 hunter |
 | pottery | agriculture | 20 farmer |
 | weaving | animal_husbandry albo agriculture | 10 herder albo 20 farmer |
