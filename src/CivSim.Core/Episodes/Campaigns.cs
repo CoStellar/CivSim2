@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using CivSim.Core.Commands;
 using CivSim.Core.Content;
 using CivSim.Core.Diplomacy;
@@ -73,7 +74,8 @@ public static class Campaigns
 
         if (warriors < 1 || warriors > Sendable(content, h))
         {
-            return "Not enough warriors stay home.";
+            // The numbers tell the player what to ask for (playtest P-03, P-10).
+            return string.Create(CultureInfo.InvariantCulture, $"Not enough warriors: {Sendable(content, h)} of {SettlementAssets.Warriors(content, h)} may go (a third stays home), {warriors} asked.");
         }
 
         int total = warriors;
@@ -111,7 +113,7 @@ public static class Campaigns
 
             if (m.Warriors < 1 || m.Warriors > Sendable(content, s))
             {
-                return "Not enough warriors stay home.";
+                return string.Create(CultureInfo.InvariantCulture, $"Not enough warriors in {s.Name}: {Sendable(content, s)} of {SettlementAssets.Warriors(content, s)} may go (a third stays home), {m.Warriors} asked.");
             }
 
             total += m.Warriors;
@@ -119,12 +121,12 @@ public static class Campaigns
 
         if (total < content.War.MinWarriors)
         {
-            return "Too few warriors.";
+            return string.Create(CultureInfo.InvariantCulture, $"Too few warriors: {total}, a campaign needs {content.War.MinWarriors}.");
         }
 
         if (total > Era(content, c).ArmyLimit)
         {
-            return "More warriors than one leader can lead.";
+            return string.Create(CultureInfo.InvariantCulture, $"More warriors than one leader can lead: {total}, at most {Era(content, c).ArmyLimit}.");
         }
 
         return MapMemory.Path(content, state, c, world, world.Geometry.Index(h.Cell), world.Geometry.Index(t.Cell)) is null
@@ -145,6 +147,24 @@ public static class Campaigns
     {
         ArgumentNullException.ThrowIfNull(content);
         return civ is null ? content.Units.First(Units.UnitRole.Army) : content.Units.Best(Units.UnitRole.Army, civ.Knows);
+    }
+
+    /// <summary>
+    /// The warriors <paramref name="s"/> may send on a campaign now: <see cref="Sendable"/> up to the army limit of its era, or
+    /// 0 while its warriors are out or rest from the last campaign (what <see cref="CannotLaunch"/> asks of the home
+    /// settlement; playtest P-03).
+    /// </summary>
+    public static int Ready(GameContent content, GameState state, SettlementState s)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(s);
+        if (state.Episodes.OutFrom(s.Owner, s.Id.Value) || Rests(state, s))
+        {
+            return 0;
+        }
+
+        CivilizationState? civ = state.FindCivilization(s.Owner);
+        return civ is null ? Sendable(content, s) : Math.Min(Sendable(content, s), Era(content, civ).ArmyLimit);
     }
 
     /// <summary>The most warriors <paramref name="s"/> may send (a third stays home: decision of 2026-11-07).</summary>

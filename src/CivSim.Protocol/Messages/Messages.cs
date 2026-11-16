@@ -150,7 +150,9 @@ public static class LeverFlags
 /// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per
 /// stratum id), health, mood and food (hundredths, last turn) are filled only for the viewer's own settlements and
 /// for observers; foreign settlements show only where they are. Status (0 active, 1 abandoned, 2 ruins) and the claim
-/// (civilization id or -1, last month) are public.
+/// (civilization id or -1, last month) are public. <see cref="Warriors"/> is how many warriors may set out on a campaign
+/// now (a third stays home; 0 while they are out or resting), for the viewer's own settlements and observers; -1 otherwise
+/// (playtest P-03).
 /// </summary>
 [MessagePackObject]
 public sealed record SettlementView(
@@ -173,7 +175,8 @@ public sealed record SettlementView(
     [property: Key(16)] int ClaimCiv = -1,
     [property: Key(17)] long ClaimUntilMonth = 0,
     [property: Key(18)] int Loyalty = 0,
-    [property: Key(19)] int Look = -1);
+    [property: Key(19)] int Look = -1,
+    [property: Key(20)] int Warriors = -1);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
