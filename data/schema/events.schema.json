@@ -113,6 +113,9 @@
           "chronicle": {
             "type": "string"
           },
+          "enabled": {
+            "type": "boolean"
+          },
           "fertilityGain": {
             "type": [
               "number",

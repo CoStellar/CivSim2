@@ -83,6 +83,11 @@ Kolejność kroków jest ta sama co w GDD, rozdział 3. Wszystko liczymy na licz
 
 **Kierunek rzeki** nie jest jeszcze zapisany w mapie (tylko wielkość na krawędzi). Wynika z wysokości narożników i dopiszemy go, gdy będzie potrzebny (transport rzeczny, tamy).
 
+## Klimat zamrożony do brązu (etap 6 PR T3a, ADR 0026 zasada 5)
+
+`planets.json` → `climateCycles.enabled: false`: `ClimateSystem` nie przesuwa cykli (epoki lodowe, CO2, cykl gwiazdy, poziom morza).
+Klimat ze startu zostaje, pory roku działają dalej (`SeasonSystem`). Testy jednostkowe odmrażają go przez `GameContent.Thawed()`.
+
 ## Pliki danych
 - `data/biomes.json`: 14 biomów, ich rodzaj (ląd albo jeden z 4 rodzajów wody), zakresy temperatury i wilgotności, koszt ruchu, bazowa żyzność, jedzenie i kolor podglądu.
 - `data/resources.json`: 22 złoża z biomami, rzeźbą, częstością, zasobnością, głębokością i kolorem.

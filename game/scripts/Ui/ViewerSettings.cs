@@ -19,8 +19,8 @@ public sealed class StartSettings
     /// <summary>World seed (digits).</summary>
     public string Seed { get; set; } = "1";
 
-    /// <summary>test, standard, large or huge.</summary>
-    public string MapSize { get; set; } = "standard";
+    /// <summary>test, small, standard, large or huge.</summary>
+    public string MapSize { get; set; } = "small"; // 130×80, 5 peoples: the default until the bronze age (ADR 0026 rule 2)
 
     /// <summary>Number of civilizations; 0 = default of the map size.</summary>
     public int Civilizations { get; set; }

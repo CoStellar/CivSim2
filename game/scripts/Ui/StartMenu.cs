@@ -14,14 +14,14 @@ namespace CivSim.Game.Ui;
 /// </summary>
 public partial class StartMenu : CanvasLayer
 {
-    private static readonly string[] Sizes = ["test", "standard", "large", "huge"];
+    private static readonly string[] Sizes = ["test", "small", "standard", "large", "huge"];
     private static readonly string[] WorldTypes = ["continents", "pangea", "archipelago"];
     private static readonly string[] Moistures = ["preset", "dry", "normal", "wet"];
     private static readonly string[] Inlands = ["normal", "dry", "humid"];
     private static readonly string[] Reliefs = ["preset", "flat", "normal", "mountainous"];
     private static readonly string[] ResourceLevels = ["normal", "scarce", "rich"];
     private static readonly string[] SpeedWords = ["pause", "x1", "x2", "x4", "max"];
-    private static readonly Dictionary<string, int> DefaultCivs = new() { ["test"] = 4, ["standard"] = 12, ["large"] = 20, ["huge"] = 32 };
+    private static readonly Dictionary<string, int> DefaultCivs = new() { ["test"] = 4, ["small"] = 5, ["standard"] = 12, ["large"] = 20, ["huge"] = 32 };
 
     private readonly LocalSetupInfo _setup;
     private readonly StartSettings _settings;

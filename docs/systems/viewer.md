@@ -47,6 +47,9 @@ flowchart LR
 ```
 
 ## Menu startowe
+
+Domyślna mapa od etapu 6 PR T3a: **small** (130×80, 5 ludów; ADR 0026 zasada 2), także `--map-size small`.
+
 - Ustawienia świata z GDD 3: ziarno (z przyciskiem losowania), rozmiar mapy, liczba cywilizacji (domyślna rośnie z rozmiarem),
   typ świata, procent wody, wilgotność, wilgotność w głębi lądu, górzystość, złoża.
 - Planeta: preset (`data/planets.json`) i każda jego wartość: nachylenie osi, mimośród, jasność gwiazdy, odległość, rok, światło,

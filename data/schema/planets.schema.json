@@ -39,6 +39,9 @@
     "climateCycles": {
       "type": "object",
       "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
         "comment": {
           "type": "string"
         },
