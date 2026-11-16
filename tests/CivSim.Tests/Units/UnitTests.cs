@@ -191,6 +191,69 @@ public class UnitTests
     }
 
     [Fact]
+    public void SettlersLiveOffTheLandOnTheWayAndStarveWhereNothingGrows()
+    {
+        // Playtest P-02 (decision of 2026-11-16): hunters and gatherers eat the wild food of their cell before what they carry.
+        GameState state = NewGame(23);
+        CivilizationState civ = state.Civilizations[0];
+        KnowAll(state, civ);
+        (WorldState world, HexCoord center) = FlatLand(state, 8);
+        HexGlobe geo = world.Geometry;
+        SettlementState home = state.Settlements[0];
+        home.Population[0] += 100;
+        home.ScoutOut = true;
+        var runner = new TurnRunner(state);
+        runner.AddSystem(new UnitSystem(Live));
+
+        Unit Group(int col)
+        {
+            new Core.Commands.SplitSettlementCommand(Live, home.Id, geo.Wrap(center.Col + col, center.Row), 30).Apply(state, civ.Id);
+            Unit u = state.Units[state.Units.Count - 1];
+            u.Cargo.Clear(); // nothing carried: only the land feeds them
+            new MoveUnitCommand(Live, u.Id, geo.Wrap(center.Col + col, center.Row)).Apply(state, civ.Id);
+            return u;
+        }
+
+        Unit fed = Group(4);
+        for (int k = 0; k < world.Map.WildFood.Length; k++)
+        {
+            world.Map.WildFood.Set(k, WorldMap.FullWildFood);
+        }
+
+        int people = fed.TotalPeople();
+        int months = 24 * Live.Time.TicksPerActionMonth;
+        for (int t = 0; t < months; t++)
+        {
+            runner.RunTurn();
+        }
+
+        // One grassland cell feeds as many gatherers as it would in a camp (fewer in winter): a larger group shrinks to that
+        // and then lives on.
+        Assert.Equal(UnitOrder.Idle, fed.Order);
+        int settled = fed.TotalPeople();
+        Assert.InRange(settled, 1, people);
+        for (int t = 0; t < months; t++)
+        {
+            runner.RunTurn();
+        }
+
+        Assert.NotNull(state.Units.Find(fed.Id)); // four years on one grassland cell and they live on (winters cut it a little)
+        Assert.True(fed.TotalPeople() * 2 >= settled);
+
+        // Where nothing grows they eat what they carry, and without it they die out.
+        byte barren = (byte)Live.Biomes.ToList().FindIndex(b => !b.IsWater && b.Food == 0);
+        Assert.True(barren > 0);
+        world.Map.Biome.Set(fed.Cell, barren);
+        world.Map.Deposit.Set(fed.Cell, 0);
+        for (int t = 0; t < months && state.Units.Find(fed.Id) is not null; t++)
+        {
+            runner.RunTurn();
+        }
+
+        Assert.Null(state.Units.Find(fed.Id));
+    }
+
+    [Fact]
     public void OthersCannotCommandOurUnits()
     {
         GameState state = NewGame(24);
@@ -246,6 +309,16 @@ public class UnitTests
         for (int t = 0; t < 300; t++)
         {
             system.Execute(warm);
+        }
+
+        // Settlers walk and eat (they gather on the way since playtest P-02, so they live to arrive) but do not found a
+        // camp in the measured ticks: a new settlement and its chronicle line are not walking.
+        foreach (Unit u in state.Units.All)
+        {
+            if (u.Role == UnitRole.Settlers && u.Order == UnitOrder.Found)
+            {
+                u.Order = UnitOrder.Move;
+            }
         }
 
         // One context for all the measured ticks (the runner makes one per tick; only the units are measured here).

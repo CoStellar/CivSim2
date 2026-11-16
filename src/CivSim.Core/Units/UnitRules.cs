@@ -116,6 +116,13 @@ public sealed record UnitRules
     /// <summary>Months of action settlers carry food for when they leave (as much as there is to spare).</summary>
     public int SettlerFoodMonths { get; init; } = 6;
 
+    /// <summary>
+    /// Percent of a month of the wild food of the cell they stand on that walking settlers gather and eat before they touch
+    /// what they carry: hunters and gatherers live off the land on the way (playtest P-02, decision of 2026-11-16). As much
+    /// as their hands can gather (population.json foodPerWorkerPerYear); 0 = they eat only what they carry.
+    /// </summary>
+    public int ForagePercent { get; init; } = 100;
+
     /// <summary>Percent of hungry settlers who die in every month of action without food.</summary>
     public int HungerDeathPercent { get; init; } = 5;
 

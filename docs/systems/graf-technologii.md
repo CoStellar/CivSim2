@@ -60,7 +60,7 @@ flowchart TD
   t_fire -.-> t_agriculture
   t_flint_knapping -.-> t_agriculture
   t_agriculture ==> k_farmer
-  s_thinkers -->|10| t_agriculture
+  s_thinkers -->|6| t_agriculture
   t_cooperative_hunting -.-> t_animal_husbandry
   t_animal_husbandry ==> k_herder
   k_hunter -->|10| t_animal_husbandry
