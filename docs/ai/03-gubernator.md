@@ -126,7 +126,9 @@ kierunku i obozowiska.
 
 - **Kiedy:** tura decyzyjna, obóz ma **mniej niż 15 osób** (`mergeBelowPeople`).
 - **Dokąd:** najbliższa (w polach) zamieszkana osada **tej samej cywilizacji** mająca co najmniej 15 osób, nie dalej niż 10 pól
-  (`maxMoveCells`). Może to być też wioska. Przy remisie odległości: pierwsza na liście osad.
+  (`maxMoveCells`). Może to być też wioska. Przy remisie odległości: pierwsza na liście osad. Nie do osady, która w tym samym kroku
+  się przenosi, dzieli albo wysyła osadników lub zwiad (`_leaving`; testy gracza P-11, 2026-11-16: „Split camp: Bea” i „Join camp:
+  Dog → Bea” w jednym takcie, 101 takich par w 3 grach); obóz spróbuje w następnym planowaniu.
 - **Ocena:** brak wyboru między opcjami. Zapis: ocena = liczba osób, notatka `people`.
 - **Komenda:** `AbandonSettlementCommand`: wszyscy przechodzą, niosą tyle dóbr, ile udźwigną (10 jednostek na osobę, więcej z
   technologiami), obóz zostaje porzucony. Obóz, do którego dołączono, nie podejmuje już decyzji w tej turze.

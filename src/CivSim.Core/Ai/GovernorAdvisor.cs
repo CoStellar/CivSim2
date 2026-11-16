@@ -37,6 +37,10 @@ public sealed class GovernorAdvisor : Advisor
     private int[] _settlementAt = [];
     private readonly List<int> _emptySites = [];
     private readonly HashSet<int> _joined = [];
+
+    // Settlements that move or send people away in this step: nobody joins them in the same step (playtest P-11: "Split camp: Bea"
+    // and "Join camp: Dog -> Bea" in one tick).
+    private readonly HashSet<int> _leaving = [];
     private readonly long[] _foodPerPerson;
     private long[] _nearOwnAt = [];
     private long _civStamp;
@@ -193,6 +197,7 @@ public sealed class GovernorAdvisor : Advisor
             }
 
             _joined.Clear();
+            _leaving.Clear();
             if (steps && Simulation.WorldClock.PlansNow(_content, state, civ))
             {
                 PlanTasks(state, queue, civ);
@@ -230,7 +235,7 @@ public sealed class GovernorAdvisor : Advisor
         bool slowTurn = !reacting && Simulation.WorldClock.PlansNow(_content, state, civ);
 
         // A handful of people does not survive on its own: they join the nearest camp of their own.
-        if (slowTurn && people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into)
+        if (slowTurn && people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into && !_leaving.Contains(into.Id.Value))
         {
             Evaluation join = Evaluation.Of(people);
             join.Note(FactorId.People, people);
@@ -266,6 +271,7 @@ public sealed class GovernorAdvisor : Advisor
                 move.Note(FactorId.Fed, s.FedPerMille);
                 (ICommand command, AiAction action) = MoveTo(state, world, s, best, 100);
                 Issue(state, queue, civ.Id, command, action, s.Id.Value, world.Geometry.Index(best), move);
+                _leaving.Add(s.Id.Value);
                 Take(world, best);
                 return;
             }
@@ -338,6 +344,7 @@ public sealed class GovernorAdvisor : Advisor
                 split.Note(FactorId.Crowding, people * 100L / Math.Max(1, max));
                 (ICommand command, AiAction action) = MoveTo(state, world, s, site, _rules.SplitPercent);
                 Issue(state, queue, civ.Id, command, action, s.Id.Value, world.Geometry.Index(site), split);
+                _leaving.Add(s.Id.Value);
                 Take(world, site);
                 return;
             }
@@ -443,6 +450,7 @@ public sealed class GovernorAdvisor : Advisor
             go.Note(FactorId.Fed, s.FedPerMille);
             (ICommand command, AiAction action) = MoveTo(state, world, s, site, percent);
             Issue(state, queue, civ.Id, command, action == AiAction.SplitCamp ? AiAction.SendSettlers : action, s.Id.Value, world.Geometry.Index(site), go);
+            _leaving.Add(s.Id.Value);
             Take(world, site);
         }
     }
@@ -531,6 +539,7 @@ public sealed class GovernorAdvisor : Advisor
 
         HexCoord site = geo.FromIndex(Chooser.KeyAt(pick));
         Issue(state, queue, civ.Id, new SplitSettlementCommand(_content, s.Id, site, _content.Ai.ExploreGroupPercent), AiAction.Explore, s.Id.Value, Chooser.KeyAt(pick), Chooser.EvaluationAt(pick));
+        _leaving.Add(s.Id.Value);
         Take(world, site);
         return true;
     }
