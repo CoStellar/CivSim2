@@ -209,7 +209,8 @@ public partial class PlayOverlay : Node2D
         DrawString(font, c + new Vector2(-24, 5), letters, HorizontalAlignment.Center, 48, 14, built ? Colors.White : new Color(0.8f, 0.8f, 0.8f));
         if (b.State == 5)
         {
-            DrawString(font, c + new Vector2(-24, 18), "goods…", HorizontalAlignment.Center, 48, 9, new Color(0.8f, 0.85f, 1f));
+            bool lost = b.Missing is not null && b.Porters == 0;
+            DrawString(font, c + new Vector2(-24, 18), lost ? "missing!" : "goods…", HorizontalAlignment.Center, 48, 9, lost ? new Color(1f, 0.5f, 0.4f) : new Color(0.8f, 0.85f, 1f));
         }
         else if (!built)
         {

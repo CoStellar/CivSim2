@@ -907,13 +907,19 @@ public partial class PlayGame : Node2D
             PlayBuildingInfo t = c.Buildings[b.Type];
             string state = b.State switch
             {
-                5 => "Waiting for its materials: porters are bringing them from the nearest storehouse. Building starts when they arrive.",
+                5 when b.Porters > 0 => $"Built {b.ProgressPermille / 10}%. Porters are bringing materials from the nearest storehouse; the work goes on as they arrive.",
+                5 => $"Built {b.ProgressPermille / 10}%. Stopped: materials are missing.",
                 0 => $"Being built: {b.ProgressPermille / 10}%",
                 1 => $"Construction paused at {b.ProgressPermille / 10}%",
                 3 => "Stopped",
                 _ => b.Starved ? $"Waiting for {Amounts(c, t.Consumes)}" : t.Workers > 0 ? (b.Workers == 0 ? "No workers" : "Working") : "Standing",
             };
             string text = $"{t.Name}\n{state}";
+            if (b.Missing is { } missing && b.State is 0 or 1 or 5)
+            {
+                text += $"\nMissing: {missing}" + (b.Porters > 0 ? $"\nPorter groups on the way: {b.Porters}" : "");
+            }
+
             if (t.Workers > 0 && b.State == 2)
             {
                 text += $"\nWorkers {b.Workers} of {t.Workers}";
@@ -930,6 +936,11 @@ public partial class PlayGame : Node2D
             }
 
             int id = b.Id;
+            if (b.Missing is not null && b.State is 0 or 1 or 5)
+            {
+                AddButton($"Bring the missing materials ({b.Missing})", () => _session!.Play(PlayCommandKind.BringMaterials, id));
+            }
+
             if (b.State == 0)
             {
                 AddButton("Pause construction", () => _session!.Play(PlayCommandKind.PauseConstruction, id, flag: true));

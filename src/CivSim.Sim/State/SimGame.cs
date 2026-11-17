@@ -231,9 +231,18 @@ public sealed partial class SimGame
                     Building b = Buildings[item.Id];
                     if (b.State == BuildingState.Construction && b.FinishTick == due.Tick)
                     {
-                        b.State = BuildingState.Active;
-                        Civs[b.Civ].Dirty = true;
-                        News.Add((b.Civ, $"{Content.Buildings[b.Type].Name} is finished."));
+                        if (b.WorkCap >= Math.Max(1, Content.Buildings[b.Type].BuildTicks))
+                        {
+                            b.State = BuildingState.Active;
+                            Civs[b.Civ].Dirty = true;
+                            News.Add((b.Civ, $"{Content.Buildings[b.Type].Name} is finished."));
+                        }
+                        else
+                        {
+                            // The materials at the site are used up: the work waits for the rest.
+                            b.RemainingTicks = Math.Max(1, Content.Buildings[b.Type].BuildTicks) - b.WorkCap;
+                            b.State = BuildingState.Delivery;
+                        }
                     }
 
                     break;

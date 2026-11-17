@@ -287,6 +287,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.SendCaravan => new SendCaravanCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One),
         PlayCommandKind.Route => new RouteCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One),
         PlayCommandKind.EndRoute => new EndRouteCommand(civ, m.A),
+        PlayCommandKind.BringMaterials => new BringMaterialsCommand(civ, m.A),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
@@ -495,16 +496,18 @@ public sealed class PlayHost : IDisposable
             HexCoord h = _game.Geo.FromIndex(b.Cell);
             BuildingType t = _game.Content.Buildings[b.Type];
             int progress = 1000;
-            if (b.State == BuildingState.Construction)
+            string? missing = null;
+            if (b.State is BuildingState.Delivery or BuildingState.Construction or BuildingState.ConstructionPaused)
             {
-                progress = 1000 - (int)Math.Clamp((b.FinishTick - _game.Ticks) * 1000 / Math.Max(1, t.BuildTicks), 0, 1000);
-            }
-            else if (b.State == BuildingState.ConstructionPaused)
-            {
-                progress = 1000 - (b.RemainingTicks * 1000 / Math.Max(1, t.BuildTicks));
+                progress = (int)Math.Clamp(_game.WorkDone(b) * 1000L / Math.Max(1, t.BuildTicks), 0, 1000);
+                if (b.Civ == civId)
+                {
+                    string text = _game.CargoText(_game.Missing(b));
+                    missing = text == "nothing" ? null : text;
+                }
             }
 
-            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent));
+            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0));
         }
 
         var units = new List<PlayUnitView>();

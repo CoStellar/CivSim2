@@ -11,13 +11,16 @@ public sealed record SendCaravanCommand(int Civ, int From, int To, int Good, lon
 /// <summary>Set up a standing route: a caravan keeps carrying the good from one settlement to the other.</summary>
 public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amount) : SimCommand(Civ);
 
+/// <summary>Send porters with the materials a construction is still missing (after porters were killed on the way).</summary>
+public sealed record BringMaterialsCommand(int Civ, int Building) : SimCommand(Civ);
+
 /// <summary>End a standing route (by its index in <see cref="SimGame.Routes"/>).</summary>
 public sealed record EndRouteCommand(int Civ, int Route) : SimCommand(Civ);
 
 /// <summary>
 /// Goods move on the map (decision of 2026-11-17): porters carry construction materials from the nearest storehouse to the
 /// site, caravans carry goods between settlements and to trade partners. Carriers are units: they walk, can be seen and can
-/// be attacked; whoever destroys them takes the load.
+/// be attacked. Killed carriers lose their load (decision of 2026-11-17, late evening); the owner is told and decides what next.
 /// </summary>
 public sealed partial class SimGame
 {
@@ -49,24 +52,123 @@ public sealed partial class SimGame
         return best;
     }
 
-    // Takes the materials from the settlement's store and sends porters with them. False when the store lacks them.
+    /// <summary>What a construction still lacks: its price minus what is at the site and on the way.</summary>
+    public long[] Missing(Building b)
+    {
+        ArgumentNullException.ThrowIfNull(b);
+        long[] price = Content.Buildings[b.Type].Price;
+        var missing = new long[price.Length];
+        for (int g = 0; g < price.Length; g++)
+        {
+            missing[g] = Math.Max(0, price[g] - b.Delivered[g] - b.OnTheWay[g]);
+        }
+
+        return missing;
+    }
+
+    // Takes the missing materials from the settlement's store and sends them to the site: one group of porters per good, so
+    // they arrive one after another and the work can start with the first. False when the store lacks them.
     private bool SendMaterials(Building b)
     {
         Settlement s = Settlements[b.Settlement];
-        BuildingType t = Content.Buildings[b.Type];
-        if (!CanAfford(s.Stock, t.Price, 100))
+        long[] missing = Missing(b);
+        if (!CanAfford(s.Stock, missing, 100))
         {
             return false;
         }
 
         int from = NearestStore(s, b.Cell);
-        Unit porters = NewCarrier(Civs[b.Civ], Content.Porters, s, from, t.Price, 100);
-        porters.Job = CarrierJob.ToBuilding;
-        porters.Target = b.Id;
-        b.Porters = porters.Id;
-        b.State = BuildingState.Delivery;
-        Walk(porters, b.Cell);
+        for (int g = 0; g < missing.Length; g++)
+        {
+            if (missing[g] <= 0)
+            {
+                continue;
+            }
+
+            var load = new long[missing.Length];
+            load[g] = missing[g];
+            Unit porters = NewCarrier(Civs[b.Civ], Content.Porters, s, from, load, 100);
+            porters.Job = CarrierJob.ToBuilding;
+            porters.Target = b.Id;
+            b.OnTheWay[g] += missing[g];
+            b.Porters++;
+            Walk(porters, b.Cell);
+        }
+
         return true;
+    }
+
+    private string? BringMaterials(Civ civ, int id) => WithOwn(civ, id, b =>
+    {
+        if (b.State is not (BuildingState.Delivery or BuildingState.Construction or BuildingState.ConstructionPaused))
+        {
+            return "Only a construction needs materials.";
+        }
+
+        long[] missing = Missing(b);
+        if (Array.TrueForAll(missing, x => x <= 0))
+        {
+            return "Nothing is missing.";
+        }
+
+        if (!SendMaterials(b))
+        {
+            return $"{Settlements[b.Settlement].Name} lacks {CargoText(missing)}.";
+        }
+
+        SyncTotals(civ);
+        return null;
+    });
+
+    // Materials reached the site: the work may go on as far as they allow.
+    private void Deliver(Building b, long[] cargo)
+    {
+        long[] price = Content.Buildings[b.Type].Price;
+        long need = 0;
+        long have = 0;
+        for (int g = 0; g < cargo.Length; g++)
+        {
+            b.OnTheWay[g] = Math.Max(0, b.OnTheWay[g] - cargo[g]);
+            b.Delivered[g] = Math.Min(price[g], b.Delivered[g] + cargo[g]);
+            need += price[g];
+            have += b.Delivered[g];
+        }
+
+        int total = Math.Max(1, Content.Buildings[b.Type].BuildTicks);
+        if (b.State == BuildingState.Construction)
+        {
+            b.RemainingTicks = total - WorkDone(b);
+        }
+
+        b.WorkCap = need <= 0 || have >= need ? total : (int)(total * have / need);
+        if (b.State is BuildingState.Delivery or BuildingState.Construction)
+        {
+            Work(b);
+        }
+    }
+
+    /// <summary>Ticks of building work done so far.</summary>
+    public int WorkDone(Building b)
+    {
+        ArgumentNullException.ThrowIfNull(b);
+        int total = Math.Max(1, Content.Buildings[b.Type].BuildTicks);
+        return b.State == BuildingState.Construction ? (int)Math.Clamp(b.WorkCap - (b.FinishTick - Ticks), 0, total) : total - b.RemainingTicks;
+    }
+
+    // Starts (or goes on with) the work up to what the materials at the site allow; otherwise waits for materials.
+    private void Work(Building b)
+    {
+        int done = Math.Max(1, Content.Buildings[b.Type].BuildTicks) - b.RemainingTicks;
+        if (done < b.WorkCap)
+        {
+            b.State = BuildingState.Construction;
+            b.FinishTick = Ticks + (b.WorkCap - done);
+            Schedule(b);
+        }
+        else
+        {
+            b.State = BuildingState.Delivery;
+        }
     }
 
     // A carrier unit leaves a settlement with goods from its store; its people stop working until they are back.
@@ -124,17 +226,14 @@ public sealed partial class SimGame
         {
             case CarrierJob.ToBuilding:
                 Building b = Buildings[u.Target];
-                if (b.State == BuildingState.Delivery && b.Porters == u.Id)
+                b.Porters = Math.Max(0, b.Porters - 1);
+                if (b.Civ == u.Civ && b.State is BuildingState.Delivery or BuildingState.Construction or BuildingState.ConstructionPaused)
                 {
-                    // Materials are here: the building time starts now.
+                    Deliver(b, u.Cargo!);
                     Array.Clear(u.Cargo!);
-                    b.Porters = -1;
-                    b.State = BuildingState.Construction;
-                    b.FinishTick = Ticks + Math.Max(1, Content.Buildings[b.Type].BuildTicks);
-                    Schedule(b);
                 }
 
-                GoHome(u);
+                GoHome(u); // with the load when the site is gone
                 break;
             case CarrierJob.ToSettlement:
                 Settlement to = Settlements[u.Target];
@@ -177,9 +276,15 @@ public sealed partial class SimGame
 
     private void Gone(Unit u)
     {
-        if (u.Job == CarrierJob.ToBuilding && u.Target >= 0 && Buildings[u.Target].Porters == u.Id)
+        if (u.Job == CarrierJob.ToBuilding && u.Target >= 0)
         {
-            Buildings[u.Target].Porters = -1; // the construction will ask for its materials again
+            // Killed on the way: the site will not get this load. Nothing is sent again by itself.
+            Building b = Buildings[u.Target];
+            b.Porters = Math.Max(0, b.Porters - 1);
+            for (int g = 0; g < b.OnTheWay.Length && u.Cargo is not null; g++)
+            {
+                b.OnTheWay[g] = Math.Max(0, b.OnTheWay[g] - u.Cargo[g]);
+            }
         }
 
         u.State = UnitState.Gone;
@@ -241,28 +346,27 @@ public sealed partial class SimGame
         return best;
     }
 
-    // Whoever destroys carriers takes their load into their nearest settlement.
-    private void Loot(Unit carrier, int takerCiv)
+    // Carriers were killed: their load is lost, and both sides hear of it.
+    private void LoseLoad(Unit carrier, int killerCiv)
     {
-        if (carrier.Cargo is null || Civs[takerCiv].Settlements.Count == 0)
-        {
-            return;
-        }
-
-        Settlement? s = NearestOwn(Civs[takerCiv], carrier.Cell);
-        if (s is null)
+        if (carrier.Cargo is null)
         {
             return;
         }
 
         string what = CargoText(carrier.Cargo);
-        Unload(s, carrier.Cargo);
         Array.Clear(carrier.Cargo);
-        if (what != "nothing")
+        if (what == "nothing")
         {
-            News.Add((takerCiv, $"We seized {what} from {Civs[carrier.Civ].Name}' {Content.Units[carrier.Kind].Name.ToLowerInvariant()}."));
-            News.Add((carrier.Civ, $"Our {Content.Units[carrier.Kind].Name.ToLowerInvariant()} were robbed of {what}."));
+            return;
         }
+
+        string kind = Content.Units[carrier.Kind].Name.ToLowerInvariant();
+        string where = carrier.Job == CarrierJob.ToBuilding
+            ? $" on the way to the {Content.Buildings[Buildings[carrier.Target].Type].Name.ToLowerInvariant()}; it needs the missing materials brought again"
+            : "";
+        News.Add((carrier.Civ, $"Our {kind} were killed by {Civs[killerCiv].Name} and {what} is lost{where}."));
+        News.Add((killerCiv, $"We destroyed {Civs[carrier.Civ].Name}' {kind}; their {what} is lost."));
     }
 
     private string? SendCaravan(Civ civ, int from, int to, int good, long amount, int route = -1)
@@ -326,18 +430,9 @@ public sealed partial class SimGame
         return null;
     }
 
-    // Once a second per people: constructions whose porters were lost ask for new materials; idle routes send a caravan.
+    // Once a second per people: idle routes send a caravan. (Lost materials are not sent again by themselves.)
     private void LogisticsStep(Civ civ)
     {
-        foreach (int id in civ.Buildings)
-        {
-            Building b = Buildings[id];
-            if (b.State == BuildingState.Delivery && b.Porters < 0)
-            {
-                SendMaterials(b);
-            }
-        }
-
         for (int r = 0; r < Routes.Count; r++)
         {
             TradeRoute route = Routes[r];

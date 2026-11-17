@@ -395,10 +395,20 @@ public sealed partial class SimGame
         Scores()[(attacker.Civ * Civs.Count) + defender.Civ] += dead;
         if (defender.People <= 0)
         {
-            Loot(defender, attacker.Civ);
-            Gone(defender);
-            News.Add((defender.Civ, $"Our {Content.Units[defender.Kind].Name.ToLowerInvariant()} were destroyed by {Civs[attacker.Civ].Name}."));
-            News.Add((attacker.Civ, $"We destroyed {Civs[defender.Civ].Name}' {Content.Units[defender.Kind].Name.ToLowerInvariant()}."));
+            Destroyed(defender, attacker.Civ);
+        }
+    }
+
+    // A unit was wiped out by another people (carriers lose their load).
+    internal void Destroyed(Unit unit, int byCiv)
+    {
+        bool carrier = unit.Cargo is not null && Content.Units[unit.Kind].System;
+        Gone(unit); // first: the site still counts this load as on the way
+        LoseLoad(unit, byCiv);
+        if (!carrier)
+        {
+            News.Add((unit.Civ, $"Our {Content.Units[unit.Kind].Name.ToLowerInvariant()} were destroyed by {Civs[byCiv].Name}."));
+            News.Add((byCiv, $"We destroyed {Civs[unit.Civ].Name}' {Content.Units[unit.Kind].Name.ToLowerInvariant()}."));
         }
     }
 

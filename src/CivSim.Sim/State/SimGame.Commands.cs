@@ -72,6 +72,7 @@ public sealed partial class SimGame
             DismissAdvisorCommand => Dismiss(civ),
             SendCaravanCommand c => SendCaravan(civ, c.From, c.To, c.Good, c.Amount),
             RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount),
+            BringMaterialsCommand c => BringMaterials(civ, c.Building),
             EndRouteCommand c => EndRoute(civ, c.Route),
             DeclareWarCommand c => DeclareWar(civ, c.Other, surprise: false),
             AttackCommand c => Attack(civ, c.Unit, c.Cell),
@@ -355,12 +356,15 @@ public sealed partial class SimGame
             Settlement = sid,
             State = BuildingState.Delivery,
             YieldPercent = yield,
+            RemainingTicks = Math.Max(1, t.BuildTicks),
+            Delivered = new long[Content.Goods.Count],
+            OnTheWay = new long[Content.Goods.Count],
         };
         Buildings.Add(b);
         civ.Buildings.Add(b.Id);
         BuildingAt[cell] = b.Id;
         Map.MarkCellDirty(cell);
-        SendMaterials(b); // porters carry the price from the nearest storehouse; building time starts when they arrive
+        SendMaterials(b); // porters carry the price from the nearest storehouse; the work goes as far as the delivered materials allow
         SyncTotals(civ);
         return null;
     }
@@ -375,7 +379,7 @@ public sealed partial class SimGame
                 return "Only a construction can be paused.";
             }
 
-            b.RemainingTicks = (int)(b.FinishTick - Ticks);
+            b.RemainingTicks = Math.Max(1, t.BuildTicks) - WorkDone(b);
             b.State = BuildingState.ConstructionPaused;
             return null;
         }
@@ -393,9 +397,8 @@ public sealed partial class SimGame
 
         Pay(stock, t.Price, Content.ResumeCostPercent);
         SyncTotals(civ);
-        b.State = BuildingState.Construction;
-        b.FinishTick = Ticks + Math.Max(1, b.RemainingTicks);
-        Schedule(b);
+        b.State = BuildingState.Delivery;
+        Work(b); // goes on as far as the materials at the site allow
         return null;
     });
 

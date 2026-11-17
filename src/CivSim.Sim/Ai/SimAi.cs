@@ -138,7 +138,7 @@ public static class SimAi
         int n = 0;
         foreach (int id in civ.Buildings)
         {
-            if (g.Buildings[id].State is BuildingState.Construction or BuildingState.ConstructionPaused)
+            if (g.Buildings[id].State is BuildingState.Delivery or BuildingState.Construction or BuildingState.ConstructionPaused)
             {
                 n++;
             }
@@ -268,7 +268,7 @@ public static class SimAi
         foreach (int id in civ.Buildings)
         {
             Building b = g.Buildings[id];
-            if (b.State is BuildingState.Construction or BuildingState.ConstructionPaused && Array.IndexOf(keys, g.Content.Buildings[b.Type].Key) >= 0)
+            if (b.State is BuildingState.Delivery or BuildingState.Construction or BuildingState.ConstructionPaused && Array.IndexOf(keys, g.Content.Buildings[b.Type].Key) >= 0)
             {
                 return true;
             }
@@ -767,6 +767,16 @@ public static class SimAi
     // Feeds a hungry settlement from the one with the most food, with a caravan.
     private static void Supply(SimGame g, Civ civ)
     {
+        // Constructions whose porters were killed: the AI sends the missing materials again when it has them.
+        foreach (int id in civ.Buildings)
+        {
+            Building b = g.Buildings[id];
+            if (b.State == BuildingState.Delivery && b.Porters == 0)
+            {
+                g.Apply(new BringMaterialsCommand(civ.Id, b.Id));
+            }
+        }
+
         foreach (int sid in civ.Settlements)
         {
             Settlement s = g.Settlements[sid];

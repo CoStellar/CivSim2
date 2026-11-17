@@ -63,8 +63,17 @@ public sealed class Building
     /// <summary>Every good it makes is full in its settlement: asleep until there is room.</summary>
     public bool Full { get; set; }
 
-    /// <summary>Porters bringing its materials (−1 = none on the way).</summary>
-    public int Porters { get; set; } = -1;
+    /// <summary>Groups of porters bringing its materials right now.</summary>
+    public int Porters { get; set; }
+
+    /// <summary>Materials already at the site (hundredths, per good).</summary>
+    public long[] Delivered { get; set; } = [];
+
+    /// <summary>Materials carried to the site right now.</summary>
+    public long[] OnTheWay { get; set; } = [];
+
+    /// <summary>Ticks of work the delivered materials allow (construction stops there until more arrive).</summary>
+    public int WorkCap { get; set; }
 
     /// <summary>Production multiplier from a bonus deposit, percent (100 = none).</summary>
     public int YieldPercent { get; init; } = 100;

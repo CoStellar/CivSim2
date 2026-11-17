@@ -153,7 +153,9 @@ public sealed record PlayBuildingView(
     [property: Key(7)] bool Starved,
     [property: Key(8)] bool Priority,
     [property: Key(9)] int ProgressPermille,
-    [property: Key(10)] int YieldPercent);
+    [property: Key(10)] int YieldPercent,
+    [property: Key(11)] string? Missing = null,
+    [property: Key(12)] int Porters = 0);
 
 /// <summary>Server → client, several times a second: what the player sees of the game.</summary>
 [MessagePackObject]
@@ -274,6 +276,9 @@ public enum PlayCommandKind
 
     /// <summary>End standing route number <c>A</c>.</summary>
     EndRoute = 25,
+
+    /// <summary>Send porters with the materials construction <c>A</c> is missing.</summary>
+    BringMaterials = 26,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

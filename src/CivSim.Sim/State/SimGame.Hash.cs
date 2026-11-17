@@ -46,6 +46,8 @@ public sealed partial class SimGame
             Add(b.Cell);
             Add((long)b.State);
             Add(b.FinishTick);
+            Add(b.WorkCap);
+            Add(b.Porters);
             Add(b.Workers);
             Add(b.Starved ? 1 : 0);
         }

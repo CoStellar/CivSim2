@@ -160,15 +160,22 @@ tylko po działaniach.
   - Budynek śpi, gdy brakuje mu składnika (mniej niż 1 sztuka w osadzie) albo gdy wszystko, co robi, jest pełne (98% miejsca).
   - Co sekundę gra porównuje, które dobra w osadzie są puste albo pełne. Tylko gdy to się zmieni, przelicza tempa, a budynki same się budzą.
 - **Dostawy na budowę:**
-  1. Cena schodzi z zapasu osady, a tragarze (1 osoba na 20 sztuk) wychodzą z najbliższego magazynu tej osady albo ze środka.
-  2. Idą 0,5 s na płaski heks; koło przyspiesza ich o 50%.
-  3. Czas budowy rusza po dojściu, potem tragarze wracają do pracy.
-  4. Zabici tragarze tracą ładunek na rzecz zabójcy, a budowa zamawia materiały jeszcze raz (znów płaci).
+  1. Cena schodzi z zapasu osady. Tragarze wychodzą z najbliższego magazynu tej osady albo ze środka, osobna grupa na każde dobro (1 osoba na 20 sztuk).
+  2. Idą 0,5 s na płaski heks; droga przyspiesza ich 2×, koło o 50%.
+  3. Praca idzie tak daleko, jak pozwalają materiały na miejscu: przy połowie ceny (liczonej w sztukach) da się zbudować połowę. Potem budowa czeka na resztę.
+  4. Po dojściu tragarze wracają do pracy w osadzie.
+- **Napad na tragarzy albo karawanę (decyzja z 2026-11-17, 22:54):**
+  - ładunek przepada, nikt go nie przejmuje;
+  - właściciel i napastnik dostają wiadomość;
+  - nic nie dzieje się samo: budowa stoi na tym, co doszło, a gracz klika „Bring the missing materials” (płaci jeszcze raz tylko za brakującą część);
+  - AI wysyła brakujące materiały sama, gdy ma je w zapasie.
+- **Karawany jeżdżą tylko lądem.** Wodne przyjdą później, razem z flotą.
 - **Karawany (2 osoby, 25 sztuk na osobę):**
   - między własnymi osadami: raz albo stała trasa, przy czym kurs rusza, gdy jest co najmniej 10 sztuk;
   - wymiana z innym ludem: dwie karawany, nasza i ich, a towar zmienia właściciela dopiero po dojściu;
   - danina po wojnie też idzie karawaną;
-  - jeśli nie ma drogi lądem, wymiany nie da się zawrzeć.
+  - jeśli nie ma drogi lądem, wymiany nie da się zawrzeć;
+  - zabita karawana traci ładunek, jak tragarze.
 - **Umowy z warunkami:**
   - znają się od co najmniej 3 minut;
   - osady są nie dalej niż 20 heksów od siebie (licząc od granic);

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using CivSim.Core.Map;
 using CivSim.Sim.Content;
@@ -38,8 +39,8 @@ public sealed class LogisticsTests
         Assert.Null(g.Apply(new BuildCommand(civ.Id, cell, hut.Id)));
         Building b = g.Buildings[g.BuildingAt[cell]];
         Assert.Equal(BuildingState.Delivery, b.State);
-        Unit porters = g.Units[b.Porters];
-        Assert.Equal(Content.Porters, porters.Kind);
+        Assert.True(b.Porters > 0);
+        Unit porters = g.Units.Last(u => u.Kind == Content.Porters && u.Target == b.Id);
         Assert.True(s.People < people, "porters leave their work");
         while (b.State == BuildingState.Delivery)
         {
@@ -47,7 +48,7 @@ public sealed class LogisticsTests
         }
 
         Assert.Equal(BuildingState.Construction, b.State);
-        Assert.Equal(g.Ticks + hut.BuildTicks, b.FinishTick);
+        Assert.True(b.FinishTick <= g.Ticks + hut.BuildTicks);
         while (porters.State != UnitState.Gone)
         {
             g.Tick();
@@ -125,7 +126,7 @@ public sealed class LogisticsTests
     }
 
     [Fact]
-    public void WhoDestroysCarriersTakesTheirLoad()
+    public void KilledPortersLoseTheLoadAndTheConstructionWaitsForTheMissingMaterials()
     {
         SimGame g = NewGame();
         Civ a = g.Civs[0];
@@ -135,8 +136,6 @@ public sealed class LogisticsTests
         sb.People = 60;
         BuildingType hut = Content.Building("hut");
         int cell = sa.Cells.Where(x => g.CannotBuild(a, x, hut) is null).OrderByDescending(x => g.Geo.Distance(g.Geo.FromIndex(x), g.Geo.FromIndex(sa.Center))).First();
-        g.Apply(new BuildCommand(a.Id, cell, hut.Id));
-        Unit porters = g.Units[g.Buildings[g.BuildingAt[cell]].Porters];
         Assert.Null(g.Apply(new TrainCommand(b.Id, sb.Id, Content.Unit("warriors").Id)));
         for (int i = 0; i <= Content.Unit("warriors").TrainTicks + 1; i++)
         {
@@ -144,8 +143,11 @@ public sealed class LogisticsTests
         }
 
         Unit w = g.Units.Last(u => u.Civ == b.Id);
+        g.Apply(new BuildCommand(a.Id, cell, hut.Id));
+        Building site = g.Buildings[g.BuildingAt[cell]];
+        Unit porters = g.Units.Last(u => u.Kind == Content.Porters && u.Target == site.Id);
         w.Cell = porters.Cell;
-        long wood = sb.Stock[Content.GoodId("wood")];
+        long[] before = (long[])sb.Stock.Clone();
         g.Apply(new AttackCommand(b.Id, w.Id, porters.Cell));
         for (int i = 0; i < 100 && porters.State != UnitState.Gone; i++)
         {
@@ -153,7 +155,59 @@ public sealed class LogisticsTests
         }
 
         Assert.Equal(UnitState.Gone, porters.State);
-        Assert.True(sb.Stock[Content.GoodId("wood")] > wood || sb.Stock[Content.GoodId("wood")] >= sb.Capacity[Content.GoodId("wood")], "the wood was seized");
+        Assert.True(g.Missing(site).Sum() > 0, "the lost materials are missing at the site");
+        Assert.Equal(0, site.Porters);
+        int wood = Content.GoodId("wood");
+        Assert.True(sb.Stock[wood] <= before[wood] + SimContent.One, "nobody takes the load");
+
+        // Nothing is sent again by itself.
+        for (int i = 0; i < 300; i++)
+        {
+            g.Tick();
+        }
+
+        Assert.Equal(0, site.Porters);
+        Assert.Equal(BuildingState.Delivery, site.State);
+
+        // The owner sends the missing materials and the building gets finished.
+        Assert.Null(g.Apply(new BringMaterialsCommand(a.Id, site.Id)));
+        Assert.True(site.Porters > 0);
+        for (int i = 0; i < 3000 && site.State != BuildingState.Active; i++)
+        {
+            g.Tick();
+        }
+
+        Assert.Equal(BuildingState.Active, site.State);
+    }
+
+    [Fact]
+    public void WorkGoesOnlyAsFarAsTheDeliveredMaterialsAllow()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        Array.Fill(civ.KnownTech, true);
+        BuildingType t = Content.Buildings.First(x => x.Price.Count(p => p > 0) >= 2 && s.Cells.Any(c => g.CannotBuild(civ, c, x) is null));
+        int cell = s.Cells.Where(c => g.CannotBuild(civ, c, t) is null).OrderByDescending(c => g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(s.Center))).First();
+        Assert.Null(g.Apply(new BuildCommand(civ.Id, cell, t.Id)));
+        Building b = g.Buildings[g.BuildingAt[cell]];
+        Assert.True(b.Porters >= 2, "one group of porters per good");
+
+        // Kill one group: the work stops part-way and waits.
+        Unit lost = g.Units.Last(u => u.Kind == Content.Porters && u.Target == b.Id);
+        g.Destroyed(lost, g.Civs[1].Id);
+        for (int i = 0; i < 3000 && !(b.State == BuildingState.Delivery && b.Porters == 0 && b.WorkCap > 0); i++)
+        {
+            g.Tick();
+        }
+
+        for (int i = 0; i < t.BuildTicks + 10; i++)
+        {
+            g.Tick();
+        }
+
+        Assert.Equal(BuildingState.Delivery, b.State);
+        Assert.True(g.WorkDone(b) > 0 && g.WorkDone(b) < t.BuildTicks, $"done {g.WorkDone(b)} of {t.BuildTicks}");
     }
 
     [Fact]
