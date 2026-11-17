@@ -22,4 +22,20 @@ public sealed class TimeRules
 
     /// <summary>Ticks of <paramref name="months"/> months of action.</summary>
     public long ActionTicks(long months) => months * TicksPerActionMonth;
+
+    /// <summary>
+    /// <paramref name="ticks"/> as time of the game at speed x1 for the chronicle: "40 s", "2 min", "3 min 20 s". Durations are
+    /// told in minutes and seconds of the game, years only as the date of an entry (ADR 0026; playtest P-09: "ready in 1
+    /// year" and "after 600 years of war" in the same war of 36 seconds).
+    /// </summary>
+    public string PlayTime(long ticks)
+    {
+        long seconds = System.Math.Max(1, (System.Math.Max(0, ticks) + (TicksPerSecond / 2)) / System.Math.Max(1, TicksPerSecond));
+        long minutes = seconds / 60;
+        seconds %= 60;
+        System.Globalization.CultureInfo c = System.Globalization.CultureInfo.InvariantCulture;
+        return minutes == 0 ? seconds.ToString(c) + " s"
+            : seconds == 0 ? minutes.ToString(c) + " min"
+            : minutes.ToString(c) + " min " + seconds.ToString(c) + " s";
+    }
 }

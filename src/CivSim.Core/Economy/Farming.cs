@@ -295,7 +295,7 @@ public sealed record SettleCommand(GameContent Content, SettlementId Settlement)
         }
 
         return s.TotalPopulation() < Content.Assets.SettleMinPeople
-            ? CommandResult.Fail($"A camp needs {Content.Assets.SettleMinPeople} people to settle down.")
+            ? CommandResult.Fail($"{s.Name} has {s.TotalPopulation()} people; a camp needs {Content.Assets.SettleMinPeople} to settle down.")
             : CommandResult.Ok;
     }
 

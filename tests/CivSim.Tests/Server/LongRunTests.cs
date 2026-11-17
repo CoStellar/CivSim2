@@ -15,7 +15,7 @@ public class LongRunTests
 {
     [Theory]
     [InlineData("war", "The Arvi declared war on the Belo.")]
-    [InlineData("peace", "The Arvi and the Belo made peace after 3 years of war.")]
+    [InlineData("peace", "The Arvi and the Belo made peace after 36 s of war.")]
     [InlineData("treaty", "The Arvi and the Belo agreed to trade.")]
     [InlineData("secession", "Kora broke away from the Arvi.")]
     [InlineData("coup", "A coup in the Arvi: Ana seized power.")]

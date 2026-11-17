@@ -79,7 +79,7 @@ public class GovernmentTests
         Assert.Equal(1, Governments.EnactDue(Content, state, lines.Add));
         Assert.Equal(Id("chiefdom"), civ.Government);
         Assert.Equal(CivilizationState.NoGovernment, civ.PendingGovernment);
-        Assert.EndsWith($"became the Chiefdom of {civ.Name}; 2 years of anarchy follow.", lines.Single(), System.StringComparison.Ordinal);
+        Assert.EndsWith($"became the Chiefdom of {civ.Name}; {Content.Time.PlayTime(Content.Time.ActionTicks(24))} of anarchy follow.", lines.Single(), System.StringComparison.Ordinal);
         Assert.True(Stability.InAnarchy(civ, state.Month), "anarchy follows a change of government");
 
         // A government with no delay changes at once; one of a later era is closed.
@@ -97,7 +97,7 @@ public class GovernmentTests
         SettlementState home = ArmyTests.Village(state, a, start, 0, 200, 75, 300);
         SettlementState target = ArmyTests.Village(state, b, start, 6, 200, 75, 300);
         string? line = new DeclareWarCommand(Content, b.Id, WarGoal.Loot).ApplyWithChronicle(state, a.Id);
-        Assert.EndsWith("Its warriors will be ready in 4 years.", line, System.StringComparison.Ordinal);
+        Assert.EndsWith($"Its warriors will be ready in {Content.Time.PlayTime(Content.Time.ActionTicks(48))}.", line, System.StringComparison.Ordinal); // P-09
         Treaty war = state.Treaties.Find(a.Id, b.Id, TreatyKind.War)!;
         Assert.Equal(state.Turn + Content.Time.ActionTicks(48), war.ReadyTick); // ADR 0025: months of action, in ticks
         Assert.Equal(war.ReadyTick, war.QuietSince);

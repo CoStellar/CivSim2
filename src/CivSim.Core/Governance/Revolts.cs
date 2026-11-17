@@ -298,7 +298,7 @@ public static class Revolts
         string became = changed ? $"; it became the {Governments.Title(content, civ)}" : string.Empty;
         return string.Create(
             System.Globalization.CultureInfo.InvariantCulture,
-            $"A coup in the {before}: {Leaders.Styled(content, civ)} seized power{became}; {content.Stability.AnarchyYears} years of anarchy follow.");
+            $"A coup in the {before}: {Leaders.Styled(content, civ)} seized power{became}; {content.Time.PlayTime(content.Time.ActionTicks(content.Stability.AnarchyYears * 12L))} of anarchy follow.");
     }
 
     // The new people knows whom the parent knew (with a first opinion of its own); the two meet, and the parent remembers.

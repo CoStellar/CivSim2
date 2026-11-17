@@ -168,7 +168,7 @@ public class RevoltTests
         Assert.Equal(Gov("chiefdom"), civ.Government);
         Assert.NotEqual(leader, civ.LeaderName);
         Assert.True(Stability.InAnarchy(civ, state.Month));
-        Assert.Equal($"A coup in the Council of {civ.Name}: {Leaders.Styled(Content, civ)} seized power; it became the Chiefdom of {civ.Name}; 2 years of anarchy follow.", line);
+        Assert.Equal($"A coup in the Council of {civ.Name}: {Leaders.Styled(Content, civ)} seized power; it became the Chiefdom of {civ.Name}; {Content.Time.PlayTime(Content.Time.ActionTicks(24))} of anarchy follow.", line);
     }
 
     [Fact]

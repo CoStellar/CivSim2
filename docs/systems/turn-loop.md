@@ -90,6 +90,9 @@ flowchart TD
 
   W podsumowaniu grupy zostają tylko ludy, które gracz zna. Gdy zostaje jeden lud z jednym zdaniem, gracz dostaje to zdanie zamiast podsumowania. Grupy `ownOnly` (wieści o dalekich ludach, zdarzenia, ruchy osad) czyta tylko lud, którego dotyczą. Obserwator czyta wszystko.
   Śmierć i następstwo przywódców nie trafiają do kroniki do epoki brązu (`leaders.json`: `chronicleEnabled: false`; ADR 0024, 0026).
+  Czasy trwania kronika podaje w czasie partii przy ×1 (`TimeRules.PlayTime`: „ready in 6 s”, „after 2 min 43 s of war”),
+  lata tylko jako datę wpisu (ADR 0026; testy gracza P-09). Odmowy rozkazów podają liczby tej osady („Bea has 42 people;
+  a settlement needs 60 to split.”; P-10).
   Pomiar (seed 7, lud 1, 15 min, grający jak AI): 2073 → 192 wpisy (138 → 12,8 na minutę), o własnym ludzie 21% → 67%, o niespotkanych ludach 1087 → 0.
 - **Komendy** (`ICommand`) to jedyny sposób zmiany stanu. Każda ma kategorię (dyplomacja, gospodarka, ruch),
   sprawdzenie zasad (`Validate`) i wykonanie (`Apply`). Każda komenda niesie gracza i cywilizację (`CommandEnvelope`).

@@ -99,10 +99,11 @@ public sealed record SetResearchDto([property: Key(0)] string Technology) : ICom
 
 /// <summary>
 /// Lever 4 (stage 6 PR P1): declare war on civilization <c>Target</c> with a goal: 0 land (<c>GoalSettlement</c> = the settlement wanted),
-/// 1 loot, 2 revenge (war.json).
+/// 1 loot, 2 revenge (war.json). The goal defaults to loot, which any war may have (playtest P-12: a default of revenge
+/// was refused with "There is nothing to avenge.").
 /// </summary>
 [MessagePackObject]
-public sealed record DeclareWarDto([property: Key(0)] int Target, [property: Key(1)] int Goal = 2, [property: Key(2)] int GoalSettlement = -1) : ICommandDto;
+public sealed record DeclareWarDto([property: Key(0)] int Target, [property: Key(1)] int Goal = 1, [property: Key(2)] int GoalSettlement = -1) : ICommandDto;
 
 /// <summary>Lever 4: propose a treaty to <c>Other</c>: 1 peace (white), 2 trade, 3 non-aggression, 4 defensive alliance (diplomacy.json).</summary>
 [MessagePackObject]
