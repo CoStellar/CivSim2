@@ -308,7 +308,7 @@ Każdy surowiec jest niewidoczny i niedostępny do zbierania, dopóki cywilizacj
 ### 4.3 Przechowywanie
 
 - **Magazyn osady** ma osobną pojemność na cztery kategorie: żywność (spichlerz), materiały sypkie i masowe (skład), towary cenne (skarbiec), płyny i gazy (zbiorniki, od ery przemysłowej).
-- **Nadmiar ponad pojemność przepada** albo jest sprzedawany z rabatem, jeśli osada jest w sieci handlowej.
+- **Nadmiar ponad pojemność przepada** albo jest sprzedawany z rabatem, jeśli osada jest w sieci handlowej. W CORE (jedna pojemność na osadę) przepada najpierw największy stos, aż zrówna się z następnymi (decyzja Patryka z 2026-11-17, testy gracza P-11: przy obcinaniu wszystkiego po równo obóz pełen skór z polowania tracił co turę drewno, krzemień i jedzenie, a jego grupy robocze wracały głodne).
 - **Psucie się na rok** (przeliczane przez długość tury, jak każde tempo): zboże 1%, chleb 4%, mięso 5%, ryby 8%. Solenie, chłodnie i konserwy obniżają te wartości. Drewno, kamień i metale się nie psują, a narzędzia i broń zużywają się tylko w użyciu.
 - **Energia elektryczna** nie jest magazynowana bez magazynów energii (od ery informacji). Co turę produkcja musi pokryć zużycie, inaczej budynki pracują z mniejszą wydajnością.
 
@@ -631,7 +631,7 @@ Karrut”. Zmiana ustroju zmienia tytuł, rdzeń zostaje.
 **Decyzje Patryka z 2026-11-07 (etap 4f, dokument „Etap 4f: państwo — propozycja”, wszystkie rekomendacje przyjęte):**
 
 - Teraz działają rada starszych i wodzostwo; despotia i republika miejska są w danych i otwierają się z epoką brązu (etap 6).
-- Lud dostaje ustrój na start z charakteru: agresja i ekspansywność → wodzostwo, ostrożność i otwartość → rada starszych.
+- Lud dostaje ustrój na start z charakteru: agresja i ekspansywność → wodzostwo, ostrożność i otwartość → rada starszych. Do epoki brązu (ustroje zamrożone, ADR 0026) każdy lud ma radę starszych.
 - Ustrój zmienia strateg (rzadko, z histerezą) albo bunt. Zmiana kosztuje bezkrólewie: 2 lata niższej stabilności i brak decyzji państwowych.
 - Liczby ustrojów (wdrożenie, premia stabilności, administracja, wpływ warstw, sukcesja, tempo AI) są w `data/governments.json`.
 

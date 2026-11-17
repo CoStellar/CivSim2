@@ -716,6 +716,17 @@ public class DeadValueTests
         int hides = Content.Good("hides").Id;
         int wood = Content.Good("wood").Id;
         int clothing = Content.Good("hide_clothing").Id;
+
+        // Goods flow to a trade partner (made here, not left to the recorded game, which changes with any rule of the economy).
+        for (int c = 0; c + 1 < state.Civilizations.Count; c += 2)
+        {
+            if (state.Treaties.Find(state.Civilizations[c].Id, state.Civilizations[c + 1].Id, CivSim.Core.Diplomacy.TreatyKind.Trade) is null)
+            {
+                state.Treaties.Add(new CivSim.Core.Diplomacy.Treaty(
+                    state.Civilizations[c].Id, state.Civilizations[c + 1].Id, CivSim.Core.Diplomacy.TreatyKind.Trade, state.Civilizations[c].Id, 0)).LastFlowMonth = 0;
+            }
+        }
+
         foreach (CivilizationState civ in state.Civilizations)
         {
             // Every step of the Neolithic peoples plans production now.
@@ -732,6 +743,15 @@ public class DeadValueTests
                 int artisans = Content.Strata.First(x => x.Crafts).Id;
                 int tanner = Content.Skills.First(x => x.Key == "tanner").Id;
                 int baker = Content.Skills.First(x => x.Key == "baker").Id;
+                foreach (int skill in new[] { tanner, baker })
+                {
+                    // Sewing and baking known (made here, not left to the recorded game).
+                    if (!civ.Knows(Content.Skills[skill].TechnologyId))
+                    {
+                        CivSim.Core.Research.Technologies.Learn(Content, state, civ, Content.Skills[skill].TechnologyId);
+                    }
+                }
+
                 if (civ.Knows(Content.Skills[tanner].TechnologyId) && civ.Knows(Content.Skills[baker].TechnologyId) && s.PopulationView[artisans] >= 2)
                 {
                     s.Skilled.Clear();
