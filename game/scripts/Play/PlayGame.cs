@@ -34,6 +34,8 @@ public partial class PlayGame : Node2D
     private bool _centred;
     private int _placing;
     private (int Col, int Row)? _selected;
+    private int _unit = -1;
+    private readonly HashSet<int> _hiddenWalk = [];
     private double _uiTimer;
     private Vector2? _dragFrom;
 
@@ -103,6 +105,54 @@ public partial class PlayGame : Node2D
             if (m.Cells.Length >= 2 * (nth + 1))
             {
                 _session.Play(PlayCommandKind.Build, type, m.Cells[2 * nth], m.Cells[(2 * nth) + 1]);
+            }
+        }
+    }
+
+    /// <summary>Script step: trains a unit kind in the first own settlement.</summary>
+    public void ScriptTrain(string key)
+    {
+        if (_session?.PlayContent is not { } c || _session.PlayView is not { } v)
+        {
+            return;
+        }
+
+        foreach (PlayUnitInfo u in c.Units)
+        {
+            if (u.Key == key)
+            {
+                foreach (PlaySettlementView s in v.Settlements)
+                {
+                    if (s.Civ == v.Civ)
+                    {
+                        _session.Play(PlayCommandKind.Train, s.Id, b: u.Id);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>Script step: sends the first own standing unit by an offset from where it stands, and selects it.</summary>
+    public void ScriptMoveFirst(int dCol, int dRow, bool hidden)
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        foreach (PlayUnitView u in v.Units)
+        {
+            if (u.Civ == v.Civ && u.State == 1)
+            {
+                _session.Play(PlayCommandKind.Move, u.Id, u.Col + dCol, u.Row + dRow, hidden);
+                _unit = u.Id;
+                if (_overlay is not null)
+                {
+                    _overlay.SelectedUnit = u.Id;
+                }
+
+                return;
             }
         }
     }
@@ -268,7 +318,15 @@ public partial class PlayGame : Node2D
                 Click();
                 break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true }:
-                StopPlacing();
+                if (_placing > 0)
+                {
+                    StopPlacing();
+                }
+                else if (_unit >= 0 && MouseCell() is { } target)
+                {
+                    _session.Play(PlayCommandKind.Move, _unit, target.Col, target.Row, _hiddenWalk.Contains(_unit));
+                }
+
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Escape }:
                 if (_placing > 0)
@@ -330,6 +388,24 @@ public partial class PlayGame : Node2D
         }
 
         _selected = cell;
+        _unit = -1;
+        if (_session.PlayView is { } view)
+        {
+            foreach (PlayUnitView u in view.Units)
+            {
+                if (u.Civ == view.Civ && u.State != 0 && u.Col == cell.Col && u.Row == cell.Row)
+                {
+                    _unit = u.Id;
+                    break;
+                }
+            }
+        }
+
+        if (_overlay is not null)
+        {
+            _overlay.SelectedUnit = _unit;
+        }
+
         UpdateUi();
     }
 
@@ -556,6 +632,20 @@ public partial class PlayGame : Node2D
             n.QueueFree();
         }
 
+        if (_unit >= 0)
+        {
+            foreach (PlayUnitView u in v.Units)
+            {
+                if (u.Id == _unit)
+                {
+                    UnitPanel(u, c);
+                    return;
+                }
+            }
+
+            _unit = -1;
+        }
+
         if (_selected is not { } sel)
         {
             _side.Text = "Click a hex to see what is there.\nPick a building below, then a green hex to build it. Shift keeps building. Right click cancels.";
@@ -573,6 +663,24 @@ public partial class PlayGame : Node2D
                     PlayLevelInfo next = c.Levels[s.Level + 1];
                     text += $"\n\nBecome a {next.Name.ToLowerInvariant()} for {Amounts(c, next.UpgradePrice)}: land of {next.Radius} hexes around, {next.Housing} homes.";
                     AddButton($"Upgrade to {next.Name.ToLowerInvariant()}", () => _session!.Play(PlayCommandKind.Upgrade, s.Id));
+                }
+
+                if (s.Civ == v.Civ)
+                {
+                    foreach (PlayUnitInfo ut in c.Units)
+                    {
+                        int kind = ut.Id;
+                        int sid = s.Id;
+                        AddButton($"Train {ut.Name.ToLowerInvariant()} ({ut.People} people, {Amounts(c, ut.Price)})", () => _session!.Play(PlayCommandKind.Train, sid, b: kind));
+                    }
+
+                    foreach (PlayUnitView u in v.Units)
+                    {
+                        if (u.Civ == v.Civ && u.State == 0 && u.Col == s.Col && u.Row == s.Row)
+                        {
+                            text += $"\nTraining: {c.Units[u.Kind].Name.ToLowerInvariant()}";
+                        }
+                    }
                 }
 
                 _side.Text = text;
@@ -637,6 +745,33 @@ public partial class PlayGame : Node2D
         _side.Text = HexText(sel);
     }
 
+    private void UnitPanel(PlayUnitView u, PlayContentMessage c)
+    {
+        PlayUnitInfo t = c.Units[u.Kind];
+        string state = u.State == 2 ? "Walking" : "Standing";
+        string text = $"{t.Name}: {u.People} people\n{state}\n\nRight click a hex to send them there.";
+        int id = u.Id;
+        if (t.CanHide)
+        {
+            bool hidden = _hiddenWalk.Contains(id);
+            text += hidden ? "\nThey walk hidden: slower, seen only up close." : "\nThey walk in the open: faster, seen from afar.";
+            AddButton(hidden ? "Walk in the open" : "Walk hidden", () =>
+            {
+                if (!_hiddenWalk.Remove(id))
+                {
+                    _hiddenWalk.Add(id);
+                }
+            });
+        }
+
+        if (t.Founds && u.State == 1)
+        {
+            AddButton("Found a camp here", () => _session!.Play(PlayCommandKind.Found, id));
+        }
+
+        _side.Text = text;
+    }
+
     private string HexText((int Col, int Row) sel)
     {
         if (_session is null || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.Content is not { } content)
@@ -675,6 +810,7 @@ public partial class PlayGame : Node2D
 
     private void Toast(string text)
     {
+        GD.Print($"toast: {text}");
         _toast.Text = text;
         _toast.Visible = true;
         _toastTime = 4;

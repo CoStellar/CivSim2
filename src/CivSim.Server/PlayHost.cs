@@ -178,6 +178,9 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Stop => new StopBuildingCommand(civ, m.A, m.Flag),
         PlayCommandKind.Priority => new PriorityCommand(civ, m.A, m.Flag),
         PlayCommandKind.Demolish => new DemolishCommand(civ, m.A),
+        PlayCommandKind.Train => new TrainCommand(civ, m.A, m.B),
+        PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag),
+        PlayCommandKind.Found => new FoundCommand(civ, m.A),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
 
@@ -239,7 +242,13 @@ public sealed class PlayHost : IDisposable
             levels.Add(new PlayLevelInfo(l.Key, l.Name, l.Radius, l.Housing, l.UpgradePrice));
         }
 
-        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth"));
+        var units = new List<PlayUnitInfo>();
+        foreach (UnitType u in content.Units)
+        {
+            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds));
+        }
+
+        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units));
         client.SentChunks = false;
     }
 
@@ -260,8 +269,8 @@ public sealed class PlayHost : IDisposable
                 continue;
             }
 
-            bool knownChanged = UpdateKnown(client);
-            if (!client.SentChunks || knownChanged)
+            Civ civ = _game.Civs[client.Civ];
+            if (!client.SentChunks)
             {
                 for (int chunk = 0; chunk < _game.Map.Chunks.Count; chunk++)
                 {
@@ -269,13 +278,22 @@ public sealed class PlayHost : IDisposable
                 }
 
                 client.SentChunks = true;
+                civ.NewlyKnown.Clear();
             }
             else
             {
                 foreach (int chunk in _dirty)
                 {
+                    civ.NewlyKnown.Remove(chunk);
                     SendChunk(client, chunk);
                 }
+
+                foreach (int chunk in civ.NewlyKnown)
+                {
+                    SendChunk(client, chunk);
+                }
+
+                civ.NewlyKnown.Clear();
             }
 
             client.Connection.Send(View(client.Civ));
@@ -287,42 +305,11 @@ public sealed class PlayHost : IDisposable
 
     private void SendChunk(PlayClient client, int chunk)
     {
-        MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, client.Known);
+        MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, _game.Civs[client.Civ].Known);
         if (m is not null)
         {
             client.Connection.Send(m);
         }
-    }
-
-    // The player knows the land a few hexes beyond its settlements (scouts widen it in stage C).
-    private bool UpdateKnown(PlayClient client)
-    {
-        Civ civ = _game.Civs[client.Civ];
-        int stamp = 0;
-        foreach (int sid in civ.Settlements)
-        {
-            stamp = (stamp * 31) + sid + (_game.Settlements[sid].Level * 7919);
-        }
-
-        if (stamp == client.KnownStamp && client.SentChunks)
-        {
-            return false;
-        }
-
-        client.KnownStamp = stamp;
-        foreach (int sid in civ.Settlements)
-        {
-            Settlement s = _game.Settlements[sid];
-            int radius = _game.Content.Levels[s.Level].Radius + 8;
-            Span<HexCoord> area = new HexCoord[HexGlobe.RangeSize(radius)];
-            int n = _game.Geo.Range(_game.Geo.FromIndex(s.Center), radius, area);
-            for (int k = 0; k < n; k++)
-            {
-                client.Known[_game.Geo.Index(area[k])] = true;
-            }
-        }
-
-        return true;
     }
 
     private PlayViewMessage View(int civId)
@@ -333,10 +320,11 @@ public sealed class PlayHost : IDisposable
             _game.Recompute(civ);
         }
 
+        bool[] known = civ.Known;
         var settlements = new List<PlaySettlementView>();
         foreach (Settlement s in _game.Settlements)
         {
-            if (s.Abandoned)
+            if (s.Abandoned || !known[s.Center])
             {
                 continue;
             }
@@ -348,7 +336,7 @@ public sealed class PlayHost : IDisposable
         var buildings = new List<PlayBuildingView>();
         foreach (Building b in _game.Buildings)
         {
-            if (b.State == BuildingState.Removed)
+            if (b.State == BuildingState.Removed || !known[b.Cell])
             {
                 continue;
             }
@@ -368,8 +356,21 @@ public sealed class PlayHost : IDisposable
             buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent));
         }
 
+        var units = new List<PlayUnitView>();
+        foreach (Unit u in _game.Units)
+        {
+            if (u.State == UnitState.Gone || (u.Civ != civId && !_game.Sees(civ, u)))
+            {
+                continue;
+            }
+
+            HexCoord h = _game.Geo.FromIndex(u.Cell);
+            HexCoord to = u.State == UnitState.Moving && u.Path.Count > 0 ? _game.Geo.FromIndex(u.Path[^1]) : h;
+            units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row));
+        }
+
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
-            civ.People, civ.Hungry, settlements, buildings, [.. _news]);
+            civ.People, civ.Hungry, settlements, buildings, [.. _news], units);
     }
 
     private sealed class PlayClient(IConnection connection, int cells)
@@ -378,9 +379,7 @@ public sealed class PlayHost : IDisposable
 
         public int Civ { get; set; } = -1;
 
-        public bool[] Known { get; } = new bool[cells];
-
-        public int KnownStamp { get; set; } = -1;
+        public int Cells { get; } = cells;
 
         public bool SentChunks { get; set; }
 

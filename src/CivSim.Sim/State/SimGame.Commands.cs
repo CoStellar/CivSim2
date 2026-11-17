@@ -58,6 +58,9 @@ public sealed partial class SimGame
                 return null;
             }),
             UpgradeSettlementCommand c => Upgrade(civ, c.Settlement),
+            TrainCommand c => Train(civ, c.Settlement, c.Kind),
+            MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden),
+            FoundCommand c => Found(civ, c.Unit),
             _ => "Unknown command.",
         };
     }
@@ -329,6 +332,7 @@ public sealed partial class SimGame
         Pay(civ, next.UpgradePrice, 100);
         s.Level++;
         Claim(s);
+        Reveal(civ, s.Center, next.Radius + 4);
         civ.Dirty = true;
         News.Add((civ.Id, $"{s.Name} is now a {next.Name.ToLowerInvariant()}."));
         return null;

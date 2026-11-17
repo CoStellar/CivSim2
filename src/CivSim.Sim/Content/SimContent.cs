@@ -13,6 +13,9 @@ public sealed record SimGood(int Id, string Key, string Name);
 /// <summary>A level of a settlement: territory radius, housing and storage it gives, price of reaching it.</summary>
 public sealed record SettlementLevel(int Id, string Key, string Name, int Radius, int Housing, long Storage, long[] UpgradePrice);
 
+/// <summary>A kind of unit (settlers, scouts; armies in stage E). Price in hundredths.</summary>
+public sealed record UnitType(int Id, string Key, string Name, int People, long[] Price, int TrainTicks, int TicksPerHex, int HiddenTicksPerHex, int Sight, bool Founds);
+
 /// <summary>A building type from <c>data/sim/game.json</c>. Amounts in hundredths; rates per worker per minute.</summary>
 public sealed class BuildingType
 {
@@ -127,6 +130,29 @@ public sealed class SimContent
 
     /// <summary>Id of food.</summary>
     public int Food { get; init; }
+
+    /// <summary>Unit kinds.</summary>
+    public required IReadOnlyList<UnitType> Units { get; init; }
+
+    /// <summary>Least distance between settlement centres.</summary>
+    public int FoundMinDistance { get; init; }
+
+    /// <summary>Walking cost of each hex in percent of a flat open hex.</summary>
+    public required int[] WalkCost { get; init; }
+
+    /// <summary>Finds a unit kind by key.</summary>
+    public UnitType Unit(string key)
+    {
+        foreach (UnitType u in Units)
+        {
+            if (u.Key == key)
+            {
+                return u;
+            }
+        }
+
+        throw new KeyNotFoundException($"Unknown unit '{key}'.");
+    }
 
     /// <summary>Finds a good by key.</summary>
     public int GoodId(string key)
@@ -274,6 +300,41 @@ public sealed class SimContent
             });
         }
 
+        var units = new List<UnitType>();
+        foreach (JsonElement u in root.GetProperty("units").EnumerateArray())
+        {
+            int perHex = u.GetProperty("ticksPerHex").GetInt32();
+            units.Add(new UnitType(
+                units.Count, u.GetProperty("key").GetString()!, u.GetProperty("name").GetString()!, u.GetProperty("people").GetInt32(), Amounts(u.GetProperty("price")),
+                (int)(Hundredths(u.GetProperty("trainSeconds")) * TicksPerSecond / One), perHex,
+                u.TryGetProperty("hiddenTicksPerHex", out JsonElement hp) ? hp.GetInt32() : 0, u.GetProperty("sight").GetInt32(),
+                u.TryGetProperty("founds", out JsonElement f) && f.GetBoolean()));
+        }
+
+        JsonElement tc = root.GetProperty("terrainCost");
+        var forest = new bool[world.Biomes.Count];
+        foreach (JsonElement k in tc.GetProperty("forestBiomes").EnumerateArray())
+        {
+            forest[world.Biome(k.GetString()!).Id] = true;
+        }
+
+        // Walking cost per biome × relief, flattened: index = biome * 3 + relief; 0 = impassable (water).
+        var walk = new int[world.Biomes.Count * 3];
+        for (int b = 0; b < world.Biomes.Count; b++)
+        {
+            for (int r = 0; r < 3; r++)
+            {
+                int cost = world.Biomes[b].IsWater ? 0 : 100;
+                if (cost > 0)
+                {
+                    cost = cost * (r == 1 ? tc.GetProperty("hills").GetInt32() : r == 2 ? tc.GetProperty("mountains").GetInt32() : 100) / 100;
+                    cost = forest[b] ? cost * tc.GetProperty("forest").GetInt32() / 100 : cost;
+                }
+
+                walk[(b * 3) + r] = cost;
+            }
+        }
+
         JsonElement start = root.GetProperty("start");
         JsonElement food = root.GetProperty("food");
         JsonElement growth = root.GetProperty("growth");
@@ -295,6 +356,9 @@ public sealed class SimContent
             StarvePercentPerMinute = growth.GetProperty("starvePercentPerMinute").GetInt32(),
             ResumeCostPercent = root.GetProperty("resumeCostPercent").GetInt32(),
             Food = GoodOf("food"),
+            Units = units,
+            FoundMinDistance = root.GetProperty("foundSettlement").GetProperty("minDistance").GetInt32(),
+            WalkCost = walk,
         };
     }
 

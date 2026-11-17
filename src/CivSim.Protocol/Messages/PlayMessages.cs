@@ -22,6 +22,32 @@ public sealed record PlayBuildingInfo(
     [property: Key(9)] long Storage,
     [property: Key(10)] string Needs);
 
+/// <summary>A unit kind of the new game.</summary>
+[MessagePackObject]
+public sealed record PlayUnitInfo(
+    [property: Key(0)] int Id,
+    [property: Key(1)] string Key,
+    [property: Key(2)] string Name,
+    [property: Key(3)] int People,
+    [property: Key(4)] long[] Price,
+    [property: Key(5)] int TrainSeconds,
+    [property: Key(6)] bool CanHide,
+    [property: Key(7)] bool Founds);
+
+/// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
+[MessagePackObject]
+public sealed record PlayUnitView(
+    [property: Key(0)] int Id,
+    [property: Key(1)] int Kind,
+    [property: Key(2)] int Civ,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] int People,
+    [property: Key(6)] int State,
+    [property: Key(7)] bool Hidden,
+    [property: Key(8)] int ToCol,
+    [property: Key(9)] int ToRow);
+
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
 public sealed record PlayLevelInfo([property: Key(0)] string Key, [property: Key(1)] string Name, [property: Key(2)] int Radius, [property: Key(3)] int Housing, [property: Key(4)] long[] UpgradePrice);
@@ -34,7 +60,8 @@ public sealed record PlayContentMessage(
     [property: Key(2)] IReadOnlyList<PlayLevelInfo> Levels,
     [property: Key(3)] int MapWidth,
     [property: Key(4)] int MapHeight,
-    [property: Key(5)] string WorldName) : IProtocolMessage;
+    [property: Key(5)] string WorldName,
+    [property: Key(6)] IReadOnlyList<PlayUnitInfo> Units) : IProtocolMessage;
 
 /// <summary>A settlement as the player sees it.</summary>
 [MessagePackObject]
@@ -77,7 +104,8 @@ public sealed record PlayViewMessage(
     [property: Key(7)] bool Hungry,
     [property: Key(8)] IReadOnlyList<PlaySettlementView> Settlements,
     [property: Key(9)] IReadOnlyList<PlayBuildingView> Buildings,
-    [property: Key(10)] IReadOnlyList<string> News) : IProtocolMessage;
+    [property: Key(10)] IReadOnlyList<string> News,
+    [property: Key(11)] IReadOnlyList<PlayUnitView> Units) : IProtocolMessage;
 
 /// <summary>What a player command does.</summary>
 public enum PlayCommandKind
@@ -99,6 +127,15 @@ public enum PlayCommandKind
 
     /// <summary>Raise settlement <c>A</c> one level.</summary>
     Upgrade = 5,
+
+    /// <summary>Train unit kind <c>B</c> in settlement <c>A</c>.</summary>
+    Train = 6,
+
+    /// <summary>Send unit <c>A</c> to (<c>Col</c>, <c>Row</c>), hidden when <c>Flag</c>.</summary>
+    Move = 7,
+
+    /// <summary>Settlers <c>A</c> found a camp where they stand.</summary>
+    Found = 8,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>
@@ -109,7 +146,8 @@ public sealed record PlayCommandMessage(
     [property: Key(2)] int A,
     [property: Key(3)] int Col,
     [property: Key(4)] int Row,
-    [property: Key(5)] bool Flag) : IProtocolMessage;
+    [property: Key(5)] bool Flag,
+    [property: Key(6)] int B = 0) : IProtocolMessage;
 
 /// <summary>Client → server: where can building type <c>Type</c> go?</summary>
 [MessagePackObject]

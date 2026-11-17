@@ -24,7 +24,10 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
 /// </summary>
 public sealed partial class SimGame
 {
-    private readonly PriorityQueue<int, (long Tick, int Id)> _schedule = new();
+    private const int DoneBuilding = 0;
+    private const int DoneTraining = 1;
+    private const int UnitStep = 2;
+    private readonly PriorityQueue<(int Kind, int Id), (long Tick, int Kind, int Id)> _schedule = new();
 
     private SimGame(SimContent content, SimSettings settings, WorldMap map)
     {
@@ -73,6 +76,9 @@ public sealed partial class SimGame
     /// <summary>Buildings, by id.</summary>
     public List<Building> Buildings { get; } = [];
 
+    /// <summary>Units, by id.</summary>
+    public List<Unit> Units { get; } = [];
+
     /// <summary>Events of the last tick for the chronicle (civ −1 = everyone).</summary>
     public List<(int Civ, string Text)> News { get; } = [];
 
@@ -100,7 +106,7 @@ public sealed partial class SimGame
         var game = new SimGame(content, settings, map);
         for (int c = 0; c < settings.Civilizations && c < report.Starts.Count; c++)
         {
-            var civ = new Civ(c, $"People {c + 1}", content.Goods.Count);
+            var civ = new Civ(c, $"People {c + 1}", content.Goods.Count) { Known = new bool[map.Geometry.CellCount] };
             game.Civs.Add(civ);
             Array.Copy(content.StartStock, civ.Stock, civ.Stock.Length);
             game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
@@ -117,6 +123,7 @@ public sealed partial class SimGame
         Settlements.Add(s);
         civ.Settlements.Add(s.Id);
         Claim(s);
+        Reveal(civ, center, Content.Levels[s.Level].Radius + 4);
         civ.Dirty = true;
         return s;
     }
@@ -126,15 +133,39 @@ public sealed partial class SimGame
     {
         Ticks++;
         News.Clear();
-        while (_schedule.TryPeek(out int id, out (long Tick, int Id) due) && due.Tick <= Ticks)
+        while (_schedule.TryPeek(out (int Kind, int Id) item, out (long Tick, int Kind, int Id) due) && due.Tick <= Ticks)
         {
             _schedule.Dequeue();
-            Building b = Buildings[id];
-            if (b.State == BuildingState.Construction && b.FinishTick == due.Tick)
+            switch (item.Kind)
             {
-                b.State = BuildingState.Active;
-                Civs[b.Civ].Dirty = true;
-                News.Add((b.Civ, $"{Content.Buildings[b.Type].Name} is finished."));
+                case DoneBuilding:
+                    Building b = Buildings[item.Id];
+                    if (b.State == BuildingState.Construction && b.FinishTick == due.Tick)
+                    {
+                        b.State = BuildingState.Active;
+                        Civs[b.Civ].Dirty = true;
+                        News.Add((b.Civ, $"{Content.Buildings[b.Type].Name} is finished."));
+                    }
+
+                    break;
+                case DoneTraining:
+                    Unit trained = Units[item.Id];
+                    if (trained.State == UnitState.Training && trained.NextTick == due.Tick)
+                    {
+                        trained.State = UnitState.Idle;
+                        Reveal(Civs[trained.Civ], trained.Cell, Content.Units[trained.Kind].Sight);
+                        News.Add((trained.Civ, $"{Content.Units[trained.Kind].Name} are ready."));
+                    }
+
+                    break;
+                default:
+                    Unit walker = Units[item.Id];
+                    if (walker.State == UnitState.Moving && walker.NextTick == due.Tick)
+                    {
+                        Step(walker);
+                    }
+
+                    break;
             }
         }
 
@@ -178,5 +209,24 @@ public sealed partial class SimGame
         }
     }
 
-    private void Schedule(Building b) => _schedule.Enqueue(b.Id, (b.FinishTick, b.Id));
+    private void Schedule(Building b) => _schedule.Enqueue((DoneBuilding, b.Id), (b.FinishTick, DoneBuilding, b.Id));
+
+    private void ScheduleUnit(Unit u, int kind) => _schedule.Enqueue((kind, u.Id), (u.NextTick, kind, u.Id));
+
+    /// <summary>Marks the hexes within <paramref name="radius"/> of <paramref name="cell"/> as seen by <paramref name="civ"/>.</summary>
+    public void Reveal(Civ civ, int cell, int radius)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(radius)];
+        int n = Geo.Range(Geo.FromIndex(cell), radius, area);
+        for (int k = 0; k < n; k++)
+        {
+            int i = Geo.Index(area[k]);
+            if (!civ.Known[i])
+            {
+                civ.Known[i] = true;
+                civ.NewlyKnown.Add(Map.Chunks.ChunkOfIndex(i));
+            }
+        }
+    }
 }

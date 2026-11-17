@@ -148,6 +148,65 @@ public sealed class Civ
     /// <summary>Gone from the game.</summary>
     public bool Dead { get; set; }
 
-    /// <summary>Total people.</summary>
+    /// <summary>Total people (in settlements; units are counted apart).</summary>
     public int People { get; set; }
+
+    /// <summary>Hexes this people has seen (fog of war).</summary>
+    public bool[] Known { get; set; } = [];
+
+    /// <summary>Map chunks with newly seen hexes since the server last looked (the server clears it).</summary>
+    public HashSet<int> NewlyKnown { get; } = [];
+
+    /// <summary>Unit ids.</summary>
+    public List<int> Units { get; } = [];
+}
+
+/// <summary>What a unit is doing.</summary>
+public enum UnitState : byte
+{
+    /// <summary>Being trained in its settlement; appears at <see cref="Unit.NextTick"/>.</summary>
+    Training = 0,
+
+    /// <summary>Standing on its hex.</summary>
+    Idle = 1,
+
+    /// <summary>Walking its path; the next step is at <see cref="Unit.NextTick"/>.</summary>
+    Moving = 2,
+
+    /// <summary>No longer in the game (founded a settlement, disbanded, destroyed).</summary>
+    Gone = 3,
+}
+
+/// <summary>A group of people on one hex: settlers, scouts, later an army. Identified by its index in <see cref="SimGame.Units"/>.</summary>
+public sealed class Unit
+{
+    /// <summary>Index in the game's list.</summary>
+    public int Id { get; init; }
+
+    /// <summary>Owner.</summary>
+    public int Civ { get; init; }
+
+    /// <summary>Unit kind id.</summary>
+    public int Kind { get; init; }
+
+    /// <summary>People in the group.</summary>
+    public int People { get; set; }
+
+    /// <summary>Hex it stands on (or the settlement centre while training).</summary>
+    public int Cell { get; set; }
+
+    /// <summary>What it is doing.</summary>
+    public UnitState State { get; set; }
+
+    /// <summary>Tick of the next step or of the end of training.</summary>
+    public long NextTick { get; set; }
+
+    /// <summary>Hexes still to walk, in order.</summary>
+    public List<int> Path { get; } = [];
+
+    /// <summary>Next index in <see cref="Path"/>.</summary>
+    public int PathIndex { get; set; }
+
+    /// <summary>Walks hidden (scouts): slower, seen only up close.</summary>
+    public bool Hidden { get; set; }
 }

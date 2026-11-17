@@ -26,6 +26,9 @@ public partial class PlayOverlay : Node2D
     private (int Col, int Row)? _hover;
     private (int Col, int Row)? _selected;
 
+    /// <summary>Id of the selected unit (−1 = none).</summary>
+    public int SelectedUnit { get; set; } = -1;
+
     /// <summary>Colour of a civilization.</summary>
     public static Color CivColor(int civ) => CivColors[((civ % CivColors.Length) + CivColors.Length) % CivColors.Length];
 
@@ -112,6 +115,43 @@ public partial class PlayOverlay : Node2D
                     DrawPolyline(Closed(Hex(c, size)), civ, 3);
                     DrawString(font, c + new Vector2(-24, 6), _content.Levels[s.Level].Name[..1], HorizontalAlignment.Center, 48, 18, Colors.White);
                     DrawString(font, c + new Vector2(-80, -26), s.Name, HorizontalAlignment.Center, 160, 14, Colors.White);
+                }
+            }
+        }
+
+        if (_view is not null)
+        {
+            foreach (PlayUnitView u in _view.Units)
+            {
+                if (u.State == 0)
+                {
+                    continue;
+                }
+
+                Color civ = CivColor(u.Civ);
+                bool mine = u.Civ == _view.Civ;
+                foreach (Vector2 c in Copies(u.Col, u.Row))
+                {
+                    if (mine && u.State == 2)
+                    {
+                        Vector2 to = HexLayout.Center(u.ToCol, u.ToRow);
+                        float dx = to.X - HexLayout.Center(u.Col, u.Row).X;
+                        if (MathF.Abs(dx) > _period.X / 2)
+                        {
+                            dx -= MathF.Sign(dx) * _period.X;
+                        }
+
+                        Vector2 end = c + new Vector2(dx, to.Y - c.Y);
+                        DrawDashedLine(c, end, new Color(1, 1, 1, 0.5f), 2, 8);
+                        DrawCircle(end, 5, new Color(1, 1, 1, 0.6f));
+                    }
+
+                    Vector2 p = c + new Vector2(10, -8);
+                    DrawCircle(p, 11, u.Hidden ? civ.Darkened(0.6f) : civ.Darkened(0.3f));
+                    DrawArc(p, 11, 0, MathF.Tau, 20, u.Id == SelectedUnit ? new Color(1f, 0.9f, 0.3f) : Colors.Black, u.Id == SelectedUnit ? 3 : 1.5f);
+                    string letter = _content.Units[u.Kind].Name[..1];
+                    DrawString(font, p + new Vector2(-11, 5), letter, HorizontalAlignment.Center, 22, 13, Colors.White);
+                    DrawString(font, p + new Vector2(-11, 20), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 10, Colors.White);
                 }
             }
         }

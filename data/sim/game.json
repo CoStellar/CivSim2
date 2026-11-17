@@ -25,6 +25,12 @@
     {"key": "town", "name": "Town", "radius": 4, "housing": 60, "storage": 600, "upgradePrice": {"wood": 250, "stone": 200, "clay": 100, "tools": 40}},
     {"key": "city", "name": "City", "radius": 5, "housing": 90, "storage": 900, "upgradePrice": {"wood": 500, "stone": 500, "clay": 250, "tools": 120}}
   ],
+  "foundSettlement": {"minDistance": 5, "comment": "Settlers found a camp at least minDistance hexes from every other settlement centre, on land nobody owns; their people live there."},
+  "units": [
+    {"key": "settlers", "name": "Settlers", "people": 8, "price": {"food": 40, "wood": 30}, "trainSeconds": 10, "ticksPerHex": 6, "sight": 3, "founds": true},
+    {"key": "scouts", "name": "Scouts", "people": 2, "price": {"food": 15}, "trainSeconds": 5, "ticksPerHex": 3, "hiddenTicksPerHex": 6, "sight": 5}
+  ],
+  "terrainCost": {"comment": "Walking cost of a hex in percent of a flat open hex.", "hills": 200, "mountains": 400, "forest": 150, "forestBiomes": ["deciduous_forest", "taiga", "jungle", "swamp"]},
   "buildings": [
     {"key": "gatherers_hut", "name": "Gatherers' hut", "workers": 3, "price": {"wood": 15}, "buildSeconds": 12,
      "biomes": ["grassland", "steppe", "savanna", "deciduous_forest", "jungle", "taiga", "swamp", "tundra"],

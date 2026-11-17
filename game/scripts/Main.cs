@@ -189,7 +189,8 @@ public partial class Main : Node2D
             // --play-demo builds a few things on the way, to check the screen without clicking.
             (double, Action<Play.PlayGame>)[] demo = _playDemo
                 ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("woodcutter", 0)),
-                   (1.9, g => g.ScriptBuildNearCentre("hut", 2)), (2.1, g => g.ScriptBuildNearCentre("hunters_lodge", 1))]
+                   (1.9, g => g.ScriptBuildNearCentre("hut", 2)), (2.1, g => g.ScriptBuildNearCentre("hunters_lodge", 1)),
+                   (2.3, g => g.ScriptTrain("scouts")), (9, g => g.ScriptMoveFirst(-8, -6, false))]
                 : [];
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
         }

@@ -140,8 +140,8 @@ public sealed class ClientSession
     public event Action<IReadOnlyList<string>>? PlayNews;
 
     /// <summary>Sends a command of the new game.</summary>
-    public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false) =>
-        _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag));
+    public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false, int b = 0) =>
+        _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag, b));
 
     /// <summary>Asks where a building type can be built.</summary>
     public void AskPlaces(int type) => _connection.Send(new PlacesRequestMessage(type));
