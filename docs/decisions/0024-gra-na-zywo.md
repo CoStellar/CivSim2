@@ -1,5 +1,7 @@
 # ADR 0024: Gra na żywo między RTS-em a strategią: gracz ponad światem
 
+> **Legacy (2026-11-17):** zastąpione przez ADR 0028 i `docs/projekt-gry.md`. Opisuje grę sprzed przebudowy.
+
 **Status:** przyjęta, 2026-11-09 (decyzje Patryka; dokument „Wizja gry: CivSim 2 na żywo — propozycja” w Claude Docs).
 Zmienia GDD rozdz. 1 (wizja, „czego nie robimy”), 6 (technologie), 13 (tryby i koniec gry) i 14 (kolejność prac).
 Wdrożenie: etapy 6–8 w `ROADMAP.md`.

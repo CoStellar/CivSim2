@@ -1,14 +1,28 @@
 # CivSim 2 — Roadmapa
 
-**Zakres:** budujemy wyłącznie funkcje oznaczone w `docs/GDD.md` (rozdział 16) jako **CORE** i **CORE (uproszczone)**.
-Moduły to przyszłe aktualizacje i nie wchodzą do tego planu. Kultury i religii nie ma w grze.
+**Przebudowa od 2026-11-17 (ADR 0028).**
+- Projekt gry: `docs/projekt-gry.md`.
+- Plan: `docs/plan-przebudowy.md`.
+- Zasady wydajności: `docs/wydajnosc.md`.
+- Kod legacy: `docs/legacy.md`.
+- Stan sprzed przebudowy: gałąź `legacy/pre-rework`.
 
-**Kierunek od 2026-11-09 (ADR 0024, 0025): gra na żywo**, a od 2026-11-13 (ADR 0027) **symulacja jest panem, gracz sternikiem**: pięć dźwigni
-(GDD 1.2), każdą można oddać AI, sterowanie oddziałami to narzędzie, nie filar; backend liczy się w taktach i pulsach, lata to tylko licznik. Kolejność: backend na żywo (etap 6),
-epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery. Dawne etapy 6–13 (ery 3–9, tryb gracza
-na końcu) są zastąpione. Etap kończy się dopiero po spełnieniu kryterium „Gotowe”. Szczegóły zasad: `docs/GDD.md` (1.1, 6.4).
+**Cel na ten tydzień: demo do średniowiecza.**
 
-**Aktualny etap: 6 (backend gry na żywo): plan w `docs/prompts/09-etap-gra-na-zywo.md` (T1–T14) i `docs/prompts/10-plan-gry.md` (kolejność od PR 4a, ADR 0026); gotowe PR 1, 2, 3a, 3b, bitwa w czasie, T11 (powtórka), T14 (schematy); następne: P prototyp sterowania, T tempo i skala (4a zadania gotowe)**
+## Przebudowa
+
+- [ ] **A. Mapa w nowej skali:** gęstsze heksy (porównanie 7 i 19 na dawny heks), heks jako miejsce na obiekt, pomiar pamięci i czasu.
+- [ ] **B. Pierwsza osada i gospodarka:** wybór miejsca startu z oceną miejsc, osada z heksów, budynki z miejscami pracy, magazyn, domy, przyrost, pasek zasobów i pasek akcji.
+- [ ] **C. Ekspansja i ruch:** osadnicy, awans i przenosiny osad, zwiadowcy jawni i ukryci, mgła wojny, kronika i oś czasu.
+- [ ] **D. Technologie, myśliciele, doradca, ery** do średniowiecza.
+- [ ] **E. Wojna:** jednostki według ery, rezerwiści, sterowanie oddziałami, walka na żywo, fortyfikacje, wojna jako stan, negocjacje pokoju, reputacja.
+- [ ] **F. Gracz AI** z tymi samymi komendami.
+- [ ] **G. Dyplomacja, handel, zdarzenia z puli, cele partii, podsumowanie.**
+- [ ] **H. Multiplayer:** pauzy, dyplomacja między ludźmi.
+
+## Legacy (gra sternika, do 2026-11-17)
+
+Poniższe etapy opisują grę sprzed przebudowy i zostają jako historia.
 
 ---
 

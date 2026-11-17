@@ -1,23 +1,32 @@
 # CivSim 2 — instrukcje dla Claude Code
 
 Czytasz ten plik na początku każdej sesji. Jest źródłem zasad pracy w tym repo.
-Pełny projekt gry: `docs/GDD.md`. Plan prac i stan: `ROADMAP.md`. Decyzje architektoniczne: `docs/decisions/`.
-Znane problemy aplikacji (z przyczynami i planem): `docs/known-issues.md`. Raporty z długich biegów: `docs/long-runs/`.
+
+**Od 2026-11-17 trwa przebudowa gry (ADR 0028).** Obowiązują:
+- projekt gry: `docs/projekt-gry.md`;
+- plan prac: `docs/plan-przebudowy.md` i `ROADMAP.md`;
+- zasady wydajności: `docs/wydajnosc.md`;
+- co jest legacy: `docs/legacy.md`.
+
+`docs/GDD.md`, `docs/systems/`, `docs/ai/` i ADR 0024–0027 opisują grę legacy: nie rozwijaj jej, chyba że nowa gra tego wymaga.
+Decyzje architektoniczne: `docs/decisions/`.
 
 ## Projekt w skrócie
 
-CivSim 2 to strategia na żywo (między RTS-em a 4X, decyzja Patryka z 2026-11-09, ADR 0024 i 0025) w pixel arcie na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się, przez bieguny przechodzi się na drugą stronę planety).
-**Symulacja jest panem, gracz sternikiem** (ADR 0027, GDD 1.2): gracz ma pięć dźwigni (gdzie żyjemy, dokąd zmierzamy, co robimy na ziemi, z kim i jak, karty), każdą może oddać AI, a każda jego decyzja ma widoczny skutek i przyczynę w kronice; każda mechanika i każdy PR przechodzi „test sternika” z GDD 1.2.
-Cywilizacje przechodzą od koczowniczych plemion do ery kosmicznej. **Najpierw powstaje symulator**
-(wszystkie cywilizacje prowadzi AI), na nim tryb gracza na tych samych zasadach. Kolejność od 2026-11-09: backend gry na żywo (etap 6),
-epoka brązu (etap 7), grywalne demo solo (etap 8), gra w sieci (etap 9), potem kolejne ery (`ROADMAP.md`).
+CivSim 2 to strategia na żywo, „Cywilizacja 6 w czasie rzeczywistym”, na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się,
+przez bieguny przechodzi się na drugą stronę planety). **Gracz jest całą cywilizacją i decyduje o wszystkim:**
+- buduje na heksach (heks to miejsce na jeden obiekt, osada to zbiór heksów);
+- bada technologie;
+- prowadzi wojsko;
+- prowadzi dyplomację.
+
+Jego lud nie ma własnej AI. Przeciwnik AI to pełny gracz z tymi samymi komendami. Partia ok. 2 h do nowożytności; teraz budujemy demo
+do średniowiecza. Multiplayer od początku. **Najpierw gra, potem realizm:** lata to tylko ozdoba na ekranie.
 
 ## Zakres
 
-Budujemy **tylko** funkcje oznaczone w `docs/GDD.md`, rozdział 16, jako **CORE** albo **CORE (uproszczone)**.
-Funkcje oznaczone jako „Moduł” to przyszłe aktualizacje: nie implementuj ich, ale nie blokuj ich architekturą
-(dane w JSON, mechanizm efektów, komendy zostawiają na nie miejsce). Funkcji „Wytnij” nie robimy wcale.
-CivSim 2 to symulator rozwoju gospodarczego: **nie ma kultury ani religii** jako mechanik.
+Budujemy to, co jest w `docs/projekt-gry.md`. Nie ma kultury, religii, wodzów ani postaci (wyjątek: myśliciele i doradcy z losowymi imionami).
+**Jak najmniej mechanizmów w tle:** każdy system spełnia `docs/wydajnosc.md` (usypianie, terminy, tempa, stałe rytmy, sumy zamiast osób).
 
 ## Role
 
@@ -47,8 +56,8 @@ CivSim 2 to symulator rozwoju gospodarczego: **nie ma kultury ani religii** jako
 5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/known-issues.md` (naprawione i nowe problemy), zaktualizuj `docs/systems/` (a gdy etap zmienia AI, także `docs/ai/`),
    upewnij się, że graf wiedzy jest aktualny, i napisz krótkie podsumowanie: co działa, co zostało, co Patryk ma zrobić.
 
-Jeśli zadanie zmienia zasady z `docs/GDD.md`, **najpierw zaproponuj zmianę Patrykowi**, potem ją wprowadź
-w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
+Jeśli zadanie zmienia zasady z `docs/projekt-gry.md`, **najpierw zaproponuj zmianę Patrykowi**, potem ją wprowadź
+w dokumencie i w kodzie. Nie zmieniaj zasad gry po cichu.
 
 ## Architektura — twarde zasady
 
@@ -68,10 +77,8 @@ w GDD i w kodzie. Nie zmieniaj zasad gry po cichu.
    - test determinizmu (hash stanu po N turach dla dwóch przebiegów) musi przechodzić lokalnie przed każdym PR.
 5. **Zawartość w danych.** Technologie, zasoby, budynki, receptury, jednostki, ustroje, polityki, zdarzenia,
    biomy i motywy UI są w plikach JSON w `data/`, walidowanych przy starcie. Nowa technologia nie wymaga kodu.
-6. **Tempa na rok.** Wszystkie tempa (wzrost, psucie, odrastanie) definiuj na rok i przeliczaj przez długość tury ery.
-   *Od etapu 6 PR 1 (ADR 0025): pętla liczy się w taktach (`data/time.json`); cywilizacja liczy rozwój w pulsach za miesiące swojej ery,
-   akcja (kampanie, liczniki wojny) w taktach przez `TimeRules.ActionTicks`, a `GameState.Month` to tylko licznik lat dla gracza.
-   Testy jednostkowe systemów biorą `TestContent.Load()` (puls co takt).*
+6. **Czas w taktach** (10 na sekundę). Każdy system liczy się w stałym rytmie (`docs/wydajnosc.md`), a wartości w danych
+   podajemy na sekundę gry. Lata i miesiące nie są zasadą gry (legacy: tempa na rok, pulsy, `TimeRules.ActionTicks`).
 7. **Wydajność od pierwszego dnia:**
    - pola mapy w płaskich tablicach (struktura tablic), byty identyfikowane liczbami;
    - zero alokacji w głównej pętli tury, pule obiektów;
@@ -166,9 +173,9 @@ Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla
 ## Czego nie robić
 
 - Nie dodawaj religii ani kultury.
-- Nie implementuj modułów z rozdziału 16 GDD bez zgody Patryka.
+- Nie dodawaj mechanik spoza `docs/projekt-gry.md` bez zgody Patryka.
 - Nie dawaj AI żadnych premii ani ukrytej wiedzy; widzi tylko to, co odkryła jej cywilizacja.
-- Nie buduj interfejsu gracza przed etapem 8 (wyjątki: podgląd deweloperski z menu startowym, widokiem warstw i narzędziami do testów etapu 6 oraz grafiki zastępcze z etapu 5).
+- Nie rozwijaj kodu legacy (`docs/legacy.md`) i nie uzależniaj od niego nowej symulacji.
 - Nie planuj eksportu do przeglądarki (Godot nie eksportuje oficjalnie C# do web).
-- Nie buduj gry w sieci przed etapem 9 i nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio).
+- Nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio): multiplayer jest od początku.
 - Nie zmieniaj zasad gry bez zgody Patryka.
