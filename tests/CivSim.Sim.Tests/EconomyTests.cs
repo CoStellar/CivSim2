@@ -25,6 +25,15 @@ public sealed class EconomyTests
     private static int FreeCell(SimGame g, Civ civ, BuildingType t) =>
         g.Settlements[civ.Settlements[0]].Cells.First(c => g.CannotBuild(civ, c, t, checkPrice: false) is null);
 
+    // Runs until a building is past the porters' walk and its construction (or a limit).
+    private static void Finish(SimGame g, Building b, int limit = 3000)
+    {
+        for (int i = 0; i < limit && b.State is BuildingState.Delivery or BuildingState.Construction; i++)
+        {
+            g.Tick();
+        }
+    }
+
     private static void Run(SimGame g, int ticks)
     {
         for (int i = 0; i < ticks; i++)
@@ -58,8 +67,9 @@ public sealed class EconomyTests
         int cell = FreeCell(g, civ, hut);
         Assert.Null(g.Apply(new BuildCommand(civ.Id, cell, hut.Id)));
         Assert.Equal(Content.StartStock[Content.GoodId("wood")] - hut.Price[Content.GoodId("wood")], civ.Stock[Content.GoodId("wood")]);
-        Run(g, hut.BuildTicks + Content.EconomyEveryTicks);
         Building b = g.Buildings[g.BuildingAt[cell]];
+        Finish(g, b);
+        Run(g, Content.EconomyEveryTicks);
         Assert.Equal(BuildingState.Active, b.State);
         Assert.Equal(hut.Workers, b.Workers);
         Assert.True(civ.Rate[Content.Food] > before, $"food rate {before} -> {civ.Rate[Content.Food]}");
@@ -74,7 +84,7 @@ public sealed class EconomyTests
         Settlement s = g.Settlements[civ.Settlements[0]];
         Assert.NotNull(g.Apply(new BuildCommand(civ.Id, s.Center, hut.Id)));
         Assert.NotNull(g.Apply(new BuildCommand(civ.Id, g.Settlements[g.Civs[1].Settlements[0]].Cells[1], hut.Id)));
-        Array.Clear(civ.Stock);
+        Array.Clear(g.Settlements[civ.Settlements[0]].Stock);
         int cell = FreeCell(g, civ, hut);
         Assert.Contains("Not enough goods", g.Apply(new BuildCommand(civ.Id, cell, hut.Id)), StringComparison.Ordinal);
     }
@@ -88,6 +98,11 @@ public sealed class EconomyTests
         int cell = FreeCell(g, civ, hut);
         g.Apply(new BuildCommand(civ.Id, cell, hut.Id));
         int id = g.BuildingAt[cell];
+        while (g.Buildings[id].State == BuildingState.Delivery)
+        {
+            g.Tick();
+        }
+
         Run(g, 3);
         Assert.Null(g.Apply(new PauseConstructionCommand(civ.Id, id, true)));
         Run(g, hut.BuildTicks * 2);
@@ -106,15 +121,17 @@ public sealed class EconomyTests
         Civ civ = g.Civs[0];
         BuildingType tm = Content.Building("toolmaker");
         int stone = Content.GoodId("stone");
-        civ.Stock[stone] = 100 * SimContent.One;
+        g.Settlements[civ.Settlements[0]].Stock[stone] = 100 * SimContent.One;
         int cell = FreeCell(g, civ, tm);
         Assert.Null(g.Apply(new BuildCommand(civ.Id, cell, tm.Id)));
-        civ.Stock[stone] = 1 * SimContent.One;
-        Run(g, tm.BuildTicks + (SimContent.TicksPerMinute / 2));
         Building b = g.Buildings[g.BuildingAt[cell]];
+        Finish(g, b);
+        g.Settlements[civ.Settlements[0]].Stock[stone] = 1 * SimContent.One;
+        g.Settlements[civ.Settlements[0]].Stock[Content.GoodId("wood")] = 90 * SimContent.One;
+        Run(g, SimContent.TicksPerMinute / 2);
         Assert.True(b.Starved);
-        Assert.Equal(0, civ.Stock[stone]);
-        civ.Stock[stone] = 50 * SimContent.One;
+        Assert.True(g.Settlements[civ.Settlements[0]].Stock[stone] < SimContent.One);
+        g.Settlements[civ.Settlements[0]].Stock[stone] = 50 * SimContent.One;
         Run(g, Content.EconomyEveryTicks * 2);
         Assert.False(b.Starved);
         Assert.True(civ.Rate[Content.GoodId("tools")] > 0);
@@ -126,11 +143,11 @@ public sealed class EconomyTests
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
         Settlement s = g.Settlements[civ.Settlements[0]];
-        civ.Stock[Content.Food] = 300 * SimContent.One;
+        g.Settlements[civ.Settlements[0]].Stock[Content.Food] = 300 * SimContent.One;
         Run(g, SimContent.TicksPerMinute);
         Assert.True(s.People > Content.StartPeople, $"people {s.People}");
         Assert.True(s.People <= s.Housing);
-        civ.Stock[Content.Food] = 0;
+        g.Settlements[civ.Settlements[0]].Stock[Content.Food] = 0;
         int before = s.People;
         Run(g, SimContent.TicksPerMinute);
         Assert.True(civ.Hungry || civ.Stock[Content.Food] > 0);
@@ -147,7 +164,7 @@ public sealed class EconomyTests
         Assert.NotNull(g.Apply(new UpgradeSettlementCommand(civ.Id, s.Id)));
         for (int i = 0; i < civ.Stock.Length; i++)
         {
-            civ.Stock[i] = 200 * SimContent.One;
+            g.Settlements[civ.Settlements[0]].Stock[i] = 200 * SimContent.One;
         }
 
         Assert.Null(g.Apply(new UpgradeSettlementCommand(civ.Id, s.Id)));

@@ -175,14 +175,33 @@ public sealed partial class SimGame
         Civ payer = tributePercent >= 0 ? b : a;
         Civ taker = tributePercent >= 0 ? a : b;
         int pct = Math.Abs(tributePercent);
-        for (int g = 0; g < payer.Stock.Length && pct > 0; g++)
+        if (pct > 0 && payer.Settlements.Count > 0 && taker.Settlements.Count > 0)
         {
-            long part = payer.Stock[g] * pct / 100;
-            payer.Stock[g] -= part;
-            taker.Stock[g] = Math.Min(taker.Capacity[g] == 0 ? long.MaxValue : Math.Max(taker.Capacity[g], taker.Stock[g]), taker.Stock[g] + part);
+            // The tribute travels in a caravan from the payer's settlement nearest the taker.
+            (Settlement from, Settlement to) = ClosestPair(payer, taker);
+            var load = new long[Content.Goods.Count];
+            for (int g = 0; g < load.Length; g++)
+            {
+                long total = 0;
+                foreach (int sid in payer.Settlements)
+                {
+                    total += Settlements[sid].Stock[g];
+                }
+
+                load[g] = total * pct / 100;
+                TakeFromCiv(payer, from, g, load[g]);
+                load[g] = Math.Min(load[g], from.Stock[g]);
+            }
+
+            Unit c = NewCarrier(payer, Content.Caravans, from, NearestStore(from, to.Center), load, 100);
+            c.Job = CarrierJob.ToSettlement;
+            c.Target = to.Id;
+            Walk(c, NearestStore(to, from.Center));
+            SyncTotals(payer);
         }
 
         SetWar(a.Id, b.Id, false);
+        PeaceMade(a.Id, b.Id);
         long truce = Ticks + (3 * SimContent.TicksPerMinute);
         Truces()[(a.Id * Civs.Count) + b.Id] = truce;
         Truces()[(b.Id * Civs.Count) + a.Id] = truce;
@@ -240,6 +259,7 @@ public sealed partial class SimGame
             }
         }
 
+        pct += Bonus(civ, EffectKind.Strength, t.Key, t.Groups); // weapons, armour, bows of each era
         return (long)u.People * t.Strength * pct;
     }
 
@@ -251,9 +271,10 @@ public sealed partial class SimGame
         foreach (int id in Civs[s.Civ].Buildings)
         {
             Building b = Buildings[id];
-            if (b.Settlement == s.Id && b.State == BuildingState.Active)
+            if (b.Settlement == s.Id && b.State == BuildingState.Active && Content.Buildings[b.Type].DefensePercent > 0)
             {
-                pct += Content.Buildings[b.Type].DefensePercent;
+                BuildingType t = Content.Buildings[b.Type];
+                pct += t.DefensePercent + Bonus(Civs[s.Civ], EffectKind.Defense, t.Key, t.Groups);
             }
         }
 
@@ -374,9 +395,8 @@ public sealed partial class SimGame
         Scores()[(attacker.Civ * Civs.Count) + defender.Civ] += dead;
         if (defender.People <= 0)
         {
-            defender.State = UnitState.Gone;
-            Civs[defender.Civ].Units.Remove(defender.Id);
-            Civs[defender.Civ].Dirty = true;
+            Loot(defender, attacker.Civ);
+            Gone(defender);
             News.Add((defender.Civ, $"Our {Content.Units[defender.Kind].Name.ToLowerInvariant()} were destroyed by {Civs[attacker.Civ].Name}."));
             News.Add((attacker.Civ, $"We destroyed {Civs[defender.Civ].Name}' {Content.Units[defender.Kind].Name.ToLowerInvariant()}."));
         }
@@ -386,7 +406,9 @@ public sealed partial class SimGame
     {
         attacker.Fighting = true;
         target.Besieged = true;
-        target.Wounds += Luck(Power(attacker)) / 100;
+        UnitType at = Content.Units[attacker.Kind];
+        int siege = 100 + at.SiegePercent + (at.SiegePercent > 0 ? Bonus(Civs[attacker.Civ], EffectKind.Siege, at.Key, at.Groups) : 0);
+        target.Wounds += Luck(Power(attacker)) * siege / 100 / 100;
         int dead = (int)Math.Min(target.People, target.Wounds / SimContent.One);
         if (dead > 0)
         {

@@ -96,7 +96,7 @@ public sealed partial class SimGame
         }
 
         SimEvent e = Content.Events[civ.Event];
-        return e.Goods[good] ? e.ProductionPercent : 100;
+        return e.Goods[good] ? 100 - ((100 - e.ProductionPercent) * Harm(civ, e.Key) / 100) : 100;
     }
 
     /// <summary>Loads the event pool from <c>game.json</c>.</summary>

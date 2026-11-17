@@ -6,37 +6,46 @@ namespace CivSim.Sim.State;
 public sealed partial class SimGame
 {
     /// <summary>
-    /// Recomputes storage, housing, jobs and the net rate of every good for one civilization. Runs only when something
-    /// changed (a building finished or stopped, people came or went, an input ran out or came back).
+    /// Recomputes, for every settlement of a people, its storage, housing, jobs and the net rate of every good. Goods lie in
+    /// the settlement where they were made (decision of 2026-11-17): every finished building adds a little room, a storehouse
+    /// a lot. Runs only when something changed: a building finished or stopped, people came or went, a store ran empty or
+    /// full, or filled again (docs/wydajnosc.md: rates, not items).
     /// </summary>
     public void Recompute(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
         int goods = Content.Goods.Count;
-        Array.Clear(civ.Rate);
-        Array.Clear(civ.Capacity);
         Array.Clear(civ.ExperienceRate);
         int people = 0;
         foreach (int sid in civ.Settlements)
         {
             Settlement s = Settlements[sid];
-            if (s.Abandoned)
-            {
-                continue;
-            }
-
             SettlementLevel level = Content.Levels[s.Level];
             s.Housing = level.Housing;
-            for (int g = 0; g < goods; g++)
-            {
-                civ.Capacity[g] += level.Storage;
-            }
-
+            Array.Clear(s.Rate);
+            Array.Fill(s.Capacity, level.Storage);
             s.Idle = s.People;
             people += s.People;
         }
 
-        // Priority buildings take workers first, then the rest in the order they were built.
+        // Storage and housing first (every finished building), then jobs: priority buildings first, the rest in build order.
+        foreach (int id in civ.Buildings)
+        {
+            Building b = Buildings[id];
+            if (b.State is BuildingState.Active or BuildingState.Stopped)
+            {
+                BuildingType t = Content.Buildings[b.Type];
+                Settlement s = Settlements[b.Settlement];
+                s.Housing += t.Housing + Bonus(civ, EffectKind.Housing, t.Key, t.Groups);
+                long room = t.Storage > 0 ? t.Storage : Content.BuildingStorage;
+                room += room * Bonus(civ, EffectKind.Storage, t.Key, t.Groups) / 100;
+                for (int g = 0; g < goods; g++)
+                {
+                    s.Capacity[g] += room;
+                }
+            }
+        }
+
         for (int pass = 0; pass < 2; pass++)
         {
             foreach (int id in civ.Buildings)
@@ -49,47 +58,61 @@ public sealed partial class SimGame
 
                 BuildingType t = Content.Buildings[b.Type];
                 b.Workers = 0;
-                if (b.State != BuildingState.Active)
+                b.Starved = false;
+                b.Full = false;
+                if (b.State != BuildingState.Active || t.Workers == 0)
                 {
                     continue;
                 }
 
                 Settlement s = Settlements[b.Settlement];
-                s.Housing += t.Housing;
-                for (int g = 0; g < goods; g++)
-                {
-                    civ.Capacity[g] += t.Storage;
-                }
-
-                if (t.Workers == 0)
-                {
-                    continue;
-                }
-
                 b.Workers = Math.Min(t.Workers, s.Idle);
                 s.Idle -= b.Workers;
-                if (b.Starved || b.Workers == 0)
+                if (b.Workers == 0)
                 {
                     continue;
                 }
 
+                // Asleep while an input is out or every output is full (woken when the stores change, see EconomyStep).
+                bool anyOut = false;
+                bool allFull = true;
                 for (int g = 0; g < goods; g++)
                 {
-                    civ.Rate[g] += (t.Produces[g] * b.Workers * b.YieldPercent / 100 * EventProduction(civ, g) / 100) - (t.Consumes[g] * b.Workers);
+                    b.Starved |= t.Consumes[g] > 0 && (s.EmptyMask & (1L << g)) != 0;
+                    if (t.Produces[g] > 0)
+                    {
+                        anyOut = true;
+                        allFull &= (s.FullMask & (1L << g)) != 0;
+                    }
+                }
+
+                b.Full = anyOut && allFull;
+                if (b.Starved || b.Full)
+                {
+                    continue;
+                }
+
+                int boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups);
+                for (int g = 0; g < goods; g++)
+                {
+                    long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100;
+                    s.Rate[g] += made - (t.Consumes[g] * b.Workers);
                 }
 
                 civ.ExperienceRate[t.Tech] += b.Workers;
             }
         }
 
-        int idle = 0;
+        int eat = civ.Event >= 0 ? 100 + ((Content.Events[civ.Event].EatPercent - 100) * Harm(civ, Content.Events[civ.Event].Key) / 100) : 100;
+        int idleAll = 0;
         foreach (int sid in civ.Settlements)
         {
-            idle += Settlements[sid].Abandoned ? 0 : Settlements[sid].Idle;
+            Settlement s = Settlements[sid];
+            idleAll += s.Idle;
+            s.Rate[Content.Food] += (s.Idle * Content.IdleForagePerMinute * EventProduction(civ, Content.Food) / 100) - (s.People * Content.FoodPerPersonPerMinute * eat / 100);
         }
 
-        int eat = civ.Event >= 0 ? Content.Events[civ.Event].EatPercent : 100;
-        civ.Rate[Content.Food] += (idle * Content.IdleForagePerMinute * EventProduction(civ, Content.Food) / 100) - (people * Content.FoodPerPersonPerMinute * eat / 100) - (civ.Advisor is null ? 0 : Content.AdvisorUpkeep);
+        // Soldiers in the field and the advisor are fed from the first settlement (the capital).
         long soldiers = 0;
         foreach (int uid in civ.Units)
         {
@@ -100,14 +123,48 @@ public sealed partial class SimGame
             }
         }
 
-        civ.Rate[Content.Food] -= soldiers * Content.War.SoldierFoodPerMinute;
-        civ.ExperienceRate[0] += idle / 2; // idle people forage: a little experience in the oldest craft
+        if (civ.Settlements.Count > 0)
+        {
+            Settlement capital = Settlements[civ.Settlements[0]];
+            capital.Rate[Content.Food] -= (soldiers * Content.War.SoldierFoodPerMinute) + (civ.Advisor is null ? 0 : Content.AdvisorUpkeep);
+        }
+
+        civ.ExperienceRate[0] += idleAll / 2; // idle people forage: a little experience in the oldest craft
         civ.People = people;
         civ.Dirty = false;
+        SyncTotals(civ);
     }
 
-    // Adds the rates for the ticks since the last step. Excess over storage is lost; a store that runs dry stops its
-    // consumers (they sleep until the good comes back), and dry food makes the civilization hungry.
+    /// <summary>Refreshes the people's totals (sum of its settlements) shown on the resource bar and used by the AI.</summary>
+    public void SyncTotals(Civ civ)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        Array.Clear(civ.Stock);
+        Array.Clear(civ.Capacity);
+        Array.Clear(civ.Rate);
+        bool hungry = false;
+        foreach (int sid in civ.Settlements)
+        {
+            Settlement s = Settlements[sid];
+            hungry |= s.Hungry;
+            for (int g = 0; g < civ.Stock.Length; g++)
+            {
+                civ.Stock[g] += s.Stock[g];
+                civ.Capacity[g] += s.Capacity[g];
+                civ.Rate[g] += s.Rate[g];
+            }
+        }
+
+        civ.Hungry = hungry;
+        civ.AnyStarved = false;
+        foreach (int id in civ.Buildings)
+        {
+            civ.AnyStarved |= Buildings[id].Starved;
+        }
+    }
+
+    // Adds each settlement's rates for the ticks since the last step. A store never goes below zero or above its room; when a
+    // store runs empty, fills up or recovers, the people is recomputed (that is how sleeping buildings wake).
     private void EconomyStep(Civ civ)
     {
         if (civ.Dirty)
@@ -120,103 +177,64 @@ public sealed partial class SimGame
             civ.Experience[t] += (long)civ.ExperienceRate[t] * Content.EconomyEveryTicks;
         }
 
-        bool starve = false;
-        for (int g = 0; g < civ.Stock.Length; g++)
+        bool changed = false;
+        foreach (int sid in civ.Settlements)
         {
-            long delta = (civ.Rate[g] * Content.EconomyEveryTicks) + civ.Remainder[g];
-            long whole = delta / SimContent.TicksPerMinute;
-            civ.Remainder[g] = delta - (whole * SimContent.TicksPerMinute);
-            long stock = civ.Stock[g] + whole;
-            if (stock > civ.Capacity[g])
+            Settlement s = Settlements[sid];
+            long empty = 0;
+            long full = 0;
+            for (int g = 0; g < s.Stock.Length; g++)
             {
-                stock = Math.Max(civ.Stock[g], civ.Capacity[g]);
-            }
-
-            if (stock < 0)
-            {
-                stock = 0;
-                civ.Remainder[g] = 0;
-                if (g == Content.Food)
+                long delta = (s.Rate[g] * Content.EconomyEveryTicks) + s.Remainder[g];
+                long whole = delta / SimContent.TicksPerMinute;
+                s.Remainder[g] = delta - (whole * SimContent.TicksPerMinute);
+                long stock = s.Stock[g] + whole;
+                if (stock > s.Capacity[g])
                 {
-                    if (!civ.Hungry)
-                    {
-                        News.Add((civ.Id, "Food has run out: people are starving."));
-                    }
-
-                    civ.Hungry = true;
+                    stock = Math.Max(s.Stock[g], s.Capacity[g]);
+                    s.Remainder[g] = 0;
                 }
-                else
+
+                if (stock <= 0)
                 {
-                    starve |= StarveConsumersOf(civ, g);
+                    stock = 0;
+                    s.Remainder[g] = 0;
+                }
+
+                s.Stock[g] = stock;
+                if (stock < SimContent.One)
+                {
+                    empty |= 1L << g;
+                }
+
+                if (s.Capacity[g] > 0 && stock * 100 >= s.Capacity[g] * 98)
+                {
+                    full |= 1L << g;
                 }
             }
-            else if (g == Content.Food && stock > 0)
+
+            bool hungry = (empty & (1L << Content.Food)) != 0 && s.Rate[Content.Food] < 0;
+            if (hungry && !s.Hungry)
             {
-                civ.Hungry = false;
+                News.Add((civ.Id, $"{s.Name} has run out of food: people are starving."));
             }
 
-            civ.Stock[g] = stock;
+            s.Hungry = hungry;
+            if (empty != s.EmptyMask || full != s.FullMask)
+            {
+                s.EmptyMask = empty;
+                s.FullMask = full;
+                changed = true;
+            }
         }
 
-        if (civ.AnyStarved && !starve)
-        {
-            WakeStarved(civ);
-        }
-
-        if (starve)
+        LogisticsStep(civ);
+        if (changed)
         {
             civ.Dirty = true;
         }
-    }
 
-    private bool StarveConsumersOf(Civ civ, int good)
-    {
-        bool any = false;
-        foreach (int id in civ.Buildings)
-        {
-            Building b = Buildings[id];
-            if (!b.Starved && b.State == BuildingState.Active && Content.Buildings[b.Type].Consumes[good] > 0)
-            {
-                b.Starved = true;
-                any = true;
-            }
-        }
-
-        civ.AnyStarved |= any;
-        return any;
-    }
-
-    // A starved building wakes when each of its inputs has at least a minute of its own use in store.
-    private void WakeStarved(Civ civ)
-    {
-        bool still = false;
-        foreach (int id in civ.Buildings)
-        {
-            Building b = Buildings[id];
-            if (!b.Starved)
-            {
-                continue;
-            }
-
-            BuildingType t = Content.Buildings[b.Type];
-            bool ok = true;
-            for (int g = 0; g < t.Consumes.Length && ok; g++)
-            {
-                ok = civ.Stock[g] >= t.Consumes[g] * Math.Max(1, t.Workers);
-            }
-
-            if (ok)
-            {
-                b.Starved = false;
-                civ.Dirty = true;
-            }
-            else
-            {
-                still = true;
-            }
-        }
-
-        civ.AnyStarved = still;
+        SyncTotals(civ);
     }
 
     // People grow toward the housing while there is food and die off while there is none.
@@ -232,20 +250,20 @@ public sealed partial class SimGame
             }
 
             long perMinute; // hundredths of a person
-            int sick = civ.Event >= 0 ? Content.Events[civ.Event].LosePercentPerMinute : 0;
+            int sick = civ.Event >= 0 ? Content.Events[civ.Event].LosePercentPerMinute * Harm(civ, Content.Events[civ.Event].Key) / 100 : 0;
             if (sick > 0)
             {
                 perMinute = -Math.Max(SimContent.One, s.People * sick);
                 s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
             }
-            else if (civ.Hungry)
+            else if (s.Hungry)
             {
                 perMinute = -Math.Max(SimContent.One, s.People * Content.StarvePercentPerMinute);
                 s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
             }
             else if (s.People < s.Housing)
             {
-                perMinute = Math.Max(Content.MinGrowthPerMinute * SimContent.One, s.People * Content.GrowthPercentPerMinute);
+                perMinute = Math.Max(Content.MinGrowthPerMinute * SimContent.One, s.People * (Content.GrowthPercentPerMinute + Bonus(civ, EffectKind.Growth, "*")));
             }
             else
             {

@@ -34,6 +34,10 @@ public sealed partial class SimGame
             Add(s.People);
             Add(s.GrowthRemainder);
             Add(s.Cells.Count);
+            foreach (long v in s.Stock)
+            {
+                Add(v);
+            }
         }
 
         foreach (Building b in Buildings)

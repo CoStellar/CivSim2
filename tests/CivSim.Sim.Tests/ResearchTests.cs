@@ -38,7 +38,7 @@ public sealed class ResearchTests
         Assert.Contains("Stone tools", g.CannotBuild(civ, s.Cells[1], Content.Building("quarry"), checkPrice: false), System.StringComparison.Ordinal);
         for (int i = 0; i < civ.Stock.Length; i++)
         {
-            civ.Stock[i] = 500 * SimContent.One;
+            g.Settlements[civ.Settlements[0]].Stock[i] = 500 * SimContent.One;
         }
 
         Assert.Contains("Agriculture", g.Apply(new UpgradeSettlementCommand(civ.Id, s.Id)), System.StringComparison.Ordinal);
@@ -85,7 +85,7 @@ public sealed class ResearchTests
 
         for (int i = 0; i < civ.Stock.Length; i++)
         {
-            civ.Stock[i] = 900 * SimContent.One;
+            g.Settlements[civ.Settlements[0]].Stock[i] = 900 * SimContent.One;
         }
 
         Person offer = civ.ThinkerOffer;

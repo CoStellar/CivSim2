@@ -284,6 +284,9 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.CancelTreaty => new CancelTreatyCommand(civ, m.A, (TreatyKind)m.B),
         PlayCommandKind.Barter => new BarterCommand(civ, m.A, m.B, m.Col * SimContent.One, m.Row, m.C * SimContent.One),
         PlayCommandKind.AnswerBarter => new AnswerBarterCommand(civ, m.A, m.Flag),
+        PlayCommandKind.SendCaravan => new SendCaravanCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One),
+        PlayCommandKind.Route => new RouteCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One),
+        PlayCommandKind.EndRoute => new EndRouteCommand(civ, m.A),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
@@ -295,6 +298,28 @@ public sealed class PlayHost : IDisposable
         {
             BuildingType t = _game.Content.Buildings[type];
             Civ c = _game.Civs[civ];
+            if (Array.IndexOf(t.Groups, "road") >= 0)
+            {
+                // Roads: known free land up to 25 hexes from our settlements.
+                var seen = new HashSet<int>();
+                foreach (int sid in c.Settlements)
+                {
+                    var area = new HexCoord[HexGlobe.RangeSize(25)];
+                    int n = _game.Geo.Range(_game.Geo.FromIndex(_game.Settlements[sid].Center), 25, area);
+                    for (int k = 0; k < n; k++)
+                    {
+                        int cell = _game.Geo.Index(area[k]);
+                        if (seen.Add(cell) && _game.CannotBuild(c, cell, t, checkPrice: false) is null)
+                        {
+                            cells.Add(area[k].Col);
+                            cells.Add(area[k].Row);
+                        }
+                    }
+                }
+
+                return new PlacesMessage(type, [.. cells]);
+            }
+
             foreach (int sid in c.Settlements)
             {
                 foreach (int cell in _game.Settlements[sid].Cells)
@@ -349,7 +374,7 @@ public sealed class PlayHost : IDisposable
         var units = new List<PlayUnitInfo>();
         foreach (UnitType u in content.Units)
         {
-            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range));
+            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range, u.System, u.NeedsBuilding));
         }
 
         var techs = new List<PlayTechInfo>();
@@ -361,7 +386,7 @@ public sealed class PlayHost : IDisposable
                 needs.Add($"{content.Techs[req].Name} {ticks / SimContent.TicksPerMinute}");
             }
 
-            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond));
+            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade));
         }
 
         var eras = new List<string>();
@@ -454,7 +479,9 @@ public sealed class PlayHost : IDisposable
             }
 
             HexCoord h = _game.Geo.FromIndex(s.Center);
-            settlements.Add(new PlaySettlementView(s.Id, s.Civ, s.Name, h.Col, h.Row, s.Level, s.People, s.Housing, s.Idle, s.Besieged, _game.Defense(s)));
+            bool own = s.Civ == civId;
+            settlements.Add(new PlaySettlementView(s.Id, s.Civ, s.Name, h.Col, h.Row, s.Level, s.People, s.Housing, s.Idle, s.Besieged, _game.Defense(s),
+                own ? (long[])s.Stock.Clone() : null, own ? (long[])s.Capacity.Clone() : null, own ? (long[])s.Rate.Clone() : null));
         }
 
         var buildings = new List<PlayBuildingView>();
@@ -490,7 +517,8 @@ public sealed class PlayHost : IDisposable
 
             HexCoord h = _game.Geo.FromIndex(u.Cell);
             HexCoord to = u.State == UnitState.Moving && u.Path.Count > 0 ? _game.Geo.FromIndex(u.Path[^1]) : h;
-            units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row, u.Fighting));
+            units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row, u.Fighting,
+                u.Cargo is null ? null : _game.CargoText(u.Cargo)));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
@@ -500,7 +528,7 @@ public sealed class PlayHost : IDisposable
             _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.BlockRadius,
             _game.Picking ? _game.Civs[_game.PickOrder[_game.PickIndex]].Name : null,
             civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0,
-            _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ));
+            _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId));
     }
 
     private PlaySummaryMessage Summary(Civ civ)
@@ -533,6 +561,21 @@ public sealed class PlayHost : IDisposable
         }
 
         return new PlaySummaryMessage(peoples, mine, best, SiteScores.Criteria, criteria);
+    }
+
+    private List<PlayRouteView> RoutesOf(int civ)
+    {
+        var list = new List<PlayRouteView>();
+        for (int i = 0; i < _game.Routes.Count; i++)
+        {
+            TradeRoute r = _game.Routes[i];
+            if (r.Civ == civ && !r.Ended)
+            {
+                list.Add(new PlayRouteView(i, r.From, r.To, r.Good, (int)(r.Amount / SimContent.One), r.Caravan >= 0));
+            }
+        }
+
+        return list;
     }
 
     private int[] TakenStarts()

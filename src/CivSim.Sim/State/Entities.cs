@@ -19,6 +19,9 @@ public enum BuildingState : byte
 
     /// <summary>Torn down; the id stays unused.</summary>
     Removed = 4,
+
+    /// <summary>Waiting for its materials: porters carry them from the nearest storehouse; building starts when they arrive.</summary>
+    Delivery = 5,
 }
 
 /// <summary>One building on one hex. Identified by its index in <see cref="SimGame.Buildings"/>.</summary>
@@ -57,6 +60,12 @@ public sealed class Building
     /// <summary>An input is missing: works no more until the input comes back.</summary>
     public bool Starved { get; set; }
 
+    /// <summary>Every good it makes is full in its settlement: asleep until there is room.</summary>
+    public bool Full { get; set; }
+
+    /// <summary>Porters bringing its materials (−1 = none on the way).</summary>
+    public int Porters { get; set; } = -1;
+
     /// <summary>Production multiplier from a bonus deposit, percent (100 = none).</summary>
     public int YieldPercent { get; init; } = 100;
 }
@@ -93,6 +102,27 @@ public sealed class Settlement
 
     /// <summary>Hexes of the territory.</summary>
     public List<int> Cells { get; } = [];
+
+    /// <summary>Goods stored here, hundredths (goods lie where they were made).</summary>
+    public long[] Stock { get; set; } = [];
+
+    /// <summary>Room per good, hundredths: the settlement's own plus every building's.</summary>
+    public long[] Capacity { get; set; } = [];
+
+    /// <summary>Net change per good per minute, hundredths.</summary>
+    public long[] Rate { get; set; } = [];
+
+    /// <summary>Carry of the economy step (hundredths × ticks).</summary>
+    public long[] Remainder { get; set; } = [];
+
+    /// <summary>Goods (bit per good) that were empty at the last economy step.</summary>
+    public long EmptyMask { get; set; }
+
+    /// <summary>Goods (bit per good) that were full at the last economy step.</summary>
+    public long FullMask { get; set; }
+
+    /// <summary>Out of food.</summary>
+    public bool Hungry { get; set; }
 
     /// <summary>Abandoned settlements keep their id but nothing else.</summary>
     public bool Abandoned { get; set; }
@@ -299,7 +329,66 @@ public sealed class Unit
 
     /// <summary>Fought in the last combat step (for the view).</summary>
     public bool Fighting { get; set; }
+
+    /// <summary>Goods carried (porters, caravans), hundredths; null for units that carry nothing.</summary>
+    public long[]? Cargo { get; set; }
+
+    /// <summary>What a carrier does: porters to a building, caravans to a settlement.</summary>
+    public CarrierJob Job { get; set; }
+
+    /// <summary>Building (porters) or settlement (caravans) the cargo goes to.</summary>
+    public int Target { get; set; } = -1;
+
+    /// <summary>Settlement the carriers come from and go back to.</summary>
+    public int Home { get; set; } = -1;
+
+    /// <summary>Hex the carriers go back to (their storehouse).</summary>
+    public int ReturnCell { get; set; } = -1;
+
+    /// <summary>Trade route that sent this caravan (−1 = none).</summary>
+    public int Route { get; set; } = -1;
 }
 
 /// <summary>One minute of a people's history: what the summary's timeline shows.</summary>
 public sealed record HistorySample(int Minute, int People, int Settlements, int Buildings, int Techs, int Soldiers, long FoodPerMinute, int Era, int Event);
+
+/// <summary>What a carrier unit is doing.</summary>
+public enum CarrierJob : byte
+{
+    /// <summary>Not a carrier.</summary>
+    None = 0,
+
+    /// <summary>Carrying materials to a construction.</summary>
+    ToBuilding = 1,
+
+    /// <summary>Carrying goods to a settlement (ours or a trade partner's).</summary>
+    ToSettlement = 2,
+
+    /// <summary>Walking home empty; joins its settlement on arrival.</summary>
+    Returning = 3,
+}
+
+/// <summary>A standing caravan route between two settlements of one people.</summary>
+public sealed class TradeRoute
+{
+    /// <summary>Owner.</summary>
+    public int Civ { get; init; }
+
+    /// <summary>Settlement the goods leave.</summary>
+    public int From { get; init; }
+
+    /// <summary>Settlement the goods go to.</summary>
+    public int To { get; init; }
+
+    /// <summary>Good carried.</summary>
+    public int Good { get; init; }
+
+    /// <summary>Amount per trip, hundredths.</summary>
+    public long Amount { get; init; }
+
+    /// <summary>Caravan on the road (−1 = none).</summary>
+    public int Caravan { get; set; } = -1;
+
+    /// <summary>Ended by the player.</summary>
+    public bool Ended { get; set; }
+}

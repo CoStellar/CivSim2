@@ -167,7 +167,6 @@ public sealed partial class SimGame
             civ.Expansion = game.AiRandom.NextInt(0, 101);
             civ.StartError = game.AiRandom.NextInt(0, 31);
             game.Civs.Add(civ);
-            Array.Copy(content.StartStock, civ.Stock, civ.Stock.Length);
             if (!settings.StartPhase)
             {
                 game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
@@ -184,16 +183,31 @@ public sealed partial class SimGame
     }
 
     /// <summary>Creates a settlement for <paramref name="civ"/> at <paramref name="center"/> and claims its territory.</summary>
-    public Settlement FoundSettlement(Civ civ, int center, int people)
+    public Settlement FoundSettlement(Civ civ, int center, int people, long[]? stock = null)
     {
         ArgumentNullException.ThrowIfNull(civ);
         string place = civ.Language?.PlaceName((ulong)civ.PlacesNamed++) ?? "";
-        var s = new Settlement { Id = Settlements.Count, Civ = civ.Id, Center = center, People = people, Name = place.Length > 0 ? place : $"{civ.Name} {civ.Settlements.Count + 1}" };
+        int goods = Content.Goods.Count;
+        var s = new Settlement
+        {
+            Id = Settlements.Count, Civ = civ.Id, Center = center, People = people, Name = place.Length > 0 ? place : $"{civ.Name} {civ.Settlements.Count + 1}",
+            Stock = new long[goods], Capacity = new long[goods], Rate = new long[goods], Remainder = new long[goods],
+        };
+
+        // The first camp gets the tribe's start goods; later camps get what their settlers carried.
+        long[]? goodsIn = stock ?? (civ.Settlements.Count == 0 ? Content.StartStock : null);
+        if (goodsIn is not null)
+        {
+            Array.Copy(goodsIn, s.Stock, goods);
+        }
+
+        Array.Fill(s.Capacity, Content.Levels[0].Storage);
         Settlements.Add(s);
         civ.Settlements.Add(s.Id);
         Claim(s);
         Reveal(civ, center, Content.Levels[s.Level].Radius + 4);
         civ.Dirty = true;
+        SyncTotals(civ);
         return s;
     }
 

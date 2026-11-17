@@ -65,6 +65,66 @@ public sealed partial class SimGame
         return n;
     }
 
+    private long[]? _offerAt;
+    private long[]? _metSince;
+    private long[]? _peaceSince;
+
+    /// <summary>
+    /// The conditions for a treaty between two peoples (decision of 2026-11-17): known for a while, settlements close,
+    /// no fighting lately, and a good name.
+    /// </summary>
+    public bool TreatyConditions(Civ civ, Civ other)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        ArgumentNullException.ThrowIfNull(other);
+        if (other.Id == civ.Id || other.Dead || AtWar(civ.Id, other.Id) || other.Reputation <= Content.TreatyMinReputation)
+        {
+            return false;
+        }
+
+        int pair = (civ.Id * Civs.Count) + other.Id;
+        _metSince ??= new long[Civs.Count * Civs.Count];
+        bool met = Met(civ, other) || Met(other, civ);
+        if (!met)
+        {
+            _metSince[pair] = 0;
+            return false;
+        }
+
+        if (_metSince[pair] == 0)
+        {
+            _metSince[pair] = Ticks;
+        }
+
+        if (Ticks - _metSince[pair] < Content.TreatyKnownTicks)
+        {
+            return false;
+        }
+
+        _peaceSince ??= new long[Civs.Count * Civs.Count];
+        if (_peaceSince[pair] > 0 && Ticks - _peaceSince[pair] < Content.TreatyPeaceTicks)
+        {
+            return false;
+        }
+
+        (Settlement a, Settlement b) = ClosestPair(civ, other);
+        int gap = Geo.Distance(Geo.FromIndex(a.Center), Geo.FromIndex(b.Center)) - Content.Levels[a.Level].Radius - Content.Levels[b.Level].Radius;
+        return gap <= Content.TreatyBorderHexes;
+    }
+
+    // Remembers when a war ended (no treaty for a while after).
+    private void PeaceMade(int a, int b)
+    {
+        _peaceSince ??= new long[Civs.Count * Civs.Count];
+        _peaceSince[(a * Civs.Count) + b] = Ticks;
+        _peaceSince[(b * Civs.Count) + a] = Ticks;
+    }
+
+    private long[] Offers() => _offerAt ??= new long[Civs.Count * Civs.Count];
+
+    /// <summary>Tick from which <paramref name="from"/> may offer <paramref name="to"/> a treaty again.</summary>
+    public long LastOffer(int from, int to) => Offers()[(from * Civs.Count) + to];
+
     private bool[] Treaties(TreatyKind kind) => kind == TreatyKind.Trade
         ? _trade ??= new bool[Civs.Count * Civs.Count]
         : _alliance ??= new bool[Civs.Count * Civs.Count];
@@ -102,6 +162,19 @@ public sealed partial class SimGame
             return "An alliance needs a trade agreement first.";
         }
 
+        if (kind == TreatyKind.Trade && Content.TradeTech >= 0 && !civ.KnownTech[Content.TradeTech])
+        {
+            return $"Trade agreements need {Content.Techs[Content.TradeTech].Name}.";
+        }
+
+        long last = LastOffer(civ.Id, other);
+        if (Ticks < last)
+        {
+            return $"We offered them something not long ago; wait {(last - Ticks) / SimContent.TicksPerSecond} s.";
+        }
+
+        Offers()[(civ.Id * Civs.Count) + other] = Ticks + Content.OfferCooldownTicks;
+
         TreatyOffers.RemoveAll(o => o.From == civ.Id && o.To == other && o.Kind == kind);
         TreatyOffers.Add(new TreatyOffer(civ.Id, other, kind));
         News.Add((other, $"{civ.Name} offer us {(kind == TreatyKind.Trade ? "a trade agreement" : "an alliance")}."));
@@ -120,6 +193,7 @@ public sealed partial class SimGame
         string what = kind == TreatyKind.Trade ? "trade agreement" : "alliance";
         if (!accept || AtWar(from, civ.Id))
         {
+            Offers()[(from * Civs.Count) + civ.Id] = Ticks + Content.RefusalCooldownTicks;
             News.Add((from, $"{civ.Name} refused our {what}."));
             return null;
         }
@@ -140,6 +214,22 @@ public sealed partial class SimGame
         News.Add((other, $"{civ.Name} ended our {(kind == TreatyKind.Trade ? "trade agreement" : "alliance")}."));
         return null;
     }
+
+    /// <summary>True when caravans can walk between the two peoples' nearest settlements.</summary>
+    public bool Reachable(Civ a, Civ b)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        if (a.Settlements.Count == 0 || b.Settlements.Count == 0)
+        {
+            return false;
+        }
+
+        (Settlement sa, Settlement sb) = ClosestPair(a, b);
+        return FindPath(sa.Center, sb.Center, _probe);
+    }
+
+    private readonly List<int> _probe = [];
 
     /// <summary>Worth of an amount of a good (percent of food × hundredths).</summary>
     public long Worth(int good, long amount) => amount * Content.Goods[good].WorthPercent / 100;
@@ -162,6 +252,11 @@ public sealed partial class SimGame
         }
 
         Civ partner = Civs[other];
+        if (!Reachable(civ, partner))
+        {
+            return $"No way on land leads to {partner.Name}: caravans cannot reach them.";
+        }
+
         if (!partner.IsAi)
         {
             BarterOffers.RemoveAll(o => o.From == civ.Id && o.To == other);
@@ -170,14 +265,15 @@ public sealed partial class SimGame
             return null;
         }
 
-        // The AI takes what is worth enough to it and leaves it at least twice what it gives.
-        bool fair = Worth(give, giveAmount) * 100 >= Worth(want, wantAmount) * Content.AcceptWorthPercent;
+        // The AI takes what is worth enough to it (fair worth once it knows currency) and keeps at least twice what it gives.
+        int wantWorth = partner.KnownTech[Content.TechId("currency")] ? 100 : Content.AcceptWorthPercent;
+        bool fair = Worth(give, giveAmount) * 100 >= Worth(want, wantAmount) * wantWorth;
         if (!fair || partner.Stock[want] < wantAmount * 2)
         {
             return $"{partner.Name} turn the offer down.";
         }
 
-        Exchange(civ, partner, give, giveAmount, want, wantAmount);
+        TradeCaravans(civ, partner, give, giveAmount, want, wantAmount);
         return null;
     }
 
@@ -202,19 +298,8 @@ public sealed partial class SimGame
             return "One side no longer has the goods.";
         }
 
-        Exchange(seller, civ, offer.GiveGood, offer.GiveAmount, offer.WantGood, offer.WantAmount);
+        TradeCaravans(seller, civ, offer.GiveGood, offer.GiveAmount, offer.WantGood, offer.WantAmount);
         return null;
-    }
-
-    private void Exchange(Civ a, Civ b, int give, long giveAmount, int want, long wantAmount)
-    {
-        a.Stock[give] -= giveAmount;
-        b.Stock[give] += giveAmount;
-        b.Stock[want] -= wantAmount;
-        a.Stock[want] += wantAmount;
-        string text = $"{a.Name} gave {giveAmount / SimContent.One} {Content.Goods[give].Key} to {b.Name} for {wantAmount / SimContent.One} {Content.Goods[want].Key}.";
-        News.Add((a.Id, text));
-        News.Add((b.Id, text));
     }
 
     // A war ends the treaties between the two; the allies of the attacked join.

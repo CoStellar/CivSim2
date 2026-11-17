@@ -114,8 +114,8 @@ public sealed class UnitTests
     {
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
-        civ.Stock[Content.Food] = 200 * SimContent.One;
-        civ.Stock[Content.GoodId("wood")] = 200 * SimContent.One;
+        g.Settlements[civ.Settlements[0]].Stock[Content.Food] = 200 * SimContent.One;
+        g.Settlements[civ.Settlements[0]].Stock[Content.GoodId("wood")] = 200 * SimContent.One;
         Unit u = TrainReady(g, civ, "settlers");
         Assert.NotNull(g.Apply(new FoundCommand(civ.Id, u.Id)));
         int target = FreeLandAway(g, civ, Content.FoundMinDistance + 1);

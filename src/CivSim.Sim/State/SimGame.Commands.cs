@@ -70,6 +70,9 @@ public sealed partial class SimGame
             ResearchCommand c => Research(civ, c.Tech),
             HireCommand c => Hire(civ, c.Advisor),
             DismissAdvisorCommand => Dismiss(civ),
+            SendCaravanCommand c => SendCaravan(civ, c.From, c.To, c.Good, c.Amount),
+            RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount),
+            EndRouteCommand c => EndRoute(civ, c.Route),
             DeclareWarCommand c => DeclareWar(civ, c.Other, surprise: false),
             AttackCommand c => Attack(civ, c.Unit, c.Cell),
             ProposePeaceCommand c => ProposePeace(civ, c.Other, c.TributePercent),
@@ -99,6 +102,28 @@ public sealed partial class SimGame
             return $"{type.Name} needs {Content.Techs[type.Tech].Name}.";
         }
 
+        if (Array.IndexOf(type.Groups, "road") >= 0)
+        {
+            // Roads may run beyond our land, on free land we know, but must start from a settlement that pays for them.
+            if (OwnerAt[cell] >= 0 && OwnerAt[cell] != civ.Id)
+            {
+                return "Not on another people's land.";
+            }
+
+            if (!civ.Known[cell] || BuildingAt[cell] >= 0 || Content.World.Biomes[Map.Biome[cell]].IsWater || (SettlementAt[cell] >= 0 && Settlements[SettlementAt[cell]].Center == cell))
+            {
+                return "A road needs free land we know.";
+            }
+
+            Settlement? payer = NearestOwn(civ, cell);
+            if (payer is null || Geo.Distance(Geo.FromIndex(payer.Center), Geo.FromIndex(cell)) > 25)
+            {
+                return "Too far from our settlements.";
+            }
+
+            return checkPrice && !CanAfford(payer.Stock, type.Price, 100) ? $"Not enough goods in {payer.Name}: a road costs {PriceText(type.Price)}." : null;
+        }
+
         if (OwnerAt[cell] != civ.Id)
         {
             return "Build only on your own land.";
@@ -114,9 +139,9 @@ public sealed partial class SimGame
             return $"{type.Name} needs {Needs(type)}.";
         }
 
-        if (checkPrice && !CanAfford(civ, type.Price, 100))
+        if (checkPrice && !CanAfford(Settlements[SettlementAt[cell]].Stock, type.Price, 100))
         {
-            return $"Not enough goods: {type.Name} costs {PriceText(type.Price)}.";
+            return $"Not enough goods in {Settlements[SettlementAt[cell]].Name}: {type.Name} costs {PriceText(type.Price)}.";
         }
 
         return null;
@@ -189,11 +214,14 @@ public sealed partial class SimGame
         return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
     }
 
-    private static bool CanAfford(Civ civ, long[] price, int percent)
+    /// <summary>True when a store holds the price (percent of it).</summary>
+    public static bool CanAfford(long[] stock, long[] price, int percent)
     {
+        ArgumentNullException.ThrowIfNull(stock);
+        ArgumentNullException.ThrowIfNull(price);
         for (int g = 0; g < price.Length; g++)
         {
-            if (civ.Stock[g] < price[g] * percent / 100)
+            if (stock[g] < price[g] * percent / 100)
             {
                 return false;
             }
@@ -202,12 +230,51 @@ public sealed partial class SimGame
         return true;
     }
 
-    private static void Pay(Civ civ, long[] price, int percent)
+    private static void Pay(long[] stock, long[] price, int percent)
     {
         for (int g = 0; g < price.Length; g++)
         {
-            civ.Stock[g] -= price[g] * percent / 100;
+            stock[g] -= price[g] * percent / 100;
         }
+    }
+
+    /// <summary>True when all the people's settlements together hold the price (research, hiring, tribute).</summary>
+    public bool CivCanAfford(Civ civ, long[] price)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        ArgumentNullException.ThrowIfNull(price);
+        for (int g = 0; g < price.Length; g++)
+        {
+            long have = 0;
+            foreach (int sid in civ.Settlements)
+            {
+                have += Settlements[sid].Stock[g];
+            }
+
+            if (have < price[g])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Pays a price of the whole people: the capital first, then the other settlements in founding order.
+    private void CivPay(Civ civ, long[] price)
+    {
+        for (int g = 0; g < price.Length; g++)
+        {
+            long need = price[g];
+            foreach (int sid in civ.Settlements)
+            {
+                long take = Math.Min(need, Settlements[sid].Stock[g]);
+                Settlements[sid].Stock[g] -= take;
+                need -= take;
+            }
+        }
+
+        SyncTotals(civ);
     }
 
     /// <summary>What the terrain of a hex must have for <paramref name="t"/>, as text.</summary>
@@ -267,7 +334,6 @@ public sealed partial class SimGame
             return why;
         }
 
-        Pay(civ, t.Price, 100);
         int yield = 100;
         if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && Map.DepositDepth[cell] == 0)
         {
@@ -279,22 +345,23 @@ public sealed partial class SimGame
             yield += t.BonusReliefPercent;
         }
 
+        int sid = SettlementAt[cell] >= 0 && Settlements[SettlementAt[cell]].Civ == civ.Id ? SettlementAt[cell] : NearestOwn(civ, cell)!.Id;
         var b = new Building
         {
             Id = Buildings.Count,
             Type = typeId,
             Cell = cell,
             Civ = civ.Id,
-            Settlement = SettlementAt[cell],
-            State = BuildingState.Construction,
-            FinishTick = Ticks + Math.Max(1, t.BuildTicks),
+            Settlement = sid,
+            State = BuildingState.Delivery,
             YieldPercent = yield,
         };
         Buildings.Add(b);
         civ.Buildings.Add(b.Id);
         BuildingAt[cell] = b.Id;
         Map.MarkCellDirty(cell);
-        Schedule(b);
+        SendMaterials(b); // porters carry the price from the nearest storehouse; building time starts when they arrive
+        SyncTotals(civ);
         return null;
     }
 
@@ -318,12 +385,14 @@ public sealed partial class SimGame
             return "This construction is not paused.";
         }
 
-        if (!CanAfford(civ, t.Price, Content.ResumeCostPercent))
+        long[] stock = Settlements[b.Settlement].Stock;
+        if (!CanAfford(stock, t.Price, Content.ResumeCostPercent))
         {
             return $"Resuming costs {Content.ResumeCostPercent}% of the price again.";
         }
 
-        Pay(civ, t.Price, Content.ResumeCostPercent);
+        Pay(stock, t.Price, Content.ResumeCostPercent);
+        SyncTotals(civ);
         b.State = BuildingState.Construction;
         b.FinishTick = Ticks + Math.Max(1, b.RemainingTicks);
         Schedule(b);
@@ -368,12 +437,12 @@ public sealed partial class SimGame
             return $"A {next.Name.ToLowerInvariant()} needs {Content.Techs[next.Tech].Name}.";
         }
 
-        if (!CanAfford(civ, next.UpgradePrice, 100))
+        if (!CanAfford(s.Stock, next.UpgradePrice, 100))
         {
-            return $"A {next.Name.ToLowerInvariant()} costs {PriceText(next.UpgradePrice)}.";
+            return $"A {next.Name.ToLowerInvariant()} costs {PriceText(next.UpgradePrice)} in {s.Name}.";
         }
 
-        Pay(civ, next.UpgradePrice, 100);
+        Pay(s.Stock, next.UpgradePrice, 100);
         s.Level++;
         Claim(s);
         Reveal(civ, s.Center, next.Radius + 4);

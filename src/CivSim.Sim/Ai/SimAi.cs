@@ -34,6 +34,7 @@ public static class SimAi
         int actions = 0;
         AnswerPeace(g, civ);
         Diplomacy(g, civ);
+        Supply(g, civ);
         Research(g, civ);
         Hire(g, civ);
         actions += Economy(g, civ) ? 1 : 0;
@@ -98,6 +99,11 @@ public static class SimAi
         foreach (int sid in civ.Settlements)
         {
             Settlement s = g.Settlements[sid];
+            if (!SimGame.CanAfford(s.Stock, t.Price, 100))
+            {
+                continue; // goods lie in each settlement: build where the materials are
+            }
+
             foreach (int cell in s.Cells)
             {
                 if (g.CannotBuild(civ, cell, t, checkPrice: false) is not null)
@@ -719,7 +725,8 @@ public static class SimAi
         return best;
     }
 
-    // Answers treaty offers at once; reviews its relations now and then and offers treaties to peoples it trusts.
+    // Answers treaty offers at once. Offers a treaty only when every condition of docs/sim holds (known long enough, close,
+    // no recent fighting, good name, and something to gain); the cooldowns live in the treaty rules themselves.
     private static void Diplomacy(SimGame g, Civ civ)
     {
         foreach (TreatyOffer offer in g.TreatyOffers.ToArray())
@@ -730,34 +737,116 @@ public static class SimAi
             }
 
             Civ from = g.Civs[offer.From];
-            bool accept = from.Reputation > -25 && (offer.Kind == TreatyKind.Trade ? civ.Aggression < 85 : civ.Aggression < 70 && from.Reputation >= 0);
+            bool accept = from.Reputation > g.Content.TreatyMinReputation && Interest(g, civ, from, offer.Kind) &&
+                (offer.Kind == TreatyKind.Trade ? civ.Aggression < 85 : civ.Aggression < 70 && from.Reputation >= 0);
             g.Apply(new AnswerTreatyCommand(civ.Id, offer.From, offer.Kind, accept));
-        }
-
-        if ((g.Ticks + (civ.Id * 97)) % g.Content.DiplomacyReviewTicks >= SimAi.ThinkEveryTicks)
-        {
-            return;
         }
 
         foreach (Civ other in g.Civs)
         {
-            if (other.Id == civ.Id || other.Dead || !g.Met(civ, other) || g.AtWar(civ.Id, other.Id) || other.Reputation < -25)
+            if (!g.TreatyConditions(civ, other) || g.Ticks < g.LastOffer(civ.Id, other.Id))
             {
                 continue;
             }
 
-            if (!g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 70)
+            if (!g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 70 && Interest(g, civ, other, TreatyKind.Trade))
             {
                 g.Apply(new ProposeTreatyCommand(civ.Id, other.Id, TreatyKind.Trade));
                 return;
             }
 
-            if (g.Has(civ.Id, other.Id, TreatyKind.Trade) && !g.Has(civ.Id, other.Id, TreatyKind.Alliance) && civ.Aggression < 50 && other.Reputation >= 0)
+            if (g.Has(civ.Id, other.Id, TreatyKind.Trade) && !g.Has(civ.Id, other.Id, TreatyKind.Alliance) && civ.Aggression < 50
+                && other.Reputation >= 0 && Interest(g, civ, other, TreatyKind.Alliance))
             {
                 g.Apply(new ProposeTreatyCommand(civ.Id, other.Id, TreatyKind.Alliance));
                 return;
             }
         }
+    }
+
+    // Feeds a hungry settlement from the one with the most food, with a caravan.
+    private static void Supply(SimGame g, Civ civ)
+    {
+        foreach (int sid in civ.Settlements)
+        {
+            Settlement s = g.Settlements[sid];
+            if (!s.Hungry)
+            {
+                continue;
+            }
+
+            Settlement? rich = null;
+            foreach (int o in civ.Settlements)
+            {
+                Settlement r = g.Settlements[o];
+                if (r != s && r.Stock[g.Content.Food] > 60 * SimContent.One && (rich is null || r.Stock[g.Content.Food] > rich.Stock[g.Content.Food]))
+                {
+                    rich = r;
+                }
+            }
+
+            if (rich is not null && !Carrying(g, civ, s.Id))
+            {
+                g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, g.Content.Food, 40 * SimContent.One));
+            }
+        }
+    }
+
+    private static bool Carrying(SimGame g, Civ civ, int to)
+    {
+        foreach (int id in civ.Units)
+        {
+            Unit u = g.Units[id];
+            if (u.Job == CarrierJob.ToSettlement && u.Target == to)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // What the AI gains: trade when the other makes a good it lacks, or knows a craft it does not (seen in their land);
+    // an alliance when both fight the same enemy.
+    private static bool Interest(SimGame g, Civ civ, Civ other, TreatyKind kind)
+    {
+        if (kind == TreatyKind.Alliance)
+        {
+            foreach (Civ third in g.Civs)
+            {
+                if (third.Id != civ.Id && third.Id != other.Id && g.AtWar(civ.Id, third.Id) && g.AtWar(other.Id, third.Id))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        foreach (int id in other.Buildings)
+        {
+            Building b = g.Buildings[id];
+            if (!civ.Known[b.Cell] || b.State != BuildingState.Active)
+            {
+                continue;
+            }
+
+            BuildingType t = g.Content.Buildings[b.Type];
+            if (!civ.KnownTech[t.Tech])
+            {
+                return true;
+            }
+
+            for (int i = 0; i < t.Produces.Length; i++)
+            {
+                if (t.Produces[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < 20 * SimContent.One)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static void AnswerPeace(SimGame g, Civ civ)

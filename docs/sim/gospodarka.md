@@ -149,3 +149,38 @@ tylko po działaniach.
   - przy kilku graczach każdy ma 3 pauzy;
   - pauzę innego gracza można przerwać dopiero po 30 s;
   - każdy gracz dostaje kolejny wolny lud.
+
+## Towary na mapie, tragarze, karawany (decyzje z 2026-11-17, wieczór)
+
+- **Zapas jest osobno w każdej osadzie.**
+  - Miejsce na każde dobro: osada ma swoje (obóz 150, wioska 200, miasteczko 300, miasto 500), każdy gotowy budynek dodaje 20, magazyn 300, spichlerz 250, wielki magazyn 1000.
+  - Produkcja trafia do zapasu osady, w której stoi budynek; ludzie jedzą z zapasu swojej osady.
+  - Żołnierze w polu i doradca jedzą ze stolicy (pierwszej osady).
+- **Budynki śpią i budzą się same.**
+  - Budynek śpi, gdy brakuje mu składnika (mniej niż 1 sztuka w osadzie) albo gdy wszystko, co robi, jest pełne (98% miejsca).
+  - Co sekundę gra porównuje, które dobra w osadzie są puste albo pełne. Tylko gdy to się zmieni, przelicza tempa, a budynki same się budzą.
+- **Dostawy na budowę:**
+  1. Cena schodzi z zapasu osady, a tragarze (1 osoba na 20 sztuk) wychodzą z najbliższego magazynu tej osady albo ze środka.
+  2. Idą 0,5 s na płaski heks; koło przyspiesza ich o 50%.
+  3. Czas budowy rusza po dojściu, potem tragarze wracają do pracy.
+  4. Zabici tragarze tracą ładunek na rzecz zabójcy, a budowa zamawia materiały jeszcze raz (znów płaci).
+- **Karawany (2 osoby, 25 sztuk na osobę):**
+  - między własnymi osadami: raz albo stała trasa, przy czym kurs rusza, gdy jest co najmniej 10 sztuk;
+  - wymiana z innym ludem: dwie karawany, nasza i ich, a towar zmienia właściciela dopiero po dojściu;
+  - danina po wojnie też idzie karawaną;
+  - jeśli nie ma drogi lądem, wymiany nie da się zawrzeć.
+- **Umowy z warunkami:**
+  - znają się od co najmniej 3 minut;
+  - osady są nie dalej niż 20 heksów od siebie (licząc od granic);
+  - od ostatniej wojny minęło 10 minut;
+  - reputacja tamtego ludu jest wyższa niż −20;
+  - AI ma w tym interes: widzi u nich budynek technologii, której nie zna, albo dobra, którego jej brakuje; sojusz chce przy wspólnym wrogu;
+  - najwyżej jedna propozycja do danego ludu na 3 minuty, po odmowie 6 minut przerwy;
+  - umowa handlowa wymaga Handlu wymiennego.
+- **Drzewo:** 45 technologii bazowych i 15 ulepszeń ery, szczegóły w `docs/sim/technologie.md`.
+  - Ulepszenia działają jako efekty: siła jednostek według grup (walka wręcz, piechota, dystans, jazda), produkcja budynków według grup (narzędzia, farmy, warsztaty), odporność na zdarzenia, szybkość, szkolenie, badania, przyrost, szczęście w losowaniu myślicieli i doradców, oblężenia, obrona.
+- **Nowe zasady:**
+  - drogi poza granicami osad (ruch po drodze 2× szybszy);
+  - statki pływają tylko po wodzie, a szkoli się je w porcie albo stoczni, w osadzie nad wodą;
+  - machiny oblężnicze zadają 4× więcej obrażeń osadom (trebusz jeszcze +100%).
+- **Nowe dobra:** odzież, naczynia, tkaniny, uzbrojenie. Osada staje się miasteczkiem za naczynia i odzież, a miastem za tkaniny i naczynia.

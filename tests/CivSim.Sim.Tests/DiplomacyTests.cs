@@ -14,6 +14,7 @@ public sealed class DiplomacyTests
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 3) { Ai = false });
         foreach (Civ a in g.Civs)
         {
+            a.KnownTech[Content.TechId("barter")] = true;
             foreach (Civ b in g.Civs)
             {
                 a.Known[g.Settlements[b.Settlements[0]].Center] = true;
@@ -40,9 +41,22 @@ public sealed class DiplomacyTests
         Assert.True(g.ResearchPrice(a, tools)[food] < before);
 
         b.IsAi = true;
+        if (!g.Reachable(a, b))
+        {
+            Assert.Contains("No way", g.Apply(new BarterCommand(a.Id, b.Id, food, 20 * SimContent.One, wood, 10 * SimContent.One)), System.StringComparison.Ordinal);
+            return;
+        }
+
         long aWood = a.Stock[wood];
         Assert.Null(g.Apply(new BarterCommand(a.Id, b.Id, food, 20 * SimContent.One, wood, 10 * SimContent.One)));
-        Assert.Equal(aWood + (10 * SimContent.One), a.Stock[wood]);
+        Assert.Equal(aWood, a.Stock[wood]); // the wood is on its way in their caravan
+        Assert.Contains(g.Units, u => u.Civ == b.Id && u.Job == CarrierJob.ToSettlement);
+        for (int i = 0; i < 6000 && !g.Units.TrueForAll(u => u.State == UnitState.Gone); i++)
+        {
+            g.Tick();
+        }
+
+        Assert.True(g.Settlements[a.Settlements[0]].Stock[wood] >= aWood + (10 * SimContent.One) - (5 * SimContent.One), "the caravan brought the wood");
         Assert.NotNull(g.Apply(new BarterCommand(a.Id, b.Id, food, 1 * SimContent.One, wood, 20 * SimContent.One)));
     }
 
@@ -56,7 +70,12 @@ public sealed class DiplomacyTests
         Assert.NotNull(g.Apply(new ProposeTreatyCommand(b.Id, c.Id, TreatyKind.Alliance)));
         g.Apply(new ProposeTreatyCommand(b.Id, c.Id, TreatyKind.Trade));
         g.Apply(new AnswerTreatyCommand(c.Id, b.Id, TreatyKind.Trade, true));
-        g.Apply(new ProposeTreatyCommand(b.Id, c.Id, TreatyKind.Alliance));
+        for (int i = 0; i <= Content.OfferCooldownTicks; i++)
+        {
+            g.Tick(); // one offer to the same people per cooldown
+        }
+
+        Assert.Null(g.Apply(new ProposeTreatyCommand(b.Id, c.Id, TreatyKind.Alliance)));
         g.Apply(new AnswerTreatyCommand(c.Id, b.Id, TreatyKind.Alliance, true));
         Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
         Assert.True(g.AtWar(a.Id, c.Id));

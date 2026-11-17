@@ -37,7 +37,9 @@ public sealed record PlayUnitInfo(
     [property: Key(8)] int Tech = 0,
     [property: Key(9)] bool Army = false,
     [property: Key(10)] int Strength = 0,
-    [property: Key(11)] int Range = 1);
+    [property: Key(11)] int Range = 1,
+    [property: Key(12)] bool System = false,
+    [property: Key(13)] string NeedsBuilding = "");
 
 /// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
 [MessagePackObject]
@@ -52,7 +54,8 @@ public sealed record PlayUnitView(
     [property: Key(7)] bool Hidden,
     [property: Key(8)] int ToCol,
     [property: Key(9)] int ToRow,
-    [property: Key(10)] bool Fighting = false);
+    [property: Key(10)] bool Fighting = false,
+    [property: Key(11)] string? Cargo = null);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -60,7 +63,15 @@ public sealed record PlayLevelInfo([property: Key(0)] string Key, [property: Key
 
 /// <summary>A technology of the new game. Needs: earlier technology names with the worker-minutes of experience.</summary>
 [MessagePackObject]
-public sealed record PlayTechInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] int Era, [property: Key(4)] string Needs, [property: Key(5)] int Seconds);
+public sealed record PlayTechInfo(
+    [property: Key(0)] int Id,
+    [property: Key(1)] string Key,
+    [property: Key(2)] string Name,
+    [property: Key(3)] int Era,
+    [property: Key(4)] string Needs,
+    [property: Key(5)] int Seconds,
+    [property: Key(6)] string Gives = "",
+    [property: Key(7)] bool Upgrade = false);
 
 /// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
 [MessagePackObject]
@@ -102,7 +113,14 @@ public sealed record PlaySettlementView(
     [property: Key(7)] int Housing,
     [property: Key(8)] int Idle,
     [property: Key(9)] bool Besieged = false,
-    [property: Key(10)] int DefensePercent = 100);
+    [property: Key(10)] int DefensePercent = 100,
+    [property: Key(11)] long[]? Stock = null,
+    [property: Key(12)] long[]? Capacity = null,
+    [property: Key(13)] long[]? Rate = null);
+
+/// <summary>A standing caravan route of the player.</summary>
+[MessagePackObject]
+public sealed record PlayRouteView([property: Key(0)] int Index, [property: Key(1)] int From, [property: Key(2)] int To, [property: Key(3)] int Good, [property: Key(4)] int Amount, [property: Key(5)] bool OnTheRoad);
 
 /// <summary>Another people as the player knows it.</summary>
 [MessagePackObject]
@@ -173,7 +191,8 @@ public sealed record PlayViewMessage(
     [property: Key(30)] int EventSecondsLeft = 0,
     [property: Key(31)] string? Goal = null,
     [property: Key(32)] string? Winner = null,
-    [property: Key(33)] int Score = 0) : IProtocolMessage;
+    [property: Key(33)] int Score = 0,
+    [property: Key(34)] IReadOnlyList<PlayRouteView>? Routes = null) : IProtocolMessage;
 
 /// <summary>What a player command does.</summary>
 public enum PlayCommandKind
@@ -246,6 +265,15 @@ public enum PlayCommandKind
 
     /// <summary>Answer people <c>A</c>'s barter offer (accept when <c>Flag</c>).</summary>
     AnswerBarter = 22,
+
+    /// <summary>Caravan from settlement <c>A</c> to settlement <c>B</c> with <c>C</c> units of good <c>Col</c>.</summary>
+    SendCaravan = 23,
+
+    /// <summary>Standing route from settlement <c>A</c> to settlement <c>B</c>: <c>C</c> units of good <c>Col</c> a trip.</summary>
+    Route = 24,
+
+    /// <summary>End standing route number <c>A</c>.</summary>
+    EndRoute = 25,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

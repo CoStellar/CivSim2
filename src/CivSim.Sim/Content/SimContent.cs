@@ -24,8 +24,61 @@ public sealed record SettlementLevel(int Id, string Key, string Name, int Radius
 /// <summary>An era (Stone Age … Middle Ages).</summary>
 public sealed record SimEra(int Id, string Key, string Name);
 
+/// <summary>What a technology effect changes.</summary>
+public enum EffectKind
+{
+    /// <summary>Production of a building (target: building key or *), percent.</summary>
+    Production,
+
+    /// <summary>Homes of a building, added.</summary>
+    Housing,
+
+    /// <summary>Room of a building (target: key or *), percent.</summary>
+    Storage,
+
+    /// <summary>Strength of a unit (target: unit key or *), percent.</summary>
+    Strength,
+
+    /// <summary>Walking speed of a unit (target: unit key, carriers or *), percent faster.</summary>
+    Speed,
+
+    /// <summary>Training time of a unit (target: unit key or *), percent shorter.</summary>
+    Training,
+
+    /// <summary>Research price, percent cheaper.</summary>
+    Research,
+
+    /// <summary>Growth, percent of people per minute added.</summary>
+    Growth,
+
+    /// <summary>Harm of an event (target: event key), percent less.</summary>
+    Resist,
+
+    /// <summary>Damage to settlements (target: unit key or *), percent.</summary>
+    Siege,
+
+    /// <summary>Defence of fortifications (target: building key or *), percent.</summary>
+    Defense,
+
+    /// <summary>Chance of rarer thinkers and advisors, percent.</summary>
+    Luck,
+}
+
+/// <summary>One effect of a technology.</summary>
+public sealed record TechEffect(EffectKind Kind, string Target, int Value);
+
 /// <summary>A technology: experience needed in earlier technologies (worker-ticks), price (hundredths) and time (ticks).</summary>
-public sealed record SimTech(int Id, string Key, string Name, int Era, bool KnownAtStart, (int Tech, long WorkerTicks)[] Experience, long[] Price, int ResearchTicks);
+public sealed record SimTech(int Id, string Key, string Name, int Era, bool KnownAtStart, (int Tech, long WorkerTicks)[] Experience, long[] Price, int ResearchTicks)
+{
+    /// <summary>What it changes besides what it unlocks.</summary>
+    public TechEffect[] Effects { get; init; } = [];
+
+    /// <summary>An upgrade of its era (better arms, tools…) rather than a base technology.</summary>
+    public bool Upgrade { get; init; }
+
+    /// <summary>One line on what it gives, for the player.</summary>
+    public string Gives { get; init; } = "";
+}
 
 /// <summary>A rarity of thinkers and advisors.</summary>
 public sealed record Rarity(int Id, string Key, string Name, int Weight, int CostPercent, int ExperiencePercent, int PriceTimes);
@@ -35,6 +88,24 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
 {
     /// <summary>Technology that allows it.</summary>
     public int Tech { get; init; }
+
+    /// <summary>Tags technology effects aim at (melee, ranged, cavalry, carriers…).</summary>
+    public string[] Groups { get; init; } = [];
+
+    /// <summary>Building the settlement must have to train it (empty = none).</summary>
+    public string NeedsBuilding { get; init; } = "";
+
+    /// <summary>Extra damage against settlements, percent.</summary>
+    public int SiegePercent { get; init; }
+
+    /// <summary>Made by the game, not trained (porters, caravans).</summary>
+    public bool System { get; init; }
+
+    /// <summary>Moves on water only (ships).</summary>
+    public bool Naval { get; init; }
+
+    /// <summary>Goods carried per person, hundredths (porters, caravans).</summary>
+    public long CargoPerPerson { get; init; }
 
     /// <summary>A fighting unit.</summary>
     public bool Army { get; init; }
@@ -126,6 +197,9 @@ public sealed class BuildingType
 
     /// <summary>Research is this much cheaper while the building works (percent).</summary>
     public int ResearchDiscountPercent { get; init; }
+
+    /// <summary>Tags technology effects aim at (food, farm, tools, craft, store, fort…).</summary>
+    public string[] Groups { get; init; } = [];
 
     /// <summary>Reliefs that raise production.</summary>
     public bool[] BonusReliefs { get; init; } = [];
@@ -251,8 +325,23 @@ public sealed class SimContent
     /// <summary>Least worth (percent of what it gives) the AI wants from a barter.</summary>
     public int AcceptWorthPercent { get; init; }
 
-    /// <summary>Ticks between the AI's reviews of its relations.</summary>
-    public int DiplomacyReviewTicks { get; init; }
+    /// <summary>How long peoples must have known each other before a treaty, ticks.</summary>
+    public int TreatyKnownTicks { get; init; }
+
+    /// <summary>Farthest distance between settlements for a treaty, hexes.</summary>
+    public int TreatyBorderHexes { get; init; }
+
+    /// <summary>Time without fighting before a treaty, ticks.</summary>
+    public int TreatyPeaceTicks { get; init; }
+
+    /// <summary>Least reputation of the other people for a treaty.</summary>
+    public int TreatyMinReputation { get; init; }
+
+    /// <summary>Least time between two offers to the same people, ticks.</summary>
+    public int OfferCooldownTicks { get; init; }
+
+    /// <summary>Wait after a refusal, ticks.</summary>
+    public int RefusalCooldownTicks { get; init; }
 
     /// <summary>The shared pool of events.</summary>
     public required IReadOnlyList<State.SimEvent> Events { get; init; }
@@ -265,6 +354,24 @@ public sealed class SimContent
 
     /// <summary>Advisor fields.</summary>
     public required IReadOnlyList<string> AdvisorFields { get; init; }
+
+    /// <summary>Room every finished building adds when its type gives none of its own, hundredths.</summary>
+    public long BuildingStorage { get; init; }
+
+    /// <summary>Unit kind of porters.</summary>
+    public int Porters { get; init; }
+
+    /// <summary>Unit kind of caravans.</summary>
+    public int Caravans { get; init; }
+
+    /// <summary>Technology needed to trade with other peoples (caravans abroad, trade agreements).</summary>
+    public int TradeTech { get; init; }
+
+    /// <summary>Technology needed to build roads (−1 = none).</summary>
+    public int RoadTech { get; init; } = -1;
+
+    /// <summary>Walking cost on a road, percent of the hex's normal cost.</summary>
+    public int RoadCostPercent { get; init; } = 50;
 
     /// <summary>Finds a technology by key.</summary>
     public int TechId(string key)
@@ -405,6 +512,26 @@ public sealed class SimContent
             return i >= 0 ? i : throw new InvalidDataException($"sim/game.json: unknown technology '{v.GetString()}'.");
         }
 
+        static TechEffect[] EffectsOf(JsonElement t)
+        {
+            var list = new List<TechEffect>();
+            if (t.TryGetProperty("effects", out JsonElement ef))
+            {
+                foreach (JsonElement e in ef.EnumerateArray())
+                {
+                    string kind = e.GetProperty("kind").GetString()!;
+                    if (!Enum.TryParse(kind, ignoreCase: true, out EffectKind k))
+                    {
+                        throw new InvalidDataException($"sim/game.json: unknown effect '{kind}'.");
+                    }
+
+                    list.Add(new TechEffect(k, e.TryGetProperty("target", out JsonElement tg) ? tg.GetString()! : "*", e.GetProperty("value").GetInt32()));
+                }
+            }
+
+            return [.. list];
+        }
+
         var techs = new List<SimTech>();
         foreach (JsonElement t in root.GetProperty("technologies").EnumerateArray())
         {
@@ -429,7 +556,12 @@ public sealed class SimContent
                 techs.Count, techKeys[techs.Count], t.GetProperty("name").GetString()!, era >= 0 ? era : throw new InvalidDataException($"sim/game.json: unknown era '{eraKey}'."),
                 t.TryGetProperty("known", out JsonElement k) && k.GetBoolean(), [.. exp],
                 t.TryGetProperty("price", out JsonElement tp) ? Amounts(tp) : new long[goods.Count],
-                t.TryGetProperty("seconds", out JsonElement ts) ? ts.GetInt32() * TicksPerSecond : 0));
+                t.TryGetProperty("seconds", out JsonElement ts) ? ts.GetInt32() * TicksPerSecond : 0)
+            {
+                Effects = EffectsOf(t),
+                Upgrade = t.TryGetProperty("upgrade", out JsonElement ug) && ug.GetBoolean(),
+                Gives = t.TryGetProperty("gives", out JsonElement gv) ? gv.GetString() ?? "" : "",
+            });
         }
 
         var levels = new List<SettlementLevel>();
@@ -441,6 +573,20 @@ public sealed class SimContent
             {
                 Tech = TechOf(l, "tech"),
             });
+        }
+
+        static string[] Strings(JsonElement e, string name)
+        {
+            var list = new List<string>();
+            if (e.TryGetProperty(name, out JsonElement arr))
+            {
+                foreach (JsonElement k in arr.EnumerateArray())
+                {
+                    list.Add(k.GetString()!);
+                }
+            }
+
+            return [.. list];
         }
 
         static bool[] ReliefsOf(JsonElement e, string name)
@@ -515,6 +661,7 @@ public sealed class SimContent
                 ResearchDiscountPercent = b.TryGetProperty("researchDiscountPercent", out JsonElement rd) ? rd.GetInt32() : 0,
                 DefensePercent = b.TryGetProperty("defensePercent", out JsonElement dp) ? dp.GetInt32() : 0,
                 BonusReliefs = ReliefsOf(b, "bonusRelief"),
+                Groups = Strings(b, "groups"),
                 BonusReliefPercent = b.TryGetProperty("bonusReliefPercent", out JsonElement brp) ? brp.GetInt32() : 0,
                 TrainPercent = b.TryGetProperty("trainPercent", out JsonElement tp2) ? tp2.GetInt32() : 100,
             });
@@ -574,6 +721,12 @@ public sealed class SimContent
                 u.TryGetProperty("founds", out JsonElement f) && f.GetBoolean())
             {
                 Tech = Math.Max(0, TechOf(u, "tech")),
+                System = u.TryGetProperty("system", out JsonElement sy) && sy.GetBoolean(),
+                Groups = Strings(u, "groups"),
+                NeedsBuilding = u.TryGetProperty("needsBuilding", out JsonElement nb) ? nb.GetString() ?? "" : "",
+                SiegePercent = u.TryGetProperty("siege", out JsonElement sg) ? sg.GetInt32() : 0,
+                Naval = u.TryGetProperty("naval", out JsonElement nv) && nv.GetBoolean(),
+                CargoPerPerson = u.TryGetProperty("cargoPerPerson", out JsonElement cp) ? Hundredths(cp) : 0,
                 Army = u.TryGetProperty("army", out JsonElement ar) && ar.GetBoolean(),
                 Levy = u.TryGetProperty("levy", out JsonElement lv) && lv.GetBoolean(),
                 Strength = u.TryGetProperty("strength", out JsonElement st) ? st.GetInt32() : 0,
@@ -663,10 +816,20 @@ public sealed class SimContent
             AdvisorPrice = Amounts(advisors.GetProperty("hirePrice")),
             AdvisorUpkeep = Hundredths(advisors.GetProperty("upkeepFoodPerMinute")),
             AdvisorFields = fields,
+            BuildingStorage = Hundredths(root.GetProperty("buildingStorage")),
+            Porters = units.FindIndex(x => x.Key == "porters"),
+            Caravans = units.FindIndex(x => x.Key == "caravan"),
+            TradeTech = techKeys.IndexOf(root.GetProperty("diplomacy").GetProperty("tradeTech").GetString()!),
+            RoadTech = techKeys.IndexOf("roads"),
             Events = State.SimGame.LoadEvents(root, goods),
             TradeResearchDiscount = root.GetProperty("diplomacy").GetProperty("researchDiscountPerPartner").GetInt32(),
             AcceptWorthPercent = root.GetProperty("diplomacy").GetProperty("acceptWorthPercent").GetInt32(),
-            DiplomacyReviewTicks = root.GetProperty("diplomacy").GetProperty("reviewSeconds").GetInt32() * TicksPerSecond,
+            TreatyKnownTicks = root.GetProperty("diplomacy").GetProperty("knownMinutes").GetInt32() * TicksPerMinute,
+            TreatyBorderHexes = root.GetProperty("diplomacy").GetProperty("borderHexes").GetInt32(),
+            TreatyPeaceTicks = root.GetProperty("diplomacy").GetProperty("peaceMinutes").GetInt32() * TicksPerMinute,
+            TreatyMinReputation = root.GetProperty("diplomacy").GetProperty("minReputation").GetInt32(),
+            OfferCooldownTicks = root.GetProperty("diplomacy").GetProperty("offerCooldownMinutes").GetInt32() * TicksPerMinute,
+            RefusalCooldownTicks = root.GetProperty("diplomacy").GetProperty("refusalCooldownMinutes").GetInt32() * TicksPerMinute,
             EventEveryTicks = root.TryGetProperty("events", out JsonElement evr) ? evr.GetProperty("everyMinutes").GetInt32() * TicksPerMinute : 0,
             EventSpreadTicks = root.TryGetProperty("events", out JsonElement evs) ? evs.GetProperty("spreadMinutes").GetInt32() * TicksPerMinute : 0,
             War = new WarRules(

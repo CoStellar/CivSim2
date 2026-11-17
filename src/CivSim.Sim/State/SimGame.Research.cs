@@ -78,6 +78,7 @@ public sealed partial class SimGame
             }
         }
 
+        discount += Bonus(civ, EffectKind.Research, "*");
         discount = Math.Min(60, discount);
         int edge = Edge(civ.Thinker, cost: true);
         var price = new long[t.Price.Length];
@@ -184,12 +185,12 @@ public sealed partial class SimGame
         }
 
         long[] price = ResearchPrice(civ, tech);
-        if (!CanAfford(civ, price, 100))
+        if (!CivCanAfford(civ, price))
         {
             return $"{Content.Techs[tech].Name} costs {PriceText(price)}.";
         }
 
-        Pay(civ, price, 100);
+        CivPay(civ, price);
         civ.Researching = tech;
         civ.ResearchEnd = Ticks + Math.Max(1, Content.Techs[tech].ResearchTicks);
         _schedule.Enqueue((DoneResearch, civ.Id), (civ.ResearchEnd, DoneResearch, civ.Id));
@@ -226,12 +227,12 @@ public sealed partial class SimGame
         }
 
         long[] price = HirePrice(offer, advisor);
-        if (!CanAfford(civ, price, 100))
+        if (!CivCanAfford(civ, price))
         {
             return $"{offer.Name} asks for {PriceText(price)}.";
         }
 
-        Pay(civ, price, 100);
+        CivPay(civ, price);
         offer.Since = Ticks;
         if (advisor)
         {
@@ -310,7 +311,9 @@ public sealed partial class SimGame
             total += r.Weight;
         }
 
-        int roll = _events.NextInt(total);
+        // Philosophy and the like make rare people more likely: the roll leans toward the end of the table.
+        int luck = Bonus(civ, EffectKind.Luck, "*");
+        int roll = Math.Min(total - 1, _events.NextInt(total) + (_events.NextInt(total) * luck / 100 / 2));
         int rarity = 0;
         for (; rarity < Content.Rarities.Count - 1 && roll >= Content.Rarities[rarity].Weight; rarity++)
         {

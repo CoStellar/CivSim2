@@ -161,6 +161,11 @@ public partial class PlayOverlay : Node2D
                     Vector2 p = c + new Vector2(10, -8);
                     DrawCircle(p, 11, u.Hidden ? civ.Darkened(0.6f) : civ.Darkened(0.3f));
                     DrawArc(p, 11, 0, MathF.Tau, 20, u.Id == SelectedUnit ? new Color(1f, 0.9f, 0.3f) : u.Fighting ? Colors.Red : Colors.Black, u.Id == SelectedUnit || u.Fighting ? 3 : 1.5f);
+                    if (u.Cargo is { Length: > 0 } && u.Cargo != "nothing")
+                    {
+                        DrawRect(new Rect2(p + new Vector2(-14, -16), new Vector2(8, 6)), new Color(0.85f, 0.7f, 0.35f));
+                    }
+
                     string letter = _content.Units[u.Kind].Name[..1];
                     DrawString(font, p + new Vector2(-11, 5), letter, HorizontalAlignment.Center, 22, 13, Colors.White);
                     DrawString(font, p + new Vector2(-11, 20), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 10, Colors.White);
@@ -189,9 +194,10 @@ public partial class PlayOverlay : Node2D
     private void DrawBuilding(Font font, Vector2 c, PlayBuildingView b, PlayBuildingInfo t)
     {
         Color civ = CivColor(b.Civ);
-        bool built = b.State >= 2;
+        bool built = b.State is 2 or 3;
         Color fill = b.State switch
         {
+            5 => new Color(0.2f, 0.2f, 0.3f, 0.6f),
             0 => new Color(0.35f, 0.3f, 0.25f, 0.85f),
             1 => new Color(0.3f, 0.25f, 0.2f, 0.85f),
             3 => new Color(0.25f, 0.25f, 0.25f, 0.9f),
@@ -201,7 +207,11 @@ public partial class PlayOverlay : Node2D
         DrawPolyline(Closed(Hex(c, 0.7f)), b.Priority ? new Color(1f, 0.85f, 0.2f) : civ, b.Priority ? 3 : 2);
         string letters = Abbreviation(t.Name);
         DrawString(font, c + new Vector2(-24, 5), letters, HorizontalAlignment.Center, 48, 14, built ? Colors.White : new Color(0.8f, 0.8f, 0.8f));
-        if (!built)
+        if (b.State == 5)
+        {
+            DrawString(font, c + new Vector2(-24, 18), "goods…", HorizontalAlignment.Center, 48, 9, new Color(0.8f, 0.85f, 1f));
+        }
+        else if (!built)
         {
             float p = b.ProgressPermille / 1000f;
             DrawLine(c + new Vector2(-14, 12), c + new Vector2(14, 12), new Color(0, 0, 0, 0.8f), 4);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using CivSim.Game.Map;
 using CivSim.Game.Net;
 using CivSim.Protocol.Messages;
@@ -853,11 +854,26 @@ public partial class PlayGame : Node2D
                     AddButton($"Upgrade to {next.Name.ToLowerInvariant()}", () => _session!.Play(PlayCommandKind.Upgrade, s.Id));
                 }
 
+                if (s.Civ == v.Civ && s.Stock is { } stock && s.Capacity is { } cap)
+                {
+                    var goods = new List<string>();
+                    for (int g = 0; g < stock.Length; g++)
+                    {
+                        if (stock[g] >= 100 || (s.Rate is { } r && r[g] != 0))
+                        {
+                            goods.Add($"{c.Goods[g].Name} {stock[g] / 100}/{cap[g] / 100}");
+                        }
+                    }
+
+                    text += "\nStore: " + string.Join(", ", goods);
+                    CaravanButtons(v, c, s, stock);
+                }
+
                 if (s.Civ == v.Civ)
                 {
                     foreach (PlayUnitInfo ut in c.Units)
                     {
-                        if (!v.Techs[ut.Tech].Known)
+                        if (!v.Techs[ut.Tech].Known || ut.System)
                         {
                             continue;
                         }
@@ -891,6 +907,7 @@ public partial class PlayGame : Node2D
             PlayBuildingInfo t = c.Buildings[b.Type];
             string state = b.State switch
             {
+                5 => "Waiting for its materials: porters are bringing them from the nearest storehouse. Building starts when they arrive.",
                 0 => $"Being built: {b.ProgressPermille / 10}%",
                 1 => $"Construction paused at {b.ProgressPermille / 10}%",
                 3 => "Stopped",
@@ -937,6 +954,59 @@ public partial class PlayGame : Node2D
 
         _side.Text = HexText(sel);
     }
+
+    // Caravans from this settlement: 20 of each of its two biggest goods to each of its two nearest own settlements,
+    // once or as a standing route; and the routes that leave from here.
+    private void CaravanButtons(PlayViewMessage v, PlayContentMessage c, PlaySettlementView s, long[] stock)
+    {
+        var others = new List<PlaySettlementView>();
+        foreach (PlaySettlementView o in v.Settlements)
+        {
+            if (o.Civ == v.Civ && o.Id != s.Id)
+            {
+                others.Add(o);
+            }
+        }
+
+        others.Sort((a, b) => Dist(a, s).CompareTo(Dist(b, s)));
+        var goods = new List<int>();
+        for (int g = 0; g < stock.Length; g++)
+        {
+            if (stock[g] >= 2000)
+            {
+                goods.Add(g);
+            }
+        }
+
+        goods.Sort((a, b) => stock[b].CompareTo(stock[a]));
+        foreach (PlaySettlementView o in others.GetRange(0, Math.Min(2, others.Count)))
+        {
+            foreach (int g in goods.GetRange(0, Math.Min(2, goods.Count)))
+            {
+                int from = s.Id;
+                int to = o.Id;
+                int good = g;
+                string name = c.Goods[g].Name.ToLowerInvariant();
+                AddButton($"Caravan: 20 {name} to {o.Name}", () => _session!.Play(PlayCommandKind.SendCaravan, from, good, flag: false, b: to, c: 20));
+                AddButton($"Route: 20 {name} to {o.Name} every trip", () => _session!.Play(PlayCommandKind.Route, from, good, flag: false, b: to, c: 20));
+            }
+        }
+
+        if (v.Routes is { } routes)
+        {
+            foreach (PlayRouteView r in routes)
+            {
+                if (r.From == s.Id)
+                {
+                    int index = r.Index;
+                    string to = v.Settlements.FirstOrDefault(x => x.Id == r.To)?.Name ?? "?";
+                    AddButton($"End route: {r.Amount} {c.Goods[r.Good].Name.ToLowerInvariant()} to {to}" + (r.OnTheRoad ? " (caravan on the road)" : ""), () => _session!.Play(PlayCommandKind.EndRoute, index));
+                }
+            }
+        }
+    }
+
+    private static int Dist(PlaySettlementView a, PlaySettlementView b) => Math.Abs(a.Col - b.Col) + Math.Abs(a.Row - b.Row);
 
     private static string PeopleName(PlayViewMessage v, int civ)
     {
@@ -988,7 +1058,7 @@ public partial class PlayGame : Node2D
     {
         PlayUnitInfo t = c.Units[u.Kind];
         string state = u.Fighting ? "FIGHTING" : u.State == 2 ? "Walking" : "Standing";
-        string text = $"{t.Name}: {u.People} people\n{state}";
+        string text = $"{t.Name}: {u.People} people\n{state}" + (u.Cargo is { } load && load != "nothing" ? $"\nCarrying {load}" : "");
         if (t.Army)
         {
             text += $"\nStrength {t.Strength} each" + (t.Range > 1 ? $", shoots {t.Range} hexes" : "") + "\n\nRight click a hex to go there, an enemy to attack it.";
@@ -999,6 +1069,12 @@ public partial class PlayGame : Node2D
         }
 
         int id = u.Id;
+        if (t.System)
+        {
+            _side.Text = text + "\n\nCarriers follow their task; soldiers can guard them or attack enemy carriers to seize the load.";
+            return;
+        }
+
         if (u.State != 0)
         {
             AddButton("Go home (join the settlement here)", () => _session!.Play(PlayCommandKind.Disband, id));
@@ -1080,18 +1156,19 @@ public partial class PlayGame : Node2D
                     }
 
                     PlayTechState st = v.Techs[info.Id];
+                    string name = info.Upgrade ? $"{info.Name} (upgrade)" : info.Name;
                     if (st.Known)
                     {
-                        rows.Add(($"[known] {info.Name}", null));
+                        rows.Add(($"[known] {name}: {info.Gives}", null));
                     }
                     else if (st.Blocked is null)
                     {
                         int id = info.Id;
-                        rows.Add(($"Research {info.Name}: {Amounts(c, st.Price)}, {info.Seconds} s", () => _session!.Play(PlayCommandKind.Research, id)));
+                        rows.Add(($"Research {name}: {Amounts(c, st.Price)}, {info.Seconds} s. {info.Gives}", () => _session!.Play(PlayCommandKind.Research, id)));
                     }
                     else
                     {
-                        rows.Add(($"{info.Name}: {st.Blocked}" + (info.Needs.Length > 0 ? $" (needs worker-minutes: {info.Needs})" : ""), null));
+                        rows.Add(($"{name}: {info.Gives} {st.Blocked}" + (info.Needs.Length > 0 ? $" (needs worker-minutes: {info.Needs})" : ""), null));
                     }
                 }
             }

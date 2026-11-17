@@ -22,7 +22,7 @@ public sealed class WarTests
     {
         for (int i = 0; i < civ.Stock.Length; i++)
         {
-            civ.Stock[i] = 500 * SimContent.One;
+            g.Settlements[civ.Settlements[0]].Stock[i] = 500 * SimContent.One;
         }
 
         Settlement home = g.Settlements[civ.Settlements[0]];
@@ -75,12 +75,12 @@ public sealed class WarTests
             target.People = 25;
             if (walls)
             {
-                b.KnownTech[Content.TechId("masonry")] = true;
-                b.Stock[Content.GoodId("stone")] = 500 * SimContent.One;
+                b.KnownTech[Content.TechId("stone_walls")] = true;
+                g.Settlements[b.Settlements[0]].Stock[Content.GoodId("stone")] = 500 * SimContent.One;
                 BuildingType w = Content.Building("stone_walls");
                 int cell = target.Cells.Find(c => g.CannotBuild(b, c, w) is null);
                 Assert.Null(g.Apply(new BuildCommand(b.Id, cell, w.Id)));
-                Run(g, w.BuildTicks + 1);
+                Run(g, w.BuildTicks + 600);
             }
 
             Unit u = Soldiers(g, a, "warriors", target.Center);
@@ -106,7 +106,8 @@ public sealed class WarTests
         Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 20)));
         Assert.Null(g.Apply(new AnswerPeaceCommand(b.Id, a.Id, true)));
         Assert.False(g.AtWar(a.Id, b.Id));
-        Assert.Equal(wood - (wood * 20 / 100), b.Stock[Content.GoodId("wood")]);
+        // The tribute leaves in a caravan (it turns back when no way on land leads to the taker).
+        Assert.Equal(g.Reachable(b, a) ? wood - (wood * 20 / 100) : wood, b.Stock[Content.GoodId("wood")]);
     }
 }
 
