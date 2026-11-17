@@ -16,6 +16,7 @@ kodu; liczby „zaszyte w kodzie” wymagają.
 | `reviewEverySteps` | 15 | własne kroki | S1 | co ile własnych kroków cywilizacji strateg robi przegląd (ADR 0018) |
 | `directionBonusPercent` | 15 | % | G2, G3, G5 | premia dla miejsc w stronę celu ekspansji |
 | `recipeSwitchBetterByPercent` | 25 | % | T1 | o ile nowa receptura musi być lepsza |
+| `recipeKeepYears` | 2 | lata akcji | T1 | jak długo rzemieślnicy trzymają recepturę, którą niedawno podjęli |
 | `crowdingLowPercent` | 50 | % | S1 | do tego zatłoczenia waga ekspansji minimalna |
 | `crowdingHighPercent` | 90 | % | S1 | od tego zatłoczenia waga ekspansji maksymalna |
 | `expansionWeightMin` | 1000 | ‰ | S1 | najniższa waga ekspansji |

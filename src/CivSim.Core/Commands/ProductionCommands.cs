@@ -48,6 +48,12 @@ public sealed record SetRecipeCommand(GameContent Content, SettlementId Settleme
     public void Apply(GameState state, CivId civ)
     {
         ArgumentNullException.ThrowIfNull(state);
-        state.FindSettlement(Settlement)!.RecipeId = RecipeId;
+        SettlementState s = state.FindSettlement(Settlement)!;
+        if (s.RecipeId != RecipeId)
+        {
+            s.RecipeSinceMonth = state.ActionMonth;
+        }
+
+        s.RecipeId = RecipeId;
     }
 }

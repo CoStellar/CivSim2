@@ -42,6 +42,12 @@
         "string"
       ]
     },
+    "recipeKeepYears": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
     "crowdingLowPercent": {
       "type": [
         "number",

@@ -286,7 +286,8 @@ public sealed record SettlementSaveData(
     [property: Key(33)] int[]? JourneyPath = null,
     [property: Key(34)] int JourneyPathAt = 0,
     [property: Key(35)] int JourneyPathGoal = -1,
-    [property: Key(36)] long PlayerOrderTick = -1);
+    [property: Key(36)] long PlayerOrderTick = -1,
+    [property: Key(37)] long RecipeSinceMonth = 0);
 
 /// <summary>Saved unit (stage 6 PR 3a).</summary>
 [MessagePackObject]
