@@ -124,6 +124,9 @@ public partial class PlayGame : Node2D
         _bigSignature = "";
     }
 
+    /// <summary>Script step: sets the zoom.</summary>
+    public void ScriptZoom(float zoom) => _camera.Zoom = new Vector2(zoom, zoom);
+
     /// <summary>Script step: sets the speed.</summary>
     public void ScriptSpeed(SimulationSpeed speed) => _session?.SetSpeed(speed);
 
@@ -359,7 +362,8 @@ public partial class PlayGame : Node2D
                 }
                 else if (_unit >= 0 && MouseCell() is { } target)
                 {
-                    _session.Play(PlayCommandKind.Move, _unit, target.Col, target.Row, _hiddenWalk.Contains(_unit));
+                    bool attack = IsArmy(_unit) && EnemyAt(target.Col, target.Row);
+                    _session.Play(attack ? PlayCommandKind.Attack : PlayCommandKind.Move, _unit, target.Col, target.Row, _hiddenWalk.Contains(_unit));
                 }
 
                 break;
@@ -444,6 +448,50 @@ public partial class PlayGame : Node2D
         UpdateUi();
     }
 
+    private bool IsArmy(int unit)
+    {
+        if (_session?.PlayView is not { } v || _session.PlayContent is not { } c)
+        {
+            return false;
+        }
+
+        foreach (PlayUnitView u in v.Units)
+        {
+            if (u.Id == unit)
+            {
+                return c.Units[u.Kind].Army;
+            }
+        }
+
+        return false;
+    }
+
+    private bool EnemyAt(int col, int row)
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return false;
+        }
+
+        foreach (PlayUnitView u in v.Units)
+        {
+            if (u.Civ != v.Civ && u.Col == col && u.Row == row)
+            {
+                return true;
+            }
+        }
+
+        foreach (PlaySettlementView s in v.Settlements)
+        {
+            if (s.Civ != v.Civ && s.Col == col && s.Row == row)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private string PlaceProblem()
     {
         if (_session?.PlayContent is not { } c || _placing <= 0)
@@ -512,7 +560,7 @@ public partial class PlayGame : Node2D
             topRow.AddChild(b);
         }
 
-        foreach (string mode in new[] { "Research", "People" })
+        foreach (string mode in new[] { "Research", "People", "Peoples" })
         {
             var b = new Button { Text = mode, FocusMode = Control.FocusModeEnum.None };
             b.Pressed += () =>
@@ -691,7 +739,7 @@ public partial class PlayGame : Node2D
             _ => "max",
         };
         string research = v.Researching >= 0 ? $"   researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "   no research";
-        _clock.Text = $"{c.Eras[v.Era]}   {Clock()}   {speed}{research}";
+        _clock.Text = v.Lost ? "Our people are gone. The game is lost." : $"{c.Eras[v.Era]}   {Clock()}   {speed}{research}";
         _advice.Text = v.Advice is { } a ? $"{v.Advisor?.Name}: {a}" : "";
         FillBuildBar(c);
         _pendingButtons.Clear();
@@ -749,7 +797,8 @@ public partial class PlayGame : Node2D
             if (s.Col == sel.Col && s.Row == sel.Row)
             {
                 PlayLevelInfo level = c.Levels[s.Level];
-                string text = $"{s.Name}\n{level.Name}\nPeople {s.People} of {s.Housing} homes\nWithout work: {s.Idle}";
+                string owner = s.Civ == v.Civ ? "" : $" ({PeopleName(v, s.Civ)})";
+                string text = $"{s.Name}{owner}\n{level.Name}\nPeople {s.People} of {s.Housing} homes\nWithout work: {s.Idle}\nDefence {s.DefensePercent}%" + (s.Besieged ? "\nUNDER ATTACK" : "");
                 if (s.Civ == v.Civ && s.Level + 1 < c.Levels.Count)
                 {
                     PlayLevelInfo next = c.Levels[s.Level + 1];
@@ -761,6 +810,11 @@ public partial class PlayGame : Node2D
                 {
                     foreach (PlayUnitInfo ut in c.Units)
                     {
+                        if (!v.Techs[ut.Tech].Known)
+                        {
+                            continue;
+                        }
+
                         int kind = ut.Id;
                         int sid = s.Id;
                         AddButton($"Train {ut.Name.ToLowerInvariant()} ({ut.People} people, {Amounts(c, ut.Price)})", () => _session!.Play(PlayCommandKind.Train, sid, b: kind));
@@ -837,12 +891,38 @@ public partial class PlayGame : Node2D
         _side.Text = HexText(sel);
     }
 
+    private static string PeopleName(PlayViewMessage v, int civ)
+    {
+        foreach (PlayPeopleView p in v.Peoples)
+        {
+            if (p.Civ == civ)
+            {
+                return p.Name;
+            }
+        }
+
+        return "strangers";
+    }
+
     private void UnitPanel(PlayUnitView u, PlayContentMessage c)
     {
         PlayUnitInfo t = c.Units[u.Kind];
-        string state = u.State == 2 ? "Walking" : "Standing";
-        string text = $"{t.Name}: {u.People} people\n{state}\n\nRight click a hex to send them there.";
+        string state = u.Fighting ? "FIGHTING" : u.State == 2 ? "Walking" : "Standing";
+        string text = $"{t.Name}: {u.People} people\n{state}";
+        if (t.Army)
+        {
+            text += $"\nStrength {t.Strength} each" + (t.Range > 1 ? $", shoots {t.Range} hexes" : "") + "\n\nRight click a hex to go there, an enemy to attack it.";
+        }
+        else
+        {
+            text += "\n\nRight click a hex to send them there.";
+        }
+
         int id = u.Id;
+        if (u.State != 0)
+        {
+            AddButton("Go home (join the settlement here)", () => _session!.Play(PlayCommandKind.Disband, id));
+        }
         if (t.CanHide)
         {
             bool hidden = _hiddenWalk.Contains(id);
@@ -933,6 +1013,48 @@ public partial class PlayGame : Node2D
                     {
                         rows.Add(($"{info.Name}: {st.Blocked}" + (info.Needs.Length > 0 ? $" (needs worker-minutes: {info.Needs})" : ""), null));
                     }
+                }
+            }
+        }
+        else if (_bigMode == "Peoples")
+        {
+            if (v.Peoples.Count == 0)
+            {
+                rows.Add(("We have met no other people yet. Send scouts.", null));
+            }
+
+            foreach (PlayPeopleView p in v.Peoples)
+            {
+                int other = p.Civ;
+                if (p.Dead)
+                {
+                    rows.Add(($"{p.Name}: gone.", null));
+                    continue;
+                }
+
+                string rep = p.Reputation < 0 ? $", known for treachery ({p.Reputation})" : "";
+                rows.Add(($"{p.Name}: {(p.AtWar ? "AT WAR" : "at peace")}{rep}", null));
+                if (p.AtWar)
+                {
+                    rows.Add(($"   War so far: we {p.OurScore}, they {p.TheirScore}.", null));
+                    int fair = p.SuggestedTribute;
+                    rows.Add((fair > 0 ? $"Offer peace: they pay us {fair}% of their goods" : fair < 0 ? $"Offer peace: we pay them {-fair}% of our goods" : "Offer peace without tribute",
+                        () => _session!.Play(PlayCommandKind.ProposePeace, other, b: fair)));
+                    if (fair <= 0)
+                    {
+                        rows.Add(($"Offer peace demanding 10% from them", () => _session!.Play(PlayCommandKind.ProposePeace, other, b: 10)));
+                    }
+
+                    if (p.TheyOfferTribute is { } t)
+                    {
+                        rows.Add((t > 0 ? $"   They offer peace if we pay {t}% of our goods." : t < 0 ? $"   They offer peace and {-t}% of their goods." : "   They offer peace.", null));
+                        rows.Add(("Accept their peace", () => _session!.Play(PlayCommandKind.AnswerPeace, other, flag: true)));
+                        rows.Add(("Refuse their peace", () => _session!.Play(PlayCommandKind.AnswerPeace, other, flag: false)));
+                    }
+                }
+                else
+                {
+                    rows.Add(($"Declare war on {p.Name}", () => _session!.Play(PlayCommandKind.DeclareWar, other)));
                 }
             }
         }

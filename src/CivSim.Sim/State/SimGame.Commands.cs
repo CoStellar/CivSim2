@@ -64,6 +64,11 @@ public sealed partial class SimGame
             ResearchCommand c => Research(civ, c.Tech),
             HireCommand c => Hire(civ, c.Advisor),
             DismissAdvisorCommand => Dismiss(civ),
+            DeclareWarCommand c => DeclareWar(civ, c.Other, surprise: false),
+            AttackCommand c => Attack(civ, c.Unit, c.Cell),
+            ProposePeaceCommand c => ProposePeace(civ, c.Other, c.TributePercent),
+            AnswerPeaceCommand c => AnswerPeace(civ, c.From, c.Accept),
+            DisbandCommand c => Disband(civ, c.Unit),
             _ => "Unknown command.",
         };
     }
@@ -256,6 +261,11 @@ public sealed partial class SimGame
         if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && Map.DepositDepth[cell] == 0)
         {
             yield += t.BonusPercent;
+        }
+
+        if (t.BonusReliefs.Length > 0 && t.BonusReliefs[Map.Relief[cell]])
+        {
+            yield += t.BonusReliefPercent;
         }
 
         var b = new Building

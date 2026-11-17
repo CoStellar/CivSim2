@@ -12,7 +12,7 @@ public sealed class EconomyTests
 
     private static SimGame NewGame(ulong seed = 1)
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(seed, 66, 40, 2));
+        SimGame g = SimGame.Create(Content, new SimSettings(seed, 66, 40, 2) { Ai = false });
         foreach (Civ civ in g.Civs)
         {
             civ.KnownTech[Content.TechId("stone_tools")] = true;

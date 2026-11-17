@@ -89,6 +89,17 @@ public sealed partial class SimGame
         }
 
         civ.Rate[Content.Food] += (idle * Content.IdleForagePerMinute) - (people * Content.FoodPerPersonPerMinute) - (civ.Advisor is null ? 0 : Content.AdvisorUpkeep);
+        long soldiers = 0;
+        foreach (int uid in civ.Units)
+        {
+            Unit u = Units[uid];
+            if (u.State != UnitState.Gone && Content.Units[u.Kind].Army)
+            {
+                soldiers += u.People;
+            }
+        }
+
+        civ.Rate[Content.Food] -= soldiers * Content.War.SoldierFoodPerMinute;
         civ.ExperienceRate[0] += idle / 2; // idle people forage: a little experience in the oldest craft
         civ.People = people;
         civ.Dirty = false;

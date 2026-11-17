@@ -39,6 +39,7 @@ public partial class Main : Node2D
     private string? _playScreenshot;
     private double _playSeconds = 6;
     private bool _playDemo;
+    private bool _playLong;
     private MapView? _map;
     private Camera2D _camera = null!;
     private Hud? _hud;
@@ -148,6 +149,9 @@ public partial class Main : Node2D
                 case "--play-screenshot":
                     _playScreenshot = next;
                     break;
+                case "--play-long":
+                    _playLong = true;
+                    break;
                 case "--play-demo":
                     _playDemo = true;
                     break;
@@ -193,6 +197,12 @@ public partial class Main : Node2D
                    (2.3, g => g.ScriptTrain("scouts")), (9, g => g.ScriptMoveFirst(-8, -6, false)),
                    (10, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
                 : [];
+            if (_playLong)
+            {
+                demo = [(1, g => g.ScriptSpeed(SimulationSpeed.Max)), (_playSeconds - 3, g => g.ScriptSpeed(SimulationSpeed.Paused)),
+                        (_playSeconds - 2, g => g.ScriptOpen("Peoples")), (_playSeconds - 2, g => g.ScriptZoom(0.35f))];
+            }
+
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
         }
 

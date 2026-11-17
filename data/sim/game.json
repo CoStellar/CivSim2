@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add.",
+  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains.",
   "density": 7,
   "economyEveryTicks": 10,
   "populationEveryTicks": 50,
@@ -59,7 +59,7 @@
     "idleForagePerMinute": 0.6
   },
   "growth": {
-    "growthPercentPerMinute": 5,
+    "growthPercentPerMinute": 8,
     "minGrowthPerMinute": 1,
     "starvePercentPerMinute": 12
   },
@@ -68,7 +68,7 @@
     {
       "key": "camp",
       "name": "Camp",
-      "radius": 2,
+      "radius": 3,
       "housing": 25,
       "storage": 300,
       "upgradePrice": {}
@@ -76,7 +76,7 @@
     {
       "key": "village",
       "name": "Village",
-      "radius": 3,
+      "radius": 4,
       "housing": 40,
       "storage": 400,
       "upgradePrice": {
@@ -89,7 +89,7 @@
     {
       "key": "town",
       "name": "Town",
-      "radius": 4,
+      "radius": 5,
       "housing": 60,
       "storage": 600,
       "upgradePrice": {
@@ -103,7 +103,7 @@
     {
       "key": "city",
       "name": "City",
-      "radius": 5,
+      "radius": 6,
       "housing": 90,
       "storage": 900,
       "upgradePrice": {
@@ -146,6 +146,150 @@
       "hiddenTicksPerHex": 6,
       "sight": 5,
       "tech": "foraging"
+    },
+    {
+      "key": "levy",
+      "name": "Levy",
+      "people": 10,
+      "price": {},
+      "trainSeconds": 3,
+      "ticksPerHex": 7,
+      "sight": 2,
+      "tech": "foraging",
+      "army": true,
+      "levy": true,
+      "strength": 5
+    },
+    {
+      "key": "warriors",
+      "name": "Warriors",
+      "people": 10,
+      "price": {
+        "food": 30,
+        "wood": 10
+      },
+      "trainSeconds": 12,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "tech": "foraging",
+      "army": true,
+      "strength": 10,
+      "bonusBiomes": [
+        "deciduous_forest",
+        "taiga",
+        "jungle"
+      ],
+      "bonusPercent": 30,
+      "upgrades": {
+        "bronze_working": 30,
+        "iron_working": 30
+      }
+    },
+    {
+      "key": "archers",
+      "name": "Archers",
+      "people": 8,
+      "price": {
+        "food": 30,
+        "wood": 25
+      },
+      "trainSeconds": 15,
+      "ticksPerHex": 6,
+      "sight": 4,
+      "tech": "stone_tools",
+      "army": true,
+      "strength": 8,
+      "range": 2,
+      "bonusRelief": [
+        "hills",
+        "mountains"
+      ],
+      "bonusPercent": 40,
+      "upgrades": {
+        "steel": 30
+      }
+    },
+    {
+      "key": "spearmen",
+      "name": "Spearmen",
+      "people": 10,
+      "price": {
+        "food": 40,
+        "bronze": 10
+      },
+      "trainSeconds": 18,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "tech": "bronze_working",
+      "army": true,
+      "strength": 16,
+      "bonusRelief": [
+        "flat"
+      ],
+      "bonusPercent": 20,
+      "upgrades": {
+        "iron_working": 25
+      }
+    },
+    {
+      "key": "horsemen",
+      "name": "Horsemen",
+      "people": 6,
+      "price": {
+        "food": 60,
+        "hides": 20
+      },
+      "trainSeconds": 20,
+      "ticksPerHex": 3,
+      "sight": 5,
+      "tech": "horseback_riding",
+      "army": true,
+      "strength": 18,
+      "bonusRelief": [
+        "flat"
+      ],
+      "bonusPercent": 40,
+      "upgrades": {
+        "feudalism": 40
+      }
+    },
+    {
+      "key": "swordsmen",
+      "name": "Swordsmen",
+      "people": 10,
+      "price": {
+        "food": 50,
+        "iron": 12
+      },
+      "trainSeconds": 20,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "tech": "iron_working",
+      "army": true,
+      "strength": 24,
+      "upgrades": {
+        "steel": 30
+      }
+    },
+    {
+      "key": "knights",
+      "name": "Knights",
+      "people": 6,
+      "price": {
+        "food": 80,
+        "iron": 20,
+        "hides": 20
+      },
+      "trainSeconds": 30,
+      "ticksPerHex": 3,
+      "sight": 5,
+      "tech": "feudalism",
+      "army": true,
+      "strength": 40,
+      "bonusRelief": [
+        "flat"
+      ],
+      "bonusPercent": 30
     }
   ],
   "terrainCost": {
@@ -257,17 +401,17 @@
         "wood": 25
       },
       "buildSeconds": 20,
-      "relief": [
-        "hills",
-        "mountains"
-      ],
-      "orDeposit": "stone",
       "produces": {
-        "stone": 3
+        "stone": 2
       },
       "bonusDeposit": "stone",
       "bonusPercent": 100,
-      "tech": "stone_tools"
+      "tech": "stone_tools",
+      "bonusRelief": [
+        "hills",
+        "mountains"
+      ],
+      "bonusReliefPercent": 100
     },
     {
       "key": "clay_pit",
@@ -569,6 +713,54 @@
       "produces": {
         "tools": 6
       }
+    },
+    {
+      "key": "palisade",
+      "name": "Palisade",
+      "tech": "stone_tools",
+      "workers": 0,
+      "price": {
+        "wood": 60
+      },
+      "buildSeconds": 25,
+      "defensePercent": 40
+    },
+    {
+      "key": "stone_walls",
+      "name": "Stone walls",
+      "tech": "masonry",
+      "workers": 0,
+      "price": {
+        "stone": 150
+      },
+      "buildSeconds": 45,
+      "defensePercent": 90
+    },
+    {
+      "key": "castle",
+      "name": "Castle",
+      "tech": "feudalism",
+      "workers": 0,
+      "price": {
+        "stone": 400,
+        "wood": 100,
+        "iron": 30
+      },
+      "buildSeconds": 90,
+      "defensePercent": 200,
+      "housing": 10
+    },
+    {
+      "key": "barracks",
+      "name": "Barracks",
+      "tech": "bronze_working",
+      "workers": 0,
+      "price": {
+        "wood": 80,
+        "stone": 40
+      },
+      "buildSeconds": 40,
+      "trainPercent": 50
     }
   ],
   "eras": [
@@ -636,13 +828,13 @@
       "name": "Agriculture",
       "era": "neolithic",
       "experience": {
-        "foraging": 60,
-        "stone_tools": 15
+        "foraging": 40,
+        "stone_tools": 10
       },
       "price": {
         "food": 80,
         "wood": 40,
-        "tools": 10
+        "stone": 20
       },
       "seconds": 60
     },
@@ -881,5 +1073,17 @@
       "research",
       "expansion"
     ]
+  },
+  "war": {
+    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers eat soldierFoodPerMinute each. Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation).",
+    "combatEveryTicks": 10,
+    "lowLuckPercent": 80,
+    "highLuckPercent": 120,
+    "defenderPercent": 30,
+    "defenderStrength": 6,
+    "captureBelowPeople": 6,
+    "soldierFoodPerMinute": 1,
+    "surpriseReputation": -30,
+    "levyStrength": 5
   }
 }

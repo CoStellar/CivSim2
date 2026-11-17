@@ -31,7 +31,34 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
 {
     /// <summary>Technology that allows it.</summary>
     public int Tech { get; init; }
+
+    /// <summary>A fighting unit.</summary>
+    public bool Army { get; init; }
+
+    /// <summary>Called-up workers: free, weak, go back to work when disbanded.</summary>
+    public bool Levy { get; init; }
+
+    /// <summary>Strength per person (warriors = 10).</summary>
+    public int Strength { get; init; }
+
+    /// <summary>Reach in hexes (1 = next hex).</summary>
+    public int Range { get; init; } = 1;
+
+    /// <summary>Biomes where it fights better.</summary>
+    public bool[] BonusBiomes { get; init; } = [];
+
+    /// <summary>Reliefs where it fights better.</summary>
+    public bool[] BonusReliefs { get; init; } = [];
+
+    /// <summary>Bonus on its terrain, percent.</summary>
+    public int BonusPercent { get; init; }
+
+    /// <summary>Technologies that make it stronger, with the percent.</summary>
+    public (int Tech, int Percent)[] Upgrades { get; init; } = [];
 }
+
+/// <summary>Rules of fighting.</summary>
+public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, long SoldierFoodPerMinute, int SurpriseReputation);
 
 /// <summary>A building type from <c>data/sim/game.json</c>. Amounts in hundredths; rates per worker per minute.</summary>
 public sealed class BuildingType
@@ -95,6 +122,18 @@ public sealed class BuildingType
 
     /// <summary>Research is this much cheaper while the building works (percent).</summary>
     public int ResearchDiscountPercent { get; init; }
+
+    /// <summary>Reliefs that raise production.</summary>
+    public bool[] BonusReliefs { get; init; } = [];
+
+    /// <summary>Extra production in percent on those reliefs.</summary>
+    public int BonusReliefPercent { get; init; }
+
+    /// <summary>Defence of its settlement, percent (fortifications).</summary>
+    public int DefensePercent { get; init; }
+
+    /// <summary>Training time in its settlement, percent (barracks).</summary>
+    public int TrainPercent { get; init; }
 }
 
 /// <summary>The rules of the new game, loaded from <c>data/sim/game.json</c> plus the world content of the legacy loader.</summary>
@@ -198,6 +237,9 @@ public sealed class SimContent
 
     /// <summary>Food an advisor eats per minute, hundredths.</summary>
     public long AdvisorUpkeep { get; init; }
+
+    /// <summary>Rules of fighting.</summary>
+    public required WarRules War { get; init; }
 
     /// <summary>Advisor fields.</summary>
     public required IReadOnlyList<string> AdvisorFields { get; init; }
@@ -376,6 +418,20 @@ public sealed class SimContent
             });
         }
 
+        static bool[] ReliefsOf(JsonElement e, string name)
+        {
+            var f = new bool[3];
+            if (e.TryGetProperty(name, out JsonElement arr))
+            {
+                foreach (JsonElement k in arr.EnumerateArray())
+                {
+                    f[k.GetString() switch { "flat" => 0, "hills" => 1, "mountains" => 2, _ => throw new InvalidDataException($"sim/game.json: unknown relief '{k.GetString()}'.") }] = true;
+                }
+            }
+
+            return f;
+        }
+
         var buildings = new List<BuildingType> { new() { Id = 0, Key = "", Name = "" } };
         foreach (JsonElement b in root.GetProperty("buildings").EnumerateArray())
         {
@@ -432,7 +488,54 @@ public sealed class SimContent
                 Tech = Math.Max(0, TechOf(b, "tech")),
                 MinFertility = b.TryGetProperty("minFertility", out JsonElement mf) ? mf.GetInt32() : 0,
                 ResearchDiscountPercent = b.TryGetProperty("researchDiscountPercent", out JsonElement rd) ? rd.GetInt32() : 0,
+                DefensePercent = b.TryGetProperty("defensePercent", out JsonElement dp) ? dp.GetInt32() : 0,
+                BonusReliefs = ReliefsOf(b, "bonusRelief"),
+                BonusReliefPercent = b.TryGetProperty("bonusReliefPercent", out JsonElement brp) ? brp.GetInt32() : 0,
+                TrainPercent = b.TryGetProperty("trainPercent", out JsonElement tp2) ? tp2.GetInt32() : 100,
             });
+        }
+
+        bool[] Flags(JsonElement e, string name)
+        {
+            var f = new bool[world.Biomes.Count];
+            if (e.TryGetProperty(name, out JsonElement arr))
+            {
+                foreach (JsonElement k in arr.EnumerateArray())
+                {
+                    f[world.Biome(k.GetString()!).Id] = true;
+                }
+            }
+
+            return f;
+        }
+
+        bool[] Reliefs(JsonElement e, string name)
+        {
+            var f = new bool[3];
+            if (e.TryGetProperty(name, out JsonElement arr))
+            {
+                foreach (JsonElement k in arr.EnumerateArray())
+                {
+                    f[k.GetString() switch { "flat" => 0, "hills" => 1, "mountains" => 2, _ => throw new InvalidDataException($"sim/game.json: unknown relief '{k.GetString()}'.") }] = true;
+                }
+            }
+
+            return f;
+        }
+
+        (int, int)[] Upgrades(JsonElement e)
+        {
+            var list = new List<(int, int)>();
+            if (e.TryGetProperty("upgrades", out JsonElement up))
+            {
+                foreach (JsonProperty p in up.EnumerateObject())
+                {
+                    int ti = techKeys.IndexOf(p.Name);
+                    list.Add((ti >= 0 ? ti : throw new InvalidDataException($"sim/game.json: unknown technology '{p.Name}'."), p.Value.GetInt32()));
+                }
+            }
+
+            return [.. list];
         }
 
         var units = new List<UnitType>();
@@ -446,6 +549,14 @@ public sealed class SimContent
                 u.TryGetProperty("founds", out JsonElement f) && f.GetBoolean())
             {
                 Tech = Math.Max(0, TechOf(u, "tech")),
+                Army = u.TryGetProperty("army", out JsonElement ar) && ar.GetBoolean(),
+                Levy = u.TryGetProperty("levy", out JsonElement lv) && lv.GetBoolean(),
+                Strength = u.TryGetProperty("strength", out JsonElement st) ? st.GetInt32() : 0,
+                Range = u.TryGetProperty("range", out JsonElement rg) ? rg.GetInt32() : 1,
+                BonusBiomes = Flags(u, "bonusBiomes"),
+                BonusReliefs = Reliefs(u, "bonusRelief"),
+                BonusPercent = u.TryGetProperty("bonusPercent", out JsonElement bpc) ? bpc.GetInt32() : 0,
+                Upgrades = Upgrades(u),
             });
         }
 
@@ -527,6 +638,11 @@ public sealed class SimContent
             AdvisorPrice = Amounts(advisors.GetProperty("hirePrice")),
             AdvisorUpkeep = Hundredths(advisors.GetProperty("upkeepFoodPerMinute")),
             AdvisorFields = fields,
+            War = new WarRules(
+                root.GetProperty("war").GetProperty("combatEveryTicks").GetInt32(), root.GetProperty("war").GetProperty("lowLuckPercent").GetInt32(),
+                root.GetProperty("war").GetProperty("highLuckPercent").GetInt32(), root.GetProperty("war").GetProperty("defenderPercent").GetInt32(),
+                root.GetProperty("war").GetProperty("defenderStrength").GetInt32(), root.GetProperty("war").GetProperty("captureBelowPeople").GetInt32(),
+                Hundredths(root.GetProperty("war").GetProperty("soldierFoodPerMinute")), root.GetProperty("war").GetProperty("surpriseReputation").GetInt32()),
         };
     }
 

@@ -10,7 +10,7 @@ public sealed class UnitTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
-    private static SimGame NewGame() => SimGame.Create(Content, new SimSettings(1, 66, 40, 2));
+    private static SimGame NewGame() => SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
 
     private static void Run(SimGame g, int ticks)
     {

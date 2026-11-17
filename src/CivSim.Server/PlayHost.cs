@@ -47,6 +47,7 @@ public sealed class PlayHost : IDisposable
         ArgumentNullException.ThrowIfNull(options);
         SimContent content = SimContent.Load(dataDirectory);
         SimGame game = SimGame.Create(content, new SimSettings(options.Seed, options.LegacyWidth, options.LegacyHeight, options.Civilizations));
+        game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
         var host = new PlayHost(game);
         host._thread.Start();
         return host;
@@ -184,6 +185,11 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Research => new ResearchCommand(civ, m.A),
         PlayCommandKind.Hire => new HireCommand(civ, m.Flag),
         PlayCommandKind.Dismiss => new DismissAdvisorCommand(civ),
+        PlayCommandKind.DeclareWar => new DeclareWarCommand(civ, m.A),
+        PlayCommandKind.Attack => new AttackCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
+        PlayCommandKind.ProposePeace => new ProposePeaceCommand(civ, m.A, m.B),
+        PlayCommandKind.AnswerPeace => new AnswerPeaceCommand(civ, m.A, m.Flag),
+        PlayCommandKind.Disband => new DisbandCommand(civ, m.A),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
 
@@ -248,7 +254,7 @@ public sealed class PlayHost : IDisposable
         var units = new List<PlayUnitInfo>();
         foreach (UnitType u in content.Units)
         {
-            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech));
+            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range));
         }
 
         var techs = new List<PlayTechInfo>();
@@ -351,7 +357,7 @@ public sealed class PlayHost : IDisposable
             }
 
             HexCoord h = _game.Geo.FromIndex(s.Center);
-            settlements.Add(new PlaySettlementView(s.Id, s.Civ, s.Name, h.Col, h.Row, s.Level, s.People, s.Housing, s.Idle));
+            settlements.Add(new PlaySettlementView(s.Id, s.Civ, s.Name, h.Col, h.Row, s.Level, s.People, s.Housing, s.Idle, s.Besieged, _game.Defense(s)));
         }
 
         var buildings = new List<PlayBuildingView>();
@@ -387,12 +393,32 @@ public sealed class PlayHost : IDisposable
 
             HexCoord h = _game.Geo.FromIndex(u.Cell);
             HexCoord to = u.State == UnitState.Moving && u.Path.Count > 0 ? _game.Geo.FromIndex(u.Path[^1]) : h;
-            units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row));
+            units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row, u.Fighting));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
             civ.People, civ.Hungry, settlements, buildings, [.. _news], units, _game.EraOf(civ), civ.Researching, ResearchPermille(civ), TechStates(civ),
-            Person(civ.Thinker, false), Person(civ.ThinkerOffer, false), Person(civ.Advisor, true), Person(civ.AdvisorOffer, true), _game.Advice(civ));
+            Person(civ.Thinker, false), Person(civ.ThinkerOffer, false), Person(civ.Advisor, true), Person(civ.AdvisorOffer, true), _game.Advice(civ),
+            Peoples(civ), civ.Dead);
+    }
+
+    private List<PlayPeopleView> Peoples(Civ civ)
+    {
+        var list = new List<PlayPeopleView>();
+        foreach (Civ other in _game.Civs)
+        {
+            if (other.Id == civ.Id || !_game.Met(civ, other) && !_game.AtWar(civ.Id, other.Id))
+            {
+                continue;
+            }
+
+            PeaceOffer? offer = _game.PeaceOffers.Find(o => o.From == other.Id && o.To == civ.Id);
+            list.Add(new PlayPeopleView(
+                other.Id, other.Name, _game.AtWar(civ.Id, other.Id), _game.Score(civ.Id, other.Id), _game.Score(other.Id, civ.Id),
+                _game.SuggestedTribute(civ.Id, other.Id), other.Reputation, offer?.TributePercent, other.Dead));
+        }
+
+        return list;
     }
 
     private int ResearchPermille(Civ civ)

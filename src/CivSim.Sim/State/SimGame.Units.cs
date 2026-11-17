@@ -79,7 +79,17 @@ public sealed partial class SimGame
         Pay(civ, t.Price, 100);
         s.People -= t.People;
         civ.Dirty = true;
-        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = t.People, Cell = s.Center, State = UnitState.Training, NextTick = Ticks + Math.Max(1, t.TrainTicks) };
+        int trainPct = 100;
+        foreach (int bid in civ.Buildings)
+        {
+            Building b = Buildings[bid];
+            if (b.Settlement == s.Id && b.State == BuildingState.Active)
+            {
+                trainPct = Math.Min(trainPct, Content.Buildings[b.Type].TrainPercent);
+            }
+        }
+
+        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = t.People, Cell = s.Center, State = UnitState.Training, NextTick = Ticks + Math.Max(1, t.TrainTicks * trainPct / 100) };
         Units.Add(u);
         civ.Units.Add(u.Id);
         ScheduleUnit(u, DoneTraining);
@@ -106,6 +116,8 @@ public sealed partial class SimGame
         }
 
         u.Hidden = hidden && t.HiddenTicksPerHex > 0;
+        u.TargetUnit = -1;
+        u.TargetSettlement = -1;
         u.PathIndex = 0;
         if (u.Path.Count == 0)
         {
@@ -192,7 +204,8 @@ public sealed partial class SimGame
     {
         u.Cell = u.Path[u.PathIndex++];
         Reveal(Civs[u.Civ], u.Cell, Content.Units[u.Kind].Sight);
-        if (u.PathIndex >= u.Path.Count)
+        int goal = u.TargetUnit >= 0 ? Units[u.TargetUnit].Cell : u.TargetSettlement >= 0 ? Settlements[u.TargetSettlement].Center : -1;
+        if (u.PathIndex >= u.Path.Count || (goal >= 0 && Distance(u.Cell, goal) <= Content.Units[u.Kind].Range))
         {
             u.State = UnitState.Idle;
             u.Path.Clear();

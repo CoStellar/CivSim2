@@ -34,7 +34,10 @@ public sealed record PlayUnitInfo(
     [property: Key(5)] int TrainSeconds,
     [property: Key(6)] bool CanHide,
     [property: Key(7)] bool Founds,
-    [property: Key(8)] int Tech = 0);
+    [property: Key(8)] int Tech = 0,
+    [property: Key(9)] bool Army = false,
+    [property: Key(10)] int Strength = 0,
+    [property: Key(11)] int Range = 1);
 
 /// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
 [MessagePackObject]
@@ -48,7 +51,8 @@ public sealed record PlayUnitView(
     [property: Key(6)] int State,
     [property: Key(7)] bool Hidden,
     [property: Key(8)] int ToCol,
-    [property: Key(9)] int ToRow);
+    [property: Key(9)] int ToRow,
+    [property: Key(10)] bool Fighting = false);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -96,7 +100,22 @@ public sealed record PlaySettlementView(
     [property: Key(5)] int Level,
     [property: Key(6)] int People,
     [property: Key(7)] int Housing,
-    [property: Key(8)] int Idle);
+    [property: Key(8)] int Idle,
+    [property: Key(9)] bool Besieged = false,
+    [property: Key(10)] int DefensePercent = 100);
+
+/// <summary>Another people as the player knows it.</summary>
+[MessagePackObject]
+public sealed record PlayPeopleView(
+    [property: Key(0)] int Civ,
+    [property: Key(1)] string Name,
+    [property: Key(2)] bool AtWar,
+    [property: Key(3)] int OurScore,
+    [property: Key(4)] int TheirScore,
+    [property: Key(5)] int SuggestedTribute,
+    [property: Key(6)] int Reputation,
+    [property: Key(7)] int? TheyOfferTribute,
+    [property: Key(8)] bool Dead);
 
 /// <summary>A building as the player sees it. State: 0 construction, 1 paused construction, 2 working, 3 stopped.</summary>
 [MessagePackObject]
@@ -136,7 +155,9 @@ public sealed record PlayViewMessage(
     [property: Key(17)] PlayPersonView? ThinkerOffer,
     [property: Key(18)] PlayPersonView? Advisor,
     [property: Key(19)] PlayPersonView? AdvisorOffer,
-    [property: Key(20)] string? Advice) : IProtocolMessage;
+    [property: Key(20)] string? Advice,
+    [property: Key(21)] IReadOnlyList<PlayPeopleView> Peoples,
+    [property: Key(22)] bool Lost) : IProtocolMessage;
 
 /// <summary>What a player command does.</summary>
 public enum PlayCommandKind
@@ -176,6 +197,21 @@ public enum PlayCommandKind
 
     /// <summary>Let the advisor go.</summary>
     Dismiss = 11,
+
+    /// <summary>Declare war on people <c>A</c>.</summary>
+    DeclareWar = 12,
+
+    /// <summary>Unit <c>A</c> attacks what stands on (<c>Col</c>, <c>Row</c>).</summary>
+    Attack = 13,
+
+    /// <summary>Offer peace to people <c>A</c>; <c>B</c> is the tribute in percent (above 0 they pay, below 0 we pay).</summary>
+    ProposePeace = 14,
+
+    /// <summary>Answer the peace offer of people <c>A</c> (accept when <c>Flag</c>).</summary>
+    AnswerPeace = 15,
+
+    /// <summary>Unit <c>A</c> goes home and its people join the settlement there.</summary>
+    Disband = 16,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

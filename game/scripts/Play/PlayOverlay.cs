@@ -112,7 +112,7 @@ public partial class PlayOverlay : Node2D
                     Color civ = CivColor(s.Civ);
                     float size = 0.55f + (s.Level * 0.1f);
                     DrawPolygon(Hex(c, size), [civ.Darkened(0.45f)]);
-                    DrawPolyline(Closed(Hex(c, size)), civ, 3);
+                    DrawPolyline(Closed(Hex(c, size)), s.Besieged ? Colors.Red : civ, s.Besieged ? 5 : 3);
                     DrawString(font, c + new Vector2(-24, 6), _content.Levels[s.Level].Name[..1], HorizontalAlignment.Center, 48, 18, Colors.White);
                     DrawString(font, c + new Vector2(-80, -26), s.Name, HorizontalAlignment.Center, 160, 14, Colors.White);
                 }
@@ -148,7 +148,7 @@ public partial class PlayOverlay : Node2D
 
                     Vector2 p = c + new Vector2(10, -8);
                     DrawCircle(p, 11, u.Hidden ? civ.Darkened(0.6f) : civ.Darkened(0.3f));
-                    DrawArc(p, 11, 0, MathF.Tau, 20, u.Id == SelectedUnit ? new Color(1f, 0.9f, 0.3f) : Colors.Black, u.Id == SelectedUnit ? 3 : 1.5f);
+                    DrawArc(p, 11, 0, MathF.Tau, 20, u.Id == SelectedUnit ? new Color(1f, 0.9f, 0.3f) : u.Fighting ? Colors.Red : Colors.Black, u.Id == SelectedUnit || u.Fighting ? 3 : 1.5f);
                     string letter = _content.Units[u.Kind].Name[..1];
                     DrawString(font, p + new Vector2(-11, 5), letter, HorizontalAlignment.Center, 22, 13, Colors.White);
                     DrawString(font, p + new Vector2(-11, 20), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 10, Colors.White);

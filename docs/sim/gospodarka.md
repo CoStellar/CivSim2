@@ -14,9 +14,9 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 
 ## Osada
 
-- Środek osady i ziemia w promieniu poziomu: obóz 2, wioska 3, miasteczko 4, miasto 5 heksów.
+- Środek osady i ziemia w promieniu poziomu: obóz 3, wioska 4, miasteczko 5, miasto 6 heksów.
 - Poziom daje domy i magazyn; awans kosztuje dobra i od razu poszerza ziemię.
-- Ludzie rosną 5% na minutę (co najmniej 1), dopóki są domy i jedzenie. Bez jedzenia ubywa 12% na minutę.
+- Ludzie rosną 8% na minutę (co najmniej 1), dopóki są domy i jedzenie. Bez jedzenia ubywa 12% na minutę.
 
 ## Budynki
 
@@ -26,7 +26,7 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 | Szałas myśliwych | 3 | 3 jedzenia, 1 skóra (×2 przy zwierzynie) | trawy, lasy, tundra |
 | Chata rybacka | 2 | 5 jedzenia (×2 przy rybach) | woda obok |
 | Drwal | 3 | 4 drewna | lasy, bagna |
-| Kamieniołom | 4 | 3 kamienia (×2 na złożu kamienia) | wzgórza, góry albo złoże kamienia |
+| Kamieniołom | 4 | 2 kamienia (×2 na wzgórzach i w górach, ×2 na złożu kamienia) | wszędzie |
 | Glinianka | 3 | 3 gliny | woda obok albo złoże gliny |
 | Wytwórca narzędzi | 2 | 1 narzędzie z 2 kamieni i 1 drewna | wszędzie |
 | Chaty | – | 8 domów | wszędzie |
@@ -42,3 +42,54 @@ Wstrzymaną budowę wznawia się za 15% ceny.
 - **Terminy:** koniec budowy to wpis w kolejce terminów, nic nie sprawdza co takt.
 - **Rytmy:** gospodarka co 10 taktów (1 s), ludność co 50 taktów (5 s), rozłożone po numerze ludu.
 - **Usypianie:** budynek bez składnika śpi, dopóki składnik nie wróci; wtedy budzi się sam.
+
+## Technologie, myśliciele, doradca (etap D)
+
+- 16 technologii w 5 erach (epoka kamienia → średniowiecze), `technologies` w `game.json`.
+- Technologia wymaga doświadczenia w poprzednich: to minuty pracy ludzi w budynkach danej technologii (ludzie bez pracy dają trochę doświadczenia w zbieractwie).
+  Potem płaci się cenę w dobrach i czeka.
+- Cena spada o 10% za każdy poznany lud, który ją zna (najwyżej 40%), i o 10–15% za szkołę i obserwatorium.
+- Myśliciel (jeden) ma rzadkość: zwykły, uzdolniony, wizjoner, rzadki, legendarny.
+  - Rzadkość obniża cenę albo wymagane doświadczenie; wizjoner obniża doświadczenie, ale podnosi cenę.
+  - Po 12 minutach odchodzi; następca (II, III…) traci 20% przewagi na pokolenie.
+  - Co 3 minuty pojawia się kandydat, którego można zatrudnić.
+- Doradca (najwyżej jeden):
+  - kandydat co 4 minuty, z jedną albo dwiema dziedzinami (gospodarka, wzrost, badania, ekspansja);
+  - je 1 jedzenia na minutę;
+  - daje jedną radę naraz, tylko w swoich dziedzinach.
+- Imiona ludów, osad i ludzi pochodzą z systemu języków.
+
+## Wojna (etap E)
+
+- Jednostki:
+  - pospolite ruszenie (darmowe, słabe, wraca do pracy);
+  - wojownicy, łucznicy (strzelają na 2 heksy), włócznicy, jeźdźcy, miecznicy, rycerze.
+
+  Każdy rodzaj ma teren, na którym jest mocniejszy, i ulepszenia z technologii (np. wojownicy +30% z brązem).
+- Żołnierze jedzą 1 jedzenia na minutę.
+- Walka co sekundę: zabici = ludzie × siła × teren i ulepszenia × szczęście 80–120%. Wojsko samo bije wrogów w zasięgu, a gracz wskazuje cel prawym kliknięciem.
+- Oblężenie osady:
+  - broni się 30% mieszkańców;
+  - umocnienia podnoszą obronę: palisada +40%, mury +90%, zamek +200%;
+  - poniżej 6 mieszkańców osada przechodzi do zwycięzcy z ziemią i budynkami;
+  - lud bez osad znika.
+- Wojna to stan:
+  - atak bez wypowiedzenia albo w czasie rozejmu psuje reputację;
+  - pokój proponuje się z daniną liczoną z przebiegu wojny (zabici i zdobyte osady);
+  - po pokoju jest rozejm na 3 minuty.
+
+## Gracz AI (etap F)
+
+Te same komendy co gracz, co 3 sekundy, widzi tylko to, co odkrył jego lud. Charakter (wojowniczość, ekspansja) jest losowany i widać go
+tylko po działaniach.
+
+- **Buduje:**
+  - najpierw to, co daje doświadczenie potrzebne do następnej technologii;
+  - potem jedzenie, domy, magazyn i dobra potrzebne do ceny badania.
+- **Bada, zatrudnia, rozwija się:** bada, zatrudnia lepszych myślicieli, awansuje osady, wysyła zwiadowców i osadników.
+- **Walczy:**
+  - utrzymuje wojsko według charakteru;
+  - broni swojej ziemi;
+  - przez pierwsze 8 minut nikogo nie atakuje;
+  - wojnę zaczyna, gdy ma dwa razy więcej siły niż obrona celu;
+  - pokój proponuje, gdy przegrywa.

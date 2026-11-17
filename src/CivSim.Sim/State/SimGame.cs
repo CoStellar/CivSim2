@@ -15,6 +15,9 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>Water percent.</summary>
     public int WaterPercent { get; init; } = 60;
+
+    /// <summary>The AI leads every people (the host hands people to players afterwards); false in rule tests.</summary>
+    public bool Ai { get; init; } = true;
 }
 
 /// <summary>
@@ -29,11 +32,18 @@ public sealed partial class SimGame
     private const int UnitStep = 2;
     private const int DoneResearch = 3;
     private readonly CivSim.Core.Random.DeterministicRandom _events;
+    private readonly CivSim.Core.Random.DeterministicRandom _combat;
+
+    /// <summary>Random stream of the AI players.</summary>
+    public CivSim.Core.Random.DeterministicRandom AiRandom { get; }
     private readonly PriorityQueue<(int Kind, int Id), (long Tick, int Kind, int Id)> _schedule = new();
 
     private SimGame(SimContent content, SimSettings settings, WorldMap map, CivSim.Core.Random.DeterministicRandom events)
     {
         _events = events;
+        var streams = new CivSim.Core.Random.RandomStreams(settings.Seed);
+        _combat = streams[CivSim.Core.Random.RandomStreamId.Combat];
+        AiRandom = streams[CivSim.Core.Random.RandomStreamId.Ai];
         Content = content;
         Settings = settings;
         Map = map;
@@ -127,6 +137,9 @@ public sealed partial class SimGame
             }
 
             civ.Thinker = new Person { Name = language.PeopleName(999), Rarity = 0 };
+            civ.IsAi = settings.Ai;
+            civ.Aggression = game.AiRandom.NextInt(0, 101);
+            civ.Expansion = game.AiRandom.NextInt(0, 101);
             game.Civs.Add(civ);
             Array.Copy(content.StartStock, civ.Stock, civ.Stock.Length);
             game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
@@ -193,6 +206,11 @@ public sealed partial class SimGame
             }
         }
 
+        if (Ticks % Content.War.CombatEveryTicks == 0)
+        {
+            CombatStep();
+        }
+
         foreach (Civ civ in Civs)
         {
             if (civ.Dead)
@@ -209,6 +227,11 @@ public sealed partial class SimGame
             {
                 PopulationStep(civ);
                 PeopleOfNoteStep(civ);
+            }
+
+            if (civ.IsAi && (Ticks + (civ.Id * 7)) % Ai.SimAi.ThinkEveryTicks == 0)
+            {
+                Ai.SimAi.Think(this, civ);
             }
         }
     }

@@ -96,6 +96,12 @@ public sealed class Settlement
 
     /// <summary>Abandoned settlements keep their id but nothing else.</summary>
     public bool Abandoned { get; set; }
+
+    /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
+    public long Wounds { get; set; }
+
+    /// <summary>Under attack in the last combat step (for the view).</summary>
+    public bool Besieged { get; set; }
 }
 
 /// <summary>A civilization (player or AI).</summary>
@@ -201,6 +207,18 @@ public sealed class Civ
 
     /// <summary>Places named so far.</summary>
     public int PlacesNamed { get; set; }
+
+    /// <summary>How other peoples see this one: falls with surprise attacks and broken truces.</summary>
+    public int Reputation { get; set; }
+
+    /// <summary>Led by the AI (false for a person).</summary>
+    public bool IsAi { get; set; } = true;
+
+    /// <summary>Character of an AI: how warlike, 0–100.</summary>
+    public int Aggression { get; set; }
+
+    /// <summary>Character of an AI: how eager to spread, 0–100.</summary>
+    public int Expansion { get; set; }
 }
 
 /// <summary>What a unit is doing.</summary>
@@ -251,4 +269,16 @@ public sealed class Unit
 
     /// <summary>Walks hidden (scouts): slower, seen only up close.</summary>
     public bool Hidden { get; set; }
+
+    /// <summary>Enemy unit it was ordered to attack (−1 = none).</summary>
+    public int TargetUnit { get; set; } = -1;
+
+    /// <summary>Enemy settlement it was ordered to attack (−1 = none).</summary>
+    public int TargetSettlement { get; set; } = -1;
+
+    /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
+    public long Wounds { get; set; }
+
+    /// <summary>Fought in the last combat step (for the view).</summary>
+    public bool Fighting { get; set; }
 }
