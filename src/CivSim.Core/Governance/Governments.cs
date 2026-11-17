@@ -40,7 +40,8 @@ public static class Governments
 
     /// <summary>
     /// Gives every civilization of a new game the government its character leans to (GDD 7.2): among those open from the
-    /// first era, the highest sum of trait × leaning; ties go to the first in the data.
+    /// first era, the highest sum of trait × leaning; ties go to the first in the data. While governments are frozen until
+    /// the bronze age every people has the first in the data, the council of elders (ADR 0026: one government until bronze).
     /// </summary>
     public static void ChooseAtStart(GameContent content, GameState state)
     {
@@ -48,7 +49,7 @@ public static class Governments
         ArgumentNullException.ThrowIfNull(state);
         foreach (CivilizationState civ in state.Civilizations)
         {
-            civ.Government = Leaning(content, civ, civ.Era);
+            civ.Government = content.GovernmentsEnabled ? Leaning(content, civ, civ.Era) : 0;
         }
     }
 

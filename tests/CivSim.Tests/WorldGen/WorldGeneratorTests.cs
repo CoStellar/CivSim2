@@ -58,8 +58,8 @@ public class WorldGeneratorTests
     // Stage 6 PR 3a: units, the scouts and journeys of settlements are in the hash (the map is unchanged).
     // Stage 6 PR 3b: the warriors' rest of every settlement is in the hash (the map is unchanged).
     // Stage 6 battles over time: the remembered way of a camp's journey is in the hash (the map is unchanged).
-    // Playtest fix (2026-11-16): when the artisans took up their recipe is in the hash (the map is unchanged).
-    private const ulong GoldenWorldHash = 13238904496547941566UL;
+    // 2026-11-17: every people starts with the council of elders while governments are frozen (ADR 0026; the map is unchanged).
+    private const ulong GoldenWorldHash = 434108583162809903UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]

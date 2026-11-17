@@ -1,6 +1,12 @@
 # Osady i magazyny
 
-**W jednym zdaniu:** każda osada ma własny magazyn z towarami; żywność psuje się co rok, a wszystko ponad pojemność magazynu przepada.
+**W jednym zdaniu:** każda osada ma własny magazyn z towarami; żywność psuje się co rok, a wszystko ponad pojemność magazynu przepada, najpierw z największych stosów.
+
+Przepełnienie (decyzja Patryka z 2026-11-17, testy gracza P-11): największe stosy schodzą do wspólnego poziomu, aż nadwyżka zniknie
+(`StorageSystem.LevelDown`). Wcześniej każde dobro traciło proporcjonalnie. Obóz łowców pełen skór tracił wtedy co turę drewno,
+krzemień i jedzenie, a jego grupy robocze wracały głodne (seed 7, lud 1, 15 min: 72 głodne grupy) i były wysyłane znowu.
+Sprawdzałem też wariant „najpierw jedzenie”: 97 głodnych grup, czyli gorzej. Z największym stosem: 4 głodne grupy, 9 wysłań po
+materiały zamiast 14, kronika 116 wpisów zamiast 194.
 
 **Faza tury:** 7. Gospodarka, na samym końcu (psucie i limity magazynów, GDD 11.1). Czas gry przesuwa się w fazie 11 (zapis).
 
@@ -18,7 +24,7 @@ flowchart LR
   N["Nowa gra"] --> C["Obóz plemienny na polu startowym<br/>+ zapasy z newTribe"]
   C --> T["Tura"]
   T --> S["Psucie: zapas × udział, który przetrwał turę"]
-  S --> L["Limit: nadwyżka ponad pojemność<br/>znika proporcjonalnie"]
+  S --> L["Limit: nadwyżka ponad pojemność<br/>znika z największych stosów"]
   L --> M["Czas gry += krok świata"]
   M --> V["Migawka → widok gracza i obserwatora"]
 ```

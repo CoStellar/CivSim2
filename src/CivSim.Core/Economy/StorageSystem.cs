@@ -9,7 +9,7 @@ namespace CivSim.Core.Economy;
 
 /// <summary>
 /// Last step of the economy phase (GDD 11.1, phase 7): goods spoil by their yearly rate converted to the turn
-/// length, then everything above the warehouse capacity is lost (GDD 4.3, CORE simplified: one capacity per
+/// length, then everything above the warehouse capacity is lost, the biggest piles first (GDD 4.3, CORE simplified: one capacity per
 /// settlement). A settlement in a trade network first sends the surplus to members with room, nearest first, losing
 /// the transport share on the way (stage 3e, decision of 2026-11-05: without money there is no selling at a discount).
 /// </summary>
@@ -185,7 +185,9 @@ public sealed class StorageSystem : ITurnSystem
         return used;
     }
 
-    // Removes the surplus from every good in proportion to how much of it is stored.
+    // Removes the surplus from the biggest piles first, down to an even level (decision of Patryk, 2026-11-17, playtest P-11:
+    // cut from every good alike, a camp full of hides lost its wood, flint and food every turn, its work groups starved and were
+    // sent out again and again).
     private long TrimToCapacity(SettlementState s, Amount capacity)
     {
         Amount total = s.TotalStock();
@@ -194,20 +196,74 @@ public sealed class StorageSystem : ITurnSystem
             return 0;
         }
 
-        Span<Amount> stock = s.Stock;
-        for (int g = 0; g < stock.Length; g++)
-        {
-            _weights[g] = stock[g].Hundredths;
-        }
-
         Amount excess = total - capacity;
-        excess.SplitProportionally(_weights, _losses);
-        for (int g = 0; g < stock.Length; g++)
+        LevelDown(s, excess.Hundredths);
+        return excess.Hundredths;
+    }
+
+    // Takes `excess` hundredths, the biggest piles first: every pile above a level comes down to it, the
+    // level found so that exactly `excess` goes (the last hundredths from piles at the level, in good order).
+    private void LevelDown(SettlementState s, long excess)
+    {
+        if (excess <= 0)
         {
-            stock[g] -= _losses[g];
+            return;
         }
 
-        return excess.Hundredths;
+        Span<Amount> stock = s.Stock;
+        long low = 0;
+        long high = 0;
+        for (int g = 0; g < stock.Length; g++)
+        {
+            high = Math.Max(high, stock[g].Hundredths);
+        }
+
+        // The lowest level at which the piles above it hold no more than the excess.
+        while (low < high)
+        {
+            long mid = low + ((high - low) / 2);
+            if (Above(stock, mid) <= excess)
+            {
+                high = mid;
+            }
+            else
+            {
+                low = mid + 1;
+            }
+        }
+
+        long left = excess - Above(stock, low);
+        for (int g = 0; g < stock.Length; g++)
+        {
+            if (stock[g].Hundredths > low)
+            {
+                stock[g] = Amount.FromHundredths(low);
+            }
+        }
+
+        for (int g = 0; g < stock.Length && left > 0; g++)
+        {
+            if (stock[g].Hundredths == low && low > 0)
+            {
+                stock[g] = Amount.FromHundredths(low - 1);
+                left--;
+            }
+        }
+    }
+
+    // Hundredths of all goods above `level`.
+    private long Above(Span<Amount> stock, long level)
+    {
+        long sum = 0;
+        for (int g = 0; g < stock.Length; g++)
+        {
+            if (stock[g].Hundredths > level)
+            {
+                sum += stock[g].Hundredths - level;
+            }
+        }
+
+        return sum;
     }
 
     // Kept shares with spoilage changed by `percent`, cached per (percent, turn length).

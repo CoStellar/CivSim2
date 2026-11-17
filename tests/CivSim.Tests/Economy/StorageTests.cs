@@ -146,7 +146,28 @@ public class StorageTests
     }
 
     [Fact]
-    public void EverythingAboveCapacityIsLostInProportion()
+    public void TheBiggestPileGoesFirstWhenThereIsNoFood()
+    {
+        // Decision of Patryk, 2026-11-17 (playtest P-11): a camp full of hides lost its wood every turn when every good was cut alike.
+        TurnRunner runner = NewGame(5);
+        SettlementState camp = runner.State.Settlements[0];
+        camp.Stock.Clear();
+        camp.Population.Clear();
+        Amount capacity = Content.SettlementLevels[camp.Level].StorageCapacity;
+        camp.Add(Good("hides"), capacity);
+        camp.Add(Good("wood"), Amount.FromUnits(20));
+        camp.Add(Good("stone"), Amount.FromUnits(10));
+
+        runner.RunTurn();
+
+        Assert.Equal(capacity, camp.TotalStock());
+        Assert.Equal(capacity - Amount.FromUnits(30), camp.StockView[Good("hides")]);
+        Assert.Equal(Amount.FromUnits(20), camp.StockView[Good("wood")]);
+        Assert.Equal(Amount.FromUnits(10), camp.StockView[Good("stone")]);
+    }
+
+    [Fact]
+    public void TwoBigPilesComeDownToTheSameLevel()
     {
         TurnRunner runner = NewGame(5);
         SettlementState camp = runner.State.Settlements[0];
@@ -158,8 +179,28 @@ public class StorageTests
         runner.RunTurn();
 
         Assert.Equal(Content.SettlementLevels[camp.Level].StorageCapacity, camp.TotalStock());
-        Assert.Equal(Amount.FromUnits(225), camp.StockView[Good("stone")]);
-        Assert.Equal(Amount.FromUnits(75), camp.StockView[Good("wood")]);
+        Assert.Equal(Amount.FromUnits(200), camp.StockView[Good("stone")]); // the bigger pile alone gives the 100
+        Assert.Equal(Amount.FromUnits(100), camp.StockView[Good("wood")]);
+    }
+
+    [Fact]
+    public void FoodAndMaterialsStayWhenAnotherPileIsBigger()
+    {
+        // The hunters' camp: hides fill the store; the food the work groups eat and the wood they fetched stay.
+        TurnRunner runner = NewGame(5);
+        SettlementState camp = runner.State.Settlements[0];
+        camp.Stock.Clear();
+        camp.Population.Clear();
+        Amount capacity = Content.SettlementLevels[camp.Level].StorageCapacity;
+        camp.Add(Good("hides"), capacity);
+        camp.Add(Good("wood"), Amount.FromUnits(20));
+        camp.Add(Good("grain"), Amount.FromUnits(10));
+
+        runner.RunTurn();
+
+        Assert.Equal(capacity, camp.TotalStock()); // the surplus came out of the hides
+        Assert.Equal(Amount.FromUnits(20), camp.StockView[Good("wood")]);
+        Assert.Equal(Amount.FromHundredths(605), camp.StockView[Good("grain")]); // only its own spoilage, as above
     }
 
     [Fact]
