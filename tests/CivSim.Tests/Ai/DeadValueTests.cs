@@ -478,6 +478,8 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        int groupIndex = saved.Count - 1; // the woodcutters at work, for the situations of the work groups below
+
         // The market again, but the artisans took up sewing just now: whether they keep it is recipeKeepYears (appended last:
         // new situations go at the end so the indexes of the others stay).
         GameState fresh = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
@@ -490,6 +492,52 @@ public class DeadValueTests
         using (var ms = new MemoryStream())
         {
             SaveGameSerializer.Save(fresh, ms);
+            saved.Add(ms.ToArray());
+        }
+
+        // A work group at work while the store already holds some of its good: whether it comes home is taskRecallAboveYears
+        // (made on purpose after playtest P-11, 2026-11-16: the recorded games stopped showing a recall by chance).
+        // The material groups the AI sends from the fed villages are at work (their networks use what they make), and the store
+        // already holds some of it.
+        foreach (int units in new[] { 5, 20, 80 })
+        {
+            GameState stocked = SaveGameSerializer.Load(new MemoryStream(saved[groupIndex]));
+            Force(stocked);
+            var council = new AiCouncil(Content);
+            var queue = new CommandQueue();
+            council.IssueCommands(stocked, queue);
+            var orders = new List<CommandEnvelope>();
+            queue.DrainSorted(stocked, stocked.Turn, orders);
+            var goods = new HashSet<int>();
+            foreach (CommandEnvelope e in orders)
+            {
+                if (e.Command is CivSim.Core.Units.StartTaskCommand start && start.Validate(stocked, e.Civ).Success)
+                {
+                    start.Apply(stocked, e.Civ);
+                    goods.Add(Content.Tasks.Find(start.Kind)!.Good);
+                }
+            }
+
+            for (int u = 0; u < stocked.Units.Count; u++)
+            {
+                CivSim.Core.Units.Unit group = stocked.Units[u]; // a view on the unit book: setting it sets the unit
+                if (group.Role == CivSim.Core.Units.UnitRole.Workers && !group.Gone)
+                {
+                    group.Cell = group.Target; // already at work
+                    group.Order = CivSim.Core.Units.UnitOrder.Work;
+                }
+            }
+
+            foreach (SettlementState s in stocked.Settlements.Where(x => x.IsActive))
+            {
+                foreach (int g in goods.Where(x => !Content.Goods[x].IsFood))
+                {
+                    s.Stock[g] = Amount.FromUnits(units);
+                }
+            }
+
+            using var ms = new MemoryStream();
+            SaveGameSerializer.Save(stocked, ms);
             saved.Add(ms.ToArray());
         }
 
