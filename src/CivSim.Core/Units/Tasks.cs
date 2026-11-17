@@ -613,6 +613,10 @@ public sealed class TaskSystem(GameContent content) : ITurnSystem
     {
         u.Order = UnitOrder.Return;
         u.ForgetPath();
-        context.Chronicle($"{kind.Name} of {home.Name} ran out; the work group comes home.", home.Owner.Value, inner: true);
+        // A worn field is the year's round of farming, not news (playtest, 2026-11-16: 18 lines a minute); a mine that runs dry is.
+        if (kind.Source != TaskSource.Farmland)
+        {
+            context.Chronicle($"{kind.Name} of {home.Name} ran out; the work group comes home.", home.Owner.Value, inner: true);
+        }
     }
 }

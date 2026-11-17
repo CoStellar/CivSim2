@@ -66,7 +66,8 @@ flowchart LR
   Wioska uprawia **tylko** pola, na które wysłała grupę; bez zadania pola nie ma zboża (wytwórcy w domu dalej zbierają dziką żywność).
   Ryby przychodzą tylko z łowisk; woda strefy nie daje już ryb zbieraczom. Pole jałowieje i odpoczywa jak dawniej
   (`FarmingSystem` znaczy pola grup przy pracy), a susza i nawadnianie zmieniają plon pola jak dawniej plon strefy. Pole, którego
-  żyzność spadnie poniżej 20, kończy się samo („Field of X ran out”). Grupa najpierw oddaje plon do magazynu, potem z niego je.
+  żyzność spadnie poniżej 20, kończy się samo, bez wpisu w kronice (wyjałowione pole to zwykły rytm rolnictwa; kopalnia, która się
+  wyczerpie, dalej pisze „Flint Mine of X ran out”; poprawka z 2026-11-16). Grupa najpierw oddaje plon do magazynu, potem z niego je.
 - **Grupy to ludzie osady** (PR 4b-2): ludzie w grupach roboczych liczą się do urodzeń, zgonów dorosłych i limitu poziomu osady
   (`PopulationSystem`), do dryfu warstw i do fachów (`SkillSystem`: mistrzowie w polu dalej uczą, a ich ludzie potrzebują fachu).
   Głód zabija tylko w domu (grupa je w pulsie albo wraca), a w domu zostaje co najmniej 1 osoba. Bez tego wioska, której rolnicy
@@ -74,7 +75,8 @@ flowchart LR
 - **AI (od PR 4b-1):** gubernator, decyzja G9 (`TaskPlanner.cs`, opis w `docs/ai/03-gubernator.md#g9`): sieć osad wysyła grupę po
   materiał, którego ma na mniej niż 2 lata zużycia rzemieślników, z osady najedzonej w ≥ 95%, i odwołuje ją przy zapasie na 4 lata.
   Te same komendy co gracz (`StartTaskCommand`, `ReturnUnitCommand`), dźwignia 3. Od PR 4b-2 także pola i łowiska: każdy rolnik i
-  rybak w domu idzie na najlepsze wolne pole albo łowisko; grupa pola wraca, gdy jej pole daje mniej niż 70% najlepszego wolnego.
+  rybak w domu idzie na najlepsze wolne pole albo łowisko; grupa pola wraca, gdy jej pole daje mniej niż 70% najlepszego wolnego, a nowe pole AI bierze tylko na ziemi, która odpoczęła do
+  70% naturalnej żyzności (bez tego pole wyjałowione do 19 odrastało do 20 i było brane znowu: 693 pola w 15 min u jednego ludu).
 
 ## Test sternika (ADR 0027)
 
