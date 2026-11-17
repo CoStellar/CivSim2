@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add.",
+  "density": 7,
+  "economyEveryTicks": 10,
+  "populationEveryTicks": 50,
+  "goods": [
+    {"key": "food", "name": "Food"},
+    {"key": "wood", "name": "Wood"},
+    {"key": "stone", "name": "Stone"},
+    {"key": "clay", "name": "Clay"},
+    {"key": "hides", "name": "Hides"},
+    {"key": "tools", "name": "Tools"}
+  ],
+  "start": {
+    "people": 20,
+    "stock": {"food": 120, "wood": 60, "stone": 20}
+  },
+  "food": {"foodPerPersonPerMinute": 1, "idleForagePerMinute": 0.6},
+  "growth": {"growthPercentPerMinute": 5, "minGrowthPerMinute": 1, "starvePercentPerMinute": 12},
+  "resumeCostPercent": 15,
+  "settlementLevels": [
+    {"key": "camp", "name": "Camp", "radius": 2, "housing": 25, "storage": 300, "upgradePrice": {}},
+    {"key": "village", "name": "Village", "radius": 3, "housing": 40, "storage": 400, "upgradePrice": {"wood": 120, "stone": 60, "clay": 30}},
+    {"key": "town", "name": "Town", "radius": 4, "housing": 60, "storage": 600, "upgradePrice": {"wood": 250, "stone": 200, "clay": 100, "tools": 40}},
+    {"key": "city", "name": "City", "radius": 5, "housing": 90, "storage": 900, "upgradePrice": {"wood": 500, "stone": 500, "clay": 250, "tools": 120}}
+  ],
+  "buildings": [
+    {"key": "gatherers_hut", "name": "Gatherers' hut", "workers": 3, "price": {"wood": 15}, "buildSeconds": 12,
+     "biomes": ["grassland", "steppe", "savanna", "deciduous_forest", "jungle", "taiga", "swamp", "tundra"],
+     "produces": {"food": 4}, "deposit": "", "bonusDeposit": "wild_grain", "bonusPercent": 100},
+    {"key": "hunters_lodge", "name": "Hunters' lodge", "workers": 3, "price": {"wood": 20}, "buildSeconds": 15,
+     "biomes": ["grassland", "steppe", "savanna", "deciduous_forest", "taiga", "jungle", "tundra"],
+     "produces": {"food": 3, "hides": 1}, "bonusDeposit": "game", "bonusPercent": 100},
+    {"key": "fishing_hut", "name": "Fishing hut", "workers": 2, "price": {"wood": 20}, "buildSeconds": 15, "needsWater": true,
+     "produces": {"food": 5}, "bonusDeposit": "fish", "bonusPercent": 100},
+    {"key": "woodcutter", "name": "Woodcutter", "workers": 3, "price": {"wood": 10, "stone": 5}, "buildSeconds": 12,
+     "biomes": ["deciduous_forest", "taiga", "jungle", "swamp"],
+     "produces": {"wood": 4}},
+    {"key": "quarry", "name": "Quarry", "workers": 4, "price": {"wood": 25}, "buildSeconds": 20,
+     "relief": ["hills", "mountains"], "orDeposit": "stone",
+     "produces": {"stone": 3}, "bonusDeposit": "stone", "bonusPercent": 100},
+    {"key": "clay_pit", "name": "Clay pit", "workers": 3, "price": {"wood": 20}, "buildSeconds": 15, "needsWater": true, "orDeposit": "clay",
+     "produces": {"clay": 3}, "bonusDeposit": "clay", "bonusPercent": 100},
+    {"key": "toolmaker", "name": "Toolmaker", "workers": 2, "price": {"wood": 30, "stone": 20}, "buildSeconds": 25,
+     "consumes": {"stone": 2, "wood": 1}, "produces": {"tools": 1}, "bonusDeposit": "flint", "bonusPercent": 50},
+    {"key": "hut", "name": "Huts", "workers": 0, "price": {"wood": 20}, "buildSeconds": 10, "housing": 8},
+    {"key": "storehouse", "name": "Storehouse", "workers": 0, "price": {"wood": 30, "stone": 10}, "buildSeconds": 20, "storage": 300}
+  ]
+}

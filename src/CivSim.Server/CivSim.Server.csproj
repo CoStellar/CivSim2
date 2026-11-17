@@ -8,5 +8,6 @@
     <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
     <ProjectReference Include="..\CivSim.Data\CivSim.Data.csproj" />
     <ProjectReference Include="..\CivSim.Protocol\CivSim.Protocol.csproj" />
+    <ProjectReference Include="..\CivSim.Sim\CivSim.Sim.csproj" />
   </ItemGroup>
 </Project>

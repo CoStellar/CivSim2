@@ -1,0 +1,51 @@
+namespace CivSim.Sim.State;
+
+public sealed partial class SimGame
+{
+    /// <summary>Hash of the game state for determinism tests (FNV-1a over the state that matters).</summary>
+    public ulong StateHash()
+    {
+        ulong h = 14695981039346656037UL;
+        void Add(long v)
+        {
+            h = (h ^ (ulong)v) * 1099511628211UL;
+        }
+
+        Add(Ticks);
+        foreach (Civ c in Civs)
+        {
+            Add(c.People);
+            Add(c.Hungry ? 1 : 0);
+            foreach (long s in c.Stock)
+            {
+                Add(s);
+            }
+
+            foreach (long r in c.Remainder)
+            {
+                Add(r);
+            }
+        }
+
+        foreach (Settlement s in Settlements)
+        {
+            Add(s.Civ);
+            Add(s.Level);
+            Add(s.People);
+            Add(s.GrowthRemainder);
+            Add(s.Cells.Count);
+        }
+
+        foreach (Building b in Buildings)
+        {
+            Add(b.Type);
+            Add(b.Cell);
+            Add((long)b.State);
+            Add(b.FinishTick);
+            Add(b.Workers);
+            Add(b.Starved ? 1 : 0);
+        }
+
+        return h;
+    }
+}

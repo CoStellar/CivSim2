@@ -34,6 +34,11 @@ public partial class Main : Node2D
     private readonly LayerStack _layers = new();
     private LocalServerHost? _host;
     private ClientSession? _session;
+    private Play.PlayGame? _play;
+    private bool _playArgs;
+    private string? _playScreenshot;
+    private double _playSeconds = 6;
+    private bool _playDemo;
     private MapView? _map;
     private Camera2D _camera = null!;
     private Hud? _hud;
@@ -137,9 +142,27 @@ public partial class Main : Node2D
                 case "--no-menu":
                     skipMenu = true;
                     break;
+                case "--play":
+                    _playArgs = true;
+                    break;
+                case "--play-screenshot":
+                    _playScreenshot = next;
+                    break;
+                case "--play-demo":
+                    _playDemo = true;
+                    break;
+                case "--play-seconds":
+                    _playSeconds = double.Parse(next, CultureInfo.InvariantCulture);
+                    break;
             }
 
             skipMenu |= Array.IndexOf(StartSettings.ArgumentNames, args[i]) >= 0;
+        }
+
+        if (_playArgs)
+        {
+            StartPlay(_saved.Start.WithArguments(args).Seed);
+            return;
         }
 
         if (skipMenu)
@@ -151,6 +174,34 @@ public partial class Main : Node2D
         {
             ShowMenu();
         }
+    }
+
+    // The new game (ADR 0028): replaces the legacy viewer while it runs.
+    private void StartPlay(string seedText)
+    {
+        StopGame();
+        _menu?.QueueFree();
+        _menu = null;
+        ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory);
+        if (_playScreenshot is not null)
+        {
+            // --play-demo builds a few things on the way, to check the screen without clicking.
+            (double, Action<Play.PlayGame>)[] demo = _playDemo
+                ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("woodcutter", 0)),
+                   (1.9, g => g.ScriptBuildNearCentre("hut", 2)), (2.1, g => g.ScriptBuildNearCentre("hunters_lodge", 1))]
+                : [];
+            _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
+        }
+
+        _play.MenuRequested += () =>
+        {
+            _play?.QueueFree();
+            _play = null;
+            _camera.MakeCurrent();
+            CallDeferred(MethodName.ShowMenu);
+        };
+        AddChild(_play);
     }
 
     /// <inheritdoc />
@@ -198,6 +249,7 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
+        _menu.PlayRequested += settings => StartPlay(settings.Seed);
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {

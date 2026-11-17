@@ -1,0 +1,120 @@
+using System.Collections.Generic;
+using MessagePack;
+
+namespace CivSim.Protocol.Messages;
+
+/// <summary>A good of the new game (ADR 0028).</summary>
+[MessagePackObject]
+public sealed record PlayGoodInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name);
+
+/// <summary>A building type of the new game. Amounts in hundredths, rates per worker per minute.</summary>
+[MessagePackObject]
+public sealed record PlayBuildingInfo(
+    [property: Key(0)] int Id,
+    [property: Key(1)] string Key,
+    [property: Key(2)] string Name,
+    [property: Key(3)] int Workers,
+    [property: Key(4)] long[] Price,
+    [property: Key(5)] int BuildSeconds,
+    [property: Key(6)] long[] Produces,
+    [property: Key(7)] long[] Consumes,
+    [property: Key(8)] int Housing,
+    [property: Key(9)] long Storage,
+    [property: Key(10)] string Needs);
+
+/// <summary>A settlement level of the new game.</summary>
+[MessagePackObject]
+public sealed record PlayLevelInfo([property: Key(0)] string Key, [property: Key(1)] string Name, [property: Key(2)] int Radius, [property: Key(3)] int Housing, [property: Key(4)] long[] UpgradePrice);
+
+/// <summary>Server → client, once: the rules a player needs to see (goods, buildings, levels).</summary>
+[MessagePackObject]
+public sealed record PlayContentMessage(
+    [property: Key(0)] IReadOnlyList<PlayGoodInfo> Goods,
+    [property: Key(1)] IReadOnlyList<PlayBuildingInfo> Buildings,
+    [property: Key(2)] IReadOnlyList<PlayLevelInfo> Levels,
+    [property: Key(3)] int MapWidth,
+    [property: Key(4)] int MapHeight,
+    [property: Key(5)] string WorldName) : IProtocolMessage;
+
+/// <summary>A settlement as the player sees it.</summary>
+[MessagePackObject]
+public sealed record PlaySettlementView(
+    [property: Key(0)] int Id,
+    [property: Key(1)] int Civ,
+    [property: Key(2)] string Name,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] int Level,
+    [property: Key(6)] int People,
+    [property: Key(7)] int Housing,
+    [property: Key(8)] int Idle);
+
+/// <summary>A building as the player sees it. State: 0 construction, 1 paused construction, 2 working, 3 stopped.</summary>
+[MessagePackObject]
+public sealed record PlayBuildingView(
+    [property: Key(0)] int Id,
+    [property: Key(1)] int Type,
+    [property: Key(2)] int Civ,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] int State,
+    [property: Key(6)] int Workers,
+    [property: Key(7)] bool Starved,
+    [property: Key(8)] bool Priority,
+    [property: Key(9)] int ProgressPermille,
+    [property: Key(10)] int YieldPercent);
+
+/// <summary>Server → client, several times a second: what the player sees of the game.</summary>
+[MessagePackObject]
+public sealed record PlayViewMessage(
+    [property: Key(0)] long Tick,
+    [property: Key(1)] SimulationSpeed Speed,
+    [property: Key(2)] int Civ,
+    [property: Key(3)] long[] Stock,
+    [property: Key(4)] long[] Capacity,
+    [property: Key(5)] long[] RatePerMinute,
+    [property: Key(6)] int People,
+    [property: Key(7)] bool Hungry,
+    [property: Key(8)] IReadOnlyList<PlaySettlementView> Settlements,
+    [property: Key(9)] IReadOnlyList<PlayBuildingView> Buildings,
+    [property: Key(10)] IReadOnlyList<string> News) : IProtocolMessage;
+
+/// <summary>What a player command does.</summary>
+public enum PlayCommandKind
+{
+    /// <summary>Build type <c>A</c> on (<c>Col</c>, <c>Row</c>).</summary>
+    Build = 0,
+
+    /// <summary>Pause (<c>Flag</c>) or resume the construction of building <c>A</c>.</summary>
+    PauseConstruction = 1,
+
+    /// <summary>Stop (<c>Flag</c>) or start building <c>A</c>.</summary>
+    Stop = 2,
+
+    /// <summary>Give building <c>A</c> its workers first (<c>Flag</c>) or not.</summary>
+    Priority = 3,
+
+    /// <summary>Tear down building <c>A</c>.</summary>
+    Demolish = 4,
+
+    /// <summary>Raise settlement <c>A</c> one level.</summary>
+    Upgrade = 5,
+}
+
+/// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>
+[MessagePackObject]
+public sealed record PlayCommandMessage(
+    [property: Key(0)] long Sequence,
+    [property: Key(1)] PlayCommandKind Kind,
+    [property: Key(2)] int A,
+    [property: Key(3)] int Col,
+    [property: Key(4)] int Row,
+    [property: Key(5)] bool Flag) : IProtocolMessage;
+
+/// <summary>Client → server: where can building type <c>Type</c> go?</summary>
+[MessagePackObject]
+public sealed record PlacesRequestMessage([property: Key(0)] int Type) : IProtocolMessage;
+
+/// <summary>Server → client: hexes (col, row pairs) of the player's land where <c>Type</c> can be built (price not checked).</summary>
+[MessagePackObject]
+public sealed record PlacesMessage([property: Key(0)] int Type, [property: Key(1)] int[] Cells) : IProtocolMessage;

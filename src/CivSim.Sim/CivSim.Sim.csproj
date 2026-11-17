@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- The new game simulation (ADR 0028). Always optimized: the Godot editor runs the Debug build. -->
+    <Optimize>true</Optimize>
+    <RootNamespace>CivSim.Sim</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
+    <ProjectReference Include="..\CivSim.Data\CivSim.Data.csproj" />
+  </ItemGroup>
+</Project>

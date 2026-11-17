@@ -124,9 +124,9 @@ public class ProtocolSerializerTests
         // Version 18: levers of the helmsman (SetLeverDto, the player's levers and the AI's decisions in the view) and the civilization
         // a player asks for in Hello (stage 6 PR P, ADR 0027). Hello has four fields now.
         // Version 20: settlement looks and the settlers' food in the view (stage 6 PR P2b).
-        // Version 21: warriors ready for a campaign in the settlement view (playtest P-03).
+        // Version 22: the new game (ADR 0028).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("15000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
+        Assert.Equal("16000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
     }
 
     [Fact]

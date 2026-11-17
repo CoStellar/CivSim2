@@ -127,6 +127,25 @@ public sealed class ClientSession
     /// <summary>Takes a lever (1–5) or gives it back to the AI.</summary>
     public void SetLever(int lever, bool take) => Command(new SetLeverDto(lever, take));
 
+    /// <summary>Rules of the new game (ADR 0028), null in the legacy viewer.</summary>
+    public PlayContentMessage? PlayContent { get; private set; }
+
+    /// <summary>Latest view of the new game.</summary>
+    public PlayViewMessage? PlayView { get; private set; }
+
+    /// <summary>Hexes where a building type can go, as answered by the server.</summary>
+    public event Action<PlacesMessage>? PlacesReceived;
+
+    /// <summary>News of the new game as they come.</summary>
+    public event Action<IReadOnlyList<string>>? PlayNews;
+
+    /// <summary>Sends a command of the new game.</summary>
+    public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false) =>
+        _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag));
+
+    /// <summary>Asks where a building type can be built.</summary>
+    public void AskPlaces(int type) => _connection.Send(new PlacesRequestMessage(type));
+
     /// <summary>Closes the connection (back to the start menu).</summary>
     public void Close() => _connection.Close();
 
@@ -232,6 +251,25 @@ public sealed class ClientSession
                 break;
             case NameSuggestionsMessage names:
                 NamesReceived?.Invoke(names);
+                break;
+            case PlayContentMessage pc:
+                PlayContent = pc;
+                if (!Worlds.ContainsKey(0))
+                {
+                    Worlds[0] = new ClientWorld(0, pc.WorldName, pc.MapWidth, pc.MapHeight);
+                }
+
+                break;
+            case PlayViewMessage pv:
+                PlayView = pv;
+                if (pv.News is { Count: > 0 } news)
+                {
+                    PlayNews?.Invoke(news);
+                }
+
+                break;
+            case PlacesMessage places:
+                PlacesReceived?.Invoke(places);
                 break;
         }
     }
