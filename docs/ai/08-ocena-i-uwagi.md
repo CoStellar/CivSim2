@@ -163,6 +163,9 @@ mniej niż na początku gry, bo wioski poza osadnikami nic nie robią.
   receptury” prawie zniknęło. **Zostało przełączanie odzież ↔ chleb** (700–950 zmian na grę): cena jedzenia skacze z plonami o więcej
   niż histereza 25%. Możliwa poprawka: liczyć cenę jedzenia ze średniej z kilku kroków albo podnieść `recipeSwitchBetterByPercent`.
   Nie zmieniałem tego, bo to strojenie, a nie błąd.
+  **Poprawione 2026-11-16** (`recipeKeepYears`): po polach (4b-2) i wcześniejszych wioskach (P-07) wahadło przyspieszyło do zmiany co 2–3 tury
+  (11,7% tur rzemieślniczych w `StrategyTests`). Receptura podjęta niedawno zostaje 2 lata akcji: 3,0% tur. Przyczyna zostaje (cena wejścia
+  liczona z bieżącego zapasu), tylko jej skutek jest wolniejszy; średnia ceny z kilku kroków byłaby pełniejszą poprawką.
 - **Wędrówki i łupy prawie się nie zdarzają** (0–8 na 1000 tur). Próg 60% i rzadka siatka sprawiają, że wędrówka jest wyjątkiem;
   łupy są ostatnie w kolejności.
 - **Liczby zaszyte w kodzie (PR B):** 11 liczb strojenia przeniesionych do `data/ai.json` (próg osiedlenia, łupów, wędrówki, wygody,

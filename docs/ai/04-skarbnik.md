@@ -56,7 +56,13 @@ odzieży przybędzie, i chętniej robi coś innego. Tak powstają łańcuchy: je
 
 ```
 zostań przy obecnej, gdy: obecna ma ocenę > 0  i  wybrana × 100 ≤ obecna × 125   (recipeSwitchBetterByPercent: 25)
+zostań przy obecnej także, gdy: od jej podjęcia minęło mniej niż 2 lata akcji         (recipeKeepYears: 2)
 ```
+
+Drugi warunek (testy gracza, 2026-11-16): z zbożem z pól (4b-2) i wcześniejszymi wioskami (P-07) osady piekły chleb, aż zboże się kończyło,
+wtedy cena zboża rosła, ocena chleba spadała poniżej zera i histereza przestawała działać. Szyły odzież, zboże wracało i wracał chleb, co 2–3
+tury. Warsztat nie przezbraja się co kilka miesięcy: receptura podjęta niedawno zostaje 2 lata akcji (`SettlementState.RecipeSinceMonth`,
+zapis 40).
 
 Obecna receptura liczy się jako wykonalna nawet wtedy, gdy w tej turze zabrakło wejść (produkcja po prostu czeka). Gdy nic nie daje
 wartości dodanej, a obecna też nie, skarbnik wysyła „brak receptury”.

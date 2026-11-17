@@ -478,13 +478,30 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        int groupIndex = saved.Count - 1; // the woodcutters at work, for the situations of the work groups below
+
+        // The market again, but the artisans took up sewing just now: whether they keep it is recipeKeepYears (appended last:
+        // new situations go at the end so the indexes of the others stay).
+        GameState fresh = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
+        Market(fresh);
+        foreach (SettlementState s in fresh.Settlements.Where(x => x.RecipeId != SettlementState.NoRecipe))
+        {
+            s.RecipeSinceMonth = fresh.ActionMonth;
+        }
+
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(fresh, ms);
+            saved.Add(ms.ToArray());
+        }
+
         // A work group at work while the store already holds some of its good: whether it comes home is taskRecallAboveYears
         // (made on purpose after playtest P-11, 2026-11-16: the recorded games stopped showing a recall by chance).
         // The material groups the AI sends from the fed villages are at work (their networks use what they make), and the store
         // already holds some of it.
         foreach (int units in new[] { 5, 20, 80 })
         {
-            GameState stocked = SaveGameSerializer.Load(new MemoryStream(saved[^1]));
+            GameState stocked = SaveGameSerializer.Load(new MemoryStream(saved[groupIndex]));
             Force(stocked);
             var council = new AiCouncil(Content);
             var queue = new CommandQueue();
@@ -721,6 +738,7 @@ public class DeadValueTests
                     s.Skilled[tanner] = s.PopulationView[artisans] / 2;
                     s.Skilled[baker] = s.PopulationView[artisans] / 2;
                     s.RecipeId = Content.Recipes.First(x => x.Key == "sew_hide_clothing").Id;
+                    s.RecipeSinceMonth = state.ActionMonth - (100 * 12); // sewing for long: only the hysteresis holds it
                 }
 
                 for (int g = 0; g < Content.Goods.Count; g++)

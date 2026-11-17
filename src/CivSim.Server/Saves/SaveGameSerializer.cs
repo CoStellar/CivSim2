@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 39; // 36: area tasks (PR 4a); 37: the levers a player holds (PR P1); 38: a player's orders hold (PR P1); 39: a player's diplomatic decisions hold
+    public const int FormatVersion = 40; // 40: when the artisans took up their recipe (they keep it a while); 36: area tasks (PR 4a); 37: the levers a player holds (PR P1); 38: a player's orders hold (PR P1); 39: a player's diplomatic decisions hold
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -80,7 +80,7 @@ public static class SaveGameSerializer
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
                 st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty, st.JourneyNext, st.JourneyStepTicks, st.JourneyProgress,
-                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth, [.. st.JourneyPath], st.JourneyPathAt, st.JourneyPathGoal, st.PlayerOrderTick));
+                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth, [.. st.JourneyPath], st.JourneyPathAt, st.JourneyPathGoal, st.PlayerOrderTick, st.RecipeSinceMonth));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -269,6 +269,7 @@ public static class SaveGameSerializer
                 JourneyPathAt = st.JourneyPathAt,
                 JourneyPathGoal = st.JourneyPathGoal,
                 PlayerOrderTick = st.PlayerOrderTick,
+                RecipeSinceMonth = st.RecipeSinceMonth,
             };
             settlement.JourneyPath.AddRange(st.JourneyPath ?? []);
             for (int g = 0; g < st.Stock.Length; g++)

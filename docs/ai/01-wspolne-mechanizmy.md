@@ -136,6 +136,7 @@ GDD 8.6. Obecny stan ma przewagę:
 | G2 przeniesienie obozu | 30% od obecnego miejsca | `migration.moveWhenBetterByPercent` |
 | G3 daleka wędrówka | 60% od lepszego z (obecne miejsce, najlepsze w zasięgu) | 2 × powyższe, zaszyte w kodzie |
 | T1 zmiana receptury | 25% od obecnej | `recipeSwitchBetterByPercent` |
+| T1 zmiana receptury | nie wcześniej niż 2 lata akcji po poprzedniej | `recipeKeepYears` |
 
 ## 7. Rytm cywilizacji: decyzje proaktywne i reaktywne (ADR 0018)
 

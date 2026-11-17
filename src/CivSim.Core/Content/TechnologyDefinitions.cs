@@ -148,6 +148,12 @@ public sealed record AiRules
     /// <summary>A new recipe must beat the one the artisans make by this much before they switch.</summary>
     public int RecipeSwitchBetterByPercent { get; init; } = 25;
 
+    /// <summary>
+    /// Years of action artisans keep a recipe they took up before they switch again (a workshop is not retooled every few
+    /// months while the price of an input swings: playtest, 2026-11-16).
+    /// </summary>
+    public int RecipeKeepYears { get; init; } = 2;
+
     /// <summary>Camps this full (people against the most their level holds, in all camps) give the lowest expansion weight.</summary>
     public int CrowdingLowPercent { get; init; } = 40;
 
