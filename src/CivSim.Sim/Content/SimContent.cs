@@ -11,10 +11,27 @@ namespace CivSim.Sim.Content;
 public sealed record SimGood(int Id, string Key, string Name);
 
 /// <summary>A level of a settlement: territory radius, housing and storage it gives, price of reaching it.</summary>
-public sealed record SettlementLevel(int Id, string Key, string Name, int Radius, int Housing, long Storage, long[] UpgradePrice);
+public sealed record SettlementLevel(int Id, string Key, string Name, int Radius, int Housing, long Storage, long[] UpgradePrice)
+{
+    /// <summary>Technology needed to reach this level (−1 = none).</summary>
+    public int Tech { get; init; } = -1;
+}
+
+/// <summary>An era (Stone Age … Middle Ages).</summary>
+public sealed record SimEra(int Id, string Key, string Name);
+
+/// <summary>A technology: experience needed in earlier technologies (worker-ticks), price (hundredths) and time (ticks).</summary>
+public sealed record SimTech(int Id, string Key, string Name, int Era, bool KnownAtStart, (int Tech, long WorkerTicks)[] Experience, long[] Price, int ResearchTicks);
+
+/// <summary>A rarity of thinkers and advisors.</summary>
+public sealed record Rarity(int Id, string Key, string Name, int Weight, int CostPercent, int ExperiencePercent, int PriceTimes);
 
 /// <summary>A kind of unit (settlers, scouts; armies in stage E). Price in hundredths.</summary>
-public sealed record UnitType(int Id, string Key, string Name, int People, long[] Price, int TrainTicks, int TicksPerHex, int HiddenTicksPerHex, int Sight, bool Founds);
+public sealed record UnitType(int Id, string Key, string Name, int People, long[] Price, int TrainTicks, int TicksPerHex, int HiddenTicksPerHex, int Sight, bool Founds)
+{
+    /// <summary>Technology that allows it.</summary>
+    public int Tech { get; init; }
+}
 
 /// <summary>A building type from <c>data/sim/game.json</c>. Amounts in hundredths; rates per worker per minute.</summary>
 public sealed class BuildingType
@@ -69,6 +86,15 @@ public sealed class BuildingType
 
     /// <summary>True when the building has inputs.</summary>
     public bool HasInputs { get; init; }
+
+    /// <summary>Technology that allows it; its workers give experience in that technology.</summary>
+    public int Tech { get; init; }
+
+    /// <summary>Least fertility of the hex (0 = any).</summary>
+    public int MinFertility { get; init; }
+
+    /// <summary>Research is this much cheaper while the building works (percent).</summary>
+    public int ResearchDiscountPercent { get; init; }
 }
 
 /// <summary>The rules of the new game, loaded from <c>data/sim/game.json</c> plus the world content of the legacy loader.</summary>
@@ -136,6 +162,59 @@ public sealed class SimContent
 
     /// <summary>Least distance between settlement centres.</summary>
     public int FoundMinDistance { get; init; }
+
+    /// <summary>Eras.</summary>
+    public required IReadOnlyList<SimEra> Eras { get; init; }
+
+    /// <summary>Technologies.</summary>
+    public required IReadOnlyList<SimTech> Techs { get; init; }
+
+    /// <summary>Discount per known people that knows a technology, percent.</summary>
+    public int NeighbourDiscountPercent { get; init; }
+
+    /// <summary>Most discount from neighbours, percent.</summary>
+    public int MaxNeighbourDiscountPercent { get; init; }
+
+    /// <summary>Rarities of thinkers and advisors.</summary>
+    public required IReadOnlyList<Rarity> Rarities { get; init; }
+
+    /// <summary>Thinker rules.</summary>
+    public int ThinkerRetireTicks { get; init; }
+
+    /// <summary>Ticks between thinker candidates.</summary>
+    public int ThinkerOfferTicks { get; init; }
+
+    /// <summary>Edge lost per thinker generation, percent.</summary>
+    public int GenerationLossPercent { get; init; }
+
+    /// <summary>Base price of hiring a thinker.</summary>
+    public required long[] ThinkerPrice { get; init; }
+
+    /// <summary>Ticks between advisor candidates.</summary>
+    public int AdvisorOfferTicks { get; init; }
+
+    /// <summary>Base price of hiring an advisor.</summary>
+    public required long[] AdvisorPrice { get; init; }
+
+    /// <summary>Food an advisor eats per minute, hundredths.</summary>
+    public long AdvisorUpkeep { get; init; }
+
+    /// <summary>Advisor fields.</summary>
+    public required IReadOnlyList<string> AdvisorFields { get; init; }
+
+    /// <summary>Finds a technology by key.</summary>
+    public int TechId(string key)
+    {
+        foreach (SimTech t in Techs)
+        {
+            if (t.Key == key)
+            {
+                return t.Id;
+            }
+        }
+
+        throw new KeyNotFoundException($"Unknown technology '{key}'.");
+    }
 
     /// <summary>Walking cost of each hex in percent of a flat open hex.</summary>
     public required int[] WalkCost { get; init; }
@@ -236,12 +315,65 @@ public sealed class SimContent
             throw new InvalidDataException($"sim/game.json: unknown deposit '{key}'.");
         }
 
+        var eras = new List<SimEra>();
+        foreach (JsonElement e in root.GetProperty("eras").EnumerateArray())
+        {
+            eras.Add(new SimEra(eras.Count, e.GetProperty("key").GetString()!, e.GetProperty("name").GetString()!));
+        }
+
+        var techKeys = new List<string>();
+        foreach (JsonElement t in root.GetProperty("technologies").EnumerateArray())
+        {
+            techKeys.Add(t.GetProperty("key").GetString()!);
+        }
+
+        int TechOf(JsonElement e, string name)
+        {
+            if (!e.TryGetProperty(name, out JsonElement v))
+            {
+                return -1;
+            }
+
+            int i = techKeys.IndexOf(v.GetString()!);
+            return i >= 0 ? i : throw new InvalidDataException($"sim/game.json: unknown technology '{v.GetString()}'.");
+        }
+
+        var techs = new List<SimTech>();
+        foreach (JsonElement t in root.GetProperty("technologies").EnumerateArray())
+        {
+            var exp = new List<(int, long)>();
+            if (t.TryGetProperty("experience", out JsonElement xe))
+            {
+                foreach (JsonProperty p in xe.EnumerateObject())
+                {
+                    int ti = techKeys.IndexOf(p.Name);
+                    if (ti < 0)
+                    {
+                        throw new InvalidDataException($"sim/game.json: unknown technology '{p.Name}' in experience.");
+                    }
+
+                    exp.Add((ti, p.Value.GetInt64() * TicksPerMinute));
+                }
+            }
+
+            string eraKey = t.GetProperty("era").GetString()!;
+            int era = eras.FindIndex(x => x.Key == eraKey);
+            techs.Add(new SimTech(
+                techs.Count, techKeys[techs.Count], t.GetProperty("name").GetString()!, era >= 0 ? era : throw new InvalidDataException($"sim/game.json: unknown era '{eraKey}'."),
+                t.TryGetProperty("known", out JsonElement k) && k.GetBoolean(), [.. exp],
+                t.TryGetProperty("price", out JsonElement tp) ? Amounts(tp) : new long[goods.Count],
+                t.TryGetProperty("seconds", out JsonElement ts) ? ts.GetInt32() * TicksPerSecond : 0));
+        }
+
         var levels = new List<SettlementLevel>();
         foreach (JsonElement l in root.GetProperty("settlementLevels").EnumerateArray())
         {
             levels.Add(new SettlementLevel(
                 levels.Count, l.GetProperty("key").GetString()!, l.GetProperty("name").GetString()!, l.GetProperty("radius").GetInt32(),
-                l.GetProperty("housing").GetInt32(), Hundredths(l.GetProperty("storage")), Amounts(l.GetProperty("upgradePrice"))));
+                l.GetProperty("housing").GetInt32(), Hundredths(l.GetProperty("storage")), Amounts(l.GetProperty("upgradePrice")))
+            {
+                Tech = TechOf(l, "tech"),
+            });
         }
 
         var buildings = new List<BuildingType> { new() { Id = 0, Key = "", Name = "" } };
@@ -297,6 +429,9 @@ public sealed class SimContent
                 BonusPercent = b.TryGetProperty("bonusPercent", out JsonElement bp) ? bp.GetInt32() : 0,
                 Housing = b.TryGetProperty("housing", out JsonElement h) ? h.GetInt32() : 0,
                 Storage = b.TryGetProperty("storage", out JsonElement s) ? Hundredths(s) : 0,
+                Tech = Math.Max(0, TechOf(b, "tech")),
+                MinFertility = b.TryGetProperty("minFertility", out JsonElement mf) ? mf.GetInt32() : 0,
+                ResearchDiscountPercent = b.TryGetProperty("researchDiscountPercent", out JsonElement rd) ? rd.GetInt32() : 0,
             });
         }
 
@@ -308,7 +443,10 @@ public sealed class SimContent
                 units.Count, u.GetProperty("key").GetString()!, u.GetProperty("name").GetString()!, u.GetProperty("people").GetInt32(), Amounts(u.GetProperty("price")),
                 (int)(Hundredths(u.GetProperty("trainSeconds")) * TicksPerSecond / One), perHex,
                 u.TryGetProperty("hiddenTicksPerHex", out JsonElement hp) ? hp.GetInt32() : 0, u.GetProperty("sight").GetInt32(),
-                u.TryGetProperty("founds", out JsonElement f) && f.GetBoolean()));
+                u.TryGetProperty("founds", out JsonElement f) && f.GetBoolean())
+            {
+                Tech = Math.Max(0, TechOf(u, "tech")),
+            });
         }
 
         JsonElement tc = root.GetProperty("terrainCost");
@@ -335,6 +473,23 @@ public sealed class SimContent
             }
         }
 
+        JsonElement research = root.GetProperty("research");
+        JsonElement thinkers = root.GetProperty("thinkers");
+        JsonElement advisors = root.GetProperty("advisors");
+        var rarities = new List<Rarity>();
+        foreach (JsonElement r in thinkers.GetProperty("rarities").EnumerateArray())
+        {
+            rarities.Add(new Rarity(
+                rarities.Count, r.GetProperty("key").GetString()!, r.GetProperty("name").GetString()!, r.GetProperty("weight").GetInt32(),
+                r.GetProperty("costPercent").GetInt32(), r.GetProperty("experiencePercent").GetInt32(), r.GetProperty("priceTimes").GetInt32()));
+        }
+
+        var fields = new List<string>();
+        foreach (JsonElement f in advisors.GetProperty("fields").EnumerateArray())
+        {
+            fields.Add(f.GetString()!);
+        }
+
         JsonElement start = root.GetProperty("start");
         JsonElement food = root.GetProperty("food");
         JsonElement growth = root.GetProperty("growth");
@@ -359,6 +514,19 @@ public sealed class SimContent
             Units = units,
             FoundMinDistance = root.GetProperty("foundSettlement").GetProperty("minDistance").GetInt32(),
             WalkCost = walk,
+            Eras = eras,
+            Techs = techs,
+            NeighbourDiscountPercent = research.GetProperty("neighbourDiscountPercent").GetInt32(),
+            MaxNeighbourDiscountPercent = research.GetProperty("maxNeighbourDiscountPercent").GetInt32(),
+            Rarities = rarities,
+            ThinkerRetireTicks = thinkers.GetProperty("retireMinutes").GetInt32() * TicksPerMinute,
+            ThinkerOfferTicks = thinkers.GetProperty("offerMinutes").GetInt32() * TicksPerMinute,
+            GenerationLossPercent = thinkers.GetProperty("generationLossPercent").GetInt32(),
+            ThinkerPrice = Amounts(thinkers.GetProperty("hirePrice")),
+            AdvisorOfferTicks = advisors.GetProperty("offerMinutes").GetInt32() * TicksPerMinute,
+            AdvisorPrice = Amounts(advisors.GetProperty("hirePrice")),
+            AdvisorUpkeep = Hundredths(advisors.GetProperty("upkeepFoodPerMinute")),
+            AdvisorFields = fields,
         };
     }
 

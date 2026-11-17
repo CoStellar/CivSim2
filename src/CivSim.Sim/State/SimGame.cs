@@ -27,10 +27,13 @@ public sealed partial class SimGame
     private const int DoneBuilding = 0;
     private const int DoneTraining = 1;
     private const int UnitStep = 2;
+    private const int DoneResearch = 3;
+    private readonly CivSim.Core.Random.DeterministicRandom _events;
     private readonly PriorityQueue<(int Kind, int Id), (long Tick, int Kind, int Id)> _schedule = new();
 
-    private SimGame(SimContent content, SimSettings settings, WorldMap map)
+    private SimGame(SimContent content, SimSettings settings, WorldMap map, CivSim.Core.Random.DeterministicRandom events)
     {
+        _events = events;
         Content = content;
         Settings = settings;
         Map = map;
@@ -103,10 +106,27 @@ public sealed partial class SimGame
         var streams = new RandomStreams(settings.Seed);
         var options = new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.Civilizations);
         WorldGenReport report = WorldGenerator.Generate(content.World, map, streams[RandomStreamId.World], settings.Seed, options);
-        var game = new SimGame(content, settings, map);
+        var game = new SimGame(content, settings, map, streams[RandomStreamId.Events]);
         for (int c = 0; c < settings.Civilizations && c < report.Starts.Count; c++)
         {
-            var civ = new Civ(c, $"People {c + 1}", content.Goods.Count) { Known = new bool[map.Geometry.CellCount] };
+            var language = CivSim.Core.Naming.NameLanguage.Create(content.World.Names, CivSim.Core.Naming.Names.LanguageSeed(settings.Seed, c));
+            string name = language.PeopleName(0);
+            var civ = new Civ(c, name.Length > 0 ? name : $"People {c + 1}", content.Goods.Count)
+            {
+                Known = new bool[map.Geometry.CellCount],
+                KnownTech = new bool[content.Techs.Count],
+                Experience = new long[content.Techs.Count],
+                ExperienceRate = new int[content.Techs.Count],
+                Language = language,
+                NextThinkerOffer = content.ThinkerOfferTicks,
+                NextAdvisorOffer = content.AdvisorOfferTicks / 2,
+            };
+            foreach (SimTech t in content.Techs)
+            {
+                civ.KnownTech[t.Id] = t.KnownAtStart;
+            }
+
+            civ.Thinker = new Person { Name = language.PeopleName(999), Rarity = 0 };
             game.Civs.Add(civ);
             Array.Copy(content.StartStock, civ.Stock, civ.Stock.Length);
             game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
@@ -119,7 +139,8 @@ public sealed partial class SimGame
     public Settlement FoundSettlement(Civ civ, int center, int people)
     {
         ArgumentNullException.ThrowIfNull(civ);
-        var s = new Settlement { Id = Settlements.Count, Civ = civ.Id, Center = center, People = people, Name = $"{civ.Name} {civ.Settlements.Count + 1}" };
+        string place = civ.Language?.PlaceName((ulong)civ.PlacesNamed++) ?? "";
+        var s = new Settlement { Id = Settlements.Count, Civ = civ.Id, Center = center, People = people, Name = place.Length > 0 ? place : $"{civ.Name} {civ.Settlements.Count + 1}" };
         Settlements.Add(s);
         civ.Settlements.Add(s.Id);
         Claim(s);
@@ -158,6 +179,9 @@ public sealed partial class SimGame
                     }
 
                     break;
+                case DoneResearch:
+                    FinishResearch(Civs[item.Id], due.Tick);
+                    break;
                 default:
                     Unit walker = Units[item.Id];
                     if (walker.State == UnitState.Moving && walker.NextTick == due.Tick)
@@ -184,6 +208,7 @@ public sealed partial class SimGame
             if ((Ticks + civ.Id) % Content.PopulationEveryTicks == 0)
             {
                 PopulationStep(civ);
+                PeopleOfNoteStep(civ);
             }
         }
     }

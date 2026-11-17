@@ -48,6 +48,14 @@ public partial class PlayGame : Node2D
     private Label _toast = null!;
     private double _toastTime;
     private HBoxContainer _buildBar = null!;
+    private PanelContainer _bigPanel = null!;
+    private VBoxContainer _bigBox = null!;
+    private Label _advice = null!;
+    private string _bigMode = "";
+    private string _bigSignature = "";
+    private string _sideSignature = "";
+    private string _barSignature = "";
+    private readonly List<(string Text, Action Act)> _pendingButtons = [];
     private string? _screenshot;
     private int _screenshotFrames = -1;
     private readonly List<(double At, Action Do)> _script = [];
@@ -105,6 +113,34 @@ public partial class PlayGame : Node2D
             if (m.Cells.Length >= 2 * (nth + 1))
             {
                 _session.Play(PlayCommandKind.Build, type, m.Cells[2 * nth], m.Cells[(2 * nth) + 1]);
+            }
+        }
+    }
+
+    /// <summary>Script step: opens the research or people window.</summary>
+    public void ScriptOpen(string mode)
+    {
+        _bigMode = mode;
+        _bigSignature = "";
+    }
+
+    /// <summary>Script step: sets the speed.</summary>
+    public void ScriptSpeed(SimulationSpeed speed) => _session?.SetSpeed(speed);
+
+    /// <summary>Script step: researches the first technology that can start now.</summary>
+    public void ScriptResearchAny()
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        foreach (PlayTechState t in v.Techs)
+        {
+            if (!t.Known && t.Blocked is null)
+            {
+                _session.Play(PlayCommandKind.Research, t.Id);
+                return;
             }
         }
     }
@@ -230,7 +266,6 @@ public partial class PlayGame : Node2D
             _map.Bind(_session, earth);
             _bound = true;
             _session.SetSpeed(SimulationSpeed.X1);
-            FillBuildBar(_session.PlayContent);
         }
 
         if (!_centred && _session.PlayView is { } v)
@@ -477,6 +512,18 @@ public partial class PlayGame : Node2D
             topRow.AddChild(b);
         }
 
+        foreach (string mode in new[] { "Research", "People" })
+        {
+            var b = new Button { Text = mode, FocusMode = Control.FocusModeEnum.None };
+            b.Pressed += () =>
+            {
+                _bigMode = _bigMode == mode ? "" : mode;
+                _bigSignature = "";
+                UpdateUi();
+            };
+            topRow.AddChild(b);
+        }
+
         var menu = new Button { Text = "Menu", FocusMode = Control.FocusModeEnum.None };
         menu.Pressed += () => MenuRequested?.Invoke();
         topRow.AddChild(menu);
@@ -502,6 +549,17 @@ public partial class PlayGame : Node2D
         _chronicleText = new RichTextLabel { ScrollFollowing = true, FitContent = false, CustomMinimumSize = new Vector2(420, 160) };
         chronicle.AddChild(_chronicleText);
 
+        _bigPanel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -560, OffsetRight = -8, OffsetTop = 120, OffsetBottom = 640, Visible = false };
+        ui.AddChild(_bigPanel);
+        var bigScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        _bigPanel.AddChild(bigScroll);
+        _bigBox = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        bigScroll.AddChild(_bigBox);
+
+        _advice = new Label { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -560, OffsetRight = -8, OffsetTop = 40, AutowrapMode = TextServer.AutowrapMode.WordSmart, HorizontalAlignment = HorizontalAlignment.Right };
+        _advice.AddThemeColorOverride("font_color", new Color(0.95f, 0.8f, 0.45f));
+        ui.AddChild(_advice);
+
         _toast = new Label { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -300, OffsetRight = 300, OffsetTop = 44, HorizontalAlignment = HorizontalAlignment.Center, Visible = false, AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _toast.AddThemeColorOverride("font_color", new Color(1f, 0.55f, 0.45f));
         ui.AddChild(_toast);
@@ -509,6 +567,14 @@ public partial class PlayGame : Node2D
 
     private void FillBuildBar(PlayContentMessage content)
     {
+        IReadOnlyList<PlayTechState>? techs = _session?.PlayView?.Techs;
+        string sig = techs is null ? "" : string.Concat(System.Linq.Enumerable.Select(techs, t => t.Known ? "1" : "0"));
+        if (sig == _barSignature && _buildBar.GetChildCount() > 0)
+        {
+            return;
+        }
+
+        _barSignature = sig;
         foreach (Node n in _buildBar.GetChildren())
         {
             n.QueueFree();
@@ -516,7 +582,7 @@ public partial class PlayGame : Node2D
 
         foreach (PlayBuildingInfo b in content.Buildings)
         {
-            if (b.Id == 0)
+            if (b.Id == 0 || (techs is not null && !techs[b.Tech].Known))
             {
                 continue;
             }
@@ -603,9 +669,14 @@ public partial class PlayGame : Node2D
         for (int g = 0; g < v.Stock.Length; g++)
         {
             long rate = v.RatePerMinute[g];
+            if (g > 2 && v.Stock[g] == 0 && rate == 0)
+            {
+                continue; // goods we have never had stay off the bar
+            }
+
             string arrow = rate > 0 ? $"+{Num(rate)}" : rate < 0 ? $"-{Num(-rate)}" : "0";
             string full = v.Stock[g] >= v.Capacity[g] ? " FULL" : "";
-            res.Add($"{c.Goods[g].Name} {v.Stock[g] / 100} ({arrow}/min){full}");
+            res.Add($"{c.Goods[g].Name} {v.Stock[g] / 100} ({arrow}){full}");
         }
 
         res.Add($"People {v.People}" + (v.Hungry ? " HUNGRY" : ""));
@@ -619,19 +690,40 @@ public partial class PlayGame : Node2D
             SimulationSpeed.X4 => "x4",
             _ => "max",
         };
-        _clock.Text = $"Stone Age   {Clock()}   {speed}";
+        string research = v.Researching >= 0 ? $"   researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "   no research";
+        _clock.Text = $"{c.Eras[v.Era]}   {Clock()}   {speed}{research}";
+        _advice.Text = v.Advice is { } a ? $"{v.Advisor?.Name}: {a}" : "";
+        FillBuildBar(c);
+        _pendingButtons.Clear();
         UpdateSide(v, c);
+        string sideSig = _side.Text + string.Join("|", System.Linq.Enumerable.Select(_pendingButtons, b => b.Text));
+        if (sideSig != _sideSignature)
+        {
+            _sideSignature = sideSig;
+            foreach (Node n in _sideButtons.GetChildren())
+            {
+                n.QueueFree();
+            }
+
+            foreach ((string text, Action act) in _pendingButtons)
+            {
+                var b = new Button { Text = text, FocusMode = Control.FocusModeEnum.None, AutowrapMode = TextServer.AutowrapMode.WordSmart };
+                b.Pressed += () =>
+                {
+                    act();
+                    _uiTimer = 0.15;
+                };
+                _sideButtons.AddChild(b);
+            }
+        }
+
+        UpdateBig(v, c);
     }
 
     private static Color PixelThemeText() => new(0.984f, 0.976f, 0.984f);
 
     private void UpdateSide(PlayViewMessage v, PlayContentMessage c)
     {
-        foreach (Node n in _sideButtons.GetChildren())
-        {
-            n.QueueFree();
-        }
-
         if (_unit >= 0)
         {
             foreach (PlayUnitView u in v.Units)
@@ -797,15 +889,113 @@ public partial class PlayGame : Node2D
         return text;
     }
 
-    private void AddButton(string text, Action act)
+    private void AddButton(string text, Action act) => _pendingButtons.Add((text, act));
+
+    // The research and people window: rebuilt only when what it shows changes, so clicks are never lost.
+    private void UpdateBig(PlayViewMessage v, PlayContentMessage c)
     {
-        var b = new Button { Text = text, FocusMode = Control.FocusModeEnum.None };
-        b.Pressed += () =>
+        _bigPanel.Visible = _bigMode.Length > 0;
+        if (_bigMode.Length == 0)
         {
-            act();
-            _uiTimer = 0.15;
-        };
-        _sideButtons.AddChild(b);
+            return;
+        }
+
+        var rows = new List<(string Text, Action? Act)>();
+        if (_bigMode == "Research")
+        {
+            rows.Add((v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name}: {v.ResearchPermille / 10}%" : "Nothing is being researched.", null));
+            if (v.Thinker is { } t)
+            {
+                rows.Add(($"Thinker {t.Name} ({t.Rarity.ToLowerInvariant()}): research costs {t.CostPercent}%, needs {t.ExperiencePercent}% of the experience.", null));
+            }
+
+            for (int era = 0; era < c.Eras.Count; era++)
+            {
+                rows.Add(($"— {c.Eras[era]} —", null));
+                foreach (PlayTechInfo info in c.Techs)
+                {
+                    if (info.Era != era)
+                    {
+                        continue;
+                    }
+
+                    PlayTechState st = v.Techs[info.Id];
+                    if (st.Known)
+                    {
+                        rows.Add(($"[known] {info.Name}", null));
+                    }
+                    else if (st.Blocked is null)
+                    {
+                        int id = info.Id;
+                        rows.Add(($"Research {info.Name}: {Amounts(c, st.Price)}, {info.Seconds} s", () => _session!.Play(PlayCommandKind.Research, id)));
+                    }
+                    else
+                    {
+                        rows.Add(($"{info.Name}: {st.Blocked}" + (info.Needs.Length > 0 ? $" (needs worker-minutes: {info.Needs})" : ""), null));
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (v.Thinker is { } t)
+            {
+                rows.Add(($"Our thinker: {t.Name}, {t.Rarity.ToLowerInvariant()}. Research costs {t.CostPercent}%, needs {t.ExperiencePercent}% of the experience.", null));
+            }
+
+            if (v.ThinkerOffer is { } to)
+            {
+                rows.Add(($"On offer: {to.Name}, {to.Rarity.ToLowerInvariant()}: costs {to.CostPercent}%, experience {to.ExperiencePercent}%.", null));
+                rows.Add(($"Hire {to.Name} for {Amounts(c, to.HirePrice)}", () => _session!.Play(PlayCommandKind.Hire, 0, flag: false)));
+            }
+
+            rows.Add(("", null));
+            if (v.Advisor is { } a)
+            {
+                rows.Add(($"Our advisor: {a.Name}, {a.Rarity.ToLowerInvariant()}, on {a.Fields}.", null));
+                rows.Add(("Let the advisor go", () => _session!.Play(PlayCommandKind.Dismiss, 0)));
+            }
+            else
+            {
+                rows.Add(("We have no advisor: nobody tells us what is going wrong.", null));
+            }
+
+            if (v.AdvisorOffer is { } ao)
+            {
+                rows.Add(($"On offer: {ao.Name}, {ao.Rarity.ToLowerInvariant()}, advises on {ao.Fields}.", null));
+                rows.Add(($"Hire {ao.Name} for {Amounts(c, ao.HirePrice)}", () => _session!.Play(PlayCommandKind.Hire, 0, flag: true)));
+            }
+        }
+
+        string sig = _bigMode + string.Join("|", System.Linq.Enumerable.Select(rows, r => r.Text));
+        if (sig == _bigSignature)
+        {
+            return;
+        }
+
+        _bigSignature = sig;
+        foreach (Node n in _bigBox.GetChildren())
+        {
+            n.QueueFree();
+        }
+
+        foreach ((string text, Action? act) in rows)
+        {
+            if (act is null)
+            {
+                _bigBox.AddChild(new Label { Text = text, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) });
+            }
+            else
+            {
+                var b = new Button { Text = text, FocusMode = Control.FocusModeEnum.None };
+                b.Pressed += () =>
+                {
+                    act();
+                    _uiTimer = 0.15;
+                };
+                _bigBox.AddChild(b);
+            }
+        }
     }
 
     private void Toast(string text)

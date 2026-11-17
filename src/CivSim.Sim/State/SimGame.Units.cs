@@ -61,6 +61,11 @@ public sealed partial class SimGame
 
         Settlement s = Settlements[sid];
         UnitType t = Content.Units[kind];
+        if (!civ.KnownTech[t.Tech])
+        {
+            return $"{t.Name} need {Content.Techs[t.Tech].Name}.";
+        }
+
         if (s.People - t.People < 5)
         {
             return $"{s.Name} has {s.People} people; {t.Name.ToLowerInvariant()} take {t.People} and 5 must stay.";

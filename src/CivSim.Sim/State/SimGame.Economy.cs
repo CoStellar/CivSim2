@@ -15,6 +15,7 @@ public sealed partial class SimGame
         int goods = Content.Goods.Count;
         Array.Clear(civ.Rate);
         Array.Clear(civ.Capacity);
+        Array.Clear(civ.ExperienceRate);
         int people = 0;
         foreach (int sid in civ.Settlements)
         {
@@ -76,6 +77,8 @@ public sealed partial class SimGame
                 {
                     civ.Rate[g] += (t.Produces[g] * b.Workers * b.YieldPercent / 100) - (t.Consumes[g] * b.Workers);
                 }
+
+                civ.ExperienceRate[t.Tech] += b.Workers;
             }
         }
 
@@ -85,7 +88,8 @@ public sealed partial class SimGame
             idle += Settlements[sid].Abandoned ? 0 : Settlements[sid].Idle;
         }
 
-        civ.Rate[Content.Food] += (idle * Content.IdleForagePerMinute) - (people * Content.FoodPerPersonPerMinute);
+        civ.Rate[Content.Food] += (idle * Content.IdleForagePerMinute) - (people * Content.FoodPerPersonPerMinute) - (civ.Advisor is null ? 0 : Content.AdvisorUpkeep);
+        civ.ExperienceRate[0] += idle / 2; // idle people forage: a little experience in the oldest craft
         civ.People = people;
         civ.Dirty = false;
     }
@@ -97,6 +101,11 @@ public sealed partial class SimGame
         if (civ.Dirty)
         {
             Recompute(civ);
+        }
+
+        for (int t = 0; t < civ.ExperienceRate.Length; t++)
+        {
+            civ.Experience[t] += (long)civ.ExperienceRate[t] * Content.EconomyEveryTicks;
         }
 
         bool starve = false;

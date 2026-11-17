@@ -159,6 +159,48 @@ public sealed class Civ
 
     /// <summary>Unit ids.</summary>
     public List<int> Units { get; } = [];
+
+    /// <summary>Technologies known.</summary>
+    public bool[] KnownTech { get; set; } = [];
+
+    /// <summary>Experience per technology, worker-ticks.</summary>
+    public long[] Experience { get; set; } = [];
+
+    /// <summary>Workers now giving experience per technology (recomputed with the economy).</summary>
+    public int[] ExperienceRate { get; set; } = [];
+
+    /// <summary>Technology being researched (−1 = none).</summary>
+    public int Researching { get; set; } = -1;
+
+    /// <summary>Tick the research ends.</summary>
+    public long ResearchEnd { get; set; }
+
+    /// <summary>The thinker (one at a time).</summary>
+    public Person? Thinker { get; set; }
+
+    /// <summary>A thinker offering service, or null.</summary>
+    public Person? ThinkerOffer { get; set; }
+
+    /// <summary>The advisor (one at most).</summary>
+    public Person? Advisor { get; set; }
+
+    /// <summary>An advisor offering service, or null.</summary>
+    public Person? AdvisorOffer { get; set; }
+
+    /// <summary>Tick of the next thinker candidate.</summary>
+    public long NextThinkerOffer { get; set; }
+
+    /// <summary>Tick of the next advisor candidate.</summary>
+    public long NextAdvisorOffer { get; set; }
+
+    /// <summary>Language for names of places and people.</summary>
+    public CivSim.Core.Naming.NameLanguage? Language { get; set; }
+
+    /// <summary>Names taken so far.</summary>
+    public int NamesUsed { get; set; }
+
+    /// <summary>Places named so far.</summary>
+    public int PlacesNamed { get; set; }
 }
 
 /// <summary>What a unit is doing.</summary>

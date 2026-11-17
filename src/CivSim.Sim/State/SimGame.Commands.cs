@@ -61,6 +61,9 @@ public sealed partial class SimGame
             TrainCommand c => Train(civ, c.Settlement, c.Kind),
             MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden),
             FoundCommand c => Found(civ, c.Unit),
+            ResearchCommand c => Research(civ, c.Tech),
+            HireCommand c => Hire(civ, c.Advisor),
+            DismissAdvisorCommand => Dismiss(civ),
             _ => "Unknown command.",
         };
     }
@@ -73,6 +76,11 @@ public sealed partial class SimGame
         if ((uint)cell >= (uint)Geo.CellCount)
         {
             return "Outside the map.";
+        }
+
+        if (!civ.KnownTech[type.Tech])
+        {
+            return $"{type.Name} needs {Content.Techs[type.Tech].Name}.";
         }
 
         if (OwnerAt[cell] != civ.Id)
@@ -120,6 +128,11 @@ public sealed partial class SimGame
         }
 
         if (type.NeedsWater && !NextToWater(cell))
+        {
+            return false;
+        }
+
+        if (type.MinFertility > 0 && Map.Fertility[cell] < type.MinFertility)
         {
             return false;
         }
@@ -207,6 +220,11 @@ public sealed partial class SimGame
         if (t.NeedsWater)
         {
             parts.Add("water next to it");
+        }
+
+        if (t.MinFertility > 0)
+        {
+            parts.Add("fertile soil");
         }
 
         string text = string.Join(", ", parts);
@@ -324,6 +342,11 @@ public sealed partial class SimGame
         }
 
         SettlementLevel next = Content.Levels[s.Level + 1];
+        if (next.Tech >= 0 && !civ.KnownTech[next.Tech])
+        {
+            return $"A {next.Name.ToLowerInvariant()} needs {Content.Techs[next.Tech].Name}.";
+        }
+
         if (!CanAfford(civ, next.UpgradePrice, 100))
         {
             return $"A {next.Name.ToLowerInvariant()} costs {PriceText(next.UpgradePrice)}.";
@@ -335,6 +358,18 @@ public sealed partial class SimGame
         Reveal(civ, s.Center, next.Radius + 4);
         civ.Dirty = true;
         News.Add((civ.Id, $"{s.Name} is now a {next.Name.ToLowerInvariant()}."));
+        return null;
+    }
+
+    private string? Dismiss(Civ civ)
+    {
+        if (civ.Advisor is null)
+        {
+            return "We have no advisor.";
+        }
+
+        civ.Advisor = null;
+        civ.Dirty = true;
         return null;
     }
 

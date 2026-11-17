@@ -5,52 +5,881 @@
   "economyEveryTicks": 10,
   "populationEveryTicks": 50,
   "goods": [
-    {"key": "food", "name": "Food"},
-    {"key": "wood", "name": "Wood"},
-    {"key": "stone", "name": "Stone"},
-    {"key": "clay", "name": "Clay"},
-    {"key": "hides", "name": "Hides"},
-    {"key": "tools", "name": "Tools"}
+    {
+      "key": "food",
+      "name": "Food"
+    },
+    {
+      "key": "wood",
+      "name": "Wood"
+    },
+    {
+      "key": "stone",
+      "name": "Stone"
+    },
+    {
+      "key": "clay",
+      "name": "Clay"
+    },
+    {
+      "key": "hides",
+      "name": "Hides"
+    },
+    {
+      "key": "tools",
+      "name": "Tools"
+    },
+    {
+      "key": "copper",
+      "name": "Copper"
+    },
+    {
+      "key": "tin",
+      "name": "Tin"
+    },
+    {
+      "key": "bronze",
+      "name": "Bronze"
+    },
+    {
+      "key": "iron",
+      "name": "Iron"
+    }
   ],
   "start": {
     "people": 20,
-    "stock": {"food": 120, "wood": 60, "stone": 20}
+    "stock": {
+      "food": 120,
+      "wood": 60,
+      "stone": 20
+    }
   },
-  "food": {"foodPerPersonPerMinute": 1, "idleForagePerMinute": 0.6},
-  "growth": {"growthPercentPerMinute": 5, "minGrowthPerMinute": 1, "starvePercentPerMinute": 12},
+  "food": {
+    "foodPerPersonPerMinute": 1,
+    "idleForagePerMinute": 0.6
+  },
+  "growth": {
+    "growthPercentPerMinute": 5,
+    "minGrowthPerMinute": 1,
+    "starvePercentPerMinute": 12
+  },
   "resumeCostPercent": 15,
   "settlementLevels": [
-    {"key": "camp", "name": "Camp", "radius": 2, "housing": 25, "storage": 300, "upgradePrice": {}},
-    {"key": "village", "name": "Village", "radius": 3, "housing": 40, "storage": 400, "upgradePrice": {"wood": 120, "stone": 60, "clay": 30}},
-    {"key": "town", "name": "Town", "radius": 4, "housing": 60, "storage": 600, "upgradePrice": {"wood": 250, "stone": 200, "clay": 100, "tools": 40}},
-    {"key": "city", "name": "City", "radius": 5, "housing": 90, "storage": 900, "upgradePrice": {"wood": 500, "stone": 500, "clay": 250, "tools": 120}}
+    {
+      "key": "camp",
+      "name": "Camp",
+      "radius": 2,
+      "housing": 25,
+      "storage": 300,
+      "upgradePrice": {}
+    },
+    {
+      "key": "village",
+      "name": "Village",
+      "radius": 3,
+      "housing": 40,
+      "storage": 400,
+      "upgradePrice": {
+        "wood": 120,
+        "stone": 60,
+        "clay": 30
+      },
+      "tech": "agriculture"
+    },
+    {
+      "key": "town",
+      "name": "Town",
+      "radius": 4,
+      "housing": 60,
+      "storage": 600,
+      "upgradePrice": {
+        "wood": 250,
+        "stone": 200,
+        "clay": 100,
+        "tools": 40
+      },
+      "tech": "masonry"
+    },
+    {
+      "key": "city",
+      "name": "City",
+      "radius": 5,
+      "housing": 90,
+      "storage": 900,
+      "upgradePrice": {
+        "wood": 500,
+        "stone": 500,
+        "clay": 250,
+        "tools": 120
+      },
+      "tech": "construction"
+    }
   ],
-  "foundSettlement": {"minDistance": 5, "comment": "Settlers found a camp at least minDistance hexes from every other settlement centre, on land nobody owns; their people live there."},
+  "foundSettlement": {
+    "minDistance": 5,
+    "comment": "Settlers found a camp at least minDistance hexes from every other settlement centre, on land nobody owns; their people live there."
+  },
   "units": [
-    {"key": "settlers", "name": "Settlers", "people": 8, "price": {"food": 40, "wood": 30}, "trainSeconds": 10, "ticksPerHex": 6, "sight": 3, "founds": true},
-    {"key": "scouts", "name": "Scouts", "people": 2, "price": {"food": 15}, "trainSeconds": 5, "ticksPerHex": 3, "hiddenTicksPerHex": 6, "sight": 5}
+    {
+      "key": "settlers",
+      "name": "Settlers",
+      "people": 8,
+      "price": {
+        "food": 40,
+        "wood": 30
+      },
+      "trainSeconds": 10,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "founds": true,
+      "tech": "foraging"
+    },
+    {
+      "key": "scouts",
+      "name": "Scouts",
+      "people": 2,
+      "price": {
+        "food": 15
+      },
+      "trainSeconds": 5,
+      "ticksPerHex": 3,
+      "hiddenTicksPerHex": 6,
+      "sight": 5,
+      "tech": "foraging"
+    }
   ],
-  "terrainCost": {"comment": "Walking cost of a hex in percent of a flat open hex.", "hills": 200, "mountains": 400, "forest": 150, "forestBiomes": ["deciduous_forest", "taiga", "jungle", "swamp"]},
+  "terrainCost": {
+    "comment": "Walking cost of a hex in percent of a flat open hex.",
+    "hills": 200,
+    "mountains": 400,
+    "forest": 150,
+    "forestBiomes": [
+      "deciduous_forest",
+      "taiga",
+      "jungle",
+      "swamp"
+    ]
+  },
   "buildings": [
-    {"key": "gatherers_hut", "name": "Gatherers' hut", "workers": 3, "price": {"wood": 15}, "buildSeconds": 12,
-     "biomes": ["grassland", "steppe", "savanna", "deciduous_forest", "jungle", "taiga", "swamp", "tundra"],
-     "produces": {"food": 4}, "deposit": "", "bonusDeposit": "wild_grain", "bonusPercent": 100},
-    {"key": "hunters_lodge", "name": "Hunters' lodge", "workers": 3, "price": {"wood": 20}, "buildSeconds": 15,
-     "biomes": ["grassland", "steppe", "savanna", "deciduous_forest", "taiga", "jungle", "tundra"],
-     "produces": {"food": 3, "hides": 1}, "bonusDeposit": "game", "bonusPercent": 100},
-    {"key": "fishing_hut", "name": "Fishing hut", "workers": 2, "price": {"wood": 20}, "buildSeconds": 15, "needsWater": true,
-     "produces": {"food": 5}, "bonusDeposit": "fish", "bonusPercent": 100},
-    {"key": "woodcutter", "name": "Woodcutter", "workers": 3, "price": {"wood": 10, "stone": 5}, "buildSeconds": 12,
-     "biomes": ["deciduous_forest", "taiga", "jungle", "swamp"],
-     "produces": {"wood": 4}},
-    {"key": "quarry", "name": "Quarry", "workers": 4, "price": {"wood": 25}, "buildSeconds": 20,
-     "relief": ["hills", "mountains"], "orDeposit": "stone",
-     "produces": {"stone": 3}, "bonusDeposit": "stone", "bonusPercent": 100},
-    {"key": "clay_pit", "name": "Clay pit", "workers": 3, "price": {"wood": 20}, "buildSeconds": 15, "needsWater": true, "orDeposit": "clay",
-     "produces": {"clay": 3}, "bonusDeposit": "clay", "bonusPercent": 100},
-    {"key": "toolmaker", "name": "Toolmaker", "workers": 2, "price": {"wood": 30, "stone": 20}, "buildSeconds": 25,
-     "consumes": {"stone": 2, "wood": 1}, "produces": {"tools": 1}, "bonusDeposit": "flint", "bonusPercent": 50},
-    {"key": "hut", "name": "Huts", "workers": 0, "price": {"wood": 20}, "buildSeconds": 10, "housing": 8},
-    {"key": "storehouse", "name": "Storehouse", "workers": 0, "price": {"wood": 30, "stone": 10}, "buildSeconds": 20, "storage": 300}
-  ]
+    {
+      "key": "gatherers_hut",
+      "name": "Gatherers' hut",
+      "workers": 3,
+      "price": {
+        "wood": 15
+      },
+      "buildSeconds": 12,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "deciduous_forest",
+        "jungle",
+        "taiga",
+        "swamp",
+        "tundra"
+      ],
+      "produces": {
+        "food": 4,
+        "wood": 1
+      },
+      "deposit": "",
+      "bonusDeposit": "wild_grain",
+      "bonusPercent": 100,
+      "tech": "foraging"
+    },
+    {
+      "key": "hunters_lodge",
+      "name": "Hunters' lodge",
+      "workers": 3,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 15,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "deciduous_forest",
+        "taiga",
+        "jungle",
+        "tundra"
+      ],
+      "produces": {
+        "food": 3,
+        "hides": 1
+      },
+      "bonusDeposit": "game",
+      "bonusPercent": 100,
+      "tech": "foraging"
+    },
+    {
+      "key": "fishing_hut",
+      "name": "Fishing hut",
+      "workers": 2,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 15,
+      "needsWater": true,
+      "produces": {
+        "food": 5
+      },
+      "bonusDeposit": "fish",
+      "bonusPercent": 100,
+      "tech": "fishing"
+    },
+    {
+      "key": "woodcutter",
+      "name": "Woodcutter",
+      "workers": 3,
+      "price": {
+        "wood": 10,
+        "stone": 5
+      },
+      "buildSeconds": 12,
+      "biomes": [
+        "deciduous_forest",
+        "taiga",
+        "jungle",
+        "swamp"
+      ],
+      "produces": {
+        "wood": 4
+      },
+      "tech": "foraging"
+    },
+    {
+      "key": "quarry",
+      "name": "Quarry",
+      "workers": 4,
+      "price": {
+        "wood": 25
+      },
+      "buildSeconds": 20,
+      "relief": [
+        "hills",
+        "mountains"
+      ],
+      "orDeposit": "stone",
+      "produces": {
+        "stone": 3
+      },
+      "bonusDeposit": "stone",
+      "bonusPercent": 100,
+      "tech": "stone_tools"
+    },
+    {
+      "key": "clay_pit",
+      "name": "Clay pit",
+      "workers": 3,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 15,
+      "needsWater": true,
+      "orDeposit": "clay",
+      "produces": {
+        "clay": 3
+      },
+      "bonusDeposit": "clay",
+      "bonusPercent": 100,
+      "tech": "stone_tools"
+    },
+    {
+      "key": "toolmaker",
+      "name": "Toolmaker",
+      "workers": 2,
+      "price": {
+        "wood": 30,
+        "stone": 20
+      },
+      "buildSeconds": 25,
+      "consumes": {
+        "stone": 2,
+        "wood": 1
+      },
+      "produces": {
+        "tools": 1
+      },
+      "bonusDeposit": "flint",
+      "bonusPercent": 50,
+      "tech": "stone_tools"
+    },
+    {
+      "key": "hut",
+      "name": "Huts",
+      "workers": 0,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 10,
+      "housing": 8,
+      "tech": "foraging"
+    },
+    {
+      "key": "storehouse",
+      "name": "Storehouse",
+      "workers": 0,
+      "price": {
+        "wood": 30,
+        "stone": 10
+      },
+      "buildSeconds": 20,
+      "storage": 300,
+      "tech": "foraging"
+    },
+    {
+      "key": "farm",
+      "name": "Farm",
+      "tech": "agriculture",
+      "workers": 4,
+      "price": {
+        "wood": 30,
+        "tools": 5
+      },
+      "buildSeconds": 20,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "deciduous_forest"
+      ],
+      "minFertility": 40,
+      "produces": {
+        "food": 6
+      },
+      "bonusDeposit": "wild_grain",
+      "bonusPercent": 50
+    },
+    {
+      "key": "potter",
+      "name": "Potter",
+      "tech": "pottery",
+      "workers": 2,
+      "price": {
+        "wood": 20,
+        "stone": 10
+      },
+      "buildSeconds": 20,
+      "consumes": {
+        "clay": 1
+      },
+      "produces": {},
+      "storage": 150
+    },
+    {
+      "key": "pasture",
+      "name": "Pasture",
+      "tech": "animal_husbandry",
+      "workers": 2,
+      "price": {
+        "wood": 30
+      },
+      "buildSeconds": 20,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "tundra"
+      ],
+      "produces": {
+        "food": 4,
+        "hides": 2
+      },
+      "bonusDeposit": "cattle",
+      "bonusPercent": 100
+    },
+    {
+      "key": "stone_house",
+      "name": "Stone houses",
+      "tech": "masonry",
+      "workers": 0,
+      "price": {
+        "stone": 40,
+        "wood": 10
+      },
+      "buildSeconds": 25,
+      "housing": 16
+    },
+    {
+      "key": "copper_mine",
+      "name": "Copper mine",
+      "tech": "copper_working",
+      "workers": 4,
+      "price": {
+        "wood": 40,
+        "tools": 15
+      },
+      "buildSeconds": 30,
+      "orDeposit": "copper",
+      "produces": {
+        "copper": 2
+      }
+    },
+    {
+      "key": "tin_mine",
+      "name": "Tin mine",
+      "tech": "bronze_working",
+      "workers": 4,
+      "price": {
+        "wood": 40,
+        "tools": 15
+      },
+      "buildSeconds": 30,
+      "orDeposit": "tin",
+      "produces": {
+        "tin": 2
+      }
+    },
+    {
+      "key": "bronze_smith",
+      "name": "Bronze smith",
+      "tech": "bronze_working",
+      "workers": 3,
+      "price": {
+        "stone": 40,
+        "clay": 30
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "copper": 2,
+        "tin": 1,
+        "wood": 1
+      },
+      "produces": {
+        "bronze": 1
+      }
+    },
+    {
+      "key": "school",
+      "name": "School",
+      "tech": "writing",
+      "workers": 3,
+      "price": {
+        "stone": 60,
+        "clay": 40
+      },
+      "buildSeconds": 40,
+      "produces": {},
+      "researchDiscountPercent": 10
+    },
+    {
+      "key": "stable",
+      "name": "Stable",
+      "tech": "horseback_riding",
+      "workers": 2,
+      "price": {
+        "wood": 60
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "food": 2
+      },
+      "produces": {
+        "hides": 1
+      }
+    },
+    {
+      "key": "iron_mine",
+      "name": "Iron mine",
+      "tech": "iron_working",
+      "workers": 4,
+      "price": {
+        "wood": 50,
+        "tools": 20
+      },
+      "buildSeconds": 35,
+      "orDeposit": "iron_ore",
+      "produces": {
+        "iron": 1
+      }
+    },
+    {
+      "key": "forge",
+      "name": "Forge",
+      "tech": "iron_working",
+      "workers": 3,
+      "price": {
+        "stone": 60,
+        "wood": 40
+      },
+      "buildSeconds": 35,
+      "consumes": {
+        "iron": 1,
+        "wood": 2
+      },
+      "produces": {
+        "tools": 3
+      }
+    },
+    {
+      "key": "observatory",
+      "name": "Observatory",
+      "tech": "mathematics",
+      "workers": 2,
+      "price": {
+        "stone": 100
+      },
+      "buildSeconds": 45,
+      "produces": {},
+      "researchDiscountPercent": 15
+    },
+    {
+      "key": "great_storehouse",
+      "name": "Great storehouse",
+      "tech": "construction",
+      "workers": 0,
+      "price": {
+        "stone": 150,
+        "wood": 80
+      },
+      "buildSeconds": 45,
+      "storage": 1000
+    },
+    {
+      "key": "manor",
+      "name": "Manor",
+      "tech": "feudalism",
+      "workers": 4,
+      "price": {
+        "stone": 200,
+        "wood": 100
+      },
+      "buildSeconds": 60,
+      "produces": {
+        "food": 8
+      },
+      "housing": 10
+    },
+    {
+      "key": "steelworks",
+      "name": "Steelworks",
+      "tech": "steel",
+      "workers": 3,
+      "price": {
+        "stone": 150,
+        "iron": 40
+      },
+      "buildSeconds": 60,
+      "consumes": {
+        "iron": 2,
+        "wood": 2
+      },
+      "produces": {
+        "tools": 6
+      }
+    }
+  ],
+  "eras": [
+    {
+      "key": "stone_age",
+      "name": "Stone Age"
+    },
+    {
+      "key": "neolithic",
+      "name": "Neolithic"
+    },
+    {
+      "key": "bronze_age",
+      "name": "Bronze Age"
+    },
+    {
+      "key": "iron_age",
+      "name": "Iron Age"
+    },
+    {
+      "key": "middle_ages",
+      "name": "Middle Ages"
+    }
+  ],
+  "research": {
+    "comment": "A technology needs experience in the technologies before it (worker-minutes in their buildings), then its price in goods and its time. It is cheaper by neighbourDiscountPercent for every known people that knows it (at most maxNeighbourDiscountPercent). One research at a time.",
+    "neighbourDiscountPercent": 10,
+    "maxNeighbourDiscountPercent": 40
+  },
+  "technologies": [
+    {
+      "key": "foraging",
+      "name": "Foraging",
+      "era": "stone_age",
+      "known": true
+    },
+    {
+      "key": "stone_tools",
+      "name": "Stone tools",
+      "era": "stone_age",
+      "experience": {
+        "foraging": 20
+      },
+      "price": {
+        "food": 40,
+        "wood": 20
+      },
+      "seconds": 30
+    },
+    {
+      "key": "fishing",
+      "name": "Fishing",
+      "era": "stone_age",
+      "experience": {
+        "foraging": 15
+      },
+      "price": {
+        "food": 30,
+        "wood": 20
+      },
+      "seconds": 25
+    },
+    {
+      "key": "agriculture",
+      "name": "Agriculture",
+      "era": "neolithic",
+      "experience": {
+        "foraging": 60,
+        "stone_tools": 15
+      },
+      "price": {
+        "food": 80,
+        "wood": 40,
+        "tools": 10
+      },
+      "seconds": 60
+    },
+    {
+      "key": "pottery",
+      "name": "Pottery",
+      "era": "neolithic",
+      "experience": {
+        "agriculture": 20,
+        "stone_tools": 15
+      },
+      "price": {
+        "clay": 40,
+        "wood": 30
+      },
+      "seconds": 45
+    },
+    {
+      "key": "animal_husbandry",
+      "name": "Animal husbandry",
+      "era": "neolithic",
+      "experience": {
+        "agriculture": 25
+      },
+      "price": {
+        "food": 100,
+        "wood": 40
+      },
+      "seconds": 50
+    },
+    {
+      "key": "masonry",
+      "name": "Masonry",
+      "era": "neolithic",
+      "experience": {
+        "stone_tools": 40,
+        "agriculture": 20
+      },
+      "price": {
+        "stone": 80,
+        "tools": 20
+      },
+      "seconds": 60
+    },
+    {
+      "key": "copper_working",
+      "name": "Copper working",
+      "era": "bronze_age",
+      "experience": {
+        "masonry": 20,
+        "pottery": 20
+      },
+      "price": {
+        "stone": 60,
+        "clay": 40,
+        "tools": 30
+      },
+      "seconds": 70
+    },
+    {
+      "key": "bronze_working",
+      "name": "Bronze working",
+      "era": "bronze_age",
+      "experience": {
+        "copper_working": 30
+      },
+      "price": {
+        "copper": 40,
+        "wood": 80,
+        "tools": 30
+      },
+      "seconds": 80
+    },
+    {
+      "key": "writing",
+      "name": "Writing",
+      "era": "bronze_age",
+      "experience": {
+        "pottery": 40,
+        "agriculture": 60
+      },
+      "price": {
+        "clay": 80,
+        "food": 100
+      },
+      "seconds": 70
+    },
+    {
+      "key": "horseback_riding",
+      "name": "Horseback riding",
+      "era": "bronze_age",
+      "experience": {
+        "animal_husbandry": 40
+      },
+      "price": {
+        "food": 150,
+        "hides": 40
+      },
+      "seconds": 70
+    },
+    {
+      "key": "iron_working",
+      "name": "Iron working",
+      "era": "iron_age",
+      "experience": {
+        "bronze_working": 50
+      },
+      "price": {
+        "bronze": 40,
+        "wood": 120,
+        "tools": 40
+      },
+      "seconds": 90
+    },
+    {
+      "key": "mathematics",
+      "name": "Mathematics",
+      "era": "iron_age",
+      "experience": {
+        "writing": 40
+      },
+      "price": {
+        "clay": 100,
+        "food": 150
+      },
+      "seconds": 80
+    },
+    {
+      "key": "construction",
+      "name": "Construction",
+      "era": "iron_age",
+      "experience": {
+        "masonry": 60,
+        "mathematics": 10
+      },
+      "price": {
+        "stone": 200,
+        "wood": 150,
+        "tools": 60
+      },
+      "seconds": 100
+    },
+    {
+      "key": "feudalism",
+      "name": "Feudalism",
+      "era": "middle_ages",
+      "experience": {
+        "construction": 40,
+        "horseback_riding": 30
+      },
+      "price": {
+        "food": 300,
+        "iron": 60,
+        "stone": 200
+      },
+      "seconds": 120
+    },
+    {
+      "key": "steel",
+      "name": "Steel",
+      "era": "middle_ages",
+      "experience": {
+        "iron_working": 60
+      },
+      "price": {
+        "iron": 120,
+        "wood": 200,
+        "tools": 80
+      },
+      "seconds": 120
+    }
+  ],
+  "thinkers": {
+    "comment": "A people has one thinker. Rarity sets how much cheaper (costPercent) and how much less experience (experiencePercent) research needs; some take less experience but cost more. A thinker retires after retireMinutes; the successor (II, III…) keeps the school but each generation loses generationLossPercent of the edge. A new candidate shows up every offerMinutes; hiring costs hirePrice times the rarity's priceTimes.",
+    "retireMinutes": 12,
+    "offerMinutes": 3,
+    "generationLossPercent": 20,
+    "hirePrice": {
+      "food": 40,
+      "clay": 10
+    },
+    "rarities": [
+      {
+        "key": "common",
+        "name": "Common",
+        "weight": 50,
+        "costPercent": 100,
+        "experiencePercent": 100,
+        "priceTimes": 1
+      },
+      {
+        "key": "gifted",
+        "name": "Gifted",
+        "weight": 30,
+        "costPercent": 85,
+        "experiencePercent": 90,
+        "priceTimes": 2
+      },
+      {
+        "key": "visionary",
+        "name": "Visionary",
+        "weight": 12,
+        "costPercent": 120,
+        "experiencePercent": 60,
+        "priceTimes": 3
+      },
+      {
+        "key": "rare",
+        "name": "Rare",
+        "weight": 6,
+        "costPercent": 70,
+        "experiencePercent": 80,
+        "priceTimes": 4
+      },
+      {
+        "key": "legendary",
+        "name": "Legendary",
+        "weight": 2,
+        "costPercent": 55,
+        "experiencePercent": 60,
+        "priceTimes": 6
+      }
+    ]
+  },
+  "advisors": {
+    "comment": "A people has at most one advisor. A candidate shows up every offerMinutes with one or two fields (economy, growth, research, expansion); hiring costs hirePrice times the rarity's priceTimes, and the advisor eats upkeepFoodPerMinute. The advisor gives one piece of advice at a time, only in its fields.",
+    "offerMinutes": 4,
+    "hirePrice": {
+      "food": 30,
+      "wood": 20
+    },
+    "upkeepFoodPerMinute": 1,
+    "fields": [
+      "economy",
+      "growth",
+      "research",
+      "expansion"
+    ]
+  }
 }

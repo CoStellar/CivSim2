@@ -20,7 +20,8 @@ public sealed record PlayBuildingInfo(
     [property: Key(7)] long[] Consumes,
     [property: Key(8)] int Housing,
     [property: Key(9)] long Storage,
-    [property: Key(10)] string Needs);
+    [property: Key(10)] string Needs,
+    [property: Key(11)] int Tech = 0);
 
 /// <summary>A unit kind of the new game.</summary>
 [MessagePackObject]
@@ -32,7 +33,8 @@ public sealed record PlayUnitInfo(
     [property: Key(4)] long[] Price,
     [property: Key(5)] int TrainSeconds,
     [property: Key(6)] bool CanHide,
-    [property: Key(7)] bool Founds);
+    [property: Key(7)] bool Founds,
+    [property: Key(8)] int Tech = 0);
 
 /// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
 [MessagePackObject]
@@ -50,7 +52,25 @@ public sealed record PlayUnitView(
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
-public sealed record PlayLevelInfo([property: Key(0)] string Key, [property: Key(1)] string Name, [property: Key(2)] int Radius, [property: Key(3)] int Housing, [property: Key(4)] long[] UpgradePrice);
+public sealed record PlayLevelInfo([property: Key(0)] string Key, [property: Key(1)] string Name, [property: Key(2)] int Radius, [property: Key(3)] int Housing, [property: Key(4)] long[] UpgradePrice, [property: Key(5)] int Tech = -1);
+
+/// <summary>A technology of the new game. Needs: earlier technology names with the worker-minutes of experience.</summary>
+[MessagePackObject]
+public sealed record PlayTechInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] int Era, [property: Key(4)] string Needs, [property: Key(5)] int Seconds);
+
+/// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
+[MessagePackObject]
+public sealed record PlayTechState([property: Key(0)] int Id, [property: Key(1)] bool Known, [property: Key(2)] long[] Price, [property: Key(3)] string? Blocked);
+
+/// <summary>A thinker or advisor as the player sees them.</summary>
+[MessagePackObject]
+public sealed record PlayPersonView(
+    [property: Key(0)] string Name,
+    [property: Key(1)] string Rarity,
+    [property: Key(2)] int CostPercent,
+    [property: Key(3)] int ExperiencePercent,
+    [property: Key(4)] string Fields,
+    [property: Key(5)] long[] HirePrice);
 
 /// <summary>Server → client, once: the rules a player needs to see (goods, buildings, levels).</summary>
 [MessagePackObject]
@@ -61,7 +81,9 @@ public sealed record PlayContentMessage(
     [property: Key(3)] int MapWidth,
     [property: Key(4)] int MapHeight,
     [property: Key(5)] string WorldName,
-    [property: Key(6)] IReadOnlyList<PlayUnitInfo> Units) : IProtocolMessage;
+    [property: Key(6)] IReadOnlyList<PlayUnitInfo> Units,
+    [property: Key(7)] IReadOnlyList<PlayTechInfo> Techs,
+    [property: Key(8)] IReadOnlyList<string> Eras) : IProtocolMessage;
 
 /// <summary>A settlement as the player sees it.</summary>
 [MessagePackObject]
@@ -105,7 +127,16 @@ public sealed record PlayViewMessage(
     [property: Key(8)] IReadOnlyList<PlaySettlementView> Settlements,
     [property: Key(9)] IReadOnlyList<PlayBuildingView> Buildings,
     [property: Key(10)] IReadOnlyList<string> News,
-    [property: Key(11)] IReadOnlyList<PlayUnitView> Units) : IProtocolMessage;
+    [property: Key(11)] IReadOnlyList<PlayUnitView> Units,
+    [property: Key(12)] int Era,
+    [property: Key(13)] int Researching,
+    [property: Key(14)] int ResearchPermille,
+    [property: Key(15)] IReadOnlyList<PlayTechState> Techs,
+    [property: Key(16)] PlayPersonView? Thinker,
+    [property: Key(17)] PlayPersonView? ThinkerOffer,
+    [property: Key(18)] PlayPersonView? Advisor,
+    [property: Key(19)] PlayPersonView? AdvisorOffer,
+    [property: Key(20)] string? Advice) : IProtocolMessage;
 
 /// <summary>What a player command does.</summary>
 public enum PlayCommandKind
@@ -136,6 +167,15 @@ public enum PlayCommandKind
 
     /// <summary>Settlers <c>A</c> found a camp where they stand.</summary>
     Found = 8,
+
+    /// <summary>Research technology <c>A</c>.</summary>
+    Research = 9,
+
+    /// <summary>Hire the thinker on offer, or the advisor when <c>Flag</c>.</summary>
+    Hire = 10,
+
+    /// <summary>Let the advisor go.</summary>
+    Dismiss = 11,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

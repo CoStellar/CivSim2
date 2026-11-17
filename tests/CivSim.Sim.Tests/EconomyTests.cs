@@ -10,7 +10,17 @@ public sealed class EconomyTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
-    private static SimGame NewGame(ulong seed = 1) => SimGame.Create(Content, new SimSettings(seed, 66, 40, 2));
+    private static SimGame NewGame(ulong seed = 1)
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(seed, 66, 40, 2));
+        foreach (Civ civ in g.Civs)
+        {
+            civ.KnownTech[Content.TechId("stone_tools")] = true;
+            civ.KnownTech[Content.TechId("agriculture")] = true;
+        }
+
+        return g;
+    }
 
     private static int FreeCell(SimGame g, Civ civ, BuildingType t) =>
         g.Settlements[civ.Settlements[0]].Cells.First(c => g.CannotBuild(civ, c, t, checkPrice: false) is null);

@@ -181,6 +181,9 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Train => new TrainCommand(civ, m.A, m.B),
         PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag),
         PlayCommandKind.Found => new FoundCommand(civ, m.A),
+        PlayCommandKind.Research => new ResearchCommand(civ, m.A),
+        PlayCommandKind.Hire => new HireCommand(civ, m.Flag),
+        PlayCommandKind.Dismiss => new DismissAdvisorCommand(civ),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
 
@@ -233,22 +236,40 @@ public sealed class PlayHost : IDisposable
         var buildings = new List<PlayBuildingInfo>();
         foreach (BuildingType t in content.Buildings)
         {
-            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t)));
+            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech));
         }
 
         var levels = new List<PlayLevelInfo>();
         foreach (SettlementLevel l in content.Levels)
         {
-            levels.Add(new PlayLevelInfo(l.Key, l.Name, l.Radius, l.Housing, l.UpgradePrice));
+            levels.Add(new PlayLevelInfo(l.Key, l.Name, l.Radius, l.Housing, l.UpgradePrice, l.Tech));
         }
 
         var units = new List<PlayUnitInfo>();
         foreach (UnitType u in content.Units)
         {
-            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds));
+            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech));
         }
 
-        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units));
+        var techs = new List<PlayTechInfo>();
+        foreach (SimTech t in content.Techs)
+        {
+            var needs = new List<string>();
+            foreach ((int req, long ticks) in t.Experience)
+            {
+                needs.Add($"{content.Techs[req].Name} {ticks / SimContent.TicksPerMinute}");
+            }
+
+            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond));
+        }
+
+        var eras = new List<string>();
+        foreach (SimEra e in content.Eras)
+        {
+            eras.Add(e.Name);
+        }
+
+        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras));
         client.SentChunks = false;
     }
 
@@ -370,8 +391,35 @@ public sealed class PlayHost : IDisposable
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
-            civ.People, civ.Hungry, settlements, buildings, [.. _news], units);
+            civ.People, civ.Hungry, settlements, buildings, [.. _news], units, _game.EraOf(civ), civ.Researching, ResearchPermille(civ), TechStates(civ),
+            Person(civ.Thinker, false), Person(civ.ThinkerOffer, false), Person(civ.Advisor, true), Person(civ.AdvisorOffer, true), _game.Advice(civ));
     }
+
+    private int ResearchPermille(Civ civ)
+    {
+        if (civ.Researching < 0)
+        {
+            return 0;
+        }
+
+        int total = Math.Max(1, _game.Content.Techs[civ.Researching].ResearchTicks);
+        return 1000 - (int)Math.Clamp((civ.ResearchEnd - _game.Ticks) * 1000 / total, 0, 1000);
+    }
+
+    private List<PlayTechState> TechStates(Civ civ)
+    {
+        var list = new List<PlayTechState>();
+        foreach (SimTech t in _game.Content.Techs)
+        {
+            list.Add(civ.KnownTech[t.Id] ? new PlayTechState(t.Id, true, [], null) : new PlayTechState(t.Id, false, _game.ResearchPrice(civ, t.Id), _game.CannotResearch(civ, t.Id)));
+        }
+
+        return list;
+    }
+
+    private PlayPersonView? Person(Sim.State.Person? p, bool advisor) => p is null ? null : new PlayPersonView(
+        p.FullName, _game.Content.Rarities[p.Rarity].Name, advisor ? 100 : _game.Edge(p, cost: true), advisor ? 100 : _game.Edge(p, cost: false),
+        advisor ? _game.FieldsText(p) : "", _game.HirePrice(p, advisor));
 
     private sealed class PlayClient(IConnection connection, int cells)
     {

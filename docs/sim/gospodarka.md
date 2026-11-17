@@ -22,7 +22,7 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 
 | Budynek | Praca | Co daje (na pracownika na minutę) | Gdzie |
 | --- | --- | --- | --- |
-| Szałas zbieraczy | 3 | 4 jedzenia (×2 na dzikim zbożu) | lądy z roślinnością |
+| Szałas zbieraczy | 3 | 4 jedzenia i 1 drewna (×2 na dzikim zbożu) | lądy z roślinnością |
 | Szałas myśliwych | 3 | 3 jedzenia, 1 skóra (×2 przy zwierzynie) | trawy, lasy, tundra |
 | Chata rybacka | 2 | 5 jedzenia (×2 przy rybach) | woda obok |
 | Drwal | 3 | 4 drewna | lasy, bagna |
