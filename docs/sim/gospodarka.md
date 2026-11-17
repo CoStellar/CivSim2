@@ -93,3 +93,33 @@ tylko po działaniach.
   - przez pierwsze 8 minut nikogo nie atakuje;
   - wojnę zaczyna, gdy ma dwa razy więcej siły niż obrona celu;
   - pokój proponuje, gdy przegrywa.
+
+## Start, zdarzenia, podsumowanie (etapy B i G)
+
+- **Ocena miejsc startu** jest liczona raz po generacji: 7 kryteriów od 0 do 100 i ocena łączna z wagami:
+
+  | kryterium | waga |
+  | --- | --- |
+  | ludność (dzika żywność, ryby, zwierzyna, woda) | 30 |
+  | rolnictwo (żyzność, woda) | 20 |
+  | wojsko (wzgórza, trudny teren, metale) | 10 |
+  | materiały (kamień, glina, krzemień, las) | 15 |
+  | miejsce na rozrost (ląd w promieniu 6) | 10 |
+  | przyszłość (miedź, cyna, żelazo) | 5 |
+  | bezpieczeństwo (długi sezon wegetacji) | 10 |
+
+- **Faza startu:**
+  - ludy wybierają po kolei, w losowej kolejności;
+  - gracz ma 30 s i widzi całą mapę bez złóż i żyzności;
+  - wokół zajętych miejsc jest strefa blokady (15 heksów);
+  - AI wybiera losowo spośród miejsc nie gorszych niż (100 − X)% najlepszego wolnego, gdzie X to losowe 0–30% dla każdego ludu;
+  - gdy gracz nie zdąży, za niego wybiera AI;
+  - po wyborze kronika podaje trzy zdania historii plemienia.
+- **Zdarzenia ze wspólnej puli:**
+  - susza, sroga zima, epidemia, pożar, powódź;
+  - każdy lud dostaje jedno co 8–10 minut, nigdy to samo co inny lud w tej chwili;
+  - zdarzenie trwa 20–90 s;
+  - radę daje tylko doradca z pasującą dziedziną.
+- **Podsumowanie (okno Summary):**
+  - ocena naszego startu wobec najlepszego wolnego miejsca w chwili wyboru, z kryteriami;
+  - historia minuta po minucie naszego ludu i ludów, które poznaliśmy: ludność, osady, budynki, technologie, żołnierze, jedzenie, zdarzenie.

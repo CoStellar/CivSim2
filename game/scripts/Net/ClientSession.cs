@@ -143,6 +143,12 @@ public sealed class ClientSession
     public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false, int b = 0) =>
         _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag, b));
 
+    /// <summary>Latest summary of the new game.</summary>
+    public PlaySummaryMessage? Summary { get; private set; }
+
+    /// <summary>Asks for the summary (history and start quality).</summary>
+    public void AskSummary() => _connection.Send(new PlaySummaryRequestMessage());
+
     /// <summary>Asks where a building type can be built.</summary>
     public void AskPlaces(int type) => _connection.Send(new PlacesRequestMessage(type));
 
@@ -267,6 +273,9 @@ public sealed class ClientSession
                     PlayNews?.Invoke(news);
                 }
 
+                break;
+            case PlaySummaryMessage summary:
+                Summary = summary;
                 break;
             case PlacesMessage places:
                 PlacesReceived?.Invoke(places);

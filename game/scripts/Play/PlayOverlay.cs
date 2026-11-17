@@ -94,6 +94,18 @@ public partial class PlayOverlay : Node2D
             }
         }
 
+        if (_view is { Picking: true, TakenStarts: { } taken })
+        {
+            for (int i = 0; i + 1 < taken.Length; i += 2)
+            {
+                foreach (Vector2 c in Copies(taken[i], taken[i + 1]))
+                {
+                    DrawCircle(c, 14, new Color(1, 0.2f, 0.2f, 0.9f));
+                    DrawArc(c, _view.BlockRadius * HexLayout.ColumnStep, 0, MathF.Tau, 64, new Color(1, 0.2f, 0.2f, 0.8f), 4);
+                }
+            }
+        }
+
         if (_view is not null)
         {
             foreach (PlayBuildingView b in _view.Buildings)

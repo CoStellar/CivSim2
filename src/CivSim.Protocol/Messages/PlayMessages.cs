@@ -157,7 +157,15 @@ public sealed record PlayViewMessage(
     [property: Key(19)] PlayPersonView? AdvisorOffer,
     [property: Key(20)] string? Advice,
     [property: Key(21)] IReadOnlyList<PlayPeopleView> Peoples,
-    [property: Key(22)] bool Lost) : IProtocolMessage;
+    [property: Key(22)] bool Lost,
+    [property: Key(23)] bool Picking = false,
+    [property: Key(24)] bool MyPick = false,
+    [property: Key(25)] int PickSecondsLeft = 0,
+    [property: Key(26)] int[]? TakenStarts = null,
+    [property: Key(27)] int BlockRadius = 0,
+    [property: Key(28)] string? WhoPicks = null,
+    [property: Key(29)] string? Event = null,
+    [property: Key(30)] int EventSecondsLeft = 0) : IProtocolMessage;
 
 /// <summary>What a player command does.</summary>
 public enum PlayCommandKind
@@ -212,6 +220,9 @@ public enum PlayCommandKind
 
     /// <summary>Unit <c>A</c> goes home and its people join the settlement there.</summary>
     Disband = 16,
+
+    /// <summary>Start the people on (<c>Col</c>, <c>Row</c>) during the start phase.</summary>
+    PickStart = 17,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>
@@ -232,3 +243,33 @@ public sealed record PlacesRequestMessage([property: Key(0)] int Type) : IProtoc
 /// <summary>Server → client: hexes (col, row pairs) of the player's land where <c>Type</c> can be built (price not checked).</summary>
 [MessagePackObject]
 public sealed record PlacesMessage([property: Key(0)] int Type, [property: Key(1)] int[] Cells) : IProtocolMessage;
+
+/// <summary>Client → server: send the summary (history and start quality).</summary>
+[MessagePackObject]
+public sealed record PlaySummaryRequestMessage([property: Key(0)] int Unused = 0) : IProtocolMessage;
+
+/// <summary>One minute of a people's history.</summary>
+[MessagePackObject]
+public sealed record PlayHistoryRow(
+    [property: Key(0)] int Minute,
+    [property: Key(1)] int People,
+    [property: Key(2)] int Settlements,
+    [property: Key(3)] int Buildings,
+    [property: Key(4)] int Techs,
+    [property: Key(5)] int Soldiers,
+    [property: Key(6)] long FoodPerMinute,
+    [property: Key(7)] int Era,
+    [property: Key(8)] string? Event);
+
+/// <summary>A people's history as the summary shows it.</summary>
+[MessagePackObject]
+public sealed record PlayHistoryView([property: Key(0)] int Civ, [property: Key(1)] string Name, [property: Key(2)] IReadOnlyList<PlayHistoryRow> Rows);
+
+/// <summary>Server → client: the summary: our history and that of the peoples we met, and how good our start was.</summary>
+[MessagePackObject]
+public sealed record PlaySummaryMessage(
+    [property: Key(0)] IReadOnlyList<PlayHistoryView> Peoples,
+    [property: Key(1)] int StartScore,
+    [property: Key(2)] int BestStartScore,
+    [property: Key(3)] IReadOnlyList<string> Criteria,
+    [property: Key(4)] int[] StartCriteria) : IProtocolMessage;

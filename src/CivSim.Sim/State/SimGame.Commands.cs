@@ -37,8 +37,14 @@ public sealed partial class SimGame
         }
 
         Civ civ = Civs[command.Civ];
+        if (Picking != command is PickStartCommand)
+        {
+            return Picking ? "First choose where our people starts." : "The start has been chosen.";
+        }
+
         return command switch
         {
+            PickStartCommand c => PickStart(civ, c.Cell),
             BuildCommand c => Build(civ, c.Cell, c.Type),
             PauseConstructionCommand c => PauseConstruction(civ, c.Building, c.Pause),
             StopBuildingCommand c => StopBuilding(civ, c.Building, c.Stop),

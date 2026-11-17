@@ -13,7 +13,7 @@ public sealed class PlayHostTests
     [Fact]
     public void APlayerGetsTheMapItsViewAndCanBuild()
     {
-        using PlayHost host = PlayHost.Start(new PlayOptions(3, 66, 40, 2));
+        using PlayHost host = PlayHost.Start(new PlayOptions(3, 66, 40, 2) { StartPhase = false });
         IConnection c = host.Connect();
         c.Send(new HelloMessage(ProtocolInfo.Version, "Test"));
         c.Send(new SetSpeedMessage(SimulationSpeed.Max));

@@ -187,7 +187,7 @@ public partial class Main : Node2D
         _menu?.QueueFree();
         _menu = null;
         ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
-        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory);
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo);
         if (_playScreenshot is not null)
         {
             // --play-demo builds a few things on the way, to check the screen without clicking.
@@ -200,7 +200,7 @@ public partial class Main : Node2D
             if (_playLong)
             {
                 demo = [(1, g => g.ScriptSpeed(SimulationSpeed.Max)), (_playSeconds - 3, g => g.ScriptSpeed(SimulationSpeed.Paused)),
-                        (_playSeconds - 2, g => g.ScriptOpen("Peoples")), (_playSeconds - 2, g => g.ScriptZoom(0.35f))];
+                        (_playSeconds - 2.5, g => g.ScriptOpen("Summary")), (_playSeconds - 2, g => g.ScriptZoom(0.35f))];
             }
 
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);

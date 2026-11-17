@@ -1085,5 +1085,59 @@
     "soldierFoodPerMinute": 1,
     "surpriseReputation": -30,
     "levyStrength": 5
+  },
+  "events": {
+    "comment": "Every people draws one event from the shared pool every everyMinutes (a random minute within the spread), never one another people has right now. An event lasts its seconds. productionPercent changes the production of the listed goods, eatPercent what people eat, losePercentPerMinute kills that share of people a minute, destroyBuilding burns one random finished building at the start. field: the advisor field that gives advice on it.",
+    "everyMinutes": 8,
+    "spreadMinutes": 2,
+    "pool": [
+      {
+        "key": "drought",
+        "name": "Drought",
+        "seconds": 90,
+        "goods": [
+          "food"
+        ],
+        "productionPercent": 60,
+        "field": "economy",
+        "advice": "Drought: build fishing huts or stop growing for a while; the stores must last."
+      },
+      {
+        "key": "hard_winter",
+        "name": "Hard winter",
+        "seconds": 90,
+        "eatPercent": 150,
+        "field": "growth",
+        "advice": "A hard winter: people eat more. Keep food stores high and do not train settlers now."
+      },
+      {
+        "key": "epidemic",
+        "name": "Epidemic",
+        "seconds": 60,
+        "losePercentPerMinute": 8,
+        "field": "growth",
+        "advice": "Sickness spreads: the fewer people we move around, the better; wait it out."
+      },
+      {
+        "key": "fire",
+        "name": "Fire",
+        "seconds": 20,
+        "destroyBuilding": true,
+        "field": "economy",
+        "advice": "A fire took a building: rebuild what we need most first."
+      },
+      {
+        "key": "flood",
+        "name": "Flood",
+        "seconds": 60,
+        "goods": [
+          "food",
+          "clay"
+        ],
+        "productionPercent": 50,
+        "field": "economy",
+        "advice": "The rivers flood: fields and clay pits work at half. Use the stores."
+      }
+    ]
   }
 }

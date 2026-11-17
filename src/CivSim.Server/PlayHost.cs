@@ -13,7 +13,11 @@ using CivSim.Sim.State;
 namespace CivSim.Server;
 
 /// <summary>Options of a new game of the rebuilt simulation (ADR 0028).</summary>
-public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHeight = 60, int Civilizations = 4);
+public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHeight = 60, int Civilizations = 4)
+{
+    /// <summary>Peoples choose where they start (the player too); false starts at once on the generator's places.</summary>
+    public bool StartPhase { get; init; } = true;
+}
 
 /// <summary>
 /// Runs a game of the new simulation on its own thread and talks to clients through the protocol only (the client never sees
@@ -46,7 +50,7 @@ public sealed class PlayHost : IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
         SimContent content = SimContent.Load(dataDirectory);
-        SimGame game = SimGame.Create(content, new SimSettings(options.Seed, options.LegacyWidth, options.LegacyHeight, options.Civilizations));
+        SimGame game = SimGame.Create(content, new SimSettings(options.Seed, options.LegacyWidth, options.LegacyHeight, options.Civilizations) { StartPhase = options.StartPhase });
         game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
         var host = new PlayHost(game);
         host._thread.Start();
@@ -163,6 +167,9 @@ public sealed class PlayHost : IDisposable
                     }
 
                     break;
+                case PlaySummaryRequestMessage when client.Civ >= 0:
+                    client.Connection.Send(Summary(_game.Civs[client.Civ]));
+                    break;
                 case PlacesRequestMessage places when client.Civ >= 0:
                     client.Connection.Send(Places(client.Civ, places.Type));
                     break;
@@ -190,6 +197,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.ProposePeace => new ProposePeaceCommand(civ, m.A, m.B),
         PlayCommandKind.AnswerPeace => new AnswerPeaceCommand(civ, m.A, m.Flag),
         PlayCommandKind.Disband => new DisbandCommand(civ, m.A),
+        PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
 
@@ -297,14 +305,16 @@ public sealed class PlayHost : IDisposable
             }
 
             Civ civ = _game.Civs[client.Civ];
-            if (!client.SentChunks)
+            if (!client.SentChunks || client.SawPicking != _game.Picking)
             {
+                // The whole map again: at the start, and when the start phase ends (deposits and soil appear, the fog comes).
                 for (int chunk = 0; chunk < _game.Map.Chunks.Count; chunk++)
                 {
-                    SendChunk(client, chunk);
+                    SendChunk(client, chunk, always: client.SentChunks);
                 }
 
                 client.SentChunks = true;
+                client.SawPicking = _game.Picking;
                 civ.NewlyKnown.Clear();
             }
             else
@@ -330,9 +340,9 @@ public sealed class PlayHost : IDisposable
         _news.Clear();
     }
 
-    private void SendChunk(PlayClient client, int chunk)
+    private void SendChunk(PlayClient client, int chunk, bool always = false)
     {
-        MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, _game.Civs[client.Civ].Known);
+        MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, _game.Civs[client.Civ].Known, hideResources: _game.Picking, always: always);
         if (m is not null)
         {
             client.Connection.Send(m);
@@ -399,7 +409,58 @@ public sealed class PlayHost : IDisposable
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
             civ.People, civ.Hungry, settlements, buildings, [.. _news], units, _game.EraOf(civ), civ.Researching, ResearchPermille(civ), TechStates(civ),
             Person(civ.Thinker, false), Person(civ.ThinkerOffer, false), Person(civ.Advisor, true), Person(civ.AdvisorOffer, true), _game.Advice(civ),
-            Peoples(civ), civ.Dead);
+            Peoples(civ), civ.Dead, _game.Picking, _game.Picking && _game.PickOrder[_game.PickIndex] == civId,
+            _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.BlockRadius,
+            _game.Picking ? _game.Civs[_game.PickOrder[_game.PickIndex]].Name : null,
+            civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0);
+    }
+
+    private PlaySummaryMessage Summary(Civ civ)
+    {
+        var peoples = new List<PlayHistoryView>();
+        foreach (Civ c in _game.Civs)
+        {
+            if (c.Id != civ.Id && !_game.Met(civ, c))
+            {
+                continue;
+            }
+
+            var rows = new List<PlayHistoryRow>();
+            foreach (HistorySample h in c.History)
+            {
+                rows.Add(new PlayHistoryRow(h.Minute, h.People, h.Settlements, h.Buildings, h.Techs, h.Soldiers, h.FoodPerMinute, h.Era, h.Event >= 0 ? _game.Content.Events[h.Event].Name : null));
+            }
+
+            peoples.Add(new PlayHistoryView(c.Id, c.Name, rows));
+        }
+
+        (int mine, int best) = _game.StartQuality(civ);
+        var criteria = new int[SiteScores.Criteria.Length];
+        if (_game.Sites is { } sites && _game.StartCell.Length > civ.Id && _game.StartCell[civ.Id] >= 0)
+        {
+            for (int k = 0; k < criteria.Length; k++)
+            {
+                criteria[k] = sites.Values[k][_game.StartCell[civ.Id]];
+            }
+        }
+
+        return new PlaySummaryMessage(peoples, mine, best, SiteScores.Criteria, criteria);
+    }
+
+    private int[] TakenStarts()
+    {
+        var list = new List<int>();
+        foreach (int cell in _game.StartCell)
+        {
+            if (cell >= 0 && _game.Picking)
+            {
+                HexCoord h = _game.Geo.FromIndex(cell);
+                list.Add(h.Col);
+                list.Add(h.Row);
+            }
+        }
+
+        return [.. list];
     }
 
     private List<PlayPeopleView> Peoples(Civ civ)
@@ -458,5 +519,7 @@ public sealed class PlayHost : IDisposable
         public bool SentChunks { get; set; }
 
         public bool ViewSoon { get; set; }
+
+        public bool SawPicking { get; set; }
     }
 }

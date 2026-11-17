@@ -22,7 +22,7 @@ public static class MapViewBuilder
     }
 
     /// <summary>Builds one chunk of <paramref name="map"/> (also used by the new game, ADR 0028).</summary>
-    public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known)
+    public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known, bool hideResources = false, bool always = false)
     {
         ArgumentNullException.ThrowIfNull(map);
         HexGlobe geo = map.Geometry;
@@ -86,9 +86,18 @@ public static class MapViewBuilder
             }
         }
 
-        if (!any)
+        if (!any && !always)
         {
             return null;
+        }
+
+        if (hideResources)
+        {
+            // While peoples choose where to start they see the land but not its deposits or soil (decision of 2026-11-17).
+            System.Array.Clear(deposit);
+            System.Array.Clear(richness);
+            System.Array.Clear(depth);
+            System.Array.Clear(fertility);
         }
 
         return new MapChunkMessage(

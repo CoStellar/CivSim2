@@ -16,6 +16,9 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
     /// <summary>Water percent.</summary>
     public int WaterPercent { get; init; } = 60;
 
+    /// <summary>Peoples choose their start in turns (the start phase); otherwise the generator's starts are used.</summary>
+    public bool StartPhase { get; init; }
+
     /// <summary>The AI leads every people (the host hands people to players afterwards); false in rule tests.</summary>
     public bool Ai { get; init; } = true;
 }
@@ -140,9 +143,19 @@ public sealed partial class SimGame
             civ.IsAi = settings.Ai;
             civ.Aggression = game.AiRandom.NextInt(0, 101);
             civ.Expansion = game.AiRandom.NextInt(0, 101);
+            civ.StartError = game.AiRandom.NextInt(0, 31);
             game.Civs.Add(civ);
             Array.Copy(content.StartStock, civ.Stock, civ.Stock.Length);
-            game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
+            if (!settings.StartPhase)
+            {
+                game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
+            }
+        }
+
+        if (settings.StartPhase)
+        {
+            game.ScoreSites();
+            game.BeginPicking();
         }
 
         return game;
@@ -165,8 +178,14 @@ public sealed partial class SimGame
     /// <summary>Runs one tick: due constructions, then the economy and population of the civilizations whose turn it is.</summary>
     public void Tick()
     {
-        Ticks++;
         News.Clear();
+        if (Picking)
+        {
+            PickingTick();
+            return;
+        }
+
+        Ticks++;
         while (_schedule.TryPeek(out (int Kind, int Id) item, out (long Tick, int Kind, int Id) due) && due.Tick <= Ticks)
         {
             _schedule.Dequeue();
@@ -211,6 +230,11 @@ public sealed partial class SimGame
             CombatStep();
         }
 
+        if (Ticks % SimContent.TicksPerMinute == 0)
+        {
+            Sample();
+        }
+
         foreach (Civ civ in Civs)
         {
             if (civ.Dead)
@@ -227,12 +251,39 @@ public sealed partial class SimGame
             {
                 PopulationStep(civ);
                 PeopleOfNoteStep(civ);
+                EventStep(civ);
             }
 
             if (civ.IsAi && (Ticks + (civ.Id * 7)) % Ai.SimAi.ThinkEveryTicks == 0)
             {
                 Ai.SimAi.Think(this, civ);
             }
+        }
+    }
+
+    // Once a minute: one line of history per people (constant memory per minute, read by the summary).
+    private void Sample()
+    {
+        foreach (Civ c in Civs)
+        {
+            if (c.Dead)
+            {
+                continue;
+            }
+
+            int techs = 0;
+            foreach (bool k in c.KnownTech)
+            {
+                techs += k ? 1 : 0;
+            }
+
+            int soldiers = 0;
+            foreach (int id in c.Units)
+            {
+                soldiers += Content.Units[Units[id].Kind].Army ? Units[id].People : 0;
+            }
+
+            c.History.Add(new HistorySample((int)(Ticks / SimContent.TicksPerMinute), c.People, c.Settlements.Count, c.Buildings.Count, techs, soldiers, c.Rate[Content.Food], EraOf(c), c.Event));
         }
     }
 

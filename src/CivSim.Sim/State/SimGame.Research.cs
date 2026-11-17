@@ -341,6 +341,11 @@ public sealed partial class SimGame
         }
 
         bool Has(string field) => Array.Exists(a.Fields, f => Content.AdvisorFields[f] == field);
+        if (civ.Event >= 0 && Has(Content.Events[civ.Event].Field))
+        {
+            return Content.Events[civ.Event].Advice;
+        }
+
         if (Has("economy"))
         {
             if (civ.Rate[Content.Food] < 0)

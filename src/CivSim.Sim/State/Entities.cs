@@ -219,6 +219,24 @@ public sealed class Civ
 
     /// <summary>Character of an AI: how eager to spread, 0–100.</summary>
     public int Expansion { get; set; }
+
+    /// <summary>How far below the best free place the AI may start for this people, percent (random per people).</summary>
+    public int StartError { get; set; }
+
+    /// <summary>Score of the best free start when this people chose (for the summary).</summary>
+    public int BestStartAtPick { get; set; }
+
+    /// <summary>Current event of the shared pool (−1 = none).</summary>
+    public int Event { get; set; } = -1;
+
+    /// <summary>Tick the current event ends.</summary>
+    public long EventEnd { get; set; }
+
+    /// <summary>Tick of the next event (0 = not drawn yet).</summary>
+    public long NextEvent { get; set; }
+
+    /// <summary>A sample of the people's state every minute, for the summary after the game.</summary>
+    public List<HistorySample> History { get; } = [];
 }
 
 /// <summary>What a unit is doing.</summary>
@@ -282,3 +300,6 @@ public sealed class Unit
     /// <summary>Fought in the last combat step (for the view).</summary>
     public bool Fighting { get; set; }
 }
+
+/// <summary>One minute of a people's history: what the summary's timeline shows.</summary>
+public sealed record HistorySample(int Minute, int People, int Settlements, int Buildings, int Techs, int Soldiers, long FoodPerMinute, int Era, int Event);

@@ -158,3 +158,58 @@ public sealed class AiTests
         Assert.Equal(Play(), Play());
     }
 }
+
+public sealed class StartAndEventTests
+{
+    private static readonly SimContent Content = SimContent.Load();
+
+    [Fact]
+    public void PeoplesChooseTheirStartInTurnsAwayFromEachOther()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(2, 98, 60, 4) { StartPhase = true });
+        Assert.True(g.Picking);
+        Assert.Empty(g.Settlements);
+        Assert.NotNull(g.Sites);
+        int guard = 0;
+        while (g.Picking && guard++ < 10_000)
+        {
+            g.Tick();
+        }
+
+        Assert.False(g.Picking);
+        Assert.Equal(4, g.Settlements.Count);
+        for (int a = 0; a < 4; a++)
+        {
+            for (int b = a + 1; b < 4; b++)
+            {
+                Assert.True(g.Geo.Distance(g.Geo.FromIndex(g.StartCell[a]), g.Geo.FromIndex(g.StartCell[b])) >= g.BlockRadius);
+            }
+
+            (int mine, int best) = g.StartQuality(g.Civs[a]);
+            Assert.True(mine >= best * (100 - 30) / 100, $"start {mine} of {best}");
+        }
+    }
+
+    [Fact]
+    public void EveryPeopleMeetsAnEventAndNoTwoShareOne()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(2, 66, 40, 3) { Ai = false });
+        bool any = false;
+        for (int i = 0; i < 12 * SimContent.TicksPerMinute; i++)
+        {
+            g.Tick();
+            var now = new System.Collections.Generic.HashSet<int>();
+            foreach (Civ c in g.Civs)
+            {
+                if (c.Event >= 0)
+                {
+                    any = true;
+                    Assert.True(now.Add(c.Event), "two peoples share an event");
+                }
+            }
+        }
+
+        Assert.True(any);
+        Assert.True(g.Civs[0].History.Count >= 11);
+    }
+}

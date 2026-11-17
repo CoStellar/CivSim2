@@ -241,6 +241,15 @@ public sealed class SimContent
     /// <summary>Rules of fighting.</summary>
     public required WarRules War { get; init; }
 
+    /// <summary>The shared pool of events.</summary>
+    public required IReadOnlyList<State.SimEvent> Events { get; init; }
+
+    /// <summary>Ticks between two events of a people (at least).</summary>
+    public int EventEveryTicks { get; init; }
+
+    /// <summary>Random extra ticks between events.</summary>
+    public int EventSpreadTicks { get; init; }
+
     /// <summary>Advisor fields.</summary>
     public required IReadOnlyList<string> AdvisorFields { get; init; }
 
@@ -638,6 +647,9 @@ public sealed class SimContent
             AdvisorPrice = Amounts(advisors.GetProperty("hirePrice")),
             AdvisorUpkeep = Hundredths(advisors.GetProperty("upkeepFoodPerMinute")),
             AdvisorFields = fields,
+            Events = State.SimGame.LoadEvents(root, goods),
+            EventEveryTicks = root.TryGetProperty("events", out JsonElement evr) ? evr.GetProperty("everyMinutes").GetInt32() * TicksPerMinute : 0,
+            EventSpreadTicks = root.TryGetProperty("events", out JsonElement evs) ? evs.GetProperty("spreadMinutes").GetInt32() * TicksPerMinute : 0,
             War = new WarRules(
                 root.GetProperty("war").GetProperty("combatEveryTicks").GetInt32(), root.GetProperty("war").GetProperty("lowLuckPercent").GetInt32(),
                 root.GetProperty("war").GetProperty("highLuckPercent").GetInt32(), root.GetProperty("war").GetProperty("defenderPercent").GetInt32(),

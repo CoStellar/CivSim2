@@ -21,6 +21,7 @@ public partial class PlayGame : Node2D
     private const float MaxZoom = 2.5f;
 
     private readonly ulong _seed;
+    private readonly bool _startPhase;
     private readonly LayerStack _layers;
     private readonly ArtLibrary _art;
     private readonly string? _dataDirectory;
@@ -35,6 +36,7 @@ public partial class PlayGame : Node2D
     private int _placing;
     private (int Col, int Row)? _selected;
     private int _unit = -1;
+    private bool _pickView;
     private readonly HashSet<int> _hiddenWalk = [];
     private double _uiTimer;
     private Vector2? _dragFrom;
@@ -62,8 +64,9 @@ public partial class PlayGame : Node2D
     private double _time;
 
     /// <summary>Creates the screen; the game starts when the node enters the tree.</summary>
-    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory)
+    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true)
     {
+        _startPhase = startPhase;
         _seed = seed;
         _layers = layers;
         _art = art;
@@ -122,6 +125,10 @@ public partial class PlayGame : Node2D
     {
         _bigMode = mode;
         _bigSignature = "";
+        if (mode == "Summary")
+        {
+            _session?.AskSummary();
+        }
     }
 
     /// <summary>Script step: sets the zoom.</summary>
@@ -202,7 +209,7 @@ public partial class PlayGame : Node2D
         _camera = new Camera2D { Zoom = new Vector2(0.9f, 0.9f) };
         AddChild(_camera);
         _camera.MakeCurrent();
-        _host = PlayHost.Start(new PlayOptions(_seed), _dataDirectory);
+        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         _session.CommandRefused += reason => Toast(reason);
         _session.PlacesReceived += m =>
@@ -271,7 +278,14 @@ public partial class PlayGame : Node2D
             _session.SetSpeed(SimulationSpeed.X1);
         }
 
-        if (!_centred && _session.PlayView is { } v)
+        if (!_centred && !_pickView && _session.PlayView is { Picking: true })
+        {
+            _camera.Position = _map.Period / 2;
+            _camera.Zoom = new Vector2(0.3f, 0.3f);
+            _pickView = true;
+        }
+
+        if (!_centred && _session.PlayView is { Picking: false } v)
         {
             foreach (PlaySettlementView s in v.Settlements)
             {
@@ -401,6 +415,20 @@ public partial class PlayGame : Node2D
     {
         if (MouseCell() is not { } cell || _session is null)
         {
+            return;
+        }
+
+        if (_session.PlayView is { Picking: true } pick)
+        {
+            if (pick.MyPick)
+            {
+                _session.Play(PlayCommandKind.PickStart, 0, cell.Col, cell.Row);
+            }
+            else
+            {
+                Toast($"{pick.WhoPicks} are choosing now; wait for your turn.");
+            }
+
             return;
         }
 
@@ -560,13 +588,18 @@ public partial class PlayGame : Node2D
             topRow.AddChild(b);
         }
 
-        foreach (string mode in new[] { "Research", "People", "Peoples" })
+        foreach (string mode in new[] { "Research", "People", "Peoples", "Summary" })
         {
             var b = new Button { Text = mode, FocusMode = Control.FocusModeEnum.None };
             b.Pressed += () =>
             {
                 _bigMode = _bigMode == mode ? "" : mode;
                 _bigSignature = "";
+                if (_bigMode == "Summary")
+                {
+                    _session?.AskSummary();
+                }
+
                 UpdateUi();
             };
             topRow.AddChild(b);
@@ -723,7 +756,7 @@ public partial class PlayGame : Node2D
             }
 
             string arrow = rate > 0 ? $"+{Num(rate)}" : rate < 0 ? $"-{Num(-rate)}" : "0";
-            string full = v.Stock[g] >= v.Capacity[g] ? " FULL" : "";
+            string full = v.Capacity[g] > 0 && v.Stock[g] >= v.Capacity[g] ? " FULL" : "";
             res.Add($"{c.Goods[g].Name} {v.Stock[g] / 100} ({arrow}){full}");
         }
 
@@ -739,8 +772,17 @@ public partial class PlayGame : Node2D
             _ => "max",
         };
         string research = v.Researching >= 0 ? $"   researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "   no research";
+        if (v.Picking)
+        {
+            _clock.Text = v.MyPick ? $"Choose where your people starts: click a land hex ({v.PickSecondsLeft} s)" : $"{v.WhoPicks} are choosing where to start…";
+            _resources.Text = "Look at the land: deposits and soil are hidden until everyone has chosen. Red circles are taken.";
+            _side.Text = _selected is { } ps ? HexText(ps) : "";
+            UpdateBig(v, c);
+            return;
+        }
+
         _clock.Text = v.Lost ? "Our people are gone. The game is lost." : $"{c.Eras[v.Era]}   {Clock()}   {speed}{research}";
-        _advice.Text = v.Advice is { } a ? $"{v.Advisor?.Name}: {a}" : "";
+        _advice.Text = (v.Event is { } ev ? $"{ev.ToUpperInvariant()}: {v.EventSecondsLeft} s left\n" : "") + (v.Advice is { } a ? $"{v.Advisor?.Name}: {a}" : "");
         FillBuildBar(c);
         _pendingButtons.Clear();
         UpdateSide(v, c);
@@ -1014,6 +1056,36 @@ public partial class PlayGame : Node2D
                         rows.Add(($"{info.Name}: {st.Blocked}" + (info.Needs.Length > 0 ? $" (needs worker-minutes: {info.Needs})" : ""), null));
                     }
                 }
+            }
+        }
+        else if (_bigMode == "Summary")
+        {
+            if (_session?.Summary is not { } sum)
+            {
+                rows.Add(("Loading…", null));
+            }
+            else
+            {
+                rows.Add(($"Our start: {sum.StartScore} of 100; the best free place when we chose had {sum.BestStartScore}.", null));
+                var crit = new List<string>();
+                for (int k = 0; k < sum.Criteria.Count; k++)
+                {
+                    crit.Add($"{sum.Criteria[k]} {sum.StartCriteria[k]}");
+                }
+
+                rows.Add(($"   {string.Join(", ", crit)}", null));
+                foreach (PlayHistoryView p in sum.Peoples)
+                {
+                    rows.Add(($"— {p.Name} —   minute: people / settlements / buildings / technologies / soldiers / food a minute", null));
+                    int step = Math.Max(1, p.Rows.Count / 12);
+                    for (int i = 0; i < p.Rows.Count; i += step)
+                    {
+                        PlayHistoryRow r = p.Rows[i];
+                        rows.Add(($"   {r.Minute,3}: {r.People} / {r.Settlements} / {r.Buildings} / {r.Techs} / {r.Soldiers} / {r.FoodPerMinute / 100}" + (r.Event is { } e ? $"  ({e})" : ""), null));
+                    }
+                }
+
+                rows.Add(("Refresh", () => _session!.AskSummary()));
             }
         }
         else if (_bigMode == "Peoples")
