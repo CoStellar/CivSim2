@@ -264,7 +264,7 @@ wioska ≤ 3 min, era 1 ≤ 5 min, 3–6 osad w 15. minucie), a takt mieści si�
 - [ ] **Technologie (GDD 6.4, ADR 0026):** doświadczenie w technologii, kierunek rozwoju, koszt zależny od rozwinięcia poprzedniej, podgląd technologii (5% × liczba znających z kontaktu, limit 50%); każda technologia odblokowuje jedną widoczną rzecz (`unlocks.visible`); tkactwo i chleb wycięte do brązu
 - [ ] **Karty decyzji w backendzie** (ADR 0026): tylko ze zdarzeń w `cards.json`, najwyżej jedna na 30 s, licznik 20 s czasu gry, decyzja AI po czasie; secesja jako karta
 - [ ] **Bez postaci z imieniem i z jednym ustrojem (rada starszych) do epoki brązu** (ADR 0026); wódz i ustroje jako karty od brązu
-- [ ] **Testy gracza, propozycje P1** (`docs/playtest/propozycje.md`, 2026-11-16): P-01 kronika gracza przez mgłę, P-02 osadnicy, P-05 panel AI po ludzku, P-03 pkt 1 wyprawa, P-07 tempo
+- [ ] **Testy gracza, propozycje P1** (`docs/playtest/propozycje.md`, 2026-11-16): P-01 kronika gracza przez mgłę, P-02 osadnicy, P-05 panel AI po ludzku, P-03 pkt 1 wyprawa, P-07 tempo; P2–P3: P-09 czas partii w kronice, P-10 odmowy z liczbami, P-12 wojna domyślnie o łup, P-11 bez krzątaniny
 - [ ] **Wydajność:** mapa standard, 6–8 cywilizacji, 300 oddziałów, takt < 30 ms w najgorszym przypadku; klient rysuje tylko zmiany i płynny ruch; sieci handlowe przyrostowo (**T7**), pule pamięci migawki (**T8**), MultiMesh w podglądzie (**T10**), budżet czasu w każdym PR (**T12**, od PR 3a), pulsy równolegle (**T13**), pole przepływu, jeśli pomiar pokaże potrzebę (**T3b**)
 - [ ] **Podgląd deweloperski:** wybór miejsca i proste rozkazy do testów, pauza, prędkości ×1/×2/×4
 - [ ] Dokumentacja: `docs/systems/` (zegar, oddziały, zadania), `docs/ai/`, `known-issues.md`

@@ -114,7 +114,7 @@ public sealed record DeclareWarCommand(GameContent Content, CivId Target, WarGoa
         if (months > 0 && state.Treaties.Find(civ, Target, TreatyKind.War) is { } war)
         {
             war.ReadyTick = state.Turn + Content.Time.ActionTicks(months); // ADR 0025: months of action, in ticks
-            line += string.Create(System.Globalization.CultureInfo.InvariantCulture, $" Its warriors will be ready in {months / 12} year{(months == 12 ? string.Empty : "s")}.");
+            line += $" Its warriors will be ready in {Content.Time.PlayTime(Content.Time.ActionTicks(months))}."; // P-09
         }
 
         return line;

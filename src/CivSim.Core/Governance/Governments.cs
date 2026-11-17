@@ -195,7 +195,7 @@ public static class Governments
         if (years > 0)
         {
             c.AnarchyUntilMonth = Math.Max(c.AnarchyUntilMonth, state.ActionMonth + (years * 12L));
-            return string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{before} became the {Title(content, c)}; {years} years of anarchy follow.");
+            return string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{before} became the {Title(content, c)}; {content.Time.PlayTime(content.Time.ActionTicks(years * 12L))} of anarchy follow.");
         }
 
         return $"{before} became the {Title(content, c)}.";

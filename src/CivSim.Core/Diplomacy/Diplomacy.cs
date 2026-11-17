@@ -225,7 +225,7 @@ public static class Treaties
         if (kind == TreatyKind.Peace)
         {
             Treaty? war = book.Find(from, to, TreatyKind.War);
-            long warYears = war is null ? 0 : (state.Month - war.SinceMonth) / 12;
+            string lasted = content.Time.PlayTime(war is null ? 0 : state.Turn - war.SinceTick); // P-09: time of the game
             if (war is not null)
             {
                 treaty.Goal = war.Goal;
@@ -255,7 +255,7 @@ public static class Treaties
             treaty.Terms = kept.Length > 0 ? terms : PeaceTerms.White;
             book.Remove(from, to, TreatyKind.War);
             book.Add(treaty);
-            return string.Create(CultureInfo.InvariantCulture, $"{a} and {b} made peace after {warYears} years of war.{kept}");
+            return string.Create(CultureInfo.InvariantCulture, $"{a} and {b} made peace after {lasted} of war.{kept}");
         }
 
         book.Add(treaty);

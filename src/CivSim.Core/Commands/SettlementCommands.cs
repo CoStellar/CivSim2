@@ -230,12 +230,13 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
         PopulationRules rules = Content.Population;
         if (Percent < 1 || Percent > 90)
         {
-            return CommandResult.Fail("Between 1 and 90 percent of the people can leave.");
+            return CommandResult.Fail($"Between 1 and 90 percent of the people can leave ({Percent}% asked).");
         }
 
         if (s!.TotalPopulation() < rules.MinSplitPeople)
         {
-            return CommandResult.Fail($"A settlement needs {rules.MinSplitPeople} people to split.");
+            // The numbers of this settlement tell the player what is missing (playtest P-10).
+            return CommandResult.Fail($"{s.Name} has {s.TotalPopulation()} people; a settlement needs {rules.MinSplitPeople} to split.");
         }
 
         WorldState world = state.Worlds[s.World.Value];
@@ -245,7 +246,7 @@ public sealed record SplitSettlementCommand(GameContent Content, SettlementId Se
             if (other.Owner == civ && other.TotalPopulation() > 0
                 && world.Geometry.Distance(other.Cell, Target) < rules.MinDistanceBetweenOwnCamps)
             {
-                return CommandResult.Fail($"New camps must be at least {rules.MinDistanceBetweenOwnCamps} cells from the others.");
+                return CommandResult.Fail($"{other.Name} is {world.Geometry.Distance(other.Cell, Target)} cells away; new camps must be at least {rules.MinDistanceBetweenOwnCamps} cells from the others.");
             }
         }
 
