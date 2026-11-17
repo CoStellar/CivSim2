@@ -478,6 +478,21 @@ public class DeadValueTests
             saved.Add(ms.ToArray());
         }
 
+        // The market again, but the artisans took up sewing just now: whether they keep it is recipeKeepYears (appended last:
+        // new situations go at the end so the indexes of the others stay).
+        GameState fresh = SaveGameSerializer.Load(new MemoryStream(saved[stone - 1]));
+        Market(fresh);
+        foreach (SettlementState s in fresh.Settlements.Where(x => x.RecipeId != SettlementState.NoRecipe))
+        {
+            s.RecipeSinceMonth = fresh.ActionMonth;
+        }
+
+        using (var ms = new MemoryStream())
+        {
+            SaveGameSerializer.Save(fresh, ms);
+            saved.Add(ms.ToArray());
+        }
+
         Assert.True(saved.Count > stone);
         return [.. saved];
     }
@@ -675,6 +690,7 @@ public class DeadValueTests
                     s.Skilled[tanner] = s.PopulationView[artisans] / 2;
                     s.Skilled[baker] = s.PopulationView[artisans] / 2;
                     s.RecipeId = Content.Recipes.First(x => x.Key == "sew_hide_clothing").Id;
+                    s.RecipeSinceMonth = state.ActionMonth - (100 * 12); // sewing for long: only the hysteresis holds it
                 }
 
                 for (int g = 0; g < Content.Goods.Count; g++)

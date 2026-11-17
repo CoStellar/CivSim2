@@ -440,6 +440,7 @@ public static class GameStateHash
             }
 
             h.Add(s.RecipeId);
+            h.Add(s.RecipeSinceMonth);
             h.Add(s.JourneyTarget);
             h.Add(s.JourneyNext);
             h.Add(s.JourneyStepTicks);
