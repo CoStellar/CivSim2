@@ -40,6 +40,7 @@ public partial class Main : Node2D
     private double _playSeconds = 6;
     private bool _playDemo;
     private bool _playLong;
+    private string _playWindow = "Summary";
     private MapView? _map;
     private Camera2D _camera = null!;
     private Hud? _hud;
@@ -149,6 +150,9 @@ public partial class Main : Node2D
                 case "--play-screenshot":
                     _playScreenshot = next;
                     break;
+                case "--play-window":
+                    _playWindow = next;
+                    break;
                 case "--play-long":
                     _playLong = true;
                     break;
@@ -181,13 +185,13 @@ public partial class Main : Node2D
     }
 
     // The new game (ADR 0028): replaces the legacy viewer while it runs.
-    private void StartPlay(string seedText)
+    private void StartPlay(string seedText, int goal = 1)
     {
         StopGame();
         _menu?.QueueFree();
         _menu = null;
         ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
-        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo);
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal);
         if (_playScreenshot is not null)
         {
             // --play-demo builds a few things on the way, to check the screen without clicking.
@@ -200,7 +204,7 @@ public partial class Main : Node2D
             if (_playLong)
             {
                 demo = [(1, g => g.ScriptSpeed(SimulationSpeed.Max)), (_playSeconds - 3, g => g.ScriptSpeed(SimulationSpeed.Paused)),
-                        (_playSeconds - 2.5, g => g.ScriptOpen("Summary")), (_playSeconds - 2, g => g.ScriptZoom(0.35f))];
+                        (_playSeconds - 2.5, g => g.ScriptOpen(_playWindow)), (_playSeconds - 2, g => g.ScriptZoom(0.35f))];
             }
 
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
@@ -261,7 +265,7 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
-        _menu.PlayRequested += settings => StartPlay(settings.Seed);
+        _menu.PlayRequested += (settings, goal) => StartPlay(settings.Seed, goal);
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {

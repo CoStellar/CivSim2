@@ -115,7 +115,12 @@ public sealed record PlayPeopleView(
     [property: Key(5)] int SuggestedTribute,
     [property: Key(6)] int Reputation,
     [property: Key(7)] int? TheyOfferTribute,
-    [property: Key(8)] bool Dead);
+    [property: Key(8)] bool Dead,
+    [property: Key(9)] bool Trade = false,
+    [property: Key(10)] bool Alliance = false,
+    [property: Key(11)] bool TheyOfferTrade = false,
+    [property: Key(12)] bool TheyOfferAlliance = false,
+    [property: Key(13)] string? TheirBarter = null);
 
 /// <summary>A building as the player sees it. State: 0 construction, 1 paused construction, 2 working, 3 stopped.</summary>
 [MessagePackObject]
@@ -165,7 +170,10 @@ public sealed record PlayViewMessage(
     [property: Key(27)] int BlockRadius = 0,
     [property: Key(28)] string? WhoPicks = null,
     [property: Key(29)] string? Event = null,
-    [property: Key(30)] int EventSecondsLeft = 0) : IProtocolMessage;
+    [property: Key(30)] int EventSecondsLeft = 0,
+    [property: Key(31)] string? Goal = null,
+    [property: Key(32)] string? Winner = null,
+    [property: Key(33)] int Score = 0) : IProtocolMessage;
 
 /// <summary>What a player command does.</summary>
 public enum PlayCommandKind
@@ -223,6 +231,21 @@ public enum PlayCommandKind
 
     /// <summary>Start the people on (<c>Col</c>, <c>Row</c>) during the start phase.</summary>
     PickStart = 17,
+
+    /// <summary>Offer people <c>A</c> a treaty of kind <c>B</c> (0 trade, 1 alliance).</summary>
+    ProposeTreaty = 18,
+
+    /// <summary>Answer people <c>A</c>'s offer of treaty <c>B</c> (accept when <c>Flag</c>).</summary>
+    AnswerTreaty = 19,
+
+    /// <summary>End treaty <c>B</c> with people <c>A</c>.</summary>
+    CancelTreaty = 20,
+
+    /// <summary>Offer people <c>A</c>: <c>Col</c> units of good <c>B</c> for <c>C</c> units of good <c>Row</c>.</summary>
+    Barter = 21,
+
+    /// <summary>Answer people <c>A</c>'s barter offer (accept when <c>Flag</c>).</summary>
+    AnswerBarter = 22,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>
@@ -234,7 +257,8 @@ public sealed record PlayCommandMessage(
     [property: Key(3)] int Col,
     [property: Key(4)] int Row,
     [property: Key(5)] bool Flag,
-    [property: Key(6)] int B = 0) : IProtocolMessage;
+    [property: Key(6)] int B = 0,
+    [property: Key(7)] int C = 0) : IProtocolMessage;
 
 /// <summary>Client → server: where can building type <c>Type</c> go?</summary>
 [MessagePackObject]

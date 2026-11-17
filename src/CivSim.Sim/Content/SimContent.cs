@@ -8,7 +8,11 @@ using CivSim.Core.Content;
 namespace CivSim.Sim.Content;
 
 /// <summary>A good the player stores (food, wood, stone…). Ids are list indexes.</summary>
-public sealed record SimGood(int Id, string Key, string Name);
+public sealed record SimGood(int Id, string Key, string Name)
+{
+    /// <summary>Worth of one unit for barter, percent of food.</summary>
+    public int WorthPercent { get; init; } = 100;
+}
 
 /// <summary>A level of a settlement: territory radius, housing and storage it gives, price of reaching it.</summary>
 public sealed record SettlementLevel(int Id, string Key, string Name, int Radius, int Housing, long Storage, long[] UpgradePrice)
@@ -241,6 +245,15 @@ public sealed class SimContent
     /// <summary>Rules of fighting.</summary>
     public required WarRules War { get; init; }
 
+    /// <summary>Research discount per trade partner, percent.</summary>
+    public int TradeResearchDiscount { get; init; }
+
+    /// <summary>Least worth (percent of what it gives) the AI wants from a barter.</summary>
+    public int AcceptWorthPercent { get; init; }
+
+    /// <summary>Ticks between the AI's reviews of its relations.</summary>
+    public int DiplomacyReviewTicks { get; init; }
+
     /// <summary>The shared pool of events.</summary>
     public required IReadOnlyList<State.SimEvent> Events { get; init; }
 
@@ -324,7 +337,10 @@ public sealed class SimContent
         var goods = new List<SimGood>();
         foreach (JsonElement g in root.GetProperty("goods").EnumerateArray())
         {
-            goods.Add(new SimGood(goods.Count, g.GetProperty("key").GetString()!, g.GetProperty("name").GetString()!));
+            goods.Add(new SimGood(goods.Count, g.GetProperty("key").GetString()!, g.GetProperty("name").GetString()!)
+            {
+                WorthPercent = g.TryGetProperty("worth", out JsonElement w) ? (int)(Hundredths(w)) : 100,
+            });
         }
 
         int GoodOf(string key)
@@ -648,6 +664,9 @@ public sealed class SimContent
             AdvisorUpkeep = Hundredths(advisors.GetProperty("upkeepFoodPerMinute")),
             AdvisorFields = fields,
             Events = State.SimGame.LoadEvents(root, goods),
+            TradeResearchDiscount = root.GetProperty("diplomacy").GetProperty("researchDiscountPerPartner").GetInt32(),
+            AcceptWorthPercent = root.GetProperty("diplomacy").GetProperty("acceptWorthPercent").GetInt32(),
+            DiplomacyReviewTicks = root.GetProperty("diplomacy").GetProperty("reviewSeconds").GetInt32() * TicksPerSecond,
             EventEveryTicks = root.TryGetProperty("events", out JsonElement evr) ? evr.GetProperty("everyMinutes").GetInt32() * TicksPerMinute : 0,
             EventSpreadTicks = root.TryGetProperty("events", out JsonElement evs) ? evs.GetProperty("spreadMinutes").GetInt32() * TicksPerMinute : 0,
             War = new WarRules(

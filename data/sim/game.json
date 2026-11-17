@@ -7,43 +7,53 @@
   "goods": [
     {
       "key": "food",
-      "name": "Food"
+      "name": "Food",
+      "worth": 1
     },
     {
       "key": "wood",
-      "name": "Wood"
+      "name": "Wood",
+      "worth": 1
     },
     {
       "key": "stone",
-      "name": "Stone"
+      "name": "Stone",
+      "worth": 1.2
     },
     {
       "key": "clay",
-      "name": "Clay"
+      "name": "Clay",
+      "worth": 1
     },
     {
       "key": "hides",
-      "name": "Hides"
+      "name": "Hides",
+      "worth": 1.5
     },
     {
       "key": "tools",
-      "name": "Tools"
+      "name": "Tools",
+      "worth": 3
     },
     {
       "key": "copper",
-      "name": "Copper"
+      "name": "Copper",
+      "worth": 4
     },
     {
       "key": "tin",
-      "name": "Tin"
+      "name": "Tin",
+      "worth": 5
     },
     {
       "key": "bronze",
-      "name": "Bronze"
+      "name": "Bronze",
+      "worth": 8
     },
     {
       "key": "iron",
-      "name": "Iron"
+      "name": "Iron",
+      "worth": 8
     }
   ],
   "start": {
@@ -1139,5 +1149,11 @@
         "advice": "The rivers flood: fields and clay pits work at half. Use the stores."
       }
     ]
+  },
+  "diplomacy": {
+    "comment": "Peoples at peace that have met can sign a trade agreement (needed for barter; every partner makes research researchDiscountPerPartner percent cheaper) and an alliance (needs a trade agreement; an ally joins a war declared on its partner). Barter: the AI takes an offer when what it gets is worth at least acceptWorthPercent of what it gives (worth per good in goods) and it keeps at least twice what it gives. The AI reviews its relations every reviewSeconds.",
+    "researchDiscountPerPartner": 5,
+    "acceptWorthPercent": 110,
+    "reviewSeconds": 60
   }
 }

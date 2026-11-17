@@ -17,6 +17,9 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 {
     /// <summary>Peoples choose where they start (the player too); false starts at once on the generator's places.</summary>
     public bool StartPhase { get; init; } = true;
+
+    /// <summary>What wins the game: 0 last standing, 1 first to the Middle Ages, 2 best score after 2 hours (protocol only, no core types).</summary>
+    public int Goal { get; init; } = 1;
 }
 
 /// <summary>
@@ -50,7 +53,11 @@ public sealed class PlayHost : IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
         SimContent content = SimContent.Load(dataDirectory);
-        SimGame game = SimGame.Create(content, new SimSettings(options.Seed, options.LegacyWidth, options.LegacyHeight, options.Civilizations) { StartPhase = options.StartPhase });
+        SimGame game = SimGame.Create(content, new SimSettings(options.Seed, options.LegacyWidth, options.LegacyHeight, options.Civilizations)
+        {
+            StartPhase = options.StartPhase,
+            Goal = (GameGoal)Math.Clamp(options.Goal, 0, 2),
+        });
         game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
         var host = new PlayHost(game);
         host._thread.Start();
@@ -148,12 +155,25 @@ public sealed class PlayHost : IDisposable
             switch (message)
             {
                 case HelloMessage:
-                    client.Civ = 0;
-                    client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, 0, client.Civ));
+                    // Each player leads the next free people; the AI hands it over (multiplayer from the start, ADR 0028).
+                    client.Civ = NextFreeCiv();
+                    if (client.Civ < 0)
+                    {
+                        client.Connection.Send(new ConnectionRejectedMessage("Every people already has a player."));
+                        break;
+                    }
+
+                    _game.Civs[client.Civ].IsAi = false;
+                    client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, client.Civ, client.Civ));
                     SendContent(client);
                     break;
                 case SetSpeedMessage speed:
-                    _speed = speed.Speed;
+                    string? refused = SetSpeed(client, speed.Speed);
+                    if (refused is not null)
+                    {
+                        client.Connection.Send(new CommandRejectedMessage(0, refused));
+                    }
+
                     break;
                 case PlayCommandMessage command when client.Civ >= 0:
                     string? why = _game.Apply(ToCommand(client.Civ, command));
@@ -179,6 +199,68 @@ public sealed class PlayHost : IDisposable
         }
     }
 
+    /// <summary>Pauses each player may start in a game with several players (decision of 2026-11-17).</summary>
+    public const int PausesPerPlayer = 3;
+
+    /// <summary>A pause is protected from other players for this long.</summary>
+    public static readonly TimeSpan PauseProtection = TimeSpan.FromSeconds(30);
+
+    private PlayClient? _pausedBy;
+    private long _pausedAt;
+
+    private int NextFreeCiv()
+    {
+        for (int c = 0; c < _game.Civs.Count; c++)
+        {
+            if (!_game.Civs[c].Dead && !_clients.Exists(x => x.Civ == c))
+            {
+                return c;
+            }
+        }
+
+        return -1;
+    }
+
+    // Alone a player pauses as often as he likes. With other players: three pauses each; another player may end a pause
+    // only after it has lasted 30 seconds; the speed is the last one asked for.
+    private string? SetSpeed(PlayClient client, SimulationSpeed speed)
+    {
+        int players = _clients.FindAll(c => c.Civ >= 0).Count;
+        if (players <= 1)
+        {
+            _speed = speed;
+            return null;
+        }
+
+        if (speed == SimulationSpeed.Paused)
+        {
+            if (_speed == SimulationSpeed.Paused)
+            {
+                return null;
+            }
+
+            if (client.PausesUsed >= PausesPerPlayer)
+            {
+                return $"You have used your {PausesPerPlayer} pauses.";
+            }
+
+            client.PausesUsed++;
+            _pausedBy = client;
+            _pausedAt = Stopwatch.GetTimestamp();
+            _speed = speed;
+            return null;
+        }
+
+        if (_speed == SimulationSpeed.Paused && _pausedBy is not null && _pausedBy != client && Stopwatch.GetElapsedTime(_pausedAt) < PauseProtection)
+        {
+            return $"The pause is protected for {(int)(PauseProtection - Stopwatch.GetElapsedTime(_pausedAt)).TotalSeconds} s more.";
+        }
+
+        _pausedBy = null;
+        _speed = speed;
+        return null;
+    }
+
     private SimCommand ToCommand(int civ, PlayCommandMessage m) => m.Kind switch
     {
         PlayCommandKind.Build => new BuildCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.A),
@@ -197,6 +279,11 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.ProposePeace => new ProposePeaceCommand(civ, m.A, m.B),
         PlayCommandKind.AnswerPeace => new AnswerPeaceCommand(civ, m.A, m.Flag),
         PlayCommandKind.Disband => new DisbandCommand(civ, m.A),
+        PlayCommandKind.ProposeTreaty => new ProposeTreatyCommand(civ, m.A, (TreatyKind)m.B),
+        PlayCommandKind.AnswerTreaty => new AnswerTreatyCommand(civ, m.A, (TreatyKind)m.B, m.Flag),
+        PlayCommandKind.CancelTreaty => new CancelTreatyCommand(civ, m.A, (TreatyKind)m.B),
+        PlayCommandKind.Barter => new BarterCommand(civ, m.A, m.B, m.Col * SimContent.One, m.Row, m.C * SimContent.One),
+        PlayCommandKind.AnswerBarter => new AnswerBarterCommand(civ, m.A, m.Flag),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
@@ -412,7 +499,8 @@ public sealed class PlayHost : IDisposable
             Peoples(civ), civ.Dead, _game.Picking, _game.Picking && _game.PickOrder[_game.PickIndex] == civId,
             _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.BlockRadius,
             _game.Picking ? _game.Civs[_game.PickOrder[_game.PickIndex]].Name : null,
-            civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0);
+            civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0,
+            _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ));
     }
 
     private PlaySummaryMessage Summary(Civ civ)
@@ -468,7 +556,10 @@ public sealed class PlayHost : IDisposable
         var list = new List<PlayPeopleView>();
         foreach (Civ other in _game.Civs)
         {
-            if (other.Id == civ.Id || !_game.Met(civ, other) && !_game.AtWar(civ.Id, other.Id))
+            // Peoples we have seen, and peoples that have seen us and spoke to us (an offer) or fight us.
+            bool known = _game.Met(civ, other) || _game.AtWar(civ.Id, other.Id)
+                || _game.TreatyOffers.Exists(o => o.From == other.Id && o.To == civ.Id) || _game.PeaceOffers.Exists(o => o.From == other.Id && o.To == civ.Id);
+            if (other.Id == civ.Id || !known)
             {
                 continue;
             }
@@ -476,7 +567,13 @@ public sealed class PlayHost : IDisposable
             PeaceOffer? offer = _game.PeaceOffers.Find(o => o.From == other.Id && o.To == civ.Id);
             list.Add(new PlayPeopleView(
                 other.Id, other.Name, _game.AtWar(civ.Id, other.Id), _game.Score(civ.Id, other.Id), _game.Score(other.Id, civ.Id),
-                _game.SuggestedTribute(civ.Id, other.Id), other.Reputation, offer?.TributePercent, other.Dead));
+                _game.SuggestedTribute(civ.Id, other.Id), other.Reputation, offer?.TributePercent, other.Dead,
+                _game.Has(civ.Id, other.Id, TreatyKind.Trade), _game.Has(civ.Id, other.Id, TreatyKind.Alliance),
+                _game.TreatyOffers.Exists(o => o.From == other.Id && o.To == civ.Id && o.Kind == TreatyKind.Trade),
+                _game.TreatyOffers.Exists(o => o.From == other.Id && o.To == civ.Id && o.Kind == TreatyKind.Alliance),
+                _game.BarterOffers.Find(o => o.From == other.Id && o.To == civ.Id) is { } b
+                    ? $"{b.GiveAmount / SimContent.One} {_game.Content.Goods[b.GiveGood].Name.ToLowerInvariant()} for {b.WantAmount / SimContent.One} {_game.Content.Goods[b.WantGood].Name.ToLowerInvariant()}"
+                    : null));
         }
 
         return list;
@@ -521,5 +618,7 @@ public sealed class PlayHost : IDisposable
         public bool ViewSoon { get; set; }
 
         public bool SawPicking { get; set; }
+
+        public int PausesUsed { get; set; }
     }
 }

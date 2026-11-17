@@ -62,7 +62,7 @@ public sealed partial class SimGame
             return "No such people.";
         }
 
-        if (!Met(civ, Civs[other]) && !surprise)
+        if (!Met(civ, Civs[other]) && !Met(Civs[other], civ) && !surprise)
         {
             return "We have not met this people.";
         }
@@ -73,7 +73,13 @@ public sealed partial class SimGame
         }
 
         bool truce = Truces()[(civ.Id * Civs.Count) + other] > Ticks;
+        bool treaty = Has(civ.Id, other, TreatyKind.Trade);
         SetWar(civ.Id, other, true);
+        TreatiesOnWar(civ.Id, other);
+        if (treaty)
+        {
+            civ.Reputation += Content.War.SurpriseReputation / 2; // breaking a treaty is remembered too
+        }
         if (surprise || truce)
         {
             civ.Reputation += Content.War.SurpriseReputation;

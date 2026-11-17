@@ -22,6 +22,7 @@ public partial class PlayGame : Node2D
 
     private readonly ulong _seed;
     private readonly bool _startPhase;
+    private readonly int _goal;
     private readonly LayerStack _layers;
     private readonly ArtLibrary _art;
     private readonly string? _dataDirectory;
@@ -64,8 +65,9 @@ public partial class PlayGame : Node2D
     private double _time;
 
     /// <summary>Creates the screen; the game starts when the node enters the tree.</summary>
-    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true)
+    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1)
     {
+        _goal = goal;
         _startPhase = startPhase;
         _seed = seed;
         _layers = layers;
@@ -209,7 +211,7 @@ public partial class PlayGame : Node2D
         _camera = new Camera2D { Zoom = new Vector2(0.9f, 0.9f) };
         AddChild(_camera);
         _camera.MakeCurrent();
-        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase }, _dataDirectory);
+        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase, Goal = _goal }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         _session.CommandRefused += reason => Toast(reason);
         _session.PlacesReceived += m =>
@@ -781,7 +783,10 @@ public partial class PlayGame : Node2D
             return;
         }
 
-        _clock.Text = v.Lost ? "Our people are gone. The game is lost." : $"{c.Eras[v.Era]}   {Clock()}   {speed}{research}";
+        _clock.Text = v.Lost ? "Our people are gone. The game is lost."
+            : v.Winner is { } w ? $"{w} have won the game. Score {v.Score}."
+            : $"{c.Eras[v.Era]}   {Clock()}   {speed}{research}   score {v.Score}";
+        _clock.TooltipText = v.Goal ?? "";
         _advice.Text = (v.Event is { } ev ? $"{ev.ToUpperInvariant()}: {v.EventSecondsLeft} s left\n" : "") + (v.Advice is { } a ? $"{v.Advisor?.Name}: {a}" : "");
         FillBuildBar(c);
         _pendingButtons.Clear();
@@ -946,6 +951,39 @@ public partial class PlayGame : Node2D
         return "strangers";
     }
 
+    // Barter ideas: 20 of what we have most of, for 10 of each good we have least of.
+    private static List<(string Text, int Give, int Want)> BarterIdeas(PlayViewMessage v, PlayContentMessage c)
+    {
+        var list = new List<(string, int, int)>();
+        int most = 0;
+        for (int g = 1; g < v.Stock.Length; g++)
+        {
+            most = v.Stock[g] > v.Stock[most] ? g : most;
+        }
+
+        if (v.Stock[most] < 2000)
+        {
+            return list;
+        }
+
+        var order = new List<int>();
+        for (int g = 0; g < v.Stock.Length; g++)
+        {
+            if (g != most)
+            {
+                order.Add(g);
+            }
+        }
+
+        order.Sort((a, b) => v.Stock[a].CompareTo(v.Stock[b]));
+        for (int i = 0; i < Math.Min(3, order.Count); i++)
+        {
+            list.Add(($"Offer 20 {c.Goods[most].Name.ToLowerInvariant()} for 10 {c.Goods[order[i]].Name.ToLowerInvariant()}", most, order[i]));
+        }
+
+        return list;
+    }
+
     private void UnitPanel(PlayUnitView u, PlayContentMessage c)
     {
         PlayUnitInfo t = c.Units[u.Kind];
@@ -1066,6 +1104,7 @@ public partial class PlayGame : Node2D
             }
             else
             {
+                rows.Add((v.Goal ?? "", null));
                 rows.Add(($"Our start: {sum.StartScore} of 100; the best free place when we chose had {sum.BestStartScore}.", null));
                 var crit = new List<string>();
                 for (int k = 0; k < sum.Criteria.Count; k++)
@@ -1126,7 +1165,46 @@ public partial class PlayGame : Node2D
                 }
                 else
                 {
-                    rows.Add(($"Declare war on {p.Name}", () => _session!.Play(PlayCommandKind.DeclareWar, other)));
+                    string treaties = p.Alliance ? "allies, trade partners" : p.Trade ? "trade partners" : "no treaties";
+                    rows.Add(($"   {treaties}", null));
+                    if (p.TheyOfferTrade)
+                    {
+                        rows.Add(("   They offer a trade agreement.", null));
+                        rows.Add(("Accept the trade agreement", () => _session!.Play(PlayCommandKind.AnswerTreaty, other, b: 0, flag: true)));
+                    }
+                    else if (!p.Trade)
+                    {
+                        rows.Add(("Offer a trade agreement (barter, research 5% cheaper)", () => _session!.Play(PlayCommandKind.ProposeTreaty, other, b: 0)));
+                    }
+
+                    if (p.TheyOfferAlliance)
+                    {
+                        rows.Add(("   They offer an alliance.", null));
+                        rows.Add(("Accept the alliance", () => _session!.Play(PlayCommandKind.AnswerTreaty, other, b: 1, flag: true)));
+                    }
+                    else if (p.Trade && !p.Alliance)
+                    {
+                        rows.Add(("Offer an alliance (they join a war declared on us)", () => _session!.Play(PlayCommandKind.ProposeTreaty, other, b: 1)));
+                    }
+
+                    if (p.Trade)
+                    {
+                        foreach ((string text, int give, int want) in BarterIdeas(v, c))
+                        {
+                            rows.Add((text, () => _session!.Play(PlayCommandKind.Barter, other, 20, want, b: give, c: 10)));
+                        }
+
+                        rows.Add(("End the trade agreement", () => _session!.Play(PlayCommandKind.CancelTreaty, other, b: 0)));
+                    }
+
+                    if (p.TheirBarter is { } offer)
+                    {
+                        rows.Add(($"   They offer {offer}.", null));
+                        rows.Add(("Accept the barter", () => _session!.Play(PlayCommandKind.AnswerBarter, other, flag: true)));
+                        rows.Add(("Refuse the barter", () => _session!.Play(PlayCommandKind.AnswerBarter, other, flag: false)));
+                    }
+
+                    rows.Add(($"Declare war on {p.Name}" + (p.Trade ? " (breaks the treaties)" : ""), () => _session!.Play(PlayCommandKind.DeclareWar, other)));
                 }
             }
         }

@@ -123,3 +123,29 @@ tylko po działaniach.
 - **Podsumowanie (okno Summary):**
   - ocena naszego startu wobec najlepszego wolnego miejsca w chwili wyboru, z kryteriami;
   - historia minuta po minucie naszego ludu i ludów, które poznaliśmy: ludność, osady, budynki, technologie, żołnierze, jedzenie, zdarzenie.
+
+## Dyplomacja, handel, cele, pauza (etapy G i H)
+
+- **Umowa handlowa:** możliwa z ludem, który nas zna albo którego znamy, w czasie pokoju.
+  - Pozwala na wymianę towar za towar.
+  - Każdy partner obniża cenę badań o 5%.
+  - AI proponuje umowy co minutę, jeśli nie jest bardzo wojownicze; nie podpisuje ich z ludami o złej reputacji (poniżej −25).
+- **Sojusz:**
+  - wymaga umowy handlowej;
+  - sojusznik przystępuje do wojny wypowiedzianej swojemu partnerowi;
+  - AI nie atakuje sojuszników, a partnerów handlowych tylko najbardziej wojownicze.
+- **Wymiana:** „daję X dobra A za Y dobra B”, według wartości dóbr z `game.json`: jedzenie 1, drewno 1, kamień 1,2, skóry 1,5, narzędzia 3, miedź 4, cyna 5, brąz i żelazo 8.
+  - AI przyjmuje, gdy dostaje co najmniej 110% wartości tego, co daje, i zostaje jej co najmniej dwa razy tyle.
+  - Człowiek odpowiada na ofertę w oknie Peoples.
+- **Wojna łamie umowy.** Wypowiedzenie wojny partnerowi handlowemu kosztuje połowę kary za atak z zaskoczenia.
+- **Cel partii** wybiera się w menu przy „Play new game”:
+  - pierwszy lud w średniowieczu;
+  - ostatni lud na mapie;
+  - najlepszy wynik po 2 godzinach.
+
+  Wynik = ludzie + 10 × osady + 20 × technologie + żołnierze. Sprawdzany co minutę.
+- **Pauza:**
+  - gracz sam pauzuje bez limitu;
+  - przy kilku graczach każdy ma 3 pauzy;
+  - pauzę innego gracza można przerwać dopiero po 30 s;
+  - każdy gracz dostaje kolejny wolny lud.

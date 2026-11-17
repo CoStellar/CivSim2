@@ -33,6 +33,7 @@ public static class SimAi
 
         int actions = 0;
         AnswerPeace(g, civ);
+        Diplomacy(g, civ);
         Research(g, civ);
         Hire(g, civ);
         actions += Economy(g, civ) ? 1 : 0;
@@ -668,8 +669,10 @@ public static class SimAi
                 continue;
             }
 
-            // Start a war only after the first minutes, when strong enough against the target's defenders and warlike enough.
-            if (target is null || civ.Aggression < 40 || idle.Count == 0 || g.Ticks < PeacefulStartTicks)
+            // Start a war only after the first minutes, when strong enough against the target's defenders and warlike enough;
+            // allies are left alone, trade partners only by the most warlike.
+            if (target is null || civ.Aggression < 40 || idle.Count == 0 || g.Ticks < PeacefulStartTicks
+                || g.Has(civ.Id, other.Id, TreatyKind.Alliance) || (g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 85))
             {
                 continue;
             }
@@ -714,6 +717,47 @@ public static class SimAi
         }
 
         return best;
+    }
+
+    // Answers treaty offers at once; reviews its relations now and then and offers treaties to peoples it trusts.
+    private static void Diplomacy(SimGame g, Civ civ)
+    {
+        foreach (TreatyOffer offer in g.TreatyOffers.ToArray())
+        {
+            if (offer.To != civ.Id)
+            {
+                continue;
+            }
+
+            Civ from = g.Civs[offer.From];
+            bool accept = from.Reputation > -25 && (offer.Kind == TreatyKind.Trade ? civ.Aggression < 85 : civ.Aggression < 70 && from.Reputation >= 0);
+            g.Apply(new AnswerTreatyCommand(civ.Id, offer.From, offer.Kind, accept));
+        }
+
+        if ((g.Ticks + (civ.Id * 97)) % g.Content.DiplomacyReviewTicks >= SimAi.ThinkEveryTicks)
+        {
+            return;
+        }
+
+        foreach (Civ other in g.Civs)
+        {
+            if (other.Id == civ.Id || other.Dead || !g.Met(civ, other) || g.AtWar(civ.Id, other.Id) || other.Reputation < -25)
+            {
+                continue;
+            }
+
+            if (!g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 70)
+            {
+                g.Apply(new ProposeTreatyCommand(civ.Id, other.Id, TreatyKind.Trade));
+                return;
+            }
+
+            if (g.Has(civ.Id, other.Id, TreatyKind.Trade) && !g.Has(civ.Id, other.Id, TreatyKind.Alliance) && civ.Aggression < 50 && other.Reputation >= 0)
+            {
+                g.Apply(new ProposeTreatyCommand(civ.Id, other.Id, TreatyKind.Alliance));
+                return;
+            }
+        }
     }
 
     private static void AnswerPeace(SimGame g, Civ civ)

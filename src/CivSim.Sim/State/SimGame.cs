@@ -7,6 +7,19 @@ using CivSim.Sim.Content;
 
 namespace CivSim.Sim.State;
 
+/// <summary>What wins the game, chosen when it is created.</summary>
+public enum GameGoal
+{
+    /// <summary>The last people standing wins.</summary>
+    LastStanding = 0,
+
+    /// <summary>The first people to reach <see cref="SimSettings.GoalEra"/> wins.</summary>
+    FirstToEra = 1,
+
+    /// <summary>After <see cref="SimSettings.GoalMinutes"/> the best score wins and the worst loses.</summary>
+    BestScore = 2,
+}
+
 /// <summary>Settings of a new game.</summary>
 public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHeight = 60, int Civilizations = 4)
 {
@@ -18,6 +31,15 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>Peoples choose their start in turns (the start phase); otherwise the generator's starts are used.</summary>
     public bool StartPhase { get; init; }
+
+    /// <summary>What wins the game.</summary>
+    public GameGoal Goal { get; init; } = GameGoal.FirstToEra;
+
+    /// <summary>Era to reach for <see cref="GameGoal.FirstToEra"/> (4 = Middle Ages).</summary>
+    public int GoalEra { get; init; } = 4;
+
+    /// <summary>Minutes of play for <see cref="GameGoal.BestScore"/>.</summary>
+    public int GoalMinutes { get; init; } = 120;
 
     /// <summary>The AI leads every people (the host hands people to players afterwards); false in rule tests.</summary>
     public bool Ai { get; init; } = true;
@@ -233,6 +255,7 @@ public sealed partial class SimGame
         if (Ticks % SimContent.TicksPerMinute == 0)
         {
             Sample();
+            CheckGoal();
         }
 
         foreach (Civ civ in Civs)
@@ -257,6 +280,91 @@ public sealed partial class SimGame
             if (civ.IsAi && (Ticks + (civ.Id * 7)) % Ai.SimAi.ThinkEveryTicks == 0)
             {
                 Ai.SimAi.Think(this, civ);
+            }
+        }
+    }
+
+    /// <summary>The winner, once the goal is met (−1 = the game goes on).</summary>
+    public int Winner { get; private set; } = -1;
+
+    /// <summary>Score of a people: people, settlements, technologies and soldiers (the summary and the time goal).</summary>
+    public int ScoreOf(Civ civ)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        if (civ.Dead)
+        {
+            return 0;
+        }
+
+        int techs = 0;
+        foreach (bool k in civ.KnownTech)
+        {
+            techs += k ? 1 : 0;
+        }
+
+        int soldiers = 0;
+        foreach (int id in civ.Units)
+        {
+            soldiers += Content.Units[Units[id].Kind].Army ? Units[id].People : 0;
+        }
+
+        return civ.People + (civ.Settlements.Count * 10) + (techs * 20) + soldiers;
+    }
+
+    /// <summary>The goal as a sentence.</summary>
+    public string GoalText => Settings.Goal switch
+    {
+        GameGoal.LastStanding => "The last people standing wins.",
+        GameGoal.FirstToEra => $"The first people to reach the {Content.Eras[Math.Clamp(Settings.GoalEra, 0, Content.Eras.Count - 1)].Name} wins.",
+        _ => $"After {Settings.GoalMinutes} minutes the best score wins.",
+    };
+
+    private void CheckGoal()
+    {
+        if (Winner >= 0)
+        {
+            return;
+        }
+
+        int alive = 0;
+        int last = -1;
+        int best = -1;
+        int bestScore = -1;
+        foreach (Civ c in Civs)
+        {
+            if (c.Dead)
+            {
+                continue;
+            }
+
+            alive++;
+            last = c.Id;
+            if (Settings.Goal == GameGoal.FirstToEra && EraOf(c) >= Settings.GoalEra)
+            {
+                best = c.Id;
+            }
+
+            if (Settings.Goal == GameGoal.BestScore && ScoreOf(c) > bestScore)
+            {
+                bestScore = ScoreOf(c);
+                if (Ticks >= (long)Settings.GoalMinutes * SimContent.TicksPerMinute)
+                {
+                    best = c.Id;
+                }
+            }
+        }
+
+        if (alive == 1 && Civs.Count > 1)
+        {
+            best = last;
+        }
+
+        if (best >= 0)
+        {
+            Winner = best;
+            foreach (Civ c in Civs)
+            {
+                News.Add((c.Id, c.Id == best ? "We have won the game!" : $"{Civs[best].Name} have won the game."));
             }
         }
     }

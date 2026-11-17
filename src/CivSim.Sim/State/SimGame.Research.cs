@@ -67,7 +67,8 @@ public sealed partial class SimGame
     {
         ArgumentNullException.ThrowIfNull(civ);
         SimTech t = Content.Techs[tech];
-        int discount = Math.Min(Content.MaxNeighbourDiscountPercent, Content.NeighbourDiscountPercent * NeighboursKnowing(civ, tech));
+        int discount = Math.Min(Content.MaxNeighbourDiscountPercent, Content.NeighbourDiscountPercent * NeighboursKnowing(civ, tech))
+            + (Content.TradeResearchDiscount * Partners(civ.Id));
         foreach (int id in civ.Buildings)
         {
             Building b = Buildings[id];

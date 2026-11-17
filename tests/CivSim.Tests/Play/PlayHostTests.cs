@@ -72,3 +72,63 @@ public sealed class PlayHostTests
         Assert.True(built, "the hut was not built");
     }
 }
+
+public sealed class PlayPauseTests
+{
+    [Fact]
+    public void WithTwoPlayersAPauseIsProtectedAndCounted()
+    {
+        using PlayHost host = PlayHost.Start(new PlayOptions(3, 66, 40, 2) { StartPhase = false });
+        IConnection a = host.Connect();
+        IConnection b = host.Connect();
+        a.Send(new HelloMessage(ProtocolInfo.Version, "A"));
+        b.Send(new HelloMessage(ProtocolInfo.Version, "B"));
+        int civA = Welcome(a);
+        int civB = Welcome(b);
+        Assert.NotEqual(civA, civB);
+        a.Send(new SetSpeedMessage(SimulationSpeed.X1));
+        System.Threading.Thread.Sleep(50);
+        a.Send(new SetSpeedMessage(SimulationSpeed.Paused));
+        System.Threading.Thread.Sleep(100);
+        b.Send(new SetSpeedMessage(SimulationSpeed.X1));
+        Assert.Contains("protected", Rejection(b), StringComparison.Ordinal);
+    }
+
+    private static int Welcome(IConnection c)
+    {
+        var clock = Stopwatch.StartNew();
+        while (clock.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            while (c.TryReceive(out IProtocolMessage? m))
+            {
+                if (m is WelcomeMessage w)
+                {
+                    return w.CivId;
+                }
+            }
+
+            System.Threading.Thread.Sleep(5);
+        }
+
+        return -1;
+    }
+
+    private static string Rejection(IConnection c)
+    {
+        var clock = Stopwatch.StartNew();
+        while (clock.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            while (c.TryReceive(out IProtocolMessage? m))
+            {
+                if (m is CommandRejectedMessage r)
+                {
+                    return r.Reason;
+                }
+            }
+
+            System.Threading.Thread.Sleep(5);
+        }
+
+        return "";
+    }
+}
