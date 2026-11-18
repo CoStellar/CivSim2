@@ -15,8 +15,14 @@ public static class PixelTheme
     /// <summary>How much the interface pictures are enlarged (whole numbers only, GDD 12).</summary>
     public const int Scale = 2;
 
-    /// <summary>Body text size; a multiple of the font's pixel grid.</summary>
-    public const int FontSize = 16;
+    /// <summary>Body text size; a multiple of the font's pixel grid. CIVSIM_FONT_SIZE overrides it (to try fonts).</summary>
+    public static int FontSize { get; private set; } = 16;
+
+    /// <summary>Size of titles (a whole multiple of the title font's grid). CIVSIM_TITLE_SIZE overrides it.</summary>
+    public static int TitleSize { get; private set; } = 24;
+
+    /// <summary>Font of titles; null = the body font. CIVSIM_TITLE_FONT (a .ttf or .otf path) sets it.</summary>
+    public static Font? TitleFont { get; private set; }
 
     /// <summary>Light text colour (palette).</summary>
     public static readonly Color Text = new(0.984f, 0.976f, 0.984f);
@@ -177,7 +183,28 @@ public static class PixelTheme
     // Pixelify Sans from res://fonts, read as a plain file so it needs no import; drawn without smoothing.
     private static FontFile? LoadFont()
     {
-        string path = ProjectSettings.GlobalizePath("res://fonts/PixelifySans.ttf");
+        // CIVSIM_FONT and friends let us try other fonts without a rebuild (font choice with Patryk, 2026-11-18).
+        if (int.TryParse(System.Environment.GetEnvironmentVariable("CIVSIM_FONT_SIZE"), out int size) && size > 0)
+        {
+            FontSize = size;
+        }
+
+        if (int.TryParse(System.Environment.GetEnvironmentVariable("CIVSIM_TITLE_SIZE"), out int title) && title > 0)
+        {
+            TitleSize = title;
+        }
+
+        if (System.Environment.GetEnvironmentVariable("CIVSIM_TITLE_FONT") is { Length: > 0 } titlePath)
+        {
+            TitleFont = LoadFile(titlePath);
+        }
+
+        string path = System.Environment.GetEnvironmentVariable("CIVSIM_FONT") is { Length: > 0 } custom ? custom : ProjectSettings.GlobalizePath("res://fonts/PixelifySans.ttf");
+        return LoadFile(path);
+    }
+
+    private static FontFile? LoadFile(string path)
+    {
         if (!System.IO.File.Exists(path))
         {
             return null;

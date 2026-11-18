@@ -161,7 +161,7 @@ public partial class PlayGame
         }
 
         var b = new Button { Text = name, FocusMode = Control.FocusModeEnum.None, TooltipText = tip.ToString(), CustomMinimumSize = new Vector2(176, 30), Alignment = HorizontalAlignment.Left, ClipText = true };
-        b.AddThemeFontSizeOverride("font_size", 16);
+        b.AddThemeFontSizeOverride("font_size", Ui.PixelTheme.FontSize);
         b.AddThemeColorOverride("font_color", ink);
         b.AddThemeColorOverride("font_hover_color", UiKit.Text);
         StyleBoxFlat normal = UiKit.Flat(bg, border, 4, 2);

@@ -74,7 +74,7 @@ public partial class PlayGame
         var right = new HBoxContainer();
         right.AddThemeConstantOverride("separation", 4);
         topRow.AddChild(right);
-        _clockLabel = UiKit.Label("0:00", 18, UiKit.Text);
+        _clockLabel = UiKit.Label("0:00", 16, UiKit.Text);
         _clockLabel.TooltipText = "Time of the game.";
         _clockLabel.CustomMinimumSize = new Vector2(64, 0);
         _clockLabel.HorizontalAlignment = HorizontalAlignment.Center;
@@ -145,7 +145,7 @@ public partial class PlayGame
         _chronicleToggle = UiKit.Button("more", ToggleChronicle, "Show more of the chronicle (C)");
         chronHead.AddChild(_chronicleToggle);
         _chronicleText = new RichTextLabel { ScrollFollowing = true, FitContent = false, SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        _chronicleText.AddThemeFontSizeOverride("normal_font_size", 16);
+        _chronicleText.AddThemeFontSizeOverride("normal_font_size", PixelTheme.FontSize);
         chron.AddChild(_chronicleText);
 
         // ---- Side panel (left) ----

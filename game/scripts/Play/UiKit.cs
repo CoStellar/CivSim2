@@ -38,7 +38,7 @@ public partial class Glyph : Control
         box.SetCornerRadiusAll(_round ? (int)(Size.X / 2) : 4);
         DrawStyleBox(box, new Rect2(Vector2.Zero, Size));
         Font font = UiKit.Font;
-        int fontSize = Size.X >= 48 ? 24 : 16; // the pixel font is sharp only at 16 and 24
+        int fontSize = Ui.PixelTheme.FontSize; // the pixel font is sharp only at its own sizes
         Vector2 textSize = font.GetStringSize(_text, HorizontalAlignment.Left, -1, fontSize);
         Color ink = _color.Luminance > 0.55f ? new Color(0.1f, 0.08f, 0.06f) : Colors.White;
         DrawString(font, new Vector2((Size.X - textSize.X) / 2, (Size.Y + (fontSize * 0.7f)) / 2), _text, HorizontalAlignment.Left, -1, fontSize, ink);
@@ -148,9 +148,15 @@ public static class UiKit
     /// <summary>A label.</summary>
     public static Label Label(string text, int size = 16, Color? color = null, bool wrap = false)
     {
-        // The pixel font is sharp only at whole multiples of its grid: 16 for text, 24 for titles.
-        size = size <= 16 ? 16 : 24;
+        // A pixel font is sharp only at whole multiples of its grid: one size for text, one for titles.
+        bool title = size > 16;
+        size = title ? Ui.PixelTheme.TitleSize : Ui.PixelTheme.FontSize;
         var l = new Label { Text = text, MouseFilter = Control.MouseFilterEnum.Pass };
+        if (title && Ui.PixelTheme.TitleFont is { } font)
+        {
+            l.AddThemeFontOverride("font", font);
+        }
+
         l.AddThemeFontSizeOverride("font_size", size);
         l.AddThemeColorOverride("font_color", color ?? Text);
         if (wrap)
