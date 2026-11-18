@@ -282,6 +282,24 @@ public partial class PlayGame
         };
         bool mine = b.Civ == v.Civ;
         items.Add(new HeaderItem(t.Name, mine ? state : $"{state} - {PeopleName(v, b.Civ)}", UiKit.GroupColor(t.Groups), UiKit.Short(t.Name)));
+        if (mine && b.Focus is { Length: > 0 } focus && c.Categories is { } cats)
+        {
+            // Every worker of a school speeds one branch of research; click to change it.
+            items.Add(new SectionItem("Research it speeds"));
+            int bid = b.Id;
+            for (int k = 0; k < focus.Length; k++)
+            {
+                int worker = k;
+                string now = focus[k];
+                var choices = cats.Where(x => x != "basics").ToList();
+                int next = (choices.IndexOf(now) + 1) % choices.Count;
+                int index = cats.ToList().IndexOf(choices[next]);
+                bool works = k < b.Workers;
+                items.Add(new ActItem($"Worker {k + 1}: {now}" + (works ? "" : " (no worker)"), () => _session!.Play(PlayCommandKind.SetFocus, bid, b: worker, c: index),
+                    $"Click to make this worker speed {choices[next]} instead. Every worker speeds one branch; a branch is at most 50% faster.", works));
+            }
+        }
+
         if (b.State is 0 or 1 or 5)
         {
             items.Add(new BarItem("Built", b.ProgressPermille / 1000f, $"{b.ProgressPermille / 10}%", new Color("8fb040")));

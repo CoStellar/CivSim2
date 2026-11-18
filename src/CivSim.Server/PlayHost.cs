@@ -274,6 +274,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
         PlayCommandKind.BuildRoad => new BuildRoadCommand(civ, Cells(m.Cells) ?? [], m.A),
         PlayCommandKind.Gather => new GatherCommand(civ, m.A, m.Flag),
+        PlayCommandKind.SetFocus => new SetFocusCommand(civ, m.A, m.B, (uint)m.C < (uint)_game.Content.TechCategories.Length ? _game.Content.TechCategories[m.C] : ""),
         PlayCommandKind.BuildWork => new BuildWorkCommand(civ, Cells(m.Cells) ?? [], m.A),
         PlayCommandKind.RemoveWork => new RemoveWorkCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.A),
         PlayCommandKind.AttackWall => new AttackWallCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
@@ -423,7 +424,7 @@ public sealed class PlayHost : IDisposable
             works.Add(new PlayWorkInfo(w.Id, w.Key, w.Name, w.Price, w.TicksPerHex / SimContent.TicksPerSecond, w.Tech, w.FromWater, text));
         }
 
-        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works));
+        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories));
         client.SentChunks = false;
     }
 
@@ -556,7 +557,7 @@ public sealed class PlayHost : IDisposable
     }
 
     private static int Sig(PlayBuildingView b) => HashCode.Combine(HashCode.Combine(b.Type, b.Civ, b.Col, b.Row, b.State, b.Workers, b.Starved, b.Priority),
-        HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered, b.Slots));
+        HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered, b.Slots, b.Focus is null ? 0 : string.Join(",", b.Focus).GetHashCode(StringComparison.Ordinal)));
 
     private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, s.DefensePercent),
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute)));
@@ -572,6 +573,7 @@ public sealed class PlayHost : IDisposable
             h.Add(t.Known);
             h.Add(t.Blocked);
             h.Add(Arr(t.Price));
+            h.Add(t.Seconds);
         }
 
         return h.ToHashCode();
@@ -784,7 +786,7 @@ public sealed class PlayHost : IDisposable
                 }
             }
 
-            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0, Slots: b.Slots));
+            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0, Slots: b.Slots, Focus: b.Civ == civId && b.Focus.Length > 0 ? (string[])b.Focus.Clone() : null));
         }
 
         if (!_game.Picking)
@@ -1113,7 +1115,7 @@ public sealed class PlayHost : IDisposable
         var list = new List<PlayTechState>();
         foreach (SimTech t in _game.Content.Techs)
         {
-            list.Add(civ.KnownTech[t.Id] ? new PlayTechState(t.Id, true, [], null) : new PlayTechState(t.Id, false, _game.ResearchPrice(civ, t.Id), _game.CannotResearch(civ, t.Id)));
+            list.Add(civ.KnownTech[t.Id] ? new PlayTechState(t.Id, true, [], null) : new PlayTechState(t.Id, false, _game.ResearchPrice(civ, t.Id), _game.CannotResearch(civ, t.Id), _game.ResearchTicks(civ, t.Id) / SimContent.TicksPerSecond));
         }
 
         return list;

@@ -84,7 +84,7 @@ public sealed record PlayTechInfo(
 
 /// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
 [MessagePackObject]
-public sealed record PlayTechState([property: Key(0)] int Id, [property: Key(1)] bool Known, [property: Key(2)] long[] Price, [property: Key(3)] string? Blocked);
+public sealed record PlayTechState([property: Key(0)] int Id, [property: Key(1)] bool Known, [property: Key(2)] long[] Price, [property: Key(3)] string? Blocked, [property: Key(4)] int Seconds = 0);
 
 /// <summary>A thinker or advisor as the player sees them.</summary>
 [MessagePackObject]
@@ -109,7 +109,8 @@ public sealed record PlayContentMessage(
     [property: Key(7)] IReadOnlyList<PlayTechInfo> Techs,
     [property: Key(8)] IReadOnlyList<string> Eras,
     [property: Key(9)] IReadOnlyList<PlayRoadInfo>? Roads = null,
-    [property: Key(10)] IReadOnlyList<PlayWorkInfo>? Works = null) : IProtocolMessage;
+    [property: Key(10)] IReadOnlyList<PlayWorkInfo>? Works = null,
+    [property: Key(11)] IReadOnlyList<string>? Categories = null) : IProtocolMessage;
 
 /// <summary>A work drawn on hexes (ditch, palisade, wall, aqueduct): its bit in the works of a hex, price and seconds per hex.</summary>
 [MessagePackObject]
@@ -181,7 +182,8 @@ public sealed record PlayBuildingView(
     [property: Key(11)] string? Missing = null,
     [property: Key(12)] int Porters = 0,
     [property: Key(13)] bool Remembered = false,
-    [property: Key(14)] int Slots = 15);
+    [property: Key(14)] int Slots = 15,
+    [property: Key(15)] string[]? Focus = null);
 
 /// <summary>
 /// Server → client: hexes whose fog or owner changed for this player (indices row × width + column). Terrain comes in
@@ -365,6 +367,9 @@ public enum PlayCommandKind
 
     /// <summary>Unit <c>A</c> breaks the enemy wall at <c>Col</c>, <c>Row</c>.</summary>
     AttackWall = 32,
+
+    /// <summary>Worker <c>B</c> of school (academy, university) <c>A</c> speeds research branch number <c>C</c> of the content's categories.</summary>
+    SetFocus = 33,
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs), eating at the nearest settlement between rounds.</summary>
     Patrol = 27,

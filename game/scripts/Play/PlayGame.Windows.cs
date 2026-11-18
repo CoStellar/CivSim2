@@ -152,10 +152,11 @@ public partial class PlayGame
         }
         if (!st.Known)
         {
-            tip.Append($"\n\nPrice: {(st.Price is null ? "?" : Amounts(c, st.Price))}, {info.Seconds} s.");
+            int secs = st.Seconds > 0 ? st.Seconds : info.Seconds;
+            tip.Append($"\n\nPrice: {(st.Price is null ? "?" : Amounts(c, st.Price))}, {secs} s" + (secs < info.Seconds ? $" (schools: {info.Seconds} s without)." : "."));
             if (info.Needs.Length > 0)
             {
-                tip.Append($"\nNeeds experience: {info.Needs} worker-minutes.");
+                tip.Append($"\nNeeds experience: {info.Needs} points (1 point = 1 worker for 1 minute in their buildings).");
             }
 
             if (st.Blocked is { } why)

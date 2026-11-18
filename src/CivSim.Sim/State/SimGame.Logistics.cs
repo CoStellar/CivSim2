@@ -153,7 +153,7 @@ public sealed partial class SimGame
     {
         ArgumentNullException.ThrowIfNull(b);
         int total = Math.Max(1, Content.Buildings[b.Type].BuildTicks);
-        return b.State == BuildingState.Construction ? (int)Math.Clamp(b.WorkCap - (b.FinishTick - Ticks), 0, total) : total - b.RemainingTicks;
+        return b.State == BuildingState.Construction ? (int)Math.Clamp(b.WorkCap - ((b.FinishTick - Ticks) * b.Speed / 100), 0, total) : total - b.RemainingTicks;
     }
 
     // Starts (or goes on with) the work up to what the materials at the site allow; otherwise waits for materials.
@@ -163,7 +163,7 @@ public sealed partial class SimGame
         if (done < b.WorkCap)
         {
             b.State = BuildingState.Construction;
-            b.FinishTick = Ticks + (b.WorkCap - done);
+            b.FinishTick = Ticks + Math.Max(1, (b.WorkCap - done) * 100 / Math.Max(1, b.Speed));
             Schedule(b);
         }
         else

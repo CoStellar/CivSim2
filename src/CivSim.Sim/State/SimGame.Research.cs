@@ -239,7 +239,7 @@ public sealed partial class SimGame
 
         CivPay(civ, price);
         civ.Researching = tech;
-        civ.ResearchEnd = Ticks + Math.Max(1, Content.Techs[tech].ResearchTicks);
+        civ.ResearchEnd = Ticks + ResearchTicks(civ, tech);
         _schedule.Enqueue((DoneResearch, civ.Id), (civ.ResearchEnd, DoneResearch, civ.Id));
         return null;
     }

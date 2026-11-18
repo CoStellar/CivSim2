@@ -27,6 +27,12 @@ public enum BuildingState : byte
 /// <summary>One building on one hex. Identified by its index in <see cref="SimGame.Buildings"/>.</summary>
 public sealed class Building
 {
+    /// <summary>Building speed of its construction, percent (builders' yards in its settlement when it was placed).</summary>
+    public int Speed { get; set; } = 100;
+
+    /// <summary>Branch of research each worker speeds (schools, academies, universities), one per job.</summary>
+    public string[] Focus { get; set; } = [];
+
     /// <summary>Places of its hex it takes: bits 0–3 (top left, top right, bottom left, bottom right).</summary>
     public int Slots { get; set; } = 1;
 

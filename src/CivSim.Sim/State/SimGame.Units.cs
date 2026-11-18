@@ -149,13 +149,23 @@ public sealed partial class SimGame
         SyncTotals(civ);
         s.People -= t.People;
         civ.Dirty = true;
+        // Training halls speed their own kind (siege workshops their engines, shipyards their ships), barracks all others; each
+        // by the share of its jobs filled.
         int trainPct = 100;
         foreach (int bid in civ.Buildings)
         {
             Building b = Buildings[bid];
-            if (b.Settlement == s.Id && b.State == BuildingState.Active)
+            BuildingType bt = Content.Buildings[b.Type];
+            if (b.Settlement != s.Id || b.State != BuildingState.Active || bt.TrainPercent >= 100)
             {
-                trainPct = Math.Min(trainPct, Content.Buildings[b.Type].TrainPercent);
+                continue;
+            }
+
+            bool own = t.NeedsBuilding.Length > 0 ? t.NeedsBuilding == bt.Key : !TrainsOwnKind(bt);
+            if (own)
+            {
+                int filled = bt.Workers == 0 ? 100 : b.Workers * 100 / bt.Workers;
+                trainPct = Math.Min(trainPct, 100 - ((100 - bt.TrainPercent) * filled / 100));
             }
         }
 

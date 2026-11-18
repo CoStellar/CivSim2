@@ -70,6 +70,7 @@ public sealed partial class SimGame
             BuildRoadCommand c => BuildRoad(civ, c.Cells, c.Level),
             GatherCommand c => Gather(civ, c.Settlement, c.On),
             BuildWorkCommand c => BuildWork(civ, c.Cells, c.Work),
+            SetFocusCommand c => SetFocus(civ, c.Building, c.Worker, c.Category),
             RemoveWorkCommand c => RemoveWork(civ, c.Cell, c.Work),
             AttackWallCommand c => AttackWall(civ, c.Unit, c.Cell),
             FoundCommand c => Found(civ, c.Unit),
@@ -371,6 +372,8 @@ public sealed partial class SimGame
             RemainingTicks = Math.Max(1, t.BuildTicks),
             Delivered = new long[Content.Goods.Count],
             OnTheWay = new long[Content.Goods.Count],
+            Speed = 100 + SupportOf(civ, sid, x => x.BuildPercent),
+            Focus = t.ResearchPercent > 0 ? DefaultFocus(t.Workers) : [],
         };
         Buildings.Add(b);
         civ.Buildings.Add(b.Id);
