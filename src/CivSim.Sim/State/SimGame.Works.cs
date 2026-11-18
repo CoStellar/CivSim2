@@ -343,10 +343,20 @@ public sealed partial class SimGame
             return;
         }
 
+        // A copy: a unit the palisade kills leaves its people's list.
+        _onPalisades.Clear();
         foreach (Unit u in ActiveUnits())
         {
+            if ((WorksAt[u.Cell] & palisade.Bit) != 0)
+            {
+                _onPalisades.Add(u);
+            }
+        }
+
+        foreach (Unit u in _onPalisades)
+        {
             int cell = u.Cell;
-            if ((WorksAt[cell] & palisade.Bit) == 0 || !Content.Units[u.Kind].Army || WorksCiv[cell] < 0 || !AtWar(u.Civ, WorksCiv[cell]))
+            if (u.State == UnitState.Gone || (WorksAt[cell] & palisade.Bit) == 0 || !Content.Units[u.Kind].Army || WorksCiv[cell] < 0 || !AtWar(u.Civ, WorksCiv[cell]))
             {
                 continue;
             }
@@ -367,6 +377,8 @@ public sealed partial class SimGame
             }
         }
     }
+
+    private readonly List<Unit> _onPalisades = [];
 
     private string? AttackWall(Civ civ, int id, int cell)
     {

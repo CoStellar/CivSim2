@@ -11,7 +11,7 @@ namespace CivSim.Sim.Ai;
 /// It thinks every <see cref="ThinkEveryTicks"/> ticks, staggered by people, and does at most a few things each time, so it
 /// costs little (docs/wydajnosc.md). Its character (aggression, expansion) shows only in what it does.
 /// </summary>
-public static class SimAi
+public static partial class SimAi
 {
     /// <summary>Ticks between two thoughts of one AI people.</summary>
     public const int ThinkEveryTicks = 30;
@@ -37,15 +37,23 @@ public static class SimAi
         Supply(g, civ);
         Research(g, civ);
         Hire(g, civ);
-        actions += Economy(g, civ) ? 1 : 0;
+        bool lean = LeanTimes(g, civ); // winter close and too little food in store: food first, no settlers or soldiers
+        actions += lean && WinterFood(g, civ) ? 1 : 0;
+        actions += actions == 0 && Economy(g, civ) ? 1 : 0;
+        actions += actions == 0 && Care(g, civ) ? 1 : 0;
         if (actions == 0)
         {
             actions += Upgrade(g, civ) ? 1 : 0;
         }
 
+        Works(g, civ);
         Scouts(g, civ);
-        Settlers(g, civ);
-        if (actions == 0)
+        if (!lean)
+        {
+            Settlers(g, civ);
+        }
+
+        if (actions == 0 && !lean)
         {
             Army(g, civ);
         }
@@ -154,10 +162,17 @@ public static class SimAi
             return false;
         }
 
-        long food = civ.Rate[g.Content.Food];
-        if (food < 3 * SimContent.One && !Building(g, civ, FoodBuildings) && Count(g, civ, FoodBuildings) <= civ.People / 5)
+        // A hungry settlement gets its own food maker first (new camps eat more than their gatherers find).
+        if (HungryCamp(g, civ))
         {
-            foreach (string k in FoodBuildings)
+            return true;
+        }
+
+        long food = civ.Rate[g.Content.Food];
+        if ((food < 3 * SimContent.One || civ.Hungry) && !Building(g, civ, FoodBuildings) && (civ.Hungry || Count(g, civ, FoodBuildings) <= civ.People / 5))
+        {
+            // Hungry: what feeds fastest and needs no tools comes first.
+            foreach (string k in civ.Hungry ? ["gatherers_hut", "hunters_lodge", "fishing_hut", "farm", "pasture"] : FoodBuildings)
             {
                 if (TryBuild(g, civ, k))
                 {
