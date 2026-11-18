@@ -363,7 +363,7 @@ public sealed class PlayHost : IDisposable
         var buildings = new List<PlayBuildingInfo>();
         foreach (BuildingType t in content.Buildings)
         {
-            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech));
+            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech, t.Groups));
         }
 
         var levels = new List<PlayLevelInfo>();

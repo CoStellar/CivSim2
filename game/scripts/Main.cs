@@ -201,7 +201,11 @@ public partial class Main : Node2D
                    (2.3, g => g.ScriptTrain("scouts")), (9, g => g.ScriptMoveFirst(-8, -6, false)),
                    (10, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
                 : [];
-            if (_playDemo && _playWindow != "Summary")
+            if (_playDemo && _playWindow == "Place")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptPlace("storehouse"))];
+            }
+            else if (_playDemo && _playWindow != "Summary")
             {
                 demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen(_playWindow))];
             }

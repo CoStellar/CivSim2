@@ -21,7 +21,8 @@ public sealed record PlayBuildingInfo(
     [property: Key(8)] int Housing,
     [property: Key(9)] long Storage,
     [property: Key(10)] string Needs,
-    [property: Key(11)] int Tech = 0);
+    [property: Key(11)] int Tech = 0,
+    [property: Key(12)] string[]? Groups = null);
 
 /// <summary>A unit kind of the new game.</summary>
 [MessagePackObject]
