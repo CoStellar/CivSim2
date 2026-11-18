@@ -146,6 +146,10 @@ public partial class PlayGame
             : (new Color(0.12f, 0.11f, 0.1f), new Color(0.28f, 0.25f, 0.22f), UiKit.Muted);
         string name = info.Upgrade ? $"{info.Name} +" : info.Name;
         var tip = new StringBuilder($"{info.Name}" + (info.Upgrade ? " (upgrade of its era)" : "") + $"\n{info.Gives}");
+        if (info.Unlocks.Length > 0)
+        {
+            tip.Append($"\n\n{info.Unlocks}");
+        }
         if (!st.Known)
         {
             tip.Append($"\n\nPrice: {(st.Price is null ? "?" : Amounts(c, st.Price))}, {info.Seconds} s.");

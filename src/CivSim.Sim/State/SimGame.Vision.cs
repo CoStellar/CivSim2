@@ -49,6 +49,13 @@ public sealed partial class SimGame
         return Visible(civ, cell) ? RoadAt[cell] : civ.SeenRoad[cell];
     }
 
+    // Units standing on each hex (those out in the world: not training, not gone), kept with their sight: who is where is
+    // then a look at a few hexes instead of a walk over every unit ever made.
+    private readonly Dictionary<int, List<int>> _unitsAt = [];
+
+    /// <summary>Units out in the world on a hex (empty when none).</summary>
+    public IReadOnlyList<int> UnitsAt(int cell) => _unitsAt.TryGetValue(cell, out List<int>? list) ? list : [];
+
     // A unit starts or moves on: its sight goes with it.
     private void Watch(Unit u)
     {
@@ -61,6 +68,13 @@ public sealed partial class SimGame
         u.WatchCell = u.Cell;
         u.WatchRadius = Content.Units[u.Kind].Sight;
         See(Civs[u.Civ], u.WatchCell, u.WatchRadius, +1);
+        if (!_unitsAt.TryGetValue(u.Cell, out List<int>? here))
+        {
+            here = [];
+            _unitsAt[u.Cell] = here;
+        }
+
+        here.Add(u.Id);
     }
 
     // The unit stops seeing (gone, or about to see from elsewhere).
@@ -69,7 +83,32 @@ public sealed partial class SimGame
         if (u.WatchCell >= 0)
         {
             See(Civs[u.Civ], u.WatchCell, u.WatchRadius, -1);
+            if (_unitsAt.TryGetValue(u.WatchCell, out List<int>? here))
+            {
+                here.Remove(u.Id);
+                if (here.Count == 0)
+                {
+                    _unitsAt.Remove(u.WatchCell);
+                }
+            }
+
             u.WatchCell = -1;
+        }
+    }
+
+    /// <summary>Units out in the world, people by people in id order of their lists (training and gone ones left out).</summary>
+    public IEnumerable<Unit> ActiveUnits()
+    {
+        foreach (Civ c in Civs)
+        {
+            foreach (int id in c.Units)
+            {
+                Unit u = Units[id];
+                if (u.State is not (UnitState.Gone or UnitState.Training))
+                {
+                    yield return u;
+                }
+            }
         }
     }
 

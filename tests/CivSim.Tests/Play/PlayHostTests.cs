@@ -26,7 +26,7 @@ public sealed class PlayHostTests
         bool built = false;
         bool ours = false;
         var clock = Stopwatch.StartNew();
-        while (clock.Elapsed < TimeSpan.FromSeconds(10) && !built)
+        while (clock.Elapsed < TimeSpan.FromSeconds(10) && !(built && view is not null))
         {
             while (c.TryReceive(out IProtocolMessage? m))
             {

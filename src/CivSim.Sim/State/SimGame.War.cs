@@ -285,7 +285,10 @@ public sealed partial class SimGame
     // Once a second: every soldier fights the enemy it was sent at, or any enemy within reach.
     private void CombatStep()
     {
-        foreach (Unit u in Units)
+        // Only units out in the world: the list of all units ever made keeps carriers long gone.
+        _fighters.Clear();
+        _fighters.AddRange(ActiveUnits());
+        foreach (Unit u in _fighters)
         {
             u.Fighting = false;
         }
@@ -295,7 +298,7 @@ public sealed partial class SimGame
             s.Besieged = false;
         }
 
-        foreach (Unit u in Units)
+        foreach (Unit u in _fighters)
         {
             if (u.State is UnitState.Gone or UnitState.Training || !Content.Units[u.Kind].Army)
             {
@@ -355,22 +358,32 @@ public sealed partial class SimGame
 
     private int Distance(int a, int b) => Geo.Distance(Geo.FromIndex(a), Geo.FromIndex(b));
 
+    private readonly List<Unit> _fighters = [];
+
+    // The nearest enemy within reach (ties: the lowest id), found by looking at the hexes in reach only.
     private Unit? NearestEnemy(Unit u, int reach)
     {
         Unit? best = null;
         int bestD = int.MaxValue;
-        foreach (Unit other in Units)
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(reach)];
+        int n = Geo.Range(Geo.FromIndex(u.Cell), reach, area);
+        for (int k = 0; k < n; k++)
         {
-            if (other.Civ == u.Civ || other.State is UnitState.Gone or UnitState.Training || !AtWar(u.Civ, other.Civ))
+            int cell = Geo.Index(area[k]);
+            foreach (int id in UnitsAt(cell))
             {
-                continue;
-            }
+                Unit other = Units[id];
+                if (other.Civ == u.Civ || other.State is UnitState.Gone or UnitState.Training || !AtWar(u.Civ, other.Civ))
+                {
+                    continue;
+                }
 
-            int d = Distance(u.Cell, other.Cell);
-            if (d <= reach && d < bestD)
-            {
-                best = other;
-                bestD = d;
+                int d = Distance(u.Cell, other.Cell);
+                if (d < bestD || (d == bestD && best is not null && other.Id < best.Id))
+                {
+                    best = other;
+                    bestD = d;
+                }
             }
         }
 

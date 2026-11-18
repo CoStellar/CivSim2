@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using CivSim.Core.Map;
 using CivSim.Protocol;
@@ -389,7 +390,7 @@ public sealed class PlayHost : IDisposable
                 needs.Add($"{content.Techs[req].Name} {ticks / SimContent.TicksPerMinute}");
             }
 
-            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category));
+            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category, Unlocks(content, t)));
         }
 
         var eras = new List<string>();
@@ -771,7 +772,7 @@ public sealed class PlayHost : IDisposable
 
         _ = known;
         var units = new List<PlayUnitView>();
-        foreach (Unit u in _game.Units)
+        foreach (Unit u in ActiveAndTraining())
         {
             if (u.State == UnitState.Gone || (u.Civ != civId && !_game.Sees(civ, u)))
             {
@@ -800,9 +801,86 @@ public sealed class PlayHost : IDisposable
             AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0);
     }
 
+    // What a technology opens and changes, worked out from the data (so the player sees exactly what it does).
+    private static string Unlocks(SimContent content, SimTech t)
+    {
+        var lines = new List<string>();
+        var buildings = content.Buildings.Where(b => b.Tech == t.Id && b.Id != 0).Select(b => b.Name).ToList();
+        if (buildings.Count > 0)
+        {
+            lines.Add("Buildings: " + string.Join(", ", buildings));
+        }
+
+        var units = content.Units.Where(u => u.Tech == t.Id && !u.System).Select(u => u.Name).ToList();
+        if (units.Count > 0)
+        {
+            lines.Add("Units: " + string.Join(", ", units));
+        }
+
+        foreach (SettlementLevel l in content.Levels)
+        {
+            if (l.Tech == t.Id && l.Id > 0)
+            {
+                lines.Add($"Settlements can become a {l.Name.ToLowerInvariant()}");
+            }
+        }
+
+        foreach (RoadLevel r in content.RoadLevels)
+        {
+            if (r.Tech == t.Id)
+            {
+                lines.Add($"Roads: {r.Name.ToLowerInvariant()}");
+            }
+        }
+
+        foreach (TechEffect e in t.Effects)
+        {
+            string target = e.Target == "*" ? "all" : content.Buildings.FirstOrDefault(b => b.Key == e.Target)?.Name
+                ?? content.Units.FirstOrDefault(u => u.Key == e.Target)?.Name ?? e.Target;
+            lines.Add(e.Kind switch
+            {
+                EffectKind.Production => $"Production of {target} +{e.Value}%",
+                EffectKind.Housing => $"Homes in {target} +{e.Value}",
+                EffectKind.Storage => $"Room in {target} +{e.Value}%",
+                EffectKind.Strength => $"Strength of {target} +{e.Value}%",
+                EffectKind.Speed => $"Walking speed of {target} +{e.Value}%",
+                EffectKind.Training => $"Training of {target} {e.Value}% shorter",
+                EffectKind.Research => $"Research {e.Value}% cheaper",
+                EffectKind.Growth => $"Growth +{e.Value}% a minute",
+                EffectKind.Resist => $"{target.Replace('_', ' ')} {e.Value}% milder",
+                EffectKind.Siege => $"Siege +{e.Value}%",
+                EffectKind.Defense => $"Defence +{e.Value}%",
+                _ => $"Rarer thinkers and advisors (+{e.Value})",
+            });
+        }
+
+        return string.Join("\n", lines);
+    }
+
+    // Units of every people that are not gone (the game's list keeps every unit ever made).
+    private IEnumerable<Unit> ActiveAndTraining()
+    {
+        foreach (Civ c in _game.Civs)
+        {
+            foreach (int id in c.Units)
+            {
+                yield return _game.Units[id];
+            }
+        }
+    }
+
+    // Alerts change at most once a second of play: worked out then, not for every view.
+    private readonly Dictionary<int, (long Tick, List<PlayAlertView> Alerts)> _alerts = [];
+
     private List<PlayAlertView> AlertsOf(Civ civ)
     {
+        if (_alerts.TryGetValue(civ.Id, out (long Tick, List<PlayAlertView> Alerts) cached) && _game.Ticks - cached.Tick < SimContent.TicksPerSecond && _game.Ticks >= cached.Tick)
+        {
+            return cached.Alerts;
+        }
+
         var list = new List<PlayAlertView>();
+        _alerts[civ.Id] = (_game.Ticks, list);
         if (civ.Dead || _game.Picking)
         {
             return list;

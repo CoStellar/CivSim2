@@ -627,9 +627,9 @@ public static class SimAi
         }
 
         // Defend: enemies seen on our land are attacked first.
-        foreach (Unit enemy in g.Units)
+        foreach (Unit enemy in g.ActiveUnits())
         {
-            if (enemy.Civ == civ.Id || enemy.State is UnitState.Gone or UnitState.Training || !g.Content.Units[enemy.Kind].Army)
+            if (enemy.Civ == civ.Id || !g.Content.Units[enemy.Kind].Army)
             {
                 continue;
             }
