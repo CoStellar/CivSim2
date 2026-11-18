@@ -74,8 +74,15 @@ public partial class StartMenu : CanvasLayer
         var root = new PanelContainer { Theme = PixelTheme.Current };
         root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         AddChild(root);
-        var center = new CenterContainer();
-        root.AddChild(center);
+
+        // The form scrolls; the buttons stay on a bar at the bottom, so they are on screen in any window size.
+        var frame = new VBoxContainer();
+        frame.AddThemeConstantOverride("separation", 8);
+        root.AddChild(frame);
+        var scroll = new ScrollContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Auto };
+        frame.AddChild(scroll);
+        var center = new CenterContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        scroll.AddChild(center);
         var page = new VBoxContainer { CustomMinimumSize = new Vector2(1180, 0) };
         page.AddThemeConstantOverride("separation", 14);
         center.AddChild(page);
@@ -107,9 +114,9 @@ public partial class StartMenu : CanvasLayer
         _error = new Label { Modulate = new Color(1f, 0.45f, 0.4f), AutowrapMode = TextServer.AutowrapMode.WordSmart };
         previewBox.AddChild(_error);
 
-        var buttons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
+        var buttons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
         buttons.AddThemeConstantOverride("separation", 12);
-        page.AddChild(buttons);
+        frame.AddChild(buttons);
         var reset = new Button { Text = "Defaults", CustomMinimumSize = new Vector2(120, 40) };
         reset.Pressed += ResetToDefaults;
         buttons.AddChild(reset);
