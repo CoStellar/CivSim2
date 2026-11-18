@@ -355,9 +355,10 @@ public partial class PlayOverlay : Node2D
             for (int c = cx * ChunkSize; c < c1; c++)
             {
                 int i = w.Index(c, r);
-                if (w.Road[i] != 0)
+                if (w.Road[i] != 0 || w.Works[i] != 0)
                 {
                     h.Add((i * 4) + w.Road[i] + (w.Visibility[i] * 1000000));
+                    h.Add((i * 65536) + w.Works[i]);
                 }
             }
         }
@@ -416,6 +417,7 @@ public partial class PlayOverlay : Node2D
 
         int cx = chunk % ChunksX;
         int cy = chunk / ChunksX;
+        PaintWorks(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
         PaintRoads(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
         if (!_content2.TryGetValue(chunk, out ChunkContent? cc))
         {
@@ -749,6 +751,93 @@ public partial class PlayOverlay : Node2D
                 if (linked == 0)
                 {
                     g.DrawCircle(c, level == 1 ? 4 : 6, RoadColor(level, grey));
+                }
+            }
+        }
+    }
+
+    // Works on hexes, under the roads: ditches and aqueducts run between neighbouring hexes of their kind along the cross between
+    // the building places (blue when water reaches them); palisades and walls line the inside of the hex's edges; bridges are
+    // planks over the river edges.
+    private void PaintWorks(CanvasItem g, CivSim.Game.Net.ClientWorld w, int c0, int r0, int c1, int r1)
+    {
+        for (int row = r0; row <= r1; row++)
+        {
+            for (int col = c0; col <= c1; col++)
+            {
+                int i = w.Index(col, row);
+                int works = w.Works[i];
+                if (works == 0 || w.Visibility[i] == MapChunkMessage.Unknown)
+                {
+                    continue;
+                }
+
+                bool grey = w.Visibility[i] == MapChunkMessage.Remembered;
+                Vector2 c = HexLayout.Center(col, row);
+                bool odd = (col & 1) == 1;
+                foreach ((int bit, Color wet, Color dry, float width) in new[] { (1, new Color(0.35f, 0.62f, 0.95f), new Color(0.45f, 0.4f, 0.32f), 3f), (8, new Color(0.55f, 0.75f, 0.95f), new Color(0.62f, 0.6f, 0.56f), 5f) })
+                {
+                    if ((works & bit) == 0)
+                    {
+                        continue;
+                    }
+
+                    bool flowing = (works & (bit == 1 ? 16 : 32)) != 0;
+                    Color col2 = grey ? Grey(flowing ? wet : dry) : flowing ? wet : dry;
+                    int linked = 0;
+                    foreach ((int dc, int dr) in odd ? OddNeighbours : EvenNeighbours)
+                    {
+                        int nr = row + dr;
+                        if (nr < 0 || nr >= w.Height || (w.Works[w.Index(col + dc, nr)] & bit) == 0)
+                        {
+                            continue;
+                        }
+
+                        linked++;
+                        g.DrawLine(c, c.Lerp(HexLayout.Center(col + dc, nr), 0.5f), col2, width, true);
+                    }
+
+                    if (linked == 0)
+                    {
+                        g.DrawLine(c + new Vector2(0, -16), c + new Vector2(0, 16), col2, width, true);
+                    }
+                }
+
+                if ((works & (2 | 4)) != 0)
+                {
+                    bool wall = (works & 4) != 0;
+                    Color edge = wall ? new Color(0.72f, 0.72f, 0.7f) : new Color(0.55f, 0.38f, 0.2f);
+                    edge = grey ? Grey(edge) : edge;
+                    Vector2[] ring = Closed(Hex(c, 0.9f));
+                    if (wall)
+                    {
+                        g.DrawPolyline(ring, new Color(0.2f, 0.2f, 0.2f, 0.9f), 6);
+                        g.DrawPolyline(ring, edge, 4);
+                    }
+                    else
+                    {
+                        for (int k = 0; k + 1 < ring.Length; k++)
+                        {
+                            g.DrawDashedLine(ring[k], ring[k + 1], edge, 3, 4);
+                        }
+                    }
+                }
+
+                for (int e = 0; e < 3; e++)
+                {
+                    if ((works & (1 << (8 + e))) == 0)
+                    {
+                        continue;
+                    }
+
+                    (int a, int b) = HexLayout.EdgeCorners[e];
+                    Vector2 mid = c + ((HexLayout.Corners[a] + HexLayout.Corners[b]) * 0.5f);
+                    Vector2 along = (HexLayout.Corners[b] - HexLayout.Corners[a]).Normalized() * 6;
+                    Vector2 across = (mid - c).Normalized() * 7;
+                    Color plank = grey ? Grey(new Color(0.6f, 0.45f, 0.28f)) : new Color(0.6f, 0.45f, 0.28f);
+                    g.DrawLine(mid - across - along, mid + across - along, plank, 2);
+                    g.DrawLine(mid - across + along, mid + across + along, plank, 2);
+                    g.DrawRect(new Rect2(mid - new Vector2(4, 4), new Vector2(8, 8)), plank);
                 }
             }
         }

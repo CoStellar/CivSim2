@@ -141,7 +141,8 @@ public partial class PlayGame
                         // A click, not a drawing: go there (or attack what is there).
                         (int col, int row) = path.Count == 1 ? path[0] : MouseCell() ?? (0, 0);
                         bool attack = IsArmy(unit) && EnemyAt(col, row);
-                        _session.Play(attack ? PlayCommandKind.Attack : PlayCommandKind.Move, unit, col, row, _hiddenWalk.Contains(unit));
+                        bool wall = IsArmy(unit) && !attack && EnemyWallAt(col, row);
+                        _session.Play(attack ? PlayCommandKind.Attack : wall ? PlayCommandKind.AttackWall : PlayCommandKind.Move, unit, col, row, _hiddenWalk.Contains(unit));
                         _overlay.Flash(col, row, attack ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 1f, 1f));
                     }
                     else
@@ -177,7 +178,7 @@ public partial class PlayGame
             case DrawMode.Road:
                 if (path.Count >= 1)
                 {
-                    _session.Play(PlayCommandKind.BuildRoad, _drawRoad, cells: cells);
+                    _session.Play(_drawRoad >= WorkSlotBase ? PlayCommandKind.BuildWork : PlayCommandKind.BuildRoad, _drawRoad >= WorkSlotBase ? _drawRoad - WorkSlotBase : _drawRoad, cells: cells);
                     _overlay.Flash(path[^1].Col, path[^1].Row, new Color(0.85f, 0.7f, 0.5f));
                 }
 
@@ -235,4 +236,16 @@ public partial class PlayGame
         DrawMode.Road => _drawing ? $"Draw the road over the hexes ({_overlay?.DrawPath.Count ?? 0} so far). Let go to start building." : "Hold the left button and draw the road over the hexes, also into empty land. Esc: cancel.",
         _ => null,
     };
+
+    // A wall of another people on the hex: soldiers sent there break it.
+    private bool EnemyWallAt(int col, int row)
+    {
+        if (_session is null || !_session.Worlds.TryGetValue(0, out CivSim.Game.Net.ClientWorld? w) || _session.PlayView is not { } v)
+        {
+            return false;
+        }
+
+        int i = w.Index(col, row);
+        return (w.Works[i] & 4) != 0 && w.Owner[i] != v.Civ;
+    }
 }

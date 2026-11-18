@@ -40,6 +40,16 @@ public sealed partial class SimGame
             }
         }
 
+        for (int i = 0; i < WorksAt.Length; i++)
+        {
+            if (WorksAt[i] != 0)
+            {
+                Add(i);
+                Add(WorksAt[i]);
+                Add(WallLeft[i]);
+            }
+        }
+
         foreach (Settlement s in Settlements)
         {
             Add(s.Civ);

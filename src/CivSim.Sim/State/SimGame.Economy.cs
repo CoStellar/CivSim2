@@ -28,6 +28,16 @@ public sealed partial class SimGame
             Array.Fill(s.Capacity, level.Storage);
             s.Idle = s.People;
             s.HealPerMinute = 0;
+            s.GrowthBonus = 0;
+            s.EpidemicResist = 0;
+            foreach (WorkKind w in Content.Works)
+            {
+                if (s.Aqueduct && w.GrowthBonus > 0)
+                {
+                    s.GrowthBonus += w.GrowthBonus;
+                    s.EpidemicResist += w.ResistEpidemicPercent;
+                }
+            }
             s.WorkPermille = WorkPermille(s);
             people += s.People;
         }
@@ -109,7 +119,7 @@ public sealed partial class SimGame
             }
 
             Settlement s = Settlements[b.Settlement];
-            long boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups) + Support(s, t);
+            long boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups) + Support(s, t) + WaterBonus(b.Cell, t);
             long work = s.WorkPermille * (winter ? t.WinterPercent : 100) / 100;
             for (int g = 0; g < goods; g++)
             {
@@ -378,6 +388,10 @@ public sealed partial class SimGame
 
             long perMinute; // hundredths of a person
             int sick = civ.Event >= 0 ? Content.Events[civ.Event].LosePercentPerMinute * Harm(civ, Content.Events[civ.Event].Key) / 100 : 0;
+            if (sick > 0 && Content.Events[civ.Event].Key == "epidemic")
+            {
+                sick = sick * Math.Max(0, 100 - s.EpidemicResist) / 100;
+            }
             if (sick > 0)
             {
                 perMinute = -Math.Max(SimContent.One, s.People * sick);
@@ -390,7 +404,7 @@ public sealed partial class SimGame
             }
             else if (s.People < s.Housing)
             {
-                perMinute = Math.Max(Content.MinGrowthPerMinute * SimContent.One, s.People * (Content.GrowthPercentPerMinute + Bonus(civ, EffectKind.Growth, "*")));
+                perMinute = Math.Max(Content.MinGrowthPerMinute * SimContent.One, s.People * (Content.GrowthPercentPerMinute + Bonus(civ, EffectKind.Growth, "*") + s.GrowthBonus));
             }
             else
             {

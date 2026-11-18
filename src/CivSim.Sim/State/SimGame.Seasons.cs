@@ -133,10 +133,15 @@ public sealed partial class SimGame
                 _support.Add((b.Settlement, st.SupportGroup, st.SupportPercent * b.Workers / Math.Max(1, st.Workers)));
             }
 
+            Settlement home = Settlements[b.Settlement];
             if (st.HealsPerMinute > 0)
             {
-                Settlements[b.Settlement].HealPerMinute += st.HealsPerMinute * b.Workers / Math.Max(1, st.Workers);
+                home.HealPerMinute += st.HealsPerMinute * b.Workers / Math.Max(1, st.Workers);
             }
+
+            // Bathhouses: milder epidemics and faster growth in their settlement, by the share of their jobs filled.
+            home.EpidemicResist = Math.Min(90, home.EpidemicResist + (st.ResistEpidemicPercent * b.Workers / Math.Max(1, st.Workers)));
+            home.GrowthBonus += st.GrowthBonus * b.Workers / Math.Max(1, st.Workers);
         }
     }
 

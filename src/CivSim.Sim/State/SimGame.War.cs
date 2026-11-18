@@ -523,6 +523,24 @@ public sealed partial class SimGame
     }
 
     // Walk toward the target until it is within reach.
+    // The wall of the target's people nearest to the unit, within a few hexes of the goal (−1 = none).
+    private int NearestEnemyWall(Unit u, int goal)
+    {
+        int best = -1;
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(7)];
+        int n = Geo.Range(Geo.FromIndex(goal), 7, area);
+        for (int k = 0; k < n; k++)
+        {
+            int c = Geo.Index(area[k]);
+            if (WalledAgainst(u.Civ, c) && (best < 0 || Distance(u.Cell, c) < Distance(u.Cell, best)))
+            {
+                best = c;
+            }
+        }
+
+        return best;
+    }
+
     private void ChaseTarget(Unit u)
     {
         int goal = u.TargetUnit >= 0 ? Units[u.TargetUnit].Cell : u.TargetSettlement >= 0 ? Settlements[u.TargetSettlement].Center : -1;
@@ -533,6 +551,12 @@ public sealed partial class SimGame
 
         if (!FindPath(u.Cell, goal, u.Path, false, u.Civ))
         {
+            // Walled in: break the wall nearest to us on the way.
+            if (u.TargetSettlement >= 0 && NearestEnemyWall(u, goal) is int wall and >= 0)
+            {
+                AttackWall(Civs[u.Civ], u.Id, wall);
+            }
+
             return;
         }
 

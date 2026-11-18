@@ -224,6 +224,16 @@ d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of th
             {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
   "reach":25,"supply":{"food":40,"wood":60,"stone":30,"clay":20}}
 d["tripFoodPer10Hexes"]=0.5
+# Works on hexes (decision of 2026-11-18): drawn hex by hex like roads, kept under whatever is built on the hex, removed only
+# by the player. Ditches and aqueducts run from water (fromWater: their longest reach). Palisades wound enemies standing on
+# them; walls stop enemies until broken (strength). Bridges come by themselves where a road crosses a river, after bridgeTech.
+d["works"]={"comment":"Works drawn on hexes; price and seconds per hex. ditch: farms on watered hexes +farmPercent. palisade: enemies at war standing on it lose woundPercentPerSecond of their people a second. wall: foreign units cannot enter until its strength (hundredths of damage) is broken. aqueduct: a settlement it reaches grows growthBonus% a minute faster and suffers resistEpidemicPercent less from epidemics.",
+  "kinds":[
+    {"key":"ditch","name":"Irrigation ditch","tech":"irrigation","price":{"wood":2,"stone":1},"seconds":3,"fromWater":4,"farmPercent":25},
+    {"key":"palisade","name":"Palisade","tech":"palisade","price":{"wood":6},"seconds":4,"woundPercentPerSecond":2},
+    {"key":"wall","name":"Stone wall","tech":"stone_walls","price":{"stone":12},"seconds":8,"strength":60},
+    {"key":"aqueduct","name":"Aqueduct","tech":"engineering","price":{"stone":10,"tools":1},"seconds":6,"fromWater":12,"growthBonus":2,"resistEpidemicPercent":30}],
+  "bridgeTech":"masonry","bridgePrice":{"stone":20,"wood":10}}
 # Winter, clothing and gathering (decision of 2026-11-18).
 d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Peoples are told warnSeconds before.",
   "cycleMinutes":8,"winterMinutes":2,"warnSeconds":30,"winterWorkPercent":50}

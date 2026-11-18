@@ -11,7 +11,7 @@ namespace CivSim.Game.Play;
 /// </summary>
 public partial class PlayGame
 {
-    private static readonly string[] Tabs = ["Food", "Production", "Homes & stores", "Military", "Society", "Roads"];
+    private static readonly string[] Tabs = ["Food", "Production", "Homes & stores", "Military", "Society", "Roads & works"];
     private const int RoadTab = 5;
     private static readonly Key[] SlotKeys = [Key.Z, Key.X, Key.C, Key.V, Key.B, Key.N, Key.M, Key.Comma, Key.Period, Key.Slash];
     private static readonly string[] SlotNames = ["Z", "X", "C", "V", "B", "N", "M", ",", ".", "/"];
@@ -79,6 +79,11 @@ public partial class PlayGame
             counts[RoadTab] += v.Techs[r.Tech].Known ? 1 : 0;
         }
 
+        foreach (PlayWorkInfo wk in c.Works ?? [])
+        {
+            counts[RoadTab] += v.Techs[wk.Tech].Known ? 1 : 0;
+        }
+
         if (counts[_tab] == 0)
         {
             _tab = Array.FindIndex(counts, n => n > 0) is var first && first >= 0 ? first : 0;
@@ -94,6 +99,16 @@ public partial class PlayGame
                 {
                     _slotTypes.Add(-r.Level);
                     affordable.Add(CanPay(v.Stock, r.Price));
+                }
+            }
+
+            // Works on hexes: drawn like roads; their slots carry minus (100 + id).
+            foreach (PlayWorkInfo wk in c.Works ?? [])
+            {
+                if (v.Techs[wk.Tech].Known)
+                {
+                    _slotTypes.Add(-(WorkSlotBase + wk.Id));
+                    affordable.Add(CanPay(v.Stock, wk.Price));
                 }
             }
         }
@@ -215,16 +230,34 @@ public partial class PlayGame
         return true;
     }
 
+    private const int WorkSlotBase = 100;
+
     private Button RoadSlot(PlayContentMessage c, int level, int index, bool can)
     {
-        PlayRoadInfo r = c.Roads![level - 1];
-        string tip = $"{r.Name}: {Amounts(c, r.Price)} and {r.Seconds} s a hex, paid by our nearest settlement.\n"
-            + (level == 1 ? "Walking on it is faster; caravans and armies take it by themselves." : "Much faster than a track, also over hills; a major trade route.")
-            + "\nDraw it hex by hex, also into empty land: settlers who found a camp at its end get a caravan of goods along it.";
+        string tip;
+        string label;
+        Color color;
+        if (level >= WorkSlotBase)
+        {
+            PlayWorkInfo wk = c.Works![level - WorkSlotBase];
+            label = wk.Name;
+            tip = $"{wk.Name}: {Amounts(c, wk.Price)} and {wk.Seconds} s a hex, paid by our nearest settlement.\n{wk.Text}\nDraw it hex by hex on our land; remove it from the hex panel.";
+            color = wk.Key switch { "ditch" => new Color(0.35f, 0.62f, 0.95f), "aqueduct" => new Color(0.55f, 0.75f, 0.95f), "wall" => new Color(0.72f, 0.72f, 0.7f), _ => new Color(0.55f, 0.38f, 0.2f) };
+        }
+        else
+        {
+            PlayRoadInfo road = c.Roads![level - 1];
+            label = road.Name;
+            tip = $"{road.Name}: {Amounts(c, road.Price)} and {road.Seconds} s a hex, paid by our nearest settlement.\n"
+                + (level == 1 ? "Walking on it is faster; caravans and armies take it by themselves." : "Much faster than a track, also over hills; a major trade route.")
+                + "\nDraw it hex by hex, also into empty land: settlers who found a camp at its end get goods along it. With Masonry it bridges the rivers it crosses.";
+            color = level == 1 ? new Color(0.66f, 0.52f, 0.34f) : new Color(0.78f, 0.74f, 0.64f);
+        }
+
+        PlayRoadInfo r = new(level, label, [], 0, 0);
         var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = tip, ToggleMode = true, ButtonPressed = _drawMode == DrawMode.Road && _drawRoad == level };
         var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
         inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-        Color color = level == 1 ? new Color(0.66f, 0.52f, 0.34f) : new Color(0.78f, 0.74f, 0.64f);
         inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(r.Name), 44) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter });
         Label name = UiKit.Label(r.Name, 11, can ? UiKit.Text : UiKit.Muted);
         name.HorizontalAlignment = HorizontalAlignment.Center;

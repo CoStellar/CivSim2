@@ -3002,5 +3002,60 @@
   "rivers": {
     "comment": "Until freeFromEra, rivers can be crossed only next to one's own building that gives a crossing (raft landings).",
     "freeFromEra": "bronze_age"
+  },
+  "works": {
+    "comment": "Works drawn on hexes; price and seconds per hex. ditch: farms on watered hexes +farmPercent. palisade: enemies at war standing on it lose woundPercentPerSecond of their people a second. wall: foreign units cannot enter until its strength (hundredths of damage) is broken. aqueduct: a settlement it reaches grows growthBonus% a minute faster and suffers resistEpidemicPercent less from epidemics.",
+    "kinds": [
+      {
+        "key": "ditch",
+        "name": "Irrigation ditch",
+        "tech": "irrigation",
+        "price": {
+          "wood": 2,
+          "stone": 1
+        },
+        "seconds": 3,
+        "fromWater": 4,
+        "farmPercent": 25
+      },
+      {
+        "key": "palisade",
+        "name": "Palisade",
+        "tech": "palisade",
+        "price": {
+          "wood": 6
+        },
+        "seconds": 4,
+        "woundPercentPerSecond": 2
+      },
+      {
+        "key": "wall",
+        "name": "Stone wall",
+        "tech": "stone_walls",
+        "price": {
+          "stone": 12
+        },
+        "seconds": 8,
+        "strength": 60
+      },
+      {
+        "key": "aqueduct",
+        "name": "Aqueduct",
+        "tech": "engineering",
+        "price": {
+          "stone": 10,
+          "tools": 1
+        },
+        "seconds": 6,
+        "fromWater": 12,
+        "growthBonus": 2,
+        "resistEpidemicPercent": 30
+      }
+    ],
+    "bridgeTech": "masonry",
+    "bridgePrice": {
+      "stone": 20,
+      "wood": 10
+    }
   }
 }

@@ -108,7 +108,12 @@ public sealed record PlayContentMessage(
     [property: Key(6)] IReadOnlyList<PlayUnitInfo> Units,
     [property: Key(7)] IReadOnlyList<PlayTechInfo> Techs,
     [property: Key(8)] IReadOnlyList<string> Eras,
-    [property: Key(9)] IReadOnlyList<PlayRoadInfo>? Roads = null) : IProtocolMessage;
+    [property: Key(9)] IReadOnlyList<PlayRoadInfo>? Roads = null,
+    [property: Key(10)] IReadOnlyList<PlayWorkInfo>? Works = null) : IProtocolMessage;
+
+/// <summary>A work drawn on hexes (ditch, palisade, wall, aqueduct): its bit in the works of a hex, price and seconds per hex.</summary>
+[MessagePackObject]
+public sealed record PlayWorkInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] long[] Price, [property: Key(4)] int Seconds, [property: Key(5)] int Tech, [property: Key(6)] int FromWater, [property: Key(7)] string Text);
 
 /// <summary>A level of road (1 track, 2 paved road): price and seconds per hex, needed technology.</summary>
 [MessagePackObject]
@@ -188,7 +193,8 @@ public sealed record PlayCellsMessage(
     [property: Key(1)] byte[] Visibility,
     [property: Key(2)] short[] Owner,
     [property: Key(3)] int[] Chunks,
-    [property: Key(4)] byte[]? Road = null) : IProtocolMessage;
+    [property: Key(4)] byte[]? Road = null,
+    [property: Key(5)] ushort[]? Works = null) : IProtocolMessage;
 
 /// <summary>Server → client, several times a second: what the player sees of the game.</summary>
 [MessagePackObject]
@@ -350,6 +356,15 @@ public enum PlayCommandKind
 
     /// <summary>The people of settlement <c>A</c> gather around it while they have no job (<c>Flag</c>) or stop.</summary>
     Gather = 29,
+
+    /// <summary>Build work <c>A</c> (ditch, palisade, wall, aqueduct) over the drawn hexes <c>Cells</c> (col, row pairs).</summary>
+    BuildWork = 30,
+
+    /// <summary>Remove work <c>A</c> from the hex at <c>Col</c>, <c>Row</c>.</summary>
+    RemoveWork = 31,
+
+    /// <summary>Unit <c>A</c> breaks the enemy wall at <c>Col</c>, <c>Row</c>.</summary>
+    AttackWall = 32,
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs), eating at the nearest settlement between rounds.</summary>
     Patrol = 27,

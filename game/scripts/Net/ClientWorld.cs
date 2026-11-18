@@ -22,6 +22,7 @@ public sealed class ClientWorld
         int n = width * height;
         Visibility = new byte[n];
         Road = new byte[n];
+        Works = new ushort[n];
         Elevation = new byte[n];
         Temperature = new sbyte[n];
         Humidity = new byte[n];
@@ -103,6 +104,9 @@ public sealed class ClientWorld
     /// <summary>Road level per hex (0 none, 1 track, 2 paved road), as the player knows it.</summary>
     public byte[] Road { get; }
 
+    /// <summary>Works of each hex (bits: ditch, palisade, wall, aqueduct, watered, flowing; bridges of its own edges in bits 8–10).</summary>
+    public ushort[] Works { get; }
+
     /// <summary>Owner civilization id or -1.</summary>
     public short[] Owner { get; }
 
@@ -153,6 +157,7 @@ public sealed class ClientWorld
                 DepositDepth[i] = m.DepositDepth[k];
                 Owner[i] = m.Owner[k];
                 Road[i] = m.Road is { } roads ? roads[k] : (byte)0;
+                Works[i] = m.Works is { } works ? works[k] : (ushort)0;
                 WildFood[i] = m.WildFood is { } wild ? wild[k] : (ushort)1000;
                 Influence[i] = m.Influence is { } inf ? inf[k] : (byte)0;
                 Seasonality[i] = m.Seasonality is { } sea ? sea[k] : (byte)0;
@@ -186,6 +191,11 @@ public sealed class ClientWorld
                 if (m.Road is { } roads)
                 {
                     Road[i] = roads[k];
+                }
+
+                if (m.Works is { } works)
+                {
+                    Works[i] = works[k];
                 }
             }
         }

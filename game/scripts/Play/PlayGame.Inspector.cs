@@ -69,6 +69,7 @@ public partial class PlayGame
                 BuildingItems(v, c, b, items);
             }
 
+            WorksItems(sel, items);
             return;
         }
 
@@ -452,6 +453,49 @@ public partial class PlayGame
         if (w.Deposit[i] != 0 && w.DepositDepth[i] == 0)
         {
             items.Add(new LineItem($"Deposit: {content.Deposits[w.Deposit[i] - 1].Name}", UiKit.Good, 14));
+        }
+
+        WorksItems(sel, items);
+    }
+
+    // The works on a hex (ditch, palisade, wall, aqueduct, bridges), with a button to remove each on our land.
+    private void WorksItems((int Col, int Row) sel, List<UiItem> items)
+    {
+        if (_session is null || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.PlayContent is not { } pc)
+        {
+            return;
+        }
+
+        int i = w.Index(sel.Col, sel.Row);
+        int works = w.Works[i];
+        if (works == 0)
+        {
+            return;
+        }
+
+        items.Add(new SectionItem("On this hex"));
+        bool ours = w.Owner[i] == _session.PlayView?.Civ;
+        foreach (PlayWorkInfo wk in pc.Works ?? [])
+        {
+            if ((works & (1 << wk.Id)) == 0)
+            {
+                continue;
+            }
+
+            bool water = wk.FromWater > 0;
+            bool reached = (works & (wk.Key == "aqueduct" ? 32 : 16)) != 0;
+            string state = water ? (reached ? " (water flows)" : " (dry: not joined to water)") : "";
+            items.Add(new LineItem(wk.Name + state, water && !reached ? UiKit.Warn : UiKit.Text, 14));
+            if (ours)
+            {
+                int id = wk.Id;
+                items.Add(new ActItem($"Remove the {wk.Name.ToLowerInvariant()}", () => _session!.Play(PlayCommandKind.RemoveWork, id, sel.Col, sel.Row), wk.Text, Accent: UiKit.Bad));
+            }
+        }
+
+        if ((works & (7 << 8)) != 0)
+        {
+            items.Add(new LineItem("A bridge crosses the river here", UiKit.Text, 14));
         }
     }
 

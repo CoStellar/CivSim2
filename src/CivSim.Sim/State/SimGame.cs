@@ -77,6 +77,7 @@ public sealed partial class SimGame
         SettlementAt = new int[Geo.CellCount];
         BuildingAt = new int[Geo.CellCount];
         RoadAt = new byte[Geo.CellCount];
+        InitWorks();
         Array.Fill(OwnerAt, (short)-1);
         Array.Fill(SettlementAt, -1);
         Array.Fill(BuildingAt, -1);
@@ -161,6 +162,7 @@ public sealed partial class SimGame
                 Vision = new short[map.Geometry.CellCount],
                 SeenOwner = NoOwners(map.Geometry.CellCount),
                 SeenRoad = new byte[map.Geometry.CellCount],
+                SeenWorks = new ushort[map.Geometry.CellCount],
                 KnownTech = new bool[content.Techs.Count],
                 Experience = new long[content.Techs.Count],
                 ExperienceRate = new int[content.Techs.Count],
@@ -292,6 +294,8 @@ public sealed partial class SimGame
             RoadStep();
             SeasonStep();
             HealStep();
+            PalisadeStep();
+            WallStep();
         }
 
         if (Ticks % SimContent.TicksPerMinute == 0)

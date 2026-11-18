@@ -94,6 +94,15 @@ public sealed class Settlement
     /// <summary>What a worker does now, per mille (winter and clothing), as last worked out.</summary>
     public int WorkPermille { get; set; } = 1000;
 
+    /// <summary>An aqueduct brings water into its land.</summary>
+    public bool Aqueduct { get; set; }
+
+    /// <summary>Growth its bathhouses and aqueduct add, percent of people a minute (worked out with the economy).</summary>
+    public int GrowthBonus { get; set; }
+
+    /// <summary>How much milder epidemics are here, percent (bathhouses, aqueduct).</summary>
+    public int EpidemicResist { get; set; }
+
     /// <summary>Wounded soldiers its herbalists heal a minute (worked out with the economy).</summary>
     public int HealPerMinute { get; set; }
 
@@ -244,6 +253,9 @@ public sealed class Civ
     /// <summary>Road level of each hex when this people last saw it.</summary>
     public byte[] SeenRoad { get; set; } = [];
 
+    /// <summary>Works of each hex as last seen (ditches, palisades, walls, aqueducts, bridges).</summary>
+    public ushort[] SeenWorks { get; set; } = [];
+
     /// <summary>Buildings remembered on hexes not seen now, by hex.</summary>
     public SortedDictionary<int, BuildingMemory> SeenBuildings { get; } = [];
 
@@ -386,6 +398,9 @@ public sealed class Unit
 
     /// <summary>Wounded soldiers carried with the unit: they do not fight; herbalists bring them back.</summary>
     public int Injured { get; set; }
+
+    /// <summary>Hex of an enemy wall the unit is breaking (−1 = none).</summary>
+    public int TargetWall { get; set; } = -1;
 
     /// <summary>Horses a caravan took with it, hundredths (back home with it).</summary>
     public long Horses { get; set; }

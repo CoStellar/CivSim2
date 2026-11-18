@@ -102,6 +102,31 @@ public sealed record SimTech(int Id, string Key, string Name, int Era, bool Know
     public bool Basic => Category == SimContent.BasicsCategory;
 }
 
+/// <summary>A work drawn on hexes (ditch, palisade, wall, aqueduct): price and time per hex and what it does.</summary>
+public sealed record WorkKind(int Id, string Key, string Name, int Tech, long[] Price, int TicksPerHex)
+{
+    /// <summary>Its bit in <c>SimGame.WorksAt</c>.</summary>
+    public int Bit => 1 << Id;
+
+    /// <summary>Longest reach from water, hexes (ditches, aqueducts; 0 = needs no water).</summary>
+    public int FromWater { get; init; }
+
+    /// <summary>Farms on a watered hex make this much more, percent.</summary>
+    public int FarmPercent { get; init; }
+
+    /// <summary>Enemies at war standing on it lose this share of their people a second, percent.</summary>
+    public int WoundPercentPerSecond { get; init; }
+
+    /// <summary>Damage it takes before it breaks, hundredths (walls; 0 = does not stop anyone).</summary>
+    public long Strength { get; init; }
+
+    /// <summary>Growth a settlement it reaches gains, percent of people a minute.</summary>
+    public int GrowthBonus { get; init; }
+
+    /// <summary>Epidemics in a settlement it reaches are this much milder, percent.</summary>
+    public int ResistEpidemicPercent { get; init; }
+}
+
 /// <summary>A level of road: price and time per hex, walking cost on it (percent).</summary>
 public sealed record RoadLevel(int Level, string Key, string Name, int Tech, long[] Price, int TicksPerHex, int WalkPercent);
 
@@ -505,6 +530,29 @@ public sealed class SimContent
 
     /// <summary>How far from our nearest settlement roads may be built, in hexes.</summary>
     public int RoadReach { get; init; } = 25;
+
+    /// <summary>Works drawn on hexes, in data order (ditch, palisade, wall, aqueduct).</summary>
+    public IReadOnlyList<WorkKind> Works { get; init; } = [];
+
+    /// <summary>Technology after which roads bridge the rivers they cross (−1 = never).</summary>
+    public int BridgeTech { get; init; } = -1;
+
+    /// <summary>Price of a bridge, hundredths per good.</summary>
+    public long[] BridgePrice { get; init; } = [];
+
+    /// <summary>Finds a work by key (null when the data has none).</summary>
+    public WorkKind? Work(string key)
+    {
+        foreach (WorkKind w in Works)
+        {
+            if (w.Key == key)
+            {
+                return w;
+            }
+        }
+
+        return null;
+    }
 
     /// <summary>Goods a caravan brings from a settlement to a new camp joined to it by road.</summary>
     public long[] RoadSupply { get; init; } = [];
@@ -1072,6 +1120,9 @@ public sealed class SimContent
             TradeTech = techKeys.IndexOf(root.GetProperty("diplomacy").GetProperty("tradeTech").GetString()!),
             RoadTech = techKeys.IndexOf("roads"),
             RoadLevels = RoadLevelsOf(root, techKeys, Amounts),
+            Works = WorksOf(root, techKeys, Amounts),
+            BridgeTech = root.TryGetProperty("works", out JsonElement wb) && wb.TryGetProperty("bridgeTech", out JsonElement bt) ? techKeys.IndexOf(bt.GetString()!) : -1,
+            BridgePrice = root.TryGetProperty("works", out JsonElement wbp) && wbp.TryGetProperty("bridgePrice", out JsonElement bp2) ? Amounts(bp2) : new long[goods.Count],
             RoadReach = root.TryGetProperty("roads", out JsonElement rr) ? rr.GetProperty("reach").GetInt32() : 25,
             RoadSupply = root.TryGetProperty("roads", out JsonElement rs) ? Amounts(rs.GetProperty("supply")) : new long[goods.Count],
             Events = State.SimGame.LoadEvents(root, goods),
@@ -1091,6 +1142,35 @@ public sealed class SimContent
                 root.GetProperty("war").GetProperty("defenderStrength").GetInt32(), root.GetProperty("war").GetProperty("captureBelowPeople").GetInt32(),
                 Hundredths(root.GetProperty("war").GetProperty("soldierFoodPerMinute")), root.GetProperty("war").GetProperty("surpriseReputation").GetInt32()),
         };
+    }
+
+    private static List<WorkKind> WorksOf(JsonElement root, List<string> techKeys, Func<JsonElement, long[]> amounts)
+    {
+        var list = new List<WorkKind>();
+        if (!root.TryGetProperty("works", out JsonElement works))
+        {
+            return list;
+        }
+
+        foreach (JsonElement w in works.GetProperty("kinds").EnumerateArray())
+        {
+            int Int(string name) => w.TryGetProperty(name, out JsonElement e) ? e.GetInt32() : 0;
+            string tech = w.GetProperty("tech").GetString()!;
+            int ti = techKeys.IndexOf(tech);
+            list.Add(new WorkKind(list.Count, w.GetProperty("key").GetString()!, w.GetProperty("name").GetString()!,
+                ti >= 0 ? ti : throw new InvalidDataException($"sim/game.json: unknown technology '{tech}'."), amounts(w.GetProperty("price")),
+                Int("seconds") * TicksPerSecond)
+            {
+                FromWater = Int("fromWater"),
+                FarmPercent = Int("farmPercent"),
+                WoundPercentPerSecond = Int("woundPercentPerSecond"),
+                Strength = Int("strength") * One,
+                GrowthBonus = Int("growthBonus"),
+                ResistEpidemicPercent = Int("resistEpidemicPercent"),
+            });
+        }
+
+        return list;
     }
 
     // Decimal text → hundredths without floating point (the JSON number's raw text is parsed).

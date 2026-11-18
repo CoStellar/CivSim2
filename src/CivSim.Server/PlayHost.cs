@@ -274,6 +274,9 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
         PlayCommandKind.BuildRoad => new BuildRoadCommand(civ, Cells(m.Cells) ?? [], m.A),
         PlayCommandKind.Gather => new GatherCommand(civ, m.A, m.Flag),
+        PlayCommandKind.BuildWork => new BuildWorkCommand(civ, Cells(m.Cells) ?? [], m.A),
+        PlayCommandKind.RemoveWork => new RemoveWorkCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.A),
+        PlayCommandKind.AttackWall => new AttackWallCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         PlayCommandKind.Found => new FoundCommand(civ, m.A),
         PlayCommandKind.Research => new ResearchCommand(civ, m.A),
         PlayCommandKind.Hire => new HireCommand(civ, m.Flag),
@@ -406,7 +409,21 @@ public sealed class PlayHost : IDisposable
             roads.Add(new PlayRoadInfo(r.Level, r.Name, r.Price, r.TicksPerHex / SimContent.TicksPerSecond, r.Tech));
         }
 
-        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads));
+        var works = new List<PlayWorkInfo>();
+        foreach (WorkKind w in _game.Content.Works)
+        {
+            string text = w.Key switch
+            {
+                "ditch" => $"Drawn from a hex next to water, at most {w.FromWater} hexes. Farms on watered hexes make {w.FarmPercent}% more. Stays under buildings.",
+                "palisade" => $"Enemies at war standing on it lose {w.WoundPercentPerSecond}% of their people a second.",
+                "wall" => "Foreign walkers cannot pass until they break it; our own people go through.",
+                "aqueduct" => $"Drawn from water, at most {w.FromWater} hexes: a settlement it reaches grows {w.GrowthBonus}% a minute faster, epidemics {w.ResistEpidemicPercent}% milder.",
+                _ => "",
+            };
+            works.Add(new PlayWorkInfo(w.Id, w.Key, w.Name, w.Price, w.TicksPerHex / SimContent.TicksPerSecond, w.Tech, w.FromWater, text));
+        }
+
+        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works));
         client.SentChunks = false;
     }
 
@@ -608,6 +625,10 @@ public sealed class PlayHost : IDisposable
 
     private readonly List<byte> _roadList = [];
 
+    private readonly List<ushort> _worksList = [];
+
+    private ushort WorksFor(Civ civ, int cell) => civ.Known[cell] ? _game.WorksSeen(civ, cell) : (ushort)0;
+
     // Only what changed against what the client has: terrain once per newly explored chunk, then fog and owner per hex.
     private void SendChanges(PlayClient client, Civ civ)
     {
@@ -615,6 +636,7 @@ public sealed class PlayHost : IDisposable
         _visList.Clear();
         _ownerList.Clear();
         _roadList.Clear();
+        _worksList.Clear();
         _chunkList.Clear();
         foreach (int chunk in _changed)
         {
@@ -648,15 +670,18 @@ public sealed class PlayHost : IDisposable
                     byte vis = VisibilityFor(civ, i);
                     short owner = OwnerFor(civ, i);
                     byte road = RoadFor(civ, i);
-                    if (vis != client.SentVisibility[i] || owner != client.SentOwner[i] || road != client.SentRoad[i])
+                    ushort works = WorksFor(civ, i);
+                    if (vis != client.SentVisibility[i] || owner != client.SentOwner[i] || road != client.SentRoad[i] || works != client.SentWorks[i])
                     {
                         client.SentVisibility[i] = vis;
                         client.SentOwner[i] = owner;
                         client.SentRoad[i] = road;
+                        client.SentWorks[i] = works;
                         _cellList.Add(i);
                         _visList.Add(vis);
                         _ownerList.Add(owner);
                         _roadList.Add(road);
+                        _worksList.Add(works);
                         any = true;
                     }
                 }
@@ -670,7 +695,7 @@ public sealed class PlayHost : IDisposable
 
         if (_cellList.Count > 0)
         {
-            client.Connection.Send(new PlayCellsMessage([.. _cellList], [.. _visList], [.. _ownerList], [.. _chunkList], [.. _roadList]));
+            client.Connection.Send(new PlayCellsMessage([.. _cellList], [.. _visList], [.. _ownerList], [.. _chunkList], [.. _roadList], [.. _worksList]));
         }
     }
 
@@ -678,7 +703,7 @@ public sealed class PlayHost : IDisposable
     {
         Civ civ = _game.Civs[client.Civ];
         MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, civ.Known, hideResources: _game.Picking, always: always,
-            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i));
+            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i), worksSeen: i => WorksFor(civ, i));
         (int x0, int y0, int w, int h) = _game.Map.Chunks.Bounds(chunk);
         for (int r = 0; r < h; r++)
         {
@@ -689,6 +714,7 @@ public sealed class PlayHost : IDisposable
                 client.SentVisibility[i] = VisibilityFor(civ, i);
                 client.SentOwner[i] = OwnerFor(civ, i);
                 client.SentRoad[i] = RoadFor(civ, i);
+                client.SentWorks[i] = WorksFor(civ, i);
             }
         }
 
@@ -869,6 +895,19 @@ public sealed class PlayHost : IDisposable
             {
                 lines.Add($"Roads: {r.Name.ToLowerInvariant()}");
             }
+        }
+
+        foreach (WorkKind w in content.Works)
+        {
+            if (w.Tech == t.Id)
+            {
+                lines.Add($"Works on hexes: {w.Name.ToLowerInvariant()}");
+            }
+        }
+
+        if (content.BridgeTech == t.Id)
+        {
+            lines.Add("Roads bridge the rivers they cross");
         }
 
         foreach (TechEffect e in t.Effects)
@@ -1100,6 +1139,8 @@ public sealed class PlayHost : IDisposable
         public bool[] SentTerrain { get; } = new bool[cells];
 
         public byte[] SentRoad { get; } = new byte[cells];
+
+        public ushort[] SentWorks { get; } = new ushort[cells];
 
         // Signatures of the objects this client has, by id: only changes are sent.
         public Dictionary<int, int> SentBuildings { get; } = [];

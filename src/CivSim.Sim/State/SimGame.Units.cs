@@ -195,6 +195,7 @@ public sealed partial class SimGame
         {
             u.TargetUnit = -1;
             u.TargetSettlement = -1;
+            u.TargetWall = -1;
             return MoveDrawn(civ, u, drawn, hidden);
         }
 
@@ -209,6 +210,7 @@ public sealed partial class SimGame
         u.Hidden = hidden && t.HiddenTicksPerHex > 0;
         u.TargetUnit = -1;
         u.TargetSettlement = -1;
+        u.TargetWall = -1;
         u.PathIndex = 0;
         if (u.Path.Count == 0)
         {
@@ -372,7 +374,8 @@ public sealed partial class SimGame
         }
 
         HexCoord c = Geo.FromIndex(from);
-        if (Map.River[Geo.EdgeIndex(Geo.Edge(c, (HexDirection)dir))] == 0)
+        int edge = Geo.EdgeIndex(Geo.Edge(c, (HexDirection)dir));
+        if (Map.River[edge] == 0 || (BridgeAt.Length > 0 && BridgeAt[edge] != 0))
         {
             return true;
         }
@@ -466,7 +469,7 @@ public sealed partial class SimGame
             {
                 int next = Geo.Index(nb[d]);
                 int step = Cost(next, naval);
-                if (step == 0 || (!naval && !Crossable(civ, cur, d)))
+                if (step == 0 || (!naval && (!Crossable(civ, cur, d) || WalledAgainst(civ, next))))
                 {
                     continue;
                 }

@@ -17,6 +17,9 @@ public sealed class RoadProject
     /// <summary>Level built.</summary>
     public int Level { get; init; }
 
+    /// <summary>Work built instead of a road (−1 = a road).</summary>
+    public int Work { get; init; } = -1;
+
     /// <summary>Hexes to build, in order.</summary>
     public List<int> Cells { get; } = [];
 
@@ -117,19 +120,21 @@ public sealed partial class SimGame
             }
 
             int cell = r.Cells[r.Next];
-            RoadLevel kind = Content.RoadLevels[r.Level - 1];
+            WorkKind? work = r.Work >= 0 ? Content.Works[r.Work] : null;
+            RoadLevel? kind = work is null ? Content.RoadLevels[r.Level - 1] : null;
+            long[] price = work?.Price ?? kind!.Price;
             if (!r.Paid)
             {
                 Settlement? payer = NearestOwn(civ, cell);
-                if (payer is null || !CanAfford(payer.Stock, kind.Price, 100))
+                if (payer is null || !CanAfford(payer.Stock, price, 100))
                 {
                     continue; // waits for goods
                 }
 
-                Pay(payer.Stock, kind.Price, 100);
+                Pay(payer.Stock, price, 100);
                 SyncTotals(civ);
                 r.Paid = true;
-                r.DoneTick = Ticks + Math.Max(1, kind.TicksPerHex);
+                r.DoneTick = Ticks + Math.Max(1, work?.TicksPerHex ?? kind!.TicksPerHex);
             }
 
             if (Ticks < r.DoneTick)
@@ -137,17 +142,25 @@ public sealed partial class SimGame
                 continue;
             }
 
-            if (RoadAt[cell] < r.Level && Content.WalkCost[(Map.Biome[cell] * 3) + Map.Relief[cell]] > 0)
+            if (work is not null)
+            {
+                if (OwnerAt[cell] == civ.Id)
+                {
+                    FinishWorkHex(civ, work, cell);
+                }
+            }
+            else if (RoadAt[cell] < r.Level && Content.WalkCost[(Map.Biome[cell] * 3) + Map.Relief[cell]] > 0)
             {
                 RoadAt[cell] = (byte)r.Level;
                 Map.MarkCellDirty(cell);
+                BridgeRoad(civ, cell);
             }
 
             r.Next++;
             r.Paid = false;
             if (r.Over)
             {
-                News.Add((civ.Id, $"The {kind.Name.ToLowerInvariant()} is built."));
+                News.Add((civ.Id, $"The {(work?.Name ?? kind!.Name).ToLowerInvariant()} is built."));
             }
         }
     }

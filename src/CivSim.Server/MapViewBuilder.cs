@@ -23,7 +23,7 @@ public static class MapViewBuilder
 
     /// <summary>Builds one chunk of <paramref name="map"/> (also used by the new game, ADR 0028).</summary>
     public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known, bool hideResources = false, bool always = false,
-        Func<int, byte>? visibilityOf = null, Func<int, short>? ownerSeen = null, Func<int, byte>? roadSeen = null)
+        Func<int, byte>? visibilityOf = null, Func<int, short>? ownerSeen = null, Func<int, byte>? roadSeen = null, Func<int, ushort>? worksSeen = null)
     {
         ArgumentNullException.ThrowIfNull(map);
         HexGlobe geo = map.Geometry;
@@ -49,6 +49,7 @@ public static class MapViewBuilder
         var seasonGrowth = new byte[n];
         var growing = new byte[n];
         byte[]? road = roadSeen is null ? null : new byte[n];
+        ushort[]? works = worksSeen is null ? null : new ushort[n];
         bool any = false;
         for (int r = 0; r < h; r++)
         {
@@ -80,6 +81,11 @@ public static class MapViewBuilder
                     road[k] = roadSeen!(i);
                 }
 
+                if (works is not null)
+                {
+                    works[k] = worksSeen!(i);
+                }
+
                 wild[k] = map.WildFood[i];
                 influence[k] = map.Influence[i];
                 seasons[k] = map.Seasonality[i];
@@ -109,6 +115,6 @@ public static class MapViewBuilder
 
         return new MapChunkMessage(
             worldId, turn, chunk, x0, y0, w, h, visibility, elevation, temperature, humidity, biome, relief, feature,
-            fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing, seasonTemperature, seasonGrowth, road);
+            fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing, seasonTemperature, seasonGrowth, road, works);
     }
 }

@@ -303,7 +303,8 @@ public sealed record MapChunkMessage(
     [property: Key(23)] byte[]? GrowingSeason = null,
     [property: Key(24)] sbyte[]? SeasonTemperature = null,
     [property: Key(25)] byte[]? SeasonGrowth = null,
-    [property: Key(26)] byte[]? Road = null) : IProtocolMessage
+    [property: Key(26)] byte[]? Road = null,
+    [property: Key(27)] ushort[]? Works = null) : IProtocolMessage
 {
     /// <summary>Visibility: never seen.</summary>
     public const byte Unknown = 0;

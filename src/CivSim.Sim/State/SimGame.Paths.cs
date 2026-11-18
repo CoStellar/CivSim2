@@ -84,6 +84,11 @@ public sealed partial class SimGame
                 return naval ? "Ships sail only on water." : "The path crosses a hex nobody can walk.";
             }
 
+            if (!naval && WalledAgainst(civ, cell))
+            {
+                return "A wall of another people stands there: break it first.";
+            }
+
             if (!naval && !Crossable(civ, last, DirectionTo(last, cell)))
             {
                 return "The path crosses a river: build a raft landing by it first.";
@@ -140,6 +145,7 @@ public sealed partial class SimGame
         u.Patrol.AddRange(loop);
         u.TargetUnit = -1;
         u.TargetSettlement = -1;
+        u.TargetWall = -1;
         NextPatrolLeg(u, PatrolStage.ToStart);
         return null;
     }
