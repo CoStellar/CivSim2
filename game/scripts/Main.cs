@@ -196,10 +196,12 @@ public partial class Main : Node2D
         {
             // --play-demo builds a few things on the way, to check the screen without clicking.
             (double, Action<Play.PlayGame>)[] demo = _playDemo
-                ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("woodcutter", 0)),
-                   (1.9, g => g.ScriptBuildNearCentre("hut", 2)), (2.1, g => g.ScriptBuildNearCentre("hunters_lodge", 1)),
-                   (2.3, g => g.ScriptTrain("scouts")), (9, g => g.ScriptMoveFirst(-8, -6, false)),
-                   (10, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
+                ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("gatherers_hut", 0)),
+                   (1.9, g => g.ScriptBuildNearCentre("woodcutter", 0)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X4)),
+                   (8, g => g.ScriptResearch("dwellings")), (12, g => g.ScriptResearch("scouting")),
+                   (12.5, g => g.ScriptBuildNearCentre("hut", 2)), (12.7, g => g.ScriptBuildNearCentre("hut", 2)), (12.9, g => g.ScriptBuildNearCentre("hut", 2)),
+                   (16, g => g.ScriptTrain("scouts")), (18, g => g.ScriptMoveFirst(-8, -6, false)),
+                   (19, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
                 : [];
             if (_playDemo && _playWindow == "Far")
             {
@@ -212,6 +214,10 @@ public partial class Main : Node2D
             else if (_playDemo && _playWindow == "Road")
             {
                 demo = [.. demo, (3, g => g.ScriptRoad())];
+            }
+            else if (_playDemo && _playWindow == "Slots")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(2.6f))];
             }
             else if (_playDemo && _playWindow == "Place")
             {

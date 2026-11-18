@@ -27,6 +27,9 @@ public enum BuildingState : byte
 /// <summary>One building on one hex. Identified by its index in <see cref="SimGame.Buildings"/>.</summary>
 public sealed class Building
 {
+    /// <summary>Places of its hex it takes: bits 0–3 (top left, top right, bottom left, bottom right).</summary>
+    public int Slots { get; set; } = 1;
+
     /// <summary>Index in the game's list.</summary>
     public int Id { get; init; }
 

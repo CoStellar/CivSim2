@@ -57,7 +57,7 @@ public sealed partial class SimGame
             DemolishCommand c => WithOwn(civ, c.Building, b =>
             {
                 b.State = BuildingState.Removed;
-                BuildingAt[b.Cell] = -1;
+                TakeOffHex(b);
                 civ.Buildings.Remove(b.Id);
                 Map.MarkCellDirty(b.Cell);
                 civ.Dirty = true;
@@ -133,9 +133,15 @@ public sealed partial class SimGame
             return "Build only on your own land.";
         }
 
-        if (BuildingAt[cell] >= 0 || Settlements[SettlementAt[cell]].Center == cell)
+        if (Settlements[SettlementAt[cell]].Center == cell)
         {
-            return "This hex is taken.";
+            return "The settlement's centre fills this hex.";
+        }
+
+        if (SlotsFor(cell, type.Size) == 0)
+        {
+            int taken = SlotsPerHex - System.Numerics.BitOperations.PopCount((uint)FreeSlots(cell));
+            return type.Size == 4 ? $"{type.Name} needs the whole hex ({taken} of 4 places are taken)." : $"No room for {type.Name.ToLowerInvariant()} here: {taken} of 4 places are taken.";
         }
 
         if (!TerrainAllows(cell, type, civ))
@@ -365,7 +371,7 @@ public sealed partial class SimGame
         };
         Buildings.Add(b);
         civ.Buildings.Add(b.Id);
-        BuildingAt[cell] = b.Id;
+        PutOnHex(b, SlotsFor(cell, t.Size));
         Map.MarkCellDirty(cell);
         SendMaterials(b); // porters carry the price from the nearest storehouse; the work goes as far as the delivered materials allow
         SyncTotals(civ);

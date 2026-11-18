@@ -159,6 +159,15 @@ public partial class PlayGame : Node2D
     /// <summary>Script step: sets the speed.</summary>
     public void ScriptSpeed(SimulationSpeed speed) => _session?.SetSpeed(speed);
 
+    /// <summary>Script step: researches a technology by key.</summary>
+    public void ScriptResearch(string key)
+    {
+        if (_session?.PlayContent is { } c && c.Techs.FirstOrDefault(t => t.Key == key) is { } t)
+        {
+            _session.Play(PlayCommandKind.Research, t.Id);
+        }
+    }
+
     /// <summary>Script step: researches the first technology that can start now.</summary>
     public void ScriptResearchAny()
     {

@@ -80,6 +80,13 @@ b("guildhall","Guild hall","guilds",3,{"stone":150,"textiles":30},50,produces={}
 b("university","University","university",4,{"stone":200,"textiles":40,"pottery":40},60,produces={},researchPercent=25,groups=["learn"])
 for x in B:
     x.setdefault("produces",{}) if x["workers"]>0 else None
+# Places on a hex (decision of 2026-11-18): 4 per hex. Fields, mines, quarries, harbours and castles take the whole hex (they use
+# the land itself); stores, stables and halls take two; houses and workshops one. Huts that gather from the land take two, so
+# that a deposit is not worked by four of them at once.
+WHOLE={"farm","pasture","quarry","copper_mine","tin_mine","iron_mine","fishing_hut","harbour","raft_landing","castle","manor","shipyard","great_storehouse"}
+TWO={"gatherers_hut","woodcutter","hunters_lodge","clay_pit","storehouse","granary","stable","barracks","trading_post","siege_workshop","bathhouse","academy","university","guildhall","steelworks","mill","province_office","builders_yard"}
+for x in B:
+    x["size"]=4 if x["key"] in WHOLE else 2 if x["key"] in TWO else 1
 d['buildings']=B
 
 U=[]

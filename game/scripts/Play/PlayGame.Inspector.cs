@@ -54,13 +54,22 @@ public partial class PlayGame
             }
         }
 
-        foreach (PlayBuildingView b in v.Buildings)
+        // Up to four buildings share a hex: each gets its own block, in the order of its places.
+        var here = v.Buildings.Where(b => b.Col == sel.Col && b.Row == sel.Row).OrderBy(b => System.Numerics.BitOperations.TrailingZeroCount(b.Slots)).ToList();
+        if (here.Count > 0)
         {
-            if (b.Col == sel.Col && b.Row == sel.Row)
+            int used = here.Sum(b => System.Numerics.BitOperations.PopCount((uint)b.Slots));
+            if (here.Count > 1 || used < 4)
+            {
+                items.Add(new LineItem($"{used} of 4 places on this hex taken", UiKit.Muted, 13));
+            }
+
+            foreach (PlayBuildingView b in here)
             {
                 BuildingItems(v, c, b, items);
-                return;
             }
+
+            return;
         }
 
         HexItems(sel, items);

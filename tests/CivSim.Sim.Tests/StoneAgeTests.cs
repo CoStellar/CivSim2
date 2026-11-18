@@ -186,7 +186,7 @@ public sealed class StoneAgeTests
         BuildingType landing = Content.Building("raft_landing");
         var b = new Building { Id = g.Buildings.Count, Civ = civ.Id, Type = landing.Id, Cell = from, Settlement = s.Id, State = BuildingState.Active };
         g.Buildings.Add(b);
-        g.BuildingAt[from] = b.Id;
+        g.PlaceForTest(b);
         Assert.True(g.Crossable(civ.Id, from, dir));
     }
 
@@ -228,5 +228,38 @@ public sealed class StoneAgeTests
         civ.Dirty = true;
         Run(g, 2 * SimContent.TicksPerMinute);
         Assert.True(u.Injured < 3, $"herbalists heal: {u.Injured} still wounded, heal {s.HealPerMinute}/min");
+    }
+
+    [Fact]
+    public void AHexHoldsFourPlacesOfSmallBuildingsOrOneWholeHexBuilding()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        Array.Fill(s.Stock, 900 * SimContent.One);
+        s.People = 60;
+        BuildingType hut = Content.Building("hut");
+        Assert.Equal(1, hut.Size);
+        int cell = s.Cells.First(c => g.CannotBuild(civ, c, hut) is null && g.FreeSlots(c) == 15);
+        for (int k = 0; k < 4; k++)
+        {
+            Assert.Null(g.Apply(new BuildCommand(civ.Id, cell, hut.Id)));
+        }
+
+        Assert.Equal(4, g.BuildingsOn(cell).Count);
+        Assert.Contains("4 of 4 places", g.CannotBuild(civ, cell, hut));
+
+        BuildingType storehouse = Content.Building("storehouse");
+        int other = s.Cells.First(c => c != cell && g.CannotBuild(civ, c, hut) is null && g.FreeSlots(c) == 15);
+        Assert.Null(g.Apply(new BuildCommand(civ.Id, other, storehouse.Id)));
+        Assert.Null(g.Apply(new BuildCommand(civ.Id, other, storehouse.Id)));
+        Assert.NotNull(g.CannotBuild(civ, other, hut)); // two storehouses fill the hex
+
+        int third = s.Cells.First(c => c != cell && c != other && g.CannotBuild(civ, c, hut) is null && g.FreeSlots(c) == 15);
+        Assert.Null(g.Apply(new BuildCommand(civ.Id, third, hut.Id)));
+        BuildingType quarry = Content.Building("quarry");
+        Assert.Equal(4, quarry.Size);
+        civ.KnownTech[quarry.Tech] = true;
+        Assert.Contains("whole hex", g.CannotBuild(civ, third, quarry));
     }
 }

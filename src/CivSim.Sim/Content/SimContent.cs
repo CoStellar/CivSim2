@@ -250,6 +250,9 @@ public sealed class BuildingType
     /// <summary>Training time in its settlement, percent (barracks).</summary>
     public int TrainPercent { get; init; }
 
+    /// <summary>Places it takes on its hex: 1, 2 or 4 (the whole hex) of the four (decision of 2026-11-18).</summary>
+    public int Size { get; init; } = 1;
+
     /// <summary>Its production in winter, percent, on top of every worker's winter slowdown (gathering and fields).</summary>
     public int WinterPercent { get; init; } = 100;
 
@@ -831,6 +834,7 @@ public sealed class SimContent
                 BonusReliefPercent = b.TryGetProperty("bonusReliefPercent", out JsonElement brp) ? brp.GetInt32() : 0,
                 TrainPercent = b.TryGetProperty("trainPercent", out JsonElement tp2) ? tp2.GetInt32() : 100,
                 WinterPercent = b.TryGetProperty("winterPercent", out JsonElement wp) ? wp.GetInt32() : 100,
+                Size = b.TryGetProperty("size", out JsonElement sz) ? sz.GetInt32() is 1 or 2 or 4 ? sz.GetInt32() : throw new InvalidDataException($"sim/game.json: size of '{b.GetProperty("key").GetString()}' must be 1, 2 or 4.") : 1,
                 AlsoTechs = TechList(b, "alsoTechs"),
                 ResearchPercent = b.TryGetProperty("researchPercent", out JsonElement rpc) ? rpc.GetInt32() : 0,
                 BuildPercent = b.TryGetProperty("buildPercent", out JsonElement bpc2) ? bpc2.GetInt32() : 0,

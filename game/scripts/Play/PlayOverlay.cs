@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CivSim.Game.Map;
 using CivSim.Protocol.Messages;
 using Godot;
@@ -326,7 +327,7 @@ public partial class PlayOverlay : Node2D
         foreach (PlayBuildingView b in cc.Buildings)
         {
             h.Add(HashCode.Combine(b.Id, b.Type, b.State, b.Workers, b.Starved, b.Priority, b.ProgressPermille, b.Remembered));
-            h.Add(HashCode.Combine(b.Missing, b.Porters, _selected == (b.Col, b.Row)));
+            h.Add(HashCode.Combine(b.Missing, b.Porters, _selected == (b.Col, b.Row), b.Slots));
         }
 
         foreach (PlaySettlementView s in cc.Settlements)
@@ -422,23 +423,43 @@ public partial class PlayOverlay : Node2D
         }
 
         int detail = Detail;
-        foreach (PlayBuildingView b in cc.Buildings)
+        if (detail == 2)
         {
-            if (_selected == (b.Col, b.Row))
+            // Close: every building in its places on the hex (four places a hex, decision of 2026-11-18).
+            foreach (PlayBuildingView b in cc.Buildings)
             {
-                continue; // drawn lifted
+                if (_selected != (b.Col, b.Row))
+                {
+                    DrawBuilding(g, HexLayout.Center(b.Col, b.Row), b, _content.Buildings[b.Type], 1f, detail);
+                }
             }
-
-            Vector2 c = HexLayout.Center(b.Col, b.Row);
-            if (detail == 0)
+        }
+        else
+        {
+            // Farther: one mark per hex, for its largest building or the kind there is most of.
+            foreach (List<PlayBuildingView> hex in ByHex(cc.Buildings))
             {
-                // Far away: a small square in the people's colour.
-                Color col = b.Remembered ? Grey(CivColor(b.Civ)) : CivColor(b.Civ).Darkened(0.3f);
-                g.DrawRect(new Rect2(c - new Vector2(7, 7), new Vector2(14, 14)), col);
-                continue;
-            }
+                PlayBuildingView b = Dominant(hex);
+                if (_selected == (b.Col, b.Row))
+                {
+                    continue;
+                }
 
-            DrawBuilding(g, c, b, _content.Buildings[b.Type], 1f, detail);
+                Vector2 c = HexLayout.Center(b.Col, b.Row);
+                if (detail == 0)
+                {
+                    Color col = b.Remembered ? Grey(CivColor(b.Civ)) : CivColor(b.Civ).Darkened(0.3f);
+                    g.DrawRect(new Rect2(c - new Vector2(7, 7), new Vector2(14, 14)), col);
+                    continue;
+                }
+
+                DrawBuilding(g, c, b with { Slots = 15 }, _content.Buildings[b.Type], 1f, detail);
+                int same = hex.Count(x => x.Type == b.Type);
+                if (hex.Count > 1)
+                {
+                    g.DrawString(UiKit.GlyphFont, c + new Vector2(-24, 20), same > 1 ? $"x{same}" + (same < hex.Count ? "+" : "") : "+", HorizontalAlignment.Center, 48, 12, new Color(1f, 0.95f, 0.7f));
+                }
+            }
         }
 
         foreach (PlaySettlementView st in cc.Settlements)
@@ -760,8 +781,71 @@ public partial class PlayOverlay : Node2D
         Cross,
     }
 
+    // Buildings grouped by hex, in their order.
+    private static List<List<PlayBuildingView>> ByHex(List<PlayBuildingView> all)
+    {
+        var map = new Dictionary<(int, int), List<PlayBuildingView>>();
+        var order = new List<List<PlayBuildingView>>();
+        foreach (PlayBuildingView b in all)
+        {
+            if (!map.TryGetValue((b.Col, b.Row), out List<PlayBuildingView>? list))
+            {
+                list = [];
+                map[(b.Col, b.Row)] = list;
+                order.Add(list);
+            }
+
+            list.Add(b);
+        }
+
+        return order;
+    }
+
+    // The building that stands for its hex from afar: the largest, else the kind there is most of.
+    private PlayBuildingView Dominant(List<PlayBuildingView> hex)
+    {
+        PlayBuildingView best = hex[0];
+        int bestScore = -1;
+        foreach (PlayBuildingView b in hex)
+        {
+            int size = System.Numerics.BitOperations.PopCount((uint)b.Slots);
+            int score = (size * 10) + hex.Count(x => x.Type == b.Type);
+            if (score > bestScore)
+            {
+                best = b;
+                bestScore = score;
+            }
+        }
+
+        return best;
+    }
+
+    // The places of a hex (top left, top right, bottom left, bottom right) as rectangles of the 48×42 tile: 15×13 each, 2 apart.
+    private static Rect2 SlotRect(Vector2 c, int slots, float scale)
+    {
+        Rect2? r = null;
+        for (int k = 0; k < 4; k++)
+        {
+            if ((slots & (1 << k)) == 0)
+            {
+                continue;
+            }
+
+            var one = new Rect2(c + (new Vector2(k % 2 == 0 ? -16 : 1, k < 2 ? -14 : 1) * scale), new Vector2(15, 13) * scale);
+            r = r is { } x ? x.Merge(one) : one;
+        }
+
+        return r ?? new Rect2(c, Vector2.Zero);
+    }
+
     private void DrawBuilding(CanvasItem g, Vector2 c, PlayBuildingView b, PlayBuildingInfo t, float scale, int detail = 2)
     {
+        if (b.Slots != 15)
+        {
+            DrawInPlaces(g, c, b, t, scale);
+            return;
+        }
+
         Font font = UiKit.GlyphFont;
         Color civ = CivColor(b.Civ);
         if (b.Remembered)
@@ -805,6 +889,42 @@ public partial class PlayOverlay : Node2D
         {
             Color w = b.Workers >= t.Workers ? Colors.LightGreen : b.Workers == 0 ? Colors.Red : Colors.Yellow;
             g.DrawString(font, c + new Vector2(-24, -8), $"{b.Workers}/{t.Workers}", HorizontalAlignment.Center, 48, 12, w);
+        }
+    }
+
+    // A building that takes one or two places of its hex: a small block with its short name and a mark of its state.
+    private void DrawInPlaces(CanvasItem g, Vector2 c, PlayBuildingView b, PlayBuildingInfo t, float scale)
+    {
+        Rect2 r = SlotRect(c, b.Slots, scale);
+        Color civ = b.Remembered ? Grey(CivColor(b.Civ)) : CivColor(b.Civ);
+        bool built = b.State is 2 or 3;
+        Color fill = b.Remembered ? new Color(0.46f, 0.46f, 0.46f, 0.85f) : b.State switch
+        {
+            5 => new Color(0.2f, 0.2f, 0.3f, 0.75f),
+            0 or 1 => new Color(0.35f, 0.3f, 0.25f, 0.9f),
+            3 => new Color(0.25f, 0.25f, 0.25f, 0.9f),
+            _ => b.Starved ? new Color(0.55f, 0.15f, 0.12f, 0.95f) : new Color(0.18f, 0.16f, 0.14f, 0.92f),
+        };
+        g.DrawRect(r, fill);
+        g.DrawRect(r, b.Priority && !b.Remembered ? new Color(1f, 0.85f, 0.2f) : civ, false, b.Priority ? 2 : 1);
+        g.DrawString(UiKit.GlyphFont, new Vector2(r.Position.X, r.Position.Y + (r.Size.Y * 0.5f) + 4), UiKit.Short(t.Name), HorizontalAlignment.Center, r.Size.X, 12,
+            b.Remembered ? new Color(0.88f, 0.88f, 0.88f) : built ? Colors.White : new Color(0.8f, 0.8f, 0.8f));
+        if (b.Remembered)
+        {
+            return;
+        }
+
+        Vector2 bl = r.Position + new Vector2(1, r.Size.Y - 2);
+        if (!built)
+        {
+            float p = b.State == 5 ? 0 : b.ProgressPermille / 1000f;
+            g.DrawLine(bl, bl + new Vector2(r.Size.X - 2, 0), new Color(0, 0, 0, 0.8f), 2);
+            g.DrawLine(bl, bl + new Vector2((r.Size.X - 2) * p, 0), b.State == 5 ? (b.Porters == 0 && b.Missing is not null ? Colors.Red : new Color(0.6f, 0.7f, 1f)) : b.State == 1 ? Colors.Orange : Colors.LightGreen, 2);
+        }
+        else if (t.Workers > 0)
+        {
+            Color w = b.Workers >= t.Workers ? Colors.LightGreen : b.Workers == 0 ? Colors.Red : Colors.Yellow;
+            g.DrawCircle(r.Position + new Vector2(r.Size.X - 3, 3), 2, w);
         }
     }
 

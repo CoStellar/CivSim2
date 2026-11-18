@@ -8,7 +8,7 @@ namespace CivSim.Sim.State;
 public sealed record SettlementMemory(int Settlement, int Civ, string Name, int Level, int Center);
 
 /// <summary>What a people remembers of a building it no longer sees.</summary>
-public sealed record BuildingMemory(int Building, int Type, int Civ, BuildingState State, int Cell);
+public sealed record BuildingMemory(int Building, int Type, int Civ, BuildingState State, int Cell, int Slots = 15);
 
 /// <summary>
 /// The fog of war (decisions of 2026-11-18): every hex is unknown, remembered or seen now. Each people counts its observers
@@ -166,15 +166,19 @@ public sealed partial class SimGame
     {
         civ.SeenOwner[cell] = OwnerAt[cell];
         civ.SeenRoad[cell] = RoadAt[cell];
-        int b = BuildingAt[cell];
-        if (b >= 0 && Buildings[b].State != BuildingState.Removed)
+        // One memory per place: key cell × 4 + first place of the building.
+        for (int k = 0; k < SlotsPerHex; k++)
+        {
+            civ.SeenBuildings.Remove((cell * SlotsPerHex) + k);
+        }
+
+        foreach (int b in BuildingsOn(cell))
         {
             Building x = Buildings[b];
-            civ.SeenBuildings[cell] = new BuildingMemory(x.Id, x.Type, x.Civ, x.State, cell);
-        }
-        else
-        {
-            civ.SeenBuildings.Remove(cell);
+            if (x.State != BuildingState.Removed)
+            {
+                civ.SeenBuildings[(cell * SlotsPerHex) + System.Numerics.BitOperations.TrailingZeroCount(x.Slots)] = new BuildingMemory(x.Id, x.Type, x.Civ, x.State, cell, x.Slots);
+            }
         }
 
         int sid = SettlementAt[cell];
@@ -191,7 +195,11 @@ public sealed partial class SimGame
 
     private static void Forget(Civ civ, int cell)
     {
-        civ.SeenBuildings.Remove(cell);
+        for (int k = 0; k < SlotsPerHex; k++)
+        {
+            civ.SeenBuildings.Remove((cell * SlotsPerHex) + k);
+        }
+
         civ.SeenSettlements.Remove(cell);
     }
 

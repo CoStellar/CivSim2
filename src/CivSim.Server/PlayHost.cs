@@ -367,7 +367,7 @@ public sealed class PlayHost : IDisposable
         var buildings = new List<PlayBuildingInfo>();
         foreach (BuildingType t in content.Buildings)
         {
-            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech, t.Groups));
+            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech, t.Groups, t.Size));
         }
 
         var levels = new List<PlayLevelInfo>();
@@ -539,7 +539,7 @@ public sealed class PlayHost : IDisposable
     }
 
     private static int Sig(PlayBuildingView b) => HashCode.Combine(HashCode.Combine(b.Type, b.Civ, b.Col, b.Row, b.State, b.Workers, b.Starved, b.Priority),
-        HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered));
+        HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered, b.Slots));
 
     private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, s.DefensePercent),
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute)));
@@ -758,7 +758,7 @@ public sealed class PlayHost : IDisposable
                 }
             }
 
-            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0));
+            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0, Slots: b.Slots));
         }
 
         if (!_game.Picking)
@@ -768,7 +768,7 @@ public sealed class PlayHost : IDisposable
                 if (m.Civ != civId)
                 {
                     HexCoord h = _game.Geo.FromIndex(m.Cell);
-                    buildings.Add(new PlayBuildingView(m.Building, m.Type, m.Civ, h.Col, h.Row, (int)m.State, 0, false, false, 1000, 100, Remembered: true));
+                    buildings.Add(new PlayBuildingView(m.Building, m.Type, m.Civ, h.Col, h.Row, (int)m.State, 0, false, false, 1000, 100, Remembered: true, Slots: m.Slots));
                 }
             }
         }

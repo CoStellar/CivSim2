@@ -383,8 +383,16 @@ public sealed partial class SimGame
 
     private bool CrossingAt(int civ, int cell)
     {
-        int b = BuildingAt[cell];
-        return b >= 0 && Buildings[b].Civ == civ && Buildings[b].State == BuildingState.Active && Content.Buildings[Buildings[b].Type].Crossing;
+        for (int k = 0; k < SlotsPerHex; k++)
+        {
+            int b = SlotAt[(cell * SlotsPerHex) + k];
+            if (b >= 0 && Buildings[b].Civ == civ && Buildings[b].State == BuildingState.Active && Content.Buildings[Buildings[b].Type].Crossing)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Direction from one hex to its neighbour (−1 when they are not neighbours).

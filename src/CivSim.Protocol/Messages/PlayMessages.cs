@@ -22,7 +22,8 @@ public sealed record PlayBuildingInfo(
     [property: Key(9)] long Storage,
     [property: Key(10)] string Needs,
     [property: Key(11)] int Tech = 0,
-    [property: Key(12)] string[]? Groups = null);
+    [property: Key(12)] string[]? Groups = null,
+    [property: Key(13)] int Size = 1);
 
 /// <summary>A unit kind of the new game.</summary>
 [MessagePackObject]
@@ -174,7 +175,8 @@ public sealed record PlayBuildingView(
     [property: Key(10)] int YieldPercent,
     [property: Key(11)] string? Missing = null,
     [property: Key(12)] int Porters = 0,
-    [property: Key(13)] bool Remembered = false);
+    [property: Key(13)] bool Remembered = false,
+    [property: Key(14)] int Slots = 15);
 
 /// <summary>
 /// Server → client: hexes whose fog or owner changed for this player (indices row × width + column). Terrain comes in

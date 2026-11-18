@@ -80,6 +80,8 @@ public sealed partial class SimGame
         Array.Fill(OwnerAt, (short)-1);
         Array.Fill(SettlementAt, -1);
         Array.Fill(BuildingAt, -1);
+        SlotAt = new int[Geo.CellCount * SlotsPerHex];
+        Array.Fill(SlotAt, -1);
     }
 
     /// <summary>Rules.</summary>
@@ -105,6 +107,12 @@ public sealed partial class SimGame
 
     /// <summary>Building on each hex (−1 = none).</summary>
     public int[] BuildingAt { get; }
+
+    /// <summary>Places on a hex (decision of 2026-11-18): four, each holding a building or nothing.</summary>
+    public const int SlotsPerHex = 4;
+
+    /// <summary>Building in each place of each hex (index cell × 4 + place), −1 = empty.</summary>
+    public int[] SlotAt { get; }
 
     /// <summary>Civilizations.</summary>
     public List<Civ> Civs { get; } = [];

@@ -551,7 +551,8 @@
       "winterPercent": 50,
       "groups": [
         "food"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "woodcutter",
@@ -573,7 +574,8 @@
       },
       "groups": [
         "tools"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "hut",
@@ -587,7 +589,8 @@
       "housing": 8,
       "groups": [
         "house"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "storehouse",
@@ -601,7 +604,8 @@
       "storage": 300,
       "groups": [
         "store"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "hearth",
@@ -616,7 +620,8 @@
       "housing": 3,
       "groups": [
         "house"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "quarry",
@@ -640,7 +645,8 @@
       "groups": [
         "tools",
         "quarry"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "toolmaker",
@@ -663,7 +669,8 @@
       "bonusPercent": 50,
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "hunters_lodge",
@@ -692,7 +699,8 @@
       "groups": [
         "food",
         "hunt"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "clay_pit",
@@ -712,7 +720,8 @@
       "bonusPercent": 100,
       "groups": [
         "tools"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "herbalist",
@@ -730,7 +739,8 @@
       "healsPerMinute": 6,
       "groups": [
         "care"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "tailor",
@@ -750,7 +760,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "fishing_hut",
@@ -769,7 +780,8 @@
       "bonusPercent": 100,
       "groups": [
         "food"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "raft_landing",
@@ -788,7 +800,8 @@
       },
       "groups": [
         "food"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "farm",
@@ -816,7 +829,8 @@
       "groups": [
         "food",
         "farm"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "potter",
@@ -837,7 +851,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "granary",
@@ -852,7 +867,8 @@
       "storage": 250,
       "groups": [
         "store"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "pasture",
@@ -877,7 +893,8 @@
       "bonusPercent": 100,
       "groups": [
         "food"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "stone_house",
@@ -892,7 +909,8 @@
       "housing": 16,
       "groups": [
         "house"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "mason",
@@ -909,7 +927,8 @@
       "supportPercent": 25,
       "groups": [
         "care"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "weaver",
@@ -930,7 +949,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "trading_post",
@@ -947,7 +967,8 @@
       "groups": [
         "store",
         "trade"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "copper_mine",
@@ -966,7 +987,8 @@
       "groups": [
         "tools",
         "mine"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "tin_mine",
@@ -985,7 +1007,8 @@
       "groups": [
         "tools",
         "mine"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "bronze_smith",
@@ -1007,7 +1030,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "armourer",
@@ -1028,7 +1052,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "school",
@@ -1044,7 +1069,8 @@
       "researchPercent": 15,
       "groups": [
         "learn"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "stable",
@@ -1068,7 +1094,8 @@
       },
       "groups": [
         "food"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "harbour",
@@ -1086,7 +1113,8 @@
       },
       "groups": [
         "food"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "mint",
@@ -1106,7 +1134,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "barracks",
@@ -1122,7 +1151,8 @@
       "trainPercent": 50,
       "groups": [
         "army"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "iron_mine",
@@ -1141,7 +1171,8 @@
       "groups": [
         "tools",
         "mine"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "blacksmith",
@@ -1162,7 +1193,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "weaponsmith",
@@ -1183,7 +1215,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 1
     },
     {
       "key": "builders_yard",
@@ -1199,7 +1232,8 @@
       "buildPercent": 30,
       "groups": [
         "care"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "great_storehouse",
@@ -1214,7 +1248,8 @@
       "storage": 1000,
       "groups": [
         "store"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "province_office",
@@ -1229,7 +1264,8 @@
       "produces": {},
       "groups": [
         "govern"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "siege_workshop",
@@ -1245,7 +1281,8 @@
       "trainPercent": 70,
       "groups": [
         "army"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "bathhouse",
@@ -1262,7 +1299,8 @@
       "growthBonus": 2,
       "groups": [
         "care"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "academy",
@@ -1278,7 +1316,8 @@
       "researchPercent": 20,
       "groups": [
         "learn"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "shipyard",
@@ -1295,7 +1334,8 @@
       "trainPercent": 60,
       "groups": [
         "army"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "manor",
@@ -1315,7 +1355,8 @@
       "groups": [
         "food",
         "farm"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "steelworks",
@@ -1337,7 +1378,8 @@
       },
       "groups": [
         "craft"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "castle",
@@ -1354,7 +1396,8 @@
       "housing": 10,
       "groups": [
         "fort"
-      ]
+      ],
+      "size": 4
     },
     {
       "key": "mill",
@@ -1373,7 +1416,8 @@
       "supportPercent": 20,
       "groups": [
         "care"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "guildhall",
@@ -1390,7 +1434,8 @@
       "supportPercent": 25,
       "groups": [
         "care"
-      ]
+      ],
+      "size": 2
     },
     {
       "key": "university",
@@ -1407,7 +1452,8 @@
       "researchPercent": 25,
       "groups": [
         "learn"
-      ]
+      ],
+      "size": 2
     }
   ],
   "eras": [
