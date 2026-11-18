@@ -211,7 +211,7 @@ public static class SimAi
             "wood" => ["woodcutter", "gatherers_hut"],
             "stone" => ["quarry"],
             "clay" => ["clay_pit"],
-            "tools" => ["toolmaker", "forge", "steelworks"],
+            "tools" => ["toolmaker", "blacksmith", "steelworks"],
             "copper" => ["copper_mine"],
             "tin" => ["tin_mine"],
             "bronze" => ["bronze_smith"],
@@ -226,7 +226,7 @@ public static class SimAi
             }
         }
 
-        foreach (string k in new[] { "school", "observatory", "farm", "pasture", "woodcutter", "quarry", "clay_pit", "toolmaker", "copper_mine", "tin_mine", "bronze_smith", "iron_mine", "forge", "potter", "gatherers_hut", "hunters_lodge" })
+        foreach (string k in new[] { "school", "academy", "farm", "pasture", "woodcutter", "quarry", "mason", "clay_pit", "toolmaker", "copper_mine", "tin_mine", "bronze_smith", "iron_mine", "blacksmith", "potter", "tailor", "herbalist", "gatherers_hut", "hunters_lodge" })
         {
             if (TryBuild(g, civ, k))
             {

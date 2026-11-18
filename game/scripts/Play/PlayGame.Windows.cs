@@ -10,7 +10,7 @@ namespace CivSim.Game.Play;
 /// <summary>The windows in the middle of the screen: settlements, research tree, peoples, thinkers and the summary.</summary>
 public partial class PlayGame
 {
-    private static readonly string[] Categories = ["food", "industry", "building", "trade", "military", "governance", "science"];
+    private static readonly string[] Categories = ["basics", "food", "industry", "building", "trade", "military", "governance", "science"];
 
     private void UpdateWindow(PlayViewMessage v, PlayContentMessage c)
     {
@@ -80,7 +80,7 @@ public partial class PlayGame
             items.Add(new LineItem($"Our thinker {t.Name} ({t.Rarity.ToLowerInvariant()}): research costs {t.CostPercent}%, needs {t.ExperiencePercent}% of the experience.", UiKit.Muted, 13));
         }
 
-        items.Add(new LineItem("Green: known.  Bright: can start now.  Dim: needs something first (hover to see what).  An era opens after five technologies of the one before.", UiKit.Muted, 13));
+        items.Add(new LineItem("Green: known.  Bright: can start now.  Dim: needs something first (hover to see what).  An era opens after five technologies of the one before; the basics do not count.", UiKit.Muted, 13));
         var sig = new StringBuilder();
         foreach (PlayTechState st in v.Techs)
         {
@@ -110,7 +110,7 @@ public partial class PlayGame
             grid.AddChild(head);
         }
 
-        foreach (string cat in Categories)
+        foreach (string cat in (IEnumerable<string>?)c.Categories ?? Categories)
         {
             var label = new HBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
             label.AddChild(new Glyph(UiKit.CategoryColor(cat), UiKit.Short(cat)[..1], 24, round: true) { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin });
