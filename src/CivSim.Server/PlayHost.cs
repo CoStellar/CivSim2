@@ -273,6 +273,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag, Cells(m.Cells)),
         PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
         PlayCommandKind.BuildRoad => new BuildRoadCommand(civ, Cells(m.Cells) ?? [], m.A),
+        PlayCommandKind.Gather => new GatherCommand(civ, m.A, m.Flag),
         PlayCommandKind.Found => new FoundCommand(civ, m.A),
         PlayCommandKind.Research => new ResearchCommand(civ, m.A),
         PlayCommandKind.Hire => new HireCommand(civ, m.Flag),
@@ -541,10 +542,10 @@ public sealed class PlayHost : IDisposable
         HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered));
 
     private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, s.DefensePercent),
-        HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row));
+        HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute)));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
-        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier));
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, u.Injured));
 
     private static int TechSig(IReadOnlyList<PlayTechState> techs)
     {
@@ -718,7 +719,9 @@ public sealed class PlayHost : IDisposable
             HexCoord h = _game.Geo.FromIndex(s.Center);
             bool own = s.Civ == civId;
             settlements.Add(new PlaySettlementView(s.Id, s.Civ, s.Name, h.Col, h.Row, s.Level, s.People, s.Housing, s.Idle, s.Besieged, _game.Defense(s),
-                own ? (long[])s.Stock.Clone() : null, own ? (long[])s.Capacity.Clone() : null, own ? (long[])s.Rate.Clone() : null));
+                own ? (long[])s.Stock.Clone() : null, own ? (long[])s.Capacity.Clone() : null, own ? (long[])s.Rate.Clone() : null,
+                Gathering: own && s.Gathering, Richness: own ? (int[])_game.Richness(s).Clone() : null, WorkPermille: own ? s.WorkPermille : 1000,
+                HealPerMinute: own ? s.HealPerMinute : 0));
         }
 
         if (!_game.Picking)
@@ -787,7 +790,7 @@ public sealed class PlayHost : IDisposable
                 mine && u.State == UnitState.Moving ? Pairs(u.Path, u.PathIndex) : null,
                 mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
-                _game.Content.Units[u.Kind].System));
+                _game.Content.Units[u.Kind].System, mine ? u.Injured : 0));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
@@ -798,7 +801,8 @@ public sealed class PlayHost : IDisposable
             _game.Picking ? _game.Civs[_game.PickOrder[_game.PickIndex]].Name : null,
             civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0,
             _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId),
-            AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0);
+            AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0,
+            Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond));
     }
 
     // What a technology opens and changes, worked out from the data (so the player sees exactly what it does).

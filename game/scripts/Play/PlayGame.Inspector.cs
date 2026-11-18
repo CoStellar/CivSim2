@@ -91,7 +91,18 @@ public partial class PlayGame
         }
 
         items.Add(new BarItem("People", s.Housing <= 0 ? 0 : (float)s.People / s.Housing, $"{s.People} of {s.Housing} homes", new Color("4f7fb8")));
-        items.Add(new LineItem(s.Idle > 0 ? $"{s.Idle} without work (they forage a little)" : "Everyone has work", UiKit.Muted, 13));
+        items.Add(new LineItem(s.Idle > 0 ? $"{s.Idle} without work" + (s.Gathering ? " (they gather around)" : " (idle)") : "Everyone has work", UiKit.Muted, 13));
+        GatherItems(c, s, items);
+        int work = s.WorkPermille / 10;
+        if (work != 100)
+        {
+            items.Add(new LineItem($"Workers work at {work}%" + (v.Winter ? " (winter; clothing helps)" : " (clothing)"), work < 100 ? UiKit.Warn : UiKit.Good, 13));
+        }
+
+        if (s.HealPerMinute > 0)
+        {
+            items.Add(new LineItem($"Herbalists heal {s.HealPerMinute} wounded a minute in its land", UiKit.Muted, 13));
+        }
 
         foreach (PlayAlertView a in v.Alerts ?? [])
         {
@@ -327,6 +338,28 @@ public partial class PlayGame
         items.Add(new ActItem("Tear down", () => _session!.Play(PlayCommandKind.Demolish, id), "The building is gone; the hex is free again.", Accent: UiKit.Bad));
     }
 
+    // The order to gather around the settlement, with what one gatherer brings here (the land's richness).
+    private void GatherItems(PlayContentMessage c, PlaySettlementView s, List<UiItem> items)
+    {
+        int sid = s.Id;
+        var per = new List<string>();
+        if (s.Richness is { } rich)
+        {
+            foreach (string key in new[] { "food", "wood", "stone" })
+            {
+                int g = c.Goods.ToList().FindIndex(x => x.Key == key);
+                if (g >= 0 && g < rich.Length && rich[g] > 0)
+                {
+                    per.Add($"{key} {rich[g]}%");
+                }
+            }
+        }
+
+        string land = per.Count == 0 ? "nothing to gather here" : string.Join(", ", per);
+        items.Add(new ActItem(s.Gathering ? "Stop gathering" : "Gather around", () => _session!.Play(PlayCommandKind.Gather, sid, flag: !s.Gathering),
+            $"People without a job pick up food, wood and stone around the settlement. How much depends on the land: {land} of a rich land."));
+    }
+
     private void UnitItems(PlayUnitView u, PlayContentMessage c, List<UiItem> items)
     {
         PlayUnitInfo t = c.Units[u.Kind];
@@ -335,6 +368,11 @@ public partial class PlayGame
         if (u.Cargo is { } load && load != "nothing")
         {
             items.Add(new LineItem($"Carrying {load}", UiKit.Text, 14));
+        }
+
+        if (u.Injured > 0)
+        {
+            items.Add(new LineItem($"{u.Injured} wounded: bring them to a settlement with herbalists", UiKit.Warn, 14));
         }
 
         if (t.Army)

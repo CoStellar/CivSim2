@@ -255,6 +255,7 @@ public sealed partial class SimGame
         civ.KnownTech[tech] = true;
         civ.Researching = -1;
         News.Add((civ.Id, $"We have learned {Content.Techs[tech].Name}."));
+        UpgradeUnits(civ, tech);
         AdvanceEra(civ, tell: true);
 
         civ.Dirty = true;

@@ -34,7 +34,7 @@ public sealed partial class SimGame
     /// Builds the full walk from <paramref name="from"/> along the drawn hexes into <paramref name="path"/>. Returns null, or why
     /// the drawing cannot be walked.
     /// </summary>
-    public string? DrawnPath(int from, IReadOnlyList<int> drawn, bool naval, List<int> path)
+    public string? DrawnPath(int from, IReadOnlyList<int> drawn, bool naval, List<int> path, int civ = -1)
     {
         ArgumentNullException.ThrowIfNull(drawn);
         ArgumentNullException.ThrowIfNull(path);
@@ -52,7 +52,7 @@ public sealed partial class SimGame
         else if (Distance(from, drawn[0]) > 1)
         {
             // The drawing starts away from the unit: find the way to its first hex.
-            if (!FindPath(from, drawn[0], path, naval))
+            if (!FindPath(from, drawn[0], path, naval, civ))
             {
                 return "There is no way to the start of the drawn path.";
             }
@@ -84,6 +84,11 @@ public sealed partial class SimGame
                 return naval ? "Ships sail only on water." : "The path crosses a hex nobody can walk.";
             }
 
+            if (!naval && !Crossable(civ, last, DirectionTo(last, cell)))
+            {
+                return "The path crosses a river: build a raft landing by it first.";
+            }
+
             path.Add(cell);
             last = cell;
         }
@@ -95,7 +100,7 @@ public sealed partial class SimGame
     private string? MoveDrawn(Civ civ, Unit u, int[] drawn, bool hidden)
     {
         UnitType t = Content.Units[u.Kind];
-        string? why = DrawnPath(u.Cell, drawn, t.Naval, u.Path);
+        string? why = DrawnPath(u.Cell, drawn, t.Naval, u.Path, u.Civ);
         if (why is not null)
         {
             u.Path.Clear();
@@ -125,7 +130,7 @@ public sealed partial class SimGame
 
         // The loop itself must be walkable from its own first hex.
         var check = new List<int>();
-        string? why = loop.Length < 2 ? "Draw a longer patrol." : DrawnPath(loop[0], loop, t.Naval, check);
+        string? why = loop.Length < 2 ? "Draw a longer patrol." : DrawnPath(loop[0], loop, t.Naval, check, civ.Id);
         if (why is not null)
         {
             return why;
@@ -147,7 +152,7 @@ public sealed partial class SimGame
         switch (stage)
         {
             case PatrolStage.ToStart:
-                if (!FindPath(u.Cell, u.Patrol[0], u.Path, t.Naval))
+                if (!FindPath(u.Cell, u.Patrol[0], u.Path, t.Naval, u.Civ))
                 {
                     StopPatrol(u, "cannot reach the start of its patrol");
                     return;
@@ -161,7 +166,7 @@ public sealed partial class SimGame
 
                 break;
             case PatrolStage.OnLoop:
-                if (DrawnPath(u.Cell, u.Patrol, t.Naval, u.Path) is not null)
+                if (DrawnPath(u.Cell, u.Patrol, t.Naval, u.Path, u.Civ) is not null)
                 {
                     StopPatrol(u, "cannot walk its patrol any more");
                     return;
@@ -170,7 +175,7 @@ public sealed partial class SimGame
                 break;
             case PatrolStage.ToSupply:
                 Settlement? home = NearestOwn(Civs[u.Civ], u.Cell);
-                if (home is null || !FindPath(u.Cell, home.Center, u.Path, t.Naval))
+                if (home is null || !FindPath(u.Cell, home.Center, u.Path, t.Naval, u.Civ))
                 {
                     StopPatrol(u, "has no settlement to eat at");
                     return;

@@ -27,6 +27,9 @@ public enum AlertKind
 
     /// <summary>A construction stopped: its materials were lost on the way.</summary>
     MissingMaterials = 6,
+
+    /// <summary>Winter comes soon (or is here) and the settlement has less than one set of clothing per person.</summary>
+    Clothing = 7,
 }
 
 /// <summary>One alert. <see cref="Good"/> is −1 when it is not about a good; <see cref="Cell"/> is where to look.</summary>
@@ -50,6 +53,14 @@ public sealed partial class SimGame
             if (EnemyNear(civ, s))
             {
                 list.Add(new Alert(AlertKind.EnemyNear, s.Id, s.Center, -1, $"Enemy soldiers near {s.Name}."));
+            }
+
+            if (Content.Clothing >= 0 && (IsWinter || TicksToSeasonChange <= SimContent.TicksPerMinute) && s.People > 0
+                && s.Stock[Content.Clothing] < (long)s.People * SimContent.One)
+            {
+                string when = IsWinter ? "It is winter" : $"Winter comes in {TicksToSeasonChange / SimContent.TicksPerSecond} s";
+                list.Add(new Alert(AlertKind.Clothing, s.Id, s.Center, Content.Clothing,
+                    $"{when}: {s.Name} has {s.Stock[Content.Clothing] / SimContent.One} sets of clothing for {s.People} people; its workers will be slower."));
             }
 
             if (s.Hungry)

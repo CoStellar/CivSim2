@@ -88,6 +88,12 @@ public sealed class Settlement
     /// <summary>Richness of its land per good, percent (mean of its land hexes), worked out when its land changes.</summary>
     public int[] ForageRichness { get; set; } = [];
 
+    /// <summary>What a worker does now, per mille (winter and clothing), as last worked out.</summary>
+    public int WorkPermille { get; set; } = 1000;
+
+    /// <summary>Wounded soldiers its herbalists heal a minute (worked out with the economy).</summary>
+    public int HealPerMinute { get; set; }
+
     /// <summary>Number of hexes the richness was worked out for (worked out again when the land grows).</summary>
     public int ForageCells { get; set; } = -1;
 
@@ -346,7 +352,7 @@ public sealed class Unit
     public int Civ { get; init; }
 
     /// <summary>Unit kind id.</summary>
-    public int Kind { get; init; }
+    public int Kind { get; set; }
 
     /// <summary>People in the group.</summary>
     public int People { get; set; }
@@ -374,6 +380,18 @@ public sealed class Unit
 
     /// <summary>Enemy settlement it was ordered to attack (−1 = none).</summary>
     public int TargetSettlement { get; set; } = -1;
+
+    /// <summary>Wounded soldiers carried with the unit: they do not fight; herbalists bring them back.</summary>
+    public int Injured { get; set; }
+
+    /// <summary>Horses a caravan took with it, hundredths (back home with it).</summary>
+    public long Horses { get; set; }
+
+    /// <summary>Share of a wounded soldier gathered from the fallen, percent.</summary>
+    public int InjuredShare { get; set; }
+
+    /// <summary>Hundredths of a wounded soldier healed so far.</summary>
+    public long HealProgress { get; set; }
 
     /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
     public long Wounds { get; set; }

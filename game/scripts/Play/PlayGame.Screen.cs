@@ -428,8 +428,9 @@ public partial class PlayGame
     private void UpdateAdvisor(PlayViewMessage v)
     {
         bool hasEvent = v.Event is not null;
-        _eventLabel.Visible = hasEvent;
-        _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" : "";
+        string season = v.SeasonSeconds <= 0 ? "" : v.Winter ? $"WINTER: {v.SeasonSeconds / 60}:{v.SeasonSeconds % 60:00} left" : v.SeasonSeconds <= 60 ? $"Winter in {v.SeasonSeconds} s" : "";
+        _eventLabel.Visible = hasEvent || season.Length > 0;
+        _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" + (season.Length > 0 ? $"   {season}" : "") : season;
         if (v.Advisor is { } a)
         {
             _advisorName.Text = $"{a.Name}, {a.Rarity.ToLowerInvariant()} advisor";

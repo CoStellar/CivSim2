@@ -226,7 +226,7 @@ public sealed partial class SimGame
         }
 
         (Settlement sa, Settlement sb) = ClosestPair(a, b);
-        return FindPath(sa.Center, sb.Center, _probe);
+        return FindPath(sa.Center, sb.Center, _probe, false, sa.Civ);
     }
 
     private readonly List<int> _probe = [];

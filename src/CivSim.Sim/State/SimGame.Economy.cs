@@ -27,6 +27,8 @@ public sealed partial class SimGame
             Array.Clear(s.Rate);
             Array.Fill(s.Capacity, level.Storage);
             s.Idle = s.People;
+            s.HealPerMinute = 0;
+            s.WorkPermille = WorkPermille(s);
             people += s.People;
         }
 
@@ -48,6 +50,7 @@ public sealed partial class SimGame
             }
         }
 
+        // Jobs first: priority buildings, then the rest in build order.
         for (int pass = 0; pass < 2; pass++)
         {
             foreach (int id in civ.Buildings)
@@ -89,20 +92,30 @@ public sealed partial class SimGame
                 }
 
                 b.Full = anyOut && allFull;
-                if (b.Starved || b.Full)
-                {
-                    continue;
-                }
-
-                int boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups);
-                for (int g = 0; g < goods; g++)
-                {
-                    long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100;
-                    s.Rate[g] += made - (t.Consumes[g] * b.Workers);
-                    civ.MadeRate[g] += made;
-                }
-
                 civ.ExperienceRate[t.Tech] += b.Workers;
+            }
+        }
+
+        // Then what they make: raised by technologies and support buildings, slowed by winter, helped by clothing.
+        GatherSupport(civ);
+        bool winter = IsWinter;
+        foreach (int id in civ.Buildings)
+        {
+            Building b = Buildings[id];
+            BuildingType t = Content.Buildings[b.Type];
+            if (b.Workers == 0 || b.Starved || b.Full)
+            {
+                continue;
+            }
+
+            Settlement s = Settlements[b.Settlement];
+            long boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups) + Support(s, t);
+            long work = s.WorkPermille * (winter ? t.WinterPercent : 100) / 100;
+            for (int g = 0; g < goods; g++)
+            {
+                long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100 * work / 1000;
+                s.Rate[g] += made - (t.Consumes[g] * b.Workers);
+                civ.MadeRate[g] += made;
             }
         }
 
@@ -115,15 +128,20 @@ public sealed partial class SimGame
             if (s.Gathering && s.Idle > 0)
             {
                 int[] rich = Richness(s);
+                long work = s.WorkPermille * (IsWinter ? 50 : 100) / 100; // gathering suffers in winter like the gatherers' huts
                 for (int g = 0; g < goods; g++)
                 {
-                    long got = s.Idle * Content.ForagePerMinute[g] * rich[g] / 100 * EventProduction(civ, g) / 100;
+                    long got = s.Idle * Content.ForagePerMinute[g] * rich[g] / 100 * EventProduction(civ, g) / 100 * work / 1000;
                     s.Rate[g] += got;
                     civ.MadeRate[g] += got;
                 }
             }
 
             s.Rate[Content.Food] -= s.People * Content.FoodPerPersonPerMinute * eat / 100;
+            if (Content.Clothing >= 0 && s.Stock[Content.Clothing] >= SimContent.One)
+            {
+                s.Rate[Content.Clothing] -= s.People * Content.ClothingWearPerPersonPerMinute;
+            }
         }
 
         // Soldiers in the field and the advisor are fed from the first settlement (the capital).
@@ -329,7 +347,7 @@ public sealed partial class SimGame
             }
 
             s.Hungry = hungry;
-            if (empty != s.EmptyMask || full != s.FullMask)
+            if (empty != s.EmptyMask || full != s.FullMask || WorkChanged(s))
             {
                 s.EmptyMask = empty;
                 s.FullMask = full;

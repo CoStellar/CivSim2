@@ -47,6 +47,54 @@ public sealed partial class SimGame
         return null;
     }
 
+    /// <summary>The kind a unit is now, after the technologies that change it (hunters are archers once Archery is known).</summary>
+    public int Upgraded(Civ civ, int kind)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        for (int guard = 0; guard < 4; guard++)
+        {
+            int next = kind;
+            foreach ((int tech, int to) in Content.Units[kind].Becomes)
+            {
+                if (civ.KnownTech[tech])
+                {
+                    next = to;
+                }
+            }
+
+            if (next == kind)
+            {
+                break;
+            }
+
+            kind = next;
+        }
+
+        return kind;
+    }
+
+    // A technology that changes a kind of unit changes the units already in the field too.
+    private void UpgradeUnits(Civ civ, int tech)
+    {
+        foreach (int uid in civ.Units)
+        {
+            Unit u = Units[uid];
+            if (u.State == UnitState.Gone)
+            {
+                continue;
+            }
+
+            int to = Upgraded(civ, u.Kind);
+            if (to != u.Kind)
+            {
+                News.Add((civ.Id, $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} are now {Content.Units[to].Name.ToLowerInvariant()} ({Content.Techs[tech].Name})."));
+                Unwatch(u);
+                u.Kind = to;
+                Watch(u);
+            }
+        }
+    }
+
     private string? Train(Civ civ, int sid, int kind)
     {
         if ((uint)sid >= (uint)Settlements.Count || Settlements[sid].Civ != civ.Id || Settlements[sid].Abandoned)
@@ -59,6 +107,7 @@ public sealed partial class SimGame
             return "Unknown unit.";
         }
 
+        kind = Upgraded(civ, kind);
         Settlement s = Settlements[sid];
         UnitType t = Content.Units[kind];
         if (!Knows(civ, t))
@@ -149,7 +198,7 @@ public sealed partial class SimGame
             return MoveDrawn(civ, u, drawn, hidden);
         }
 
-        if (!FindPath(u.Cell, cell, u.Path, t.Naval))
+        if (!FindPath(u.Cell, cell, u.Path, t.Naval, u.Civ))
         {
             return "There is no way there on foot.";
         }
@@ -311,13 +360,55 @@ public sealed partial class SimGame
         ScheduleUnit(u, UnitStep);
     }
 
+    /// <summary>
+    /// True when a walker of the people may go from the hex in the direction: rivers stop walkers until the era given in the data,
+    /// except next to a crossing building of their own (raft landings) on either bank (decision of 2026-11-18).
+    /// </summary>
+    public bool Crossable(int civ, int from, int dir)
+    {
+        if (civ < 0 || Civs[civ].Era >= Content.RiversFreeEra)
+        {
+            return true;
+        }
+
+        HexCoord c = Geo.FromIndex(from);
+        if (Map.River[Geo.EdgeIndex(Geo.Edge(c, (HexDirection)dir))] == 0)
+        {
+            return true;
+        }
+
+        int to = Geo.Index(Geo.Neighbor(c, (HexDirection)dir));
+        return CrossingAt(civ, from) || CrossingAt(civ, to);
+    }
+
+    private bool CrossingAt(int civ, int cell)
+    {
+        int b = BuildingAt[cell];
+        return b >= 0 && Buildings[b].Civ == civ && Buildings[b].State == BuildingState.Active && Content.Buildings[Buildings[b].Type].Crossing;
+    }
+
+    // Direction from one hex to its neighbour (−1 when they are not neighbours).
+    private int DirectionTo(int from, int to)
+    {
+        HexCoord c = Geo.FromIndex(from);
+        for (int d = 0; d < 6; d++)
+        {
+            if (Geo.Index(Geo.Neighbor(c, (HexDirection)d)) == to)
+            {
+                return d;
+            }
+        }
+
+        return -1;
+    }
+
     private int Cost(int cell, bool naval) => naval ? (Content.World.Biomes[Map.Biome[cell]].IsWater ? 100 : 0) : CellCost(cell);
 
     /// <summary>
     /// A* over land hexes with walking costs. Fills <paramref name="path"/> with the hexes after <paramref name="from"/> up to
     /// <paramref name="to"/>. Arrays are reused between calls (no allocation per search).
     /// </summary>
-    public bool FindPath(int from, int to, List<int> path, bool naval = false)
+    public bool FindPath(int from, int to, List<int> path, bool naval = false, int civ = -1)
     {
         ArgumentNullException.ThrowIfNull(path);
         path.Clear();
@@ -367,7 +458,7 @@ public sealed partial class SimGame
             {
                 int next = Geo.Index(nb[d]);
                 int step = Cost(next, naval);
-                if (step == 0)
+                if (step == 0 || (!naval && !Crossable(civ, cur, d)))
                 {
                     continue;
                 }

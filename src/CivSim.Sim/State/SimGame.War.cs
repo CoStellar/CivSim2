@@ -406,11 +406,21 @@ public sealed partial class SimGame
 
         defender.Wounds -= dead * SimContent.One;
         defender.People -= dead;
+        Wound(defender, dead);
         Scores()[(attacker.Civ * Civs.Count) + defender.Civ] += dead;
         if (defender.People <= 0)
         {
             Destroyed(defender, attacker.Civ);
         }
+    }
+
+    // Of the fallen, a share is wounded, not dead: they stay with the unit until herbalists heal them (shares add up, so one
+    // fallen at a time still gives wounded).
+    private void Wound(Unit u, int fallen)
+    {
+        u.InjuredShare += fallen * Content.InjuredPercent;
+        u.Injured += u.InjuredShare / 100;
+        u.InjuredShare %= 100;
     }
 
     // A unit was wiped out by another people (carriers lose their load).
@@ -451,6 +461,7 @@ public sealed partial class SimGame
         {
             attacker.Wounds -= lost * SimContent.One;
             attacker.People -= lost;
+            Wound(attacker, lost);
             Scores()[(target.Civ * Civs.Count) + attacker.Civ] += lost;
             if (attacker.People <= 0)
             {
@@ -520,7 +531,7 @@ public sealed partial class SimGame
             return;
         }
 
-        if (!FindPath(u.Cell, goal, u.Path))
+        if (!FindPath(u.Cell, goal, u.Path, false, u.Civ))
         {
             return;
         }

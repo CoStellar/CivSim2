@@ -31,6 +31,7 @@ public sealed class FogTests
             }
 
             s.People = 60;
+            c.Era = Content.RiversFreeEra; // these tests draw paths; rivers are tested in StoneAgeTests
         }
 
         return g;
@@ -242,9 +243,9 @@ public sealed class FogTests
             g.RoadAt[cell] = 1;
         }
 
-        int caravans = g.Units.Count(u => u.Kind == Content.Caravans);
+        int carriers = g.Units.Count(u => u.Kind == Content.Caravans || u.Kind == Content.Porters);
         Settlement camp = g.FoundSettlement(civ, site, 8, new long[Content.Goods.Count]);
         g.TestRoadSupply(civ, camp);
-        Assert.True(g.Units.Count(u => u.Kind == Content.Caravans) > caravans, "a caravan sets out along the road");
+        Assert.True(g.Units.Count(u => u.Kind == Content.Caravans || u.Kind == Content.Porters) > carriers, "carriers set out along the road (porters before caravans)");
     }
 }

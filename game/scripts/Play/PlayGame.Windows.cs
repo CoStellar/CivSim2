@@ -233,6 +233,7 @@ public partial class PlayGame
         3 => "needs goods",
         4 => "no homes",
         5 => "store full",
+        7 => "clothing",
         _ => "materials missing",
     };
 

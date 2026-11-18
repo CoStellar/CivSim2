@@ -60,7 +60,8 @@ public sealed record PlayUnitView(
     [property: Key(12)] int[]? Path = null,
     [property: Key(13)] int[]? Patrol = null,
     [property: Key(14)] bool Attack = false,
-    [property: Key(15)] bool Carrier = false);
+    [property: Key(15)] bool Carrier = false,
+    [property: Key(16)] int Injured = 0);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -129,7 +130,11 @@ public sealed record PlaySettlementView(
     [property: Key(11)] long[]? Stock = null,
     [property: Key(12)] long[]? Capacity = null,
     [property: Key(13)] long[]? Rate = null,
-    [property: Key(14)] bool Remembered = false);
+    [property: Key(14)] bool Remembered = false,
+    [property: Key(15)] bool Gathering = false,
+    [property: Key(16)] int[]? Richness = null,
+    [property: Key(17)] int WorkPermille = 1000,
+    [property: Key(18)] int HealPerMinute = 0);
 
 /// <summary>A standing caravan route of the player.</summary>
 [MessagePackObject]
@@ -225,7 +230,9 @@ public sealed record PlayViewMessage(
     [property: Key(36)] int EraKnown = 0,
     [property: Key(37)] int EraNeed = 0,
     [property: Key(38)] bool ObjectsApart = false,
-    [property: Key(39)] bool TechsSame = false) : IProtocolMessage;
+    [property: Key(39)] bool TechsSame = false,
+    [property: Key(40)] bool Winter = false,
+    [property: Key(41)] int SeasonSeconds = 0) : IProtocolMessage;
 
 /// <summary>
 /// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this
@@ -338,6 +345,9 @@ public enum PlayCommandKind
 
     /// <summary>Build a road of level <c>A</c> over the drawn hexes <c>Cells</c> (col, row pairs).</summary>
     BuildRoad = 28,
+
+    /// <summary>The people of settlement <c>A</c> gather around it while they have no job (<c>Flag</c>) or stop.</summary>
+    Gather = 29,
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs), eating at the nearest settlement between rounds.</summary>
     Patrol = 27,

@@ -173,8 +173,29 @@ public sealed partial class SimGame
     }
 
     // A carrier unit leaves a settlement with goods from its store; its people stop working until they are back.
+    // Goods between settlements go in caravans once the people has the wheel, horseback riding and the horses a caravan takes;
+    // before that porters carry them (decision of 2026-11-18). The horses come back with the caravan.
     private Unit NewCarrier(Civ civ, int kind, Settlement home, int fromCell, long[] goods, int percent)
     {
+        long horses = 0;
+        if (kind == Content.Caravans)
+        {
+            UnitType caravan = Content.Units[Content.Caravans];
+            int h = GoodId("horses");
+            if (Knows(civ, caravan) && (caravan.HorsesPerCaravan == 0 || (h >= 0 && home.Stock[h] >= caravan.HorsesPerCaravan)))
+            {
+                horses = caravan.HorsesPerCaravan;
+                if (h >= 0)
+                {
+                    home.Stock[h] -= horses;
+                }
+            }
+            else
+            {
+                kind = Content.Porters;
+            }
+        }
+
         var cargo = new long[goods.Length];
         long total = 0;
         for (int g = 0; g < goods.Length; g++)
@@ -185,9 +206,10 @@ public sealed partial class SimGame
         }
 
         UnitType t = Content.Units[kind];
-        int people = (int)Math.Clamp((total + t.CargoPerPerson - 1) / Math.Max(1, t.CargoPerPerson), 1, Math.Max(1, home.People - 1));
+        long each = t.CargoPerPerson + (Bonus(civ, EffectKind.Cargo, t.Key, t.Groups) * SimContent.One); // baskets: Carrying
+        int people = (int)Math.Clamp((total + each - 1) / Math.Max(1, each), 1, Math.Max(1, home.People - 1));
         home.People = Math.Max(1, home.People - people);
-        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = fromCell, State = UnitState.Idle, Cargo = cargo, Home = home.Id, ReturnCell = fromCell };
+        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = fromCell, State = UnitState.Idle, Cargo = cargo, Home = home.Id, ReturnCell = fromCell, Horses = horses };
         Units.Add(u);
         civ.Units.Add(u.Id);
         civ.Dirty = true;
@@ -207,7 +229,7 @@ public sealed partial class SimGame
     // Starts a unit walking to a hex; arrives at once when already there. A caravan with no way there turns back with its load.
     private void Walk(Unit u, int cell)
     {
-        bool way = FindPath(u.Cell, cell, u.Path, Content.Units[u.Kind].Naval);
+        bool way = FindPath(u.Cell, cell, u.Path, Content.Units[u.Kind].Naval, u.Civ);
         if (!way && u.Job == CarrierJob.ToSettlement)
         {
             u.Path.Clear();
@@ -271,6 +293,11 @@ public sealed partial class SimGame
                     Unload(home, u.Cargo);
                 }
 
+                if (u.Horses > 0 && GoodId("horses") is int h and >= 0)
+                {
+                    home.Stock[h] += u.Horses;
+                }
+
                 Gone(u);
                 break;
             default:
@@ -298,7 +325,7 @@ public sealed partial class SimGame
     private void WalkVia(Unit u, IReadOnlyList<int> drawn, int dest)
     {
         var tail = new List<int>();
-        if (DrawnPath(u.Cell, drawn, false, u.Path) is not null || !FindPath(u.Path.Count > 0 ? u.Path[^1] : u.Cell, dest, tail))
+        if (DrawnPath(u.Cell, drawn, false, u.Path, u.Civ) is not null || !FindPath(u.Path.Count > 0 ? u.Path[^1] : u.Cell, dest, tail, false, u.Civ))
         {
             Walk(u, dest);
             return;
@@ -468,7 +495,7 @@ public sealed partial class SimGame
         if (drawn is { Length: > 0 })
         {
             var check = new List<int>();
-            string? why = DrawnPath(drawn[0], drawn, false, check);
+            string? why = DrawnPath(drawn[0], drawn, false, check, civ.Id);
             if (why is not null)
             {
                 return why;

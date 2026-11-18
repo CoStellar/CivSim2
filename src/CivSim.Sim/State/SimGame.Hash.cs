@@ -47,6 +47,7 @@ public sealed partial class SimGame
             Add(s.People);
             Add(s.GrowthRemainder);
             Add(s.Cells.Count);
+            Add(s.Gathering ? 1 : 0);
             foreach (long v in s.Stock)
             {
                 Add(v);

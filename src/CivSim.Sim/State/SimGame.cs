@@ -282,6 +282,8 @@ public sealed partial class SimGame
         if (Ticks % SimContent.TicksPerSecond == 0)
         {
             RoadStep();
+            SeasonStep();
+            HealStep();
         }
 
         if (Ticks % SimContent.TicksPerMinute == 0)

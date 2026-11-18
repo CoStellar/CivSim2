@@ -68,6 +68,7 @@ public sealed partial class SimGame
             MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path),
             PatrolCommand c => Patrol(civ, c.Unit, c.Loop),
             BuildRoadCommand c => BuildRoad(civ, c.Cells, c.Level),
+            GatherCommand c => Gather(civ, c.Settlement, c.On),
             FoundCommand c => Found(civ, c.Unit),
             ResearchCommand c => Research(civ, c.Tech),
             HireCommand c => Hire(civ, c.Advisor),
