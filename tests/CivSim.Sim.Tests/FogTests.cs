@@ -21,7 +21,7 @@ public sealed class FogTests
 
     private static SimGame NewGame()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         foreach (Civ c in g.Civs)
         {
             Settlement s = g.Settlements[c.Settlements[0]];

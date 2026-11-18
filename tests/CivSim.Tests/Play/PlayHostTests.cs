@@ -37,7 +37,7 @@ public sealed class PlayHostTests
                         hut = pc.Buildings.Count - 1;
                         foreach (PlayBuildingInfo b in pc.Buildings)
                         {
-                            hut = b.Key == "hut" ? b.Id : hut;
+                            hut = b.Key == "gatherers_hut" ? b.Id : hut; // known from the start (huts need Dwellings)
                         }
 
                         break;

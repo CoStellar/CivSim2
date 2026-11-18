@@ -8,7 +8,7 @@ public sealed class ResearchTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
-    private static SimGame NewGame() => SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
+    private static SimGame NewGame() => SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
 
     [Fact]
     public void ATechnologyNeedsExperiencePriceAndTime()

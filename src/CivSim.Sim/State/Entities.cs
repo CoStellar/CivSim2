@@ -82,6 +82,15 @@ public sealed class Building
 /// <summary>A settlement: a centre hex and the territory around it.</summary>
 public sealed class Settlement
 {
+    /// <summary>Its people gather food, wood and stone around it when they have no job (the player's order; on at the start).</summary>
+    public bool Gathering { get; set; } = true;
+
+    /// <summary>Richness of its land per good, percent (mean of its land hexes), worked out when its land changes.</summary>
+    public int[] ForageRichness { get; set; } = [];
+
+    /// <summary>Number of hexes the richness was worked out for (worked out again when the land grows).</summary>
+    public int ForageCells { get; set; } = -1;
+
     /// <summary>Index in the game's list.</summary>
     public int Id { get; init; }
 
@@ -161,7 +170,15 @@ public sealed class Civ
         Capacity = new long[goods];
         Rate = new long[goods];
         Remainder = new long[goods];
+        Made = new long[goods];
+        MadeRate = new long[goods];
     }
+
+    /// <summary>Goods made in all, hundredths × ticks per minute (experience by making: technologies that ask for goods made).</summary>
+    public long[] Made { get; }
+
+    /// <summary>Goods made per minute now, hundredths (recomputed with the economy).</summary>
+    public long[] MadeRate { get; }
 
     /// <summary>Index in the game's list.</summary>
     public int Id { get; }

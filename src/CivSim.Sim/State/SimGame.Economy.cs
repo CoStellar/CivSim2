@@ -1,4 +1,5 @@
 using System;
+using CivSim.Core.Map;
 using CivSim.Sim.Content;
 
 namespace CivSim.Sim.State;
@@ -16,6 +17,7 @@ public sealed partial class SimGame
         ArgumentNullException.ThrowIfNull(civ);
         int goods = Content.Goods.Count;
         Array.Clear(civ.ExperienceRate);
+        Array.Clear(civ.MadeRate);
         int people = 0;
         foreach (int sid in civ.Settlements)
         {
@@ -97,6 +99,7 @@ public sealed partial class SimGame
                 {
                     long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100;
                     s.Rate[g] += made - (t.Consumes[g] * b.Workers);
+                    civ.MadeRate[g] += made;
                 }
 
                 civ.ExperienceRate[t.Tech] += b.Workers;
@@ -109,7 +112,18 @@ public sealed partial class SimGame
         {
             Settlement s = Settlements[sid];
             idleAll += s.Idle;
-            s.Rate[Content.Food] += (s.Idle * Content.IdleForagePerMinute * EventProduction(civ, Content.Food) / 100) - (s.People * Content.FoodPerPersonPerMinute * eat / 100);
+            if (s.Gathering && s.Idle > 0)
+            {
+                int[] rich = Richness(s);
+                for (int g = 0; g < goods; g++)
+                {
+                    long got = s.Idle * Content.ForagePerMinute[g] * rich[g] / 100 * EventProduction(civ, g) / 100;
+                    s.Rate[g] += got;
+                    civ.MadeRate[g] += got;
+                }
+            }
+
+            s.Rate[Content.Food] -= s.People * Content.FoodPerPersonPerMinute * eat / 100;
         }
 
         // Soldiers in the field and the advisor are fed from the first settlement (the capital).
@@ -129,10 +143,100 @@ public sealed partial class SimGame
             capital.Rate[Content.Food] -= (soldiers * Content.War.SoldierFoodPerMinute) + (civ.Advisor is null ? 0 : Content.AdvisorUpkeep);
         }
 
-        civ.ExperienceRate[0] += idleAll / 2; // idle people forage: a little experience in the oldest craft
+        civ.ExperienceRate[0] += idleAll / 2; // gatherers around the settlements: a little experience in the oldest craft
         civ.People = people;
         civ.Dirty = false;
         SyncTotals(civ);
+    }
+
+    /// <summary>
+    /// Richness of a settlement's land for gatherers, percent per good: the mean over its land hexes of what each hex gives
+    /// (food and wood by biome, stone by relief, more on deposits and by rivers). Worked out again only when its land changes.
+    /// </summary>
+    public int[] Richness(Settlement s)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        if (s.ForageCells == s.Cells.Count && s.ForageRichness.Length == Content.Goods.Count)
+        {
+            return s.ForageRichness;
+        }
+
+        int goods = Content.Goods.Count;
+        var sum = new long[goods];
+        int land = 0;
+        int wood = Content.Goods.Count > 1 ? GoodId("wood") : -1;
+        int stone = GoodId("stone");
+        foreach (int cell in s.Cells)
+        {
+            int biome = Map.Biome[cell];
+            if (Content.World.Biomes[biome].IsWater)
+            {
+                continue;
+            }
+
+            land++;
+            sum[Content.Food] += Content.ForageBiome[biome * 2];
+            if (wood >= 0)
+            {
+                sum[wood] += Content.ForageBiome[(biome * 2) + 1];
+            }
+
+            if (stone >= 0)
+            {
+                sum[stone] += Content.ForageRelief[Map.Relief[cell]];
+            }
+
+            int dep = Map.DepositDepth[cell] == 0 ? Map.Deposit[cell] : 0;
+            if (dep > 0)
+            {
+                for (int g = 0; g < goods; g++)
+                {
+                    sum[g] += Content.ForageDeposit[(dep * goods) + g];
+                }
+            }
+
+            if (Content.ForageRiverFood > 0 && ByRiver(cell))
+            {
+                sum[Content.Food] += Content.ForageRiverFood;
+            }
+        }
+
+        var rich = new int[goods];
+        for (int g = 0; g < goods; g++)
+        {
+            rich[g] = land == 0 ? 0 : (int)Math.Min(200, sum[g] / land);
+        }
+
+        s.ForageRichness = rich;
+        s.ForageCells = s.Cells.Count;
+        return rich;
+    }
+
+    private bool ByRiver(int cell)
+    {
+        HexCoord c = Geo.FromIndex(cell);
+        for (int d = 0; d < 6; d++)
+        {
+            if (Map.River[Geo.EdgeIndex(Geo.Edge(c, (HexDirection)d))] > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int GoodId(string key)
+    {
+        for (int g = 0; g < Content.Goods.Count; g++)
+        {
+            if (Content.Goods[g].Key == key)
+            {
+                return g;
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>Refreshes the people's totals (sum of its settlements) shown on the resource bar and used by the AI.</summary>
@@ -175,6 +279,11 @@ public sealed partial class SimGame
         for (int t = 0; t < civ.ExperienceRate.Length; t++)
         {
             civ.Experience[t] += (long)civ.ExperienceRate[t] * Content.EconomyEveryTicks;
+        }
+
+        for (int g = 0; g < civ.MadeRate.Length; g++)
+        {
+            civ.Made[g] += civ.MadeRate[g] * Content.EconomyEveryTicks;
         }
 
         bool changed = false;

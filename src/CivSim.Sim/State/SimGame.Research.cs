@@ -115,10 +115,28 @@ public sealed partial class SimGame
             int prev = Math.Max(0, era - 1);
             return civ.Era < prev
                 ? $"Our people must first reach the {Content.Eras[prev].Name}."
-                : $"Opens in the {Content.Eras[era].Name}: know {Content.EraAdvanceTechs} technologies of the {Content.Eras[civ.Era].Name} (we know {KnownIn(civ, civ.Era)}).";
+                : $"Opens in the {Content.Eras[era].Name}: know {Content.EraAdvanceTechs} technologies of the {Content.Eras[civ.Era].Name}, basics not counted (we know {KnownIn(civ, civ.Era)}).";
+        }
+
+        foreach (int req in Content.Techs[tech].Requires)
+        {
+            if (!civ.KnownTech[req])
+            {
+                return $"Needs {Content.Techs[req].Name} first.";
+            }
         }
 
         int edge = Edge(civ.Thinker, cost: false);
+        foreach ((int good, long amount) in Content.Techs[tech].Made)
+        {
+            long made = civ.Made[good] / SimContent.TicksPerMinute;
+            long needed = amount * edge / 100;
+            if (made < needed)
+            {
+                return $"Needs more {Content.Goods[good].Name.ToLowerInvariant()} made: {made / SimContent.One} of {needed / SimContent.One}.";
+            }
+        }
+
         foreach ((int req, long need) in Content.Techs[tech].Experience)
         {
             if (!civ.KnownTech[req])
@@ -130,7 +148,7 @@ public sealed partial class SimGame
             long needed = need * edge / 100;
             if (have < needed)
             {
-                return $"Needs more experience in {Content.Techs[req].Name}: {have / SimContent.TicksPerMinute} of {needed / SimContent.TicksPerMinute} worker-minutes.";
+                return $"Needs more experience in {Content.Techs[req].Name}: {have / SimContent.TicksPerMinute} of {needed / SimContent.TicksPerMinute} points (1 point = 1 worker for 1 minute).";
             }
         }
 
@@ -183,7 +201,7 @@ public sealed partial class SimGame
         int n = 0;
         for (int t = 0; t < Content.Techs.Count; t++)
         {
-            if (civ.KnownTech[t] && Content.Techs[t].Era == era)
+            if (civ.KnownTech[t] && Content.Techs[t].Era == era && !Content.Techs[t].Basic)
             {
                 n++;
             }

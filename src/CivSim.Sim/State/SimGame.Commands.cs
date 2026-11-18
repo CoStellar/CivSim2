@@ -100,9 +100,9 @@ public sealed partial class SimGame
             return "Outside the map.";
         }
 
-        if (!civ.KnownTech[type.Tech])
+        if (!Knows(civ, type))
         {
-            return $"{type.Name} needs {Content.Techs[type.Tech].Name}.";
+            return $"{type.Name} needs {NeedText(type.Tech, type.AlsoTechs)}.";
         }
 
         if (Array.IndexOf(type.Groups, "road") >= 0)
@@ -137,7 +137,7 @@ public sealed partial class SimGame
             return "This hex is taken.";
         }
 
-        if (!TerrainAllows(cell, type))
+        if (!TerrainAllows(cell, type, civ))
         {
             return $"{type.Name} needs {Needs(type)}.";
         }
@@ -151,7 +151,7 @@ public sealed partial class SimGame
     }
 
     /// <summary>True when the terrain of the hex suits the building.</summary>
-    public bool TerrainAllows(int cell, BuildingType type)
+    public bool TerrainAllows(int cell, BuildingType type, Civ? civ = null)
     {
         ArgumentNullException.ThrowIfNull(type);
         if (type.OrDeposit != 0 && Map.Deposit[cell] == type.OrDeposit && Map.DepositDepth[cell] == 0)
@@ -176,7 +176,7 @@ public sealed partial class SimGame
             return false;
         }
 
-        if (type.MinFertility > 0 && Map.Fertility[cell] < type.MinFertility)
+        if (type.MinFertility > 0 && Map.Fertility[cell] < type.MinFertility - (civ is null ? 0 : Bonus(civ, EffectKind.Fertility, type.Key, type.Groups)))
         {
             return false;
         }
@@ -437,9 +437,9 @@ public sealed partial class SimGame
         }
 
         SettlementLevel next = Content.Levels[s.Level + 1];
-        if (next.Tech >= 0 && !civ.KnownTech[next.Tech])
+        if (!Knows(civ, next.Tech, next.AlsoTechs))
         {
-            return $"A {next.Name.ToLowerInvariant()} needs {Content.Techs[next.Tech].Name}.";
+            return $"A {next.Name.ToLowerInvariant()} needs {NeedText(next.Tech, next.AlsoTechs)}.";
         }
 
         if (!CanAfford(s.Stock, next.UpgradePrice, 100))

@@ -33,6 +33,11 @@ public sealed partial class SimGame
             {
                 Add(r);
             }
+
+            foreach (long m in c.Made)
+            {
+                Add(m);
+            }
         }
 
         foreach (Settlement s in Settlements)

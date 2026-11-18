@@ -805,24 +805,58 @@ public sealed class PlayHost : IDisposable
     private static string Unlocks(SimContent content, SimTech t)
     {
         var lines = new List<string>();
-        var buildings = content.Buildings.Where(b => b.Tech == t.Id && b.Id != 0).Select(b => b.Name).ToList();
+        // "with X": things that need this technology and another one as well.
+        string With(int tech, int[] also)
+        {
+            var others = also.Append(tech).Where(o => o != t.Id && o >= 0).Select(o => content.Techs[o].Name).ToList();
+            return others.Count == 0 ? "" : $" (with {string.Join(" and ", others)})";
+        }
+
+        bool Needs(int tech, int[] also) => tech == t.Id || also.Contains(t.Id);
+        var buildings = content.Buildings.Where(b => b.Id != 0 && Needs(b.Tech, b.AlsoTechs)).Select(b => b.Name + With(b.Tech, b.AlsoTechs)).ToList();
         if (buildings.Count > 0)
         {
             lines.Add("Buildings: " + string.Join(", ", buildings));
         }
 
-        var units = content.Units.Where(u => u.Tech == t.Id && !u.System).Select(u => u.Name).ToList();
+        var units = content.Units.Where(u => (!u.System || u.Key == "caravan" || u.Key == "trade_ship") && !u.Levy && Needs(u.Tech, u.AlsoTechs)).Select(u => u.Name + With(u.Tech, u.AlsoTechs)).ToList();
         if (units.Count > 0)
         {
             lines.Add("Units: " + string.Join(", ", units));
         }
 
+        foreach (UnitType u in content.Units)
+        {
+            foreach ((int tech, int kind) in u.Becomes)
+            {
+                if (tech == t.Id)
+                {
+                    lines.Add($"{u.Name} become {content.Units[kind].Name.ToLowerInvariant()}");
+                }
+            }
+        }
+
         foreach (SettlementLevel l in content.Levels)
         {
-            if (l.Tech == t.Id && l.Id > 0)
+            if (l.Id > 0 && Needs(l.Tech, l.AlsoTechs))
             {
-                lines.Add($"Settlements can become a {l.Name.ToLowerInvariant()}");
+                lines.Add($"Settlements can become a {l.Name.ToLowerInvariant()}{With(l.Tech, l.AlsoTechs)}");
             }
+        }
+
+        if (t.Requires.Length > 0)
+        {
+            lines.Add("Needs first: " + string.Join(", ", t.Requires.Select(r => content.Techs[r].Name)));
+        }
+
+        if (t.Made.Length > 0)
+        {
+            lines.Add("Needs made: " + string.Join(", ", t.Made.Select(m => $"{m.Amount / SimContent.One} {content.Goods[m.Good].Name.ToLowerInvariant()}")));
+        }
+
+        if (t.Basic)
+        {
+            lines.Add("A basic step: does not count toward the next era");
         }
 
         foreach (RoadLevel r in content.RoadLevels)
@@ -850,6 +884,8 @@ public sealed class PlayHost : IDisposable
                 EffectKind.Resist => $"{target.Replace('_', ' ')} {e.Value}% milder",
                 EffectKind.Siege => $"Siege +{e.Value}%",
                 EffectKind.Defense => $"Defence +{e.Value}%",
+                EffectKind.Cargo => $"Each of {target.ToLowerInvariant()} carries {e.Value} more",
+                EffectKind.Fertility => $"{target} also on land {e.Value} points less fertile",
                 _ => $"Rarer thinkers and advisors (+{e.Value})",
             });
         }

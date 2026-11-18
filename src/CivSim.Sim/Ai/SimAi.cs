@@ -89,7 +89,7 @@ public static class SimAi
         }
 
         BuildingType t = g.Content.Buildings[id];
-        if (!civ.KnownTech[t.Tech] || !Affordable(civ, t.Price))
+        if (!SimGame.Knows(civ, t) || !Affordable(civ, t.Price))
         {
             return false;
         }
@@ -287,6 +287,23 @@ public static class SimAi
                 continue;
             }
 
+            // Goods to make: the first building that makes the missing good.
+            foreach ((int good, long amount) in t.Made)
+            {
+                if (civ.Made[good] / SimContent.TicksPerMinute >= amount)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b))
+                    {
+                        return b.Key;
+                    }
+                }
+            }
+
             foreach ((int req, long need) in t.Experience)
             {
                 if (!civ.KnownTech[req] || civ.Experience[req] >= need)
@@ -376,7 +393,7 @@ public static class SimAi
             bool can = false;
             foreach (BuildingType b in g.Content.Buildings)
             {
-                can |= b.Id > 0 && b.Produces[good] > 0 && civ.KnownTech[b.Tech];
+                can |= b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b);
             }
 
             if (can && civ.Stock[good] < bestStock)
@@ -405,8 +422,8 @@ public static class SimAi
                 continue;
             }
 
-            // Warlike peoples like the technologies of arms, builders the others; earlier eras first.
-            int score = -t.Era * 10;
+            // Warlike peoples like the technologies of arms, builders the others; earlier eras first, the cheap basics before all.
+            int score = (-t.Era * 10) + (t.Basic ? 30 : 0);
             foreach (UnitType u in g.Content.Units)
             {
                 if (u.Army && u.Tech == t.Id)
@@ -569,7 +586,7 @@ public static class SimAi
         UnitType? best = null;
         foreach (UnitType t in g.Content.Units)
         {
-            if (t.Army && !t.Levy && civ.KnownTech[t.Tech] && (best is null || t.Strength > best.Strength))
+            if (t.Army && !t.Levy && !t.Naval && SimGame.Knows(civ, t) && (best is null || t.Strength > best.Strength))
             {
                 best = t;
             }
@@ -842,7 +859,7 @@ public static class SimAi
             }
 
             BuildingType t = g.Content.Buildings[b.Type];
-            if (!civ.KnownTech[t.Tech])
+            if (!SimGame.Knows(civ, t))
             {
                 return true;
             }
