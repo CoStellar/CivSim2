@@ -215,6 +215,14 @@ public partial class Main : Node2D
             {
                 demo = [.. demo, (3, g => g.ScriptRoad())];
             }
+            else if (_playWindow == "Pick")
+            {
+                demo = [(5.0, g => g.ScriptMouseClick(new Vector2(800, 450)))];
+            }
+            else if (_playWindow == "PickHover")
+            {
+                demo = [(_playSeconds - 1, g => g.GetViewport().WarpMouse(new Vector2(800, 450)))];
+            }
             else if (_playDemo && _playWindow == "Slots")
             {
                 demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(2.6f))];

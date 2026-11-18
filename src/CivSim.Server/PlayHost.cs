@@ -105,6 +105,12 @@ public sealed class PlayHost : IDisposable
                     ticksPerSecond = 400;
                 }
 
+                // Choosing the start goes in real time whatever the speed: 30 seconds are 30 seconds.
+                if (_game.Picking)
+                {
+                    ticksPerSecond = SimContent.TicksPerSecond;
+                }
+
                 if (ticksPerSecond > 0)
                 {
                     double wait = 1.0 / ticksPerSecond;

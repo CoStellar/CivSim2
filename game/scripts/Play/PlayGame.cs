@@ -159,6 +159,16 @@ public partial class PlayGame : Node2D
     /// <summary>Script step: sets the speed.</summary>
     public void ScriptSpeed(SimulationSpeed speed) => _session?.SetSpeed(speed);
 
+    /// <summary>Script step: a real left click (press and release) at a point of the screen, through Godot's input.</summary>
+    public void ScriptMouseClick(Vector2 at)
+    {
+        GetViewport().WarpMouse(at);
+        foreach (bool down in new[] { true, false })
+        {
+            Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = down, Position = at, GlobalPosition = at });
+        }
+    }
+
     /// <summary>Script step: researches a technology by key.</summary>
     public void ScriptResearch(string key)
     {
@@ -306,6 +316,7 @@ public partial class PlayGame : Node2D
         {
             _map.Bind(_session, earth);
             _overlay.World = earth;
+            _overlay.PickProblem = StartProblem;
             _bound = true;
             _session.SetSpeed(SimulationSpeed.X1);
         }
@@ -491,6 +502,43 @@ public partial class PlayGame : Node2D
         }
 
         GetViewport().SetInputAsHandled();
+    }
+
+    // Why the player cannot start on a hex (the same rules as the server: land, not mountains, away from the taken starts).
+    private string? StartProblem((int Col, int Row) h)
+    {
+        if (_session is null || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.Content is not { } content || _session.PlayView is not { } v)
+        {
+            return null;
+        }
+
+        int i = w.Index(h.Col, h.Row);
+        if (content.Biomes[w.Biome[i]].IsWater)
+        {
+            return "Water: a people starts on land";
+        }
+
+        if (w.Relief[i] == 2)
+        {
+            return "Mountains: not here";
+        }
+
+        if (v.TakenStarts is { } taken)
+        {
+            Vector2 at = HexLayout.Center(h.Col, h.Row);
+            for (int k = 0; k + 1 < taken.Length; k += 2)
+            {
+                Vector2 d = HexLayout.Center(taken[k], taken[k + 1]) - at;
+                float wrap = _map!.Period.X;
+                d.X = wrap > 0 ? Math.Abs(((d.X % wrap) + (wrap * 1.5f)) % wrap - (wrap / 2)) : d.X;
+                if (d.Length() < v.BlockRadius * HexLayout.ColumnStep)
+                {
+                    return "Too close to another people";
+                }
+            }
+        }
+
+        return null;
     }
 
     private void Click()

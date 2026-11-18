@@ -345,10 +345,15 @@ public partial class PlayGame
         }
 
         _clockLabel.Text = Clock();
+        foreach ((Button b, SimulationSpeed _) in _speedButtons)
+        {
+            b.Visible = !v.Picking; // choosing the start goes in real time
+        }
+
         if (v.Picking)
         {
-            _eraLabel.Text = v.MyPick ? $"Choose where your people starts ({v.PickSecondsLeft} s)" : $"{v.WhoPicks} are choosing…";
-            SetResources("pick", () => _resBox.AddChild(UiKit.Label("Click a land hex to start there. Deposits and soil stay hidden until everyone has chosen; red circles are taken.", 14, UiKit.Muted)));
+            _eraLabel.Text = v.MyPick ? $"Your turn: {v.PickSecondsLeft} s" : $"{v.WhoPicks} are choosing…";
+            SetResources("pick", () => _resBox.AddChild(UiKit.Label("Choosing the start", 14, UiKit.Muted)));
             return;
         }
 
@@ -492,6 +497,15 @@ public partial class PlayGame
 
     private void UpdateBanner(PlayContentMessage c)
     {
+        if (_session?.PlayView is { Picking: true } pick)
+        {
+            _banner.Visible = true;
+            _bannerText.Text = pick.MyPick
+                ? $"Click a land hex on the map where your people should start ({pick.PickSecondsLeft} s left; then the AI chooses for you).\nGreen under the mouse: you may start there. Red circles: taken by other peoples. Deposits and soil stay hidden until everyone has chosen."
+                : $"{pick.WhoPicks} are choosing where to start. Your turn comes; look around the map meanwhile.";
+            return;
+        }
+
         string? hint = DrawHint();
         _banner.Visible = _placing > 0 || hint is not null;
         if (hint is not null)

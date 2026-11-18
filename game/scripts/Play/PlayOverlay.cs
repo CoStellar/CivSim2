@@ -153,6 +153,9 @@ public partial class PlayOverlay : Node2D
     /// <summary>Hex under the mouse (an outline only).</summary>
     public void SetHover((int Col, int Row)? hover) => _hover = hover;
 
+    /// <summary>While choosing the start: why a hex cannot be our start (null = it can).</summary>
+    public Func<(int Col, int Row), string?>? PickProblem { get; set; }
+
     /// <summary>Selected hex.</summary>
     public void SetSelected((int Col, int Row)? selected) => _selected = selected;
 
@@ -643,6 +646,18 @@ public partial class PlayOverlay : Node2D
         if (_hover is { } h && h != _selected)
         {
             Color color = _places.Count == 0 || _places.Contains(h) ? new Color(1, 1, 1, 0.55f) : new Color(1, 0.3f, 0.3f, 0.8f);
+            if (_view is { Picking: true, MyPick: true } && PickProblem is { } problem)
+            {
+                // Choosing the start: green where we may start, red with the reason where not.
+                string? why = problem(h);
+                color = why is null ? new Color(0.35f, 1f, 0.4f, 0.95f) : new Color(1f, 0.3f, 0.3f, 0.95f);
+                foreach (Vector2 c in Copies(h.Col, h.Row))
+                {
+                    g.DrawPolyline(Closed(Hex(c, 0.97f)), color, 3f);
+                    g.DrawString(UiKit.GlyphFont, c + new Vector2(-150, 40), why ?? "Start here", HorizontalAlignment.Center, 300, 16, color);
+                }
+            }
+
             foreach (Vector2 c in Copies(h.Col, h.Row))
             {
                 g.DrawPolyline(Closed(Hex(c, 0.97f)), color, 1.5f);
