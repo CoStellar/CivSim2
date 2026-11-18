@@ -1,7 +1,10 @@
 # Nowa symulacja: osada i gospodarka (etapy A i B, ADR 0028)
 
-**W jednym zdaniu:** lud ma jeden wspólny magazyn, osady to zbiory heksów, a każdy budynek stoi na jednym heksie i daje
-miejsca pracy; ludzie sami obsadzają wolne miejsca, a gospodarka to suma temp przeliczana tylko po zmianie.
+**W jednym zdaniu:** każda osada ma swój zapas i swoje heksy, na heksie są 4 miejsca na budynki, budynki dają miejsca pracy,
+ludzie sami je obsadzają, a gospodarka to suma temp przeliczana tylko po zmianie.
+
+Stan opisu: gałąź `feat/stone-age` (2026-11-18). Drzewo technologii i mechaniki z nim związane (zima, zbieranie z okolicy,
+stany heksa, budynki wsparcia, statki) opisuje szczegółowo `docs/sim/technologie.md`.
 
 Kod: `src/CivSim.Sim` (bez Godota), dane: `data/sim/game.json`, serwer: `src/CivSim.Server/PlayHost.cs`,
 ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Tests/Play`.
@@ -10,7 +13,11 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 
 - Generator świata bez zmian, tylko więcej heksów: `density` w `game.json` (dziś 7) mnoży powierzchnię mapy.
   Mała mapa legacy 98×60 daje 258×160 heksów. Ten sam seed daje te same kontynenty.
-- Heks to miejsce na jeden budynek. Teren (biom, wzgórza, góry, woda obok, złoże na heksie) decyduje, co można postawić.
+- **Na heksie są 4 miejsca** (decyzja z 2026-11-18):
+  - budynek zajmuje 1 miejsce (domy, warsztaty, zielarz, szkoła), 2 miejsca (magazyny, stajnie, chaty zbieraczy, hale) albo cały heks (pola, kopalnie, kamieniołomy, porty, zamki);
+  - środek osady zajmuje cały heks.
+- Teren (biom, wzgórza, góry, woda obok, złoże na heksie) decyduje, co można postawić.
+- **Stany heksa** (rów, palisada, mur, akwedukt, most) leżą na heksie obok budynków i zostają pod nimi; usuwa je tylko gracz.
 
 ## Osada
 
@@ -22,18 +29,29 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 
 | Budynek | Praca | Co daje (na pracownika na minutę) | Gdzie |
 | --- | --- | --- | --- |
-| Szałas zbieraczy | 3 | 4 jedzenia i 1 drewna (×2 na dzikim zbożu) | lądy z roślinnością |
+| Szałas zbieraczy | 3 | 4 jedzenia i 1 drewna (×2 na dzikim zbożu; zimą jeszcze ×0,5) | lądy z roślinnością |
 | Szałas myśliwych | 3 | 3 jedzenia, 1 skóra (×2 przy zwierzynie) | trawy, lasy, tundra |
 | Chata rybacka | 2 | 5 jedzenia (×2 przy rybach) | woda obok |
 | Drwal | 3 | 4 drewna | lasy, bagna |
 | Kamieniołom | 4 | 2 kamienia (×2 na wzgórzach i w górach, ×2 na złożu kamienia) | wszędzie |
 | Glinianka | 3 | 3 gliny | woda obok albo złoże gliny |
 | Wytwórca narzędzi | 2 | 1 narzędzie z 2 kamieni i 1 drewna | wszędzie |
-| Chaty | – | 8 domów | wszędzie |
-| Spichlerz | – | +300 każdego dobra w magazynie | wszędzie |
+| Chaty (Dwellings) | – | 8 domów (+2 z Shelters) | wszędzie |
+| Magazyn (Stockpiling) | – | +300 każdego dobra w magazynie | wszędzie |
 
-Każdy człowiek je 1 jedzenia na minutę, a bez pracy sam zbiera 0,6. Budowa jest płacona z góry i trwa 10–25 s.
-Wstrzymaną budowę wznawia się za 15% ceny.
+Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
+
+- Każdy człowiek je 1 jedzenia na minutę.
+- **Zbieranie z okolicy:** gracz włącza je w osadzie (na starcie jest włączone). Ludzie bez pracy zbierają wtedy na minutę 0,5 jedzenia, 0,25 drewna i 0,1 kamienia, razy wartość ziemi osady:
+  - jedzenie i drewno zależą od biomu;
+  - kamień od rzeźby terenu;
+  - złoża i rzeki dodają;
+  - wartość ziemi liczona jest raz, przy założeniu osady i gdy ziemia rośnie.
+- **Siła pracy** osady (zima, ubrania, kamienne domy) mnoży całą produkcję. Szczegóły są w `docs/sim/technologie.md`, rozdział „Mechaniki”.
+- Budowa:
+  - cenę niosą tragarze i praca idzie tak daleko, jak pozwalają materiały;
+  - trwa 10–25 s, a plac budowniczych w osadzie skraca ją do 30%;
+  - wstrzymaną budowę wznawia się za 15% ceny.
 
 ## Jak liczymy (docs/wydajnosc.md)
 
@@ -45,10 +63,14 @@ Wstrzymaną budowę wznawia się za 15% ceny.
 
 ## Technologie, myśliciele, doradca (etap D)
 
-- 16 technologii w 5 erach (epoka kamienia → średniowiecze), `technologies` w `game.json`.
-- Technologia wymaga doświadczenia w poprzednich: to minuty pracy ludzi w budynkach danej technologii (ludzie bez pracy dają trochę doświadczenia w zbieractwie).
-  Potem płaci się cenę w dobrach i czeka.
-- Cena spada o 10% za każdy poznany lud, który ją zna (najwyżej 40%), i o 10–15% za szkołę i obserwatorium.
+- 65 technologii w 5 erach (epoka kamienia → średniowiecze), `technologies` w `game.json`: 6 podstawowych, 47 zwykłych, 12 ulepszeń.
+- **Doświadczenie:**
+  - zwykle punkty doświadczenia: 1 punkt to 1 pracownik przez 1 minutę w budynkach danej technologii (zbierający z okolicy dają trochę punktów zbieractwa);
+  - czasem zamiast punktów wyprodukowane dobra, np. Barter 30 ceramiki;
+  - czasem technologia wymagana „najpierw”.
+- Potem płaci się cenę w dobrach i czeka.
+- Cena spada o 10% za każdy poznany lud, który ją zna (najwyżej 40%), i o 5% za każdą umowę handlową.
+- **Szkoły, akademie, uniwersytety** skracają czas badania: każdy pracownik przyspiesza jedną wybraną gałąź (+15/20/25%), gałąź najwyżej +50%.
 - Myśliciel (jeden) ma rzadkość: zwykły, uzdolniony, wizjoner, rzadki, legendarny.
   - Rzadkość obniża cenę albo wymagane doświadczenie; wizjoner obniża doświadczenie, ale podnosi cenę.
   - Po 12 minutach odchodzi; następca (II, III…) traci 20% przewagi na pokolenie.
@@ -62,15 +84,20 @@ Wstrzymaną budowę wznawia się za 15% ceny.
 ## Wojna (etap E)
 
 - Jednostki:
-  - pospolite ruszenie (darmowe, słabe, wraca do pracy);
-  - wojownicy, łucznicy (strzelają na 2 heksy), włócznicy, jeźdźcy, miecznicy, rycerze.
+  - mieszkańcy (Residents): darmowi, słabi, bez technologii, tylko do obrony;
+  - łowcy (włócznie i proce, zasięg 2), którzy po Archery sami stają się łucznikami (zasięg 3);
+  - wojownicy (Flint weapons), włócznicy, jeźdźcy i rycerze (kosztują konie), miecznicy, kusznicy, katapulty;
+  - statki: transport (20 żołnierzy na pokładzie), okręt (30), statek handlowy.
 
-  Każdy rodzaj ma teren, na którym jest mocniejszy, i ulepszenia z technologii (np. wojownicy +30% z brązem).
+  Każdy rodzaj ma teren, na którym jest mocniejszy, i ulepszenia z technologii: jedno ulepszenie broni i pancerza na erę.
+- **Ranni:** 30% poległych to ranni. Zielarze leczą ich w ziemi swojej osady.
 - Żołnierze jedzą 1 jedzenia na minutę.
 - Walka co sekundę: zabici = ludzie × siła × teren i ulepszenia × szczęście 80–120%. Wojsko samo bije wrogów w zasięgu, a gracz wskazuje cel prawym kliknięciem.
 - Oblężenie osady:
   - broni się 30% mieszkańców;
-  - umocnienia podnoszą obronę: palisada +40%, mury +90%, zamek +200%;
+  - zamek podnosi obronę o 220%;
+  - palisada (stan heksa) rani wrogów, którzy na niej stoją: 2% ludzi na sekundę;
+  - mur (stan heksa) zatrzymuje obcych, dopóki go nie rozbiją; wojsko, które nie ma drogi do osady, samo atakuje najbliższy mur;
   - poniżej 6 mieszkańców osada przechodzi do zwycięzcy z ziemią i budynkami;
   - lud bez osad znika.
 - Wojna to stan:
@@ -84,8 +111,18 @@ Te same komendy co gracz, co 3 sekundy, widzi tylko to, co odkrył jego lud. Cha
 tylko po działaniach.
 
 - **Buduje:**
-  - najpierw to, co daje doświadczenie potrzebne do następnej technologii;
-  - potem jedzenie, domy, magazyn i dobra potrzebne do ceny badania.
+  - najpierw jedzenie w głodnej osadzie (albo takiej, która zjada ostatnie dwie minuty zapasu), na jej własnej ziemi;
+  - przed zimą (minuta przed i w zimie), gdy zapas jedzenia jej nie wystarczy: myśliwych i rybaków, bez osadników i wojska;
+  - to, co daje doświadczenie albo dobra potrzebne do następnej technologii;
+  - jedzenie, domy, magazyn i dobra potrzebne do ceny badania;
+  - narzędzia, gdy ich brak (po kamieniołomie); krawców przed zimą;
+  - budynki wsparcia tam, gdzie mają co wzmacniać: zielarza przy łowcach, kamieniarza przy kamieniołomie, młyn przy farmach, gildię przy warsztatach, a łaźnię, szkołę, akademię i uniwersytet w większych osadach.
+- **Rysuje stany heksa** (jeden naraz):
+  - rów od wody do suchej farmy;
+  - pierścień muru i palisady wokół osady w czasie wojny;
+  - akwedukt do miasteczka.
+- **Pomiar** (3 ziarna, 4 ludy, 40 minut, przed i po zmianach z 2026-11-18): ludzi o 29% więcej (967 zamiast 750), próbek z głodem o jedną trzecią mniej, wymarły 1 lud zamiast 2.
+- **Czego AI jeszcze nie robi:** nie wsiada na statki i nie handluje drogą morską z własnej woli.
 - **Bada, zatrudnia, rozwija się:** bada, zatrudnia lepszych myślicieli, awansuje osady, wysyła zwiadowców i osadników.
 - **Walczy:**
   - utrzymuje wojsko według charakteru;
@@ -169,12 +206,14 @@ tylko po działaniach.
   - właściciel i napastnik dostają wiadomość;
   - nic nie dzieje się samo: budowa stoi na tym, co doszło, a gracz klika „Bring the missing materials” (płaci jeszcze raz tylko za brakującą część);
   - AI wysyła brakujące materiały sama, gdy ma je w zapasie.
-- **Karawany jeżdżą tylko lądem.** Wodne przyjdą później, razem z flotą.
+- **Tragarze** niosą po 5 sztuk na osobę, a po Carrying (kosze) po 20.
+- **Towary między osadami** niosą tragarze, dopóki lud nie zna The wheel i Horseback riding i nie ma w osadzie 2 koni. Wtedy idzie karawana, a konie wracają z nią. Konie mieszkają tylko w stajniach, po 16 w każdej.
+- **Bez drogi lądowej** wymiana z innym ludem płynie statkami handlowymi między portami (Sailing).
 - **Karawany (2 osoby, 25 sztuk na osobę):**
   - między własnymi osadami: raz albo stała trasa, przy czym kurs rusza, gdy jest co najmniej 10 sztuk;
   - wymiana z innym ludem: dwie karawany, nasza i ich, a towar zmienia właściciela dopiero po dojściu;
   - danina po wojnie też idzie karawaną;
-  - jeśli nie ma drogi lądem, wymiany nie da się zawrzeć;
+  - jeśli nie ma drogi lądem ani morzem między portami, wymiany nie da się zawrzeć;
   - zabita karawana traci ładunek, jak tragarze.
 - **Umowy z warunkami:**
   - znają się od co najmniej 3 minut;
@@ -183,11 +222,12 @@ tylko po działaniach.
   - reputacja tamtego ludu jest wyższa niż −20;
   - AI ma w tym interes: widzi u nich budynek technologii, której nie zna, albo dobra, którego jej brakuje; sojusz chce przy wspólnym wrogu;
   - najwyżej jedna propozycja do danego ludu na 3 minuty, po odmowie 6 minut przerwy;
-  - umowa handlowa wymaga Handlu wymiennego.
-- **Drzewo:** 45 technologii bazowych i 15 ulepszeń ery, szczegóły w `docs/sim/technologie.md`.
+  - umowa handlowa wymaga Handlu wymiennego (Barter), a do Currency także osobnego punktu handlowego na każdą umowę.
+- **Drzewo:** szczegóły w `docs/sim/technologie.md` (od 2026-11-18: 65 technologii).
   - Ulepszenia działają jako efekty: siła jednostek według grup (walka wręcz, piechota, dystans, jazda), produkcja budynków według grup (narzędzia, farmy, warsztaty), odporność na zdarzenia, szybkość, szkolenie, badania, przyrost, szczęście w losowaniu myślicieli i doradców, oblężenia, obrona.
 - **Nowe zasady:**
-  - drogi poza granicami osad (ruch po drodze 2× szybszy);
+  - drogi poza granicami osad (ruch po drodze 2× szybszy); od Masonry drogi same budują mosty przez rzeki;
+  - rzeki zatrzymują piechurów do epoki brązu, chyba że przy własnej przystani albo po moście;
   - statki pływają tylko po wodzie, a szkoli się je w porcie albo stoczni, w osadzie nad wodą;
   - machiny oblężnicze zadają 4× więcej obrażeń osadom (trebusz jeszcze +100%).
 - **Nowe dobra:** odzież, naczynia, tkaniny, uzbrojenie. Osada staje się miasteczkiem za naczynia i odzież, a miastem za tkaniny i naczynia.
@@ -195,11 +235,11 @@ tylko po działaniach.
 ## Ery jako poziomy, kategorie technologii, alarmy (decyzje z 2026-11-18)
 
 - **Ery to poziomy ludu.**
-  - Następna era otwiera się, gdy lud zna 5 technologii swojej obecnej ery. Ulepszenia też się liczą.
+  - Następna era otwiera się, gdy lud zna 5 technologii swojej obecnej ery. Ulepszenia też się liczą, technologie podstawowe nie.
   - Liczba jest w `eraAdvanceTechs` w `data/sim/game.json`.
   - Technologii z ery, do której lud jeszcze nie doszedł, nie da się zacząć.
   - W obrębie ery nadal trzeba iść po drzewie, bo technologia wymaga doświadczenia w poprzednich.
-- **Kategorie technologii:** jedzenie, przemysł, budownictwo, handel, wojsko, zarządzanie, nauka. Okno Research grupuje według nich.
+- **Kategorie technologii:** podstawy, jedzenie, przemysł, budownictwo, handel, wojsko, zarządzanie, nauka. Okno Research grupuje według nich.
 - **Jedzenie na drogę:** tragarze i karawany przy wyjściu biorą 0,5 jedzenia na osobę na każde 10 heksów drogi tam i z powrotem (`tripFoodPer10Hexes`). Jeśli jedzenia brakuje, idą z tym, co jest.
 - **Alarmy** (liczone na żądanie dla widoku, nie zapisywane):
   - atak na osadę;
@@ -208,5 +248,6 @@ tylko po działaniach.
   - brak dobra, przez który budynek stoi;
   - brak domów (osada nie rośnie);
   - pełny magazyn dobra, które osada wytwarza;
-  - budowa bez materiałów.
+  - budowa bez materiałów;
+  - za mało ubrań przed zimą (mniej niż 1 zestaw na osobę na minutę przed zimą i w zimie).
 - **Odpowiedź na brak:** w panelu osady są przyciski „Bring 20 X from Y” (jeden kurs) i „Supply route” (stała trasa), z najbliższych osad, które mają tego dobra co najmniej 40.
