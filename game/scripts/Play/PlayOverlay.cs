@@ -270,7 +270,8 @@ public partial class PlayOverlay : Node2D
                 {
                     ChunkNodes nodes = NodesFor(chunk, k);
                     nodes.Used = true;
-                    int sig = HashCode.Combine(_content2.TryGetValue(chunk, out ChunkContent? cc) ? cc.Sig : 0, RoadSig(w, cx, cy), Detail);
+                    int zoomStep = Detail == 0 ? (int)(_zoom * 40) : 0; // far names follow the zoom
+                    int sig = HashCode.Combine(_content2.TryGetValue(chunk, out ChunkContent? cc) ? cc.Sig : 0, RoadSig(w, cx, cy), Detail, zoomStep);
                     if (sig != nodes.DrawnSig)
                     {
                         nodes.DrawnSig = sig;
@@ -656,16 +657,21 @@ public partial class PlayOverlay : Node2D
 
     private void PaintChunkLabels(CanvasItem g, int chunk)
     {
-        if (_content is null || Detail == 0 || !_content2.TryGetValue(chunk, out ChunkContent? cc))
+        // Names of settlements show at every zoom (Patryk, 2026-11-18); far away only the names and alert marks remain.
+        if (_content is null || !_content2.TryGetValue(chunk, out ChunkContent? cc))
         {
             return;
         }
 
         Font font = UiKit.Font;
         int size = Ui.PixelTheme.FontSize;
+        // Far away the names keep their size on screen: drawn larger in the world.
+        float k = Detail == 0 ? Math.Min(5f, 0.85f / Math.Max(0.05f, _zoom)) : 1f;
         foreach (PlaySettlementView s in cc.Settlements)
         {
-            Vector2 c = HexLayout.Center(s.Col, s.Row);
+            Vector2 centre = HexLayout.Center(s.Col, s.Row);
+            g.DrawSetTransform(centre, 0, new Vector2(k, k));
+            Vector2 c = Vector2.Zero;
             Vector2 at = c + new Vector2(-100, -30);
             Color ink = s.Remembered ? new Color(0.75f, 0.75f, 0.75f) : Colors.White;
             float w = font.GetStringSize(s.Name, HorizontalAlignment.Left, -1, size).X + 12;
@@ -681,6 +687,8 @@ public partial class PlayOverlay : Node2D
                 g.DrawCircle(c + new Vector2(0, -30 - size - 8), 9, mark);
                 g.DrawString(UiKit.GlyphFont, c + new Vector2(-6, -30 - size - 3), "!", HorizontalAlignment.Center, 12, 12, Colors.Black);
             }
+
+            g.DrawSetTransform(Vector2.Zero, 0, Vector2.One);
         }
     }
 
