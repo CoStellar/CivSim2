@@ -133,11 +133,13 @@ public partial class PlayGame
                         (int col, int row) = path.Count == 1 ? path[0] : MouseCell() ?? (0, 0);
                         bool attack = IsArmy(unit) && EnemyAt(col, row);
                         _session.Play(attack ? PlayCommandKind.Attack : PlayCommandKind.Move, unit, col, row, _hiddenWalk.Contains(unit));
+                        _overlay.Flash(col, row, attack ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 1f, 1f));
                     }
                     else
                     {
                         (int col, int row) = path[^1];
                         _session.Play(PlayCommandKind.Move, unit, col, row, _hiddenWalk.Contains(unit), cells: cells);
+                        _overlay.Flash(col, row, new Color(1f, 1f, 1f));
                     }
                 }
 
@@ -166,6 +168,17 @@ public partial class PlayGame
         }
 
         CancelDraw();
+    }
+
+    // Shows or hides all our standing routes, patrols and marches (G); the selected ones always show.
+    private void ToggleRoutes()
+    {
+        if (_overlay is not null)
+        {
+            _overlay.ShowAllRoutes = !_overlay.ShowAllRoutes;
+            _overlay.Restatic();
+            Toast(_overlay.ShowAllRoutes ? "All our routes are shown (G hides them)." : "Only the routes of what is selected are shown (G shows all).");
+        }
     }
 
     private void CancelDraw()

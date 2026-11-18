@@ -19,7 +19,7 @@ public sealed record BuildingMemory(int Building, int Type, int Civ, BuildingSta
 public sealed partial class SimGame
 {
     /// <summary>Hexes a settlement sees beyond its own land.</summary>
-    public const int SettlementSightBeyond = 3;
+    public const int SettlementSightBeyond = 1;
 
     /// <summary>True when <paramref name="civ"/> sees the hex now (always true while the start is being chosen).</summary>
     public bool Visible(Civ civ, int cell)

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools).",
+  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools).",
   "density": 7,
   "economyEveryTicks": 10,
   "populationEveryTicks": 50,
@@ -162,7 +162,7 @@
       },
       "trainSeconds": 10,
       "ticksPerHex": 6,
-      "sight": 3,
+      "sight": 2,
       "founds": true
     },
     {
@@ -175,7 +175,7 @@
       },
       "trainSeconds": 5,
       "ticksPerHex": 3,
-      "sight": 5,
+      "sight": 3,
       "hiddenTicksPerHex": 6
     },
     {
@@ -186,7 +186,7 @@
       "price": {},
       "trainSeconds": 0,
       "ticksPerHex": 5,
-      "sight": 2,
+      "sight": 1,
       "system": true,
       "cargoPerPerson": 20,
       "groups": [
@@ -201,7 +201,7 @@
       "price": {},
       "trainSeconds": 0,
       "ticksPerHex": 6,
-      "sight": 3,
+      "sight": 1,
       "system": true,
       "cargoPerPerson": 25,
       "groups": [
@@ -235,7 +235,7 @@
       },
       "trainSeconds": 12,
       "ticksPerHex": 6,
-      "sight": 3,
+      "sight": 2,
       "army": true,
       "strength": 10,
       "bonusBiomes": [
@@ -260,7 +260,7 @@
       },
       "trainSeconds": 15,
       "ticksPerHex": 6,
-      "sight": 4,
+      "sight": 2,
       "army": true,
       "strength": 8,
       "range": 2,
@@ -285,7 +285,7 @@
       },
       "trainSeconds": 18,
       "ticksPerHex": 6,
-      "sight": 3,
+      "sight": 2,
       "army": true,
       "strength": 16,
       "bonusRelief": [
@@ -309,7 +309,7 @@
       },
       "trainSeconds": 20,
       "ticksPerHex": 3,
-      "sight": 4,
+      "sight": 3,
       "army": true,
       "strength": 16,
       "bonusRelief": [
@@ -331,7 +331,7 @@
       },
       "trainSeconds": 20,
       "ticksPerHex": 3,
-      "sight": 5,
+      "sight": 3,
       "army": true,
       "strength": 18,
       "bonusRelief": [
@@ -353,7 +353,7 @@
       },
       "trainSeconds": 25,
       "ticksPerHex": 4,
-      "sight": 4,
+      "sight": 3,
       "army": true,
       "naval": true,
       "strength": 10,
@@ -373,7 +373,7 @@
       },
       "trainSeconds": 20,
       "ticksPerHex": 6,
-      "sight": 3,
+      "sight": 2,
       "army": true,
       "strength": 24,
       "groups": [
@@ -392,7 +392,7 @@
       },
       "trainSeconds": 30,
       "ticksPerHex": 9,
-      "sight": 3,
+      "sight": 2,
       "army": true,
       "strength": 8,
       "range": 2,
@@ -413,7 +413,7 @@
       },
       "trainSeconds": 35,
       "ticksPerHex": 3,
-      "sight": 5,
+      "sight": 3,
       "army": true,
       "naval": true,
       "strength": 22,
@@ -434,7 +434,7 @@
       },
       "trainSeconds": 20,
       "ticksPerHex": 6,
-      "sight": 4,
+      "sight": 2,
       "army": true,
       "strength": 20,
       "range": 2,
@@ -455,7 +455,7 @@
       },
       "trainSeconds": 30,
       "ticksPerHex": 3,
-      "sight": 5,
+      "sight": 3,
       "army": true,
       "strength": 40,
       "bonusRelief": [

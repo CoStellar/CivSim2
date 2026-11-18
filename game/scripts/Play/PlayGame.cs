@@ -19,7 +19,7 @@ public partial class PlayGame : Node2D
 {
     private const float PanSpeed = 900f;
     private const float MinZoom = 0.08f;
-    private const float MaxZoom = 2.5f;
+    private const float MaxZoom = 3.5f;
 
     private readonly ulong _seed;
     private readonly bool _startPhase;
@@ -209,7 +209,7 @@ public partial class PlayGame : Node2D
     /// <inheritdoc/>
     public override void _Ready()
     {
-        _camera = new Camera2D { Zoom = new Vector2(0.9f, 0.9f) };
+        _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
         _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase, Goal = _goal }, _dataDirectory);
@@ -312,6 +312,7 @@ public partial class PlayGame : Node2D
         }
 
         _overlay.SetSelected(_selected);
+        _map.SetLift(_selected, _overlay.Lift, _camera.Position);
         if (_session.PlayContent is { } content)
         {
             _overlay.Show(content, _session.PlayView, _map.Period, visible);
@@ -445,6 +446,9 @@ public partial class PlayGame : Node2D
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 } f:
                 OpenWindow(WindowNames[(int)(f.Keycode - Key.Key1)]);
                 break;
+            case InputEventKey { Pressed: true, Keycode: Key.G }:
+                ToggleRoutes();
+                break;
             case InputEventKey { Pressed: true, Keycode: Key.H }:
                 _help.Visible = !_help.Visible;
                 break;
@@ -537,6 +541,7 @@ public partial class PlayGame : Node2D
         if (_overlay is not null)
         {
             _overlay.SelectedUnit = _unit;
+            _overlay.Restatic();
         }
 
         UpdateUi();

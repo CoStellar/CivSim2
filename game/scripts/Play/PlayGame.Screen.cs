@@ -120,6 +120,7 @@ public partial class PlayGame
         }
 
         right.AddChild(new VSeparator());
+        right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
         right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls, first steps and the font (H)"));
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
@@ -264,6 +265,7 @@ public partial class PlayGame
         "Left click: select a settlement, building, unit or hex. Its panel opens on the left.\n" +
         "Right click: send the selected units there (on an enemy: attack). Hold the right button and draw over the hexes: they walk exactly that way.\n" +
         "Shift + left click: add the units on a hex to the selection.\n" +
+        "G: show or hide all our routes; the routes of what is selected always show.\n" +
         "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +
         "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
         "WASD, arrows or middle mouse drag: move the map. Wheel: zoom.\n" +

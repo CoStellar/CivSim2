@@ -56,7 +56,11 @@ public sealed record PlayUnitView(
     [property: Key(8)] int ToCol,
     [property: Key(9)] int ToRow,
     [property: Key(10)] bool Fighting = false,
-    [property: Key(11)] string? Cargo = null);
+    [property: Key(11)] string? Cargo = null,
+    [property: Key(12)] int[]? Path = null,
+    [property: Key(13)] int[]? Patrol = null,
+    [property: Key(14)] bool Attack = false,
+    [property: Key(15)] bool Carrier = false);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -123,7 +127,7 @@ public sealed record PlaySettlementView(
 
 /// <summary>A standing caravan route of the player.</summary>
 [MessagePackObject]
-public sealed record PlayRouteView([property: Key(0)] int Index, [property: Key(1)] int From, [property: Key(2)] int To, [property: Key(3)] int Good, [property: Key(4)] int Amount, [property: Key(5)] bool OnTheRoad);
+public sealed record PlayRouteView([property: Key(0)] int Index, [property: Key(1)] int From, [property: Key(2)] int To, [property: Key(3)] int Good, [property: Key(4)] int Amount, [property: Key(5)] bool OnTheRoad, [property: Key(6)] int[]? Path = null);
 
 /// <summary>Another people as the player knows it.</summary>
 [MessagePackObject]

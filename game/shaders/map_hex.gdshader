@@ -33,8 +33,9 @@ void vertex() {
 }
 
 void fragment() {
-	float remembered = step(9999.5, custom.x);
-	float code = custom.x - remembered * 10000.0;
+	float fog = floor(custom.x / 10000.0 + 0.001);
+	float remembered = fog > 0.5 ? (fog > 1.5 ? 0.5 : 1.0) : 0.0; // 1 = grey, 0.5 = the soft edge next to what we see
+	float code = custom.x - fog * 10000.0;
 	float relief = floor(code / 1000.0 + 0.001);
 	float biome = code - relief * 1000.0;
 	vec3 col = vec3(0.16, 0.16, 0.17);
@@ -70,10 +71,10 @@ void fragment() {
 		}
 	}
 	col = mix(col, tint.rgb, tint.a);
-	if (remembered > 0.5) {
+	if (remembered > 0.0) {
 		// What we saw before, not what is there now: grey.
 		float l = dot(col, vec3(0.3, 0.59, 0.11));
-		col = mix(vec3(l), col, 0.15) * 0.72;
+		col = mix(col, mix(vec3(l), col, 0.15) * 0.72, remembered);
 	}
 	COLOR = vec4(col, 1.0);
 }

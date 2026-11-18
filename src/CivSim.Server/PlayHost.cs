@@ -637,8 +637,13 @@ public sealed class PlayHost : IDisposable
 
             HexCoord h = _game.Geo.FromIndex(u.Cell);
             HexCoord to = u.State == UnitState.Moving && u.Path.Count > 0 ? _game.Geo.FromIndex(u.Path[^1]) : h;
+            bool mine = u.Civ == civId;
             units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row, u.Fighting,
-                u.Cargo is null ? null : _game.CargoText(u.Cargo)));
+                u.Cargo is null ? null : _game.CargoText(u.Cargo),
+                mine && u.State == UnitState.Moving ? Pairs(u.Path, u.PathIndex) : null,
+                mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
+                u.TargetUnit >= 0 || u.TargetSettlement >= 0,
+                _game.Content.Units[u.Kind].System));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
@@ -667,6 +672,21 @@ public sealed class PlayHost : IDisposable
         }
 
         return list;
+    }
+
+    // Hex indices from a position on, as (col, row) pairs for the client.
+    private int[] Pairs(IReadOnlyList<int> cells, int from)
+    {
+        int n = Math.Max(0, cells.Count - from);
+        var pairs = new int[n * 2];
+        for (int k = 0; k < n; k++)
+        {
+            HexCoord h = _game.Geo.FromIndex(cells[from + k]);
+            pairs[2 * k] = h.Col;
+            pairs[(2 * k) + 1] = h.Row;
+        }
+
+        return pairs;
     }
 
     // Hexes drawn by the player, as (col, row) pairs, to hex indices.
@@ -726,7 +746,7 @@ public sealed class PlayHost : IDisposable
             TradeRoute r = _game.Routes[i];
             if (r.Civ == civ && !r.Ended)
             {
-                list.Add(new PlayRouteView(i, r.From, r.To, r.Good, (int)(r.Amount / SimContent.One), r.Caravan >= 0));
+                list.Add(new PlayRouteView(i, r.From, r.To, r.Good, (int)(r.Amount / SimContent.One), r.Caravan >= 0, r.Path.Count > 0 ? Pairs(r.Path, 0) : null));
             }
         }
 
