@@ -208,6 +208,9 @@ public sealed class Civ
     /// <summary>Technologies known.</summary>
     public bool[] KnownTech { get; set; } = [];
 
+    /// <summary>Era reached: a level, raised by knowing enough technologies of the era before.</summary>
+    public int Era { get; set; }
+
     /// <summary>Experience per technology, worker-ticks.</summary>
     public long[] Experience { get; set; } = [];
 

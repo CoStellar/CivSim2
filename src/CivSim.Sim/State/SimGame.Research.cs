@@ -109,6 +109,15 @@ public sealed partial class SimGame
             return $"Already researching {Content.Techs[civ.Researching].Name}.";
         }
 
+        int era = Content.Techs[tech].Era;
+        if (era > civ.Era)
+        {
+            int prev = Math.Max(0, era - 1);
+            return civ.Era < prev
+                ? $"Our people must first reach the {Content.Eras[prev].Name}."
+                : $"Opens in the {Content.Eras[era].Name}: know {Content.EraAdvanceTechs} technologies of the {Content.Eras[civ.Era].Name} (we know {KnownIn(civ, civ.Era)}).";
+        }
+
         int edge = Edge(civ.Thinker, cost: false);
         foreach ((int req, long need) in Content.Techs[tech].Experience)
         {
@@ -160,20 +169,40 @@ public sealed partial class SimGame
         return false;
     }
 
-    /// <summary>The era of a people: the latest era of a technology it knows.</summary>
+    /// <summary>The era of a people: a level reached by knowing enough technologies of the era before.</summary>
     public int EraOf(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
-        int era = 0;
+        return civ.Era;
+    }
+
+    /// <summary>How many technologies of an era a people knows.</summary>
+    public int KnownIn(Civ civ, int era)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        int n = 0;
         for (int t = 0; t < Content.Techs.Count; t++)
         {
-            if (civ.KnownTech[t])
+            if (civ.KnownTech[t] && Content.Techs[t].Era == era)
             {
-                era = Math.Max(era, Content.Techs[t].Era);
+                n++;
             }
         }
 
-        return era;
+        return n;
+    }
+
+    // Raises the era while the people knows enough technologies of its current one.
+    internal void AdvanceEra(Civ civ, bool tell)
+    {
+        while (civ.Era + 1 < Content.Eras.Count && KnownIn(civ, civ.Era) >= Content.EraAdvanceTechs)
+        {
+            civ.Era++;
+            if (tell)
+            {
+                News.Add((civ.Id, $"Our people enter the {Content.Eras[civ.Era].Name}: its technologies can now be researched."));
+            }
+        }
     }
 
     private string? Research(Civ civ, int tech)
@@ -205,15 +234,10 @@ public sealed partial class SimGame
         }
 
         int tech = civ.Researching;
-        int eraBefore = EraOf(civ);
         civ.KnownTech[tech] = true;
         civ.Researching = -1;
         News.Add((civ.Id, $"We have learned {Content.Techs[tech].Name}."));
-        int era = EraOf(civ);
-        if (era > eraBefore)
-        {
-            News.Add((civ.Id, $"Our people enter the {Content.Eras[era].Name}."));
-        }
+        AdvanceEra(civ, tell: true);
 
         civ.Dirty = true;
     }

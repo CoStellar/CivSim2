@@ -387,7 +387,7 @@ public sealed class PlayHost : IDisposable
                 needs.Add($"{content.Techs[req].Name} {ticks / SimContent.TicksPerMinute}");
             }
 
-            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade));
+            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category));
         }
 
         var eras = new List<string>();
@@ -531,7 +531,25 @@ public sealed class PlayHost : IDisposable
             _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.BlockRadius,
             _game.Picking ? _game.Civs[_game.PickOrder[_game.PickIndex]].Name : null,
             civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0,
-            _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId));
+            _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId),
+            AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0);
+    }
+
+    private List<PlayAlertView> AlertsOf(Civ civ)
+    {
+        var list = new List<PlayAlertView>();
+        if (civ.Dead || _game.Picking)
+        {
+            return list;
+        }
+
+        foreach (Alert a in _game.Alerts(civ))
+        {
+            HexCoord h = _game.Geo.FromIndex(a.Cell);
+            list.Add(new PlayAlertView((int)a.Kind, a.Settlement, h.Col, h.Row, a.Good, a.Text));
+        }
+
+        return list;
     }
 
     private PlaySummaryMessage Summary(Civ civ)

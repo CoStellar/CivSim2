@@ -49,6 +49,9 @@ public partial class PlayGame : Node2D
     private VBoxContainer _sideButtons = null!;
     private PanelContainer _sidePanel = null!;
     private RichTextLabel _chronicleText = null!;
+    private VBoxContainer _alertBox = null!;
+    private PanelContainer _alertPanel = null!;
+    private string _alertSignature = "";
     private Label _toast = null!;
     private double _toastTime;
     private HBoxContainer _buildBar = null!;
@@ -591,7 +594,7 @@ public partial class PlayGame : Node2D
             topRow.AddChild(b);
         }
 
-        foreach (string mode in new[] { "Research", "People", "Peoples", "Summary" })
+        foreach (string mode in new[] { "Settlements", "Research", "People", "Peoples", "Summary" })
         {
             var b = new Button { Text = mode, FocusMode = Control.FocusModeEnum.None };
             b.Pressed += () =>
@@ -632,6 +635,13 @@ public partial class PlayGame : Node2D
         ui.AddChild(chronicle);
         _chronicleText = new RichTextLabel { ScrollFollowing = true, FitContent = false, CustomMinimumSize = new Vector2(420, 160) };
         chronicle.AddChild(_chronicleText);
+
+        _alertPanel = new PanelContainer { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 8, OffsetRight = 470, OffsetTop = -300, OffsetBottom = -60, Visible = false };
+        ui.AddChild(_alertPanel);
+        var alertScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        _alertPanel.AddChild(alertScroll);
+        _alertBox = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        alertScroll.AddChild(_alertBox);
 
         _bigPanel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -560, OffsetRight = -8, OffsetTop = 120, OffsetBottom = 640, Visible = false };
         ui.AddChild(_bigPanel);
@@ -786,10 +796,11 @@ public partial class PlayGame : Node2D
 
         _clock.Text = v.Lost ? "Our people are gone. The game is lost."
             : v.Winner is { } w ? $"{w} have won the game. Score {v.Score}."
-            : $"{c.Eras[v.Era]}   {Clock()}   {speed}{research}   score {v.Score}";
+            : $"{c.Eras[v.Era]}" + (v.EraNeed > 0 ? $" {Math.Min(v.EraKnown, v.EraNeed)}/{v.EraNeed}" : "") + $"   {Clock()}   {speed}{research}   score {v.Score}";
         _clock.TooltipText = v.Goal ?? "";
         _advice.Text = (v.Event is { } ev ? $"{ev.ToUpperInvariant()}: {v.EventSecondsLeft} s left\n" : "") + (v.Advice is { } a ? $"{v.Advisor?.Name}: {a}" : "");
         FillBuildBar(c);
+        UpdateAlerts(v);
         _pendingButtons.Clear();
         UpdateSide(v, c);
         string sideSig = _side.Text + string.Join("|", System.Linq.Enumerable.Select(_pendingButtons, b => b.Text));
@@ -866,6 +877,15 @@ public partial class PlayGame : Node2D
                     }
 
                     text += "\nStore: " + string.Join(", ", goods);
+                    foreach (PlayAlertView a in v.Alerts ?? [])
+                    {
+                        if (a.Settlement == s.Id)
+                        {
+                            text += $"\n! {a.Text}";
+                        }
+                    }
+
+                    SupplyButtons(v, c, s);
                     CaravanButtons(v, c, s, stock);
                 }
 
@@ -1017,6 +1037,8 @@ public partial class PlayGame : Node2D
         }
     }
 
+    private static readonly string[] Categories = ["food", "industry", "building", "trade", "military", "governance", "science"];
+
     private static int Dist(PlaySettlementView a, PlaySettlementView b) => Math.Abs(a.Col - b.Col) + Math.Abs(a.Row - b.Row);
 
     private static string PeopleName(PlayViewMessage v, int civ)
@@ -1158,16 +1180,24 @@ public partial class PlayGame : Node2D
 
             for (int era = 0; era < c.Eras.Count; era++)
             {
-                rows.Add(($"— {c.Eras[era]} —", null));
+                string opens = era <= v.Era ? "" : era == v.Era + 1 && v.EraNeed > 0
+                    ? $" (opens after {v.EraNeed} technologies of the {c.Eras[v.Era]}: we know {v.EraKnown})"
+                    : " (later)";
+                rows.Add(($"— {c.Eras[era]}{opens} —", null));
+                var inEra = new List<PlayTechInfo>();
                 foreach (PlayTechInfo info in c.Techs)
                 {
-                    if (info.Era != era)
+                    if (info.Era == era)
                     {
-                        continue;
+                        inEra.Add(info);
                     }
+                }
 
+                inEra.Sort((a, b) => Array.IndexOf(Categories, a.Category).CompareTo(Array.IndexOf(Categories, b.Category)) is var k && k != 0 ? k : a.Id.CompareTo(b.Id));
+                foreach (PlayTechInfo info in inEra)
+                {
                     PlayTechState st = v.Techs[info.Id];
-                    string name = info.Upgrade ? $"{info.Name} (upgrade)" : info.Name;
+                    string name = $"[{info.Category}] " + (info.Upgrade ? $"{info.Name} (upgrade)" : info.Name);
                     if (st.Known)
                     {
                         rows.Add(($"[known] {name}: {info.Gives}", null));
@@ -1213,6 +1243,37 @@ public partial class PlayGame : Node2D
                 }
 
                 rows.Add(("Refresh", () => _session!.AskSummary()));
+            }
+        }
+        else if (_bigMode == "Settlements")
+        {
+            foreach (PlaySettlementView s in v.Settlements)
+            {
+                if (s.Civ != v.Civ || s.Stock is not { } stock || s.Rate is not { } rate)
+                {
+                    continue;
+                }
+
+                int alerts = 0;
+                foreach (PlayAlertView a in v.Alerts ?? [])
+                {
+                    alerts += a.Settlement == s.Id ? 1 : 0;
+                }
+
+                var goods = new List<string>();
+                for (int g = 0; g < stock.Length; g++)
+                {
+                    if (g < 3 || stock[g] >= 100 || rate[g] != 0)
+                    {
+                        string arrow = rate[g] > 0 ? $"+{Num(rate[g])}" : rate[g] < 0 ? $"-{Num(-rate[g])}" : "0";
+                        goods.Add($"{c.Goods[g].Name} {stock[g] / 100} ({arrow})");
+                    }
+                }
+
+                int col = s.Col;
+                int row = s.Row;
+                string warn = alerts > 0 ? $"   ! {alerts} alert{(alerts > 1 ? "s" : "")}" : "";
+                rows.Add(($"{s.Name} ({c.Levels[s.Level].Name.ToLowerInvariant()}): {s.People} of {s.Housing} homes{warn}\n   " + string.Join(", ", goods), () => Focus(col, row)));
             }
         }
         else if (_bigMode == "Peoples")
@@ -1356,6 +1417,85 @@ public partial class PlayGame : Node2D
                 _bigBox.AddChild(b);
             }
         }
+    }
+
+    // Alerts at the bottom left: what needs a reaction. A click goes to the place.
+    private void UpdateAlerts(PlayViewMessage v)
+    {
+        IReadOnlyList<PlayAlertView> alerts = v.Alerts ?? [];
+        string sig = string.Join("|", System.Linq.Enumerable.Select(alerts, a => a.Text));
+        _alertPanel.Visible = alerts.Count > 0;
+        if (sig == _alertSignature)
+        {
+            return;
+        }
+
+        _alertSignature = sig;
+        foreach (Node n in _alertBox.GetChildren())
+        {
+            n.QueueFree();
+        }
+
+        foreach (PlayAlertView a in alerts)
+        {
+            int col = a.Col;
+            int row = a.Row;
+            var b = new Button { Text = "! " + a.Text, FocusMode = Control.FocusModeEnum.None, Alignment = HorizontalAlignment.Left, ClipText = true, CustomMinimumSize = new Vector2(440, 0) };
+            b.AddThemeColorOverride("font_color", a.Kind <= 2 ? new Color(1f, 0.55f, 0.45f) : new Color(0.95f, 0.85f, 0.5f));
+            b.TooltipText = a.Text;
+            b.Pressed += () => Focus(col, row);
+            _alertBox.AddChild(b);
+        }
+    }
+
+    // Answers to "needs food / needs a good" in a settlement: bring it from one of our settlements that has some to spare.
+    private void SupplyButtons(PlayViewMessage v, PlayContentMessage c, PlaySettlementView s)
+    {
+        var goods = new List<int>();
+        foreach (PlayAlertView a in v.Alerts ?? [])
+        {
+            if (a.Settlement == s.Id && a.Good >= 0 && a.Kind is 2 or 3 && !goods.Contains(a.Good))
+            {
+                goods.Add(a.Good);
+            }
+        }
+
+        foreach (int g in goods)
+        {
+            var from = new List<PlaySettlementView>();
+            foreach (PlaySettlementView o in v.Settlements)
+            {
+                if (o.Civ == v.Civ && o.Id != s.Id && o.Stock is { } st && st[g] >= 4000)
+                {
+                    from.Add(o);
+                }
+            }
+
+            from.Sort((a, b) => Dist(a, s).CompareTo(Dist(b, s)));
+            string name = c.Goods[g].Name.ToLowerInvariant();
+            if (from.Count == 0)
+            {
+                AddButton($"No settlement of ours has {name} to spare", () => { });
+            }
+
+            foreach (PlaySettlementView o in from.GetRange(0, Math.Min(3, from.Count)))
+            {
+                int fromId = o.Id;
+                int to = s.Id;
+                int good = g;
+                long has = o.Stock![g] / 100;
+                AddButton($"Bring 20 {name} from {o.Name} (has {has})", () => _session!.Play(PlayCommandKind.SendCaravan, fromId, good, flag: false, b: to, c: 20));
+                AddButton($"Supply route: {name} from {o.Name}, 20 a trip", () => _session!.Play(PlayCommandKind.Route, fromId, good, flag: false, b: to, c: 20));
+            }
+        }
+    }
+
+    // Moves the camera to a hex and selects it.
+    private void Focus(int col, int row)
+    {
+        _camera.Position = HexLayout.Center(col, row);
+        _selected = (col, row);
+        _unit = -1;
     }
 
     private void Toast(string text)

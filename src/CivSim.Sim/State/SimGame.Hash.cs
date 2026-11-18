@@ -16,6 +16,7 @@ public sealed partial class SimGame
         {
             Add(c.People);
             Add(c.Hungry ? 1 : 0);
+            Add(c.Era);
             foreach (long s in c.Stock)
             {
                 Add(s);

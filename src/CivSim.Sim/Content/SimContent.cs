@@ -78,6 +78,9 @@ public sealed record SimTech(int Id, string Key, string Name, int Era, bool Know
 
     /// <summary>One line on what it gives, for the player.</summary>
     public string Gives { get; init; } = "";
+
+    /// <summary>Branch of the tree (food, industry, building, military, governance, trade, science).</summary>
+    public string Category { get; init; } = "";
 }
 
 /// <summary>A rarity of thinkers and advisors.</summary>
@@ -270,6 +273,15 @@ public sealed class SimContent
 
     /// <summary>Extra price, percent, for resuming a paused construction.</summary>
     public int ResumeCostPercent { get; init; }
+
+    /// <summary>Food a carrier person takes for every 10 hexes of the way there and back (hundredths), paid when it leaves.</summary>
+    public long TripFoodPer10Hexes { get; init; }
+
+    /// <summary>Technologies of its era a people must know to enter the next era (eras are levels, not one gate technology).</summary>
+    public int EraAdvanceTechs { get; init; } = 5;
+
+    /// <summary>Branches of the technology tree, in display order.</summary>
+    public string[] TechCategories { get; init; } = [];
 
     /// <summary>Id of food.</summary>
     public int Food { get; init; }
@@ -561,6 +573,7 @@ public sealed class SimContent
                 Effects = EffectsOf(t),
                 Upgrade = t.TryGetProperty("upgrade", out JsonElement ug) && ug.GetBoolean(),
                 Gives = t.TryGetProperty("gives", out JsonElement gv) ? gv.GetString() ?? "" : "",
+                Category = t.TryGetProperty("category", out JsonElement cat) ? cat.GetString() ?? "" : "",
             });
         }
 
@@ -799,6 +812,9 @@ public sealed class SimContent
             MinGrowthPerMinute = growth.GetProperty("minGrowthPerMinute").GetInt32(),
             StarvePercentPerMinute = growth.GetProperty("starvePercentPerMinute").GetInt32(),
             ResumeCostPercent = root.GetProperty("resumeCostPercent").GetInt32(),
+            TripFoodPer10Hexes = root.TryGetProperty("tripFoodPer10Hexes", out JsonElement tf) ? Hundredths(tf) : 0,
+            EraAdvanceTechs = root.TryGetProperty("eraAdvanceTechs", out JsonElement eat) ? eat.GetInt32() : 5,
+            TechCategories = Strings(root, "techCategories"),
             Food = GoodOf("food"),
             Units = units,
             FoundMinDistance = root.GetProperty("foundSettlement").GetProperty("minDistance").GetInt32(),

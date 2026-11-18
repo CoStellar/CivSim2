@@ -191,3 +191,22 @@ tylko po działaniach.
   - statki pływają tylko po wodzie, a szkoli się je w porcie albo stoczni, w osadzie nad wodą;
   - machiny oblężnicze zadają 4× więcej obrażeń osadom (trebusz jeszcze +100%).
 - **Nowe dobra:** odzież, naczynia, tkaniny, uzbrojenie. Osada staje się miasteczkiem za naczynia i odzież, a miastem za tkaniny i naczynia.
+
+## Ery jako poziomy, kategorie technologii, alarmy (decyzje z 2026-11-18)
+
+- **Ery to poziomy ludu.**
+  - Następna era otwiera się, gdy lud zna 5 technologii swojej obecnej ery. Ulepszenia też się liczą.
+  - Liczba jest w `eraAdvanceTechs` w `data/sim/game.json`.
+  - Technologii z ery, do której lud jeszcze nie doszedł, nie da się zacząć.
+  - W obrębie ery nadal trzeba iść po drzewie, bo technologia wymaga doświadczenia w poprzednich.
+- **Kategorie technologii:** jedzenie, przemysł, budownictwo, handel, wojsko, zarządzanie, nauka. Okno Research grupuje według nich.
+- **Jedzenie na drogę:** tragarze i karawany przy wyjściu biorą 0,5 jedzenia na osobę na każde 10 heksów drogi tam i z powrotem (`tripFoodPer10Hexes`). Jeśli jedzenia brakuje, idą z tym, co jest.
+- **Alarmy** (liczone na żądanie dla widoku, nie zapisywane):
+  - atak na osadę;
+  - wróg blisko (wojsko ludu, z którym walczymy, do 3 heksów za ziemią osady);
+  - głód;
+  - brak dobra, przez który budynek stoi;
+  - brak domów (osada nie rośnie);
+  - pełny magazyn dobra, które osada wytwarza;
+  - budowa bez materiałów.
+- **Odpowiedź na brak:** w panelu osady są przyciski „Bring 20 X from Y” (jeden kurs) i „Supply route” (stała trasa), z najbliższych osad, które mają tego dobra co najmniej 40.

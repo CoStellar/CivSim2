@@ -234,4 +234,44 @@ public sealed class LogisticsTests
         civ.KnownTech[Content.TechId("bronze_weapons")] = true;
         Assert.True(g.Power(u) > before);
     }
+
+    [Fact]
+    public void ANewEraOpensAfterEnoughTechnologiesOfTheOneBefore()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        int agriculture = Content.TechId("agriculture");
+        Assert.Contains("Opens in the", g.CannotResearch(civ, agriculture));
+        foreach (SimTech t in Content.Techs.Where(t => t.Era == 0).Take(Content.EraAdvanceTechs))
+        {
+            civ.KnownTech[t.Id] = true;
+        }
+
+        g.AdvanceEra(civ, tell: false);
+        Assert.True(civ.Era >= 1, "knowing five stone-age technologies opens the neolithic");
+        Assert.DoesNotContain("Opens in the", g.CannotResearch(civ, agriculture) ?? "");
+    }
+
+    [Fact]
+    public void AlertsTellWhatNeedsAReaction()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        for (int i = 0; i < 2 * SimContent.TicksPerSecond; i++)
+        {
+            g.Tick();
+        }
+
+        s.People = s.Housing + 40;
+        s.Stock[Content.Food] = 0;
+        for (int i = 0; i < 6 * SimContent.TicksPerSecond; i++)
+        {
+            g.Tick();
+        }
+
+        System.Collections.Generic.List<Alert> alerts = g.Alerts(civ);
+        Assert.True(alerts.Count > 0, $"people {s.People}, homes {s.Housing}, hungry {s.Hungry}, food {s.Stock[Content.Food]}");
+        Assert.Contains(alerts, a => a.Kind == AlertKind.Hungry && a.Settlement == s.Id);
+    }
 }

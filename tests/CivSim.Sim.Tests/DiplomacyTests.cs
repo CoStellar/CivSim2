@@ -90,7 +90,7 @@ public sealed class GoalTests
     public void TheFirstPeopleInTheMiddleAgesWins()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false, Goal = GameGoal.FirstToEra, GoalEra = 4 });
-        g.Civs[1].KnownTech[Content.TechId("feudalism")] = true;
+        g.Civs[1].Era = 4; // eras are levels: reached by knowing enough technologies of the era before
         for (int i = 0; i < SimContent.TicksPerMinute; i++)
         {
             g.Tick();

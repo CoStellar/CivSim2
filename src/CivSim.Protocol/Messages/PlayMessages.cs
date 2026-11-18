@@ -71,7 +71,8 @@ public sealed record PlayTechInfo(
     [property: Key(4)] string Needs,
     [property: Key(5)] int Seconds,
     [property: Key(6)] string Gives = "",
-    [property: Key(7)] bool Upgrade = false);
+    [property: Key(7)] bool Upgrade = false,
+    [property: Key(8)] string Category = "");
 
 /// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
 [MessagePackObject]
@@ -194,7 +195,21 @@ public sealed record PlayViewMessage(
     [property: Key(31)] string? Goal = null,
     [property: Key(32)] string? Winner = null,
     [property: Key(33)] int Score = 0,
-    [property: Key(34)] IReadOnlyList<PlayRouteView>? Routes = null) : IProtocolMessage;
+    [property: Key(34)] IReadOnlyList<PlayRouteView>? Routes = null,
+    [property: Key(35)] IReadOnlyList<PlayAlertView>? Alerts = null,
+    [property: Key(36)] int EraKnown = 0,
+    [property: Key(37)] int EraNeed = 0) : IProtocolMessage;
+
+/// <summary>Something in one of the player's settlements that needs a reaction. Kind: 0 attacked, 1 enemy near, 2 hungry,
+/// 3 needs a good, 4 no homes, 5 store full, 6 construction lacks materials. Good is −1 when not about a good.</summary>
+[MessagePackObject]
+public sealed record PlayAlertView(
+    [property: Key(0)] int Kind,
+    [property: Key(1)] int Settlement,
+    [property: Key(2)] int Col,
+    [property: Key(3)] int Row,
+    [property: Key(4)] int Good,
+    [property: Key(5)] string Text);
 
 /// <summary>What a player command does.</summary>
 public enum PlayCommandKind

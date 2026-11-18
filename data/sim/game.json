@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools).",
+  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools).",
   "density": 7,
   "economyEveryTicks": 10,
   "populationEveryTicks": 50,
@@ -1462,7 +1462,8 @@
       "name": "Foraging",
       "era": "stone_age",
       "gives": "Gatherers, woodcutters, huts, storehouses, scouts, settlers, warriors.",
-      "known": true
+      "known": true,
+      "category": "food"
     },
     {
       "key": "fire",
@@ -1482,7 +1483,8 @@
           "target": "gatherers_hut",
           "value": 10
         }
-      ]
+      ],
+      "category": "food"
     },
     {
       "key": "stone_tools",
@@ -1496,7 +1498,8 @@
         "food": 40,
         "wood": 20
       },
-      "seconds": 30
+      "seconds": 30,
+      "category": "industry"
     },
     {
       "key": "hunting",
@@ -1510,7 +1513,8 @@
         "food": 30,
         "wood": 20
       },
-      "seconds": 25
+      "seconds": 25,
+      "category": "food"
     },
     {
       "key": "fishing",
@@ -1524,7 +1528,8 @@
         "food": 30,
         "wood": 20
       },
-      "seconds": 25
+      "seconds": 25,
+      "category": "food"
     },
     {
       "key": "shelters",
@@ -1544,7 +1549,8 @@
           "target": "hut",
           "value": 4
         }
-      ]
+      ],
+      "category": "building"
     },
     {
       "key": "herbal_lore",
@@ -1564,7 +1570,8 @@
           "target": "epidemic",
           "value": 50
         }
-      ]
+      ],
+      "category": "science"
     },
     {
       "key": "sewing",
@@ -1586,7 +1593,8 @@
           "target": "hard_winter",
           "value": 50
         }
-      ]
+      ],
+      "category": "industry"
     },
     {
       "key": "rafts",
@@ -1606,7 +1614,8 @@
           "target": "*",
           "value": 10
         }
-      ]
+      ],
+      "category": "trade"
     },
     {
       "key": "flint_blades",
@@ -1628,7 +1637,8 @@
           "value": 20
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "agriculture",
@@ -1644,7 +1654,8 @@
         "wood": 40,
         "stone": 20
       },
-      "seconds": 60
+      "seconds": 60,
+      "category": "food"
     },
     {
       "key": "pottery",
@@ -1659,7 +1670,8 @@
         "clay": 40,
         "wood": 30
       },
-      "seconds": 45
+      "seconds": 45,
+      "category": "industry"
     },
     {
       "key": "animal_husbandry",
@@ -1674,7 +1686,8 @@
         "food": 100,
         "wood": 40
       },
-      "seconds": 50
+      "seconds": 50,
+      "category": "food"
     },
     {
       "key": "masonry",
@@ -1689,7 +1702,8 @@
         "stone": 80,
         "tools": 20
       },
-      "seconds": 60
+      "seconds": 60,
+      "category": "building"
     },
     {
       "key": "weaving",
@@ -1704,7 +1718,8 @@
         "hides": 30,
         "tools": 10
       },
-      "seconds": 50
+      "seconds": 50,
+      "category": "industry"
     },
     {
       "key": "irrigation",
@@ -1730,7 +1745,8 @@
           "target": "drought",
           "value": 40
         }
-      ]
+      ],
+      "category": "food"
     },
     {
       "key": "barter",
@@ -1744,7 +1760,8 @@
         "pottery": 20,
         "food": 60
       },
-      "seconds": 50
+      "seconds": 50,
+      "category": "trade"
     },
     {
       "key": "palisade",
@@ -1757,7 +1774,8 @@
       "price": {
         "wood": 80
       },
-      "seconds": 40
+      "seconds": 40,
+      "category": "military"
     },
     {
       "key": "copper_working",
@@ -1773,7 +1791,8 @@
         "clay": 40,
         "tools": 30
       },
-      "seconds": 70
+      "seconds": 70,
+      "category": "industry"
     },
     {
       "key": "polished_stone",
@@ -1795,7 +1814,8 @@
           "value": 15
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "industry"
     },
     {
       "key": "hide_shields",
@@ -1816,7 +1836,8 @@
           "value": 15
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "bronze_working",
@@ -1831,7 +1852,8 @@
         "wood": 80,
         "tools": 30
       },
-      "seconds": 80
+      "seconds": 80,
+      "category": "industry"
     },
     {
       "key": "the_wheel",
@@ -1853,7 +1875,8 @@
           "target": "carriers",
           "value": 50
         }
-      ]
+      ],
+      "category": "trade"
     },
     {
       "key": "writing",
@@ -1868,7 +1891,8 @@
         "clay": 80,
         "food": 100
       },
-      "seconds": 70
+      "seconds": 70,
+      "category": "governance"
     },
     {
       "key": "horseback_riding",
@@ -1882,7 +1906,8 @@
         "food": 150,
         "hides": 40
       },
-      "seconds": 70
+      "seconds": 70,
+      "category": "military"
     },
     {
       "key": "sailing",
@@ -1897,7 +1922,8 @@
         "wood": 150,
         "textiles": 20
       },
-      "seconds": 70
+      "seconds": 70,
+      "category": "trade"
     },
     {
       "key": "currency",
@@ -1919,7 +1945,8 @@
           "target": "*",
           "value": 5
         }
-      ]
+      ],
+      "category": "trade"
     },
     {
       "key": "code_of_laws",
@@ -1940,7 +1967,8 @@
           "target": "levy",
           "value": 50
         }
-      ]
+      ],
+      "category": "governance"
     },
     {
       "key": "composite_bow",
@@ -1962,7 +1990,8 @@
           "target": "archers",
           "value": 30
         }
-      ]
+      ],
+      "category": "military"
     },
     {
       "key": "brick_walls",
@@ -1977,7 +2006,8 @@
         "clay": 150,
         "wood": 50
       },
-      "seconds": 60
+      "seconds": 60,
+      "category": "military"
     },
     {
       "key": "bronze_weapons",
@@ -1999,7 +2029,8 @@
           "value": 30
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "bronze_armour",
@@ -2021,7 +2052,8 @@
           "value": 20
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "bronze_tools",
@@ -2043,7 +2075,8 @@
           "value": 20
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "industry"
     },
     {
       "key": "iron_working",
@@ -2058,7 +2091,8 @@
         "wood": 120,
         "tools": 40
       },
-      "seconds": 90
+      "seconds": 90,
+      "category": "industry"
     },
     {
       "key": "mathematics",
@@ -2072,7 +2106,8 @@
         "clay": 100,
         "food": 150
       },
-      "seconds": 80
+      "seconds": 80,
+      "category": "science"
     },
     {
       "key": "construction",
@@ -2088,7 +2123,8 @@
         "wood": 150,
         "tools": 60
       },
-      "seconds": 100
+      "seconds": 100,
+      "category": "building"
     },
     {
       "key": "roads",
@@ -2103,7 +2139,8 @@
         "stone": 150,
         "tools": 30
       },
-      "seconds": 70
+      "seconds": 70,
+      "category": "trade"
     },
     {
       "key": "engineering",
@@ -2119,7 +2156,8 @@
         "tools": 60,
         "iron": 20
       },
-      "seconds": 90
+      "seconds": 90,
+      "category": "military"
     },
     {
       "key": "medicine",
@@ -2146,7 +2184,8 @@
           "target": "epidemic",
           "value": 30
         }
-      ]
+      ],
+      "category": "science"
     },
     {
       "key": "philosophy",
@@ -2168,7 +2207,8 @@
           "target": "*",
           "value": 40
         }
-      ]
+      ],
+      "category": "science"
     },
     {
       "key": "shipbuilding",
@@ -2183,7 +2223,8 @@
         "wood": 250,
         "iron": 30
       },
-      "seconds": 90
+      "seconds": 90,
+      "category": "trade"
     },
     {
       "key": "stone_walls",
@@ -2197,7 +2238,8 @@
       "price": {
         "stone": 250
       },
-      "seconds": 80
+      "seconds": 80,
+      "category": "military"
     },
     {
       "key": "iron_weapons",
@@ -2219,7 +2261,8 @@
           "value": 30
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "chain_mail",
@@ -2246,7 +2289,8 @@
           "value": 25
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "iron_tools",
@@ -2273,7 +2317,8 @@
           "value": 15
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "industry"
     },
     {
       "key": "crop_rotation",
@@ -2296,7 +2341,8 @@
           "value": 25
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "food"
     },
     {
       "key": "feudalism",
@@ -2312,7 +2358,8 @@
         "iron": 60,
         "stone": 200
       },
-      "seconds": 120
+      "seconds": 120,
+      "category": "governance"
     },
     {
       "key": "steel",
@@ -2334,7 +2381,8 @@
           "target": "*",
           "value": 10
         }
-      ]
+      ],
+      "category": "industry"
     },
     {
       "key": "castles",
@@ -2348,7 +2396,8 @@
         "stone": 400,
         "iron": 40
       },
-      "seconds": 110
+      "seconds": 110,
+      "category": "military"
     },
     {
       "key": "heavy_plough",
@@ -2370,7 +2419,8 @@
           "target": "farm",
           "value": 30
         }
-      ]
+      ],
+      "category": "food"
     },
     {
       "key": "crossbows",
@@ -2384,7 +2434,8 @@
         "iron": 60,
         "wood": 100
       },
-      "seconds": 90
+      "seconds": 90,
+      "category": "military"
     },
     {
       "key": "guilds",
@@ -2406,7 +2457,8 @@
           "target": "craft",
           "value": 25
         }
-      ]
+      ],
+      "category": "industry"
     },
     {
       "key": "mills",
@@ -2428,7 +2480,8 @@
           "target": "farm",
           "value": 20
         }
-      ]
+      ],
+      "category": "food"
     },
     {
       "key": "chivalry",
@@ -2449,7 +2502,8 @@
           "target": "knights",
           "value": 30
         }
-      ]
+      ],
+      "category": "military"
     },
     {
       "key": "university",
@@ -2464,7 +2518,8 @@
         "stone": 300,
         "textiles": 80
       },
-      "seconds": 120
+      "seconds": 120,
+      "category": "science"
     },
     {
       "key": "steel_weapons",
@@ -2486,7 +2541,8 @@
           "value": 30
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "plate_armour",
@@ -2513,7 +2569,8 @@
           "value": 30
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "longbow",
@@ -2535,7 +2592,8 @@
           "value": 30
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "heavy_cavalry",
@@ -2557,7 +2615,8 @@
           "value": 30
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     },
     {
       "key": "trebuchet",
@@ -2579,7 +2638,8 @@
           "value": 100
         }
       ],
-      "upgrade": true
+      "upgrade": true,
+      "category": "military"
     }
   ],
   "thinkers": {
@@ -2727,5 +2787,16 @@
     "offerCooldownMinutes": 3,
     "refusalCooldownMinutes": 6
   },
-  "buildingStorage": 20
+  "buildingStorage": 20,
+  "techCategories": [
+    "food",
+    "industry",
+    "building",
+    "trade",
+    "military",
+    "governance",
+    "science"
+  ],
+  "eraAdvanceTechs": 5,
+  "tripFoodPer10Hexes": 0.5
 }

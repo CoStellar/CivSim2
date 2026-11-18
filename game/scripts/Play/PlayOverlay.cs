@@ -127,6 +127,14 @@ public partial class PlayOverlay : Node2D
                     DrawPolyline(Closed(Hex(c, size)), s.Besieged ? Colors.Red : civ, s.Besieged ? 5 : 3);
                     DrawString(font, c + new Vector2(-24, 6), _content.Levels[s.Level].Name[..1], HorizontalAlignment.Center, 48, 18, Colors.White);
                     DrawString(font, c + new Vector2(-80, -26), s.Name, HorizontalAlignment.Center, 160, 14, Colors.White);
+                    int worst = AlertOf(s.Id);
+                    if (worst >= 0)
+                    {
+                        // A mark over the settlement: red for danger and hunger, yellow for the rest.
+                        Color mark = worst <= 2 ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 0.85f, 0.3f);
+                        DrawCircle(c + new Vector2(0, -44), 9, mark);
+                        DrawString(font, c + new Vector2(-6, -38), "!", HorizontalAlignment.Center, 12, 16, Colors.Black);
+                    }
                 }
             }
         }
@@ -263,5 +271,20 @@ public partial class PlayOverlay : Node2D
         pts.CopyTo(all, 0);
         all[^1] = pts[0];
         return all;
+    }
+
+    // The most urgent alert kind of a settlement (−1 = none).
+    private int AlertOf(int settlement)
+    {
+        int worst = -1;
+        foreach (PlayAlertView a in _view?.Alerts ?? [])
+        {
+            if (a.Settlement == settlement && (worst < 0 || a.Kind < worst))
+            {
+                worst = a.Kind;
+            }
+        }
+
+        return worst;
     }
 }

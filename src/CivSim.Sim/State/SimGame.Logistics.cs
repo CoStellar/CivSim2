@@ -92,6 +92,7 @@ public sealed partial class SimGame
             porters.Target = b.Id;
             b.OnTheWay[g] += missing[g];
             b.Porters++;
+            PackFood(porters, s, b.Cell);
             Walk(porters, b.Cell);
         }
 
@@ -191,6 +192,15 @@ public sealed partial class SimGame
         civ.Units.Add(u.Id);
         civ.Dirty = true;
         return u;
+    }
+
+    // Carriers take food for the whole way there and back; it is part of the cost of sending them (taken from home, as far as
+    // there is food: they never wait for it).
+    private void PackFood(Unit u, Settlement home, int toCell)
+    {
+        long hexes = Geo.Distance(Geo.FromIndex(u.Cell), Geo.FromIndex(toCell));
+        long food = Math.Min(home.Stock[Content.Food], u.People * hexes * 2 * Content.TripFoodPer10Hexes / 10);
+        home.Stock[Content.Food] -= food;
     }
 
     // Starts a unit walking to a hex; arrives at once when already there. A caravan with no way there turns back with its load.
@@ -399,7 +409,9 @@ public sealed partial class SimGame
             Routes[route].Caravan = c.Id;
         }
 
-        Walk(c, NearestStore(Settlements[to], s.Center));
+        int dest = NearestStore(Settlements[to], s.Center);
+        PackFood(c, s, dest);
+        Walk(c, dest);
         return null;
     }
 
@@ -465,6 +477,7 @@ public sealed partial class SimGame
         Unit ca = NewCarrier(a, Content.Caravans, sa, NearestStore(sa, sb.Center), load, 100);
         ca.Job = CarrierJob.ToSettlement;
         ca.Target = sb.Id;
+        PackFood(ca, sa, NearestStore(sb, sa.Center));
         Walk(ca, NearestStore(sb, sa.Center));
 
         var back = new long[Content.Goods.Count];
@@ -473,6 +486,7 @@ public sealed partial class SimGame
         Unit cb = NewCarrier(b, Content.Caravans, sb, NearestStore(sb, sa.Center), back, 100);
         cb.Job = CarrierJob.ToSettlement;
         cb.Target = sa.Id;
+        PackFood(cb, sb, NearestStore(sa, sb.Center));
         Walk(cb, NearestStore(sa, sb.Center));
         string text = $"Caravans set out: {giveAmount / SimContent.One} {Content.Goods[giveGood].Key} of {a.Name} for {wantAmount / SimContent.One} {Content.Goods[wantGood].Key} of {b.Name}.";
         News.Add((a.Id, text));
