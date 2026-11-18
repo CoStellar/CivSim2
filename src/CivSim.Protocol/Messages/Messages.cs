@@ -30,6 +30,7 @@ namespace CivSim.Protocol.Messages;
 [Union(21, typeof(PlaySummaryRequestMessage))]
 [Union(22, typeof(PlaySummaryMessage))]
 [Union(23, typeof(PlayCellsMessage))]
+[Union(24, typeof(PlayObjectsMessage))]
 public interface IProtocolMessage
 {
 }

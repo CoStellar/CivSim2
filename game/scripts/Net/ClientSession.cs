@@ -143,6 +143,53 @@ public sealed class ClientSession
     public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false, int b = 0, int c = 0, int[]? cells = null) =>
         _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag, b, c, cells));
 
+    private readonly SortedDictionary<int, PlayBuildingView> _buildings = [];
+    private readonly SortedDictionary<int, PlaySettlementView> _settlements = [];
+    private readonly SortedDictionary<int, PlayUnitView> _units = [];
+
+    // Objects come as changes (fog of war work, 2026-11-18): keep them here and put them into each view.
+    private void Merge(PlayObjectsMessage m)
+    {
+        foreach (int id in m.GoneBuildings)
+        {
+            _buildings.Remove(id);
+        }
+
+        foreach (int id in m.GoneSettlements)
+        {
+            _settlements.Remove(id);
+        }
+
+        foreach (int id in m.GoneUnits)
+        {
+            _units.Remove(id);
+        }
+
+        foreach (PlayBuildingView b in m.Buildings)
+        {
+            _buildings[b.Id] = b;
+        }
+
+        foreach (PlaySettlementView s in m.Settlements)
+        {
+            _settlements[s.Id] = s;
+        }
+
+        foreach (PlayUnitView u in m.Units)
+        {
+            _units[u.Id] = u;
+        }
+    }
+
+    private PlayViewMessage Merged(PlayViewMessage v, IReadOnlyList<PlayTechState> techs) => v with
+    {
+        Buildings = [.. _buildings.Values],
+        Settlements = [.. _settlements.Values],
+        Units = [.. _units.Values],
+        Techs = techs,
+        News = v.News,
+    };
+
     /// <summary>Latest summary of the new game.</summary>
     public PlaySummaryMessage? Summary { get; private set; }
 
@@ -273,8 +320,16 @@ public sealed class ClientSession
                 }
 
                 break;
+            case PlayObjectsMessage objects:
+                Merge(objects);
+                if (PlayView is { } last)
+                {
+                    PlayView = Merged(last, last.Techs);
+                }
+
+                break;
             case PlayViewMessage pv:
-                PlayView = pv;
+                PlayView = pv.ObjectsApart ? Merged(pv, pv.TechsSame && PlayView is { } prev ? prev.Techs : pv.Techs) : pv;
                 if (pv.News is { Count: > 0 } news)
                 {
                     PlayNews?.Invoke(news);

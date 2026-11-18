@@ -456,11 +456,138 @@ public sealed class PlayHost : IDisposable
                 SendChanges(client, civ);
             }
 
-            client.Connection.Send(View(client.Civ));
-            client.ViewSoon = false;
+            SendView(client);
         }
 
         _news.Clear();
+    }
+
+    // Objects every round, as changes; the rest of the view four times a second (or at once after a command).
+    private void SendView(PlayClient client)
+    {
+        client.News.AddRange(_news);
+        PlayViewMessage v = View(client.Civ);
+        var buildings = new List<PlayBuildingView>();
+        var settlements = new List<PlaySettlementView>();
+        var units = new List<PlayUnitView>();
+        int[] goneB = Diff(v.Buildings, b => b.Id, Sig, client.SentBuildings, buildings);
+        int[] goneS = Diff(v.Settlements, s => s.Id, Sig, client.SentSettlements, settlements);
+        int[] goneU = Diff(v.Units, u => u.Id, Sig, client.SentUnits, units);
+        if (buildings.Count + settlements.Count + units.Count + goneB.Length + goneS.Length + goneU.Length > 0)
+        {
+            client.Connection.Send(new PlayObjectsMessage(buildings, goneB, settlements, goneS, units, goneU));
+        }
+
+        long now = Stopwatch.GetTimestamp();
+        if (!client.ViewSoon && _game.Ticks > 0 && Stopwatch.GetElapsedTime(client.LastFullView, now) < TimeSpan.FromMilliseconds(250) && client.LastFullView != long.MinValue)
+        {
+            return;
+        }
+
+        int techs = TechSig(v.Techs);
+        bool same = techs == client.SentTechs;
+        client.SentTechs = techs;
+        client.Connection.Send(v with
+        {
+            Buildings = [],
+            Settlements = [],
+            Units = [],
+            News = [.. client.News],
+            Techs = same ? [] : v.Techs,
+            ObjectsApart = true,
+            TechsSame = same,
+        });
+        client.News.Clear();
+        client.LastFullView = now;
+        client.ViewSoon = false;
+    }
+
+    // Adds to changed the views whose signature differs from what the client has; returns the ids it has no more.
+    private static int[] Diff<T>(IReadOnlyList<T> now, Func<T, int> id, Func<T, int> sig, Dictionary<int, int> sent, List<T> changed)
+    {
+        var present = new HashSet<int>();
+        foreach (T x in now)
+        {
+            int key = id(x);
+            int s = sig(x);
+            present.Add(key);
+            if (!sent.TryGetValue(key, out int old) || old != s)
+            {
+                sent[key] = s;
+                changed.Add(x);
+            }
+        }
+
+        var gone = new List<int>();
+        foreach (int key in sent.Keys)
+        {
+            if (!present.Contains(key))
+            {
+                gone.Add(key);
+            }
+        }
+
+        foreach (int key in gone)
+        {
+            sent.Remove(key);
+        }
+
+        gone.Sort();
+        return [.. gone];
+    }
+
+    private static int Sig(PlayBuildingView b) => HashCode.Combine(HashCode.Combine(b.Type, b.Civ, b.Col, b.Row, b.State, b.Workers, b.Starved, b.Priority),
+        HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered));
+
+    private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, s.DefensePercent),
+        HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row));
+
+    private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier));
+
+    private static int TechSig(IReadOnlyList<PlayTechState> techs)
+    {
+        var h = new HashCode();
+        foreach (PlayTechState t in techs)
+        {
+            h.Add(t.Known);
+            h.Add(t.Blocked);
+            h.Add(Arr(t.Price));
+        }
+
+        return h.ToHashCode();
+    }
+
+    private static int Arr(long[]? a)
+    {
+        if (a is null)
+        {
+            return 0;
+        }
+
+        var h = new HashCode();
+        foreach (long x in a)
+        {
+            h.Add(x);
+        }
+
+        return h.ToHashCode();
+    }
+
+    private static int Arr(int[]? a)
+    {
+        if (a is null)
+        {
+            return 0;
+        }
+
+        var h = new HashCode();
+        foreach (int x in a)
+        {
+            h.Add(x);
+        }
+
+        return h.ToHashCode();
     }
 
     private readonly SortedSet<int> _changed = [];
@@ -855,6 +982,19 @@ public sealed class PlayHost : IDisposable
         public bool[] SentTerrain { get; } = new bool[cells];
 
         public byte[] SentRoad { get; } = new byte[cells];
+
+        // Signatures of the objects this client has, by id: only changes are sent.
+        public Dictionary<int, int> SentBuildings { get; } = [];
+
+        public Dictionary<int, int> SentSettlements { get; } = [];
+
+        public Dictionary<int, int> SentUnits { get; } = [];
+
+        public int SentTechs { get; set; }
+
+        public long LastFullView { get; set; } = long.MinValue;
+
+        public List<string> News { get; } = [];
 
         private static short[] Filled(int n)
         {

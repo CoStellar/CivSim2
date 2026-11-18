@@ -222,7 +222,23 @@ public sealed record PlayViewMessage(
     [property: Key(34)] IReadOnlyList<PlayRouteView>? Routes = null,
     [property: Key(35)] IReadOnlyList<PlayAlertView>? Alerts = null,
     [property: Key(36)] int EraKnown = 0,
-    [property: Key(37)] int EraNeed = 0) : IProtocolMessage;
+    [property: Key(37)] int EraNeed = 0,
+    [property: Key(38)] bool ObjectsApart = false,
+    [property: Key(39)] bool TechsSame = false) : IProtocolMessage;
+
+/// <summary>
+/// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this
+/// player since the last message, and the ids of those gone from its view. The client keeps the rest; <see
+/// cref="PlayViewMessage"/> then comes without them (<c>ObjectsApart</c>).
+/// </summary>
+[MessagePackObject]
+public sealed record PlayObjectsMessage(
+    [property: Key(0)] IReadOnlyList<PlayBuildingView> Buildings,
+    [property: Key(1)] int[] GoneBuildings,
+    [property: Key(2)] IReadOnlyList<PlaySettlementView> Settlements,
+    [property: Key(3)] int[] GoneSettlements,
+    [property: Key(4)] IReadOnlyList<PlayUnitView> Units,
+    [property: Key(5)] int[] GoneUnits) : IProtocolMessage;
 
 /// <summary>Something in one of the player's settlements that needs a reaction. Kind: 0 attacked, 1 enemy near, 2 hungry,
 /// 3 needs a good, 4 no homes, 5 store full, 6 construction lacks materials. Good is −1 when not about a good.</summary>
