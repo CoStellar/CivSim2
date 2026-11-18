@@ -269,7 +269,8 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Priority => new PriorityCommand(civ, m.A, m.Flag),
         PlayCommandKind.Demolish => new DemolishCommand(civ, m.A),
         PlayCommandKind.Train => new TrainCommand(civ, m.A, m.B),
-        PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag),
+        PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag, Cells(m.Cells)),
+        PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
         PlayCommandKind.Found => new FoundCommand(civ, m.A),
         PlayCommandKind.Research => new ResearchCommand(civ, m.A),
         PlayCommandKind.Hire => new HireCommand(civ, m.Flag),
@@ -285,7 +286,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Barter => new BarterCommand(civ, m.A, m.B, m.Col * SimContent.One, m.Row, m.C * SimContent.One),
         PlayCommandKind.AnswerBarter => new AnswerBarterCommand(civ, m.A, m.Flag),
         PlayCommandKind.SendCaravan => new SendCaravanCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One),
-        PlayCommandKind.Route => new RouteCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One),
+        PlayCommandKind.Route => new RouteCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One, Cells(m.Cells)),
         PlayCommandKind.EndRoute => new EndRouteCommand(civ, m.A),
         PlayCommandKind.BringMaterials => new BringMaterialsCommand(civ, m.A),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
@@ -421,6 +422,7 @@ public sealed class PlayHost : IDisposable
             if (!client.SentChunks || client.SawPicking != _game.Picking)
             {
                 // The whole map again: at the start, and when the start phase ends (deposits and soil appear, the fog comes).
+                System.Array.Clear(client.SentTerrain);
                 for (int chunk = 0; chunk < _game.Map.Chunks.Count; chunk++)
                 {
                     SendChunk(client, chunk, always: client.SentChunks);
@@ -432,18 +434,19 @@ public sealed class PlayHost : IDisposable
             }
             else
             {
+                _changed.Clear();
                 foreach (int chunk in _dirty)
                 {
-                    civ.NewlyKnown.Remove(chunk);
-                    SendChunk(client, chunk);
+                    _changed.Add(chunk);
                 }
 
                 foreach (int chunk in civ.NewlyKnown)
                 {
-                    SendChunk(client, chunk);
+                    _changed.Add(chunk);
                 }
 
                 civ.NewlyKnown.Clear();
+                SendChanges(client, civ);
             }
 
             client.Connection.Send(View(client.Civ));
@@ -453,9 +456,97 @@ public sealed class PlayHost : IDisposable
         _news.Clear();
     }
 
+    private readonly SortedSet<int> _changed = [];
+    private readonly List<int> _cellList = [];
+    private readonly List<byte> _visList = [];
+    private readonly List<short> _ownerList = [];
+    private readonly List<int> _chunkList = [];
+
+    // What the player should see of a hex now: unknown, remembered (grey) or seen; and its owner as known.
+    private byte VisibilityFor(Civ civ, int cell) =>
+        !civ.Known[cell] ? MapChunkMessage.Unknown : _game.Visible(civ, cell) ? MapChunkMessage.Visible : MapChunkMessage.Remembered;
+
+    private short OwnerFor(Civ civ, int cell) => civ.Known[cell] ? _game.OwnerSeen(civ, cell) : WorldMap.NoOwner;
+
+    // Only what changed against what the client has: terrain once per newly explored chunk, then fog and owner per hex.
+    private void SendChanges(PlayClient client, Civ civ)
+    {
+        _cellList.Clear();
+        _visList.Clear();
+        _ownerList.Clear();
+        _chunkList.Clear();
+        foreach (int chunk in _changed)
+        {
+            (int x0, int y0, int w, int h) = _game.Map.Chunks.Bounds(chunk);
+            bool terrain = false;
+            for (int r = 0; r < h && !terrain; r++)
+            {
+                for (int c = 0; c < w; c++)
+                {
+                    int i = _game.Geo.Index(new HexCoord(x0 + c, y0 + r));
+                    if (civ.Known[i] && !client.SentTerrain[i])
+                    {
+                        terrain = true;
+                        break;
+                    }
+                }
+            }
+
+            if (terrain)
+            {
+                SendChunk(client, chunk);
+                continue;
+            }
+
+            bool any = false;
+            for (int r = 0; r < h; r++)
+            {
+                for (int c = 0; c < w; c++)
+                {
+                    int i = _game.Geo.Index(new HexCoord(x0 + c, y0 + r));
+                    byte vis = VisibilityFor(civ, i);
+                    short owner = OwnerFor(civ, i);
+                    if (vis != client.SentVisibility[i] || owner != client.SentOwner[i])
+                    {
+                        client.SentVisibility[i] = vis;
+                        client.SentOwner[i] = owner;
+                        _cellList.Add(i);
+                        _visList.Add(vis);
+                        _ownerList.Add(owner);
+                        any = true;
+                    }
+                }
+            }
+
+            if (any)
+            {
+                _chunkList.Add(chunk);
+            }
+        }
+
+        if (_cellList.Count > 0)
+        {
+            client.Connection.Send(new PlayCellsMessage([.. _cellList], [.. _visList], [.. _ownerList], [.. _chunkList]));
+        }
+    }
+
     private void SendChunk(PlayClient client, int chunk, bool always = false)
     {
-        MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, _game.Civs[client.Civ].Known, hideResources: _game.Picking, always: always);
+        Civ civ = _game.Civs[client.Civ];
+        MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, civ.Known, hideResources: _game.Picking, always: always,
+            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i));
+        (int x0, int y0, int w, int h) = _game.Map.Chunks.Bounds(chunk);
+        for (int r = 0; r < h; r++)
+        {
+            for (int c = 0; c < w; c++)
+            {
+                int i = _game.Geo.Index(new HexCoord(x0 + c, y0 + r));
+                client.SentTerrain[i] = civ.Known[i];
+                client.SentVisibility[i] = VisibilityFor(civ, i);
+                client.SentOwner[i] = OwnerFor(civ, i);
+            }
+        }
+
         if (m is not null)
         {
             client.Connection.Send(m);
@@ -474,7 +565,8 @@ public sealed class PlayHost : IDisposable
         var settlements = new List<PlaySettlementView>();
         foreach (Settlement s in _game.Settlements)
         {
-            if (s.Abandoned || !known[s.Center])
+            // Our own always; others only while seen (what we saw before comes from memory below).
+            if (s.Abandoned || (s.Civ != civId && !_game.Visible(civ, s.Center)))
             {
                 continue;
             }
@@ -485,10 +577,22 @@ public sealed class PlayHost : IDisposable
                 own ? (long[])s.Stock.Clone() : null, own ? (long[])s.Capacity.Clone() : null, own ? (long[])s.Rate.Clone() : null));
         }
 
+        if (!_game.Picking)
+        {
+            foreach (SettlementMemory m in _game.RememberedSettlements(civ))
+            {
+                if (m.Civ != civId)
+                {
+                    HexCoord h = _game.Geo.FromIndex(m.Center);
+                    settlements.Add(new PlaySettlementView(m.Settlement, m.Civ, m.Name, h.Col, h.Row, m.Level, -1, 0, 0, Remembered: true));
+                }
+            }
+        }
+
         var buildings = new List<PlayBuildingView>();
         foreach (Building b in _game.Buildings)
         {
-            if (b.State == BuildingState.Removed || !known[b.Cell])
+            if (b.State == BuildingState.Removed || (b.Civ != civId && !_game.Visible(civ, b.Cell)))
             {
                 continue;
             }
@@ -510,6 +614,19 @@ public sealed class PlayHost : IDisposable
             buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0));
         }
 
+        if (!_game.Picking)
+        {
+            foreach (BuildingMemory m in _game.RememberedBuildings(civ))
+            {
+                if (m.Civ != civId)
+                {
+                    HexCoord h = _game.Geo.FromIndex(m.Cell);
+                    buildings.Add(new PlayBuildingView(m.Building, m.Type, m.Civ, h.Col, h.Row, (int)m.State, 0, false, false, 1000, 100, Remembered: true));
+                }
+            }
+        }
+
+        _ = known;
         var units = new List<PlayUnitView>();
         foreach (Unit u in _game.Units)
         {
@@ -550,6 +667,23 @@ public sealed class PlayHost : IDisposable
         }
 
         return list;
+    }
+
+    // Hexes drawn by the player, as (col, row) pairs, to hex indices.
+    private int[]? Cells(int[]? pairs)
+    {
+        if (pairs is null || pairs.Length < 2)
+        {
+            return null;
+        }
+
+        var cells = new int[pairs.Length / 2];
+        for (int k = 0; k < cells.Length; k++)
+        {
+            cells[k] = _game.Geo.Index(_game.Geo.Wrap(pairs[2 * k], pairs[(2 * k) + 1]));
+        }
+
+        return cells;
     }
 
     private PlaySummaryMessage Summary(Civ civ)
@@ -676,6 +810,20 @@ public sealed class PlayHost : IDisposable
         public int Civ { get; set; } = -1;
 
         public int Cells { get; } = cells;
+
+        // What this client has been told, hex by hex: the server sends only changes against it.
+        public byte[] SentVisibility { get; } = new byte[cells];
+
+        public short[] SentOwner { get; } = Filled(cells);
+
+        public bool[] SentTerrain { get; } = new bool[cells];
+
+        private static short[] Filled(int n)
+        {
+            var a = new short[n];
+            System.Array.Fill(a, (short)-1);
+            return a;
+        }
 
         public bool SentChunks { get; set; }
 

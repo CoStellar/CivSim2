@@ -9,7 +9,7 @@ namespace CivSim.Sim.State;
 public sealed record SendCaravanCommand(int Civ, int From, int To, int Good, long Amount) : SimCommand(Civ);
 
 /// <summary>Set up a standing route: a caravan keeps carrying the good from one settlement to the other.</summary>
-public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amount) : SimCommand(Civ);
+public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amount, int[]? Path = null) : SimCommand(Civ);
 
 /// <summary>Send porters with the materials a construction is still missing (after porters were killed on the way).</summary>
 public sealed record BringMaterialsCommand(int Civ, int Building) : SimCommand(Civ);
@@ -191,6 +191,7 @@ public sealed partial class SimGame
         Units.Add(u);
         civ.Units.Add(u.Id);
         civ.Dirty = true;
+        Watch(u);
         return u;
     }
 
@@ -281,7 +282,34 @@ public sealed partial class SimGame
     private void GoHome(Unit u)
     {
         u.Job = CarrierJob.Returning;
+        if (u.Route >= 0 && Routes[u.Route].Path.Count > 0)
+        {
+            var back = new List<int>(Routes[u.Route].Path);
+            back.Reverse();
+            WalkVia(u, back, u.ReturnCell);
+            return;
+        }
+
         Walk(u, u.ReturnCell);
+    }
+
+    // Walks a carrier along a drawn path, then the shortest way from its end to the destination. Falls back to the
+    // shortest way when the drawing cannot be walked any more (a building on it, land changed hands…).
+    private void WalkVia(Unit u, IReadOnlyList<int> drawn, int dest)
+    {
+        var tail = new List<int>();
+        if (DrawnPath(u.Cell, drawn, false, u.Path) is not null || !FindPath(u.Path.Count > 0 ? u.Path[^1] : u.Cell, dest, tail))
+        {
+            Walk(u, dest);
+            return;
+        }
+
+        u.Path.AddRange(tail);
+        StartWalk(u, false);
+        if (u.State == UnitState.Idle)
+        {
+            Arrive(u);
+        }
     }
 
     private void Gone(Unit u)
@@ -297,6 +325,7 @@ public sealed partial class SimGame
             }
         }
 
+        Unwatch(u);
         u.State = UnitState.Gone;
         Civs[u.Civ].Units.Remove(u.Id);
         Civs[u.Civ].Dirty = true;
@@ -411,11 +440,19 @@ public sealed partial class SimGame
 
         int dest = NearestStore(Settlements[to], s.Center);
         PackFood(c, s, dest);
-        Walk(c, dest);
+        if (route >= 0 && Routes[route].Path.Count > 0)
+        {
+            WalkVia(c, Routes[route].Path, dest);
+        }
+        else
+        {
+            Walk(c, dest);
+        }
+
         return null;
     }
 
-    private string? AddRoute(Civ civ, int from, int to, int good, long amount)
+    private string? AddRoute(Civ civ, int from, int to, int good, long amount, int[]? drawn = null)
     {
         if ((uint)from >= (uint)Settlements.Count || (uint)to >= (uint)Settlements.Count || Settlements[from].Civ != civ.Id || Settlements[to].Civ != civ.Id || from == to)
         {
@@ -427,7 +464,20 @@ public sealed partial class SimGame
             return "Choose a good and an amount.";
         }
 
-        Routes.Add(new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount });
+        var route = new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount };
+        if (drawn is { Length: > 0 })
+        {
+            var check = new List<int>();
+            string? why = DrawnPath(drawn[0], drawn, false, check);
+            if (why is not null)
+            {
+                return why;
+            }
+
+            route.Path.AddRange(drawn);
+        }
+
+        Routes.Add(route);
         return null;
     }
 

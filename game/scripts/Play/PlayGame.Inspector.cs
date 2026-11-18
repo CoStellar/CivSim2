@@ -70,6 +70,13 @@ public partial class PlayGame
     {
         PlayLevelInfo level = c.Levels[s.Level];
         bool mine = s.Civ == v.Civ;
+        if (s.Remembered)
+        {
+            items.Add(new HeaderItem(s.Name, $"{level.Name} of {PeopleName(v, s.Civ)} - as we last saw it", new Color("6a6a6a"), level.Name[..1]));
+            items.Add(new LineItem("Out of sight. Send scouts to see what is there now.", UiKit.Muted, 14));
+            return;
+        }
+
         items.Add(new HeaderItem(s.Name, mine ? level.Name : $"{level.Name} of {PeopleName(v, s.Civ)}", mine ? new Color("c8a050") : new Color("8a5050"), level.Name[..1]));
         if (s.Besieged)
         {
@@ -217,7 +224,8 @@ public partial class PlayGame
                 int good = g;
                 string name = c.Goods[g].Name.ToLowerInvariant();
                 items.Add(new ActItem($"Send 20 {name} to {o.Name}", () => _session!.Play(PlayCommandKind.SendCaravan, from, good, flag: false, b: to, c: 20)));
-                items.Add(new ActItem($"Route: {name} to {o.Name}, every trip", () => _session!.Play(PlayCommandKind.Route, from, good, flag: false, b: to, c: 20)));
+                items.Add(new ActItem($"Route: {name} to {o.Name}, every trip", () => _session!.Play(PlayCommandKind.Route, from, good, flag: false, b: to, c: 20), "The caravans take the shortest way."));
+                items.Add(new ActItem($"Draw the way: {name} to {o.Name}", () => ArmDraw(DrawMode.Route, (from, to, good)), "Draw over the hexes the way the caravans take, there and back."));
             }
         }
 
@@ -235,6 +243,13 @@ public partial class PlayGame
     private void BuildingItems(PlayViewMessage v, PlayContentMessage c, PlayBuildingView b, List<UiItem> items)
     {
         PlayBuildingInfo t = c.Buildings[b.Type];
+        if (b.Remembered)
+        {
+            items.Add(new HeaderItem(t.Name, $"{PeopleName(v, b.Civ)} - as we last saw it", new Color("6a6a6a"), UiKit.Short(t.Name)));
+            items.Add(new LineItem("Out of sight. It may be gone or changed.", UiKit.Muted, 14));
+            return;
+        }
+
         string state = b.State switch
         {
             5 when b.Porters > 0 => "Materials on the way",
@@ -334,7 +349,17 @@ public partial class PlayGame
             return;
         }
 
-        items.Add(new LineItem(t.Army ? "Right click a hex to go there, an enemy to attack it." : "Right click a hex to send them there.", UiKit.Muted, 13));
+        items.Add(new LineItem(t.Army ? "Right click a hex to go there, an enemy to attack it. Hold the right button and draw to choose the way." : "Right click a hex to send them there. Hold the right button and draw to choose the way.", UiKit.Muted, 13));
+        int more = _overlay?.SelectedUnits.Count ?? 0;
+        if (more > 1)
+        {
+            items.Add(new LineItem($"{more} units selected: orders go to all of them.", UiKit.Warn, 14));
+        }
+
+        if (u.State != 0)
+        {
+            items.Add(new ActItem("Draw a patrol", () => ArmDraw(DrawMode.Patrol), "Draw a loop over the hexes. They walk it, go to the nearest settlement for food, and walk it again.", Accent: UiKit.Good));
+        }
         if (t.CanHide)
         {
             bool hidden = _hiddenWalk.Contains(id);

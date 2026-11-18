@@ -33,8 +33,10 @@ void vertex() {
 }
 
 void fragment() {
-	float relief = floor(custom.x / 1000.0 + 0.001);
-	float biome = custom.x - relief * 1000.0;
+	float remembered = step(9999.5, custom.x);
+	float code = custom.x - remembered * 10000.0;
+	float relief = floor(code / 1000.0 + 0.001);
+	float biome = code - relief * 1000.0;
 	vec3 col = vec3(0.16, 0.16, 0.17);
 	if (has_art) {
 		vec3 base;
@@ -68,5 +70,10 @@ void fragment() {
 		}
 	}
 	col = mix(col, tint.rgb, tint.a);
+	if (remembered > 0.5) {
+		// What we saw before, not what is there now: grey.
+		float l = dot(col, vec3(0.3, 0.59, 0.11));
+		col = mix(vec3(l), col, 0.15) * 0.72;
+	}
 	COLOR = vec4(col, 1.0);
 }

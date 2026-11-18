@@ -149,6 +149,8 @@ public sealed partial class SimGame
             var civ = new Civ(c, name.Length > 0 ? name : $"People {c + 1}", content.Goods.Count)
             {
                 Known = new bool[map.Geometry.CellCount],
+                Vision = new short[map.Geometry.CellCount],
+                SeenOwner = NoOwners(map.Geometry.CellCount),
                 KnownTech = new bool[content.Techs.Count],
                 Experience = new long[content.Techs.Count],
                 ExperienceRate = new int[content.Techs.Count],
@@ -205,7 +207,7 @@ public sealed partial class SimGame
         Settlements.Add(s);
         civ.Settlements.Add(s.Id);
         Claim(s);
-        Reveal(civ, center, Content.Levels[s.Level].Radius + 4);
+        Watch(s);
         civ.Dirty = true;
         SyncTotals(civ);
         return s;
@@ -251,7 +253,7 @@ public sealed partial class SimGame
                     if (trained.State == UnitState.Training && trained.NextTick == due.Tick)
                     {
                         trained.State = UnitState.Idle;
-                        Reveal(Civs[trained.Civ], trained.Cell, Content.Units[trained.Kind].Sight);
+                        Watch(trained);
                         News.Add((trained.Civ, $"{Content.Units[trained.Kind].Name} are ready."));
                     }
 
@@ -444,6 +446,14 @@ public sealed partial class SimGame
     private void ScheduleUnit(Unit u, int kind) => _schedule.Enqueue((kind, u.Id), (u.NextTick, kind, u.Id));
 
     /// <summary>Marks the hexes within <paramref name="radius"/> of <paramref name="cell"/> as seen by <paramref name="civ"/>.</summary>
+    private static short[] NoOwners(int n)
+    {
+        var a = new short[n];
+        Array.Fill(a, (short)-1);
+        return a;
+    }
+
+    /// <summary>Marks hexes explored without seeing them now (used by tests and scripted starts).</summary>
     public void Reveal(Civ civ, int cell, int radius)
     {
         ArgumentNullException.ThrowIfNull(civ);

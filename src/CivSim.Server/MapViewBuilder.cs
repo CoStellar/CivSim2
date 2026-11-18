@@ -22,7 +22,8 @@ public static class MapViewBuilder
     }
 
     /// <summary>Builds one chunk of <paramref name="map"/> (also used by the new game, ADR 0028).</summary>
-    public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known, bool hideResources = false, bool always = false)
+    public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known, bool hideResources = false, bool always = false,
+        Func<int, byte>? visibilityOf = null, Func<int, short>? ownerSeen = null)
     {
         ArgumentNullException.ThrowIfNull(map);
         HexGlobe geo = map.Geometry;
@@ -61,7 +62,7 @@ public static class MapViewBuilder
                 }
 
                 any = true;
-                visibility[k] = MapChunkMessage.Visible;
+                visibility[k] = visibilityOf is null ? MapChunkMessage.Visible : visibilityOf(i);
                 elevation[k] = map.Elevation[i];
                 temperature[k] = map.Temperature[i];
                 humidity[k] = map.Humidity[i];
@@ -72,7 +73,7 @@ public static class MapViewBuilder
                 deposit[k] = map.Deposit[i];
                 richness[k] = map.DepositRichness[i];
                 depth[k] = map.DepositDepth[i];
-                owner[k] = map.Owner[i];
+                owner[k] = ownerSeen is null ? map.Owner[i] : ownerSeen(i);
                 wild[k] = map.WildFood[i];
                 influence[k] = map.Influence[i];
                 seasons[k] = map.Seasonality[i];

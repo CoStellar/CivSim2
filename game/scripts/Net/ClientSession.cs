@@ -140,8 +140,8 @@ public sealed class ClientSession
     public event Action<IReadOnlyList<string>>? PlayNews;
 
     /// <summary>Sends a command of the new game.</summary>
-    public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false, int b = 0, int c = 0) =>
-        _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag, b, c));
+    public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false, int b = 0, int c = 0, int[]? cells = null) =>
+        _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag, b, c, cells));
 
     /// <summary>Latest summary of the new game.</summary>
     public PlaySummaryMessage? Summary { get; private set; }
@@ -227,6 +227,13 @@ public sealed class ClientSession
                 if (Worlds.TryGetValue(chunk.WorldId, out ClientWorld? world))
                 {
                     world.Apply(chunk);
+                }
+
+                break;
+            case PlayCellsMessage cells:
+                if (Worlds.TryGetValue(0, out ClientWorld? earth))
+                {
+                    earth.Apply(cells);
                 }
 
                 break;

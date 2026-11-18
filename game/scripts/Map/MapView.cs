@@ -476,7 +476,9 @@ public partial class MapView : Node2D
                     // Tiles: a variant picked by the cell (stable), relief and feature tiles, river edges.
                     int variant = (int)(((uint)i * 2654435761u) >> 30) % ArtLibrary.BiomeVariants;
                     int relief = world.Relief[i];
-                    _buffer[o + 4] = (world.Biome[i] * ArtLibrary.BiomeVariants) + variant + (1000 * relief);
+                    // Remembered hexes carry +10000: the shader turns them grey (fog of war with memory, 2026-11-18).
+                    bool remembered = world.Visibility[i] == MapChunkMessage.Remembered;
+                    _buffer[o + 4] = (world.Biome[i] * ArtLibrary.BiomeVariants) + variant + (1000 * relief) + (remembered ? 10000 : 0);
                     _buffer[o + 5] = relief switch
                     {
                         1 => ArtLibrary.HillsTile + (variant & 1),

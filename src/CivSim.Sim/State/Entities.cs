@@ -141,6 +141,12 @@ public sealed class Settlement
 
     /// <summary>Under attack in the last combat step (for the view).</summary>
     public bool Besieged { get; set; }
+
+    /// <summary>People whose sight this settlement adds to (−1 = none).</summary>
+    public int WatchCiv { get; set; } = -1;
+
+    /// <summary>Sight radius counted for it.</summary>
+    public int WatchRadius { get; set; }
 }
 
 /// <summary>A civilization (player or AI).</summary>
@@ -199,8 +205,21 @@ public sealed class Civ
     /// <summary>Hexes this people has seen (fog of war).</summary>
     public bool[] Known { get; set; } = [];
 
-    /// <summary>Map chunks with newly seen hexes since the server last looked (the server clears it).</summary>
+    /// <summary>Map chunks whose hexes were explored, came into sight or went out of it since the server last looked (the
+    /// server clears it).</summary>
     public HashSet<int> NewlyKnown { get; } = [];
+
+    /// <summary>Observers per hex: units and settlements that see it now (the fog of war; seen while above zero).</summary>
+    public short[] Vision { get; set; } = [];
+
+    /// <summary>Owner of each hex when this people last saw it.</summary>
+    public short[] SeenOwner { get; set; } = [];
+
+    /// <summary>Buildings remembered on hexes not seen now, by hex.</summary>
+    public SortedDictionary<int, BuildingMemory> SeenBuildings { get; } = [];
+
+    /// <summary>Settlements remembered on hexes not seen now, by centre hex.</summary>
+    public SortedDictionary<int, SettlementMemory> SeenSettlements { get; } = [];
 
     /// <summary>Unit ids.</summary>
     public List<int> Units { get; } = [];
@@ -359,6 +378,18 @@ public sealed class Unit
 
     /// <summary>Trade route that sent this caravan (−1 = none).</summary>
     public int Route { get; set; } = -1;
+
+    /// <summary>Drawn patrol loop (empty = not patrolling).</summary>
+    public List<int> Patrol { get; } = [];
+
+    /// <summary>Where it is in its patrol cycle.</summary>
+    public PatrolStage PatrolStage { get; set; }
+
+    /// <summary>Hex its sight is counted from (−1 = not seeing).</summary>
+    public int WatchCell { get; set; } = -1;
+
+    /// <summary>Sight counted at <see cref="WatchCell"/>.</summary>
+    public int WatchRadius { get; set; }
 }
 
 /// <summary>One minute of a people's history: what the summary's timeline shows.</summary>
@@ -403,4 +434,7 @@ public sealed class TradeRoute
 
     /// <summary>Ended by the player.</summary>
     public bool Ended { get; set; }
+
+    /// <summary>Hexes the player drew for the way there (empty = the shortest way); the way back is the same, reversed.</summary>
+    public List<int> Path { get; } = [];
 }

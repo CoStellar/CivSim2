@@ -118,7 +118,8 @@ public sealed record PlaySettlementView(
     [property: Key(10)] int DefensePercent = 100,
     [property: Key(11)] long[]? Stock = null,
     [property: Key(12)] long[]? Capacity = null,
-    [property: Key(13)] long[]? Rate = null);
+    [property: Key(13)] long[]? Rate = null,
+    [property: Key(14)] bool Remembered = false);
 
 /// <summary>A standing caravan route of the player.</summary>
 [MessagePackObject]
@@ -157,7 +158,19 @@ public sealed record PlayBuildingView(
     [property: Key(9)] int ProgressPermille,
     [property: Key(10)] int YieldPercent,
     [property: Key(11)] string? Missing = null,
-    [property: Key(12)] int Porters = 0);
+    [property: Key(12)] int Porters = 0,
+    [property: Key(13)] bool Remembered = false);
+
+/// <summary>
+/// Server → client: hexes whose fog or owner changed for this player (indices row × width + column). Terrain comes in
+/// <see cref="MapChunkMessage"/> once, when a hex is first explored; after that only these small changes.
+/// </summary>
+[MessagePackObject]
+public sealed record PlayCellsMessage(
+    [property: Key(0)] int[] Cells,
+    [property: Key(1)] byte[] Visibility,
+    [property: Key(2)] short[] Owner,
+    [property: Key(3)] int[] Chunks) : IProtocolMessage;
 
 /// <summary>Server → client, several times a second: what the player sees of the game.</summary>
 [MessagePackObject]
@@ -295,6 +308,9 @@ public enum PlayCommandKind
 
     /// <summary>Send porters with the materials construction <c>A</c> is missing.</summary>
     BringMaterials = 26,
+
+    /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs), eating at the nearest settlement between rounds.</summary>
+    Patrol = 27,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>
@@ -307,7 +323,8 @@ public sealed record PlayCommandMessage(
     [property: Key(4)] int Row,
     [property: Key(5)] bool Flag,
     [property: Key(6)] int B = 0,
-    [property: Key(7)] int C = 0) : IProtocolMessage;
+    [property: Key(7)] int C = 0,
+    [property: Key(8)] int[]? Cells = null) : IProtocolMessage;
 
 /// <summary>Client → server: where can building type <c>Type</c> go?</summary>
 [MessagePackObject]

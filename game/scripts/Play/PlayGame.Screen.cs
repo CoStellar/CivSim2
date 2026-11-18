@@ -262,7 +262,8 @@ public partial class PlayGame
 
     private const string HelpText =
         "Left click: select a settlement, building, unit or hex. Its panel opens on the left.\n" +
-        "Right click: send the selected unit there (on an enemy: attack). While placing: cancel.\n" +
+        "Right click: send the selected units there (on an enemy: attack). Hold the right button and draw over the hexes: they walk exactly that way.\n" +
+        "Shift + left click: add the units on a hex to the selection.\n" +
         "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +
         "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
         "WASD, arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
@@ -487,8 +488,13 @@ public partial class PlayGame
 
     private void UpdateBanner(PlayContentMessage c)
     {
-        _banner.Visible = _placing > 0;
-        if (_placing > 0)
+        string? hint = DrawHint();
+        _banner.Visible = _placing > 0 || hint is not null;
+        if (hint is not null)
+        {
+            _bannerText.Text = hint;
+        }
+        else if (_placing > 0)
         {
             PlayBuildingInfo t = c.Buildings[_placing];
             _bannerText.Text = $"Placing {t.Name} ({Amounts(c, t.Price)}). Click a green hex.  Shift: place more.  Right click or Esc: cancel.";

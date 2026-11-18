@@ -146,7 +146,7 @@ public sealed class LogisticsTests
         g.Apply(new BuildCommand(a.Id, cell, hut.Id));
         Building site = g.Buildings[g.BuildingAt[cell]];
         Unit porters = g.Units.Last(u => u.Kind == Content.Porters && u.Target == site.Id);
-        w.Cell = porters.Cell;
+        g.Place(w, porters.Cell);
         long[] before = (long[])sb.Stock.Clone();
         g.Apply(new AttackCommand(b.Id, w.Id, porters.Cell));
         for (int i = 0; i < 100 && porters.State != UnitState.Gone; i++)

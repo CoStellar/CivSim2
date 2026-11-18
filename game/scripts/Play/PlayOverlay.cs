@@ -29,6 +29,15 @@ public partial class PlayOverlay : Node2D
     /// <summary>Id of the selected unit (−1 = none).</summary>
     public int SelectedUnit { get; set; } = -1;
 
+    /// <summary>All selected units (several with Shift).</summary>
+    public HashSet<int> SelectedUnits { get; } = [];
+
+    /// <summary>Hexes being drawn (a path, a patrol, a route), in order.</summary>
+    public List<(int Col, int Row)> DrawPath { get; } = [];
+
+    /// <summary>Colour of the drawn path.</summary>
+    public Color DrawColor { get; set; } = new(1f, 0.95f, 0.5f);
+
     /// <summary>Colour of a civilization.</summary>
     public static Color CivColor(int civ) => CivColors[((civ % CivColors.Length) + CivColors.Length) % CivColors.Length];
 
@@ -121,7 +130,7 @@ public partial class PlayOverlay : Node2D
             {
                 foreach (Vector2 c in Copies(s.Col, s.Row))
                 {
-                    Color civ = CivColor(s.Civ);
+                    Color civ = s.Remembered ? Grey(CivColor(s.Civ)) : CivColor(s.Civ);
                     float size = 0.55f + (s.Level * 0.1f);
                     DrawPolygon(Hex(c, size), [civ.Darkened(0.45f)]);
                     DrawPolyline(Closed(Hex(c, size)), s.Besieged ? Colors.Red : civ, s.Besieged ? 5 : 3);
@@ -168,7 +177,8 @@ public partial class PlayOverlay : Node2D
 
                     Vector2 p = c + new Vector2(10, -8);
                     DrawCircle(p, 11, u.Hidden ? civ.Darkened(0.6f) : civ.Darkened(0.3f));
-                    DrawArc(p, 11, 0, MathF.Tau, 20, u.Id == SelectedUnit ? new Color(1f, 0.9f, 0.3f) : u.Fighting ? Colors.Red : Colors.Black, u.Id == SelectedUnit || u.Fighting ? 3 : 1.5f);
+                    bool picked = u.Id == SelectedUnit || SelectedUnits.Contains(u.Id);
+                    DrawArc(p, 11, 0, MathF.Tau, 20, picked ? new Color(1f, 0.9f, 0.3f) : u.Fighting ? Colors.Red : Colors.Black, picked || u.Fighting ? 3 : 1.5f);
                     if (u.Cargo is { Length: > 0 } && u.Cargo != "nothing")
                     {
                         DrawRect(new Rect2(p + new Vector2(-14, -16), new Vector2(8, 6)), new Color(0.85f, 0.7f, 0.35f));
@@ -177,6 +187,28 @@ public partial class PlayOverlay : Node2D
                     string letter = _content.Units[u.Kind].Name[..1];
                     DrawString(font, p + new Vector2(-11, 5), letter, HorizontalAlignment.Center, 22, 13, Colors.White);
                     DrawString(font, p + new Vector2(-11, 20), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 10, Colors.White);
+                }
+            }
+        }
+
+        // The path being drawn: a dot on every hex, joined in the order they were drawn.
+        for (int k = 0; k < DrawPath.Count; k++)
+        {
+            (int col, int row) = DrawPath[k];
+            Vector2 here = HexLayout.Center(col, row);
+            foreach (Vector2 c in Copies(col, row))
+            {
+                DrawPolygon(Hex(c, 0.45f), [new Color(DrawColor, 0.35f)]);
+                if (k > 0)
+                {
+                    Vector2 prev = HexLayout.Center(DrawPath[k - 1].Col, DrawPath[k - 1].Row);
+                    float dx = here.X - prev.X;
+                    if (MathF.Abs(dx) > _period.X / 2)
+                    {
+                        dx -= MathF.Sign(dx) * _period.X;
+                    }
+
+                    DrawLine(c - new Vector2(dx, here.Y - prev.Y), c, DrawColor, 3);
                 }
             }
         }
@@ -202,6 +234,15 @@ public partial class PlayOverlay : Node2D
     private void DrawBuilding(Font font, Vector2 c, PlayBuildingView b, PlayBuildingInfo t)
     {
         Color civ = CivColor(b.Civ);
+        if (b.Remembered)
+        {
+            // A building we saw before: grey, as we last saw it (like Age of Empires).
+            DrawPolygon(Hex(c, 0.7f), [new Color(0.32f, 0.32f, 0.32f, 0.75f)]);
+            DrawPolyline(Closed(Hex(c, 0.7f)), Grey(civ), 2);
+            DrawString(font, c + new Vector2(-24, 5), Abbreviation(t.Name), HorizontalAlignment.Center, 48, 14, new Color(0.7f, 0.7f, 0.7f));
+            return;
+        }
+
         bool built = b.State is 2 or 3;
         Color fill = b.State switch
         {
@@ -231,6 +272,12 @@ public partial class PlayOverlay : Node2D
             Color w = b.Workers >= t.Workers ? Colors.LightGreen : b.Workers == 0 ? Colors.Red : Colors.Yellow;
             DrawString(font, c + new Vector2(-24, -6), $"{b.Workers}/{t.Workers}", HorizontalAlignment.Center, 48, 10, w);
         }
+    }
+
+    private static Color Grey(Color c)
+    {
+        float l = (c.R * 0.3f) + (c.G * 0.59f) + (c.B * 0.11f);
+        return new Color(l, l, l, 0.85f);
     }
 
     private static string Abbreviation(string name)

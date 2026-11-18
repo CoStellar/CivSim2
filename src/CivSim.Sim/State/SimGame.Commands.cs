@@ -65,13 +65,14 @@ public sealed partial class SimGame
             }),
             UpgradeSettlementCommand c => Upgrade(civ, c.Settlement),
             TrainCommand c => Train(civ, c.Settlement, c.Kind),
-            MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden),
+            MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path),
+            PatrolCommand c => Patrol(civ, c.Unit, c.Loop),
             FoundCommand c => Found(civ, c.Unit),
             ResearchCommand c => Research(civ, c.Tech),
             HireCommand c => Hire(civ, c.Advisor),
             DismissAdvisorCommand => Dismiss(civ),
             SendCaravanCommand c => SendCaravan(civ, c.From, c.To, c.Good, c.Amount),
-            RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount),
+            RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount, c.Path),
             BringMaterialsCommand c => BringMaterials(civ, c.Building),
             EndRouteCommand c => EndRoute(civ, c.Route),
             DeclareWarCommand c => DeclareWar(civ, c.Other, surprise: false),
@@ -448,7 +449,7 @@ public sealed partial class SimGame
         Pay(s.Stock, next.UpgradePrice, 100);
         s.Level++;
         Claim(s);
-        Reveal(civ, s.Center, next.Radius + 4);
+        Watch(s);
         civ.Dirty = true;
         News.Add((civ.Id, $"{s.Name} is now a {next.Name.ToLowerInvariant()}."));
         return null;

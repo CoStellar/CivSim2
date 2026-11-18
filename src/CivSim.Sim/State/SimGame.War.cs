@@ -233,6 +233,7 @@ public sealed partial class SimGame
         }
 
         Settlements[sid].People += u.People;
+        Unwatch(u);
         u.State = UnitState.Gone;
         civ.Units.Remove(u.Id);
         civ.Dirty = true;
@@ -440,6 +441,7 @@ public sealed partial class SimGame
             Scores()[(target.Civ * Civs.Count) + attacker.Civ] += lost;
             if (attacker.People <= 0)
             {
+                Unwatch(attacker);
                 attacker.State = UnitState.Gone;
                 Civs[attacker.Civ].Units.Remove(attacker.Id);
                 News.Add((attacker.Civ, $"Our {Content.Units[attacker.Kind].Name.ToLowerInvariant()} fell before {target.Name}."));
@@ -478,7 +480,7 @@ public sealed partial class SimGame
         }
 
         Scores()[(winner.Id * Civs.Count) + loser.Id] += 50;
-        Reveal(winner, s.Center, Content.Levels[s.Level].Radius + 2);
+        Watch(s); // the loser stops seeing from it, the winner starts
         winner.Dirty = true;
         loser.Dirty = true;
         NewsAbout(winner.Id, loser.Id, $"{winner.Name} took {s.Name} from {loser.Name}.");
@@ -487,6 +489,7 @@ public sealed partial class SimGame
             loser.Dead = true;
             foreach (int uid in loser.Units)
             {
+                Unwatch(Units[uid]);
                 Units[uid].State = UnitState.Gone;
             }
 

@@ -167,6 +167,29 @@ public sealed class ClientWorld
         }
     }
 
+    /// <summary>Applies fog and owner changes of single hexes (the terrain came earlier).</summary>
+    public void Apply(PlayCellsMessage m)
+    {
+        ArgumentNullException.ThrowIfNull(m);
+        for (int k = 0; k < m.Cells.Length; k++)
+        {
+            int i = m.Cells[k];
+            if ((uint)i < (uint)Visibility.Length)
+            {
+                Visibility[i] = m.Visibility[k];
+                Owner[i] = m.Owner[k];
+            }
+        }
+
+        foreach (int chunk in m.Chunks)
+        {
+            if ((uint)chunk < (uint)DirtyChunks.Length)
+            {
+                DirtyChunks[chunk] = true;
+            }
+        }
+    }
+
     private static int Mod(int a, int m)
     {
         int r = a % m;

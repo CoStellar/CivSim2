@@ -31,7 +31,7 @@ public sealed class WarTests
         Run(g, Content.Unit(kind).TrainTicks + 2);
         Unit u = g.Units[^1];
         HexCoord c = g.Geo.FromIndex(near);
-        u.Cell = g.Geo.Index(g.Geo.Neighbor(c, HexDirection.N));
+        g.Place(u, g.Geo.Index(g.Geo.Neighbor(c, HexDirection.N)));
         return u;
     }
 

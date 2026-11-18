@@ -9,7 +9,7 @@ namespace CivSim.Sim.State;
 public sealed record TrainCommand(int Civ, int Settlement, int Kind) : SimCommand(Civ);
 
 /// <summary>Send a unit to a hex, hidden or in the open (scouts).</summary>
-public sealed record MoveCommand(int Civ, int Unit, int Cell, bool Hidden) : SimCommand(Civ);
+public sealed record MoveCommand(int Civ, int Unit, int Cell, bool Hidden, int[]? Path = null) : SimCommand(Civ);
 
 /// <summary>Settlers found a camp where they stand.</summary>
 public sealed record FoundCommand(int Civ, int Unit) : SimCommand(Civ);
@@ -123,7 +123,7 @@ public sealed partial class SimGame
         return null;
     }
 
-    private string? Move(Civ civ, int id, int cell, bool hidden)
+    private string? Move(Civ civ, int id, int cell, bool hidden, int[]? drawn = null)
     {
         if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
         {
@@ -142,10 +142,20 @@ public sealed partial class SimGame
             return "Porters and caravans follow their task.";
         }
 
+        if (drawn is { Length: > 0 })
+        {
+            u.TargetUnit = -1;
+            u.TargetSettlement = -1;
+            return MoveDrawn(civ, u, drawn, hidden);
+        }
+
         if (!FindPath(u.Cell, cell, u.Path, t.Naval))
         {
             return "There is no way there on foot.";
         }
+
+        u.Patrol.Clear();
+        u.PatrolStage = PatrolStage.None;
 
         u.Hidden = hidden && t.HiddenTicksPerHex > 0;
         u.TargetUnit = -1;
@@ -182,6 +192,7 @@ public sealed partial class SimGame
             return why;
         }
 
+        Unwatch(u);
         u.State = UnitState.Gone;
         civ.Units.Remove(u.Id);
         Settlement s = FoundSettlement(civ, u.Cell, u.People, u.Cargo ?? new long[Content.Goods.Count]);
@@ -202,20 +213,27 @@ public sealed partial class SimGame
             return false;
         }
 
+        if (civ.Vision[other.Cell] <= 0)
+        {
+            return false;
+        }
+
+        if (!other.Hidden)
+        {
+            return true;
+        }
+
+        // Hidden units: only on our own land or right next to one of our units.
+        if (SettlementAt[other.Cell] >= 0 && Settlements[SettlementAt[other.Cell]].Civ == civ.Id)
+        {
+            return true;
+        }
+
         HexCoord at = Geo.FromIndex(other.Cell);
         foreach (int id in civ.Units)
         {
             Unit u = Units[id];
-            if (u.State != UnitState.Training && Geo.Distance(Geo.FromIndex(u.Cell), at) <= (other.Hidden ? 1 : Content.Units[u.Kind].Sight))
-            {
-                return true;
-            }
-        }
-
-        foreach (int sid in civ.Settlements)
-        {
-            Settlement s = Settlements[sid];
-            if (!s.Abandoned && Geo.Distance(Geo.FromIndex(s.Center), at) <= (other.Hidden ? Content.Levels[s.Level].Radius : Content.Levels[s.Level].Radius + 3))
+            if (u.State != UnitState.Training && Geo.Distance(Geo.FromIndex(u.Cell), at) <= 1)
             {
                 return true;
             }
@@ -280,7 +298,7 @@ public sealed partial class SimGame
     private void Step(Unit u)
     {
         u.Cell = u.Path[u.PathIndex++];
-        Reveal(Civs[u.Civ], u.Cell, Content.Units[u.Kind].Sight);
+        Watch(u);
         int goal = u.TargetUnit >= 0 ? Units[u.TargetUnit].Cell : u.TargetSettlement >= 0 ? Settlements[u.TargetSettlement].Center : -1;
         if (u.PathIndex >= u.Path.Count || (goal >= 0 && Distance(u.Cell, goal) <= Content.Units[u.Kind].Range))
         {
@@ -289,6 +307,10 @@ public sealed partial class SimGame
             if (u.Job != CarrierJob.None)
             {
                 Arrive(u);
+            }
+            else if (u.PatrolStage != PatrolStage.None)
+            {
+                PatrolArrived(u);
             }
 
             return;

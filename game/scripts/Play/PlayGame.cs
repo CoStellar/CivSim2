@@ -361,27 +361,54 @@ public partial class PlayGame : Node2D
             case InputEventMouseButton { ButtonIndex: MouseButton.Middle } m:
                 _dragFrom = m.Pressed ? m.Position : null;
                 break;
+            case InputEventMouseMotion when _drawing:
+                ExtendDraw();
+                break;
             case InputEventMouseMotion motion when _dragFrom is { } from:
                 _camera.Position -= (motion.Position - from) / _camera.Zoom.X;
                 _dragFrom = motion.Position;
                 break;
-            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true }:
-                Click();
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left } left:
+                if (left.Pressed && _drawMode is DrawMode.Patrol or DrawMode.Route && !_drawing)
+                {
+                    BeginDraw(_drawMode);
+                }
+                else if (!left.Pressed && _drawing && _drawMode is DrawMode.Patrol or DrawMode.Route)
+                {
+                    FinishDraw();
+                }
+                else if (left.Pressed)
+                {
+                    Click();
+                }
+
                 break;
-            case InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true }:
-                if (_placing > 0)
+            case InputEventMouseButton { ButtonIndex: MouseButton.Right } right:
+                if (right.Pressed && _placing > 0)
                 {
                     StopPlacing();
                 }
-                else if (_unit >= 0 && MouseCell() is { } target)
+                else if (right.Pressed && _drawMode != DrawMode.None)
                 {
-                    bool attack = IsArmy(_unit) && EnemyAt(target.Col, target.Row);
-                    _session.Play(attack ? PlayCommandKind.Attack : PlayCommandKind.Move, _unit, target.Col, target.Row, _hiddenWalk.Contains(_unit));
+                    CancelDraw();
+                }
+                else if (right.Pressed && SelectedUnitIds().Count > 0)
+                {
+                    // Press: start drawing; a quick click without moving is a plain "go there".
+                    BeginDraw(DrawMode.Move);
+                }
+                else if (!right.Pressed && _drawing && _drawMode == DrawMode.Move)
+                {
+                    FinishDraw();
                 }
 
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Escape }:
-                if (_help.Visible)
+                if (_drawMode != DrawMode.None)
+                {
+                    CancelDraw();
+                }
+                else if (_help.Visible)
                 {
                     _help.Visible = false;
                 }
@@ -476,7 +503,14 @@ public partial class PlayGame : Node2D
             return;
         }
 
+        bool add = Input.IsKeyPressed(Key.Shift) && _overlay is not null;
+        if (!add)
+        {
+            _overlay?.SelectedUnits.Clear();
+        }
+
         _selected = cell;
+        int before = _unit;
         _unit = -1;
         if (_session.PlayView is { } view)
         {
@@ -484,10 +518,20 @@ public partial class PlayGame : Node2D
             {
                 if (u.Civ == view.Civ && u.State != 0 && u.Col == cell.Col && u.Row == cell.Row)
                 {
-                    _unit = u.Id;
-                    break;
+                    // With Shift every unit on the hex joins the selection.
+                    if (add)
+                    {
+                        _overlay!.SelectedUnits.Add(u.Id);
+                    }
+
+                    _unit = _unit < 0 ? u.Id : _unit;
                 }
             }
+        }
+
+        if (add && before >= 0)
+        {
+            _overlay!.SelectedUnits.Add(before);
         }
 
         if (_overlay is not null)
