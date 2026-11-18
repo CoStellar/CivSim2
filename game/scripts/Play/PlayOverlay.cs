@@ -19,8 +19,10 @@ namespace CivSim.Game.Play;
 /// <item>effects: the hex under the mouse, the path being drawn, the flash of a given order;</item>
 /// <item>labels: names of settlements and their alert marks, always on top.</item>
 /// </list>
-/// The ground, routes, units and labels are drawn again only when the view or the camera changes; the lift and effects
-/// layers, which move, every frame. Placeholder shapes and letters until pixel art comes.
+/// Ground, units and labels are split by map chunk (32×32 hexes): each chunk is its own node, drawn again only when what is
+/// in it changes, and Godot skips the nodes off screen. How much is drawn depends on the zoom (far: marks only; middle: no
+/// small numbers; near: everything). The routes layer is drawn again when the view changes; the lift and effects layers,
+/// which move, every frame. Placeholder shapes and letters until pixel art comes.
 /// </summary>
 public partial class PlayOverlay : Node2D
 {
@@ -40,13 +42,16 @@ public partial class PlayOverlay : Node2D
     private (int Col, int Row)? _selected;
     private (int Col, int Row)? _liftedCell;
     private double _time;
-    private Layer _ground = null!;
+    private Layer _marks = null!;
     private Layer _routes = null!;
     private Layer _lift = null!;
-    private Layer _units = null!;
     private Layer _effects = null!;
-    private Layer _labels = null!;
-    private string _staticSig = "";
+    private readonly Dictionary<(int Chunk, int Copy), ChunkNodes> _chunkNodes = [];
+    private readonly Dictionary<int, ChunkContent> _content2 = [];
+    private float _zoom = 1;
+    private bool _rebucket = true;
+
+    private const int ChunkSize = 32;
 
     /// <summary>Id of the selected unit (−1 = none).</summary>
     public int SelectedUnit { get; set; } = -1;
@@ -76,12 +81,10 @@ public partial class PlayOverlay : Node2D
     /// <inheritdoc/>
     public override void _Ready()
     {
-        _ground = Add(0, PaintGround);
+        _marks = Add(0, PaintMarks);
         _routes = Add(5, PaintRoutes);
         _lift = Add(7, PaintLift);
-        _units = Add(10, PaintUnits);
         _effects = Add(15, PaintEffects);
-        _labels = Add(20, PaintLabels);
     }
 
     /// <inheritdoc/>
@@ -101,20 +104,32 @@ public partial class PlayOverlay : Node2D
         _effects.QueueRedraw();
     }
 
-    /// <summary>Sets what to draw.</summary>
-    public void Show(PlayContentMessage content, PlayViewMessage? view, Vector2 period, Rect2 visible)
+    /// <summary>Sets what to draw; <paramref name="zoom"/> picks how much detail.</summary>
+    public void Show(PlayContentMessage content, PlayViewMessage? view, Vector2 period, Rect2 visible, float zoom = 1)
     {
         _content = content;
         _period = period;
         Rect2 grown = visible.Grow(80);
-        bool changed = view != _view || grown != _visible;
+        bool changed = view != _view;
+        bool moved = grown != _visible || zoom != _zoom;
         _view = view;
         _visible = grown;
+        _zoom = zoom;
         if (changed)
         {
-            Restatic();
+            _rebucket = true;
+            _routes?.QueueRedraw();
+            _marks?.QueueRedraw();
+        }
+
+        if (changed || moved)
+        {
+            UpdateChunks();
         }
     }
+
+    // Detail by zoom: 0 far (marks only), 1 middle (no small numbers), 2 near (everything).
+    private int Detail => _zoom < 0.35f ? 0 : _zoom < 0.8f ? 1 : 2;
 
     /// <summary>Hexes to highlight while placing (null = not placing).</summary>
     public void SetPlaces(int[]? cells)
@@ -146,24 +161,217 @@ public partial class PlayOverlay : Node2D
     /// <summary>Draws the slow layers again (after a selection or a toggle).</summary>
     public void Restatic()
     {
-        string sig = $"{SelectedUnit}|{string.Join(",", SelectedUnits)}|{RouteDisplay}|{_selected}";
-        _staticSig = sig;
-        _ground?.QueueRedraw();
+        _rebucket = true;
+        _marks?.QueueRedraw();
         _routes?.QueueRedraw();
-        _units?.QueueRedraw();
-        _labels?.QueueRedraw();
+        UpdateChunks();
+    }
+
+    // ---- Chunks ----------------------------------------------------------------------------------------------------
+
+    // What one chunk holds, and a signature that changes when any of it does.
+    private sealed class ChunkContent
+    {
+        public List<PlayBuildingView> Buildings { get; } = [];
+
+        public List<PlaySettlementView> Settlements { get; } = [];
+
+        public List<PlayUnitView> Units { get; } = [];
+
+        public int Sig { get; set; }
+    }
+
+    // The three nodes of one chunk copy: ground, units and labels (each its own z).
+    private sealed class ChunkNodes
+    {
+        public required Layer Ground { get; init; }
+
+        public required Layer Units { get; init; }
+
+        public required Layer Labels { get; init; }
+
+        public int DrawnSig { get; set; } = int.MinValue;
+
+        public bool Used { get; set; }
+    }
+
+    private int ChunksX => World is { } w ? (w.Width + ChunkSize - 1) / ChunkSize : 1;
+
+    private int ChunkOf(int col, int row) => ((row / ChunkSize) * ChunksX) + (Mod(col, World?.Width ?? 1) / ChunkSize);
+
+    private static int Mod(int a, int m) => ((a % m) + m) % m;
+
+    // Sorts the objects into chunks (when the view changed) and gives each visible chunk copy its nodes; a node is drawn
+    // again only when its chunk's signature changed.
+    private void UpdateChunks()
+    {
+        if (_view is null || _content is null || World is not { } w || _period.X <= 0 || _marks is null)
+        {
+            return;
+        }
+
+        if (_rebucket)
+        {
+            _rebucket = false;
+            foreach (ChunkContent cc in _content2.Values)
+            {
+                cc.Buildings.Clear();
+                cc.Settlements.Clear();
+                cc.Units.Clear();
+            }
+
+            foreach (PlayBuildingView b in _view.Buildings)
+            {
+                Bucket(ChunkOf(b.Col, b.Row)).Buildings.Add(b);
+            }
+
+            foreach (PlaySettlementView st in _view.Settlements)
+            {
+                Bucket(ChunkOf(st.Col, st.Row)).Settlements.Add(st);
+            }
+
+            foreach (PlayUnitView u in _view.Units)
+            {
+                if (u.State != 0)
+                {
+                    Bucket(ChunkOf(u.Col, u.Row)).Units.Add(u);
+                }
+            }
+
+            foreach ((int chunk, ChunkContent cc) in _content2)
+            {
+                cc.Sig = ContentSig(chunk, cc);
+            }
+        }
+
+        foreach (ChunkNodes n in _chunkNodes.Values)
+        {
+            n.Used = false;
+        }
+
+        int rows = (w.Height + ChunkSize - 1) / ChunkSize;
+        float cw = ChunkSize * HexLayout.ColumnStep;
+        float ch = ChunkSize * HexLayout.RowStep;
+        for (int cy = 0; cy < rows; cy++)
+        {
+            float y0 = (cy * ch) - 40;
+            if (y0 + ch + 80 < _visible.Position.Y || y0 > _visible.End.Y)
+            {
+                continue;
+            }
+
+            for (int cx = 0; cx < ChunksX; cx++)
+            {
+                float x0 = (cx * cw) - 40;
+                int k0 = (int)MathF.Floor((_visible.Position.X - (x0 + cw + 80)) / _period.X) + 1;
+                int k1 = (int)MathF.Floor((_visible.End.X - x0) / _period.X);
+                int chunk = (cy * ChunksX) + cx;
+                for (int k = k0; k <= k1; k++)
+                {
+                    ChunkNodes nodes = NodesFor(chunk, k);
+                    nodes.Used = true;
+                    int sig = HashCode.Combine(_content2.TryGetValue(chunk, out ChunkContent? cc) ? cc.Sig : 0, RoadSig(w, cx, cy), Detail);
+                    if (sig != nodes.DrawnSig)
+                    {
+                        nodes.DrawnSig = sig;
+                        nodes.Ground.QueueRedraw();
+                        nodes.Units.QueueRedraw();
+                        nodes.Labels.QueueRedraw();
+                    }
+                }
+            }
+        }
+
+        foreach (ChunkNodes n in _chunkNodes.Values)
+        {
+            n.Ground.Visible = n.Units.Visible = n.Labels.Visible = n.Used;
+        }
+    }
+
+    private ChunkContent Bucket(int chunk)
+    {
+        if (!_content2.TryGetValue(chunk, out ChunkContent? cc))
+        {
+            cc = new ChunkContent();
+            _content2[chunk] = cc;
+        }
+
+        return cc;
+    }
+
+    private ChunkNodes NodesFor(int chunk, int copy)
+    {
+        if (_chunkNodes.TryGetValue((chunk, copy), out ChunkNodes? n))
+        {
+            return n;
+        }
+
+        var offset = new Vector2(copy * _period.X, 0);
+        n = new ChunkNodes
+        {
+            Ground = Add(1, g => PaintChunkGround(g, chunk)),
+            Units = Add(10, g => PaintChunkUnits(g, chunk)),
+            Labels = Add(20, g => PaintChunkLabels(g, chunk)),
+        };
+        n.Ground.Position = n.Units.Position = n.Labels.Position = offset;
+        _chunkNodes[(chunk, copy)] = n;
+        return n;
+    }
+
+    // Everything drawn in a chunk, plus the selection (the selected hex is drawn lifted, selected units ringed).
+    private int ContentSig(int chunk, ChunkContent cc)
+    {
+        var h = new HashCode();
+        foreach (PlayBuildingView b in cc.Buildings)
+        {
+            h.Add(HashCode.Combine(b.Id, b.Type, b.State, b.Workers, b.Starved, b.Priority, b.ProgressPermille, b.Remembered));
+            h.Add(HashCode.Combine(b.Missing, b.Porters, _selected == (b.Col, b.Row)));
+        }
+
+        foreach (PlaySettlementView s in cc.Settlements)
+        {
+            h.Add(HashCode.Combine(s.Id, s.Civ, s.Level, s.Besieged, s.Remembered, s.Name, AlertOf(s.Id), _selected == (s.Col, s.Row)));
+        }
+
+        foreach (PlayUnitView u in cc.Units)
+        {
+            h.Add(HashCode.Combine(u.Id, u.Col, u.Row, u.People, u.Hidden, u.Fighting, u.Cargo, u.Id == SelectedUnit || SelectedUnits.Contains(u.Id)));
+        }
+
+        h.Add(chunk);
+        return h.ToHashCode();
+    }
+
+    // Roads and fog of a chunk, as a number that changes when they do.
+    private static int RoadSig(CivSim.Game.Net.ClientWorld w, int cx, int cy)
+    {
+        var h = new HashCode();
+        int r1 = Math.Min(w.Height, (cy + 1) * ChunkSize);
+        int c1 = Math.Min(w.Width, (cx + 1) * ChunkSize);
+        for (int r = cy * ChunkSize; r < r1; r++)
+        {
+            for (int c = cx * ChunkSize; c < c1; c++)
+            {
+                int i = w.Index(c, r);
+                if (w.Road[i] != 0)
+                {
+                    h.Add((i * 4) + w.Road[i] + (w.Visibility[i] * 1000000));
+                }
+            }
+        }
+
+        return h.ToHashCode();
     }
 
     // ---- Layers ----------------------------------------------------------------------------------------------------
 
-    private void PaintGround(CanvasItem g)
+    // Under the chunks: places to build, the starts taken while choosing, the land of the selected settlement.
+    private void PaintMarks(CanvasItem g)
     {
         if (_content is null || _period.X <= 0)
         {
             return;
         }
-
-        PaintRoads(g);
 
         foreach ((int col, int row) in _places)
         {
@@ -185,13 +393,7 @@ public partial class PlayOverlay : Node2D
             }
         }
 
-        if (_view is null)
-        {
-            return;
-        }
-
-        // The land of the selected settlement, lightly.
-        if (SelectedSettlement() is { } sel && sel.Civ == _view.Civ)
+        if (_view is not null && SelectedSettlement() is { } sel && sel.Civ == _view.Civ)
         {
             int radius = _content.Levels[sel.Level].Radius;
             Color tint = new(Light(CivColor(sel.Civ)), 0.12f);
@@ -200,31 +402,49 @@ public partial class PlayOverlay : Node2D
                 g.DrawCircle(c, (radius + 0.5f) * HexLayout.ColumnStep, tint);
             }
         }
+    }
 
-        foreach (PlayBuildingView b in _view.Buildings)
+    // One chunk's roads, buildings and settlement centres (in the coordinates of the map's first copy).
+    private void PaintChunkGround(CanvasItem g, int chunk)
+    {
+        if (_content is null || World is not { } w)
+        {
+            return;
+        }
+
+        int cx = chunk % ChunksX;
+        int cy = chunk / ChunksX;
+        PaintRoads(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
+        if (!_content2.TryGetValue(chunk, out ChunkContent? cc))
+        {
+            return;
+        }
+
+        int detail = Detail;
+        foreach (PlayBuildingView b in cc.Buildings)
         {
             if (_selected == (b.Col, b.Row))
             {
                 continue; // drawn lifted
             }
 
-            PlayBuildingInfo t = _content.Buildings[b.Type];
-            foreach (Vector2 c in Copies(b.Col, b.Row))
+            Vector2 c = HexLayout.Center(b.Col, b.Row);
+            if (detail == 0)
             {
-                DrawBuilding(g, c, b, t, 1f);
-            }
-        }
-
-        foreach (PlaySettlementView s in _view.Settlements)
-        {
-            if (_selected == (s.Col, s.Row))
-            {
+                // Far away: a small square in the people's colour.
+                Color col = b.Remembered ? Grey(CivColor(b.Civ)) : CivColor(b.Civ).Darkened(0.3f);
+                g.DrawRect(new Rect2(c - new Vector2(7, 7), new Vector2(14, 14)), col);
                 continue;
             }
 
-            foreach (Vector2 c in Copies(s.Col, s.Row))
+            DrawBuilding(g, c, b, _content.Buildings[b.Type], 1f, detail);
+        }
+
+        foreach (PlaySettlementView st in cc.Settlements)
+        {
+            if (_selected != (st.Col, st.Row))
             {
-                DrawSettlement(g, c, s, 1f);
+                DrawSettlement(g, HexLayout.Center(st.Col, st.Row), st, 1f);
             }
         }
     }
@@ -348,34 +568,36 @@ public partial class PlayOverlay : Node2D
         }
     }
 
-    private void PaintUnits(CanvasItem g)
+    private void PaintChunkUnits(CanvasItem g, int chunk)
     {
-        if (_view is null || _content is null || _period.X <= 0)
+        if (_content is null || !_content2.TryGetValue(chunk, out ChunkContent? cc))
         {
             return;
         }
 
         Font font = UiKit.GlyphFont;
-        foreach (PlayUnitView u in _view.Units)
+        int detail = Detail;
+        foreach (PlayUnitView u in cc.Units)
         {
-            if (u.State == 0)
+            Color civ = CivColor(u.Civ);
+            bool picked = u.Id == SelectedUnit || SelectedUnits.Contains(u.Id);
+            Vector2 p = HexLayout.Center(u.Col, u.Row) + new Vector2(10, -8);
+            if (detail == 0)
             {
+                g.DrawCircle(p, 8, picked ? new Color(1f, 0.9f, 0.3f) : civ);
                 continue;
             }
 
-            Color civ = CivColor(u.Civ);
-            bool picked = u.Id == SelectedUnit || SelectedUnits.Contains(u.Id);
-            foreach (Vector2 c in Copies(u.Col, u.Row))
+            g.DrawCircle(p, 11, u.Hidden ? civ.Darkened(0.6f) : civ.Darkened(0.3f));
+            g.DrawArc(p, 11, 0, MathF.Tau, 20, picked ? new Color(1f, 0.9f, 0.3f) : u.Fighting ? Colors.Red : Colors.Black, picked || u.Fighting ? 3 : 1.5f);
+            if (u.Cargo is { Length: > 0 } && u.Cargo != "nothing")
             {
-                Vector2 p = c + new Vector2(10, -8);
-                g.DrawCircle(p, 11, u.Hidden ? civ.Darkened(0.6f) : civ.Darkened(0.3f));
-                g.DrawArc(p, 11, 0, MathF.Tau, 20, picked ? new Color(1f, 0.9f, 0.3f) : u.Fighting ? Colors.Red : Colors.Black, picked || u.Fighting ? 3 : 1.5f);
-                if (u.Cargo is { Length: > 0 } && u.Cargo != "nothing")
-                {
-                    g.DrawRect(new Rect2(p + new Vector2(-14, -16), new Vector2(8, 6)), new Color(0.85f, 0.7f, 0.35f));
-                }
+                g.DrawRect(new Rect2(p + new Vector2(-14, -16), new Vector2(8, 6)), new Color(0.85f, 0.7f, 0.35f));
+            }
 
-                g.DrawString(font, p + new Vector2(-11, 5), _content.Units[u.Kind].Name[..1], HorizontalAlignment.Center, 22, 12, Colors.White);
+            g.DrawString(font, p + new Vector2(-11, 5), _content.Units[u.Kind].Name[..1], HorizontalAlignment.Center, 22, 12, Colors.White);
+            if (detail == 2)
+            {
                 g.DrawString(font, p + new Vector2(-11, 22), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 12, Colors.White);
             }
         }
@@ -432,52 +654,44 @@ public partial class PlayOverlay : Node2D
         }
     }
 
-    private void PaintLabels(CanvasItem g)
+    private void PaintChunkLabels(CanvasItem g, int chunk)
     {
-        if (_view is null || _content is null || _period.X <= 0)
+        if (_content is null || Detail == 0 || !_content2.TryGetValue(chunk, out ChunkContent? cc))
         {
             return;
         }
 
         Font font = UiKit.Font;
         int size = Ui.PixelTheme.FontSize;
-        foreach (PlaySettlementView s in _view.Settlements)
+        foreach (PlaySettlementView s in cc.Settlements)
         {
-            foreach (Vector2 c in Copies(s.Col, s.Row))
+            Vector2 c = HexLayout.Center(s.Col, s.Row);
+            Vector2 at = c + new Vector2(-100, -30);
+            Color ink = s.Remembered ? new Color(0.75f, 0.75f, 0.75f) : Colors.White;
+            float w = font.GetStringSize(s.Name, HorizontalAlignment.Left, -1, size).X + 12;
+            var plate = new Rect2(c.X - (w / 2), at.Y - size + 2, w, size + 4);
+            g.DrawRect(plate, new Color(0.08f, 0.07f, 0.06f, 0.75f));
+            g.DrawRect(plate, s.Remembered ? Grey(CivColor(s.Civ)) : CivColor(s.Civ), false, 1.5f);
+            g.DrawString(font, at, s.Name, HorizontalAlignment.Center, 200, size, ink);
+            int worst = AlertOf(s.Id);
+            if (worst >= 0)
             {
-                Vector2 at = c + new Vector2(-100, -30);
-                Color ink = s.Remembered ? new Color(0.75f, 0.75f, 0.75f) : Colors.White;
-                float w = font.GetStringSize(s.Name, HorizontalAlignment.Left, -1, size).X + 12;
-                var plate = new Rect2(c.X - (w / 2), at.Y - size + 2, w, size + 4);
-                g.DrawRect(plate, new Color(0.08f, 0.07f, 0.06f, 0.75f));
-                g.DrawRect(plate, s.Remembered ? Grey(CivColor(s.Civ)) : CivColor(s.Civ), false, 1.5f);
-                g.DrawString(font, at, s.Name, HorizontalAlignment.Center, 200, size, ink);
-                int worst = AlertOf(s.Id);
-                if (worst >= 0)
-                {
-                    // A mark over the settlement: red for danger and hunger, yellow for the rest.
-                    Color mark = worst <= 2 ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 0.85f, 0.3f);
-                    g.DrawCircle(c + new Vector2(0, -30 - size - 8), 9, mark);
-                    g.DrawString(UiKit.GlyphFont, c + new Vector2(-6, -30 - size - 3), "!", HorizontalAlignment.Center, 12, 12, Colors.Black);
-                }
+                // A mark over the settlement: red for danger and hunger, yellow for the rest.
+                Color mark = worst <= 2 ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 0.85f, 0.3f);
+                g.DrawCircle(c + new Vector2(0, -30 - size - 8), 9, mark);
+                g.DrawString(UiKit.GlyphFont, c + new Vector2(-6, -30 - size - 3), "!", HorizontalAlignment.Center, 12, 12, Colors.Black);
             }
         }
     }
 
     // Roads as part of the land, like rivers: from each road hex half a segment to each neighbouring road hex; tracks thin
     // and brown, paved roads wide and pale; remembered ones grey.
-    private void PaintRoads(CanvasItem g)
+    private void PaintRoads(CanvasItem g, CivSim.Game.Net.ClientWorld w, int c0, int r0, int c1, int r1)
     {
-        if (World is not { } w)
+        bool thin = Detail == 0;
+        for (int row = r0; row <= r1; row++)
         {
-            return;
-        }
-
-        (int c0, int r0) = HexLayout.CellAt(_visible.Position);
-        (int c1, int r1) = HexLayout.CellAt(_visible.End);
-        for (int row = Math.Max(0, r0 - 1); row <= Math.Min(w.Height - 1, r1 + 1); row++)
-        {
-            for (int col = c0 - 1; col <= c1 + 1; col++)
+            for (int col = c0; col <= c1; col++)
             {
                 int i = w.Index(col, row);
                 int level = w.Road[i];
@@ -500,7 +714,7 @@ public partial class PlayOverlay : Node2D
 
                     linked++;
                     Vector2 mid = c.Lerp(HexLayout.Center(col + dc, nr), 0.5f);
-                    RoadSegment(g, c, mid, level, grey);
+                    RoadSegment(g, c, mid, level, grey, thin);
                 }
 
                 if (linked == 0)
@@ -514,9 +728,9 @@ public partial class PlayOverlay : Node2D
     private static readonly (int, int)[] EvenNeighbours = [(0, -1), (0, 1), (1, -1), (1, 0), (-1, -1), (-1, 0)];
     private static readonly (int, int)[] OddNeighbours = [(0, -1), (0, 1), (1, 0), (1, 1), (-1, 0), (-1, 1)];
 
-    private static void RoadSegment(CanvasItem g, Vector2 a, Vector2 b, int level, bool grey)
+    private static void RoadSegment(CanvasItem g, Vector2 a, Vector2 b, int level, bool grey, bool thin)
     {
-        float width = level == 1 ? 4f : 8f;
+        float width = (level == 1 ? 4f : 8f) * (thin ? 2f : 1f); // far away lines would vanish: thicker in the world
         g.DrawLine(a, b, new Color(0.15f, 0.11f, 0.08f, 0.8f), width + 3, true);
         g.DrawLine(a, b, RoadColor(level, grey), width, true);
         g.DrawCircle(a, (width + 3) / 2, new Color(0.15f, 0.11f, 0.08f, 0.8f));
@@ -538,7 +752,7 @@ public partial class PlayOverlay : Node2D
         Cross,
     }
 
-    private void DrawBuilding(CanvasItem g, Vector2 c, PlayBuildingView b, PlayBuildingInfo t, float scale)
+    private void DrawBuilding(CanvasItem g, Vector2 c, PlayBuildingView b, PlayBuildingInfo t, float scale, int detail = 2)
     {
         Font font = UiKit.GlyphFont;
         Color civ = CivColor(b.Civ);
@@ -563,6 +777,11 @@ public partial class PlayOverlay : Node2D
         g.DrawPolygon(Hex(c, 0.7f * scale), [fill]);
         g.DrawPolyline(Closed(Hex(c, 0.7f * scale)), b.Priority ? new Color(1f, 0.85f, 0.2f) : civ, b.Priority ? 3 : 2);
         g.DrawString(font, c + new Vector2(-24, 5), UiKit.Short(t.Name), HorizontalAlignment.Center, 48, 12, built ? Colors.White : new Color(0.8f, 0.8f, 0.8f));
+        if (detail < 2)
+        {
+            return; // middle distance: no small numbers
+        }
+
         if (b.State == 5)
         {
             bool lost = b.Missing is not null && b.Porters == 0;

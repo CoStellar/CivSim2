@@ -237,6 +237,12 @@ public partial class MapView : Node2D
                 c.UpdateLines(_world, RiverBaseWidth, BorderWidth, _fogHides ? fog : null);
             }
 
+            // Nothing known in the chunk: nothing to draw, not even the dark of the fog (the empty screen is the fog).
+            if (!c.AnyKnown)
+            {
+                continue;
+            }
+
             for (int kx = kx0; kx <= kx1; kx++)
             {
                 var offset = new Vector2(kx * _period.X, 0);
@@ -492,6 +498,9 @@ public partial class MapView : Node2D
 
         public Vector2 Origin { get; }
 
+        /// <summary>True when the player knows at least one hex of the chunk (otherwise it is not drawn).</summary>
+        public bool AnyKnown { get; private set; }
+
         /// <summary>True when the hex is in this chunk.</summary>
         public bool Holds(int col, int row) => col >= X0 && col < X0 + W && row >= Y0 && row < Y0 + H;
 
@@ -529,6 +538,7 @@ public partial class MapView : Node2D
 
         public void UpdateColors(ClientWorld world, ContentMessage? content, (MapLayer, float)[] active, byte[]? fog)
         {
+            bool any = false;
             for (int r = 0; r < H; r++)
             {
                 for (int c = 0; c < W; c++)
@@ -536,6 +546,13 @@ public partial class MapView : Node2D
                     int col = X0 + c;
                     int row = Y0 + r;
                     int i = world.Index(col, row);
+
+                    // Unknown hexes are not drawn at all (decision of 2026-11-18): a zero-size instance costs the GPU nothing.
+                    bool known = world.Visibility[i] != MapChunkMessage.Unknown;
+                    any |= known;
+                    int t = ((r * W) + c) * Stride;
+                    _buffer[t] = known ? 1 : 0;
+                    _buffer[t + 5] = known ? 1 : 0;
                     Color tint = OverlayColors.Tint(active, world, content, fog, i);
                     int o = (((r * W) + c) * Stride) + 8;
                     _buffer[o] = tint.R;
@@ -566,6 +583,7 @@ public partial class MapView : Node2D
             Hexes.Buffer = _buffer;
             ColorsDirty = false;
             EverColored = true;
+            AnyKnown = any;
         }
 
         private static bool SeenNeighbour(ClientWorld w, int col, int row)

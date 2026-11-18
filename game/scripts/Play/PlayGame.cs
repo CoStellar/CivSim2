@@ -335,7 +335,7 @@ public partial class PlayGame : Node2D
         _map.SetLift(_selected, _overlay.Lift, _camera.Position);
         if (_session.PlayContent is { } content)
         {
-            _overlay.Show(content, _session.PlayView, _map.Period, visible);
+            _overlay.Show(content, _session.PlayView, _map.Period, visible, _camera.Zoom.X);
         }
 
         _uiTimer -= delta;

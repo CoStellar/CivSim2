@@ -201,7 +201,15 @@ public partial class Main : Node2D
                    (2.3, g => g.ScriptTrain("scouts")), (9, g => g.ScriptMoveFirst(-8, -6, false)),
                    (10, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
                 : [];
-            if (_playDemo && _playWindow == "Road")
+            if (_playDemo && _playWindow == "Far")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad()), (_playSeconds - 1, g => g.ScriptZoom(0.3f))];
+            }
+            else if (_playDemo && _playWindow == "Mid")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad()), (_playSeconds - 1, g => g.ScriptZoom(0.6f))];
+            }
+            else if (_playDemo && _playWindow == "Road")
             {
                 demo = [.. demo, (3, g => g.ScriptRoad())];
             }
