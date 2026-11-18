@@ -12,6 +12,13 @@ public sealed partial class SimGame
         }
 
         Add(Ticks);
+        long roads = 0;
+        for (int i = 0; i < RoadAt.Length; i++)
+        {
+            roads = (roads * 31) + RoadAt[i];
+        }
+
+        Add(roads);
         foreach (Civ c in Civs)
         {
             Add(c.People);

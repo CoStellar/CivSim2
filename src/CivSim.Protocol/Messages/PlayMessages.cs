@@ -104,7 +104,12 @@ public sealed record PlayContentMessage(
     [property: Key(5)] string WorldName,
     [property: Key(6)] IReadOnlyList<PlayUnitInfo> Units,
     [property: Key(7)] IReadOnlyList<PlayTechInfo> Techs,
-    [property: Key(8)] IReadOnlyList<string> Eras) : IProtocolMessage;
+    [property: Key(8)] IReadOnlyList<string> Eras,
+    [property: Key(9)] IReadOnlyList<PlayRoadInfo>? Roads = null) : IProtocolMessage;
+
+/// <summary>A level of road (1 track, 2 paved road): price and seconds per hex, needed technology.</summary>
+[MessagePackObject]
+public sealed record PlayRoadInfo([property: Key(0)] int Level, [property: Key(1)] string Name, [property: Key(2)] long[] Price, [property: Key(3)] int Seconds, [property: Key(4)] int Tech);
 
 /// <summary>A settlement as the player sees it.</summary>
 [MessagePackObject]
@@ -174,7 +179,8 @@ public sealed record PlayCellsMessage(
     [property: Key(0)] int[] Cells,
     [property: Key(1)] byte[] Visibility,
     [property: Key(2)] short[] Owner,
-    [property: Key(3)] int[] Chunks) : IProtocolMessage;
+    [property: Key(3)] int[] Chunks,
+    [property: Key(4)] byte[]? Road = null) : IProtocolMessage;
 
 /// <summary>Server → client, several times a second: what the player sees of the game.</summary>
 [MessagePackObject]
@@ -312,6 +318,9 @@ public enum PlayCommandKind
 
     /// <summary>Send porters with the materials construction <c>A</c> is missing.</summary>
     BringMaterials = 26,
+
+    /// <summary>Build a road of level <c>A</c> over the drawn hexes <c>Cells</c> (col, row pairs).</summary>
+    BuildRoad = 28,
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs), eating at the nearest settlement between rounds.</summary>
     Patrol = 27,

@@ -123,6 +123,25 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Script step: builds a track from the first settlement a few hexes up and to the side.</summary>
+    public void ScriptRoad()
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        foreach (PlaySettlementView s in v.Settlements)
+        {
+            if (s.Civ == v.Civ)
+            {
+                int[] cells = [s.Col, s.Row, s.Col, s.Row - 1, s.Col, s.Row - 2, s.Col + 1, s.Row - 3 + (s.Col & 1), s.Col + 2, s.Row - 3];
+                _session.Play(PlayCommandKind.BuildRoad, 1, cells: cells);
+                return;
+            }
+        }
+    }
+
     /// <summary>Script step: opens the research or people window.</summary>
     public void ScriptOpen(string mode)
     {
@@ -277,6 +296,7 @@ public partial class PlayGame : Node2D
         if (!_bound && _session.Worlds.TryGetValue(0, out ClientWorld? earth) && _session.Content is not null && _session.PlayContent is not null)
         {
             _map.Bind(_session, earth);
+            _overlay.World = earth;
             _bound = true;
             _session.SetSpeed(SimulationSpeed.X1);
         }
@@ -370,11 +390,11 @@ public partial class PlayGame : Node2D
                 _dragFrom = motion.Position;
                 break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Left } left:
-                if (left.Pressed && _drawMode is DrawMode.Patrol or DrawMode.Route && !_drawing)
+                if (left.Pressed && _drawMode is DrawMode.Patrol or DrawMode.Route or DrawMode.Road && !_drawing)
                 {
                     BeginDraw(_drawMode);
                 }
-                else if (!left.Pressed && _drawing && _drawMode is DrawMode.Patrol or DrawMode.Route)
+                else if (!left.Pressed && _drawing && _drawMode is DrawMode.Patrol or DrawMode.Route or DrawMode.Road)
                 {
                     FinishDraw();
                 }

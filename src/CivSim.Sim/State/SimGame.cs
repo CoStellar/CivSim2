@@ -76,6 +76,7 @@ public sealed partial class SimGame
         OwnerAt = new short[Geo.CellCount];
         SettlementAt = new int[Geo.CellCount];
         BuildingAt = new int[Geo.CellCount];
+        RoadAt = new byte[Geo.CellCount];
         Array.Fill(OwnerAt, (short)-1);
         Array.Fill(SettlementAt, -1);
         Array.Fill(BuildingAt, -1);
@@ -151,6 +152,7 @@ public sealed partial class SimGame
                 Known = new bool[map.Geometry.CellCount],
                 Vision = new short[map.Geometry.CellCount],
                 SeenOwner = NoOwners(map.Geometry.CellCount),
+                SeenRoad = new byte[map.Geometry.CellCount],
                 KnownTech = new bool[content.Techs.Count],
                 Experience = new long[content.Techs.Count],
                 ExperienceRate = new int[content.Techs.Count],
@@ -275,6 +277,11 @@ public sealed partial class SimGame
         if (Ticks % Content.War.CombatEveryTicks == 0)
         {
             CombatStep();
+        }
+
+        if (Ticks % SimContent.TicksPerSecond == 0)
+        {
+            RoadStep();
         }
 
         if (Ticks % SimContent.TicksPerMinute == 0)

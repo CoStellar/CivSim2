@@ -60,8 +60,12 @@ public partial class PlayOverlay : Node2D
     /// <summary>Colour of the drawn path.</summary>
     public Color DrawColor { get; set; } = new(1f, 0.95f, 0.5f);
 
-    /// <summary>Show all our standing routes, patrols and marches (toggled by the player); otherwise only the selected ones.</summary>
-    public bool ShowAllRoutes { get; set; }
+    /// <summary>Which of our routes show besides those of what is selected (G cycles): 0 none, 1 orders under way (marches,
+    /// carriers on their way), 2 those and the standing ones (patrols, caravan routes).</summary>
+    public int RouteDisplay { get; set; }
+
+    /// <summary>The map as the player knows it (for roads).</summary>
+    public CivSim.Game.Net.ClientWorld? World { get; set; }
 
     /// <summary>How far the selected hex is lifted, 0–1 (grows over a tenth of a second after a click).</summary>
     public float Lift { get; private set; }
@@ -142,7 +146,7 @@ public partial class PlayOverlay : Node2D
     /// <summary>Draws the slow layers again (after a selection or a toggle).</summary>
     public void Restatic()
     {
-        string sig = $"{SelectedUnit}|{string.Join(",", SelectedUnits)}|{ShowAllRoutes}|{_selected}";
+        string sig = $"{SelectedUnit}|{string.Join(",", SelectedUnits)}|{RouteDisplay}|{_selected}";
         _staticSig = sig;
         _ground?.QueueRedraw();
         _routes?.QueueRedraw();
@@ -158,6 +162,8 @@ public partial class PlayOverlay : Node2D
         {
             return;
         }
+
+        PaintRoads(g);
 
         foreach ((int col, int row) in _places)
         {
@@ -240,13 +246,13 @@ public partial class PlayOverlay : Node2D
 
             bool picked = u.Id == SelectedUnit || SelectedUnits.Contains(u.Id);
             bool fromSel = sel is not null && u.Carrier && Near(u, sel);
-            if (!picked && !fromSel && !ShowAllRoutes)
+            if (!picked && !fromSel && RouteDisplay == 0)
             {
                 continue;
             }
 
             Color color = Light(CivColor(u.Civ));
-            if (u.Patrol is { Length: >= 4 } loop)
+            if (u.Patrol is { Length: >= 4 } loop && (picked || RouteDisplay >= 2))
             {
                 StrokePath(g, Points(loop, (u.Col, u.Row), closed: true), color, 2.5f, dashed: true, arrows: 3, end: EndMark.None);
             }
@@ -267,7 +273,7 @@ public partial class PlayOverlay : Node2D
                 continue;
             }
 
-            bool shown = ShowAllRoutes || (sel is not null && (sel.Id == r.From || sel.Id == r.To));
+            bool shown = RouteDisplay >= 2 || (sel is not null && (sel.Id == r.From || sel.Id == r.To));
             if (!shown)
             {
                 continue;
@@ -458,6 +464,71 @@ public partial class PlayOverlay : Node2D
         }
     }
 
+    // Roads as part of the land, like rivers: from each road hex half a segment to each neighbouring road hex; tracks thin
+    // and brown, paved roads wide and pale; remembered ones grey.
+    private void PaintRoads(CanvasItem g)
+    {
+        if (World is not { } w)
+        {
+            return;
+        }
+
+        (int c0, int r0) = HexLayout.CellAt(_visible.Position);
+        (int c1, int r1) = HexLayout.CellAt(_visible.End);
+        for (int row = Math.Max(0, r0 - 1); row <= Math.Min(w.Height - 1, r1 + 1); row++)
+        {
+            for (int col = c0 - 1; col <= c1 + 1; col++)
+            {
+                int i = w.Index(col, row);
+                int level = w.Road[i];
+                if (level == 0 || w.Visibility[i] == MapChunkMessage.Unknown)
+                {
+                    continue;
+                }
+
+                bool grey = w.Visibility[i] == MapChunkMessage.Remembered;
+                Vector2 c = HexLayout.Center(col, row);
+                bool odd = (col & 1) == 1;
+                int linked = 0;
+                foreach ((int dc, int dr) in odd ? OddNeighbours : EvenNeighbours)
+                {
+                    int nr = row + dr;
+                    if (nr < 0 || nr >= w.Height || w.Road[w.Index(col + dc, nr)] == 0)
+                    {
+                        continue;
+                    }
+
+                    linked++;
+                    Vector2 mid = c.Lerp(HexLayout.Center(col + dc, nr), 0.5f);
+                    RoadSegment(g, c, mid, level, grey);
+                }
+
+                if (linked == 0)
+                {
+                    g.DrawCircle(c, level == 1 ? 4 : 6, RoadColor(level, grey));
+                }
+            }
+        }
+    }
+
+    private static readonly (int, int)[] EvenNeighbours = [(0, -1), (0, 1), (1, -1), (1, 0), (-1, -1), (-1, 0)];
+    private static readonly (int, int)[] OddNeighbours = [(0, -1), (0, 1), (1, 0), (1, 1), (-1, 0), (-1, 1)];
+
+    private static void RoadSegment(CanvasItem g, Vector2 a, Vector2 b, int level, bool grey)
+    {
+        float width = level == 1 ? 4f : 8f;
+        g.DrawLine(a, b, new Color(0.15f, 0.11f, 0.08f, 0.8f), width + 3, true);
+        g.DrawLine(a, b, RoadColor(level, grey), width, true);
+        g.DrawCircle(a, (width + 3) / 2, new Color(0.15f, 0.11f, 0.08f, 0.8f));
+        g.DrawCircle(a, width / 2, RoadColor(level, grey));
+    }
+
+    private static Color RoadColor(int level, bool grey)
+    {
+        Color c = level == 1 ? new Color(0.66f, 0.52f, 0.34f) : new Color(0.78f, 0.74f, 0.64f);
+        return grey ? Grey(c) : c;
+    }
+
     // ---- Pieces --------------------------------------------------------------------------------------------------
 
     private enum EndMark
@@ -474,9 +545,9 @@ public partial class PlayOverlay : Node2D
         if (b.Remembered)
         {
             // A building we saw before: grey, as we last saw it (like Age of Empires).
-            g.DrawPolygon(Hex(c, 0.7f * scale), [new Color(0.32f, 0.32f, 0.32f, 0.75f)]);
+            g.DrawPolygon(Hex(c, 0.7f * scale), [new Color(0.46f, 0.46f, 0.46f, 0.8f)]);
             g.DrawPolyline(Closed(Hex(c, 0.7f * scale)), Grey(civ), 2);
-            g.DrawString(font, c + new Vector2(-24, 5), UiKit.Short(t.Name), HorizontalAlignment.Center, 48, 12, new Color(0.7f, 0.7f, 0.7f));
+            g.DrawString(font, c + new Vector2(-24, 5), UiKit.Short(t.Name), HorizontalAlignment.Center, 48, 12, new Color(0.88f, 0.88f, 0.88f));
             return;
         }
 
@@ -651,8 +722,8 @@ public partial class PlayOverlay : Node2D
 
     private static Color Grey(Color c)
     {
-        float l = (c.R * 0.3f) + (c.G * 0.59f) + (c.B * 0.11f);
-        return new Color(l, l, l, 0.85f);
+        float l = 0.25f + (0.75f * ((c.R * 0.3f) + (c.G * 0.59f) + (c.B * 0.11f)));
+        return new Color(l, l, l, 0.9f);
     }
 
     // The map repeats east–west; draw an object in every copy that is on screen.

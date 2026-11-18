@@ -215,6 +215,9 @@ public sealed class Civ
     /// <summary>Owner of each hex when this people last saw it.</summary>
     public short[] SeenOwner { get; set; } = [];
 
+    /// <summary>Road level of each hex when this people last saw it.</summary>
+    public byte[] SeenRoad { get; set; } = [];
+
     /// <summary>Buildings remembered on hexes not seen now, by hex.</summary>
     public SortedDictionary<int, BuildingMemory> SeenBuildings { get; } = [];
 

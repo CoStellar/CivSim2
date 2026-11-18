@@ -42,6 +42,13 @@ public sealed partial class SimGame
         Watch(u);
     }
 
+    /// <summary>Road level of a hex as the people knows it: live where seen, remembered elsewhere.</summary>
+    public byte RoadSeen(Civ civ, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        return Visible(civ, cell) ? RoadAt[cell] : civ.SeenRoad[cell];
+    }
+
     // A unit starts or moves on: its sight goes with it.
     private void Watch(Unit u)
     {
@@ -119,6 +126,7 @@ public sealed partial class SimGame
     private void Remember(Civ civ, int cell)
     {
         civ.SeenOwner[cell] = OwnerAt[cell];
+        civ.SeenRoad[cell] = RoadAt[cell];
         int b = BuildingAt[cell];
         if (b >= 0 && Buildings[b].State != BuildingState.Removed)
         {

@@ -187,4 +187,64 @@ public sealed class FogTests
         Assert.Contains(PatrolStage.ToSupply, stages);
         Assert.NotEqual(PatrolStage.None, u.PatrolStage);
     }
+
+    [Fact]
+    public void ADrawnTrackIsBuiltHexByHex()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        var drawn = new List<int> { home.Center };
+        HexCoord at = g.Geo.FromIndex(home.Center);
+        for (int k = 0; k < 4; k++)
+        {
+            at = g.Geo.Neighbor(at, HexDirection.N);
+            int cell = g.Geo.Index(at);
+            if (!g.FindPath(drawn[^1], cell, new List<int>()) || g.FindPath(drawn[^1], cell, new List<int>()) && Content.WalkCost[(g.Map.Biome[cell] * 3) + g.Map.Relief[cell]] == 0)
+            {
+                break;
+            }
+
+            drawn.Add(cell);
+        }
+
+        Assert.True(drawn.Count >= 3, "the test needs land north of the camp");
+        var before = new List<int>();
+        Assert.True(g.FindPath(drawn[0], drawn[^1], before));
+        Assert.Null(g.Apply(new BuildRoadCommand(civ.Id, [.. drawn], 1)));
+        Run(g, 20 * Content.RoadLevels[0].TicksPerHex);
+        Assert.All(drawn, c => Assert.Equal(1, g.RoadAt[c]));
+    }
+
+    [Fact]
+    public void SettlersOnARoadGetACaravanOfGoods()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        HexCoord c = g.Geo.FromIndex(home.Center);
+        var line = new List<int>();
+        HexCoord at = c;
+        for (int k = 0; k < Content.FoundMinDistance + 2; k++)
+        {
+            at = g.Geo.Neighbor(at, HexDirection.N);
+            line.Add(g.Geo.Index(at));
+        }
+
+        int site = line[^1];
+        if (g.CannotFound(site) is not null)
+        {
+            return; // water or mountains on this seed
+        }
+
+        foreach (int cell in line)
+        {
+            g.RoadAt[cell] = 1;
+        }
+
+        int caravans = g.Units.Count(u => u.Kind == Content.Caravans);
+        Settlement camp = g.FoundSettlement(civ, site, 8, new long[Content.Goods.Count]);
+        g.TestRoadSupply(civ, camp);
+        Assert.True(g.Units.Count(u => u.Kind == Content.Caravans) > caravans, "a caravan sets out along the road");
+    }
 }

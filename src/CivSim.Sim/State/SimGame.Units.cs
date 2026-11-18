@@ -197,6 +197,7 @@ public sealed partial class SimGame
         civ.Units.Remove(u.Id);
         Settlement s = FoundSettlement(civ, u.Cell, u.People, u.Cargo ?? new long[Content.Goods.Count]);
         News.Add((civ.Id, $"Settlers founded {s.Name}."));
+        RoadSupply(civ, s);
         return null;
     }
 
@@ -252,17 +253,7 @@ public sealed partial class SimGame
     }
 
     // Walking cost of a hex in percent (0 = impassable): terrain, halved on a road.
-    private int CellCost(int cell)
-    {
-        int cost = Content.WalkCost[(Map.Biome[cell] * 3) + Map.Relief[cell]];
-        int b = BuildingAt[cell];
-        if (cost > 0 && b >= 0 && Buildings[b].State == BuildingState.Active && Array.IndexOf(Content.Buildings[Buildings[b].Type].Groups, "road") >= 0)
-        {
-            cost = cost * Content.RoadCostPercent / 100;
-        }
-
-        return cost;
-    }
+    private int CellCost(int cell) => RoadCost(cell, Content.WalkCost[(Map.Biome[cell] * 3) + Map.Relief[cell]]);
 
     private bool HasBuilding(Settlement s, string key)
     {

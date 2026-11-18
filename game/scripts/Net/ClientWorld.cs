@@ -21,6 +21,7 @@ public sealed class ClientWorld
         Height = height;
         int n = width * height;
         Visibility = new byte[n];
+        Road = new byte[n];
         Elevation = new byte[n];
         Temperature = new sbyte[n];
         Humidity = new byte[n];
@@ -99,6 +100,9 @@ public sealed class ClientWorld
     /// <summary>Deposit depth (0 visible, 1 shallow, 2 deep).</summary>
     public byte[] DepositDepth { get; }
 
+    /// <summary>Road level per hex (0 none, 1 track, 2 paved road), as the player knows it.</summary>
+    public byte[] Road { get; }
+
     /// <summary>Owner civilization id or -1.</summary>
     public short[] Owner { get; }
 
@@ -148,6 +152,7 @@ public sealed class ClientWorld
                 DepositRichness[i] = m.DepositRichness[k];
                 DepositDepth[i] = m.DepositDepth[k];
                 Owner[i] = m.Owner[k];
+                Road[i] = m.Road is { } roads ? roads[k] : (byte)0;
                 WildFood[i] = m.WildFood is { } wild ? wild[k] : (ushort)1000;
                 Influence[i] = m.Influence is { } inf ? inf[k] : (byte)0;
                 Seasonality[i] = m.Seasonality is { } sea ? sea[k] : (byte)0;
@@ -178,6 +183,10 @@ public sealed class ClientWorld
             {
                 Visibility[i] = m.Visibility[k];
                 Owner[i] = m.Owner[k];
+                if (m.Road is { } roads)
+                {
+                    Road[i] = roads[k];
+                }
             }
         }
 

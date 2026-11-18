@@ -271,6 +271,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Train => new TrainCommand(civ, m.A, m.B),
         PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag, Cells(m.Cells)),
         PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
+        PlayCommandKind.BuildRoad => new BuildRoadCommand(civ, Cells(m.Cells) ?? [], m.A),
         PlayCommandKind.Found => new FoundCommand(civ, m.A),
         PlayCommandKind.Research => new ResearchCommand(civ, m.A),
         PlayCommandKind.Hire => new HireCommand(civ, m.Flag),
@@ -397,7 +398,13 @@ public sealed class PlayHost : IDisposable
             eras.Add(e.Name);
         }
 
-        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras));
+        var roads = new List<PlayRoadInfo>();
+        foreach (RoadLevel r in content.RoadLevels)
+        {
+            roads.Add(new PlayRoadInfo(r.Level, r.Name, r.Price, r.TicksPerHex / SimContent.TicksPerSecond, r.Tech));
+        }
+
+        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads));
         client.SentChunks = false;
     }
 
@@ -468,12 +475,17 @@ public sealed class PlayHost : IDisposable
 
     private short OwnerFor(Civ civ, int cell) => civ.Known[cell] ? _game.OwnerSeen(civ, cell) : WorldMap.NoOwner;
 
+    private byte RoadFor(Civ civ, int cell) => civ.Known[cell] ? _game.RoadSeen(civ, cell) : (byte)0;
+
+    private readonly List<byte> _roadList = [];
+
     // Only what changed against what the client has: terrain once per newly explored chunk, then fog and owner per hex.
     private void SendChanges(PlayClient client, Civ civ)
     {
         _cellList.Clear();
         _visList.Clear();
         _ownerList.Clear();
+        _roadList.Clear();
         _chunkList.Clear();
         foreach (int chunk in _changed)
         {
@@ -506,13 +518,16 @@ public sealed class PlayHost : IDisposable
                     int i = _game.Geo.Index(new HexCoord(x0 + c, y0 + r));
                     byte vis = VisibilityFor(civ, i);
                     short owner = OwnerFor(civ, i);
-                    if (vis != client.SentVisibility[i] || owner != client.SentOwner[i])
+                    byte road = RoadFor(civ, i);
+                    if (vis != client.SentVisibility[i] || owner != client.SentOwner[i] || road != client.SentRoad[i])
                     {
                         client.SentVisibility[i] = vis;
                         client.SentOwner[i] = owner;
+                        client.SentRoad[i] = road;
                         _cellList.Add(i);
                         _visList.Add(vis);
                         _ownerList.Add(owner);
+                        _roadList.Add(road);
                         any = true;
                     }
                 }
@@ -526,7 +541,7 @@ public sealed class PlayHost : IDisposable
 
         if (_cellList.Count > 0)
         {
-            client.Connection.Send(new PlayCellsMessage([.. _cellList], [.. _visList], [.. _ownerList], [.. _chunkList]));
+            client.Connection.Send(new PlayCellsMessage([.. _cellList], [.. _visList], [.. _ownerList], [.. _chunkList], [.. _roadList]));
         }
     }
 
@@ -534,7 +549,7 @@ public sealed class PlayHost : IDisposable
     {
         Civ civ = _game.Civs[client.Civ];
         MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, civ.Known, hideResources: _game.Picking, always: always,
-            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i));
+            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i));
         (int x0, int y0, int w, int h) = _game.Map.Chunks.Bounds(chunk);
         for (int r = 0; r < h; r++)
         {
@@ -544,6 +559,7 @@ public sealed class PlayHost : IDisposable
                 client.SentTerrain[i] = civ.Known[i];
                 client.SentVisibility[i] = VisibilityFor(civ, i);
                 client.SentOwner[i] = OwnerFor(civ, i);
+                client.SentRoad[i] = RoadFor(civ, i);
             }
         }
 
@@ -837,6 +853,8 @@ public sealed class PlayHost : IDisposable
         public short[] SentOwner { get; } = Filled(cells);
 
         public bool[] SentTerrain { get; } = new bool[cells];
+
+        public byte[] SentRoad { get; } = new byte[cells];
 
         private static short[] Filled(int n)
         {

@@ -83,6 +83,9 @@ public sealed record SimTech(int Id, string Key, string Name, int Era, bool Know
     public string Category { get; init; } = "";
 }
 
+/// <summary>A level of road: price and time per hex, walking cost on it (percent).</summary>
+public sealed record RoadLevel(int Level, string Key, string Name, int Tech, long[] Price, int TicksPerHex, int WalkPercent);
+
 /// <summary>A rarity of thinkers and advisors.</summary>
 public sealed record Rarity(int Id, string Key, string Name, int Weight, int CostPercent, int ExperiencePercent, int PriceTimes);
 
@@ -384,6 +387,15 @@ public sealed class SimContent
 
     /// <summary>Walking cost on a road, percent of the hex's normal cost.</summary>
     public int RoadCostPercent { get; init; } = 50;
+
+    /// <summary>Levels of roads (index + 1 is the level on the map: 1 track, 2 paved road).</summary>
+    public IReadOnlyList<RoadLevel> RoadLevels { get; init; } = [];
+
+    /// <summary>How far from our nearest settlement roads may be built, in hexes.</summary>
+    public int RoadReach { get; init; } = 25;
+
+    /// <summary>Goods a caravan brings from a settlement to a new camp joined to it by road.</summary>
+    public long[] RoadSupply { get; init; } = [];
 
     /// <summary>Finds a technology by key.</summary>
     public int TechId(string key)
@@ -837,6 +849,9 @@ public sealed class SimContent
             Caravans = units.FindIndex(x => x.Key == "caravan"),
             TradeTech = techKeys.IndexOf(root.GetProperty("diplomacy").GetProperty("tradeTech").GetString()!),
             RoadTech = techKeys.IndexOf("roads"),
+            RoadLevels = RoadLevelsOf(root, techKeys, Amounts),
+            RoadReach = root.TryGetProperty("roads", out JsonElement rr) ? rr.GetProperty("reach").GetInt32() : 25,
+            RoadSupply = root.TryGetProperty("roads", out JsonElement rs) ? Amounts(rs.GetProperty("supply")) : new long[goods.Count],
             Events = State.SimGame.LoadEvents(root, goods),
             TradeResearchDiscount = root.GetProperty("diplomacy").GetProperty("researchDiscountPerPartner").GetInt32(),
             AcceptWorthPercent = root.GetProperty("diplomacy").GetProperty("acceptWorthPercent").GetInt32(),
@@ -857,6 +872,24 @@ public sealed class SimContent
     }
 
     // Decimal text → hundredths without floating point (the JSON number's raw text is parsed).
+    private static List<RoadLevel> RoadLevelsOf(JsonElement root, List<string> techKeys, Func<JsonElement, long[]> amounts)
+    {
+        var list = new List<RoadLevel>();
+        if (!root.TryGetProperty("roads", out JsonElement roads))
+        {
+            return list;
+        }
+
+        foreach (JsonElement l in roads.GetProperty("levels").EnumerateArray())
+        {
+            list.Add(new RoadLevel(list.Count + 1, l.GetProperty("key").GetString()!, l.GetProperty("name").GetString()!,
+                Math.Max(0, techKeys.IndexOf(l.GetProperty("tech").GetString()!)), amounts(l.GetProperty("price")),
+                l.GetProperty("seconds").GetInt32() * TicksPerSecond, l.GetProperty("walkPercent").GetInt32()));
+        }
+
+        return list;
+    }
+
     private static long Hundredths(JsonElement e)
     {
         string text = e.GetRawText();

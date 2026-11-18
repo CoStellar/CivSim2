@@ -74,7 +74,7 @@ void fragment() {
 	if (remembered > 0.0) {
 		// What we saw before, not what is there now: grey.
 		float l = dot(col, vec3(0.3, 0.59, 0.11));
-		col = mix(col, mix(vec3(l), col, 0.15) * 0.72, remembered);
+		col = mix(col, mix(vec3(l), col, 0.2) * 0.86 + 0.04, remembered);
 	}
 	COLOR = vec4(col, 1.0);
 }

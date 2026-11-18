@@ -21,6 +21,9 @@ public enum DrawMode
 
     /// <summary>Left drag after "Draw the way": a standing caravan route along these hexes.</summary>
     Route,
+
+    /// <summary>Left drag after picking a road in the bar: build a road over these hexes.</summary>
+    Road,
 }
 
 /// <summary>
@@ -34,6 +37,7 @@ public partial class PlayGame
     private bool _drawing;
     private Vector2 _lastDrawPoint;
     private (int From, int To, int Good) _drawRoute;
+    private int _drawRoad;
 
     // Arms a drawing that starts with the next left press (patrol, route).
     private void ArmDraw(DrawMode mode, (int From, int To, int Good) route = default)
@@ -44,7 +48,12 @@ public partial class PlayGame
         _overlay?.DrawPath.Clear();
         if (_overlay is not null)
         {
-            _overlay.DrawColor = mode == DrawMode.Route ? new Color(0.95f, 0.75f, 0.35f) : new Color(0.55f, 0.85f, 1f);
+            _overlay.DrawColor = mode switch
+            {
+                DrawMode.Route => new Color(0.95f, 0.75f, 0.35f),
+                DrawMode.Road => new Color(0.85f, 0.7f, 0.5f),
+                _ => new Color(0.55f, 0.85f, 1f),
+            };
         }
 
         _uiTimer = 0;
@@ -165,19 +174,32 @@ public partial class PlayGame
                 }
 
                 break;
+            case DrawMode.Road:
+                if (path.Count >= 1)
+                {
+                    _session.Play(PlayCommandKind.BuildRoad, _drawRoad, cells: cells);
+                    _overlay.Flash(path[^1].Col, path[^1].Row, new Color(0.85f, 0.7f, 0.5f));
+                }
+
+                break;
         }
 
         CancelDraw();
     }
 
-    // Shows or hides all our standing routes, patrols and marches (G); the selected ones always show.
+    // Cycles which of our routes show (G): none, orders under way, those and the standing ones; the selected ones always show.
     private void ToggleRoutes()
     {
         if (_overlay is not null)
         {
-            _overlay.ShowAllRoutes = !_overlay.ShowAllRoutes;
+            _overlay.RouteDisplay = (_overlay.RouteDisplay + 1) % 3;
             _overlay.Restatic();
-            Toast(_overlay.ShowAllRoutes ? "All our routes are shown (G hides them)." : "Only the routes of what is selected are shown (G shows all).");
+            Toast(_overlay.RouteDisplay switch
+            {
+                0 => "Routes: only those of what is selected (G for more).",
+                1 => "Routes: orders under way - marches and carriers (G for more).",
+                _ => "Routes: orders under way, patrols and caravan routes (G to hide).",
+            });
         }
     }
 
@@ -210,6 +232,7 @@ public partial class PlayGame
         DrawMode.Move when _drawing => "Draw the way over the hexes. Let go of the right button to send them.",
         DrawMode.Patrol => _drawing ? "Draw the patrol over the hexes. Let go to start it." : "Hold the left button and draw the patrol over the hexes. Esc: cancel.",
         DrawMode.Route => _drawing ? "Draw the caravans' way. Let go to set the route." : "Hold the left button and draw the caravans' way from here to the other settlement. Esc: cancel.",
+        DrawMode.Road => _drawing ? $"Draw the road over the hexes ({_overlay?.DrawPath.Count ?? 0} so far). Let go to start building." : "Hold the left button and draw the road over the hexes, also into empty land. Esc: cancel.",
         _ => null,
     };
 }
