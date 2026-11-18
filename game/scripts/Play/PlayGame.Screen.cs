@@ -52,16 +52,43 @@ public partial class PlayGame
     private string _alertSig = "";
     private string _resSig = "";
 
+    private CanvasLayer? _uiLayer;
+
+    // The chronicle sits above the height of the action bar, so a wide bar never covers it.
+    private static int ChronicleBottom => -((3 * PixelTheme.FontSize) + 104);
+
+    // Builds the screen again (after the font changed), keeping what is open.
+    private void RebuildUi()
+    {
+        bool help = _help.Visible;
+        _uiLayer?.QueueFree();
+        _speedButtons.Clear();
+        _resSig = _alertSig = _inspectorSig = _barSig = _bigSignature = "";
+        BuildUi();
+        _help.Visible = help;
+        if (_chronicleOpen)
+        {
+            _chronicleOpen = false;
+            ToggleChronicle();
+        }
+
+        RefreshChronicle();
+        UpdateUi();
+    }
+
     private void BuildUi()
     {
         var ui = new CanvasLayer { Layer = 10 };
+        _uiLayer = ui;
         AddChild(ui);
+        int topH = Math.Max(48, (PixelTheme.FontSize * 2) + 8);
+        Vector2 screen = GetViewport().GetVisibleRect().Size;
         var root = new Control { MouseFilter = Control.MouseFilterEnum.Ignore, Theme = PixelTheme.Current };
         root.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         ui.AddChild(root);
 
         // ---- Top bar: resources | era and years | time, speed, windows ----
-        var top = new PanelContainer { AnchorRight = 1, OffsetBottom = 48 };
+        var top = new PanelContainer { AnchorRight = 1, OffsetBottom = topH };
         top.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.11f, 0.09f, 0.08f, 0.94f), new Color(0.35f, 0.28f, 0.2f), 0, 2));
         root.AddChild(top);
         var topRow = new HBoxContainer();
@@ -93,11 +120,11 @@ public partial class PlayGame
         }
 
         right.AddChild(new VSeparator());
-        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls and first steps (H)"));
+        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls, first steps and the font (H)"));
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
         // Era and years in the middle of the top bar, over the bar.
-        var centre = new VBoxContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -230, OffsetRight = 230, OffsetTop = 0, MouseFilter = Control.MouseFilterEnum.Ignore };
+        var centre = new VBoxContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(240), OffsetRight = UiKit.W(240), OffsetTop = 0, MouseFilter = Control.MouseFilterEnum.Ignore };
         centre.AddThemeConstantOverride("separation", 0);
         root.AddChild(centre);
         _eraLabel = UiKit.Label("", 24, UiKit.Heading);
@@ -107,14 +134,18 @@ public partial class PlayGame
         centre.AddChild(_eraBarBox);
         _researchChip = UiKit.Button("Choose research", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (2).");
         _researchChip.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
-        _researchChip.CustomMinimumSize = new Vector2(260, 0);
+        _researchChip.CustomMinimumSize = new Vector2(UiKit.W(260), 0);
         centre.AddChild(_researchChip);
         _yearLabel = UiKit.Label("", 12, UiKit.Muted);
         _yearLabel.HorizontalAlignment = HorizontalAlignment.Center;
 
         // ---- Advisor (top right) and alerts under it ----
-        _advisorPanel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -380, OffsetRight = -8, OffsetTop = 56 };
-        root.AddChild(_advisorPanel);
+        // The advisor and, under it, the alerts: one column at the right.
+        var rightCol = new VBoxContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -UiKit.W(380), OffsetRight = -8, OffsetTop = topH + 8, MouseFilter = Control.MouseFilterEnum.Ignore };
+        rightCol.AddThemeConstantOverride("separation", 8);
+        root.AddChild(rightCol);
+        _advisorPanel = new PanelContainer();
+        rightCol.AddChild(_advisorPanel);
         var adv = new HBoxContainer();
         adv.AddThemeConstantOverride("separation", 8);
         _advisorPanel.AddChild(adv);
@@ -128,12 +159,12 @@ public partial class PlayGame
         _advisorText = UiKit.Label("", 14, UiKit.Text, wrap: true);
         advText.AddChild(_advisorText);
 
-        _alertsBox = new VBoxContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -380, OffsetRight = -8, OffsetTop = 200 };
+        _alertsBox = new VBoxContainer();
         _alertsBox.AddThemeConstantOverride("separation", 4);
-        root.AddChild(_alertsBox);
+        rightCol.AddChild(_alertsBox);
 
         // ---- Chronicle (bottom right, opens wider) ----
-        _chroniclePanel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -440, OffsetRight = -8, OffsetTop = -200, OffsetBottom = -96 };
+        _chroniclePanel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -UiKit.W(440), OffsetRight = -8, OffsetTop = ChronicleBottom - 110, OffsetBottom = ChronicleBottom };
         root.AddChild(_chroniclePanel);
         var chron = new VBoxContainer();
         _chroniclePanel.AddChild(chron);
@@ -142,16 +173,16 @@ public partial class PlayGame
         Label chronTitle = UiKit.Label("CHRONICLE", 13, UiKit.Heading);
         chronTitle.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         chronHead.AddChild(chronTitle);
-        _chronicleToggle = UiKit.Button("more", ToggleChronicle, "Show more of the chronicle (C)");
+        _chronicleToggle = UiKit.Button("more", ToggleChronicle, "Show more of the chronicle (L)");
         chronHead.AddChild(_chronicleToggle);
         _chronicleText = new RichTextLabel { ScrollFollowing = true, FitContent = false, SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         _chronicleText.AddThemeFontSizeOverride("normal_font_size", PixelTheme.FontSize);
         chron.AddChild(_chronicleText);
 
         // ---- Side panel (left) ----
-        _inspector = new PanelContainer { OffsetLeft = 8, OffsetTop = 56, OffsetRight = 340 };
+        _inspector = new PanelContainer { OffsetLeft = 8, OffsetTop = topH + 8, OffsetRight = 8 + UiKit.W(332) };
         root.AddChild(_inspector);
-        _inspectorScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, CustomMinimumSize = new Vector2(320, 0) };
+        _inspectorScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, CustomMinimumSize = new Vector2(UiKit.W(320), 0) };
         _inspector.AddChild(_inspectorScroll);
         _inspectorBox = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         _inspectorBox.AddThemeConstantOverride("separation", 6);
@@ -161,21 +192,22 @@ public partial class PlayGame
         BuildActionBar(root);
 
         // ---- Placing banner, toast, windows, help ----
-        _banner = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -360, OffsetRight = 360, OffsetTop = 110, Visible = false };
+        _banner = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(380), OffsetRight = UiKit.W(380), OffsetTop = topH + 70 + PixelTheme.FontSize, Visible = false };
         _banner.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.16f, 0.24f, 0.12f, 0.95f), new Color(0.5f, 0.75f, 0.35f), 6, 2));
         root.AddChild(_banner);
         _bannerText = UiKit.Label("", 15, UiKit.Text, wrap: true);
         _bannerText.HorizontalAlignment = HorizontalAlignment.Center;
         _banner.AddChild(_bannerText);
 
-        _toastPanel = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -300, OffsetRight = 300, OffsetTop = 170, Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
+        _toastPanel = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(320), OffsetRight = UiKit.W(320), OffsetTop = topH + 140, Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
         _toastPanel.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.3f, 0.1f, 0.08f, 0.95f), UiKit.Bad, 6, 2));
         root.AddChild(_toastPanel);
         _toast = UiKit.Label("", 15, UiKit.Text, wrap: true);
         _toast.HorizontalAlignment = HorizontalAlignment.Center;
         _toastPanel.AddChild(_toast);
 
-        _window = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -560, OffsetRight = 560, OffsetTop = -330, OffsetBottom = 300, Visible = false };
+        int half = (int)Math.Min(UiKit.W(560), (screen.X / 2) - 16);
+        _window = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -half, OffsetRight = half, OffsetTop = -(screen.Y / 2) + topH + 8, OffsetBottom = (screen.Y / 2) - 150, Visible = false };
         root.AddChild(_window);
         var win = new VBoxContainer();
         _window.AddChild(win);
@@ -198,10 +230,31 @@ public partial class PlayGame
         _windowBox.AddThemeConstantOverride("separation", 6);
         winScroll.AddChild(_windowBox);
 
-        _help = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -330, OffsetRight = 330, OffsetTop = -250, OffsetBottom = 250, Visible = false };
+        int helpHalf = (int)Math.Min(UiKit.W(360), (screen.X / 2) - 16);
+        _help = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -helpHalf, OffsetRight = helpHalf, OffsetTop = -(screen.Y / 2) + topH + 8, OffsetBottom = (screen.Y / 2) - 150, Visible = false };
         root.AddChild(_help);
-        var help = new VBoxContainer();
-        _help.AddChild(help);
+        var helpScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        _help.AddChild(helpScroll);
+        var help = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        helpScroll.AddChild(help);
+        help.AddChild(UiKit.Label("FONT", 18, UiKit.Heading));
+        var fonts = new HFlowContainer();
+        help.AddChild(fonts);
+        foreach (FontChoice f in PixelTheme.Fonts)
+        {
+            string key = f.Key;
+            var b = new Button { Text = f.Name, ToggleMode = true, ButtonPressed = PixelTheme.FontKey == key, FocusMode = Control.FocusModeEnum.None, TooltipText = "Use this font for the whole screen." };
+            b.Pressed += () =>
+            {
+                PixelTheme.UseFont(key);
+                ViewerSettings settings = ViewerSettings.Load();
+                settings.Font = key;
+                settings.Save();
+                RebuildUi();
+            };
+            fonts.AddChild(b);
+        }
+
         help.AddChild(UiKit.Label("CONTROLS", 18, UiKit.Heading));
         help.AddChild(UiKit.Label(HelpText, 15, UiKit.Text, wrap: true));
         help.AddChild(UiKit.Button("Close", () => _help.Visible = false));
@@ -210,10 +263,10 @@ public partial class PlayGame
     private const string HelpText =
         "Left click: select a settlement, building, unit or hex. Its panel opens on the left.\n" +
         "Right click: send the selected unit there (on an enemy: attack). While placing: cancel.\n" +
-        "Bottom bar: pick a building (or its key Q, W, E…), then click a green hex. Hold Shift to place more.\n" +
+        "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +
         "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
-        "Arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
-        "Space: pause. + and -: faster, slower. 1-5: windows. C: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
+        "WASD, arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
+        "Space: pause. + and -: faster, slower. 1-5: windows. L: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
         "FIRST STEPS\n" +
         "1. Food first: a Gatherers' hut, then a Woodcutter. People without work forage a little.\n" +
         "2. Huts give homes: people grow only while there are free homes and food.\n" +
@@ -237,7 +290,7 @@ public partial class PlayGame
     private void ToggleChronicle()
     {
         _chronicleOpen = !_chronicleOpen;
-        _chroniclePanel.OffsetTop = _chronicleOpen ? -520 : -200;
+        _chroniclePanel.OffsetTop = ChronicleBottom - (_chronicleOpen ? 420 : 110);
         _chronicleToggle.Text = _chronicleOpen ? "less" : "more";
         RefreshChronicle();
     }
@@ -273,9 +326,9 @@ public partial class PlayGame
         _inspector.Visible = items.Count > 0;
 
         // The side panel grows with what it shows, up to the action bar; then it scrolls.
-        float most = GetViewport().GetVisibleRect().Size.Y - 56 - 150;
+        float most = GetViewport().GetVisibleRect().Size.Y - (2 * PixelTheme.FontSize) - 200;
         float want = Math.Min(_inspectorBox.GetCombinedMinimumSize().Y + 4, most);
-        _inspectorScroll.CustomMinimumSize = new Vector2(320, want);
+        _inspectorScroll.CustomMinimumSize = new Vector2(UiKit.W(320), want);
         _inspector.Size = Vector2.Zero;
         UpdateWindow(v, c);
     }
@@ -308,7 +361,7 @@ public partial class PlayGame
         {
             _eraBarBox.SetMeta("sig", sig);
             UiKit.Clear(_eraBarBox);
-            _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, 460, 22, next));
+            _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, UiKit.W(460), PixelTheme.FontSize + 6, next));
         }
 
         _researchChip.Text = v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "Choose research (2)";

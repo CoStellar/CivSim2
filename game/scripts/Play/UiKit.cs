@@ -37,8 +37,8 @@ public partial class Glyph : Control
         box.SetBorderWidthAll(2);
         box.SetCornerRadiusAll(_round ? (int)(Size.X / 2) : 4);
         DrawStyleBox(box, new Rect2(Vector2.Zero, Size));
-        Font font = UiKit.Font;
-        int fontSize = Ui.PixelTheme.FontSize; // the pixel font is sharp only at its own sizes
+        Font font = UiKit.GlyphFont;
+        int fontSize = Size.X >= 44 ? 24 : 12; // Galmuri 11 Bold: sharp at 12 and 24, whatever font the text uses
         Vector2 textSize = font.GetStringSize(_text, HorizontalAlignment.Left, -1, fontSize);
         Color ink = _color.Luminance > 0.55f ? new Color(0.1f, 0.08f, 0.06f) : Colors.White;
         DrawString(font, new Vector2((Size.X - textSize.X) / 2, (Size.Y + (fontSize * 0.7f)) / 2), _text, HorizontalAlignment.Left, -1, fontSize, ink);
@@ -111,10 +111,23 @@ public static class UiKit
         ["science"] = new Color("8a5ab8"),
     };
 
-    private static Font? _font;
-
     /// <summary>The interface font (the pixel font when the theme is loaded).</summary>
-    public static Font Font => _font ??= Ui.PixelTheme.Current?.DefaultFont ?? ThemeDB.FallbackFont;
+    public static Font Font => Ui.PixelTheme.Current?.DefaultFont ?? ThemeDB.FallbackFont;
+
+    private static Font? _glyphFont;
+
+    /// <summary>The small sharp font of the tiles' letters.</summary>
+    public static Font GlyphFont => _glyphFont ??= LoadGlyphFont() ?? Font;
+
+    private static Font? LoadGlyphFont()
+    {
+        string path = ProjectSettings.GlobalizePath("res://fonts/Galmuri11-Bold.ttf");
+        var f = new FontFile { Antialiasing = TextServer.FontAntialiasing.None, Hinting = TextServer.Hinting.None, SubpixelPositioning = TextServer.SubpixelPositioning.Disabled };
+        return System.IO.File.Exists(path) && f.LoadDynamicFont(path) == Error.Ok ? f : null;
+    }
+
+    /// <summary>A width in pixels grown for the chosen font.</summary>
+    public static int W(int px) => (int)(px * Ui.PixelTheme.Wide);
 
     /// <summary>Colour of a good by key.</summary>
     public static Color GoodColor(string key) => GoodColors.TryGetValue(key, out Color c) ? c : new Color("888888");
@@ -195,7 +208,7 @@ public static class UiKit
             return bar;
         }
 
-        var stack = new Control { CustomMinimumSize = new Vector2(width, Math.Max(height, 22)), SizeFlagsHorizontal = width == 0 ? Control.SizeFlags.ExpandFill : Control.SizeFlags.ShrinkBegin };
+        var stack = new Control { CustomMinimumSize = new Vector2(width, Math.Max(height, Ui.PixelTheme.FontSize + 6)), SizeFlagsHorizontal = width == 0 ? Control.SizeFlags.ExpandFill : Control.SizeFlags.ShrinkBegin };
         bar.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         stack.AddChild(bar);
         Label l = Label(text, 13);

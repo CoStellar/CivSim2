@@ -166,9 +166,9 @@ internal static class UiRender
             {
                 var row = new HBoxContainer();
                 Label name = UiKit.Label(b.Label, 14, UiKit.Muted);
-                name.CustomMinimumSize = new Vector2(86, 0);
+                name.CustomMinimumSize = new Vector2(UiKit.W(86), 0);
                 row.AddChild(name);
-                row.AddChild(UiKit.Bar(b.Fraction, b.Color, 0, 22, b.Value));
+                row.AddChild(UiKit.Bar(b.Fraction, b.Color, 0, Ui.PixelTheme.FontSize + 6, b.Value));
                 return row;
             }
 
@@ -228,7 +228,7 @@ internal static class UiRender
                 flow.AddThemeConstantOverride("v_separation", 6);
                 foreach (TileCell tile in t.Tiles)
                 {
-                    var button = new Button { FocusMode = Control.FocusModeEnum.None, TooltipText = tile.Tooltip, Disabled = !tile.Enabled, CustomMinimumSize = new Vector2(92, 72) };
+                    var button = new Button { FocusMode = Control.FocusModeEnum.None, TooltipText = tile.Tooltip, Disabled = !tile.Enabled, CustomMinimumSize = new Vector2(UiKit.W(92), 40 + Ui.PixelTheme.FontSize) };
                     var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
                     inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
                     var glyph = new Glyph(tile.Enabled ? tile.Color : tile.Color.Darkened(0.5f), tile.Short, 32) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter };

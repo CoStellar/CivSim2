@@ -7,12 +7,13 @@ namespace CivSim.Game.Play;
 
 /// <summary>
 /// The action bar at the bottom (like World of Warcraft): tabs for kinds of buildings and a row of slots. Click a slot or
-/// press its key on the row under the numbers (Q, W, E…), then click a green hex on the map.
+/// press its key on the bottom row (Z, X, C…; WASD stays for the camera), then click a green hex on the map.
 /// </summary>
 public partial class PlayGame
 {
     private static readonly string[] Tabs = ["Food", "Production", "Homes & stores", "Military", "Society"];
-    private static readonly Key[] SlotKeys = [Key.Q, Key.W, Key.E, Key.R, Key.T, Key.Y, Key.U, Key.I, Key.O, Key.P];
+    private static readonly Key[] SlotKeys = [Key.Z, Key.X, Key.C, Key.V, Key.B, Key.N, Key.M, Key.Comma, Key.Period, Key.Slash];
+    private static readonly string[] SlotNames = ["Z", "X", "C", "V", "B", "N", "M", ",", ".", "/"];
 
     private HBoxContainer _tabsBox = null!;
     private HBoxContainer _slotsBox = null!;
@@ -119,22 +120,22 @@ public partial class PlayGame
             PlayBuildingInfo t = c.Buildings[_slotTypes[i]];
             int id = t.Id;
             bool can = affordable[i];
-            var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(112, 92), TooltipText = Describe(c, t) + (can ? "" : "\n\nWe do not have the goods for it now."), ToggleMode = true, ButtonPressed = _placing == id };
+            var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = Describe(c, t) + (can ? "" : "\n\nWe do not have the goods for it now."), ToggleMode = true, ButtonPressed = _placing == id };
             var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
             inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
             inner.AddThemeConstantOverride("separation", 1);
             Color color = UiKit.GroupColor(t.Groups);
-            inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(t.Name), 38) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter });
+            inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(t.Name), 44) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter });
             Label name = UiKit.Label(t.Name, 11, can ? UiKit.Text : UiKit.Muted);
             name.HorizontalAlignment = HorizontalAlignment.Center;
             name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            name.CustomMinimumSize = new Vector2(104, 0);
+            name.CustomMinimumSize = new Vector2(UiKit.W(104), 0);
             name.MouseFilter = Control.MouseFilterEnum.Ignore;
             inner.AddChild(name);
             slot.AddChild(inner);
             if (i < SlotKeys.Length)
             {
-                Label key = UiKit.Label(SlotKeys[i].ToString(), 11, UiKit.Heading);
+                Label key = UiKit.Label(SlotNames[i], 11, UiKit.Heading);
                 key.Position = new Vector2(5, 2);
                 key.MouseFilter = Control.MouseFilterEnum.Ignore;
                 slot.AddChild(key);
@@ -158,7 +159,7 @@ public partial class PlayGame
         }
     }
 
-    // Keys Q…P pick the slots of the open tab; Tab moves to the next tab. True when the key was used.
+    // Keys Z…/ pick the slots of the open tab; Tab moves to the next tab. True when the key was used.
     private bool ActionKey(Key key)
     {
         if (key == Key.Tab)

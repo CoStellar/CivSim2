@@ -100,7 +100,7 @@ public partial class PlayGame
         for (int era = 0; era < c.Eras.Count; era++)
         {
             string state = era <= v.Era ? "" : era == v.Era + 1 && v.EraNeed > 0 ? $"opens at {v.EraNeed} of the {c.Eras[v.Era]} ({v.EraKnown} now)" : "later";
-            var head = new VBoxContainer { CustomMinimumSize = new Vector2(176, 0) };
+            var head = new VBoxContainer { CustomMinimumSize = new Vector2(UiKit.W(176), 0) };
             head.AddChild(UiKit.Label(c.Eras[era], 16, era <= v.Era ? UiKit.Heading : UiKit.Muted));
             if (state.Length > 0)
             {
@@ -160,7 +160,7 @@ public partial class PlayGame
             }
         }
 
-        var b = new Button { Text = name, FocusMode = Control.FocusModeEnum.None, TooltipText = tip.ToString(), CustomMinimumSize = new Vector2(176, 30), Alignment = HorizontalAlignment.Left, ClipText = true };
+        var b = new Button { Text = name, FocusMode = Control.FocusModeEnum.None, TooltipText = tip.ToString(), CustomMinimumSize = new Vector2(UiKit.W(176), Ui.PixelTheme.FontSize + 14), Alignment = HorizontalAlignment.Left, ClipText = true };
         b.AddThemeFontSizeOverride("font_size", Ui.PixelTheme.FontSize);
         b.AddThemeColorOverride("font_color", ink);
         b.AddThemeColorOverride("font_hover_color", UiKit.Text);

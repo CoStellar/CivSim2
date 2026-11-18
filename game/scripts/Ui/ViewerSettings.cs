@@ -288,6 +288,9 @@ public sealed class ViewerSettings
     /// <summary>Which HUD panels were open.</summary>
     public HudPanels Panels { get; set; } = new();
 
+    /// <summary>Key of the interface font the player chose (null = default).</summary>
+    public string? Font { get; set; }
+
     /// <summary>Reads the saved settings; defaults when there are none or the file is broken.</summary>
     public static ViewerSettings Load()
     {
