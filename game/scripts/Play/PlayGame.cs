@@ -415,8 +415,8 @@ public partial class PlayGame : Node2D
             case InputEventKey { Pressed: true, Keycode: Key.Minus or Key.KpSubtract }:
                 _session.SetSpeed(_session.PlayView?.Speed switch { SimulationSpeed.X4 => SimulationSpeed.X2, SimulationSpeed.X2 => SimulationSpeed.X1, _ => SimulationSpeed.Paused });
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.F1 or Key.F2 or Key.F3 or Key.F4 or Key.F5 } f:
-                OpenWindow(WindowNames[(int)(f.Keycode - Key.F1)]);
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 } f:
+                OpenWindow(WindowNames[(int)(f.Keycode - Key.Key1)]);
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.H }:
                 _help.Visible = !_help.Visible;
@@ -591,22 +591,22 @@ public partial class PlayGame : Node2D
     private void MoveCamera(float delta)
     {
         var dir = Vector2.Zero;
-        if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left))
+        if (Input.IsKeyPressed(Key.Left))
         {
             dir.X -= 1;
         }
 
-        if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right))
+        if (Input.IsKeyPressed(Key.Right))
         {
             dir.X += 1;
         }
 
-        if (Input.IsKeyPressed(Key.W) || Input.IsKeyPressed(Key.Up))
+        if (Input.IsKeyPressed(Key.Up))
         {
             dir.Y -= 1;
         }
 
-        if (Input.IsKeyPressed(Key.S) || Input.IsKeyPressed(Key.Down))
+        if (Input.IsKeyPressed(Key.Down))
         {
             dir.Y += 1;
         }

@@ -105,7 +105,7 @@ public partial class PlayGame
         centre.AddChild(_eraLabel);
         _eraBarBox = new VBoxContainer();
         centre.AddChild(_eraBarBox);
-        _researchChip = UiKit.Button("Choose research", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (F2).");
+        _researchChip = UiKit.Button("Choose research", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (2).");
         _researchChip.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
         _researchChip.CustomMinimumSize = new Vector2(260, 0);
         centre.AddChild(_researchChip);
@@ -187,7 +187,7 @@ public partial class PlayGame
         for (int i = 0; i < WindowNames.Length; i++)
         {
             string name = WindowNames[i];
-            winHead.AddChild(UiKit.Button(name, () => OpenWindow(name, toggle: false), $"F{i + 1}"));
+            winHead.AddChild(UiKit.Button($"{i + 1} {name}", () => OpenWindow(name, toggle: false), $"key {i + 1}"));
         }
 
         winHead.AddChild(UiKit.Button("Close", () => OpenWindow(""), "Close (Esc)"));
@@ -210,15 +210,15 @@ public partial class PlayGame
     private const string HelpText =
         "Left click: select a settlement, building, unit or hex. Its panel opens on the left.\n" +
         "Right click: send the selected unit there (on an enemy: attack). While placing: cancel.\n" +
-        "Bottom bar: pick a building (or its number key 1, 2, 3…), then click a green hex. Hold Shift to place more.\n" +
+        "Bottom bar: pick a building (or its key Q, W, E…), then click a green hex. Hold Shift to place more.\n" +
         "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
-        "Arrows / WASD or middle mouse drag: move the map. Wheel: zoom.\n" +
-        "Space: pause. + and -: faster, slower. F1-F5: windows. C: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
+        "Arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
+        "Space: pause. + and -: faster, slower. 1-5: windows. C: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
         "FIRST STEPS\n" +
         "1. Food first: a Gatherers' hut, then a Woodcutter. People without work forage a little.\n" +
         "2. Huts give homes: people grow only while there are free homes and food.\n" +
         "3. A Storehouse near new buildings makes porters' walks short, so building goes faster.\n" +
-        "4. Research (F2) opens new buildings. Five technologies of an era open the next one.\n" +
+        "4. Research (2) opens new buildings. Five technologies of an era open the next one.\n" +
         "5. Scouts find land and peoples; settlers found new camps.\n" +
         "6. Alerts on the right say what needs you. Click one to go there.";
 
@@ -311,7 +311,7 @@ public partial class PlayGame
             _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, 460, 22, next));
         }
 
-        _researchChip.Text = v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "Choose research (F2)";
+        _researchChip.Text = v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "Choose research (2)";
         _researchChip.AddThemeColorOverride("font_color", v.Researching >= 0 ? UiKit.Text : UiKit.Warn);
 
         // Resources: an icon, the amount and the trend a minute, for goods we have or make.
@@ -382,7 +382,7 @@ public partial class PlayGame
         else
         {
             _advisorName.Text = "No advisor";
-            _advisorText.Text = v.AdvisorOffer is { } o ? $"{o.Name} offers advice on {o.Fields}. Hire in Thinkers (F4)." : "Nobody tells us what goes wrong.";
+            _advisorText.Text = v.AdvisorOffer is { } o ? $"{o.Name} offers advice on {o.Fields}. Hire in Thinkers (4)." : "Nobody tells us what goes wrong.";
             _advisorText.AddThemeColorOverride("font_color", UiKit.Muted);
         }
 
@@ -406,7 +406,7 @@ public partial class PlayGame
         {
             if (++shown > 7)
             {
-                _alertsBox.AddChild(UiKit.Label($"and {alerts.Count - 7} more: see Settlements (F1)", 13, UiKit.Muted));
+                _alertsBox.AddChild(UiKit.Label($"and {alerts.Count - 7} more: see Settlements (1)", 13, UiKit.Muted));
                 break;
             }
 

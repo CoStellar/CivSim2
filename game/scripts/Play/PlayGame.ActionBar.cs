@@ -7,12 +7,12 @@ namespace CivSim.Game.Play;
 
 /// <summary>
 /// The action bar at the bottom (like World of Warcraft): tabs for kinds of buildings and a row of slots. Click a slot or
-/// press its number key (1, 2, 3…, like a World of Warcraft bar), then click a green hex on the map.
+/// press its key on the row under the numbers (Q, W, E…), then click a green hex on the map.
 /// </summary>
 public partial class PlayGame
 {
     private static readonly string[] Tabs = ["Food", "Production", "Homes & stores", "Military", "Society"];
-    private static readonly Key[] SlotKeys = [Key.Key1, Key.Key2, Key.Key3, Key.Key4, Key.Key5, Key.Key6, Key.Key7, Key.Key8, Key.Key9, Key.Key0];
+    private static readonly Key[] SlotKeys = [Key.Q, Key.W, Key.E, Key.R, Key.T, Key.Y, Key.U, Key.I, Key.O, Key.P];
 
     private HBoxContainer _tabsBox = null!;
     private HBoxContainer _slotsBox = null!;
@@ -38,7 +38,7 @@ public partial class PlayGame
         for (int i = 0; i < WindowNames.Length; i++)
         {
             string name = WindowNames[i];
-            head.AddChild(UiKit.Button(name, () => OpenWindow(name), $"{name} (F{i + 1})"));
+            head.AddChild(UiKit.Button($"{i + 1} {name}", () => OpenWindow(name), $"{name} (key {i + 1})"));
         }
         _slotsBox = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
         _slotsBox.AddThemeConstantOverride("separation", 4);
@@ -134,7 +134,7 @@ public partial class PlayGame
             slot.AddChild(inner);
             if (i < SlotKeys.Length)
             {
-                Label key = UiKit.Label(i == 9 ? "0" : $"{i + 1}", 11, UiKit.Heading);
+                Label key = UiKit.Label(SlotKeys[i].ToString(), 11, UiKit.Heading);
                 key.Position = new Vector2(5, 2);
                 key.MouseFilter = Control.MouseFilterEnum.Ignore;
                 slot.AddChild(key);
@@ -158,7 +158,7 @@ public partial class PlayGame
         }
     }
 
-    // Keys 1…0 pick the slots of the open tab; Tab moves to the next tab. True when the key was used.
+    // Keys Q…P pick the slots of the open tab; Tab moves to the next tab. True when the key was used.
     private bool ActionKey(Key key)
     {
         if (key == Key.Tab)
