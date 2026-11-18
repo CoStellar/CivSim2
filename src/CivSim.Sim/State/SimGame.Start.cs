@@ -121,7 +121,7 @@ public sealed partial class SimGame
                 {
                     farm += Map.Fertility[c] / 10;
                     army += (Map.Relief[c] > 0 ? 3 : 0) + (Content.WalkCost[(Map.Biome[c] * 3) + Map.Relief[c]] > 100 ? 1 : 0);
-                    mat += (Map.Relief[c] > 0 ? 2 : 0) + (dep == stone || dep == clay || dep == flint ? 4 : 0) + (Content.Buildings[Content.Building("woodcutter").Id].Biomes[Map.Biome[c]] ? 1 : 0);
+                    mat += (Map.Relief[c] > 0 ? 2 : 0) + (dep == stone || dep == clay || dep == flint ? 4 : 0) + (Trees[c] == Forest ? 2 : Trees[c] == Grove ? 1 : 0);
                     safe += Map.GrowingSeason[c] / 10;
                 }
 

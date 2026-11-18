@@ -29,7 +29,7 @@ def b(key,name,tech,workers,price,secs,**kw):
     x={"key":key,"name":name,"tech":tech,"workers":workers,"price":price,"buildSeconds":secs}; x.update(kw); B.append(x)
 # Stone age
 b("gatherers_hut","Gatherers' hut","foraging",3,{"wood":15},12,biomes=["grassland","steppe","savanna","deciduous_forest","jungle","taiga","swamp","tundra"],produces={"food":4,"wood":1},bonusDeposit="wild_grain",bonusPercent=100,winterPercent=50,groups=["food"])
-b("woodcutter","Woodcutter","foraging",3,{"wood":15},12,biomes=FOREST,produces={"wood":4},groups=["tools"])
+b("woodcutter","Woodcutter","foraging",3,{"wood":15},12,biomes=FOREST,orTrees=True,produces={"wood":4},groups=["tools"])
 b("hut","Huts","dwellings",0,{"wood":20},10,housing=8,groups=["house"])
 b("storehouse","Storehouse","stockpiling",0,{"wood":30},20,storage=300,groups=["store"])
 b("hearth","Hearth","fire",0,{"wood":15,"stone":10},10,housing=3,groups=["house"])
@@ -224,6 +224,11 @@ d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of th
             {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
   "reach":25,"supply":{"food":40,"wood":60,"stone":30,"clay":20}}
 d["tripFoodPer10Hexes"]=0.5
+# Trees (Patryk, 2026-11-18 19:35: too little wood, too few trees): forests are full of trees; on open land groves grow in
+# clumps, groveChance percent of each biome's hexes. Woodcutters work groves too (at groveWoodPercent), gatherers pick up
+# their wood the same.
+d["trees"]={"comment":"Groves on open land, in clumps: groveChance percent of a biome's land hexes. A grove gives groveWoodPercent of a forest's wood to woodcutters and gatherers.",
+  "groveChance":{"grassland":50,"savanna":40,"steppe":25,"tundra":15,"swamp":50},"groveWoodPercent":60}
 # Works on hexes (decision of 2026-11-18): drawn hex by hex like roads, kept under whatever is built on the hex, removed only
 # by the player. Ditches and aqueducts run from water (fromWater: their longest reach). Palisades wound enemies standing on
 # them; walls stop enemies until broken (strength). Bridges come by themselves where a road crosses a river, after bridgeTech.

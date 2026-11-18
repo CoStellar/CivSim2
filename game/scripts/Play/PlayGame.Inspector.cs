@@ -478,6 +478,11 @@ public partial class PlayGame
             items.Add(new LineItem($"Deposit: {content.Deposits[w.Deposit[i] - 1].Name}", UiKit.Good, 14));
         }
 
+        if (w.Trees[i] == 1)
+        {
+            items.Add(new LineItem("A grove: woodcutters can work it (60% of a forest), gatherers find wood here", UiKit.Good, 14));
+        }
+
         WorksItems(sel, items);
     }
 

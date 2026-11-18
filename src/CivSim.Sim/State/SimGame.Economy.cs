@@ -238,7 +238,7 @@ public sealed partial class SimGame
             sum[Content.Food] += Content.ForageBiome[biome * 2];
             if (wood >= 0)
             {
-                sum[wood] += Content.ForageBiome[(biome * 2) + 1];
+                sum[wood] += WoodRichness(cell);
             }
 
             if (stone >= 0)

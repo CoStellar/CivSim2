@@ -305,6 +305,9 @@ public sealed class BuildingType
     /// <summary>Most of a good it can hold (stables: 16 horses each), hundredths per good; 0 = no limit of its own.</summary>
     public long[] GoodLimit { get; init; } = [];
 
+    /// <summary>It may also stand on a grove outside its biomes (woodcutters), giving the grove's share of wood.</summary>
+    public bool OrTrees { get; init; }
+
     /// <summary>Its people may cross the rivers next to it (raft landings).</summary>
     public bool Crossing { get; init; }
 
@@ -555,6 +558,15 @@ public sealed class SimContent
 
         return f;
     }
+
+    /// <summary>Share of each biome's land hexes with a grove, percent (open land; forests are all trees).</summary>
+    public int[] GroveChance { get; init; } = [];
+
+    /// <summary>Wood a grove gives woodcutters and gatherers, percent of a forest's.</summary>
+    public int GroveWoodPercent { get; init; } = 60;
+
+    /// <summary>Biomes that are forest (all trees).</summary>
+    public bool[] ForestBiomes { get; init; } = [];
 
     /// <summary>Works drawn on hexes, in data order (ditch, palisade, wall, aqueduct).</summary>
     public IReadOnlyList<WorkKind> Works { get; init; } = [];
@@ -916,6 +928,7 @@ public sealed class SimContent
                 GoodLimit = b.TryGetProperty("goodLimit", out JsonElement gl) ? Amounts(gl) : new long[goods.Count],
                 Warm = b.TryGetProperty("warm", out JsonElement wm) && wm.GetBoolean(),
                 Crossing = b.TryGetProperty("crossing", out JsonElement cr) && cr.GetBoolean(),
+                OrTrees = b.TryGetProperty("orTrees", out JsonElement ot) && ot.GetBoolean(),
                 SupportGroup = b.TryGetProperty("supportGroup", out JsonElement sgp) ? sgp.GetString() ?? "" : "",
                 SupportPercent = b.TryGetProperty("supportPercent", out JsonElement spc) ? spc.GetInt32() : 0,
                 HealsPerMinute = b.TryGetProperty("healsPerMinute", out JsonElement hpm) ? hpm.GetInt32() : 0,
@@ -1148,6 +1161,9 @@ public sealed class SimContent
             RoadTech = techKeys.IndexOf("roads"),
             RoadLevels = RoadLevelsOf(root, techKeys, Amounts),
             Works = WorksOf(root, techKeys, Amounts),
+            GroveChance = GroveChanceOf(root, world),
+            GroveWoodPercent = root.TryGetProperty("trees", out JsonElement tr) && tr.TryGetProperty("groveWoodPercent", out JsonElement gwp) ? gwp.GetInt32() : 60,
+            ForestBiomes = ForestOf(root, world),
             BridgeTech = root.TryGetProperty("works", out JsonElement wb) && wb.TryGetProperty("bridgeTech", out JsonElement bt) ? techKeys.IndexOf(bt.GetString()!) : -1,
             BridgePrice = root.TryGetProperty("works", out JsonElement wbp) && wbp.TryGetProperty("bridgePrice", out JsonElement bp2) ? Amounts(bp2) : new long[goods.Count],
             RoadReach = root.TryGetProperty("roads", out JsonElement rr) ? rr.GetProperty("reach").GetInt32() : 25,
@@ -1169,6 +1185,31 @@ public sealed class SimContent
                 root.GetProperty("war").GetProperty("defenderStrength").GetInt32(), root.GetProperty("war").GetProperty("captureBelowPeople").GetInt32(),
                 Hundredths(root.GetProperty("war").GetProperty("soldierFoodPerMinute")), root.GetProperty("war").GetProperty("surpriseReputation").GetInt32()),
         };
+    }
+
+    private static int[] GroveChanceOf(JsonElement root, GameContent world)
+    {
+        var chance = new int[world.Biomes.Count];
+        if (root.TryGetProperty("trees", out JsonElement trees) && trees.TryGetProperty("groveChance", out JsonElement gc))
+        {
+            foreach (JsonProperty p in gc.EnumerateObject())
+            {
+                chance[world.Biome(p.Name).Id] = p.Value.GetInt32();
+            }
+        }
+
+        return chance;
+    }
+
+    private static bool[] ForestOf(JsonElement root, GameContent world)
+    {
+        var forest = new bool[world.Biomes.Count];
+        foreach (JsonElement k in root.GetProperty("terrainCost").GetProperty("forestBiomes").EnumerateArray())
+        {
+            forest[world.Biome(k.GetString()!).Id] = true;
+        }
+
+        return forest;
     }
 
     private static List<WorkKind> WorksOf(JsonElement root, List<string> techKeys, Func<JsonElement, long[]> amounts)

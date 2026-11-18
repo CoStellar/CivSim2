@@ -707,7 +707,7 @@ public sealed class PlayHost : IDisposable
     {
         Civ civ = _game.Civs[client.Civ];
         MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, civ.Known, hideResources: _game.Picking, always: always,
-            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i), worksSeen: i => WorksFor(civ, i));
+            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i), worksSeen: i => WorksFor(civ, i), treesOf: i => civ.Known[i] ? _game.Trees[i] : (byte)0);
         (int x0, int y0, int w, int h) = _game.Map.Chunks.Bounds(chunk);
         for (int r = 0; r < h; r++)
         {

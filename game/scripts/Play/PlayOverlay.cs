@@ -355,6 +355,11 @@ public partial class PlayOverlay : Node2D
             for (int c = cx * ChunkSize; c < c1; c++)
             {
                 int i = w.Index(c, r);
+                if (w.Trees[i] == 1)
+                {
+                    h.Add((i * 8) + 7 + (w.Visibility[i] * 1000000));
+                }
+
                 if (w.Road[i] != 0 || w.Works[i] != 0)
                 {
                     h.Add((i * 4) + w.Road[i] + (w.Visibility[i] * 1000000));
@@ -417,6 +422,7 @@ public partial class PlayOverlay : Node2D
 
         int cx = chunk % ChunksX;
         int cy = chunk / ChunksX;
+        PaintGroves(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
         PaintWorks(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
         PaintRoads(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
         if (!_content2.TryGetValue(chunk, out ChunkContent? cc))
@@ -751,6 +757,43 @@ public partial class PlayOverlay : Node2D
                 if (linked == 0)
                 {
                     g.DrawCircle(c, level == 1 ? 4 : 6, RoadColor(level, grey));
+                }
+            }
+        }
+    }
+
+    // Groves on open land: a few small trees at the hex's corners, around the building places (forests have trees in their tiles).
+    private static readonly Vector2[] GroveSpots = [new(-19, -2), new(18, 3), new(-6, -17), new(8, 16), new(-12, 13), new(13, -14)];
+
+    private void PaintGroves(CanvasItem g, CivSim.Game.Net.ClientWorld w, int c0, int r0, int c1, int r1)
+    {
+        if (Detail == 0)
+        {
+            return;
+        }
+
+        for (int row = r0; row <= r1; row++)
+        {
+            for (int col = c0; col <= c1; col++)
+            {
+                int i = w.Index(col, row);
+                if (w.Trees[i] != 1 || w.Visibility[i] == MapChunkMessage.Unknown)
+                {
+                    continue;
+                }
+
+                bool grey = w.Visibility[i] == MapChunkMessage.Remembered;
+                Color crown = grey ? Grey(new Color(0.22f, 0.42f, 0.18f)) : new Color(0.22f, 0.42f, 0.18f);
+                Color dark = grey ? Grey(new Color(0.13f, 0.27f, 0.11f)) : new Color(0.13f, 0.27f, 0.11f);
+                Color trunk = grey ? Grey(new Color(0.36f, 0.25f, 0.14f)) : new Color(0.36f, 0.25f, 0.14f);
+                Vector2 c = HexLayout.Center(col, row);
+                int count = 3 + (int)((uint)(i * 2654435761u) % 4u);
+                for (int k = 0; k < count; k++)
+                {
+                    Vector2 p = c + GroveSpots[(k + i) % GroveSpots.Length];
+                    g.DrawRect(new Rect2(p + new Vector2(-1, 1), new Vector2(2, 4)), trunk);
+                    g.DrawColoredPolygon([p + new Vector2(0, -7), p + new Vector2(5, 2), p + new Vector2(-5, 2)], dark);
+                    g.DrawColoredPolygon([p + new Vector2(0, -6), p + new Vector2(4, 1), p + new Vector2(-4, 1)], crown);
                 }
             }
         }

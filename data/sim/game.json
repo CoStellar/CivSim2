@@ -571,6 +571,7 @@
         "jungle",
         "swamp"
       ],
+      "orTrees": true,
       "produces": {
         "wood": 4
       },
@@ -3060,5 +3061,16 @@
       "stone": 20,
       "wood": 10
     }
+  },
+  "trees": {
+    "comment": "Groves on open land, in clumps: groveChance percent of a biome's land hexes. A grove gives groveWoodPercent of a forest's wood to woodcutters and gatherers.",
+    "groveChance": {
+      "grassland": 50,
+      "savanna": 40,
+      "steppe": 25,
+      "tundra": 15,
+      "swamp": 50
+    },
+    "groveWoodPercent": 60
   }
 }

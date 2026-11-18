@@ -78,6 +78,7 @@ public sealed partial class SimGame
         BuildingAt = new int[Geo.CellCount];
         RoadAt = new byte[Geo.CellCount];
         InitWorks();
+        GrowTrees();
         Array.Fill(OwnerAt, (short)-1);
         Array.Fill(SettlementAt, -1);
         Array.Fill(BuildingAt, -1);

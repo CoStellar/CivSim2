@@ -23,6 +23,7 @@ public sealed class ClientWorld
         Visibility = new byte[n];
         Road = new byte[n];
         Works = new ushort[n];
+        Trees = new byte[n];
         Elevation = new byte[n];
         Temperature = new sbyte[n];
         Humidity = new byte[n];
@@ -107,6 +108,9 @@ public sealed class ClientWorld
     /// <summary>Works of each hex (bits: ditch, palisade, wall, aqueduct, watered, flowing; bridges of its own edges in bits 8–10).</summary>
     public ushort[] Works { get; }
 
+    /// <summary>Trees of each hex: 0 none, 1 a grove, 2 forest.</summary>
+    public byte[] Trees { get; }
+
     /// <summary>Owner civilization id or -1.</summary>
     public short[] Owner { get; }
 
@@ -158,6 +162,7 @@ public sealed class ClientWorld
                 Owner[i] = m.Owner[k];
                 Road[i] = m.Road is { } roads ? roads[k] : (byte)0;
                 Works[i] = m.Works is { } works ? works[k] : (ushort)0;
+                Trees[i] = m.Trees is { } trees ? trees[k] : (byte)0;
                 WildFood[i] = m.WildFood is { } wild ? wild[k] : (ushort)1000;
                 Influence[i] = m.Influence is { } inf ? inf[k] : (byte)0;
                 Seasonality[i] = m.Seasonality is { } sea ? sea[k] : (byte)0;

@@ -17,6 +17,13 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
   - budynek zajmuje 1 miejsce (domy, warsztaty, zielarz, szkoła), 2 miejsca (magazyny, stajnie, chaty zbieraczy, hale) albo cały heks (pola, kopalnie, kamieniołomy, porty, zamki);
   - środek osady zajmuje cały heks.
 - Teren (biom, wzgórza, góry, woda obok, złoże na heksie) decyduje, co można postawić.
+- **Drzewa** (Patryk, 2026-11-18 19:35: za mało drewna, za mało drzew):
+  - lasy są pełne drzew;
+  - na otwartym lądzie rosną kępy, skupiskami: 50% heksów łąki i bagien, 40% sawanny, 25% stepu, 15% tundry (`trees` w `game.json`);
+  - drwal może stanąć na kępie i daje tam 60% tego, co w lesie;
+  - zbieranie z okolicy liczy drewno kęp tak samo;
+  - kępy liczą się też do oceny miejsc startu.
+  - Wynik na 4 ziarnach: każdy lud ma w swojej ziemi co najmniej 6 heksów z drzewami (zwykle 10–30), a wartość drewna wynosi 24–72%. Wcześniej co czwarty lud nie miał żadnego drzewa (10%).
 - **Stany heksa** (rów, palisada, mur, akwedukt, most) leżą na heksie obok budynków i zostają pod nimi; usuwa je tylko gracz.
 
 ## Osada

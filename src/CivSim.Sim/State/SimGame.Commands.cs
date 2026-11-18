@@ -174,7 +174,7 @@ public sealed partial class SimGame
 
         bool anyBiome = Array.IndexOf(type.Biomes, true) >= 0;
         bool anyRelief = Array.IndexOf(type.Reliefs, true) >= 0;
-        if (anyBiome && !type.Biomes[Map.Biome[cell]])
+        if (anyBiome && !type.Biomes[Map.Biome[cell]] && !(type.OrTrees && Trees[cell] == Grove))
         {
             return false;
         }
@@ -359,6 +359,12 @@ public sealed partial class SimGame
         if (t.BonusReliefs.Length > 0 && t.BonusReliefs[Map.Relief[cell]])
         {
             yield += t.BonusReliefPercent;
+        }
+
+        // A woodcutter on a grove: a grove's share of a forest's wood.
+        if (t.OrTrees && Trees[cell] == Grove && !t.Biomes[Map.Biome[cell]])
+        {
+            yield = yield * Content.GroveWoodPercent / 100;
         }
 
         int sid = SettlementAt[cell] >= 0 && Settlements[SettlementAt[cell]].Civ == civ.Id ? SettlementAt[cell] : NearestOwn(civ, cell)!.Id;
