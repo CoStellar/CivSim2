@@ -148,6 +148,9 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
     /// <summary>Ships that carry armies.</summary>
     public bool CarriesArmies { get; init; }
 
+    /// <summary>People of armies a ship carries.</summary>
+    public int Carries { get; init; }
+
     /// <summary>Horses a caravan takes with it (they come back with it).</summary>
     public long HorsesPerCaravan { get; init; }
 
@@ -989,6 +992,7 @@ public sealed class SimContent
                 Upgrades = Upgrades(u),
                 AlsoTechs = TechList(u, "alsoTechs"),
                 CarriesArmies = u.TryGetProperty("carriesArmies", out JsonElement ca) && ca.GetBoolean(),
+                Carries = u.TryGetProperty("carries", out JsonElement cr2) ? cr2.GetInt32() : 0,
                 HorsesPerCaravan = u.TryGetProperty("horsesPerCaravan", out JsonElement hpc) ? Hundredths(hpc) : 0,
             });
         }

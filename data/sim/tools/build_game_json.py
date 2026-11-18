@@ -107,11 +107,11 @@ u("warriors","Warriors","flint_weapons",10,{"food":30,"wood":10},12,6,3,army=Tru
 u("archers","Archers","archery",8,{"food":30,"wood":25},15,6,4,army=True,strength=9,range=3,bonusRelief=["hills","mountains"],bonusPercent=40,groups=["ranged","infantry"])
 u("spearmen","Spearmen","bronze_weapons",10,{"food":40,"arms":5},18,6,3,army=True,strength=16,bonusRelief=["flat"],bonusPercent=20,groups=["melee","infantry"])
 u("horsemen","Horsemen","horseback_riding",6,{"food":40,"horses":6},20,3,5,army=True,strength=18,bonusRelief=["flat"],bonusPercent=40,groups=["cavalry"])
-u("transport","Transport ship","sailing",8,{"wood":80,"food":30},25,4,4,army=True,naval=True,strength=4,carriesArmies=True,needsBuilding="harbour",groups=["ship"])
+u("transport","Transport ship","sailing",8,{"wood":80,"food":30},25,4,4,army=True,naval=True,strength=4,carriesArmies=True,carries=20,needsBuilding="harbour",groups=["ship"])
 u("trade_ship","Trade ship","sailing",4,{},0,4,3,system=True,naval=True,cargoPerPerson=40,groups=["carriers","ship"])
 u("swordsmen","Swordsmen","iron_weapons",10,{"food":50,"arms":10},20,6,3,army=True,strength=24,groups=["melee","infantry"])
 u("catapult","Catapult","engineering",6,{"wood":100,"tools":20},30,9,3,army=True,strength=8,range=2,siege=300,needsBuilding="siege_workshop",groups=["siege"])
-u("warship","Warship","shipbuilding",12,{"wood":150,"arms":10},35,3,5,army=True,naval=True,strength=22,range=2,carriesArmies=True,needsBuilding="shipyard",groups=["ship"])
+u("warship","Warship","shipbuilding",12,{"wood":150,"arms":10},35,3,5,army=True,naval=True,strength=22,range=2,carriesArmies=True,carries=30,needsBuilding="shipyard",groups=["ship"])
 u("crossbowmen","Crossbowmen","crossbows",8,{"food":40,"arms":10},20,6,4,army=True,strength=20,range=2,groups=["ranged","infantry"])
 u("knights","Knights","chivalry",6,{"food":60,"arms":15,"horses":6},30,3,5,army=True,strength=40,bonusRelief=["flat"],bonusPercent=30,groups=["cavalry"])
 # Sight (decision of 2026-11-18: units saw too much): scouts, riders and ships 3, carriers 1, the rest 2.

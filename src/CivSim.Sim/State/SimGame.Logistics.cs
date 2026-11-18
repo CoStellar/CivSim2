@@ -356,6 +356,7 @@ public sealed partial class SimGame
         u.State = UnitState.Gone;
         Civs[u.Civ].Units.Remove(u.Id);
         Civs[u.Civ].Dirty = true;
+        Sink(u);
         if (u.Route >= 0 && Routes[u.Route].Caravan == u.Id)
         {
             Routes[u.Route].Caravan = -1;
@@ -548,6 +549,19 @@ public sealed partial class SimGame
     private void TradeCaravans(Civ a, Civ b, int giveGood, long giveAmount, int wantGood, long wantAmount)
     {
         (Settlement sa, Settlement sb) = ClosestPair(a, b);
+        if (!FindPath(sa.Center, sb.Center, _probe, false, a.Id) && SeaWay(a, b))
+        {
+            // No way on land: the goods go by trade ships between the harbours.
+            ShipGoods(a, b, giveGood, giveAmount);
+            ShipGoods(b, a, wantGood, wantAmount);
+            string sea = $"Trade ships set out: {giveAmount / SimContent.One} {Content.Goods[giveGood].Key} of {a.Name} for {wantAmount / SimContent.One} {Content.Goods[wantGood].Key} of {b.Name}.";
+            News.Add((a.Id, sea));
+            News.Add((b.Id, sea));
+            SyncTotals(a);
+            SyncTotals(b);
+            return;
+        }
+
         var load = new long[Content.Goods.Count];
         load[giveGood] = giveAmount;
         TakeFromCiv(a, sa, giveGood, giveAmount);

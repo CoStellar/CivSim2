@@ -411,6 +411,9 @@ public sealed class Unit
     /// <summary>Wounded soldiers carried with the unit: they do not fight; herbalists bring them back.</summary>
     public int Injured { get; set; }
 
+    /// <summary>Ship the unit is aboard (−1 = none): off the map until it lands.</summary>
+    public int Aboard { get; set; } = -1;
+
     /// <summary>Hex of an enemy wall the unit is breaking (−1 = none).</summary>
     public int TargetWall { get; set; } = -1;
 

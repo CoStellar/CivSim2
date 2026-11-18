@@ -382,6 +382,7 @@
       "naval": true,
       "strength": 4,
       "carriesArmies": true,
+      "carries": 20,
       "needsBuilding": "harbour",
       "groups": [
         "ship"
@@ -461,6 +462,7 @@
       "strength": 22,
       "range": 2,
       "carriesArmies": true,
+      "carries": 30,
       "needsBuilding": "shipyard",
       "groups": [
         "ship"

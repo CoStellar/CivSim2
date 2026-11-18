@@ -210,4 +210,62 @@ public sealed class WorksTests
         g.TestBridge(civ, from);
         Assert.True(g.Crossable(civ.Id, from, dir), "the bridge lets everyone cross");
     }
+
+    [Fact]
+    public void TransportsCarryArmiesAndTakeThemDownWhenSunk()
+    {
+        for (ulong seed = 1; seed < 20; seed++)
+        {
+            SimGame g = NewGame(seed);
+            Civ civ = g.Civs[0];
+            Settlement s = g.Settlements[civ.Settlements[0]];
+            var nb = new HexCoord[6];
+            int land = -1;
+            int water = -1;
+            foreach (int c in s.Cells)
+            {
+                if (Content.World.Biomes[g.Map.Biome[c]].IsWater)
+                {
+                    continue;
+                }
+
+                g.Geo.GetNeighbors(g.Geo.FromIndex(c), nb);
+                int w = nb.Select(g.Geo.Index).FirstOrDefault(n => Content.World.Biomes[g.Map.Biome[n]].IsWater, -1);
+                if (w >= 0)
+                {
+                    land = c;
+                    water = w;
+                    break;
+                }
+            }
+
+            if (land < 0)
+            {
+                continue;
+            }
+
+            UnitType transport = Content.Unit("transport");
+            var ship = new Unit { Id = g.Units.Count, Civ = civ.Id, Kind = transport.Id, People = transport.People, Cell = water, State = UnitState.Idle };
+            g.Units.Add(ship);
+            civ.Units.Add(ship.Id);
+            Assert.Null(g.Apply(new TrainCommand(civ.Id, s.Id, Content.Unit("warriors").Id)));
+            Run(g, Content.Unit("warriors").TrainTicks + 2);
+            Unit w2 = g.Units.Last(x => x.Kind == Content.Unit("warriors").Id);
+            g.Place(w2, land);
+            Assert.Null(g.Apply(new BoardCommand(civ.Id, w2.Id, ship.Id)));
+            Assert.Equal(ship.Id, w2.Aboard);
+            Assert.Equal(w2.People, g.Aboard(ship));
+            Assert.DoesNotContain(g.ActiveUnits(), x => x.Id == w2.Id);
+            Assert.Null(g.Apply(new LandCommand(civ.Id, ship.Id, land)));
+            Assert.Equal(-1, w2.Aboard);
+            Assert.Equal(land, w2.Cell);
+
+            Assert.Null(g.Apply(new BoardCommand(civ.Id, w2.Id, ship.Id)));
+            g.Destroyed(ship, g.Civs[1].Id);
+            Assert.Equal(UnitState.Gone, w2.State);
+            return;
+        }
+
+        throw new InvalidOperationException("no coast");
+    }
 }

@@ -398,6 +398,11 @@ public partial class PlayGame
             items.Add(new LineItem($"Carrying {load}", UiKit.Text, 14));
         }
 
+        if (t.Carries > 0)
+        {
+            items.Add(new LineItem(u.Aboard > 0 ? $"{u.Aboard} of {t.Carries} soldiers aboard: right click a land hex next to the ship to land them" : $"Carries up to {t.Carries} soldiers: right click this ship with a land unit next to it", UiKit.Muted, 13));
+        }
+
         if (u.Injured > 0)
         {
             items.Add(new LineItem($"{u.Injured} wounded: bring them to a settlement with herbalists", UiKit.Warn, 14));

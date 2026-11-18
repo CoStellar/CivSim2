@@ -71,6 +71,8 @@ public sealed partial class SimGame
             GatherCommand c => Gather(civ, c.Settlement, c.On),
             BuildWorkCommand c => BuildWork(civ, c.Cells, c.Work),
             SetFocusCommand c => SetFocus(civ, c.Building, c.Worker, c.Category),
+            BoardCommand c => Board(civ, c.Unit, c.Ship),
+            LandCommand c => Land(civ, c.Ship, c.Cell),
             RemoveWorkCommand c => RemoveWork(civ, c.Cell, c.Work),
             AttackWallCommand c => AttackWall(civ, c.Unit, c.Cell),
             FoundCommand c => Found(civ, c.Unit),

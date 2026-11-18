@@ -274,6 +274,8 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
         PlayCommandKind.BuildRoad => new BuildRoadCommand(civ, Cells(m.Cells) ?? [], m.A),
         PlayCommandKind.Gather => new GatherCommand(civ, m.A, m.Flag),
+        PlayCommandKind.Board => new BoardCommand(civ, m.A, m.B),
+        PlayCommandKind.Land => new LandCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         PlayCommandKind.SetFocus => new SetFocusCommand(civ, m.A, m.B, (uint)m.C < (uint)_game.Content.TechCategories.Length ? _game.Content.TechCategories[m.C] : ""),
         PlayCommandKind.BuildWork => new BuildWorkCommand(civ, Cells(m.Cells) ?? [], m.A),
         PlayCommandKind.RemoveWork => new RemoveWorkCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.A),
@@ -383,7 +385,7 @@ public sealed class PlayHost : IDisposable
         var units = new List<PlayUnitInfo>();
         foreach (UnitType u in content.Units)
         {
-            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range, u.System, u.NeedsBuilding));
+            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range, u.System, u.NeedsBuilding, u.Naval, u.Carries));
         }
 
         var techs = new List<PlayTechInfo>();
@@ -563,7 +565,7 @@ public sealed class PlayHost : IDisposable
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute)));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
-        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, u.Injured));
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard)));
 
     private static int TechSig(IReadOnlyList<PlayTechState> techs)
     {
@@ -805,7 +807,7 @@ public sealed class PlayHost : IDisposable
         var units = new List<PlayUnitView>();
         foreach (Unit u in ActiveAndTraining())
         {
-            if (u.State == UnitState.Gone || (u.Civ != civId && !_game.Sees(civ, u)))
+            if (u.State == UnitState.Gone || u.Aboard >= 0 || (u.Civ != civId && !_game.Sees(civ, u)))
             {
                 continue;
             }
@@ -818,7 +820,7 @@ public sealed class PlayHost : IDisposable
                 mine && u.State == UnitState.Moving ? Pairs(u.Path, u.PathIndex) : null,
                 mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
-                _game.Content.Units[u.Kind].System, mine ? u.Injured : 0));
+                _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),

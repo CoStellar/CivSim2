@@ -111,7 +111,7 @@ public sealed partial class SimGame
             foreach (int id in c.Units)
             {
                 Unit u = Units[id];
-                if (u.State is not (UnitState.Gone or UnitState.Training))
+                if (u.State is not (UnitState.Gone or UnitState.Training) && u.Aboard < 0)
                 {
                     yield return u;
                 }

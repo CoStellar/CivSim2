@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using CivSim.Game.Map;
@@ -142,6 +143,18 @@ public partial class PlayGame
                         (int col, int row) = path.Count == 1 ? path[0] : MouseCell() ?? (0, 0);
                         bool attack = IsArmy(unit) && EnemyAt(col, row);
                         bool wall = IsArmy(unit) && !attack && EnemyWallAt(col, row);
+                        if (!attack && ShipAt(col, row, unit) is int ship)
+                        {
+                            _session.Play(PlayCommandKind.Board, unit, b: ship); // aboard our ship there
+                            continue;
+                        }
+
+                        if (!attack && Carrying(unit))
+                        {
+                            _session.Play(PlayCommandKind.Land, unit, col, row); // the ship lands its soldiers there
+                            continue;
+                        }
+
                         _session.Play(attack ? PlayCommandKind.Attack : wall ? PlayCommandKind.AttackWall : PlayCommandKind.Move, unit, col, row, _hiddenWalk.Contains(unit));
                         _overlay.Flash(col, row, attack ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 1f, 1f));
                     }
@@ -248,4 +261,25 @@ public partial class PlayGame
         int i = w.Index(col, row);
         return (w.Works[i] & 4) != 0 && w.Owner[i] != v.Civ;
     }
+
+    // Our ship on the hex that can take this land unit aboard (null = none).
+    private int? ShipAt(int col, int row, int unit)
+    {
+        if (_session?.PlayView is not { } v || _session.PlayContent is not { } c)
+        {
+            return null;
+        }
+
+        PlayUnitView? me = v.Units.FirstOrDefault(x => x.Id == unit);
+        if (me is null || c.Units[me.Kind].Naval || c.Units[me.Kind].System)
+        {
+            return null;
+        }
+
+        PlayUnitView? ship = v.Units.FirstOrDefault(x => x.Civ == v.Civ && x.Col == col && x.Row == row && c.Units[x.Kind].Carries > 0);
+        return ship?.Id;
+    }
+
+    // A ship of ours with soldiers aboard.
+    private bool Carrying(int unit) => _session?.PlayView?.Units.FirstOrDefault(x => x.Id == unit) is { Aboard: > 0 };
 }

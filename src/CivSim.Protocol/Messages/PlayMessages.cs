@@ -41,7 +41,9 @@ public sealed record PlayUnitInfo(
     [property: Key(10)] int Strength = 0,
     [property: Key(11)] int Range = 1,
     [property: Key(12)] bool System = false,
-    [property: Key(13)] string NeedsBuilding = "");
+    [property: Key(13)] string NeedsBuilding = "",
+    [property: Key(14)] bool Naval = false,
+    [property: Key(15)] int Carries = 0);
 
 /// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
 [MessagePackObject]
@@ -62,7 +64,8 @@ public sealed record PlayUnitView(
     [property: Key(13)] int[]? Patrol = null,
     [property: Key(14)] bool Attack = false,
     [property: Key(15)] bool Carrier = false,
-    [property: Key(16)] int Injured = 0);
+    [property: Key(16)] int Injured = 0,
+    [property: Key(17)] int Aboard = 0);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -370,6 +373,12 @@ public enum PlayCommandKind
 
     /// <summary>Worker <c>B</c> of school (academy, university) <c>A</c> speeds research branch number <c>C</c> of the content's categories.</summary>
     SetFocus = 33,
+
+    /// <summary>Land unit <c>A</c> goes aboard ship <c>B</c> next to it.</summary>
+    Board = 34,
+
+    /// <summary>Ship <c>A</c> lands the units aboard on the hex at <c>Col</c>, <c>Row</c> next to it.</summary>
+    Land = 35,
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs), eating at the nearest settlement between rounds.</summary>
     Patrol = 27,

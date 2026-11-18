@@ -263,7 +263,7 @@ public sealed partial class SimGame
         }
 
         (Settlement sa, Settlement sb) = ClosestPair(a, b);
-        return FindPath(sa.Center, sb.Center, _probe, false, sa.Civ);
+        return FindPath(sa.Center, sb.Center, _probe, false, sa.Civ) || SeaWay(a, b);
     }
 
     private readonly List<int> _probe = [];
@@ -291,7 +291,7 @@ public sealed partial class SimGame
         Civ partner = Civs[other];
         if (!Reachable(civ, partner))
         {
-            return $"No way on land leads to {partner.Name}: caravans cannot reach them.";
+            return $"No way on land leads to {partner.Name}, and no sea way between our harbours: goods cannot reach them.";
         }
 
         if (!partner.IsAi)
