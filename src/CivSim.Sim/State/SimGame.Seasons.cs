@@ -62,8 +62,12 @@ public sealed partial class SimGame
         }
 
         long bonus = Content.ClothingBonusPercent * 10L;
+
+        // Warm (stone) homes: the share of people living in them loses only 35% in winter instead of 50%.
+        long warm = s.People == 0 ? 0 : Math.Min(1000, (long)s.WarmHomes * 1000 / s.People);
+        long winterBase = (Content.WinterWorkPercent * 10L) + ((1000 - (Content.WinterWorkPercent * 10L)) * 3 / 10 * warm / 1000);
         long work = IsWinter
-            ? Math.Min(Content.ClothingWinterMaxPercent * 10L, (Content.WinterWorkPercent * 10L) + (bonus * sets / 1000))
+            ? Math.Min(Content.ClothingWinterMaxPercent * 10L, winterBase + (bonus * sets / 1000))
             : 1000 + (bonus * Math.Min(sets, 1000) / 1000);
         work = Math.Max(work, 0);
         return (int)(work / StepPermille * StepPermille);

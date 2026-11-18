@@ -46,7 +46,7 @@ b("farm","Farm","agriculture",4,{"wood":30,"tools":5},20,biomes=["grassland","st
 b("potter","Potter","pottery",2,{"wood":20,"stone":10},20,consumes={"clay":2,"wood":1},produces={"pottery":1},groups=["craft"])
 b("granary","Granary","pottery",0,{"wood":30,"clay":30},25,storage=250,groups=["store"])
 b("pasture","Pasture","animal_husbandry",2,{"wood":30},20,biomes=["grassland","steppe","savanna","tundra"],produces={"food":4,"hides":2},bonusDeposit="cattle",bonusPercent=100,groups=["food"])
-b("stone_house","Stone houses","masonry",0,{"stone":40,"wood":10},25,housing=16,groups=["house"])
+b("stone_house","Stone houses","masonry",0,{"stone":40,"wood":10},25,housing=16,warm=True,groups=["house"])
 b("mason","Mason","masonry",3,{"wood":30,"tools":10},25,produces={},supportGroup="quarry",supportPercent=25,groups=["care"])
 b("weaver","Weaver","weaving",2,{"wood":30,"tools":5},25,consumes={"hides":1,"food":1},produces={"textiles":1},groups=["craft"])
 b("trading_post","Trading post","barter",2,{"wood":40,"pottery":10},30,storage=150,produces={},groups=["store","trade"])

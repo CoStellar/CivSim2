@@ -88,4 +88,37 @@ public sealed class LearningTests
         Assert.True(s.Rate[stone] > before, $"masons raise the quarries near them ({before} → {s.Rate[stone]})");
         _ = quarry;
     }
+
+    [Fact]
+    public void HorsesLiveOnlyInStablesAndBarterNeedsATradingPostPerAgreement()
+    {
+        (SimGame g, Civ civ, Settlement s) = NewGame();
+        int currency = Content.TechId("currency");
+        civ.KnownTech[currency] = false;
+        Assert.Equal(0, g.TradeRoom(civ));
+        civ.KnownTech[currency] = true;
+        Assert.Equal(int.MaxValue, g.TradeRoom(civ));
+
+        int horses = Content.GoodId("horses");
+        g.Recompute(civ);
+        Assert.Equal(0, s.Capacity[horses]);
+        BuildDone(g, civ, s, "stable");
+        g.Recompute(civ);
+        Assert.Equal(16 * SimContent.One, s.Capacity[horses]);
+    }
+
+    [Fact]
+    public void StoneHousesKeepTheirPeopleWarmerInWinter()
+    {
+        (SimGame g, Civ civ, Settlement s) = NewGame();
+        Run(g, g.TicksToSeasonChange + 1);
+        Assert.True(g.IsWinter);
+        int clothing = Content.GoodId("clothing");
+        s.Stock[clothing] = 0;
+        s.People = 32;
+        s.WarmHomes = 0;
+        Assert.Equal(500, g.WorkPermille(s));
+        s.WarmHomes = 32;
+        Assert.Equal(650, g.WorkPermille(s));
+    }
 }

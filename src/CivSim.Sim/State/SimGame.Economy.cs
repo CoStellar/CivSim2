@@ -24,6 +24,13 @@ public sealed partial class SimGame
             Settlement s = Settlements[sid];
             SettlementLevel level = Content.Levels[s.Level];
             s.Housing = level.Housing;
+            s.WarmHomes = 0;
+            if (s.LimitRoom.Length != goods)
+            {
+                s.LimitRoom = new long[goods];
+            }
+
+            Array.Clear(s.LimitRoom);
             Array.Clear(s.Rate);
             Array.Fill(s.Capacity, level.Storage);
             s.Idle = s.People;
@@ -38,7 +45,6 @@ public sealed partial class SimGame
                     s.EpidemicResist += w.ResistEpidemicPercent;
                 }
             }
-            s.WorkPermille = WorkPermille(s);
             people += s.People;
         }
 
@@ -57,7 +63,33 @@ public sealed partial class SimGame
                 {
                     s.Capacity[g] += room;
                 }
+
+                if (t.Warm)
+                {
+                    s.WarmHomes += t.Housing;
+                }
+
+                for (int g = 0; g < t.GoodLimit.Length; g++)
+                {
+                    s.LimitRoom[g] += t.GoodLimit[g];
+                }
             }
+        }
+
+        // Goods kept only in their own buildings (horses in stables): their room is what those buildings hold. Then the work of
+        // each settlement (winter, clothing and warm homes), known now that the homes are counted.
+        foreach (int sid in civ.Settlements)
+        {
+            Settlement s = Settlements[sid];
+            for (int g = 0; g < goods; g++)
+            {
+                if (Content.LimitedGoods[g])
+                {
+                    s.Capacity[g] = s.LimitRoom[g];
+                }
+            }
+
+            s.WorkPermille = WorkPermille(s);
         }
 
         // Jobs first: priority buildings, then the rest in build order.

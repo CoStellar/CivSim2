@@ -15,6 +15,7 @@ public sealed class DiplomacyTests
         foreach (Civ a in g.Civs)
         {
             a.KnownTech[Content.TechId("barter")] = true;
+            a.KnownTech[Content.TechId("currency")] = true; // no limit of one agreement per trading post
             foreach (Civ b in g.Civs)
             {
                 a.Known[g.Settlements[b.Settlements[0]].Center] = true;

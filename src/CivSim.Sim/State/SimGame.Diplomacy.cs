@@ -53,6 +53,34 @@ public sealed partial class SimGame
         return a != b && t[(a * Civs.Count) + b];
     }
 
+    /// <summary>
+    /// Trade agreements a people can keep: one per finished trading post, without limit once it knows Currency (barter is
+    /// limited at first, decision of 2026-11-18).
+    /// </summary>
+    public int TradeRoom(Civ civ)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        int currency = Content.Techs.Count;
+        for (int t = 0; t < Content.Techs.Count; t++)
+        {
+            currency = Content.Techs[t].Key == "currency" ? t : currency;
+        }
+
+        if (currency < Content.Techs.Count && civ.KnownTech[currency])
+        {
+            return int.MaxValue;
+        }
+
+        int posts = 0;
+        foreach (int id in civ.Buildings)
+        {
+            Building b = Buildings[id];
+            posts += b.State == BuildingState.Active && Array.IndexOf(Content.Buildings[b.Type].Groups, "trade") >= 0 ? 1 : 0;
+        }
+
+        return posts;
+    }
+
     /// <summary>Number of trade partners of a people.</summary>
     public int Partners(int civ)
     {
@@ -167,6 +195,11 @@ public sealed partial class SimGame
             return $"Trade agreements need {Content.Techs[Content.TradeTech].Name}.";
         }
 
+        if (kind == TreatyKind.Trade && Partners(civ.Id) >= TradeRoom(civ))
+        {
+            return $"Every trade agreement needs a trading post of ours (we have {TradeRoom(civ)}, used by {Partners(civ.Id)}).";
+        }
+
         long last = LastOffer(civ.Id, other);
         if (Ticks < last)
         {
@@ -191,6 +224,10 @@ public sealed partial class SimGame
 
         TreatyOffers.Remove(offer);
         string what = kind == TreatyKind.Trade ? "trade agreement" : "alliance";
+        if (accept && kind == TreatyKind.Trade && Partners(civ.Id) >= TradeRoom(civ))
+        {
+            return $"Every trade agreement needs a trading post of ours (we have {TradeRoom(civ)}).";
+        }
         if (!accept || AtWar(from, civ.Id))
         {
             Offers()[(from * Civs.Count) + civ.Id] = Ticks + Content.RefusalCooldownTicks;

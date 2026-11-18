@@ -296,6 +296,9 @@ public sealed class BuildingType
     /// <summary>Growth in its settlement, percent of people a minute added at full staff (bathhouses).</summary>
     public int GrowthBonus { get; init; }
 
+    /// <summary>Its homes are warm (stone houses): people living in them lose less work in winter.</summary>
+    public bool Warm { get; init; }
+
     /// <summary>Most of a good it can hold (stables: 16 horses each), hundredths per good; 0 = no limit of its own.</summary>
     public long[] GoodLimit { get; init; } = [];
 
@@ -530,6 +533,25 @@ public sealed class SimContent
 
     /// <summary>How far from our nearest settlement roads may be built, in hexes.</summary>
     public int RoadReach { get; init; } = 25;
+
+    /// <summary>Goods kept only in buildings that give room for them (horses: stables), per good.</summary>
+    public bool[] LimitedGoods => _limited ??= LimitedOf();
+
+    private bool[]? _limited;
+
+    private bool[] LimitedOf()
+    {
+        var f = new bool[Goods.Count];
+        foreach (BuildingType b in Buildings)
+        {
+            for (int g = 0; g < b.GoodLimit.Length; g++)
+            {
+                f[g] |= b.GoodLimit[g] > 0;
+            }
+        }
+
+        return f;
+    }
 
     /// <summary>Works drawn on hexes, in data order (ditch, palisade, wall, aqueduct).</summary>
     public IReadOnlyList<WorkKind> Works { get; init; } = [];
@@ -889,6 +911,7 @@ public sealed class SimContent
                 ResistEpidemicPercent = b.TryGetProperty("resistEpidemicPercent", out JsonElement rep) ? rep.GetInt32() : 0,
                 GrowthBonus = b.TryGetProperty("growthBonus", out JsonElement gb) ? gb.GetInt32() : 0,
                 GoodLimit = b.TryGetProperty("goodLimit", out JsonElement gl) ? Amounts(gl) : new long[goods.Count],
+                Warm = b.TryGetProperty("warm", out JsonElement wm) && wm.GetBoolean(),
                 Crossing = b.TryGetProperty("crossing", out JsonElement cr) && cr.GetBoolean(),
                 SupportGroup = b.TryGetProperty("supportGroup", out JsonElement sgp) ? sgp.GetString() ?? "" : "",
                 SupportPercent = b.TryGetProperty("supportPercent", out JsonElement spc) ? spc.GetInt32() : 0,

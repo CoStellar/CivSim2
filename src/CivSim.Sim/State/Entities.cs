@@ -100,6 +100,12 @@ public sealed class Settlement
     /// <summary>What a worker does now, per mille (winter and clothing), as last worked out.</summary>
     public int WorkPermille { get; set; } = 1000;
 
+    /// <summary>Homes in warm (stone) houses, worked out with the economy.</summary>
+    public int WarmHomes { get; set; }
+
+    /// <summary>Room for goods kept only in their own buildings (horses in stables), hundredths per good.</summary>
+    public long[] LimitRoom { get; set; } = [];
+
     /// <summary>An aqueduct brings water into its land.</summary>
     public bool Aqueduct { get; set; }
 

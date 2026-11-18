@@ -907,6 +907,7 @@
       },
       "buildSeconds": 25,
       "housing": 16,
+      "warm": true,
       "groups": [
         "house"
       ],
