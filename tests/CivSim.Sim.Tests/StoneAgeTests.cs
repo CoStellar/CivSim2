@@ -90,8 +90,16 @@ public sealed class StoneAgeTests
         int clothing = Content.GoodId("clothing");
         s.Stock[clothing] = 30 * SimContent.One;
         civ.Dirty = true;
+        Assert.False(g.IsWinter);
         Run(g, SimContent.TicksPerMinute);
-        Assert.True(s.Stock[clothing] < 30 * SimContent.One, "clothing wears out");
+        Assert.Equal(30 * SimContent.One, s.Stock[clothing]); // clothing.wearOnlyInWinter: no wear outside winter
+        while (!g.IsWinter)
+        {
+            Run(g, SimContent.TicksPerSecond);
+        }
+        long atWinter = s.Stock[clothing];
+        Run(g, SimContent.TicksPerMinute);
+        Assert.True(s.Stock[clothing] < atWinter, "clothing wears out in winter");
     }
 
     [Fact]

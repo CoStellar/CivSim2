@@ -359,4 +359,4 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
 | M6 | Złoża z ery, do której lud jeszcze nie doszedł, widać jako „???” (na mapie i w opisie heksa). Po wejściu w tę erę lud wie, co to jest, bez ponownego badania skał | `survey.eras` |
 | G2 | Osada pusta przez 60 s (nie ostatnia ludu) zmienia się w ruinę: ziemia jest niczyja, budynki stoją zrujnowane. Osadnicy na środku ruiny albo obok przejmują ją dla swojego ludu, a budynki wracają jako budowy za 50% ceny | `ruins.emptySeconds`, `ruins.rebuildPercent` |
 | G6 | Gdy osadzie brakuje towarów na awans, karawany z innych osad przywożą brakujące towary (najpierw z najbliższych). Awans kończy się, gdy wszystko dojedzie. Napad na taką karawanę odwołuje awans | — |
-| G5 | Przełącznik: ubrania zużywają się tylko zimą (domyślnie wyłączony, do decyzji) | `clothing.wearOnlyInWinter` |
+| G5 | Ubrania zużywają się tylko zimą, a krawiec robi 2 ubrania na pracownika na minutę (było 1) | `clothing.wearOnlyInWinter`, `tailor.produces` |
