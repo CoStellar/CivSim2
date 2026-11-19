@@ -160,6 +160,8 @@ public sealed partial class SimGame
             var civ = new Civ(c, name.Length > 0 ? name : $"People {c + 1}", content.Goods.Count)
             {
                 Known = new bool[map.Geometry.CellCount],
+                RockSeen = new byte[map.Geometry.CellCount],
+                SoilSeen = new bool[map.Geometry.CellCount],
                 Vision = new short[map.Geometry.CellCount],
                 SeenOwner = NoOwners(map.Geometry.CellCount),
                 SeenRoad = new byte[map.Geometry.CellCount],
@@ -293,6 +295,7 @@ public sealed partial class SimGame
         if (Ticks % SimContent.TicksPerSecond == 0)
         {
             RoadStep();
+            SurveyStep();
             SeasonStep();
             HealStep();
             PalisadeStep();

@@ -307,7 +307,7 @@ public partial class MapObjects : Node2D
 
                 Texture2D? icon = _art.Get("objects", "deposit_" + content.Deposits[d - 1].Key);
                 Vector2 at = HexLayout.Center(col, row) + new Vector2(-20, -2);
-                Color tint = w.DepositDepth[i] == 0 ? Colors.White : new Color(0.55f, 0.55f, 0.55f);
+                Color tint = Colors.White; // only known deposits are sent (survey, 2026-11-19)
                 if (icon is not null)
                 {
                     if (!p.Lines)

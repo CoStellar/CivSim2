@@ -276,6 +276,12 @@ public sealed class Civ
     /// <summary>Hexes this people has seen (fog of war).</summary>
     public bool[] Known { get; set; } = [];
 
+    /// <summary>Per hex: 1 + the era in which prospectors last looked at it (0 = never).</summary>
+    public byte[] RockSeen { get; set; } = [];
+
+    /// <summary>Per hex: surveyors have looked at its soil.</summary>
+    public bool[] SoilSeen { get; set; } = [];
+
     /// <summary>Map chunks whose hexes were explored, came into sight or went out of it since the server last looked (the
     /// server clears it).</summary>
     public HashSet<int> NewlyKnown { get; } = [];
@@ -479,6 +485,9 @@ public sealed class Unit
 
     /// <summary>Drawn patrol loop (empty = not patrolling).</summary>
     public List<int> Patrol { get; } = [];
+
+    /// <summary>Hex and era of its last survey (prospectors and surveyors look again only when these change).</summary>
+    public int SurveyedAt { get; set; } = -1;
 
     /// <summary>The last patrol loop it walked, kept after it stops, to walk it again.</summary>
     public List<int> LastPatrol { get; } = [];

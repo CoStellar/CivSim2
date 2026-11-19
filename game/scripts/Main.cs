@@ -232,6 +232,10 @@ public partial class Main : Node2D
             {
                 demo = [.. demo, (_playSeconds - 2, g => g.ScriptOpen("Research")), (_playSeconds - 1, g => g.ScriptHoverTech("pottery"))];
             }
+            else if (_playWindow == "Prospect")
+            {
+                demo = [(1.0, g => g.ScriptSpeed(SimulationSpeed.X4)), (1.5, g => g.ScriptSendKind("prospectors", 9, -3)), (_playSeconds - 1.5, g => g.ScriptZoom(0.9f))];
+            }
             else if (_playDemo && _playWindow == "Hex")
             {
                 demo = [.. demo, (_playSeconds - 1, g => g.ScriptSelectBusiestHex())];

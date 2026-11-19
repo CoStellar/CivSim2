@@ -172,6 +172,28 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Script step: sends the first own unit of a kind by an offset and selects it.</summary>
+    public void ScriptSendKind(string key, int dCol, int dRow)
+    {
+        if (_session?.PlayView is not { } v || _session.PlayContent is not { } c)
+        {
+            return;
+        }
+
+        PlayUnitView? u = v.Units.FirstOrDefault(x => x.Civ == v.Civ && c.Units[x.Kind].Key == key);
+        if (u is not null)
+        {
+            _session.Play(PlayCommandKind.Move, u.Id, u.Col + dCol, u.Row + dRow);
+            _unit = u.Id;
+            if (_overlay is not null)
+            {
+                _overlay.SelectedUnit = u.Id;
+            }
+
+            UpdateUi();
+        }
+    }
+
     /// <summary>Script step: lights a technology in the tree as if the mouse were on it.</summary>
     public void ScriptHoverTech(string key)
     {

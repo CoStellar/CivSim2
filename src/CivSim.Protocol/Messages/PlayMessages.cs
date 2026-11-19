@@ -44,7 +44,8 @@ public sealed record PlayUnitInfo(
     [property: Key(12)] bool System = false,
     [property: Key(13)] string NeedsBuilding = "",
     [property: Key(14)] bool Naval = false,
-    [property: Key(15)] int Carries = 0);
+    [property: Key(15)] int Carries = 0,
+    [property: Key(16)] int Survey = 0);
 
 /// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
 [MessagePackObject]
@@ -69,7 +70,8 @@ public sealed record PlayUnitView(
     [property: Key(17)] int Aboard = 0,
     [property: Key(18)] int Hunger = 0,
     [property: Key(19)] int Home = -1,
-    [property: Key(20)] int[]? LastPatrol = null);
+    [property: Key(20)] int[]? LastPatrol = null,
+    [property: Key(21)] int[]? Found = null);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]

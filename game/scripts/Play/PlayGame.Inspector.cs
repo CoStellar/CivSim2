@@ -512,6 +512,31 @@ public partial class PlayGame
             items.Add(new LineItem($"{u.Injured} wounded: bring them to a settlement with herbalists", UiKit.Warn, 14));
         }
 
+        // Prospectors and surveyors: they look at the land only while they stand; what they know around them is listed.
+        if (t.Survey > 0 && u.State != 0)
+        {
+            string what = t.Survey == 1 ? "the rock (stone, clay, flint, ores of our era)" : "the soil (fertility, wild grain, cattle, sheep)";
+            items.Add(new LineItem(u.State == 1 ? $"Standing: they look at {what} within 3 hexes" : $"Walking: they look at {what} only when they stand", u.State == 1 ? UiKit.Good : UiKit.Muted, 13));
+            if (u.Found is { Length: > 0 } found && _session?.Content is { } world)
+            {
+                items.Add(new SectionItem("Found around"));
+                var acts = new List<ActItem>();
+                for (int k = 0; k + 2 < found.Length; k += 3)
+                {
+                    int col = found[k + 1];
+                    int row = found[k + 2];
+                    int far = Math.Max(Math.Abs(col - u.Col), Math.Abs(row - u.Row));
+                    acts.Add(new ActItem($"{world.Deposits[found[k] - 1].Name} ({far})", () => Focus(col, row), "Show it on the map"));
+                }
+
+                items.Add(new ButtonsItem(acts));
+            }
+            else if (u.State == 1)
+            {
+                items.Add(new LineItem("Nothing of this kind around here.", UiKit.Muted, 13));
+            }
+        }
+
         // Rations: the home settlement feeds the unit once a minute, wherever it is.
         if (u.State != 0)
         {
@@ -610,9 +635,22 @@ public partial class PlayGame
         string relief = content.Reliefs[w.Relief[i]];
         string owner = w.Owner[i] < 0 ? "Nobody's land" : w.Owner[i] == _session.PlayView?.Civ ? "Our land" : "Land of another people";
         items.Add(new HeaderItem(biome, $"{relief} - {owner}", new Color("5f7f4a"), UiKit.Short(biome)));
-        if (w.Deposit[i] != 0 && w.DepositDepth[i] == 0)
+        // Only what we know of the ground (2026-11-19): beyond our land prospectors find the rock, surveyors the soil.
+        if (w.Deposit[i] != 0)
         {
             items.Add(new LineItem($"Deposit: {content.Deposits[w.Deposit[i] - 1].Name}", UiKit.Good, 14));
+        }
+
+        byte survey = w.Survey[i];
+        if (survey != 255)
+        {
+            bool rock = (survey & MapChunkMessage.RockLooked) != 0;
+            bool soil = (survey & MapChunkMessage.SoilKnown) != 0;
+            items.Add(new LineItem(soil ? $"Soil: fertility {w.Fertility[i]}" : "Soil not surveyed: surveyors find its fertility", soil ? UiKit.Text : UiKit.Muted, 13));
+            if (!rock)
+            {
+                items.Add(new LineItem("Rock not prospected in this era: prospectors find stone, clay, flint and ores", UiKit.Muted, 13));
+            }
         }
 
         if (w.Trees[i] == 1)

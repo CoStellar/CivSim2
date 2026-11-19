@@ -59,6 +59,10 @@ public static partial class SimAi
         }
 
         War(g, civ);
+        if (!lean && actions == 0)
+        {
+            Surveys(g, civ); // last: settlers and soldiers come first
+        }
     }
 
     private static int Key(SimGame g, string key)
@@ -120,7 +124,7 @@ public static partial class SimAi
                 }
 
                 int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (s.Idle * 2);
-                if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.Map.DepositDepth[cell] == 0)
+                if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.KnowsDeposit(civ, cell))
                 {
                     score += 20;
                 }
@@ -525,6 +529,66 @@ public static partial class SimAi
                 }
             }
         }
+    }
+
+    // Prospectors and surveyors (2026-11-19): one of each once known and the people has two settlements; each walks to ground around
+    // our settlements that it has not looked at yet, stands there (surveys), then goes on. Same rules as for the player.
+    private static void Surveys(SimGame g, Civ civ)
+    {
+        // Not before the people has spread a little: early on every person is needed at home.
+        if (g.Ticks < 10 * SimContent.TicksPerMinute || civ.Settlements.Count < 2 || civ.Hungry)
+        {
+            return;
+        }
+
+        foreach (UnitType t in g.Content.Units)
+        {
+            if (t.Survey == 0 || !SimGame.Knows(civ, t))
+            {
+                continue;
+            }
+
+            if (Own(g, civ, x => x.Id == t.Id) == 0 && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
+                && Own(g, civ, _ => true) == Own(g, civ, _ => true, includeTraining: false))
+            {
+                g.Apply(new TrainCommand(civ.Id, civ.Settlements[0], t.Id));
+            }
+
+            foreach (int id in civ.Units.ToArray())
+            {
+                Unit u = g.Units[id];
+                if (u.Kind != t.Id || u.State != UnitState.Idle || u.SurveyedAt != (u.Cell * 16) + civ.Era)
+                {
+                    continue; // still walking, or not yet looked around where it stands
+                }
+
+                // Targets come from a hash of the unit and the time, not from the AI's random stream, so surveys do not
+                // change the AI's other choices.
+                ulong z = ((ulong)g.Ticks * 0x9E3779B97F4A7C15UL) ^ ((ulong)(u.Id + 1) * 0xBF58476D1CE4E5B9UL);
+                Settlement home = g.Settlements[civ.Settlements[(int)(Mix(ref z) % (ulong)civ.Settlements.Count)]];
+                HexCoord c = g.Geo.FromIndex(home.Center);
+                for (int tries = 0; tries < 16; tries++)
+                {
+                    int dc = (int)(Mix(ref z) % 25) - 12;
+                    int dr = (int)(Mix(ref z) % 19) - 9;
+                    int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
+                    bool looked = t.Survey == 1 ? g.RockLookedAt(civ, cell) : g.KnowsSoil(civ, cell);
+                    if (civ.Known[cell] && !looked && g.OwnerAt[cell] < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater
+                        && g.Apply(new MoveCommand(civ.Id, u.Id, cell, false)) is null)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private static ulong Mix(ref ulong z)
+    {
+        z += 0x9E3779B97F4A7C15UL;
+        ulong x = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
+        x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+        return x ^ (x >> 31);
     }
 
     // Food a people makes a minute after everyone's rations (residents and units; the rate shows the rations per minute).

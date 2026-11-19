@@ -305,8 +305,18 @@ public sealed record MapChunkMessage(
     [property: Key(25)] byte[]? SeasonGrowth = null,
     [property: Key(26)] byte[]? Road = null,
     [property: Key(27)] ushort[]? Works = null,
-    [property: Key(28)] byte[]? Trees = null) : IProtocolMessage
+    [property: Key(28)] byte[]? Trees = null,
+    [property: Key(29)] byte[]? Survey = null) : IProtocolMessage
 {
+    /// <summary>Survey bit: prospectors have looked at the rock in the viewer's present era (or it is its own land).</summary>
+    public const byte RockLooked = 1;
+
+    /// <summary>Survey bit: the soil is known (fertility is real, not 0 for unknown).</summary>
+    public const byte SoilKnown = 2;
+
+    /// <summary>Survey bit: the deposit sent for the hex is known (a hex without one sends 0 either way).</summary>
+    public const byte DepositKnown = 4;
+
     /// <summary>Visibility: never seen.</summary>
     public const byte Unknown = 0;
 

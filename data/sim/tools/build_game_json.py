@@ -106,6 +106,9 @@ def u(key,name,tech,people,price,secs,perHex,sight,**kw):
     U.append(x)
 u("settlers","Settlers","migration",8,{"food":40,"wood":30},10,6,3,founds=True)
 u("scouts","Scouts","scouting",2,{"food":15},5,3,5,hiddenTicksPerHex=6)
+# Prospectors and surveyors (Patryk, 2026-11-19): beyond our land only they find what lies in the ground and how good the soil is.
+u("prospectors","Prospectors","stone_tools",2,{"food":15,"wood":5},8,4,3,survey="rock")
+u("surveyors","Surveyors","scouting",2,{"food":15},6,4,3,survey="soil")
 # Porters carry 5 in their hands; Carrying gives baskets (+15 each). Caravans (pack animals) come with Animal husbandry.
 u("porters","Porters","foraging",1,{},0,5,2,system=True,cargoPerPerson=5,groups=["carriers"])
 # Caravans need the wheel and horses (decision of 2026-11-18): each takes horsesPerCaravan horses, which come back with it.
@@ -125,7 +128,7 @@ u("warship","Warship","shipbuilding",12,{"wood":150,"arms":10},35,3,5,army=True,
 u("crossbowmen","Crossbowmen","crossbows",8,{"food":40,"arms":10},20,6,4,army=True,strength=20,range=2,groups=["ranged","infantry"])
 u("knights","Knights","chivalry",6,{"food":60,"arms":15,"horses":6},30,3,5,army=True,strength=40,bonusRelief=["flat"],bonusPercent=30,groups=["cavalry"])
 # Sight (decision of 2026-11-18: units saw too much): scouts, riders and ships 3, carriers 1, the rest 2.
-SIGHT={"scouts":3,"horsemen":3,"knights":3,"transport":3,"warship":3,"porters":1,"caravan":1,"trade_ship":2}
+SIGHT={"scouts":3,"prospectors":3,"surveyors":3,"horsemen":3,"knights":3,"transport":3,"warship":3,"porters":1,"caravan":1,"trade_ship":2}
 for x in U:
     x["sight"]=SIGHT.get(x["key"],2)
 d['units']=U
@@ -234,6 +237,9 @@ d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of th
             {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
   "reach":25,"supply":{"food":40,"wood":60,"stone":30,"clay":20}}
 d.pop("tripFoodPer10Hexes", None)
+d["survey"]={"comment":"What is known of the land (Patryk, 2026-11-19). On our own land everything is known. Beyond it, seeing a hex shows only the surface deposits; the rest is found by units that survey (units[].survey): standing still, they look at every hex within radius. rock: prospectors find stone, clay, flint and ores, each ore only from the era in eras (a people recognises an ore once it is in the era of the technology that works it, even before it knows the technology); ores not listed are never found in these eras. soil: surveyors find fertility and the deposits in soil.",
+  "radius":3,"surface":["game","fish","horses"],"soil":["wild_grain","cattle","sheep"],
+  "eras":{"flint":"stone_age","stone":"stone_age","clay":"stone_age","salt":"neolithic","copper":"neolithic","tin":"bronze_age","gold":"bronze_age","silver":"bronze_age","iron_ore":"iron_age","marble":"iron_age","saltpeter":"middle_ages"}}
 d['comment'] = d['comment'].replace("Food: every person eats foodPerPersonPerMinute;", "Food: every person eats foodPerPersonPerMinute, paid once a minute at the ration (see rations);").replace(" without food it loses starvePercentPerMinute.", " it does not grow while it has no food (deaths from hunger come at the rations; starvePercentPerMinute is not used).")
 # Rations (Patryk, 2026-11-19): no running cost of units, as in RTS games. Every minute each settlement feeds all its people:
 # its residents and the units that come from it. Short of food, the idle go hungry first, then the workers, the units last;

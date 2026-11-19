@@ -148,6 +148,9 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
     /// <summary>Ships that carry armies.</summary>
     public bool CarriesArmies { get; init; }
 
+    /// <summary>What it finds when it stands still: 0 nothing, 1 rock (prospectors), 2 soil (surveyors).</summary>
+    public int Survey { get; init; }
+
     /// <summary>People of armies a ship carries.</summary>
     public int Carries { get; init; }
 
@@ -588,6 +591,15 @@ public sealed class SimContent
     /// <summary>Wood a grove gives woodcutters and gatherers, percent of a forest's.</summary>
     public int GroveWoodPercent { get; init; } = 60;
 
+    /// <summary>Hexes around a standing prospector or surveyor that it looks at.</summary>
+    public int SurveyRadius { get; init; } = 3;
+
+    /// <summary>Per deposit id: 0 seen on the surface, 1 found by prospectors (rock), 2 by surveyors (soil).</summary>
+    public int[] DepositSurvey { get; init; } = [];
+
+    /// <summary>Per deposit id: the era from which a people recognises it (rock); int.MaxValue = not in these eras.</summary>
+    public int[] DepositEra { get; init; } = [];
+
     /// <summary>Biomes that are forest (all trees).</summary>
     public bool[] ForestBiomes { get; init; } = [];
 
@@ -677,6 +689,45 @@ public sealed class SimContent
     }
 
     /// <summary>Loads the rules from a data folder (default: the folder next to the program).</summary>
+    // Per deposit id: how it is found (see SimContent.DepositSurvey). Without a survey section everything is on the surface.
+    private static int[] SurveyKinds(GameContent world, JsonElement root)
+    {
+        int max = world.Deposits.Count == 0 ? 0 : world.Deposits.Max(d => d.Id);
+        var kinds = new int[max + 1];
+        if (!root.TryGetProperty("survey", out JsonElement sv))
+        {
+            return kinds;
+        }
+
+        var surface = sv.GetProperty("surface").EnumerateArray().Select(x => x.GetString()).ToHashSet();
+        var soil = sv.GetProperty("soil").EnumerateArray().Select(x => x.GetString()).ToHashSet();
+        foreach (DepositDefinition d in world.Deposits)
+        {
+            kinds[d.Id] = surface.Contains(d.Key) ? 0 : soil.Contains(d.Key) ? 2 : 1;
+        }
+
+        return kinds;
+    }
+
+    // Per deposit id: the era from which prospectors recognise it.
+    private static int[] SurveyEras(GameContent world, JsonElement root, List<SimEra> eras)
+    {
+        int max = world.Deposits.Count == 0 ? 0 : world.Deposits.Max(d => d.Id);
+        var at = new int[max + 1];
+        if (!root.TryGetProperty("survey", out JsonElement sv))
+        {
+            return at;
+        }
+
+        JsonElement byEra = sv.GetProperty("eras");
+        foreach (DepositDefinition d in world.Deposits)
+        {
+            at[d.Id] = byEra.TryGetProperty(d.Key, out JsonElement e) && eras.FindIndex(x => x.Key == e.GetString()) is int i && i >= 0 ? i : int.MaxValue;
+        }
+
+        return at;
+    }
+
     public static SimContent Load(string? directory = null)
     {
         directory ??= CivSim.Data.ContentLoader.DefaultDirectory;
@@ -1038,6 +1089,7 @@ public sealed class SimContent
                 Upgrades = Upgrades(u),
                 AlsoTechs = TechList(u, "alsoTechs"),
                 CarriesArmies = u.TryGetProperty("carriesArmies", out JsonElement ca) && ca.GetBoolean(),
+                Survey = u.TryGetProperty("survey", out JsonElement sv) ? sv.GetString() switch { "rock" => 1, "soil" => 2, _ => 0 } : 0,
                 Carries = u.TryGetProperty("carries", out JsonElement cr2) ? cr2.GetInt32() : 0,
                 HorsesPerCaravan = u.TryGetProperty("horsesPerCaravan", out JsonElement hpc) ? Hundredths(hpc) : 0,
             });
@@ -1206,6 +1258,9 @@ public sealed class SimContent
             Works = WorksOf(root, techKeys, Amounts),
             GroveChance = GroveChanceOf(root, world),
             GroveWoodPercent = root.TryGetProperty("trees", out JsonElement tr) && tr.TryGetProperty("groveWoodPercent", out JsonElement gwp) ? gwp.GetInt32() : 60,
+            SurveyRadius = root.TryGetProperty("survey", out JsonElement svy) ? svy.GetProperty("radius").GetInt32() : 3,
+            DepositSurvey = SurveyKinds(world, root),
+            DepositEra = SurveyEras(world, root, eras),
             ForestBiomes = ForestOf(root, world),
             BridgeTech = root.TryGetProperty("works", out JsonElement wb) && wb.TryGetProperty("bridgeTech", out JsonElement bt) ? techKeys.IndexOf(bt.GetString()!) : -1,
             BridgePrice = root.TryGetProperty("works", out JsonElement wbp) && wbp.TryGetProperty("bridgePrice", out JsonElement bp2) ? Amounts(bp2) : new long[goods.Count],

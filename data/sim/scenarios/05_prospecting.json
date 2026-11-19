@@ -1,0 +1,14 @@
+{
+  "name": "Prospecting",
+  "description": "Neolithic, the map known: prospectors and surveyors ready at home. Send them out and let them stand to find ores and good soil beyond our land.",
+  "seed": 3,
+  "peoples": 3,
+  "revealMap": true,
+  "civs": [
+    { "era": "neolithic", "level": "village", "people": 40, "stock": { "food": 300, "wood": 200, "stone": 100, "tools": 30 },
+      "buildings": { "gatherers_hut": 2, "woodcutter": 1, "hut": 3, "storehouse": 1 },
+      "units": { "prospectors": 2, "surveyors": 1, "scouts": 1 } },
+    { "era": "neolithic", "level": "village", "people": 40 },
+    { "era": "neolithic", "level": "village", "people": 40 }
+  ]
+}

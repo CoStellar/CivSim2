@@ -194,6 +194,33 @@
       "hiddenTicksPerHex": 6
     },
     {
+      "key": "prospectors",
+      "name": "Prospectors",
+      "tech": "stone_tools",
+      "people": 2,
+      "price": {
+        "food": 15,
+        "wood": 5
+      },
+      "trainSeconds": 8,
+      "ticksPerHex": 4,
+      "sight": 3,
+      "survey": "rock"
+    },
+    {
+      "key": "surveyors",
+      "name": "Surveyors",
+      "tech": "scouting",
+      "people": 2,
+      "price": {
+        "food": 15
+      },
+      "trainSeconds": 6,
+      "ticksPerHex": 4,
+      "sight": 3,
+      "survey": "soil"
+    },
+    {
       "key": "porters",
       "name": "Porters",
       "tech": "foraging",
@@ -3099,5 +3126,32 @@
     "blockFuzz": 3,
     "scoreRadius": 3,
     "roomRadius": 6
+  },
+  "survey": {
+    "comment": "What is known of the land (Patryk, 2026-11-19). On our own land everything is known. Beyond it, seeing a hex shows only the surface deposits; the rest is found by units that survey (units[].survey): standing still, they look at every hex within radius. rock: prospectors find stone, clay, flint and ores, each ore only from the era in eras (a people recognises an ore once it is in the era of the technology that works it, even before it knows the technology); ores not listed are never found in these eras. soil: surveyors find fertility and the deposits in soil.",
+    "radius": 3,
+    "surface": [
+      "game",
+      "fish",
+      "horses"
+    ],
+    "soil": [
+      "wild_grain",
+      "cattle",
+      "sheep"
+    ],
+    "eras": {
+      "flint": "stone_age",
+      "stone": "stone_age",
+      "clay": "stone_age",
+      "salt": "neolithic",
+      "copper": "neolithic",
+      "tin": "bronze_age",
+      "gold": "bronze_age",
+      "silver": "bronze_age",
+      "iron_ore": "iron_age",
+      "marble": "iron_age",
+      "saltpeter": "middle_ages"
+    }
   }
 }

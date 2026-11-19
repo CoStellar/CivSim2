@@ -24,6 +24,7 @@ public sealed class ClientWorld
         Road = new byte[n];
         Works = new ushort[n];
         Trees = new byte[n];
+        Survey = new byte[n];
         Elevation = new byte[n];
         Temperature = new sbyte[n];
         Humidity = new byte[n];
@@ -111,6 +112,9 @@ public sealed class ClientWorld
     /// <summary>Trees of each hex: 0 none, 1 a grove, 2 forest.</summary>
     public byte[] Trees { get; }
 
+    /// <summary>What we know of each hex's ground (MapChunkMessage.RockLooked, SoilKnown, DepositKnown); 255 when not sent.</summary>
+    public byte[] Survey { get; }
+
     /// <summary>Owner civilization id or -1.</summary>
     public short[] Owner { get; }
 
@@ -163,6 +167,7 @@ public sealed class ClientWorld
                 Road[i] = m.Road is { } roads ? roads[k] : (byte)0;
                 Works[i] = m.Works is { } works ? works[k] : (ushort)0;
                 Trees[i] = m.Trees is { } trees ? trees[k] : (byte)0;
+                Survey[i] = m.Survey is { } survey ? survey[k] : (byte)255;
                 WildFood[i] = m.WildFood is { } wild ? wild[k] : (ushort)1000;
                 Influence[i] = m.Influence is { } inf ? inf[k] : (byte)0;
                 Seasonality[i] = m.Seasonality is { } sea ? sea[k] : (byte)0;

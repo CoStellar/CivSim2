@@ -408,7 +408,7 @@ public sealed class PlayHost : IDisposable
         var units = new List<PlayUnitInfo>();
         foreach (UnitType u in content.Units)
         {
-            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range, u.System, u.NeedsBuilding, u.Naval, u.Carries));
+            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range, u.System, u.NeedsBuilding, u.Naval, u.Carries, u.Survey));
         }
 
         var techs = new List<PlayTechInfo>();
@@ -604,7 +604,7 @@ public sealed class PlayHost : IDisposable
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute, s.RationUnits, s.RationFood, s.RationShort, HashCode.Combine(s.RationDead, s.HungryPeople, s.HungryWorkers))));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
-        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home, Arr(u.LastPatrol))));
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home, Arr(u.LastPatrol), Arr(u.Found))));
 
     private static int TechSig(IReadOnlyList<PlayTechState> techs)
     {
@@ -690,7 +690,8 @@ public sealed class PlayHost : IDisposable
                 for (int c = 0; c < w; c++)
                 {
                     int i = _game.Geo.Index(new HexCoord(x0 + c, y0 + r));
-                    if (civ.Known[i] && !client.SentTerrain[i])
+                    // New ground, or something found in it (prospectors, surveyors, our land growing): the whole chunk again.
+                    if ((civ.Known[i] && !client.SentTerrain[i]) || (civ.Known[i] && SurveyFor(civ, i) != client.SentSurvey[i]))
                     {
                         terrain = true;
                         break;
@@ -742,11 +743,16 @@ public sealed class PlayHost : IDisposable
         }
     }
 
+    // What the people knows of a hex's ground: rock looked at in its era (1), soil known (2).
+    private byte SurveyFor(Civ civ, int i) => (byte)((_game.RockLookedAt(civ, i) ? MapChunkMessage.RockLooked : 0) | (_game.KnowsSoil(civ, i) ? MapChunkMessage.SoilKnown : 0)
+        | (_game.KnowsDeposit(civ, i) ? MapChunkMessage.DepositKnown : 0));
+
     private void SendChunk(PlayClient client, int chunk, bool always = false)
     {
         Civ civ = _game.Civs[client.Civ];
         MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, civ.Known, hideResources: _game.Picking, always: always,
-            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i), worksSeen: i => WorksFor(civ, i), treesOf: i => civ.Known[i] ? _game.Trees[i] : (byte)0);
+            visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i), worksSeen: i => WorksFor(civ, i), treesOf: i => civ.Known[i] ? _game.Trees[i] : (byte)0,
+            depositKnown: i => _game.KnowsDeposit(civ, i), surveyOf: i => SurveyFor(civ, i));
         (int x0, int y0, int w, int h) = _game.Map.Chunks.Bounds(chunk);
         for (int r = 0; r < h; r++)
         {
@@ -758,6 +764,7 @@ public sealed class PlayHost : IDisposable
                 client.SentOwner[i] = OwnerFor(civ, i);
                 client.SentRoad[i] = RoadFor(civ, i);
                 client.SentWorks[i] = WorksFor(civ, i);
+                client.SentSurvey[i] = SurveyFor(civ, i);
             }
         }
 
@@ -873,7 +880,8 @@ public sealed class PlayHost : IDisposable
                 mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
                 _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0,
-                mine ? u.Hunger : 0, mine ? u.Home : -1, mine && u.Patrol.Count == 0 && u.LastPatrol.Count > 0 ? Pairs(u.LastPatrol, 0) : null));
+                mine ? u.Hunger : 0, mine ? u.Home : -1, mine && u.Patrol.Count == 0 && u.LastPatrol.Count > 0 ? Pairs(u.LastPatrol, 0) : null,
+                mine && _game.Content.Units[u.Kind].Survey > 0 ? Found(u) : null));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
@@ -1111,6 +1119,21 @@ public sealed class PlayHost : IDisposable
         return list;
     }
 
+    // What a prospector or surveyor knows around it: deposit id, column, row for each.
+    private int[] Found(Unit u)
+    {
+        var list = new List<int>();
+        foreach ((int d, int cell) in _game.FoundAround(u))
+        {
+            HexCoord h = _game.Geo.FromIndex(cell);
+            list.Add(d);
+            list.Add(h.Col);
+            list.Add(h.Row);
+        }
+
+        return [.. list];
+    }
+
     private int[] TakenStarts()
     {
         var list = new List<int>();
@@ -1199,6 +1222,8 @@ public sealed class PlayHost : IDisposable
         public byte[] SentRoad { get; } = new byte[cells];
 
         public ushort[] SentWorks { get; } = new ushort[cells];
+
+        public byte[] SentSurvey { get; } = new byte[cells];
 
         // Signatures of the objects this client has, by id: only changes are sent.
         public Dictionary<int, int> SentBuildings { get; } = [];

@@ -241,6 +241,34 @@ tylko po działaniach.
   - machiny oblężnicze zadają 4× więcej obrażeń osadom (trebusz jeszcze +100%).
 - **Nowe dobra:** odzież, naczynia, tkaniny, uzbrojenie. Osada staje się miasteczkiem za naczynia i odzież, a miastem za tkaniny i naczynia.
 
+## Co wiemy o ziemi: poszukiwacze i mierniczy (decyzja Patryka z 2026-11-19)
+
+- **Na naszej ziemi** wiemy wszystko: złoża (rudy od ery, w której się je rozpoznaje) i żyzność. Gdy ziemia osady rośnie, nowe heksy też są znane.
+- **Poza naszą ziemią** samo zobaczenie heksa pokazuje teren i to, co widać gołym okiem: zwierzynę, ryby i dzikie konie (`survey.surface`). Reszty nie znamy, dopóki jej nie zbadamy.
+- **Trzy rodzaje zwiadowców:**
+
+| Jednostka | Technologia | Co znajduje |
+| --- | --- | --- |
+| Zwiadowcy | Scouting | teren, ludy, osady, wojsko (jak dotąd) |
+| Poszukiwacze (prospectors) | Stone tools | kamień, glina, krzemień i rudy |
+| Mierniczy (surveyors) | Scouting | żyzność ziemi, dzikie zboże, bydło, owce (`survey.soil`) |
+
+- **Badają tylko stojąc** i od razu cały krąg 3 heksów wokół siebie (`survey.radius`). Idąca jednostka nie bada nic. Ich wzrok to też 3 heksy.
+- **Rudy rozpoznaje się od ery technologii, która je wykorzystuje**, nawet zanim lud ją zna (`survey.eras`): miedź od neolitu, cynę, złoto i srebro od epoki brązu, żelazo i marmur od epoki żelaza, saletrę od średniowiecza. Węgla, ropy itp. w tych erach nie znajdzie się wcale. Heks zbadany we wcześniejszej erze trzeba zbadać jeszcze raz, żeby znaleźć rudy nowej ery.
+- **Znalezisko zostaje na zawsze** i od razu trafia na mapę ludu. Kronika podaje, co znaleziono.
+- **Budynki na złożach** (kopalnie, glinianki, premie za złoże) liczą tylko złoża, które lud zna. Przy okazji naprawiony błąd: kopalnie miedzi, cyny i żelaza nie dawały się zbudować, bo te rudy leżą płytko pod ziemią, a gra uznawała tylko złoża na powierzchni.
+- **Panel jednostki:**
+  - stojąca: „Standing: they look at … within 3 hexes”;
+  - idąca: „Walking: … only when they stand”;
+  - lista „Found around” z odległością; kliknięcie pokazuje miejsce na mapie.
+- **Panel heksa** poza naszą ziemią: „Soil not surveyed” albo żyzność, oraz „Rock not prospected in this era”.
+- **AI:** gdy ma dwie osady i po 10. minucie, trenuje po jednym poszukiwaczu i mierniczym. Wysyła je na niezbadaną ziemię w promieniu ok. 12 heksów od swoich osad. Cele losuje z własnego skrótu, nie ze strumienia losowego AI.
+- **Pomiar** (6 ziaren, 4 ludy, 40 minut): ludzi 1370 → ok. 960, wymarłych ludów 5 → 4.
+  - Taka sama zmiana bez nowych jednostek (zabranie 4 ludzi i 30 jedzenia stolicy w 10. minucie) daje 1079.
+  - Gra AI jest więc bardzo czuła na drobne zmiany, a ten spadek jest w granicach tego rozrzutu.
+  - Do strojenia AI potrzeba więcej ziaren (znany problem 23).
+- **Scenariusz testowy:** `05_prospecting`.
+
 ## Ulepszanie budynków na miejscu (decyzja Patryka z 2026-11-19)
 
 - Budynek przechodzi w swój lepszy rodzaj, gdy lud zna jego technologię (pole `upgradesTo` w danych):

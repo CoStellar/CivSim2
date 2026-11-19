@@ -173,7 +173,8 @@ public sealed partial class SimGame
     public bool TerrainAllows(int cell, BuildingType type, Civ? civ = null)
     {
         ArgumentNullException.ThrowIfNull(type);
-        if (type.OrDeposit != 0 && Map.Deposit[cell] == type.OrDeposit && Map.DepositDepth[cell] == 0)
+        // A deposit counts once the people knows it (on its own land: from the era that recognises it).
+        if (type.OrDeposit != 0 && Map.Deposit[cell] == type.OrDeposit && (civ is null ? Map.DepositDepth[cell] == 0 : KnowsDeposit(civ, cell)))
         {
             return true;
         }
@@ -365,7 +366,7 @@ public sealed partial class SimGame
     {
         int typeId = t.Id;
         int yield = 100;
-        if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && Map.DepositDepth[cell] == 0)
+        if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && KnowsDeposit(civ, cell))
         {
             yield += t.BonusPercent;
         }
