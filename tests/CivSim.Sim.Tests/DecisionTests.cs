@@ -59,4 +59,21 @@ public sealed class DecisionTests
         Assert.Equal(50 * SimContent.One, t.KeepAtSource);
         Assert.NotNull(g.Apply(new RouteCommand(civ.Id, home.Id, home.Id, wood, 20 * SimContent.One, null, 50 * SimContent.One)));
     }
+
+    [Fact]
+    public void ADepositOfALaterEraShowsAsUnknownUntilThatEra()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int iron = Content.World.Deposits.First(d => d.Key == "iron_ore").Id;
+        int cell = home.Cells.First(c => c != home.Center);
+        g.Map.Deposit.Set(cell, (ushort)iron);
+        civ.Era = 1;
+        Assert.True(g.DepositHidden(civ, cell));
+        Assert.False(g.KnowsDeposit(civ, cell));
+        civ.Era = Content.DepositEra[iron];
+        Assert.False(g.DepositHidden(civ, cell));
+        Assert.True(g.KnowsDeposit(civ, cell)); // learnt with the era, nobody had to look again (M6)
+    }
 }

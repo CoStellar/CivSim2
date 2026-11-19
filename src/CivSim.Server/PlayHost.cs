@@ -791,7 +791,7 @@ public sealed class PlayHost : IDisposable
 
     // What the people knows of a hex's ground: rock looked at in its era (1), soil known (2).
     private byte SurveyFor(Civ civ, int i) => (byte)((_game.RockLookedAt(civ, i) ? MapChunkMessage.RockLooked : 0) | (_game.KnowsSoil(civ, i) ? MapChunkMessage.SoilKnown : 0)
-        | (_game.KnowsDeposit(civ, i) ? MapChunkMessage.DepositKnown : 0));
+        | (_game.KnowsDeposit(civ, i) ? MapChunkMessage.DepositKnown : 0) | (_game.DepositHidden(civ, i) ? MapChunkMessage.DepositHidden : 0));
 
     private void SendChunk(PlayClient client, int chunk, bool always = false)
     {

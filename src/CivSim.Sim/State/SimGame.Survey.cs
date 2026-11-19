@@ -31,8 +31,25 @@ public sealed partial class SimGame
         {
             0 => true,
             2 => own || civ.SoilSeen[cell],
-            _ => (own ? civ.Era : civ.RockSeen[cell] - 1) >= era,
+            _ => (own || civ.RockSeen[cell] > 0) && civ.Era >= era, // M6 (2026-11-19): looked at once, learnt when the era comes
         };
+    }
+
+    /// <summary>
+    /// True when the people knows a deposit lies in the hex but not yet what it is (M6: an ore of a later era, shown as "???";
+    /// it becomes known when the people reaches that era).
+    /// </summary>
+    public bool DepositHidden(Civ civ, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        int d = Map.Deposit[cell];
+        if (d == 0 || !civ.Known[cell] || (d < Content.DepositSurvey.Length ? Content.DepositSurvey[d] : 0) != 1)
+        {
+            return false;
+        }
+
+        int era = d < Content.DepositEra.Length ? Content.DepositEra[d] : 0;
+        return (OwnerAt[cell] == civ.Id || civ.RockSeen[cell] > 0) && civ.Era < era && era != int.MaxValue;
     }
 
     /// <summary>True when the people knows how fertile the hex is.</summary>

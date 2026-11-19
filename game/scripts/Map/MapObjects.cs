@@ -300,6 +300,19 @@ public partial class MapObjects : Node2D
             {
                 int i = w.Index(col, row);
                 int d = w.Deposit[i];
+                if (d == 0 && w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0 && w.Visibility[i] != MapChunkMessage.Unknown && !Fogged(col, row))
+                {
+                    // M6 (2026-11-19): a deposit of a later era: we know it is there, not what it is.
+                    if (p.Lines)
+                    {
+                        Vector2 q = HexLayout.Center(col, row) + new Vector2(-20, -2);
+                        p.DrawRect(new Rect2(q + new Vector2(2, 4), new Vector2(22, 16)), new Color(0.2f, 0.18f, 0.15f, 0.85f));
+                        p.DrawString(ThemeDB.FallbackFont, q + new Vector2(3, 17), "???", HorizontalAlignment.Left, 22, 11, new Color(1f, 0.9f, 0.6f));
+                    }
+
+                    continue;
+                }
+
                 if (d == 0 || d > content.Deposits.Count || w.Visibility[i] == MapChunkMessage.Unknown || Fogged(col, row))
                 {
                     continue;

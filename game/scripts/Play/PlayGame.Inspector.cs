@@ -674,6 +674,10 @@ public partial class PlayGame
         {
             items.Add(new LineItem($"Deposit: {content.Deposits[w.Deposit[i] - 1].Name}", UiKit.Good, 14));
         }
+        else if (w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0)
+        {
+            items.Add(new LineItem("Deposit: ??? (an ore of a later era: we will know it when our people get there)", UiKit.Warn, 14));
+        }
 
         byte survey = w.Survey[i];
         if (survey != 255)
