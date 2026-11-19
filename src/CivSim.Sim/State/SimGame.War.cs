@@ -233,6 +233,7 @@ public sealed partial class SimGame
         }
 
         Settlements[sid].People += u.People;
+        Unwatch(u);
         u.State = UnitState.Gone;
         civ.Units.Remove(u.Id);
         civ.Dirty = true;
@@ -259,8 +260,8 @@ public sealed partial class SimGame
             }
         }
 
-        pct += Bonus(civ, EffectKind.Strength, t.Key, t.Groups); // weapons, armour, bows of each era
-        return (long)u.People * t.Strength * pct;
+        pct += Bonus(civ, EffectKind.Strength, t.Key, t.Groups); // drill of each era
+        return (long)u.People * t.Strength * pct * FedPercent(u) / 100 * WeaponPercent(u) / 100;
     }
 
     /// <summary>Defence of a settlement in percent from its finished fortifications.</summary>
@@ -281,65 +282,6 @@ public sealed partial class SimGame
         return pct;
     }
 
-    // Once a second: every soldier fights the enemy it was sent at, or any enemy within reach.
-    private void CombatStep()
-    {
-        foreach (Unit u in Units)
-        {
-            u.Fighting = false;
-        }
-
-        foreach (Settlement s in Settlements)
-        {
-            s.Besieged = false;
-        }
-
-        foreach (Unit u in Units)
-        {
-            if (u.State is UnitState.Gone or UnitState.Training || !Content.Units[u.Kind].Army)
-            {
-                continue;
-            }
-
-            int reach = Content.Units[u.Kind].Range;
-            Unit? enemy = u.TargetUnit >= 0 && Units[u.TargetUnit].State is UnitState.Idle or UnitState.Moving ? Units[u.TargetUnit] : null;
-            if (enemy is not null && Distance(u.Cell, enemy.Cell) > reach)
-            {
-                ChaseTarget(u);
-                enemy = null;
-            }
-
-            enemy ??= NearestEnemy(u, reach);
-            if (enemy is not null)
-            {
-                Hit(u, enemy);
-                continue;
-            }
-
-            if (u.TargetUnit >= 0 && Units[u.TargetUnit].State == UnitState.Gone)
-            {
-                u.TargetUnit = -1;
-            }
-
-            if (u.TargetSettlement >= 0)
-            {
-                Settlement target = Settlements[u.TargetSettlement];
-                if (target.Abandoned || target.Civ == u.Civ || !AtWar(u.Civ, target.Civ))
-                {
-                    u.TargetSettlement = -1;
-                }
-                else if (Distance(u.Cell, target.Center) <= reach)
-                {
-                    Siege(u, target);
-                }
-                else if (u.State == UnitState.Idle)
-                {
-                    ChaseTarget(u);
-                }
-            }
-        }
-    }
-
     // News about two peoples reaches them and everyone who has met one of them.
     private void NewsAbout(int a, int b, string text)
     {
@@ -354,22 +296,30 @@ public sealed partial class SimGame
 
     private int Distance(int a, int b) => Geo.Distance(Geo.FromIndex(a), Geo.FromIndex(b));
 
+    // The nearest enemy within reach (ties: the lowest id), found by looking at the hexes in reach only.
     private Unit? NearestEnemy(Unit u, int reach)
     {
         Unit? best = null;
         int bestD = int.MaxValue;
-        foreach (Unit other in Units)
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(reach)];
+        int n = Geo.Range(Geo.FromIndex(u.Cell), reach, area);
+        for (int k = 0; k < n; k++)
         {
-            if (other.Civ == u.Civ || other.State is UnitState.Gone or UnitState.Training || !AtWar(u.Civ, other.Civ))
+            int cell = Geo.Index(area[k]);
+            foreach (int id in UnitsAt(cell))
             {
-                continue;
-            }
+                Unit other = Units[id];
+                if (other.Civ == u.Civ || other.State is UnitState.Gone or UnitState.Training || !AtWar(u.Civ, other.Civ))
+                {
+                    continue;
+                }
 
-            int d = Distance(u.Cell, other.Cell);
-            if (d <= reach && d < bestD)
-            {
-                best = other;
-                bestD = d;
+                int d = Distance(u.Cell, other.Cell);
+                if (d < bestD || (d == bestD && best is not null && other.Id < best.Id))
+                {
+                    best = other;
+                    bestD = d;
+                }
             }
         }
 
@@ -378,25 +328,13 @@ public sealed partial class SimGame
 
     private long Luck(long damage) => damage * _combat.NextInt(Content.War.LowLuckPercent, Content.War.HighLuckPercent + 1) / 100;
 
-    // Damage is in hundredths of a person: power (people × strength × percent) / 10 000 people a second at strength 10.
-    private void Hit(Unit attacker, Unit defender)
+    // Of the fallen, a share is wounded, not dead: they stay with the unit until herbalists heal them (shares add up, so one
+    // fallen at a time still gives wounded).
+    private void Wound(Unit u, int fallen)
     {
-        attacker.Fighting = true;
-        defender.Fighting = true;
-        defender.Wounds += Luck(Power(attacker)) / 100;
-        int dead = (int)Math.Min(defender.People, defender.Wounds / SimContent.One);
-        if (dead <= 0)
-        {
-            return;
-        }
-
-        defender.Wounds -= dead * SimContent.One;
-        defender.People -= dead;
-        Scores()[(attacker.Civ * Civs.Count) + defender.Civ] += dead;
-        if (defender.People <= 0)
-        {
-            Destroyed(defender, attacker.Civ);
-        }
+        u.InjuredShare += fallen * Content.InjuredPercent;
+        u.Injured += u.InjuredShare / 100;
+        u.InjuredShare %= 100;
     }
 
     // A unit was wiped out by another people (carriers lose their load).
@@ -416,9 +354,12 @@ public sealed partial class SimGame
     {
         attacker.Fighting = true;
         target.Besieged = true;
+        Fought(attacker.Civ);
+        Fought(target.Civ);
         UnitType at = Content.Units[attacker.Kind];
         int siege = 100 + at.SiegePercent + (at.SiegePercent > 0 ? Bonus(Civs[attacker.Civ], EffectKind.Siege, at.Key, at.Groups) : 0);
-        target.Wounds += Luck(Power(attacker)) * siege / 100 / 100;
+        // Power is a second's damage; a step of battle is a part of a second.
+        target.Wounds += Luck(Power(attacker)) * siege / 100 / 100 * Content.Combat.StepTicks / SimContent.TicksPerSecond;
         int dead = (int)Math.Min(target.People, target.Wounds / SimContent.One);
         if (dead > 0)
         {
@@ -431,15 +372,17 @@ public sealed partial class SimGame
         // The defenders strike back, raised by the walls.
         long defenders = (long)target.People * Content.War.DefenderPercent / 100;
         long back = defenders * Content.War.DefenderStrength * Defense(target);
-        attacker.Wounds += Luck(back) / 100;
+        attacker.Wounds += Luck(back) / 100 * Content.Combat.StepTicks / SimContent.TicksPerSecond;
         int lost = (int)Math.Min(attacker.People, attacker.Wounds / SimContent.One);
         if (lost > 0)
         {
             attacker.Wounds -= lost * SimContent.One;
             attacker.People -= lost;
+            Wound(attacker, lost);
             Scores()[(target.Civ * Civs.Count) + attacker.Civ] += lost;
             if (attacker.People <= 0)
             {
+                Unwatch(attacker);
                 attacker.State = UnitState.Gone;
                 Civs[attacker.Civ].Units.Remove(attacker.Id);
                 News.Add((attacker.Civ, $"Our {Content.Units[attacker.Kind].Name.ToLowerInvariant()} fell before {target.Name}."));
@@ -478,7 +421,7 @@ public sealed partial class SimGame
         }
 
         Scores()[(winner.Id * Civs.Count) + loser.Id] += 50;
-        Reveal(winner, s.Center, Content.Levels[s.Level].Radius + 2);
+        Watch(s); // the loser stops seeing from it, the winner starts
         winner.Dirty = true;
         loser.Dirty = true;
         NewsAbout(winner.Id, loser.Id, $"{winner.Name} took {s.Name} from {loser.Name}.");
@@ -487,6 +430,7 @@ public sealed partial class SimGame
             loser.Dead = true;
             foreach (int uid in loser.Units)
             {
+                Unwatch(Units[uid]);
                 Units[uid].State = UnitState.Gone;
             }
 
@@ -496,6 +440,24 @@ public sealed partial class SimGame
     }
 
     // Walk toward the target until it is within reach.
+    // The wall of the target's people nearest to the unit, within a few hexes of the goal (−1 = none).
+    private int NearestEnemyWall(Unit u, int goal)
+    {
+        int best = -1;
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(7)];
+        int n = Geo.Range(Geo.FromIndex(goal), 7, area);
+        for (int k = 0; k < n; k++)
+        {
+            int c = Geo.Index(area[k]);
+            if (WalledAgainst(u.Civ, c) && (best < 0 || Distance(u.Cell, c) < Distance(u.Cell, best)))
+            {
+                best = c;
+            }
+        }
+
+        return best;
+    }
+
     private void ChaseTarget(Unit u)
     {
         int goal = u.TargetUnit >= 0 ? Units[u.TargetUnit].Cell : u.TargetSettlement >= 0 ? Settlements[u.TargetSettlement].Center : -1;
@@ -504,8 +466,14 @@ public sealed partial class SimGame
             return;
         }
 
-        if (!FindPath(u.Cell, goal, u.Path))
+        if (!FindPath(u.Cell, goal, u.Path, false, u.Civ))
         {
+            // Walled in: break the wall nearest to us on the way.
+            if (u.TargetSettlement >= 0 && NearestEnemyWall(u, goal) is int wall and >= 0)
+            {
+                AttackWall(Civs[u.Civ], u.Id, wall);
+            }
+
             return;
         }
 

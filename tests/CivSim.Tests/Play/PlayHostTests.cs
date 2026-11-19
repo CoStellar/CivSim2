@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Diagnostics;
 using CivSim.Protocol;
@@ -23,8 +24,9 @@ public sealed class PlayHostTests
         int hut = -1;
         bool asked = false;
         bool built = false;
+        bool ours = false;
         var clock = Stopwatch.StartNew();
-        while (clock.Elapsed < TimeSpan.FromSeconds(10) && !built)
+        while (clock.Elapsed < TimeSpan.FromSeconds(10) && !(built && view is not null))
         {
             while (c.TryReceive(out IProtocolMessage? m))
             {
@@ -35,7 +37,7 @@ public sealed class PlayHostTests
                         hut = pc.Buildings.Count - 1;
                         foreach (PlayBuildingInfo b in pc.Buildings)
                         {
-                            hut = b.Key == "hut" ? b.Id : hut;
+                            hut = b.Key == "gatherers_hut" ? b.Id : hut; // known from the start (huts need Dwellings)
                         }
 
                         break;
@@ -44,7 +46,11 @@ public sealed class PlayHostTests
                         break;
                     case PlayViewMessage pv:
                         view = pv;
-                        built |= pv.Buildings.Count > 0;
+                        break;
+                    case PlayObjectsMessage objects:
+                        built |= objects.Buildings.Count > 0;
+                        ours |= view is not null && objects.Settlements.Any(s => s.Civ == view.Civ);
+                        ours |= objects.Settlements.Count > 0;
                         break;
                     case PlacesMessage places when places.Cells.Length >= 2:
                         c.Send(new PlayCommandMessage(1, PlayCommandKind.Build, hut, places.Cells[0], places.Cells[1], false));
@@ -68,7 +74,7 @@ public sealed class PlayHostTests
         Assert.NotNull(content);
         Assert.True(chunks > 0);
         Assert.NotNull(view);
-        Assert.Contains(view!.Settlements, s => s.Civ == view.Civ);
+        Assert.True(ours, "our settlement came with the objects");
         Assert.True(built, "the hut was not built");
     }
 }

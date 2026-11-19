@@ -29,6 +29,8 @@ namespace CivSim.Protocol.Messages;
 [Union(20, typeof(PlacesMessage))]
 [Union(21, typeof(PlaySummaryRequestMessage))]
 [Union(22, typeof(PlaySummaryMessage))]
+[Union(23, typeof(PlayCellsMessage))]
+[Union(24, typeof(PlayObjectsMessage))]
 public interface IProtocolMessage
 {
 }
@@ -300,8 +302,21 @@ public sealed record MapChunkMessage(
     [property: Key(22)] byte[]? Seasonality = null,
     [property: Key(23)] byte[]? GrowingSeason = null,
     [property: Key(24)] sbyte[]? SeasonTemperature = null,
-    [property: Key(25)] byte[]? SeasonGrowth = null) : IProtocolMessage
+    [property: Key(25)] byte[]? SeasonGrowth = null,
+    [property: Key(26)] byte[]? Road = null,
+    [property: Key(27)] ushort[]? Works = null,
+    [property: Key(28)] byte[]? Trees = null,
+    [property: Key(29)] byte[]? Survey = null) : IProtocolMessage
 {
+    /// <summary>Survey bit: prospectors have looked at the rock in the viewer's present era (or it is its own land).</summary>
+    public const byte RockLooked = 1;
+
+    /// <summary>Survey bit: the soil is known (fertility is real, not 0 for unknown).</summary>
+    public const byte SoilKnown = 2;
+
+    /// <summary>Survey bit: the deposit sent for the hex is known (a hex without one sends 0 either way).</summary>
+    public const byte DepositKnown = 4;
+
     /// <summary>Visibility: never seen.</summary>
     public const byte Unknown = 0;
 

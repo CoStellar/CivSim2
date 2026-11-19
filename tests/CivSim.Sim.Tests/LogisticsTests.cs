@@ -13,7 +13,7 @@ public sealed class LogisticsTests
 
     private static SimGame NewGame()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         foreach (Civ c in g.Civs)
         {
             Settlement s = g.Settlements[c.Settlements[0]];
@@ -146,7 +146,8 @@ public sealed class LogisticsTests
         g.Apply(new BuildCommand(a.Id, cell, hut.Id));
         Building site = g.Buildings[g.BuildingAt[cell]];
         Unit porters = g.Units.Last(u => u.Kind == Content.Porters && u.Target == site.Id);
-        w.Cell = porters.Cell;
+        porters.People = 1; // one porter, so the warriors kill them before they reach the site
+        g.Place(w, porters.Cell);
         long[] before = (long[])sb.Stock.Clone();
         g.Apply(new AttackCommand(b.Id, w.Id, porters.Cell));
         for (int i = 0; i < 100 && porters.State != UnitState.Gone; i++)
@@ -156,6 +157,7 @@ public sealed class LogisticsTests
 
         Assert.Equal(UnitState.Gone, porters.State);
         Assert.True(g.Missing(site).Sum() > 0, "the lost materials are missing at the site");
+        w.Stance = Stance.Passive; // the raiders stand by and let the next porters pass
         Assert.Equal(0, site.Porters);
         int wood = Content.GoodId("wood");
         Assert.True(sb.Stock[wood] <= before[wood] + SimContent.One, "nobody takes the load");
@@ -211,14 +213,43 @@ public sealed class LogisticsTests
     }
 
     [Fact]
-    public void TheTreeHas45BaseTechnologiesAndEraUpgrades()
+    public void EveryEraHasEnoughTechnologiesBeyondTheBasicsAndItsUpgrades()
     {
-        Assert.Equal(45, Content.Techs.Count(t => !t.Upgrade));
         Assert.True(Content.Techs.Count(t => t.Upgrade) >= 10);
         foreach (SimEra era in Content.Eras)
         {
-            Assert.Equal(9, Content.Techs.Count(t => !t.Upgrade && t.Era == era.Id));
+            int counted = Content.Techs.Count(t => !t.Upgrade && !t.Basic && t.Era == era.Id);
+            Assert.True(counted >= Content.EraAdvanceTechs + 2, $"{era.Name} has {counted} technologies that count");
         }
+    }
+
+    [Fact]
+    public void BasicsDoNotCountTowardTheNextEra()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Assert.Equal(1, g.KnownIn(civ, 0)); // the six basics do not count, Flint weapons does
+        g.AdvanceEra(civ, tell: false);
+        Assert.Equal(0, civ.Era);
+    }
+
+    [Fact]
+    public void ATechnologyCanAskForAnotherKnownFirstAndForGoodsMade()
+    {
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Array.Fill(civ.KnownTech, true);
+        civ.Era = 1;
+        int barter = Content.TechId("barter");
+        int currency = Content.TechId("currency");
+        civ.KnownTech[barter] = false;
+        civ.KnownTech[currency] = false;
+        civ.Era = 2;
+        Assert.Contains("Barter first", g.CannotResearch(civ, currency));
+        civ.Experience[Content.TechId("pottery")] = 1000 * SimContent.TicksPerMinute;
+        Assert.Contains("pottery made", g.CannotResearch(civ, barter));
+        civ.Made[Content.GoodId("pottery")] = 30 * SimContent.One * SimContent.TicksPerMinute;
+        Assert.Null(g.CannotResearch(civ, barter));
     }
 
     [Fact]
@@ -231,7 +262,7 @@ public sealed class LogisticsTests
         g.Apply(new TrainCommand(civ.Id, s.Id, Content.Unit("warriors").Id));
         Unit u = g.Units[^1];
         long before = g.Power(u);
-        civ.KnownTech[Content.TechId("bronze_weapons")] = true;
+        civ.KnownTech[Content.TechId("bronze_age_arms")] = true;
         Assert.True(g.Power(u) > before);
     }
 
@@ -242,7 +273,7 @@ public sealed class LogisticsTests
         Civ civ = g.Civs[0];
         int agriculture = Content.TechId("agriculture");
         Assert.Contains("Opens in the", g.CannotResearch(civ, agriculture));
-        foreach (SimTech t in Content.Techs.Where(t => t.Era == 0).Take(Content.EraAdvanceTechs))
+        foreach (SimTech t in Content.Techs.Where(t => t.Era == 0 && !t.Basic).Take(Content.EraAdvanceTechs))
         {
             civ.KnownTech[t.Id] = true;
         }
@@ -264,9 +295,11 @@ public sealed class LogisticsTests
         }
 
         s.People = s.Housing + 40;
-        s.Stock[Content.Food] = 0;
-        for (int i = 0; i < 6 * SimContent.TicksPerSecond; i++)
+        s.Gathering = false;
+        civ.Dirty = true;
+        for (int i = 0; i < SimContent.TicksPerMinute + 1; i++)
         {
+            s.Stock[Content.Food] = 0; // through a ration: the people go hungry
             g.Tick();
         }
 

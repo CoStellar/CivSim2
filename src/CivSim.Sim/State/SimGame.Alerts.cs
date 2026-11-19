@@ -27,6 +27,12 @@ public enum AlertKind
 
     /// <summary>A construction stopped: its materials were lost on the way.</summary>
     MissingMaterials = 6,
+
+    /// <summary>Winter comes soon (or is here) and the settlement has less than one set of clothing per person.</summary>
+    Clothing = 7,
+
+    /// <summary>The settlement will not have the food for its units' next ration (or did not have it at the last one).</summary>
+    Rations = 8,
 }
 
 /// <summary>One alert. <see cref="Good"/> is −1 when it is not about a good; <see cref="Cell"/> is where to look.</summary>
@@ -52,9 +58,28 @@ public sealed partial class SimGame
                 list.Add(new Alert(AlertKind.EnemyNear, s.Id, s.Center, -1, $"Enemy soldiers near {s.Name}."));
             }
 
-            if (s.Hungry)
+            if (Content.Clothing >= 0 && (IsWinter || TicksToSeasonChange <= SimContent.TicksPerMinute) && s.People > 0
+                && s.Stock[Content.Clothing] < (long)s.People * SimContent.One)
             {
-                list.Add(new Alert(AlertKind.Hungry, s.Id, s.Center, Content.Food, $"{s.Name} goes hungry: bring food from another settlement or build food makers."));
+                string when = IsWinter ? "It is winter" : $"Winter comes in {TicksToSeasonChange / SimContent.TicksPerSecond} s";
+                list.Add(new Alert(AlertKind.Clothing, s.Id, s.Center, Content.Clothing,
+                    $"{when}: {s.Name} has {s.Stock[Content.Clothing] / SimContent.One} sets of clothing for {s.People} people; its workers will be slower."));
+            }
+
+            // The next ration: what it will have by then (its makers keep making) against what everyone eats.
+            (_, _, long ration) = RationOf(s);
+            long secs = TicksToRation(civ) / SimContent.TicksPerSecond;
+            long then = s.Stock[Content.Food] + ((s.Rate[Content.Food] + s.Eating) * secs / 60);
+            if (s.Hungry || s.RationShort > 0)
+            {
+                list.Add(new Alert(AlertKind.Hungry, s.Id, s.Center, Content.Food, s.HungerStreak >= 2
+                    ? $"{s.Name} starves: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" without food, some die at every ration (next in {secs} s)."
+                    : $"{s.Name} goes hungry: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" got no ration. Missing the next one in {secs} s kills some."));
+            }
+            else if (ration > 0 && then < ration)
+            {
+                list.Add(new Alert(AlertKind.Rations, s.Id, s.Center, Content.Food,
+                    $"{s.Name} will lack food for the next ration in {secs} s: {then / SimContent.One} of {ration / SimContent.One} needed. The idle go hungry first."));
             }
 
             long reported = 0;

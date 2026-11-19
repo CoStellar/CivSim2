@@ -1,0 +1,18 @@
+{
+  "name": "Battle 1: open field",
+  "description": "Two armies of warriors, equal arms (stone weapons, hide armour), face each other on a field 4 hexes apart. Our scouts stand ahead of our line. People 1 stands and holds (no AI). Test the combat mode, selecting, formations, stances, flanking, the zone of control and the strike on leaving.",
+  "seed": 7,
+  "peoples": 2,
+  "revealMap": true,
+  "wars": [[0, 1]],
+  "field": [0, 1],
+  "fieldGap": 5,
+  "civs": [
+    { "era": "neolithic", "level": "village", "people": 60, "unitPeople": 12, "weapon": 1, "armour": 1,
+      "stock": { "food": 400, "wood": 300, "stone": 200, "stone_weapons": 60, "hide_armour": 40 },
+      "units": { "scouts": 1, "warriors": 4, "hunters": 2 } },
+    { "era": "neolithic", "level": "village", "people": 60, "ai": false, "unitPeople": 12, "weapon": 1, "armour": 1,
+      "stock": { "food": 400, "wood": 300 },
+      "units": { "warriors": 4, "hunters": 1 } }
+  ]
+}

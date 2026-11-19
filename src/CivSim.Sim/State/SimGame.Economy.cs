@@ -1,4 +1,5 @@
 using System;
+using CivSim.Core.Map;
 using CivSim.Sim.Content;
 
 namespace CivSim.Sim.State;
@@ -16,15 +17,34 @@ public sealed partial class SimGame
         ArgumentNullException.ThrowIfNull(civ);
         int goods = Content.Goods.Count;
         Array.Clear(civ.ExperienceRate);
+        Array.Clear(civ.MadeRate);
         int people = 0;
         foreach (int sid in civ.Settlements)
         {
             Settlement s = Settlements[sid];
             SettlementLevel level = Content.Levels[s.Level];
             s.Housing = level.Housing;
+            s.WarmHomes = 0;
+            if (s.LimitRoom.Length != goods)
+            {
+                s.LimitRoom = new long[goods];
+            }
+
+            Array.Clear(s.LimitRoom);
             Array.Clear(s.Rate);
             Array.Fill(s.Capacity, level.Storage);
             s.Idle = s.People;
+            s.HealPerMinute = 0;
+            s.GrowthBonus = 0;
+            s.EpidemicResist = 0;
+            foreach (WorkKind w in Content.Works)
+            {
+                if (s.Aqueduct && w.GrowthBonus > 0)
+                {
+                    s.GrowthBonus += w.GrowthBonus;
+                    s.EpidemicResist += w.ResistEpidemicPercent;
+                }
+            }
             people += s.People;
         }
 
@@ -41,11 +61,38 @@ public sealed partial class SimGame
                 room += room * Bonus(civ, EffectKind.Storage, t.Key, t.Groups) / 100;
                 for (int g = 0; g < goods; g++)
                 {
-                    s.Capacity[g] += room;
+                    s.Capacity[g] += Content.HalfRoom(b.Type, g) ? room * 2 : room; // weapons in an armoury take half the room
+                }
+
+                if (t.Warm)
+                {
+                    s.WarmHomes += t.Housing;
+                }
+
+                for (int g = 0; g < t.GoodLimit.Length; g++)
+                {
+                    s.LimitRoom[g] += t.GoodLimit[g];
                 }
             }
         }
 
+        // Goods kept only in their own buildings (horses in stables): their room is what those buildings hold. Then the work of
+        // each settlement (winter, clothing and warm homes), known now that the homes are counted.
+        foreach (int sid in civ.Settlements)
+        {
+            Settlement s = Settlements[sid];
+            for (int g = 0; g < goods; g++)
+            {
+                if (Content.LimitedGoods[g])
+                {
+                    s.Capacity[g] = s.LimitRoom[g];
+                }
+            }
+
+            s.WorkPermille = WorkPermille(s);
+        }
+
+        // Jobs first: priority buildings, then the rest in build order.
         for (int pass = 0; pass < 2; pass++)
         {
             foreach (int id in civ.Buildings)
@@ -87,52 +134,155 @@ public sealed partial class SimGame
                 }
 
                 b.Full = anyOut && allFull;
-                if (b.Starved || b.Full)
-                {
-                    continue;
-                }
-
-                int boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups);
-                for (int g = 0; g < goods; g++)
-                {
-                    long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100;
-                    s.Rate[g] += made - (t.Consumes[g] * b.Workers);
-                }
-
                 civ.ExperienceRate[t.Tech] += b.Workers;
             }
         }
 
-        int eat = civ.Event >= 0 ? 100 + ((Content.Events[civ.Event].EatPercent - 100) * Harm(civ, Content.Events[civ.Event].Key) / 100) : 100;
+        // Then what they make: raised by technologies and support buildings, slowed by winter, helped by clothing.
+        GatherSupport(civ);
+        bool winter = IsWinter;
+        foreach (int id in civ.Buildings)
+        {
+            Building b = Buildings[id];
+            BuildingType t = Content.Buildings[b.Type];
+            if (b.Workers == 0 || b.Starved || b.Full)
+            {
+                continue;
+            }
+
+            Settlement s = Settlements[b.Settlement];
+            long boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups) + Support(s, t) + WaterBonus(b.Cell, t);
+            long work = s.WorkPermille * (winter ? t.WinterPercent : 100) / 100 * s.WorkersFedPermille / 1000;
+            for (int g = 0; g < goods; g++)
+            {
+                long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100 * work / 1000;
+                s.Rate[g] += made - (t.Consumes[g] * b.Workers);
+                civ.MadeRate[g] += made;
+            }
+        }
+
+        int eat = EatPercent(civ);
         int idleAll = 0;
         foreach (int sid in civ.Settlements)
         {
             Settlement s = Settlements[sid];
             idleAll += s.Idle;
-            s.Rate[Content.Food] += (s.Idle * Content.IdleForagePerMinute * EventProduction(civ, Content.Food) / 100) - (s.People * Content.FoodPerPersonPerMinute * eat / 100);
-        }
-
-        // Soldiers in the field and the advisor are fed from the first settlement (the capital).
-        long soldiers = 0;
-        foreach (int uid in civ.Units)
-        {
-            Unit u = Units[uid];
-            if (u.State != UnitState.Gone && Content.Units[u.Kind].Army)
+            if (s.Gathering && s.Idle > 0)
             {
-                soldiers += u.People;
+                int[] rich = Richness(s);
+                long work = s.WorkPermille * (IsWinter ? 50 : 100) / 100 * s.IdleFedPermille / 1000; // gathering suffers in winter like the gatherers' huts
+                for (int g = 0; g < goods; g++)
+                {
+                    long got = s.Idle * Content.ForagePerMinute[g] * rich[g] / 100 * EventProduction(civ, g) / 100 * work / 1000;
+                    s.Rate[g] += got;
+                    civ.MadeRate[g] += got;
+                }
+            }
+
+            // Everyone it feeds, residents and its units, eats once a minute at the ration (SimGame.Rations); the rate shows it per minute.
+            s.Eating = ((s.People + UnitPeopleOf(civ, s)) * Content.FoodPerPersonPerMinute * eat / 100) + (s.Id == civ.Settlements[0] && civ.Advisor is not null ? Content.AdvisorUpkeep : 0);
+            s.Rate[Content.Food] -= s.Eating;
+            if (Content.Clothing >= 0 && s.Stock[Content.Clothing] >= SimContent.One)
+            {
+                s.Rate[Content.Clothing] -= s.People * Content.ClothingWearPerPersonPerMinute;
             }
         }
 
-        if (civ.Settlements.Count > 0)
-        {
-            Settlement capital = Settlements[civ.Settlements[0]];
-            capital.Rate[Content.Food] -= (soldiers * Content.War.SoldierFoodPerMinute) + (civ.Advisor is null ? 0 : Content.AdvisorUpkeep);
-        }
 
-        civ.ExperienceRate[0] += idleAll / 2; // idle people forage: a little experience in the oldest craft
+        civ.ExperienceRate[0] += idleAll / 2; // gatherers around the settlements: a little experience in the oldest craft
         civ.People = people;
         civ.Dirty = false;
         SyncTotals(civ);
+    }
+
+    /// <summary>
+    /// Richness of a settlement's land for gatherers, percent per good: the mean over its land hexes of what each hex gives
+    /// (food and wood by biome, stone by relief, more on deposits and by rivers). Worked out again only when its land changes.
+    /// </summary>
+    public int[] Richness(Settlement s)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        if (s.ForageCells == s.Cells.Count && s.ForageRichness.Length == Content.Goods.Count)
+        {
+            return s.ForageRichness;
+        }
+
+        int goods = Content.Goods.Count;
+        var sum = new long[goods];
+        int land = 0;
+        int wood = Content.Goods.Count > 1 ? GoodId("wood") : -1;
+        int stone = GoodId("stone");
+        foreach (int cell in s.Cells)
+        {
+            int biome = Map.Biome[cell];
+            if (Content.World.Biomes[biome].IsWater)
+            {
+                continue;
+            }
+
+            land++;
+            sum[Content.Food] += Content.ForageBiome[biome * 2];
+            if (wood >= 0)
+            {
+                sum[wood] += WoodRichness(cell);
+            }
+
+            if (stone >= 0)
+            {
+                sum[stone] += Content.ForageRelief[Map.Relief[cell]];
+            }
+
+            int dep = Map.DepositDepth[cell] == 0 ? Map.Deposit[cell] : 0;
+            if (dep > 0)
+            {
+                for (int g = 0; g < goods; g++)
+                {
+                    sum[g] += Content.ForageDeposit[(dep * goods) + g];
+                }
+            }
+
+            if (Content.ForageRiverFood > 0 && ByRiver(cell))
+            {
+                sum[Content.Food] += Content.ForageRiverFood;
+            }
+        }
+
+        var rich = new int[goods];
+        for (int g = 0; g < goods; g++)
+        {
+            rich[g] = land == 0 ? 0 : (int)Math.Min(200, sum[g] / land);
+        }
+
+        s.ForageRichness = rich;
+        s.ForageCells = s.Cells.Count;
+        return rich;
+    }
+
+    private bool ByRiver(int cell)
+    {
+        HexCoord c = Geo.FromIndex(cell);
+        for (int d = 0; d < 6; d++)
+        {
+            if (Map.River[Geo.EdgeIndex(Geo.Edge(c, (HexDirection)d))] > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int GoodId(string key)
+    {
+        for (int g = 0; g < Content.Goods.Count; g++)
+        {
+            if (Content.Goods[g].Key == key)
+            {
+                return g;
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>Refreshes the people's totals (sum of its settlements) shown on the resource bar and used by the AI.</summary>
@@ -177,6 +327,11 @@ public sealed partial class SimGame
             civ.Experience[t] += (long)civ.ExperienceRate[t] * Content.EconomyEveryTicks;
         }
 
+        for (int g = 0; g < civ.MadeRate.Length; g++)
+        {
+            civ.Made[g] += civ.MadeRate[g] * Content.EconomyEveryTicks;
+        }
+
         bool changed = false;
         foreach (int sid in civ.Settlements)
         {
@@ -185,7 +340,8 @@ public sealed partial class SimGame
             long full = 0;
             for (int g = 0; g < s.Stock.Length; g++)
             {
-                long delta = (s.Rate[g] * Content.EconomyEveryTicks) + s.Remainder[g];
+                long perMinute = g == Content.Food ? s.Rate[g] + s.Eating : s.Rate[g]; // food is eaten at the ration, not by the tick
+                long delta = (perMinute * Content.EconomyEveryTicks) + s.Remainder[g];
                 long whole = delta / SimContent.TicksPerMinute;
                 s.Remainder[g] = delta - (whole * SimContent.TicksPerMinute);
                 long stock = s.Stock[g] + whole;
@@ -213,14 +369,7 @@ public sealed partial class SimGame
                 }
             }
 
-            bool hungry = (empty & (1L << Content.Food)) != 0 && s.Rate[Content.Food] < 0;
-            if (hungry && !s.Hungry)
-            {
-                News.Add((civ.Id, $"{s.Name} has run out of food: people are starving."));
-            }
-
-            s.Hungry = hungry;
-            if (empty != s.EmptyMask || full != s.FullMask)
+            if (empty != s.EmptyMask || full != s.FullMask || WorkChanged(s))
             {
                 s.EmptyMask = empty;
                 s.FullMask = full;
@@ -251,19 +400,24 @@ public sealed partial class SimGame
 
             long perMinute; // hundredths of a person
             int sick = civ.Event >= 0 ? Content.Events[civ.Event].LosePercentPerMinute * Harm(civ, Content.Events[civ.Event].Key) / 100 : 0;
+            if (sick > 0 && Content.Events[civ.Event].Key == "epidemic")
+            {
+                sick = sick * Math.Max(0, 100 - s.EpidemicResist) / 100;
+            }
             if (sick > 0)
             {
                 perMinute = -Math.Max(SimContent.One, s.People * sick);
                 s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
             }
-            else if (s.Hungry)
+            else if (s.Stock[Content.Food] < SimContent.One)
             {
-                perMinute = -Math.Max(SimContent.One, s.People * Content.StarvePercentPerMinute);
+                // No growth without food; deaths from hunger come at the rations (SimGame.Rations).
                 s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
+                continue;
             }
             else if (s.People < s.Housing)
             {
-                perMinute = Math.Max(Content.MinGrowthPerMinute * SimContent.One, s.People * (Content.GrowthPercentPerMinute + Bonus(civ, EffectKind.Growth, "*")));
+                perMinute = Math.Max(Content.MinGrowthPerMinute * SimContent.One, s.People * (Content.GrowthPercentPerMinute + Bonus(civ, EffectKind.Growth, "*") + s.GrowthBonus));
             }
             else
             {

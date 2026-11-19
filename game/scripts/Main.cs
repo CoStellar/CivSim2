@@ -36,6 +36,7 @@ public partial class Main : Node2D
     private ClientSession? _session;
     private Play.PlayGame? _play;
     private bool _playArgs;
+    private string? _playScenario;
     private string? _playScreenshot;
     private double _playSeconds = 6;
     private bool _playDemo;
@@ -156,6 +157,10 @@ public partial class Main : Node2D
                 case "--play-long":
                     _playLong = true;
                     break;
+                case "--play-scenario":
+                    _playScenario = next;
+                    _playArgs = true;
+                    break;
                 case "--play-demo":
                     _playDemo = true;
                     break;
@@ -185,23 +190,74 @@ public partial class Main : Node2D
     }
 
     // The new game (ADR 0028): replaces the legacy viewer while it runs.
-    private void StartPlay(string seedText, int goal = 1)
+    private void StartPlay(string seedText, int goal = 1, string? scenario = null)
     {
         StopGame();
         _menu?.QueueFree();
         _menu = null;
         ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
-        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal);
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal, scenario: scenario ?? _playScenario);
         if (_playScreenshot is not null)
         {
             // --play-demo builds a few things on the way, to check the screen without clicking.
             (double, Action<Play.PlayGame>)[] demo = _playDemo
-                ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("woodcutter", 0)),
-                   (1.9, g => g.ScriptBuildNearCentre("hut", 2)), (2.1, g => g.ScriptBuildNearCentre("hunters_lodge", 1)),
-                   (2.3, g => g.ScriptTrain("scouts")), (9, g => g.ScriptMoveFirst(-8, -6, false)),
-                   (10, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
+                ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("gatherers_hut", 0)),
+                   (1.9, g => g.ScriptBuildNearCentre("woodcutter", 0)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X4)),
+                   (8, g => g.ScriptResearch("dwellings")), (12, g => g.ScriptResearch("scouting")),
+                   (12.5, g => g.ScriptBuildNearCentre("hut", 2)), (12.7, g => g.ScriptBuildNearCentre("hut", 2)), (12.9, g => g.ScriptBuildNearCentre("hut", 2)),
+                   (16, g => g.ScriptTrain("scouts")), (18, g => g.ScriptMoveFirst(-8, -6, false)),
+                   (19, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
                 : [];
-            if (_playDemo && _playWindow == "Place")
+            if (_playDemo && _playWindow == "Far")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad()), (_playSeconds - 1, g => g.ScriptZoom(0.3f))];
+            }
+            else if (_playDemo && _playWindow == "Mid")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad()), (_playSeconds - 1, g => g.ScriptZoom(0.6f))];
+            }
+            else if (_playDemo && _playWindow == "Road")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad())];
+            }
+            else if (_playWindow == "Pick")
+            {
+                demo = [(5.0, g => g.ScriptMouseClick(new Vector2(800, 450)))];
+            }
+            else if (_playWindow == "PickHover")
+            {
+                demo = [(_playSeconds - 1, g => g.GetViewport().WarpMouse(new Vector2(800, 450)))];
+            }
+            else if (_playDemo && _playWindow == "ResearchHover")
+            {
+                demo = [.. demo, (_playSeconds - 2, g => g.ScriptOpen("Research")), (_playSeconds - 1, g => g.ScriptHoverTech("pottery"))];
+            }
+            else if (_playWindow == "Prospect")
+            {
+                demo = [(1.0, g => g.ScriptSpeed(SimulationSpeed.X4)), (1.5, g => g.ScriptSendKind("prospectors", 9, -3)), (_playSeconds - 1.5, g => g.ScriptZoom(0.9f))];
+            }
+            else if (_playWindow == "Battle")
+            {
+                // A test scenario with armies on a field: combat mode, all soldiers picked, sent in formation at the enemy.
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1))];
+            }
+            else if (_playWindow == "BattleBox")
+            {
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(2))];
+            }
+            else if (_playDemo && _playWindow == "Hex")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptSelectBusiestHex())];
+            }
+            else if (_playDemo && _playWindow == "Units")
+            {
+                demo = [.. demo, (24, g => g.ScriptPatrolFirst()), (_playSeconds - 1, g => g.ScriptOpen("Units"))];
+            }
+            else if (_playDemo && _playWindow == "Slots")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(2.6f))];
+            }
+            else if (_playDemo && _playWindow == "Place")
             {
                 demo = [.. demo, (_playSeconds - 1, g => g.ScriptPlace("storehouse"))];
             }
@@ -274,7 +330,7 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
-        _menu.PlayRequested += (settings, goal) => StartPlay(settings.Seed, goal);
+        _menu.PlayRequested += (settings, goal, scenario) => StartPlay(settings.Seed, goal, scenario);
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {

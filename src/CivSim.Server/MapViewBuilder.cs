@@ -22,7 +22,9 @@ public static class MapViewBuilder
     }
 
     /// <summary>Builds one chunk of <paramref name="map"/> (also used by the new game, ADR 0028).</summary>
-    public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known, bool hideResources = false, bool always = false)
+    public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known, bool hideResources = false, bool always = false,
+        Func<int, byte>? visibilityOf = null, Func<int, short>? ownerSeen = null, Func<int, byte>? roadSeen = null, Func<int, ushort>? worksSeen = null, Func<int, byte>? treesOf = null,
+        Func<int, bool>? depositKnown = null, Func<int, byte>? surveyOf = null)
     {
         ArgumentNullException.ThrowIfNull(map);
         HexGlobe geo = map.Geometry;
@@ -47,6 +49,10 @@ public static class MapViewBuilder
         var seasonTemperature = new sbyte[n];
         var seasonGrowth = new byte[n];
         var growing = new byte[n];
+        byte[]? survey = surveyOf is null ? null : new byte[n];
+        byte[]? road = roadSeen is null ? null : new byte[n];
+        ushort[]? works = worksSeen is null ? null : new ushort[n];
+        byte[]? trees = treesOf is null ? null : new byte[n];
         bool any = false;
         for (int r = 0; r < h; r++)
         {
@@ -61,18 +67,40 @@ public static class MapViewBuilder
                 }
 
                 any = true;
-                visibility[k] = MapChunkMessage.Visible;
+                visibility[k] = visibilityOf is null ? MapChunkMessage.Visible : visibilityOf(i);
                 elevation[k] = map.Elevation[i];
                 temperature[k] = map.Temperature[i];
                 humidity[k] = map.Humidity[i];
                 biome[k] = map.Biome[i];
                 relief[k] = map.Relief[i];
                 feature[k] = map.Feature[i];
-                fertility[k] = map.Fertility[i];
-                deposit[k] = map.Deposit[i];
-                richness[k] = map.DepositRichness[i];
-                depth[k] = map.DepositDepth[i];
-                owner[k] = map.Owner[i];
+                // Only what the viewer knows of the ground (survey, 2026-11-19).
+                byte surveyed = surveyOf is null ? (byte)3 : surveyOf(i);
+                bool hasDeposit = depositKnown is null || depositKnown(i);
+                fertility[k] = (surveyed & 2) != 0 ? map.Fertility[i] : (byte)0;
+                deposit[k] = hasDeposit ? map.Deposit[i] : (ushort)0;
+                richness[k] = hasDeposit ? map.DepositRichness[i] : 0;
+                depth[k] = hasDeposit ? map.DepositDepth[i] : (byte)0;
+                if (survey is not null)
+                {
+                    survey[k] = surveyed;
+                }
+                owner[k] = ownerSeen is null ? map.Owner[i] : ownerSeen(i);
+                if (road is not null)
+                {
+                    road[k] = roadSeen!(i);
+                }
+
+                if (works is not null)
+                {
+                    works[k] = worksSeen!(i);
+                }
+
+                if (trees is not null)
+                {
+                    trees[k] = treesOf!(i);
+                }
+
                 wild[k] = map.WildFood[i];
                 influence[k] = map.Influence[i];
                 seasons[k] = map.Seasonality[i];
@@ -102,6 +130,6 @@ public static class MapViewBuilder
 
         return new MapChunkMessage(
             worldId, turn, chunk, x0, y0, w, h, visibility, elevation, temperature, humidity, biome, relief, feature,
-            fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing, seasonTemperature, seasonGrowth);
+            fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing, seasonTemperature, seasonGrowth, road, works, trees, survey);
     }
 }

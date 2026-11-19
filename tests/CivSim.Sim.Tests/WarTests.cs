@@ -31,14 +31,14 @@ public sealed class WarTests
         Run(g, Content.Unit(kind).TrainTicks + 2);
         Unit u = g.Units[^1];
         HexCoord c = g.Geo.FromIndex(near);
-        u.Cell = g.Geo.Index(g.Geo.Neighbor(c, HexDirection.N));
+        g.Place(u, g.Geo.Index(g.Geo.Neighbor(c, HexDirection.N)));
         return u;
     }
 
     [Fact]
     public void AttackingWithoutWarIsASurpriseThatCostsReputation()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         Civ a = g.Civs[0];
         Settlement target = g.Settlements[g.Civs[1].Settlements[0]];
         Unit u = Soldiers(g, a, "warriors", target.Center);
@@ -50,7 +50,7 @@ public sealed class WarTests
     [Fact]
     public void ASettlementWithFewPeopleLeftIsTaken()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         Civ a = g.Civs[0];
         Civ b = g.Civs[1];
         Settlement target = g.Settlements[b.Settlements[0]];
@@ -68,16 +68,21 @@ public sealed class WarTests
     {
         static int Lost(bool walls)
         {
-            SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
+            SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
             Civ a = g.Civs[0];
             Civ b = g.Civs[1];
             Settlement target = g.Settlements[b.Settlements[0]];
             target.People = 25;
             if (walls)
             {
-                b.KnownTech[Content.TechId("stone_walls")] = true;
-                g.Settlements[b.Settlements[0]].Stock[Content.GoodId("stone")] = 500 * SimContent.One;
-                BuildingType w = Content.Building("stone_walls");
+                b.KnownTech[Content.TechId("castles")] = true;
+                Settlement home = g.Settlements[b.Settlements[0]];
+                foreach (string k in new[] { "stone", "wood", "iron" })
+                {
+                    home.Stock[Content.GoodId(k)] = 500 * SimContent.One;
+                }
+
+                BuildingType w = Content.Building("castle");
                 int cell = target.Cells.Find(c => g.CannotBuild(b, c, w) is null);
                 Assert.Null(g.Apply(new BuildCommand(b.Id, cell, w.Id)));
                 Run(g, w.BuildTicks + 600);
@@ -95,7 +100,7 @@ public sealed class WarTests
     [Fact]
     public void PeaceWithTributeMovesGoodsAndEndsTheWar()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false });
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         Civ a = g.Civs[0];
         Civ b = g.Civs[1];
         b.Known[g.Settlements[a.Settlements[0]].Center] = true;
@@ -118,7 +123,7 @@ public sealed class AiTests
     [Fact]
     public void AiPeoplesGrowBuildResearchAndSpreadOnTheirOwn()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(5, 98, 60, 4));
+        SimGame g = SimGame.Create(Content, new SimSettings(5, 98, 60, 4)).Basics();
         for (int i = 0; i < 10 * SimContent.TicksPerMinute; i++)
         {
             g.Tick();
@@ -147,7 +152,7 @@ public sealed class AiTests
     {
         static ulong Play()
         {
-            SimGame g = SimGame.Create(Content, new SimSettings(5, 66, 40, 3));
+            SimGame g = SimGame.Create(Content, new SimSettings(5, 66, 40, 3)).Basics();
             for (int i = 0; i < 4 * SimContent.TicksPerMinute; i++)
             {
                 g.Tick();
@@ -167,7 +172,7 @@ public sealed class StartAndEventTests
     [Fact]
     public void PeoplesChooseTheirStartInTurnsAwayFromEachOther()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(2, 98, 60, 4) { StartPhase = true });
+        SimGame g = SimGame.Create(Content, new SimSettings(2, 98, 60, 4) { StartPhase = true }).Basics();
         Assert.True(g.Picking);
         Assert.Empty(g.Settlements);
         Assert.NotNull(g.Sites);
@@ -189,12 +194,23 @@ public sealed class StartAndEventTests
             (int mine, int best) = g.StartQuality(g.Civs[a]);
             Assert.True(mine >= best * (100 - 30) / 100, $"start {mine} of {best}");
         }
+
+        // The shown circles hide the start: never centred on it, yet every hex too close to it lies inside.
+        int moved = 0;
+        for (int a = 0; a < 4; a++)
+        {
+            int d = g.Geo.Distance(g.Geo.FromIndex(g.StartCell[a]), g.Geo.FromIndex(g.BlockCenter[a]));
+            Assert.True(d <= g.BlockFuzz);
+            moved += d > 0 ? 1 : 0;
+        }
+
+        Assert.True(moved >= 3, $"only {moved} circles moved");
     }
 
     [Fact]
     public void EveryPeopleMeetsAnEventAndNoTwoShareOne()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(2, 66, 40, 3) { Ai = false });
+        SimGame g = SimGame.Create(Content, new SimSettings(2, 66, 40, 3) { Ai = false }).Basics();
         bool any = false;
         for (int i = 0; i < 12 * SimContent.TicksPerMinute; i++)
         {

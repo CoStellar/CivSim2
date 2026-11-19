@@ -95,11 +95,12 @@ public static class OverlayColors
 
         if (w.Visibility[i] == MapChunkMessage.Remembered)
         {
-            // A player's remembered cells are darker, like the fog layer's remembered cells.
-            r *= 0.6f;
-            g *= 0.6f;
-            b *= 0.6f;
-            a = 0.4f + (a * 0.6f);
+            // Remembered hexes: the layers are greyed too; the shader greys the tiles (decision of 2026-11-18).
+            float lum = (r * 0.3f) + (g * 0.59f) + (b * 0.11f);
+            r = ((lum * 0.85f) + (r * 0.15f)) * 0.7f;
+            g = ((lum * 0.85f) + (g * 0.15f)) * 0.7f;
+            b = ((lum * 0.85f) + (b * 0.15f)) * 0.7f;
+            a *= 0.6f;
         }
 
         return a <= 0 ? new Color(0, 0, 0, 0) : new Color(r / a, g / a, b / a, a);

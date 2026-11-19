@@ -76,9 +76,14 @@ public sealed partial class SimGame
         OwnerAt = new short[Geo.CellCount];
         SettlementAt = new int[Geo.CellCount];
         BuildingAt = new int[Geo.CellCount];
+        RoadAt = new byte[Geo.CellCount];
+        InitWorks();
+        GrowTrees();
         Array.Fill(OwnerAt, (short)-1);
         Array.Fill(SettlementAt, -1);
         Array.Fill(BuildingAt, -1);
+        SlotAt = new int[Geo.CellCount * SlotsPerHex];
+        Array.Fill(SlotAt, -1);
     }
 
     /// <summary>Rules.</summary>
@@ -104,6 +109,12 @@ public sealed partial class SimGame
 
     /// <summary>Building on each hex (−1 = none).</summary>
     public int[] BuildingAt { get; }
+
+    /// <summary>Places on a hex (decision of 2026-11-18): four, each holding a building or nothing.</summary>
+    public const int SlotsPerHex = 4;
+
+    /// <summary>Building in each place of each hex (index cell × 4 + place), −1 = empty.</summary>
+    public int[] SlotAt { get; }
 
     /// <summary>Civilizations.</summary>
     public List<Civ> Civs { get; } = [];
@@ -149,6 +160,12 @@ public sealed partial class SimGame
             var civ = new Civ(c, name.Length > 0 ? name : $"People {c + 1}", content.Goods.Count)
             {
                 Known = new bool[map.Geometry.CellCount],
+                RockSeen = new byte[map.Geometry.CellCount],
+                SoilSeen = new bool[map.Geometry.CellCount],
+                Vision = new short[map.Geometry.CellCount],
+                SeenOwner = NoOwners(map.Geometry.CellCount),
+                SeenRoad = new byte[map.Geometry.CellCount],
+                SeenWorks = new ushort[map.Geometry.CellCount],
                 KnownTech = new bool[content.Techs.Count],
                 Experience = new long[content.Techs.Count],
                 ExperienceRate = new int[content.Techs.Count],
@@ -205,7 +222,7 @@ public sealed partial class SimGame
         Settlements.Add(s);
         civ.Settlements.Add(s.Id);
         Claim(s);
-        Reveal(civ, center, Content.Levels[s.Level].Radius + 4);
+        Watch(s);
         civ.Dirty = true;
         SyncTotals(civ);
         return s;
@@ -251,7 +268,7 @@ public sealed partial class SimGame
                     if (trained.State == UnitState.Training && trained.NextTick == due.Tick)
                     {
                         trained.State = UnitState.Idle;
-                        Reveal(Civs[trained.Civ], trained.Cell, Content.Units[trained.Kind].Sight);
+                        Watch(trained);
                         News.Add((trained.Civ, $"{Content.Units[trained.Kind].Name} are ready."));
                     }
 
@@ -270,9 +287,19 @@ public sealed partial class SimGame
             }
         }
 
-        if (Ticks % Content.War.CombatEveryTicks == 0)
+        if (Ticks % Content.Combat.StepTicks == 0)
         {
             CombatStep();
+        }
+
+        if (Ticks % SimContent.TicksPerSecond == 0)
+        {
+            RoadStep();
+            SurveyStep();
+            SeasonStep();
+            HealStep();
+            PalisadeStep();
+            WallStep();
         }
 
         if (Ticks % SimContent.TicksPerMinute == 0)
@@ -291,6 +318,11 @@ public sealed partial class SimGame
             if ((Ticks + civ.Id) % Content.EconomyEveryTicks == 0)
             {
                 EconomyStep(civ);
+            }
+
+            if ((Ticks + (civ.Id * 17)) % Content.Rations.EveryTicks == 0)
+            {
+                RationStep(civ);
             }
 
             if ((Ticks + civ.Id) % Content.PopulationEveryTicks == 0)
@@ -444,6 +476,14 @@ public sealed partial class SimGame
     private void ScheduleUnit(Unit u, int kind) => _schedule.Enqueue((kind, u.Id), (u.NextTick, kind, u.Id));
 
     /// <summary>Marks the hexes within <paramref name="radius"/> of <paramref name="cell"/> as seen by <paramref name="civ"/>.</summary>
+    private static short[] NoOwners(int n)
+    {
+        var a = new short[n];
+        Array.Fill(a, (short)-1);
+        return a;
+    }
+
+    /// <summary>Marks hexes explored without seeing them now (used by tests and scripted starts).</summary>
     public void Reveal(Civ civ, int cell, int radius)
     {
         ArgumentNullException.ThrowIfNull(civ);

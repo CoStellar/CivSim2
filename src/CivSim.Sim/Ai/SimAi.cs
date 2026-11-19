@@ -11,7 +11,7 @@ namespace CivSim.Sim.Ai;
 /// It thinks every <see cref="ThinkEveryTicks"/> ticks, staggered by people, and does at most a few things each time, so it
 /// costs little (docs/wydajnosc.md). Its character (aggression, expansion) shows only in what it does.
 /// </summary>
-public static class SimAi
+public static partial class SimAi
 {
     /// <summary>Ticks between two thoughts of one AI people.</summary>
     public const int ThinkEveryTicks = 30;
@@ -37,20 +37,37 @@ public static class SimAi
         Supply(g, civ);
         Research(g, civ);
         Hire(g, civ);
-        actions += Economy(g, civ) ? 1 : 0;
+        bool lean = LeanTimes(g, civ); // winter close and too little food in store: food first, no settlers or soldiers
+        actions += lean && WinterFood(g, civ) ? 1 : 0;
+        actions += actions == 0 && Economy(g, civ) ? 1 : 0;
+        actions += actions == 0 && Care(g, civ) ? 1 : 0;
         if (actions == 0)
         {
             actions += Upgrade(g, civ) ? 1 : 0;
         }
 
-        Scouts(g, civ);
-        Settlers(g, civ);
         if (actions == 0)
+        {
+            actions += Rebuild(g, civ) ? 1 : 0;
+        }
+
+        Works(g, civ);
+        Scouts(g, civ);
+        if (!lean)
+        {
+            Settlers(g, civ);
+        }
+
+        if (actions == 0 && !lean)
         {
             Army(g, civ);
         }
 
         War(g, civ);
+        if (!lean && actions == 0)
+        {
+            Surveys(g, civ); // last: settlers and soldiers come first
+        }
     }
 
     private static int Key(SimGame g, string key)
@@ -89,7 +106,7 @@ public static class SimAi
         }
 
         BuildingType t = g.Content.Buildings[id];
-        if (!civ.KnownTech[t.Tech] || !Affordable(civ, t.Price))
+        if (!SimGame.Knows(civ, t) || !Affordable(civ, t.Price))
         {
             return false;
         }
@@ -112,7 +129,7 @@ public static class SimAi
                 }
 
                 int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (s.Idle * 2);
-                if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.Map.DepositDepth[cell] == 0)
+                if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.KnowsDeposit(civ, cell))
                 {
                     score += 20;
                 }
@@ -154,10 +171,17 @@ public static class SimAi
             return false;
         }
 
-        long food = civ.Rate[g.Content.Food];
-        if (food < 3 * SimContent.One && !Building(g, civ, FoodBuildings) && Count(g, civ, FoodBuildings) <= civ.People / 5)
+        // A hungry settlement gets its own food maker first (new camps eat more than their gatherers find).
+        if (HungryCamp(g, civ))
         {
-            foreach (string k in FoodBuildings)
+            return true;
+        }
+
+        long food = NetFood(g, civ);
+        if ((food < 3 * SimContent.One || civ.Hungry) && !Building(g, civ, FoodBuildings) && (civ.Hungry || Count(g, civ, FoodBuildings) <= civ.People / 5))
+        {
+            // Hungry: what feeds fastest and needs no tools comes first.
+            foreach (string k in civ.Hungry ? ["gatherers_hut", "hunters_lodge", "fishing_hut", "farm", "pasture"] : FoodBuildings)
             {
                 if (TryBuild(g, civ, k))
                 {
@@ -211,7 +235,7 @@ public static class SimAi
             "wood" => ["woodcutter", "gatherers_hut"],
             "stone" => ["quarry"],
             "clay" => ["clay_pit"],
-            "tools" => ["toolmaker", "forge", "steelworks"],
+            "tools" => ["toolmaker", "blacksmith", "steelworks"],
             "copper" => ["copper_mine"],
             "tin" => ["tin_mine"],
             "bronze" => ["bronze_smith"],
@@ -226,7 +250,7 @@ public static class SimAi
             }
         }
 
-        foreach (string k in new[] { "school", "observatory", "farm", "pasture", "woodcutter", "quarry", "clay_pit", "toolmaker", "copper_mine", "tin_mine", "bronze_smith", "iron_mine", "forge", "potter", "gatherers_hut", "hunters_lodge" })
+        foreach (string k in new[] { "school", "academy", "farm", "pasture", "woodcutter", "quarry", "mason", "clay_pit", "toolmaker", "copper_mine", "tin_mine", "bronze_smith", "iron_mine", "blacksmith", "potter", "tailor", "herbalist", "gatherers_hut", "hunters_lodge" })
         {
             if (TryBuild(g, civ, k))
             {
@@ -285,6 +309,23 @@ public static class SimAi
             if (civ.KnownTech[t.Id])
             {
                 continue;
+            }
+
+            // Goods to make: the first building that makes the missing good.
+            foreach ((int good, long amount) in t.Made)
+            {
+                if (civ.Made[good] / SimContent.TicksPerMinute >= amount)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b))
+                    {
+                        return b.Key;
+                    }
+                }
             }
 
             foreach ((int req, long need) in t.Experience)
@@ -376,7 +417,7 @@ public static class SimAi
             bool can = false;
             foreach (BuildingType b in g.Content.Buildings)
             {
-                can |= b.Id > 0 && b.Produces[good] > 0 && civ.KnownTech[b.Tech];
+                can |= b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b);
             }
 
             if (can && civ.Stock[good] < bestStock)
@@ -405,8 +446,8 @@ public static class SimAi
                 continue;
             }
 
-            // Warlike peoples like the technologies of arms, builders the others; earlier eras first.
-            int score = -t.Era * 10;
+            // Warlike peoples like the technologies of arms, builders the others; earlier eras first, the cheap basics before all.
+            int score = (-t.Era * 10) + (t.Basic ? 30 : 0);
             foreach (UnitType u in g.Content.Units)
             {
                 if (u.Army && u.Tech == t.Id)
@@ -445,6 +486,43 @@ public static class SimAi
                 && g.Apply(new UpgradeSettlementCommand(civ.Id, sid)) is null)
             {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    // A building into its better kind (huts into stone houses, toolmaker into blacksmith...), one at a time, when the rest of
+    // the price leaves a fifth of the stores; houses first when homes run short.
+    private static bool Rebuild(SimGame g, Civ civ)
+    {
+        if (Under(g, civ) >= 1 + civ.Settlements.Count)
+        {
+            return false;
+        }
+
+        foreach (bool homes in new[] { true, false })
+        {
+            foreach (int id in civ.Buildings.ToArray())
+            {
+                Building b = g.Buildings[id];
+                BuildingType t = g.Content.Buildings[b.Type];
+                if (t.UpgradesTo <= 0 || (t.Housing > 0) != homes)
+                {
+                    continue;
+                }
+
+                Settlement s = g.Settlements[b.Settlement];
+                if (homes && s.People < s.Housing - 4)
+                {
+                    continue;
+                }
+
+                if (g.CannotUpgrade(civ, b, out BuildingType? to) is null && Affordable(civ, g.UpgradeRest(t, to!), 20)
+                    && g.Apply(new UpgradeBuildingCommand(civ.Id, b.Id)) is null)
+                {
+                    return true;
+                }
             }
         }
 
@@ -495,11 +573,78 @@ public static class SimAi
         }
     }
 
+    // Prospectors and surveyors (2026-11-19): one at a time once the people has three settlements (prospectors from the
+    // Neolithic, when ores can be found; surveyors before); it walks to ground around
+    // our settlements that it has not looked at yet, stands there (surveys), then goes on. Same rules as for the player.
+    private static void Surveys(SimGame g, Civ civ)
+    {
+        // Not before the people has spread a little: early on every person is needed at home.
+        if (g.Ticks < 15 * SimContent.TicksPerMinute || civ.Settlements.Count < 3 || civ.Hungry)
+        {
+            return;
+        }
+
+        bool any = Own(g, civ, x => x.Survey > 0) > 0; // one at a time: prospectors once ores matter, else surveyors
+
+        foreach (UnitType t in g.Content.Units)
+        {
+            if (t.Survey == 0 || !SimGame.Knows(civ, t))
+            {
+                continue;
+            }
+
+            bool wanted = t.Survey == 1 ? civ.Era >= 1 : civ.Era == 0;
+            if (!any && wanted && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
+                && Own(g, civ, _ => true) == Own(g, civ, _ => true, includeTraining: false))
+            {
+                g.Apply(new TrainCommand(civ.Id, civ.Settlements[0], t.Id));
+            }
+
+            foreach (int id in civ.Units.ToArray())
+            {
+                Unit u = g.Units[id];
+                if (u.Kind != t.Id || u.State != UnitState.Idle || u.SurveyedAt != (u.Cell * 16) + civ.Era)
+                {
+                    continue; // still walking, or not yet looked around where it stands
+                }
+
+                // Targets come from a hash of the unit and the time, not from the AI's random stream, so surveys do not
+                // change the AI's other choices.
+                ulong z = ((ulong)g.Ticks * 0x9E3779B97F4A7C15UL) ^ ((ulong)(u.Id + 1) * 0xBF58476D1CE4E5B9UL);
+                Settlement home = g.Settlements[civ.Settlements[(int)(Mix(ref z) % (ulong)civ.Settlements.Count)]];
+                HexCoord c = g.Geo.FromIndex(home.Center);
+                for (int tries = 0; tries < 16; tries++)
+                {
+                    int dc = (int)(Mix(ref z) % 25) - 12;
+                    int dr = (int)(Mix(ref z) % 19) - 9;
+                    int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
+                    bool looked = t.Survey == 1 ? g.RockLookedAt(civ, cell) : g.KnowsSoil(civ, cell);
+                    if (civ.Known[cell] && !looked && g.OwnerAt[cell] < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater
+                        && g.Apply(new MoveCommand(civ.Id, u.Id, cell, false)) is null)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private static ulong Mix(ref ulong z)
+    {
+        z += 0x9E3779B97F4A7C15UL;
+        ulong x = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
+        x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+        return x ^ (x >> 31);
+    }
+
+    // Food a people makes a minute after everyone's rations (residents and units; the rate shows the rations per minute).
+    private static long NetFood(SimGame g, Civ civ) => civ.Rate[g.Content.Food];
+
     private static void Settlers(SimGame g, Civ civ)
     {
         UnitType settlers = g.Content.Unit("settlers");
         int cap = 2 + (civ.Expansion / 25) + g.EraOf(civ);
-        if (Own(g, civ, t => t.Founds) == 0 && civ.Settlements.Count < cap && civ.Rate[g.Content.Food] > 0)
+        if (Own(g, civ, t => t.Founds) == 0 && civ.Settlements.Count < cap && NetFood(g, civ) > 0)
         {
             foreach (int sid in civ.Settlements)
             {
@@ -534,7 +679,8 @@ public static class SimAi
         }
     }
 
-    // A known free land hex 6–12 hexes away where a camp may stand, with the most food-friendly land around.
+    // A known free land hex 6–12 hexes away where a camp may stand, with the most food-friendly land around: the biome and
+    // water, plus what our prospectors and surveyors found within 2 hexes (known soil and deposits only, 2026-11-19).
     private static int BestSite(SimGame g, Civ civ, int from)
     {
         HexCoord c = g.Geo.FromIndex(from);
@@ -552,7 +698,7 @@ public static class SimAi
                     continue;
                 }
 
-                int score = g.Content.World.Biomes[g.Map.Biome[cell]].Food * 10 + (g.NextToWater(cell) ? 15 : 0) - r;
+                int score = (g.Content.World.Biomes[g.Map.Biome[cell]].Food * 10) + (g.NextToWater(cell) ? 15 : 0) - r + KnownGround(g, civ, cell);
                 if (score > bestScore)
                 {
                     best = cell;
@@ -564,12 +710,36 @@ public static class SimAi
         return best;
     }
 
+    // What we know of the ground around a hex is worth: fertile soil, food in the soil and on it, stone, clay and ores.
+    private static int KnownGround(SimGame g, Civ civ, int cell)
+    {
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(2)];
+        int n = g.Geo.Range(g.Geo.FromIndex(cell), 2, area);
+        int score = 0;
+        for (int k = 0; k < n; k++)
+        {
+            int c = g.Geo.Index(area[k]);
+            if (g.KnowsSoil(civ, c))
+            {
+                score += g.Map.Fertility[c] / 40;
+            }
+
+            if (g.KnowsDeposit(civ, c))
+            {
+                int kind = g.Content.DepositSurvey[g.Map.Deposit[c]];
+                score += kind == 1 ? 6 : 4; // rock (stone, clay, ores) or food (game, fish, grain, herds)
+            }
+        }
+
+        return score;
+    }
+
     private static UnitType? BestSoldier(SimGame g, Civ civ)
     {
         UnitType? best = null;
         foreach (UnitType t in g.Content.Units)
         {
-            if (t.Army && !t.Levy && civ.KnownTech[t.Tech] && (best is null || t.Strength > best.Strength))
+            if (t.Army && !t.Levy && !t.Naval && SimGame.Knows(civ, t) && (best is null || t.Strength > best.Strength))
             {
                 best = t;
             }
@@ -588,7 +758,7 @@ public static class SimAi
         }
 
         int want = civ.People * (5 + (civ.Aggression / 5)) / 100;
-        if (soldiers >= want || civ.Rate[g.Content.Food] < 2 * SimContent.One)
+        if (soldiers >= want || NetFood(g, civ) < 2 * SimContent.One)
         {
             return;
         }
@@ -599,13 +769,22 @@ public static class SimAi
             return;
         }
 
+        // Rations: the settlement that trains them feeds them, so the one with the most food to spare trains them, and only if
+        // it can feed them as well as its own people.
+        Settlement? best = null;
         foreach (int sid in civ.Settlements)
         {
-            if (g.Settlements[sid].People >= t.People + 15)
+            Settlement s = g.Settlements[sid];
+            if (s.People >= t.People + 15 && s.Rate[g.Content.Food] >= t.People * g.Content.FoodPerPersonPerMinute
+                && (best is null || s.Rate[g.Content.Food] > best.Rate[g.Content.Food]))
             {
-                g.Apply(new TrainCommand(civ.Id, sid, t.Id));
-                return;
+                best = s;
             }
+        }
+
+        if (best is not null)
+        {
+            g.Apply(new TrainCommand(civ.Id, best.Id, t.Id));
         }
     }
 
@@ -627,9 +806,9 @@ public static class SimAi
         }
 
         // Defend: enemies seen on our land are attacked first.
-        foreach (Unit enemy in g.Units)
+        foreach (Unit enemy in g.ActiveUnits())
         {
-            if (enemy.Civ == civ.Id || enemy.State is UnitState.Gone or UnitState.Training || !g.Content.Units[enemy.Kind].Army)
+            if (enemy.Civ == civ.Id || !g.Content.Units[enemy.Kind].Army)
             {
                 continue;
             }
@@ -842,7 +1021,7 @@ public static class SimAi
             }
 
             BuildingType t = g.Content.Buildings[b.Type];
-            if (!civ.KnownTech[t.Tech])
+            if (!SimGame.Knows(civ, t))
             {
                 return true;
             }

@@ -22,6 +22,9 @@ public sealed record PriorityCommand(int Civ, int Building, bool Priority) : Sim
 /// <summary>Tear a building down (no refund).</summary>
 public sealed record DemolishCommand(int Civ, int Building) : SimCommand(Civ);
 
+/// <summary>Upgrade a building in place to its better kind (Patryk, 2026-11-19).</summary>
+public sealed record UpgradeBuildingCommand(int Civ, int Building) : SimCommand(Civ);
+
 /// <summary>Raise a settlement one level (camp → village → town → city).</summary>
 public sealed record UpgradeSettlementCommand(int Civ, int Settlement) : SimCommand(Civ);
 
@@ -57,21 +60,38 @@ public sealed partial class SimGame
             DemolishCommand c => WithOwn(civ, c.Building, b =>
             {
                 b.State = BuildingState.Removed;
-                BuildingAt[b.Cell] = -1;
+                TakeOffHex(b);
                 civ.Buildings.Remove(b.Id);
                 Map.MarkCellDirty(b.Cell);
                 civ.Dirty = true;
                 return null;
             }),
             UpgradeSettlementCommand c => Upgrade(civ, c.Settlement),
-            TrainCommand c => Train(civ, c.Settlement, c.Kind),
-            MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden),
+            UpgradeBuildingCommand c => UpgradeBuilding(civ, c.Building),
+            DebugCommand c => Debug(civ, c.Action),
+            ResumePatrolCommand c => ResumePatrol(civ, c.Unit),
+            TrainCommand c => Train(civ, c.Settlement, c.Kind, c.People, c.Shock),
+            SplitCommand c => Split(civ, c.Unit, c.People),
+            RefitCommand c => Refit(civ, c.Unit),
+            StanceCommand c => SetStance(civ, c.Unit, c.Stance),
+            GuardCommand c => SetGuard(civ, c.Unit, c.Cells),
+            FormationCommand c => Formation(civ, c.Units, c.Cell, c.Facing),
+            MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path),
+            PatrolCommand c => Patrol(civ, c.Unit, c.Loop),
+            BuildRoadCommand c => BuildRoad(civ, c.Cells, c.Level),
+            GatherCommand c => Gather(civ, c.Settlement, c.On),
+            BuildWorkCommand c => BuildWork(civ, c.Cells, c.Work),
+            SetFocusCommand c => SetFocus(civ, c.Building, c.Worker, c.Category),
+            BoardCommand c => Board(civ, c.Unit, c.Ship),
+            LandCommand c => Land(civ, c.Ship, c.Cell),
+            RemoveWorkCommand c => RemoveWork(civ, c.Cell, c.Work),
+            AttackWallCommand c => AttackWall(civ, c.Unit, c.Cell),
             FoundCommand c => Found(civ, c.Unit),
             ResearchCommand c => Research(civ, c.Tech),
             HireCommand c => Hire(civ, c.Advisor),
             DismissAdvisorCommand => Dismiss(civ),
             SendCaravanCommand c => SendCaravan(civ, c.From, c.To, c.Good, c.Amount),
-            RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount),
+            RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount, c.Path),
             BringMaterialsCommand c => BringMaterials(civ, c.Building),
             EndRouteCommand c => EndRoute(civ, c.Route),
             DeclareWarCommand c => DeclareWar(civ, c.Other, surprise: false),
@@ -98,9 +118,9 @@ public sealed partial class SimGame
             return "Outside the map.";
         }
 
-        if (!civ.KnownTech[type.Tech])
+        if (!Knows(civ, type))
         {
-            return $"{type.Name} needs {Content.Techs[type.Tech].Name}.";
+            return $"{type.Name} needs {NeedText(type.Tech, type.AlsoTechs)}.";
         }
 
         if (Array.IndexOf(type.Groups, "road") >= 0)
@@ -130,12 +150,18 @@ public sealed partial class SimGame
             return "Build only on your own land.";
         }
 
-        if (BuildingAt[cell] >= 0 || Settlements[SettlementAt[cell]].Center == cell)
+        if (Settlements[SettlementAt[cell]].Center == cell)
         {
-            return "This hex is taken.";
+            return "The settlement's centre fills this hex.";
         }
 
-        if (!TerrainAllows(cell, type))
+        if (SlotsFor(cell, type.Size) == 0)
+        {
+            int taken = SlotsPerHex - System.Numerics.BitOperations.PopCount((uint)FreeSlots(cell));
+            return type.Size == 4 ? $"{type.Name} needs the whole hex ({taken} of 4 places are taken)." : $"No room for {type.Name.ToLowerInvariant()} here: {taken} of 4 places are taken.";
+        }
+
+        if (!TerrainAllows(cell, type, civ))
         {
             return $"{type.Name} needs {Needs(type)}.";
         }
@@ -149,17 +175,18 @@ public sealed partial class SimGame
     }
 
     /// <summary>True when the terrain of the hex suits the building.</summary>
-    public bool TerrainAllows(int cell, BuildingType type)
+    public bool TerrainAllows(int cell, BuildingType type, Civ? civ = null)
     {
         ArgumentNullException.ThrowIfNull(type);
-        if (type.OrDeposit != 0 && Map.Deposit[cell] == type.OrDeposit && Map.DepositDepth[cell] == 0)
+        // A deposit counts once the people knows it (on its own land: from the era that recognises it).
+        if (type.OrDeposit != 0 && Map.Deposit[cell] == type.OrDeposit && (civ is null ? Map.DepositDepth[cell] == 0 : KnowsDeposit(civ, cell)))
         {
             return true;
         }
 
         bool anyBiome = Array.IndexOf(type.Biomes, true) >= 0;
         bool anyRelief = Array.IndexOf(type.Reliefs, true) >= 0;
-        if (anyBiome && !type.Biomes[Map.Biome[cell]])
+        if (anyBiome && !type.Biomes[Map.Biome[cell]] && !(type.OrTrees && Trees[cell] == Grove))
         {
             return false;
         }
@@ -174,7 +201,7 @@ public sealed partial class SimGame
             return false;
         }
 
-        if (type.MinFertility > 0 && Map.Fertility[cell] < type.MinFertility)
+        if (type.MinFertility > 0 && Map.Fertility[cell] < type.MinFertility - (civ is null ? 0 : Bonus(civ, EffectKind.Fertility, type.Key, type.Groups)))
         {
             return false;
         }
@@ -335,8 +362,16 @@ public sealed partial class SimGame
             return why;
         }
 
+        Place(civ, cell, t, SlotsFor(cell, t.Size), null);
+        return null;
+    }
+
+    // A new construction on the hex, in the given places. Credit: materials already at the site (an upgrade's old building).
+    private Building Place(Civ civ, int cell, BuildingType t, int slots, long[]? credit)
+    {
+        int typeId = t.Id;
         int yield = 100;
-        if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && Map.DepositDepth[cell] == 0)
+        if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && KnowsDeposit(civ, cell))
         {
             yield += t.BonusPercent;
         }
@@ -344,6 +379,12 @@ public sealed partial class SimGame
         if (t.BonusReliefs.Length > 0 && t.BonusReliefs[Map.Relief[cell]])
         {
             yield += t.BonusReliefPercent;
+        }
+
+        // A woodcutter on a grove: a grove's share of a forest's wood.
+        if (t.OrTrees && Trees[cell] == Grove && !t.Biomes[Map.Biome[cell]])
+        {
+            yield = yield * Content.GroveWoodPercent / 100;
         }
 
         int sid = SettlementAt[cell] >= 0 && Settlements[SettlementAt[cell]].Civ == civ.Id ? SettlementAt[cell] : NearestOwn(civ, cell)!.Id;
@@ -359,14 +400,21 @@ public sealed partial class SimGame
             RemainingTicks = Math.Max(1, t.BuildTicks),
             Delivered = new long[Content.Goods.Count],
             OnTheWay = new long[Content.Goods.Count],
+            Speed = 100 + SupportOf(civ, sid, x => x.BuildPercent),
+            Focus = t.ResearchPercent > 0 ? DefaultFocus(t.Workers) : [],
         };
         Buildings.Add(b);
         civ.Buildings.Add(b.Id);
-        BuildingAt[cell] = b.Id;
+        PutOnHex(b, slots);
         Map.MarkCellDirty(cell);
+        if (credit is not null)
+        {
+            Deliver(b, credit); // what the old building gives is at the site already: the work may start on it
+        }
+
         SendMaterials(b); // porters carry the price from the nearest storehouse; the work goes as far as the delivered materials allow
         SyncTotals(civ);
-        return null;
+        return b;
     }
 
     private string? PauseConstruction(Civ civ, int id, bool pause) => WithOwn(civ, id, b =>
@@ -435,9 +483,9 @@ public sealed partial class SimGame
         }
 
         SettlementLevel next = Content.Levels[s.Level + 1];
-        if (next.Tech >= 0 && !civ.KnownTech[next.Tech])
+        if (!Knows(civ, next.Tech, next.AlsoTechs))
         {
-            return $"A {next.Name.ToLowerInvariant()} needs {Content.Techs[next.Tech].Name}.";
+            return $"A {next.Name.ToLowerInvariant()} needs {NeedText(next.Tech, next.AlsoTechs)}.";
         }
 
         if (!CanAfford(s.Stock, next.UpgradePrice, 100))
@@ -448,7 +496,7 @@ public sealed partial class SimGame
         Pay(s.Stock, next.UpgradePrice, 100);
         s.Level++;
         Claim(s);
-        Reveal(civ, s.Center, next.Radius + 4);
+        Watch(s);
         civ.Dirty = true;
         News.Add((civ.Id, $"{s.Name} is now a {next.Name.ToLowerInvariant()}."));
         return null;

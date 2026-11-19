@@ -10,11 +10,17 @@ namespace CivSim.Game.Play;
 /// <summary>The windows in the middle of the screen: settlements, research tree, peoples, thinkers and the summary.</summary>
 public partial class PlayGame
 {
-    private static readonly string[] Categories = ["food", "industry", "building", "trade", "military", "governance", "science"];
+    private static readonly string[] Categories = ["basics", "food", "industry", "building", "trade", "military", "governance", "science"];
+
+    // Half the width of the windows; the research tree takes the whole screen.
+    private int _windowHalf;
 
     private void UpdateWindow(PlayViewMessage v, PlayContentMessage c)
     {
         _window.Visible = _bigMode.Length > 0;
+        float half = _bigMode == "Research" ? (GetViewport().GetVisibleRect().Size.X / 2) - 12 : _windowHalf;
+        _window.OffsetLeft = -half;
+        _window.OffsetRight = half;
         if (_bigMode.Length == 0)
         {
             return;
@@ -31,6 +37,7 @@ public partial class PlayGame
             "Settlements" => "Our settlements",
             "Peoples" => "Other peoples",
             "Thinkers" => "Thinkers and advisors",
+            "Units" => "Our units and patrols",
             _ => "Summary",
         };
         var items = new List<UiItem>();
@@ -47,6 +54,9 @@ public partial class PlayGame
                 break;
             case "Thinkers":
                 ThinkerItems(v, c, items);
+                break;
+            case "Units":
+                UnitTable(v, c, items);
                 break;
             default:
                 SummaryItems(v, items);
@@ -80,7 +90,8 @@ public partial class PlayGame
             items.Add(new LineItem($"Our thinker {t.Name} ({t.Rarity.ToLowerInvariant()}): research costs {t.CostPercent}%, needs {t.ExperiencePercent}% of the experience.", UiKit.Muted, 13));
         }
 
-        items.Add(new LineItem("Green: known.  Bright: can start now.  Dim: needs something first (hover to see what).  An era opens after five technologies of the one before.", UiKit.Muted, 13));
+        items.Add(new LineItem("Green: known.  Bright: can start now.  Dim: needs something first (hover to see what).  Lines lead from what a technology needs; the stripe on the left is its branch.  An era opens after five technologies of the one before; the basics do not count.", UiKit.Muted, 13));
+        items.Add(new CustomItem("legend" + string.Join(",", c.Categories ?? []), () => Legend(c)));
         var sig = new StringBuilder();
         foreach (PlayTechState st in v.Techs)
         {
@@ -88,51 +99,67 @@ public partial class PlayGame
         }
 
         sig.Append(v.Researching).Append(v.Era).Append(v.EraKnown);
-        items.Add(new CustomItem(sig.ToString(), () => TechGrid(v, c)));
+        items.Add(new CustomItem(sig.ToString(), () =>
+        {
+            var tree = new TechTree(v, c, info => TechCard(v, c, info));
+            float x = tree.EraX(v.Era);
+            Callable.From(() =>
+            {
+                if (tree.GetParent()?.GetParent() is ScrollContainer scroll && _researchScrolled != v.Era)
+                {
+                    _researchScrolled = v.Era;
+                    scroll.ScrollHorizontal = (int)Math.Max(0, x - 40);
+                }
+            }).CallDeferred();
+            return tree;
+        }));
     }
 
-    private Control TechGrid(PlayViewMessage v, PlayContentMessage c)
+    // Scrolled once to the people's era when the tree opens.
+    private int _researchScrolled = -1;
+
+    // The branches and their colours (the stripe on each card).
+    private static Control Legend(PlayContentMessage c)
     {
-        var grid = new GridContainer { Columns = c.Eras.Count + 1 };
-        grid.AddThemeConstantOverride("h_separation", 6);
-        grid.AddThemeConstantOverride("v_separation", 6);
-        grid.AddChild(new Control());
-        for (int era = 0; era < c.Eras.Count; era++)
+        var row = new HFlowContainer();
+        row.AddThemeConstantOverride("h_separation", 12);
+        foreach (string cat in (IEnumerable<string>?)c.Categories ?? Categories)
         {
-            string state = era <= v.Era ? "" : era == v.Era + 1 && v.EraNeed > 0 ? $"opens at {v.EraNeed} of the {c.Eras[v.Era]} ({v.EraKnown} now)" : "later";
-            var head = new VBoxContainer { CustomMinimumSize = new Vector2(UiKit.W(176), 0) };
-            head.AddChild(UiKit.Label(c.Eras[era], 16, era <= v.Era ? UiKit.Heading : UiKit.Muted));
-            if (state.Length > 0)
-            {
-                head.AddChild(UiKit.Label(state, 11, UiKit.Muted, wrap: true));
-            }
-
-            grid.AddChild(head);
+            var one = new HBoxContainer();
+            one.AddChild(new Glyph(UiKit.CategoryColor(cat), "", 14, round: true) { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+            one.AddChild(UiKit.Label(char.ToUpperInvariant(cat[0]) + cat[1..], 13, UiKit.Text));
+            row.AddChild(one);
         }
 
-        foreach (string cat in Categories)
-        {
-            var label = new HBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
-            label.AddChild(new Glyph(UiKit.CategoryColor(cat), UiKit.Short(cat)[..1], 24, round: true) { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin });
-            label.AddChild(UiKit.Label(char.ToUpperInvariant(cat[0]) + cat[1..], 14, UiKit.Text));
-            grid.AddChild(label);
-            for (int era = 0; era < c.Eras.Count; era++)
-            {
-                var cell = new VBoxContainer();
-                cell.AddThemeConstantOverride("separation", 3);
-                foreach (PlayTechInfo info in c.Techs)
-                {
-                    if (info.Era == era && info.Category == cat)
-                    {
-                        cell.AddChild(TechCard(v, c, info));
-                    }
-                }
+        return row;
+    }
 
-                grid.AddChild(cell);
+    // A card: its state in the frame, its branch in the stripe on the left.
+    private static StyleBoxTexture CardBox(Color bg, Color border, Color branch)
+    {
+        // Two layers: the branch's stripe under the card, the card shifted right over it.
+        var img = Image.CreateEmpty(16, 8, false, Image.Format.Rgba8);
+        img.Fill(border);
+        for (int y = 1; y < 7; y++)
+        {
+            for (int x = 6; x < 15; x++)
+            {
+                img.SetPixel(x, y, bg);
+            }
+
+            for (int x = 0; x < 5; x++)
+            {
+                img.SetPixel(x, y, branch);
             }
         }
 
-        return grid;
+        return new StyleBoxTexture
+        {
+            Texture = ImageTexture.CreateFromImage(img),
+            TextureMarginLeft = 6, TextureMarginRight = 2, TextureMarginTop = 2, TextureMarginBottom = 2,
+            ContentMarginLeft = 10, ContentMarginRight = 4, ContentMarginTop = 2, ContentMarginBottom = 2,
+            AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Stretch, AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Stretch,
+        };
     }
 
     private Button TechCard(PlayViewMessage v, PlayContentMessage c, PlayTechInfo info)
@@ -146,12 +173,17 @@ public partial class PlayGame
             : (new Color(0.12f, 0.11f, 0.1f), new Color(0.28f, 0.25f, 0.22f), UiKit.Muted);
         string name = info.Upgrade ? $"{info.Name} +" : info.Name;
         var tip = new StringBuilder($"{info.Name}" + (info.Upgrade ? " (upgrade of its era)" : "") + $"\n{info.Gives}");
+        if (info.Unlocks.Length > 0)
+        {
+            tip.Append($"\n\n{info.Unlocks}");
+        }
         if (!st.Known)
         {
-            tip.Append($"\n\nPrice: {(st.Price is null ? "?" : Amounts(c, st.Price))}, {info.Seconds} s.");
+            int secs = st.Seconds > 0 ? st.Seconds : info.Seconds;
+            tip.Append($"\n\nPrice: {(st.Price is null ? "?" : Amounts(c, st.Price))}, {secs} s" + (secs < info.Seconds ? $" (schools: {info.Seconds} s without)." : "."));
             if (info.Needs.Length > 0)
             {
-                tip.Append($"\nNeeds experience: {info.Needs} worker-minutes.");
+                tip.Append($"\nNeeds experience: {info.Needs} points (1 point = 1 worker for 1 minute in their buildings).");
             }
 
             if (st.Blocked is { } why)
@@ -164,14 +196,10 @@ public partial class PlayGame
         b.AddThemeFontSizeOverride("font_size", Ui.PixelTheme.FontSize);
         b.AddThemeColorOverride("font_color", ink);
         b.AddThemeColorOverride("font_hover_color", UiKit.Text);
-        StyleBoxFlat normal = UiKit.Flat(bg, border, 4, 2);
-        normal.BorderWidthLeft = 6;
-        normal.BorderColor = border;
-        b.AddThemeStyleboxOverride("normal", normal);
-        b.AddThemeStyleboxOverride("hover", UiKit.Flat(bg.Lightened(0.12f), border, 4, 2));
-        b.AddThemeStyleboxOverride("pressed", normal);
-        b.AddThemeStyleboxOverride("disabled", normal);
-        _ = cat;
+        b.AddThemeStyleboxOverride("normal", CardBox(bg, border, cat));
+        b.AddThemeStyleboxOverride("hover", CardBox(bg.Lightened(0.12f), border, cat));
+        b.AddThemeStyleboxOverride("pressed", CardBox(bg, border, cat));
+        b.AddThemeStyleboxOverride("disabled", CardBox(bg, border, cat));
         int id = info.Id;
         if (!st.Known && st.Blocked is null && !now)
         {
@@ -221,6 +249,151 @@ public partial class PlayGame
         items.Add(new TableItem(4 + shown.Length, cells));
     }
 
+    // Units picked in the Units window, for orders to a group.
+    private readonly HashSet<int> _unitPicks = [];
+
+    // Every unit of ours, patrols first: stop, recall or send out again one, a picked group or all of them (Patryk, 2026-11-19).
+    private void UnitTable(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
+    {
+        var mine = v.Units.Where(u => u.Civ == v.Civ && !c.Units[u.Kind].System)
+            .OrderBy(u => u.Patrol is null ? 1 : 0).ThenBy(u => u.Hunger == 0 ? 1 : 0).ThenBy(u => u.Id).ToList();
+        _unitPicks.IntersectWith(mine.Select(u => u.Id));
+        int patrols = mine.Count(u => u.Patrol is not null);
+        int stopped = mine.Count(u => u.Patrol is null && u.LastPatrol is not null);
+        int hungry = mine.Count(u => u.Hunger > 0);
+        int carriers = v.Units.Count(u => u.Civ == v.Civ && c.Units[u.Kind].System);
+        items.Add(new LineItem($"{mine.Count} unit(s): {patrols} on patrol, {stopped} with a patrol to resume" + (carriers > 0 ? $"; {carriers} carrier group(s) on their tasks" : "") +
+            $". Their settlements feed them every minute: next ration in {v.RationSeconds} s.", UiKit.Muted, 13));
+        if (hungry > 0)
+        {
+            items.Add(new LineItem($"{hungry} unit(s) hungry: their settlement had no food for the ration. Strength and speed {c.HungryPercent}%; the next missed ration kills some.", UiKit.Bad, 14));
+        }
+
+        if (mine.Count == 0)
+        {
+            items.Add(new LineItem("No units. Train scouts or soldiers in a settlement.", UiKit.Muted, 14));
+            return;
+        }
+
+        // Orders for all of them, and for the picked ones.
+        var all = mine.Where(u => u.State != 0).ToList();
+        var picked = all.Where(u => _unitPicks.Contains(u.Id)).ToList();
+        items.Add(new ButtonsItem(
+        [
+            new ActItem($"Stop all patrols ({patrols})", () => Orders(v, all.Where(u => u.Patrol is not null), UnitOrder.Stop), "They stop where they are.", patrols > 0, UiKit.Warn),
+            new ActItem($"Resume all ({stopped})", () => Orders(v, all, UnitOrder.Resume), "Every stopped unit walks its last patrol again.", stopped > 0, UiKit.Good),
+            new ActItem("Recall all", () => Orders(v, all, UnitOrder.Recall), "Every unit walks back to the settlement that feeds it and waits there.", all.Count > 0),
+        ]));
+        items.Add(new ButtonsItem(
+        [
+            new ActItem($"Picked ({picked.Count}): stop", () => Orders(v, picked, UnitOrder.Stop), "", picked.Count > 0, UiKit.Warn),
+            new ActItem("resume", () => Orders(v, picked, UnitOrder.Resume), "They walk their last patrol again.", picked.Any(u => u.LastPatrol is not null), UiKit.Good),
+            new ActItem("recall", () => Orders(v, picked, UnitOrder.Recall), "Back to the settlement that feeds them.", picked.Count > 0),
+            new ActItem("pick patrols", () =>
+            {
+                _unitPicks.Clear();
+                _unitPicks.UnionWith(mine.Where(u => u.Patrol is not null || u.LastPatrol is not null).Select(u => u.Id));
+                _bigSignature = "";
+            }, "Pick every unit that patrols or patrolled."),
+            new ActItem("pick none", () =>
+            {
+                _unitPicks.Clear();
+                _bigSignature = "";
+            }, "", _unitPicks.Count > 0),
+        ]));
+
+        var cells = new List<CellItem>
+        {
+            new("Pick", UiKit.Heading), new("Unit", UiKit.Heading), new("People", UiKit.Heading), new("Doing", UiKit.Heading), new("Fed by", UiKit.Heading),
+            new("Food", UiKit.Heading), new("", UiKit.Heading), new("", UiKit.Heading),
+        };
+        foreach (PlayUnitView u in mine)
+        {
+            int id = u.Id;
+            int col = u.Col;
+            int row = u.Row;
+            PlayUnitView unit = u;
+            bool on = _unitPicks.Contains(id);
+            cells.Add(new CellItem(on ? "[x]" : "[ ]", on ? UiKit.Good : UiKit.Muted, () =>
+            {
+                if (!_unitPicks.Remove(id))
+                {
+                    _unitPicks.Add(id);
+                }
+
+                _bigSignature = "";
+            }));
+            cells.Add(new CellItem(c.Units[u.Kind].Name, null, () =>
+            {
+                _unit = id;
+                if (_overlay is not null)
+                {
+                    _overlay.SelectedUnit = id;
+                }
+
+                Focus(col, row);
+                _bigMode = "";
+                UpdateUi();
+            }));
+            cells.Add(new CellItem($"{u.People}" + (u.Injured > 0 ? $" ({u.Injured} wounded)" : ""), UiKit.Text));
+            string doing = u.State == 0 ? "training" : u.Fighting ? "FIGHTING" : u.Patrol is not null ? $"patrol, {u.Patrol.Length / 2} hexes" : u.State == 2 ? "walking" : "standing";
+            cells.Add(new CellItem(doing, u.Fighting ? UiKit.Bad : u.Patrol is not null ? UiKit.Good : UiKit.Muted));
+            cells.Add(new CellItem(v.Settlements.FirstOrDefault(x => x.Id == u.Home)?.Name ?? "-", UiKit.Muted));
+            cells.Add(new CellItem(u.Hunger switch { 0 => "fed", 1 => "HUNGRY", _ => "STARVING" }, u.Hunger == 0 ? UiKit.Muted : UiKit.Bad));
+            if (u.State == 0)
+            {
+                cells.Add(new CellItem("", UiKit.Muted));
+                cells.Add(new CellItem("", UiKit.Muted));
+                continue;
+            }
+
+            cells.Add(u.Patrol is not null || u.State == 2
+                ? new CellItem(u.Patrol is not null ? "[Stop patrol]" : "[Stop]", UiKit.Warn, () => Orders(v, [unit], UnitOrder.Stop))
+                : u.LastPatrol is not null
+                    ? new CellItem("[Resume patrol]", UiKit.Good, () => Orders(v, [unit], UnitOrder.Resume))
+                    : new CellItem("", UiKit.Muted));
+            cells.Add(new CellItem("[Recall]", UiKit.Text, () => Orders(v, [unit], UnitOrder.Recall)));
+        }
+
+        items.Add(new TableItem(8, cells));
+    }
+
+    private enum UnitOrder
+    {
+        Stop,
+        Resume,
+        Recall,
+    }
+
+    // Stop: a move to where it stands ends the walk or patrol. Resume: its last patrol again. Recall: back to the settlement
+    // that feeds it (or our nearest one), where it waits.
+    private void Orders(PlayViewMessage v, IEnumerable<PlayUnitView> units, UnitOrder order)
+    {
+        var ours = v.Settlements.Where(s => s.Civ == v.Civ && !s.Remembered).ToList();
+        foreach (PlayUnitView u in units)
+        {
+            switch (order)
+            {
+                case UnitOrder.Stop:
+                    _session!.Play(PlayCommandKind.Move, u.Id, u.Col, u.Row);
+                    break;
+                case UnitOrder.Resume when u.LastPatrol is not null && u.Patrol is null:
+                    _session!.Play(PlayCommandKind.ResumePatrol, u.Id);
+                    break;
+                case UnitOrder.Recall:
+                    PlaySettlementView? home = ours.FirstOrDefault(s => s.Id == u.Home) ?? ours.OrderBy(s => Math.Abs(s.Col - u.Col) + Math.Abs(s.Row - u.Row)).FirstOrDefault();
+                    if (home is not null)
+                    {
+                        _session!.Play(PlayCommandKind.Move, u.Id, home.Col, home.Row);
+                    }
+
+                    break;
+            }
+        }
+
+        _uiTimer = 0.1;
+    }
+
     private static string AlertWord(int kind) => kind switch
     {
         0 => "attacked",
@@ -229,6 +402,8 @@ public partial class PlayGame
         3 => "needs goods",
         4 => "no homes",
         5 => "store full",
+        7 => "clothing",
+        8 => "rations",
         _ => "materials missing",
     };
 

@@ -22,7 +22,9 @@ public sealed record PlayBuildingInfo(
     [property: Key(9)] long Storage,
     [property: Key(10)] string Needs,
     [property: Key(11)] int Tech = 0,
-    [property: Key(12)] string[]? Groups = null);
+    [property: Key(12)] string[]? Groups = null,
+    [property: Key(13)] int Size = 1,
+    [property: Key(14)] int UpgradesTo = 0);
 
 /// <summary>A unit kind of the new game.</summary>
 [MessagePackObject]
@@ -40,7 +42,13 @@ public sealed record PlayUnitInfo(
     [property: Key(10)] int Strength = 0,
     [property: Key(11)] int Range = 1,
     [property: Key(12)] bool System = false,
-    [property: Key(13)] string NeedsBuilding = "");
+    [property: Key(13)] string NeedsBuilding = "",
+    [property: Key(14)] bool Naval = false,
+    [property: Key(15)] int Carries = 0,
+    [property: Key(16)] int Survey = 0,
+    [property: Key(17)] int MinPeople = 0,
+    [property: Key(18)] int MaxPeople = 0,
+    [property: Key(19)] string[]? Groups = null);
 
 /// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
 [MessagePackObject]
@@ -56,7 +64,22 @@ public sealed record PlayUnitView(
     [property: Key(8)] int ToCol,
     [property: Key(9)] int ToRow,
     [property: Key(10)] bool Fighting = false,
-    [property: Key(11)] string? Cargo = null);
+    [property: Key(11)] string? Cargo = null,
+    [property: Key(12)] int[]? Path = null,
+    [property: Key(13)] int[]? Patrol = null,
+    [property: Key(14)] bool Attack = false,
+    [property: Key(15)] bool Carrier = false,
+    [property: Key(16)] int Injured = 0,
+    [property: Key(17)] int Aboard = 0,
+    [property: Key(18)] int Hunger = 0,
+    [property: Key(19)] int Home = -1,
+    [property: Key(20)] int[]? LastPatrol = null,
+    [property: Key(21)] int[]? Found = null,
+    [property: Key(22)] int Weapon = 0,
+    [property: Key(23)] int Armour = 0,
+    [property: Key(24)] int Stance = 0,
+    [property: Key(25)] int LastLoss = 0,
+    [property: Key(26)] int[]? Guard = null);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -73,11 +96,13 @@ public sealed record PlayTechInfo(
     [property: Key(5)] int Seconds,
     [property: Key(6)] string Gives = "",
     [property: Key(7)] bool Upgrade = false,
-    [property: Key(8)] string Category = "");
+    [property: Key(8)] string Category = "",
+    [property: Key(9)] string Unlocks = "",
+    [property: Key(10)] int[]? From = null);
 
 /// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
 [MessagePackObject]
-public sealed record PlayTechState([property: Key(0)] int Id, [property: Key(1)] bool Known, [property: Key(2)] long[] Price, [property: Key(3)] string? Blocked);
+public sealed record PlayTechState([property: Key(0)] int Id, [property: Key(1)] bool Known, [property: Key(2)] long[] Price, [property: Key(3)] string? Blocked, [property: Key(4)] int Seconds = 0);
 
 /// <summary>A thinker or advisor as the player sees them.</summary>
 [MessagePackObject]
@@ -100,7 +125,24 @@ public sealed record PlayContentMessage(
     [property: Key(5)] string WorldName,
     [property: Key(6)] IReadOnlyList<PlayUnitInfo> Units,
     [property: Key(7)] IReadOnlyList<PlayTechInfo> Techs,
-    [property: Key(8)] IReadOnlyList<string> Eras) : IProtocolMessage;
+    [property: Key(8)] IReadOnlyList<string> Eras,
+    [property: Key(9)] IReadOnlyList<PlayRoadInfo>? Roads = null,
+    [property: Key(10)] IReadOnlyList<PlayWorkInfo>? Works = null,
+    [property: Key(11)] IReadOnlyList<string>? Categories = null,
+    [property: Key(12)] int HungryPercent = 100,
+    [property: Key(13)] int StarvingPercent = 100,
+    [property: Key(14)] int[]? WeaponGoods = null,
+    [property: Key(15)] int[]? ArmourGoods = null,
+    [property: Key(16)] int[]? WeaponPercent = null,
+    [property: Key(17)] int[]? ArmourPercent = null) : IProtocolMessage;
+
+/// <summary>A work drawn on hexes (ditch, palisade, wall, aqueduct): its bit in the works of a hex, price and seconds per hex.</summary>
+[MessagePackObject]
+public sealed record PlayWorkInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] long[] Price, [property: Key(4)] int Seconds, [property: Key(5)] int Tech, [property: Key(6)] int FromWater, [property: Key(7)] string Text);
+
+/// <summary>A level of road (1 track, 2 paved road): price and seconds per hex, needed technology.</summary>
+[MessagePackObject]
+public sealed record PlayRoadInfo([property: Key(0)] int Level, [property: Key(1)] string Name, [property: Key(2)] long[] Price, [property: Key(3)] int Seconds, [property: Key(4)] int Tech);
 
 /// <summary>A settlement as the player sees it.</summary>
 [MessagePackObject]
@@ -118,11 +160,23 @@ public sealed record PlaySettlementView(
     [property: Key(10)] int DefensePercent = 100,
     [property: Key(11)] long[]? Stock = null,
     [property: Key(12)] long[]? Capacity = null,
-    [property: Key(13)] long[]? Rate = null);
+    [property: Key(13)] long[]? Rate = null,
+    [property: Key(14)] bool Remembered = false,
+    [property: Key(15)] bool Gathering = false,
+    [property: Key(16)] int[]? Richness = null,
+    [property: Key(17)] int WorkPermille = 1000,
+    [property: Key(18)] int HealPerMinute = 0,
+    [property: Key(19)] int RationUnits = 0,
+    [property: Key(20)] int RationPeople = 0,
+    [property: Key(21)] long RationFood = 0,
+    [property: Key(22)] int RationShort = 0,
+    [property: Key(23)] int RationDead = 0,
+    [property: Key(24)] int HungryPeople = 0,
+    [property: Key(25)] int HungryWorkers = 0);
 
 /// <summary>A standing caravan route of the player.</summary>
 [MessagePackObject]
-public sealed record PlayRouteView([property: Key(0)] int Index, [property: Key(1)] int From, [property: Key(2)] int To, [property: Key(3)] int Good, [property: Key(4)] int Amount, [property: Key(5)] bool OnTheRoad);
+public sealed record PlayRouteView([property: Key(0)] int Index, [property: Key(1)] int From, [property: Key(2)] int To, [property: Key(3)] int Good, [property: Key(4)] int Amount, [property: Key(5)] bool OnTheRoad, [property: Key(6)] int[]? Path = null);
 
 /// <summary>Another people as the player knows it.</summary>
 [MessagePackObject]
@@ -157,7 +211,25 @@ public sealed record PlayBuildingView(
     [property: Key(9)] int ProgressPermille,
     [property: Key(10)] int YieldPercent,
     [property: Key(11)] string? Missing = null,
-    [property: Key(12)] int Porters = 0);
+    [property: Key(12)] int Porters = 0,
+    [property: Key(13)] bool Remembered = false,
+    [property: Key(14)] int Slots = 15,
+    [property: Key(15)] string[]? Focus = null,
+    [property: Key(16)] string? UpgradeBlocked = null,
+    [property: Key(17)] string? UpgradeCost = null);
+
+/// <summary>
+/// Server → client: hexes whose fog or owner changed for this player (indices row × width + column). Terrain comes in
+/// <see cref="MapChunkMessage"/> once, when a hex is first explored; after that only these small changes.
+/// </summary>
+[MessagePackObject]
+public sealed record PlayCellsMessage(
+    [property: Key(0)] int[] Cells,
+    [property: Key(1)] byte[] Visibility,
+    [property: Key(2)] short[] Owner,
+    [property: Key(3)] int[] Chunks,
+    [property: Key(4)] byte[]? Road = null,
+    [property: Key(5)] ushort[]? Works = null) : IProtocolMessage;
 
 /// <summary>Server → client, several times a second: what the player sees of the game.</summary>
 [MessagePackObject]
@@ -199,7 +271,27 @@ public sealed record PlayViewMessage(
     [property: Key(34)] IReadOnlyList<PlayRouteView>? Routes = null,
     [property: Key(35)] IReadOnlyList<PlayAlertView>? Alerts = null,
     [property: Key(36)] int EraKnown = 0,
-    [property: Key(37)] int EraNeed = 0) : IProtocolMessage;
+    [property: Key(37)] int EraNeed = 0,
+    [property: Key(38)] bool ObjectsApart = false,
+    [property: Key(39)] bool TechsSame = false,
+    [property: Key(40)] bool Winter = false,
+    [property: Key(41)] int SeasonSeconds = 0,
+    [property: Key(42)] int RationSeconds = 0,
+    [property: Key(43)] bool Debug = false) : IProtocolMessage;
+
+/// <summary>
+/// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this
+/// player since the last message, and the ids of those gone from its view. The client keeps the rest; <see
+/// cref="PlayViewMessage"/> then comes without them (<c>ObjectsApart</c>).
+/// </summary>
+[MessagePackObject]
+public sealed record PlayObjectsMessage(
+    [property: Key(0)] IReadOnlyList<PlayBuildingView> Buildings,
+    [property: Key(1)] int[] GoneBuildings,
+    [property: Key(2)] IReadOnlyList<PlaySettlementView> Settlements,
+    [property: Key(3)] int[] GoneSettlements,
+    [property: Key(4)] IReadOnlyList<PlayUnitView> Units,
+    [property: Key(5)] int[] GoneUnits) : IProtocolMessage;
 
 /// <summary>Something in one of the player's settlements that needs a reaction. Kind: 0 attacked, 1 enemy near, 2 hungry,
 /// 3 needs a good, 4 no homes, 5 store full, 6 construction lacks materials. Good is −1 when not about a good.</summary>
@@ -233,7 +325,7 @@ public enum PlayCommandKind
     /// <summary>Raise settlement <c>A</c> one level.</summary>
     Upgrade = 5,
 
-    /// <summary>Train unit kind <c>B</c> in settlement <c>A</c>.</summary>
+    /// <summary>Train unit kind <c>B</c> in settlement <c>A</c>, <c>C</c> people (0 = the default); <c>Flag</c>: weapons only.</summary>
     Train = 6,
 
     /// <summary>Send unit <c>A</c> to (<c>Col</c>, <c>Row</c>), hidden when <c>Flag</c>.</summary>
@@ -295,6 +387,57 @@ public enum PlayCommandKind
 
     /// <summary>Send porters with the materials construction <c>A</c> is missing.</summary>
     BringMaterials = 26,
+
+    /// <summary>Build a road of level <c>A</c> over the drawn hexes <c>Cells</c> (col, row pairs).</summary>
+    BuildRoad = 28,
+
+    /// <summary>The people of settlement <c>A</c> gather around it while they have no job (<c>Flag</c>) or stop.</summary>
+    Gather = 29,
+
+    /// <summary>Build work <c>A</c> (ditch, palisade, wall, aqueduct) over the drawn hexes <c>Cells</c> (col, row pairs).</summary>
+    BuildWork = 30,
+
+    /// <summary>Remove work <c>A</c> from the hex at <c>Col</c>, <c>Row</c>.</summary>
+    RemoveWork = 31,
+
+    /// <summary>Unit <c>A</c> breaks the enemy wall at <c>Col</c>, <c>Row</c>.</summary>
+    AttackWall = 32,
+
+    /// <summary>Worker <c>B</c> of school (academy, university) <c>A</c> speeds research branch number <c>C</c> of the content's categories.</summary>
+    SetFocus = 33,
+
+    /// <summary>Land unit <c>A</c> goes aboard ship <c>B</c> next to it.</summary>
+    Board = 34,
+
+    /// <summary>Ship <c>A</c> lands the units aboard on the hex at <c>Col</c>, <c>Row</c> next to it.</summary>
+    Land = 35,
+
+    /// <summary>Upgrade building <c>A</c> in place to its better kind.</summary>
+    UpgradeBuilding = 36,
+
+    /// <summary>Unit <c>A</c> walks its last patrol again.</summary>
+    ResumePatrol = 37,
+
+    /// <summary>Debug action <c>A</c> (test scenarios only): 0 goods, 1 finish research, 2 reveal map, 3 people, 4 next era.</summary>
+    Debug = 38,
+
+    /// <summary>Unit <c>A</c> splits <c>B</c> people off into a new unit beside it.</summary>
+    Split = 39,
+
+    /// <summary>Unit <c>A</c> takes the best arms of the settlement it stands in.</summary>
+    Refit = 40,
+
+    /// <summary>Unit <c>A</c> fights with stance <c>B</c>: 0 hold, 1 aggressive, 2 passive.</summary>
+    Stance = 41,
+
+    /// <summary>Unit <c>A</c> guards the hexes <c>Cells</c> (col, row pairs; none = stop guarding).</summary>
+    Guard = 42,
+
+    /// <summary>Units <c>Cells</c> (unit ids) go in formation to (Col, Row) facing direction <c>B</c> (−1 = the way they walk).</summary>
+    Formation = 43,
+
+    /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs) round and round.</summary>
+    Patrol = 27,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>
@@ -307,7 +450,8 @@ public sealed record PlayCommandMessage(
     [property: Key(4)] int Row,
     [property: Key(5)] bool Flag,
     [property: Key(6)] int B = 0,
-    [property: Key(7)] int C = 0) : IProtocolMessage;
+    [property: Key(7)] int C = 0,
+    [property: Key(8)] int[]? Cells = null) : IProtocolMessage;
 
 /// <summary>Client → server: where can building type <c>Type</c> go?</summary>
 [MessagePackObject]

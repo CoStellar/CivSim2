@@ -45,6 +45,8 @@ public partial class MapView : Node2D
     private int _fogVersion = -1;
     private bool _hasArt;
     private bool _fogHides;
+    private MultiMeshInstance2D? _liftNode;
+    private Polygon2D? _liftShadow;
 
     /// <summary>Creates the view with the given layer stack and pictures.</summary>
     public MapView(LayerStack layers, ArtLibrary art)
@@ -235,6 +237,12 @@ public partial class MapView : Node2D
                 c.UpdateLines(_world, RiverBaseWidth, BorderWidth, _fogHides ? fog : null);
             }
 
+            // Nothing known in the chunk: nothing to draw, not even the dark of the fog (the empty screen is the fog).
+            if (!c.AnyKnown)
+            {
+                continue;
+            }
+
             for (int kx = kx0; kx <= kx1; kx++)
             {
                 var offset = new Vector2(kx * _period.X, 0);
@@ -309,6 +317,63 @@ public partial class MapView : Node2D
         center.X += MathF.Round((screen.X - center.X) / _period.X) * _period.X;
         _outline.Position = center;
         _outline.Visible = true;
+    }
+
+    /// <summary>
+    /// Lifts one hex out of the board (decision of 2026-11-18): the same tile, a few pixels bigger and higher, with a shadow
+    /// under it. <paramref name="amount"/> 0 = flat, 1 = fully lifted; the copy nearest to <paramref name="near"/> is used.
+    /// </summary>
+    public void SetLift((int Col, int Row)? cell, float amount, Vector2 near)
+    {
+        if (cell is not { } c || amount <= 0.001f || _world is null || _hexMaterial is null || _hexMesh is null)
+        {
+            if (_liftNode is not null)
+            {
+                _liftNode.Visible = false;
+                _liftShadow!.Visible = false;
+            }
+
+            return;
+        }
+
+        ChunkGfx? chunk = _chunks.Find(k => k.Holds(c.Col, c.Row));
+        if (chunk is null || !chunk.EverColored)
+        {
+            return;
+        }
+
+        if (_liftNode is null)
+        {
+            _liftShadow = new Polygon2D { Color = new Color(0, 0, 0, 0.45f), ZIndex = 39 };
+            var pts = new Vector2[6];
+            for (int i = 0; i < 6; i++)
+            {
+                pts[i] = HexLayout.Corners[i];
+            }
+
+            _liftShadow.Polygon = pts;
+            AddChild(_liftShadow);
+            _liftNode = new MultiMeshInstance2D
+            {
+                ZIndex = 40,
+                Multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform2D, UseColors = true, UseCustomData = true, Mesh = _hexMesh, InstanceCount = 1 },
+            };
+            AddChild(_liftNode);
+        }
+
+        Vector2 center = HexLayout.Center(c.Col, c.Row);
+        center.X += MathF.Round((near.X - center.X) / _period.X) * _period.X;
+        float scale = 1f + (0.12f * amount);
+        Vector2 up = new(0, -5f * amount);
+        (Color color, Color custom) = chunk.Instance(c.Col, c.Row);
+        _liftNode.Material = _hexMaterial;
+        _liftNode.Multimesh.SetInstanceTransform2D(0, new Transform2D(0, new Vector2(scale, scale), 0, center + up));
+        _liftNode.Multimesh.SetInstanceColor(0, color);
+        _liftNode.Multimesh.SetInstanceCustomData(0, custom);
+        _liftNode.Visible = true;
+        _liftShadow!.Position = center + new Vector2(3f * amount, 4f * amount);
+        _liftShadow.Scale = new Vector2(scale, scale);
+        _liftShadow.Visible = true;
     }
 
     private MultiMeshInstance2D Take(List<MultiMeshInstance2D> pool, int index, int z)
@@ -433,6 +498,20 @@ public partial class MapView : Node2D
 
         public Vector2 Origin { get; }
 
+        /// <summary>True when the player knows at least one hex of the chunk (otherwise it is not drawn).</summary>
+        public bool AnyKnown { get; private set; }
+
+        /// <summary>True when the hex is in this chunk.</summary>
+        public bool Holds(int col, int row) => col >= X0 && col < X0 + W && row >= Y0 && row < Y0 + H;
+
+        /// <summary>Colour and tile data of one hex as drawn (for the lifted copy).</summary>
+        public (Color Color, Color Custom) Instance(int col, int row)
+        {
+            int o = ((((row - Y0) * W) + (col - X0)) * Stride) + 8;
+            return (new Color(_buffer[o], _buffer[o + 1], _buffer[o + 2], _buffer[o + 3]),
+                new Color(_buffer[o + 4], _buffer[o + 5], _buffer[o + 6], _buffer[o + 7]));
+        }
+
         public Rect2 Bounds { get; }
 
         public MultiMesh Hexes { get; }
@@ -459,6 +538,7 @@ public partial class MapView : Node2D
 
         public void UpdateColors(ClientWorld world, ContentMessage? content, (MapLayer, float)[] active, byte[]? fog)
         {
+            bool any = false;
             for (int r = 0; r < H; r++)
             {
                 for (int c = 0; c < W; c++)
@@ -466,6 +546,13 @@ public partial class MapView : Node2D
                     int col = X0 + c;
                     int row = Y0 + r;
                     int i = world.Index(col, row);
+
+                    // Unknown hexes are not drawn at all (decision of 2026-11-18): a zero-size instance costs the GPU nothing.
+                    bool known = world.Visibility[i] != MapChunkMessage.Unknown;
+                    any |= known;
+                    int t = ((r * W) + c) * Stride;
+                    _buffer[t] = known ? 1 : 0;
+                    _buffer[t + 5] = known ? 1 : 0;
                     Color tint = OverlayColors.Tint(active, world, content, fog, i);
                     int o = (((r * W) + c) * Stride) + 8;
                     _buffer[o] = tint.R;
@@ -476,7 +563,11 @@ public partial class MapView : Node2D
                     // Tiles: a variant picked by the cell (stable), relief and feature tiles, river edges.
                     int variant = (int)(((uint)i * 2654435761u) >> 30) % ArtLibrary.BiomeVariants;
                     int relief = world.Relief[i];
-                    _buffer[o + 4] = (world.Biome[i] * ArtLibrary.BiomeVariants) + variant + (1000 * relief);
+                    // Remembered hexes carry +10000: the shader turns them grey (fog of war with memory, 2026-11-18).
+                    // Remembered hexes next to seen ones carry +20000: half grey, a soft edge of the fog.
+                    bool remembered = world.Visibility[i] == MapChunkMessage.Remembered;
+                    int fogCode = !remembered ? 0 : SeenNeighbour(world, col, row) ? 20000 : 10000;
+                    _buffer[o + 4] = (world.Biome[i] * ArtLibrary.BiomeVariants) + variant + (1000 * relief) + fogCode;
                     _buffer[o + 5] = relief switch
                     {
                         1 => ArtLibrary.HillsTile + (variant & 1),
@@ -492,7 +583,19 @@ public partial class MapView : Node2D
             Hexes.Buffer = _buffer;
             ColorsDirty = false;
             EverColored = true;
+            AnyKnown = any;
         }
+
+        private static bool SeenNeighbour(ClientWorld w, int col, int row)
+        {
+            bool odd = (col & 1) == 1;
+            return Seen(w, col, row - 1) || Seen(w, col, row + 1)
+                || Seen(w, col + 1, odd ? row : row - 1) || Seen(w, col + 1, odd ? row + 1 : row)
+                || Seen(w, col - 1, odd ? row : row - 1) || Seen(w, col - 1, odd ? row + 1 : row);
+        }
+
+        private static bool Seen(ClientWorld w, int col, int row) =>
+            row >= 0 && row < w.Height && w.Visibility[w.Index(col, row)] == MapChunkMessage.Visible;
 
         // River sizes on all six edges, 2 bits each (N, NE, SE own; S, SW, NW belong to the neighbours, ADR 0012 layout).
         private static int RiverBits(ClientWorld w, int col, int row)

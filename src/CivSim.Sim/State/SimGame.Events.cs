@@ -78,7 +78,7 @@ public sealed partial class SimGame
             {
                 Building b = Buildings[finished[_events.NextInt(finished.Count)]];
                 b.State = BuildingState.Removed;
-                BuildingAt[b.Cell] = -1;
+                TakeOffHex(b);
                 civ.Buildings.Remove(b.Id);
                 Map.MarkCellDirty(b.Cell);
                 News.Add((civ.Id, $"The fire burned our {Content.Buildings[b.Type].Name.ToLowerInvariant()}."));

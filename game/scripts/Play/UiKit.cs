@@ -102,6 +102,7 @@ public static class UiKit
 
     private static readonly Dictionary<string, Color> CategoryColors = new()
     {
+        ["basics"] = new Color("a89878"),
         ["food"] = new Color("5f9e3a"),
         ["industry"] = new Color("c07a38"),
         ["building"] = new Color("8a7a60"),

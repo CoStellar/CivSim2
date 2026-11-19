@@ -11,10 +11,11 @@ public sealed class DiplomacyTests
     // Three peoples that have all met; people 1 is led by the AI so that it answers.
     private static SimGame Met()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 3) { Ai = false });
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 3) { Ai = false }).Basics();
         foreach (Civ a in g.Civs)
         {
             a.KnownTech[Content.TechId("barter")] = true;
+            a.KnownTech[Content.TechId("currency")] = true; // no limit of one agreement per trading post
             foreach (Civ b in g.Civs)
             {
                 a.Known[g.Settlements[b.Settlements[0]].Center] = true;
@@ -89,7 +90,7 @@ public sealed class GoalTests
     [Fact]
     public void TheFirstPeopleInTheMiddleAgesWins()
     {
-        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false, Goal = GameGoal.FirstToEra, GoalEra = 4 });
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false, Goal = GameGoal.FirstToEra, GoalEra = 4 }).Basics();
         g.Civs[1].Era = 4; // eras are levels: reached by knowing enough technologies of the era before
         for (int i = 0; i < SimContent.TicksPerMinute; i++)
         {

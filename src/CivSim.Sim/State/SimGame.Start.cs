@@ -28,19 +28,24 @@ public sealed class SiteScores
         }
 
         Total = new byte[cells];
+        Seen = new byte[cells];
     }
 
     /// <summary>Score per criterion per hex (0 = water or worthless, 100 = best of the map).</summary>
     public byte[][] Values { get; }
 
-    /// <summary>Overall score per hex, 0–100.</summary>
+    /// <summary>Overall score per hex, 0–100 (with deposits and soil: for the summary after the game).</summary>
     public byte[] Total { get; }
+
+    /// <summary>
+    /// Overall score per hex, 0–100, from what anyone sees while choosing (terrain, water, trees; no deposits or soil):
+    /// what the AI chooses by, so it knows no more than the player (known issue 23, 2026-11-19).
+    /// </summary>
+    public byte[] Seen { get; }
 }
 
 public sealed partial class SimGame
 {
-    private const int StartScoreRadius = 3;
-    private const int StartRoomRadius = 6;
 
     /// <summary>Site scores (computed once at creation).</summary>
     public SiteScores? Sites { get; private set; }
@@ -57,17 +62,49 @@ public sealed partial class SimGame
     /// <summary>Real ticks the current chooser has left.</summary>
     public int PickTicksLeft { get; private set; }
 
-    /// <summary>Ticks a person gets to choose (15 s to look, 15 s to pick).</summary>
-    public const int PickTicks = 30 * SimContent.TicksPerSecond;
+    /// <summary>Ticks a person gets to choose (startPhase.pickSeconds).</summary>
+    public int PickTicks => Content.StartPhase.PickTicks;
 
     /// <summary>Start hex chosen by each people (−1 = not yet).</summary>
     public int[] StartCell { get; private set; } = [];
 
-    /// <summary>Hexes around a chosen start where no other people may start.</summary>
-    public int BlockRadius => Content.FoundMinDistance * 3;
+    /// <summary>Hexes around a chosen start where no other people may start (Patryk, 2026-11-19: 15 took too much of a continent).</summary>
+    public int BlockRadius => Content.StartPhase.BlockRadius;
+
+    /// <summary>
+    /// How far the shown circle of a taken start lies from the start itself (Patryk, 2026-11-19: the circles must not give the
+    /// start away). The circle is this much wider, so it still covers every hex too close to the start.
+    /// </summary>
+    public int BlockFuzz => Content.StartPhase.BlockFuzz;
+
+    /// <summary>Centre of each taken start's circle: a hex near the start, from the seed (−1 = not chosen).</summary>
+    public int[] BlockCenter { get; private set; } = [];
+
+    /// <summary>Radius of the shown circles: the block plus the fuzz.</summary>
+    public int ShownBlockRadius => BlockRadius + BlockFuzz;
+
+    // A hex within the fuzz of the start, chosen by the seed and the people: the same in every replay.
+    private int FuzzedCenter(int civ, int cell)
+    {
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(BlockFuzz)];
+        int n = Geo.Range(Geo.FromIndex(cell), BlockFuzz, area);
+        ulong z = (Settings.Seed * 0x9E3779B97F4A7C15UL) + ((ulong)(civ + 1) * 0xBF58476D1CE4E5B9UL) + (ulong)cell;
+        z = (z ^ (z >> 31)) * 0x94D049BB133111EBUL;
+        return Geo.Index(area[(int)((z ^ (z >> 29)) % (ulong)n)]);
+    }
 
     /// <summary>Scores the whole map for starting (once).</summary>
     public void ScoreSites()
+    {
+        int n = Geo.CellCount;
+        var scores = new SiteScores(n);
+        Score(scores.Total, scores.Values, ground: true);
+        Score(scores.Seen, null, ground: false);
+        Sites = scores;
+    }
+
+    // Scores every hex into total (and, with values, each criterion). Without ground, deposits and soil count as unknown.
+    private void Score(byte[] totals, byte[][]? values, bool ground)
     {
         int n = Geo.CellCount;
         var raw = new int[SiteScores.Criteria.Length][];
@@ -76,7 +113,7 @@ public sealed partial class SimGame
             raw[k] = new int[n];
         }
 
-        var area = new HexCoord[HexGlobe.RangeSize(StartRoomRadius)];
+        var area = new HexCoord[HexGlobe.RangeSize(Content.StartPhase.RoomRadius)];
         int copper = DepositId("copper");
         int tin = DepositId("tin");
         int iron = DepositId("iron_ore");
@@ -93,14 +130,14 @@ public sealed partial class SimGame
                 continue;
             }
 
-            int m = Geo.Range(Geo.FromIndex(i), StartRoomRadius, area);
+            int m = Geo.Range(Geo.FromIndex(i), Content.StartPhase.RoomRadius, area);
             int food = 0, farm = 0, army = 0, mat = 0, room = 0, future = 0, safe = 0;
             for (int k = 0; k < m; k++)
             {
                 int c = Geo.Index(area[k]);
-                bool near = Geo.Distance(Geo.FromIndex(i), area[k]) <= StartScoreRadius;
+                bool near = Geo.Distance(Geo.FromIndex(i), area[k]) <= Content.StartPhase.ScoreRadius;
                 bool water = Content.World.Biomes[Map.Biome[c]].IsWater;
-                int dep = Map.DepositDepth[c] == 0 ? Map.Deposit[c] : 0;
+                int dep = ground ? Map.Deposit[c] : 0;
                 if (!water)
                 {
                     room++;
@@ -119,9 +156,9 @@ public sealed partial class SimGame
                 food += Content.World.Biomes[Map.Biome[c]].Food * 2 + (dep == fish || dep == game || dep == grain ? 4 : 0);
                 if (!water)
                 {
-                    farm += Map.Fertility[c] / 10;
+                    farm += ground ? Map.Fertility[c] / 10 : 0;
                     army += (Map.Relief[c] > 0 ? 3 : 0) + (Content.WalkCost[(Map.Biome[c] * 3) + Map.Relief[c]] > 100 ? 1 : 0);
-                    mat += (Map.Relief[c] > 0 ? 2 : 0) + (dep == stone || dep == clay || dep == flint ? 4 : 0) + (Content.Buildings[Content.Building("woodcutter").Id].Biomes[Map.Biome[c]] ? 1 : 0);
+                    mat += (Map.Relief[c] > 0 ? 2 : 0) + (dep == stone || dep == clay || dep == flint ? 4 : 0) + (Trees[c] == Forest ? 2 : Trees[c] == Grove ? 1 : 0);
                     safe += Map.GrowingSeason[c] / 10;
                 }
 
@@ -146,7 +183,6 @@ public sealed partial class SimGame
             raw[6][i] = safe;
         }
 
-        var scores = new SiteScores(n);
         var weights = new[] { 30, 20, 10, 15, 10, 5, 10 };
         var max = new int[raw.Length];
         for (int k = 0; k < raw.Length; k++)
@@ -165,7 +201,11 @@ public sealed partial class SimGame
             for (int k = 0; k < raw.Length; k++)
             {
                 int v = max[k] == 0 ? 0 : raw[k][i] * 100 / max[k];
-                scores.Values[k][i] = (byte)v;
+                if (values is not null)
+                {
+                    values[k][i] = (byte)v;
+                }
+
                 t += v * weights[k];
             }
 
@@ -175,10 +215,8 @@ public sealed partial class SimGame
 
         for (int i = 0; i < n; i++)
         {
-            scores.Total[i] = (byte)(total[i] * 100 / bestTotal);
+            totals[i] = (byte)(total[i] * 100 / bestTotal);
         }
-
-        Sites = scores;
     }
 
     private int DepositId(string key)
@@ -207,10 +245,11 @@ public sealed partial class SimGame
             return "Not in the mountains.";
         }
 
+        // The shown circles are the rule: nobody learns more than they see.
         HexCoord c = Geo.FromIndex(cell);
-        foreach (int s in StartCell)
+        foreach (int s in BlockCenter)
         {
-            if (s >= 0 && Geo.Distance(Geo.FromIndex(s), c) < BlockRadius)
+            if (s >= 0 && Geo.Distance(Geo.FromIndex(s), c) < ShownBlockRadius)
             {
                 return "Too close to another people.";
             }
@@ -224,6 +263,8 @@ public sealed partial class SimGame
         Picking = true;
         StartCell = new int[Civs.Count];
         Array.Fill(StartCell, -1);
+        BlockCenter = new int[Civs.Count];
+        Array.Fill(BlockCenter, -1);
         PickOrder.Clear();
         for (int c = 0; c < Civs.Count; c++)
         {
@@ -264,9 +305,9 @@ public sealed partial class SimGame
         int best = 0;
         for (int i = 0; i < Geo.CellCount; i++)
         {
-            if (sites.Total[i] > best && CannotStart(i) is null)
+            if (sites.Seen[i] > best && CannotStart(i) is null)
             {
-                best = sites.Total[i];
+                best = sites.Seen[i];
             }
         }
 
@@ -275,7 +316,7 @@ public sealed partial class SimGame
         var pool = new List<int>();
         for (int i = 0; i < Geo.CellCount; i++)
         {
-            if (sites.Total[i] >= bar && CannotStart(i) is null)
+            if (sites.Seen[i] >= bar && CannotStart(i) is null)
             {
                 pool.Add(i);
             }
@@ -320,6 +361,7 @@ public sealed partial class SimGame
         }
 
         StartCell[civ.Id] = cell;
+        BlockCenter[civ.Id] = FuzzedCenter(civ.Id, cell);
         PickIndex++;
         if (PickIndex < PickOrder.Count)
         {

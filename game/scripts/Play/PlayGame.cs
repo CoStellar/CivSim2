@@ -19,7 +19,7 @@ public partial class PlayGame : Node2D
 {
     private const float PanSpeed = 900f;
     private const float MinZoom = 0.08f;
-    private const float MaxZoom = 2.5f;
+    private const float MaxZoom = 3.5f;
 
     private readonly ulong _seed;
     private readonly bool _startPhase;
@@ -50,9 +50,12 @@ public partial class PlayGame : Node2D
     private readonly List<(double At, Action Do)> _script = [];
     private double _time;
 
+    private readonly string? _scenario;
+
     /// <summary>Creates the screen; the game starts when the node enters the tree.</summary>
-    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1)
+    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1, string? scenario = null)
     {
+        _scenario = scenario;
         _goal = goal;
         _startPhase = startPhase;
         _seed = seed;
@@ -123,6 +126,25 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Script step: builds a track from the first settlement a few hexes up and to the side.</summary>
+    public void ScriptRoad()
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        foreach (PlaySettlementView s in v.Settlements)
+        {
+            if (s.Civ == v.Civ)
+            {
+                int[] cells = [s.Col, s.Row, s.Col, s.Row - 1, s.Col, s.Row - 2, s.Col + 1, s.Row - 3 + (s.Col & 1), s.Col + 2, s.Row - 3];
+                _session.Play(PlayCommandKind.BuildRoad, 1, cells: cells);
+                return;
+            }
+        }
+    }
+
     /// <summary>Script step: opens the research or people window.</summary>
     public void ScriptOpen(string mode)
     {
@@ -139,6 +161,65 @@ public partial class PlayGame : Node2D
 
     /// <summary>Script step: sets the speed.</summary>
     public void ScriptSpeed(SimulationSpeed speed) => _session?.SetSpeed(speed);
+
+    /// <summary>Script step: a real left click (press and release) at a point of the screen, through Godot's input.</summary>
+    public void ScriptMouseClick(Vector2 at)
+    {
+        GetViewport().WarpMouse(at);
+        foreach (bool down in new[] { true, false })
+        {
+            Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = down, Position = at, GlobalPosition = at });
+        }
+    }
+
+    /// <summary>Script step: sends the first own unit of a kind by an offset and selects it.</summary>
+    public void ScriptSendKind(string key, int dCol, int dRow)
+    {
+        if (_session?.PlayView is not { } v || _session.PlayContent is not { } c)
+        {
+            return;
+        }
+
+        PlayUnitView? u = v.Units.FirstOrDefault(x => x.Civ == v.Civ && c.Units[x.Kind].Key == key);
+        if (u is not null)
+        {
+            _session.Play(PlayCommandKind.Move, u.Id, u.Col + dCol, u.Row + dRow);
+            _unit = u.Id;
+            if (_overlay is not null)
+            {
+                _overlay.SelectedUnit = u.Id;
+            }
+
+            UpdateUi();
+        }
+    }
+
+    /// <summary>Script step: lights a technology in the tree as if the mouse were on it.</summary>
+    public void ScriptHoverTech(string key)
+    {
+        if (_session?.PlayContent is { } c && c.Techs.FirstOrDefault(t => t.Key == key) is { } t)
+        {
+            TechTree.Hovered = t.Id;
+            _bigSignature = "";
+            UpdateUi();
+        }
+    }
+
+    /// <summary>Script step: moves the mouse there as a real move (hover effects).</summary>
+    public void ScriptMouseMove(Vector2 at)
+    {
+        GetViewport().WarpMouse(at);
+        Input.ParseInputEvent(new InputEventMouseMotion { Position = at, GlobalPosition = at, Relative = new Vector2(1, 0) });
+    }
+
+    /// <summary>Script step: researches a technology by key.</summary>
+    public void ScriptResearch(string key)
+    {
+        if (_session?.PlayContent is { } c && c.Techs.FirstOrDefault(t => t.Key == key) is { } t)
+        {
+            _session.Play(PlayCommandKind.Research, t.Id);
+        }
+    }
 
     /// <summary>Script step: researches the first technology that can start now.</summary>
     public void ScriptResearchAny()
@@ -182,6 +263,43 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Script step: selects the hex of our building with the most neighbours on its hex.</summary>
+    public void ScriptSelectBusiestHex()
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        var best = v.Buildings.Where(b => b.Civ == v.Civ).GroupBy(b => (b.Col, b.Row)).OrderByDescending(x => x.Count()).FirstOrDefault();
+        if (best is not null)
+        {
+            _selected = best.Key;
+            _unit = -1;
+            UpdateUi();
+        }
+    }
+
+    /// <summary>Script step: the first own standing unit patrols up and down its column, four hexes north of it.</summary>
+    public void ScriptPatrolFirst()
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        foreach (PlayUnitView u in v.Units)
+        {
+            if (u.Civ == v.Civ && u.State != 0 && !_session.PlayContent!.Units[u.Kind].System)
+            {
+                int c = u.Col;
+                int r = u.Row;
+                _session.Play(PlayCommandKind.Patrol, u.Id, cells: [c, r - 1, c, r - 2, c, r - 3, c, r - 4, c, r - 3, c, r - 2]);
+                return;
+            }
+        }
+    }
+
     /// <summary>Script step: sends the first own standing unit by an offset from where it stands, and selects it.</summary>
     public void ScriptMoveFirst(int dCol, int dRow, bool hidden)
     {
@@ -209,10 +327,10 @@ public partial class PlayGame : Node2D
     /// <inheritdoc/>
     public override void _Ready()
     {
-        _camera = new Camera2D { Zoom = new Vector2(0.9f, 0.9f) };
+        _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
-        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase, Goal = _goal }, _dataDirectory);
+        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         _session.CommandRefused += reason => Toast(reason);
         _session.PlacesReceived += m =>
@@ -240,6 +358,7 @@ public partial class PlayGame : Node2D
 
             RefreshChronicle();
         };
+        AddChild(new ParchmentBackground()); // the unknown world: an old map, not black
         _map = new MapView(_layers, _art);
         AddChild(_map);
         _overlay = new PlayOverlay { ZIndex = 50 };
@@ -277,6 +396,8 @@ public partial class PlayGame : Node2D
         if (!_bound && _session.Worlds.TryGetValue(0, out ClientWorld? earth) && _session.Content is not null && _session.PlayContent is not null)
         {
             _map.Bind(_session, earth);
+            _overlay.World = earth;
+            _overlay.PickProblem = StartProblem;
             _bound = true;
             _session.SetSpeed(SimulationSpeed.X1);
         }
@@ -312,9 +433,10 @@ public partial class PlayGame : Node2D
         }
 
         _overlay.SetSelected(_selected);
+        _map.SetLift(_selected, _overlay.Lift, _camera.Position);
         if (_session.PlayContent is { } content)
         {
-            _overlay.Show(content, _session.PlayView, _map.Period, visible);
+            _overlay.Show(content, _session.PlayView, _map.Period, visible, _camera.Zoom.X);
         }
 
         _uiTimer -= delta;
@@ -350,6 +472,12 @@ public partial class PlayGame : Node2D
             return;
         }
 
+        if (CombatInput(e))
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         switch (e)
         {
             case InputEventMouseButton { ButtonIndex: MouseButton.WheelUp, Pressed: true } w:
@@ -361,27 +489,54 @@ public partial class PlayGame : Node2D
             case InputEventMouseButton { ButtonIndex: MouseButton.Middle } m:
                 _dragFrom = m.Pressed ? m.Position : null;
                 break;
+            case InputEventMouseMotion when _drawing:
+                ExtendDraw();
+                break;
             case InputEventMouseMotion motion when _dragFrom is { } from:
                 _camera.Position -= (motion.Position - from) / _camera.Zoom.X;
                 _dragFrom = motion.Position;
                 break;
-            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true }:
-                Click();
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left } left:
+                if (left.Pressed && _drawMode is DrawMode.Patrol or DrawMode.Route or DrawMode.Road && !_drawing)
+                {
+                    BeginDraw(_drawMode);
+                }
+                else if (!left.Pressed && _drawing && _drawMode is DrawMode.Patrol or DrawMode.Route or DrawMode.Road)
+                {
+                    FinishDraw();
+                }
+                else if (left.Pressed)
+                {
+                    Click();
+                }
+
                 break;
-            case InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true }:
-                if (_placing > 0)
+            case InputEventMouseButton { ButtonIndex: MouseButton.Right } right:
+                if (right.Pressed && _placing > 0)
                 {
                     StopPlacing();
                 }
-                else if (_unit >= 0 && MouseCell() is { } target)
+                else if (right.Pressed && _drawMode != DrawMode.None)
                 {
-                    bool attack = IsArmy(_unit) && EnemyAt(target.Col, target.Row);
-                    _session.Play(attack ? PlayCommandKind.Attack : PlayCommandKind.Move, _unit, target.Col, target.Row, _hiddenWalk.Contains(_unit));
+                    CancelDraw();
+                }
+                else if (right.Pressed && SelectedUnitIds().Count > 0)
+                {
+                    // Press: start drawing; a quick click without moving is a plain "go there".
+                    BeginDraw(DrawMode.Move);
+                }
+                else if (!right.Pressed && _drawing && _drawMode == DrawMode.Move)
+                {
+                    FinishDraw();
                 }
 
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Escape }:
-                if (_help.Visible)
+                if (_drawMode != DrawMode.None)
+                {
+                    CancelDraw();
+                }
+                else if (_help.Visible)
                 {
                     _help.Visible = false;
                 }
@@ -415,8 +570,18 @@ public partial class PlayGame : Node2D
             case InputEventKey { Pressed: true, Keycode: Key.Minus or Key.KpSubtract }:
                 _session.SetSpeed(_session.PlayView?.Speed switch { SimulationSpeed.X4 => SimulationSpeed.X2, SimulationSpeed.X2 => SimulationSpeed.X1, _ => SimulationSpeed.Paused });
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 } f:
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 or Key.Key6 } f:
                 OpenWindow(WindowNames[(int)(f.Keycode - Key.Key1)]);
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P }:
+                OpenWindow("Units"); // patrols are listed first there
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.F5 or Key.F6 or Key.F7 or Key.F8 or Key.F9 } dk when _session.PlayView?.Debug == true:
+                // Test scenarios only: F5 goods, F6 finish research, F7 reveal the map, F8 more people, F9 next era.
+                _session.Play(PlayCommandKind.Debug, (int)(dk.Keycode - Key.F5));
+                break;
+            case InputEventKey { Pressed: true, Keycode: Key.G }:
+                ToggleRoutes();
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.H }:
                 _help.Visible = !_help.Visible;
@@ -431,6 +596,43 @@ public partial class PlayGame : Node2D
         }
 
         GetViewport().SetInputAsHandled();
+    }
+
+    // Why the player cannot start on a hex (the same rules as the server: land, not mountains, away from the taken starts).
+    private string? StartProblem((int Col, int Row) h)
+    {
+        if (_session is null || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.Content is not { } content || _session.PlayView is not { } v)
+        {
+            return null;
+        }
+
+        int i = w.Index(h.Col, h.Row);
+        if (content.Biomes[w.Biome[i]].IsWater)
+        {
+            return "Water: a people starts on land";
+        }
+
+        if (w.Relief[i] == 2)
+        {
+            return "Mountains: not here";
+        }
+
+        if (v.TakenStarts is { } taken)
+        {
+            Vector2 at = HexLayout.Center(h.Col, h.Row);
+            for (int k = 0; k + 1 < taken.Length; k += 2)
+            {
+                Vector2 d = HexLayout.Center(taken[k], taken[k + 1]) - at;
+                float wrap = _map!.Period.X;
+                d.X = wrap > 0 ? Math.Abs(((d.X % wrap) + (wrap * 1.5f)) % wrap - (wrap / 2)) : d.X;
+                if (d.Length() < v.BlockRadius * HexLayout.ColumnStep)
+                {
+                    return "Too close to another people";
+                }
+            }
+        }
+
+        return null;
     }
 
     private void Click()
@@ -476,7 +678,14 @@ public partial class PlayGame : Node2D
             return;
         }
 
+        bool add = Input.IsKeyPressed(Key.Shift) && _overlay is not null;
+        if (!add)
+        {
+            _overlay?.SelectedUnits.Clear();
+        }
+
         _selected = cell;
+        int before = _unit;
         _unit = -1;
         if (_session.PlayView is { } view)
         {
@@ -484,15 +693,26 @@ public partial class PlayGame : Node2D
             {
                 if (u.Civ == view.Civ && u.State != 0 && u.Col == cell.Col && u.Row == cell.Row)
                 {
-                    _unit = u.Id;
-                    break;
+                    // With Shift every unit on the hex joins the selection.
+                    if (add)
+                    {
+                        _overlay!.SelectedUnits.Add(u.Id);
+                    }
+
+                    _unit = _unit < 0 ? u.Id : _unit;
                 }
             }
+        }
+
+        if (add && before >= 0)
+        {
+            _overlay!.SelectedUnits.Add(before);
         }
 
         if (_overlay is not null)
         {
             _overlay.SelectedUnit = _unit;
+            _overlay.Restatic();
         }
 
         UpdateUi();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CivSim.Game.Map;
 using CivSim.Game.Ui;
 using CivSim.Protocol.Messages;
@@ -15,7 +16,7 @@ namespace CivSim.Game.Play;
 /// </summary>
 public partial class PlayGame
 {
-    private static readonly string[] WindowNames = ["Settlements", "Research", "Peoples", "Thinkers", "Summary"];
+    private static readonly string[] WindowNames = ["Settlements", "Research", "Peoples", "Thinkers", "Summary", "Units"];
 
     // Decorative years at the start of each era and at the end of the last (only for the screen, never for the rules).
     private static readonly int[] EraYears = [-10000, -6000, -3000, -1200, 500, 1500];
@@ -27,6 +28,7 @@ public partial class PlayGame
     private Label _clockLabel = null!;
     private readonly List<(Button Button, SimulationSpeed Speed)> _speedButtons = [];
     private Button _researchChip = null!;
+    private Button _patrolsButton = null!;
     private PanelContainer _advisorPanel = null!;
     private Label _advisorName = null!;
     private Label _advisorText = null!;
@@ -120,6 +122,9 @@ public partial class PlayGame
         }
 
         right.AddChild(new VSeparator());
+        _patrolsButton = UiKit.Button("Patrols", () => OpenWindow("Units"), "Our patrols and units: stop one or all of them (P)");
+        right.AddChild(_patrolsButton);
+        right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
         right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls, first steps and the font (H)"));
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
@@ -207,6 +212,7 @@ public partial class PlayGame
         _toastPanel.AddChild(_toast);
 
         int half = (int)Math.Min(UiKit.W(560), (screen.X / 2) - 16);
+        _windowHalf = half;
         _window = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -half, OffsetRight = half, OffsetTop = -(screen.Y / 2) + topH + 8, OffsetBottom = (screen.Y / 2) - 150, Visible = false };
         root.AddChild(_window);
         var win = new VBoxContainer();
@@ -262,7 +268,11 @@ public partial class PlayGame
 
     private const string HelpText =
         "Left click: select a settlement, building, unit or hex. Its panel opens on the left.\n" +
-        "Right click: send the selected unit there (on an enemy: attack). While placing: cancel.\n" +
+        "Right click: send the selected units there (on an enemy: attack). Hold the right button and draw over the hexes: they walk exactly that way.\n" +
+        "Shift + left click: add the units on a hex to the selection.\n" +
+        "F: combat mode. The left button picks soldiers only: click one, drag a box, Ctrl + click a line of one kind side by side, Shift + drag paints hexes they guard. Right click with several soldiers: they go in formation (melee in front, archers behind, riders on the ends). Z hold, X aggressive, C passive, V split in half, B refit at home, N stop guarding.\n" +
+        "G: which routes show - none, orders under way, or those and the standing ones (patrols, caravan routes). The routes of what is selected always show.\n" +
+        "Roads tab in the bar: pick a track or road, then draw it hex by hex with the left button.\n" +
         "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +
         "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
         "WASD, arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
@@ -340,11 +350,23 @@ public partial class PlayGame
             b.SetPressedNoSignal(v.Speed == s);
         }
 
-        _clockLabel.Text = Clock();
+        _clockLabel.Text = v.Debug ? $"TEST {Clock()}" : Clock();
+        _clockLabel.TooltipText = v.Debug ? "Test scenario. F5: +200 of every good. F6: finish the research. F7: reveal the map. F8: +10 people. F9: next era." : "";
+        _clockLabel.MouseFilter = v.Debug ? Control.MouseFilterEnum.Stop : Control.MouseFilterEnum.Ignore;
+        int patrols = v.Units.Count(u => u.Civ == v.Civ && u.Patrol is not null);
+        int hungry = v.Units.Count(u => u.Civ == v.Civ && u.Hunger > 0);
+        _patrolsButton.Visible = patrols > 0 || hungry > 0;
+        _patrolsButton.Text = hungry > 0 ? $"Units: {hungry} hungry" : $"Patrols {patrols}";
+        _patrolsButton.Modulate = hungry > 0 ? new Color(1f, 0.55f, 0.5f) : Colors.White;
+        foreach ((Button b, SimulationSpeed _) in _speedButtons)
+        {
+            b.Visible = !v.Picking; // choosing the start goes in real time
+        }
+
         if (v.Picking)
         {
-            _eraLabel.Text = v.MyPick ? $"Choose where your people starts ({v.PickSecondsLeft} s)" : $"{v.WhoPicks} are choosing…";
-            SetResources("pick", () => _resBox.AddChild(UiKit.Label("Click a land hex to start there. Deposits and soil stay hidden until everyone has chosen; red circles are taken.", 14, UiKit.Muted)));
+            _eraLabel.Text = v.MyPick ? $"Your turn: {v.PickSecondsLeft} s" : $"{v.WhoPicks} are choosing…";
+            SetResources("pick", () => _resBox.AddChild(UiKit.Label("Choosing the start", 14, UiKit.Muted)));
             return;
         }
 
@@ -424,8 +446,9 @@ public partial class PlayGame
     private void UpdateAdvisor(PlayViewMessage v)
     {
         bool hasEvent = v.Event is not null;
-        _eventLabel.Visible = hasEvent;
-        _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" : "";
+        string season = v.SeasonSeconds <= 0 ? "" : v.Winter ? $"WINTER: {v.SeasonSeconds / 60}:{v.SeasonSeconds % 60:00} left" : v.SeasonSeconds <= 60 ? $"Winter in {v.SeasonSeconds} s" : "";
+        _eventLabel.Visible = hasEvent || season.Length > 0;
+        _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" + (season.Length > 0 ? $"   {season}" : "") : season;
         if (v.Advisor is { } a)
         {
             _advisorName.Text = $"{a.Name}, {a.Rarity.ToLowerInvariant()} advisor";
@@ -487,8 +510,22 @@ public partial class PlayGame
 
     private void UpdateBanner(PlayContentMessage c)
     {
-        _banner.Visible = _placing > 0;
-        if (_placing > 0)
+        if (_session?.PlayView is { Picking: true } pick)
+        {
+            _banner.Visible = true;
+            _bannerText.Text = pick.MyPick
+                ? $"Click a land hex on the map where your people should start ({pick.PickSecondsLeft} s left; then the AI chooses for you).\nGreen under the mouse: you may start there. Red circles: taken by other peoples. Deposits and soil stay hidden until everyone has chosen."
+                : $"{pick.WhoPicks} are choosing where to start. Your turn comes; look around the map meanwhile.";
+            return;
+        }
+
+        string? hint = DrawHint();
+        _banner.Visible = _placing > 0 || hint is not null;
+        if (hint is not null)
+        {
+            _bannerText.Text = hint;
+        }
+        else if (_placing > 0)
         {
             PlayBuildingInfo t = c.Buildings[_placing];
             _bannerText.Text = $"Placing {t.Name} ({Amounts(c, t.Price)}). Click a green hex.  Shift: place more.  Right click or Esc: cancel.";

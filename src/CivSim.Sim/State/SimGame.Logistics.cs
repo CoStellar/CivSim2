@@ -9,7 +9,7 @@ namespace CivSim.Sim.State;
 public sealed record SendCaravanCommand(int Civ, int From, int To, int Good, long Amount) : SimCommand(Civ);
 
 /// <summary>Set up a standing route: a caravan keeps carrying the good from one settlement to the other.</summary>
-public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amount) : SimCommand(Civ);
+public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amount, int[]? Path = null) : SimCommand(Civ);
 
 /// <summary>Send porters with the materials a construction is still missing (after porters were killed on the way).</summary>
 public sealed record BringMaterialsCommand(int Civ, int Building) : SimCommand(Civ);
@@ -92,7 +92,6 @@ public sealed partial class SimGame
             porters.Target = b.Id;
             b.OnTheWay[g] += missing[g];
             b.Porters++;
-            PackFood(porters, s, b.Cell);
             Walk(porters, b.Cell);
         }
 
@@ -153,7 +152,7 @@ public sealed partial class SimGame
     {
         ArgumentNullException.ThrowIfNull(b);
         int total = Math.Max(1, Content.Buildings[b.Type].BuildTicks);
-        return b.State == BuildingState.Construction ? (int)Math.Clamp(b.WorkCap - (b.FinishTick - Ticks), 0, total) : total - b.RemainingTicks;
+        return b.State == BuildingState.Construction ? (int)Math.Clamp(b.WorkCap - ((b.FinishTick - Ticks) * b.Speed / 100), 0, total) : total - b.RemainingTicks;
     }
 
     // Starts (or goes on with) the work up to what the materials at the site allow; otherwise waits for materials.
@@ -163,7 +162,7 @@ public sealed partial class SimGame
         if (done < b.WorkCap)
         {
             b.State = BuildingState.Construction;
-            b.FinishTick = Ticks + (b.WorkCap - done);
+            b.FinishTick = Ticks + Math.Max(1, (b.WorkCap - done) * 100 / Math.Max(1, b.Speed));
             Schedule(b);
         }
         else
@@ -173,8 +172,29 @@ public sealed partial class SimGame
     }
 
     // A carrier unit leaves a settlement with goods from its store; its people stop working until they are back.
+    // Goods between settlements go in caravans once the people has the wheel, horseback riding and the horses a caravan takes;
+    // before that porters carry them (decision of 2026-11-18). The horses come back with the caravan.
     private Unit NewCarrier(Civ civ, int kind, Settlement home, int fromCell, long[] goods, int percent)
     {
+        long horses = 0;
+        if (kind == Content.Caravans)
+        {
+            UnitType caravan = Content.Units[Content.Caravans];
+            int h = GoodId("horses");
+            if (Knows(civ, caravan) && (caravan.HorsesPerCaravan == 0 || (h >= 0 && home.Stock[h] >= caravan.HorsesPerCaravan)))
+            {
+                horses = caravan.HorsesPerCaravan;
+                if (h >= 0)
+                {
+                    home.Stock[h] -= horses;
+                }
+            }
+            else
+            {
+                kind = Content.Porters;
+            }
+        }
+
         var cargo = new long[goods.Length];
         long total = 0;
         for (int g = 0; g < goods.Length; g++)
@@ -185,28 +205,21 @@ public sealed partial class SimGame
         }
 
         UnitType t = Content.Units[kind];
-        int people = (int)Math.Clamp((total + t.CargoPerPerson - 1) / Math.Max(1, t.CargoPerPerson), 1, Math.Max(1, home.People - 1));
+        long each = t.CargoPerPerson + (Bonus(civ, EffectKind.Cargo, t.Key, t.Groups) * SimContent.One); // baskets: Carrying
+        int people = (int)Math.Clamp((total + each - 1) / Math.Max(1, each), 1, Math.Max(1, home.People - 1));
         home.People = Math.Max(1, home.People - people);
-        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = fromCell, State = UnitState.Idle, Cargo = cargo, Home = home.Id, ReturnCell = fromCell };
+        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = fromCell, State = UnitState.Idle, Cargo = cargo, Home = home.Id, ReturnCell = fromCell, Horses = horses };
         Units.Add(u);
         civ.Units.Add(u.Id);
         civ.Dirty = true;
+        Watch(u);
         return u;
-    }
-
-    // Carriers take food for the whole way there and back; it is part of the cost of sending them (taken from home, as far as
-    // there is food: they never wait for it).
-    private void PackFood(Unit u, Settlement home, int toCell)
-    {
-        long hexes = Geo.Distance(Geo.FromIndex(u.Cell), Geo.FromIndex(toCell));
-        long food = Math.Min(home.Stock[Content.Food], u.People * hexes * 2 * Content.TripFoodPer10Hexes / 10);
-        home.Stock[Content.Food] -= food;
     }
 
     // Starts a unit walking to a hex; arrives at once when already there. A caravan with no way there turns back with its load.
     private void Walk(Unit u, int cell)
     {
-        bool way = FindPath(u.Cell, cell, u.Path, Content.Units[u.Kind].Naval);
+        bool way = FindPath(u.Cell, cell, u.Path, Content.Units[u.Kind].Naval, u.Civ);
         if (!way && u.Job == CarrierJob.ToSettlement)
         {
             u.Path.Clear();
@@ -270,6 +283,11 @@ public sealed partial class SimGame
                     Unload(home, u.Cargo);
                 }
 
+                if (u.Horses > 0 && GoodId("horses") is int h and >= 0)
+                {
+                    home.Stock[h] += u.Horses;
+                }
+
                 Gone(u);
                 break;
             default:
@@ -281,7 +299,34 @@ public sealed partial class SimGame
     private void GoHome(Unit u)
     {
         u.Job = CarrierJob.Returning;
+        if (u.Route >= 0 && Routes[u.Route].Path.Count > 0)
+        {
+            var back = new List<int>(Routes[u.Route].Path);
+            back.Reverse();
+            WalkVia(u, back, u.ReturnCell);
+            return;
+        }
+
         Walk(u, u.ReturnCell);
+    }
+
+    // Walks a carrier along a drawn path, then the shortest way from its end to the destination. Falls back to the
+    // shortest way when the drawing cannot be walked any more (a building on it, land changed hands…).
+    private void WalkVia(Unit u, IReadOnlyList<int> drawn, int dest)
+    {
+        var tail = new List<int>();
+        if (DrawnPath(u.Cell, drawn, false, u.Path, u.Civ) is not null || !FindPath(u.Path.Count > 0 ? u.Path[^1] : u.Cell, dest, tail, false, u.Civ))
+        {
+            Walk(u, dest);
+            return;
+        }
+
+        u.Path.AddRange(tail);
+        StartWalk(u, false);
+        if (u.State == UnitState.Idle)
+        {
+            Arrive(u);
+        }
     }
 
     private void Gone(Unit u)
@@ -297,9 +342,11 @@ public sealed partial class SimGame
             }
         }
 
+        Unwatch(u);
         u.State = UnitState.Gone;
         Civs[u.Civ].Units.Remove(u.Id);
         Civs[u.Civ].Dirty = true;
+        Sink(u);
         if (u.Route >= 0 && Routes[u.Route].Caravan == u.Id)
         {
             Routes[u.Route].Caravan = -1;
@@ -410,12 +457,19 @@ public sealed partial class SimGame
         }
 
         int dest = NearestStore(Settlements[to], s.Center);
-        PackFood(c, s, dest);
-        Walk(c, dest);
+        if (route >= 0 && Routes[route].Path.Count > 0)
+        {
+            WalkVia(c, Routes[route].Path, dest);
+        }
+        else
+        {
+            Walk(c, dest);
+        }
+
         return null;
     }
 
-    private string? AddRoute(Civ civ, int from, int to, int good, long amount)
+    private string? AddRoute(Civ civ, int from, int to, int good, long amount, int[]? drawn = null)
     {
         if ((uint)from >= (uint)Settlements.Count || (uint)to >= (uint)Settlements.Count || Settlements[from].Civ != civ.Id || Settlements[to].Civ != civ.Id || from == to)
         {
@@ -427,7 +481,20 @@ public sealed partial class SimGame
             return "Choose a good and an amount.";
         }
 
-        Routes.Add(new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount });
+        var route = new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount };
+        if (drawn is { Length: > 0 })
+        {
+            var check = new List<int>();
+            string? why = DrawnPath(drawn[0], drawn, false, check, civ.Id);
+            if (why is not null)
+            {
+                return why;
+            }
+
+            route.Path.AddRange(drawn);
+        }
+
+        Routes.Add(route);
         return null;
     }
 
@@ -471,13 +538,25 @@ public sealed partial class SimGame
     private void TradeCaravans(Civ a, Civ b, int giveGood, long giveAmount, int wantGood, long wantAmount)
     {
         (Settlement sa, Settlement sb) = ClosestPair(a, b);
+        if (!FindPath(sa.Center, sb.Center, _probe, false, a.Id) && SeaWay(a, b))
+        {
+            // No way on land: the goods go by trade ships between the harbours.
+            ShipGoods(a, b, giveGood, giveAmount);
+            ShipGoods(b, a, wantGood, wantAmount);
+            string sea = $"Trade ships set out: {giveAmount / SimContent.One} {Content.Goods[giveGood].Key} of {a.Name} for {wantAmount / SimContent.One} {Content.Goods[wantGood].Key} of {b.Name}.";
+            News.Add((a.Id, sea));
+            News.Add((b.Id, sea));
+            SyncTotals(a);
+            SyncTotals(b);
+            return;
+        }
+
         var load = new long[Content.Goods.Count];
         load[giveGood] = giveAmount;
         TakeFromCiv(a, sa, giveGood, giveAmount);
         Unit ca = NewCarrier(a, Content.Caravans, sa, NearestStore(sa, sb.Center), load, 100);
         ca.Job = CarrierJob.ToSettlement;
         ca.Target = sb.Id;
-        PackFood(ca, sa, NearestStore(sb, sa.Center));
         Walk(ca, NearestStore(sb, sa.Center));
 
         var back = new long[Content.Goods.Count];
@@ -486,7 +565,6 @@ public sealed partial class SimGame
         Unit cb = NewCarrier(b, Content.Caravans, sb, NearestStore(sb, sa.Center), back, 100);
         cb.Job = CarrierJob.ToSettlement;
         cb.Target = sa.Id;
-        PackFood(cb, sb, NearestStore(sa, sb.Center));
         Walk(cb, NearestStore(sa, sb.Center));
         string text = $"Caravans set out: {giveAmount / SimContent.One} {Content.Goods[giveGood].Key} of {a.Name} for {wantAmount / SimContent.One} {Content.Goods[wantGood].Key} of {b.Name}.";
         News.Add((a.Id, text));

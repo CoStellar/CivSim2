@@ -27,6 +27,15 @@ public enum BuildingState : byte
 /// <summary>One building on one hex. Identified by its index in <see cref="SimGame.Buildings"/>.</summary>
 public sealed class Building
 {
+    /// <summary>Building speed of its construction, percent (builders' yards in its settlement when it was placed).</summary>
+    public int Speed { get; set; } = 100;
+
+    /// <summary>Branch of research each worker speeds (schools, academies, universities), one per job.</summary>
+    public string[] Focus { get; set; } = [];
+
+    /// <summary>Places of its hex it takes: bits 0–3 (top left, top right, bottom left, bottom right).</summary>
+    public int Slots { get; set; } = 1;
+
     /// <summary>Index in the game's list.</summary>
     public int Id { get; init; }
 
@@ -82,6 +91,36 @@ public sealed class Building
 /// <summary>A settlement: a centre hex and the territory around it.</summary>
 public sealed class Settlement
 {
+    /// <summary>Its people gather food, wood and stone around it when they have no job (the player's order; on at the start).</summary>
+    public bool Gathering { get; set; } = true;
+
+    /// <summary>Richness of its land per good, percent (mean of its land hexes), worked out when its land changes.</summary>
+    public int[] ForageRichness { get; set; } = [];
+
+    /// <summary>What a worker does now, per mille (winter and clothing), as last worked out.</summary>
+    public int WorkPermille { get; set; } = 1000;
+
+    /// <summary>Homes in warm (stone) houses, worked out with the economy.</summary>
+    public int WarmHomes { get; set; }
+
+    /// <summary>Room for goods kept only in their own buildings (horses in stables), hundredths per good.</summary>
+    public long[] LimitRoom { get; set; } = [];
+
+    /// <summary>An aqueduct brings water into its land.</summary>
+    public bool Aqueduct { get; set; }
+
+    /// <summary>Growth its bathhouses and aqueduct add, percent of people a minute (worked out with the economy).</summary>
+    public int GrowthBonus { get; set; }
+
+    /// <summary>How much milder epidemics are here, percent (bathhouses, aqueduct).</summary>
+    public int EpidemicResist { get; set; }
+
+    /// <summary>Wounded soldiers its herbalists heal a minute (worked out with the economy).</summary>
+    public int HealPerMinute { get; set; }
+
+    /// <summary>Number of hexes the richness was worked out for (worked out again when the land grows).</summary>
+    public int ForageCells { get; set; } = -1;
+
     /// <summary>Index in the game's list.</summary>
     public int Id { get; init; }
 
@@ -136,11 +175,41 @@ public sealed class Settlement
     /// <summary>Abandoned settlements keep their id but nothing else.</summary>
     public bool Abandoned { get; set; }
 
+    /// <summary>Food everyone it feeds eats a minute (residents, its units, the advisor in the capital), paid at the ration.</summary>
+    public long Eating { get; set; }
+
+    /// <summary>Units it could not feed at the last ration.</summary>
+    public int RationShort { get; set; }
+
+    /// <summary>Residents it could not feed at the last ration (idle first, then workers).</summary>
+    public int HungryPeople { get; set; }
+
+    /// <summary>Of them, workers.</summary>
+    public int HungryWorkers { get; set; }
+
+    /// <summary>Missed rations in a row for its residents.</summary>
+    public int HungerStreak { get; set; }
+
+    /// <summary>Work of its workers in permille after hunger.</summary>
+    public int WorkersFedPermille { get; set; } = 1000;
+
+    /// <summary>Work of its people without a job (gathering) in permille after hunger.</summary>
+    public int IdleFedPermille { get; set; } = 1000;
+
+    /// <summary>People (residents and units) who starved to death at the last ration.</summary>
+    public int RationDead { get; set; }
+
     /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
     public long Wounds { get; set; }
 
     /// <summary>Under attack in the last combat step (for the view).</summary>
     public bool Besieged { get; set; }
+
+    /// <summary>People whose sight this settlement adds to (−1 = none).</summary>
+    public int WatchCiv { get; set; } = -1;
+
+    /// <summary>Sight radius counted for it.</summary>
+    public int WatchRadius { get; set; }
 }
 
 /// <summary>A civilization (player or AI).</summary>
@@ -155,7 +224,15 @@ public sealed class Civ
         Capacity = new long[goods];
         Rate = new long[goods];
         Remainder = new long[goods];
+        Made = new long[goods];
+        MadeRate = new long[goods];
     }
+
+    /// <summary>Goods made in all, hundredths × ticks per minute (experience by making: technologies that ask for goods made).</summary>
+    public long[] Made { get; }
+
+    /// <summary>Goods made per minute now, hundredths (recomputed with the economy).</summary>
+    public long[] MadeRate { get; }
 
     /// <summary>Index in the game's list.</summary>
     public int Id { get; }
@@ -199,8 +276,33 @@ public sealed class Civ
     /// <summary>Hexes this people has seen (fog of war).</summary>
     public bool[] Known { get; set; } = [];
 
-    /// <summary>Map chunks with newly seen hexes since the server last looked (the server clears it).</summary>
+    /// <summary>Per hex: 1 + the era in which prospectors last looked at it (0 = never).</summary>
+    public byte[] RockSeen { get; set; } = [];
+
+    /// <summary>Per hex: surveyors have looked at its soil.</summary>
+    public bool[] SoilSeen { get; set; } = [];
+
+    /// <summary>Map chunks whose hexes were explored, came into sight or went out of it since the server last looked (the
+    /// server clears it).</summary>
     public HashSet<int> NewlyKnown { get; } = [];
+
+    /// <summary>Observers per hex: units and settlements that see it now (the fog of war; seen while above zero).</summary>
+    public short[] Vision { get; set; } = [];
+
+    /// <summary>Owner of each hex when this people last saw it.</summary>
+    public short[] SeenOwner { get; set; } = [];
+
+    /// <summary>Road level of each hex when this people last saw it.</summary>
+    public byte[] SeenRoad { get; set; } = [];
+
+    /// <summary>Works of each hex as last seen (ditches, palisades, walls, aqueducts, bridges).</summary>
+    public ushort[] SeenWorks { get; set; } = [];
+
+    /// <summary>Buildings remembered on hexes not seen now, by hex.</summary>
+    public SortedDictionary<int, BuildingMemory> SeenBuildings { get; } = [];
+
+    /// <summary>Settlements remembered on hexes not seen now, by centre hex.</summary>
+    public SortedDictionary<int, SettlementMemory> SeenSettlements { get; } = [];
 
     /// <summary>Unit ids.</summary>
     public List<int> Units { get; } = [];
@@ -307,7 +409,7 @@ public sealed class Unit
     public int Civ { get; init; }
 
     /// <summary>Unit kind id.</summary>
-    public int Kind { get; init; }
+    public int Kind { get; set; }
 
     /// <summary>People in the group.</summary>
     public int People { get; set; }
@@ -336,6 +438,24 @@ public sealed class Unit
     /// <summary>Enemy settlement it was ordered to attack (−1 = none).</summary>
     public int TargetSettlement { get; set; } = -1;
 
+    /// <summary>Wounded soldiers carried with the unit: they do not fight; herbalists bring them back.</summary>
+    public int Injured { get; set; }
+
+    /// <summary>Ship the unit is aboard (−1 = none): off the map until it lands.</summary>
+    public int Aboard { get; set; } = -1;
+
+    /// <summary>Hex of an enemy wall the unit is breaking (−1 = none).</summary>
+    public int TargetWall { get; set; } = -1;
+
+    /// <summary>Horses a caravan took with it, hundredths (back home with it).</summary>
+    public long Horses { get; set; }
+
+    /// <summary>Share of a wounded soldier gathered from the fallen, percent.</summary>
+    public int InjuredShare { get; set; }
+
+    /// <summary>Hundredths of a wounded soldier healed so far.</summary>
+    public long HealProgress { get; set; }
+
     /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
     public long Wounds { get; set; }
 
@@ -351,14 +471,72 @@ public sealed class Unit
     /// <summary>Building (porters) or settlement (caravans) the cargo goes to.</summary>
     public int Target { get; set; } = -1;
 
-    /// <summary>Settlement the carriers come from and go back to.</summary>
+    /// <summary>Settlement the unit comes from: carriers go back to it, and it feeds the unit's rations.</summary>
     public int Home { get; set; } = -1;
+
+    /// <summary>Missed rations in a row: 0 fed, 1 hungry, 2 starving.</summary>
+    public byte Hunger { get; set; }
 
     /// <summary>Hex the carriers go back to (their storehouse).</summary>
     public int ReturnCell { get; set; } = -1;
 
     /// <summary>Trade route that sent this caravan (−1 = none).</summary>
     public int Route { get; set; } = -1;
+
+    /// <summary>Drawn patrol loop (empty = not patrolling).</summary>
+    public List<int> Patrol { get; } = [];
+
+    /// <summary>Hex and era of its last survey (prospectors and surveyors look again only when these change).</summary>
+    public int SurveyedAt { get; set; } = -1;
+
+    /// <summary>The last patrol loop it walked, kept after it stops, to walk it again.</summary>
+    public List<int> LastPatrol { get; } = [];
+
+    /// <summary>Where it is in its patrol cycle.</summary>
+    public PatrolStage PatrolStage { get; set; }
+
+    /// <summary>Hex its sight is counted from (−1 = not seeing).</summary>
+    public int WatchCell { get; set; } = -1;
+
+    /// <summary>Sight counted at <see cref="WatchCell"/>.</summary>
+    public int WatchRadius { get; set; }
+
+    /// <summary>Level of its weapons (0 = bare: clubs and sticks; 1–4 stone, bronze, iron, steel).</summary>
+    public byte Weapon { get; set; }
+
+    /// <summary>Level of its armour (0 = none; 1–4 hide, bronze, iron, plate).</summary>
+    public byte Armour { get; set; }
+
+    /// <summary>How it fights on its own.</summary>
+    public Stance Stance { get; set; }
+
+    /// <summary>Hexes walked since it last touched an enemy (a charge needs a run).</summary>
+    public int Run { get; set; }
+
+    /// <summary>Hexes it guards (painted by the player): it goes at enemies on them and comes back.</summary>
+    public List<int> Guard { get; } = [];
+
+    /// <summary>People it lost in the last step of battle (for the view).</summary>
+    public int LastLoss { get; set; }
+
+    /// <summary>Tick of its last step on the way (a charge needs a fresh run).</summary>
+    public long StepTick { get; set; } = -1;
+
+    /// <summary>Tick it last fought (for the view and the slowing of time).</summary>
+    public long FoughtTick { get; set; } = -1;
+}
+
+/// <summary>How an army unit fights when not told otherwise.</summary>
+public enum Stance : byte
+{
+    /// <summary>Strikes what it touches or reaches, does not walk after it.</summary>
+    Hold = 0,
+
+    /// <summary>Goes at enemies it sees within its sight.</summary>
+    Aggressive = 1,
+
+    /// <summary>Strikes only the enemy it was sent at (to walk past or pull back).</summary>
+    Passive = 2,
 }
 
 /// <summary>One minute of a people's history: what the summary's timeline shows.</summary>
@@ -403,4 +581,7 @@ public sealed class TradeRoute
 
     /// <summary>Ended by the player.</summary>
     public bool Ended { get; set; }
+
+    /// <summary>Hexes the player drew for the way there (empty = the shortest way); the way back is the same, reversed.</summary>
+    public List<int> Path { get; } = [];
 }
