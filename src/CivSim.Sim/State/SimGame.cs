@@ -186,6 +186,7 @@ public sealed partial class SimGame
             game.Civs.Add(civ);
             if (!settings.StartPhase)
             {
+                game.StartMetals(civ, map.Geometry.Index(report.Starts[c]));
                 game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
             }
         }

@@ -57,6 +57,7 @@ Strony 01–12 opisują AI starego symulatora (rada doradców, lata, epizody). N
 | N22 | Wytwórca braku | oszczędza, a dobra brak i nikt go nie robi | buduje wytwórcę (np. narzędziarz na narzędzia) nawet bez wolnych rąk, z pierwszeństwem | — | `Ai/SimAi.cs` (`Economy`, `Makers`) |
 | N23 | Nauczyciel bez surowca | nauczyciel (budynek dający doświadczenie) nie ma wejść | najpierw buduje wytwórcę surowca (kamieniołom dla narzędziarza); nauczyciel, który już stoi, dostaje pierwszeństwo | 20 sztuk zapasu | `Ai/SimAi.cs` (`Teacher`, `Economy`) |
 | N24 | Bez bliźniaków i pustych miejsc pracy | budynek tego rodzaju jest w budowie albo wolnych miejsc pracy jest tyle, co bezczynnych ludzi | nie zaczyna nowego miejsca pracy (wyjątki: nauczyciel, wytwórca braku, jedzenie przy głodzie); budynek z pracownikami stawia w osadzie z wolnymi rękami. Po 40 min (12 ziaren): puste budynki 23% → 15%, wolne miejsca pracy 185 → 85 | — | `Ai/SimAi.cs` (`TryBuild`) |
+| N25 | Droga do bramy ery | brama obecnej ery nieznana | technologie na drodze do bramy (ona sama, jej wymagania i technologie, w których wymaga doświadczenia, dwa kroki wstecz) dostają +25 w wyborze badania, a ich budynki-nauczyciele idą pierwsze | +25 | `Ai/SimAi.cs` (`GatewayWay`) |
 
 ## Zmiany z 2026-11-19
 
@@ -118,6 +119,18 @@ Naprawy: N21–N24 oraz tempo badań w danych (`research.pace`: procent ceny, do
 
 `research.pace` po strojeniu: cena 40/35/25/25/25%, doświadczenie i wyroby 40/35/22/22/22%, czas 60/50/35/35/35% (epoka kamienia, neolit, brąz, żelazo, średniowiecze).
 Dalej obniżanie liczb nie przyspiesza AI: w epoce żelaza blokuje ją struktura drzewa, nie ceny (punkt 4 poniżej).
+
+## Po bramach ery i decyzjach z testów (2026-11-19, 12 ziaren, 70 min)
+
+| Miara | Bez bram | Z bramami (M1), miedzią przy starcie (M4) i N25 |
+| --- | --- | --- |
+| Pierwsza epoka brązu | 17,4 min | 38,8 min |
+| Pierwsza epoka żelaza | 39,1 min | 59,2 min (w 4 z 12 gier) |
+| Głód (próbki) | 13% | 6% |
+| Puste budynki z miejscami pracy | 15% | 4% |
+
+Brama spowalnia AI, bo obróbka miedzi wymaga doświadczenia w kamieniarstwie i garncarstwie, a te z kolei doświadczenia w rolnictwie.
+W ziarnie 3 farma mogła stanąć od 16. minuty, a AI postawiła ją dopiero w 28.: decyzje gospodarki przed nauczycielem (domy, magazyny) zabierają jej ruch. To następna rzecz do poprawy.
 
 ## Ocena i uwagi (uczciwie)
 

@@ -229,14 +229,36 @@ public partial class PlayGame
                 int good = g;
                 items.Add(new ActItem($"Bring 20 {name} from {o.Name} (has {o.Stock![g] / 100})", () => _session!.Play(PlayCommandKind.SendCaravan, fromId, good, flag: false, b: to, c: 20),
                     "One caravan. It walks on the map and can be raided.", Accent: UiKit.Good));
-                items.Add(new ActItem($"Supply route: {name} from {o.Name}", () => _session!.Play(PlayCommandKind.Route, fromId, good, flag: false, b: to, c: 20),
-                    "A caravan keeps bringing 20 a trip while there are at least 10 to send."));
+                items.Add(new ActItem($"Supply route: {name} from {o.Name}", () => _session!.Play(PlayCommandKind.Route, fromId, good, _routeKeep, flag: false, b: to, c: 20, d: _routeUntil),
+                    $"A caravan keeps bringing 20 a trip while {o.Name} keeps {_routeKeep}" + (_routeUntil > 0 ? $" and here are fewer than {_routeUntil}." : ".")));
             }
         }
     }
 
+    // Limits of new standing routes (G3, 2026-11-19): what the source keeps and how much the target should reach.
+    private int _routeKeep = 30;
+    private int _routeUntil;
+
+    private CustomItem RouteLimitsItem() => new("routelimits", () =>
+    {
+        var row = new HBoxContainer();
+        SpinBox Spin(int value, string tip, Action<int> set)
+        {
+            var box = new SpinBox { MinValue = 0, MaxValue = 5000, Step = 10, Value = value, TooltipText = tip, CustomMinimumSize = new Vector2(UiKit.W(90), 0) };
+            box.ValueChanged += x => set((int)x);
+            return box;
+        }
+
+        row.AddChild(UiKit.Label("Routes: keep", 13, UiKit.Muted));
+        row.AddChild(Spin(_routeKeep, "What stays in the settlement the goods leave.", x => _routeKeep = x));
+        row.AddChild(UiKit.Label(" until target has", 13, UiKit.Muted));
+        row.AddChild(Spin(_routeUntil, "Trips stop while the target has this much (0 = always).", x => _routeUntil = x));
+        return row;
+    });
+
     private void CaravanItems(PlayViewMessage v, PlayContentMessage c, PlaySettlementView s, long[] stock, List<UiItem> items)
     {
+        items.Add(RouteLimitsItem());
         var others = v.Settlements.Where(o => o.Civ == v.Civ && o.Id != s.Id).OrderBy(o => Dist(o, s)).Take(2).ToList();
         var goods = Enumerable.Range(0, stock.Length).Where(g => stock[g] >= 2000).OrderByDescending(g => stock[g]).Take(2).ToList();
         if (others.Count == 0)
@@ -257,7 +279,8 @@ public partial class PlayGame
                 int good = g;
                 string name = c.Goods[g].Name.ToLowerInvariant();
                 items.Add(new ActItem($"Send 20 {name} to {o.Name}", () => _session!.Play(PlayCommandKind.SendCaravan, from, good, flag: false, b: to, c: 20)));
-                items.Add(new ActItem($"Route: {name} to {o.Name}, every trip", () => _session!.Play(PlayCommandKind.Route, from, good, flag: false, b: to, c: 20), "The caravans take the shortest way."));
+                items.Add(new ActItem($"Route: {name} to {o.Name}, every trip", () => _session!.Play(PlayCommandKind.Route, from, good, _routeKeep, flag: false, b: to, c: 20, d: _routeUntil),
+                    $"The caravans take the shortest way; {s.Name} keeps {_routeKeep}" + (_routeUntil > 0 ? $", they go while {o.Name} has fewer than {_routeUntil}." : ".")));
                 items.Add(new ActItem($"Draw the way: {name} to {o.Name}", () => ArmDraw(DrawMode.Route, (from, to, good)), "Draw over the hexes the way the caravans take, there and back."));
             }
         }

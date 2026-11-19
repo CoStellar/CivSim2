@@ -87,6 +87,7 @@ public sealed partial class SimGame
         }
         else
         {
+            civ.Reputation += Content.War.DeclareReputation; // E1: no free wars
             NewsAbout(civ.Id, other, $"{civ.Name} declared war on {Civs[other].Name}.");
         }
 
@@ -188,7 +189,7 @@ public sealed partial class SimGame
                     total += Settlements[sid].Stock[g];
                 }
 
-                load[g] = total * pct / 100;
+                load[g] = total * (g == Content.Food ? Math.Min(pct, Content.War.TributeFoodMaxPercent) : pct) / 100; // E3: food capped
                 TakeFromCiv(payer, from, g, load[g]);
                 load[g] = Math.Min(load[g], from.Stock[g]);
             }
@@ -202,7 +203,7 @@ public sealed partial class SimGame
 
         SetWar(a.Id, b.Id, false);
         PeaceMade(a.Id, b.Id);
-        long truce = Ticks + (3 * SimContent.TicksPerMinute);
+        long truce = Ticks + (Content.War.TruceSeconds * SimContent.TicksPerSecond);
         Truces()[(a.Id * Civs.Count) + b.Id] = truce;
         Truces()[(b.Id * Civs.Count) + a.Id] = truce;
         foreach (Unit u in Units)

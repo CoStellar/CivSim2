@@ -341,3 +341,18 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
   - za mało ubrań przed zimą (mniej niż 1 zestaw na osobę na minutę przed zimą i w zimie);
   - za mało jedzenia na następną rację (racje).
 - **Odpowiedź na brak:** w panelu osady są przyciski „Bring 20 X from Y” (jeden kurs) i „Supply route” (stała trasa), z najbliższych osad, które mają tego dobra co najmniej 40.
+
+## Decyzje po testach z 2026-11-19 (`claude/decyzje-po-testach.md`)
+
+| Nr | Zasada | Dane |
+| --- | --- | --- |
+| M1 | Wyjście z ery wymaga też technologii-bramy tej ery: neolit → obróbka miedzi, epoka brązu → obróbka brązu, epoka żelaza → obróbka żelaza. Karta bramy ma złotą ramkę i znak „»”, a podpowiedź mówi, do której ery prowadzi | `eraGateways` |
+| M2, M3 | Budować na złożu wolno, złoże nie znika; gracz dostaje w kronice uwagę, że kopalnia potrzebuje wolnego heksu. AI omija znane złoża, które da się wydobywać | — |
+| M4 | Każdy start ma miedź w odległości 3–7 heksów i cynę w odległości 5–12; gdy mapa ich tam nie ma, gra kładzie je na wolnym lądzie | `startDeposits` |
+| G1 | Nowy obóz od razu ma chatę zbieraczy, opłaconą z zapasów osadników (40 jedzenia i 30 drewna) | `foundWith` |
+| E1 | Każde wypowiedzenie wojny kosztuje 10 punktów reputacji; AI płaci daninę dopiero, gdy straciła w tej wojnie co najmniej 5 ludzi | `war.declareReputation`, `war.tributeNeedsKills` |
+| E2 | Awans osady wymaga ludzi: wioska 40, miasteczko 150, miasto 400 | `settlementLevels[].minPeople` |
+| E3 | Danina zabiera najwyżej 10% jedzenia płacącego | `war.tributeFoodMaxPercent` |
+| E5 | Doświadczenie liczy się tylko wtedy, gdy budynek naprawdę pracuje (ma surowiec i miejsce na wyroby) | — |
+| G3 | Stała trasa ma dwa progi: ile zostaje w źródle i do ilu napełniać cel (0 = bez limitu). Ustawia się je w panelu osady nad przyciskami tras | `RouteCommand.KeepAtSource`, `UntilTargetHas` |
+| — | Rozejm po pokoju trwa `war.truceSeconds` = 180 s | `war.truceSeconds` |

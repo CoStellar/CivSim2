@@ -18,6 +18,9 @@ public sealed record SimGood(int Id, string Key, string Name)
     public string StoredIn { get; init; } = "";
 }
 
+/// <summary>A deposit every start has between <paramref name="Min"/> and <paramref name="Max"/> hexes, at depth <paramref name="Depth"/>.</summary>
+public sealed record StartDeposit(int Deposit, int Min, int Max, int Depth);
+
 /// <summary>Percent of the price, of the experience and goods made, and of the time of research, by era (index = era).</summary>
 public sealed record ResearchPace(int[] PricePercent, int[] ExperiencePercent, int[] SecondsPercent)
 {
@@ -127,6 +130,9 @@ public sealed record SettlementLevel(int Id, string Key, string Name, int Radius
 
     /// <summary>Other technologies needed as well (a level can need an ordinary and a political technology).</summary>
     public int[] AlsoTechs { get; init; } = [];
+
+    /// <summary>People the settlement must have to reach this level (E2, 2026-11-19).</summary>
+    public int MinPeople { get; init; }
 }
 
 /// <summary>An era (Stone Age … Middle Ages).</summary>
@@ -326,7 +332,20 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
 }
 
 /// <summary>Rules of fighting.</summary>
-public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, int SurpriseReputation);
+public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, int SurpriseReputation)
+{
+    /// <summary>Reputation every declaration of war costs (E1, 2026-11-19).</summary>
+    public int DeclareReputation { get; init; } = -10;
+
+    /// <summary>People a people must have lost to the war before its AI agrees to pay tribute.</summary>
+    public int TributeNeedsKills { get; init; } = 5;
+
+    /// <summary>Most food, percent of the payer's, a tribute takes (E3).</summary>
+    public int TributeFoodMaxPercent { get; init; } = 10;
+
+    /// <summary>Truce after peace, seconds.</summary>
+    public int TruceSeconds { get; init; } = 180;
+}
 
 /// <summary>Choosing the start (startPhase in the data): ticks to pick, the block radius and its fuzz, the scoring radii.</summary>
 public sealed record StartPhaseRules(int PickTicks, int BlockRadius, int BlockFuzz, int ScoreRadius, int RoomRadius);
@@ -600,6 +619,18 @@ public sealed class SimContent
 
     /// <summary>Technologies of its era a people must know to enter the next era (eras are levels, not one gate technology).</summary>
     public int EraAdvanceTechs { get; init; } = 5;
+
+    /// <summary>Deposits every start has near it (startDeposits; M4, 2026-11-19).</summary>
+    public StartDeposit[] StartDeposits { get; init; } = [];
+
+    /// <summary>Buildings a new camp starts with, finished, paid from the settlers' provisions (foundWith).</summary>
+    public int[] FoundWith { get; init; } = [];
+
+    /// <summary>Per era: the technology that must be known to leave it (−1 = none; M1, 2026-11-19).</summary>
+    public int[] EraGateway { get; init; } = [];
+
+    /// <summary>The gateway technology of an era, −1 when it has none.</summary>
+    public int GatewayOf(int era) => (uint)era < (uint)EraGateway.Length ? EraGateway[era] : -1;
 
     /// <summary>Branches of the technology tree, in display order.</summary>
     public string[] TechCategories { get; init; } = [];
@@ -1090,6 +1121,7 @@ public sealed class SimContent
             {
                 Tech = TechOf(l, "tech"),
                 AlsoTechs = TechList(l, "alsoTechs"),
+                MinPeople = l.TryGetProperty("minPeople", out JsonElement mp) ? mp.GetInt32() : 0,
             });
         }
 
@@ -1431,6 +1463,13 @@ public sealed class SimContent
                     ra.GetProperty("starvingPercent").GetInt32(), ra.GetProperty("starveLosePercent").GetInt32())
                 : new RationRules(600, 75, 50, 20),
             EraAdvanceTechs = root.TryGetProperty("eraAdvanceTechs", out JsonElement eat) ? eat.GetInt32() : 5,
+            StartDeposits = root.TryGetProperty("startDeposits", out JsonElement sd)
+                ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
+                    x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1))]
+                : [],
+            FoundWith = root.TryGetProperty("foundWith", out JsonElement fw) ? [.. fw.EnumerateArray().Select(x => buildings.FindIndex(b => b.Key == x.GetString())).Where(i => i > 0)] : [],
+            EraGateway = [.. eras.Select(e => root.TryGetProperty("eraGateways", out JsonElement gw) && gw.TryGetProperty(e.Key, out JsonElement gk)
+                ? techs.FindIndex(t => t.Key == gk.GetString()) : -1)],
             TechCategories = Strings(root, "techCategories"),
             Food = GoodOf("food"),
             Units = units,
@@ -1482,7 +1521,13 @@ public sealed class SimContent
                 root.GetProperty("war").GetProperty("combatEveryTicks").GetInt32(), root.GetProperty("war").GetProperty("lowLuckPercent").GetInt32(),
                 root.GetProperty("war").GetProperty("highLuckPercent").GetInt32(), root.GetProperty("war").GetProperty("defenderPercent").GetInt32(),
                 root.GetProperty("war").GetProperty("defenderStrength").GetInt32(), root.GetProperty("war").GetProperty("captureBelowPeople").GetInt32(),
-                root.GetProperty("war").GetProperty("surpriseReputation").GetInt32()),
+                root.GetProperty("war").GetProperty("surpriseReputation").GetInt32())
+            {
+                DeclareReputation = root.GetProperty("war").TryGetProperty("declareReputation", out JsonElement dr) ? dr.GetInt32() : -10,
+                TributeNeedsKills = root.GetProperty("war").TryGetProperty("tributeNeedsKills", out JsonElement tk) ? tk.GetInt32() : 5,
+                TributeFoodMaxPercent = root.GetProperty("war").TryGetProperty("tributeFoodMaxPercent", out JsonElement tf) ? tf.GetInt32() : 10,
+                TruceSeconds = root.GetProperty("war").TryGetProperty("truceSeconds", out JsonElement trs) ? trs.GetInt32() : 180,
+            },
         };
     }
 

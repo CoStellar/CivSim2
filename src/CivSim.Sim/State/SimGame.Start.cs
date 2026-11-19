@@ -380,6 +380,7 @@ public sealed partial class SimGame
                 c.NewlyKnown.Add(chunk);
             }
 
+            StartMetals(c, StartCell[c.Id]);
             FoundSettlement(c, StartCell[c.Id], Content.StartPeople);
             News.Add((c.Id, StoryOf(c, StartCell[c.Id])));
         }
@@ -408,5 +409,45 @@ public sealed partial class SimGame
         }
 
         return (Sites.Total[StartCell[civ.Id]], civ.BestStartAtPick);
+    }
+
+    /// <summary>
+    /// M4 (2026-11-19): every start has the metals of the first metal age near it (startDeposits: a deposit within min–max hexes,
+    /// placed on free land when the map has none there).
+    /// </summary>
+    internal void StartMetals(Civ civ, int center)
+    {
+        foreach (StartDeposit want in Content.StartDeposits)
+        {
+            var ring = new HexCoord[HexGlobe.RangeSize(want.Max)];
+            int n = Geo.Range(Geo.FromIndex(center), want.Max, ring);
+            bool have = false;
+            var spots = new List<int>();
+            for (int k = 0; k < n; k++)
+            {
+                int cell = Geo.Index(ring[k]);
+                int d = Distance(center, cell);
+                if (Map.Deposit[cell] == want.Deposit)
+                {
+                    have = true;
+                    break;
+                }
+
+                if (d >= want.Min && Map.Deposit[cell] == 0 && !Content.World.Biomes[Map.Biome[cell]].IsWater && CellCost(cell) > 0)
+                {
+                    spots.Add(cell);
+                }
+            }
+
+            if (have || spots.Count == 0)
+            {
+                continue;
+            }
+
+            spots.Sort();
+            int pick = spots[(int)((((ulong)(civ.Id + 1) * 0x9E3779B97F4A7C15UL) ^ (ulong)want.Deposit) % (ulong)spots.Count)];
+            Map.Deposit.Set(pick, (ushort)want.Deposit);
+            Map.DepositDepth.Set(pick, (byte)want.Depth);
+        }
     }
 }
