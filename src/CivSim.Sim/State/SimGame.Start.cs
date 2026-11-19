@@ -66,6 +66,28 @@ public sealed partial class SimGame
     /// <summary>Hexes around a chosen start where no other people may start.</summary>
     public int BlockRadius => Content.FoundMinDistance * 3;
 
+    /// <summary>
+    /// How far the shown circle of a taken start lies from the start itself (Patryk, 2026-11-19: the circles must not give the
+    /// start away). The circle is this much wider, so it still covers every hex too close to the start.
+    /// </summary>
+    public const int BlockFuzz = 5;
+
+    /// <summary>Centre of each taken start's circle: a hex near the start, from the seed (−1 = not chosen).</summary>
+    public int[] BlockCenter { get; private set; } = [];
+
+    /// <summary>Radius of the shown circles: the block plus the fuzz.</summary>
+    public int ShownBlockRadius => BlockRadius + BlockFuzz;
+
+    // A hex within the fuzz of the start, chosen by the seed and the people: the same in every replay.
+    private int FuzzedCenter(int civ, int cell)
+    {
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(BlockFuzz)];
+        int n = Geo.Range(Geo.FromIndex(cell), BlockFuzz, area);
+        ulong z = (Settings.Seed * 0x9E3779B97F4A7C15UL) + ((ulong)(civ + 1) * 0xBF58476D1CE4E5B9UL) + (ulong)cell;
+        z = (z ^ (z >> 31)) * 0x94D049BB133111EBUL;
+        return Geo.Index(area[(int)((z ^ (z >> 29)) % (ulong)n)]);
+    }
+
     /// <summary>Scores the whole map for starting (once).</summary>
     public void ScoreSites()
     {
@@ -207,10 +229,11 @@ public sealed partial class SimGame
             return "Not in the mountains.";
         }
 
+        // The shown circles are the rule: nobody learns more than they see.
         HexCoord c = Geo.FromIndex(cell);
-        foreach (int s in StartCell)
+        foreach (int s in BlockCenter)
         {
-            if (s >= 0 && Geo.Distance(Geo.FromIndex(s), c) < BlockRadius)
+            if (s >= 0 && Geo.Distance(Geo.FromIndex(s), c) < ShownBlockRadius)
             {
                 return "Too close to another people.";
             }
@@ -224,6 +247,8 @@ public sealed partial class SimGame
         Picking = true;
         StartCell = new int[Civs.Count];
         Array.Fill(StartCell, -1);
+        BlockCenter = new int[Civs.Count];
+        Array.Fill(BlockCenter, -1);
         PickOrder.Clear();
         for (int c = 0; c < Civs.Count; c++)
         {
@@ -320,6 +345,7 @@ public sealed partial class SimGame
         }
 
         StartCell[civ.Id] = cell;
+        BlockCenter[civ.Id] = FuzzedCenter(civ.Id, cell);
         PickIndex++;
         if (PickIndex < PickOrder.Count)
         {

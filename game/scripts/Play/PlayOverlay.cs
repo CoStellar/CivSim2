@@ -398,7 +398,8 @@ public partial class PlayOverlay : Node2D
             {
                 foreach (Vector2 c in Copies(taken[i], taken[i + 1]))
                 {
-                    g.DrawCircle(c, 14, new Color(1, 0.2f, 0.2f, 0.9f));
+                    // Only the circle: its centre is near the start, not on it, so it does not give the start away.
+                    g.DrawCircle(c, _view.BlockRadius * HexLayout.ColumnStep, new Color(1, 0.2f, 0.2f, 0.12f));
                     g.DrawArc(c, _view.BlockRadius * HexLayout.ColumnStep, 0, MathF.Tau, 64, new Color(1, 0.2f, 0.2f, 0.8f), 4);
                 }
             }

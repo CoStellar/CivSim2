@@ -833,7 +833,7 @@ public sealed class PlayHost : IDisposable
             civ.People, civ.Hungry, settlements, buildings, [.. _news], units, _game.EraOf(civ), civ.Researching, ResearchPermille(civ), TechStates(civ),
             Person(civ.Thinker, false), Person(civ.ThinkerOffer, false), Person(civ.Advisor, true), Person(civ.AdvisorOffer, true), _game.Advice(civ),
             Peoples(civ), civ.Dead, _game.Picking, _game.Picking && _game.PickOrder[_game.PickIndex] == civId,
-            _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.BlockRadius,
+            _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.ShownBlockRadius,
             _game.Picking ? _game.Civs[_game.PickOrder[_game.PickIndex]].Name : null,
             civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0,
             _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId),
@@ -1066,7 +1066,7 @@ public sealed class PlayHost : IDisposable
     private int[] TakenStarts()
     {
         var list = new List<int>();
-        foreach (int cell in _game.StartCell)
+        foreach (int cell in _game.BlockCenter)
         {
             if (cell >= 0 && _game.Picking)
             {

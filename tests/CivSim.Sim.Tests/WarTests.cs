@@ -194,6 +194,17 @@ public sealed class StartAndEventTests
             (int mine, int best) = g.StartQuality(g.Civs[a]);
             Assert.True(mine >= best * (100 - 30) / 100, $"start {mine} of {best}");
         }
+
+        // The shown circles hide the start: never centred on it, yet every hex too close to it lies inside.
+        int moved = 0;
+        for (int a = 0; a < 4; a++)
+        {
+            int d = g.Geo.Distance(g.Geo.FromIndex(g.StartCell[a]), g.Geo.FromIndex(g.BlockCenter[a]));
+            Assert.True(d <= SimGame.BlockFuzz);
+            moved += d > 0 ? 1 : 0;
+        }
+
+        Assert.True(moved >= 3, $"only {moved} circles moved");
     }
 
     [Fact]
