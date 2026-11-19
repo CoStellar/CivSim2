@@ -166,7 +166,8 @@
         "stone": 60,
         "clay": 30
       },
-      "tech": "agriculture"
+      "tech": "agriculture",
+      "minPeople": 40
     },
     {
       "key": "town",
@@ -183,7 +184,8 @@
       "tech": "code_of_laws",
       "alsoTechs": [
         "masonry"
-      ]
+      ],
+      "minPeople": 150
     },
     {
       "key": "city",
@@ -201,7 +203,8 @@
       "tech": "civil_service",
       "alsoTechs": [
         "construction"
-      ]
+      ],
+      "minPeople": 400
     }
   ],
   "foundSettlement": {
@@ -2931,7 +2934,7 @@
     ]
   },
   "war": {
-    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation).",
+    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation). declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. truceSeconds: truce after peace.",
     "combatEveryTicks": 10,
     "lowLuckPercent": 80,
     "highLuckPercent": 120,
@@ -2940,7 +2943,11 @@
     "captureBelowPeople": 6,
     "surpriseReputation": -30,
     "levyStrength": 5,
-    "injuredPercent": 30
+    "injuredPercent": 30,
+    "declareReputation": -10,
+    "tributeNeedsKills": 5,
+    "tributeFoodMaxPercent": 10,
+    "truceSeconds": 180
   },
   "events": {
     "comment": "Every people draws one event from the shared pool every everyMinutes (a random minute within the spread), never one another people has right now. An event lasts its seconds. productionPercent changes the production of the listed goods, eatPercent what people eat, losePercentPerMinute kills that share of people a minute, destroyBuilding burns one random finished building at the start. field: the advisor field that gives advice on it.",
@@ -3314,5 +3321,28 @@
     ],
     "chaseRetrySeconds": 5,
     "chaseGiveUp": 3
-  }
+  },
+  "eraGateways": {
+    "comment": "Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
+    "neolithic": "copper_working",
+    "bronze_age": "bronze_working",
+    "iron_age": "iron_working"
+  },
+  "foundWith": [
+    "gatherers_hut"
+  ],
+  "startDeposits": [
+    {
+      "deposit": "copper",
+      "min": 3,
+      "max": 7,
+      "depth": 1
+    },
+    {
+      "deposit": "tin",
+      "min": 5,
+      "max": 12,
+      "depth": 1
+    }
+  ]
 }

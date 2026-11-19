@@ -106,7 +106,7 @@ public sealed class WarTests
         b.Known[g.Settlements[a.Settlements[0]].Center] = true;
         a.Known[g.Settlements[b.Settlements[0]].Center] = true;
         Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
-        Assert.Equal(0, a.Reputation);
+        Assert.Equal(Content.War.DeclareReputation, a.Reputation); // an open declaration costs a little (E1)
         long wood = b.Stock[Content.GoodId("wood")];
         Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 20)));
         Assert.Null(g.Apply(new AnswerPeaceCommand(b.Id, a.Id, true)));

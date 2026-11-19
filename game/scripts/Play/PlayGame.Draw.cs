@@ -189,7 +189,7 @@ public partial class PlayGame
             case DrawMode.Route:
                 if (path.Count >= 2)
                 {
-                    _session.Play(PlayCommandKind.Route, _drawRoute.From, _drawRoute.Good, flag: false, b: _drawRoute.To, c: 20, cells: cells);
+                    _session.Play(PlayCommandKind.Route, _drawRoute.From, _drawRoute.Good, _routeKeep, flag: false, b: _drawRoute.To, c: 20, cells: cells, d: _routeUntil);
                 }
 
                 break;

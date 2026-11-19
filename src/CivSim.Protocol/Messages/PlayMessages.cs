@@ -101,7 +101,8 @@ public sealed record PlayTechInfo(
     [property: Key(7)] bool Upgrade = false,
     [property: Key(8)] string Category = "",
     [property: Key(9)] string Unlocks = "",
-    [property: Key(10)] int[]? From = null);
+    [property: Key(10)] int[]? From = null,
+    [property: Key(11)] string Gateway = "");
 
 /// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
 [MessagePackObject]
@@ -405,7 +406,10 @@ public enum PlayCommandKind
     /// <summary>Caravan from settlement <c>A</c> to settlement <c>B</c> with <c>C</c> units of good <c>Col</c>.</summary>
     SendCaravan = 23,
 
-    /// <summary>Standing route from settlement <c>A</c> to settlement <c>B</c>: <c>C</c> units of good <c>Col</c> a trip.</summary>
+    /// <summary>
+    /// Standing route from settlement <c>A</c> to settlement <c>B</c>: <c>C</c> units of good <c>Col</c> a trip, leaving <c>Row</c>
+    /// at the source, while the target has fewer than <c>D</c> (0 = no limit).
+    /// </summary>
     Route = 24,
 
     /// <summary>End standing route number <c>A</c>.</summary>
@@ -477,7 +481,8 @@ public sealed record PlayCommandMessage(
     [property: Key(5)] bool Flag,
     [property: Key(6)] int B = 0,
     [property: Key(7)] int C = 0,
-    [property: Key(8)] int[]? Cells = null) : IProtocolMessage;
+    [property: Key(8)] int[]? Cells = null,
+    [property: Key(9)] int D = 0) : IProtocolMessage;
 
 /// <summary>Client → server: where can building type <c>Type</c> go?</summary>
 [MessagePackObject]

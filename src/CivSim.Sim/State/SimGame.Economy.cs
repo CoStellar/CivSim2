@@ -134,7 +134,10 @@ public sealed partial class SimGame
                 }
 
                 b.Full = anyOut && allFull;
-                civ.ExperienceRate[t.Tech] += b.Workers;
+                if (!b.Starved && !b.Full)
+                {
+                    civ.ExperienceRate[t.Tech] += b.Workers; // E5 (2026-11-19): experience only while it really works
+                }
             }
         }
 

@@ -171,8 +171,9 @@ public partial class PlayGame
             : now ? (new Color(0.15f, 0.22f, 0.36f), new Color(0.45f, 0.65f, 1f), UiKit.Text)
             : st.Blocked is null ? (new Color(0.3f, 0.24f, 0.12f), UiKit.Heading, UiKit.Text)
             : (new Color(0.12f, 0.11f, 0.1f), new Color(0.28f, 0.25f, 0.22f), UiKit.Muted);
-        string name = info.Upgrade ? $"{info.Name} +" : info.Name;
-        var tip = new StringBuilder($"{info.Name}" + (info.Upgrade ? " (upgrade of its era)" : "") + $"\n{info.Gives}");
+        string name = (info.Gateway.Length > 0 ? "» " : "") + (info.Upgrade ? $"{info.Name} +" : info.Name);
+        var tip = new StringBuilder($"{info.Name}" + (info.Upgrade ? " (upgrade of its era)" : "")
+            + (info.Gateway.Length > 0 ? $"\nGATEWAY to the {info.Gateway}: needed, besides enough technologies of its era, to enter it." : "") + $"\n{info.Gives}");
         if (info.Unlocks.Length > 0)
         {
             tip.Append($"\n\n{info.Unlocks}");
@@ -196,6 +197,11 @@ public partial class PlayGame
         b.AddThemeFontSizeOverride("font_size", Ui.PixelTheme.FontSize);
         b.AddThemeColorOverride("font_color", ink);
         b.AddThemeColorOverride("font_hover_color", UiKit.Text);
+        if (info.Gateway.Length > 0 && !st.Known)
+        {
+            border = new Color(1f, 0.82f, 0.3f); // gateways stand out in gold
+        }
+
         b.AddThemeStyleboxOverride("normal", CardBox(bg, border, cat));
         b.AddThemeStyleboxOverride("hover", CardBox(bg.Lightened(0.12f), border, cat));
         b.AddThemeStyleboxOverride("pressed", CardBox(bg, border, cat));

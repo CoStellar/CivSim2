@@ -9,7 +9,11 @@ namespace CivSim.Sim.State;
 public sealed record SendCaravanCommand(int Civ, int From, int To, int Good, long Amount) : SimCommand(Civ);
 
 /// <summary>Set up a standing route: a caravan keeps carrying the good from one settlement to the other.</summary>
-public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amount, int[]? Path = null) : SimCommand(Civ);
+/// <summary>
+/// A standing route: <paramref name="Amount"/> a trip (hundredths); a trip leaves while the source keeps
+/// <paramref name="KeepAtSource"/> and the target has less than <paramref name="UntilTargetHas"/> (0 = no limit; G3, 2026-11-19).
+/// </summary>
+public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amount, int[]? Path = null, long KeepAtSource = 0, long UntilTargetHas = 0) : SimCommand(Civ);
 
 /// <summary>Send porters with the materials a construction is still missing (after porters were killed on the way).</summary>
 public sealed record BringMaterialsCommand(int Civ, int Building) : SimCommand(Civ);
@@ -469,7 +473,7 @@ public sealed partial class SimGame
         return null;
     }
 
-    private string? AddRoute(Civ civ, int from, int to, int good, long amount, int[]? drawn = null)
+    private string? AddRoute(Civ civ, int from, int to, int good, long amount, int[]? drawn = null, long keep = 0, long until = 0)
     {
         if ((uint)from >= (uint)Settlements.Count || (uint)to >= (uint)Settlements.Count || Settlements[from].Civ != civ.Id || Settlements[to].Civ != civ.Id || from == to)
         {
@@ -481,7 +485,7 @@ public sealed partial class SimGame
             return "Choose a good and an amount.";
         }
 
-        var route = new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount };
+        var route = new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount, KeepAtSource = Math.Max(0, keep), UntilTargetHas = Math.Max(0, until) };
         if (drawn is { Length: > 0 })
         {
             var check = new List<int>();
@@ -526,10 +530,12 @@ public sealed partial class SimGame
                 continue;
             }
 
-            // A trip leaves when there are at least ten units to carry.
-            if (Settlements[route.From].Stock[route.Good] >= 10 * SimContent.One)
+            // A trip leaves when at least ten units can go above what the source keeps, while the target is below its limit.
+            long spare = Settlements[route.From].Stock[route.Good] - route.KeepAtSource;
+            bool wanted = route.UntilTargetHas <= 0 || Settlements[route.To].Stock[route.Good] < route.UntilTargetHas;
+            if (wanted && spare >= 10 * SimContent.One)
             {
-                SendCaravan(civ, route.From, route.To, route.Good, route.Amount, r);
+                SendCaravan(civ, route.From, route.To, route.Good, Math.Min(route.Amount, spare), r);
             }
         }
     }

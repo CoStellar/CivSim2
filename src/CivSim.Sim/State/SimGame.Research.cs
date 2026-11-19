@@ -115,7 +115,8 @@ public sealed partial class SimGame
             int prev = Math.Max(0, era - 1);
             return civ.Era < prev
                 ? $"Our people must first reach the {Content.Eras[prev].Name}."
-                : $"Opens in the {Content.Eras[era].Name}: know {Content.EraAdvanceTechs} technologies of the {Content.Eras[civ.Era].Name}, basics not counted (we know {KnownIn(civ, civ.Era)}).";
+                : $"Opens in the {Content.Eras[era].Name}: know {Content.EraAdvanceTechs} technologies of the {Content.Eras[civ.Era].Name}, basics not counted (we know {KnownIn(civ, civ.Era)})"
+                    + (Content.GatewayOf(civ.Era) is int gate and >= 0 ? $", among them the gateway {Content.Techs[gate].Name}{(civ.KnownTech[gate] ? " (known)" : "")}." : ".");
         }
 
         foreach (int req in Content.Techs[tech].Requires)
@@ -213,7 +214,8 @@ public sealed partial class SimGame
     // Raises the era while the people knows enough technologies of its current one.
     internal void AdvanceEra(Civ civ, bool tell)
     {
-        while (civ.Era + 1 < Content.Eras.Count && KnownIn(civ, civ.Era) >= Content.EraAdvanceTechs)
+        while (civ.Era + 1 < Content.Eras.Count && KnownIn(civ, civ.Era) >= Content.EraAdvanceTechs
+            && (Content.GatewayOf(civ.Era) < 0 || civ.KnownTech[Content.GatewayOf(civ.Era)]))
         {
             civ.Era++;
             if (tell)

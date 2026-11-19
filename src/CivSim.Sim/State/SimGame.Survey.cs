@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CivSim.Core.Map;
+using CivSim.Sim.Content;
 
 namespace CivSim.Sim.State;
 
@@ -156,5 +157,25 @@ public sealed partial class SimGame
         {
             News.Add((civ.Id, $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} found {string.Join(", ", found)}."));
         }
+    }
+
+    /// <summary>True when the hex holds a deposit some mine works (a building on it blocks that mine; M2, 2026-11-19).</summary>
+    public bool Mineable(int cell)
+    {
+        int d = Map.Deposit[cell];
+        if (d == 0)
+        {
+            return false;
+        }
+
+        foreach (BuildingType b in Content.Buildings)
+        {
+            if (b.OrDeposit == d)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

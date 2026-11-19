@@ -168,6 +168,12 @@ public static partial class SimAi
                     continue;
                 }
 
+                // M2 (2026-11-19): a known deposit is kept for its mine; only buildings that work it go there.
+                if (t.OrDeposit == 0 && t.BonusDeposit != g.Map.Deposit[cell] && g.Map.Deposit[cell] != 0 && g.KnowsDeposit(civ, cell) && g.Mineable(cell))
+                {
+                    continue;
+                }
+
                 // Where hands are free: a working building goes where its workers live.
                 int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (Math.Min(s.Idle, t.Workers) * 10);
                 if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.KnowsDeposit(civ, cell))
@@ -392,9 +398,63 @@ public static partial class SimAi
     }
 
     // A building with jobs whose workers give the experience the nearest technology still lacks.
+    // N25 (2026-11-19, gateways): the unknown technologies on the way to the era's gateway: the gateway, what it requires and the
+    // technologies it asks experience in, two steps back.
+    private static bool[] GatewayWay(SimGame g, Civ civ)
+    {
+        var way = new bool[g.Content.Techs.Count];
+        int gate = g.Content.GatewayOf(civ.Era);
+        if (gate < 0 || civ.KnownTech[gate])
+        {
+            return way;
+        }
+
+        Mark(gate, 3);
+        return way;
+
+        void Mark(int tech, int depth)
+        {
+            if (civ.KnownTech[tech] || way[tech] || depth == 0)
+            {
+                return;
+            }
+
+            way[tech] = true;
+            SimTech t = g.Content.Techs[tech];
+            foreach (int req in t.Requires)
+            {
+                Mark(req, depth - 1);
+            }
+
+            foreach ((int exp, long _) in t.Experience)
+            {
+                Mark(exp, depth - 1);
+            }
+        }
+    }
+
     private static string? Teacher(SimGame g, Civ civ, bool missingOnly = false)
     {
-        foreach (SimTech t in g.Content.Techs)
+        // The gateway's way first, then the rest in the order of the tree.
+        bool[] way = GatewayWay(g, civ);
+        var order = new List<SimTech>(g.Content.Techs.Count);
+        foreach (SimTech x in g.Content.Techs)
+        {
+            if (way[x.Id])
+            {
+                order.Add(x);
+            }
+        }
+
+        foreach (SimTech x in g.Content.Techs)
+        {
+            if (!way[x.Id])
+            {
+                order.Add(x);
+            }
+        }
+
+        foreach (SimTech t in order)
         {
             if (civ.KnownTech[t.Id])
             {
@@ -549,6 +609,7 @@ public static partial class SimAi
             return;
         }
 
+        bool[] way = GatewayWay(g, civ);
         int pick = -1;
         int want = -1;
         int wantScore = int.MinValue;
@@ -561,7 +622,7 @@ public static partial class SimAi
             }
 
             // Warlike peoples like the technologies of arms, builders the others; earlier eras first, the cheap basics before all.
-            int score = (-t.Era * 10) + (t.Basic ? 30 : 0);
+            int score = (-t.Era * 10) + (t.Basic ? 30 : 0) + (way[t.Id] ? 25 : 0); // the gateway and its way open the next era (M1, N25)
             foreach (UnitType u in g.Content.Units)
             {
                 if (u.Army && u.Tech == t.Id)
@@ -1181,9 +1242,12 @@ public static partial class SimAi
                 continue;
             }
 
-            // Accept terms no worse than the course of the war suggests, with some give from peaceful characters.
+            // Accept terms no worse than the course of the war suggests, with some give from peaceful characters. E1
+            // (2026-11-19): tribute only after real losses (tributeNeedsKills people killed by them).
             int fair = g.SuggestedTribute(offer.From, civ.Id);
-            bool accept = offer.TributePercent <= fair + ((100 - civ.Aggression) / 10);
+            bool hurt = g.Score(offer.From, civ.Id) >= g.Content.War.TributeNeedsKills;
+            bool accept = offer.TributePercent <= 0 ? offer.TributePercent <= fair + ((100 - civ.Aggression) / 10)
+                : hurt && offer.TributePercent <= fair + ((100 - civ.Aggression) / 10);
             g.Apply(new AnswerPeaceCommand(civ.Id, offer.From, accept));
         }
     }

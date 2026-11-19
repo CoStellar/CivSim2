@@ -174,6 +174,8 @@ public sealed class EconomyTests
             g.Settlements[civ.Settlements[0]].Stock[i] = 200 * SimContent.One;
         }
 
+        Assert.Contains("needs 40 people", g.Apply(new UpgradeSettlementCommand(civ.Id, s.Id)), StringComparison.Ordinal); // E2
+        s.People = 40;
         Assert.Null(g.Apply(new UpgradeSettlementCommand(civ.Id, s.Id)));
         Assert.Equal(1, s.Level);
         Assert.True(s.Cells.Count > before);

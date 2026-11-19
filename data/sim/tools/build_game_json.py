@@ -24,9 +24,10 @@ d['diplomacy'].update({"knownMinutes":3,"borderHexes":20,"peaceMinutes":10,"minR
 d.pop('reviewSeconds', None); d['diplomacy'].pop('reviewSeconds', None)
 d['settlementLevels'] = [
  {"key":"camp","name":"Camp","radius":3,"housing":25,"storage":150,"upgradePrice":{}},
- {"key":"village","name":"Village","radius":4,"housing":40,"storage":200,"upgradePrice":{"wood":120,"stone":60,"clay":30},"tech":"agriculture"},
- {"key":"town","name":"Town","radius":5,"housing":60,"storage":300,"upgradePrice":{"wood":250,"stone":200,"pottery":40,"clothing":30},"tech":"code_of_laws","alsoTechs":["masonry"]},
- {"key":"city","name":"City","radius":6,"housing":90,"storage":500,"upgradePrice":{"wood":500,"stone":500,"textiles":80,"pottery":80,"tools":60},"tech":"civil_service","alsoTechs":["construction"]}]
+ {"key":"village","name":"Village","radius":4,"housing":40,"storage":200,"upgradePrice":{"wood":120,"stone":60,"clay":30},"tech":"agriculture","minPeople":40},
+ {"key":"town","name":"Town","radius":5,"housing":60,"storage":300,"upgradePrice":{"wood":250,"stone":200,"pottery":40,"clothing":30},"tech":"code_of_laws","alsoTechs":["masonry"],"minPeople":150},
+ {"key":"city","name":"City","radius":6,"housing":90,"storage":500,"upgradePrice":{"wood":500,"stone":500,"textiles":80,"pottery":80,"tools":60},"tech":"civil_service","alsoTechs":["construction"],"minPeople":400}]
+# minPeople (Patryk, 2026-11-19, E2): people a settlement must have to reach the level (wide steps: village 40, town 150).
 
 FOREST=["deciduous_forest","taiga","jungle","swamp"]
 B=[]
@@ -252,6 +253,13 @@ for x in T:
     x["category"]=CAT[x["key"]]
 d["techCategories"]=["basics","food","industry","building","trade","military","governance","science"]
 d["eraAdvanceTechs"]=5
+# A new camp starts with a gatherers' hut, paid from the settlers' provisions (Patryk, 2026-11-19, G1).
+d["foundWith"]=["gatherers_hut"]
+# Every start has copper and tin near it (Patryk, 2026-11-19, M4): placed on free land when the map has none within max hexes.
+d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1}]
+# Gateways (Patryk, 2026-11-19, M1): to leave an era a people must also know its gateway technology (metal opens the next era).
+d["eraGateways"]={"comment":"Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
+  "neolithic":"copper_working","bronze_age":"bronze_working","iron_age":"iron_working"}
 # Roads are part of the map, drawn hex by hex (decision of 2026-11-18): tracks from the start, paved roads with Roads.
 d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of the hex's cost (capped at 150 so roads cross rough land). reach: hexes from our nearest settlement. supply: goods carriers bring to a new camp joined to our roads.",
   "levels":[{"key":"track","name":"Track","tech":"carrying","price":{"wood":2},"seconds":2,"walkPercent":60},
@@ -293,6 +301,11 @@ d["forage"]={"comment":"People of a settlement told to gather pick up food, wood
   "relief":[5,50,100],"deposits":{"stone":{"stone":100},"flint":{"stone":50},"wild_grain":{"food":50},"game":{"food":30}},"riverFood":20}
 d["food"].pop("idleForagePerMinute",None)
 d["war"]["injuredPercent"]=30
+# E1, E3 (Patryk, 2026-11-19): declaring war costs reputation; the AI pays tribute only after it lost tributeNeedsKills people
+# to the war; food in a tribute is at most tributeFoodMaxPercent of the payer's food; truceSeconds after peace.
+d["war"].update({"declareReputation":-10,"tributeNeedsKills":5,"tributeFoodMaxPercent":10,"truceSeconds":180})
+if "declareReputation" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. truceSeconds: truce after peace."
 d["war"].pop("soldierFoodPerMinute", None)
 d["war"]["comment"]=d["war"]["comment"].replace(" Soldiers eat soldierFoodPerMinute each.", " Soldiers are fed by rations (see rations).")
 d["rivers"]={"comment":"Until freeFromEra, rivers can be crossed only next to one's own building that gives a crossing (raft landings).","freeFromEra":"bronze_age"}

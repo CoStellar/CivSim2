@@ -362,7 +362,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Barter => new BarterCommand(civ, m.A, m.B, m.Col * SimContent.One, m.Row, m.C * SimContent.One),
         PlayCommandKind.AnswerBarter => new AnswerBarterCommand(civ, m.A, m.Flag),
         PlayCommandKind.SendCaravan => new SendCaravanCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One),
-        PlayCommandKind.Route => new RouteCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One, Cells(m.Cells)),
+        PlayCommandKind.Route => new RouteCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One, Cells(m.Cells), m.Row * SimContent.One, m.D * SimContent.One),
         PlayCommandKind.EndRoute => new EndRouteCommand(civ, m.A),
         PlayCommandKind.BringMaterials => new BringMaterialsCommand(civ, m.A),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
@@ -479,7 +479,8 @@ public sealed class PlayHost : IDisposable
                 }
             }
 
-            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks * content.Pace.Seconds(t.Era) / 100 / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category, Unlocks(content, t), [.. from]));
+            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks * content.Pace.Seconds(t.Era) / 100 / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category, Unlocks(content, t), [.. from],
+                content.GatewayOf(t.Era) == t.Id && t.Era + 1 < content.Eras.Count ? content.Eras[t.Era + 1].Name : ""));
         }
 
         var eras = new List<string>();

@@ -274,6 +274,18 @@ public sealed partial class SimGame
         civ.Units.Remove(u.Id);
         Settlement s = FoundSettlement(civ, u.Cell, u.People, u.Cargo ?? new long[Content.Goods.Count]);
         News.Add((civ.Id, $"Settlers founded {s.Name}."));
+
+        // G1 (2026-11-19): the camp starts with what feeds it (foundWith), paid from what the settlers carried.
+        foreach (int kind in Content.FoundWith)
+        {
+            BuildingType t = Content.Buildings[kind];
+            if (Knows(civ, t) && CanAfford(s.Stock, t.Price, 100) && PlaceFinished(civ, s, t))
+            {
+                Pay(s.Stock, t.Price, 100);
+            }
+        }
+
+        SyncTotals(civ);
         RoadSupply(civ, s);
         return null;
     }

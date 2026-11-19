@@ -594,6 +594,12 @@ public sealed class TradeRoute
     /// <summary>Amount per trip, hundredths.</summary>
     public long Amount { get; init; }
 
+    /// <summary>What stays at the source, hundredths (G3, 2026-11-19).</summary>
+    public long KeepAtSource { get; init; }
+
+    /// <summary>Trips leave while the target has less than this, hundredths (0 = no limit).</summary>
+    public long UntilTargetHas { get; init; }
+
     /// <summary>Caravan on the road (−1 = none).</summary>
     public int Caravan { get; set; } = -1;
 

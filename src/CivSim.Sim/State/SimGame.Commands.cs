@@ -91,7 +91,7 @@ public sealed partial class SimGame
             HireCommand c => Hire(civ, c.Advisor),
             DismissAdvisorCommand => Dismiss(civ),
             SendCaravanCommand c => SendCaravan(civ, c.From, c.To, c.Good, c.Amount),
-            RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount, c.Path),
+            RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount, c.Path, c.KeepAtSource, c.UntilTargetHas),
             BringMaterialsCommand c => BringMaterials(civ, c.Building),
             EndRouteCommand c => EndRoute(civ, c.Route),
             DeclareWarCommand c => DeclareWar(civ, c.Other, surprise: false),
@@ -363,6 +363,12 @@ public sealed partial class SimGame
         }
 
         Place(civ, cell, t, SlotsFor(cell, t.Size), null);
+        if (t.OrDeposit == 0 && Map.Deposit[cell] != t.BonusDeposit && KnowsDeposit(civ, cell) && Mineable(cell) && !civ.IsAi)
+        {
+            // M2 (2026-11-19): allowed, the deposit stays, but no mine fits while this stands.
+            News.Add((civ.Id, $"{t.Name} stands on a {Content.World.Deposit(Map.Deposit[cell]).Key.Replace('_', ' ')} deposit: the deposit stays, but its mine needs the hex free."));
+        }
+
         return null;
     }
 
@@ -486,6 +492,11 @@ public sealed partial class SimGame
         if (!Knows(civ, next.Tech, next.AlsoTechs))
         {
             return $"A {next.Name.ToLowerInvariant()} needs {NeedText(next.Tech, next.AlsoTechs)}.";
+        }
+
+        if (s.People < next.MinPeople)
+        {
+            return $"A {next.Name.ToLowerInvariant()} needs {next.MinPeople} people; {s.Name} has {s.People}.";
         }
 
         if (!CanAfford(s.Stock, next.UpgradePrice, 100))
