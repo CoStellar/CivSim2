@@ -149,7 +149,7 @@ public sealed class FogTests
     }
 
     [Fact]
-    public void APatrolWalksItsLoopEatsAtHomeAndGoesAgain()
+    public void APatrolWalksItsLoopAgainAndAgainWithoutGoingHome()
     {
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
@@ -177,15 +177,17 @@ public sealed class FogTests
             return;
         }
 
-        var stages = new HashSet<PatrolStage>();
+        // Rounds: it comes back to the loop again and again; its home feeds it by rations, so it never walks home to eat.
+        int rounds = 0;
+        PatrolStage was = u.PatrolStage;
         for (int i = 0; i < 6000; i++)
         {
             g.Tick();
-            stages.Add(u.PatrolStage);
+            rounds += was == PatrolStage.OnLoop && u.PatrolStage == PatrolStage.ToStart ? 1 : 0;
+            was = u.PatrolStage;
         }
 
-        Assert.Contains(PatrolStage.OnLoop, stages);
-        Assert.Contains(PatrolStage.ToSupply, stages);
+        Assert.True(rounds >= 2, $"{rounds} rounds");
         Assert.NotEqual(PatrolStage.None, u.PatrolStage);
     }
 

@@ -198,7 +198,10 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
 }
 
 /// <summary>Rules of fighting.</summary>
-public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, long SoldierFoodPerMinute, int SurpriseReputation);
+public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, int SurpriseReputation);
+
+/// <summary>Rations: every <paramref name="EveryTicks"/> a settlement feeds all its people, residents and units (Patryk, 2026-11-19).</summary>
+public sealed record RationRules(int EveryTicks, int HungryPercent, int StarvingPercent, int StarveLosePercent);
 
 /// <summary>A building type from <c>data/sim/game.json</c>. Amounts in hundredths; rates per worker per minute.</summary>
 public sealed class BuildingType
@@ -423,8 +426,8 @@ public sealed class SimContent
     /// <summary>Extra price, percent, for resuming a paused construction.</summary>
     public int ResumeCostPercent { get; init; }
 
-    /// <summary>Food a carrier person takes for every 10 hexes of the way there and back (hundredths), paid when it leaves.</summary>
-    public long TripFoodPer10Hexes { get; init; }
+    /// <summary>Rations of the units, paid by their home settlement.</summary>
+    public RationRules Rations { get; init; } = new(600, 75, 50, 20);
 
     /// <summary>Technologies of its era a people must know to enter the next era (eras are levels, not one gate technology).</summary>
     public int EraAdvanceTechs { get; init; } = 5;
@@ -1134,7 +1137,10 @@ public sealed class SimContent
             MinGrowthPerMinute = growth.GetProperty("minGrowthPerMinute").GetInt32(),
             StarvePercentPerMinute = growth.GetProperty("starvePercentPerMinute").GetInt32(),
             ResumeCostPercent = root.GetProperty("resumeCostPercent").GetInt32(),
-            TripFoodPer10Hexes = root.TryGetProperty("tripFoodPer10Hexes", out JsonElement tf) ? Hundredths(tf) : 0,
+            Rations = root.TryGetProperty("rations", out JsonElement ra)
+                ? new RationRules(ra.GetProperty("everySeconds").GetInt32() * TicksPerSecond, ra.GetProperty("hungryPercent").GetInt32(),
+                    ra.GetProperty("starvingPercent").GetInt32(), ra.GetProperty("starveLosePercent").GetInt32())
+                : new RationRules(600, 75, 50, 20),
             EraAdvanceTechs = root.TryGetProperty("eraAdvanceTechs", out JsonElement eat) ? eat.GetInt32() : 5,
             TechCategories = Strings(root, "techCategories"),
             Food = GoodOf("food"),
@@ -1183,7 +1189,7 @@ public sealed class SimContent
                 root.GetProperty("war").GetProperty("combatEveryTicks").GetInt32(), root.GetProperty("war").GetProperty("lowLuckPercent").GetInt32(),
                 root.GetProperty("war").GetProperty("highLuckPercent").GetInt32(), root.GetProperty("war").GetProperty("defenderPercent").GetInt32(),
                 root.GetProperty("war").GetProperty("defenderStrength").GetInt32(), root.GetProperty("war").GetProperty("captureBelowPeople").GetInt32(),
-                Hundredths(root.GetProperty("war").GetProperty("soldierFoodPerMinute")), root.GetProperty("war").GetProperty("surpriseReputation").GetInt32()),
+                root.GetProperty("war").GetProperty("surpriseReputation").GetInt32()),
         };
     }
 

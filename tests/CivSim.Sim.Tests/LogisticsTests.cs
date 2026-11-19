@@ -294,9 +294,11 @@ public sealed class LogisticsTests
         }
 
         s.People = s.Housing + 40;
-        s.Stock[Content.Food] = 0;
-        for (int i = 0; i < 6 * SimContent.TicksPerSecond; i++)
+        s.Gathering = false;
+        civ.Dirty = true;
+        for (int i = 0; i < SimContent.TicksPerMinute + 1; i++)
         {
+            s.Stock[Content.Food] = 0; // through a ration: the people go hungry
             g.Tick();
         }
 

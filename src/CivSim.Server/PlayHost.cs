@@ -432,7 +432,8 @@ public sealed class PlayHost : IDisposable
             works.Add(new PlayWorkInfo(w.Id, w.Key, w.Name, w.Price, w.TicksPerHex / SimContent.TicksPerSecond, w.Tech, w.FromWater, text));
         }
 
-        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories));
+        client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories,
+            _game.Content.Rations.HungryPercent, _game.Content.Rations.StarvingPercent));
         client.SentChunks = false;
     }
 
@@ -568,10 +569,10 @@ public sealed class PlayHost : IDisposable
         HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered, b.Slots, b.Focus is null ? 0 : string.Join(",", b.Focus).GetHashCode(StringComparison.Ordinal)));
 
     private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, s.DefensePercent),
-        HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute)));
+        HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute, s.RationUnits, s.RationFood, s.RationShort, HashCode.Combine(s.RationDead, s.HungryPeople, s.HungryWorkers))));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
-        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard)));
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home)));
 
     private static int TechSig(IReadOnlyList<PlayTechState> techs)
     {
@@ -754,10 +755,13 @@ public sealed class PlayHost : IDisposable
 
             HexCoord h = _game.Geo.FromIndex(s.Center);
             bool own = s.Civ == civId;
+            (int rUnits, int rPeople, long rFood) = own ? _game.RationOf(s) : (0, 0, 0);
             settlements.Add(new PlaySettlementView(s.Id, s.Civ, s.Name, h.Col, h.Row, s.Level, s.People, s.Housing, s.Idle, s.Besieged, _game.Defense(s),
                 own ? (long[])s.Stock.Clone() : null, own ? (long[])s.Capacity.Clone() : null, own ? (long[])s.Rate.Clone() : null,
                 Gathering: own && s.Gathering, Richness: own ? (int[])_game.Richness(s).Clone() : null, WorkPermille: own ? s.WorkPermille : 1000,
-                HealPerMinute: own ? s.HealPerMinute : 0));
+                HealPerMinute: own ? s.HealPerMinute : 0, RationUnits: rUnits, RationPeople: rPeople, RationFood: rFood,
+                RationShort: own ? s.RationShort : 0, RationDead: own ? s.RationDead : 0,
+                HungryPeople: own ? s.HungryPeople : 0, HungryWorkers: own ? s.HungryWorkers : 0));
         }
 
         if (!_game.Picking)
@@ -826,7 +830,8 @@ public sealed class PlayHost : IDisposable
                 mine && u.State == UnitState.Moving ? Pairs(u.Path, u.PathIndex) : null,
                 mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
-                _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0));
+                _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0,
+                mine ? u.Hunger : 0, mine ? u.Home : -1));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
@@ -838,7 +843,8 @@ public sealed class PlayHost : IDisposable
             civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0,
             _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId),
             AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0,
-            Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond));
+            Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond),
+            RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond);
     }
 
     // What a technology opens and changes, worked out from the data (so the player sees exactly what it does).

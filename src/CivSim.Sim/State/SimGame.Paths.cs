@@ -18,9 +18,6 @@ public enum PatrolStage : byte
 
     /// <summary>Walking the loop.</summary>
     OnLoop = 2,
-
-    /// <summary>Walking to the nearest own settlement for food.</summary>
-    ToSupply = 3,
 }
 
 /// <summary>
@@ -179,21 +176,6 @@ public sealed partial class SimGame
                 }
 
                 break;
-            case PatrolStage.ToSupply:
-                Settlement? home = NearestOwn(Civs[u.Civ], u.Cell);
-                if (home is null || !FindPath(u.Cell, home.Center, u.Path, t.Naval, u.Civ))
-                {
-                    StopPatrol(u, "has no settlement to eat at");
-                    return;
-                }
-
-                if (u.Path.Count == 0)
-                {
-                    Resupply(u);
-                    return;
-                }
-
-                break;
         }
 
         StartWalk(u, u.Hidden);
@@ -208,25 +190,9 @@ public sealed partial class SimGame
                 NextPatrolLeg(u, PatrolStage.OnLoop);
                 break;
             case PatrolStage.OnLoop:
-                NextPatrolLeg(u, PatrolStage.ToSupply);
-                break;
-            case PatrolStage.ToSupply:
-                Resupply(u);
+                NextPatrolLeg(u, PatrolStage.ToStart); // round again: the home settlement feeds it wherever it is
                 break;
         }
-    }
-
-    // At a settlement: food for the next cycle (as much as there is), then out again.
-    private void Resupply(Unit u)
-    {
-        Settlement? s = NearestOwn(Civs[u.Civ], u.Cell);
-        if (s is not null)
-        {
-            long food = Math.Min(s.Stock[Content.Food], u.People * u.Patrol.Count * Content.TripFoodPer10Hexes / 10);
-            s.Stock[Content.Food] -= food;
-        }
-
-        NextPatrolLeg(u, PatrolStage.ToStart);
     }
 
     private void StopPatrol(Unit u, string why)

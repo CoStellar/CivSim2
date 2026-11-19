@@ -152,7 +152,7 @@ public sealed partial class SimGame
 
             Settlement s = Settlements[b.Settlement];
             long boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups) + Support(s, t) + WaterBonus(b.Cell, t);
-            long work = s.WorkPermille * (winter ? t.WinterPercent : 100) / 100;
+            long work = s.WorkPermille * (winter ? t.WinterPercent : 100) / 100 * s.WorkersFedPermille / 1000;
             for (int g = 0; g < goods; g++)
             {
                 long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100 * work / 1000;
@@ -161,7 +161,7 @@ public sealed partial class SimGame
             }
         }
 
-        int eat = civ.Event >= 0 ? 100 + ((Content.Events[civ.Event].EatPercent - 100) * Harm(civ, Content.Events[civ.Event].Key) / 100) : 100;
+        int eat = EatPercent(civ);
         int idleAll = 0;
         foreach (int sid in civ.Settlements)
         {
@@ -170,7 +170,7 @@ public sealed partial class SimGame
             if (s.Gathering && s.Idle > 0)
             {
                 int[] rich = Richness(s);
-                long work = s.WorkPermille * (IsWinter ? 50 : 100) / 100; // gathering suffers in winter like the gatherers' huts
+                long work = s.WorkPermille * (IsWinter ? 50 : 100) / 100 * s.IdleFedPermille / 1000; // gathering suffers in winter like the gatherers' huts
                 for (int g = 0; g < goods; g++)
                 {
                     long got = s.Idle * Content.ForagePerMinute[g] * rich[g] / 100 * EventProduction(civ, g) / 100 * work / 1000;
@@ -179,29 +179,15 @@ public sealed partial class SimGame
                 }
             }
 
-            s.Rate[Content.Food] -= s.People * Content.FoodPerPersonPerMinute * eat / 100;
+            // Everyone it feeds, residents and its units, eats once a minute at the ration (SimGame.Rations); the rate shows it per minute.
+            s.Eating = ((s.People + UnitPeopleOf(civ, s)) * Content.FoodPerPersonPerMinute * eat / 100) + (s.Id == civ.Settlements[0] && civ.Advisor is not null ? Content.AdvisorUpkeep : 0);
+            s.Rate[Content.Food] -= s.Eating;
             if (Content.Clothing >= 0 && s.Stock[Content.Clothing] >= SimContent.One)
             {
                 s.Rate[Content.Clothing] -= s.People * Content.ClothingWearPerPersonPerMinute;
             }
         }
 
-        // Soldiers in the field and the advisor are fed from the first settlement (the capital).
-        long soldiers = 0;
-        foreach (int uid in civ.Units)
-        {
-            Unit u = Units[uid];
-            if (u.State != UnitState.Gone && Content.Units[u.Kind].Army)
-            {
-                soldiers += u.People;
-            }
-        }
-
-        if (civ.Settlements.Count > 0)
-        {
-            Settlement capital = Settlements[civ.Settlements[0]];
-            capital.Rate[Content.Food] -= (soldiers * Content.War.SoldierFoodPerMinute) + (civ.Advisor is null ? 0 : Content.AdvisorUpkeep);
-        }
 
         civ.ExperienceRate[0] += idleAll / 2; // gatherers around the settlements: a little experience in the oldest craft
         civ.People = people;
@@ -354,7 +340,8 @@ public sealed partial class SimGame
             long full = 0;
             for (int g = 0; g < s.Stock.Length; g++)
             {
-                long delta = (s.Rate[g] * Content.EconomyEveryTicks) + s.Remainder[g];
+                long perMinute = g == Content.Food ? s.Rate[g] + s.Eating : s.Rate[g]; // food is eaten at the ration, not by the tick
+                long delta = (perMinute * Content.EconomyEveryTicks) + s.Remainder[g];
                 long whole = delta / SimContent.TicksPerMinute;
                 s.Remainder[g] = delta - (whole * SimContent.TicksPerMinute);
                 long stock = s.Stock[g] + whole;
@@ -382,13 +369,6 @@ public sealed partial class SimGame
                 }
             }
 
-            bool hungry = (empty & (1L << Content.Food)) != 0 && s.Rate[Content.Food] < 0;
-            if (hungry && !s.Hungry)
-            {
-                News.Add((civ.Id, $"{s.Name} has run out of food: people are starving."));
-            }
-
-            s.Hungry = hungry;
             if (empty != s.EmptyMask || full != s.FullMask || WorkChanged(s))
             {
                 s.EmptyMask = empty;
@@ -429,10 +409,11 @@ public sealed partial class SimGame
                 perMinute = -Math.Max(SimContent.One, s.People * sick);
                 s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
             }
-            else if (s.Hungry)
+            else if (s.Stock[Content.Food] < SimContent.One)
             {
-                perMinute = -Math.Max(SimContent.One, s.People * Content.StarvePercentPerMinute);
+                // No growth without food; deaths from hunger come at the rations (SimGame.Rations).
                 s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
+                continue;
             }
             else if (s.People < s.Housing)
             {

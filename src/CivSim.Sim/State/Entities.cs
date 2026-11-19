@@ -175,6 +175,30 @@ public sealed class Settlement
     /// <summary>Abandoned settlements keep their id but nothing else.</summary>
     public bool Abandoned { get; set; }
 
+    /// <summary>Food everyone it feeds eats a minute (residents, its units, the advisor in the capital), paid at the ration.</summary>
+    public long Eating { get; set; }
+
+    /// <summary>Units it could not feed at the last ration.</summary>
+    public int RationShort { get; set; }
+
+    /// <summary>Residents it could not feed at the last ration (idle first, then workers).</summary>
+    public int HungryPeople { get; set; }
+
+    /// <summary>Of them, workers.</summary>
+    public int HungryWorkers { get; set; }
+
+    /// <summary>Missed rations in a row for its residents.</summary>
+    public int HungerStreak { get; set; }
+
+    /// <summary>Work of its workers in permille after hunger.</summary>
+    public int WorkersFedPermille { get; set; } = 1000;
+
+    /// <summary>Work of its people without a job (gathering) in permille after hunger.</summary>
+    public int IdleFedPermille { get; set; } = 1000;
+
+    /// <summary>People (residents and units) who starved to death at the last ration.</summary>
+    public int RationDead { get; set; }
+
     /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
     public long Wounds { get; set; }
 
@@ -441,8 +465,11 @@ public sealed class Unit
     /// <summary>Building (porters) or settlement (caravans) the cargo goes to.</summary>
     public int Target { get; set; } = -1;
 
-    /// <summary>Settlement the carriers come from and go back to.</summary>
+    /// <summary>Settlement the unit comes from: carriers go back to it, and it feeds the unit's rations.</summary>
     public int Home { get; set; } = -1;
+
+    /// <summary>Missed rations in a row: 0 fed, 1 hungry, 2 starving.</summary>
+    public byte Hunger { get; set; }
 
     /// <summary>Hex the carriers go back to (their storehouse).</summary>
     public int ReturnCell { get; set; } = -1;

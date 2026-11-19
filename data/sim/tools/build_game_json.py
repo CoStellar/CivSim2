@@ -223,7 +223,13 @@ d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of th
   "levels":[{"key":"track","name":"Track","tech":"carrying","price":{"wood":2},"seconds":2,"walkPercent":60},
             {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
   "reach":25,"supply":{"food":40,"wood":60,"stone":30,"clay":20}}
-d["tripFoodPer10Hexes"]=0.5
+d.pop("tripFoodPer10Hexes", None)
+d['comment'] = d['comment'].replace("Food: every person eats foodPerPersonPerMinute;", "Food: every person eats foodPerPersonPerMinute, paid once a minute at the ration (see rations);").replace(" without food it loses starvePercentPerMinute.", " it does not grow while it has no food (deaths from hunger come at the rations; starvePercentPerMinute is not used).")
+# Rations (Patryk, 2026-11-19): no running cost of units, as in RTS games. Every minute each settlement feeds all its people:
+# its residents and the units that come from it. Short of food, the idle go hungry first, then the workers, the units last;
+# a second missed ration in a row kills some of the hungry.
+d["rations"]={"comment":"Every everySeconds a settlement feeds everyone it has: its residents and its units (soldiers, scouts, carriers, settlers on the way), each eating food.foodPerPersonPerMinute for the time since the last ration. Short of food, its units are fed first (fighting ones first), then its workers, then the people without a job: those go hungry first. Hungry people work, gather, fight and walk at hungryPercent. Missed again at the next ration: starvingPercent, and starveLosePercent of the hungry (at least 1) die then and at every further missed ration. One full ration ends it.",
+  "everySeconds":60,"hungryPercent":75,"starvingPercent":50,"starveLosePercent":20}
 # Trees (Patryk, 2026-11-18 19:35: too little wood, too few trees): forests are full of trees; on open land groves grow in
 # clumps, groveChance percent of each biome's hexes. Woodcutters work groves too (at groveWoodPercent), gatherers pick up
 # their wood the same.
@@ -250,6 +256,8 @@ d["forage"]={"comment":"People of a settlement told to gather pick up food, wood
   "relief":[5,50,100],"deposits":{"stone":{"stone":100},"flint":{"stone":50},"wild_grain":{"food":50},"game":{"food":30}},"riverFood":20}
 d["food"].pop("idleForagePerMinute",None)
 d["war"]["injuredPercent"]=30
+d["war"].pop("soldierFoodPerMinute", None)
+d["war"]["comment"]=d["war"]["comment"].replace(" Soldiers eat soldierFoodPerMinute each.", " Soldiers are fed by rations (see rations).")
 d["rivers"]={"comment":"Until freeFromEra, rivers can be crossed only next to one's own building that gives a crossing (raft landings).","freeFromEra":"bronze_age"}
 d['technologies']=T
 

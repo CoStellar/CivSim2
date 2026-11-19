@@ -30,7 +30,7 @@ public partial class PlayGame
             {
                 if (u.Id == _unit)
                 {
-                    UnitItems(u, c, items);
+                    UnitItems(v, u, c, items);
                     return;
                 }
             }
@@ -112,6 +112,19 @@ public partial class PlayGame
         if (s.HealPerMinute > 0)
         {
             items.Add(new LineItem($"Herbalists heal {s.HealPerMinute} wounded a minute in its land", UiKit.Muted, 13));
+        }
+
+        // Rations: everyone it feeds eats once a minute; short of food the idle go hungry first, then the workers, the units last.
+        {
+            int food = c.Goods.ToList().FindIndex(x => x.Key == "food");
+            bool enough = s.Stock is { } st && food >= 0 && food < st.Length && st[food] >= s.RationFood;
+            string who = s.RationUnits > 0 ? $"{s.People} residents and {s.RationPeople} in {s.RationUnits} units" : $"{s.People} residents";
+            items.Add(new LineItem($"Ration: {UiKit.Num(s.RationFood)} food for {who} in {v.RationSeconds} s", s.HungryPeople > 0 || s.RationShort > 0 ? UiKit.Bad : enough ? UiKit.Muted : UiKit.Warn, 13));
+            if (s.HungryPeople > 0 || s.RationShort > 0)
+            {
+                string hungry = (s.HungryPeople > 0 ? $"{s.HungryPeople} people ({s.HungryWorkers} of them workers)" : "") + (s.RationShort > 0 ? (s.HungryPeople > 0 ? " and " : "") + $"{s.RationShort} units" : "");
+                items.Add(new LineItem(s.RationDead > 0 ? $"Starving: {hungry} without food, {s.RationDead} died at the last ration" : $"Hungry: {hungry} got no ration and work weaker", UiKit.Bad, 13));
+            }
         }
 
         foreach (PlayAlertView a in v.Alerts ?? [])
@@ -388,7 +401,7 @@ public partial class PlayGame
             $"People without a job pick up food, wood and stone around the settlement. How much depends on the land: {land} of a rich land."));
     }
 
-    private void UnitItems(PlayUnitView u, PlayContentMessage c, List<UiItem> items)
+    private void UnitItems(PlayViewMessage v, PlayUnitView u, PlayContentMessage c, List<UiItem> items)
     {
         PlayUnitInfo t = c.Units[u.Kind];
         string state = u.State == 0 ? "Training" : u.Fighting ? "FIGHTING" : u.State == 2 ? "Walking" : "Standing";
@@ -406,6 +419,23 @@ public partial class PlayGame
         if (u.Injured > 0)
         {
             items.Add(new LineItem($"{u.Injured} wounded: bring them to a settlement with herbalists", UiKit.Warn, 14));
+        }
+
+        // Rations: the home settlement feeds the unit once a minute, wherever it is.
+        if (u.State != 0)
+        {
+            string home = v.Settlements.FirstOrDefault(x => x.Id == u.Home)?.Name ?? "our nearest settlement";
+            if (u.Hunger == 0)
+            {
+                items.Add(new LineItem($"Fed by {home}: ration in {v.RationSeconds} s", UiKit.Muted, 13));
+            }
+            else
+            {
+                int pct = u.Hunger == 1 ? c.HungryPercent : c.StarvingPercent;
+                items.Add(new LineItem(u.Hunger == 1
+                    ? $"HUNGRY: {home} had no food for it. Strength and speed {pct}%; missing the next ration ({v.RationSeconds} s) kills some"
+                    : $"STARVING: strength and speed {pct}%, some die at every missed ration. Bring food to {home}", UiKit.Bad, 14));
+            }
         }
 
         if (t.Army)
@@ -429,7 +459,7 @@ public partial class PlayGame
 
         if (u.State != 0)
         {
-            items.Add(new ActItem("Draw a patrol", () => ArmDraw(DrawMode.Patrol), "Draw a loop over the hexes. They walk it, go to the nearest settlement for food, and walk it again.", Accent: UiKit.Good));
+            items.Add(new ActItem("Draw a patrol", () => ArmDraw(DrawMode.Patrol), "Draw a loop over the hexes. They walk it again and again; their settlement feeds them at the ration. Stop patrols in the Units window (P or 6).", Accent: UiKit.Good));
         }
         if (t.CanHide)
         {

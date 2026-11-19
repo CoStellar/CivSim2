@@ -31,6 +31,7 @@ public partial class PlayGame
             "Settlements" => "Our settlements",
             "Peoples" => "Other peoples",
             "Thinkers" => "Thinkers and advisors",
+            "Units" => "Our units and patrols",
             _ => "Summary",
         };
         var items = new List<UiItem>();
@@ -47,6 +48,9 @@ public partial class PlayGame
                 break;
             case "Thinkers":
                 ThinkerItems(v, c, items);
+                break;
+            case "Units":
+                UnitTable(v, c, items);
                 break;
             default:
                 SummaryItems(v, items);
@@ -226,6 +230,81 @@ public partial class PlayGame
         items.Add(new TableItem(4 + shown.Length, cells));
     }
 
+    // Every unit of ours, patrols first: stop one or all of them without hunting for them on the map (Patryk, 2026-11-19).
+    private void UnitTable(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
+    {
+        var mine = v.Units.Where(u => u.Civ == v.Civ && !c.Units[u.Kind].System)
+            .OrderBy(u => u.Patrol is null ? 1 : 0).ThenBy(u => u.Hunger == 0 ? 1 : 0).ThenBy(u => u.Id).ToList();
+        int patrols = mine.Count(u => u.Patrol is not null);
+        int hungry = mine.Count(u => u.Hunger > 0);
+        int carriers = v.Units.Count(u => u.Civ == v.Civ && c.Units[u.Kind].System);
+        items.Add(new LineItem($"{mine.Count} unit(s), {patrols} on patrol" + (carriers > 0 ? $", and {carriers} carrier group(s) on their tasks" : "") +
+            $". Their settlements feed them every minute: next ration in {v.RationSeconds} s.", UiKit.Muted, 13));
+        if (hungry > 0)
+        {
+            items.Add(new LineItem($"{hungry} unit(s) hungry: their settlement had no food for the ration. Strength and speed {c.HungryPercent}%; the next missed ration kills some.", UiKit.Bad, 14));
+        }
+
+        if (patrols > 0)
+        {
+            var stopping = mine.Where(u => u.Patrol is not null).Select(u => (u.Id, u.Col, u.Row)).ToList();
+            items.Add(new ActItem(patrols == 1 ? "Stop the patrol" : $"Stop all patrols ({patrols})", () =>
+            {
+                foreach ((int id, int col, int row) in stopping)
+                {
+                    _session!.Play(PlayCommandKind.Move, id, col, row); // a move to where it stands ends the patrol
+                }
+
+                _uiTimer = 0.1;
+            }, "They stop where they are.", Accent: UiKit.Warn));
+        }
+
+        if (mine.Count == 0)
+        {
+            items.Add(new LineItem("No units. Train scouts or soldiers in a settlement.", UiKit.Muted, 14));
+            return;
+        }
+
+        var cells = new List<CellItem>
+        {
+            new("Unit", UiKit.Heading), new("People", UiKit.Heading), new("Doing", UiKit.Heading), new("Fed by", UiKit.Heading),
+            new("Food", UiKit.Heading), new("", UiKit.Heading),
+        };
+        foreach (PlayUnitView u in mine)
+        {
+            int id = u.Id;
+            int col = u.Col;
+            int row = u.Row;
+            cells.Add(new CellItem(c.Units[u.Kind].Name, null, () =>
+            {
+                _unit = id;
+                if (_overlay is not null)
+                {
+                    _overlay.SelectedUnit = id;
+                }
+
+                Focus(col, row);
+                _bigMode = "";
+                UpdateUi();
+            }));
+            cells.Add(new CellItem($"{u.People}" + (u.Injured > 0 ? $" ({u.Injured} wounded)" : ""), UiKit.Text));
+            string doing = u.State == 0 ? "training" : u.Fighting ? "FIGHTING" : u.Patrol is not null ? $"patrol, {u.Patrol.Length / 2} hexes" : u.State == 2 ? "walking" : "standing";
+            cells.Add(new CellItem(doing, u.Fighting ? UiKit.Bad : u.Patrol is not null ? UiKit.Good : UiKit.Muted));
+            cells.Add(new CellItem(v.Settlements.FirstOrDefault(x => x.Id == u.Home)?.Name ?? "-", UiKit.Muted));
+            cells.Add(new CellItem(u.Hunger switch { 0 => "fed", 1 => "HUNGRY", _ => "STARVING" }, u.Hunger == 0 ? UiKit.Muted : UiKit.Bad));
+            bool moving = u.Patrol is not null || u.State == 2;
+            cells.Add(moving
+                ? new CellItem(u.Patrol is not null ? "[Stop patrol]" : "[Stop]", UiKit.Warn, () =>
+                {
+                    _session!.Play(PlayCommandKind.Move, id, col, row);
+                    _uiTimer = 0.1;
+                })
+                : new CellItem("", UiKit.Muted));
+        }
+
+        items.Add(new TableItem(6, cells));
+    }
+
     private static string AlertWord(int kind) => kind switch
     {
         0 => "attacked",
@@ -235,6 +314,7 @@ public partial class PlayGame
         4 => "no homes",
         5 => "store full",
         7 => "clothing",
+        8 => "rations",
         _ => "materials missing",
     };
 

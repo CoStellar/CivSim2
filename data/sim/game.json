@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; people told to gather pick up food, wood and stone around their settlement (forage). Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools).",
+  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute, paid once a minute at the ration (see rations); people told to gather pick up food, wood and stone around their settlement (forage). Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); it does not grow while it has no food (deaths from hunger come at the rations; starvePercentPerMinute is not used). resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools).",
   "density": 7,
   "economyEveryTicks": 10,
   "populationEveryTicks": 50,
@@ -2795,14 +2795,13 @@
     ]
   },
   "war": {
-    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers eat soldierFoodPerMinute each. Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation).",
+    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation).",
     "combatEveryTicks": 10,
     "lowLuckPercent": 80,
     "highLuckPercent": 120,
     "defenderPercent": 30,
     "defenderStrength": 6,
     "captureBelowPeople": 6,
-    "soldierFoodPerMinute": 1,
     "surpriseReputation": -30,
     "levyStrength": 5,
     "injuredPercent": 30
@@ -2885,7 +2884,6 @@
     "science"
   ],
   "eraAdvanceTechs": 5,
-  "tripFoodPer10Hexes": 0.5,
   "roads": {
     "comment": "Levels of roads. walkPercent: walking cost on them, of the hex's cost (capped at 150 so roads cross rough land). reach: hexes from our nearest settlement. supply: goods carriers bring to a new camp joined to our roads.",
     "levels": [
@@ -3072,5 +3070,12 @@
       "swamp": 50
     },
     "groveWoodPercent": 60
+  },
+  "rations": {
+    "comment": "Every everySeconds a settlement feeds everyone it has: its residents and its units (soldiers, scouts, carriers, settlers on the way), each eating food.foodPerPersonPerMinute for the time since the last ration. Short of food, its units are fed first (fighting ones first), then its workers, then the people without a job: those go hungry first. Hungry people work, gather, fight and walk at hungryPercent. Missed again at the next ration: starvingPercent, and starveLosePercent of the hungry (at least 1) die then and at every further missed ration. One full ration ends it.",
+    "everySeconds": 60,
+    "hungryPercent": 75,
+    "starvingPercent": 50,
+    "starveLosePercent": 20
   }
 }

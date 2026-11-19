@@ -147,10 +147,17 @@ public sealed class EconomyTests
         Run(g, SimContent.TicksPerMinute);
         Assert.True(s.People > Content.StartPeople, $"people {s.People}");
         Assert.True(s.People <= s.Housing);
-        g.Settlements[civ.Settlements[0]].Stock[Content.Food] = 0;
+        // No food and nobody gathering: the next ration leaves them hungry, the one after kills some (rations, 2026-11-19).
+        s.Gathering = false;
+        civ.Dirty = true;
         int before = s.People;
-        Run(g, SimContent.TicksPerMinute);
-        Assert.True(civ.Hungry || civ.Stock[Content.Food] > 0);
+        for (int i = 0; i < 3 * SimContent.TicksPerMinute; i++)
+        {
+            s.Stock[Content.Food] = 0;
+            g.Tick();
+        }
+
+        Assert.True(civ.Hungry);
         Assert.True(s.People < before, $"people {before} -> {s.People}");
     }
 

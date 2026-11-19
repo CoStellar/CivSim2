@@ -77,6 +77,14 @@ public sealed partial class SimGame
             Add(b.Starved ? 1 : 0);
         }
 
+        foreach (Unit u in Units)
+        {
+            Add((long)u.State);
+            Add(u.Cell);
+            Add(u.People);
+            Add(u.Hunger);
+        }
+
         return h;
     }
 }

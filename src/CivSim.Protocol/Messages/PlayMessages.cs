@@ -65,7 +65,9 @@ public sealed record PlayUnitView(
     [property: Key(14)] bool Attack = false,
     [property: Key(15)] bool Carrier = false,
     [property: Key(16)] int Injured = 0,
-    [property: Key(17)] int Aboard = 0);
+    [property: Key(17)] int Aboard = 0,
+    [property: Key(18)] int Hunger = 0,
+    [property: Key(19)] int Home = -1);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -113,7 +115,9 @@ public sealed record PlayContentMessage(
     [property: Key(8)] IReadOnlyList<string> Eras,
     [property: Key(9)] IReadOnlyList<PlayRoadInfo>? Roads = null,
     [property: Key(10)] IReadOnlyList<PlayWorkInfo>? Works = null,
-    [property: Key(11)] IReadOnlyList<string>? Categories = null) : IProtocolMessage;
+    [property: Key(11)] IReadOnlyList<string>? Categories = null,
+    [property: Key(12)] int HungryPercent = 100,
+    [property: Key(13)] int StarvingPercent = 100) : IProtocolMessage;
 
 /// <summary>A work drawn on hexes (ditch, palisade, wall, aqueduct): its bit in the works of a hex, price and seconds per hex.</summary>
 [MessagePackObject]
@@ -144,7 +148,14 @@ public sealed record PlaySettlementView(
     [property: Key(15)] bool Gathering = false,
     [property: Key(16)] int[]? Richness = null,
     [property: Key(17)] int WorkPermille = 1000,
-    [property: Key(18)] int HealPerMinute = 0);
+    [property: Key(18)] int HealPerMinute = 0,
+    [property: Key(19)] int RationUnits = 0,
+    [property: Key(20)] int RationPeople = 0,
+    [property: Key(21)] long RationFood = 0,
+    [property: Key(22)] int RationShort = 0,
+    [property: Key(23)] int RationDead = 0,
+    [property: Key(24)] int HungryPeople = 0,
+    [property: Key(25)] int HungryWorkers = 0);
 
 /// <summary>A standing caravan route of the player.</summary>
 [MessagePackObject]
@@ -245,7 +256,8 @@ public sealed record PlayViewMessage(
     [property: Key(38)] bool ObjectsApart = false,
     [property: Key(39)] bool TechsSame = false,
     [property: Key(40)] bool Winter = false,
-    [property: Key(41)] int SeasonSeconds = 0) : IProtocolMessage;
+    [property: Key(41)] int SeasonSeconds = 0,
+    [property: Key(42)] int RationSeconds = 0) : IProtocolMessage;
 
 /// <summary>
 /// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this

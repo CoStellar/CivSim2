@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CivSim.Game.Map;
 using CivSim.Game.Ui;
 using CivSim.Protocol.Messages;
@@ -15,7 +16,7 @@ namespace CivSim.Game.Play;
 /// </summary>
 public partial class PlayGame
 {
-    private static readonly string[] WindowNames = ["Settlements", "Research", "Peoples", "Thinkers", "Summary"];
+    private static readonly string[] WindowNames = ["Settlements", "Research", "Peoples", "Thinkers", "Summary", "Units"];
 
     // Decorative years at the start of each era and at the end of the last (only for the screen, never for the rules).
     private static readonly int[] EraYears = [-10000, -6000, -3000, -1200, 500, 1500];
@@ -27,6 +28,7 @@ public partial class PlayGame
     private Label _clockLabel = null!;
     private readonly List<(Button Button, SimulationSpeed Speed)> _speedButtons = [];
     private Button _researchChip = null!;
+    private Button _patrolsButton = null!;
     private PanelContainer _advisorPanel = null!;
     private Label _advisorName = null!;
     private Label _advisorText = null!;
@@ -120,6 +122,8 @@ public partial class PlayGame
         }
 
         right.AddChild(new VSeparator());
+        _patrolsButton = UiKit.Button("Patrols", () => OpenWindow("Units"), "Our patrols and units: stop one or all of them (P)");
+        right.AddChild(_patrolsButton);
         right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
         right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls, first steps and the font (H)"));
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
@@ -345,6 +349,11 @@ public partial class PlayGame
         }
 
         _clockLabel.Text = Clock();
+        int patrols = v.Units.Count(u => u.Civ == v.Civ && u.Patrol is not null);
+        int hungry = v.Units.Count(u => u.Civ == v.Civ && u.Hunger > 0);
+        _patrolsButton.Visible = patrols > 0 || hungry > 0;
+        _patrolsButton.Text = hungry > 0 ? $"Units: {hungry} hungry" : $"Patrols {patrols}";
+        _patrolsButton.Modulate = hungry > 0 ? new Color(1f, 0.55f, 0.5f) : Colors.White;
         foreach ((Button b, SimulationSpeed _) in _speedButtons)
         {
             b.Visible = !v.Picking; // choosing the start goes in real time

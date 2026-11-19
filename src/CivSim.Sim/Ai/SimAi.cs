@@ -168,7 +168,7 @@ public static partial class SimAi
             return true;
         }
 
-        long food = civ.Rate[g.Content.Food];
+        long food = NetFood(g, civ);
         if ((food < 3 * SimContent.One || civ.Hungry) && !Building(g, civ, FoodBuildings) && (civ.Hungry || Count(g, civ, FoodBuildings) <= civ.People / 5))
         {
             // Hungry: what feeds fastest and needs no tools comes first.
@@ -527,11 +527,14 @@ public static partial class SimAi
         }
     }
 
+    // Food a people makes a minute after everyone's rations (residents and units; the rate shows the rations per minute).
+    private static long NetFood(SimGame g, Civ civ) => civ.Rate[g.Content.Food];
+
     private static void Settlers(SimGame g, Civ civ)
     {
         UnitType settlers = g.Content.Unit("settlers");
         int cap = 2 + (civ.Expansion / 25) + g.EraOf(civ);
-        if (Own(g, civ, t => t.Founds) == 0 && civ.Settlements.Count < cap && civ.Rate[g.Content.Food] > 0)
+        if (Own(g, civ, t => t.Founds) == 0 && civ.Settlements.Count < cap && NetFood(g, civ) > 0)
         {
             foreach (int sid in civ.Settlements)
             {
@@ -620,7 +623,7 @@ public static partial class SimAi
         }
 
         int want = civ.People * (5 + (civ.Aggression / 5)) / 100;
-        if (soldiers >= want || civ.Rate[g.Content.Food] < 2 * SimContent.One)
+        if (soldiers >= want || NetFood(g, civ) < 2 * SimContent.One)
         {
             return;
         }
@@ -631,13 +634,22 @@ public static partial class SimAi
             return;
         }
 
+        // Rations: the settlement that trains them feeds them, so the one with the most food to spare trains them, and only if
+        // it can feed them as well as its own people.
+        Settlement? best = null;
         foreach (int sid in civ.Settlements)
         {
-            if (g.Settlements[sid].People >= t.People + 15)
+            Settlement s = g.Settlements[sid];
+            if (s.People >= t.People + 15 && s.Rate[g.Content.Food] >= t.People * g.Content.FoodPerPersonPerMinute
+                && (best is null || s.Rate[g.Content.Food] > best.Rate[g.Content.Food]))
             {
-                g.Apply(new TrainCommand(civ.Id, sid, t.Id));
-                return;
+                best = s;
             }
+        }
+
+        if (best is not null)
+        {
+            g.Apply(new TrainCommand(civ.Id, best.Id, t.Id));
         }
     }
 

@@ -261,7 +261,7 @@ public sealed partial class SimGame
         }
 
         pct += Bonus(civ, EffectKind.Strength, t.Key, t.Groups); // weapons, armour, bows of each era
-        return (long)u.People * t.Strength * pct;
+        return (long)u.People * t.Strength * pct * FedPercent(u) / 100;
     }
 
     /// <summary>Defence of a settlement in percent from its finished fortifications.</summary>

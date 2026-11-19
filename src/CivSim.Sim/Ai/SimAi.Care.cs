@@ -57,7 +57,9 @@ public static partial class SimAi
         {
             Settlement s = g.Settlements[sid];
             // Hungry now, or eating more than it makes with less than two minutes of food left.
-            bool running = s.Rate[g.Content.Food] < 0 && s.Stock[g.Content.Food] < (long)s.People * 2 * g.Content.FoodPerPersonPerMinute;
+            // Less than two rations (residents and units) left.
+            long ration = g.RationOf(s).Food;
+            bool running = (s.Rate[g.Content.Food] < 0 || s.RationShort > 0) && s.Stock[g.Content.Food] < 2 * ration;
             if (!s.Hungry && !running)
             {
                 continue;

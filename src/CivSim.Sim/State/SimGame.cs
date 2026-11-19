@@ -317,6 +317,11 @@ public sealed partial class SimGame
                 EconomyStep(civ);
             }
 
+            if ((Ticks + (civ.Id * 17)) % Content.Rations.EveryTicks == 0)
+            {
+                RationStep(civ);
+            }
+
             if ((Ticks + civ.Id) % Content.PopulationEveryTicks == 0)
             {
                 PopulationStep(civ);

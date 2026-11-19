@@ -309,7 +309,7 @@ public sealed partial class SimGame
         UnitType t = Content.Units[u.Kind];
         int per = u.Hidden ? t.HiddenTicksPerHex : t.TicksPerHex;
         int cost = t.Naval ? 100 : CellCost(cell);
-        int speed = 100 + Bonus(Civs[u.Civ], EffectKind.Speed, t.Key, t.Groups);
+        int speed = (100 + Bonus(Civs[u.Civ], EffectKind.Speed, t.Key, t.Groups)) * FedPercent(u) / 100;
         return Math.Max(1, per * Math.Max(50, cost) / speed);
     }
 

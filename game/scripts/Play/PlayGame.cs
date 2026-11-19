@@ -220,6 +220,26 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Script step: the first own standing unit patrols up and down its column, four hexes north of it.</summary>
+    public void ScriptPatrolFirst()
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        foreach (PlayUnitView u in v.Units)
+        {
+            if (u.Civ == v.Civ && u.State != 0 && !_session.PlayContent!.Units[u.Kind].System)
+            {
+                int c = u.Col;
+                int r = u.Row;
+                _session.Play(PlayCommandKind.Patrol, u.Id, cells: [c, r - 1, c, r - 2, c, r - 3, c, r - 4, c, r - 3, c, r - 2]);
+                return;
+            }
+        }
+    }
+
     /// <summary>Script step: sends the first own standing unit by an offset from where it stands, and selects it.</summary>
     public void ScriptMoveFirst(int dCol, int dRow, bool hidden)
     {
@@ -483,8 +503,11 @@ public partial class PlayGame : Node2D
             case InputEventKey { Pressed: true, Keycode: Key.Minus or Key.KpSubtract }:
                 _session.SetSpeed(_session.PlayView?.Speed switch { SimulationSpeed.X4 => SimulationSpeed.X2, SimulationSpeed.X2 => SimulationSpeed.X1, _ => SimulationSpeed.Paused });
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 } f:
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 or Key.Key6 } f:
                 OpenWindow(WindowNames[(int)(f.Keycode - Key.Key1)]);
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P }:
+                OpenWindow("Units"); // patrols are listed first there
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.G }:
                 ToggleRoutes();
