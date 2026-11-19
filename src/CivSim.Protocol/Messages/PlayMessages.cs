@@ -262,7 +262,8 @@ public sealed record PlayViewMessage(
     [property: Key(39)] bool TechsSame = false,
     [property: Key(40)] bool Winter = false,
     [property: Key(41)] int SeasonSeconds = 0,
-    [property: Key(42)] int RationSeconds = 0) : IProtocolMessage;
+    [property: Key(42)] int RationSeconds = 0,
+    [property: Key(43)] bool Debug = false) : IProtocolMessage;
 
 /// <summary>
 /// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this
@@ -402,6 +403,9 @@ public enum PlayCommandKind
 
     /// <summary>Unit <c>A</c> walks its last patrol again.</summary>
     ResumePatrol = 37,
+
+    /// <summary>Debug action <c>A</c> (test scenarios only): 0 goods, 1 finish research, 2 reveal map, 3 people, 4 next era.</summary>
+    Debug = 38,
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs) round and round.</summary>
     Patrol = 27,

@@ -50,9 +50,12 @@ public partial class PlayGame : Node2D
     private readonly List<(double At, Action Do)> _script = [];
     private double _time;
 
+    private readonly string? _scenario;
+
     /// <summary>Creates the screen; the game starts when the node enters the tree.</summary>
-    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1)
+    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1, string? scenario = null)
     {
+        _scenario = scenario;
         _goal = goal;
         _startPhase = startPhase;
         _seed = seed;
@@ -305,7 +308,7 @@ public partial class PlayGame : Node2D
         _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
-        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase, Goal = _goal }, _dataDirectory);
+        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         _session.CommandRefused += reason => Toast(reason);
         _session.PlacesReceived += m =>
@@ -544,6 +547,10 @@ public partial class PlayGame : Node2D
                 break;
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P }:
                 OpenWindow("Units"); // patrols are listed first there
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.F5 or Key.F6 or Key.F7 or Key.F8 or Key.F9 } dk when _session.PlayView?.Debug == true:
+                // Test scenarios only: F5 goods, F6 finish research, F7 reveal the map, F8 more people, F9 next era.
+                _session.Play(PlayCommandKind.Debug, (int)(dk.Keycode - Key.F5));
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.G }:
                 ToggleRoutes();

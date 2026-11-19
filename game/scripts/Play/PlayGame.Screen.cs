@@ -349,7 +349,9 @@ public partial class PlayGame
             b.SetPressedNoSignal(v.Speed == s);
         }
 
-        _clockLabel.Text = Clock();
+        _clockLabel.Text = v.Debug ? $"TEST {Clock()}" : Clock();
+        _clockLabel.TooltipText = v.Debug ? "Test scenario. F5: +200 of every good. F6: finish the research. F7: reveal the map. F8: +10 people. F9: next era." : "";
+        _clockLabel.MouseFilter = v.Debug ? Control.MouseFilterEnum.Stop : Control.MouseFilterEnum.Ignore;
         int patrols = v.Units.Count(u => u.Civ == v.Civ && u.Patrol is not null);
         int hungry = v.Units.Count(u => u.Civ == v.Civ && u.Hunger > 0);
         _patrolsButton.Visible = patrols > 0 || hungry > 0;

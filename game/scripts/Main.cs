@@ -36,6 +36,7 @@ public partial class Main : Node2D
     private ClientSession? _session;
     private Play.PlayGame? _play;
     private bool _playArgs;
+    private string? _playScenario;
     private string? _playScreenshot;
     private double _playSeconds = 6;
     private bool _playDemo;
@@ -156,6 +157,10 @@ public partial class Main : Node2D
                 case "--play-long":
                     _playLong = true;
                     break;
+                case "--play-scenario":
+                    _playScenario = next;
+                    _playArgs = true;
+                    break;
                 case "--play-demo":
                     _playDemo = true;
                     break;
@@ -185,13 +190,13 @@ public partial class Main : Node2D
     }
 
     // The new game (ADR 0028): replaces the legacy viewer while it runs.
-    private void StartPlay(string seedText, int goal = 1)
+    private void StartPlay(string seedText, int goal = 1, string? scenario = null)
     {
         StopGame();
         _menu?.QueueFree();
         _menu = null;
         ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
-        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal);
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal, scenario: scenario ?? _playScenario);
         if (_playScreenshot is not null)
         {
             // --play-demo builds a few things on the way, to check the screen without clicking.
@@ -312,7 +317,7 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
-        _menu.PlayRequested += (settings, goal) => StartPlay(settings.Seed, goal);
+        _menu.PlayRequested += (settings, goal, scenario) => StartPlay(settings.Seed, goal, scenario);
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {

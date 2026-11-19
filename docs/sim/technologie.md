@@ -561,10 +561,16 @@ Liczy się do progu: 9 technologii zwykłych i ulepszenia; podstawowe nie.
 
 ## Jak wygląda drzewo w grze (2026-11-19)
 
-- Okno Research (klawisz 2) zajmuje cały ekran i rysuje drzewo od lewej do prawej:
-  - ery to pasy kolumn (era ludu jest lekko podświetlona);
-  - w erze technologia stoi o kolumnę na prawo od technologii tej samej ery, których potrzebuje;
-  - wiersz jest jak najbliżej średniej wierszy tego, czego potrzebuje, więc gałęzie idą prosto;
-  - linie prowadzą od tego, czego technologia potrzebuje (doświadczenie albo „najpierw X”): zielone między znanymi, złote od znanej do nowej, szare dalej;
-  - pasek z lewej strony karty to gałąź (legenda nad drzewem), ramka to stan (znana, można zacząć, czeka).
-- Widać erę ludu i następną. Dalszych er nie widać, dopóki lud do nich nie dojdzie (Patryk, 2026-11-19: tego, co niedostępne przez za niski poziom, nie pokazujemy). Z tego samego powodu panel heksa nie pokazuje prac i ulepszeń z dalszych er, a panel osady awansu, którego technologia jest z dalszej ery.
+Okno Research (klawisz 2) zajmuje cały ekran. Drzewo jest rysowane metodą Sugiyamy, czyli standardową metodą rysowania grafów warstwowych:
+1. **Kolumny (warstwy).** Technologia stoi kolumnę na prawo od najpóźniejszej technologii, której potrzebuje, i nigdy na lewo od pierwszej kolumny swojej ery. Ery to pasy kolumn; era ludu jest lekko podświetlona.
+2. **Punkty pośrednie.** Linia, która przeskakuje kolumny, dostaje w każdej mijanej kolumnie własne miejsce (cienki „przystanek”). Dzięki temu biegnie w przerwie obok kart, nigdy pod nimi.
+3. **Mniej skrzyżowań.** Kolejność w każdej kolumnie układa się według średniej pozycji sąsiadów (metoda barycentrum), 12 przejść w prawo i w lewo. Na starcie technologie są ułożone według gałęzi, więc gałąź trzyma się razem.
+4. **Wysokości.** Karty i przystanki przesuwają się ku średniej wysokości sąsiadów, z zachowaniem kolejności i odstępów. Tłok rozkłada się w górę i w dół, a linie są możliwie proste.
+
+Do tego:
+- linie wchodzą w kartę w punktach rozłożonych na jej lewym boku;
+- kolory linii: zielone między znanymi, złote od znanej do nowej, szare dalej;
+- **najechanie myszą** na technologię podświetla ją, wszystko, czego potrzebuje (aż do początku), i linie między nimi, a reszta blednie;
+- pasek z lewej strony karty to gałąź (legenda nad drzewem), ramka to stan.
+
+**Widać wszystkie ery** (Patryk, 2026-11-19), bo gra polega na planowaniu. W innych miejscach (panel heksa, panel osady) widać tylko to, co jest z ery, do której lud doszedł.

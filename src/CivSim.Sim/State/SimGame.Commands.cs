@@ -68,6 +68,7 @@ public sealed partial class SimGame
             }),
             UpgradeSettlementCommand c => Upgrade(civ, c.Settlement),
             UpgradeBuildingCommand c => UpgradeBuilding(civ, c.Building),
+            DebugCommand c => Debug(civ, c.Action),
             ResumePatrolCommand c => ResumePatrol(civ, c.Unit),
             TrainCommand c => Train(civ, c.Settlement, c.Kind),
             MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path),

@@ -1,0 +1,15 @@
+{
+  "name": "Neolithic start",
+  "description": "Everyone enters the Neolithic with a village of 40 and the Stone Age buildings. Test farms, pottery, masonry and the Neolithic tree.",
+  "seed": 3,
+  "peoples": 4,
+  "civs": [
+    { "era": "neolithic", "level": "village", "people": 40,
+      "stock": { "food": 200, "wood": 200, "stone": 120, "clay": 80, "tools": 20, "hides": 30, "clothing": 40 },
+      "buildings": { "gatherers_hut": 2, "woodcutter": 2, "hut": 3, "storehouse": 1, "quarry": 1, "toolmaker": 1, "clay_pit": 1, "tailor": 1 },
+      "units": { "scouts": 1, "warriors": 1 } },
+    { "era": "neolithic", "level": "village", "people": 40, "stock": { "food": 200, "wood": 200, "stone": 120 }, "buildings": { "gatherers_hut": 2, "woodcutter": 2, "hut": 3 } },
+    { "era": "neolithic", "level": "village", "people": 40, "stock": { "food": 200, "wood": 200, "stone": 120 }, "buildings": { "gatherers_hut": 2, "woodcutter": 2, "hut": 3 } },
+    { "era": "neolithic", "level": "village", "people": 40, "stock": { "food": 200, "wood": 200, "stone": 120 }, "buildings": { "gatherers_hut": 2, "woodcutter": 2, "hut": 3 } }
+  ]
+}

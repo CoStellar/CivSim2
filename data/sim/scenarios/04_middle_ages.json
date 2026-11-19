@@ -1,0 +1,16 @@
+{
+  "name": "Middle Ages",
+  "description": "We are in the Middle Ages with a city and three towns; the others are in the Iron Age. Test the last era: castles, steel, knights, universities.",
+  "seed": 11,
+  "peoples": 4,
+  "revealMap": true,
+  "civs": [
+    { "era": "middle_ages", "level": "city", "people": 90, "settlements": 3, "settlementPeople": 22,
+      "stock": { "food": 800, "wood": 600, "stone": 600, "clay": 200, "tools": 150, "clothing": 150, "pottery": 120, "textiles": 120, "iron": 80, "arms": 80, "horses": 40, "coins": 300 },
+      "buildings": { "farm": 3, "woodcutter": 2, "stone_house": 4, "great_storehouse": 1, "blacksmith": 1, "weaponsmith": 1, "academy": 1, "builders_yard": 1, "bathhouse": 1 },
+      "units": { "swordsmen": 3, "crossbowmen": 2, "knights": 1, "catapult": 1, "scouts": 1 } },
+    { "era": "iron_age", "level": "town", "people": 70, "settlements": 1, "stock": { "food": 400, "wood": 400, "stone": 400, "arms": 40 }, "units": { "swordsmen": 2 } },
+    { "era": "iron_age", "level": "town", "people": 70, "settlements": 1, "stock": { "food": 400, "wood": 400, "stone": 400, "arms": 40 }, "units": { "swordsmen": 2 } },
+    { "era": "iron_age", "level": "town", "people": 70, "settlements": 1, "stock": { "food": 400, "wood": 400, "stone": 400, "arms": 40 }, "units": { "swordsmen": 2 } }
+  ]
+}

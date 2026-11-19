@@ -19,6 +19,9 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
     /// <summary>Peoples choose where they start (the player too); false starts at once on the generator's places.</summary>
     public bool StartPhase { get; init; } = true;
 
+    /// <summary>Test scenario to start from (file name in data/sim/scenarios without .json; null = a normal game).</summary>
+    public string? Scenario { get; init; }
+
     /// <summary>What wins the game: 0 last standing, 1 first to the Middle Ages, 2 best score after 2 hours (protocol only, no core types).</summary>
     public int Goal { get; init; } = 1;
 }
@@ -54,11 +57,22 @@ public sealed class PlayHost : IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
         SimContent content = SimContent.Load(dataDirectory);
-        SimGame game = SimGame.Create(content, new SimSettings(options.Seed, options.LegacyWidth, options.LegacyHeight, options.Civilizations)
+        SimGame game;
+        if (options.Scenario is { Length: > 0 } key)
         {
-            StartPhase = options.StartPhase,
-            Goal = (GameGoal)Math.Clamp(options.Goal, 0, 2),
-        });
+            // A test scenario: the game starts at the moment of development it describes.
+            string path = System.IO.Path.Combine(SimScenario.Folder(dataDirectory), key + ".json");
+            game = SimGame.FromScenario(content, SimScenario.Load(path));
+        }
+        else
+        {
+            game = SimGame.Create(content, new SimSettings(options.Seed, options.LegacyWidth, options.LegacyHeight, options.Civilizations)
+            {
+                StartPhase = options.StartPhase,
+                Goal = (GameGoal)Math.Clamp(options.Goal, 0, 2),
+            });
+        }
+
         game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
         var host = new PlayHost(game);
         host._thread.Start();
@@ -283,6 +297,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Board => new BoardCommand(civ, m.A, m.B),
         PlayCommandKind.Land => new LandCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         PlayCommandKind.UpgradeBuilding => new UpgradeBuildingCommand(civ, m.A),
+        PlayCommandKind.Debug => new DebugCommand(civ, (DebugAction)m.A),
         PlayCommandKind.ResumePatrol => new ResumePatrolCommand(civ, m.A),
         PlayCommandKind.SetFocus => new SetFocusCommand(civ, m.A, m.B, (uint)m.C < (uint)_game.Content.TechCategories.Length ? _game.Content.TechCategories[m.C] : ""),
         PlayCommandKind.BuildWork => new BuildWorkCommand(civ, Cells(m.Cells) ?? [], m.A),
@@ -871,7 +886,7 @@ public sealed class PlayHost : IDisposable
             _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId),
             AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0,
             Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond),
-            RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond);
+            RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond, Debug: _game.DebugOn);
     }
 
     // What a technology opens and changes, worked out from the data (so the player sees exactly what it does).
