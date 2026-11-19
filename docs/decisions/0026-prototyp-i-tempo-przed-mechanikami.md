@@ -1,5 +1,7 @@
 # ADR 0026: Prototyp sterowania i tempo przed nowymi mechanikami; mniej systemów do epoki brązu
 
+> **Legacy (2026-11-17):** zastąpione przez ADR 0028 i `docs/projekt-gry.md`. Opisuje grę sprzed przebudowy.
+
 **Status:** przyjęta, 2026-11-13 (decyzja Patryka: „zapisz to wszystko”; dokument „Przegląd planu CivSim 2 z poziomu gracza — propozycja”
 w Claude Docs). Uzupełnia ADR 0024 i 0025. Zmienia GDD 1.1, 4.4, 6.3, 6.4, 7.1, 13.2 i `ROADMAP.md` (etapy 6–8). Plan: `docs/prompts/10-plan-gry.md`.
 

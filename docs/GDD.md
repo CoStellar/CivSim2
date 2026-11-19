@@ -1,5 +1,7 @@
 # CivSim 2 — Dokument projektu gry (GDD)
 
+> **Legacy (2026-11-17):** zastąpione przez ADR 0028 i `docs/projekt-gry.md`. Opisuje grę sprzed przebudowy.
+
 Wersja z 3 listopada 2026, zmiana kierunku na grę na żywo 9 listopada 2026 (ADR 0024, 0025) · źródło: dokument projektu w Claude
 
 ## 1. Wizja i filary

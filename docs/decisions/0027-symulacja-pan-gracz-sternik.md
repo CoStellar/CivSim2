@@ -1,5 +1,7 @@
 # ADR 0027: Symulacja jest panem, gracz sternikiem
 
+> **Legacy (2026-11-17):** zastąpione przez ADR 0028 i `docs/projekt-gry.md`. Opisuje grę sprzed przebudowy.
+
 **Status:** przyjęta, 2026-11-13 (decyzja Patryka: „niech symulacja będzie panem, a gracz sternikiem; będziemy się tego trzymać przez cały
 rozwój cywilizacji”). Dokument: „CivSim 2: rozgrywka sternika — zasady na wszystkie ery” w Claude Docs
 (https://claude.ai/artifact/RfXQsHCry1K2wCsJLkFcUr). Zmienia GDD 1.1 i dodaje GDD 1.2. Uzupełnia ADR 0024 (gra na żywo) i 0026.
