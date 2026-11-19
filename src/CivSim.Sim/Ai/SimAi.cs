@@ -156,9 +156,9 @@ public static partial class SimAi
                 continue; // goods lie in each settlement: build where the materials are
             }
 
-            if (t.Workers > 0 && s.Idle == 0 && idleAnywhere > 0)
+            if (t.Workers > 0 && s.Idle == 0 && idleAnywhere > 0 && keepSaving)
             {
-                continue; // nobody here would work in it
+                continue; // nobody here would work in it (teachers go first anyway: their priority takes workers)
             }
 
             foreach (int cell in s.Cells)
@@ -213,7 +213,15 @@ public static partial class SimAi
 
     private static bool Economy(SimGame g, Civ civ)
     {
-        if (Under(g, civ) >= 1 + civ.Settlements.Count)
+        // N26 (2026-11-19): the teacher of what research waits for jumps the queue of building sites (one more site allowed).
+        int under = Under(g, civ);
+        if (under < 2 + civ.Settlements.Count && Teacher(g, civ, missingOnly: true) is string first && TryBuild(g, civ, first, keepSaving: false))
+        {
+            g.Apply(new PriorityCommand(civ.Id, civ.Buildings[^1], true));
+            return true;
+        }
+
+        if (under >= 1 + civ.Settlements.Count)
         {
             return false;
         }
@@ -433,7 +441,7 @@ public static partial class SimAi
         }
     }
 
-    private static string? Teacher(SimGame g, Civ civ, bool missingOnly = false)
+    internal static string? Teacher(SimGame g, Civ civ, bool missingOnly = false)
     {
         // The gateway's way first, then the rest in the order of the tree.
         bool[] way = GatewayWay(g, civ);
