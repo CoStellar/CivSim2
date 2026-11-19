@@ -356,3 +356,5 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
 | E5 | Doświadczenie liczy się tylko wtedy, gdy budynek naprawdę pracuje (ma surowiec i miejsce na wyroby) | — |
 | G3 | Stała trasa ma dwa progi: ile zostaje w źródle i do ilu napełniać cel (0 = bez limitu). Ustawia się je w panelu osady nad przyciskami tras | `RouteCommand.KeepAtSource`, `UntilTargetHas` |
 | — | Rozejm po pokoju trwa `war.truceSeconds` = 180 s | `war.truceSeconds` |
+| M6 | Złoża z ery, do której lud jeszcze nie doszedł, widać jako „???” (na mapie i w opisie heksa). Po wejściu w tę erę lud wie, co to jest, bez ponownego badania skał | `survey.eras` |
+| G2 | Osada pusta przez 60 s (nie ostatnia ludu) zmienia się w ruinę: ziemia jest niczyja, budynki stoją zrujnowane. Osadnicy na środku ruiny albo obok przejmują ją dla swojego ludu, a budynki wracają jako budowy za 50% ceny | `ruins.emptySeconds`, `ruins.rebuildPercent` |

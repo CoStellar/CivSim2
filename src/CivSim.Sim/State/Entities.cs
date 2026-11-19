@@ -22,6 +22,9 @@ public enum BuildingState : byte
 
     /// <summary>Waiting for its materials: porters carry them from the nearest storehouse; building starts when they arrive.</summary>
     Delivery = 5,
+
+    /// <summary>Part of a ruin (its settlement emptied); comes back as a site to finish when settlers take the ruin.</summary>
+    Ruined = 6,
 }
 
 /// <summary>One building on one hex. Identified by its index in <see cref="SimGame.Buildings"/>.</summary>
@@ -172,8 +175,11 @@ public sealed class Settlement
     /// <summary>Out of food.</summary>
     public bool Hungry { get; set; }
 
-    /// <summary>Abandoned settlements keep their id but nothing else.</summary>
+    /// <summary>Abandoned settlements are ruins: nobody's, until settlers take them again (G2, 2026-11-19).</summary>
     public bool Abandoned { get; set; }
+
+    /// <summary>Tick since which nobody has lived here (−1 = people live here).</summary>
+    public long EmptySince { get; set; } = -1;
 
     /// <summary>Food everyone it feeds eats a minute (residents, its units, the advisor in the capital), paid at the ration.</summary>
     public long Eating { get; set; }

@@ -833,7 +833,19 @@ public sealed class PlayHost : IDisposable
         foreach (Settlement s in _game.Settlements)
         {
             // Our own always; others only while seen (what we saw before comes from memory below).
-            if (s.Abandoned || (s.Civ != civId && !_game.Visible(civ, s.Center)))
+            if (s.Abandoned)
+            {
+                // G2 (2026-11-19): ruins are nobody's; seen like any land we know.
+                if (known[s.Center] && _game.Visible(civ, s.Center))
+                {
+                    HexCoord rh = _game.Geo.FromIndex(s.Center);
+                    settlements.Add(new PlaySettlementView(s.Id, -1, $"Ruins of {s.Name}", rh.Col, rh.Row, s.Level, 0, 0, 0, false, 0, null, null, null));
+                }
+
+                continue;
+            }
+
+            if (s.Civ != civId && !_game.Visible(civ, s.Center))
             {
                 continue;
             }
@@ -864,7 +876,8 @@ public sealed class PlayHost : IDisposable
         var buildings = new List<PlayBuildingView>();
         foreach (Building b in _game.Buildings)
         {
-            if (b.State == BuildingState.Removed || (b.Civ != civId && !_game.Visible(civ, b.Cell)))
+            bool ruined = b.State == BuildingState.Ruined;
+            if (b.State == BuildingState.Removed || ((b.Civ != civId || ruined) && !_game.Visible(civ, b.Cell)))
             {
                 continue;
             }
@@ -892,7 +905,7 @@ public sealed class PlayHost : IDisposable
                 upCost = _game.CargoText(_game.UpgradeRest(t, to!));
             }
 
-            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0, Slots: b.Slots, Focus: b.Civ == civId && b.Focus.Length > 0 ? (string[])b.Focus.Clone() : null,
+            buildings.Add(new PlayBuildingView(b.Id, b.Type, ruined ? -1 : b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0, Slots: b.Slots, Focus: b.Civ == civId && b.Focus.Length > 0 ? (string[])b.Focus.Clone() : null,
                 UpgradeBlocked: upBlocked, UpgradeCost: upCost));
         }
 

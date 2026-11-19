@@ -255,6 +255,9 @@ d["techCategories"]=["basics","food","industry","building","trade","military","g
 d["eraAdvanceTechs"]=5
 # A new camp starts with a gatherers' hut, paid from the settlers' provisions (Patryk, 2026-11-19, G1).
 d["foundWith"]=["gatherers_hut"]
+# Ruins (Patryk, 2026-11-19, G2): a settlement empty for emptySeconds becomes a ruin, nobody's; settlers standing on or next to its
+# centre take it again, and its buildings come back as sites that need rebuildPercent of their price.
+d["ruins"]={"comment":"A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.","emptySeconds":60,"rebuildPercent":50}
 # Every start has copper and tin near it (Patryk, 2026-11-19, M4): placed on free land when the map has none within max hexes.
 d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1}]
 # Gateways (Patryk, 2026-11-19, M1): to leave an era a people must also know its gateway technology (metal opens the next era).

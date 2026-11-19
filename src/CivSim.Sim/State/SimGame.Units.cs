@@ -263,6 +263,15 @@ public sealed partial class SimGame
             return "Only settlers found camps.";
         }
 
+        if (RuinNear(u.Cell) is Settlement ruin)
+        {
+            Unwatch(u);
+            u.State = UnitState.Gone;
+            civ.Units.Remove(u.Id);
+            Revive(civ, ruin, u.People, u.Cargo);
+            return null;
+        }
+
         string? why = CannotFound(u.Cell);
         if (why is not null)
         {

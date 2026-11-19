@@ -381,6 +381,7 @@ public sealed partial class SimGame
         }
 
         LogisticsStep(civ);
+        RuinStep(civ);
         if (changed)
         {
             civ.Dirty = true;

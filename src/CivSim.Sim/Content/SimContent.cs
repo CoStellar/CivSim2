@@ -623,6 +623,12 @@ public sealed class SimContent
     /// <summary>Deposits every start has near it (startDeposits; M4, 2026-11-19).</summary>
     public StartDeposit[] StartDeposits { get; init; } = [];
 
+    /// <summary>Seconds a settlement stays empty before it falls to ruin (ruins.emptySeconds; G2, 2026-11-19).</summary>
+    public int RuinEmptySeconds { get; init; } = 60;
+
+    /// <summary>Share of a ruined building's price its rebuilding costs, percent.</summary>
+    public int RuinRebuildPercent { get; init; } = 50;
+
     /// <summary>Buildings a new camp starts with, finished, paid from the settlers' provisions (foundWith).</summary>
     public int[] FoundWith { get; init; } = [];
 
@@ -1467,6 +1473,8 @@ public sealed class SimContent
                 ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
                     x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1))]
                 : [],
+            RuinEmptySeconds = root.TryGetProperty("ruins", out JsonElement ru) && ru.TryGetProperty("emptySeconds", out JsonElement res) ? res.GetInt32() : 60,
+            RuinRebuildPercent = root.TryGetProperty("ruins", out JsonElement ru2) && ru2.TryGetProperty("rebuildPercent", out JsonElement rrp) ? rrp.GetInt32() : 50,
             FoundWith = root.TryGetProperty("foundWith", out JsonElement fw) ? [.. fw.EnumerateArray().Select(x => buildings.FindIndex(b => b.Key == x.GetString())).Where(i => i > 0)] : [],
             EraGateway = [.. eras.Select(e => root.TryGetProperty("eraGateways", out JsonElement gw) && gw.TryGetProperty(e.Key, out JsonElement gk)
                 ? techs.FindIndex(t => t.Key == gk.GetString()) : -1)],

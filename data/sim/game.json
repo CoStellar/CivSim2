@@ -3344,5 +3344,10 @@
       "max": 12,
       "depth": 1
     }
-  ]
+  ],
+  "ruins": {
+    "comment": "A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.",
+    "emptySeconds": 60,
+    "rebuildPercent": 50
+  }
 }
