@@ -554,7 +554,8 @@
       "groups": [
         "food"
       ],
-      "size": 2
+      "size": 2,
+      "upgradesTo": "farm"
     },
     {
       "key": "woodcutter",
@@ -593,7 +594,8 @@
       "groups": [
         "house"
       ],
-      "size": 1
+      "size": 1,
+      "upgradesTo": "stone_house"
     },
     {
       "key": "storehouse",
@@ -608,7 +610,8 @@
       "groups": [
         "store"
       ],
-      "size": 2
+      "size": 2,
+      "upgradesTo": "great_storehouse"
     },
     {
       "key": "hearth",
@@ -673,7 +676,8 @@
       "groups": [
         "craft"
       ],
-      "size": 1
+      "size": 1,
+      "upgradesTo": "blacksmith"
     },
     {
       "key": "hunters_lodge",
@@ -703,7 +707,8 @@
         "food",
         "hunt"
       ],
-      "size": 2
+      "size": 2,
+      "upgradesTo": "pasture"
     },
     {
       "key": "clay_pit",
@@ -784,7 +789,8 @@
       "groups": [
         "food"
       ],
-      "size": 4
+      "size": 4,
+      "upgradesTo": "harbour"
     },
     {
       "key": "raft_landing",
@@ -833,7 +839,8 @@
         "food",
         "farm"
       ],
-      "size": 4
+      "size": 4,
+      "upgradesTo": "manor"
     },
     {
       "key": "potter",
@@ -1057,7 +1064,8 @@
       "groups": [
         "craft"
       ],
-      "size": 1
+      "size": 1,
+      "upgradesTo": "weaponsmith"
     },
     {
       "key": "school",
@@ -1074,7 +1082,8 @@
       "groups": [
         "learn"
       ],
-      "size": 1
+      "size": 1,
+      "upgradesTo": "academy"
     },
     {
       "key": "stable",
@@ -1198,7 +1207,8 @@
       "groups": [
         "craft"
       ],
-      "size": 1
+      "size": 1,
+      "upgradesTo": "steelworks"
     },
     {
       "key": "weaponsmith",
@@ -1321,7 +1331,8 @@
       "groups": [
         "learn"
       ],
-      "size": 2
+      "size": 2,
+      "upgradesTo": "university"
     },
     {
       "key": "shipyard",
@@ -3077,5 +3088,6 @@
     "hungryPercent": 75,
     "starvingPercent": 50,
     "starveLosePercent": 20
-  }
+  },
+  "upgradeCreditPercent": 50
 }

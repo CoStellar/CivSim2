@@ -109,6 +109,45 @@ internal sealed record TableItem(int Columns, IReadOnlyList<CellItem> Cells) : U
 }
 
 /// <summary>Anything else: made by a function, rebuilt when its signature changes.</summary>
+/// <summary>Several actions side by side (they wrap to the next line when the panel is narrow).</summary>
+internal sealed record ButtonsItem(IReadOnlyList<ActItem> Acts) : UiItem
+{
+    public override string Sig
+    {
+        get
+        {
+            var sb = new StringBuilder("R");
+            foreach (ActItem a in Acts)
+            {
+                sb.Append(a.Sig).Append(';');
+            }
+
+            return sb.ToString();
+        }
+    }
+}
+
+/// <summary>One of the four places on a hex: what stands there (null = free), its colour and state.</summary>
+internal sealed record PlaceCell(string? Name, string Short, Color Color, string State, Color StateColor);
+
+/// <summary>The four places of a hex as a 2×2 picture, like the hex on the map (Patryk, 2026-11-19).</summary>
+internal sealed record PlacesItem(PlaceCell?[] Places, int[] Owner) : UiItem
+{
+    public override string Sig
+    {
+        get
+        {
+            var sb = new StringBuilder("P");
+            for (int k = 0; k < Places.Length; k++)
+            {
+                sb.Append(Owner[k]).Append(Places[k]?.Name).Append(Places[k]?.State).Append(';');
+            }
+
+            return sb.ToString();
+        }
+    }
+}
+
 internal sealed record CustomItem(string Key, Func<Control> Make) : UiItem
 {
     public override string Sig => $"C{Key}";
@@ -275,10 +314,96 @@ internal static class UiRender
                 return grid;
             }
 
+            case ButtonsItem r:
+            {
+                var flow = new HFlowContainer();
+                flow.AddThemeConstantOverride("h_separation", 4);
+                flow.AddThemeConstantOverride("v_separation", 4);
+                foreach (ActItem a in r.Acts)
+                {
+                    ActItem act = a;
+                    Button b = UiKit.Button(a.Text, () =>
+                    {
+                        act.Do();
+                        clicked();
+                    }, a.Tooltip, a.Enabled);
+                    if (a.Accent is { } accent)
+                    {
+                        b.AddThemeColorOverride("font_color", accent);
+                    }
+
+                    flow.AddChild(b);
+                }
+
+                return flow;
+            }
+
+            case PlacesItem p:
+                return new HexPlaces(p);
             case CustomItem c:
                 return c.Make();
             default:
                 return new Control();
+        }
+    }
+}
+
+/// <summary>Draws the four places of a hex: a building spanning two or four places is one block.</summary>
+internal sealed partial class HexPlaces : Control
+{
+    private readonly PlacesItem _item;
+
+    public HexPlaces(PlacesItem item)
+    {
+        _item = item;
+        CustomMinimumSize = new Vector2(UiKit.W(300), ((Ui.PixelTheme.FontSize * 2) + 22) * 2);
+        MouseFilter = MouseFilterEnum.Ignore;
+    }
+
+    public override void _Draw()
+    {
+        float w = Size.X / 2;
+        float h = Size.Y / 2;
+        var done = new HashSet<int>();
+        for (int k = 0; k < 4; k++)
+        {
+            int owner = _item.Owner[k];
+            if (owner >= 0 && !done.Add(owner))
+            {
+                continue;
+            }
+
+            // The block of this building: every place it owns (places 0 1 on top, 2 3 below).
+            float x0 = float.MaxValue, y0 = float.MaxValue, x1 = 0, y1 = 0;
+            for (int j = 0; j < 4; j++)
+            {
+                if (j == k || (owner >= 0 && _item.Owner[j] == owner))
+                {
+                    x0 = Math.Min(x0, (j % 2) * w);
+                    y0 = Math.Min(y0, (j / 2) * h);
+                    x1 = Math.Max(x1, ((j % 2) + 1) * w);
+                    y1 = Math.Max(y1, ((j / 2) + 1) * h);
+                }
+            }
+
+            var rect = new Rect2(x0 + 2, y0 + 2, x1 - x0 - 4, y1 - y0 - 4);
+            PlaceCell? c = _item.Places[k];
+            var box = new StyleBoxFlat { BgColor = c is null ? new Color(0.18f, 0.17f, 0.16f) : c.Color.Darkened(0.35f), BorderColor = c is null ? new Color(0.3f, 0.28f, 0.26f) : c.StateColor };
+            box.SetBorderWidthAll(c is null ? 1 : 3);
+            box.SetCornerRadiusAll(4);
+            DrawStyleBox(box, rect);
+            Font font = UiKit.Font;
+            int size = Ui.PixelTheme.FontSize;
+            float line = font.GetHeight(size);
+            float top = rect.Position.Y + ((rect.Size.Y - (c is null ? line : line * 2)) / 2) + font.GetAscent(size);
+            if (c is null)
+            {
+                DrawString(font, new Vector2(rect.Position.X + 8, top), "free", HorizontalAlignment.Left, rect.Size.X - 16, size, UiKit.Muted);
+                continue;
+            }
+
+            DrawString(font, new Vector2(rect.Position.X + 8, top), c.Name, HorizontalAlignment.Left, rect.Size.X - 16, size, UiKit.Heading);
+            DrawString(font, new Vector2(rect.Position.X + 8, top + line), c.State, HorizontalAlignment.Left, rect.Size.X - 16, size, c.StateColor);
         }
     }
 }

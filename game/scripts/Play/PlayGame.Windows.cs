@@ -230,33 +230,24 @@ public partial class PlayGame
         items.Add(new TableItem(4 + shown.Length, cells));
     }
 
-    // Every unit of ours, patrols first: stop one or all of them without hunting for them on the map (Patryk, 2026-11-19).
+    // Units picked in the Units window, for orders to a group.
+    private readonly HashSet<int> _unitPicks = [];
+
+    // Every unit of ours, patrols first: stop, recall or send out again one, a picked group or all of them (Patryk, 2026-11-19).
     private void UnitTable(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
         var mine = v.Units.Where(u => u.Civ == v.Civ && !c.Units[u.Kind].System)
             .OrderBy(u => u.Patrol is null ? 1 : 0).ThenBy(u => u.Hunger == 0 ? 1 : 0).ThenBy(u => u.Id).ToList();
+        _unitPicks.IntersectWith(mine.Select(u => u.Id));
         int patrols = mine.Count(u => u.Patrol is not null);
+        int stopped = mine.Count(u => u.Patrol is null && u.LastPatrol is not null);
         int hungry = mine.Count(u => u.Hunger > 0);
         int carriers = v.Units.Count(u => u.Civ == v.Civ && c.Units[u.Kind].System);
-        items.Add(new LineItem($"{mine.Count} unit(s), {patrols} on patrol" + (carriers > 0 ? $", and {carriers} carrier group(s) on their tasks" : "") +
+        items.Add(new LineItem($"{mine.Count} unit(s): {patrols} on patrol, {stopped} with a patrol to resume" + (carriers > 0 ? $"; {carriers} carrier group(s) on their tasks" : "") +
             $". Their settlements feed them every minute: next ration in {v.RationSeconds} s.", UiKit.Muted, 13));
         if (hungry > 0)
         {
             items.Add(new LineItem($"{hungry} unit(s) hungry: their settlement had no food for the ration. Strength and speed {c.HungryPercent}%; the next missed ration kills some.", UiKit.Bad, 14));
-        }
-
-        if (patrols > 0)
-        {
-            var stopping = mine.Where(u => u.Patrol is not null).Select(u => (u.Id, u.Col, u.Row)).ToList();
-            items.Add(new ActItem(patrols == 1 ? "Stop the patrol" : $"Stop all patrols ({patrols})", () =>
-            {
-                foreach ((int id, int col, int row) in stopping)
-                {
-                    _session!.Play(PlayCommandKind.Move, id, col, row); // a move to where it stands ends the patrol
-                }
-
-                _uiTimer = 0.1;
-            }, "They stop where they are.", Accent: UiKit.Warn));
         }
 
         if (mine.Count == 0)
@@ -265,16 +256,54 @@ public partial class PlayGame
             return;
         }
 
+        // Orders for all of them, and for the picked ones.
+        var all = mine.Where(u => u.State != 0).ToList();
+        var picked = all.Where(u => _unitPicks.Contains(u.Id)).ToList();
+        items.Add(new ButtonsItem(
+        [
+            new ActItem($"Stop all patrols ({patrols})", () => Orders(v, all.Where(u => u.Patrol is not null), UnitOrder.Stop), "They stop where they are.", patrols > 0, UiKit.Warn),
+            new ActItem($"Resume all ({stopped})", () => Orders(v, all, UnitOrder.Resume), "Every stopped unit walks its last patrol again.", stopped > 0, UiKit.Good),
+            new ActItem("Recall all", () => Orders(v, all, UnitOrder.Recall), "Every unit walks back to the settlement that feeds it and waits there.", all.Count > 0),
+        ]));
+        items.Add(new ButtonsItem(
+        [
+            new ActItem($"Picked ({picked.Count}): stop", () => Orders(v, picked, UnitOrder.Stop), "", picked.Count > 0, UiKit.Warn),
+            new ActItem("resume", () => Orders(v, picked, UnitOrder.Resume), "They walk their last patrol again.", picked.Any(u => u.LastPatrol is not null), UiKit.Good),
+            new ActItem("recall", () => Orders(v, picked, UnitOrder.Recall), "Back to the settlement that feeds them.", picked.Count > 0),
+            new ActItem("pick patrols", () =>
+            {
+                _unitPicks.Clear();
+                _unitPicks.UnionWith(mine.Where(u => u.Patrol is not null || u.LastPatrol is not null).Select(u => u.Id));
+                _bigSignature = "";
+            }, "Pick every unit that patrols or patrolled."),
+            new ActItem("pick none", () =>
+            {
+                _unitPicks.Clear();
+                _bigSignature = "";
+            }, "", _unitPicks.Count > 0),
+        ]));
+
         var cells = new List<CellItem>
         {
-            new("Unit", UiKit.Heading), new("People", UiKit.Heading), new("Doing", UiKit.Heading), new("Fed by", UiKit.Heading),
-            new("Food", UiKit.Heading), new("", UiKit.Heading),
+            new("Pick", UiKit.Heading), new("Unit", UiKit.Heading), new("People", UiKit.Heading), new("Doing", UiKit.Heading), new("Fed by", UiKit.Heading),
+            new("Food", UiKit.Heading), new("", UiKit.Heading), new("", UiKit.Heading),
         };
         foreach (PlayUnitView u in mine)
         {
             int id = u.Id;
             int col = u.Col;
             int row = u.Row;
+            PlayUnitView unit = u;
+            bool on = _unitPicks.Contains(id);
+            cells.Add(new CellItem(on ? "[x]" : "[ ]", on ? UiKit.Good : UiKit.Muted, () =>
+            {
+                if (!_unitPicks.Remove(id))
+                {
+                    _unitPicks.Add(id);
+                }
+
+                _bigSignature = "";
+            }));
             cells.Add(new CellItem(c.Units[u.Kind].Name, null, () =>
             {
                 _unit = id;
@@ -292,17 +321,58 @@ public partial class PlayGame
             cells.Add(new CellItem(doing, u.Fighting ? UiKit.Bad : u.Patrol is not null ? UiKit.Good : UiKit.Muted));
             cells.Add(new CellItem(v.Settlements.FirstOrDefault(x => x.Id == u.Home)?.Name ?? "-", UiKit.Muted));
             cells.Add(new CellItem(u.Hunger switch { 0 => "fed", 1 => "HUNGRY", _ => "STARVING" }, u.Hunger == 0 ? UiKit.Muted : UiKit.Bad));
-            bool moving = u.Patrol is not null || u.State == 2;
-            cells.Add(moving
-                ? new CellItem(u.Patrol is not null ? "[Stop patrol]" : "[Stop]", UiKit.Warn, () =>
-                {
-                    _session!.Play(PlayCommandKind.Move, id, col, row);
-                    _uiTimer = 0.1;
-                })
-                : new CellItem("", UiKit.Muted));
+            if (u.State == 0)
+            {
+                cells.Add(new CellItem("", UiKit.Muted));
+                cells.Add(new CellItem("", UiKit.Muted));
+                continue;
+            }
+
+            cells.Add(u.Patrol is not null || u.State == 2
+                ? new CellItem(u.Patrol is not null ? "[Stop patrol]" : "[Stop]", UiKit.Warn, () => Orders(v, [unit], UnitOrder.Stop))
+                : u.LastPatrol is not null
+                    ? new CellItem("[Resume patrol]", UiKit.Good, () => Orders(v, [unit], UnitOrder.Resume))
+                    : new CellItem("", UiKit.Muted));
+            cells.Add(new CellItem("[Recall]", UiKit.Text, () => Orders(v, [unit], UnitOrder.Recall)));
         }
 
-        items.Add(new TableItem(6, cells));
+        items.Add(new TableItem(8, cells));
+    }
+
+    private enum UnitOrder
+    {
+        Stop,
+        Resume,
+        Recall,
+    }
+
+    // Stop: a move to where it stands ends the walk or patrol. Resume: its last patrol again. Recall: back to the settlement
+    // that feeds it (or our nearest one), where it waits.
+    private void Orders(PlayViewMessage v, IEnumerable<PlayUnitView> units, UnitOrder order)
+    {
+        var ours = v.Settlements.Where(s => s.Civ == v.Civ && !s.Remembered).ToList();
+        foreach (PlayUnitView u in units)
+        {
+            switch (order)
+            {
+                case UnitOrder.Stop:
+                    _session!.Play(PlayCommandKind.Move, u.Id, u.Col, u.Row);
+                    break;
+                case UnitOrder.Resume when u.LastPatrol is not null && u.Patrol is null:
+                    _session!.Play(PlayCommandKind.ResumePatrol, u.Id);
+                    break;
+                case UnitOrder.Recall:
+                    PlaySettlementView? home = ours.FirstOrDefault(s => s.Id == u.Home) ?? ours.OrderBy(s => Math.Abs(s.Col - u.Col) + Math.Abs(s.Row - u.Row)).FirstOrDefault();
+                    if (home is not null)
+                    {
+                        _session!.Play(PlayCommandKind.Move, u.Id, home.Col, home.Row);
+                    }
+
+                    break;
+            }
+        }
+
+        _uiTimer = 0.1;
     }
 
     private static string AlertWord(int kind) => kind switch

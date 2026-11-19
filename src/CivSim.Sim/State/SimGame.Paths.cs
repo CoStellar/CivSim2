@@ -7,6 +7,9 @@ namespace CivSim.Sim.State;
 /// <summary>Send a unit on a patrol: it walks the drawn loop, goes to the nearest settlement for food, and walks it again.</summary>
 public sealed record PatrolCommand(int Civ, int Unit, int[] Loop) : SimCommand(Civ);
 
+/// <summary>A unit walks its last patrol again (Patryk, 2026-11-19).</summary>
+public sealed record ResumePatrolCommand(int Civ, int Unit) : SimCommand(Civ);
+
 /// <summary>Where a patrolling unit is in its cycle.</summary>
 public enum PatrolStage : byte
 {
@@ -116,6 +119,16 @@ public sealed partial class SimGame
         return null;
     }
 
+    private string? ResumePatrol(Civ civ, int id)
+    {
+        if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id)
+        {
+            return "Not your unit.";
+        }
+
+        return Units[id].LastPatrol.Count == 0 ? "This unit has not patrolled yet." : Patrol(civ, id, [.. Units[id].LastPatrol]);
+    }
+
     private string? Patrol(Civ civ, int id, int[] loop)
     {
         if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
@@ -140,6 +153,8 @@ public sealed partial class SimGame
 
         u.Patrol.Clear();
         u.Patrol.AddRange(loop);
+        u.LastPatrol.Clear();
+        u.LastPatrol.AddRange(loop);
         u.TargetUnit = -1;
         u.TargetSettlement = -1;
         u.TargetWall = -1;

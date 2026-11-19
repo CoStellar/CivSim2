@@ -220,6 +220,23 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Script step: selects the hex of our building with the most neighbours on its hex.</summary>
+    public void ScriptSelectBusiestHex()
+    {
+        if (_session?.PlayView is not { } v)
+        {
+            return;
+        }
+
+        var best = v.Buildings.Where(b => b.Civ == v.Civ).GroupBy(b => (b.Col, b.Row)).OrderByDescending(x => x.Count()).FirstOrDefault();
+        if (best is not null)
+        {
+            _selected = best.Key;
+            _unit = -1;
+            UpdateUi();
+        }
+    }
+
     /// <summary>Script step: the first own standing unit patrols up and down its column, four hexes north of it.</summary>
     public void ScriptPatrolFirst()
     {

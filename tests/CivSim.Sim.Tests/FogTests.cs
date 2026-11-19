@@ -189,6 +189,13 @@ public sealed class FogTests
 
         Assert.True(rounds >= 2, $"{rounds} rounds");
         Assert.NotEqual(PatrolStage.None, u.PatrolStage);
+
+        // Stopped, it keeps its patrol and walks it again on resume.
+        Assert.Null(g.Apply(new MoveCommand(civ.Id, u.Id, u.Cell, false)));
+        Assert.Empty(u.Patrol);
+        Assert.Equal(loop, u.LastPatrol);
+        Assert.Null(g.Apply(new ResumePatrolCommand(civ.Id, u.Id)));
+        Assert.Equal(loop, u.Patrol);
     }
 
     [Fact]

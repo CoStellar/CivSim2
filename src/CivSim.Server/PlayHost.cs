@@ -282,6 +282,8 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Gather => new GatherCommand(civ, m.A, m.Flag),
         PlayCommandKind.Board => new BoardCommand(civ, m.A, m.B),
         PlayCommandKind.Land => new LandCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
+        PlayCommandKind.UpgradeBuilding => new UpgradeBuildingCommand(civ, m.A),
+        PlayCommandKind.ResumePatrol => new ResumePatrolCommand(civ, m.A),
         PlayCommandKind.SetFocus => new SetFocusCommand(civ, m.A, m.B, (uint)m.C < (uint)_game.Content.TechCategories.Length ? _game.Content.TechCategories[m.C] : ""),
         PlayCommandKind.BuildWork => new BuildWorkCommand(civ, Cells(m.Cells) ?? [], m.A),
         PlayCommandKind.RemoveWork => new RemoveWorkCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.A),
@@ -379,7 +381,7 @@ public sealed class PlayHost : IDisposable
         var buildings = new List<PlayBuildingInfo>();
         foreach (BuildingType t in content.Buildings)
         {
-            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech, t.Groups, t.Size));
+            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech, t.Groups, t.Size, t.UpgradesTo));
         }
 
         var levels = new List<PlayLevelInfo>();
@@ -566,13 +568,13 @@ public sealed class PlayHost : IDisposable
     }
 
     private static int Sig(PlayBuildingView b) => HashCode.Combine(HashCode.Combine(b.Type, b.Civ, b.Col, b.Row, b.State, b.Workers, b.Starved, b.Priority),
-        HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered, b.Slots, b.Focus is null ? 0 : string.Join(",", b.Focus).GetHashCode(StringComparison.Ordinal)));
+        HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered, b.Slots, HashCode.Combine(b.Focus is null ? 0 : string.Join(",", b.Focus).GetHashCode(StringComparison.Ordinal), b.UpgradeBlocked, b.UpgradeCost)));
 
     private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, s.DefensePercent),
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute, s.RationUnits, s.RationFood, s.RationShort, HashCode.Combine(s.RationDead, s.HungryPeople, s.HungryWorkers))));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
-        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home)));
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home, Arr(u.LastPatrol))));
 
     private static int TechSig(IReadOnlyList<PlayTechState> techs)
     {
@@ -798,7 +800,17 @@ public sealed class PlayHost : IDisposable
                 }
             }
 
-            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0, Slots: b.Slots, Focus: b.Civ == civId && b.Focus.Length > 0 ? (string[])b.Focus.Clone() : null));
+            // An upgrade in place: what it becomes, what it still costs and why it cannot be done now.
+            string? upBlocked = null;
+            string? upCost = null;
+            if (b.Civ == civId && t.UpgradesTo > 0 && b.State is BuildingState.Active or BuildingState.Stopped)
+            {
+                upBlocked = _game.CannotUpgrade(civ, b, out BuildingType? to) ?? "";
+                upCost = _game.CargoText(_game.UpgradeRest(t, to!));
+            }
+
+            buildings.Add(new PlayBuildingView(b.Id, b.Type, b.Civ, h.Col, h.Row, (int)b.State, b.Workers, b.Starved, b.Priority, progress, b.YieldPercent, missing, b.Civ == civId ? b.Porters : 0, Slots: b.Slots, Focus: b.Civ == civId && b.Focus.Length > 0 ? (string[])b.Focus.Clone() : null,
+                UpgradeBlocked: upBlocked, UpgradeCost: upCost));
         }
 
         if (!_game.Picking)
@@ -831,7 +843,7 @@ public sealed class PlayHost : IDisposable
                 mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
                 _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0,
-                mine ? u.Hunger : 0, mine ? u.Home : -1));
+                mine ? u.Hunger : 0, mine ? u.Home : -1, mine && u.Patrol.Count == 0 && u.LastPatrol.Count > 0 ? Pairs(u.LastPatrol, 0) : null));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),

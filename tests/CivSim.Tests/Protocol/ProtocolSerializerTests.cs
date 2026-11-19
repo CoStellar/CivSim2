@@ -125,9 +125,9 @@ public class ProtocolSerializerTests
         // a player asks for in Hello (stage 6 PR P, ADR 0027). Hello has four fields now.
         // Version 20: settlement looks and the settlers' food in the view (stage 6 PR P2b).
         // Version 22: the new game (ADR 0028). Versions 23 to 26: alerts, fog with memory, the Stone Age rebuild.
-        // Version 27: rations of the settlements and their units.
+        // Version 27: rations of the settlements and their units. Version 28: building upgrades and patrols to resume.
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("1B000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
+        Assert.Equal("1C000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
     }
 
     [Fact]

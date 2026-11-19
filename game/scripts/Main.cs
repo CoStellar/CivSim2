@@ -223,6 +223,10 @@ public partial class Main : Node2D
             {
                 demo = [(_playSeconds - 1, g => g.GetViewport().WarpMouse(new Vector2(800, 450)))];
             }
+            else if (_playDemo && _playWindow == "Hex")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptSelectBusiestHex())];
+            }
             else if (_playDemo && _playWindow == "Units")
             {
                 demo = [.. demo, (24, g => g.ScriptPatrolFirst()), (_playSeconds - 1, g => g.ScriptOpen("Units"))];

@@ -87,6 +87,13 @@ WHOLE={"farm","pasture","quarry","copper_mine","tin_mine","iron_mine","fishing_h
 TWO={"gatherers_hut","woodcutter","hunters_lodge","clay_pit","storehouse","granary","stable","barracks","trading_post","siege_workshop","bathhouse","academy","university","guildhall","steelworks","mill","province_office","builders_yard"}
 for x in B:
     x["size"]=4 if x["key"] in WHOLE else 2 if x["key"] in TWO else 1
+# Upgrades in place (Patryk, 2026-11-19): a building becomes its better kind once that is known; half of its own price counts
+# toward the new one (upgradeCreditPercent), the rest porters bring as for any construction. A bigger kind needs the free places.
+UP={"hut":"stone_house","storehouse":"great_storehouse","gatherers_hut":"farm","hunters_lodge":"pasture","fishing_hut":"harbour",
+    "farm":"manor","toolmaker":"blacksmith","blacksmith":"steelworks","armourer":"weaponsmith","school":"academy","academy":"university"}
+for x in B:
+    if x["key"] in UP: x["upgradesTo"]=UP[x["key"]]
+d["upgradeCreditPercent"]=50
 d['buildings']=B
 
 U=[]

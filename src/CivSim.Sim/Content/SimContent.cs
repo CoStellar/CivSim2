@@ -311,6 +311,11 @@ public sealed class BuildingType
     /// <summary>It may also stand on a grove outside its biomes (woodcutters), giving the grove's share of wood.</summary>
     public bool OrTrees { get; init; }
 
+    /// <summary>Better kind it can be upgraded to in place (0 = none).</summary>
+    public int UpgradesTo { get; set; }
+
+    internal string UpgradeKey { get; init; } = "";
+
     /// <summary>Its people may cross the rivers next to it (raft landings).</summary>
     public bool Crossing { get; init; }
 
@@ -443,6 +448,9 @@ public sealed class SimContent
 
     /// <summary>Least distance between settlement centres.</summary>
     public int FoundMinDistance { get; init; }
+
+    /// <summary>Share of a building's price that counts toward its upgrade, percent.</summary>
+    public int UpgradeCreditPercent { get; init; } = 50;
 
     /// <summary>Eras.</summary>
     public required IReadOnlyList<SimEra> Eras { get; init; }
@@ -932,10 +940,20 @@ public sealed class SimContent
                 Warm = b.TryGetProperty("warm", out JsonElement wm) && wm.GetBoolean(),
                 Crossing = b.TryGetProperty("crossing", out JsonElement cr) && cr.GetBoolean(),
                 OrTrees = b.TryGetProperty("orTrees", out JsonElement ot) && ot.GetBoolean(),
+                UpgradeKey = b.TryGetProperty("upgradesTo", out JsonElement ut) ? ut.GetString() ?? "" : "",
                 SupportGroup = b.TryGetProperty("supportGroup", out JsonElement sgp) ? sgp.GetString() ?? "" : "",
                 SupportPercent = b.TryGetProperty("supportPercent", out JsonElement spc) ? spc.GetInt32() : 0,
                 HealsPerMinute = b.TryGetProperty("healsPerMinute", out JsonElement hpm) ? hpm.GetInt32() : 0,
             });
+        }
+
+        foreach (BuildingType upgradable in buildings)
+        {
+            if (upgradable.UpgradeKey.Length > 0)
+            {
+                upgradable.UpgradesTo = buildings.FindIndex(x => x.Key == upgradable.UpgradeKey) is int up && up > 0
+                    ? up : throw new InvalidDataException($"sim/game.json: '{upgradable.Key}' upgrades to unknown '{upgradable.UpgradeKey}'.");
+            }
         }
 
         bool[] Flags(JsonElement e, string name)
@@ -1146,6 +1164,7 @@ public sealed class SimContent
             Food = GoodOf("food"),
             Units = units,
             FoundMinDistance = root.GetProperty("foundSettlement").GetProperty("minDistance").GetInt32(),
+            UpgradeCreditPercent = root.TryGetProperty("upgradeCreditPercent", out JsonElement ucp) ? ucp.GetInt32() : 50,
             WalkCost = walk,
             Eras = eras,
             Techs = techs,

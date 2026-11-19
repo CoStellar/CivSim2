@@ -22,6 +22,9 @@ public sealed record PriorityCommand(int Civ, int Building, bool Priority) : Sim
 /// <summary>Tear a building down (no refund).</summary>
 public sealed record DemolishCommand(int Civ, int Building) : SimCommand(Civ);
 
+/// <summary>Upgrade a building in place to its better kind (Patryk, 2026-11-19).</summary>
+public sealed record UpgradeBuildingCommand(int Civ, int Building) : SimCommand(Civ);
+
 /// <summary>Raise a settlement one level (camp → village → town → city).</summary>
 public sealed record UpgradeSettlementCommand(int Civ, int Settlement) : SimCommand(Civ);
 
@@ -64,6 +67,8 @@ public sealed partial class SimGame
                 return null;
             }),
             UpgradeSettlementCommand c => Upgrade(civ, c.Settlement),
+            UpgradeBuildingCommand c => UpgradeBuilding(civ, c.Building),
+            ResumePatrolCommand c => ResumePatrol(civ, c.Unit),
             TrainCommand c => Train(civ, c.Settlement, c.Kind),
             MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path),
             PatrolCommand c => Patrol(civ, c.Unit, c.Loop),
@@ -350,6 +355,14 @@ public sealed partial class SimGame
             return why;
         }
 
+        Place(civ, cell, t, SlotsFor(cell, t.Size), null);
+        return null;
+    }
+
+    // A new construction on the hex, in the given places. Credit: materials already at the site (an upgrade's old building).
+    private Building Place(Civ civ, int cell, BuildingType t, int slots, long[]? credit)
+    {
+        int typeId = t.Id;
         int yield = 100;
         if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && Map.DepositDepth[cell] == 0)
         {
@@ -385,11 +398,16 @@ public sealed partial class SimGame
         };
         Buildings.Add(b);
         civ.Buildings.Add(b.Id);
-        PutOnHex(b, SlotsFor(cell, t.Size));
+        PutOnHex(b, slots);
         Map.MarkCellDirty(cell);
+        if (credit is not null)
+        {
+            Deliver(b, credit); // what the old building gives is at the site already: the work may start on it
+        }
+
         SendMaterials(b); // porters carry the price from the nearest storehouse; the work goes as far as the delivered materials allow
         SyncTotals(civ);
-        return null;
+        return b;
     }
 
     private string? PauseConstruction(Civ civ, int id, bool pause) => WithOwn(civ, id, b =>

@@ -23,7 +23,8 @@ public sealed record PlayBuildingInfo(
     [property: Key(10)] string Needs,
     [property: Key(11)] int Tech = 0,
     [property: Key(12)] string[]? Groups = null,
-    [property: Key(13)] int Size = 1);
+    [property: Key(13)] int Size = 1,
+    [property: Key(14)] int UpgradesTo = 0);
 
 /// <summary>A unit kind of the new game.</summary>
 [MessagePackObject]
@@ -67,7 +68,8 @@ public sealed record PlayUnitView(
     [property: Key(16)] int Injured = 0,
     [property: Key(17)] int Aboard = 0,
     [property: Key(18)] int Hunger = 0,
-    [property: Key(19)] int Home = -1);
+    [property: Key(19)] int Home = -1,
+    [property: Key(20)] int[]? LastPatrol = null);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -197,7 +199,9 @@ public sealed record PlayBuildingView(
     [property: Key(12)] int Porters = 0,
     [property: Key(13)] bool Remembered = false,
     [property: Key(14)] int Slots = 15,
-    [property: Key(15)] string[]? Focus = null);
+    [property: Key(15)] string[]? Focus = null,
+    [property: Key(16)] string? UpgradeBlocked = null,
+    [property: Key(17)] string? UpgradeCost = null);
 
 /// <summary>
 /// Server → client: hexes whose fog or owner changed for this player (indices row × width + column). Terrain comes in
@@ -392,7 +396,13 @@ public enum PlayCommandKind
     /// <summary>Ship <c>A</c> lands the units aboard on the hex at <c>Col</c>, <c>Row</c> next to it.</summary>
     Land = 35,
 
-    /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs), eating at the nearest settlement between rounds.</summary>
+    /// <summary>Upgrade building <c>A</c> in place to its better kind.</summary>
+    UpgradeBuilding = 36,
+
+    /// <summary>Unit <c>A</c> walks its last patrol again.</summary>
+    ResumePatrol = 37,
+
+    /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs) round and round.</summary>
     Patrol = 27,
 }
 

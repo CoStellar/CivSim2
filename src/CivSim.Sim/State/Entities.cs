@@ -480,6 +480,9 @@ public sealed class Unit
     /// <summary>Drawn patrol loop (empty = not patrolling).</summary>
     public List<int> Patrol { get; } = [];
 
+    /// <summary>The last patrol loop it walked, kept after it stops, to walk it again.</summary>
+    public List<int> LastPatrol { get; } = [];
+
     /// <summary>Where it is in its patrol cycle.</summary>
     public PatrolStage PatrolStage { get; set; }
 

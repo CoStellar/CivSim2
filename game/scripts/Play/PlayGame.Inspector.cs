@@ -58,18 +58,7 @@ public partial class PlayGame
         var here = v.Buildings.Where(b => b.Col == sel.Col && b.Row == sel.Row).OrderBy(b => System.Numerics.BitOperations.TrailingZeroCount(b.Slots)).ToList();
         if (here.Count > 0)
         {
-            int used = here.Sum(b => System.Numerics.BitOperations.PopCount((uint)b.Slots));
-            if (here.Count > 1 || used < 4)
-            {
-                items.Add(new LineItem($"{used} of 4 places on this hex taken", UiKit.Muted, 13));
-            }
-
-            foreach (PlayBuildingView b in here)
-            {
-                BuildingItems(v, c, b, items);
-            }
-
-            WorksItems(sel, items);
+            HexOverview(v, c, sel, here, items);
             return;
         }
 
@@ -274,9 +263,62 @@ public partial class PlayGame
         }
     }
 
-    private void BuildingItems(PlayViewMessage v, PlayContentMessage c, PlayBuildingView b, List<UiItem> items)
+    // The whole hex at a glance (Patryk, 2026-11-19): its land, its four places as a picture, its protection and works, then
+    // every building with its state and its buttons side by side.
+    private void HexOverview(PlayViewMessage v, PlayContentMessage c, (int Col, int Row) sel, List<PlayBuildingView> here, List<UiItem> items)
+    {
+        HexHeader(sel, items);
+        var places = new PlaceCell?[4];
+        int[] owner = [-1, -1, -1, -1];
+        foreach (PlayBuildingView b in here)
+        {
+            PlayBuildingInfo t = c.Buildings[b.Type];
+            (string state, Color color) = ShortState(b, t);
+            for (int k = 0; k < 4; k++)
+            {
+                if ((b.Slots & (1 << k)) != 0)
+                {
+                    owner[k] = b.Id;
+                    places[k] = new PlaceCell(t.Name, UiKit.Short(t.Name), UiKit.GroupColor(t.Groups), state, color);
+                }
+            }
+        }
+
+        int used = owner.Count(x => x >= 0);
+        items.Add(new SectionItem($"Places: {used} of 4 taken"));
+        items.Add(new PlacesItem(places, owner));
+        WorksItems(sel, items, always: true);
+        int n = 0;
+        foreach (PlayBuildingView b in here)
+        {
+            BuildingItems(v, c, b, items, ++n);
+        }
+    }
+
+    // A word or two for a building's state and its colour (the border of its place in the picture).
+    private static (string Text, Color Color) ShortState(PlayBuildingView b, PlayBuildingInfo t) => b.State switch
+    {
+        _ when b.Remembered => ("as last seen", UiKit.Muted),
+        5 when b.Porters > 0 => ($"materials coming, {b.ProgressPermille / 10}%", UiKit.Warn),
+        5 => ("materials missing", UiKit.Bad),
+        0 => ($"building {b.ProgressPermille / 10}%", new Color("8fb040")),
+        1 => ("paused", UiKit.Warn),
+        3 => ("stopped", UiKit.Bad),
+        _ when b.Starved => ("waiting for goods", UiKit.Warn),
+        _ when t.Workers > 0 && b.Workers == 0 => ("no workers", UiKit.Bad),
+        _ when t.Workers > 0 => ($"working {b.Workers}/{t.Workers}", UiKit.Good),
+        _ => ("standing", UiKit.Good),
+    };
+
+    private void BuildingItems(PlayViewMessage v, PlayContentMessage c, PlayBuildingView b, List<UiItem> items, int number = 0)
     {
         PlayBuildingInfo t = c.Buildings[b.Type];
+        if (number > 0)
+        {
+            // In the hex overview: a section per building, its buttons in one row.
+            items.Add(new SectionItem($"{number}. {t.Name}" + (b.Civ == v.Civ ? "" : $" ({PeopleName(v, b.Civ)})")));
+        }
+
         if (b.Remembered)
         {
             items.Add(new HeaderItem(t.Name, $"{PeopleName(v, b.Civ)} - as we last saw it", new Color("6a6a6a"), UiKit.Short(t.Name)));
@@ -294,7 +336,14 @@ public partial class PlayGame
             _ => b.Starved ? "Waiting for goods" : t.Workers > 0 ? (b.Workers == 0 ? "No workers" : "Working") : "Standing",
         };
         bool mine = b.Civ == v.Civ;
-        items.Add(new HeaderItem(t.Name, mine ? state : $"{state} - {PeopleName(v, b.Civ)}", UiKit.GroupColor(t.Groups), UiKit.Short(t.Name)));
+        if (number == 0)
+        {
+            items.Add(new HeaderItem(t.Name, mine ? state : $"{state} - {PeopleName(v, b.Civ)}", UiKit.GroupColor(t.Groups), UiKit.Short(t.Name)));
+        }
+        else
+        {
+            items.Add(new LineItem(state, ShortState(b, t).Color, 14));
+        }
         if (mine && b.Focus is { Length: > 0 } focus && c.Categories is { } cats)
         {
             // Every worker of a school speeds one branch of research; click to change it.
@@ -353,6 +402,36 @@ public partial class PlayGame
         }
 
         int id = b.Id;
+        int start = items.Count;
+
+        // Upgrade in place, once the better kind is known.
+        if (t.UpgradesTo > 0)
+        {
+            PlayBuildingInfo to = c.Buildings[t.UpgradesTo];
+            bool known = v.Techs.FirstOrDefault(x => x.Id == to.Tech)?.Known ?? false;
+            if (!known)
+            {
+                items.Add(new LineItem($"Later: upgrade to {to.Name} with {c.Techs[to.Tech].Name}", UiKit.Muted, 13));
+                start = items.Count;
+            }
+            else if (b.UpgradeBlocked is { } why)
+            {
+                items.Add(new ActItem($"Upgrade to {to.Name}", () => _session!.Play(PlayCommandKind.UpgradeBuilding, id),
+                    why.Length == 0 ? $"Rebuilt in place: half of its price counts, porters bring the rest ({b.UpgradeCost}). It stops working while it is rebuilt." : why,
+                    why.Length == 0, UiKit.Good));
+                if (why.Length > 0 && number > 0)
+                {
+                    items.Insert(start, new LineItem($"Upgrade to {to.Name}: {why}", UiKit.Warn, 13));
+                    start++;
+                }
+                else if (why.Length == 0)
+                {
+                    items.Insert(start, new LineItem($"Upgrade to {to.Name} costs {b.UpgradeCost}", UiKit.Muted, 13));
+                    start++;
+                }
+            }
+        }
+
         if (b.Missing is not null && b.State is 0 or 1 or 5)
         {
             items.Add(new ActItem($"Bring the missing materials", () => _session!.Play(PlayCommandKind.BringMaterials, id), $"Porters carry {b.Missing} from the nearest storehouse. We pay for it again.", Accent: UiKit.Good));
@@ -376,7 +455,14 @@ public partial class PlayGame
             items.Add(new ActItem("Start work", () => _session!.Play(PlayCommandKind.Stop, id, flag: false)));
         }
 
-        items.Add(new ActItem("Tear down", () => _session!.Play(PlayCommandKind.Demolish, id), "The building is gone; the hex is free again.", Accent: UiKit.Bad));
+        items.Add(new ActItem("Tear down", () => _session!.Play(PlayCommandKind.Demolish, id), "The building is gone; its places are free again.", Accent: UiKit.Bad));
+        if (number > 0)
+        {
+            // Side by side: the buttons of this building in one row.
+            var acts = items.Skip(start).OfType<ActItem>().ToList();
+            items.RemoveAll(x => x is ActItem a && acts.Contains(a));
+            items.Add(new ButtonsItem(acts));
+        }
     }
 
     // The order to gather around the settlement, with what one gatherer brings here (the land's richness).
@@ -499,6 +585,19 @@ public partial class PlayGame
             return;
         }
 
+        HexHeader(sel, items);
+        WorksItems(sel, items, always: w.Owner[i] == _session.PlayView?.Civ);
+    }
+
+    // What the land of a hex is: biome, relief, owner, deposit, grove.
+    private void HexHeader((int Col, int Row) sel, List<UiItem> items)
+    {
+        if (_session is null || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.Content is not { } content)
+        {
+            return;
+        }
+
+        int i = w.Index(sel.Col, sel.Row);
         string biome = content.Biomes[w.Biome[i]].Name;
         string relief = content.Reliefs[w.Relief[i]];
         string owner = w.Owner[i] < 0 ? "Nobody's land" : w.Owner[i] == _session.PlayView?.Civ ? "Our land" : "Land of another people";
@@ -512,12 +611,11 @@ public partial class PlayGame
         {
             items.Add(new LineItem("A grove: woodcutters can work it (60% of a forest), gatherers find wood here", UiKit.Good, 14));
         }
-
-        WorksItems(sel, items);
     }
 
     // The works on a hex (ditch, palisade, wall, aqueduct, bridges), with a button to remove each on our land.
-    private void WorksItems((int Col, int Row) sel, List<UiItem> items)
+    // With always: every kind of work is listed, built or not (the protection of the hex at a glance).
+    private void WorksItems((int Col, int Row) sel, List<UiItem> items, bool always = false)
     {
         if (_session is null || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.PlayContent is not { } pc)
         {
@@ -526,13 +624,30 @@ public partial class PlayGame
 
         int i = w.Index(sel.Col, sel.Row);
         int works = w.Works[i];
-        if (works == 0)
+        if (works == 0 && !always)
         {
             return;
         }
 
-        items.Add(new SectionItem("On this hex"));
+        items.Add(new SectionItem("Protection and works"));
         bool ours = w.Owner[i] == _session.PlayView?.Civ;
+        if (always)
+        {
+            var cells = new List<CellItem>();
+            foreach (PlayWorkInfo wk in pc.Works ?? [])
+            {
+                bool has = (works & (1 << wk.Id)) != 0;
+                bool known = _session.PlayView?.Techs.FirstOrDefault(x => x.Id == wk.Tech)?.Known ?? false;
+                cells.Add(new CellItem(wk.Name, has ? UiKit.Text : UiKit.Muted));
+                cells.Add(new CellItem(has ? "yes" : known ? "no (draw it in Roads & works)" : $"no ({pc.Techs[wk.Tech].Name})", has ? UiKit.Good : UiKit.Muted));
+            }
+
+            bool bridge = (works & (7 << 8)) != 0;
+            cells.Add(new CellItem("Bridge", bridge ? UiKit.Text : UiKit.Muted));
+            cells.Add(new CellItem(bridge ? "yes" : "no", bridge ? UiKit.Good : UiKit.Muted));
+            items.Add(new TableItem(2, cells));
+        }
+
         foreach (PlayWorkInfo wk in pc.Works ?? [])
         {
             if ((works & (1 << wk.Id)) == 0)
@@ -543,7 +658,11 @@ public partial class PlayGame
             bool water = wk.FromWater > 0;
             bool reached = (works & (wk.Key == "aqueduct" ? 32 : 16)) != 0;
             string state = water ? (reached ? " (water flows)" : " (dry: not joined to water)") : "";
-            items.Add(new LineItem(wk.Name + state, water && !reached ? UiKit.Warn : UiKit.Text, 14));
+            if (!always || (water && !reached))
+            {
+                items.Add(new LineItem(wk.Name + state, water && !reached ? UiKit.Warn : UiKit.Text, 14));
+            }
+
             if (ours)
             {
                 int id = wk.Id;
@@ -551,7 +670,7 @@ public partial class PlayGame
             }
         }
 
-        if ((works & (7 << 8)) != 0)
+        if ((works & (7 << 8)) != 0 && !always)
         {
             items.Add(new LineItem("A bridge crosses the river here", UiKit.Text, 14));
         }

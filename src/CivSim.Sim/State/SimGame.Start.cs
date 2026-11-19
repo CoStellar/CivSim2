@@ -63,14 +63,14 @@ public sealed partial class SimGame
     /// <summary>Start hex chosen by each people (−1 = not yet).</summary>
     public int[] StartCell { get; private set; } = [];
 
-    /// <summary>Hexes around a chosen start where no other people may start.</summary>
-    public int BlockRadius => Content.FoundMinDistance * 3;
+    /// <summary>Hexes around a chosen start where no other people may start (Patryk, 2026-11-19: 15 took too much of a continent).</summary>
+    public int BlockRadius => Content.FoundMinDistance * 2;
 
     /// <summary>
     /// How far the shown circle of a taken start lies from the start itself (Patryk, 2026-11-19: the circles must not give the
     /// start away). The circle is this much wider, so it still covers every hex too close to the start.
     /// </summary>
-    public const int BlockFuzz = 5;
+    public const int BlockFuzz = 3;
 
     /// <summary>Centre of each taken start's circle: a hex near the start, from the seed (−1 = not chosen).</summary>
     public int[] BlockCenter { get; private set; } = [];
