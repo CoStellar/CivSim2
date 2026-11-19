@@ -46,6 +46,11 @@ public static partial class SimAi
             actions += Upgrade(g, civ) ? 1 : 0;
         }
 
+        if (actions == 0)
+        {
+            actions += Rebuild(g, civ) ? 1 : 0;
+        }
+
         Works(g, civ);
         Scouts(g, civ);
         if (!lean)
@@ -487,6 +492,43 @@ public static partial class SimAi
         return false;
     }
 
+    // A building into its better kind (huts into stone houses, toolmaker into blacksmith...), one at a time, when the rest of
+    // the price leaves a fifth of the stores; houses first when homes run short.
+    private static bool Rebuild(SimGame g, Civ civ)
+    {
+        if (Under(g, civ) >= 1 + civ.Settlements.Count)
+        {
+            return false;
+        }
+
+        foreach (bool homes in new[] { true, false })
+        {
+            foreach (int id in civ.Buildings.ToArray())
+            {
+                Building b = g.Buildings[id];
+                BuildingType t = g.Content.Buildings[b.Type];
+                if (t.UpgradesTo <= 0 || (t.Housing > 0) != homes)
+                {
+                    continue;
+                }
+
+                Settlement s = g.Settlements[b.Settlement];
+                if (homes && s.People < s.Housing - 4)
+                {
+                    continue;
+                }
+
+                if (g.CannotUpgrade(civ, b, out BuildingType? to) is null && Affordable(civ, g.UpgradeRest(t, to!), 20)
+                    && g.Apply(new UpgradeBuildingCommand(civ.Id, b.Id)) is null)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static int Own(SimGame g, Civ civ, Func<UnitType, bool> kind, bool includeTraining = true)
     {
         int n = 0;
@@ -531,15 +573,18 @@ public static partial class SimAi
         }
     }
 
-    // Prospectors and surveyors (2026-11-19): one of each once known and the people has two settlements; each walks to ground around
+    // Prospectors and surveyors (2026-11-19): one at a time once the people has three settlements (prospectors from the
+    // Neolithic, when ores can be found; surveyors before); it walks to ground around
     // our settlements that it has not looked at yet, stands there (surveys), then goes on. Same rules as for the player.
     private static void Surveys(SimGame g, Civ civ)
     {
         // Not before the people has spread a little: early on every person is needed at home.
-        if (g.Ticks < 10 * SimContent.TicksPerMinute || civ.Settlements.Count < 2 || civ.Hungry)
+        if (g.Ticks < 15 * SimContent.TicksPerMinute || civ.Settlements.Count < 3 || civ.Hungry)
         {
             return;
         }
+
+        bool any = Own(g, civ, x => x.Survey > 0) > 0; // one at a time: prospectors once ores matter, else surveyors
 
         foreach (UnitType t in g.Content.Units)
         {
@@ -548,7 +593,8 @@ public static partial class SimAi
                 continue;
             }
 
-            if (Own(g, civ, x => x.Id == t.Id) == 0 && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
+            bool wanted = t.Survey == 1 ? civ.Era >= 1 : civ.Era == 0;
+            if (!any && wanted && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
                 && Own(g, civ, _ => true) == Own(g, civ, _ => true, includeTraining: false))
             {
                 g.Apply(new TrainCommand(civ.Id, civ.Settlements[0], t.Id));
@@ -633,7 +679,8 @@ public static partial class SimAi
         }
     }
 
-    // A known free land hex 6–12 hexes away where a camp may stand, with the most food-friendly land around.
+    // A known free land hex 6–12 hexes away where a camp may stand, with the most food-friendly land around: the biome and
+    // water, plus what our prospectors and surveyors found within 2 hexes (known soil and deposits only, 2026-11-19).
     private static int BestSite(SimGame g, Civ civ, int from)
     {
         HexCoord c = g.Geo.FromIndex(from);
@@ -651,7 +698,7 @@ public static partial class SimAi
                     continue;
                 }
 
-                int score = g.Content.World.Biomes[g.Map.Biome[cell]].Food * 10 + (g.NextToWater(cell) ? 15 : 0) - r;
+                int score = (g.Content.World.Biomes[g.Map.Biome[cell]].Food * 10) + (g.NextToWater(cell) ? 15 : 0) - r + KnownGround(g, civ, cell);
                 if (score > bestScore)
                 {
                     best = cell;
@@ -661,6 +708,30 @@ public static partial class SimAi
         }
 
         return best;
+    }
+
+    // What we know of the ground around a hex is worth: fertile soil, food in the soil and on it, stone, clay and ores.
+    private static int KnownGround(SimGame g, Civ civ, int cell)
+    {
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(2)];
+        int n = g.Geo.Range(g.Geo.FromIndex(cell), 2, area);
+        int score = 0;
+        for (int k = 0; k < n; k++)
+        {
+            int c = g.Geo.Index(area[k]);
+            if (g.KnowsSoil(civ, c))
+            {
+                score += g.Map.Fertility[c] / 40;
+            }
+
+            if (g.KnowsDeposit(civ, c))
+            {
+                int kind = g.Content.DepositSurvey[g.Map.Deposit[c]];
+                score += kind == 1 ? 6 : 4; // rock (stone, clay, ores) or food (game, fish, grain, herds)
+            }
+        }
+
+        return score;
     }
 
     private static UnitType? BestSoldier(SimGame g, Civ civ)

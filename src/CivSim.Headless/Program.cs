@@ -11,6 +11,11 @@ public static class Program
     /// <summary>Runs the headless simulation. Exit code 0 = success, 2 = bad arguments.</summary>
     public static int Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "--sim-report")
+        {
+            return SimReport.Execute(args, Console.Out); // the AI of the new game over many seeds
+        }
+
         HeadlessOptions? options = HeadlessOptions.Parse(args, out string? error);
         if (options is null)
         {

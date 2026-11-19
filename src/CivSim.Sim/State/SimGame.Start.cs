@@ -28,13 +28,20 @@ public sealed class SiteScores
         }
 
         Total = new byte[cells];
+        Seen = new byte[cells];
     }
 
     /// <summary>Score per criterion per hex (0 = water or worthless, 100 = best of the map).</summary>
     public byte[][] Values { get; }
 
-    /// <summary>Overall score per hex, 0–100.</summary>
+    /// <summary>Overall score per hex, 0–100 (with deposits and soil: for the summary after the game).</summary>
     public byte[] Total { get; }
+
+    /// <summary>
+    /// Overall score per hex, 0–100, from what anyone sees while choosing (terrain, water, trees; no deposits or soil):
+    /// what the AI chooses by, so it knows no more than the player (known issue 23, 2026-11-19).
+    /// </summary>
+    public byte[] Seen { get; }
 }
 
 public sealed partial class SimGame
@@ -90,6 +97,16 @@ public sealed partial class SimGame
     public void ScoreSites()
     {
         int n = Geo.CellCount;
+        var scores = new SiteScores(n);
+        Score(scores.Total, scores.Values, ground: true);
+        Score(scores.Seen, null, ground: false);
+        Sites = scores;
+    }
+
+    // Scores every hex into total (and, with values, each criterion). Without ground, deposits and soil count as unknown.
+    private void Score(byte[] totals, byte[][]? values, bool ground)
+    {
+        int n = Geo.CellCount;
         var raw = new int[SiteScores.Criteria.Length][];
         for (int k = 0; k < raw.Length; k++)
         {
@@ -120,7 +137,7 @@ public sealed partial class SimGame
                 int c = Geo.Index(area[k]);
                 bool near = Geo.Distance(Geo.FromIndex(i), area[k]) <= Content.StartPhase.ScoreRadius;
                 bool water = Content.World.Biomes[Map.Biome[c]].IsWater;
-                int dep = Map.DepositDepth[c] == 0 ? Map.Deposit[c] : 0;
+                int dep = ground ? Map.Deposit[c] : 0;
                 if (!water)
                 {
                     room++;
@@ -139,7 +156,7 @@ public sealed partial class SimGame
                 food += Content.World.Biomes[Map.Biome[c]].Food * 2 + (dep == fish || dep == game || dep == grain ? 4 : 0);
                 if (!water)
                 {
-                    farm += Map.Fertility[c] / 10;
+                    farm += ground ? Map.Fertility[c] / 10 : 0;
                     army += (Map.Relief[c] > 0 ? 3 : 0) + (Content.WalkCost[(Map.Biome[c] * 3) + Map.Relief[c]] > 100 ? 1 : 0);
                     mat += (Map.Relief[c] > 0 ? 2 : 0) + (dep == stone || dep == clay || dep == flint ? 4 : 0) + (Trees[c] == Forest ? 2 : Trees[c] == Grove ? 1 : 0);
                     safe += Map.GrowingSeason[c] / 10;
@@ -166,7 +183,6 @@ public sealed partial class SimGame
             raw[6][i] = safe;
         }
 
-        var scores = new SiteScores(n);
         var weights = new[] { 30, 20, 10, 15, 10, 5, 10 };
         var max = new int[raw.Length];
         for (int k = 0; k < raw.Length; k++)
@@ -185,7 +201,11 @@ public sealed partial class SimGame
             for (int k = 0; k < raw.Length; k++)
             {
                 int v = max[k] == 0 ? 0 : raw[k][i] * 100 / max[k];
-                scores.Values[k][i] = (byte)v;
+                if (values is not null)
+                {
+                    values[k][i] = (byte)v;
+                }
+
                 t += v * weights[k];
             }
 
@@ -195,10 +215,8 @@ public sealed partial class SimGame
 
         for (int i = 0; i < n; i++)
         {
-            scores.Total[i] = (byte)(total[i] * 100 / bestTotal);
+            totals[i] = (byte)(total[i] * 100 / bestTotal);
         }
-
-        Sites = scores;
     }
 
     private int DepositId(string key)
@@ -287,9 +305,9 @@ public sealed partial class SimGame
         int best = 0;
         for (int i = 0; i < Geo.CellCount; i++)
         {
-            if (sites.Total[i] > best && CannotStart(i) is null)
+            if (sites.Seen[i] > best && CannotStart(i) is null)
             {
-                best = sites.Total[i];
+                best = sites.Seen[i];
             }
         }
 
@@ -298,7 +316,7 @@ public sealed partial class SimGame
         var pool = new List<int>();
         for (int i = 0; i < Geo.CellCount; i++)
         {
-            if (sites.Total[i] >= bar && CannotStart(i) is null)
+            if (sites.Seen[i] >= bar && CannotStart(i) is null)
             {
                 pool.Add(i);
             }
