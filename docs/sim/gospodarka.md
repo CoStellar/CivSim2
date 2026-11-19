@@ -30,7 +30,7 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 
 - Środek osady i ziemia w promieniu poziomu: obóz 3, wioska 4, miasteczko 5, miasto 6 heksów.
 - Poziom daje domy i magazyn; awans kosztuje dobra i od razu poszerza ziemię.
-- Ludzie rosną 8% na minutę (co najmniej 1), dopóki są domy i jedzenie. Bez jedzenia ubywa 12% na minutę.
+- Ludzie rosną 8% na minutę (co najmniej 1), dopóki są domy i jedzenie w magazynie. Głód i śmierć z głodu przychodzą przy racjach (niżej).
 
 ## Budynki
 
@@ -239,6 +239,28 @@ tylko po działaniach.
   - machiny oblężnicze zadają 4× więcej obrażeń osadom (trebusz jeszcze +100%).
 - **Nowe dobra:** odzież, naczynia, tkaniny, uzbrojenie. Osada staje się miasteczkiem za naczynia i odzież, a miastem za tkaniny i naczynia.
 
+## Racje (decyzja Patryka z 2026-11-19)
+
+Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po trochu” co takt.
+
+- **Raz na minutę każda osada karmi wszystkich swoich ludzi naraz:** mieszkańców i jednostki, które z niej wyszły (wojsko, zwiadowców, tragarzy, osadników w drodze, statki). Każda osoba zjada 1 jedzenie (`food.foodPerPersonPerMinute`), zdarzenia jak uczta czy klęska to zmieniają.
+- **Kolejność, gdy jedzenia brakuje:** najpierw dostają jednostki (walczące przed resztą, potem od najstarszej), potem pracownicy budynków, na końcu ludzie bez pracy. Czyli **pierwsi głodują bezrobotni, potem pracujący, na końcu jednostki**.
+- **Głodni pracują słabiej:**
+  - po pierwszej nieudanej racji 75% (`rations.hungryPercent`): budynki tylu, ilu pracowników głoduje, zbieranie bezrobotnych, siła i szybkość jednostek;
+  - po drugiej z rzędu 50% (`starvingPercent`) i ginie 20% głodnych (`starveLosePercent`, co najmniej 1); to samo przy każdej następnej;
+  - jedna pełna racja kończy głód.
+- **Osadnicy** jedzą najpierw z zapasów, które niosą do nowego obozu.
+- **Tempo jedzenia w osadzie** (+/- przy jedzeniu) nadal pokazuje wszystko na minutę: produkcję minus racje mieszkańców i jednostek. Magazyn rośnie przez minutę i spada raz, przy racji.
+- **Usunięte:** ciągłe jedzenie żołnierzy z pierwszej osady, powrót patroli do osady po jedzenie i jedzenie na drogę tragarzy i karawan (`tripFoodPer10Hexes`).
+- **Co widzi gracz:**
+  - w panelu osady linia „Ration: X food for N residents and M in K units in S s”, czerwona przy głodzie, z liczbą głodnych (ilu to pracownicy) i zmarłych;
+  - w panelu jednostki „Fed by X: ration in S s” albo HUNGRY / STARVING;
+  - alarm „rations”, gdy do następnej racji zabraknie jedzenia, i alarm głodu z liczbą głodnych;
+  - okno **6 Units** (także klawisz P i przycisk „Patrols N” na górze): wszystkie jednostki, najpierw patrole i głodni, z kolumną „Fed by”, przyciskiem „Stop patrol” przy każdej i „Stop all patrols”.
+- **Patrole** chodzą po swojej pętli w kółko, aż gracz je zatrzyma.
+- **AI:** szkoli wojsko w osadzie, która ma najwięcej jedzenia na zbyciu i wyżywi nowy oddział.
+- **Pomiar** (3 ziarna, 4 ludy, 40 minut; przed → po): ludzi 728 → 953, osad 40 → 37, jednostek 41 → 43, wymarłych ludów 0 → 1. Próbek „lud głoduje” 615 → 1078, bo flaga głodu trwa teraz całą minutę po nieudanej racji (wcześniej tylko przy pustym magazynie). Jednostki głodne w 3–4% próbek.
+
 ## Ery jako poziomy, kategorie technologii, alarmy (decyzje z 2026-11-18)
 
 - **Ery to poziomy ludu.**
@@ -247,7 +269,6 @@ tylko po działaniach.
   - Technologii z ery, do której lud jeszcze nie doszedł, nie da się zacząć.
   - W obrębie ery nadal trzeba iść po drzewie, bo technologia wymaga doświadczenia w poprzednich.
 - **Kategorie technologii:** podstawy, jedzenie, przemysł, budownictwo, handel, wojsko, zarządzanie, nauka. Okno Research grupuje według nich.
-- **Jedzenie na drogę:** tragarze i karawany przy wyjściu biorą 0,5 jedzenia na osobę na każde 10 heksów drogi tam i z powrotem (`tripFoodPer10Hexes`). Jeśli jedzenia brakuje, idą z tym, co jest.
 - **Alarmy** (liczone na żądanie dla widoku, nie zapisywane):
   - atak na osadę;
   - wróg blisko (wojsko ludu, z którym walczymy, do 3 heksów za ziemią osady);
@@ -256,5 +277,6 @@ tylko po działaniach.
   - brak domów (osada nie rośnie);
   - pełny magazyn dobra, które osada wytwarza;
   - budowa bez materiałów;
-  - za mało ubrań przed zimą (mniej niż 1 zestaw na osobę na minutę przed zimą i w zimie).
+  - za mało ubrań przed zimą (mniej niż 1 zestaw na osobę na minutę przed zimą i w zimie);
+  - za mało jedzenia na następną rację (racje).
 - **Odpowiedź na brak:** w panelu osady są przyciski „Bring 20 X from Y” (jeden kurs) i „Supply route” (stała trasa), z najbliższych osad, które mają tego dobra co najmniej 40.
