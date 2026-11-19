@@ -15,7 +15,23 @@ namespace CivSim.Headless;
 /// </summary>
 public static class SimReport
 {
-    private sealed record Row(ulong Seed, int People, int Settlements, int Units, int Soldiers, int Dead, double Era, int Neolithic, int HungryPercent, int Wars, int Buildings, int Techs);
+    private sealed record Row(ulong Seed, int People, int Settlements, int Units, int Soldiers, int Dead, double Era, int Neolithic, int HungryPercent, int Wars, int Buildings, int Techs)
+    {
+        /// <summary>Minute the first people entered each era (index = era; −1 = not reached).</summary>
+        public int[] FirstEra { get; init; } = [];
+
+        /// <summary>Working buildings (built, with jobs) with nobody in them at the end, percent.</summary>
+        public int EmptyPercent { get; init; }
+
+        /// <summary>Free jobs in working buildings at the end, all peoples.</summary>
+        public int FreeJobs { get; init; }
+
+        /// <summary>Food a minute after rations at the end, mean of the peoples.</summary>
+        public double FoodPerMinute { get; init; }
+
+        /// <summary>Peoples whose food falls at the end.</summary>
+        public int FoodFalling { get; init; }
+    }
 
     /// <summary>Runs the report; exit code 0.</summary>
     public static int Execute(string[] args, TextWriter output)
@@ -56,11 +72,25 @@ public static class SimReport
         Line("hungry % of samples", r => r.HungryPercent);
         Line("wars declared", r => r.Wars);
         Line("buildings", r => r.Buildings);
+        Line("empty working bldgs %", r => r.EmptyPercent);
+        Line("free jobs", r => r.FreeJobs);
+        Line("food/min per people", r => r.FoodPerMinute);
+        Line("peoples losing food", r => r.FoodFalling);
         Line("technologies known", r => r.Techs);
         var neo = rows.Where(r => r.Neolithic >= 0).Select(r => (double)r.Neolithic).ToList();
         if (neo.Count > 0)
         {
             output.WriteLine(string.Create(inv, $"{"first Neolithic (min)",-22} mean {neo.Average(),8:F1}   in {neo.Count} of {seeds} games"));
+        }
+
+        // When the first people of each game enters each era.
+        for (int e = 2; e < content.Eras.Count; e++)
+        {
+            int era = e;
+            var at = rows.Where(r => r.FirstEra.Length > era && r.FirstEra[era] >= 0).Select(r => (double)r.FirstEra[era]).OrderBy(x => x).ToList();
+            output.WriteLine(at.Count == 0
+                ? $"first {content.Eras[era].Name,-16} not reached in {minutes} min"
+                : string.Create(inv, $"{"first " + content.Eras[era].Name + " (min)",-22} mean {at.Average(),8:F1}   median {at[at.Count / 2],8:F1}   in {at.Count} of {seeds} games"));
         }
 
         if (csv is not null)
@@ -84,6 +114,7 @@ public static class SimReport
         int samples = 0;
         int hungry = 0;
         int neolithic = -1;
+        int[] firstEra = [.. Enumerable.Repeat(-1, content.Eras.Count)];
         int wars = 0;
         var atWar = new HashSet<(int, int)>();
         for (int sec = 1; sec <= minutes * 60; sec++)
@@ -106,6 +137,11 @@ public static class SimReport
                 if (c.Era > 0 && neolithic < 0)
                 {
                     neolithic = sec / 60;
+                }
+
+                for (int e = 1; e <= c.Era && e < firstEra.Length; e++)
+                {
+                    firstEra[e] = firstEra[e] < 0 ? sec / 60 : firstEra[e];
                 }
 
                 foreach (Civ o in g.Civs.Where(o => o.Id > c.Id))
@@ -138,6 +174,27 @@ public static class SimReport
             }
         }
 
+        // Economy at the end: empty working buildings and free jobs (2026-11-19 tests: A1).
+        int working = 0;
+        int empty = 0;
+        int free = 0;
+        foreach (Civ c in alive)
+        {
+            foreach (int id in c.Buildings)
+            {
+                Building b = g.Buildings[id];
+                int jobs = content.Buildings[b.Type].Workers;
+                if (b.State != BuildingState.Active || jobs == 0)
+                {
+                    continue;
+                }
+
+                working++;
+                empty += b.Workers == 0 ? 1 : 0;
+                free += Math.Max(0, jobs - b.Workers);
+            }
+        }
+
         return new Row(
             seed,
             alive.Sum(c => c.Settlements.Sum(s => g.Settlements[s].People)),
@@ -150,7 +207,14 @@ public static class SimReport
             samples == 0 ? 0 : hungry * 100 / samples,
             wars,
             alive.Sum(c => c.Buildings.Count),
-            alive.Count == 0 ? 0 : (int)alive.Average(c => c.KnownTech.Count(k => k)));
+            alive.Count == 0 ? 0 : (int)alive.Average(c => c.KnownTech.Count(k => k)))
+        {
+            FirstEra = firstEra,
+            EmptyPercent = working == 0 ? 0 : empty * 100 / working,
+            FreeJobs = free,
+            FoodPerMinute = alive.Count == 0 ? 0 : alive.Average(c => c.Rate[content.Food] / (double)SimContent.One),
+            FoodFalling = alive.Count(c => c.Rate[content.Food] < 0),
+        };
     }
 
     private static int Arg(string[] args, string name, int fallback)

@@ -18,6 +18,19 @@ public sealed record SimGood(int Id, string Key, string Name)
     public string StoredIn { get; init; } = "";
 }
 
+/// <summary>Percent of the price, of the experience and goods made, and of the time of research, by era (index = era).</summary>
+public sealed record ResearchPace(int[] PricePercent, int[] ExperiencePercent, int[] SecondsPercent)
+{
+    /// <summary>Percent of the price in an era.</summary>
+    public int Price(int era) => (uint)era < (uint)PricePercent.Length ? PricePercent[era] : 100;
+
+    /// <summary>Percent of the experience and goods made asked for in an era.</summary>
+    public int Experience(int era) => (uint)era < (uint)ExperiencePercent.Length ? ExperiencePercent[era] : 100;
+
+    /// <summary>Percent of the research time in an era.</summary>
+    public int Seconds(int era) => (uint)era < (uint)SecondsPercent.Length ? SecondsPercent[era] : 100;
+}
+
 /// <summary>
 /// Rules of battle (Patryk, 2026-11-19, claude/walka-propozycja.md): every number of combat in the data (section combat).
 /// Percent values are of the damage; Weapon and Armour are multipliers in percent by level 0–4; Flank by how many enemies touch.
@@ -95,6 +108,12 @@ public sealed record CombatRules
 
     /// <summary>Seconds with no fighting after which a new battle slows a single-player game to ×1 again.</summary>
     public int CalmSeconds { get; init; } = 30;
+
+    /// <summary>Seconds before a unit with no way to its target searches again.</summary>
+    public int ChaseRetrySeconds { get; init; } = 5;
+
+    /// <summary>Failed searches after which a unit gives its target up.</summary>
+    public int ChaseGiveUp { get; init; } = 3;
 
     /// <summary>Training time of a unit with weapons only (no armour), percent.</summary>
     public int ShockTrainPercent { get; init; } = 40;
@@ -534,6 +553,12 @@ public sealed class SimContent
     /// <summary>Schools and academies speed a branch of research at most this much, percent (research.maxSupportPercent).</summary>
     public int MaxResearchSupportPercent { get; init; } = 50;
 
+    /// <summary>
+    /// Pace of research by era (research.pace, 2026-11-19: about 60 minutes to the Middle Ages): percent of each technology's
+    /// price, of the experience and goods made it asks for, and of its time. Index = era; missing eras 100.
+    /// </summary>
+    public ResearchPace Pace { get; init; } = new([], [], []);
+
     /// <summary>Choosing the start: time, the block around taken starts and the scoring radii (startPhase).</summary>
     public StartPhaseRules StartPhase { get; init; } = new(300, 10, 3, 3, 6);
 
@@ -813,6 +838,8 @@ public sealed class SimContent
     }
 
     /// <summary>Loads the rules from a data folder (default: the folder next to the program).</summary>
+    private static int[] Ints(JsonElement e, string name) => e.TryGetProperty(name, out JsonElement v) ? [.. v.EnumerateArray().Select(x => x.GetInt32())] : [];
+
     private static CombatRules ReadCombat(JsonElement c)
     {
         int I(string name, int fallback) => c.TryGetProperty(name, out JsonElement v) ? v.GetInt32() : fallback;
@@ -846,6 +873,8 @@ public sealed class SimContent
             ShockTrainPercent = I("shockTrainPercent", d.ShockTrainPercent),
             CalmSeconds = I("calmSeconds", d.CalmSeconds),
             WarnPercents = A("warnPercents", d.WarnPercents),
+            ChaseRetrySeconds = I("chaseRetrySeconds", d.ChaseRetrySeconds),
+            ChaseGiveUp = Math.Max(1, I("chaseGiveUp", d.ChaseGiveUp)),
         };
     }
 
@@ -1380,6 +1409,9 @@ public sealed class SimContent
             WinterWorkPercent = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("winterWorkPercent").GetInt32() : 100,
             WorkStepPermille = seasons.ValueKind == JsonValueKind.Object && seasons.TryGetProperty("workStepPermille", out JsonElement wsp) ? Math.Max(1, wsp.GetInt32()) : 25,
             MaxResearchSupportPercent = research.TryGetProperty("maxSupportPercent", out JsonElement msp) ? msp.GetInt32() : 50,
+            Pace = research.TryGetProperty("pace", out JsonElement pace)
+                ? new ResearchPace(Ints(pace, "pricePercent"), Ints(pace, "experiencePercent"), Ints(pace, "secondsPercent"))
+                : new ResearchPace([], [], []),
             StartPhase = root.TryGetProperty("startPhase", out JsonElement sp)
                 ? new StartPhaseRules(sp.GetProperty("pickSeconds").GetInt32() * TicksPerSecond, sp.GetProperty("blockRadius").GetInt32(), sp.GetProperty("blockFuzz").GetInt32(),
                     sp.GetProperty("scoreRadius").GetInt32(), sp.GetProperty("roomRadius").GetInt32())

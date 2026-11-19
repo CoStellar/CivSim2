@@ -574,3 +574,19 @@ Do tego:
 - pasek z lewej strony karty to gałąź (legenda nad drzewem), ramka to stan.
 
 **Widać wszystkie ery** (Patryk, 2026-11-19), bo gra polega na planowaniu. W innych miejscach (panel heksa, panel osady) widać tylko to, co jest z ery, do której lud doszedł.
+
+## Tempo badań (2026-11-19)
+
+`research.pace` w `data/sim/game.json` skaluje każdą technologię według jej ery: `pricePercent` (cena w dobrach),
+`experiencePercent` (doświadczenie i wyroby, których technologia wymaga) i `secondsPercent` (czas badania). Obecnie:
+
+| Era | Cena | Doświadczenie i wyroby | Czas |
+| --- | --- | --- | --- |
+| Epoka kamienia | 40% | 40% | 60% |
+| Neolit | 35% | 35% | 50% |
+| Epoka brązu | 25% | 22% | 35% |
+| Epoka żelaza | 25% | 22% | 35% |
+| Średniowiecze | 25% | 22% | 35% |
+
+Przykład: garncarstwo ma w drzewie cenę 40 gliny i 30 drewna oraz 45 s; w neolicie kosztuje 14 gliny i 10 drewna i trwa 22 s (przed premiami myśliciela i sąsiadów). Okno badań i podpowiedzi
+pokazują liczby już po skalowaniu. Pomiar AI (12 ziaren) i powody: `docs/ai/13-ai-nowej-gry.md`, sekcja „Tempo er”.

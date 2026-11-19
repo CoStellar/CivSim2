@@ -53,6 +53,10 @@ Strony 01–12 opisują AI starego symulatora (rada doradców, lata, epizody). N
 | N18 | Zaopatrzenie | co myślenie | ponawia materiały na budowy, których tragarze zginęli; głodnej osadzie wysyła karawanę 40 jedzenia z osady, która ma najwięcej (> 60) | 40, 60 | `Ai/SimAi.cs:947` |
 | N19 | Umowy | oferta do nas albo warunki umowy spełnione | przyjmuje handel, gdy proponujący ma dobrą reputację, jest korzyść (dobro albo rzemiosło, którego nam brak), a wojowniczość < 85; sojusz przy wspólnym wrogu i wojowniczości < 70; sam proponuje handel (wojowniczość < 70) i sojusz (< 50) | 85, 70, 50 | `Ai/SimAi.cs:909`, `:1000` |
 | N20 | Odpowiedź na pokój | oferta do nas | przyjmuje daninę nie gorszą niż sugerowana z przebiegu wojny plus (100 − wojowniczość)/10 punktów | /10 | `Ai/SimAi.cs:1041` |
+| N21 | Oszczędzanie na technologię | żadnej technologii nie stać | zapamiętuje cenę tej, którą chce najbardziej (najlepszy wynik minus cena/20); budynki (oprócz jedzenia, nauczycieli i wytwórców braków), osadnicy wyjęci, wojsko i ulepszenia zostawiają te dobra | cena/20 | `Ai/SimAi.cs` (`Research`, `Affordable`) |
+| N22 | Wytwórca braku | oszczędza, a dobra brak i nikt go nie robi | buduje wytwórcę (np. narzędziarz na narzędzia) nawet bez wolnych rąk, z pierwszeństwem | — | `Ai/SimAi.cs` (`Economy`, `Makers`) |
+| N23 | Nauczyciel bez surowca | nauczyciel (budynek dający doświadczenie) nie ma wejść | najpierw buduje wytwórcę surowca (kamieniołom dla narzędziarza); nauczyciel, który już stoi, dostaje pierwszeństwo | 20 sztuk zapasu | `Ai/SimAi.cs` (`Teacher`, `Economy`) |
+| N24 | Bez bliźniaków i pustych miejsc pracy | budynek tego rodzaju jest w budowie albo wolnych miejsc pracy jest tyle, co bezczynnych ludzi | nie zaczyna nowego miejsca pracy (wyjątki: nauczyciel, wytwórca braku, jedzenie przy głodzie); budynek z pracownikami stawia w osadzie z wolnymi rękami. Po 40 min (12 ziaren): puste budynki 23% → 15%, wolne miejsca pracy 185 → 85 | — | `Ai/SimAi.cs` (`TryBuild`) |
 
 ## Zmiany z 2026-11-19
 
@@ -93,6 +97,28 @@ Strony 01–12 opisują AI starego symulatora (rada doradców, lata, epizody). N
 | AI bez poszukiwaczy | 212 |
 | Obecnie (`8b03118`: po 15. minucie, 3 osady, jeden naraz) | 203 |
 
+## Tempo er (2026-11-19, cel: ok. 60 minut do średniowiecza)
+
+Pomiar sondą „na co czeka badanie” (6 ziaren, próbka co 10 s): AI w neolicie badała przez 8% czasu. Przez resztę czekała:
+- na dobra do ceny (najczęściej drewno na ogień i narzędzia), bo wydawała je od razu na budynki;
+- na doświadczenie, bo nauczyciela (np. narzędziarza) nie budowała przez kilkanaście minut albo stał bez surowca lub bez ludzi.
+
+Do tego AI stawiała dziesiątki pustych tartaków: budynek szedł tam, gdzie leżało drewno, a nie tam, gdzie byli wolni ludzie.
+Naprawy: N21–N24 oraz tempo badań w danych (`research.pace`: procent ceny, doświadczenia i czasu dla każdej ery).
+
+| 12 ziaren, 4 ludy | Przed | Po |
+| --- | --- | --- |
+| Pierwszy neolit | 14,2 min | 6,8 min |
+| Pierwsza epoka brązu | 54,8 min (w 5 z 12 gier w 80 min) | 17,4 min (we wszystkich) |
+| Pierwsza epoka żelaza | brak w 80 min | 39,1 min (we wszystkich) |
+| Pierwsze średniowiecze | brak | brak w 80 min |
+| Ludzie po 40 min | 224 | 646 |
+| Osady po 40 min | 10,8 | 19,0 |
+| Próbki z głodem (40 min) | 44% | 9% |
+
+`research.pace` po strojeniu: cena 40/35/25/25/25%, doświadczenie i wyroby 40/35/22/22/22%, czas 60/50/35/35/35% (epoka kamienia, neolit, brąz, żelazo, średniowiecze).
+Dalej obniżanie liczb nie przyspiesza AI: w epoce żelaza blokuje ją struktura drzewa, nie ceny (punkt 4 poniżej).
+
 ## Ocena i uwagi (uczciwie)
 
 1. **Głód jest wysoki:** 44% próbek ma głodną osadę. Flaga głodu trwa całą minutę po nieudanej racji, więc liczba jest wyższa niż przed racjami, ale nowe obozy naprawdę głodują (znany problem 20). Do poprawy: osadnicy z większym zapasem albo budowa zbieraczy w nowym obozie od razu.
@@ -100,3 +126,5 @@ Strony 01–12 opisują AI starego symulatora (rada doradców, lata, epizody). N
 3. **Badanie jest proste:** N8 to „najwcześniejsza era, podstawy najpierw”. Nie patrzy na teren ani na to, czego lud potrzebuje. W 40 minutach AI kończy w neolicie (era 0,9 średnio).
 4. **Brak statków** (znany problem 19) i brak zarządcy i prowincji (21).
 5. **Liczby są w kodzie**, nie w danych: progi z kolumny „Liczby”. Przeniesienie ich do `data/sim/ai.json` jest w planie razem ze strojeniem po nowym systemie walki.
+4. **Średniowiecze poza zasięgiem AI:** droga do epoki żelaza i dalej idzie przez miedź. Doświadczenie w obróbce miedzi daje tylko kopalnia miedzi, a ta wymaga znanego złoża na własnej ziemi. Bez miedzi nie ma brązu, a bez brązu ani epoki żelaza, ani średniowiecza. Podobnie matematyka: doświadczenie daje tylko plac budowniczych, a prawo i budownictwo nie mają żadnego budynku-nauczyciela. Do decyzji Patryka: drugi nauczyciel dla tych technologii albo osadnicy AI, którzy celują w złoża miedzi.
+5. **Dużo ludzi:** po 80 minutach 4 ludy mają średnio ok. 8900 ludzi. To dobrze dla tempa, ale trzeba sprawdzić czas taktu na dużej mapie.

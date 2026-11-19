@@ -232,7 +232,25 @@ public sealed partial class SimGame
             return "Units go home only on our own land.";
         }
 
-        Settlements[sid].People += u.People;
+        // B6 (2026-11-19 tests): arms and whatever it carries go back to the store, not only the people.
+        Settlement s = Settlements[sid];
+        s.People += u.People;
+        if (Geared(Content.Units[u.Kind]))
+        {
+            ReturnGear(s.Stock, u);
+        }
+
+        if (u.Cargo is { } cargo)
+        {
+            for (int g = 0; g < cargo.Length && g < s.Stock.Length; g++)
+            {
+                s.Stock[g] += Math.Max(0, cargo[g]);
+            }
+
+            u.Cargo = null;
+        }
+
+        SyncTotals(civ);
         Unwatch(u);
         u.State = UnitState.Gone;
         civ.Units.Remove(u.Id);
@@ -466,8 +484,30 @@ public sealed partial class SimGame
             return;
         }
 
-        if (!FindPath(u.Cell, goal, u.Path, false, u.Civ))
+        // B2/B3 (2026-11-19 tests): walking on, a way that still ends within reach of the goal is kept (no new search
+        // every half second); after a failed search the next one waits combat.chaseRetrySeconds, and after
+        // combat.chaseGiveUp failures the unit gives the target up (its stance or guard finds another).
+        int reach = Content.Units[u.Kind].Range;
+        if (u.State == UnitState.Moving && u.PathIndex < u.Path.Count && Distance(u.Path[^1], goal) <= reach)
         {
+            return;
+        }
+
+        if (Ticks - u.ChaseFailTick < Content.Combat.ChaseRetrySeconds * SimContent.TicksPerSecond)
+        {
+            return;
+        }
+
+        if (!PathFor(u, goal))
+        {
+            u.ChaseFailTick = Ticks;
+            if (++u.ChaseFails >= Content.Combat.ChaseGiveUp && u.TargetUnit >= 0)
+            {
+                u.TargetUnit = -1;
+                u.ChaseFails = 0;
+                return;
+            }
+
             // Walled in: break the wall nearest to us on the way.
             if (u.TargetSettlement >= 0 && NearestEnemyWall(u, goal) is int wall and >= 0)
             {
@@ -476,6 +516,8 @@ public sealed partial class SimGame
 
             return;
         }
+
+        u.ChaseFails = 0;
 
         // Stop short of the goal: as far as the unit's reach.
         int keep = Math.Max(0, u.Path.Count - Content.Units[u.Kind].Range);

@@ -361,6 +361,9 @@ public sealed class Civ
     /// <summary>Character of an AI: how warlike, 0–100.</summary>
     public int Aggression { get; set; }
 
+    /// <summary>AI: goods it saves for the technology it wants next (null = none); building and training leave them.</summary>
+    public long[]? AiSaving { get; set; }
+
     /// <summary>Character of an AI: how eager to spread, 0–100.</summary>
     public int Expansion { get; set; }
 
@@ -524,6 +527,12 @@ public sealed class Unit
 
     /// <summary>Units it struck in the last step of battle (for the view's arrows).</summary>
     public List<int> Struck { get; } = [];
+
+    /// <summary>Tick its last search for a way to its target failed (−1 = never).</summary>
+    public long ChaseFailTick { get; set; } = -100_000;
+
+    /// <summary>Failed searches for a way to its target in a row.</summary>
+    public int ChaseFails { get; set; }
 
     /// <summary>Tick of its last charge (−1 = never).</summary>
     public long ChargeTick { get; set; } = -1;

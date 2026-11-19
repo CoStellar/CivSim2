@@ -34,6 +34,9 @@ public sealed record DebugCommand(int Civ, DebugAction Action) : SimCommand(Civ)
 /// </summary>
 public sealed partial class SimGame
 {
+    /// <summary>Test scenarios: no peace can be proposed (battles are fought to the end).</summary>
+    public bool NoPeace { get; private set; }
+
     /// <summary>The debug keys work in this game.</summary>
     public bool DebugOn { get; private set; }
 
@@ -69,6 +72,7 @@ public sealed partial class SimGame
             }
         }
 
+        g.NoPeace = scenario.NoPeace;
         if (scenario.Field is [int fa, int fb] && fa != fb && (uint)fa < (uint)g.Civs.Count && (uint)fb < (uint)g.Civs.Count && !g.PlaceField(fa, fb, scenario.FieldGap))
         {
             g.News.Add((0, "Scenario: no field between the two peoples."));

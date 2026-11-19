@@ -52,6 +52,9 @@ public sealed record SimScenario
     /// <summary>Hexes between the two armies of the field.</summary>
     public int FieldGap { get; init; } = 4;
 
+    /// <summary>No peace can be proposed (to test battles to the end).</summary>
+    public bool NoPeace { get; init; }
+
     /// <summary>The scenarios folder of a data directory (default: the game's data).</summary>
     public static string Folder(string? dataDirectory = null) => Path.Combine(dataDirectory ?? CivSim.Data.ContentLoader.DefaultDirectory, "sim", "scenarios");
 
@@ -128,6 +131,7 @@ public sealed record SimScenario
             Wars = wars,
             Field = r.TryGetProperty("field", out JsonElement fl) ? [.. fl.EnumerateArray().Select(x => x.GetInt32())] : [],
             FieldGap = Int(r, "fieldGap", 4),
+            NoPeace = r.TryGetProperty("noPeace", out JsonElement np) && np.GetBoolean(),
         };
 
         static string Str(JsonElement e, string name) => e.TryGetProperty(name, out JsonElement v) ? v.GetString() ?? "" : "";

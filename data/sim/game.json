@@ -1595,10 +1595,33 @@
     }
   ],
   "research": {
-    "comment": "A technology needs experience in the technologies before it (worker-minutes in their buildings), then its price in goods and its time. It is cheaper by neighbourDiscountPercent for every known people that knows it (at most maxNeighbourDiscountPercent). One research at a time. maxSupportPercent: schools and academies speed a branch of research at most this much.",
+    "comment": "A technology needs experience in the technologies before it (worker-minutes in their buildings), then its price in goods and its time. It is cheaper by neighbourDiscountPercent for every known people that knows it (at most maxNeighbourDiscountPercent). One research at a time. maxSupportPercent: schools and academies speed a branch of research at most this much. pace: percent of the price, of the experience and goods made asked for, and of the time of the technologies of each era (index = era).",
     "neighbourDiscountPercent": 10,
     "maxNeighbourDiscountPercent": 40,
-    "maxSupportPercent": 50
+    "maxSupportPercent": 50,
+    "pace": {
+      "pricePercent": [
+        40,
+        35,
+        25,
+        25,
+        25
+      ],
+      "experiencePercent": [
+        40,
+        35,
+        22,
+        22,
+        22
+      ],
+      "secondsPercent": [
+        60,
+        50,
+        35,
+        35,
+        35
+      ]
+    }
   },
   "technologies": [
     {
@@ -3229,7 +3252,7 @@
     }
   },
   "combat": {
-    "comment": "Battle in steps of stepTicks. A unit fights every enemy unit next to it (ranged: within range, only while standing). Per step it kills engaged people x strength x weapon / armour of the target x terrain x flank x charge x bonus against the target's kind x fed x luck / killDivisor. Engaged people: at most frontPerContact for each enemy it touches. weapon and armour: multipliers for levels 0-4 (armourVsRangedBonus: armour counts this much more against arrows). Flank: damage taken by how many enemy units touch the target (index = count, last for more). Terrain: per level of relief higher than the target (flat 0, hills 1, mountains 2) reliefPercent, at most reliefMaxPercent; per elevationStep of height above it elevationPercent, at most elevationMaxPercent. Cover of the target's hex (forest or grove, palisade or wall) against ranged and melee, lost when enemies touch it from opposite sides. Attacking across a river without a bridge: riverPercent. Roads and swamps: openPercent more taken. Leaving enemies: each enemy next to it strikes once, disengagePercent of a step (cavalry cavalryDisengagePercent), unless another unit of ours stays next to that enemy. Charge: cavalry that walked chargeHexes or more before contact strikes chargePercent once (not against units that stop charges). One army unit to a hex: a unit that stops on another steps aside. Zone of control: a unit stops when it comes next to an enemy, and from there goes on only one hex at a time. Weapons only (shock): no armour, shockTrainPercent of the time. Single player: a battle after calmSeconds of calm slows time to x1. A unit falling to warnPercents of its full size is told in the chronicle.",
+    "comment": "Battle in steps of stepTicks. A unit fights every enemy unit next to it (ranged: within range, only while standing). Per step it kills engaged people x strength x weapon / armour of the target x terrain x flank x charge x bonus against the target's kind x fed x luck / killDivisor. Engaged people: at most frontPerContact for each enemy it touches. weapon and armour: multipliers for levels 0-4 (armourVsRangedBonus: armour counts this much more against arrows). Flank: damage taken by how many enemy units touch the target (index = count, last for more). Terrain: per level of relief higher than the target (flat 0, hills 1, mountains 2) reliefPercent, at most reliefMaxPercent; per elevationStep of height above it elevationPercent, at most elevationMaxPercent. Cover of the target's hex (forest or grove, palisade or wall) against ranged and melee, lost when enemies touch it from opposite sides. Attacking across a river without a bridge: riverPercent. Roads and swamps: openPercent more taken. Leaving enemies: each enemy next to it strikes once, disengagePercent of a step (cavalry cavalryDisengagePercent), unless another unit of ours stays next to that enemy. Charge: cavalry that walked chargeHexes or more before contact strikes chargePercent once (not against units that stop charges). One army unit to a hex: a unit that stops on another steps aside. Zone of control: a unit stops when it comes next to an enemy, and from there goes on only one hex at a time. Weapons only (shock): no armour, shockTrainPercent of the time. Single player: a battle after calmSeconds of calm slows time to x1. A unit falling to warnPercents of its full size is told in the chronicle. A unit with no way to its target searches again after chaseRetrySeconds and gives it up after chaseGiveUp failures.",
     "stepTicks": 5,
     "killDivisor": 400,
     "frontPerContact": 12,
@@ -3288,6 +3311,8 @@
     "warnPercents": [
       50,
       25
-    ]
+    ],
+    "chaseRetrySeconds": 5,
+    "chaseGiveUp": 3
   }
 }

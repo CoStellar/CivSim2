@@ -83,11 +83,14 @@ public static partial class SimAi
         return -1;
     }
 
-    private static bool Affordable(Civ civ, long[] price, int keepPercent = 0)
+    // The price can be paid and leaves what is saved for the next technology (unless saving is ignored: food buildings).
+    private static bool Affordable(Civ civ, long[] price, int keepPercent = 0, bool keepSaving = true)
     {
+        long[]? saving = keepSaving ? civ.AiSaving : null;
         for (int i = 0; i < price.Length; i++)
         {
-            if (civ.Stock[i] < price[i] * (100 + keepPercent) / 100)
+            long saved = saving is not null && price[i] > 0 ? saving[i] : 0;
+            if (civ.Stock[i] - saved < price[i] * (100 + keepPercent) / 100)
             {
                 return false;
             }
@@ -97,7 +100,7 @@ public static partial class SimAi
     }
 
     // Builds the building on the best free hex of any own settlement: a bonus deposit first, then the hex nearest the centre.
-    private static bool TryBuild(SimGame g, Civ civ, string key)
+    private static bool TryBuild(SimGame g, Civ civ, string key, bool keepSaving = true)
     {
         int id = Key(g, key);
         if (id < 0)
@@ -106,9 +109,41 @@ public static partial class SimAi
         }
 
         BuildingType t = g.Content.Buildings[id];
-        if (!SimGame.Knows(civ, t) || !Affordable(civ, t.Price))
+        if (!SimGame.Knows(civ, t) || !Affordable(civ, t.Price, keepSaving: keepSaving && Array.IndexOf(FoodBuildings, t.Key) < 0))
         {
             return false;
+        }
+
+        // N24 (2026-11-19): one of its kind still being built comes first (no twins under construction), and a working
+        // building goes only to a settlement with free hands (endless empty woodcutters).
+        int idleAnywhere = 0;
+        foreach (int sid in civ.Settlements)
+        {
+            idleAnywhere += g.Settlements[sid].Idle;
+        }
+
+        if (t.Workers > 0)
+        {
+            // A1 (2026-11-19 tests): a new workplace only when free jobs are fewer than idle hands; teachers and makers of
+            // what research lacks (keepSaving off) and food for the hungry may still go first.
+            int freeJobs = 0;
+            foreach (int bid in civ.Buildings)
+            {
+                Building b = g.Buildings[bid];
+                if (b.Type == id && b.State is BuildingState.Delivery or BuildingState.Construction)
+                {
+                    return false;
+                }
+
+                int jobs = g.Content.Buildings[b.Type].Workers;
+                freeJobs += b.State is BuildingState.Active or BuildingState.Delivery or BuildingState.Construction ? Math.Max(0, jobs - b.Workers) : 0;
+            }
+
+            bool urgent = !keepSaving || (civ.Hungry && Array.IndexOf(FoodBuildings, t.Key) >= 0);
+            if (!urgent && freeJobs >= idleAnywhere)
+            {
+                return false;
+            }
         }
 
         int best = -1;
@@ -121,6 +156,11 @@ public static partial class SimAi
                 continue; // goods lie in each settlement: build where the materials are
             }
 
+            if (t.Workers > 0 && s.Idle == 0 && idleAnywhere > 0)
+            {
+                continue; // nobody here would work in it
+            }
+
             foreach (int cell in s.Cells)
             {
                 if (g.CannotBuild(civ, cell, t, checkPrice: false) is not null)
@@ -128,7 +168,8 @@ public static partial class SimAi
                     continue;
                 }
 
-                int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (s.Idle * 2);
+                // Where hands are free: a working building goes where its workers live.
+                int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (Math.Min(s.Idle, t.Workers) * 10);
                 if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.KnowsDeposit(civ, cell))
                 {
                     score += 20;
@@ -216,11 +257,51 @@ public static partial class SimAi
         }
 
         // What teaches the experience the next technology lacks comes first, even without idle hands: it gets workers first.
-        string? learn = Teacher(g, civ);
-        if (learn is not null && !Has(g, civ, learn) && TryBuild(g, civ, learn))
+        string? learn = Teacher(g, civ, missingOnly: true) ?? Teacher(g, civ);
+        if (learn is not null && !Has(g, civ, learn) && TryBuild(g, civ, learn, keepSaving: false))
         {
             g.Apply(new PriorityCommand(civ.Id, civ.Buildings[^1], true));
             return true;
+        }
+
+        // The teacher stands already: it gets workers first.
+        if (learn is not null)
+        {
+            foreach (int id in civ.Buildings)
+            {
+                Building b = g.Buildings[id];
+                if (!b.Priority && b.State == BuildingState.Active && g.Content.Buildings[b.Type].Key == learn)
+                {
+                    g.Apply(new PriorityCommand(civ.Id, id, true));
+                    break;
+                }
+            }
+        }
+
+        // N22 (2026-11-19, era pacing): a good the saved-for technology lacks, with nobody making it, gets its maker even
+        // without idle hands (like the teacher above).
+        if (civ.AiSaving is { } save)
+        {
+            for (int i = 0; i < save.Length; i++)
+            {
+                if (save[i] <= 0 || civ.Stock[i] >= save[i] || i == g.Content.Food)
+                {
+                    continue;
+                }
+
+                string[] makers = Makers(g.Content.Goods[i].Key);
+                if (makers.Length > 0 && Count(g, civ, makers) == 0)
+                {
+                    foreach (string k in makers)
+                    {
+                        if (TryBuild(g, civ, k, keepSaving: false))
+                        {
+                            g.Apply(new PriorityCommand(civ.Id, civ.Buildings[^1], true));
+                            return true;
+                        }
+                    }
+                }
+            }
         }
 
         if (idle < 3)
@@ -229,19 +310,12 @@ public static partial class SimAi
         }
 
         // Work for the idle: the good we have least of.
-
-        string[] order = (Wanted(g, civ) ?? Lowest(g, civ)) switch
+        string[] order = Makers(Wanted(g, civ) ?? Lowest(g, civ));
+        if (order.Length == 0)
         {
-            "wood" => ["woodcutter", "gatherers_hut"],
-            "stone" => ["quarry"],
-            "clay" => ["clay_pit"],
-            "tools" => ["toolmaker", "blacksmith", "steelworks"],
-            "copper" => ["copper_mine"],
-            "tin" => ["tin_mine"],
-            "bronze" => ["bronze_smith"],
-            "iron" => ["iron_mine"],
-            _ => ["gatherers_hut", "hunters_lodge"],
-        };
+            order = ["gatherers_hut", "hunters_lodge"];
+        }
+
         foreach (string k in order)
         {
             if (TryBuild(g, civ, k))
@@ -260,6 +334,22 @@ public static partial class SimAi
 
         return false;
     }
+
+    // Buildings that make a good, best first ([] = none the AI builds for it).
+    private static string[] Makers(string good) => good switch
+    {
+        "wood" => ["woodcutter", "gatherers_hut"],
+        "stone" => ["quarry"],
+        "clay" => ["clay_pit"],
+        "tools" => ["toolmaker", "blacksmith", "steelworks"],
+        "copper" => ["copper_mine"],
+        "tin" => ["tin_mine"],
+        "bronze" => ["bronze_smith"],
+        "iron" => ["iron_mine"],
+        "hides" => ["hunters_lodge"],
+        "pottery" => ["potter"],
+        _ => [],
+    };
 
     // True when the people has a building of this kind (built or being built).
     private static bool Has(SimGame g, Civ civ, string key)
@@ -302,7 +392,7 @@ public static partial class SimAi
     }
 
     // A building with jobs whose workers give the experience the nearest technology still lacks.
-    private static string? Teacher(SimGame g, Civ civ)
+    private static string? Teacher(SimGame g, Civ civ, bool missingOnly = false)
     {
         foreach (SimTech t in g.Content.Techs)
         {
@@ -321,7 +411,7 @@ public static partial class SimAi
 
                 foreach (BuildingType b in g.Content.Buildings)
                 {
-                    if (b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b))
+                    if (b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b) && !(missingOnly && Has(g, civ, b.Key)))
                     {
                         return b.Key;
                     }
@@ -337,6 +427,25 @@ public static partial class SimAi
 
                 foreach (BuildingType b in g.Content.Buildings)
                 {
+                    // N23 (2026-11-19): a teacher that lacks its inputs (a toolmaker with no stone) asks for their maker first.
+                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && b.Consumes.Length > 0 && !NoInputsMissing(civ, b) && SimGame.Knows(civ, b))
+                    {
+                        for (int i = 0; i < b.Consumes.Length; i++)
+                        {
+                            if (b.Consumes[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < 20 * SimContent.One)
+                            {
+                                foreach (string k in Makers(g.Content.Goods[i].Key))
+                                {
+                                    int id = Key(g, k);
+                                    if (id >= 0 && SimGame.Knows(civ, g.Content.Buildings[id]) && !Has(g, civ, k))
+                                    {
+                                        return k;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if (b.Id > 0 && b.Tech == req && b.Workers > 0 && (b.Consumes.Length == 0 || NoInputsMissing(civ, b)))
                     {
                         bool any = false;
@@ -357,7 +466,7 @@ public static partial class SimAi
                             }
                         }
 
-                        if (any)
+                        if (any && !(missingOnly && Has(g, civ, b.Key)))
                         {
                             return b.Key;
                         }
@@ -430,14 +539,19 @@ public static partial class SimAi
         return best;
     }
 
+    // N21 (2026-11-19, era pacing): with nothing affordable, the AI saves the price of the technology it wants most, so
+    // buildings and soldiers do not eat it up; food buildings still go first.
     private static void Research(SimGame g, Civ civ)
     {
         if (civ.Researching >= 0)
         {
+            civ.AiSaving = null;
             return;
         }
 
         int pick = -1;
+        int want = -1;
+        int wantScore = int.MinValue;
         int bestScore = int.MinValue;
         foreach (SimTech t in g.Content.Techs)
         {
@@ -456,16 +570,36 @@ public static partial class SimAi
                 }
             }
 
-            if (score > bestScore && Affordable(civ, g.ResearchPrice(civ, t.Id)))
+            long[] price = g.ResearchPrice(civ, t.Id);
+            if (score > bestScore && Affordable(civ, price, keepSaving: false))
             {
                 pick = t.Id;
                 bestScore = score;
+            }
+
+            // Wanted most: the best score, then the cheapest.
+            long total = 0;
+            foreach (long x in price)
+            {
+                total += x;
+            }
+
+            score -= (int)Math.Min(1000, total / SimContent.One / 20);
+            if (score > wantScore)
+            {
+                want = t.Id;
+                wantScore = score;
             }
         }
 
         if (pick >= 0)
         {
+            civ.AiSaving = null;
             g.Apply(new ResearchCommand(civ.Id, pick));
+        }
+        else
+        {
+            civ.AiSaving = want >= 0 ? g.ResearchPrice(civ, want) : null;
         }
     }
 
@@ -649,7 +783,7 @@ public static partial class SimAi
             foreach (int sid in civ.Settlements)
             {
                 Settlement s = g.Settlements[sid];
-                if (s.People >= 20 && Affordable(civ, settlers.Price, 30))
+                if (s.People >= 20 && Affordable(civ, settlers.Price, 30, keepSaving: false)) // spreading goes before saving
                 {
                     g.Apply(new TrainCommand(civ.Id, sid, settlers.Id));
                     break;

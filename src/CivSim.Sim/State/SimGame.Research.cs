@@ -84,7 +84,7 @@ public sealed partial class SimGame
         var price = new long[t.Price.Length];
         for (int g = 0; g < price.Length; g++)
         {
-            price[g] = t.Price[g] * edge / 100 * (100 - discount) / 100;
+            price[g] = t.Price[g] * edge / 100 * (100 - discount) / 100 * Content.Pace.Price(t.Era) / 100;
         }
 
         return price;
@@ -126,7 +126,7 @@ public sealed partial class SimGame
             }
         }
 
-        int edge = Edge(civ.Thinker, cost: false);
+        int edge = Edge(civ.Thinker, cost: false) * Content.Pace.Experience(era) / 100;
         foreach ((int good, long amount) in Content.Techs[tech].Made)
         {
             long made = civ.Made[good] / SimContent.TicksPerMinute;
