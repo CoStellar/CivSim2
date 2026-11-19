@@ -297,7 +297,8 @@ d["works"]={"comment":"Works drawn on hexes; price and seconds per hex. ditch: f
 d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). Work is rounded down to steps of workStepPermille. In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Peoples are told warnSeconds before.",
   "workStepPermille":25,"cycleMinutes":8,"winterMinutes":2,"warnSeconds":30,"winterWorkPercent":50}
 d["clothing"]={"comment":"Every set of clothing a worker has adds bonusPercent. Outside winter only the first set counts (at most 100+bonus); in winter more sets count, up to winterMaxPercent. Worked out per settlement: sets = clothing in store / people. Sets wear out: wearPerPersonPerMinute.",
-  "good":"clothing","bonusPercent":15,"winterMaxPercent":110,"wearPerPersonPerMinute":0.03}
+  "good":"clothing","bonusPercent":15,"winterMaxPercent":110,"wearPerPersonPerMinute":0.03,"wearOnlyInWinter":False}
+# wearOnlyInWinter (G5, 2026-11-19): when true, clothing wears out only in winter. Off until Patryk decides.
 d["forage"]={"comment":"People of a settlement told to gather pick up food, wood and stone around it. Per gatherer per minute at richness 100: perMinute. A hex's richness: food and wood by biome, stone by relief; deposits and rivers add. A settlement's richness is the mean over the land hexes in its radius (worked out when it is founded or grows).",
   "perMinute":{"food":0.5,"wood":0.25,"stone":0.1},
   "biomes":{"grassland":[100,10],"steppe":[70,0],"savanna":[80,10],"deciduous_forest":[80,100],"jungle":[90,80],"taiga":[50,100],"swamp":[60,40],"tundra":[30,0],"desert":[10,0],"ice":[0,0]},

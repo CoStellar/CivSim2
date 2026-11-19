@@ -593,6 +593,9 @@ public sealed class SimContent
     /// <summary>Clothing worn out per person per minute, hundredths.</summary>
     public long ClothingWearPerPersonPerMinute { get; init; }
 
+    /// <summary>Clothing wears out only in winter (clothing.wearOnlyInWinter; G5 test, 2026-11-19).</summary>
+    public bool ClothingWearOnlyInWinter { get; init; }
+
     /// <summary>Share of the fallen who are wounded instead of dead, percent (herbalists heal them).</summary>
     public int InjuredPercent { get; init; }
 
@@ -1458,6 +1461,7 @@ public sealed class SimContent
             ClothingBonusPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("bonusPercent").GetInt32() : 0,
             ClothingWinterMaxPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("winterMaxPercent").GetInt32() : 100,
             ClothingWearPerPersonPerMinute = clothing.ValueKind == JsonValueKind.Object ? Hundredths(clothing.GetProperty("wearPerPersonPerMinute")) : 0,
+            ClothingWearOnlyInWinter = clothing.ValueKind == JsonValueKind.Object && clothing.TryGetProperty("wearOnlyInWinter", out JsonElement woiw) && woiw.GetBoolean(),
             InjuredPercent = root.GetProperty("war").TryGetProperty("injuredPercent", out JsonElement inj) ? inj.GetInt32() : 0,
             RiversFreeEra = root.TryGetProperty("rivers", out JsonElement rv) ? eras.FindIndex(e => e.Key == rv.GetProperty("freeFromEra").GetString()) is int rfe && rfe >= 0 ? rfe : int.MaxValue : int.MaxValue,
             GrowthPercentPerMinute = growth.GetProperty("growthPercentPerMinute").GetInt32(),

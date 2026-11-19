@@ -3073,7 +3073,8 @@
     "good": "clothing",
     "bonusPercent": 15,
     "winterMaxPercent": 110,
-    "wearPerPersonPerMinute": 0.03
+    "wearPerPersonPerMinute": 0.03,
+    "wearOnlyInWinter": false
   },
   "forage": {
     "comment": "People of a settlement told to gather pick up food, wood and stone around it. Per gatherer per minute at richness 100: perMinute. A hex's richness: food and wood by biome, stone by relief; deposits and rivers add. A settlement's richness is the mean over the land hexes in its radius (worked out when it is founded or grows).",
