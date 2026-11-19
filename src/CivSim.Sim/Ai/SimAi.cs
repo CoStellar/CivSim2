@@ -124,6 +124,9 @@ public static partial class SimAi
 
         if (t.Workers > 0)
         {
+            // A1 (2026-11-19 tests): a new workplace only when free jobs are fewer than idle hands; teachers and makers of
+            // what research lacks (keepSaving off) and food for the hungry may still go first.
+            int freeJobs = 0;
             foreach (int bid in civ.Buildings)
             {
                 Building b = g.Buildings[bid];
@@ -131,6 +134,15 @@ public static partial class SimAi
                 {
                     return false;
                 }
+
+                int jobs = g.Content.Buildings[b.Type].Workers;
+                freeJobs += b.State is BuildingState.Active or BuildingState.Delivery or BuildingState.Construction ? Math.Max(0, jobs - b.Workers) : 0;
+            }
+
+            bool urgent = !keepSaving || (civ.Hungry && Array.IndexOf(FoodBuildings, t.Key) >= 0);
+            if (!urgent && freeJobs >= idleAnywhere)
+            {
+                return false;
             }
         }
 

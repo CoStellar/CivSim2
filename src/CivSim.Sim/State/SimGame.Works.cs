@@ -420,7 +420,7 @@ public sealed partial class SimGame
             }
         }
 
-        if (best < 0 || !FindPath(u.Cell, best, u.Path, false, u.Civ))
+        if (best < 0 || !PathFor(u, best))
         {
             u.TargetWall = -1;
             return "No way to the wall.";

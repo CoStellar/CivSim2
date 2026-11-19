@@ -109,6 +109,12 @@ public sealed record CombatRules
     /// <summary>Seconds with no fighting after which a new battle slows a single-player game to ×1 again.</summary>
     public int CalmSeconds { get; init; } = 30;
 
+    /// <summary>Seconds before a unit with no way to its target searches again.</summary>
+    public int ChaseRetrySeconds { get; init; } = 5;
+
+    /// <summary>Failed searches after which a unit gives its target up.</summary>
+    public int ChaseGiveUp { get; init; } = 3;
+
     /// <summary>Training time of a unit with weapons only (no armour), percent.</summary>
     public int ShockTrainPercent { get; init; } = 40;
 }
@@ -867,6 +873,8 @@ public sealed class SimContent
             ShockTrainPercent = I("shockTrainPercent", d.ShockTrainPercent),
             CalmSeconds = I("calmSeconds", d.CalmSeconds),
             WarnPercents = A("warnPercents", d.WarnPercents),
+            ChaseRetrySeconds = I("chaseRetrySeconds", d.ChaseRetrySeconds),
+            ChaseGiveUp = Math.Max(1, I("chaseGiveUp", d.ChaseGiveUp)),
         };
     }
 

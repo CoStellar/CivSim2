@@ -56,7 +56,7 @@ Strony 01–12 opisują AI starego symulatora (rada doradców, lata, epizody). N
 | N21 | Oszczędzanie na technologię | żadnej technologii nie stać | zapamiętuje cenę tej, którą chce najbardziej (najlepszy wynik minus cena/20); budynki (oprócz jedzenia, nauczycieli i wytwórców braków), osadnicy wyjęci, wojsko i ulepszenia zostawiają te dobra | cena/20 | `Ai/SimAi.cs` (`Research`, `Affordable`) |
 | N22 | Wytwórca braku | oszczędza, a dobra brak i nikt go nie robi | buduje wytwórcę (np. narzędziarz na narzędzia) nawet bez wolnych rąk, z pierwszeństwem | — | `Ai/SimAi.cs` (`Economy`, `Makers`) |
 | N23 | Nauczyciel bez surowca | nauczyciel (budynek dający doświadczenie) nie ma wejść | najpierw buduje wytwórcę surowca (kamieniołom dla narzędziarza); nauczyciel, który już stoi, dostaje pierwszeństwo | 20 sztuk zapasu | `Ai/SimAi.cs` (`Teacher`, `Economy`) |
-| N24 | Bez bliźniaków w budowie | budynek tego rodzaju jest jeszcze w budowie | nie zaczyna drugiego; budynek z pracownikami stawia w osadzie z wolnymi rękami | — | `Ai/SimAi.cs` (`TryBuild`) |
+| N24 | Bez bliźniaków i pustych miejsc pracy | budynek tego rodzaju jest w budowie albo wolnych miejsc pracy jest tyle, co bezczynnych ludzi | nie zaczyna nowego miejsca pracy (wyjątki: nauczyciel, wytwórca braku, jedzenie przy głodzie); budynek z pracownikami stawia w osadzie z wolnymi rękami. Po 40 min (12 ziaren): puste budynki 23% → 15%, wolne miejsca pracy 185 → 85 | — | `Ai/SimAi.cs` (`TryBuild`) |
 
 ## Zmiany z 2026-11-19
 

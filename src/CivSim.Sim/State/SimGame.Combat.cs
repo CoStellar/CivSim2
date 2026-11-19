@@ -488,7 +488,7 @@ public sealed partial class SimGame
     // Starts a unit walking to the cell (no new orders: keeps its target).
     private void Go(Unit u, int cell)
     {
-        if (!FindPath(u.Cell, cell, u.Path, Content.Units[u.Kind].Naval, u.Civ) || u.Path.Count == 0)
+        if (!PathFor(u, cell) || u.Path.Count == 0)
         {
             return;
         }

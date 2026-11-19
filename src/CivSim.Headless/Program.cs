@@ -16,6 +16,11 @@ public static class Program
             return SimReport.Execute(args, Console.Out); // the AI of the new game over many seeds
         }
 
+        if (args.Length > 0 && args[0] == "--sim-scenario")
+        {
+            return SimScenarioRun.Execute(args, Console.Out); // a test scenario without Godot
+        }
+
         HeadlessOptions? options = HeadlessOptions.Parse(args, out string? error);
         if (options is null)
         {

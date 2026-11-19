@@ -528,6 +528,12 @@ public sealed class Unit
     /// <summary>Units it struck in the last step of battle (for the view's arrows).</summary>
     public List<int> Struck { get; } = [];
 
+    /// <summary>Tick its last search for a way to its target failed (−1 = never).</summary>
+    public long ChaseFailTick { get; set; } = -100_000;
+
+    /// <summary>Failed searches for a way to its target in a row.</summary>
+    public int ChaseFails { get; set; }
+
     /// <summary>Tick of its last charge (−1 = never).</summary>
     public long ChargeTick { get; set; } = -1;
 

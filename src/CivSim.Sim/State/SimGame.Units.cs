@@ -222,11 +222,14 @@ public sealed partial class SimGame
             return MoveDrawn(civ, u, drawn, hidden);
         }
 
-        if (!FindPath(u.Cell, cell, u.Path, t.Naval, u.Civ))
+        // Found into a spare list first: a refused move leaves the unit on its old way (B1, 2026-11-19 tests).
+        if (!FindPath(u.Cell, cell, _way, t.Naval, u.Civ))
         {
             return "There is no way there on foot.";
         }
 
+        u.Path.Clear();
+        u.Path.AddRange(_way);
         u.Patrol.Clear();
         u.PatrolStage = PatrolStage.None;
 
@@ -475,6 +478,22 @@ public sealed partial class SimGame
     /// A* over land hexes with walking costs. Fills <paramref name="path"/> with the hexes after <paramref name="from"/> up to
     /// <paramref name="to"/>. Arrays are reused between calls (no allocation per search).
     /// </summary>
+    private readonly List<int> _way = [];
+
+    /// <summary>Finds a way into a unit's path only when there is one (the old way stays otherwise).</summary>
+    private bool PathFor(Unit u, int goal)
+    {
+        if (!FindPath(u.Cell, goal, _way, Content.Units[u.Kind].Naval, u.Civ))
+        {
+            return false;
+        }
+
+        u.Path.Clear();
+        u.Path.AddRange(_way);
+        return true;
+    }
+
+    /// <summary>Finds a way from a hex to another (cleared first), true when there is one.</summary>
     public bool FindPath(int from, int to, List<int> path, bool naval = false, int civ = -1)
     {
         ArgumentNullException.ThrowIfNull(path);

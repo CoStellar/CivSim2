@@ -5,6 +5,7 @@
   "peoples": 2,
   "revealMap": true,
   "wars": [[0, 1]],
+  "noPeace": true,
   "field": [0, 1],
   "fieldGap": 6,
   "civs": [

@@ -44,6 +44,19 @@ public sealed partial class SimGame
             return "Draw a path first.";
         }
 
+        if ((uint)from >= (uint)Geo.CellCount)
+        {
+            return "The path leaves the map.";
+        }
+
+        foreach (int c in drawn)
+        {
+            if ((uint)c >= (uint)Geo.CellCount)
+            {
+                return "The path leaves the map."; // B5: refused, not thrown
+            }
+        }
+
         int start = 0;
         if (drawn[0] == from)
         {
@@ -105,12 +118,14 @@ public sealed partial class SimGame
     private string? MoveDrawn(Civ civ, Unit u, int[] drawn, bool hidden)
     {
         UnitType t = Content.Units[u.Kind];
-        string? why = DrawnPath(u.Cell, drawn, t.Naval, u.Path, u.Civ);
+        string? why = DrawnPath(u.Cell, drawn, t.Naval, _way, u.Civ);
         if (why is not null)
         {
-            u.Path.Clear();
-            return why;
+            return why; // the old way stays (B1)
         }
+
+        u.Path.Clear();
+        u.Path.AddRange(_way);
 
         u.Patrol.Clear();
         u.PatrolStage = PatrolStage.None;

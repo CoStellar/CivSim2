@@ -198,7 +198,10 @@ public sealed class PlayHost : IDisposable
 
                     break;
                 case PlayCommandMessage command when client.Civ >= 0:
-                    string? why = _game.Apply(ToCommand(client.Civ, command));
+                    // E6 (2026-11-19 tests): debug keys of a test scenario only for the host (the first player who joined).
+                    string? why = command.Kind == PlayCommandKind.Debug && _clients.Find(c => c.Civ >= 0) != client
+                        ? "Only the host may use debug keys."
+                        : _game.Apply(ToCommand(client.Civ, command));
                     if (why is not null)
                     {
                         client.Connection.Send(new CommandRejectedMessage(command.Sequence, why));

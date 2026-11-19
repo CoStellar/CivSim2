@@ -370,4 +370,33 @@ public sealed class CombatTests
 
         Assert.Contains(g.News, n => n.Item1 == 1 && n.Item2.Contains("down to", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void ARefusedMoveLeavesTheWalkerOnItsWay()
+    {
+        SimGame g = War();
+        int f = Field(g);
+        Unit u = Soldiers(g, 0, "warriors", f, 10);
+        int far = Beside(g, Beside(g, Beside(g, f, HexDirection.S), HexDirection.S), HexDirection.S);
+        Assert.Null(g.Apply(new MoveCommand(0, u.Id, far, false)));
+        g.Tick();
+        int water = Enumerable.Range(0, g.Geo.CellCount).First(c => Content.World.Biomes[g.Map.Biome[c]].IsWater);
+        Assert.NotNull(g.Apply(new MoveCommand(0, u.Id, water, false)));
+        Assert.NotNull(g.Apply(new MoveCommand(0, u.Id, far, false, [far, water])));
+        Assert.True(u.Path.Count > 0);
+        Run(g, 200);
+        Assert.Equal(far, u.Cell);
+        Assert.Equal(UnitState.Idle, u.State);
+    }
+
+    [Fact]
+    public void DisbandingGivesTheArmsBack()
+    {
+        SimGame g = War();
+        Settlement home = g.Settlements[g.Civs[0].Settlements[0]];
+        Unit u = Soldiers(g, 0, "warriors", home.Center, 10, weapon: 2, armour: 1);
+        long before = home.Stock[Content.GoodId("bronze_weapons")];
+        Assert.Null(g.Apply(new DisbandCommand(0, u.Id)));
+        Assert.Equal(before + (10 * SimContent.One), home.Stock[Content.GoodId("bronze_weapons")]);
+    }
 }
