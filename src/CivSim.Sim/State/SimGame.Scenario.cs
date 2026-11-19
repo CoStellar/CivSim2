@@ -178,7 +178,7 @@ public sealed partial class SimGame
                 int kind = Upgraded(civ, t.Id);
                 UnitType ut = Content.Units[kind];
                 int people = p.UnitPeople > 0 && ut.MaxPeople > 0 ? Math.Clamp(p.UnitPeople, ut.MinPeople, ut.MaxPeople) : ut.People;
-                var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = s.Center, State = UnitState.Idle, Home = s.Id };
+                var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Size = people, Cell = s.Center, State = UnitState.Idle, Home = s.Id };
                 if (Geared(ut))
                 {
                     if (p.Weapon >= 0 || p.Armour >= 0)

@@ -239,7 +239,7 @@ public partial class Main : Node2D
             else if (_playWindow == "Battle")
             {
                 // A test scenario with armies on a field: combat mode, all soldiers picked, sent in formation at the enemy.
-                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1))];
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1)), (_playSeconds - 0.6, g => g.ScriptBattle(3))];
             }
             else if (_playWindow == "BattleBox")
             {

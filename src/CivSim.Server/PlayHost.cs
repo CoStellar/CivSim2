@@ -283,6 +283,21 @@ public sealed class PlayHost : IDisposable
         return null;
     }
 
+    private static PlayCombatInfo CombatInfo(CombatRules r)
+    {
+        var open = new List<int>();
+        for (int b = 0; b < r.OpenBiomes.Length; b++)
+        {
+            if (r.OpenBiomes[b])
+            {
+                open.Add(b);
+            }
+        }
+
+        return new PlayCombatInfo(r.TreeCover.Ranged, r.TreeCover.Melee, r.PalisadeCover.Ranged, r.PalisadeCover.Melee, r.WallCover.Ranged, r.WallCover.Melee,
+            r.OpenPercent, [.. open], r.ReliefPercent, r.ReliefMaxPercent, r.ElevationStep, r.ElevationPercent, r.ElevationMaxPercent, r.RiverPercent, r.Flank);
+    }
+
     private long _calmSince;
 
     // Single player: a battle of the player's people that starts after a calm slows time to ×1 (Patryk, 2026-11-19).
@@ -492,7 +507,7 @@ public sealed class PlayHost : IDisposable
 
         client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories,
             _game.Content.Rations.HungryPercent, _game.Content.Rations.StarvingPercent, _game.Content.WeaponGoods, _game.Content.ArmourGoods,
-            _game.Content.Combat.Weapon, _game.Content.Combat.Armour));
+            _game.Content.Combat.Weapon, _game.Content.Combat.Armour, CombatInfo(_game.Content.Combat)));
         client.SentChunks = false;
     }
 
@@ -631,7 +646,7 @@ public sealed class PlayHost : IDisposable
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute, s.RationUnits, s.RationFood, s.RationShort, HashCode.Combine(s.RationDead, s.HungryPeople, s.HungryWorkers))));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
-        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home, Arr(u.LastPatrol), Arr(u.Found), HashCode.Combine(u.Weapon, u.Armour, u.Stance, u.LastLoss, Arr(u.Guard)))));
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home, Arr(u.LastPatrol), Arr(u.Found), HashCode.Combine(u.Weapon, u.Armour, u.Stance, u.LastLoss, Arr(u.Guard), u.Size, Arr(u.Struck), u.Charging))));
 
     private static int TechSig(IReadOnlyList<PlayTechState> techs)
     {
@@ -909,7 +924,8 @@ public sealed class PlayHost : IDisposable
                 _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0,
                 mine ? u.Hunger : 0, mine ? u.Home : -1, mine && u.Patrol.Count == 0 && u.LastPatrol.Count > 0 ? Pairs(u.LastPatrol, 0) : null,
                 mine && _game.Content.Units[u.Kind].Survey > 0 ? Found(u) : null, u.Weapon, u.Armour, (int)u.Stance, u.LastLoss,
-                mine && u.Guard.Count > 0 ? Pairs(u.Guard, 0) : null));
+                mine && u.Guard.Count > 0 ? Pairs(u.Guard, 0) : null, Math.Max(u.Size, u.People), u.Struck.Count > 0 ? [.. u.Struck] : null,
+                u.ChargeTick >= 0 && _game.Ticks - u.ChargeTick < SimContent.TicksPerSecond));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),

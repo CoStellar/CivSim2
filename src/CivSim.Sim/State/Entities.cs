@@ -519,6 +519,15 @@ public sealed class Unit
     /// <summary>People it lost in the last step of battle (for the view).</summary>
     public int LastLoss { get; set; }
 
+    /// <summary>People it had when trained or split (its full strength; 0 = as many as now).</summary>
+    public int Size { get; set; }
+
+    /// <summary>Units it struck in the last step of battle (for the view's arrows).</summary>
+    public List<int> Struck { get; } = [];
+
+    /// <summary>Tick of its last charge (−1 = never).</summary>
+    public long ChargeTick { get; set; } = -1;
+
     /// <summary>Tick of its last step on the way (a charge needs a fresh run).</summary>
     public long StepTick { get; set; } = -1;
 

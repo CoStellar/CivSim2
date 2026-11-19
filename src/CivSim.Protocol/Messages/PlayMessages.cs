@@ -79,7 +79,10 @@ public sealed record PlayUnitView(
     [property: Key(23)] int Armour = 0,
     [property: Key(24)] int Stance = 0,
     [property: Key(25)] int LastLoss = 0,
-    [property: Key(26)] int[]? Guard = null);
+    [property: Key(26)] int[]? Guard = null,
+    [property: Key(27)] int Size = 0,
+    [property: Key(28)] int[]? Struck = null,
+    [property: Key(29)] bool Charging = false);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -134,7 +137,30 @@ public sealed record PlayContentMessage(
     [property: Key(14)] int[]? WeaponGoods = null,
     [property: Key(15)] int[]? ArmourGoods = null,
     [property: Key(16)] int[]? WeaponPercent = null,
-    [property: Key(17)] int[]? ArmourPercent = null) : IProtocolMessage;
+    [property: Key(17)] int[]? ArmourPercent = null,
+    [property: Key(18)] PlayCombatInfo? Combat = null) : IProtocolMessage;
+
+/// <summary>
+/// Numbers of battle the client shows on hexes (cover markers): cover of trees, palisade and wall against ranged and melee,
+/// open ground, height (relief levels and elevation), river; percent changes of the damage taken. Flank by enemies touching.
+/// </summary>
+[MessagePackObject]
+public sealed record PlayCombatInfo(
+    [property: Key(0)] int TreeRanged,
+    [property: Key(1)] int TreeMelee,
+    [property: Key(2)] int PalisadeRanged,
+    [property: Key(3)] int PalisadeMelee,
+    [property: Key(4)] int WallRanged,
+    [property: Key(5)] int WallMelee,
+    [property: Key(6)] int OpenPercent,
+    [property: Key(7)] int[] OpenBiomes,
+    [property: Key(8)] int ReliefPercent,
+    [property: Key(9)] int ReliefMaxPercent,
+    [property: Key(10)] int ElevationStep,
+    [property: Key(11)] int ElevationPercent,
+    [property: Key(12)] int ElevationMaxPercent,
+    [property: Key(13)] int RiverPercent,
+    [property: Key(14)] int[] Flank);
 
 /// <summary>A work drawn on hexes (ditch, palisade, wall, aqueduct): its bit in the works of a hex, price and seconds per hex.</summary>
 [MessagePackObject]

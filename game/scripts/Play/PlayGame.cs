@@ -427,10 +427,16 @@ public partial class PlayGame : Node2D
         Rect2 visible = VisibleRect();
         _map.SetGrid(_camera.Zoom.X >= 0.6f);
         _map.Refresh(visible, _camera.Zoom.X);
-        if (_placing > 0)
+        if (_placing > 0 || _combat)
         {
             _overlay.SetHover(MouseCell());
         }
+        else if (_overlay.CombatHover)
+        {
+            _overlay.SetHover(null);
+        }
+
+        _overlay.CombatHover = _combat && _placing == 0;
 
         _overlay.SetSelected(_selected);
         _map.SetLift(_selected, _overlay.Lift, _camera.Position);

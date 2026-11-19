@@ -130,6 +130,20 @@ W panelu osady nad kafelkami szkolenia jest suwak wielkości (lewy koniec: zwyk�
 W panelu oddziału jest sekcja „Battle”: broń i zbroja z mnożnikami, straty w ostatnim pół sekundy, przyciski postaw,
 dzielenia, uzbrojenia i straży.
 
+## Co widać w bitwie (paczka 2)
+
+Bez przewidywania wyniku, tylko to, co się dzieje:
+
+- **pasek ludzi** nad żetonem każdego oddziału wojska: zielony powyżej połowy wielkości, żółty do ćwierci, czerwony poniżej;
+  ranni na szaro (wielkość to liczba ludzi przy szkoleniu albo podziale);
+- **straty** wyskakują nad oddziałem („-2”) i znikają po 1,4 s; „Charge!” przy szarży;
+- **strzałki** od oddziału do tego, kogo uderzył w ostatnim kroku: żółte nasze, pomarańczowe wroga, czerwone i grubsze,
+  gdy cel biją dwa albo więcej oddziałów (flanka); strzały przerywaną linią;
+- **heks pod kursorem w trybie walki**: obwódka zielona (dobra osłona albo wyżej od najbliższego wroga), żółta (trochę),
+  czerwona (otwarty teren albo niżej) i napisy z liczbami: osłona od strzał i wręcz, otwarty teren, wysokość wobec
+  najbliższego widocznego wroga (strzałka w górę lub w dół);
+- **kronika**: „Our warriors are down to 6 of 12” przy połowie i ćwierci (`warnPercents`).
+
 ## Scenariusze testowe
 
 `06_battle_field` (pole, równe uzbrojenie), `07_battle_arms` (uzbrojenie, wielkość, dzielenie), `08_battle_cavalry`
@@ -144,5 +158,5 @@ dzielenie, szyk.
 
 ## Czego jeszcze nie ma (kolejne paczki)
 
-Paski życia, liczby strat nad oddziałami, strzałki ataku i znaczniki osłony; zaopatrzenie wojsk; garnizon i oblężenie etapami;
+Zaopatrzenie wojsk; garnizon i oblężenie etapami;
 weterani, rezerwiści, limit dowodzenia, zmęczenie wojną; AI walki (formacje, flanki, odskoki jazdy).

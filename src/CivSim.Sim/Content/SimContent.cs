@@ -90,6 +90,9 @@ public sealed record CombatRules
     /// <summary>Damage of the charging strike, percent.</summary>
     public int ChargePercent { get; init; } = 200;
 
+    /// <summary>Shares of its full size (percent) at which a unit's people are warned it weakens.</summary>
+    public int[] WarnPercents { get; init; } = [50, 25];
+
     /// <summary>Seconds with no fighting after which a new battle slows a single-player game to ×1 again.</summary>
     public int CalmSeconds { get; init; } = 30;
 
@@ -842,6 +845,7 @@ public sealed class SimContent
             ChargePercent = I("chargePercent", d.ChargePercent),
             ShockTrainPercent = I("shockTrainPercent", d.ShockTrainPercent),
             CalmSeconds = I("calmSeconds", d.CalmSeconds),
+            WarnPercents = A("warnPercents", d.WarnPercents),
         };
     }
 
