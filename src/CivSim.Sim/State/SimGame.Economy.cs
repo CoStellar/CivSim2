@@ -185,7 +185,7 @@ public sealed partial class SimGame
             // Everyone it feeds, residents and its units, eats once a minute at the ration (SimGame.Rations); the rate shows it per minute.
             s.Eating = ((s.People + UnitPeopleOf(civ, s)) * Content.FoodPerPersonPerMinute * eat / 100) + (s.Id == civ.Settlements[0] && civ.Advisor is not null ? Content.AdvisorUpkeep : 0);
             s.Rate[Content.Food] -= s.Eating;
-            if (Content.Clothing >= 0 && s.Stock[Content.Clothing] >= SimContent.One)
+            if (Content.Clothing >= 0 && s.Stock[Content.Clothing] >= SimContent.One && (IsWinter || !Content.ClothingWearOnlyInWinter))
             {
                 s.Rate[Content.Clothing] -= s.People * Content.ClothingWearPerPersonPerMinute;
             }
@@ -382,6 +382,7 @@ public sealed partial class SimGame
 
         LogisticsStep(civ);
         RuinStep(civ);
+        UpgradeArrivals(civ);
         if (changed)
         {
             civ.Dirty = true;

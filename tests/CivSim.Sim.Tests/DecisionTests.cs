@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using CivSim.Sim.Ai;
 using CivSim.Sim.Content;
@@ -119,5 +121,34 @@ public sealed class DecisionTests
         Assert.False(camp.Abandoned);
         Assert.Equal(other.Id, camp.Civ);
         Assert.Contains(camp.Id, other.Settlements);
+    }
+
+    [Fact]
+    public void UpgradeGoodsComeByCaravanFirst()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int site = Enumerable.Range(0, g.Geo.CellCount).First(c => g.OwnerAt[c] < 0 && !Content.World.Biomes[g.Map.Biome[c]].IsWater
+            && g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(home.Center)) == 8 && g.FindPath(home.Center, c, new List<int>(), false, civ.Id));
+        Settlement camp = g.FoundSettlement(civ, site, 50);
+        Array.Clear(home.Stock);
+        for (int k = 0; k < camp.Stock.Length; k++)
+        {
+            camp.Stock[k] = 400 * SimContent.One;
+        }
+
+        home.People = 45;
+        civ.KnownTech[Content.TechId("agriculture")] = true;
+        Assert.Null(g.Apply(new UpgradeSettlementCommand(civ.Id, home.Id)));
+        Assert.True(home.UpgradeWaiting);
+        Assert.Equal(0, home.Level);
+        for (int i = 0; i < 3 * SimContent.TicksPerMinute && home.Level == 0; i++)
+        {
+            home.People = 45;
+            g.Tick();
+        }
+
+        Assert.Equal(1, home.Level); // the caravans came and the camp became a village
     }
 }

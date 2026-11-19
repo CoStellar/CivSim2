@@ -178,6 +178,9 @@ public sealed class Settlement
     /// <summary>Abandoned settlements are ruins: nobody's, until settlers take them again (G2, 2026-11-19).</summary>
     public bool Abandoned { get; set; }
 
+    /// <summary>Waiting for the goods of its next level, carried by caravans from our other settlements (G6, 2026-11-19).</summary>
+    public bool UpgradeWaiting { get; set; }
+
     /// <summary>Tick since which nobody has lived here (−1 = people live here).</summary>
     public long EmptySince { get; set; } = -1;
 
@@ -473,6 +476,9 @@ public sealed class Unit
 
     /// <summary>Goods carried (porters, caravans), hundredths; null for units that carry nothing.</summary>
     public long[]? Cargo { get; set; }
+
+    /// <summary>A caravan carrying goods for its target's upgrade: if it is raided, the upgrade is called off.</summary>
+    public bool ForUpgrade { get; set; }
 
     /// <summary>What a carrier does: porters to a building, caravans to a settlement.</summary>
     public CarrierJob Job { get; set; }
