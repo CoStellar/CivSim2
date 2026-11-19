@@ -59,7 +59,7 @@ public sealed partial class SimGame
     {
         ArgumentNullException.ThrowIfNull(civ);
         SimTech t = Content.Techs[tech];
-        return Math.Max(1, t.ResearchTicks * 100 / (100 + ResearchSpeed(civ, t.Category)));
+        return Math.Max(1, t.ResearchTicks * Content.Pace.Seconds(t.Era) / (100 + ResearchSpeed(civ, t.Category)));
     }
 
     // What the working support buildings of a settlement add of one kind (builders' yards: building speed), by jobs filled.

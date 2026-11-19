@@ -1595,10 +1595,33 @@
     }
   ],
   "research": {
-    "comment": "A technology needs experience in the technologies before it (worker-minutes in their buildings), then its price in goods and its time. It is cheaper by neighbourDiscountPercent for every known people that knows it (at most maxNeighbourDiscountPercent). One research at a time. maxSupportPercent: schools and academies speed a branch of research at most this much.",
+    "comment": "A technology needs experience in the technologies before it (worker-minutes in their buildings), then its price in goods and its time. It is cheaper by neighbourDiscountPercent for every known people that knows it (at most maxNeighbourDiscountPercent). One research at a time. maxSupportPercent: schools and academies speed a branch of research at most this much. pace: percent of the price, of the experience and goods made asked for, and of the time of the technologies of each era (index = era).",
     "neighbourDiscountPercent": 10,
     "maxNeighbourDiscountPercent": 40,
-    "maxSupportPercent": 50
+    "maxSupportPercent": 50,
+    "pace": {
+      "pricePercent": [
+        40,
+        35,
+        25,
+        25,
+        25
+      ],
+      "experiencePercent": [
+        40,
+        35,
+        22,
+        22,
+        22
+      ],
+      "secondsPercent": [
+        60,
+        50,
+        35,
+        35,
+        35
+      ]
+    }
   },
   "technologies": [
     {

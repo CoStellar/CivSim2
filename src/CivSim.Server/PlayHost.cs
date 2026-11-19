@@ -458,7 +458,7 @@ public sealed class PlayHost : IDisposable
             var needs = new List<string>();
             foreach ((int req, long ticks) in t.Experience)
             {
-                needs.Add($"{content.Techs[req].Name} {ticks / SimContent.TicksPerMinute}");
+                needs.Add($"{content.Techs[req].Name} {ticks * content.Pace.Experience(t.Era) / 100 / SimContent.TicksPerMinute}");
             }
 
             // The branches of the tree: experience in, and plain need of, earlier technologies.
@@ -476,7 +476,7 @@ public sealed class PlayHost : IDisposable
                 }
             }
 
-            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category, Unlocks(content, t), [.. from]));
+            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks * content.Pace.Seconds(t.Era) / 100 / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category, Unlocks(content, t), [.. from]));
         }
 
         var eras = new List<string>();
@@ -991,7 +991,7 @@ public sealed class PlayHost : IDisposable
 
         if (t.Made.Length > 0)
         {
-            lines.Add("Needs made: " + string.Join(", ", t.Made.Select(m => $"{m.Amount / SimContent.One} {content.Goods[m.Good].Name.ToLowerInvariant()}")));
+            lines.Add("Needs made: " + string.Join(", ", t.Made.Select(m => $"{m.Amount * content.Pace.Experience(t.Era) / 100 / SimContent.One} {content.Goods[m.Good].Name.ToLowerInvariant()}")));
         }
 
         if (t.Basic)
@@ -1229,7 +1229,8 @@ public sealed class PlayHost : IDisposable
             return 0;
         }
 
-        int total = Math.Max(1, _game.Content.Techs[civ.Researching].ResearchTicks);
+        SimTech r = _game.Content.Techs[civ.Researching];
+        int total = Math.Max(1, r.ResearchTicks * _game.Content.Pace.Seconds(r.Era) / 100);
         return 1000 - (int)Math.Clamp((civ.ResearchEnd - _game.Ticks) * 1000 / total, 0, 1000);
     }
 

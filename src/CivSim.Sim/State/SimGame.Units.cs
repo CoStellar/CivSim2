@@ -362,6 +362,13 @@ public sealed partial class SimGame
 
     private void Step(Unit u)
     {
+        if (u.PathIndex >= u.Path.Count)
+        {
+            u.State = UnitState.Idle; // the way was cut short while the step waited
+            u.Path.Clear();
+            return;
+        }
+
         int next = u.Path[u.PathIndex];
         if (Content.Units[u.Kind].Army)
         {

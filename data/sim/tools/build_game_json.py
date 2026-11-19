@@ -300,6 +300,11 @@ d['technologies']=T
 
 # remove old unit upgrades fields (now effects); keep terrain bonus
 d["research"]["maxSupportPercent"]=50
+# Pace of research by era (2026-11-19: about 60 minutes to the Middle Ages): percent of the price, of the experience and goods
+# made asked for, and of the time, for the technologies of each era (stone, neolithic, bronze, iron, middle ages).
+d["research"]["pace"]={"pricePercent":[40,35,25,25,25],"experiencePercent":[40,35,22,22,22],"secondsPercent":[60,50,35,35,35]}
+if "pace:" not in d["research"]["comment"]:
+    d["research"]["comment"]+=" pace: percent of the price, of the experience and goods made asked for, and of the time of the technologies of each era (index = era)."
 if "maxSupportPercent:" not in d["research"]["comment"]:
     d["research"]["comment"]+=" maxSupportPercent: schools and academies speed a branch of research at most this much."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')

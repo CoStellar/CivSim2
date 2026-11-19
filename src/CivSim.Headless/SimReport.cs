@@ -15,7 +15,11 @@ namespace CivSim.Headless;
 /// </summary>
 public static class SimReport
 {
-    private sealed record Row(ulong Seed, int People, int Settlements, int Units, int Soldiers, int Dead, double Era, int Neolithic, int HungryPercent, int Wars, int Buildings, int Techs);
+    private sealed record Row(ulong Seed, int People, int Settlements, int Units, int Soldiers, int Dead, double Era, int Neolithic, int HungryPercent, int Wars, int Buildings, int Techs)
+    {
+        /// <summary>Minute the first people entered each era (index = era; −1 = not reached).</summary>
+        public int[] FirstEra { get; init; } = [];
+    }
 
     /// <summary>Runs the report; exit code 0.</summary>
     public static int Execute(string[] args, TextWriter output)
@@ -63,6 +67,16 @@ public static class SimReport
             output.WriteLine(string.Create(inv, $"{"first Neolithic (min)",-22} mean {neo.Average(),8:F1}   in {neo.Count} of {seeds} games"));
         }
 
+        // When the first people of each game enters each era.
+        for (int e = 2; e < content.Eras.Count; e++)
+        {
+            int era = e;
+            var at = rows.Where(r => r.FirstEra.Length > era && r.FirstEra[era] >= 0).Select(r => (double)r.FirstEra[era]).OrderBy(x => x).ToList();
+            output.WriteLine(at.Count == 0
+                ? $"first {content.Eras[era].Name,-16} not reached in {minutes} min"
+                : string.Create(inv, $"{"first " + content.Eras[era].Name + " (min)",-22} mean {at.Average(),8:F1}   median {at[at.Count / 2],8:F1}   in {at.Count} of {seeds} games"));
+        }
+
         if (csv is not null)
         {
             using var w = new StreamWriter(csv);
@@ -84,6 +98,7 @@ public static class SimReport
         int samples = 0;
         int hungry = 0;
         int neolithic = -1;
+        int[] firstEra = [.. Enumerable.Repeat(-1, content.Eras.Count)];
         int wars = 0;
         var atWar = new HashSet<(int, int)>();
         for (int sec = 1; sec <= minutes * 60; sec++)
@@ -106,6 +121,11 @@ public static class SimReport
                 if (c.Era > 0 && neolithic < 0)
                 {
                     neolithic = sec / 60;
+                }
+
+                for (int e = 1; e <= c.Era && e < firstEra.Length; e++)
+                {
+                    firstEra[e] = firstEra[e] < 0 ? sec / 60 : firstEra[e];
                 }
 
                 foreach (Civ o in g.Civs.Where(o => o.Id > c.Id))
@@ -150,7 +170,10 @@ public static class SimReport
             samples == 0 ? 0 : hungry * 100 / samples,
             wars,
             alive.Sum(c => c.Buildings.Count),
-            alive.Count == 0 ? 0 : (int)alive.Average(c => c.KnownTech.Count(k => k)));
+            alive.Count == 0 ? 0 : (int)alive.Average(c => c.KnownTech.Count(k => k)))
+        {
+            FirstEra = firstEra,
+        };
     }
 
     private static int Arg(string[] args, string name, int fallback)
