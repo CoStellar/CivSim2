@@ -298,6 +298,7 @@ public partial class PlayGame : Node2D
 
             RefreshChronicle();
         };
+        AddChild(new ParchmentBackground()); // the unknown world: an old map, not black
         _map = new MapView(_layers, _art);
         AddChild(_map);
         _overlay = new PlayOverlay { ZIndex = 50 };

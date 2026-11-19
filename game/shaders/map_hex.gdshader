@@ -72,9 +72,10 @@ void fragment() {
 	}
 	col = mix(col, tint.rgb, tint.a);
 	if (remembered > 0.0) {
-		// What we saw before, not what is there now: grey.
+		// What we saw before, not what is there now: faded to sepia, like ink on the old map around it.
 		float l = dot(col, vec3(0.3, 0.59, 0.11));
-		col = mix(col, mix(vec3(l), col, 0.2) * 0.86 + 0.04, remembered);
+		vec3 sepia = vec3(l) * vec3(1.08, 0.94, 0.74) * 0.9 + vec3(0.07, 0.05, 0.02);
+		col = mix(col, mix(sepia, col, 0.2), remembered);
 	}
 	COLOR = vec4(col, 1.0);
 }
