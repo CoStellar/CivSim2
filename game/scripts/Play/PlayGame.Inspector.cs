@@ -142,6 +142,11 @@ public partial class PlayGame
             items.Add(new GoodsItem(cells));
 
             items.Add(new SectionItem("Train"));
+            if (c.Units.Any(x => x.MaxPeople > 0 && v.Techs[x.Tech].Known))
+            {
+                items.Add(TrainSizeItem());
+            }
+
             var tiles = new List<TileCell>();
             foreach (PlayUnitInfo ut in c.Units)
             {
@@ -152,15 +157,20 @@ public partial class PlayGame
 
                 int kind = ut.Id;
                 int sid = s.Id;
-                bool can = CanPay(stock, ut.Price) && s.People > ut.People;
-                string tip = $"{ut.Name}: {ut.People} people, {Amounts(c, ut.Price)}, {ut.TrainSeconds} s."
+                int size = _trainSize > 0 && ut.MaxPeople > 0 ? Math.Clamp(_trainSize, ut.MinPeople, ut.MaxPeople) : ut.People;
+                long[] price = [.. ut.Price.Select(p => p * size / Math.Max(1, ut.People))];
+                bool shock = _trainShock && ut.MaxPeople > 0;
+                bool can = CanPay(stock, price) && s.People > size;
+                string tip = $"{ut.Name}: {size} people, {Amounts(c, price)}, {ut.TrainSeconds * size / Math.Max(1, ut.People)} s"
+                    + (shock ? " (faster: weapons only)." : ".")
+                    + (ut.MaxPeople > 0 ? $"\nThey take the best weapons{(shock ? "" : " and armour")} the store holds for all {size}." : "")
                     + (ut.Army ? $"\nStrength {ut.Strength} each" + (ut.Range > 1 ? $", shoots {ut.Range} hexes." : ".") : "")
                     + (ut.Founds ? "\nThey found a new camp where you send them." : "")
                     + (ut.CanHide ? "\nCan walk hidden." : "")
                     + (ut.NeedsBuilding.Length > 0 ? $"\nNeeds a {ut.NeedsBuilding.Replace('_', ' ')} in the settlement." : "")
                     + (can ? "" : "\n\nNot enough people or goods here now.");
                 tiles.Add(new TileCell(ut.Name, UiKit.Short(ut.Name), ut.Army ? new Color("b84040") : new Color("4f8f7f"), tip,
-                    () => _session!.Play(PlayCommandKind.Train, sid, b: kind), can, $"{ut.Name}"));
+                    () => _session!.Play(PlayCommandKind.Train, sid, c: _trainSize > 0 && ut.MaxPeople > 0 ? size : 0, flag: shock, b: kind), can, $"{ut.Name}"));
             }
 
             items.Add(new TilesItem(tiles));
@@ -556,7 +566,8 @@ public partial class PlayGame
 
         if (t.Army)
         {
-            items.Add(new LineItem($"Strength {t.Strength} each" + (t.Range > 1 ? $", shoots {t.Range} hexes" : ""), UiKit.Text, 14));
+            items.Add(new LineItem($"Strength {t.Strength} each" + (t.Range > 1 ? $", shoots {t.Range} hexes, only standing" : ""), UiKit.Text, 14));
+            CombatItems(v, c, u, items);
         }
 
         int id = u.Id;

@@ -60,6 +60,9 @@ public partial class PlayOverlay : Node2D
     /// <summary>All selected units (several with Shift).</summary>
     public HashSet<int> SelectedUnits { get; } = [];
 
+    /// <summary>Hexes being painted as a guard zone (combat mode), or null.</summary>
+    public List<(int Col, int Row)>? GuardPaint { get; set; }
+
     /// <summary>Hexes being drawn (a path, a patrol, a route), in order.</summary>
     public List<(int Col, int Row)> DrawPath { get; } = [];
 
@@ -563,6 +566,30 @@ public partial class PlayOverlay : Node2D
                 g.DrawSetTransform(p, 0, new Vector2(1f, 0.45f));
                 g.DrawCircle(Vector2.Zero, 15 + (2 * pulse), new Color(CivColor(u.Civ), 0.35f + (0.25f * pulse)));
                 g.DrawSetTransform(Vector2.Zero, 0, Vector2.One);
+            }
+        }
+
+        // Guard hexes of the selected units, and those being painted.
+        var guard = new Color(1f, 0.6f, 0.2f, 0.55f + (0.25f * pulse));
+        foreach (PlayUnitView u in _view.Units)
+        {
+            if ((u.Id == SelectedUnit || SelectedUnits.Contains(u.Id)) && u.Guard is { } cells)
+            {
+                for (int k = 0; k + 1 < cells.Length; k += 2)
+                {
+                    foreach (Vector2 c in Copies(cells[k], cells[k + 1]))
+                    {
+                        g.DrawPolyline(Closed(Hex(c, 0.8f)), guard, 2f);
+                    }
+                }
+            }
+        }
+
+        foreach ((int col, int row) in GuardPaint ?? [])
+        {
+            foreach (Vector2 c in Copies(col, row))
+            {
+                g.DrawPolyline(Closed(Hex(c, 0.8f)), new Color(1f, 0.75f, 0.3f, 0.9f), 3f);
             }
         }
 

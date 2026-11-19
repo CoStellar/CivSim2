@@ -397,7 +397,8 @@ public sealed partial class SimGame
 
     /// <summary>
     /// Puts the armies of two peoples on a field near the first settlement of <paramref name="a"/>, in formation facing each other
-    /// <paramref name="gap"/> hexes apart (test scenarios): the first direction from the settlement with land all the way.
+    /// <paramref name="gap"/> hexes apart (test scenarios): the first direction from the settlement with land and no river all the way. Scouts
+    /// of the first people stand two hexes ahead of its line.
     /// </summary>
     public bool PlaceField(int a, int b, int gap)
     {
@@ -417,9 +418,10 @@ public sealed partial class SimGame
             HexCoord x = home;
             for (int k = 0; k < reach && land; k++)
             {
+                int from = Geo.Index(x);
                 x = Geo.Neighbor(x, (HexDirection)d);
                 int i = Geo.Index(x);
-                land = !Content.World.Biomes[Map.Biome[i]].IsWater && CellCost(i) > 0;
+                land = !Content.World.Biomes[Map.Biome[i]].IsWater && CellCost(i) > 0 && Crossable(a, from, d) && Crossable(b, from, d);
             }
 
             toward = land ? d : -1;
@@ -444,6 +446,18 @@ public sealed partial class SimGame
 
         Place(ca, Geo.Index(pa), toward);
         Place(cb, Geo.Index(pb), (toward + 3) % 6);
+
+        // Scouts of the first people stand two hexes ahead of its line, so it sees the other army.
+        HexCoord ahead = Geo.Neighbor(Geo.Neighbor(pa, (HexDirection)toward), (HexDirection)toward);
+        foreach (int id in ca.Units)
+        {
+            Unit u = Units[id];
+            if (u.State == UnitState.Idle && !Content.Units[u.Kind].Army && !Content.Units[u.Kind].System && !Content.Units[u.Kind].Founds)
+            {
+                this.Place(u, Geo.Index(ahead));
+            }
+        }
+
         return true;
 
         void Place(Civ civ, int cell, int facing)

@@ -270,6 +270,7 @@ public partial class PlayGame
         "Left click: select a settlement, building, unit or hex. Its panel opens on the left.\n" +
         "Right click: send the selected units there (on an enemy: attack). Hold the right button and draw over the hexes: they walk exactly that way.\n" +
         "Shift + left click: add the units on a hex to the selection.\n" +
+        "F: combat mode. The left button picks soldiers only: click one, drag a box, Ctrl + click a line of one kind side by side, Shift + drag paints hexes they guard. Right click with several soldiers: they go in formation (melee in front, archers behind, riders on the ends). Z hold, X aggressive, C passive, V split in half, B refit at home, N stop guarding.\n" +
         "G: which routes show - none, orders under way, or those and the standing ones (patrols, caravan routes). The routes of what is selected always show.\n" +
         "Roads tab in the bar: pick a track or road, then draw it hex by hex with the left button.\n" +
         "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +

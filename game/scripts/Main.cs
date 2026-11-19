@@ -236,6 +236,15 @@ public partial class Main : Node2D
             {
                 demo = [(1.0, g => g.ScriptSpeed(SimulationSpeed.X4)), (1.5, g => g.ScriptSendKind("prospectors", 9, -3)), (_playSeconds - 1.5, g => g.ScriptZoom(0.9f))];
             }
+            else if (_playWindow == "Battle")
+            {
+                // A test scenario with armies on a field: combat mode, all soldiers picked, sent in formation at the enemy.
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1))];
+            }
+            else if (_playWindow == "BattleBox")
+            {
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(2))];
+            }
             else if (_playDemo && _playWindow == "Hex")
             {
                 demo = [.. demo, (_playSeconds - 1, g => g.ScriptSelectBusiestHex())];

@@ -472,6 +472,12 @@ public partial class PlayGame : Node2D
             return;
         }
 
+        if (CombatInput(e))
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         switch (e)
         {
             case InputEventMouseButton { ButtonIndex: MouseButton.WheelUp, Pressed: true } w:

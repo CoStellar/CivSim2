@@ -135,6 +135,11 @@ public partial class PlayGame
         switch (_drawMode)
         {
             case DrawMode.Move:
+                if (path.Count <= 1 && (path.Count == 1 ? path[0] : MouseCell()) is { } spot && SendFormation(spot.Col, spot.Row))
+                {
+                    break; // several soldiers in combat mode: in formation
+                }
+
                 foreach (int unit in SelectedUnitIds())
                 {
                     if (path.Count <= 1)
