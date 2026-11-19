@@ -200,6 +200,9 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
 /// <summary>Rules of fighting.</summary>
 public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, int SurpriseReputation);
 
+/// <summary>Choosing the start (startPhase in the data): ticks to pick, the block radius and its fuzz, the scoring radii.</summary>
+public sealed record StartPhaseRules(int PickTicks, int BlockRadius, int BlockFuzz, int ScoreRadius, int RoomRadius);
+
 /// <summary>Rations: every <paramref name="EveryTicks"/> a settlement feeds all its people, residents and units (Patryk, 2026-11-19).</summary>
 public sealed record RationRules(int EveryTicks, int HungryPercent, int StarvingPercent, int StarveLosePercent);
 
@@ -397,6 +400,15 @@ public sealed class SimContent
 
     /// <summary>Every worker's output in winter, percent.</summary>
     public int WinterWorkPercent { get; init; } = 100;
+
+    /// <summary>Work is rounded down to steps of this many permille (seasons.workStepPermille).</summary>
+    public int WorkStepPermille { get; init; } = 25;
+
+    /// <summary>Schools and academies speed a branch of research at most this much, percent (research.maxSupportPercent).</summary>
+    public int MaxResearchSupportPercent { get; init; } = 50;
+
+    /// <summary>Choosing the start: time, the block around taken starts and the scoring radii (startPhase).</summary>
+    public StartPhaseRules StartPhase { get; init; } = new(300, 10, 3, 3, 6);
 
     /// <summary>Id of clothing (−1 = none).</summary>
     public int Clothing { get; init; } = -1;
@@ -1145,6 +1157,12 @@ public sealed class SimContent
             WinterTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("winterMinutes").GetInt32() * TicksPerMinute : 0,
             WinterWarnTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("warnSeconds").GetInt32() * TicksPerSecond : 0,
             WinterWorkPercent = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("winterWorkPercent").GetInt32() : 100,
+            WorkStepPermille = seasons.ValueKind == JsonValueKind.Object && seasons.TryGetProperty("workStepPermille", out JsonElement wsp) ? Math.Max(1, wsp.GetInt32()) : 25,
+            MaxResearchSupportPercent = research.TryGetProperty("maxSupportPercent", out JsonElement msp) ? msp.GetInt32() : 50,
+            StartPhase = root.TryGetProperty("startPhase", out JsonElement sp)
+                ? new StartPhaseRules(sp.GetProperty("pickSeconds").GetInt32() * TicksPerSecond, sp.GetProperty("blockRadius").GetInt32(), sp.GetProperty("blockFuzz").GetInt32(),
+                    sp.GetProperty("scoreRadius").GetInt32(), sp.GetProperty("roomRadius").GetInt32())
+                : new StartPhaseRules(300, 10, 3, 3, 6),
             Clothing = clothing.ValueKind == JsonValueKind.Object ? GoodOf(clothing.GetProperty("good").GetString()!) : -1,
             ClothingBonusPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("bonusPercent").GetInt32() : 0,
             ClothingWinterMaxPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("winterMaxPercent").GetInt32() : 100,

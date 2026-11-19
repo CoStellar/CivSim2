@@ -558,3 +558,13 @@ Liczy się do progu: 9 technologii zwykłych i ulepszenia; podstawowe nie.
 - paska postępu doświadczenia;
 - pokazania, ile ulepszenie realnie dało;
 - prowincji i limitu administracji z Civil service (przyjdą z zarządcą).
+
+## Jak wygląda drzewo w grze (2026-11-19)
+
+- Okno Research (klawisz 2) zajmuje cały ekran i rysuje drzewo od lewej do prawej:
+  - ery to pasy kolumn (era ludu jest lekko podświetlona);
+  - w erze technologia stoi o kolumnę na prawo od technologii tej samej ery, których potrzebuje;
+  - wiersz jest jak najbliżej średniej wierszy tego, czego potrzebuje, więc gałęzie idą prosto;
+  - linie prowadzą od tego, czego technologia potrzebuje (doświadczenie albo „najpierw X”): zielone między znanymi, złote od znanej do nowej, szare dalej;
+  - pasek z lewej strony karty to gałąź (legenda nad drzewem), ramka to stan (znana, można zacząć, czeka).
+- Widać erę ludu i następną. Dalszych er nie widać, dopóki lud do nich nie dojdzie (Patryk, 2026-11-19: tego, co niedostępne przez za niski poziom, nie pokazujemy). Z tego samego powodu panel heksa nie pokazuje prac i ulepszeń z dalszych er, a panel osady awansu, którego technologia jest z dalszej ery.

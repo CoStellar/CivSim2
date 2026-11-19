@@ -155,7 +155,8 @@ tylko po działaniach.
 - **Faza startu:**
   - ludy wybierają po kolei, w losowej kolejności;
   - gracz ma 30 s i widzi całą mapę bez złóż i żyzności;
-  - wokół zajętych miejsc jest strefa blokady: 10 heksów (2 × odległość zakładania osady; do 2026-11-19 było 15, co zajmowało za dużo kontynentu);
+  - wokół zajętych miejsc jest strefa blokady: 10 heksów (do 2026-11-19 było 15, co zajmowało za dużo kontynentu);
+  - wszystkie liczby fazy startu są w danych, w `startPhase`: `pickSeconds` 30, `blockRadius` 10, `blockFuzz` 3, `scoreRadius` 3, `roomRadius` 6;
   - koło pokazane graczowi nie zdradza miejsca (2026-11-19): jego środek leży losowo (z ziarna) do 3 heksów od prawdziwego startu, a promień jest o 3 większy (13), więc zawsze zakrywa całą blokadę; serwer sprawdza to samo koło, które widzi gracz, i nie ma kropki w środku;
   - AI wybiera losowo spośród miejsc nie gorszych niż (100 − X)% najlepszego wolnego, gdzie X to losowe 0–30% dla każdego ludu;
   - gdy gracz nie zdąży, za niego wybiera AI;

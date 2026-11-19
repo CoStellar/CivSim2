@@ -39,8 +39,6 @@ public sealed class SiteScores
 
 public sealed partial class SimGame
 {
-    private const int StartScoreRadius = 3;
-    private const int StartRoomRadius = 6;
 
     /// <summary>Site scores (computed once at creation).</summary>
     public SiteScores? Sites { get; private set; }
@@ -57,20 +55,20 @@ public sealed partial class SimGame
     /// <summary>Real ticks the current chooser has left.</summary>
     public int PickTicksLeft { get; private set; }
 
-    /// <summary>Ticks a person gets to choose (15 s to look, 15 s to pick).</summary>
-    public const int PickTicks = 30 * SimContent.TicksPerSecond;
+    /// <summary>Ticks a person gets to choose (startPhase.pickSeconds).</summary>
+    public int PickTicks => Content.StartPhase.PickTicks;
 
     /// <summary>Start hex chosen by each people (−1 = not yet).</summary>
     public int[] StartCell { get; private set; } = [];
 
     /// <summary>Hexes around a chosen start where no other people may start (Patryk, 2026-11-19: 15 took too much of a continent).</summary>
-    public int BlockRadius => Content.FoundMinDistance * 2;
+    public int BlockRadius => Content.StartPhase.BlockRadius;
 
     /// <summary>
     /// How far the shown circle of a taken start lies from the start itself (Patryk, 2026-11-19: the circles must not give the
     /// start away). The circle is this much wider, so it still covers every hex too close to the start.
     /// </summary>
-    public const int BlockFuzz = 3;
+    public int BlockFuzz => Content.StartPhase.BlockFuzz;
 
     /// <summary>Centre of each taken start's circle: a hex near the start, from the seed (−1 = not chosen).</summary>
     public int[] BlockCenter { get; private set; } = [];
@@ -98,7 +96,7 @@ public sealed partial class SimGame
             raw[k] = new int[n];
         }
 
-        var area = new HexCoord[HexGlobe.RangeSize(StartRoomRadius)];
+        var area = new HexCoord[HexGlobe.RangeSize(Content.StartPhase.RoomRadius)];
         int copper = DepositId("copper");
         int tin = DepositId("tin");
         int iron = DepositId("iron_ore");
@@ -115,12 +113,12 @@ public sealed partial class SimGame
                 continue;
             }
 
-            int m = Geo.Range(Geo.FromIndex(i), StartRoomRadius, area);
+            int m = Geo.Range(Geo.FromIndex(i), Content.StartPhase.RoomRadius, area);
             int food = 0, farm = 0, army = 0, mat = 0, room = 0, future = 0, safe = 0;
             for (int k = 0; k < m; k++)
             {
                 int c = Geo.Index(area[k]);
-                bool near = Geo.Distance(Geo.FromIndex(i), area[k]) <= StartScoreRadius;
+                bool near = Geo.Distance(Geo.FromIndex(i), area[k]) <= Content.StartPhase.ScoreRadius;
                 bool water = Content.World.Biomes[Map.Biome[c]].IsWater;
                 int dep = Map.DepositDepth[c] == 0 ? Map.Deposit[c] : 0;
                 if (!water)

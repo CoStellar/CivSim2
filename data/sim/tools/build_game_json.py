@@ -94,6 +94,9 @@ UP={"hut":"stone_house","storehouse":"great_storehouse","gatherers_hut":"farm","
 for x in B:
     if x["key"] in UP: x["upgradesTo"]=UP[x["key"]]
 d["upgradeCreditPercent"]=50
+# Choosing the start (Patryk, 2026-11-19: every number in the data).
+d["startPhase"]={"comment":"pickSeconds: time a player has to choose. blockRadius: hexes around a taken start where no other people may start. blockFuzz: the shown circle is centred up to this many hexes from the real start and is this much wider, so it hides the start. scoreRadius, roomRadius: hexes looked at when scoring a start (its own land, the room around).",
+  "pickSeconds":30,"blockRadius":10,"blockFuzz":3,"scoreRadius":3,"roomRadius":6}
 d['buildings']=B
 
 U=[]
@@ -253,8 +256,8 @@ d["works"]={"comment":"Works drawn on hexes; price and seconds per hex. ditch: f
     {"key":"aqueduct","name":"Aqueduct","tech":"engineering","price":{"stone":10,"tools":1},"seconds":6,"fromWater":12,"growthBonus":2,"resistEpidemicPercent":30}],
   "bridgeTech":"masonry","bridgePrice":{"stone":20,"wood":10}}
 # Winter, clothing and gathering (decision of 2026-11-18).
-d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Peoples are told warnSeconds before.",
-  "cycleMinutes":8,"winterMinutes":2,"warnSeconds":30,"winterWorkPercent":50}
+d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). Work is rounded down to steps of workStepPermille. In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Peoples are told warnSeconds before.",
+  "workStepPermille":25,"cycleMinutes":8,"winterMinutes":2,"warnSeconds":30,"winterWorkPercent":50}
 d["clothing"]={"comment":"Every set of clothing a worker has adds bonusPercent. Outside winter only the first set counts (at most 100+bonus); in winter more sets count, up to winterMaxPercent. Worked out per settlement: sets = clothing in store / people. Sets wear out: wearPerPersonPerMinute.",
   "good":"clothing","bonusPercent":15,"winterMaxPercent":110,"wearPerPersonPerMinute":0.03}
 d["forage"]={"comment":"People of a settlement told to gather pick up food, wood and stone around it. Per gatherer per minute at richness 100: perMinute. A hex's richness: food and wood by biome, stone by relief; deposits and rivers add. A settlement's richness is the mean over the land hexes in its radius (worked out when it is founded or grows).",
@@ -269,6 +272,9 @@ d["rivers"]={"comment":"Until freeFromEra, rivers can be crossed only next to on
 d['technologies']=T
 
 # remove old unit upgrades fields (now effects); keep terrain bonus
+d["research"]["maxSupportPercent"]=50
+if "maxSupportPercent:" not in d["research"]["comment"]:
+    d["research"]["comment"]+=" maxSupportPercent: schools and academies speed a branch of research at most this much."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist

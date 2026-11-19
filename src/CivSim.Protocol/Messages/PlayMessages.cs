@@ -87,7 +87,8 @@ public sealed record PlayTechInfo(
     [property: Key(6)] string Gives = "",
     [property: Key(7)] bool Upgrade = false,
     [property: Key(8)] string Category = "",
-    [property: Key(9)] string Unlocks = "");
+    [property: Key(9)] string Unlocks = "",
+    [property: Key(10)] int[]? From = null);
 
 /// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
 [MessagePackObject]

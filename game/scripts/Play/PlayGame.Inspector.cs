@@ -171,7 +171,7 @@ public partial class PlayGame
             }
 
             items.Add(new SectionItem("Settlement"));
-            if (s.Level + 1 < c.Levels.Count)
+            if (s.Level + 1 < c.Levels.Count && Reached(v, c, c.Levels[s.Level + 1].Tech))
             {
                 PlayLevelInfo next = c.Levels[s.Level + 1];
                 bool tech = next.Tech < 0 || v.Techs[next.Tech].Known;
@@ -411,7 +411,12 @@ public partial class PlayGame
             bool known = v.Techs.FirstOrDefault(x => x.Id == to.Tech)?.Known ?? false;
             if (!known)
             {
-                items.Add(new LineItem($"Later: upgrade to {to.Name} with {c.Techs[to.Tech].Name}", UiKit.Muted, 13));
+                // Only within reach: nothing from an era we have not entered (Patryk, 2026-11-19).
+                if (Reached(v, c, to.Tech))
+                {
+                    items.Add(new LineItem($"Later: upgrade to {to.Name} with {c.Techs[to.Tech].Name}", UiKit.Muted, 13));
+                }
+
                 start = items.Count;
             }
             else if (b.UpgradeBlocked is { } why)
@@ -589,6 +594,9 @@ public partial class PlayGame
         WorksItems(sel, items, always: w.Owner[i] == _session.PlayView?.Civ);
     }
 
+    // True when a technology belongs to an era we have entered (or is none): what lies beyond is not shown.
+    private static bool Reached(PlayViewMessage v, PlayContentMessage c, int tech) => tech < 0 || tech >= c.Techs.Count || c.Techs[tech].Era <= v.Era;
+
     // What the land of a hex is: biome, relief, owner, deposit, grove.
     private void HexHeader((int Col, int Row) sel, List<UiItem> items)
     {
@@ -638,14 +646,25 @@ public partial class PlayGame
             {
                 bool has = (works & (1 << wk.Id)) != 0;
                 bool known = _session.PlayView?.Techs.FirstOrDefault(x => x.Id == wk.Tech)?.Known ?? false;
+                if (!has && _session.PlayView is { } pv && !Reached(pv, pc, wk.Tech))
+                {
+                    continue; // not before its era
+                }
+
                 cells.Add(new CellItem(wk.Name, has ? UiKit.Text : UiKit.Muted));
                 cells.Add(new CellItem(has ? "yes" : known ? "no (draw it in Roads & works)" : $"no ({pc.Techs[wk.Tech].Name})", has ? UiKit.Good : UiKit.Muted));
             }
 
-            bool bridge = (works & (7 << 8)) != 0;
-            cells.Add(new CellItem("Bridge", bridge ? UiKit.Text : UiKit.Muted));
-            cells.Add(new CellItem(bridge ? "yes" : "no", bridge ? UiKit.Good : UiKit.Muted));
-            items.Add(new TableItem(2, cells));
+            if ((works & (7 << 8)) != 0)
+            {
+                cells.Add(new CellItem("Bridge", UiKit.Text));
+                cells.Add(new CellItem("yes", UiKit.Good));
+            }
+
+            if (cells.Count > 0)
+            {
+                items.Add(new TableItem(2, cells));
+            }
         }
 
         foreach (PlayWorkInfo wk in pc.Works ?? [])

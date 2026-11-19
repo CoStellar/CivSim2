@@ -212,6 +212,7 @@ public partial class PlayGame
         _toastPanel.AddChild(_toast);
 
         int half = (int)Math.Min(UiKit.W(560), (screen.X / 2) - 16);
+        _windowHalf = half;
         _window = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -half, OffsetRight = half, OffsetTop = -(screen.Y / 2) + topH + 8, OffsetBottom = (screen.Y / 2) - 150, Visible = false };
         root.AddChild(_window);
         var win = new VBoxContainer();

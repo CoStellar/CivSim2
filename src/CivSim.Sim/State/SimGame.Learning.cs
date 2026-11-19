@@ -14,8 +14,6 @@ public sealed record SetFocusCommand(int Civ, int Building, int Worker, string C
 /// </summary>
 public sealed partial class SimGame
 {
-    /// <summary>Most a branch of research can be sped up, percent.</summary>
-    public const int MaxResearchSpeedPercent = 50;
 
     private static readonly string[] FocusOrder = ["science", "industry", "food", "building", "military", "trade", "governance"];
 
@@ -53,7 +51,7 @@ public sealed partial class SimGame
             }
         }
 
-        return Math.Min(MaxResearchSpeedPercent, pct);
+        return Math.Min(Content.MaxResearchSupportPercent, pct);
     }
 
     /// <summary>Ticks a research of the technology takes the people now.</summary>

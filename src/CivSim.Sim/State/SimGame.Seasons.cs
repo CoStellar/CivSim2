@@ -27,8 +27,6 @@ public sealed partial class SimGame
         return null;
     }
 
-    private const int StepPermille = 25;
-
     /// <summary>True while it is winter.</summary>
     public bool IsWinter => Content.SeasonCycleTicks > 0 && Ticks % Content.SeasonCycleTicks >= Content.SeasonCycleTicks - Content.WinterTicks;
 
@@ -70,7 +68,7 @@ public sealed partial class SimGame
             ? Math.Min(Content.ClothingWinterMaxPercent * 10L, winterBase + (bonus * sets / 1000))
             : 1000 + (bonus * Math.Min(sets, 1000) / 1000);
         work = Math.Max(work, 0);
-        return (int)(work / StepPermille * StepPermille);
+        return (int)(work / Content.WorkStepPermille * Content.WorkStepPermille);
     }
 
     // Tells the peoples about the seasons and makes them work the rates out again when the season changes.

@@ -12,9 +12,15 @@ public partial class PlayGame
 {
     private static readonly string[] Categories = ["basics", "food", "industry", "building", "trade", "military", "governance", "science"];
 
+    // Half the width of the windows; the research tree takes the whole screen.
+    private int _windowHalf;
+
     private void UpdateWindow(PlayViewMessage v, PlayContentMessage c)
     {
         _window.Visible = _bigMode.Length > 0;
+        float half = _bigMode == "Research" ? (GetViewport().GetVisibleRect().Size.X / 2) - 12 : _windowHalf;
+        _window.OffsetLeft = -half;
+        _window.OffsetRight = half;
         if (_bigMode.Length == 0)
         {
             return;
@@ -84,7 +90,8 @@ public partial class PlayGame
             items.Add(new LineItem($"Our thinker {t.Name} ({t.Rarity.ToLowerInvariant()}): research costs {t.CostPercent}%, needs {t.ExperiencePercent}% of the experience.", UiKit.Muted, 13));
         }
 
-        items.Add(new LineItem("Green: known.  Bright: can start now.  Dim: needs something first (hover to see what).  An era opens after five technologies of the one before; the basics do not count.", UiKit.Muted, 13));
+        items.Add(new LineItem("Green: known.  Bright: can start now.  Dim: needs something first (hover to see what).  Lines lead from what a technology needs; the stripe on the left is its branch.  An era opens after five technologies of the one before; the basics do not count.", UiKit.Muted, 13));
+        items.Add(new CustomItem("legend" + string.Join(",", c.Categories ?? []), () => Legend(c)));
         var sig = new StringBuilder();
         foreach (PlayTechState st in v.Techs)
         {
@@ -92,51 +99,67 @@ public partial class PlayGame
         }
 
         sig.Append(v.Researching).Append(v.Era).Append(v.EraKnown);
-        items.Add(new CustomItem(sig.ToString(), () => TechGrid(v, c)));
+        items.Add(new CustomItem(sig.ToString(), () =>
+        {
+            var tree = new TechTree(v, c, info => TechCard(v, c, info));
+            float x = tree.EraX(v.Era);
+            Callable.From(() =>
+            {
+                if (tree.GetParent()?.GetParent() is ScrollContainer scroll && _researchScrolled != v.Era)
+                {
+                    _researchScrolled = v.Era;
+                    scroll.ScrollHorizontal = (int)Math.Max(0, x - 40);
+                }
+            }).CallDeferred();
+            return tree;
+        }));
     }
 
-    private Control TechGrid(PlayViewMessage v, PlayContentMessage c)
+    // Scrolled once to the people's era when the tree opens.
+    private int _researchScrolled = -1;
+
+    // The branches and their colours (the stripe on each card).
+    private static Control Legend(PlayContentMessage c)
     {
-        var grid = new GridContainer { Columns = c.Eras.Count + 1 };
-        grid.AddThemeConstantOverride("h_separation", 6);
-        grid.AddThemeConstantOverride("v_separation", 6);
-        grid.AddChild(new Control());
-        for (int era = 0; era < c.Eras.Count; era++)
-        {
-            string state = era <= v.Era ? "" : era == v.Era + 1 && v.EraNeed > 0 ? $"opens at {v.EraNeed} of the {c.Eras[v.Era]} ({v.EraKnown} now)" : "later";
-            var head = new VBoxContainer { CustomMinimumSize = new Vector2(UiKit.W(176), 0) };
-            head.AddChild(UiKit.Label(c.Eras[era], 16, era <= v.Era ? UiKit.Heading : UiKit.Muted));
-            if (state.Length > 0)
-            {
-                head.AddChild(UiKit.Label(state, 11, UiKit.Muted, wrap: true));
-            }
-
-            grid.AddChild(head);
-        }
-
+        var row = new HFlowContainer();
+        row.AddThemeConstantOverride("h_separation", 12);
         foreach (string cat in (IEnumerable<string>?)c.Categories ?? Categories)
         {
-            var label = new HBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
-            label.AddChild(new Glyph(UiKit.CategoryColor(cat), UiKit.Short(cat)[..1], 24, round: true) { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin });
-            label.AddChild(UiKit.Label(char.ToUpperInvariant(cat[0]) + cat[1..], 14, UiKit.Text));
-            grid.AddChild(label);
-            for (int era = 0; era < c.Eras.Count; era++)
-            {
-                var cell = new VBoxContainer();
-                cell.AddThemeConstantOverride("separation", 3);
-                foreach (PlayTechInfo info in c.Techs)
-                {
-                    if (info.Era == era && info.Category == cat)
-                    {
-                        cell.AddChild(TechCard(v, c, info));
-                    }
-                }
+            var one = new HBoxContainer();
+            one.AddChild(new Glyph(UiKit.CategoryColor(cat), "", 14, round: true) { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+            one.AddChild(UiKit.Label(char.ToUpperInvariant(cat[0]) + cat[1..], 13, UiKit.Text));
+            row.AddChild(one);
+        }
 
-                grid.AddChild(cell);
+        return row;
+    }
+
+    // A card: its state in the frame, its branch in the stripe on the left.
+    private static StyleBoxTexture CardBox(Color bg, Color border, Color branch)
+    {
+        // Two layers: the branch's stripe under the card, the card shifted right over it.
+        var img = Image.CreateEmpty(16, 8, false, Image.Format.Rgba8);
+        img.Fill(border);
+        for (int y = 1; y < 7; y++)
+        {
+            for (int x = 6; x < 15; x++)
+            {
+                img.SetPixel(x, y, bg);
+            }
+
+            for (int x = 0; x < 5; x++)
+            {
+                img.SetPixel(x, y, branch);
             }
         }
 
-        return grid;
+        return new StyleBoxTexture
+        {
+            Texture = ImageTexture.CreateFromImage(img),
+            TextureMarginLeft = 6, TextureMarginRight = 2, TextureMarginTop = 2, TextureMarginBottom = 2,
+            ContentMarginLeft = 10, ContentMarginRight = 4, ContentMarginTop = 2, ContentMarginBottom = 2,
+            AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Stretch, AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Stretch,
+        };
     }
 
     private Button TechCard(PlayViewMessage v, PlayContentMessage c, PlayTechInfo info)
@@ -173,14 +196,10 @@ public partial class PlayGame
         b.AddThemeFontSizeOverride("font_size", Ui.PixelTheme.FontSize);
         b.AddThemeColorOverride("font_color", ink);
         b.AddThemeColorOverride("font_hover_color", UiKit.Text);
-        StyleBoxFlat normal = UiKit.Flat(bg, border, 4, 2);
-        normal.BorderWidthLeft = 6;
-        normal.BorderColor = border;
-        b.AddThemeStyleboxOverride("normal", normal);
-        b.AddThemeStyleboxOverride("hover", UiKit.Flat(bg.Lightened(0.12f), border, 4, 2));
-        b.AddThemeStyleboxOverride("pressed", normal);
-        b.AddThemeStyleboxOverride("disabled", normal);
-        _ = cat;
+        b.AddThemeStyleboxOverride("normal", CardBox(bg, border, cat));
+        b.AddThemeStyleboxOverride("hover", CardBox(bg.Lightened(0.12f), border, cat));
+        b.AddThemeStyleboxOverride("pressed", CardBox(bg, border, cat));
+        b.AddThemeStyleboxOverride("disabled", CardBox(bg, border, cat));
         int id = info.Id;
         if (!st.Known && st.Blocked is null && !now)
         {

@@ -405,7 +405,22 @@ public sealed class PlayHost : IDisposable
                 needs.Add($"{content.Techs[req].Name} {ticks / SimContent.TicksPerMinute}");
             }
 
-            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category, Unlocks(content, t)));
+            // The branches of the tree: experience in, and plain need of, earlier technologies.
+            var from = new List<int>();
+            foreach ((int req, long _) in t.Experience)
+            {
+                from.Add(req);
+            }
+
+            foreach (int req in t.Requires)
+            {
+                if (!from.Contains(req))
+                {
+                    from.Add(req);
+                }
+            }
+
+            techs.Add(new PlayTechInfo(t.Id, t.Key, t.Name, t.Era, string.Join(", ", needs), t.ResearchTicks / SimContent.TicksPerSecond, t.Gives, t.Upgrade, t.Category, Unlocks(content, t), [.. from]));
         }
 
         var eras = new List<string>();

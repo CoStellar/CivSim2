@@ -200,7 +200,7 @@ public sealed class StartAndEventTests
         for (int a = 0; a < 4; a++)
         {
             int d = g.Geo.Distance(g.Geo.FromIndex(g.StartCell[a]), g.Geo.FromIndex(g.BlockCenter[a]));
-            Assert.True(d <= SimGame.BlockFuzz);
+            Assert.True(d <= g.BlockFuzz);
             moved += d > 0 ? 1 : 0;
         }
 
