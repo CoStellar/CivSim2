@@ -71,9 +71,52 @@
       "worth": 8
     },
     {
-      "key": "arms",
-      "name": "Arms",
-      "worth": 10
+      "key": "stone_weapons",
+      "name": "Stone weapons",
+      "worth": 3,
+      "storedIn": "armoury"
+    },
+    {
+      "key": "bronze_weapons",
+      "name": "Bronze weapons",
+      "worth": 9,
+      "storedIn": "armoury"
+    },
+    {
+      "key": "iron_weapons",
+      "name": "Iron weapons",
+      "worth": 12,
+      "storedIn": "armoury"
+    },
+    {
+      "key": "steel_weapons",
+      "name": "Steel weapons",
+      "worth": 18,
+      "storedIn": "armoury"
+    },
+    {
+      "key": "hide_armour",
+      "name": "Hide armour",
+      "worth": 3,
+      "storedIn": "armoury"
+    },
+    {
+      "key": "bronze_armour",
+      "name": "Bronze armour",
+      "worth": 9,
+      "storedIn": "armoury"
+    },
+    {
+      "key": "iron_armour",
+      "name": "Iron armour",
+      "worth": 12,
+      "storedIn": "armoury"
+    },
+    {
+      "key": "steel_armour",
+      "name": "Plate armour",
+      "worth": 18,
+      "storedIn": "armoury"
     },
     {
       "key": "horses",
@@ -296,7 +339,9 @@
       "groups": [
         "ranged",
         "infantry"
-      ]
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     },
     {
       "key": "warriors",
@@ -311,7 +356,7 @@
       "ticksPerHex": 6,
       "sight": 2,
       "army": true,
-      "strength": 10,
+      "strength": 9,
       "bonusBiomes": [
         "deciduous_forest",
         "taiga",
@@ -321,7 +366,9 @@
       "groups": [
         "melee",
         "infantry"
-      ]
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     },
     {
       "key": "archers",
@@ -346,7 +393,9 @@
       "groups": [
         "ranged",
         "infantry"
-      ]
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     },
     {
       "key": "spearmen",
@@ -354,22 +403,24 @@
       "tech": "bronze_weapons",
       "people": 10,
       "price": {
-        "food": 40,
-        "arms": 5
+        "food": 40
       },
       "trainSeconds": 18,
       "ticksPerHex": 6,
       "sight": 2,
       "army": true,
-      "strength": 16,
-      "bonusRelief": [
-        "flat"
-      ],
-      "bonusPercent": 20,
+      "strength": 11,
+      "bonusVs": {
+        "cavalry": 50
+      },
+      "stopsCharge": true,
       "groups": [
         "melee",
-        "infantry"
-      ]
+        "infantry",
+        "spear"
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     },
     {
       "key": "horsemen",
@@ -384,14 +435,19 @@
       "ticksPerHex": 3,
       "sight": 3,
       "army": true,
-      "strength": 18,
+      "strength": 12,
       "bonusRelief": [
         "flat"
       ],
-      "bonusPercent": 40,
+      "bonusPercent": 20,
+      "bonusVs": {
+        "ranged": 50
+      },
       "groups": [
         "cavalry"
-      ]
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     },
     {
       "key": "transport",
@@ -438,18 +494,19 @@
       "tech": "iron_weapons",
       "people": 10,
       "price": {
-        "food": 50,
-        "arms": 10
+        "food": 50
       },
       "trainSeconds": 20,
       "ticksPerHex": 6,
       "sight": 2,
       "army": true,
-      "strength": 24,
+      "strength": 13,
       "groups": [
         "melee",
         "infantry"
-      ]
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     },
     {
       "key": "catapult",
@@ -479,7 +536,7 @@
       "people": 12,
       "price": {
         "wood": 150,
-        "arms": 10
+        "iron": 10
       },
       "trainSeconds": 35,
       "ticksPerHex": 3,
@@ -502,18 +559,21 @@
       "people": 8,
       "price": {
         "food": 40,
-        "arms": 10
+        "wood": 20
       },
       "trainSeconds": 20,
       "ticksPerHex": 6,
       "sight": 2,
       "army": true,
-      "strength": 20,
+      "strength": 12,
       "range": 2,
+      "pierce": 1,
       "groups": [
         "ranged",
         "infantry"
-      ]
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     },
     {
       "key": "knights",
@@ -522,21 +582,25 @@
       "people": 6,
       "price": {
         "food": 60,
-        "arms": 15,
         "horses": 6
       },
       "trainSeconds": 30,
       "ticksPerHex": 3,
       "sight": 3,
       "army": true,
-      "strength": 40,
+      "strength": 16,
       "bonusRelief": [
         "flat"
       ],
-      "bonusPercent": 30,
+      "bonusPercent": 20,
+      "bonusVs": {
+        "ranged": 50
+      },
       "groups": [
         "cavalry"
-      ]
+      ],
+      "minPeople": 5,
+      "maxPeople": 30
     }
   ],
   "terrainCost": {
@@ -696,7 +760,8 @@
         "wood": 1
       },
       "produces": {
-        "tools": 1
+        "tools": 1,
+        "stone_weapons": 0.5
       },
       "bonusDeposit": "flint",
       "bonusPercent": 50,
@@ -791,7 +856,8 @@
         "hides": 1
       },
       "produces": {
-        "clothing": 1
+        "clothing": 1,
+        "hide_armour": 0.3
       },
       "groups": [
         "craft"
@@ -1086,10 +1152,12 @@
         "wood": 1
       },
       "produces": {
-        "arms": 1
+        "bronze_weapons": 1,
+        "bronze_armour": 0.5
       },
       "groups": [
-        "craft"
+        "craft",
+        "armoury"
       ],
       "size": 1,
       "upgradesTo": "weaponsmith"
@@ -1190,7 +1258,8 @@
       "produces": {},
       "trainPercent": 50,
       "groups": [
-        "army"
+        "army",
+        "armoury"
       ],
       "size": 2
     },
@@ -1252,10 +1321,12 @@
         "wood": 1
       },
       "produces": {
-        "arms": 2
+        "iron_weapons": 1.5,
+        "iron_armour": 1
       },
       "groups": [
-        "craft"
+        "craft",
+        "armoury"
       ],
       "size": 1
     },
@@ -1416,10 +1487,12 @@
       },
       "produces": {
         "tools": 4,
-        "arms": 2
+        "steel_weapons": 1,
+        "steel_armour": 1
       },
       "groups": [
-        "craft"
+        "craft",
+        "armoury"
       ],
       "size": 2
     },
@@ -1437,7 +1510,8 @@
       "defensePercent": 220,
       "housing": 10,
       "groups": [
-        "fort"
+        "fort",
+        "armoury"
       ],
       "size": 4
     },
@@ -3153,5 +3227,63 @@
       "marble": "iron_age",
       "saltpeter": "middle_ages"
     }
+  },
+  "combat": {
+    "comment": "Battle in steps of stepTicks. A unit fights every enemy unit next to it (ranged: within range, only while standing). Per step it kills engaged people x strength x weapon / armour of the target x terrain x flank x charge x bonus against the target's kind x fed x luck / killDivisor. Engaged people: at most frontPerContact for each enemy it touches. weapon and armour: multipliers for levels 0-4 (armourVsRangedBonus: armour counts this much more against arrows). Flank: damage taken by how many enemy units touch the target (index = count, last for more). Terrain: per level of relief higher than the target (flat 0, hills 1, mountains 2) reliefPercent, at most reliefMaxPercent; per elevationStep of height above it elevationPercent, at most elevationMaxPercent. Cover of the target's hex (forest or grove, palisade or wall) against ranged and melee, lost when enemies touch it from opposite sides. Attacking across a river without a bridge: riverPercent. Roads and swamps: openPercent more taken. Leaving enemies: each enemy next to it strikes once, disengagePercent of a step (cavalry cavalryDisengagePercent), unless another unit of ours stays next to that enemy. Charge: cavalry that walked chargeHexes or more before contact strikes chargePercent once (not against units that stop charges). One army unit to a hex: a unit that stops on another steps aside. Zone of control: a unit stops when it comes next to an enemy, and from there goes on only one hex at a time. Weapons only (shock): no armour, shockTrainPercent of the time. Single player: a battle after calmSeconds of calm slows time to x1.",
+    "stepTicks": 5,
+    "killDivisor": 400,
+    "frontPerContact": 12,
+    "weapon": [
+      60,
+      100,
+      140,
+      180,
+      220
+    ],
+    "armour": [
+      100,
+      130,
+      170,
+      210,
+      260
+    ],
+    "armourVsRangedBonus": 20,
+    "flank": [
+      100,
+      100,
+      125,
+      150,
+      180
+    ],
+    "reliefPercent": 8,
+    "reliefMaxPercent": 16,
+    "elevationStep": 20,
+    "elevationPercent": 3,
+    "elevationMaxPercent": 9,
+    "cover": {
+      "trees": {
+        "ranged": -30,
+        "melee": -15
+      },
+      "palisade": {
+        "ranged": -50,
+        "melee": -30
+      },
+      "wall": {
+        "ranged": -50,
+        "melee": -30
+      }
+    },
+    "riverPercent": -25,
+    "openPercent": 15,
+    "openBiomes": [
+      "swamp"
+    ],
+    "disengagePercent": 50,
+    "cavalryDisengagePercent": 25,
+    "chargeHexes": 2,
+    "chargePercent": 200,
+    "shockTrainPercent": 40,
+    "calmSeconds": 30
   }
 }

@@ -13,6 +13,88 @@ public sealed record SimGood(int Id, string Key, string Name)
 {
     /// <summary>Worth of one unit for barter, percent of food.</summary>
     public int WorthPercent { get; init; } = 100;
+
+    /// <summary>Building group whose buildings keep this good at half room (each such building holds twice as much of it); "" = none.</summary>
+    public string StoredIn { get; init; } = "";
+}
+
+/// <summary>
+/// Rules of battle (Patryk, 2026-11-19, claude/walka-propozycja.md): every number of combat in the data (section combat).
+/// Percent values are of the damage; Weapon and Armour are multipliers in percent by level 0–4; Flank by how many enemies touch.
+/// </summary>
+public sealed record CombatRules
+{
+    /// <summary>Ticks between two steps of battle.</summary>
+    public int StepTicks { get; init; } = 5;
+
+    /// <summary>Engaged people × strength × multipliers / this = hundredths of a person killed a step.</summary>
+    public long KillDivisor { get; init; } = 400;
+
+    /// <summary>People of a unit that fight one enemy it touches, at most.</summary>
+    public int FrontPerContact { get; init; } = 12;
+
+    /// <summary>Weapon multiplier in percent by level.</summary>
+    public int[] Weapon { get; init; } = [60, 100, 140, 180, 220];
+
+    /// <summary>Armour divisor in percent by level.</summary>
+    public int[] Armour { get; init; } = [100, 130, 170, 210, 260];
+
+    /// <summary>Armour counts this much more (percent of its level's extra) against arrows.</summary>
+    public int ArmourVsRangedBonus { get; init; } = 20;
+
+    /// <summary>Damage taken in percent by the number of enemy units touching (index = count; the last for more).</summary>
+    public int[] Flank { get; init; } = [100, 100, 125, 150, 180];
+
+    /// <summary>Percent per level of relief above the target, and the most.</summary>
+    public int ReliefPercent { get; init; } = 8;
+
+    /// <summary>Most percent from relief.</summary>
+    public int ReliefMaxPercent { get; init; } = 16;
+
+    /// <summary>Height difference (elevation units) for one step of ElevationPercent.</summary>
+    public int ElevationStep { get; init; } = 20;
+
+    /// <summary>Percent per step of height above the target.</summary>
+    public int ElevationPercent { get; init; } = 3;
+
+    /// <summary>Most percent from height.</summary>
+    public int ElevationMaxPercent { get; init; } = 9;
+
+    /// <summary>Cover of a hex with trees: damage change from ranged and melee attackers.</summary>
+    public (int Ranged, int Melee) TreeCover { get; init; } = (-30, -15);
+
+    /// <summary>Cover of a palisade.</summary>
+    public (int Ranged, int Melee) PalisadeCover { get; init; } = (-50, -30);
+
+    /// <summary>Cover of a wall.</summary>
+    public (int Ranged, int Melee) WallCover { get; init; } = (-50, -30);
+
+    /// <summary>Melee across a river with no bridge.</summary>
+    public int RiverPercent { get; init; } = -25;
+
+    /// <summary>More taken on roads and in swamps.</summary>
+    public int OpenPercent { get; init; } = 15;
+
+    /// <summary>Biomes where a unit stands open (swamps).</summary>
+    public bool[] OpenBiomes { get; init; } = [];
+
+    /// <summary>A strike on a unit leaving, percent of a step.</summary>
+    public int DisengagePercent { get; init; } = 50;
+
+    /// <summary>The same for cavalry.</summary>
+    public int CavalryDisengagePercent { get; init; } = 25;
+
+    /// <summary>Hexes cavalry walks before contact to charge.</summary>
+    public int ChargeHexes { get; init; } = 2;
+
+    /// <summary>Damage of the charging strike, percent.</summary>
+    public int ChargePercent { get; init; } = 200;
+
+    /// <summary>Seconds with no fighting after which a new battle slows a single-player game to ×1 again.</summary>
+    public int CalmSeconds { get; init; } = 30;
+
+    /// <summary>Training time of a unit with weapons only (no armour), percent.</summary>
+    public int ShockTrainPercent { get; init; } = 40;
 }
 
 /// <summary>A level of a settlement: territory radius, housing and storage it gives, price of reaching it.</summary>
@@ -198,6 +280,27 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
 
     /// <summary>Technologies that make it stronger, with the percent.</summary>
     public (int Tech, int Percent)[] Upgrades { get; init; } = [];
+
+    /// <summary>More damage against units of a group, percent (spearmen against cavalry, riders against archers).</summary>
+    public (string Group, int Percent)[] BonusVs { get; init; } = [];
+
+    /// <summary>Charges do not work against it (spearmen).</summary>
+    public bool StopsCharge { get; init; }
+
+    /// <summary>Armour levels of the target it ignores (crossbows).</summary>
+    public int Pierce { get; init; }
+
+    /// <summary>Smallest size the player may train (0 = the default size only).</summary>
+    public int MinPeople { get; init; }
+
+    /// <summary>Largest size the player may train.</summary>
+    public int MaxPeople { get; init; }
+
+    /// <summary>True for riders (charge, light disengage).</summary>
+    public bool Cavalry => Array.IndexOf(Groups, "cavalry") >= 0;
+
+    /// <summary>True for archers and other units that shoot.</summary>
+    public bool Ranged => Range > 1;
 }
 
 /// <summary>Rules of fighting.</summary>
@@ -388,6 +491,24 @@ public sealed class SimContent
 
     /// <summary>Richness a surface deposit adds: index deposit * goods + good.</summary>
     public required int[] ForageDeposit { get; init; }
+
+    /// <summary>Rules of battle (section combat).</summary>
+    public CombatRules Combat { get; init; } = new();
+
+    private bool[][]? _halfRoom;
+
+    /// <summary>Per building type and good: the building keeps the good at half room (an armoury its weapons).</summary>
+    public bool HalfRoom(int building, int good)
+    {
+        _halfRoom ??= [.. Buildings.Select(b => Goods.Select(g => g.StoredIn.Length > 0 && Array.IndexOf(b.Groups, g.StoredIn) >= 0).ToArray())];
+        return _halfRoom[building][good];
+    }
+
+    /// <summary>Weapon goods by level 1–4 (index 0 unused, −1 = missing).</summary>
+    public int[] WeaponGoods { get; init; } = [-1, -1, -1, -1, -1];
+
+    /// <summary>Armour goods by level 1–4 (index 0 unused, −1 = missing).</summary>
+    public int[] ArmourGoods { get; init; } = [-1, -1, -1, -1, -1];
 
     /// <summary>Food richness a river by the hex adds.</summary>
     public int ForageRiverFood { get; init; }
@@ -689,6 +810,41 @@ public sealed class SimContent
     }
 
     /// <summary>Loads the rules from a data folder (default: the folder next to the program).</summary>
+    private static CombatRules ReadCombat(JsonElement c)
+    {
+        int I(string name, int fallback) => c.TryGetProperty(name, out JsonElement v) ? v.GetInt32() : fallback;
+        int[] A(string name, int[] fallback) => c.TryGetProperty(name, out JsonElement v) ? [.. v.EnumerateArray().Select(x => x.GetInt32())] : fallback;
+        (int, int) Cover(string name, (int, int) fallback) => c.TryGetProperty("cover", out JsonElement cv) && cv.TryGetProperty(name, out JsonElement k)
+            ? (k.GetProperty("ranged").GetInt32(), k.GetProperty("melee").GetInt32()) : fallback;
+        var d = new CombatRules();
+        return new CombatRules
+        {
+            StepTicks = Math.Max(1, I("stepTicks", d.StepTicks)),
+            KillDivisor = Math.Max(1, I("killDivisor", (int)d.KillDivisor)),
+            FrontPerContact = Math.Max(1, I("frontPerContact", d.FrontPerContact)),
+            Weapon = A("weapon", d.Weapon),
+            Armour = A("armour", d.Armour),
+            ArmourVsRangedBonus = I("armourVsRangedBonus", d.ArmourVsRangedBonus),
+            Flank = A("flank", d.Flank),
+            ReliefPercent = I("reliefPercent", d.ReliefPercent),
+            ReliefMaxPercent = I("reliefMaxPercent", d.ReliefMaxPercent),
+            ElevationStep = Math.Max(1, I("elevationStep", d.ElevationStep)),
+            ElevationPercent = I("elevationPercent", d.ElevationPercent),
+            ElevationMaxPercent = I("elevationMaxPercent", d.ElevationMaxPercent),
+            TreeCover = Cover("trees", d.TreeCover),
+            PalisadeCover = Cover("palisade", d.PalisadeCover),
+            WallCover = Cover("wall", d.WallCover),
+            RiverPercent = I("riverPercent", d.RiverPercent),
+            OpenPercent = I("openPercent", d.OpenPercent),
+            DisengagePercent = I("disengagePercent", d.DisengagePercent),
+            CavalryDisengagePercent = I("cavalryDisengagePercent", d.CavalryDisengagePercent),
+            ChargeHexes = I("chargeHexes", d.ChargeHexes),
+            ChargePercent = I("chargePercent", d.ChargePercent),
+            ShockTrainPercent = I("shockTrainPercent", d.ShockTrainPercent),
+            CalmSeconds = I("calmSeconds", d.CalmSeconds),
+        };
+    }
+
     // Per deposit id: how it is found (see SimContent.DepositSurvey). Without a survey section everything is on the surface.
     private static int[] SurveyKinds(GameContent world, JsonElement root)
     {
@@ -742,6 +898,7 @@ public sealed class SimContent
             goods.Add(new SimGood(goods.Count, g.GetProperty("key").GetString()!, g.GetProperty("name").GetString()!)
             {
                 WorthPercent = g.TryGetProperty("worth", out JsonElement w) ? (int)(Hundredths(w)) : 100,
+                StoredIn = g.TryGetProperty("storedIn", out JsonElement si) ? si.GetString() ?? "" : "",
             });
         }
 
@@ -1089,6 +1246,11 @@ public sealed class SimContent
                 Upgrades = Upgrades(u),
                 AlsoTechs = TechList(u, "alsoTechs"),
                 CarriesArmies = u.TryGetProperty("carriesArmies", out JsonElement ca) && ca.GetBoolean(),
+                BonusVs = u.TryGetProperty("bonusVs", out JsonElement bv) ? [.. bv.EnumerateObject().Select(p => (p.Name, p.Value.GetInt32()))] : [],
+                StopsCharge = u.TryGetProperty("stopsCharge", out JsonElement sc) && sc.GetBoolean(),
+                Pierce = u.TryGetProperty("pierce", out JsonElement pi) ? pi.GetInt32() : 0,
+                MinPeople = u.TryGetProperty("minPeople", out JsonElement mnp) ? mnp.GetInt32() : 0,
+                MaxPeople = u.TryGetProperty("maxPeople", out JsonElement mxp) ? mxp.GetInt32() : 0,
                 Survey = u.TryGetProperty("survey", out JsonElement sv) ? sv.GetString() switch { "rock" => 1, "soil" => 2, _ => 0 } : 0,
                 Carries = u.TryGetProperty("carries", out JsonElement cr2) ? cr2.GetInt32() : 0,
                 HorsesPerCaravan = u.TryGetProperty("horsesPerCaravan", out JsonElement hpc) ? Hundredths(hpc) : 0,
@@ -1204,6 +1366,9 @@ public sealed class SimContent
             ForageBiome = forageBiome,
             ForageRelief = forageRelief,
             ForageDeposit = forageDeposit,
+            Combat = root.TryGetProperty("combat", out JsonElement cbt) ? ReadCombat(cbt) with { OpenBiomes = Flags(cbt, "openBiomes") } : new CombatRules(),
+            WeaponGoods = [-1, .. new[] { "stone_weapons", "bronze_weapons", "iron_weapons", "steel_weapons" }.Select(k => goods.FindIndex(x => x.Key == k))],
+            ArmourGoods = [-1, .. new[] { "hide_armour", "bronze_armour", "iron_armour", "steel_armour" }.Select(k => goods.FindIndex(x => x.Key == k))],
             ForageRiverFood = forage.TryGetProperty("riverFood", out JsonElement frf) ? frf.GetInt32() : 0,
             SeasonCycleTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("cycleMinutes").GetInt32() * TicksPerMinute : 0,
             WinterTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("winterMinutes").GetInt32() * TicksPerMinute : 0,

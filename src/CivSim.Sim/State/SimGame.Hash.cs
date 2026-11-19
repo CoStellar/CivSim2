@@ -83,6 +83,8 @@ public sealed partial class SimGame
             Add(u.Cell);
             Add(u.People);
             Add(u.Hunger);
+            Add(u.Weapon | (u.Armour << 8) | ((int)u.Stance << 16));
+            Add(u.Wounds);
         }
 
         return h;

@@ -500,6 +500,43 @@ public sealed class Unit
 
     /// <summary>Sight counted at <see cref="WatchCell"/>.</summary>
     public int WatchRadius { get; set; }
+
+    /// <summary>Level of its weapons (0 = bare: clubs and sticks; 1–4 stone, bronze, iron, steel).</summary>
+    public byte Weapon { get; set; }
+
+    /// <summary>Level of its armour (0 = none; 1–4 hide, bronze, iron, plate).</summary>
+    public byte Armour { get; set; }
+
+    /// <summary>How it fights on its own.</summary>
+    public Stance Stance { get; set; }
+
+    /// <summary>Hexes walked since it last touched an enemy (a charge needs a run).</summary>
+    public int Run { get; set; }
+
+    /// <summary>Hexes it guards (painted by the player): it goes at enemies on them and comes back.</summary>
+    public List<int> Guard { get; } = [];
+
+    /// <summary>People it lost in the last step of battle (for the view).</summary>
+    public int LastLoss { get; set; }
+
+    /// <summary>Tick of its last step on the way (a charge needs a fresh run).</summary>
+    public long StepTick { get; set; } = -1;
+
+    /// <summary>Tick it last fought (for the view and the slowing of time).</summary>
+    public long FoughtTick { get; set; } = -1;
+}
+
+/// <summary>How an army unit fights when not told otherwise.</summary>
+public enum Stance : byte
+{
+    /// <summary>Strikes what it touches or reaches, does not walk after it.</summary>
+    Hold = 0,
+
+    /// <summary>Goes at enemies it sees within its sight.</summary>
+    Aggressive = 1,
+
+    /// <summary>Strikes only the enemy it was sent at (to walk past or pull back).</summary>
+    Passive = 2,
 }
 
 /// <summary>One minute of a people's history: what the summary's timeline shows.</summary>

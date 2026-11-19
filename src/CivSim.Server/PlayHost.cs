@@ -132,6 +132,7 @@ public sealed class PlayHost : IDisposable
                     while (Stopwatch.GetElapsedTime(lastTick).TotalSeconds >= wait && ran < 50)
                     {
                         _game.Tick();
+                        SlowForBattle();
                         foreach ((int civ, string text) in _game.News)
                         {
                             if (civ < 0 || civ == 0)
@@ -282,6 +283,26 @@ public sealed class PlayHost : IDisposable
         return null;
     }
 
+    private long _calmSince;
+
+    // Single player: a battle of the player's people that starts after a calm slows time to ×1 (Patryk, 2026-11-19).
+    private void SlowForBattle()
+    {
+        bool fighting = _game.LastFightTick(0) == _game.Ticks;
+        if (!fighting)
+        {
+            return;
+        }
+
+        bool fresh = _game.Ticks - _calmSince > _game.Content.Combat.CalmSeconds * SimContent.TicksPerSecond;
+        _calmSince = _game.Ticks;
+        if (fresh && _speed > SimulationSpeed.X1 && _clients.FindAll(c => c.Civ >= 0).Count <= 1)
+        {
+            _speed = SimulationSpeed.X1;
+            _news.Add("Battle! Time runs at ×1.");
+        }
+    }
+
     private SimCommand ToCommand(int civ, PlayCommandMessage m) => m.Kind switch
     {
         PlayCommandKind.Build => new BuildCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.A),
@@ -289,7 +310,12 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Stop => new StopBuildingCommand(civ, m.A, m.Flag),
         PlayCommandKind.Priority => new PriorityCommand(civ, m.A, m.Flag),
         PlayCommandKind.Demolish => new DemolishCommand(civ, m.A),
-        PlayCommandKind.Train => new TrainCommand(civ, m.A, m.B),
+        PlayCommandKind.Train => new TrainCommand(civ, m.A, m.B, m.C, m.Flag),
+        PlayCommandKind.Split => new SplitCommand(civ, m.A, m.B),
+        PlayCommandKind.Refit => new RefitCommand(civ, m.A),
+        PlayCommandKind.Stance => new StanceCommand(civ, m.A, (Stance)m.B),
+        PlayCommandKind.Guard => new GuardCommand(civ, m.A, Cells(m.Cells) ?? []),
+        PlayCommandKind.Formation => new FormationCommand(civ, m.Cells ?? [], _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.B),
         PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag, Cells(m.Cells)),
         PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
         PlayCommandKind.BuildRoad => new BuildRoadCommand(civ, Cells(m.Cells) ?? [], m.A),
@@ -408,7 +434,7 @@ public sealed class PlayHost : IDisposable
         var units = new List<PlayUnitInfo>();
         foreach (UnitType u in content.Units)
         {
-            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range, u.System, u.NeedsBuilding, u.Naval, u.Carries, u.Survey));
+            units.Add(new PlayUnitInfo(u.Id, u.Key, u.Name, u.People, u.Price, u.TrainTicks / SimContent.TicksPerSecond, u.HiddenTicksPerHex > 0, u.Founds, u.Tech, u.Army, u.Strength, u.Range, u.System, u.NeedsBuilding, u.Naval, u.Carries, u.Survey, u.MinPeople, u.MaxPeople, u.Groups));
         }
 
         var techs = new List<PlayTechInfo>();
@@ -465,7 +491,8 @@ public sealed class PlayHost : IDisposable
         }
 
         client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories,
-            _game.Content.Rations.HungryPercent, _game.Content.Rations.StarvingPercent));
+            _game.Content.Rations.HungryPercent, _game.Content.Rations.StarvingPercent, _game.Content.WeaponGoods, _game.Content.ArmourGoods,
+            _game.Content.Combat.Weapon, _game.Content.Combat.Armour));
         client.SentChunks = false;
     }
 
@@ -604,7 +631,7 @@ public sealed class PlayHost : IDisposable
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute, s.RationUnits, s.RationFood, s.RationShort, HashCode.Combine(s.RationDead, s.HungryPeople, s.HungryWorkers))));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
-        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home, Arr(u.LastPatrol), Arr(u.Found))));
+        HashCode.Combine(u.ToRow, u.Fighting, u.Cargo, Arr(u.Path), Arr(u.Patrol), u.Attack, u.Carrier, HashCode.Combine(u.Injured, u.Aboard, u.Hunger, u.Home, Arr(u.LastPatrol), Arr(u.Found), HashCode.Combine(u.Weapon, u.Armour, u.Stance, u.LastLoss, Arr(u.Guard)))));
 
     private static int TechSig(IReadOnlyList<PlayTechState> techs)
     {
@@ -881,7 +908,8 @@ public sealed class PlayHost : IDisposable
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
                 _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0,
                 mine ? u.Hunger : 0, mine ? u.Home : -1, mine && u.Patrol.Count == 0 && u.LastPatrol.Count > 0 ? Pairs(u.LastPatrol, 0) : null,
-                mine && _game.Content.Units[u.Kind].Survey > 0 ? Found(u) : null));
+                mine && _game.Content.Units[u.Kind].Survey > 0 ? Found(u) : null, u.Weapon, u.Armour, (int)u.Stance, u.LastLoss,
+                mine && u.Guard.Count > 0 ? Pairs(u.Guard, 0) : null));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),

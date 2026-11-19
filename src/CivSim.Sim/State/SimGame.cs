@@ -287,7 +287,7 @@ public sealed partial class SimGame
             }
         }
 
-        if (Ticks % Content.War.CombatEveryTicks == 0)
+        if (Ticks % Content.Combat.StepTicks == 0)
         {
             CombatStep();
         }

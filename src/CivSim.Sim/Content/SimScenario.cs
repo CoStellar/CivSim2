@@ -46,6 +46,12 @@ public sealed record SimScenario
     /// <summary>Pairs of peoples at war from the start.</summary>
     public IReadOnlyList<int[]> Wars { get; init; } = [];
 
+    /// <summary>Two peoples whose armies start on a field between them, facing each other (empty = at home).</summary>
+    public int[] Field { get; init; } = [];
+
+    /// <summary>Hexes between the two armies of the field.</summary>
+    public int FieldGap { get; init; } = 4;
+
     /// <summary>The scenarios folder of a data directory (default: the game's data).</summary>
     public static string Folder(string? dataDirectory = null) => Path.Combine(dataDirectory ?? CivSim.Data.ContentLoader.DefaultDirectory, "sim", "scenarios");
 
@@ -91,6 +97,9 @@ public sealed record SimScenario
                     Aggression = c.TryGetProperty("aggression", out JsonElement ag) ? ag.GetInt32() : null,
                     Expansion = c.TryGetProperty("expansion", out JsonElement ex) ? ex.GetInt32() : null,
                     Ai = c.TryGetProperty("ai", out JsonElement ai) ? ai.GetBoolean() : null,
+                    UnitPeople = Int(c, "unitPeople", 0),
+                    Weapon = Int(c, "weapon", -1),
+                    Armour = Int(c, "armour", -1),
                 });
             }
         }
@@ -117,6 +126,8 @@ public sealed record SimScenario
             Debug = !r.TryGetProperty("debug", out JsonElement db) || db.GetBoolean(),
             Civs = civs,
             Wars = wars,
+            Field = r.TryGetProperty("field", out JsonElement fl) ? [.. fl.EnumerateArray().Select(x => x.GetInt32())] : [],
+            FieldGap = Int(r, "fieldGap", 4),
         };
 
         static string Str(JsonElement e, string name) => e.TryGetProperty(name, out JsonElement v) ? v.GetString() ?? "" : "";
@@ -144,6 +155,15 @@ public sealed record SimScenario
 /// <summary>How one people starts in a scenario. Empty fields keep the normal start.</summary>
 public sealed record ScenarioPeople
 {
+    /// <summary>Size of every army unit it starts with (0 = the kind's default).</summary>
+    public int UnitPeople { get; init; }
+
+    /// <summary>Weapon level of its starting soldiers (−1 = the best its stock holds).</summary>
+    public int Weapon { get; init; } = -1;
+
+    /// <summary>Armour level of its starting soldiers (−1 = the best its stock holds).</summary>
+    public int Armour { get; init; } = -1;
+
     /// <summary>Era key: every technology of the eras before it is known, and the people is in it.</summary>
     public string Era { get; init; } = "";
 

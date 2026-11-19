@@ -8,7 +8,12 @@ d['goods'] = [
  {"key":"clay","name":"Clay","worth":1},{"key":"hides","name":"Hides","worth":1.5},{"key":"tools","name":"Tools","worth":3},
  {"key":"clothing","name":"Clothing","worth":3},{"key":"pottery","name":"Pottery","worth":2.5},{"key":"textiles","name":"Textiles","worth":3},
  {"key":"copper","name":"Copper","worth":4},{"key":"tin","name":"Tin","worth":5},{"key":"bronze","name":"Bronze","worth":8},
- {"key":"iron","name":"Iron","worth":8},{"key":"arms","name":"Arms","worth":10},
+ {"key":"iron","name":"Iron","worth":8},
+ # Weapons and armour of four levels (Patryk, 2026-11-19): a unit is armed with the best it gets; both lie at half room in an armoury.
+ {"key":"stone_weapons","name":"Stone weapons","worth":3,"storedIn":"armoury"},{"key":"bronze_weapons","name":"Bronze weapons","worth":9,"storedIn":"armoury"},
+ {"key":"iron_weapons","name":"Iron weapons","worth":12,"storedIn":"armoury"},{"key":"steel_weapons","name":"Steel weapons","worth":18,"storedIn":"armoury"},
+ {"key":"hide_armour","name":"Hide armour","worth":3,"storedIn":"armoury"},{"key":"bronze_armour","name":"Bronze armour","worth":9,"storedIn":"armoury"},
+ {"key":"iron_armour","name":"Iron armour","worth":12,"storedIn":"armoury"},{"key":"steel_armour","name":"Plate armour","worth":18,"storedIn":"armoury"},
  {"key":"horses","name":"Horses","worth":12},{"key":"coins","name":"Coins","worth":1}]
 d['buildingStorage'] = 20
 EXTRA = " Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools)."
@@ -34,11 +39,11 @@ b("hut","Huts","dwellings",0,{"wood":20},10,housing=8,groups=["house"])
 b("storehouse","Storehouse","stockpiling",0,{"wood":30},20,storage=300,groups=["store"])
 b("hearth","Hearth","fire",0,{"wood":15,"stone":10},10,housing=3,groups=["house"])
 b("quarry","Quarry","stone_tools",4,{"wood":25},20,produces={"stone":2},bonusRelief=["hills","mountains"],bonusReliefPercent=100,bonusDeposit="stone",bonusPercent=100,groups=["tools","quarry"])
-b("toolmaker","Toolmaker","stone_tools",2,{"wood":30,"stone":20},25,consumes={"stone":2,"wood":1},produces={"tools":1},bonusDeposit="flint",bonusPercent=50,groups=["craft"])
+b("toolmaker","Toolmaker","stone_tools",2,{"wood":30,"stone":20},25,consumes={"stone":2,"wood":1},produces={"tools":1,"stone_weapons":0.5},bonusDeposit="flint",bonusPercent=50,groups=["craft"])
 b("hunters_lodge","Hunters' lodge","hunting",3,{"wood":20},15,biomes=["grassland","steppe","savanna","deciduous_forest","taiga","jungle","tundra"],produces={"food":3,"hides":1},bonusDeposit="game",bonusPercent=100,groups=["food","hunt"])
 b("clay_pit","Clay pit","shelters",3,{"wood":20},15,needsWater=True,orDeposit="clay",produces={"clay":3},bonusDeposit="clay",bonusPercent=100,groups=["tools"])
 b("herbalist","Herbalist","herbal_lore",2,{"wood":20,"clay":10},20,produces={},supportGroup="hunt",supportPercent=25,healsPerMinute=6,groups=["care"])
-b("tailor","Tailor","sewing",2,{"wood":20,"tools":5},20,consumes={"hides":1},produces={"clothing":1},groups=["craft"])
+b("tailor","Tailor","sewing",2,{"wood":20,"tools":5},20,consumes={"hides":1},produces={"clothing":1,"hide_armour":0.3},groups=["craft"])
 # Neolithic
 b("fishing_hut","Fishing hut","fishing",2,{"wood":20},15,needsWater=True,produces={"food":5},bonusDeposit="fish",bonusPercent=100,groups=["food"])
 b("raft_landing","Raft landing","rafts",2,{"wood":40},20,needsWater=True,crossing=True,produces={"food":2,"wood":1},groups=["food"])
@@ -54,16 +59,16 @@ b("copper_mine","Copper mine","copper_working",4,{"wood":40,"tools":15},30,orDep
 # Bronze
 b("tin_mine","Tin mine","bronze_working",4,{"wood":40,"tools":15},30,orDeposit="tin",produces={"tin":2},groups=["tools","mine"])
 b("bronze_smith","Bronze smith","bronze_working",3,{"stone":40,"clay":30},30,consumes={"copper":2,"tin":1,"wood":1},produces={"bronze":1},groups=["craft"])
-b("armourer","Armourer","bronze_weapons",2,{"stone":40,"wood":30},30,consumes={"bronze":1,"wood":1},produces={"arms":1},groups=["craft"])
+b("armourer","Armourer","bronze_weapons",2,{"stone":40,"wood":30},30,consumes={"bronze":1,"wood":1},produces={"bronze_weapons":1,"bronze_armour":0.5},groups=["craft","armoury"])
 b("school","School","writing",3,{"stone":60,"clay":40},40,produces={},researchPercent=15,groups=["learn"])
 b("stable","Stable","horseback_riding",2,{"wood":60},30,consumes={"food":2},produces={"horses":0.5},bonusDeposit="horses",bonusPercent=100,goodLimit={"horses":16},groups=["food"])
 b("harbour","Harbour","sailing",3,{"wood":80,"stone":20},40,needsWater=True,produces={"food":4},groups=["food"])
 b("mint","Mint","currency",2,{"stone":60,"wood":20},35,consumes={"copper":1},produces={"coins":10},groups=["craft"])
-b("barracks","Barracks","barracks",2,{"wood":80,"stone":40},40,produces={},trainPercent=50,groups=["army"])
+b("barracks","Barracks","barracks",2,{"wood":80,"stone":40},40,produces={},trainPercent=50,groups=["army","armoury"])
 # Iron
 b("iron_mine","Iron mine","iron_working",4,{"wood":50,"tools":20},35,orDeposit="iron_ore",produces={"iron":1},groups=["tools","mine"])
 b("blacksmith","Blacksmith","iron_working",2,{"stone":40,"wood":30},30,consumes={"iron":1,"wood":1},produces={"tools":2},groups=["craft"])
-b("weaponsmith","Weaponsmith","iron_weapons",2,{"stone":40,"wood":30},30,consumes={"iron":1,"wood":1},produces={"arms":2},groups=["craft"])
+b("weaponsmith","Weaponsmith","iron_weapons",2,{"stone":40,"wood":30},30,consumes={"iron":1,"wood":1},produces={"iron_weapons":1.5,"iron_armour":1},groups=["craft","armoury"])
 b("builders_yard","Builders' yard","mathematics",3,{"stone":80,"wood":60},40,produces={},buildPercent=30,groups=["care"])
 b("great_storehouse","Great storehouse","construction",0,{"stone":150,"wood":80},45,storage=1000,groups=["store"])
 b("province_office","Province office","civil_service",3,{"stone":120,"wood":60},50,produces={},groups=["govern"])
@@ -73,8 +78,8 @@ b("academy","Academy","philosophy",3,{"stone":120,"textiles":20},50,produces={},
 b("shipyard","Shipyard","shipbuilding",4,{"wood":150,"tools":30},50,needsWater=True,produces={},trainPercent=60,groups=["army"])
 # Middle ages
 b("manor","Manor","feudalism",4,{"stone":200,"wood":100},60,produces={"food":8},housing=10,winterPercent=50,groups=["food","farm"])
-b("steelworks","Steelworks","steel",3,{"stone":150,"iron":40},60,consumes={"iron":2,"wood":2},produces={"tools":4,"arms":2},groups=["craft"])
-b("castle","Castle","castles",0,{"stone":400,"wood":100,"iron":30},90,defensePercent=220,housing=10,groups=["fort"])
+b("steelworks","Steelworks","steel",3,{"stone":150,"iron":40},60,consumes={"iron":2,"wood":2},produces={"tools":4,"steel_weapons":1,"steel_armour":1},groups=["craft","armoury"])
+b("castle","Castle","castles",0,{"stone":400,"wood":100,"iron":30},90,defensePercent=220,housing=10,groups=["fort","armoury"])
 b("mill","Mill","mills",2,{"wood":80,"stone":60,"tools":10},40,needsWater=True,produces={},supportGroup="farm",supportPercent=20,groups=["care"])
 b("guildhall","Guild hall","guilds",3,{"stone":150,"textiles":30},50,produces={},supportGroup="craft",supportPercent=25,groups=["care"])
 b("university","University","university",4,{"stone":200,"textiles":40,"pottery":40},60,produces={},researchPercent=25,groups=["learn"])
@@ -94,6 +99,17 @@ UP={"hut":"stone_house","storehouse":"great_storehouse","gatherers_hut":"farm","
 for x in B:
     if x["key"] in UP: x["upgradesTo"]=UP[x["key"]]
 d["upgradeCreditPercent"]=50
+# Combat (Patryk, 2026-11-19, claude/walka-propozycja.md): every number here.
+d["combat"]={"comment":"Battle in steps of stepTicks. A unit fights every enemy unit next to it (ranged: within range, only while standing). Per step it kills engaged people x strength x weapon / armour of the target x terrain x flank x charge x bonus against the target's kind x fed x luck / killDivisor. Engaged people: at most frontPerContact for each enemy it touches. weapon and armour: multipliers for levels 0-4 (armourVsRangedBonus: armour counts this much more against arrows). Flank: damage taken by how many enemy units touch the target (index = count, last for more). Terrain: per level of relief higher than the target (flat 0, hills 1, mountains 2) reliefPercent, at most reliefMaxPercent; per elevationStep of height above it elevationPercent, at most elevationMaxPercent. Cover of the target's hex (forest or grove, palisade or wall) against ranged and melee, lost when enemies touch it from opposite sides. Attacking across a river without a bridge: riverPercent. Roads and swamps: openPercent more taken. Leaving enemies: each enemy next to it strikes once, disengagePercent of a step (cavalry cavalryDisengagePercent), unless another unit of ours stays next to that enemy. Charge: cavalry that walked chargeHexes or more before contact strikes chargePercent once (not against units that stop charges). One army unit to a hex: a unit that stops on another steps aside. Zone of control: a unit stops when it comes next to an enemy, and from there goes on only one hex at a time. Weapons only (shock): no armour, shockTrainPercent of the time. Single player: a battle after calmSeconds of calm slows time to x1.",
+  "stepTicks":5,"killDivisor":400,"frontPerContact":12,
+  "weapon":[60,100,140,180,220],"armour":[100,130,170,210,260],"armourVsRangedBonus":20,
+  "flank":[100,100,125,150,180],
+  "reliefPercent":8,"reliefMaxPercent":16,"elevationStep":20,"elevationPercent":3,"elevationMaxPercent":9,
+  "cover":{"trees":{"ranged":-30,"melee":-15},"palisade":{"ranged":-50,"melee":-30},"wall":{"ranged":-50,"melee":-30}},
+  "riverPercent":-25,"openPercent":15,"openBiomes":["swamp"],
+  "disengagePercent":50,"cavalryDisengagePercent":25,
+  "chargeHexes":2,"chargePercent":200,
+  "shockTrainPercent":40,"calmSeconds":30}
 # Choosing the start (Patryk, 2026-11-19: every number in the data).
 d["startPhase"]={"comment":"pickSeconds: time a player has to choose. blockRadius: hexes around a taken start where no other people may start. blockFuzz: the shown circle is centred up to this many hexes from the real start and is this much wider, so it hides the start. scoreRadius, roomRadius: hexes looked at when scoring a start (its own land, the room around).",
   "pickSeconds":30,"blockRadius":10,"blockFuzz":3,"scoreRadius":3,"roomRadius":6}
@@ -114,20 +130,25 @@ u("porters","Porters","foraging",1,{},0,5,2,system=True,cargoPerPerson=5,groups=
 # Caravans need the wheel and horses (decision of 2026-11-18): each takes horsesPerCaravan horses, which come back with it.
 u("caravan","Caravan","the_wheel",2,{},0,6,3,system=True,cargoPerPerson=25,alsoTechs=["horseback_riding"],horsesPerCaravan=2,groups=["carriers"])
 # Residents: the people of a settlement taking up arms against raiders. No technology, weak (decision of 2026-11-18).
+# Army units (Patryk, 2026-11-19): strength is drill and kind; weapons and armour (levels 0-4) come from the stores when they
+# train. people is the default size; the player picks minPeople-maxPeople, and the price follows the size.
 u("levy","Residents",None,10,{},3,7,2,army=True,levy=True,strength=5,groups=["melee"])
 u("hunters","Hunters","hunting",8,{"food":20,"wood":10},10,5,3,army=True,strength=6,range=2,becomes={"archery":"archers"},bonusBiomes=FOREST[:3],bonusPercent=20,groups=["ranged","infantry"])
-u("warriors","Warriors","flint_weapons",10,{"food":30,"wood":10},12,6,3,army=True,strength=10,bonusBiomes=FOREST[:3],bonusPercent=30,groups=["melee","infantry"])
+u("warriors","Warriors","flint_weapons",10,{"food":30,"wood":10},12,6,3,army=True,strength=9,bonusBiomes=FOREST[:3],bonusPercent=30,groups=["melee","infantry"])
 u("archers","Archers","archery",8,{"food":30,"wood":25},15,6,4,army=True,strength=9,range=3,bonusRelief=["hills","mountains"],bonusPercent=40,groups=["ranged","infantry"])
-u("spearmen","Spearmen","bronze_weapons",10,{"food":40,"arms":5},18,6,3,army=True,strength=16,bonusRelief=["flat"],bonusPercent=20,groups=["melee","infantry"])
-u("horsemen","Horsemen","horseback_riding",6,{"food":40,"horses":6},20,3,5,army=True,strength=18,bonusRelief=["flat"],bonusPercent=40,groups=["cavalry"])
+u("spearmen","Spearmen","bronze_weapons",10,{"food":40},18,6,3,army=True,strength=11,bonusVs={"cavalry":50},stopsCharge=True,groups=["melee","infantry","spear"])
+u("horsemen","Horsemen","horseback_riding",6,{"food":40,"horses":6},20,3,5,army=True,strength=12,bonusRelief=["flat"],bonusPercent=20,bonusVs={"ranged":50},groups=["cavalry"])
 u("transport","Transport ship","sailing",8,{"wood":80,"food":30},25,4,4,army=True,naval=True,strength=4,carriesArmies=True,carries=20,needsBuilding="harbour",groups=["ship"])
 u("trade_ship","Trade ship","sailing",4,{},0,4,3,system=True,naval=True,cargoPerPerson=40,groups=["carriers","ship"])
-u("swordsmen","Swordsmen","iron_weapons",10,{"food":50,"arms":10},20,6,3,army=True,strength=24,groups=["melee","infantry"])
+u("swordsmen","Swordsmen","iron_weapons",10,{"food":50},20,6,3,army=True,strength=13,groups=["melee","infantry"])
 u("catapult","Catapult","engineering",6,{"wood":100,"tools":20},30,9,3,army=True,strength=8,range=2,siege=300,needsBuilding="siege_workshop",groups=["siege"])
-u("warship","Warship","shipbuilding",12,{"wood":150,"arms":10},35,3,5,army=True,naval=True,strength=22,range=2,carriesArmies=True,carries=30,needsBuilding="shipyard",groups=["ship"])
-u("crossbowmen","Crossbowmen","crossbows",8,{"food":40,"arms":10},20,6,4,army=True,strength=20,range=2,groups=["ranged","infantry"])
-u("knights","Knights","chivalry",6,{"food":60,"arms":15,"horses":6},30,3,5,army=True,strength=40,bonusRelief=["flat"],bonusPercent=30,groups=["cavalry"])
+u("warship","Warship","shipbuilding",12,{"wood":150,"iron":10},35,3,5,army=True,naval=True,strength=22,range=2,carriesArmies=True,carries=30,needsBuilding="shipyard",groups=["ship"])
+u("crossbowmen","Crossbowmen","crossbows",8,{"food":40,"wood":20},20,6,4,army=True,strength=12,range=2,pierce=1,groups=["ranged","infantry"])
+u("knights","Knights","chivalry",6,{"food":60,"horses":6},30,3,5,army=True,strength=16,bonusRelief=["flat"],bonusPercent=20,bonusVs={"ranged":50},groups=["cavalry"])
 # Sight (decision of 2026-11-18: units saw too much): scouts, riders and ships 3, carriers 1, the rest 2.
+for x in U:
+    if x.get("army") and not x.get("naval") and not x.get("levy") and "siege" not in x.get("groups",[]):
+        x["minPeople"]=5; x["maxPeople"]=30
 SIGHT={"scouts":3,"prospectors":3,"surveyors":3,"horsemen":3,"knights":3,"transport":3,"warship":3,"porters":1,"caravan":1,"trade_ship":2}
 for x in U:
     x["sight"]=SIGHT.get(x["key"],2)

@@ -6,7 +6,11 @@ using CivSim.Sim.Content;
 namespace CivSim.Sim.State;
 
 /// <summary>Train a unit of <paramref name="Kind"/> in a settlement (its people leave the settlement).</summary>
-public sealed record TrainCommand(int Civ, int Settlement, int Kind) : SimCommand(Civ);
+/// <summary>
+/// Train a unit. <paramref name="People"/>: its size for soldiers (0 = the default; within the kind's minPeople–maxPeople), the
+/// price follows the size. <paramref name="Shock"/>: weapons only, no armour, trained faster (combat.shockTrainPercent).
+/// </summary>
+public sealed record TrainCommand(int Civ, int Settlement, int Kind, int People = 0, bool Shock = false) : SimCommand(Civ);
 
 /// <summary>Send a unit to a hex, hidden or in the open (scouts).</summary>
 public sealed record MoveCommand(int Civ, int Unit, int Cell, bool Hidden, int[]? Path = null) : SimCommand(Civ);
@@ -95,7 +99,7 @@ public sealed partial class SimGame
         }
     }
 
-    private string? Train(Civ civ, int sid, int kind)
+    private string? Train(Civ civ, int sid, int kind, int size = 0, bool shock = false)
     {
         if ((uint)sid >= (uint)Settlements.Count || Settlements[sid].Civ != civ.Id || Settlements[sid].Abandoned)
         {
@@ -115,9 +119,12 @@ public sealed partial class SimGame
             return $"{t.Name} need {NeedText(t.Tech, t.AlsoTechs)}.";
         }
 
-        if (s.People - t.People < 5)
+        int people = size > 0 && t.MaxPeople > 0 ? Math.Clamp(size, t.MinPeople, t.MaxPeople) : t.People;
+        int pricePct = people * 100 / Math.Max(1, t.People);
+        shock &= Geared(t);
+        if (s.People - people < 5)
         {
-            return $"{s.Name} has {s.People} people; {t.Name.ToLowerInvariant()} take {t.People} and 5 must stay.";
+            return $"{s.Name} has {s.People} people; {t.Name.ToLowerInvariant()} take {people} and 5 must stay.";
         }
 
         if (t.System)
@@ -140,14 +147,13 @@ public sealed partial class SimGame
             }
         }
 
-        if (!CanAfford(s.Stock, t.Price, 100))
+        if (!CanAfford(s.Stock, t.Price, pricePct))
         {
-            return $"{t.Name} cost {PriceText(t.Price)} in {s.Name}.";
+            return $"{people} {t.Name.ToLowerInvariant()} cost {PriceText(t.Price)} × {pricePct}% in {s.Name}.";
         }
 
-        Pay(s.Stock, t.Price, 100);
-        SyncTotals(civ);
-        s.People -= t.People;
+        Pay(s.Stock, t.Price, pricePct);
+        s.People -= people;
         civ.Dirty = true;
         // Training halls speed their own kind (siege workshops their engines, shipyards their ships), barracks all others; each
         // by the share of its jobs filled.
@@ -170,12 +176,19 @@ public sealed partial class SimGame
         }
 
         trainPct = trainPct * Math.Max(20, 100 - Bonus(civ, EffectKind.Training, t.Key, t.Groups)) / 100;
+        trainPct = trainPct * pricePct / 100 * (shock ? Content.Combat.ShockTrainPercent : 100) / 100;
         var u = new Unit
         {
-            Id = Units.Count, Civ = civ.Id, Kind = kind, People = t.People, Cell = spawn, State = UnitState.Training, NextTick = Ticks + Math.Max(1, t.TrainTicks * trainPct / 100),
+            Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = spawn, State = UnitState.Training, NextTick = Ticks + Math.Max(1, t.TrainTicks * trainPct / 100),
             Cargo = t.Founds ? (long[])t.Price.Clone() : null, // settlers carry their provisions to the new camp
             Home = s.Id,
         };
+        if (Geared(t))
+        {
+            TakeGear(s.Stock, u, shock); // the best arms the stores hold for all of them
+        }
+
+        SyncTotals(civ);
         Units.Add(u);
         civ.Units.Add(u.Id);
         ScheduleUnit(u, DoneTraining);
@@ -349,8 +362,30 @@ public sealed partial class SimGame
 
     private void Step(Unit u)
     {
-        u.Cell = u.Path[u.PathIndex++];
+        int next = u.Path[u.PathIndex];
+        if (Content.Units[u.Kind].Army)
+        {
+            Disengage(u, next); // each enemy left behind strikes once
+            if (u.State == UnitState.Gone)
+            {
+                return;
+            }
+        }
+
+        u.Cell = next;
+        u.PathIndex++;
+        u.Run++;
+        u.StepTick = Ticks;
         Watch(u);
+        if (Content.Units[u.Kind].Army && !Content.Units[u.Kind].Naval && u.PathIndex < u.Path.Count && EnemyBeside(u, u.Cell))
+        {
+            // Zone of control: next to an enemy a unit stops; from here it goes on one hex at a time.
+            u.State = UnitState.Idle;
+            u.Path.Clear();
+            MakeRoom(u);
+            return;
+        }
+
         int goal = u.TargetUnit >= 0 ? Units[u.TargetUnit].Cell : u.TargetSettlement >= 0 ? Settlements[u.TargetSettlement].Center : -1;
         if (u.PathIndex >= u.Path.Count || (goal >= 0 && Distance(u.Cell, goal) <= Content.Units[u.Kind].Range))
         {
@@ -363,6 +398,10 @@ public sealed partial class SimGame
             else if (u.PatrolStage != PatrolStage.None)
             {
                 PatrolArrived(u);
+            }
+            else
+            {
+                MakeRoom(u);
             }
 
             return;

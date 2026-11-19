@@ -69,6 +69,11 @@ public sealed partial class SimGame
             }
         }
 
+        if (scenario.Field is [int fa, int fb] && fa != fb && (uint)fa < (uint)g.Civs.Count && (uint)fb < (uint)g.Civs.Count && !g.PlaceField(fa, fb, scenario.FieldGap))
+        {
+            g.News.Add((0, "Scenario: no field between the two peoples."));
+        }
+
         foreach (Civ c in g.Civs)
         {
             c.Dirty = true;
@@ -170,7 +175,23 @@ public sealed partial class SimGame
             UnitType t = Content.Unit(key);
             for (int k = 0; k < count; k++)
             {
-                var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = Upgraded(civ, t.Id), People = t.People, Cell = s.Center, State = UnitState.Idle, Home = s.Id };
+                int kind = Upgraded(civ, t.Id);
+                UnitType ut = Content.Units[kind];
+                int people = p.UnitPeople > 0 && ut.MaxPeople > 0 ? Math.Clamp(p.UnitPeople, ut.MinPeople, ut.MaxPeople) : ut.People;
+                var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = s.Center, State = UnitState.Idle, Home = s.Id };
+                if (Geared(ut))
+                {
+                    if (p.Weapon >= 0 || p.Armour >= 0)
+                    {
+                        u.Weapon = (byte)Math.Clamp(p.Weapon, 0, 4);
+                        u.Armour = (byte)Math.Clamp(p.Armour, 0, 4);
+                    }
+                    else
+                    {
+                        TakeGear(s.Stock, u, shock: false);
+                    }
+                }
+
                 Units.Add(u);
                 civ.Units.Add(u.Id);
                 Watch(u);

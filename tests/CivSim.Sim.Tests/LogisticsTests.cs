@@ -157,6 +157,7 @@ public sealed class LogisticsTests
 
         Assert.Equal(UnitState.Gone, porters.State);
         Assert.True(g.Missing(site).Sum() > 0, "the lost materials are missing at the site");
+        w.Stance = Stance.Passive; // the raiders stand by and let the next porters pass
         Assert.Equal(0, site.Porters);
         int wood = Content.GoodId("wood");
         Assert.True(sb.Stock[wood] <= before[wood] + SimContent.One, "nobody takes the load");

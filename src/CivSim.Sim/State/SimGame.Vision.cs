@@ -66,6 +66,7 @@ public sealed partial class SimGame
     // A unit starts or moves on: its sight goes with it.
     private void Watch(Unit u)
     {
+        _contactsTick = -1; // who touches whom changed
         Unwatch(u);
         if (u.State is UnitState.Gone or UnitState.Training)
         {

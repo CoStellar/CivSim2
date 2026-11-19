@@ -61,7 +61,7 @@ public sealed partial class SimGame
                 room += room * Bonus(civ, EffectKind.Storage, t.Key, t.Groups) / 100;
                 for (int g = 0; g < goods; g++)
                 {
-                    s.Capacity[g] += room;
+                    s.Capacity[g] += Content.HalfRoom(b.Type, g) ? room * 2 : room; // weapons in an armoury take half the room
                 }
 
                 if (t.Warm)

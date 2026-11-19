@@ -1,0 +1,20 @@
+{
+  "name": "Battle 4: against the AI",
+  "description": "Bronze Age, both armies on a field 6 hexes apart; people 1 is an aggressive AI that attacks. Test everything together against an enemy that moves.",
+  "seed": 11,
+  "peoples": 2,
+  "revealMap": true,
+  "wars": [[0, 1]],
+  "field": [0, 1],
+  "fieldGap": 6,
+  "civs": [
+    { "era": "bronze_age", "techs": ["bronze_weapons", "barracks", "archery", "horseback_riding"], "level": "town", "people": 100, "unitPeople": 15,
+      "stock": { "food": 600, "wood": 400, "stone": 300, "bronze_weapons": 100, "bronze_armour": 80, "horses": 30 },
+      "buildings": { "farm": 2, "woodcutter": 1, "stone_house": 3, "storehouse": 1, "armourer": 1, "barracks": 1 },
+      "units": { "spearmen": 2, "warriors": 2, "archers": 2, "horsemen": 1 } },
+    { "era": "bronze_age", "techs": ["bronze_weapons", "barracks", "archery", "horseback_riding"], "level": "town", "people": 100, "aggression": 100, "unitPeople": 15,
+      "stock": { "food": 600, "wood": 400, "stone": 300, "bronze_weapons": 100, "bronze_armour": 80, "horses": 30 },
+      "buildings": { "farm": 2, "woodcutter": 1, "stone_house": 3, "storehouse": 1, "armourer": 1 },
+      "units": { "spearmen": 2, "warriors": 2, "archers": 2, "horsemen": 1 } }
+  ]
+}

@@ -45,7 +45,10 @@ public sealed record PlayUnitInfo(
     [property: Key(13)] string NeedsBuilding = "",
     [property: Key(14)] bool Naval = false,
     [property: Key(15)] int Carries = 0,
-    [property: Key(16)] int Survey = 0);
+    [property: Key(16)] int Survey = 0,
+    [property: Key(17)] int MinPeople = 0,
+    [property: Key(18)] int MaxPeople = 0,
+    [property: Key(19)] string[]? Groups = null);
 
 /// <summary>A unit as the player sees it. State: 0 training, 1 standing, 2 walking.</summary>
 [MessagePackObject]
@@ -71,7 +74,12 @@ public sealed record PlayUnitView(
     [property: Key(18)] int Hunger = 0,
     [property: Key(19)] int Home = -1,
     [property: Key(20)] int[]? LastPatrol = null,
-    [property: Key(21)] int[]? Found = null);
+    [property: Key(21)] int[]? Found = null,
+    [property: Key(22)] int Weapon = 0,
+    [property: Key(23)] int Armour = 0,
+    [property: Key(24)] int Stance = 0,
+    [property: Key(25)] int LastLoss = 0,
+    [property: Key(26)] int[]? Guard = null);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -122,7 +130,11 @@ public sealed record PlayContentMessage(
     [property: Key(10)] IReadOnlyList<PlayWorkInfo>? Works = null,
     [property: Key(11)] IReadOnlyList<string>? Categories = null,
     [property: Key(12)] int HungryPercent = 100,
-    [property: Key(13)] int StarvingPercent = 100) : IProtocolMessage;
+    [property: Key(13)] int StarvingPercent = 100,
+    [property: Key(14)] int[]? WeaponGoods = null,
+    [property: Key(15)] int[]? ArmourGoods = null,
+    [property: Key(16)] int[]? WeaponPercent = null,
+    [property: Key(17)] int[]? ArmourPercent = null) : IProtocolMessage;
 
 /// <summary>A work drawn on hexes (ditch, palisade, wall, aqueduct): its bit in the works of a hex, price and seconds per hex.</summary>
 [MessagePackObject]
@@ -313,7 +325,7 @@ public enum PlayCommandKind
     /// <summary>Raise settlement <c>A</c> one level.</summary>
     Upgrade = 5,
 
-    /// <summary>Train unit kind <c>B</c> in settlement <c>A</c>.</summary>
+    /// <summary>Train unit kind <c>B</c> in settlement <c>A</c>, <c>C</c> people (0 = the default); <c>Flag</c>: weapons only.</summary>
     Train = 6,
 
     /// <summary>Send unit <c>A</c> to (<c>Col</c>, <c>Row</c>), hidden when <c>Flag</c>.</summary>
@@ -408,6 +420,21 @@ public enum PlayCommandKind
 
     /// <summary>Debug action <c>A</c> (test scenarios only): 0 goods, 1 finish research, 2 reveal map, 3 people, 4 next era.</summary>
     Debug = 38,
+
+    /// <summary>Unit <c>A</c> splits <c>B</c> people off into a new unit beside it.</summary>
+    Split = 39,
+
+    /// <summary>Unit <c>A</c> takes the best arms of the settlement it stands in.</summary>
+    Refit = 40,
+
+    /// <summary>Unit <c>A</c> fights with stance <c>B</c>: 0 hold, 1 aggressive, 2 passive.</summary>
+    Stance = 41,
+
+    /// <summary>Unit <c>A</c> guards the hexes <c>Cells</c> (col, row pairs; none = stop guarding).</summary>
+    Guard = 42,
+
+    /// <summary>Units <c>Cells</c> (unit ids) go in formation to (Col, Row) facing direction <c>B</c> (−1 = the way they walk).</summary>
+    Formation = 43,
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs) round and round.</summary>
     Patrol = 27,
