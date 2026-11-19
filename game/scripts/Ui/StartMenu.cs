@@ -63,6 +63,9 @@ public partial class StartMenu : CanvasLayer
     /// <summary>Raised when the user presses Quit.</summary>
     public event Action? QuitRequested;
 
+    /// <summary>Raised when the user wants to play the new game (ADR 0028) with the chosen seed.</summary>
+    public event Action<StartSettings, int>? PlayRequested;
+
     /// <inheritdoc />
     public override void _Ready() => Build();
 
@@ -113,7 +116,15 @@ public partial class StartMenu : CanvasLayer
         var quit = new Button { Text = "Quit", CustomMinimumSize = new Vector2(120, 40) };
         quit.Pressed += () => QuitRequested?.Invoke();
         buttons.AddChild(quit);
-        _start = new Button { Text = "Start", CustomMinimumSize = new Vector2(180, 40) };
+        var goal = new OptionButton { CustomMinimumSize = new Vector2(260, 40), TooltipText = "What wins the new game" };
+        goal.AddItem("Goal: first to the Middle Ages", 1);
+        goal.AddItem("Goal: last people standing", 0);
+        goal.AddItem("Goal: best score after 2 hours", 2);
+        buttons.AddChild(goal);
+        var play = new Button { Text = "Play new game", CustomMinimumSize = new Vector2(180, 40) };
+        play.Pressed += () => PlayRequested?.Invoke(_settings, goal.GetSelectedId());
+        buttons.AddChild(play);
+        _start = new Button { Text = "Watch (legacy)", CustomMinimumSize = new Vector2(180, 40) };
         _start.Pressed += Start;
         buttons.AddChild(_start);
         _start.GrabFocus();

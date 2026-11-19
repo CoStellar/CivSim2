@@ -15,8 +15,52 @@ public static class PixelTheme
     /// <summary>How much the interface pictures are enlarged (whole numbers only, GDD 12).</summary>
     public const int Scale = 2;
 
-    /// <summary>Body text size; a multiple of the font's pixel grid.</summary>
-    public const int FontSize = 16;
+    /// <summary>Body text size; a multiple of the font's pixel grid. CIVSIM_FONT_SIZE overrides it (to try fonts).</summary>
+    public static int FontSize { get; private set; } = 16;
+
+    /// <summary>Size of titles (a whole multiple of the title font's grid). CIVSIM_TITLE_SIZE overrides it.</summary>
+    public static int TitleSize { get; private set; } = 24;
+
+    /// <summary>Font of titles; null = the body font. CIVSIM_TITLE_FONT (a .ttf or .otf path) sets it.</summary>
+    public static Font? TitleFont { get; private set; }
+
+    /// <summary>How much wider than Pixelify Sans 16 the chosen font runs; panels grow by it.</summary>
+    public static float Wide { get; private set; } = 1f;
+
+    /// <summary>The fonts the player can choose (Patryk's pick, 2026-11-18): plain pixel fonts, each drawn at a whole
+    /// multiple of its pixel grid, with a title size of the same family.</summary>
+    public static readonly FontChoice[] Fonts =
+    [
+        new("jersey", "Jersey", "Jersey15-Regular.ttf", 27, "Jersey25-Regular.ttf", 41, 1.15f),
+        new("galmuri", "Galmuri", "Galmuri9.ttf", 20, "Galmuri11-Bold.ttf", 24, 1.15f),
+        new("departure", "Departure Mono", "DepartureMono-Regular.otf", 22, "DepartureMono-Regular.otf", 33, 1.45f),
+        new("pressstart", "Press Start", "PressStart2P-Regular.ttf", 16, "PressStart2P-Regular.ttf", 24, 1.45f),
+    ];
+
+    /// <summary>Key of the font in use.</summary>
+    public static string FontKey { get; private set; } = "jersey";
+
+    /// <summary>Switches the interface to one of <see cref="Fonts"/>; the screens rebuild their nodes after this.</summary>
+    public static void UseFont(string key)
+    {
+        FontChoice choice = System.Array.Find(Fonts, f => f.Key == key) ?? Fonts[0];
+        FontFile? body = LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Body}"));
+        if (body is null)
+        {
+            return;
+        }
+
+        FontKey = choice.Key;
+        FontSize = choice.BodySize;
+        TitleSize = choice.TitleSize;
+        TitleFont = LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Title}"));
+        Wide = choice.Wide;
+        if (Current is not null)
+        {
+            Current.DefaultFont = body;
+            Current.DefaultFontSize = FontSize;
+        }
+    }
 
     /// <summary>Light text colour (palette).</summary>
     public static readonly Color Text = new(0.984f, 0.976f, 0.984f);
@@ -174,10 +218,44 @@ public static class PixelTheme
         return theme;
     }
 
-    // Pixelify Sans from res://fonts, read as a plain file so it needs no import; drawn without smoothing.
+    // The chosen font from res://fonts, read as a plain file so it needs no import; drawn without smoothing.
     private static FontFile? LoadFont()
     {
-        string path = ProjectSettings.GlobalizePath("res://fonts/PixelifySans.ttf");
+        // CIVSIM_FONT and friends let us try other fonts without a rebuild (font choice with Patryk, 2026-11-18).
+        if (int.TryParse(System.Environment.GetEnvironmentVariable("CIVSIM_FONT_SIZE"), out int size) && size > 0)
+        {
+            FontSize = size;
+        }
+
+        if (int.TryParse(System.Environment.GetEnvironmentVariable("CIVSIM_TITLE_SIZE"), out int title) && title > 0)
+        {
+            TitleSize = title;
+        }
+
+        if (System.Environment.GetEnvironmentVariable("CIVSIM_TITLE_FONT") is { Length: > 0 } titlePath)
+        {
+            TitleFont = LoadFile(titlePath);
+        }
+
+        if (System.Environment.GetEnvironmentVariable("CIVSIM_FONT") is { Length: > 0 } custom)
+        {
+            return LoadFile(custom);
+        }
+
+        // The player's choice (saved with the viewer settings), Jersey by default.
+        string key = ViewerSettings.Load().Font ?? "jersey";
+        FontChoice choice = System.Array.Find(Fonts, f => f.Key == key) ?? Fonts[0];
+        FontKey = choice.Key;
+        FontSize = choice.BodySize;
+        TitleSize = choice.TitleSize;
+        TitleFont = LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Title}"));
+        Wide = choice.Wide;
+        return LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Body}"))
+            ?? LoadFile(ProjectSettings.GlobalizePath("res://fonts/PixelifySans.ttf"));
+    }
+
+    private static FontFile? LoadFile(string path)
+    {
         if (!System.IO.File.Exists(path))
         {
             return null;
@@ -220,3 +298,6 @@ public static class PixelTheme
         return ImageTexture.CreateFromImage(image);
     }
 }
+
+/// <summary>A font the player can pick: body font and size, title font and size (whole multiples of their pixel grids).</summary>
+public sealed record FontChoice(string Key, string Name, string Body, int BodySize, string Title, int TitleSize, float Wide);

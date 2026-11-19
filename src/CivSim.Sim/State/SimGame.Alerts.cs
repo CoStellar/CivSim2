@@ -1,0 +1,146 @@
+using System;
+using System.Collections.Generic;
+using CivSim.Sim.Content;
+
+namespace CivSim.Sim.State;
+
+/// <summary>What needs the player's reaction in a settlement.</summary>
+public enum AlertKind
+{
+    /// <summary>The settlement is besieged.</summary>
+    Attacked = 0,
+
+    /// <summary>Soldiers of a people at war with us are close.</summary>
+    EnemyNear = 1,
+
+    /// <summary>People go hungry: food must be brought in or made.</summary>
+    Hungry = 2,
+
+    /// <summary>A building stands still for lack of a good: it must be brought in.</summary>
+    NeedsGood = 3,
+
+    /// <summary>No homes left: the settlement stopped growing.</summary>
+    NoRoom = 4,
+
+    /// <summary>A good is full: its makers stopped.</summary>
+    StoreFull = 5,
+
+    /// <summary>A construction stopped: its materials were lost on the way.</summary>
+    MissingMaterials = 6,
+}
+
+/// <summary>One alert. <see cref="Good"/> is −1 when it is not about a good; <see cref="Cell"/> is where to look.</summary>
+public sealed record Alert(AlertKind Kind, int Settlement, int Cell, int Good, string Text);
+
+public sealed partial class SimGame
+{
+    /// <summary>What needs a people's reaction right now, most urgent first. Worked out on request (for the view), not stored.</summary>
+    public List<Alert> Alerts(Civ civ)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        var list = new List<Alert>();
+        foreach (int sid in civ.Settlements)
+        {
+            Settlement s = Settlements[sid];
+            if (s.Besieged)
+            {
+                list.Add(new Alert(AlertKind.Attacked, s.Id, s.Center, -1, $"{s.Name} is under attack."));
+            }
+
+            if (EnemyNear(civ, s))
+            {
+                list.Add(new Alert(AlertKind.EnemyNear, s.Id, s.Center, -1, $"Enemy soldiers near {s.Name}."));
+            }
+
+            if (s.Hungry)
+            {
+                list.Add(new Alert(AlertKind.Hungry, s.Id, s.Center, Content.Food, $"{s.Name} goes hungry: bring food from another settlement or build food makers."));
+            }
+
+            long reported = 0;
+            foreach (int id in civ.Buildings)
+            {
+                Building b = Buildings[id];
+                if (b.Settlement != s.Id)
+                {
+                    continue;
+                }
+
+                if (b.State == BuildingState.Delivery && b.Porters == 0 && b.WorkCap < Content.Buildings[b.Type].BuildTicks)
+                {
+                    list.Add(new Alert(AlertKind.MissingMaterials, s.Id, b.Cell, -1, $"{Content.Buildings[b.Type].Name} in {s.Name} lacks materials: {CargoText(Missing(b))}."));
+                }
+
+                if (b.State == BuildingState.Active && b.Starved)
+                {
+                    long[] needs = Content.Buildings[b.Type].Consumes;
+                    for (int g = 0; g < needs.Length; g++)
+                    {
+                        long bit = 1L << g;
+                        if (needs[g] > 0 && (s.EmptyMask & bit) != 0 && (reported & bit) == 0 && g != Content.Food)
+                        {
+                            reported |= bit;
+                            list.Add(new Alert(AlertKind.NeedsGood, s.Id, s.Center, g, $"{s.Name} needs {Content.Goods[g].Key}: its {Content.Buildings[b.Type].Name.ToLowerInvariant()} stands still."));
+                        }
+                    }
+                }
+            }
+
+            if (s.People >= s.Housing && !s.Hungry)
+            {
+                list.Add(new Alert(AlertKind.NoRoom, s.Id, s.Center, -1, $"{s.Name} has no homes left and stopped growing."));
+            }
+
+            for (int g = 0; g < Content.Goods.Count; g++)
+            {
+                if ((s.FullMask & (1L << g)) != 0 && s.Rate[g] >= 0 && MadeIn(civ, s, g))
+                {
+                    list.Add(new Alert(AlertKind.StoreFull, s.Id, s.Center, g, $"{s.Name}: {Content.Goods[g].Key} is full, its makers stopped. Build a storehouse or send it away."));
+                }
+            }
+        }
+
+        list.Sort((a, b) => a.Kind.CompareTo(b.Kind));
+        return list;
+    }
+
+    // True when a building of the settlement makes this good.
+    private bool MadeIn(Civ civ, Settlement s, int good)
+    {
+        foreach (int id in civ.Buildings)
+        {
+            Building b = Buildings[id];
+            if (b.Settlement == s.Id && b.State == BuildingState.Active && Content.Buildings[b.Type].Produces[good] > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Soldiers of a people at war with us within a few hexes of the settlement's land.
+    private bool EnemyNear(Civ civ, Settlement s)
+    {
+        int reach = Content.Levels[s.Level].Radius + 3;
+        var centre = Geo.FromIndex(s.Center);
+        foreach (Civ other in Civs)
+        {
+            if (other.Id == civ.Id || other.Dead || !AtWar(civ.Id, other.Id))
+            {
+                continue;
+            }
+
+            foreach (int uid in other.Units)
+            {
+                Unit u = Units[uid];
+                if (Content.Units[u.Kind].Army && Sees(civ, u) && Geo.Distance(centre, Geo.FromIndex(u.Cell)) <= reach)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+}

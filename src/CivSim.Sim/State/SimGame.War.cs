@@ -1,0 +1,530 @@
+using System;
+using System.Collections.Generic;
+using CivSim.Core.Map;
+using CivSim.Sim.Content;
+
+namespace CivSim.Sim.State;
+
+/// <summary>Declare war openly on another people.</summary>
+public sealed record DeclareWarCommand(int Civ, int Other) : SimCommand(Civ);
+
+/// <summary>Send an army unit to attack what stands on a hex (an enemy unit or settlement).</summary>
+public sealed record AttackCommand(int Civ, int Unit, int Cell) : SimCommand(Civ);
+
+/// <summary>
+/// Offer peace. <paramref name="TributePercent"/> above 0: the other people pays that share of every good to us; below 0: we pay.
+/// </summary>
+public sealed record ProposePeaceCommand(int Civ, int Other, int TributePercent) : SimCommand(Civ);
+
+/// <summary>Answer a peace offer from <paramref name="From"/>.</summary>
+public sealed record AnswerPeaceCommand(int Civ, int From, bool Accept) : SimCommand(Civ);
+
+/// <summary>Send a unit's people home: they join the settlement whose land the unit stands on.</summary>
+public sealed record DisbandCommand(int Civ, int Unit) : SimCommand(Civ);
+
+/// <summary>A peace offer waiting for an answer.</summary>
+public sealed record PeaceOffer(int From, int To, int TributePercent, long Tick);
+
+public sealed partial class SimGame
+{
+    private int[]? _war;
+    private int[]? _score;
+    private long[]? _truceUntil;
+
+    /// <summary>Peace offers waiting for an answer.</summary>
+    public List<PeaceOffer> PeaceOffers { get; } = [];
+
+    /// <summary>True when the two peoples are at war.</summary>
+    public bool AtWar(int a, int b) => a != b && War()[(a * Civs.Count) + b] != 0;
+
+    /// <summary>War score of <paramref name="a"/> against <paramref name="b"/>: enemies killed plus settlements taken.</summary>
+    public int Score(int a, int b) => Scores()[(a * Civs.Count) + b];
+
+    /// <summary>The tribute in percent that the course of the war suggests <paramref name="b"/> pays <paramref name="a"/> (negative: a pays).</summary>
+    public int SuggestedTribute(int a, int b) => Math.Clamp((Score(a, b) - Score(b, a)) / 5, -30, 30);
+
+    private int[] War() => _war ??= new int[Civs.Count * Civs.Count];
+
+    private int[] Scores() => _score ??= new int[Civs.Count * Civs.Count];
+
+    private long[] Truces() => _truceUntil ??= new long[Civs.Count * Civs.Count];
+
+    private void SetWar(int a, int b, bool war)
+    {
+        War()[(a * Civs.Count) + b] = war ? 1 : 0;
+        War()[(b * Civs.Count) + a] = war ? 1 : 0;
+    }
+
+    private string? DeclareWar(Civ civ, int other, bool surprise)
+    {
+        if ((uint)other >= (uint)Civs.Count || other == civ.Id || Civs[other].Dead)
+        {
+            return "No such people.";
+        }
+
+        if (!Met(civ, Civs[other]) && !Met(Civs[other], civ) && !surprise)
+        {
+            return "We have not met this people.";
+        }
+
+        if (AtWar(civ.Id, other))
+        {
+            return "We are already at war with them.";
+        }
+
+        bool truce = Truces()[(civ.Id * Civs.Count) + other] > Ticks;
+        bool treaty = Has(civ.Id, other, TreatyKind.Trade);
+        SetWar(civ.Id, other, true);
+        TreatiesOnWar(civ.Id, other);
+        if (treaty)
+        {
+            civ.Reputation += Content.War.SurpriseReputation / 2; // breaking a treaty is remembered too
+        }
+        if (surprise || truce)
+        {
+            civ.Reputation += Content.War.SurpriseReputation;
+            NewsAbout(civ.Id, other, $"{civ.Name} attacked {Civs[other].Name} {(surprise ? "without declaring war" : "breaking a truce")}.");
+        }
+        else
+        {
+            NewsAbout(civ.Id, other, $"{civ.Name} declared war on {Civs[other].Name}.");
+        }
+
+        return null;
+    }
+
+    private string? Attack(Civ civ, int id, int cell)
+    {
+        if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
+        {
+            return "Not your unit, or it is not ready.";
+        }
+
+        Unit u = Units[id];
+        if (!Content.Units[u.Kind].Army)
+        {
+            return "Only soldiers attack.";
+        }
+
+        int enemyUnit = -1;
+        foreach (Unit other in Units)
+        {
+            if (other.Cell == cell && other.Civ != civ.Id && other.State is UnitState.Idle or UnitState.Moving && Sees(civ, other))
+            {
+                enemyUnit = other.Id;
+                break;
+            }
+        }
+
+        int enemySettlement = SettlementAt[cell] >= 0 && Settlements[SettlementAt[cell]].Center == cell && Settlements[SettlementAt[cell]].Civ != civ.Id
+            ? SettlementAt[cell] : -1;
+        int victim = enemyUnit >= 0 ? Units[enemyUnit].Civ : enemySettlement >= 0 ? Settlements[enemySettlement].Civ : -1;
+        if (victim < 0)
+        {
+            return "There is no enemy there.";
+        }
+
+        if (!AtWar(civ.Id, victim))
+        {
+            DeclareWar(civ, victim, surprise: true);
+        }
+
+        u.TargetUnit = enemyUnit;
+        u.TargetSettlement = enemyUnit >= 0 ? -1 : enemySettlement;
+        ChaseTarget(u);
+        return null;
+    }
+
+    private string? ProposePeace(Civ civ, int other, int tribute)
+    {
+        if ((uint)other >= (uint)Civs.Count || !AtWar(civ.Id, other))
+        {
+            return "We are not at war with them.";
+        }
+
+        PeaceOffers.RemoveAll(o => o.From == civ.Id && o.To == other);
+        PeaceOffers.Add(new PeaceOffer(civ.Id, other, Math.Clamp(tribute, -50, 50), Ticks));
+        News.Add((other, $"{civ.Name} offer peace" + (tribute > 0 ? $" if we pay {tribute}% of our goods." : tribute < 0 ? $" and {-tribute}% of their goods." : ".")));
+        return null;
+    }
+
+    private string? AnswerPeace(Civ civ, int from, bool accept)
+    {
+        PeaceOffer? offer = PeaceOffers.Find(o => o.From == from && o.To == civ.Id);
+        if (offer is null)
+        {
+            return "There is no such offer.";
+        }
+
+        PeaceOffers.Remove(offer);
+        if (!accept)
+        {
+            News.Add((from, $"{civ.Name} refused our peace."));
+            return null;
+        }
+
+        MakePeace(Civs[from], civ, offer.TributePercent);
+        return null;
+    }
+
+    /// <summary>Ends the war between two peoples; the tribute goes from <paramref name="b"/> to <paramref name="a"/> (negative: back).</summary>
+    public void MakePeace(Civ a, Civ b, int tributePercent)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        Civ payer = tributePercent >= 0 ? b : a;
+        Civ taker = tributePercent >= 0 ? a : b;
+        int pct = Math.Abs(tributePercent);
+        if (pct > 0 && payer.Settlements.Count > 0 && taker.Settlements.Count > 0)
+        {
+            // The tribute travels in a caravan from the payer's settlement nearest the taker.
+            (Settlement from, Settlement to) = ClosestPair(payer, taker);
+            var load = new long[Content.Goods.Count];
+            for (int g = 0; g < load.Length; g++)
+            {
+                long total = 0;
+                foreach (int sid in payer.Settlements)
+                {
+                    total += Settlements[sid].Stock[g];
+                }
+
+                load[g] = total * pct / 100;
+                TakeFromCiv(payer, from, g, load[g]);
+                load[g] = Math.Min(load[g], from.Stock[g]);
+            }
+
+            Unit c = NewCarrier(payer, Content.Caravans, from, NearestStore(from, to.Center), load, 100);
+            c.Job = CarrierJob.ToSettlement;
+            c.Target = to.Id;
+            Walk(c, NearestStore(to, from.Center));
+            SyncTotals(payer);
+        }
+
+        SetWar(a.Id, b.Id, false);
+        PeaceMade(a.Id, b.Id);
+        long truce = Ticks + (3 * SimContent.TicksPerMinute);
+        Truces()[(a.Id * Civs.Count) + b.Id] = truce;
+        Truces()[(b.Id * Civs.Count) + a.Id] = truce;
+        foreach (Unit u in Units)
+        {
+            if ((u.Civ == a.Id && (u.TargetUnit >= 0 && Units[u.TargetUnit].Civ == b.Id || u.TargetSettlement >= 0 && Settlements[u.TargetSettlement].Civ == b.Id))
+                || (u.Civ == b.Id && (u.TargetUnit >= 0 && Units[u.TargetUnit].Civ == a.Id || u.TargetSettlement >= 0 && Settlements[u.TargetSettlement].Civ == a.Id)))
+            {
+                u.TargetUnit = -1;
+                u.TargetSettlement = -1;
+            }
+        }
+
+        NewsAbout(a.Id, b.Id, $"{a.Name} and {b.Name} made peace" + (pct > 0 ? $"; {payer.Name} pay {pct}% of their goods." : "."));
+    }
+
+    private string? Disband(Civ civ, int id)
+    {
+        if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
+        {
+            return "Not your unit.";
+        }
+
+        Unit u = Units[id];
+        int sid = SettlementAt[u.Cell];
+        if (sid < 0 || Settlements[sid].Civ != civ.Id)
+        {
+            return "Units go home only on our own land.";
+        }
+
+        Settlements[sid].People += u.People;
+        u.State = UnitState.Gone;
+        civ.Units.Remove(u.Id);
+        civ.Dirty = true;
+        return null;
+    }
+
+    /// <summary>Fighting strength of a unit now, before luck: people × strength × terrain and upgrades.</summary>
+    public long Power(Unit u)
+    {
+        ArgumentNullException.ThrowIfNull(u);
+        UnitType t = Content.Units[u.Kind];
+        int pct = 100;
+        if ((t.BonusBiomes.Length > 0 && t.BonusBiomes[Map.Biome[u.Cell]]) || (t.BonusReliefs.Length > 0 && t.BonusReliefs[Map.Relief[u.Cell]]))
+        {
+            pct += t.BonusPercent;
+        }
+
+        Civ civ = Civs[u.Civ];
+        foreach ((int tech, int up) in t.Upgrades)
+        {
+            if (civ.KnownTech[tech])
+            {
+                pct += up;
+            }
+        }
+
+        pct += Bonus(civ, EffectKind.Strength, t.Key, t.Groups); // weapons, armour, bows of each era
+        return (long)u.People * t.Strength * pct;
+    }
+
+    /// <summary>Defence of a settlement in percent from its finished fortifications.</summary>
+    public int Defense(Settlement s)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        int pct = 100;
+        foreach (int id in Civs[s.Civ].Buildings)
+        {
+            Building b = Buildings[id];
+            if (b.Settlement == s.Id && b.State == BuildingState.Active && Content.Buildings[b.Type].DefensePercent > 0)
+            {
+                BuildingType t = Content.Buildings[b.Type];
+                pct += t.DefensePercent + Bonus(Civs[s.Civ], EffectKind.Defense, t.Key, t.Groups);
+            }
+        }
+
+        return pct;
+    }
+
+    // Once a second: every soldier fights the enemy it was sent at, or any enemy within reach.
+    private void CombatStep()
+    {
+        foreach (Unit u in Units)
+        {
+            u.Fighting = false;
+        }
+
+        foreach (Settlement s in Settlements)
+        {
+            s.Besieged = false;
+        }
+
+        foreach (Unit u in Units)
+        {
+            if (u.State is UnitState.Gone or UnitState.Training || !Content.Units[u.Kind].Army)
+            {
+                continue;
+            }
+
+            int reach = Content.Units[u.Kind].Range;
+            Unit? enemy = u.TargetUnit >= 0 && Units[u.TargetUnit].State is UnitState.Idle or UnitState.Moving ? Units[u.TargetUnit] : null;
+            if (enemy is not null && Distance(u.Cell, enemy.Cell) > reach)
+            {
+                ChaseTarget(u);
+                enemy = null;
+            }
+
+            enemy ??= NearestEnemy(u, reach);
+            if (enemy is not null)
+            {
+                Hit(u, enemy);
+                continue;
+            }
+
+            if (u.TargetUnit >= 0 && Units[u.TargetUnit].State == UnitState.Gone)
+            {
+                u.TargetUnit = -1;
+            }
+
+            if (u.TargetSettlement >= 0)
+            {
+                Settlement target = Settlements[u.TargetSettlement];
+                if (target.Abandoned || target.Civ == u.Civ || !AtWar(u.Civ, target.Civ))
+                {
+                    u.TargetSettlement = -1;
+                }
+                else if (Distance(u.Cell, target.Center) <= reach)
+                {
+                    Siege(u, target);
+                }
+                else if (u.State == UnitState.Idle)
+                {
+                    ChaseTarget(u);
+                }
+            }
+        }
+    }
+
+    // News about two peoples reaches them and everyone who has met one of them.
+    private void NewsAbout(int a, int b, string text)
+    {
+        foreach (Civ c in Civs)
+        {
+            if (c.Id == a || c.Id == b || Met(c, Civs[a]) || Met(c, Civs[b]))
+            {
+                News.Add((c.Id, text));
+            }
+        }
+    }
+
+    private int Distance(int a, int b) => Geo.Distance(Geo.FromIndex(a), Geo.FromIndex(b));
+
+    private Unit? NearestEnemy(Unit u, int reach)
+    {
+        Unit? best = null;
+        int bestD = int.MaxValue;
+        foreach (Unit other in Units)
+        {
+            if (other.Civ == u.Civ || other.State is UnitState.Gone or UnitState.Training || !AtWar(u.Civ, other.Civ))
+            {
+                continue;
+            }
+
+            int d = Distance(u.Cell, other.Cell);
+            if (d <= reach && d < bestD)
+            {
+                best = other;
+                bestD = d;
+            }
+        }
+
+        return best;
+    }
+
+    private long Luck(long damage) => damage * _combat.NextInt(Content.War.LowLuckPercent, Content.War.HighLuckPercent + 1) / 100;
+
+    // Damage is in hundredths of a person: power (people × strength × percent) / 10 000 people a second at strength 10.
+    private void Hit(Unit attacker, Unit defender)
+    {
+        attacker.Fighting = true;
+        defender.Fighting = true;
+        defender.Wounds += Luck(Power(attacker)) / 100;
+        int dead = (int)Math.Min(defender.People, defender.Wounds / SimContent.One);
+        if (dead <= 0)
+        {
+            return;
+        }
+
+        defender.Wounds -= dead * SimContent.One;
+        defender.People -= dead;
+        Scores()[(attacker.Civ * Civs.Count) + defender.Civ] += dead;
+        if (defender.People <= 0)
+        {
+            Destroyed(defender, attacker.Civ);
+        }
+    }
+
+    // A unit was wiped out by another people (carriers lose their load).
+    internal void Destroyed(Unit unit, int byCiv)
+    {
+        bool carrier = unit.Cargo is not null && Content.Units[unit.Kind].System;
+        Gone(unit); // first: the site still counts this load as on the way
+        LoseLoad(unit, byCiv);
+        if (!carrier)
+        {
+            News.Add((unit.Civ, $"Our {Content.Units[unit.Kind].Name.ToLowerInvariant()} were destroyed by {Civs[byCiv].Name}."));
+            News.Add((byCiv, $"We destroyed {Civs[unit.Civ].Name}' {Content.Units[unit.Kind].Name.ToLowerInvariant()}."));
+        }
+    }
+
+    private void Siege(Unit attacker, Settlement target)
+    {
+        attacker.Fighting = true;
+        target.Besieged = true;
+        UnitType at = Content.Units[attacker.Kind];
+        int siege = 100 + at.SiegePercent + (at.SiegePercent > 0 ? Bonus(Civs[attacker.Civ], EffectKind.Siege, at.Key, at.Groups) : 0);
+        target.Wounds += Luck(Power(attacker)) * siege / 100 / 100;
+        int dead = (int)Math.Min(target.People, target.Wounds / SimContent.One);
+        if (dead > 0)
+        {
+            target.Wounds -= dead * SimContent.One;
+            target.People -= dead;
+            Civs[target.Civ].Dirty = true;
+            Scores()[(attacker.Civ * Civs.Count) + target.Civ] += dead;
+        }
+
+        // The defenders strike back, raised by the walls.
+        long defenders = (long)target.People * Content.War.DefenderPercent / 100;
+        long back = defenders * Content.War.DefenderStrength * Defense(target);
+        attacker.Wounds += Luck(back) / 100;
+        int lost = (int)Math.Min(attacker.People, attacker.Wounds / SimContent.One);
+        if (lost > 0)
+        {
+            attacker.Wounds -= lost * SimContent.One;
+            attacker.People -= lost;
+            Scores()[(target.Civ * Civs.Count) + attacker.Civ] += lost;
+            if (attacker.People <= 0)
+            {
+                attacker.State = UnitState.Gone;
+                Civs[attacker.Civ].Units.Remove(attacker.Id);
+                News.Add((attacker.Civ, $"Our {Content.Units[attacker.Kind].Name.ToLowerInvariant()} fell before {target.Name}."));
+                return;
+            }
+        }
+
+        if (target.People < Content.War.CaptureBelowPeople)
+        {
+            Capture(Civs[attacker.Civ], target);
+        }
+    }
+
+    private void Capture(Civ winner, Settlement s)
+    {
+        Civ loser = Civs[s.Civ];
+        loser.Settlements.Remove(s.Id);
+        winner.Settlements.Add(s.Id);
+        s.Civ = winner.Id;
+        s.Wounds = 0;
+        foreach (int cell in s.Cells)
+        {
+            OwnerAt[cell] = (short)winner.Id;
+            Map.Owner.Set(cell, (short)winner.Id);
+        }
+
+        foreach (Building b in Buildings)
+        {
+            if (b.Settlement == s.Id && b.State != BuildingState.Removed)
+            {
+                loser.Buildings.Remove(b.Id);
+                winner.Buildings.Add(b.Id);
+                b.Civ = winner.Id;
+                b.Priority = false;
+            }
+        }
+
+        Scores()[(winner.Id * Civs.Count) + loser.Id] += 50;
+        Reveal(winner, s.Center, Content.Levels[s.Level].Radius + 2);
+        winner.Dirty = true;
+        loser.Dirty = true;
+        NewsAbout(winner.Id, loser.Id, $"{winner.Name} took {s.Name} from {loser.Name}.");
+        if (loser.Settlements.Count == 0)
+        {
+            loser.Dead = true;
+            foreach (int uid in loser.Units)
+            {
+                Units[uid].State = UnitState.Gone;
+            }
+
+            loser.Units.Clear();
+            NewsAbout(loser.Id, winner.Id, $"{loser.Name} are no more.");
+        }
+    }
+
+    // Walk toward the target until it is within reach.
+    private void ChaseTarget(Unit u)
+    {
+        int goal = u.TargetUnit >= 0 ? Units[u.TargetUnit].Cell : u.TargetSettlement >= 0 ? Settlements[u.TargetSettlement].Center : -1;
+        if (goal < 0 || Distance(u.Cell, goal) <= Content.Units[u.Kind].Range)
+        {
+            return;
+        }
+
+        if (!FindPath(u.Cell, goal, u.Path))
+        {
+            return;
+        }
+
+        // Stop short of the goal: as far as the unit's reach.
+        int keep = Math.Max(0, u.Path.Count - Content.Units[u.Kind].Range);
+        u.Path.RemoveRange(keep, u.Path.Count - keep);
+        u.PathIndex = 0;
+        if (u.Path.Count == 0)
+        {
+            u.State = UnitState.Idle;
+            return;
+        }
+
+        bool wasMoving = u.State == UnitState.Moving;
+        u.State = UnitState.Moving;
+        if (!wasMoving)
+        {
+            u.NextTick = Ticks + StepTicks(u, u.Path[0]);
+            ScheduleUnit(u, UnitStep);
+        }
+    }
+}

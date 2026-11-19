@@ -1,0 +1,370 @@
+using System;
+using System.Collections.Generic;
+using CivSim.Core.Map;
+using CivSim.Sim.Content;
+
+namespace CivSim.Sim.State;
+
+/// <summary>Pick the start hex during the start phase.</summary>
+public sealed record PickStartCommand(int Civ, int Cell) : SimCommand(Civ);
+
+/// <summary>
+/// Scores of every land hex as a place to start, computed once after the world is generated (decision of Patryk, 2026-11-17):
+/// several criteria from 0 to 100, where 100 is the best hex of this map. The AI picks from them without computing anything,
+/// and the summary after the game tells the player how good the chosen place was.
+/// </summary>
+public sealed class SiteScores
+{
+    /// <summary>Names of the criteria, in the order of <see cref="Values"/>.</summary>
+    public static readonly string[] Criteria = ["people", "farming", "army", "materials", "room", "future", "safety"];
+
+    /// <summary>Creates empty scores for <paramref name="cells"/> hexes.</summary>
+    public SiteScores(int cells)
+    {
+        Values = new byte[Criteria.Length][];
+        for (int k = 0; k < Values.Length; k++)
+        {
+            Values[k] = new byte[cells];
+        }
+
+        Total = new byte[cells];
+    }
+
+    /// <summary>Score per criterion per hex (0 = water or worthless, 100 = best of the map).</summary>
+    public byte[][] Values { get; }
+
+    /// <summary>Overall score per hex, 0–100.</summary>
+    public byte[] Total { get; }
+}
+
+public sealed partial class SimGame
+{
+    private const int StartScoreRadius = 3;
+    private const int StartRoomRadius = 6;
+
+    /// <summary>Site scores (computed once at creation).</summary>
+    public SiteScores? Sites { get; private set; }
+
+    /// <summary>True while peoples are still choosing where to start.</summary>
+    public bool Picking { get; private set; }
+
+    /// <summary>Order in which peoples choose (civ ids).</summary>
+    public List<int> PickOrder { get; } = [];
+
+    /// <summary>Index in <see cref="PickOrder"/> of the people choosing now.</summary>
+    public int PickIndex { get; private set; }
+
+    /// <summary>Real ticks the current chooser has left.</summary>
+    public int PickTicksLeft { get; private set; }
+
+    /// <summary>Ticks a person gets to choose (15 s to look, 15 s to pick).</summary>
+    public const int PickTicks = 30 * SimContent.TicksPerSecond;
+
+    /// <summary>Start hex chosen by each people (−1 = not yet).</summary>
+    public int[] StartCell { get; private set; } = [];
+
+    /// <summary>Hexes around a chosen start where no other people may start.</summary>
+    public int BlockRadius => Content.FoundMinDistance * 3;
+
+    /// <summary>Scores the whole map for starting (once).</summary>
+    public void ScoreSites()
+    {
+        int n = Geo.CellCount;
+        var raw = new int[SiteScores.Criteria.Length][];
+        for (int k = 0; k < raw.Length; k++)
+        {
+            raw[k] = new int[n];
+        }
+
+        var area = new HexCoord[HexGlobe.RangeSize(StartRoomRadius)];
+        int copper = DepositId("copper");
+        int tin = DepositId("tin");
+        int iron = DepositId("iron_ore");
+        int stone = DepositId("stone");
+        int clay = DepositId("clay");
+        int flint = DepositId("flint");
+        int fish = DepositId("fish");
+        int game = DepositId("game");
+        int grain = DepositId("wild_grain");
+        for (int i = 0; i < n; i++)
+        {
+            if (Content.World.Biomes[Map.Biome[i]].IsWater)
+            {
+                continue;
+            }
+
+            int m = Geo.Range(Geo.FromIndex(i), StartRoomRadius, area);
+            int food = 0, farm = 0, army = 0, mat = 0, room = 0, future = 0, safe = 0;
+            for (int k = 0; k < m; k++)
+            {
+                int c = Geo.Index(area[k]);
+                bool near = Geo.Distance(Geo.FromIndex(i), area[k]) <= StartScoreRadius;
+                bool water = Content.World.Biomes[Map.Biome[c]].IsWater;
+                int dep = Map.DepositDepth[c] == 0 ? Map.Deposit[c] : 0;
+                if (!water)
+                {
+                    room++;
+                }
+
+                if (dep == copper || dep == tin || dep == iron)
+                {
+                    future += 3;
+                }
+
+                if (!near)
+                {
+                    continue;
+                }
+
+                food += Content.World.Biomes[Map.Biome[c]].Food * 2 + (dep == fish || dep == game || dep == grain ? 4 : 0);
+                if (!water)
+                {
+                    farm += Map.Fertility[c] / 10;
+                    army += (Map.Relief[c] > 0 ? 3 : 0) + (Content.WalkCost[(Map.Biome[c] * 3) + Map.Relief[c]] > 100 ? 1 : 0);
+                    mat += (Map.Relief[c] > 0 ? 2 : 0) + (dep == stone || dep == clay || dep == flint ? 4 : 0) + (Content.Buildings[Content.Building("woodcutter").Id].Biomes[Map.Biome[c]] ? 1 : 0);
+                    safe += Map.GrowingSeason[c] / 10;
+                }
+
+                if (dep == copper || dep == tin || dep == iron)
+                {
+                    army += 2;
+                }
+            }
+
+            if (NextToWater(i))
+            {
+                food += 6;
+                farm += 6;
+            }
+
+            raw[0][i] = food;
+            raw[1][i] = farm;
+            raw[2][i] = army;
+            raw[3][i] = mat;
+            raw[4][i] = room;
+            raw[5][i] = future;
+            raw[6][i] = safe;
+        }
+
+        var scores = new SiteScores(n);
+        var weights = new[] { 30, 20, 10, 15, 10, 5, 10 };
+        var max = new int[raw.Length];
+        for (int k = 0; k < raw.Length; k++)
+        {
+            foreach (int v in raw[k])
+            {
+                max[k] = Math.Max(max[k], v);
+            }
+        }
+
+        int bestTotal = 1;
+        var total = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            int t = 0;
+            for (int k = 0; k < raw.Length; k++)
+            {
+                int v = max[k] == 0 ? 0 : raw[k][i] * 100 / max[k];
+                scores.Values[k][i] = (byte)v;
+                t += v * weights[k];
+            }
+
+            total[i] = t / 100;
+            bestTotal = Math.Max(bestTotal, total[i]);
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            scores.Total[i] = (byte)(total[i] * 100 / bestTotal);
+        }
+
+        Sites = scores;
+    }
+
+    private int DepositId(string key)
+    {
+        foreach (Core.Content.DepositDefinition d in Content.World.Deposits)
+        {
+            if (d.Key == key)
+            {
+                return d.Id;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>Why a people cannot start on <paramref name="cell"/> now (null = it can).</summary>
+    public string? CannotStart(int cell)
+    {
+        if ((uint)cell >= (uint)Geo.CellCount || Content.World.Biomes[Map.Biome[cell]].IsWater)
+        {
+            return "A people starts on land.";
+        }
+
+        if (Map.Relief[cell] == 2)
+        {
+            return "Not in the mountains.";
+        }
+
+        HexCoord c = Geo.FromIndex(cell);
+        foreach (int s in StartCell)
+        {
+            if (s >= 0 && Geo.Distance(Geo.FromIndex(s), c) < BlockRadius)
+            {
+                return "Too close to another people.";
+            }
+        }
+
+        return null;
+    }
+
+    private void BeginPicking()
+    {
+        Picking = true;
+        StartCell = new int[Civs.Count];
+        Array.Fill(StartCell, -1);
+        PickOrder.Clear();
+        for (int c = 0; c < Civs.Count; c++)
+        {
+            PickOrder.Add(c);
+        }
+
+        for (int i = PickOrder.Count - 1; i > 0; i--)
+        {
+            int j = _events.NextInt(i + 1);
+            (PickOrder[i], PickOrder[j]) = (PickOrder[j], PickOrder[i]);
+        }
+
+        PickIndex = 0;
+        PickTicksLeft = Civs[PickOrder[0]].IsAi ? SimContent.TicksPerSecond : PickTicks;
+        foreach (Civ civ in Civs)
+        {
+            Array.Fill(civ.Known, true); // the whole map, but the server hides deposits and fertility while picking
+        }
+    }
+
+    // One tick of the start phase: the chooser's time runs out, then the AI picks for it.
+    private void PickingTick()
+    {
+        if (--PickTicksLeft > 0)
+        {
+            return;
+        }
+
+        Civ civ = Civs[PickOrder[PickIndex]];
+        PlaceStart(civ, AiStart(civ));
+    }
+
+    /// <summary>The hex the AI would choose for a people: from the best free places, with this people's error.</summary>
+    public int AiStart(Civ civ)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        SiteScores sites = Sites!;
+        int best = 0;
+        for (int i = 0; i < Geo.CellCount; i++)
+        {
+            if (sites.Total[i] > best && CannotStart(i) is null)
+            {
+                best = sites.Total[i];
+            }
+        }
+
+        int error = civ.StartError;
+        int bar = best * (100 - error) / 100;
+        var pool = new List<int>();
+        for (int i = 0; i < Geo.CellCount; i++)
+        {
+            if (sites.Total[i] >= bar && CannotStart(i) is null)
+            {
+                pool.Add(i);
+            }
+        }
+
+        return pool.Count == 0 ? -1 : pool[AiRandom.NextInt(pool.Count)];
+    }
+
+    private string? PickStart(Civ civ, int cell)
+    {
+        if (!Picking || PickOrder[PickIndex] != civ.Id)
+        {
+            return "It is not our turn to choose.";
+        }
+
+        string? why = CannotStart(cell);
+        if (why is not null)
+        {
+            return why;
+        }
+
+        PlaceStart(civ, cell);
+        return null;
+    }
+
+    private void PlaceStart(Civ civ, int cell)
+    {
+        int best = 0;
+        for (int i = 0; i < Geo.CellCount; i++)
+        {
+            if (Sites!.Total[i] > best && CannotStart(i) is null)
+            {
+                best = Sites.Total[i];
+            }
+        }
+
+        civ.BestStartAtPick = best;
+        if (cell < 0)
+        {
+            // No free land left: fall back to the generator's start hex.
+            cell = Settlements.Count > 0 ? Settlements[0].Center : 0;
+        }
+
+        StartCell[civ.Id] = cell;
+        PickIndex++;
+        if (PickIndex < PickOrder.Count)
+        {
+            PickTicksLeft = Civs[PickOrder[PickIndex]].IsAi ? SimContent.TicksPerSecond : PickTicks;
+            return;
+        }
+
+        // Everyone has chosen: the game begins.
+        Picking = false;
+        foreach (Civ c in Civs)
+        {
+            Array.Fill(c.Known, false);
+            c.NewlyKnown.Clear();
+            for (int chunk = 0; chunk < Map.Chunks.Count; chunk++)
+            {
+                c.NewlyKnown.Add(chunk);
+            }
+
+            FoundSettlement(c, StartCell[c.Id], Content.StartPeople);
+            News.Add((c.Id, StoryOf(c, StartCell[c.Id])));
+        }
+    }
+
+    /// <summary>Three sentences of the tribe's past, from the land it chose.</summary>
+    public string StoryOf(Civ civ, int cell)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        string biome = Content.World.Biomes[Map.Biome[cell]].Name.ToLowerInvariant();
+        string relief = Map.Relief[cell] == 1 ? "among low hills" : "on open ground";
+        string water = NextToWater(cell) ? "by fresh water that never runs dry" : "far from any river, trusting the rains";
+        string past = civ.Aggression > 60 ? "They drove off the bands that hunted here before them."
+            : civ.Expansion > 60 ? "They walked many moons, always toward the next valley."
+            : "They followed the herds until the elders said: here.";
+        return $"The {civ.Name} remember the long walk to the {biome}. {past} They raised their first fires {relief}, {water}.";
+    }
+
+    /// <summary>Score of a people's start compared with the best place free when it chose (for the summary).</summary>
+    public (int Mine, int Best) StartQuality(Civ civ)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        if (Sites is null || StartCell.Length <= civ.Id || StartCell[civ.Id] < 0)
+        {
+            return (0, 0);
+        }
+
+        return (Sites.Total[StartCell[civ.Id]], civ.BestStartAtPick);
+    }
+}

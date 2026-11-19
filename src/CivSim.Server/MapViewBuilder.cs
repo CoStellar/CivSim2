@@ -18,7 +18,13 @@ public static class MapViewBuilder
     public static MapChunkMessage? Build(WorldState world, int chunk, long turn, bool[]? known)
     {
         ArgumentNullException.ThrowIfNull(world);
-        WorldMap map = world.Map;
+        return Build(world.Map, world.Id.Value, chunk, turn, known);
+    }
+
+    /// <summary>Builds one chunk of <paramref name="map"/> (also used by the new game, ADR 0028).</summary>
+    public static MapChunkMessage? Build(WorldMap map, int worldId, int chunk, long turn, bool[]? known, bool hideResources = false, bool always = false)
+    {
+        ArgumentNullException.ThrowIfNull(map);
         HexGlobe geo = map.Geometry;
         (int x0, int y0, int w, int h) = map.Chunks.Bounds(chunk);
         int n = w * h;
@@ -80,13 +86,22 @@ public static class MapViewBuilder
             }
         }
 
-        if (!any)
+        if (!any && !always)
         {
             return null;
         }
 
+        if (hideResources)
+        {
+            // While peoples choose where to start they see the land but not its deposits or soil (decision of 2026-11-17).
+            System.Array.Clear(deposit);
+            System.Array.Clear(richness);
+            System.Array.Clear(depth);
+            System.Array.Clear(fertility);
+        }
+
         return new MapChunkMessage(
-            world.Id.Value, turn, chunk, x0, y0, w, h, visibility, elevation, temperature, humidity, biome, relief, feature,
+            worldId, turn, chunk, x0, y0, w, h, visibility, elevation, temperature, humidity, biome, relief, feature,
             fertility, deposit, richness, depth, owner, river, wild, influence, seasons, growing, seasonTemperature, seasonGrowth);
     }
 }

@@ -1,0 +1,2802 @@
+{
+  "version": 1,
+  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute; idle people forage idleForagePerMinute each. Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); without food it loses starvePercentPerMinute. resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools). Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre) and the building time starts when they arrive. groups: tags that technology effects can aim at (e.g. melee, tools).",
+  "density": 7,
+  "economyEveryTicks": 10,
+  "populationEveryTicks": 50,
+  "goods": [
+    {
+      "key": "food",
+      "name": "Food",
+      "worth": 1
+    },
+    {
+      "key": "wood",
+      "name": "Wood",
+      "worth": 1
+    },
+    {
+      "key": "stone",
+      "name": "Stone",
+      "worth": 1.2
+    },
+    {
+      "key": "clay",
+      "name": "Clay",
+      "worth": 1
+    },
+    {
+      "key": "hides",
+      "name": "Hides",
+      "worth": 1.5
+    },
+    {
+      "key": "tools",
+      "name": "Tools",
+      "worth": 3
+    },
+    {
+      "key": "clothing",
+      "name": "Clothing",
+      "worth": 3
+    },
+    {
+      "key": "pottery",
+      "name": "Pottery",
+      "worth": 2.5
+    },
+    {
+      "key": "textiles",
+      "name": "Textiles",
+      "worth": 3
+    },
+    {
+      "key": "copper",
+      "name": "Copper",
+      "worth": 4
+    },
+    {
+      "key": "tin",
+      "name": "Tin",
+      "worth": 5
+    },
+    {
+      "key": "bronze",
+      "name": "Bronze",
+      "worth": 8
+    },
+    {
+      "key": "iron",
+      "name": "Iron",
+      "worth": 8
+    },
+    {
+      "key": "arms",
+      "name": "Arms",
+      "worth": 10
+    }
+  ],
+  "start": {
+    "people": 20,
+    "stock": {
+      "food": 120,
+      "wood": 60,
+      "stone": 20
+    }
+  },
+  "food": {
+    "foodPerPersonPerMinute": 1,
+    "idleForagePerMinute": 0.6
+  },
+  "growth": {
+    "growthPercentPerMinute": 8,
+    "minGrowthPerMinute": 1,
+    "starvePercentPerMinute": 12
+  },
+  "resumeCostPercent": 15,
+  "settlementLevels": [
+    {
+      "key": "camp",
+      "name": "Camp",
+      "radius": 3,
+      "housing": 25,
+      "storage": 150,
+      "upgradePrice": {}
+    },
+    {
+      "key": "village",
+      "name": "Village",
+      "radius": 4,
+      "housing": 40,
+      "storage": 200,
+      "upgradePrice": {
+        "wood": 120,
+        "stone": 60,
+        "clay": 30
+      },
+      "tech": "agriculture"
+    },
+    {
+      "key": "town",
+      "name": "Town",
+      "radius": 5,
+      "housing": 60,
+      "storage": 300,
+      "upgradePrice": {
+        "wood": 250,
+        "stone": 200,
+        "pottery": 40,
+        "clothing": 30
+      },
+      "tech": "masonry"
+    },
+    {
+      "key": "city",
+      "name": "City",
+      "radius": 6,
+      "housing": 90,
+      "storage": 500,
+      "upgradePrice": {
+        "wood": 500,
+        "stone": 500,
+        "textiles": 80,
+        "pottery": 80,
+        "tools": 60
+      },
+      "tech": "construction"
+    }
+  ],
+  "foundSettlement": {
+    "minDistance": 5,
+    "comment": "Settlers found a camp at least minDistance hexes from every other settlement centre, on land nobody owns; their people live there."
+  },
+  "units": [
+    {
+      "key": "settlers",
+      "name": "Settlers",
+      "tech": "foraging",
+      "people": 8,
+      "price": {
+        "food": 40,
+        "wood": 30
+      },
+      "trainSeconds": 10,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "founds": true
+    },
+    {
+      "key": "scouts",
+      "name": "Scouts",
+      "tech": "foraging",
+      "people": 2,
+      "price": {
+        "food": 15
+      },
+      "trainSeconds": 5,
+      "ticksPerHex": 3,
+      "sight": 5,
+      "hiddenTicksPerHex": 6
+    },
+    {
+      "key": "porters",
+      "name": "Porters",
+      "tech": "foraging",
+      "people": 1,
+      "price": {},
+      "trainSeconds": 0,
+      "ticksPerHex": 5,
+      "sight": 2,
+      "system": true,
+      "cargoPerPerson": 20,
+      "groups": [
+        "carriers"
+      ]
+    },
+    {
+      "key": "caravan",
+      "name": "Caravan",
+      "tech": "foraging",
+      "people": 2,
+      "price": {},
+      "trainSeconds": 0,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "system": true,
+      "cargoPerPerson": 25,
+      "groups": [
+        "carriers"
+      ]
+    },
+    {
+      "key": "levy",
+      "name": "Levy",
+      "tech": "foraging",
+      "people": 10,
+      "price": {},
+      "trainSeconds": 3,
+      "ticksPerHex": 7,
+      "sight": 2,
+      "army": true,
+      "levy": true,
+      "strength": 5,
+      "groups": [
+        "melee"
+      ]
+    },
+    {
+      "key": "warriors",
+      "name": "Warriors",
+      "tech": "foraging",
+      "people": 10,
+      "price": {
+        "food": 30,
+        "wood": 10
+      },
+      "trainSeconds": 12,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "army": true,
+      "strength": 10,
+      "bonusBiomes": [
+        "deciduous_forest",
+        "taiga",
+        "jungle"
+      ],
+      "bonusPercent": 30,
+      "groups": [
+        "melee",
+        "infantry"
+      ]
+    },
+    {
+      "key": "archers",
+      "name": "Archers",
+      "tech": "hunting",
+      "people": 8,
+      "price": {
+        "food": 30,
+        "wood": 25
+      },
+      "trainSeconds": 15,
+      "ticksPerHex": 6,
+      "sight": 4,
+      "army": true,
+      "strength": 8,
+      "range": 2,
+      "bonusRelief": [
+        "hills",
+        "mountains"
+      ],
+      "bonusPercent": 40,
+      "groups": [
+        "ranged",
+        "infantry"
+      ]
+    },
+    {
+      "key": "spearmen",
+      "name": "Spearmen",
+      "tech": "bronze_working",
+      "people": 10,
+      "price": {
+        "food": 40,
+        "arms": 5
+      },
+      "trainSeconds": 18,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "army": true,
+      "strength": 16,
+      "bonusRelief": [
+        "flat"
+      ],
+      "bonusPercent": 20,
+      "groups": [
+        "melee",
+        "infantry"
+      ]
+    },
+    {
+      "key": "chariots",
+      "name": "Chariots",
+      "tech": "the_wheel",
+      "people": 6,
+      "price": {
+        "food": 50,
+        "wood": 40,
+        "bronze": 5
+      },
+      "trainSeconds": 20,
+      "ticksPerHex": 3,
+      "sight": 4,
+      "army": true,
+      "strength": 16,
+      "bonusRelief": [
+        "flat"
+      ],
+      "bonusPercent": 50,
+      "groups": [
+        "cavalry"
+      ]
+    },
+    {
+      "key": "horsemen",
+      "name": "Horsemen",
+      "tech": "horseback_riding",
+      "people": 6,
+      "price": {
+        "food": 60,
+        "hides": 20
+      },
+      "trainSeconds": 20,
+      "ticksPerHex": 3,
+      "sight": 5,
+      "army": true,
+      "strength": 18,
+      "bonusRelief": [
+        "flat"
+      ],
+      "bonusPercent": 40,
+      "groups": [
+        "cavalry"
+      ]
+    },
+    {
+      "key": "galley",
+      "name": "Galley",
+      "tech": "sailing",
+      "people": 8,
+      "price": {
+        "wood": 80,
+        "food": 30
+      },
+      "trainSeconds": 25,
+      "ticksPerHex": 4,
+      "sight": 4,
+      "army": true,
+      "naval": true,
+      "strength": 10,
+      "needsBuilding": "harbour",
+      "groups": [
+        "ship"
+      ]
+    },
+    {
+      "key": "swordsmen",
+      "name": "Swordsmen",
+      "tech": "iron_working",
+      "people": 10,
+      "price": {
+        "food": 50,
+        "arms": 10
+      },
+      "trainSeconds": 20,
+      "ticksPerHex": 6,
+      "sight": 3,
+      "army": true,
+      "strength": 24,
+      "groups": [
+        "melee",
+        "infantry"
+      ]
+    },
+    {
+      "key": "catapult",
+      "name": "Catapult",
+      "tech": "engineering",
+      "people": 6,
+      "price": {
+        "wood": 100,
+        "tools": 20
+      },
+      "trainSeconds": 30,
+      "ticksPerHex": 9,
+      "sight": 3,
+      "army": true,
+      "strength": 8,
+      "range": 2,
+      "siege": 300,
+      "needsBuilding": "siege_workshop",
+      "groups": [
+        "siege"
+      ]
+    },
+    {
+      "key": "warship",
+      "name": "Warship",
+      "tech": "shipbuilding",
+      "people": 12,
+      "price": {
+        "wood": 150,
+        "arms": 10
+      },
+      "trainSeconds": 35,
+      "ticksPerHex": 3,
+      "sight": 5,
+      "army": true,
+      "naval": true,
+      "strength": 22,
+      "range": 2,
+      "needsBuilding": "shipyard",
+      "groups": [
+        "ship"
+      ]
+    },
+    {
+      "key": "crossbowmen",
+      "name": "Crossbowmen",
+      "tech": "crossbows",
+      "people": 8,
+      "price": {
+        "food": 40,
+        "arms": 10
+      },
+      "trainSeconds": 20,
+      "ticksPerHex": 6,
+      "sight": 4,
+      "army": true,
+      "strength": 20,
+      "range": 2,
+      "groups": [
+        "ranged",
+        "infantry"
+      ]
+    },
+    {
+      "key": "knights",
+      "name": "Knights",
+      "tech": "feudalism",
+      "people": 6,
+      "price": {
+        "food": 80,
+        "arms": 15,
+        "hides": 20
+      },
+      "trainSeconds": 30,
+      "ticksPerHex": 3,
+      "sight": 5,
+      "army": true,
+      "strength": 40,
+      "bonusRelief": [
+        "flat"
+      ],
+      "bonusPercent": 30,
+      "groups": [
+        "cavalry"
+      ]
+    }
+  ],
+  "terrainCost": {
+    "comment": "Walking cost of a hex in percent of a flat open hex.",
+    "hills": 200,
+    "mountains": 400,
+    "forest": 150,
+    "forestBiomes": [
+      "deciduous_forest",
+      "taiga",
+      "jungle",
+      "swamp"
+    ]
+  },
+  "buildings": [
+    {
+      "key": "gatherers_hut",
+      "name": "Gatherers' hut",
+      "tech": "foraging",
+      "workers": 3,
+      "price": {
+        "wood": 15
+      },
+      "buildSeconds": 12,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "deciduous_forest",
+        "jungle",
+        "taiga",
+        "swamp",
+        "tundra"
+      ],
+      "produces": {
+        "food": 4,
+        "wood": 1
+      },
+      "bonusDeposit": "wild_grain",
+      "bonusPercent": 100,
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "woodcutter",
+      "name": "Woodcutter",
+      "tech": "foraging",
+      "workers": 3,
+      "price": {
+        "wood": 10,
+        "stone": 5
+      },
+      "buildSeconds": 12,
+      "biomes": [
+        "deciduous_forest",
+        "taiga",
+        "jungle",
+        "swamp"
+      ],
+      "produces": {
+        "wood": 4
+      },
+      "groups": [
+        "tools"
+      ]
+    },
+    {
+      "key": "hut",
+      "name": "Huts",
+      "tech": "foraging",
+      "workers": 0,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 10,
+      "housing": 8,
+      "groups": [
+        "house"
+      ]
+    },
+    {
+      "key": "storehouse",
+      "name": "Storehouse",
+      "tech": "foraging",
+      "workers": 0,
+      "price": {
+        "wood": 30
+      },
+      "buildSeconds": 20,
+      "storage": 300,
+      "groups": [
+        "store"
+      ]
+    },
+    {
+      "key": "hearth",
+      "name": "Hearth",
+      "tech": "fire",
+      "workers": 0,
+      "price": {
+        "wood": 15,
+        "stone": 10
+      },
+      "buildSeconds": 10,
+      "housing": 3,
+      "groups": [
+        "house"
+      ]
+    },
+    {
+      "key": "quarry",
+      "name": "Quarry",
+      "tech": "stone_tools",
+      "workers": 4,
+      "price": {
+        "wood": 25
+      },
+      "buildSeconds": 20,
+      "produces": {
+        "stone": 2
+      },
+      "bonusRelief": [
+        "hills",
+        "mountains"
+      ],
+      "bonusReliefPercent": 100,
+      "bonusDeposit": "stone",
+      "bonusPercent": 100,
+      "groups": [
+        "tools"
+      ]
+    },
+    {
+      "key": "toolmaker",
+      "name": "Toolmaker",
+      "tech": "stone_tools",
+      "workers": 2,
+      "price": {
+        "wood": 30,
+        "stone": 20
+      },
+      "buildSeconds": 25,
+      "consumes": {
+        "stone": 2,
+        "wood": 1
+      },
+      "produces": {
+        "tools": 1
+      },
+      "bonusDeposit": "flint",
+      "bonusPercent": 50,
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "hunters_lodge",
+      "name": "Hunters' lodge",
+      "tech": "hunting",
+      "workers": 3,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 15,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "deciduous_forest",
+        "taiga",
+        "jungle",
+        "tundra"
+      ],
+      "produces": {
+        "food": 3,
+        "hides": 1
+      },
+      "bonusDeposit": "game",
+      "bonusPercent": 100,
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "fishing_hut",
+      "name": "Fishing hut",
+      "tech": "fishing",
+      "workers": 2,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 15,
+      "needsWater": true,
+      "produces": {
+        "food": 5
+      },
+      "bonusDeposit": "fish",
+      "bonusPercent": 100,
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "clay_pit",
+      "name": "Clay pit",
+      "tech": "shelters",
+      "workers": 3,
+      "price": {
+        "wood": 20
+      },
+      "buildSeconds": 15,
+      "needsWater": true,
+      "orDeposit": "clay",
+      "produces": {
+        "clay": 3
+      },
+      "bonusDeposit": "clay",
+      "bonusPercent": 100,
+      "groups": [
+        "tools"
+      ]
+    },
+    {
+      "key": "herbalist",
+      "name": "Herbalist",
+      "tech": "herbal_lore",
+      "workers": 2,
+      "price": {
+        "wood": 20,
+        "clay": 10
+      },
+      "buildSeconds": 20,
+      "produces": {},
+      "groups": [
+        "care"
+      ]
+    },
+    {
+      "key": "tailor",
+      "name": "Tailor",
+      "tech": "sewing",
+      "workers": 2,
+      "price": {
+        "wood": 20,
+        "tools": 5
+      },
+      "buildSeconds": 20,
+      "consumes": {
+        "hides": 1
+      },
+      "produces": {
+        "clothing": 1
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "raft_landing",
+      "name": "Raft landing",
+      "tech": "rafts",
+      "workers": 2,
+      "price": {
+        "wood": 40
+      },
+      "buildSeconds": 20,
+      "needsWater": true,
+      "produces": {
+        "food": 2,
+        "wood": 1
+      },
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "farm",
+      "name": "Farm",
+      "tech": "agriculture",
+      "workers": 4,
+      "price": {
+        "wood": 30,
+        "tools": 5
+      },
+      "buildSeconds": 20,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "deciduous_forest"
+      ],
+      "minFertility": 40,
+      "produces": {
+        "food": 6
+      },
+      "bonusDeposit": "wild_grain",
+      "bonusPercent": 50,
+      "groups": [
+        "food",
+        "farm"
+      ]
+    },
+    {
+      "key": "potter",
+      "name": "Potter",
+      "tech": "pottery",
+      "workers": 2,
+      "price": {
+        "wood": 20,
+        "stone": 10
+      },
+      "buildSeconds": 20,
+      "consumes": {
+        "clay": 2,
+        "wood": 1
+      },
+      "produces": {
+        "pottery": 1
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "granary",
+      "name": "Granary",
+      "tech": "pottery",
+      "workers": 0,
+      "price": {
+        "wood": 30,
+        "clay": 30
+      },
+      "buildSeconds": 25,
+      "storage": 250,
+      "groups": [
+        "store"
+      ]
+    },
+    {
+      "key": "pasture",
+      "name": "Pasture",
+      "tech": "animal_husbandry",
+      "workers": 2,
+      "price": {
+        "wood": 30
+      },
+      "buildSeconds": 20,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "savanna",
+        "tundra"
+      ],
+      "produces": {
+        "food": 4,
+        "hides": 2
+      },
+      "bonusDeposit": "cattle",
+      "bonusPercent": 100,
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "stone_house",
+      "name": "Stone houses",
+      "tech": "masonry",
+      "workers": 0,
+      "price": {
+        "stone": 40,
+        "wood": 10
+      },
+      "buildSeconds": 25,
+      "housing": 16,
+      "groups": [
+        "house"
+      ]
+    },
+    {
+      "key": "mason",
+      "name": "Mason",
+      "tech": "masonry",
+      "workers": 3,
+      "price": {
+        "wood": 30,
+        "tools": 10
+      },
+      "buildSeconds": 25,
+      "consumes": {
+        "stone": 1
+      },
+      "produces": {},
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "weaver",
+      "name": "Weaver",
+      "tech": "weaving",
+      "workers": 2,
+      "price": {
+        "wood": 30,
+        "tools": 5
+      },
+      "buildSeconds": 25,
+      "consumes": {
+        "hides": 1,
+        "food": 1
+      },
+      "produces": {
+        "textiles": 1
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "irrigation_ditch",
+      "name": "Irrigation ditch",
+      "tech": "irrigation",
+      "workers": 2,
+      "price": {
+        "wood": 20,
+        "stone": 20
+      },
+      "buildSeconds": 20,
+      "needsWater": true,
+      "minFertility": 30,
+      "produces": {
+        "food": 5
+      },
+      "groups": [
+        "food",
+        "farm"
+      ]
+    },
+    {
+      "key": "trading_post",
+      "name": "Trading post",
+      "tech": "barter",
+      "workers": 2,
+      "price": {
+        "wood": 40,
+        "pottery": 10
+      },
+      "buildSeconds": 30,
+      "storage": 150,
+      "produces": {},
+      "groups": [
+        "store"
+      ]
+    },
+    {
+      "key": "palisade",
+      "name": "Palisade",
+      "tech": "palisade",
+      "workers": 0,
+      "price": {
+        "wood": 60
+      },
+      "buildSeconds": 25,
+      "defensePercent": 40,
+      "groups": [
+        "fort"
+      ]
+    },
+    {
+      "key": "copper_mine",
+      "name": "Copper mine",
+      "tech": "copper_working",
+      "workers": 4,
+      "price": {
+        "wood": 40,
+        "tools": 15
+      },
+      "buildSeconds": 30,
+      "orDeposit": "copper",
+      "produces": {
+        "copper": 2
+      },
+      "groups": [
+        "tools",
+        "mine"
+      ]
+    },
+    {
+      "key": "tin_mine",
+      "name": "Tin mine",
+      "tech": "bronze_working",
+      "workers": 4,
+      "price": {
+        "wood": 40,
+        "tools": 15
+      },
+      "buildSeconds": 30,
+      "orDeposit": "tin",
+      "produces": {
+        "tin": 2
+      },
+      "groups": [
+        "tools",
+        "mine"
+      ]
+    },
+    {
+      "key": "bronze_smith",
+      "name": "Bronze smith",
+      "tech": "bronze_working",
+      "workers": 3,
+      "price": {
+        "stone": 40,
+        "clay": 30
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "copper": 2,
+        "tin": 1,
+        "wood": 1
+      },
+      "produces": {
+        "bronze": 1
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "armourer",
+      "name": "Armourer",
+      "tech": "bronze_working",
+      "workers": 2,
+      "price": {
+        "stone": 40,
+        "wood": 30
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "bronze": 1,
+        "wood": 1
+      },
+      "produces": {
+        "arms": 1
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "cartwright",
+      "name": "Cartwright",
+      "tech": "the_wheel",
+      "workers": 2,
+      "price": {
+        "wood": 50,
+        "tools": 10
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "wood": 2
+      },
+      "produces": {
+        "tools": 1
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "school",
+      "name": "School",
+      "tech": "writing",
+      "workers": 3,
+      "price": {
+        "stone": 60,
+        "clay": 40
+      },
+      "buildSeconds": 40,
+      "produces": {},
+      "researchDiscountPercent": 10,
+      "groups": [
+        "learn"
+      ]
+    },
+    {
+      "key": "stable",
+      "name": "Stable",
+      "tech": "horseback_riding",
+      "workers": 2,
+      "price": {
+        "wood": 60
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "food": 2
+      },
+      "produces": {
+        "hides": 1
+      },
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "harbour",
+      "name": "Harbour",
+      "tech": "sailing",
+      "workers": 3,
+      "price": {
+        "wood": 80,
+        "stone": 20
+      },
+      "buildSeconds": 40,
+      "needsWater": true,
+      "produces": {
+        "food": 4
+      },
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "market",
+      "name": "Market",
+      "tech": "currency",
+      "workers": 3,
+      "price": {
+        "wood": 60,
+        "stone": 40,
+        "pottery": 10
+      },
+      "buildSeconds": 40,
+      "storage": 200,
+      "produces": {},
+      "groups": [
+        "store"
+      ]
+    },
+    {
+      "key": "barracks",
+      "name": "Barracks",
+      "tech": "code_of_laws",
+      "workers": 0,
+      "price": {
+        "wood": 80,
+        "stone": 40
+      },
+      "buildSeconds": 40,
+      "trainPercent": 50,
+      "groups": [
+        "army"
+      ]
+    },
+    {
+      "key": "brick_walls",
+      "name": "Brick walls",
+      "tech": "brick_walls",
+      "workers": 0,
+      "price": {
+        "clay": 120,
+        "wood": 30
+      },
+      "buildSeconds": 35,
+      "defensePercent": 70,
+      "groups": [
+        "fort"
+      ]
+    },
+    {
+      "key": "iron_mine",
+      "name": "Iron mine",
+      "tech": "iron_working",
+      "workers": 4,
+      "price": {
+        "wood": 50,
+        "tools": 20
+      },
+      "buildSeconds": 35,
+      "orDeposit": "iron_ore",
+      "produces": {
+        "iron": 1
+      },
+      "groups": [
+        "tools",
+        "mine"
+      ]
+    },
+    {
+      "key": "forge",
+      "name": "Forge",
+      "tech": "iron_working",
+      "workers": 3,
+      "price": {
+        "stone": 60,
+        "wood": 40
+      },
+      "buildSeconds": 35,
+      "consumes": {
+        "iron": 1,
+        "wood": 2
+      },
+      "produces": {
+        "tools": 2,
+        "arms": 1
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "observatory",
+      "name": "Observatory",
+      "tech": "mathematics",
+      "workers": 2,
+      "price": {
+        "stone": 100
+      },
+      "buildSeconds": 45,
+      "produces": {},
+      "researchDiscountPercent": 15,
+      "groups": [
+        "learn"
+      ]
+    },
+    {
+      "key": "great_storehouse",
+      "name": "Great storehouse",
+      "tech": "construction",
+      "workers": 0,
+      "price": {
+        "stone": 150,
+        "wood": 80
+      },
+      "buildSeconds": 45,
+      "storage": 1000,
+      "groups": [
+        "store"
+      ]
+    },
+    {
+      "key": "road",
+      "name": "Road",
+      "tech": "roads",
+      "workers": 0,
+      "price": {
+        "stone": 10
+      },
+      "buildSeconds": 6,
+      "groups": [
+        "road"
+      ]
+    },
+    {
+      "key": "builders_yard",
+      "name": "Builders' yard",
+      "tech": "construction",
+      "workers": 3,
+      "price": {
+        "stone": 80,
+        "wood": 60
+      },
+      "buildSeconds": 40,
+      "consumes": {
+        "stone": 1
+      },
+      "produces": {},
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "siege_workshop",
+      "name": "Siege workshop",
+      "tech": "engineering",
+      "workers": 3,
+      "price": {
+        "wood": 100,
+        "tools": 30
+      },
+      "buildSeconds": 45,
+      "consumes": {
+        "wood": 2
+      },
+      "produces": {},
+      "groups": [
+        "army"
+      ]
+    },
+    {
+      "key": "bathhouse",
+      "name": "Bathhouse",
+      "tech": "medicine",
+      "workers": 2,
+      "price": {
+        "stone": 80,
+        "pottery": 20
+      },
+      "buildSeconds": 40,
+      "housing": 4,
+      "produces": {},
+      "groups": [
+        "care"
+      ]
+    },
+    {
+      "key": "academy",
+      "name": "Academy",
+      "tech": "philosophy",
+      "workers": 3,
+      "price": {
+        "stone": 120,
+        "textiles": 20
+      },
+      "buildSeconds": 50,
+      "produces": {},
+      "researchDiscountPercent": 10,
+      "groups": [
+        "learn"
+      ]
+    },
+    {
+      "key": "shipyard",
+      "name": "Shipyard",
+      "tech": "shipbuilding",
+      "workers": 4,
+      "price": {
+        "wood": 150,
+        "tools": 30
+      },
+      "buildSeconds": 50,
+      "needsWater": true,
+      "consumes": {
+        "wood": 2
+      },
+      "produces": {},
+      "groups": [
+        "army"
+      ]
+    },
+    {
+      "key": "stone_walls",
+      "name": "Stone walls",
+      "tech": "stone_walls",
+      "workers": 0,
+      "price": {
+        "stone": 150
+      },
+      "buildSeconds": 45,
+      "defensePercent": 110,
+      "groups": [
+        "fort"
+      ]
+    },
+    {
+      "key": "manor",
+      "name": "Manor",
+      "tech": "feudalism",
+      "workers": 4,
+      "price": {
+        "stone": 200,
+        "wood": 100
+      },
+      "buildSeconds": 60,
+      "produces": {
+        "food": 8
+      },
+      "housing": 10,
+      "groups": [
+        "food"
+      ]
+    },
+    {
+      "key": "steelworks",
+      "name": "Steelworks",
+      "tech": "steel",
+      "workers": 3,
+      "price": {
+        "stone": 150,
+        "iron": 40
+      },
+      "buildSeconds": 60,
+      "consumes": {
+        "iron": 2,
+        "wood": 2
+      },
+      "produces": {
+        "tools": 4,
+        "arms": 2
+      },
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "castle",
+      "name": "Castle",
+      "tech": "castles",
+      "workers": 0,
+      "price": {
+        "stone": 400,
+        "wood": 100,
+        "iron": 30
+      },
+      "buildSeconds": 90,
+      "defensePercent": 220,
+      "housing": 10,
+      "groups": [
+        "fort"
+      ]
+    },
+    {
+      "key": "mill",
+      "name": "Mill",
+      "tech": "mills",
+      "workers": 3,
+      "price": {
+        "wood": 80,
+        "stone": 60,
+        "tools": 10
+      },
+      "buildSeconds": 40,
+      "needsWater": true,
+      "produces": {
+        "food": 6
+      },
+      "groups": [
+        "food",
+        "farm"
+      ]
+    },
+    {
+      "key": "guildhall",
+      "name": "Guild hall",
+      "tech": "guilds",
+      "workers": 3,
+      "price": {
+        "stone": 150,
+        "textiles": 30
+      },
+      "buildSeconds": 50,
+      "produces": {},
+      "groups": [
+        "craft"
+      ]
+    },
+    {
+      "key": "university",
+      "name": "University",
+      "tech": "university",
+      "workers": 4,
+      "price": {
+        "stone": 200,
+        "textiles": 40,
+        "pottery": 40
+      },
+      "buildSeconds": 60,
+      "produces": {},
+      "researchDiscountPercent": 20,
+      "groups": [
+        "learn"
+      ]
+    }
+  ],
+  "eras": [
+    {
+      "key": "stone_age",
+      "name": "Stone Age"
+    },
+    {
+      "key": "neolithic",
+      "name": "Neolithic"
+    },
+    {
+      "key": "bronze_age",
+      "name": "Bronze Age"
+    },
+    {
+      "key": "iron_age",
+      "name": "Iron Age"
+    },
+    {
+      "key": "middle_ages",
+      "name": "Middle Ages"
+    }
+  ],
+  "research": {
+    "comment": "A technology needs experience in the technologies before it (worker-minutes in their buildings), then its price in goods and its time. It is cheaper by neighbourDiscountPercent for every known people that knows it (at most maxNeighbourDiscountPercent). One research at a time.",
+    "neighbourDiscountPercent": 10,
+    "maxNeighbourDiscountPercent": 40
+  },
+  "technologies": [
+    {
+      "key": "foraging",
+      "name": "Foraging",
+      "era": "stone_age",
+      "gives": "Gatherers, woodcutters, huts, storehouses, scouts, settlers, warriors.",
+      "known": true,
+      "category": "food"
+    },
+    {
+      "key": "fire",
+      "name": "Fire",
+      "era": "stone_age",
+      "gives": "Hearths; gatherers +10%.",
+      "experience": {
+        "foraging": 10
+      },
+      "price": {
+        "wood": 30
+      },
+      "seconds": 20,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "gatherers_hut",
+          "value": 10
+        }
+      ],
+      "category": "food"
+    },
+    {
+      "key": "stone_tools",
+      "name": "Stone tools",
+      "era": "stone_age",
+      "gives": "Quarries, toolmakers.",
+      "experience": {
+        "foraging": 20
+      },
+      "price": {
+        "food": 40,
+        "wood": 20
+      },
+      "seconds": 30,
+      "category": "industry"
+    },
+    {
+      "key": "hunting",
+      "name": "Hunting",
+      "era": "stone_age",
+      "gives": "Hunters' lodges, archers.",
+      "experience": {
+        "foraging": 15
+      },
+      "price": {
+        "food": 30,
+        "wood": 20
+      },
+      "seconds": 25,
+      "category": "food"
+    },
+    {
+      "key": "fishing",
+      "name": "Fishing",
+      "era": "stone_age",
+      "gives": "Fishing huts.",
+      "experience": {
+        "foraging": 15
+      },
+      "price": {
+        "food": 30,
+        "wood": 20
+      },
+      "seconds": 25,
+      "category": "food"
+    },
+    {
+      "key": "shelters",
+      "name": "Shelters",
+      "era": "stone_age",
+      "gives": "Huts give 4 more homes; clay pits.",
+      "experience": {
+        "foraging": 25
+      },
+      "price": {
+        "wood": 40
+      },
+      "seconds": 30,
+      "effects": [
+        {
+          "kind": "housing",
+          "target": "hut",
+          "value": 4
+        }
+      ],
+      "category": "building"
+    },
+    {
+      "key": "herbal_lore",
+      "name": "Herbal lore",
+      "era": "stone_age",
+      "gives": "Herbalists; epidemics half as deadly.",
+      "experience": {
+        "hunting": 15
+      },
+      "price": {
+        "food": 40
+      },
+      "seconds": 30,
+      "effects": [
+        {
+          "kind": "resist",
+          "target": "epidemic",
+          "value": 50
+        }
+      ],
+      "category": "science"
+    },
+    {
+      "key": "sewing",
+      "name": "Sewing",
+      "era": "stone_age",
+      "gives": "Tailors (clothing); hard winters half as harsh.",
+      "experience": {
+        "hunting": 20,
+        "stone_tools": 10
+      },
+      "price": {
+        "hides": 15,
+        "food": 30
+      },
+      "seconds": 30,
+      "effects": [
+        {
+          "kind": "resist",
+          "target": "hard_winter",
+          "value": 50
+        }
+      ],
+      "category": "industry"
+    },
+    {
+      "key": "rafts",
+      "name": "Rafts",
+      "era": "stone_age",
+      "gives": "Raft landings; units cross rivers faster.",
+      "experience": {
+        "fishing": 15
+      },
+      "price": {
+        "wood": 50
+      },
+      "seconds": 30,
+      "effects": [
+        {
+          "kind": "speed",
+          "target": "*",
+          "value": 10
+        }
+      ],
+      "category": "trade"
+    },
+    {
+      "key": "flint_blades",
+      "name": "Flint blades",
+      "era": "stone_age",
+      "gives": "Warriors and levy +20%.",
+      "experience": {
+        "stone_tools": 20
+      },
+      "price": {
+        "stone": 30,
+        "tools": 5
+      },
+      "seconds": 25,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "melee",
+          "value": 20
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "agriculture",
+      "name": "Agriculture",
+      "era": "neolithic",
+      "gives": "Farms; camps can become villages.",
+      "experience": {
+        "foraging": 40,
+        "stone_tools": 10
+      },
+      "price": {
+        "food": 80,
+        "wood": 40,
+        "stone": 20
+      },
+      "seconds": 60,
+      "category": "food"
+    },
+    {
+      "key": "pottery",
+      "name": "Pottery",
+      "era": "neolithic",
+      "gives": "Potters (pottery), granaries.",
+      "experience": {
+        "agriculture": 15,
+        "shelters": 10
+      },
+      "price": {
+        "clay": 40,
+        "wood": 30
+      },
+      "seconds": 45,
+      "category": "industry"
+    },
+    {
+      "key": "animal_husbandry",
+      "name": "Animal husbandry",
+      "era": "neolithic",
+      "gives": "Pastures.",
+      "experience": {
+        "agriculture": 20,
+        "hunting": 20
+      },
+      "price": {
+        "food": 100,
+        "wood": 40
+      },
+      "seconds": 50,
+      "category": "food"
+    },
+    {
+      "key": "masonry",
+      "name": "Masonry",
+      "era": "neolithic",
+      "gives": "Stone houses, masons; villages can become towns.",
+      "experience": {
+        "stone_tools": 40,
+        "agriculture": 15
+      },
+      "price": {
+        "stone": 80,
+        "tools": 20
+      },
+      "seconds": 60,
+      "category": "building"
+    },
+    {
+      "key": "weaving",
+      "name": "Weaving",
+      "era": "neolithic",
+      "gives": "Weavers (textiles).",
+      "experience": {
+        "animal_husbandry": 20,
+        "sewing": 15
+      },
+      "price": {
+        "hides": 30,
+        "tools": 10
+      },
+      "seconds": 50,
+      "category": "industry"
+    },
+    {
+      "key": "irrigation",
+      "name": "Irrigation",
+      "era": "neolithic",
+      "gives": "Irrigation ditches; farms +25%; droughts 40% milder.",
+      "experience": {
+        "agriculture": 40
+      },
+      "price": {
+        "stone": 60,
+        "tools": 15
+      },
+      "seconds": 55,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "farm",
+          "value": 25
+        },
+        {
+          "kind": "resist",
+          "target": "drought",
+          "value": 40
+        }
+      ],
+      "category": "food"
+    },
+    {
+      "key": "barter",
+      "name": "Barter",
+      "era": "neolithic",
+      "gives": "Trading posts; trade agreements and caravans to other peoples.",
+      "experience": {
+        "pottery": 15
+      },
+      "price": {
+        "pottery": 20,
+        "food": 60
+      },
+      "seconds": 50,
+      "category": "trade"
+    },
+    {
+      "key": "palisade",
+      "name": "Palisade",
+      "era": "neolithic",
+      "gives": "Palisades (+40% defence).",
+      "experience": {
+        "stone_tools": 30
+      },
+      "price": {
+        "wood": 80
+      },
+      "seconds": 40,
+      "category": "military"
+    },
+    {
+      "key": "copper_working",
+      "name": "Copper working",
+      "era": "neolithic",
+      "gives": "Copper mines.",
+      "experience": {
+        "masonry": 20,
+        "pottery": 20
+      },
+      "price": {
+        "stone": 60,
+        "clay": 40,
+        "tools": 30
+      },
+      "seconds": 70,
+      "category": "industry"
+    },
+    {
+      "key": "polished_stone",
+      "name": "Polished stone tools",
+      "era": "neolithic",
+      "gives": "Quarries, woodcutters, clay pits +15%.",
+      "experience": {
+        "masonry": 20
+      },
+      "price": {
+        "stone": 60,
+        "tools": 10
+      },
+      "seconds": 40,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "tools",
+          "value": 15
+        }
+      ],
+      "upgrade": true,
+      "category": "industry"
+    },
+    {
+      "key": "hide_shields",
+      "name": "Hide shields",
+      "era": "neolithic",
+      "gives": "Infantry +15%.",
+      "experience": {
+        "animal_husbandry": 20
+      },
+      "price": {
+        "hides": 40
+      },
+      "seconds": 40,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "infantry",
+          "value": 15
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "bronze_working",
+      "name": "Bronze working",
+      "era": "bronze_age",
+      "gives": "Tin mines, bronze smiths, armourers (arms), spearmen.",
+      "experience": {
+        "copper_working": 30
+      },
+      "price": {
+        "copper": 40,
+        "wood": 80,
+        "tools": 30
+      },
+      "seconds": 80,
+      "category": "industry"
+    },
+    {
+      "key": "the_wheel",
+      "name": "The wheel",
+      "era": "bronze_age",
+      "gives": "Cartwrights, chariots; porters and caravans 50% faster.",
+      "experience": {
+        "agriculture": 60,
+        "masonry": 20
+      },
+      "price": {
+        "wood": 120,
+        "tools": 20
+      },
+      "seconds": 70,
+      "effects": [
+        {
+          "kind": "speed",
+          "target": "carriers",
+          "value": 50
+        }
+      ],
+      "category": "trade"
+    },
+    {
+      "key": "writing",
+      "name": "Writing",
+      "era": "bronze_age",
+      "gives": "Schools (research −10%).",
+      "experience": {
+        "pottery": 40,
+        "agriculture": 60
+      },
+      "price": {
+        "clay": 80,
+        "food": 100
+      },
+      "seconds": 70,
+      "category": "governance"
+    },
+    {
+      "key": "horseback_riding",
+      "name": "Horseback riding",
+      "era": "bronze_age",
+      "gives": "Stables, horsemen.",
+      "experience": {
+        "animal_husbandry": 40
+      },
+      "price": {
+        "food": 150,
+        "hides": 40
+      },
+      "seconds": 70,
+      "category": "military"
+    },
+    {
+      "key": "sailing",
+      "name": "Sailing",
+      "era": "bronze_age",
+      "gives": "Harbours, galleys.",
+      "experience": {
+        "fishing": 40,
+        "rafts": 20
+      },
+      "price": {
+        "wood": 150,
+        "textiles": 20
+      },
+      "seconds": 70,
+      "category": "trade"
+    },
+    {
+      "key": "currency",
+      "name": "Currency",
+      "era": "bronze_age",
+      "gives": "Markets; barter at fair worth; research −5%.",
+      "experience": {
+        "barter": 30,
+        "copper_working": 20
+      },
+      "price": {
+        "copper": 30,
+        "pottery": 30
+      },
+      "seconds": 70,
+      "effects": [
+        {
+          "kind": "research",
+          "target": "*",
+          "value": 5
+        }
+      ],
+      "category": "trade"
+    },
+    {
+      "key": "code_of_laws",
+      "name": "Code of laws",
+      "era": "bronze_age",
+      "gives": "Barracks (training ×2 faster); levy trains 50% faster.",
+      "experience": {
+        "writing": 10
+      },
+      "price": {
+        "clay": 60,
+        "food": 80
+      },
+      "seconds": 60,
+      "effects": [
+        {
+          "kind": "training",
+          "target": "levy",
+          "value": 50
+        }
+      ],
+      "category": "governance"
+    },
+    {
+      "key": "composite_bow",
+      "name": "Composite bow",
+      "era": "bronze_age",
+      "gives": "Archers +30%.",
+      "experience": {
+        "hunting": 40,
+        "bronze_working": 15
+      },
+      "price": {
+        "wood": 80,
+        "hides": 30
+      },
+      "seconds": 60,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "archers",
+          "value": 30
+        }
+      ],
+      "category": "military"
+    },
+    {
+      "key": "brick_walls",
+      "name": "Brick walls",
+      "era": "bronze_age",
+      "gives": "Brick walls (+70% defence).",
+      "experience": {
+        "masonry": 40,
+        "pottery": 30
+      },
+      "price": {
+        "clay": 150,
+        "wood": 50
+      },
+      "seconds": 60,
+      "category": "military"
+    },
+    {
+      "key": "bronze_weapons",
+      "name": "Bronze weapons",
+      "era": "bronze_age",
+      "gives": "Melee +30%.",
+      "experience": {
+        "bronze_working": 20
+      },
+      "price": {
+        "bronze": 30,
+        "wood": 40
+      },
+      "seconds": 60,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "melee",
+          "value": 30
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "bronze_armour",
+      "name": "Bronze armour",
+      "era": "bronze_age",
+      "gives": "Infantry +20%.",
+      "experience": {
+        "bronze_working": 30
+      },
+      "price": {
+        "bronze": 40,
+        "hides": 20
+      },
+      "seconds": 60,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "infantry",
+          "value": 20
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "bronze_tools",
+      "name": "Bronze tools",
+      "era": "bronze_age",
+      "gives": "Quarries, woodcutters, mines +20%.",
+      "experience": {
+        "bronze_working": 25
+      },
+      "price": {
+        "bronze": 30,
+        "tools": 20
+      },
+      "seconds": 55,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "tools",
+          "value": 20
+        }
+      ],
+      "upgrade": true,
+      "category": "industry"
+    },
+    {
+      "key": "iron_working",
+      "name": "Iron working",
+      "era": "iron_age",
+      "gives": "Iron mines, forges, swordsmen.",
+      "experience": {
+        "bronze_working": 50
+      },
+      "price": {
+        "bronze": 40,
+        "wood": 120,
+        "tools": 40
+      },
+      "seconds": 90,
+      "category": "industry"
+    },
+    {
+      "key": "mathematics",
+      "name": "Mathematics",
+      "era": "iron_age",
+      "gives": "Observatories (research −15%).",
+      "experience": {
+        "writing": 40
+      },
+      "price": {
+        "clay": 100,
+        "food": 150
+      },
+      "seconds": 80,
+      "category": "science"
+    },
+    {
+      "key": "construction",
+      "name": "Construction",
+      "era": "iron_age",
+      "gives": "Great storehouses; towns can become cities.",
+      "experience": {
+        "masonry": 60,
+        "mathematics": 10
+      },
+      "price": {
+        "stone": 200,
+        "wood": 150,
+        "tools": 60
+      },
+      "seconds": 100,
+      "category": "building"
+    },
+    {
+      "key": "roads",
+      "name": "Roads",
+      "era": "iron_age",
+      "gives": "Roads: walking on them twice as fast.",
+      "experience": {
+        "construction": 10,
+        "the_wheel": 30
+      },
+      "price": {
+        "stone": 150,
+        "tools": 30
+      },
+      "seconds": 70,
+      "category": "trade"
+    },
+    {
+      "key": "engineering",
+      "name": "Engineering",
+      "era": "iron_age",
+      "gives": "Siege workshops, catapults.",
+      "experience": {
+        "construction": 20,
+        "mathematics": 20
+      },
+      "price": {
+        "wood": 200,
+        "tools": 60,
+        "iron": 20
+      },
+      "seconds": 90,
+      "category": "military"
+    },
+    {
+      "key": "medicine",
+      "name": "Medicine",
+      "era": "iron_age",
+      "gives": "Bathhouses; growth +2% a minute; epidemics 30% milder.",
+      "experience": {
+        "herbal_lore": 40,
+        "writing": 30
+      },
+      "price": {
+        "food": 150,
+        "pottery": 40
+      },
+      "seconds": 80,
+      "effects": [
+        {
+          "kind": "growth",
+          "target": "*",
+          "value": 2
+        },
+        {
+          "kind": "resist",
+          "target": "epidemic",
+          "value": 30
+        }
+      ],
+      "category": "science"
+    },
+    {
+      "key": "philosophy",
+      "name": "Philosophy",
+      "era": "iron_age",
+      "gives": "Academies; rarer thinkers and advisors.",
+      "experience": {
+        "writing": 60,
+        "mathematics": 20
+      },
+      "price": {
+        "clay": 150,
+        "textiles": 40
+      },
+      "seconds": 90,
+      "effects": [
+        {
+          "kind": "luck",
+          "target": "*",
+          "value": 40
+        }
+      ],
+      "category": "science"
+    },
+    {
+      "key": "shipbuilding",
+      "name": "Shipbuilding",
+      "era": "iron_age",
+      "gives": "Shipyards, warships.",
+      "experience": {
+        "sailing": 40,
+        "iron_working": 20
+      },
+      "price": {
+        "wood": 250,
+        "iron": 30
+      },
+      "seconds": 90,
+      "category": "trade"
+    },
+    {
+      "key": "stone_walls",
+      "name": "Stone walls",
+      "era": "iron_age",
+      "gives": "Stone walls (+110% defence).",
+      "experience": {
+        "masonry": 60,
+        "construction": 20
+      },
+      "price": {
+        "stone": 250
+      },
+      "seconds": 80,
+      "category": "military"
+    },
+    {
+      "key": "iron_weapons",
+      "name": "Iron weapons",
+      "era": "iron_age",
+      "gives": "Melee +30%.",
+      "experience": {
+        "iron_working": 30
+      },
+      "price": {
+        "iron": 40,
+        "wood": 60
+      },
+      "seconds": 70,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "melee",
+          "value": 30
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "chain_mail",
+      "name": "Chain mail",
+      "era": "iron_age",
+      "gives": "Infantry and cavalry +25%.",
+      "experience": {
+        "iron_working": 40
+      },
+      "price": {
+        "iron": 60,
+        "hides": 30
+      },
+      "seconds": 70,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "infantry",
+          "value": 25
+        },
+        {
+          "kind": "strength",
+          "target": "cavalry",
+          "value": 25
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "iron_tools",
+      "name": "Iron tools",
+      "era": "iron_age",
+      "gives": "Quarries, woodcutters, mines +25%; farms +15%.",
+      "experience": {
+        "iron_working": 30
+      },
+      "price": {
+        "iron": 40,
+        "tools": 30
+      },
+      "seconds": 65,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "tools",
+          "value": 25
+        },
+        {
+          "kind": "production",
+          "target": "farm",
+          "value": 15
+        }
+      ],
+      "upgrade": true,
+      "category": "industry"
+    },
+    {
+      "key": "crop_rotation",
+      "name": "Crop rotation",
+      "era": "iron_age",
+      "gives": "Farms +25%.",
+      "experience": {
+        "agriculture": 120,
+        "irrigation": 40
+      },
+      "price": {
+        "food": 200,
+        "tools": 40
+      },
+      "seconds": 70,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "farm",
+          "value": 25
+        }
+      ],
+      "upgrade": true,
+      "category": "food"
+    },
+    {
+      "key": "feudalism",
+      "name": "Feudalism",
+      "era": "middle_ages",
+      "gives": "Manors, knights.",
+      "experience": {
+        "construction": 40,
+        "horseback_riding": 30
+      },
+      "price": {
+        "food": 300,
+        "iron": 60,
+        "stone": 200
+      },
+      "seconds": 120,
+      "category": "governance"
+    },
+    {
+      "key": "steel",
+      "name": "Steel",
+      "era": "middle_ages",
+      "gives": "Steelworks; all soldiers +10%.",
+      "experience": {
+        "iron_working": 60
+      },
+      "price": {
+        "iron": 120,
+        "wood": 200,
+        "tools": 80
+      },
+      "seconds": 120,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "*",
+          "value": 10
+        }
+      ],
+      "category": "industry"
+    },
+    {
+      "key": "castles",
+      "name": "Castles",
+      "era": "middle_ages",
+      "gives": "Castles (+220% defence).",
+      "experience": {
+        "construction": 60
+      },
+      "price": {
+        "stone": 400,
+        "iron": 40
+      },
+      "seconds": 110,
+      "category": "military"
+    },
+    {
+      "key": "heavy_plough",
+      "name": "Heavy plough",
+      "era": "middle_ages",
+      "gives": "Farms +30%.",
+      "experience": {
+        "agriculture": 200,
+        "iron_working": 40
+      },
+      "price": {
+        "iron": 60,
+        "wood": 150
+      },
+      "seconds": 90,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "farm",
+          "value": 30
+        }
+      ],
+      "category": "food"
+    },
+    {
+      "key": "crossbows",
+      "name": "Crossbows",
+      "era": "middle_ages",
+      "gives": "Crossbowmen.",
+      "experience": {
+        "iron_working": 40
+      },
+      "price": {
+        "iron": 60,
+        "wood": 100
+      },
+      "seconds": 90,
+      "category": "military"
+    },
+    {
+      "key": "guilds",
+      "name": "Guilds",
+      "era": "middle_ages",
+      "gives": "Guild halls; workshops +25%.",
+      "experience": {
+        "currency": 60,
+        "weaving": 60
+      },
+      "price": {
+        "textiles": 80,
+        "pottery": 60
+      },
+      "seconds": 100,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "craft",
+          "value": 25
+        }
+      ],
+      "category": "industry"
+    },
+    {
+      "key": "mills",
+      "name": "Mills",
+      "era": "middle_ages",
+      "gives": "Mills; farms +20%.",
+      "experience": {
+        "agriculture": 200,
+        "the_wheel": 60
+      },
+      "price": {
+        "stone": 200,
+        "wood": 150
+      },
+      "seconds": 90,
+      "effects": [
+        {
+          "kind": "production",
+          "target": "farm",
+          "value": 20
+        }
+      ],
+      "category": "food"
+    },
+    {
+      "key": "chivalry",
+      "name": "Chivalry",
+      "era": "middle_ages",
+      "gives": "Knights +30%.",
+      "experience": {
+        "feudalism": 20
+      },
+      "price": {
+        "food": 200,
+        "iron": 60
+      },
+      "seconds": 90,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "knights",
+          "value": 30
+        }
+      ],
+      "category": "military"
+    },
+    {
+      "key": "university",
+      "name": "University",
+      "era": "middle_ages",
+      "gives": "Universities (research −20%).",
+      "experience": {
+        "philosophy": 40,
+        "writing": 120
+      },
+      "price": {
+        "stone": 300,
+        "textiles": 80
+      },
+      "seconds": 120,
+      "category": "science"
+    },
+    {
+      "key": "steel_weapons",
+      "name": "Steel weapons",
+      "era": "middle_ages",
+      "gives": "Melee +30%.",
+      "experience": {
+        "steel": 30
+      },
+      "price": {
+        "iron": 80,
+        "wood": 60
+      },
+      "seconds": 90,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "melee",
+          "value": 30
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "plate_armour",
+      "name": "Plate armour",
+      "era": "middle_ages",
+      "gives": "Infantry and cavalry +30%.",
+      "experience": {
+        "steel": 40
+      },
+      "price": {
+        "iron": 120,
+        "textiles": 30
+      },
+      "seconds": 100,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "infantry",
+          "value": 30
+        },
+        {
+          "kind": "strength",
+          "target": "cavalry",
+          "value": 30
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "longbow",
+      "name": "Longbow",
+      "era": "middle_ages",
+      "gives": "Archers and crossbowmen +30%.",
+      "experience": {
+        "steel": 10
+      },
+      "price": {
+        "wood": 150,
+        "iron": 20
+      },
+      "seconds": 80,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "ranged",
+          "value": 30
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "heavy_cavalry",
+      "name": "Heavy cavalry",
+      "era": "middle_ages",
+      "gives": "Cavalry +30%.",
+      "experience": {
+        "feudalism": 40
+      },
+      "price": {
+        "food": 200,
+        "iron": 80
+      },
+      "seconds": 90,
+      "effects": [
+        {
+          "kind": "strength",
+          "target": "cavalry",
+          "value": 30
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    },
+    {
+      "key": "trebuchet",
+      "name": "Trebuchet",
+      "era": "middle_ages",
+      "gives": "Siege engines +100% against settlements.",
+      "experience": {
+        "engineering": 40
+      },
+      "price": {
+        "wood": 250,
+        "iron": 40
+      },
+      "seconds": 90,
+      "effects": [
+        {
+          "kind": "siege",
+          "target": "*",
+          "value": 100
+        }
+      ],
+      "upgrade": true,
+      "category": "military"
+    }
+  ],
+  "thinkers": {
+    "comment": "A people has one thinker. Rarity sets how much cheaper (costPercent) and how much less experience (experiencePercent) research needs; some take less experience but cost more. A thinker retires after retireMinutes; the successor (II, III…) keeps the school but each generation loses generationLossPercent of the edge. A new candidate shows up every offerMinutes; hiring costs hirePrice times the rarity's priceTimes.",
+    "retireMinutes": 12,
+    "offerMinutes": 3,
+    "generationLossPercent": 20,
+    "hirePrice": {
+      "food": 40,
+      "clay": 10
+    },
+    "rarities": [
+      {
+        "key": "common",
+        "name": "Common",
+        "weight": 50,
+        "costPercent": 100,
+        "experiencePercent": 100,
+        "priceTimes": 1
+      },
+      {
+        "key": "gifted",
+        "name": "Gifted",
+        "weight": 30,
+        "costPercent": 85,
+        "experiencePercent": 90,
+        "priceTimes": 2
+      },
+      {
+        "key": "visionary",
+        "name": "Visionary",
+        "weight": 12,
+        "costPercent": 120,
+        "experiencePercent": 60,
+        "priceTimes": 3
+      },
+      {
+        "key": "rare",
+        "name": "Rare",
+        "weight": 6,
+        "costPercent": 70,
+        "experiencePercent": 80,
+        "priceTimes": 4
+      },
+      {
+        "key": "legendary",
+        "name": "Legendary",
+        "weight": 2,
+        "costPercent": 55,
+        "experiencePercent": 60,
+        "priceTimes": 6
+      }
+    ]
+  },
+  "advisors": {
+    "comment": "A people has at most one advisor. A candidate shows up every offerMinutes with one or two fields (economy, growth, research, expansion); hiring costs hirePrice times the rarity's priceTimes, and the advisor eats upkeepFoodPerMinute. The advisor gives one piece of advice at a time, only in its fields.",
+    "offerMinutes": 4,
+    "hirePrice": {
+      "food": 30,
+      "wood": 20
+    },
+    "upkeepFoodPerMinute": 1,
+    "fields": [
+      "economy",
+      "growth",
+      "research",
+      "expansion"
+    ]
+  },
+  "war": {
+    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers eat soldierFoodPerMinute each. Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation).",
+    "combatEveryTicks": 10,
+    "lowLuckPercent": 80,
+    "highLuckPercent": 120,
+    "defenderPercent": 30,
+    "defenderStrength": 6,
+    "captureBelowPeople": 6,
+    "soldierFoodPerMinute": 1,
+    "surpriseReputation": -30,
+    "levyStrength": 5
+  },
+  "events": {
+    "comment": "Every people draws one event from the shared pool every everyMinutes (a random minute within the spread), never one another people has right now. An event lasts its seconds. productionPercent changes the production of the listed goods, eatPercent what people eat, losePercentPerMinute kills that share of people a minute, destroyBuilding burns one random finished building at the start. field: the advisor field that gives advice on it.",
+    "everyMinutes": 8,
+    "spreadMinutes": 2,
+    "pool": [
+      {
+        "key": "drought",
+        "name": "Drought",
+        "seconds": 90,
+        "goods": [
+          "food"
+        ],
+        "productionPercent": 60,
+        "field": "economy",
+        "advice": "Drought: build fishing huts or stop growing for a while; the stores must last."
+      },
+      {
+        "key": "hard_winter",
+        "name": "Hard winter",
+        "seconds": 90,
+        "eatPercent": 150,
+        "field": "growth",
+        "advice": "A hard winter: people eat more. Keep food stores high and do not train settlers now."
+      },
+      {
+        "key": "epidemic",
+        "name": "Epidemic",
+        "seconds": 60,
+        "losePercentPerMinute": 8,
+        "field": "growth",
+        "advice": "Sickness spreads: the fewer people we move around, the better; wait it out."
+      },
+      {
+        "key": "fire",
+        "name": "Fire",
+        "seconds": 20,
+        "destroyBuilding": true,
+        "field": "economy",
+        "advice": "A fire took a building: rebuild what we need most first."
+      },
+      {
+        "key": "flood",
+        "name": "Flood",
+        "seconds": 60,
+        "goods": [
+          "food",
+          "clay"
+        ],
+        "productionPercent": 50,
+        "field": "economy",
+        "advice": "The rivers flood: fields and clay pits work at half. Use the stores."
+      }
+    ]
+  },
+  "diplomacy": {
+    "comment": "Peoples consider a treaty only when they have known each other for knownMinutes, their settlements are at most borderHexes apart, they have not fought for peaceMinutes and the other's reputation is above minReputation; then a trade agreement when they lack a good the other makes or the other knows more technologies, an alliance when they share an enemy. At most one offer to the same people every offerCooldownMinutes, refusalCooldownMinutes after a refusal. Trade agreements need the barter technology. Barter goods travel in caravans; the AI takes a barter worth acceptWorthPercent of what it gives (100 with currency) and keeps twice what it gives.",
+    "researchDiscountPerPartner": 5,
+    "acceptWorthPercent": 110,
+    "tradeTech": "barter",
+    "knownMinutes": 3,
+    "borderHexes": 20,
+    "peaceMinutes": 10,
+    "minReputation": -20,
+    "offerCooldownMinutes": 3,
+    "refusalCooldownMinutes": 6
+  },
+  "buildingStorage": 20,
+  "techCategories": [
+    "food",
+    "industry",
+    "building",
+    "trade",
+    "military",
+    "governance",
+    "science"
+  ],
+  "eraAdvanceTechs": 5,
+  "tripFoodPer10Hexes": 0.5
+}

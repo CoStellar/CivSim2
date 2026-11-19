@@ -34,6 +34,13 @@ public partial class Main : Node2D
     private readonly LayerStack _layers = new();
     private LocalServerHost? _host;
     private ClientSession? _session;
+    private Play.PlayGame? _play;
+    private bool _playArgs;
+    private string? _playScreenshot;
+    private double _playSeconds = 6;
+    private bool _playDemo;
+    private bool _playLong;
+    private string _playWindow = "Summary";
     private MapView? _map;
     private Camera2D _camera = null!;
     private Hud? _hud;
@@ -137,9 +144,33 @@ public partial class Main : Node2D
                 case "--no-menu":
                     skipMenu = true;
                     break;
+                case "--play":
+                    _playArgs = true;
+                    break;
+                case "--play-screenshot":
+                    _playScreenshot = next;
+                    break;
+                case "--play-window":
+                    _playWindow = next;
+                    break;
+                case "--play-long":
+                    _playLong = true;
+                    break;
+                case "--play-demo":
+                    _playDemo = true;
+                    break;
+                case "--play-seconds":
+                    _playSeconds = double.Parse(next, CultureInfo.InvariantCulture);
+                    break;
             }
 
             skipMenu |= Array.IndexOf(StartSettings.ArgumentNames, args[i]) >= 0;
+        }
+
+        if (_playArgs)
+        {
+            StartPlay(_saved.Start.WithArguments(args).Seed);
+            return;
         }
 
         if (skipMenu)
@@ -151,6 +182,51 @@ public partial class Main : Node2D
         {
             ShowMenu();
         }
+    }
+
+    // The new game (ADR 0028): replaces the legacy viewer while it runs.
+    private void StartPlay(string seedText, int goal = 1)
+    {
+        StopGame();
+        _menu?.QueueFree();
+        _menu = null;
+        ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal);
+        if (_playScreenshot is not null)
+        {
+            // --play-demo builds a few things on the way, to check the screen without clicking.
+            (double, Action<Play.PlayGame>)[] demo = _playDemo
+                ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("woodcutter", 0)),
+                   (1.9, g => g.ScriptBuildNearCentre("hut", 2)), (2.1, g => g.ScriptBuildNearCentre("hunters_lodge", 1)),
+                   (2.3, g => g.ScriptTrain("scouts")), (9, g => g.ScriptMoveFirst(-8, -6, false)),
+                   (10, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
+                : [];
+            if (_playDemo && _playWindow == "Place")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptPlace("storehouse"))];
+            }
+            else if (_playDemo && _playWindow != "Summary")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen(_playWindow))];
+            }
+
+            if (_playLong)
+            {
+                demo = [(1, g => g.ScriptSpeed(SimulationSpeed.Max)), (_playSeconds - 3, g => g.ScriptSpeed(SimulationSpeed.Paused)),
+                        (_playSeconds - 2.5, g => g.ScriptOpen(_playWindow)), (_playSeconds - 2, g => g.ScriptZoom(0.35f))];
+            }
+
+            _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
+        }
+
+        _play.MenuRequested += () =>
+        {
+            _play?.QueueFree();
+            _play = null;
+            _camera.MakeCurrent();
+            CallDeferred(MethodName.ShowMenu);
+        };
+        AddChild(_play);
     }
 
     /// <inheritdoc />
@@ -198,6 +274,7 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
+        _menu.PlayRequested += (settings, goal) => StartPlay(settings.Seed, goal);
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {
