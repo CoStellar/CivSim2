@@ -155,7 +155,8 @@ tylko po działaniach.
 - **Faza startu:**
   - ludy wybierają po kolei, w losowej kolejności;
   - gracz ma 30 s i widzi całą mapę bez złóż i żyzności;
-  - wokół zajętych miejsc jest strefa blokady (15 heksów);
+  - wokół zajętych miejsc jest strefa blokady: 10 heksów (2 × odległość zakładania osady; do 2026-11-19 było 15, co zajmowało za dużo kontynentu);
+  - koło pokazane graczowi nie zdradza miejsca (2026-11-19): jego środek leży losowo (z ziarna) do 3 heksów od prawdziwego startu, a promień jest o 3 większy (13), więc zawsze zakrywa całą blokadę; serwer sprawdza to samo koło, które widzi gracz, i nie ma kropki w środku;
   - AI wybiera losowo spośród miejsc nie gorszych niż (100 − X)% najlepszego wolnego, gdzie X to losowe 0–30% dla każdego ludu;
   - gdy gracz nie zdąży, za niego wybiera AI;
   - po wyborze kronika podaje trzy zdania historii plemienia.
@@ -239,6 +240,35 @@ tylko po działaniach.
   - machiny oblężnicze zadają 4× więcej obrażeń osadom (trebusz jeszcze +100%).
 - **Nowe dobra:** odzież, naczynia, tkaniny, uzbrojenie. Osada staje się miasteczkiem za naczynia i odzież, a miastem za tkaniny i naczynia.
 
+## Ulepszanie budynków na miejscu (decyzja Patryka z 2026-11-19)
+
+- Budynek przechodzi w swój lepszy rodzaj, gdy lud zna jego technologię (pole `upgradesTo` w danych):
+
+| Z | Na |
+| --- | --- |
+| Huts | Stone house |
+| Storehouse | Great storehouse |
+| Gatherers' hut | Farm |
+| Hunters' lodge | Pasture |
+| Fishing hut | Harbour |
+| Farm | Manor |
+| Toolmaker | Blacksmith → Steelworks |
+| Armourer | Weaponsmith |
+| School | Academy → University |
+
+- Stary budynek znika, nowy buduje się na jego miejscach. Większy rodzaj potrzebuje wolnych miejsc obok (np. farma zajmuje cały heks).
+- Połowa ceny starego budynku liczy się do nowego (`upgradeCreditPercent` 50, nie więcej niż cena nowego); resztę noszą tragarze jak przy każdej budowie.
+- W czasie przebudowy budynek nie działa (domy też: chaty znikają, dopóki nie stanie kamienny dom).
+- Warunki terenu nowego rodzaju muszą pasować (farma potrzebuje żyznej ziemi).
+
+## Podgląd heksa (2026-11-19)
+
+Po kliknięciu heksa z budynkami lewy panel pokazuje:
+- ziemię (biom, rzeźba, czyja, złoże, zagajnik);
+- cztery miejsca heksa jako obrazek 2 × 2: każdy budynek to blok z ramką w kolorze stanu (pracuje, czeka, stoi, budowa z procentem), wolne miejsca są puste;
+- „Protection and works”: każdy rodzaj (rów, palisada, mur, akwedukt, most) z „yes” albo „no” i technologią, której brakuje, oraz przyciski usuwania;
+- każdy budynek osobno: stan, pracownicy, produkcja, ulepszenie (koszt albo powód, czemu nie teraz; „Later: …” przed technologią) i przyciski w jednym rzędzie: ulepsz, priorytet, stop/start, wyburz.
+
 ## Racje (decyzja Patryka z 2026-11-19)
 
 Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po trochu” co takt.
@@ -257,7 +287,7 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
   - w panelu jednostki „Fed by X: ration in S s” albo HUNGRY / STARVING;
   - alarm „rations”, gdy do następnej racji zabraknie jedzenia, i alarm głodu z liczbą głodnych;
   - okno **6 Units** (także klawisz P i przycisk „Patrols N” na górze): wszystkie jednostki, najpierw patrole i głodni, z kolumną „Fed by”, przyciskiem „Stop patrol” przy każdej i „Stop all patrols”.
-- **Patrole** chodzą po swojej pętli w kółko, aż gracz je zatrzyma.
+- **Patrole** chodzą po swojej pętli w kółko, aż gracz je zatrzyma. Zatrzymana jednostka pamięta ostatnią pętlę: „Resume” wysyła ją na tę samą trasę, „Recall” odsyła do osady, która ją karmi. W oknie Units działa to dla jednej jednostki, dla zaznaczonych (kolumna Pick, „pick patrols”) i dla wszystkich.
 - **AI:** szkoli wojsko w osadzie, która ma najwięcej jedzenia na zbyciu i wyżywi nowy oddział.
 - **Pomiar** (3 ziarna, 4 ludy, 40 minut; przed → po): ludzi 728 → 953, osad 40 → 37, jednostek 41 → 43, wymarłych ludów 0 → 1. Próbek „lud głoduje” 615 → 1078, bo flaga głodu trwa teraz całą minutę po nieudanej racji (wcześniej tylko przy pustym magazynie). Jednostki głodne w 3–4% próbek.
 
