@@ -114,6 +114,8 @@ Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
 
 ## Gracz AI (etap F)
 
+Pełny opis decyzji (N1–N20), liczby i pomiar z 12 ziaren: [`docs/ai/13-ai-nowej-gry.md`](../ai/13-ai-nowej-gry.md). Pomiar: `dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12`.
+
 Te same komendy co gracz, co 3 sekundy, widzi tylko to, co odkrył jego lud. Charakter (wojowniczość, ekspansja) jest losowany i widać go
 tylko po działaniach.
 
