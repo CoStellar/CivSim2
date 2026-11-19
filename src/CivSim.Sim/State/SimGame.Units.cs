@@ -179,7 +179,7 @@ public sealed partial class SimGame
         trainPct = trainPct * pricePct / 100 * (shock ? Content.Combat.ShockTrainPercent : 100) / 100;
         var u = new Unit
         {
-            Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = spawn, State = UnitState.Training, NextTick = Ticks + Math.Max(1, t.TrainTicks * trainPct / 100),
+            Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Size = people, Cell = spawn, State = UnitState.Training, NextTick = Ticks + Math.Max(1, t.TrainTicks * trainPct / 100),
             Cargo = t.Founds ? (long[])t.Price.Clone() : null, // settlers carry their provisions to the new camp
             Home = s.Id,
         };

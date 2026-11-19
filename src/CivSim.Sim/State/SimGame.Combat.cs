@@ -171,12 +171,13 @@ public sealed partial class SimGame
         int cell = FreeBeside(u.Cell, u.Civ);
         var part = new Unit
         {
-            Id = Units.Count, Civ = civ.Id, Kind = u.Kind, People = people, Cell = u.Cell, State = UnitState.Idle, Home = u.Home,
+            Id = Units.Count, Civ = civ.Id, Kind = u.Kind, People = people, Size = people, Cell = u.Cell, State = UnitState.Idle, Home = u.Home,
             Weapon = u.Weapon, Armour = u.Armour, Stance = u.Stance, Hunger = u.Hunger,
             Injured = u.Injured * people / u.People,
         };
         u.Injured -= part.Injured;
         u.People -= people;
+        u.Size = u.People;
         Units.Add(part);
         civ.Units.Add(part.Id);
         Watch(part);
@@ -701,6 +702,11 @@ public sealed partial class SimGame
 
         _pending[d.Id] += damage;
         _pendingBy[d.Id] = a.Civ;
+        if (!a.Struck.Contains(d.Id))
+        {
+            a.Struck.Add(d.Id);
+        }
+
         a.Fighting = true;
         d.Fighting = true;
         a.FoughtTick = Ticks;
@@ -719,6 +725,7 @@ public sealed partial class SimGame
         {
             u.Fighting = false;
             u.LastLoss = 0;
+            u.Struck.Clear();
         }
 
         foreach (Settlement s in Settlements)
@@ -762,6 +769,10 @@ public sealed partial class SimGame
 
                         bool charge = charging && !Content.Units[e.Kind].StopsCharge;
                         Strike(u, e, each, ranged: false, charge ? r.ChargePercent : 100);
+                        if (charge)
+                        {
+                            u.ChargeTick = Ticks;
+                        }
                     }
                 }
             }
@@ -805,8 +816,18 @@ public sealed partial class SimGame
         }
 
         u.Wounds -= dead * SimContent.One;
+        int before = u.People;
         u.People -= dead;
-        u.LastLoss = dead;
+        u.LastLoss += dead;
+        int size = Math.Max(u.Size, before);
+        foreach (int pct in Content.Combat.WarnPercents)
+        {
+            if (before * 100 > size * pct && u.People * 100 <= size * pct && u.People > 0)
+            {
+                News.Add((u.Civ, $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} are down to {u.People} of {size}."));
+            }
+        }
+
         Wound(u, dead);
         Civs[u.Civ].Dirty = true;
         if (byCiv >= 0)

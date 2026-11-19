@@ -351,4 +351,23 @@ public sealed class CombatTests
         Assert.Equal(row[1], m2.Cell);
         Assert.Equal(Beside(g, f, HexDirection.S), a1.Cell);
     }
+
+    [Fact]
+    public void StrikesAreKeptForTheViewAndWeakUnitsAreTold()
+    {
+        SimGame g = War();
+        int f = Field(g);
+        Unit a = Soldiers(g, 0, "warriors", f, 30);
+        Unit d = Soldiers(g, 1, "warriors", Beside(g, f, HexDirection.N), 10);
+        Assert.Equal(10, d.Size);
+        Run(g, Content.Combat.StepTicks + 1);
+        Assert.Contains(d.Id, a.Struck);
+        g.News.Clear();
+        for (int i = 0; i < 2000 && d.State != UnitState.Gone && d.People * 100 > d.Size * 50; i++)
+        {
+            g.Tick();
+        }
+
+        Assert.Contains(g.News, n => n.Item1 == 1 && n.Item2.Contains("down to", StringComparison.Ordinal));
+    }
 }

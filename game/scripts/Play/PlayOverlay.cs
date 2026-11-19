@@ -104,6 +104,7 @@ public partial class PlayOverlay : Node2D
 
         Lift = Math.Min(1f, Lift + ((float)delta * 10f));
         _flashes.RemoveAll(f => _time - f.Born > 0.4);
+        _popups.RemoveAll(p => _time - p.Born > PopupSeconds);
         _lift.QueueRedraw();
         _effects.QueueRedraw();
     }
@@ -116,6 +117,11 @@ public partial class PlayOverlay : Node2D
         Rect2 grown = visible.Grow(80);
         bool changed = view != _view;
         bool moved = grown != _visible || zoom != _zoom;
+        if (changed && view is not null)
+        {
+            BattleNews(view);
+        }
+
         _view = view;
         _visible = grown;
         _zoom = zoom;
@@ -343,7 +349,7 @@ public partial class PlayOverlay : Node2D
 
         foreach (PlayUnitView u in cc.Units)
         {
-            h.Add(HashCode.Combine(u.Id, u.Col, u.Row, u.People, u.Hidden, u.Fighting, u.Cargo, u.Id == SelectedUnit || SelectedUnits.Contains(u.Id)));
+            h.Add(HashCode.Combine(u.Id, u.Col, u.Row, u.People, u.Hidden, u.Fighting, u.Cargo, HashCode.Combine(u.Id == SelectedUnit || SelectedUnits.Contains(u.Id), u.Size, u.Injured)));
         }
 
         h.Add(chunk);
@@ -657,6 +663,10 @@ public partial class PlayOverlay : Node2D
             }
 
             g.DrawString(font, p + new Vector2(-11, 5), _content.Units[u.Kind].Name[..1], HorizontalAlignment.Center, 22, 12, Colors.White);
+            if (_content.Units[u.Kind].Army && u.Size > 0)
+            {
+                HealthBar(g, p + new Vector2(-12, -18), u); // above the token: the number is below
+            }
             if (detail == 2)
             {
                 g.DrawString(font, p + new Vector2(-11, 22), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 12, Colors.White);
@@ -670,6 +680,8 @@ public partial class PlayOverlay : Node2D
         {
             return;
         }
+
+        PaintBattle(g);
 
         if (_hover is { } h && h != _selected)
         {

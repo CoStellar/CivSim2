@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CivSim.Game.Map;
+using CivSim.Game.Net;
 using CivSim.Protocol.Messages;
 using Godot;
 
@@ -433,7 +434,7 @@ public sealed partial class PlayGame
 
     /// <summary>
     /// Script step for screenshots of battles: 0 combat mode on and all our soldiers picked, the camera on them; 1 send them in
-    /// formation at the enemy's nearest unit (one hex short); 2 show a selection box around them.
+    /// formation at the enemy's nearest unit (one hex short); 2 show a selection box around them; 3 the mouse behind the first.
     /// </summary>
     public void ScriptBattle(int step)
     {
@@ -468,6 +469,28 @@ public sealed partial class PlayGame
                     _camera.Position = (HexLayout.Center(ours[0].Col, ours[0].Row) + HexLayout.Center(foe.Col, foe.Row)) / 2;
                 }
 
+                break;
+            case 3:
+                // The mouse on a hex with trees near our first unit, else behind it (cover markers).
+                Transform2D screen = GetViewport().GetCanvasTransform();
+                (int Col, int Row) spot = (ours[0].Col, ours[0].Row + 1);
+                if (_session.Worlds.TryGetValue(0, out ClientWorld? w))
+                {
+                    for (int dc = -3; dc <= 3; dc++)
+                    {
+                        for (int dr = -3; dr <= 3; dr++)
+                        {
+                            int c = (((ours[0].Col + dc) % w.Width) + w.Width) % w.Width;
+                            int r = Math.Clamp(ours[0].Row + dr, 0, w.Height - 1);
+                            if (w.Trees[w.Index(c, r)] != 0)
+                            {
+                                spot = (c, r);
+                            }
+                        }
+                    }
+                }
+
+                GetViewport().WarpMouse(screen * HexLayout.Center(spot.Col, spot.Row));
                 break;
             default:
                 Transform2D toScreen = GetViewport().GetCanvasTransform();
