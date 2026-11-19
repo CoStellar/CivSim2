@@ -169,6 +169,24 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Script step: lights a technology in the tree as if the mouse were on it.</summary>
+    public void ScriptHoverTech(string key)
+    {
+        if (_session?.PlayContent is { } c && c.Techs.FirstOrDefault(t => t.Key == key) is { } t)
+        {
+            TechTree.Hovered = t.Id;
+            _bigSignature = "";
+            UpdateUi();
+        }
+    }
+
+    /// <summary>Script step: moves the mouse there as a real move (hover effects).</summary>
+    public void ScriptMouseMove(Vector2 at)
+    {
+        GetViewport().WarpMouse(at);
+        Input.ParseInputEvent(new InputEventMouseMotion { Position = at, GlobalPosition = at, Relative = new Vector2(1, 0) });
+    }
+
     /// <summary>Script step: researches a technology by key.</summary>
     public void ScriptResearch(string key)
     {
