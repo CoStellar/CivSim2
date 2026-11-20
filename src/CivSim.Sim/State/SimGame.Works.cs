@@ -216,7 +216,36 @@ public sealed partial class SimGame
     private ushort PalisadeBit => (ushort)(_palisadeBit >= 0 ? _palisadeBit : (_palisadeBit = Content.Work("palisade")?.Bit ?? 0));
 
     /// <summary>True when foreign walkers may not enter the hex: a wall of another people stands there.</summary>
-    public bool WalledAgainst(int civ, int cell) => civ >= 0 && WallBit != 0 && (WorksAt[cell] & WallBit) != 0 && WorksCiv[cell] != civ;
+    public bool WalledAgainst(int civ, int cell) => civ >= 0 && WallBit != 0 && (WorksAt[cell] & WallBit) != 0 && WorksCiv[cell] >= 0 && WorksCiv[cell] != civ;
+
+    /// <summary>
+    /// A6 (tests 2026-11-20): walls and palisades on a settlement's land belong to whoever holds it now. A taken settlement's works
+    /// go to the taker; works nobody holds (on ruins) go to the people that settles there again.
+    /// </summary>
+    private void AdoptWorks(Settlement s, int from)
+    {
+        foreach (int cell in s.Cells)
+        {
+            if ((WorksAt[cell] & (WallBit | PalisadeBit)) != 0 && (WorksCiv[cell] == from || WorksCiv[cell] < 0))
+            {
+                WorksCiv[cell] = s.Civ;
+                Map.MarkCellDirty(cell);
+            }
+        }
+    }
+
+    /// <summary>Walls and palisades of a settlement that is no more (ruins) or of a people that is no more belong to nobody and stop nobody.</summary>
+    private void DisownWorks(IEnumerable<int> cells, int civ)
+    {
+        foreach (int cell in cells)
+        {
+            if (WorksCiv[cell] == civ)
+            {
+                WorksCiv[cell] = -1;
+                Map.MarkCellDirty(cell);
+            }
+        }
+    }
 
     // Water runs from the ditch and aqueduct hexes next to water along their own kind, as far as the kind reaches. Settlements an
     // aqueduct reaches are marked.

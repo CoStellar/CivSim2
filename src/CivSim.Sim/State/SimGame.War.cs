@@ -116,6 +116,8 @@ public sealed partial class SimGame
         return null;
     }
 
+    private readonly List<int> _attackWay = [];
+
     private string? Attack(Civ civ, int id, int cell)
     {
         if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
@@ -146,10 +148,26 @@ public sealed partial class SimGame
 
         int enemySettlement = SettlementAt[cell] >= 0 && Settlements[SettlementAt[cell]].Center == cell && Settlements[SettlementAt[cell]].Civ != civ.Id
             ? SettlementAt[cell] : -1;
+
+        // A8 (tests 2026-11-20): a settlement we neither see nor remember is not there for us (the same answer as an empty hex,
+        // so clicking around finds no hidden city).
+        if (enemySettlement >= 0 && !Visible(civ, cell)
+            && !(civ.SeenSettlements.TryGetValue(cell, out SettlementMemory? seen) && seen.Settlement == enemySettlement))
+        {
+            enemySettlement = -1;
+        }
+
         int victim = enemyUnit >= 0 ? Units[enemyUnit].Civ : enemySettlement >= 0 ? Settlements[enemySettlement].Civ : -1;
         if (victim < 0)
         {
             return "There is no enemy there.";
+        }
+
+        // A7 (tests 2026-11-20): refused at once when no way leads there (walls do not count: they can be broken).
+        if (u.Aboard < 0 && Distance(u.Cell, cell) > Content.Units[u.Kind].Range
+            && !FindPath(u.Cell, cell, _attackWay, Content.Units[u.Kind].Naval, civ.Id, ignoreWalls: true))
+        {
+            return "No way there: a river or the sea is in the way.";
         }
 
         if (!AtWar(civ.Id, victim) && DeclareWar(civ, victim, surprise: true) is string refused)
@@ -483,6 +501,7 @@ public sealed partial class SimGame
         loser.Settlements.Remove(s.Id);
         winner.Settlements.Add(s.Id);
         s.Civ = winner.Id;
+        AdoptWorks(s, loser.Id);
         s.Wounds = 0;
         s.Guard = 0; // the garrison of the old owner is gone
         foreach (int cell in s.Cells)
@@ -517,6 +536,7 @@ public sealed partial class SimGame
     private void Perish(Civ loser, Civ winner)
     {
         loser.Dead = true;
+        DisownWorks(System.Linq.Enumerable.Range(0, Geo.CellCount), loser.Id); // A6: its walls stop nobody
         foreach (int uid in loser.Units)
         {
             Unwatch(Units[uid]);

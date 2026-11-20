@@ -1,3 +1,4 @@
+using System.Linq;
 using CivSim.Core.Map;
 using CivSim.Sim.Content;
 using CivSim.Sim.State;
@@ -45,6 +46,55 @@ public sealed class WarTests
         Assert.Null(g.Apply(new AttackCommand(a.Id, u.Id, target.Center)));
         Assert.True(g.AtWar(0, 1));
         Assert.True(a.Reputation < 0);
+    }
+
+    [Fact]
+    public void ASettlementNeverSeenCannotBeAttacked()
+    {
+        // A8 (tests 2026-11-20): the attack was taken and started a surprise war; the hex next to it said "no enemy".
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ a = g.Civs[0];
+        Settlement home = g.Settlements[a.Settlements[0]];
+        Settlement target = g.Settlements[g.Civs[1].Settlements[0]];
+        Unit u = Soldiers(g, a, "warriors", home.Center);
+        Assert.False(g.Visible(a, target.Center));
+        Assert.Equal("There is no enemy there.", g.Apply(new AttackCommand(a.Id, u.Id, target.Center)));
+        Assert.False(g.AtWar(0, 1));
+    }
+
+    [Fact]
+    public void AnAttackWithNoWayThereIsRefused()
+    {
+        // A7 (tests 2026-11-20): scenario 03 on its old world (seed 7) has no way by land to the enemy.
+        SimScenario sc = SimScenario.LoadAll(SimScenario.Folder()).First(x => x.Key == "03_war_bronze") with { Seed = 7 };
+        SimGame g = SimGame.FromScenario(Content, sc);
+        Civ a = g.Civs[0];
+        Settlement target = g.Settlements[g.Civs[1].Settlements[0]];
+        a.SeenSettlements[target.Center] = new SettlementMemory(target.Id, target.Civ, target.Name, target.Level, target.Center);
+        Unit u = g.Units.First(x => x.Civ == 0 && x.State == UnitState.Idle && Content.Units[x.Kind].Army);
+        Assert.False(g.FindPath(u.Cell, target.Center, new System.Collections.Generic.List<int>(), false, 0, ignoreWalls: true));
+        Assert.Equal("No way there: a river or the sea is in the way.", g.Apply(new AttackCommand(a.Id, u.Id, target.Center)));
+    }
+
+    [Fact]
+    public void TheWallsOfATakenSettlementChangeHands()
+    {
+        // A6 (tests 2026-11-20): the walls stayed the loser's and kept the taker's army out of its own new settlement.
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ a = g.Civs[0];
+        Civ b = g.Civs[1];
+        Settlement target = g.Settlements[b.Settlements[0]];
+        Unit u = Soldiers(g, a, "warriors", target.Center);
+        int wall = target.Cells.First(c => c != target.Center && c != u.Cell);
+        g.WorksAt[wall] |= (ushort)Content.Work("wall")!.Bit;
+        g.WorksCiv[wall] = b.Id;
+        Assert.True(g.WalledAgainst(a.Id, wall));
+        u.People = 40;
+        g.Apply(new AttackCommand(a.Id, u.Id, target.Center));
+        Run(g, 1200);
+        Assert.Equal(a.Id, target.Civ);
+        Assert.Equal(a.Id, g.WorksCiv[wall]);
+        Assert.False(g.WalledAgainst(a.Id, wall));
     }
 
     [Fact]

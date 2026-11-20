@@ -206,7 +206,8 @@ public sealed partial class SimGame
         long total = 0;
         for (int g = 0; g < goods.Length; g++)
         {
-            cargo[g] = goods[g] * percent / 100;
+            // A10 (tests 2026-11-20): the caravan's own horses leave first, so a load of horses counted before can be more than is left.
+            cargo[g] = Math.Min(goods[g] * percent / 100, Math.Max(0, home.Stock[g]));
             home.Stock[g] -= cargo[g];
             total += cargo[g];
         }
