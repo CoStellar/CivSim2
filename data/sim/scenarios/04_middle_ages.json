@@ -1,7 +1,7 @@
 {
   "name": "Middle Ages",
   "description": "We are in the Middle Ages with a city and three towns; the others are in the Iron Age. Test the last era: castles, steel, knights, universities.",
-  "seed": 11,
+  "seed": 56,
   "peoples": 4,
   "revealMap": true,
   "civs": [

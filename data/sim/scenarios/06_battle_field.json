@@ -1,7 +1,7 @@
 {
   "name": "Battle 1: open field",
   "description": "Two armies of warriors, equal arms (stone weapons, hide armour), face each other on a field 4 hexes apart. Our scouts stand ahead of our line. People 1 stands and holds (no AI). Test the combat mode, selecting, formations, stances, flanking, the zone of control and the strike on leaving.",
-  "seed": 7,
+  "seed": 130,
   "peoples": 2,
   "revealMap": true,
   "wars": [[0, 1]],

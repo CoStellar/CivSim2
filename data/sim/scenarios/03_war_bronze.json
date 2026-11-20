@@ -1,7 +1,7 @@
 {
   "name": "War test: Bronze Age",
   "description": "We and people 1 are at war from the start, both in the Bronze Age with armies ready; the map is known. Test battles, walls, sieges and peace.",
-  "seed": 7,
+  "seed": 56,
   "peoples": 3,
   "revealMap": true,
   "wars": [[0, 1]],

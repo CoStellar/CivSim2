@@ -30,6 +30,24 @@ public sealed class FuzzTests
             {
                 return $"unit {u.Id} has {u.People} people";
             }
+
+            if (u.State != UnitState.Gone && (u.Horses < 0 || u.Provisions < 0 || (u.Cargo is { } c && c.Any(x => x < 0))))
+            {
+                return $"unit {u.Id} carries less than nothing";
+            }
+
+            if (u.State != UnitState.Gone && g.Civs[u.Civ].Dead)
+            {
+                return $"unit {u.Id} of a people that is no more";
+            }
+        }
+
+        foreach (Civ civ in g.Civs)
+        {
+            if (civ.Researching >= 0 && civ.KnownTech[civ.Researching])
+            {
+                return $"{civ.Name} research {g.Content.Techs[civ.Researching].Key}, which they know";
+            }
         }
 
         foreach (Settlement s in g.Settlements)
@@ -88,6 +106,32 @@ public sealed class FuzzTests
         }
 
         Assert.True(failures.Count == 0, string.Join("\n", failures));
+    }
+
+    [Fact]
+    public void ACaravanOfAllOurHorsesLeavesNoneBelowZero()
+    {
+        // A10 (tests 2026-11-20): the caravan's own horses left first, then the load counted before took the same horses again.
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int site = Enumerable.Range(0, g.Geo.CellCount).First(c => g.OwnerAt[c] < 0 && !Content.World.Biomes[g.Map.Biome[c]].IsWater
+            && g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(home.Center)) == 8 && g.FindPath(home.Center, c, new System.Collections.Generic.List<int>(), false, civ.Id));
+        Settlement camp = g.FoundSettlement(civ, site, 30);
+        foreach (string t in new[] { "the_wheel", "horseback_riding", "carrying" })
+        {
+            if (Content.Techs.Any(x => x.Key == t))
+            {
+                civ.KnownTech[Content.TechId(t)] = true;
+            }
+        }
+
+        int horses = Content.GoodId("horses");
+        home.Stock[horses] = 5 * SimContent.One;
+        g.Apply(new SendCaravanCommand(civ.Id, home.Id, camp.Id, horses, 5 * SimContent.One));
+        Assert.True(g.Units[^1].Horses > 0, "a caravan with horses, not porters");
+        Assert.True(home.Stock[horses] >= 0, $"{home.Stock[horses]} horses left");
+        Assert.Null(Broken(g));
     }
 
     [Fact]

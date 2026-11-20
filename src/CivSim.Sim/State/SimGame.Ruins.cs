@@ -39,6 +39,7 @@ public sealed partial class SimGame
         s.Abandoned = true;
         s.EmptySince = -1;
         civ.Settlements.Remove(s.Id);
+        DisownWorks(s.Cells, civ.Id); // A6 (tests 2026-11-20): walls of ruins belong to nobody
         foreach (int cell in s.Cells)
         {
             OwnerAt[cell] = -1;
@@ -107,6 +108,7 @@ public sealed partial class SimGame
 
         civ.Settlements.Add(s.Id);
         Claim(s);
+        AdoptWorks(s, -1);
         foreach (Building b in Buildings)
         {
             if (b.Settlement != s.Id || b.State != BuildingState.Ruined)

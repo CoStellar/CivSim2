@@ -11,6 +11,39 @@ public sealed class ScenarioTests
     private static readonly SimContent Content = SimContent.Load();
 
     [Fact]
+    public void FromOurCityThereIsAWayToEveryOtherPeople()
+    {
+        // A4 (tests 2026-11-20): in 03, 04 and 06-09 no enemy city could be reached by land, so attacks stood still.
+        foreach (SimScenario sc in SimScenario.LoadAll(SimScenario.Folder()))
+        {
+            SimGame g = SimGame.FromScenario(Content, sc);
+            Assert.DoesNotContain(g.News, n => n.Text.StartsWith("Scenario: no field", System.StringComparison.Ordinal));
+            Settlement home = g.Settlements[g.Civs[0].Settlements[0]];
+            foreach (Civ other in g.Civs.Where(c => c.Id != 0))
+            {
+                foreach (int sid in other.Settlements)
+                {
+                    Assert.True(g.FindPath(home.Center, g.Settlements[sid].Center, new System.Collections.Generic.List<int>(), false, 0),
+                        $"{sc.Key}: no way from {home.Name} to {g.Settlements[sid].Name} of people {other.Id}");
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void ScenarioUnitsStartWithFullPacks()
+    {
+        foreach (SimScenario sc in SimScenario.LoadAll(SimScenario.Folder()))
+        {
+            SimGame g = SimGame.FromScenario(Content, sc);
+            foreach (Unit u in g.Units.Where(u => u.State != UnitState.Gone && g.Content.Units[u.Kind].Army))
+            {
+                Assert.True(u.Provisions == g.ProvisionsMax(u), $"{sc.Key}: unit {u.Id} has {u.Provisions} of {g.ProvisionsMax(u)}");
+            }
+        }
+    }
+
+    [Fact]
     public void EveryScenarioSetsUpAsWrittenAndRuns()
     {
         var all = SimScenario.LoadAll(SimScenario.Folder());

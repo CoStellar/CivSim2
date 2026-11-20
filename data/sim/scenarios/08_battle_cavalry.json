@@ -1,7 +1,7 @@
 {
   "name": "Battle 3: cavalry and archers",
   "description": "Iron Age. Our horsemen and archers against their spearmen, swordsmen and archers on a field 7 hexes apart. Test the charge after a run (spearmen stop it), riders breaking away and coming back (they lose only a quarter strike on leaving), archers that shoot only standing, and higher ground. Our scouts stand ahead of our line. People 1 holds (no AI).",
-  "seed": 7,
+  "seed": 120,
   "peoples": 2,
   "revealMap": true,
   "wars": [[0, 1]],

@@ -199,6 +199,7 @@ public sealed partial class SimGame
                 Units.Add(u);
                 civ.Units.Add(u.Id);
                 Watch(u);
+                FillPacks(u); // A5 (tests 2026-11-20): they left with empty packs and starved a minute out
             }
         }
 
@@ -345,6 +346,11 @@ public sealed partial class SimGame
                 }
 
                 AdvanceEra(civ, true);
+                if (civ.Researching >= 0 && civ.KnownTech[civ.Researching])
+                {
+                    civ.Researching = -1; // B8 (tests 2026-11-20): the debug key taught what was being researched
+                }
+
                 break;
             default:
                 return "Nothing to do.";

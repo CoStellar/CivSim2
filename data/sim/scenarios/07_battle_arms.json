@@ -1,7 +1,7 @@
 {
   "name": "Battle 2: arms and sizes",
   "description": "Bronze Age. Our army has bronze weapons but no armour, theirs iron weapons and bronze armour; our town holds bronze weapons and armour for 60 and has barracks (half room for arms). Test refitting at home, the size slider and weapons-only training, splitting a unit, and how much the arms count. Our scouts stand ahead of our line. People 1 stands (no AI).",
-  "seed": 7,
+  "seed": 120,
   "peoples": 2,
   "revealMap": true,
   "wars": [[0, 1]],

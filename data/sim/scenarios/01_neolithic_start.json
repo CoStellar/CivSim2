@@ -1,7 +1,7 @@
 {
   "name": "Neolithic start",
   "description": "Everyone enters the Neolithic with a village of 40 and the Stone Age buildings. Test farms, pottery, masonry and the Neolithic tree.",
-  "seed": 3,
+  "seed": 44,
   "peoples": 4,
   "civs": [
     { "era": "neolithic", "level": "village", "people": 40,

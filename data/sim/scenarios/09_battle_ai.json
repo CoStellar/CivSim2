@@ -1,7 +1,7 @@
 {
   "name": "Battle 4: against the AI",
   "description": "Bronze Age, both armies on a field 6 hexes apart; people 1 is an aggressive AI that attacks. Test everything together against an enemy that moves.",
-  "seed": 11,
+  "seed": 44,
   "peoples": 2,
   "revealMap": true,
   "wars": [[0, 1]],

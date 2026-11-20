@@ -559,8 +559,8 @@ public sealed partial class SimGame
         return true;
     }
 
-    /// <summary>Finds a way from a hex to another (cleared first), true when there is one.</summary>
-    public bool FindPath(int from, int to, List<int> path, bool naval = false, int civ = -1, int searchLimit = 0)
+    /// <summary>Finds a way from a hex to another (cleared first), true when there is one; <paramref name="ignoreWalls"/>: as if no wall stood (walls can be broken).</summary>
+    public bool FindPath(int from, int to, List<int> path, bool naval = false, int civ = -1, int searchLimit = 0, bool ignoreWalls = false)
     {
         int limit = searchLimit > 0 ? Math.Min(searchLimit, MaxPathNodes) : MaxPathNodes;
         ArgumentNullException.ThrowIfNull(path);
@@ -610,7 +610,7 @@ public sealed partial class SimGame
             {
                 int next = _next[(cur * 6) + d];
                 int step = Cost(next, naval);
-                if (step == 0 || (!naval && (!Crossable(civ, cur, d) || WalledAgainst(civ, next))))
+                if (step == 0 || (!naval && (!Crossable(civ, cur, d) || (!ignoreWalls && WalledAgainst(civ, next)))))
                 {
                     continue;
                 }

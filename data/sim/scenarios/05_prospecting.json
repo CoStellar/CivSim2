@@ -1,7 +1,7 @@
 {
   "name": "Prospecting",
   "description": "Neolithic, the map known: prospectors and surveyors ready at home. Send them out and let them stand to find ores and good soil beyond our land.",
-  "seed": 3,
+  "seed": 44,
   "peoples": 3,
   "revealMap": true,
   "civs": [
