@@ -3476,5 +3476,10 @@
   "alerts": {
     "comment": "foodLowMinutes: a settlement that eats more than it makes is warned when its food lasts this long or less.",
     "foodLowMinutes": 3
+  },
+  "ai": {
+    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free.",
+    "homesFoodMinutes": 3,
+    "smallPeople": 30
   }
 }

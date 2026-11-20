@@ -67,6 +67,29 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/SimAi.cs` i `SimAi.Care.cs`. Ta strona op
 | N34 | Droga do celu i zwiad bez skoków (sprint 2026-11-20) | wybór osady do ataku; zwiadowca szuka nowego celu | atakuje tylko osadę, do której jest droga z miejsca jego wojska (pamięta wynik 2 min, szuka najwyżej 20 000 heksów); zwiadowca próbuje tylko heksów lądu, jedno szukanie drogi (do 1500 heksów) na myślenie, a gdy nic nie wyszło, czeka 30 s; nie wypowiada wojny ponad `war.maxWars` | 2 min, 20 000, 1500, 30 s | `Ai/SimAi.cs` (`WayTo`, `Scouts`, `War`) |
 | N33 | Premie rodzajów (#112) | rodzaj jednostki osiągnął poziom | łucznicy i machiny: Hardened; jazda: na zmianę Forced march i Hardened; piechota: na zmianę Hardened i Shield wall | — | `Ai/SimAi.cs` (`VeteranChoiceFor`) |
 
+## Decyzje po testach z 2026-11-20 (16B, 17B i AI do 7A)
+
+1. **Domy przy zapasie jedzenia (16B):** AI stawia nowe domy tylko wtedy, gdy ma jedzenie na 3 minuty jedzenia wszystkich (`ai.homesFoodMinutes`).
+2. **Mały lud (17B):** poniżej 30 osób (`ai.smallPeople`) AI nie szkoli oddziałów (zwiadowców, poszukiwaczy, wojska; osadników tak) i nie stawia nowego budynku z pracownikami, dopóki ma wolne miejsca pracy. Zwiadowcy wychodzą, gdy lud dorośnie do 30 osób, najpóźniej do 30. minuty (było: do 20.).
+3. **Droga do epoki żelaza (7A):**
+   - gdy brama ery jest znana, AI najpierw buduje to, co robi dobra potrzebne do wejścia w następną erę (brąz), a gdy wytwórca stoi bez surowca, buduje jego dostawcę (kopalnię cyny);
+   - złoża potrzebne do tego (cyna, miedź) i złoża kopalń dających brakujące doświadczenie (ruda żelaza) przyciągają osadników: osada stawia się do 2 heksów od znanego złoża, do 25 heksów od nas, i może to być jedna osada ponad zwykły limit AI;
+   - poszukiwacze szukają do 22 heksów od osad, dopóki takiego złoża nie znają.
+
+Pomiar (`--sim-report --seeds 12 --minutes 120`, mapa 98×60; development → wszystkie decyzje z 2026-11-20):
+
+| | Przed | Po |
+| --- | --- | --- |
+| Ludzie (średnio) | 16 848 | 11 154 |
+| Głód (% próbek) | 31,8 | 10,8 |
+| Era (średnia ludów) | 3,2 | 3,5 |
+| Technologie | 43,9 | 52,1 |
+| Średniowiecze: ile gier | 10 z 12 | 12 z 12 |
+| Pierwszy brąz / żelazo / średniowiecze [min] | 32,6 / 44,4 / 68,3 | 37,0 / 59,1 / 73,0 |
+| Wojny na grę | 16,8 | 39,3 |
+| Zajęte / złupione osady | 0,6 / 9,4 | 4,1 / 9,1 |
+| Wymarłe ludy na grę | 0,0 | 0,2 |
+
 ## Zmiany z testów 2026-11-20
 
 1. **Awans karawanami (A1):** po nieudanym awansie AI czeka 60 s (`upgradeCaravans.aiRetrySeconds`) i nie próbuje, gdy towary już jadą. Pomiar (mapa 98×60, 4 ludy, 100 min): nieudane awanse 673 → 12 (seed 1) i 751 → 7 (seed 2).

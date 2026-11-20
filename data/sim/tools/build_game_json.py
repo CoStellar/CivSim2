@@ -384,6 +384,9 @@ d["startPhase"]["neighbourMaxHexes"]=60
 d["startPhase"]["neighbourMinHexes"]=25
 if "neighbourMaxHexes:" not in d["startPhase"]["comment"]:
     d["startPhase"]["comment"]+=" neighbourMaxHexes: every people starts on the main continent (the largest land) and, after the first, at most this many hexes by land from a people already placed (while choosing: from the shown circles); 0 = anywhere. neighbourMinHexes: placed starts and the AI's choices keep this far from other starts when the land allows (room to grow)."
+# 16B, 17B: the AI builds homes only with food for 3 minutes, and a people under 30 trains no units (but settlers) and
+# builds no workplace while jobs are free.
+d["ai"]={"comment":"homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free.","homesFoodMinutes":3,"smallPeople":30}
 # 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
 d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5}}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
