@@ -118,6 +118,11 @@ public sealed partial class SimGame
             return $"{s.Name} is under siege: it trains nothing new.";
         }
 
+        if (Content.Units[kind].Army && ArmyUnits(civ) >= ArmyLimit(civ))
+        {
+            return $"Our army is at its limit of {ArmyLimit(civ)} units: grow settlements, build barracks or learn the ways of government.";
+        }
+
         UnitType t = Content.Units[kind];
         if (!Knows(civ, t))
         {
@@ -351,7 +356,7 @@ public sealed partial class SimGame
         UnitType t = Content.Units[u.Kind];
         int per = u.Hidden ? t.HiddenTicksPerHex : t.TicksPerHex;
         int cost = t.Naval ? 100 : CellCost(cell);
-        int speed = (100 + Bonus(Civs[u.Civ], EffectKind.Speed, t.Key, t.Groups)) * FedPercent(u) / 100;
+        int speed = (100 + Bonus(Civs[u.Civ], EffectKind.Speed, t.Key, t.Groups) + VetSpeed(u)) * FedPercent(u) / 100;
         return Math.Max(1, per * Math.Max(50, cost) / speed);
     }
 

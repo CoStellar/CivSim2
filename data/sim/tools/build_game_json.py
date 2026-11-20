@@ -257,6 +257,14 @@ d["eraAdvanceTechs"]=5
 d["foundWith"]=["gatherers_hut"]
 # Ruins (Patryk, 2026-11-19, G2): a settlement empty for emptySeconds becomes a ruin, nobody's; settlers standing on or next to its
 # centre take it again, and its buildings come back as sites that need rebuildPercent of their price.
+# Army limit and veterans (Patryk, 2026-11-20, questions 9 and 11).
+d["armyLimit"]={"comment":"Army units (not people) a people may have: perLevel for each settlement by its level (camp, village, town, city), plus perBuilding for each finished building of those kinds, plus perTech for each of those technologies known. Training stops at the limit; a big army stays possible, but costs food at every ration.",
+  "perLevel":[2,3,5,8],"perBuilding":{"barracks":2,"castle":2},"perTech":{"code_of_laws":2,"civil_service":3,"feudalism":3}}
+d["veterans"]={"comment":"Experience belongs to a kind of unit, not to a unit: every enemy its units kill adds one to that kind's experience. At each of the levels (kills in all) the people picks one of the options for that kind, for all its units of that kind, now and later: strengthPercent more damage, takenPercent of the damage taken (negative = less), speedPercent faster walking. Options stack.",
+  "levels":[20,60,140,300],
+  "options":[{"key":"hardened","name":"Hardened","text":"+10% damage","strengthPercent":10},
+             {"key":"shield_wall","name":"Shield wall","text":"10% less damage taken","takenPercent":-10},
+             {"key":"forced_march","name":"Forced march","text":"+10% walking speed","speedPercent":10}]}
 # Supplies of the army (Patryk, 2026-11-20, question 1: D).
 d["supply"]={"comment":"An army unit on its people's land or within rangeHexes of it is fed at the ration by its home settlement and fills its provisions: food for carryMinutes minutes of its people. Farther away it eats its provisions; before them the land gives what landHands foragers would gather on its hex (forage.perMinute food at the hex's richness, times landPercent): a small unit lives off the land longer than a big one. With no provisions left it goes hungry, then starves. A caravan can carry food to a unit in the field (it follows the unit, and can be raided on the way).",
   "rangeHexes":3,"carryMinutes":4,"landHands":10,"landPercent":100}

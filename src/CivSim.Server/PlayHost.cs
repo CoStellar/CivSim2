@@ -367,6 +367,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.BringMaterials => new BringMaterialsCommand(civ, m.A),
         PlayCommandKind.TakeSettlement => new TakeSettlementCommand(civ, m.A, (TakeChoice)m.B),
         PlayCommandKind.SupplyUnit => new SupplyUnitCommand(civ, m.A, m.B, (long)m.C * SimContent.One),
+        PlayCommandKind.ChooseVeteran => new ChooseVeteranCommand(civ, m.A, m.B),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
@@ -513,7 +514,8 @@ public sealed class PlayHost : IDisposable
 
         client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories,
             _game.Content.Rations.HungryPercent, _game.Content.Rations.StarvingPercent, _game.Content.WeaponGoods, _game.Content.ArmourGoods,
-            _game.Content.Combat.Weapon, _game.Content.Combat.Armour, CombatInfo(_game.Content.Combat)));
+            _game.Content.Combat.Weapon, _game.Content.Combat.Armour, CombatInfo(_game.Content.Combat),
+            [.. _game.Content.Veterans.Options.Select(o => $"{o.Name}|{o.Text}")], _game.Content.Veterans.Levels));
         client.SentChunks = false;
     }
 
@@ -959,7 +961,8 @@ public sealed class PlayHost : IDisposable
             _game.GoalText, _game.Winner >= 0 ? _game.Civs[_game.Winner].Name : null, _game.ScoreOf(civ), RoutesOf(civId),
             AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0,
             Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond),
-            RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond, Debug: _game.DebugOn);
+            RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond, Debug: _game.DebugOn,
+            ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone());
     }
 
     // What a technology opens and changes, worked out from the data (so the player sees exactly what it does).

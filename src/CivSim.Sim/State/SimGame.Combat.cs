@@ -37,6 +37,7 @@ public sealed partial class SimGame
     private readonly Stack<List<int>> _spareLists = [];
     private long[] _pending = [];
     private int[] _pendingBy = [];
+    private int[] _pendingKind = [];
     private long _contactsTick = -1;
     private long[] _lastFight = [];
 
@@ -166,6 +167,11 @@ public sealed partial class SimGame
         if (people < min || u.People - people < min)
         {
             return $"Both parts need at least {min} people.";
+        }
+
+        if (ArmyUnits(civ) >= ArmyLimit(civ))
+        {
+            return $"Our army is at its limit of {ArmyLimit(civ)} units.";
         }
 
         int cell = FreeBeside(u.Cell, u.Civ);
@@ -614,6 +620,7 @@ public sealed partial class SimGame
         }
 
         drill += Bonus(civ, EffectKind.Strength, at.Key, at.Groups);
+        drill += VetStrength(a); // veterans of the kind
         foreach ((string group, int pct) in at.BonusVs)
         {
             if (Array.IndexOf(dt.Groups, group) >= 0)
@@ -703,10 +710,12 @@ public sealed partial class SimGame
         {
             Array.Resize(ref _pending, Units.Count * 2);
             Array.Resize(ref _pendingBy, Units.Count * 2);
+            Array.Resize(ref _pendingKind, Units.Count * 2);
         }
 
         _pending[d.Id] += damage;
         _pendingBy[d.Id] = a.Civ;
+        _pendingKind[d.Id] = a.Kind;
         if (!a.Struck.Contains(d.Id))
         {
             a.Struck.Add(d.Id);
@@ -790,7 +799,7 @@ public sealed partial class SimGame
             {
                 long damage = _pending[u.Id];
                 _pending[u.Id] = 0;
-                Take(u, damage, _pendingBy[u.Id]);
+                Take(u, damage, _pendingBy[u.Id], _pendingKind[u.Id]);
             }
         }
 
@@ -806,8 +815,9 @@ public sealed partial class SimGame
     }
 
     // Losses of a unit from the damage of a step.
-    private void Take(Unit u, long damage, int byCiv)
+    private void Take(Unit u, long damage, int byCiv, int byKind = -1)
     {
+        damage = damage * (100 + VetTaken(u)) / 100; // veterans: a kind's shield wall
         u.Wounds += damage;
         int dead = (int)Math.Min(u.People, u.Wounds / SimContent.One);
         if (dead <= 0)
@@ -833,6 +843,7 @@ public sealed partial class SimGame
         if (byCiv >= 0)
         {
             Scores()[(byCiv * Civs.Count) + u.Civ] += dead;
+            Credit(byCiv, byKind, dead);
         }
 
         if (u.People <= 0)

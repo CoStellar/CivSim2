@@ -204,6 +204,36 @@ Kod: `SimGame.Rations.cs` (`InSupply`, `ProvisionsMax`, `LandFood`), `SupplyUnit
 - **Dostawa:** komenda `SupplyUnitCommand` (w kliencie przycisk „Send N food from …” w opisie oddziału w polu). Karawana z jedzeniem idzie za oddziałem, a jeśli on się przesunął, idzie dalej (najwyżej 6 razy). Napad na nią zabiera jedzenie.
 - **AI:** oddział w polu z jedzeniem na mniej niż 1,5 minuty dostaje karawanę z domu, jeśli dom ma ponad 2 razy tyle jedzenia i 40 zapasu. Głodny oddział bez dostawy wraca do domu.
 
+## Limit oddziałów i doświadczenie rodzajów (decyzje Patryka z 2026-11-20, pytania 9 i 11)
+
+Kod: `src/CivSim.Sim/State/SimGame.Veterans.cs`. Dane: `armyLimit`, `veterans`.
+
+**Limit oddziałów wojska** (liczba oddziałów, nie ludzi; pospolite ruszenie się nie liczy):
+
+| Źródło | Ile |
+| --- | --- |
+| Każda osada według poziomu: obóz, wioska, miasteczko, miasto | 2, 3, 5, 8 (`perLevel`) |
+| Każde koszary, każdy zamek | +2 (`perBuilding`) |
+| Code of laws, Civil service, Feudalism | +2, +3, +3 (`perTech`) |
+
+Przy limicie szkolenie i dzielenie oddziałów są odrzucane. Dużą armię da się więc mieć, ale trzeba na nią rozbudować państwo,
+a jedzenie i tak kosztuje przy każdej racji.
+
+**Doświadczenie należy do rodzaju jednostki, nie do oddziału.** Każdy wróg zabity przez oddział danego rodzaju (w polu i przy oblężeniu)
+dodaje 1 punkt temu rodzajowi. Progi poziomów: 20, 60, 140 i 300 zabitych (`levels`). Na każdym poziomie lud wybiera jedną z 3 premii
+dla wszystkich oddziałów tego rodzaju, obecnych i przyszłych. Premie się sumują.
+
+| Premia | Działanie |
+| --- | --- |
+| Hardened | +10% obrażeń |
+| Shield wall | 10% mniej otrzymanych obrażeń |
+| Forced march | +10% szybkości marszu |
+
+Gracz wybiera w opisie oddziału (przyciski pojawiają się po nowym poziomie). AI wybiera od razu:
+- łucznicy i machiny: Hardened;
+- jazda: na zmianę Forced march i Hardened;
+- piechota: na zmianę Hardened i Shield wall.
+
 ## Czego jeszcze nie ma (kolejne paczki)
 
-Limit oddziałów i doświadczenie rodzajów jednostek; AI walki (formacje, flanki, odskoki jazdy).
+AI walki (formacje, flanki, odskoki jazdy).

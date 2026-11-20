@@ -290,6 +290,7 @@ public sealed partial class SimGame
         }
 
         pct += Bonus(civ, EffectKind.Strength, t.Key, t.Groups); // drill of each era
+        pct += VetStrength(u);
         return (long)u.People * t.Strength * pct * FedPercent(u) / 100 * WeaponPercent(u) / 100;
     }
 
@@ -425,6 +426,7 @@ public sealed partial class SimGame
         if (guard + residents > 0)
         {
             Scores()[(attacker.Civ * Civs.Count) + target.Civ] += guard + residents;
+            Credit(attacker.Civ, attacker.Kind, guard + residents);
         }
 
         // The guard and the fighting residents strike back, raised by the walls.

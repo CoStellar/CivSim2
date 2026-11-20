@@ -103,6 +103,7 @@ public sealed partial class SimGame
             AnswerPeaceCommand c => AnswerPeace(civ, c.From, c.Accept),
             DisbandCommand c => Disband(civ, c.Unit),
             TakeSettlementCommand c => TakeSettlement(civ, c.Settlement, c.Choice),
+            ChooseVeteranCommand c => ChooseVeteran(civ, c.Kind, c.Option),
             ProposeTreatyCommand c => ProposeTreaty(civ, c.Other, c.Kind),
             AnswerTreatyCommand c => AnswerTreaty(civ, c.From, c.Kind, c.Accept),
             CancelTreatyCommand c => CancelTreaty(civ, c.Other, c.Kind),

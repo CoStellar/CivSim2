@@ -159,6 +159,12 @@ public partial class PlayGame
             items.Add(new GoodsItem(cells));
 
             items.Add(new SectionItem("Train"));
+            if (v.ArmyLimit > 0 || v.ArmyUnits > 0)
+            {
+                items.Add(new LineItem($"Army units {v.ArmyUnits} of {v.ArmyLimit} (more with bigger settlements, barracks, castles and laws)",
+                    v.ArmyUnits >= v.ArmyLimit ? UiKit.Warn : UiKit.Muted, 13));
+            }
+
             if (c.Units.Any(x => x.MaxPeople > 0 && v.Techs[x.Tech].Known))
             {
                 items.Add(TrainSizeItem());
@@ -625,6 +631,7 @@ public partial class PlayGame
         if (t.Army)
         {
             items.Add(new LineItem($"Strength {t.Strength} each" + (t.Range > 1 ? $", shoots {t.Range} hexes, only standing" : ""), UiKit.Text, 14));
+            VeteranItems(v, c, u, items);
             CombatItems(v, c, u, items);
         }
 
@@ -667,6 +674,44 @@ public partial class PlayGame
         if (u.State != 0 && !t.Army) // warriors stay warriors (Patryk, 2026-11-20)
         {
             items.Add(new ActItem("Go home (join the settlement here)", () => _session!.Play(PlayCommandKind.Disband, id)));
+        }
+    }
+
+    // Veterans (2026-11-20): the level of the whole kind, what it learned, and the choice waiting for a new level.
+    private void VeteranItems(PlayViewMessage v, PlayContentMessage c, PlayUnitView u, List<UiItem> items)
+    {
+        if (u.Civ != v.Civ || v.KindLevel is not { } level || c.VeteranOptions is not { Length: > 0 } options || c.VeteranLevels is not { } levels)
+        {
+            return;
+        }
+
+        int kind = u.Kind;
+        int lv = level[kind];
+        int kills = v.KindKills?[kind] ?? 0;
+        string next = lv < levels.Length ? $", {kills} of {levels[lv]} kills to level {lv + 1}" : ", the highest level";
+        var learned = new List<string>();
+        for (int o = 0; o < options.Length; o++)
+        {
+            int n = v.KindPicks?[(kind * options.Length) + o] ?? 0;
+            if (n > 0)
+            {
+                learned.Add((n > 1 ? $"{n}x " : "") + options[o].Split('|')[0]);
+            }
+        }
+
+        items.Add(new LineItem($"All our {c.Units[kind].Name.ToLowerInvariant()}: level {lv}{next}" + (learned.Count > 0 ? $"; learned {string.Join(", ", learned)}" : ""), UiKit.Muted, 13));
+        if ((v.KindPending?[kind] ?? 0) > 0)
+        {
+            items.Add(new LineItem("A new level: choose what all of them learn", UiKit.Good, 14));
+            var acts = new List<ActItem>();
+            for (int o = 0; o < options.Length; o++)
+            {
+                int option = o;
+                string[] parts = options[o].Split('|');
+                acts.Add(new ActItem(parts[0], () => _session!.Play(PlayCommandKind.ChooseVeteran, kind, b: option), parts.Length > 1 ? parts[1] : "", Accent: UiKit.Good));
+            }
+
+            items.Add(new ButtonsItem(acts));
         }
     }
 

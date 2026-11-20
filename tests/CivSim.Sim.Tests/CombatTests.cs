@@ -88,6 +88,11 @@ public sealed class CombatTests
         }
 
         home.People = 200;
+        foreach (string law in new[] { "code_of_laws", "civil_service", "feudalism" })
+        {
+            g.Civs[civ].KnownTech[Content.TechId(law)] = true; // room in the army limit for the tests' many units
+        }
+
         UnitType t = Content.Unit(kind);
         foreach (int tech in t.AlsoTechs.Append(t.Tech))
         {
