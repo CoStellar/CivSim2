@@ -1,6 +1,6 @@
 # Kod i dokumenty legacy
 
-Od 2026-11-17 (ADR 0028) gra jest przebudowywana. Stan sprzed przebudowy: gałąź `legacy/pre-rework`.
+Od 2026-11-17 (ADR 0028) gra jest przebudowywana. Od 2026-11-20 (decyzja Patryka) legacy zostaje w repo, ale nie zajmujemy się nim i nie odnosimy się do niego. Stan sprzed przebudowy: gałąź `legacy/pre-rework`.
 
 **Legacy znaczy:** nie rozwijamy, nie naprawiamy (chyba że blokuje nową grę), nie dopisujemy funkcji. Kod zostaje, dopóki nowa
 symulacja go nie zastąpi; wtedy usuwamy go w osobnym PR. Nowy kod nie zależy od legacy (wolno korzystać tylko z części „zostaje”).
@@ -27,4 +27,4 @@ symulacja go nie zastąpi; wtedy usuwamy go w osobnym PR. Nowy kod nie zależy o
 | `src/CivSim.Core/Research` | badania w myślicielach | doświadczenie, koszt w zasobach, czas, myśliciele jako przedmioty |
 | `src/CivSim.Core/Governance`, `Events` | ustroje, stabilność, bunty, zdarzenia | wyrzucone; zdarzenia ze wspólnej puli |
 | `src/CivSim.Core/Simulation` (pętla tury), `Commands`, `Perception` | pętla taktów i pulsów, komendy legacy, postrzeganie | nowa pętla rytmów; mgła wojny przeniesiona |
-| `docs/GDD.md`, `docs/systems/`, `docs/ai/`, `docs/prompts/`, ADR 0024–0027 | opis gry sternika | `docs/projekt-gry.md`, `docs/plan-przebudowy.md`, nowe `docs/sim/` |
+| `docs/legacy/` (GDD, `systems/`, `ai/`, `prompts/`, `long-runs/`, stara roadmapa i stare znane problemy), ADR 0024–0027 | opis gry sternika | `docs/projekt-gry.md`, `docs/sim/`, `ROADMAP.md` |

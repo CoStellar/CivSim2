@@ -589,4 +589,4 @@ Do tego:
 | Średniowiecze | 25% | 22% | 35% |
 
 Przykład: garncarstwo ma w drzewie cenę 40 gliny i 30 drewna oraz 45 s; w neolicie kosztuje 14 gliny i 10 drewna i trwa 22 s (przed premiami myśliciela i sąsiadów). Okno badań i podpowiedzi
-pokazują liczby już po skalowaniu. Pomiar AI (12 ziaren) i powody: `docs/ai/13-ai-nowej-gry.md`, sekcja „Tempo er”.
+pokazują liczby już po skalowaniu. Pomiar AI (12 ziaren) i powody: `docs/sim/ai.md`, sekcja „Tempo er”.
