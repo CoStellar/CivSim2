@@ -194,7 +194,9 @@ public sealed partial class SimGame
 
         if (!CanAfford(s.Stock, t.Price, pricePct))
         {
-            return $"{people} {t.Name.ToLowerInvariant()} cost {PriceText(t.Price)} × {pricePct}% in {s.Name}.";
+            // A12 (tests 2026-11-20): the final price and what is missing, not "price × N%".
+            long[] final = Scaled(t.Price, pricePct);
+            return $"{people} {t.Name.ToLowerInvariant()} cost {PriceText(final)}; {s.Name} has only {ShortText(s.Stock, final)}.";
         }
 
         Pay(s.Stock, t.Price, pricePct);

@@ -149,11 +149,32 @@ public sealed partial class SimGame
             long needed = need * edge / 100;
             if (have < needed)
             {
-                return $"Needs more experience in {Content.Techs[req].Name}: {have / SimContent.TicksPerMinute} of {needed / SimContent.TicksPerMinute} points (1 point = 1 worker for 1 minute).";
+                return $"Needs more experience in {Content.Techs[req].Name}: {have / SimContent.TicksPerMinute} of {needed / SimContent.TicksPerMinute} points (1 point = 1 worker for 1 minute{ExperienceFrom(req)}).";
             }
         }
 
         return null;
+    }
+
+    /// <summary>A12 (tests 2026-11-20): where the experience of a technology comes from, as ", in a farm or a pasture" ("" when nowhere).</summary>
+    public string ExperienceFrom(int tech)
+    {
+        var names = new System.Collections.Generic.List<string>();
+        foreach (BuildingType b in Content.Buildings)
+        {
+            if (b.Tech == tech && b.Workers > 0 && !names.Contains("a " + b.Name.ToLowerInvariant()))
+            {
+                names.Add("a " + b.Name.ToLowerInvariant());
+            }
+        }
+
+        string where = names.Count == 0 ? "" : $"working in {string.Join(" or ", names)}";
+        if (tech == 0)
+        {
+            where = where.Length == 0 ? "people gathering around our settlements" : $"{where}, or people gathering around our settlements";
+        }
+
+        return where.Length == 0 ? "" : $"; it comes from {where}";
     }
 
     /// <summary>Number of peoples this one has met (seen a settlement of) that know <paramref name="tech"/>.</summary>

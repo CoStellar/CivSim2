@@ -1142,7 +1142,7 @@ public sealed class PlayHost : IDisposable
             bool mine = u.Civ == civId;
             units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row, u.Fighting,
                 u.Cargo is null ? null : _game.CargoText(u.Cargo),
-                mine && u.State == UnitState.Moving ? Pairs(u.Path, u.PathIndex) : null,
+                mine && u.State == UnitState.Moving ? KnownPairs(u.Path, u.PathIndex, civ.Known) : null,
                 mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
                 _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0,
@@ -1164,7 +1164,7 @@ public sealed class PlayHost : IDisposable
             AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0,
             Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond),
             RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond, Debug: _game.DebugOn,
-            ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone());
+            ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone(), Won: _game.Winner == civId);
     }
 
     // What a technology opens and changes, worked out from the data (so the player sees exactly what it does).
@@ -1311,6 +1311,27 @@ public sealed class PlayHost : IDisposable
     }
 
     // Hex indices from a position on, as (col, row) pairs for the client.
+    // A20 (tests 2026-11-20): a way is shown only as far as the land we know; its shape beyond would give away hidden terrain.
+    private int[] KnownPairs(IReadOnlyList<int> cells, int from, bool[] known)
+    {
+        int end = from;
+        while (end < cells.Count && known[cells[end]])
+        {
+            end++;
+        }
+
+        int n = end - from;
+        var pairs = new int[n * 2];
+        for (int k = 0; k < n; k++)
+        {
+            HexCoord h = _game.Geo.FromIndex(cells[from + k]);
+            pairs[2 * k] = h.Col;
+            pairs[(2 * k) + 1] = h.Row;
+        }
+
+        return pairs;
+    }
+
     private int[] Pairs(IReadOnlyList<int> cells, int from)
     {
         int n = Math.Max(0, cells.Count - from);
