@@ -82,7 +82,10 @@ public sealed record PlayUnitView(
     [property: Key(26)] int[]? Guard = null,
     [property: Key(27)] int Size = 0,
     [property: Key(28)] int[]? Struck = null,
-    [property: Key(29)] bool Charging = false);
+    [property: Key(29)] bool Charging = false,
+    [property: Key(30)] long Provisions = 0,
+    [property: Key(31)] long ProvisionsMax = 0,
+    [property: Key(32)] bool InSupply = true);
 
 /// <summary>A settlement level of the new game.</summary>
 [MessagePackObject]
@@ -475,6 +478,9 @@ public enum PlayCommandKind
 
     /// <summary>Settlement <c>A</c> fell to us: <c>B</c> 0 take it, 1 sack it, 2 raze it.</summary>
     TakeSettlement = 44,
+
+    /// <summary>A caravan with <c>C</c> food from settlement <c>A</c> to our army unit <c>B</c> in the field.</summary>
+    SupplyUnit = 45,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

@@ -174,8 +174,10 @@ public sealed partial class SimGame
             Id = Units.Count, Civ = civ.Id, Kind = u.Kind, People = people, Size = people, Cell = u.Cell, State = UnitState.Idle, Home = u.Home,
             Weapon = u.Weapon, Armour = u.Armour, Stance = u.Stance, Hunger = u.Hunger,
             Injured = u.Injured * people / u.People,
+            Provisions = u.Provisions * people / u.People,
         };
         u.Injured -= part.Injured;
+        u.Provisions -= part.Provisions;
         u.People -= people;
         u.Size = u.People;
         Units.Add(part);

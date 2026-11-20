@@ -495,6 +495,9 @@ public sealed class Unit
     /// <summary>Hundredths of a wounded soldier healed so far.</summary>
     public long HealProgress { get; set; }
 
+    /// <summary>Food an army unit carries for the field, hundredths (supply).</summary>
+    public long Provisions { get; set; }
+
     /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
     public long Wounds { get; set; }
 
@@ -613,6 +616,9 @@ public enum CarrierJob : byte
 
     /// <summary>Walking home empty; joins its settlement on arrival.</summary>
     Returning = 3,
+
+    /// <summary>Carrying food to an army unit in the field (supply).</summary>
+    ToUnit = 4,
 }
 
 /// <summary>A standing caravan route between two settlements of one people.</summary>

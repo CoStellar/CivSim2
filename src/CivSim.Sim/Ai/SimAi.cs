@@ -35,6 +35,7 @@ public static partial class SimAi
         AnswerPeace(g, civ);
         Diplomacy(g, civ);
         Supply(g, civ);
+        FieldSupply(g, civ);
         Research(g, civ);
         Hire(g, civ);
         bool lean = LeanTimes(g, civ); // winter close and too little food in store: food first, no settlers or soldiers
@@ -1411,6 +1412,49 @@ public static partial class SimAi
                 {
                     return;
                 }
+            }
+        }
+    }
+
+    // Supply (2026-11-20): an army unit in the field with less than a minute and a half of provisions gets a food caravan from
+    // home when home can spare it; a hungry one with no food coming walks home.
+    private static void FieldSupply(SimGame g, Civ civ)
+    {
+        foreach (int id in civ.Units.ToArray())
+        {
+            Unit u = g.Units[id];
+            if (!g.Content.Units[u.Kind].Army || u.State is UnitState.Gone or UnitState.Training || u.Aboard >= 0 || g.InSupply(u))
+            {
+                continue;
+            }
+
+            long perMinute = (long)u.People * g.Content.FoodPerPersonPerMinute;
+            if (u.Provisions >= perMinute * 3 / 2)
+            {
+                continue;
+            }
+
+            bool coming = false;
+            foreach (int cid in civ.Units)
+            {
+                coming |= g.Units[cid].Job == CarrierJob.ToUnit && g.Units[cid].Target == u.Id && g.Units[cid].State != UnitState.Gone;
+            }
+
+            if (coming)
+            {
+                continue;
+            }
+
+            long want = g.ProvisionsMax(u) - u.Provisions;
+            if ((uint)u.Home < (uint)g.Settlements.Count && g.Settlements[u.Home].Civ == civ.Id && g.Settlements[u.Home].Stock[g.Content.Food] > (2 * want) + (40 * SimContent.One)
+                && g.Apply(new SupplyUnitCommand(civ.Id, u.Home, u.Id, want)) is null)
+            {
+                continue;
+            }
+
+            if (u.Hunger > 0 && (uint)u.Home < (uint)g.Settlements.Count)
+            {
+                g.Apply(new MoveCommand(civ.Id, u.Id, g.Settlements[u.Home].Center, false));
             }
         }
     }

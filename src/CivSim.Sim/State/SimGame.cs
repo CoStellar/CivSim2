@@ -270,6 +270,7 @@ public sealed partial class SimGame
                     {
                         trained.State = UnitState.Idle;
                         Watch(trained);
+                        FillPacks(trained);
                         News.Add((trained.Civ, $"{Content.Units[trained.Kind].Name} are ready."));
                     }
 
