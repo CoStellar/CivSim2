@@ -42,7 +42,7 @@ public static class SchemaValidator
             string schemaPath = Path.Combine(schemaDir, Path.GetFileNameWithoutExtension(name) + ".schema.json");
             if (!File.Exists(schemaPath))
             {
-                errors.Add($"{name}: no schema {FolderName}/{Path.GetFileName(schemaPath)} (write one with docs/systems/tools/infer_schema.py).");
+                errors.Add($"{name}: no schema {FolderName}/{Path.GetFileName(schemaPath)} (write one with docs/legacy/systems/tools/infer_schema.py).");
                 continue;
             }
 

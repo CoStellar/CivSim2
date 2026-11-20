@@ -2,180 +2,110 @@
 
 Czytasz ten plik na początku każdej sesji. Jest źródłem zasad pracy w tym repo.
 
-**Od 2026-11-17 trwa przebudowa gry (ADR 0028).** Obowiązują:
-- projekt gry: `docs/projekt-gry.md`;
-- plan prac: `docs/plan-przebudowy.md` i `ROADMAP.md`;
-- zasady wydajności: `docs/wydajnosc.md`;
-- co jest legacy: `docs/legacy.md`.
+**Teraz: sprint do grywalnego demo (do średniowiecza).** Lista prac i stan: `ROADMAP.md`.
 
-`docs/GDD.md`, `docs/systems/`, `docs/ai/` i ADR 0024–0027 opisują grę legacy: nie rozwijaj jej, chyba że nowa gra tego wymaga.
-Decyzje architektoniczne: `docs/decisions/`.
+## Gra
 
-## Projekt w skrócie
+CivSim 2 to strategia na żywo, „Cywilizacja 6 w czasie rzeczywistym”, na heksagonalnej mapie-planecie (wschód–zachód zawija się,
+przez bieguny przechodzi się na drugą stronę). **Gracz jest całą cywilizacją:** buduje na heksach, bada technologie, prowadzi wojsko
+i dyplomację. Jego lud nie ma własnej AI; sam wykonuje tylko codzienne prace. Przeciwnik AI to pełny gracz z tymi samymi komendami.
+**Najpierw gra, potem realizm.**
 
-CivSim 2 to strategia na żywo, „Cywilizacja 6 w czasie rzeczywistym”, na heksagonalnej mapie-planecie (kula: wschód–zachód zawija się,
-przez bieguny przechodzi się na drugą stronę planety). **Gracz jest całą cywilizacją i decyduje o wszystkim:**
-- buduje na heksach (heks to miejsce na jeden obiekt, osada to zbiór heksów);
-- bada technologie;
-- prowadzi wojsko;
-- prowadzi dyplomację.
+Dokumenty gry (po polsku):
 
-Jego lud nie ma własnej AI. Przeciwnik AI to pełny gracz z tymi samymi komendami. Partia ok. 2 h do nowożytności; teraz budujemy demo
-do średniowiecza. Multiplayer od początku. **Najpierw gra, potem realizm:** lata to tylko ozdoba na ekranie.
+| Plik | Co |
+| --- | --- |
+| `docs/projekt-gry.md` | projekt gry: zasady i zakres (kopia robocza w notatkach Projektu: `claude/projekt-gry.md`) |
+| `docs/sim/gospodarka.md` | gospodarka, osady, racje, zima, logistyka, wszystkie decyzje z liczbami |
+| `docs/sim/technologie.md` | drzewo technologii, budynki, mechaniki |
+| `docs/sim/walka.md` | walka, oblężenie, zaopatrzenie, limit oddziałów, doświadczenie rodzajów |
+| `docs/sim/ai.md` | każda decyzja AI (N1–…) z warunkami, progami i pomiarami |
+| `docs/sim/scenariusze.md` | scenariusze testowe i tryb debug |
+| `docs/wydajnosc.md` | zasady wydajności (usypianie, terminy, stałe rytmy, sumy zamiast osób) |
+| `docs/known-issues.md` | znane problemy nowej gry |
+| `docs/decisions/` | decyzje architektoniczne (ADR) |
 
-## Zakres
+Decyzje Patryka z rozmów są też w notatkach Projektu (`claude/decyzje-*.md`, `claude/runda-testow-*.md`).
 
-Budujemy to, co jest w `docs/projekt-gry.md`. Nie ma kultury, religii, wodzów ani postaci (wyjątek: myśliciele i doradcy z losowymi imionami).
-**Jak najmniej mechanizmów w tle:** każdy system spełnia `docs/wydajnosc.md` (usypianie, terminy, tempa, stałe rytmy, sumy zamiast osób).
+## Legacy
 
-## Role
+Kod i dokumenty sprzed przebudowy (ADR 0028, 2026-11-17) zostają w repo, ale **nie zajmujemy się nimi i nie odnosimy się do nich**:
+nie czytamy, nie naprawiamy, nie rozwijamy, nowy kod od nich nie zależy. Opis, co jest legacy: `docs/legacy/README.md`
+(tam są też stare GDD, opisy systemów, AI i roadmapa). Legacy jest m.in. w `src/CivSim.Core` (poza mapą, generacją świata, liczbami,
+losowaniem, haszem i nazwami) i w plikach `data/*.json` poza `data/sim/`.
 
-- **Ty (Claude Code):** cały kod, testy, pliki danych, dokumentacja techniczna, benchmarki.
-- **Patryk (właściciel):** decyzje projektowe, grafika pixel art, ocena, czy symulacja zachowuje się sensownie.
-  Patryk nie pisze już w C# ani w Javie. Tłumacz po polsku, prosto, bez żargonu, i pokazuj efekty
-  (wykresy, mapy PNG, raporty), a nie tylko kod.
+## Role i sposób pracy
+
+- **Claude Code:** cały kod, testy, dane, dokumentacja techniczna, pomiary.
+- **Patryk (właściciel):** decyzje projektowe, grafika, granie i ocena. Nie pisze w C#. Tłumacz po polsku, prosto, bez żargonu,
+  i pokazuj efekty liczbami (tabele, pomiary, zrzuty ekranu).
+- **Zmiana zasad gry wymaga zgody Patryka.** Najpierw propozycja (najlepiej kwestionariusz z wariantami i rekomendacją), potem kod.
+- **Po każdym wdrożeniu:** szczegółowe wyjaśnienie z liczbami (przed/po z `--sim-report`).
+- **Przed otwarciem PR:** sprawdź otwarte PR-y względem siebie (konflikty, zależności, kolejność merge'a).
+- **Testy uruchamiaj wtedy, gdy są potrzebne** (przed commitem zmian w kodzie, nie po każdej drobnej edycji).
+- **Wszystkie liczby w danych** (`data/sim/game.json`), nie w kodzie.
+- **Czego lud nie zna, tego nie widać** (złoża późniejszych er jako „???”, budynki i jednostki dopiero po technologii). Wyjątek: drzewo technologii.
+- **Gałęzie:** `feat/<opis>` albo `fix/<opis>` od `development`. PR do `development`, opis po polsku: co, dlaczego, liczby, wyniki testów.
+  **Merge robi Patryk.** Nigdy nie pushuj do `main`.
+- **Nie commituj** nieśledzonych `tools/CivSim.Playtest` ani `docs/playtest` (to drugie jest śledzone, ale go nie zmieniaj).
 
 ## Języki
 
-- Rozmowa z Patrykiem, plany sesji i opisy PR: **po polsku**.
-- Kod, komentarze, nazwy, komunikaty commitów, pliki danych, teksty w grze: **wyłącznie po angielsku**.
-- `docs/GDD.md`, `ROADMAP.md`, `docs/decisions/` i `docs/systems/`: po polsku (dla Patryka).
+- Rozmowa z Patrykiem, opisy PR, dokumenty w `docs/`: **po polsku**, prosto.
+- Kod, komentarze, nazwy, commity, dane, teksty w grze: **po angielsku**.
 
-## Jak wygląda każda sesja
+## Struktura (nowa gra)
 
-1. **Start:** przeczytaj `CLAUDE.md`, aktualny etap w `ROADMAP.md`, `docs/known-issues.md`, odpowiedni rozdział `docs/GDD.md`,
-   ostatnie commity (`git log --oneline -20`) i graf wiedzy (`/understand-chat`, gdy potrzebujesz kontekstu).
-2. **Plan sesji** (po polsku, zanim zaczniesz pisać kod):
-   - **Ja zrobię:** lista zadań z `ROADMAP.md`.
-   - **Ty zrób:** grafiki lub decyzje. Grafikę opisuj zawsze tak: nazwa pliku, rozmiar w px, warstwa,
-     liczba wariantów, paleta `art/palette/civsim2_palette.gpl`, krótki opis i odniesienie (np. do `art/legacy/`).
-   - **Do decyzji:** pytania, bez których nie możesz iść dalej, z Twoją rekomendacją.
-3. **Praca:** osobna gałąź `feat/<krótki-opis>` albo `fix/<...>`, małe commity.
-4. **PR:** opis po polsku: co, dlaczego, jak sprawdzić, wyniki testów, benchmark, raport `/understand-diff`.
-   Nigdy nie pushuj bezpośrednio do `main`. Merge robi Patryk.
-5. **Koniec sesji:** odhacz zadania w `ROADMAP.md`, zaktualizuj `docs/known-issues.md` (naprawione i nowe problemy), zaktualizuj `docs/systems/` (a gdy etap zmienia AI, także `docs/ai/`),
-   upewnij się, że graf wiedzy jest aktualny, i napisz krótkie podsumowanie: co działa, co zostało, co Patryk ma zrobić.
+```
+src/CivSim.Sim/            symulacja nowej gry (State/SimGame*.cs, Ai/SimAi*.cs, Content/SimContent.cs)
+src/CivSim.Core/           fundament: Map (HexGlobe), WorldGen, Numerics, Random, Hashing, Naming (reszta to legacy)
+src/CivSim.Protocol/       wiadomości klient–serwer (MessagePack, wersja w ProtocolInfo.cs)
+src/CivSim.Server/         PlayHost.cs: serwer gry, widok gracza filtrowany mgłą, komendy
+src/CivSim.Headless/       --sim-report, --sim-scenario i inne pomiary bez okna
+game/                      klient Godot 4.7.2 .NET (scripts/Play/PlayGame*.cs, PlayOverlay*.cs, UiKit, UiItems)
+data/sim/game.json         wszystkie dane gry (budowany skryptem, patrz niżej)
+data/sim/tools/build_game_json.py   skrypt danych: edytuje game.json w miejscu; zmiany danych rób tutaj
+data/sim/scenarios/        scenariusze testowe (README.md w środku)
+tests/CivSim.Sim.Tests/    testy symulacji
+tests/CivSim.Tests/        testy protokołu, serwera i reszty
+docs/sim/                  opis nowej gry
+```
 
-Jeśli zadanie zmienia zasady z `docs/projekt-gry.md`, **najpierw zaproponuj zmianę Patrykowi**, potem ją wprowadź
-w dokumencie i w kodzie. Nie zmieniaj zasad gry po cichu.
+## Polecenia
+
+```
+export PATH=$HOME/.dotnet:$PATH
+python3 data/sim/tools/build_game_json.py                      # po zmianie skryptu danych
+dotnet build -c Release -v q                                     # ostrzeżenia są błędami
+dotnet test tests/CivSim.Sim.Tests -c Release -v q
+dotnet test tests/CivSim.Tests -c Release -v q
+dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12 --minutes 75   # pomiar AI i tempa er
+dotnet run --project src/CivSim.Headless -c Release -- --sim-scenario <nazwa> [--minutes N] [--ai-all]
+cd game && dotnet build                                         # klient
+```
+
+Zrzuty ekranu klienta (xvfb, w katalogu `game`): `--play [--play-scenario <nazwa>] --play-window <okno> --play-screenshot /tmp/x.png --play-seconds N`.
+
+Protokół: po zmianie wiadomości podbij `ProtocolInfo.Version` i oczekiwany nagłówek w `ProtocolSerializerTests.WireFormatIsStable`.
 
 ## Architektura — twarde zasady
 
-1. **Rdzeń bez grafiki.** `CivSim.Core` nie ma żadnej zależności od Godota ani od UI. Musi działać w
-   `CivSim.Headless` i w testach.
-2. **Wszystko przez komendy.** Każda zmiana stanu gry to komenda (`ICommand`). AI i gracz wydają te same
-   komendy. Godot nigdy nie modyfikuje stanu bezpośrednio: wysyła komendy, czyta migawki.
-3. **Osobny wątek symulacji.** Po każdej turze rdzeń publikuje niezmienną migawkę (double buffer).
-   UI czyta tylko ostatnią gotową migawkę.
-4. **Determinizm** (ten sam seed + te same komendy = identyczny stan, bit w bit, na każdym systemie):
-   - własny PRNG (np. PCG32 lub xoshiro256**) z osobnymi strumieniami na system (`world`, `ai`, `combat`, `events`…);
-     **zakaz** `System.Random`, `Guid.NewGuid`, `DateTime.Now` i haszy zależnych od procesu w logice gry;
-   - ilości zasobów i ekonomia na liczbach całkowitych (typ `Amount` w setnych częściach jednostki), bez `float`/`double`;
-     tam, gdzie liczby ułamkowe są nieuniknione (klimat, oceny AI), używaj fixed-point albo zaokrąglaj deterministycznie;
-   - iteracja zawsze w stałej kolejności identyfikatorów; nie polegaj na kolejności `Dictionary`/`HashSet`;
-   - AI liczone równolegle wyłącznie czyta migawkę, a jej komendy są sortowane przed rozstrzygnięciem;
-   - test determinizmu (hash stanu po N turach dla dwóch przebiegów) musi przechodzić lokalnie przed każdym PR.
-5. **Zawartość w danych.** Technologie, zasoby, budynki, receptury, jednostki, ustroje, polityki, zdarzenia,
-   biomy i motywy UI są w plikach JSON w `data/`, walidowanych przy starcie. Nowa technologia nie wymaga kodu.
-6. **Czas w taktach** (10 na sekundę). Każdy system liczy się w stałym rytmie (`docs/wydajnosc.md`), a wartości w danych
-   podajemy na sekundę gry. Lata i miesiące nie są zasadą gry (legacy: tempa na rok, pulsy, `TimeRules.ActionTicks`).
-7. **Wydajność od pierwszego dnia:**
-   - pola mapy w płaskich tablicach (struktura tablic), byty identyfikowane liczbami;
-   - zero alokacji w głównej pętli tury, pule obiektów;
-   - mapa podzielona na fragmenty 32×32, przeliczane tylko przy zmianach (dirty flags);
-   - historia i statystyki o stałej pamięci (próbkowanie coraz rzadsze z wiekiem).
-8. **Mapa:** heksy flat-top, współrzędne osiowe (q, r), kula (ADR 0012): zawijanie wschód–zachód, przejście przez biegun
-   na drugą stronę planety, rzędy jako pasy o równej powierzchni. Szerokość = 4k + 2, wysokość parzysta.
-   Wszystkie odległości i sąsiedztwa idą przez jeden moduł `HexGlobe`, nigdy ręcznie.
-9. **Wiele światów:** stan gry od początku przechowuje listę światów (planet); Ziemia to świat 0.
-10. **Gotowość na multiplayer (klient–serwer).** Gry sieciowej nie budujemy (to przyszła aktualizacja), ale od etapu 0:
-    - gra zawsze działa jako klient i serwer; w grze jednoosobowej serwer startuje lokalnie w tym samym procesie,
-      a połączenie to transport w pamięci (bez sieci) za tym samym interfejsem, co późniejszy transport sieciowy;
-    - klient (`CivSim.Game`) **nie odwołuje się do `CivSim.Core`**, tylko do `CivSim.Protocol`: wysyła komendy, dostaje widok;
-    - serwer jest autorytatywny: sprawdza każdą komendę (uprawnienia, zasoby, widoczność celu) i jako jedyny liczy symulację;
-    - widok dla gracza jest filtrowany przez mgłę wojny i pamięć mapy jego cywilizacji; klient nigdy nie dostaje pełnego stanu
-      (dlatego nie lockstep);
-    - każda komenda niesie identyfikator gracza i cywilizacji, nawet w grze jednoosobowej;
-    - wiadomości protokołu są wersjonowane i serializowane (MessagePack), z testami zgodności;
-    - tura kończy się, gdy wszyscy gracze są gotowi albo minie limit czasu; rozłączoną cywilizację przejmuje AI.
-
-## Struktura repo
-
-```
-src/CivSim.Core/        logika symulacji (bez Godota)
-src/CivSim.Data/        ładowanie i walidacja JSON
-src/CivSim.Protocol/    wiadomości klient–serwer, wersja protokołu, transport w pamięci (sieciowy w przyszłej aktualizacji)
-src/CivSim.Server/      serwer gry: tury, sprawdzanie komend, filtrowanie widoczności, zapis (czysty .NET, bez Godota)
-src/CivSim.Headless/    uruchamianie bez okna, benchmarki, raporty CSV, eksport mapy do PNG
-tests/CivSim.Tests/     testy jednostkowe, determinizmu i długich przebiegów
-game/                   klient w Godocie (od etapu 2), zależy tylko od Protocol
-data/                   zawartość gry w JSON
-art/                    grafiki Patryka (palette/, templates/, legacy/, src/, export/)
-docs/                   GDD, decyzje, opisy systemów, prompty
-.understand-anything/   graf wiedzy projektu (commitowany)
-```
-
-## Testy, benchmarki i CI
-
-- xUnit. Każdy system ma testy jednostkowe.
-- **Test determinizmu:** dwa przebiegi z tym samym seedem → identyczny hash stanu.
-- **Test długiego przebiegu:** 10 000 tur na stałym seedzie, raport czasu tury i pamięci.
-- Cele wydajności (dostrajane po pomiarach):
-
-| Mapa | Wymiary | Cywilizacje | Czas tury | Pamięć po 10 000 tur |
-| --- | --- | --- | --- | --- |
-| Standard | 256×160 | 12 | < 50 ms | < 1 GB |
-| Duża | 384×240 | 20 | < 120 ms | < 1,5 GB |
-| Ogromna | 512×320 | 32 | < 250 ms | < 3 GB |
-
-- PR, który pogarsza czas tury lub pamięć o więcej niż 10%, wymaga wyjaśnienia w opisie.
-- Testy i benchmarki uruchamiamy **lokalnie** przed każdym PR i wpisujemy wyniki do opisu (decyzja Patryka z 2026-11-05: nie polegamy na CI). Testy mają być krótkie: cały zestaw w kilka sekund, długie przebiegi tylko w benchmarku `CivSim.Headless`.
-
-## Zrozumiałość kodu: Understand Anything
-
-Repo od etapu 0 korzysta z pluginu Understand Anything (graf wiedzy projektu dla Claude Code).
-
-- Instalacja: plugin jest wpisany w `.claude/settings.json` (marketplace `Egonex-AI/Understand-Anything`, dawniej `Lum1104`;
-  zatwierdzona wersja 2.9.8, 2026-11-05). Nowa sesja w tym folderze proponuje instalację. Ręcznie w terminalu:
-  `/plugin marketplace add Egonex-AI/Understand-Anything` i `/plugin install understand-anything`.
-  To projekt społeczności, nie Anthropic. Przed instalacją pokaż Patrykowi wersję, którą instalujesz.
-- Pierwsza analiza: `/understand`. Zużywa sporo tokenów; kolejne analizują tylko zmienione pliki.
-- Włącz automatyczną aktualizację po commitach: `/understand --auto-update`.
-- Commituj `.understand-anything/` **oprócz** `intermediate/` i `diff-overlay.json` (są w `.gitignore`).
-  Jeśli graf przekroczy 10 MB, przenieś go do Git LFS.
-- W każdym PR dołącz wynik `/understand-diff`.
-- Dla Patryka: `/understand-dashboard` (graf), `/understand-domain` (przepływy, np. fazy tury),
-  `/understand-explain <plik>`, `/understand-chat <pytanie>`.
-
-## Dokumentacja techniczna
-
-- Każdy system rdzenia ma plik `docs/systems/<system>.md` według szablonu z `docs/systems/README.md`,
-  z diagramem przepływu danych w Mermaid.
-- Ważna decyzja techniczna = nowy plik ADR w `docs/decisions/` (numerowany, po polsku).
-- **Pełny opis decyzji AI: `docs/ai/`** (po polsku, dla Patryka). Każda decyzja AI ma tam identyfikator, warunki, wzory, progi,
-  parametry, miejsce w kodzie i przykład z dziennika „Dlaczego?”, a `08-ocena-i-uwagi.md` uczciwie ocenia, co jest za proste albo zbędne.
-  **Obowiązkowo aktualizuj go na końcu każdego etapu (i w każdym PR), który zmienia AI:** nowe lub zmienione decyzje, czynniki, parametry
-  w `data/ai.json` i innych plikach, kolejność doradców, wiedza AI. Odśwież statystyki z 3 seedów (`--decisions`), wykres PNG,
-  commit w nagłówku `docs/ai/README.md` i dopisz wiersz w jego historii zmian. Nie wolno niczego pominąć.
-- Publiczne klasy i metody w kodzie mają krótkie komentarze XML po angielsku.
-- **Moduł wojny co erę** (prośba Patryka z 2026-11-07): w każdym etapie nowej ery zaktualizuj uzbrojenie, fachy i jednostki wojska, limity wodza
-  i pola oraz zaopatrzenie według listy w `docs/systems/war.md`, sekcja „Co erę”.
-
-## Grafika (kiedy prosisz Patryka o pliki)
-
-- Narzędzie Patryka: LibreSprite (pliki `.ase`). Paleta: `art/palette/civsim2_palette.gpl` (45 kolorów ze starego CivSim + 8 rozszerzenia).
-- Heks: flat-top **48×42 px**, kolumny co 36 px, rzędy co 42 px, co druga kolumna przesunięta o 21 px.
-  Maska: `art/templates/hex_template_48x42.png`.
-- Warstwy od dołu: biom → teren (rzeźba, cechy, rzeki na krawędziach) → obiekty → jednostki.
-- Kolor cywilizacji: zarezerwowane odcienie magenty `#FF00FF`, `#C000C0`, `#800080` (podmieniane shaderem).
-- Do etapu 4 podgląd używa kolorowych heksów generowanych w kodzie. Od etapu 5 używa grafik zastępczych (placeholderów), które robisz Ty (Claude Code) w palecie i w rozmiarach z GDD 12.3. Pixel art Patryka wchodzi w etapie 13 (tryb gracza, na końcu CORE) i podmienia je pod tymi samymi nazwami.
+1. **Symulacja bez grafiki.** `CivSim.Sim` i `CivSim.Core` nie zależą od Godota; działają w `CivSim.Headless` i testach.
+2. **Wszystko przez komendy.** Każda zmiana stanu to komenda (`SimGame.Apply`). AI i gracz wydają te same komendy, a gra sprawdza je
+   tak samo. AI niczego nie zmienia bezpośrednio.
+3. **Determinizm:** własny PRNG ze strumieniami; zakaz `System.Random`, `Guid.NewGuid`, `DateTime.Now` w logice; ekonomia na liczbach
+   całkowitych (setne części jednostki, `SimContent.One`); stała kolejność iteracji; hasz stanu w `SimGame.Hash.cs` (dopisz do niego nowy stan).
+4. **Dane w JSON**, wczytywane i sprawdzane przy starcie (`SimContent`).
+5. **Czas w taktach** (10 na sekundę). Każdy system ma stały rytm (`docs/wydajnosc.md`); wartości w danych na sekundę albo minutę gry.
+6. **Klient–serwer od początku.** Klient (`game/`) zna tylko `CivSim.Protocol`; serwer jest autorytatywny i filtruje widok mgłą wojny.
+   Transport w pamięci za tym samym interfejsem co przyszły sieciowy. Multiplayer przez sieć to przyszła aktualizacja.
+7. **Mapa:** heksy flat-top, współrzędne osiowe, kula; odległości i sąsiedztwa tylko przez `HexGlobe`.
+8. **AI bez premii i ukrytej wiedzy:** widzi tylko to, co odkrył jej lud.
 
 ## Czego nie robić
 
-- Nie dodawaj religii ani kultury.
-- Nie dodawaj mechanik spoza `docs/projekt-gry.md` bez zgody Patryka.
-- Nie dawaj AI żadnych premii ani ukrytej wiedzy; widzi tylko to, co odkryła jej cywilizacja.
-- Nie rozwijaj kodu legacy (`docs/legacy.md`) i nie uzależniaj od niego nowej symulacji.
-- Nie planuj eksportu do przeglądarki (Godot nie eksportuje oficjalnie C# do web).
-- Nie wprowadzaj skrótów omijających granicę klient–serwer (np. klient czytający stan rdzenia bezpośrednio): multiplayer jest od początku.
+- Nie dodawaj kultury ani religii.
 - Nie zmieniaj zasad gry bez zgody Patryka.
+- Nie rozwijaj legacy i nie uzależniaj od niego nowej gry.
+- Nie omijaj granicy klient–serwer.
+- Nie planuj eksportu do przeglądarki.

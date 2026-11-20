@@ -1,3 +1,5 @@
+**The new game's data is `data/sim/` (`game.json`, built by `data/sim/tools/build_game_json.py`, and test scenarios).** The other files here belong to the legacy game (`docs/legacy/README.md`).
+
 # Game content (data)
 
 Only CORE features are covered here (see `docs/GDD.md`, section 16). All game content lives here as JSON, validated on load.

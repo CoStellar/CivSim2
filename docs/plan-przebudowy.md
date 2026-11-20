@@ -1,7 +1,7 @@
 # Plan przebudowy (ADR 0028)
 
 Cel: demo do średniowiecza, w którym Patryk gra na żywo. Każdy etap kończy się czymś, co da się zagrać albo obejrzeć w kliencie Godot.
-Co zostaje, a co jest legacy: `docs/legacy.md`. Stan etapów: `ROADMAP.md`.
+Co zostaje, a co jest legacy: `docs/legacy/README.md`. Etapy A–G są zrobione (2026-11-20); dalsze prace: sprint do demo w `ROADMAP.md`.
 
 **Sposób pracy:**
 - Nowa symulacja powstaje obok starej, w nowym projekcie `src/CivSim.Sim` (bez zależności od Godota).

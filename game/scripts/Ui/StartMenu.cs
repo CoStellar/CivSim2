@@ -144,10 +144,10 @@ public partial class StartMenu : CanvasLayer
         var play = new Button { Text = "Play new game", CustomMinimumSize = new Vector2(180, 40) };
         play.Pressed += () => PlayRequested?.Invoke(_settings, goal.GetSelectedId(), keys[Math.Max(0, scenario.Selected)]);
         buttons.AddChild(play);
-        _start = new Button { Text = "Watch (legacy)", CustomMinimumSize = new Vector2(180, 40) };
+        _start = new Button { Text = "Watch (legacy)", CustomMinimumSize = new Vector2(180, 40), Visible = false }; // legacy: hidden (2026-11-20)
         _start.Pressed += Start;
         buttons.AddChild(_start);
-        _start.GrabFocus();
+        play.GrabFocus();
         UpdatePlaceholders();
         _previewIn = 0;
     }

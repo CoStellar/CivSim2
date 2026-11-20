@@ -1,9 +1,8 @@
 # AI nowej gry (ADR 0028): wszystkie decyzje
 
-Strony 01–12 opisują AI starego symulatora (rada doradców, lata, epizody). Nowa gra (gałęzie `feat/sim-core` → `feat/fog` →
-`feat/stone-age`) ma własne, prostsze AI w `src/CivSim.Sim/Ai/SimAi.cs` i `SimAi.Care.cs`. Ta strona opisuje każdą jego decyzję.
+AI nowej gry jest w `src/CivSim.Sim/Ai/SimAi.cs` i `SimAi.Care.cs`. Ta strona opisuje każdą jego decyzję.
 
-**Stan:** commit `8b03118` (2026-11-19). Ścieżki mają postać `plik:linia` dla tego commita.
+**Stan:** N1–N25 według commita `8b03118` (2026-11-19; ścieżki `plik:linia` dla tego commita), N26–N33 z PR-ów #108–#112 (2026-11-20; ścieżki z nazwą metody).
 
 ## Zasady ogólne
 
@@ -58,6 +57,14 @@ Strony 01–12 opisują AI starego symulatora (rada doradców, lata, epizody). N
 | N23 | Nauczyciel bez surowca | nauczyciel (budynek dający doświadczenie) nie ma wejść | najpierw buduje wytwórcę surowca (kamieniołom dla narzędziarza); nauczyciel, który już stoi, dostaje pierwszeństwo | 20 sztuk zapasu | `Ai/SimAi.cs` (`Teacher`, `Economy`) |
 | N24 | Bez bliźniaków i pustych miejsc pracy | budynek tego rodzaju jest w budowie albo wolnych miejsc pracy jest tyle, co bezczynnych ludzi | nie zaczyna nowego miejsca pracy (wyjątki: nauczyciel, wytwórca braku, jedzenie przy głodzie); budynek z pracownikami stawia w osadzie z wolnymi rękami. Po 40 min (12 ziaren): puste budynki 23% → 15%, wolne miejsca pracy 185 → 85 | — | `Ai/SimAi.cs` (`TryBuild`) |
 | N25 | Droga do bramy ery | brama obecnej ery nieznana | technologie na drodze do bramy (ona sama, jej wymagania i technologie, w których wymaga doświadczenia, dwa kroki wstecz) dostają +25 w wyborze badania, a ich budynki-nauczyciele idą pierwsze | +25 | `Ai/SimAi.cs` (`GatewayWay`) |
+| N26 | Nauczyciel przed kolejką | badanie czeka na nauczyciela, budów mniej niż 2 + liczba osad | stawia nauczyciela przed innymi budowami; może go postawić w osadzie bez wolnych rąk, tam gdzie są towary | 2 + osady | `Ai/SimAi.cs` (`Economy`) |
+| N27 | Dowóz na budowę (#109) | budynek, na który czeka badanie, da się postawić tylko w osadzie bez jego ceny | karawany z najbogatszych osad przywożą brakującą cenę; następna decyzja stawia budynek | — | `Ai/SimAi.cs` (`Fund`) |
+| N28 | Najpierw producent ceny (#109) | budynek do nauki kosztuje towar, którego nikt nie robi | stawia producenta tego towaru (np. narzędziarza przed farmą) | — | `Ai/SimAi.cs` (`PriceMaker`) |
+| N29 | Surowce dla warsztatów (#109) | pracujący budynek ma w osadzie < 10 sztuk surowca | karawana z osady, która ma go najwięcej (zostawia 20, wiezie do 30); najwyżej 2 nowe na decyzję, jedna na towar i cel | 10, 20, 30, 2 | `Ai/SimAi.cs` (`Inputs`) |
+| N30 | Złoża dla osadników (#109) | brama ery czeka na towar z kopalni, a żadna osada nie ma złoża | miejsce obozu przy znanym takim złożu (promień 2) dostaje +60; budynek przy surowcach dostaje do +20 za surowiec | +60, +20 | `Ai/SimAi.cs` (`WantedDeposits`, `InputsAtHand`) |
+| N31 | Po zdobyciu osady (#110) | osada padła przed naszym wojskiem | zajmuje, gdy leży do 20 heksów od naszej najbliższej osady, dalej łupi; burzy tylko ostatnią osadę wroga przy wojowniczości ≥ 75. Obrona celu przy decyzji o wojnie liczy też straż | 20 heksów, 75 | `Ai/SimAi.cs` (`TakeChoiceFor`) |
+| N32 | Jedzenie dla armii w polu (#111) | oddział poza zasięgiem zaopatrzenia ma jedzenia na < 1,5 minuty i nikt mu go nie wiezie | karawana z domu, gdy dom ma > 2 × brak + 40; głodny bez dostawy wraca do domu | 1,5 min, ×2 + 40 | `Ai/SimAi.cs` (`FieldSupply`) |
+| N33 | Premie rodzajów (#112) | rodzaj jednostki osiągnął poziom | łucznicy i machiny: Hardened; jazda: na zmianę Forced march i Hardened; piechota: na zmianę Hardened i Shield wall | — | `Ai/SimAi.cs` (`VeteranChoiceFor`) |
 
 ## Zmiany z 2026-11-19
 

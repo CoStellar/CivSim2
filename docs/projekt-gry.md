@@ -1,6 +1,6 @@
 # CivSim 2: projekt gry
 
-Spisane z odpowiedzi Patryka, 2026-11-17 (ADR 0028). To podstawa gry; zastępuje `docs/GDD.md` (legacy). Kopia robocza jest też w notatkach
+Spisane z odpowiedzi Patryka, 2026-11-17 (ADR 0028). To podstawa gry; zastępuje stare GDD (legacy). Kopia robocza jest też w notatkach
 Projektu (`claude/projekt-gry.md`); przy zmianach aktualizujemy obie. **Najpierw gra, potem realizm.**
 
 ## 1. Wizja
@@ -123,10 +123,13 @@ Projektu (`claude/projekt-gry.md`); przy zmianach aktualizujemy obie. **Najpierw
   - nowa era daje nowe rodzaje i ulepsza istniejące, a później już tylko ulepsza;
   - oddział to grupa na heksie;
   - rozkazy: idź, atakuj, broń pola, wycofaj się.
-- **Armia:**
-  - wojownik nie pracuje i kosztuje jedzenie;
-  - rezerwista pracuje, a po powołaniu jest słabszym żołnierzem;
-  - wojownicy mogą w pokoju pomagać w pracach, ale potem przez jakiś czas są słabsi.
+- **Armia** (zmiana 2026-11-20, decyzje 1, 9, 10, 11):
+  - wojownik nie pracuje i kosztuje jedzenie; zostaje wojownikiem do końca (bez rozwiązywania oddziałów i bez rezerwistów);
+  - limit oddziałów rośnie z poziomem osad, koszarami, zamkami i technologiami politycznymi; duża armia jest możliwa, ale droga;
+  - doświadczenie ma rodzaj jednostki (np. wszyscy łucznicy), a na każdym poziomie gracz wybiera jedną z 3 premii;
+  - z dala od swojej ziemi armia je z juków i z ziemi, a karawany mogą dowozić jej jedzenie.
+- **Oblężenie** (2026-11-20, decyzje 3, 5, 7, 8): otoczenie odcina osadę i spowalnia jej pracę; bronią oddziały, straż z umocnień
+  i 30% mieszkańców (zostaje co najmniej 40%); po zdobyciu zdobywca wybiera: zajmij, złup albo zburz.
 - **Bitwy widoczne**, gracz stale wpływa i może wycofać jednostki.
 - **Wojna to stan,** a każda walka należy do wojny. Wojna kończy się:
   - **pokojem z negocjacji:**
