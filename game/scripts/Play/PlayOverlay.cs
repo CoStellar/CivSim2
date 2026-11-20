@@ -397,7 +397,10 @@ public partial class PlayOverlay : Node2D
         {
             foreach (Vector2 c in Copies(col, row))
             {
-                g.DrawPolygon(Hex(c, 0.9f), [new Color(0.3f, 1f, 0.4f, 0.28f)]);
+                // E12 (2026-11-20): a light outline, not green on green grass.
+                Vector2[] hex = Hex(c, 0.86f);
+                g.DrawPolygon(hex, [new Color(1f, 1f, 0.85f, 0.12f)]);
+                g.DrawPolyline([.. hex, hex[0]], new Color(1f, 0.95f, 0.55f, 0.95f), 3f);
             }
         }
 

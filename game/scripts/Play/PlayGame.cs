@@ -343,7 +343,7 @@ public partial class PlayGame : Node2D
         _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
-        _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario }, _dataDirectory);
+        _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario, Tutorial = _scenario is null }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         _session.CommandRefused += reason => Toast(reason);
         _session.Saved += r => Toast(r.Text);
@@ -467,6 +467,7 @@ public partial class PlayGame : Node2D
         }
 
         UpdateToast(delta);
+        UpdateHexTip();
 
         if (_host?.Error is { } error)
         {
@@ -618,6 +619,9 @@ public partial class PlayGame : Node2D
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.L }:
                 ToggleChronicle();
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.T }:
+                OpenWindow("Tutorial");
                 break;
             case InputEventKey { Pressed: true, Echo: false } k when ActionKey(k.Keycode):
                 break;

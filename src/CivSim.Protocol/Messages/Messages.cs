@@ -33,6 +33,7 @@ namespace CivSim.Protocol.Messages;
 [Union(24, typeof(PlayObjectsMessage))]
 [Union(25, typeof(SaveGameRequestMessage))]
 [Union(26, typeof(SaveGameResultMessage))]
+[Union(27, typeof(SetTutorialMessage))]
 public interface IProtocolMessage
 {
 }

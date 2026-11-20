@@ -301,7 +301,7 @@ public sealed partial class SimGame
         int tech = civ.Researching;
         civ.KnownTech[tech] = true;
         civ.Researching = -1;
-        News.Add((civ.Id, $"We have learned {Content.Techs[tech].Name}."));
+        News.Add((civ.Id, $"We have learned {Content.Techs[tech].Name}.{Opened(tech)}")); // E5: what it opened and where
         UpgradeUnits(civ, tech);
         AdvanceEra(civ, tell: true);
 
@@ -367,9 +367,24 @@ public sealed partial class SimGame
 
         if (Ticks >= civ.NextThinkerOffer)
         {
-            civ.ThinkerOffer = NewPerson(civ, advisor: false);
-            civ.NextThinkerOffer = Ticks + Content.ThinkerOfferTicks;
-            News.Add((civ.Id, $"A {Content.Rarities[civ.ThinkerOffer.Rarity].Name.ToLowerInvariant()} thinker, {civ.ThinkerOffer.Name}, offers to teach us."));
+            Person candidate = NewPerson(civ, advisor: false);
+            long[] asks = HirePrice(candidate, false);
+            bool knownGoods = true;
+            for (int g = 0; g < asks.Length; g++)
+            {
+                knownGoods &= asks[g] <= 0 || KnowsGood(civ, g);
+            }
+
+            if (!knownGoods)
+            {
+                civ.NextThinkerOffer = Ticks + (Content.ThinkerOfferTicks / 4); // E17: not yet; he asks for goods we do not know
+            }
+            else
+            {
+                civ.ThinkerOffer = candidate;
+                civ.NextThinkerOffer = Ticks + Content.ThinkerOfferTicks;
+                News.Add((civ.Id, $"A {Content.Rarities[candidate.Rarity].Name.ToLowerInvariant()} thinker, {candidate.Name}, offers to teach us."));
+            }
         }
 
         if (Ticks >= civ.NextAdvisorOffer)
