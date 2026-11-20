@@ -47,7 +47,7 @@ public sealed partial class SimGame
             return Picking ? "First choose where our people starts." : "The start has been chosen.";
         }
 
-        return command switch
+        string? refused = command switch
         {
             PickStartCommand c => PickStart(civ, c.Cell),
             BuildCommand c => Build(civ, c.Cell, c.Type),
@@ -111,6 +111,22 @@ public sealed partial class SimGame
             AnswerBarterCommand c => AnswerBarter(civ, c.From, c.Accept),
             _ => "Unknown command.",
         };
+
+        SettlePlayer(civ);
+        return refused;
+    }
+
+    /// <summary>
+    /// A14 (tests 2026-11-20): a player's people is recomputed inside the simulation right after its command and at the end of each
+    /// tick, so the server's view only reads (before, the view recomputed it at wall-clock moments and changed the state hash).
+    /// The AI recomputes at its own thought, as before.
+    /// </summary>
+    private void SettlePlayer(Civ civ)
+    {
+        if (!civ.IsAi && civ.Dirty && !civ.Dead)
+        {
+            Recompute(civ);
+        }
     }
 
     /// <summary>Why <paramref name="type"/> cannot be built on <paramref name="cell"/> by <paramref name="civ"/> (null = it can).</summary>
