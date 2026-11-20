@@ -3368,11 +3368,12 @@
     "choiceSeconds": 20
   },
   "supply": {
-    "comment": "An army unit on its people's land or within rangeHexes of it is fed at the ration by its home settlement and fills its provisions: food for carryMinutes minutes of its people. Farther away it eats its provisions; before them the land gives what landHands foragers would gather on its hex (forage.perMinute food at the hex's richness, times landPercent): a small unit lives off the land longer than a big one. With no provisions left it goes hungry, then starves. A caravan can carry food to a unit in the field (it follows the unit, and can be raided on the way).",
+    "comment": "An army unit on its people's land or within rangeHexes of it is fed at the ration by its home settlement and fills its provisions: food for carryMinutes minutes of its people. Farther away it eats its provisions; before them the land gives what landHands foragers would gather on its hex (forage.perMinute food at the hex's richness, times landPercent): a small unit lives off the land longer than a big one. With no provisions left it goes hungry, then starves. A caravan can carry food to a unit in the field (it follows the unit, and can be raided on the way). noWaySeconds: a caravan to a unit there is no way to is refused, and the AI sends none to that unit for this long.",
     "rangeHexes": 3,
     "carryMinutes": 4,
     "landHands": 10,
-    "landPercent": 100
+    "landPercent": 100,
+    "noWaySeconds": 60
   },
   "armyLimit": {
     "comment": "Army units (not people) a people may have: perLevel for each settlement by its level (camp, village, town, city), plus perBuilding for each finished building of those kinds, plus perTech for each of those technologies known. Training stops at the limit; a big army stays possible, but costs food at every ration.",
@@ -3420,5 +3421,10 @@
         "speedPercent": 10
       }
     ]
+  },
+  "upgradeCaravans": {
+    "comment": "A settlement short of the goods for its upgrade gets them by caravan from our other settlements: they carry what is missing plus extraPercent of the price of that good (at least 1), as far as the senders have it. When they arrive short, the AI asks again only after aiRetrySeconds.",
+    "extraPercent": 10,
+    "aiRetrySeconds": 60
   }
 }

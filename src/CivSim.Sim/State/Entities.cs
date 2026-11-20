@@ -181,6 +181,9 @@ public sealed class Settlement
     /// <summary>Waiting for the goods of its next level, carried by caravans from our other settlements (G6, 2026-11-19).</summary>
     public bool UpgradeWaiting { get; set; }
 
+    /// <summary>Tick the last upgrade by caravan failed (the AI waits before it asks again; −1 = never).</summary>
+    public long UpgradeFailedTick { get; set; } = -1;
+
     /// <summary>Tick since which nobody has lived here (−1 = people live here).</summary>
     public long EmptySince { get; set; } = -1;
 
@@ -593,6 +596,9 @@ public sealed class Unit
 
     /// <summary>Failed searches for a way to its target in a row.</summary>
     public int ChaseFails { get; set; }
+
+    /// <summary>Tick a caravan with food found no way to this unit (−1 = never; the AI waits supply.noWaySeconds after it).</summary>
+    public long SupplyNoWayTick { get; set; } = -1;
 
     /// <summary>Tick of its last charge (−1 = never).</summary>
     public long ChargeTick { get; set; } = -1;

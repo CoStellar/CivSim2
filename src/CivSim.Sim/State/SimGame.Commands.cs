@@ -263,6 +263,23 @@ public sealed partial class SimGame
         return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
     }
 
+    /// <summary>The goods of a price a store lacks, as "29 of 30 clay, 0 of 40 pottery" ("nothing" when it has them all).</summary>
+    public string ShortText(long[] stock, long[] price)
+    {
+        ArgumentNullException.ThrowIfNull(stock);
+        ArgumentNullException.ThrowIfNull(price);
+        var parts = new System.Collections.Generic.List<string>();
+        for (int g = 0; g < price.Length; g++)
+        {
+            if (price[g] > 0 && stock[g] < price[g])
+            {
+                parts.Add($"{stock[g] / SimContent.One} of {price[g] / SimContent.One} {Content.Goods[g].Key}");
+            }
+        }
+
+        return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
+    }
+
     /// <summary>True when a store holds the price (percent of it).</summary>
     public static bool CanAfford(long[] stock, long[] price, int percent)
     {
@@ -535,7 +552,17 @@ public sealed partial class SimGame
 
             if (!BringForUpgrade(civ, s, next.UpgradePrice))
             {
-                return $"A {next.Name.ToLowerInvariant()} costs {PriceText(next.UpgradePrice)}; our settlements together do not have it.";
+                // A12 (tests 2026-11-20): say which goods are missing, counted over all our settlements.
+                var all = new long[next.UpgradePrice.Length];
+                foreach (int own in civ.Settlements)
+                {
+                    for (int g = 0; g < all.Length; g++)
+                    {
+                        all[g] += Settlements[own].Stock[g];
+                    }
+                }
+
+                return $"A {next.Name.ToLowerInvariant()} costs {PriceText(next.UpgradePrice)}; all our settlements together have only {ShortText(all, next.UpgradePrice)}.";
             }
 
             s.UpgradeWaiting = true;
@@ -584,11 +611,13 @@ public sealed partial class SimGame
                     break;
                 }
 
-                long send = Math.Min(missing[g], Settlements[sid].Stock[g]);
+                // A1 (tests 2026-11-20): a margin, because the settlement keeps using the goods while the caravans are on the way.
+                long margin = Math.Max(SimContent.One, price[g] * Content.UpgradeCaravans.ExtraPercent / 100);
+                long send = Math.Min(missing[g] + margin, Settlements[sid].Stock[g]);
                 if (send >= SimContent.One && SendCaravan(civ, sid, s.Id, g, send) is null)
                 {
                     Units[^1].ForUpgrade = true;
-                    missing[g] -= send;
+                    missing[g] -= Math.Min(missing[g], send);
                 }
             }
         }
@@ -618,7 +647,8 @@ public sealed partial class SimGame
             else if (!civ.Units.Exists(id => Units[id].ForUpgrade && Units[id].Target == sid && Units[id].State != UnitState.Gone && Units[id].Job == CarrierJob.ToSettlement))
             {
                 s.UpgradeWaiting = false; // the caravans arrived short or turned back
-                News.Add((civ.Id, $"Not all the goods for {s.Name} arrived: it does not grow this time."));
+                s.UpgradeFailedTick = Ticks;
+                News.Add((civ.Id, $"Not all the goods for {s.Name} arrived ({ShortText(s.Stock, Content.Levels[s.Level + 1].UpgradePrice)}): it does not grow this time."));
             }
         }
     }

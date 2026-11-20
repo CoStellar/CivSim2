@@ -153,6 +153,43 @@ public sealed class DecisionTests
     }
 
     [Fact]
+    public void AnUpgradeByCaravanSurvivesGoodsUsedOnTheWay()
+    {
+        // A1 (tests 2026-11-20): 775 of 777 AI upgrades failed because the settlement used 1 clay while the caravans walked.
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int site = Enumerable.Range(0, g.Geo.CellCount).First(c => g.OwnerAt[c] < 0 && !Content.World.Biomes[g.Map.Biome[c]].IsWater
+            && g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(home.Center)) == 8 && g.FindPath(home.Center, c, new List<int>(), false, civ.Id));
+        Settlement camp = g.FoundSettlement(civ, site, 50);
+        int clay = Content.GoodId("clay");
+        for (int k = 0; k < camp.Stock.Length; k++)
+        {
+            camp.Stock[k] = 400 * SimContent.One;
+            home.Stock[k] = 0;
+        }
+
+        home.Stock[clay] = 20 * SimContent.One; // 10 short of 30
+        home.People = 45;
+        civ.KnownTech[Content.TechId("agriculture")] = true;
+        Assert.Null(g.Apply(new UpgradeSettlementCommand(civ.Id, home.Id)));
+        bool used = false;
+        for (int i = 0; i < 3 * SimContent.TicksPerMinute && home.Level == 0; i++)
+        {
+            home.People = 45;
+            if (!used && i == 20)
+            {
+                home.Stock[clay] -= 2 * SimContent.One; // a potter takes some while the caravans are on the way
+                used = true;
+            }
+
+            g.Tick();
+        }
+
+        Assert.Equal(1, home.Level);
+    }
+
+    [Fact]
     public void TheAiBringsAWorkshopTheGoodsItUses()
     {
         // AI goods (2026-11-20): goods lie in each settlement; a potter with no clay at home gets it from the other camp.
