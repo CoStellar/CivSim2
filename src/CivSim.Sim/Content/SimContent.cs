@@ -593,6 +593,9 @@ public sealed class SimContent
     /// <summary>Clothing worn out per person per minute, hundredths.</summary>
     public long ClothingWearPerPersonPerMinute { get; init; }
 
+    /// <summary>Clothing wears out only in winter (clothing.wearOnlyInWinter; G5 test, 2026-11-19).</summary>
+    public bool ClothingWearOnlyInWinter { get; init; }
+
     /// <summary>Share of the fallen who are wounded instead of dead, percent (herbalists heal them).</summary>
     public int InjuredPercent { get; init; }
 
@@ -622,6 +625,12 @@ public sealed class SimContent
 
     /// <summary>Deposits every start has near it (startDeposits; M4, 2026-11-19).</summary>
     public StartDeposit[] StartDeposits { get; init; } = [];
+
+    /// <summary>Seconds a settlement stays empty before it falls to ruin (ruins.emptySeconds; G2, 2026-11-19).</summary>
+    public int RuinEmptySeconds { get; init; } = 60;
+
+    /// <summary>Share of a ruined building's price its rebuilding costs, percent.</summary>
+    public int RuinRebuildPercent { get; init; } = 50;
 
     /// <summary>Buildings a new camp starts with, finished, paid from the settlers' provisions (foundWith).</summary>
     public int[] FoundWith { get; init; } = [];
@@ -1452,6 +1461,7 @@ public sealed class SimContent
             ClothingBonusPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("bonusPercent").GetInt32() : 0,
             ClothingWinterMaxPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("winterMaxPercent").GetInt32() : 100,
             ClothingWearPerPersonPerMinute = clothing.ValueKind == JsonValueKind.Object ? Hundredths(clothing.GetProperty("wearPerPersonPerMinute")) : 0,
+            ClothingWearOnlyInWinter = clothing.ValueKind == JsonValueKind.Object && clothing.TryGetProperty("wearOnlyInWinter", out JsonElement woiw) && woiw.GetBoolean(),
             InjuredPercent = root.GetProperty("war").TryGetProperty("injuredPercent", out JsonElement inj) ? inj.GetInt32() : 0,
             RiversFreeEra = root.TryGetProperty("rivers", out JsonElement rv) ? eras.FindIndex(e => e.Key == rv.GetProperty("freeFromEra").GetString()) is int rfe && rfe >= 0 ? rfe : int.MaxValue : int.MaxValue,
             GrowthPercentPerMinute = growth.GetProperty("growthPercentPerMinute").GetInt32(),
@@ -1467,6 +1477,8 @@ public sealed class SimContent
                 ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
                     x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1))]
                 : [],
+            RuinEmptySeconds = root.TryGetProperty("ruins", out JsonElement ru) && ru.TryGetProperty("emptySeconds", out JsonElement res) ? res.GetInt32() : 60,
+            RuinRebuildPercent = root.TryGetProperty("ruins", out JsonElement ru2) && ru2.TryGetProperty("rebuildPercent", out JsonElement rrp) ? rrp.GetInt32() : 50,
             FoundWith = root.TryGetProperty("foundWith", out JsonElement fw) ? [.. fw.EnumerateArray().Select(x => buildings.FindIndex(b => b.Key == x.GetString())).Where(i => i > 0)] : [],
             EraGateway = [.. eras.Select(e => root.TryGetProperty("eraGateways", out JsonElement gw) && gw.TryGetProperty(e.Key, out JsonElement gk)
                 ? techs.FindIndex(t => t.Key == gk.GetString()) : -1)],

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using CivSim.Core.Map;
 using CivSim.Sim.Content;
 
@@ -501,9 +503,23 @@ public sealed partial class SimGame
 
         if (!CanAfford(s.Stock, next.UpgradePrice, 100))
         {
-            return $"A {next.Name.ToLowerInvariant()} costs {PriceText(next.UpgradePrice)} in {s.Name}.";
+            // G6 (2026-11-19): the goods come first, by caravan from our other settlements; a raid on the way calls it off.
+            if (s.UpgradeWaiting)
+            {
+                return $"The goods for the {next.Name.ToLowerInvariant()} are on their way to {s.Name}.";
+            }
+
+            if (!BringForUpgrade(civ, s, next.UpgradePrice))
+            {
+                return $"A {next.Name.ToLowerInvariant()} costs {PriceText(next.UpgradePrice)}; our settlements together do not have it.";
+            }
+
+            s.UpgradeWaiting = true;
+            News.Add((civ.Id, $"Caravans carry the goods for the {next.Name.ToLowerInvariant()} to {s.Name}; it grows when they arrive."));
+            return null;
         }
 
+        s.UpgradeWaiting = false;
         Pay(s.Stock, next.UpgradePrice, 100);
         s.Level++;
         Claim(s);
@@ -511,6 +527,76 @@ public sealed partial class SimGame
         civ.Dirty = true;
         News.Add((civ.Id, $"{s.Name} is now a {next.Name.ToLowerInvariant()}."));
         return null;
+    }
+
+    // Sends what the settlement lacks for the price from our other settlements (nearest first); false when they lack it too.
+    private bool BringForUpgrade(Civ civ, Settlement s, long[] price)
+    {
+        var missing = new long[price.Length];
+        for (int g = 0; g < price.Length; g++)
+        {
+            missing[g] = Math.Max(0, price[g] - s.Stock[g]);
+            long elsewhere = 0;
+            foreach (int sid in civ.Settlements)
+            {
+                elsewhere += sid == s.Id ? 0 : Settlements[sid].Stock[g];
+            }
+
+            if (elsewhere < missing[g])
+            {
+                return false;
+            }
+        }
+
+        var order = new List<int>(civ.Settlements);
+        order.Remove(s.Id);
+        order.Sort((a, b) => Distance(Settlements[a].Center, s.Center).CompareTo(Distance(Settlements[b].Center, s.Center)));
+        for (int g = 0; g < price.Length; g++)
+        {
+            foreach (int sid in order)
+            {
+                if (missing[g] <= 0)
+                {
+                    break;
+                }
+
+                long send = Math.Min(missing[g], Settlements[sid].Stock[g]);
+                if (send >= SimContent.One && SendCaravan(civ, sid, s.Id, g, send) is null)
+                {
+                    Units[^1].ForUpgrade = true;
+                    missing[g] -= send;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // Once a second: a settlement whose upgrade goods have all arrived grows.
+    private void UpgradeArrivals(Civ civ)
+    {
+        foreach (int sid in civ.Settlements.ToArray())
+        {
+            Settlement s = Settlements[sid];
+            if (!s.UpgradeWaiting || s.Level + 1 >= Content.Levels.Count)
+            {
+                continue;
+            }
+
+            if (CanAfford(s.Stock, Content.Levels[s.Level + 1].UpgradePrice, 100))
+            {
+                s.UpgradeWaiting = false;
+                if (Upgrade(civ, sid) is string why)
+                {
+                    News.Add((civ.Id, $"{s.Name} did not grow: {why}"));
+                }
+            }
+            else if (!civ.Units.Exists(id => Units[id].ForUpgrade && Units[id].Target == sid && Units[id].State != UnitState.Gone && Units[id].Job == CarrierJob.ToSettlement))
+            {
+                s.UpgradeWaiting = false; // the caravans arrived short or turned back
+                News.Add((civ.Id, $"Not all the goods for {s.Name} arrived: it does not grow this time."));
+            }
+        }
     }
 
     private string? Dismiss(Civ civ)

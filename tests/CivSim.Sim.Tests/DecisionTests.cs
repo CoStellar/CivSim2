@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using CivSim.Sim.Ai;
 using CivSim.Sim.Content;
@@ -58,5 +60,95 @@ public sealed class DecisionTests
         var t = new TradeRoute { Civ = civ.Id, From = home.Id, To = home.Id, Good = wood, Amount = 20 * SimContent.One, KeepAtSource = 50 * SimContent.One };
         Assert.Equal(50 * SimContent.One, t.KeepAtSource);
         Assert.NotNull(g.Apply(new RouteCommand(civ.Id, home.Id, home.Id, wood, 20 * SimContent.One, null, 50 * SimContent.One)));
+    }
+
+    [Fact]
+    public void ADepositOfALaterEraShowsAsUnknownUntilThatEra()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int iron = Content.World.Deposits.First(d => d.Key == "iron_ore").Id;
+        int cell = home.Cells.First(c => c != home.Center);
+        g.Map.Deposit.Set(cell, (ushort)iron);
+        civ.Era = 1;
+        Assert.True(g.DepositHidden(civ, cell));
+        Assert.False(g.KnowsDeposit(civ, cell));
+        civ.Era = Content.DepositEra[iron];
+        Assert.False(g.DepositHidden(civ, cell));
+        Assert.True(g.KnowsDeposit(civ, cell)); // learnt with the era, nobody had to look again (M6)
+    }
+
+    [Fact]
+    public void AnEmptySettlementFallsToRuinAndSettlersTakeIt()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int site = Enumerable.Range(0, g.Geo.CellCount).First(c => g.OwnerAt[c] < 0 && !Content.World.Biomes[g.Map.Biome[c]].IsWater
+            && g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(home.Center)) == 9);
+        Settlement camp = g.FoundSettlement(civ, site, 0);
+        Assert.Equal(2, civ.Settlements.Count);
+        for (int i = 0; i < (Content.RuinEmptySeconds + 3) * SimContent.TicksPerSecond; i++)
+        {
+            camp.People = 0;
+            g.Tick();
+        }
+
+        Assert.True(camp.Abandoned);
+        Assert.DoesNotContain(camp.Id, civ.Settlements);
+        Assert.Equal(-1, g.OwnerAt[camp.Center]);
+
+        // Settlers of the other people take it.
+        Civ other = g.Civs[1];
+        Settlement theirs = g.Settlements[other.Settlements[0]];
+        theirs.People = 100;
+        for (int k = 0; k < theirs.Stock.Length; k++)
+        {
+            theirs.Stock[k] = 500 * SimContent.One;
+        }
+
+        other.KnownTech[Content.TechId("migration")] = true;
+        Assert.Null(g.Apply(new TrainCommand(other.Id, theirs.Id, Content.Unit("settlers").Id)));
+        Unit settlers = g.Units[^1];
+        for (int i = 0; i < 5000 && settlers.State == UnitState.Training; i++)
+        {
+            g.Tick();
+        }
+
+        g.Place(settlers, camp.Center);
+        Assert.Null(g.Apply(new FoundCommand(other.Id, settlers.Id)));
+        Assert.False(camp.Abandoned);
+        Assert.Equal(other.Id, camp.Civ);
+        Assert.Contains(camp.Id, other.Settlements);
+    }
+
+    [Fact]
+    public void UpgradeGoodsComeByCaravanFirst()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int site = Enumerable.Range(0, g.Geo.CellCount).First(c => g.OwnerAt[c] < 0 && !Content.World.Biomes[g.Map.Biome[c]].IsWater
+            && g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(home.Center)) == 8 && g.FindPath(home.Center, c, new List<int>(), false, civ.Id));
+        Settlement camp = g.FoundSettlement(civ, site, 50);
+        Array.Clear(home.Stock);
+        for (int k = 0; k < camp.Stock.Length; k++)
+        {
+            camp.Stock[k] = 400 * SimContent.One;
+        }
+
+        home.People = 45;
+        civ.KnownTech[Content.TechId("agriculture")] = true;
+        Assert.Null(g.Apply(new UpgradeSettlementCommand(civ.Id, home.Id)));
+        Assert.True(home.UpgradeWaiting);
+        Assert.Equal(0, home.Level);
+        for (int i = 0; i < 3 * SimContent.TicksPerMinute && home.Level == 0; i++)
+        {
+            home.People = 45;
+            g.Tick();
+        }
+
+        Assert.Equal(1, home.Level); // the caravans came and the camp became a village
     }
 }

@@ -524,7 +524,7 @@ public sealed partial class SimGame
                 continue;
             }
 
-            if (Settlements[route.From].Civ != civ.Id || Settlements[route.To].Civ != civ.Id)
+            if (Settlements[route.From].Civ != civ.Id || Settlements[route.To].Civ != civ.Id || Settlements[route.From].Abandoned || Settlements[route.To].Abandoned)
             {
                 route.Ended = true;
                 continue;

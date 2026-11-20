@@ -22,6 +22,9 @@ public enum BuildingState : byte
 
     /// <summary>Waiting for its materials: porters carry them from the nearest storehouse; building starts when they arrive.</summary>
     Delivery = 5,
+
+    /// <summary>Part of a ruin (its settlement emptied); comes back as a site to finish when settlers take the ruin.</summary>
+    Ruined = 6,
 }
 
 /// <summary>One building on one hex. Identified by its index in <see cref="SimGame.Buildings"/>.</summary>
@@ -172,8 +175,14 @@ public sealed class Settlement
     /// <summary>Out of food.</summary>
     public bool Hungry { get; set; }
 
-    /// <summary>Abandoned settlements keep their id but nothing else.</summary>
+    /// <summary>Abandoned settlements are ruins: nobody's, until settlers take them again (G2, 2026-11-19).</summary>
     public bool Abandoned { get; set; }
+
+    /// <summary>Waiting for the goods of its next level, carried by caravans from our other settlements (G6, 2026-11-19).</summary>
+    public bool UpgradeWaiting { get; set; }
+
+    /// <summary>Tick since which nobody has lived here (−1 = people live here).</summary>
+    public long EmptySince { get; set; } = -1;
 
     /// <summary>Food everyone it feeds eats a minute (residents, its units, the advisor in the capital), paid at the ration.</summary>
     public long Eating { get; set; }
@@ -467,6 +476,9 @@ public sealed class Unit
 
     /// <summary>Goods carried (porters, caravans), hundredths; null for units that carry nothing.</summary>
     public long[]? Cargo { get; set; }
+
+    /// <summary>A caravan carrying goods for its target's upgrade: if it is raided, the upgrade is called off.</summary>
+    public bool ForUpgrade { get; set; }
 
     /// <summary>What a carrier does: porters to a building, caravans to a settlement.</summary>
     public CarrierJob Job { get; set; }

@@ -332,6 +332,7 @@ public partial class PlayGame
     private static (string Text, Color Color) ShortState(PlayBuildingView b, PlayBuildingInfo t) => b.State switch
     {
         _ when b.Remembered => ("as last seen", UiKit.Muted),
+        6 => ("ruin: settlers who take the settlement rebuild it at half the price", UiKit.Muted),
         5 when b.Porters > 0 => ($"materials coming, {b.ProgressPermille / 10}%", UiKit.Warn),
         5 => ("materials missing", UiKit.Bad),
         0 => ($"building {b.ProgressPermille / 10}%", new Color("8fb040")),
@@ -673,6 +674,10 @@ public partial class PlayGame
         if (w.Deposit[i] != 0)
         {
             items.Add(new LineItem($"Deposit: {content.Deposits[w.Deposit[i] - 1].Name}", UiKit.Good, 14));
+        }
+        else if (w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0)
+        {
+            items.Add(new LineItem("Deposit: ??? (an ore of a later era: we will know it when our people get there)", UiKit.Warn, 14));
         }
 
         byte survey = w.Survey[i];

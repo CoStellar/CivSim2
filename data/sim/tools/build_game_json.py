@@ -44,7 +44,7 @@ b("toolmaker","Toolmaker","stone_tools",2,{"wood":30,"stone":20},25,consumes={"s
 b("hunters_lodge","Hunters' lodge","hunting",3,{"wood":20},15,biomes=["grassland","steppe","savanna","deciduous_forest","taiga","jungle","tundra"],produces={"food":3,"hides":1},bonusDeposit="game",bonusPercent=100,groups=["food","hunt"])
 b("clay_pit","Clay pit","shelters",3,{"wood":20},15,needsWater=True,orDeposit="clay",produces={"clay":3},bonusDeposit="clay",bonusPercent=100,groups=["tools"])
 b("herbalist","Herbalist","herbal_lore",2,{"wood":20,"clay":10},20,produces={},supportGroup="hunt",supportPercent=25,healsPerMinute=6,groups=["care"])
-b("tailor","Tailor","sewing",2,{"wood":20,"tools":5},20,consumes={"hides":1},produces={"clothing":1,"hide_armour":0.3},groups=["craft"])
+b("tailor","Tailor","sewing",2,{"wood":20,"tools":5},20,consumes={"hides":1},produces={"clothing":2,"hide_armour":0.3},groups=["craft"])
 # Neolithic
 b("fishing_hut","Fishing hut","fishing",2,{"wood":20},15,needsWater=True,produces={"food":5},bonusDeposit="fish",bonusPercent=100,groups=["food"])
 b("raft_landing","Raft landing","rafts",2,{"wood":40},20,needsWater=True,crossing=True,produces={"food":2,"wood":1},groups=["food"])
@@ -255,6 +255,9 @@ d["techCategories"]=["basics","food","industry","building","trade","military","g
 d["eraAdvanceTechs"]=5
 # A new camp starts with a gatherers' hut, paid from the settlers' provisions (Patryk, 2026-11-19, G1).
 d["foundWith"]=["gatherers_hut"]
+# Ruins (Patryk, 2026-11-19, G2): a settlement empty for emptySeconds becomes a ruin, nobody's; settlers standing on or next to its
+# centre take it again, and its buildings come back as sites that need rebuildPercent of their price.
+d["ruins"]={"comment":"A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.","emptySeconds":60,"rebuildPercent":50}
 # Every start has copper and tin near it (Patryk, 2026-11-19, M4): placed on free land when the map has none within max hexes.
 d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1}]
 # Gateways (Patryk, 2026-11-19, M1): to leave an era a people must also know its gateway technology (metal opens the next era).
@@ -294,7 +297,8 @@ d["works"]={"comment":"Works drawn on hexes; price and seconds per hex. ditch: f
 d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). Work is rounded down to steps of workStepPermille. In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Peoples are told warnSeconds before.",
   "workStepPermille":25,"cycleMinutes":8,"winterMinutes":2,"warnSeconds":30,"winterWorkPercent":50}
 d["clothing"]={"comment":"Every set of clothing a worker has adds bonusPercent. Outside winter only the first set counts (at most 100+bonus); in winter more sets count, up to winterMaxPercent. Worked out per settlement: sets = clothing in store / people. Sets wear out: wearPerPersonPerMinute.",
-  "good":"clothing","bonusPercent":15,"winterMaxPercent":110,"wearPerPersonPerMinute":0.03}
+  "good":"clothing","bonusPercent":15,"winterMaxPercent":110,"wearPerPersonPerMinute":0.03,"wearOnlyInWinter":True}
+# wearOnlyInWinter (Patryk, 2026-11-19, G5): clothing wears out only in winter; the tailor also makes 2 per worker-minute.
 d["forage"]={"comment":"People of a settlement told to gather pick up food, wood and stone around it. Per gatherer per minute at richness 100: perMinute. A hex's richness: food and wood by biome, stone by relief; deposits and rivers add. A settlement's richness is the mean over the land hexes in its radius (worked out when it is founded or grows).",
   "perMinute":{"food":0.5,"wood":0.25,"stone":0.1},
   "biomes":{"grassland":[100,10],"steppe":[70,0],"savanna":[80,10],"deciduous_forest":[80,100],"jungle":[90,80],"taiga":[50,100],"swamp":[60,40],"tundra":[30,0],"desert":[10,0],"ice":[0,0]},

@@ -360,6 +360,12 @@ public sealed partial class SimGame
     internal void Destroyed(Unit unit, int byCiv)
     {
         bool carrier = unit.Cargo is not null && Content.Units[unit.Kind].System;
+        if (unit.ForUpgrade && (uint)unit.Target < (uint)Settlements.Count && Settlements[unit.Target].UpgradeWaiting)
+        {
+            Settlements[unit.Target].UpgradeWaiting = false; // G6: raided on the way, the upgrade does not happen
+            News.Add((unit.Civ, $"The caravan with goods for {Settlements[unit.Target].Name} was raided: it does not grow this time."));
+        }
+
         Gone(unit); // first: the site still counts this load as on the way
         LoseLoad(unit, byCiv);
         if (!carrier)
