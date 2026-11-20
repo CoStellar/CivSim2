@@ -39,3 +39,6 @@ Battle scenarios (2026-11-19): `06_battle_field` (open field, equal arms: select
 control, leaving), `07_battle_arms` (refit, sizes, weapons only, split, how much the arms count), `08_battle_cavalry` (charges,
 riders breaking away, archers standing, height), `09_battle_ai` (all of it against an attacking AI). In the first three the
 enemy stands still (no AI).
+
+War scenario (2026-11-20): `10_siege_supply`: march on a far enemy town that does not attack; provisions in the field, food
+caravans to units, the blockade, guard and fighting residents, then take, sack or raze.
