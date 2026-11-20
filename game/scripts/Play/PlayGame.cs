@@ -52,9 +52,13 @@ public partial class PlayGame : Node2D
 
     private readonly string? _scenario;
 
+    // Options from the start menu (map, peoples, world, a save to load); null = the defaults with the seed above.
+    private readonly PlayOptions? _options;
+
     /// <summary>Creates the screen; the game starts when the node enters the tree.</summary>
-    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1, string? scenario = null)
+    public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1, string? scenario = null, PlayOptions? options = null)
     {
+        _options = options;
         _scenario = scenario;
         _goal = goal;
         _startPhase = startPhase;
@@ -330,9 +334,10 @@ public partial class PlayGame : Node2D
         _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
-        _host = PlayHost.Start(new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario }, _dataDirectory);
+        _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         _session.CommandRefused += reason => Toast(reason);
+        _session.Saved += r => Toast(r.Text);
         _session.PlacesReceived += m =>
         {
             if (m.Type == _placing)
@@ -566,6 +571,10 @@ public partial class PlayGame : Node2D
                     MenuRequested?.Invoke();
                 }
 
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.F5 }:
+                SaveNow();
+                GetViewport().SetInputAsHandled();
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Space }:
                 _session.SetSpeed(_session.PlayView?.Speed == SimulationSpeed.Paused ? SimulationSpeed.X1 : SimulationSpeed.Paused);

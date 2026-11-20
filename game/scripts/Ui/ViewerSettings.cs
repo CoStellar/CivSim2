@@ -165,6 +165,15 @@ public sealed class StartSettings
     /// <summary>Folder name of the art pack; empty = default pictures.</summary>
     public string ArtPack { get; set; } = string.Empty;
 
+    /// <summary>New game: what wins (0 last standing, 1 first to the Middle Ages, 2 best score after 2 hours).</summary>
+    public int Goal { get; set; } = 1;
+
+    /// <summary>New game: peoples choose where they start.</summary>
+    public bool ChooseStart { get; set; } = true;
+
+    /// <summary>New game: number of peoples (the player's included).</summary>
+    public int Peoples { get; set; } = 4;
+
     /// <summary>Speed word to the protocol value.</summary>
     public static SimulationSpeed ParseSpeed(string? word) => word switch
     {

@@ -24,6 +24,15 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>What wins the game: 0 last standing, 1 first to the Middle Ages, 2 best score after 2 hours (protocol only, no core types).</summary>
     public int Goal { get; init; } = 1;
+
+    /// <summary>World type: 0 continents, 1 one big continent, 2 islands.</summary>
+    public int WorldType { get; init; }
+
+    /// <summary>Share of the planet under water, percent.</summary>
+    public int WaterPercent { get; init; } = 60;
+
+    /// <summary>A save to load (the other options then come from the save).</summary>
+    public string? LoadPath { get; init; }
 }
 
 /// <summary>
@@ -42,10 +51,15 @@ public sealed class PlayHost : IDisposable
     private volatile bool _stopping;
     private volatile string? _error;
     private SimulationSpeed _speed = SimulationSpeed.Paused;
+    private readonly PlayOptions _options;
+    private readonly List<SavedCommand> _log = [];
+    private SavedGame? _replay;
+    private long _lastAutosave;
 
-    private PlayHost(SimGame game)
+    private PlayHost(SimGame game, PlayOptions options)
     {
         _game = game;
+        _options = options with { LoadPath = null };
         _thread = new Thread(Run) { IsBackground = true, Name = "CivSim play" };
     }
 
@@ -57,6 +71,14 @@ public sealed class PlayHost : IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
         SimContent content = SimContent.Load(dataDirectory);
+        SavedGame? save = null;
+        if (options.LoadPath is { Length: > 0 } load)
+        {
+            // A save: the same game again; its commands are played again on the game thread before anything else.
+            save = PlaySaves.Read(load);
+            options = save.Options;
+        }
+
         SimGame game;
         if (options.Scenario is { Length: > 0 } key)
         {
@@ -70,11 +92,13 @@ public sealed class PlayHost : IDisposable
             {
                 StartPhase = options.StartPhase,
                 Goal = (GameGoal)Math.Clamp(options.Goal, 0, 2),
+                WorldType = (CivSim.Core.WorldGen.WorldType)Math.Clamp(options.WorldType, 0, 2),
+                WaterPercent = Math.Clamp(options.WaterPercent, 30, 80),
             });
         }
 
         game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
-        var host = new PlayHost(game);
+        var host = new PlayHost(game, options) { _replay = save };
         host._thread.Start();
         return host;
     }
@@ -98,6 +122,11 @@ public sealed class PlayHost : IDisposable
     {
         try
         {
+            if (_replay is { } replay)
+            {
+                Replay(replay);
+            }
+
             long lastTick = Stopwatch.GetTimestamp();
             long lastView = 0;
             while (!_stopping)
@@ -133,6 +162,7 @@ public sealed class PlayHost : IDisposable
                     {
                         _game.Tick();
                         SlowForBattle();
+                        Autosave();
                         foreach ((int civ, string text) in _game.News)
                         {
                             if (civ < 0 || civ == 0)
@@ -209,8 +239,12 @@ public sealed class PlayHost : IDisposable
                     else
                     {
                         client.ViewSoon = true;
+                        _log.Add(SavedCommand.Of(_game.Ticks, client.Civ, command)); // the save plays it again at this tick
                     }
 
+                    break;
+                case SaveGameRequestMessage save when client.Civ >= 0:
+                    client.Connection.Send(Save(save.Name));
                     break;
                 case PlaySummaryRequestMessage when client.Civ >= 0:
                     client.Connection.Send(Summary(_game.Civs[client.Civ]));
@@ -304,6 +338,82 @@ public sealed class PlayHost : IDisposable
     private long _calmSince;
 
     // Single player: a battle of the player's people that starts after a calm slows time to ×1 (Patryk, 2026-11-19).
+    /// <summary>Game minutes between automatic saves.</summary>
+    public const int AutosaveMinutes = 5;
+
+    private SaveGameResultMessage Save(string name)
+    {
+        try
+        {
+            Civ first = _game.Civs[0];
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = _options.Scenario is { Length: > 0 } sc
+                    ? $"{sc} minute {_game.Ticks / SimContent.TicksPerMinute}"
+                    : $"World {_options.Seed} minute {_game.Ticks / SimContent.TicksPerMinute}";
+            }
+
+            string path = PlaySaves.Write(new SavedGame
+            {
+                Name = name,
+                SavedAt = DateTime.UtcNow,
+                Options = _options,
+                Players = [.. _game.Civs.Where(c => !c.IsAi).Select(c => c.Id)],
+                Tick = _game.Ticks,
+                Hash = _game.StateHash(),
+                Era = _game.Content.Eras[first.Era].Name,
+                Commands = [.. _log],
+            });
+            return new SaveGameResultMessage(true, $"Saved: {System.IO.Path.GetFileNameWithoutExtension(path)}");
+        }
+        catch (Exception e) when (e is System.IO.IOException or UnauthorizedAccessException)
+        {
+            return new SaveGameResultMessage(false, $"Could not save: {e.Message}");
+        }
+    }
+
+    private void Autosave()
+    {
+        if (_game.Picking || _game.Ticks - _lastAutosave < AutosaveMinutes * SimContent.TicksPerMinute)
+        {
+            return;
+        }
+
+        _lastAutosave = _game.Ticks;
+        Save(PlaySaves.AutoName);
+    }
+
+    // Plays a save's commands again at their ticks, up to the tick it was saved at, then checks it is the same game.
+    private void Replay(SavedGame save)
+    {
+        foreach (Civ c in _game.Civs)
+        {
+            c.IsAi = !save.Players.Contains(c.Id);
+        }
+
+        foreach (SavedCommand c in save.Commands)
+        {
+            while (_game.Ticks < c.Tick)
+            {
+                _game.Tick();
+            }
+
+            _game.Apply(ToCommand(c.Civ, c.ToMessage()));
+            _log.Add(c);
+        }
+
+        while (_game.Ticks < save.Tick)
+        {
+            _game.Tick();
+        }
+
+        _game.News.Clear();
+        _lastAutosave = _game.Ticks;
+        _news.Add(_game.StateHash() == save.Hash
+            ? $"Loaded: {save.Name}."
+            : $"Loaded: {save.Name}, but it was saved by another version of the game: the game goes on from a different state.");
+    }
+
     private void SlowForBattle()
     {
         bool fighting = _game.LastFightTick(0) == _game.Ticks;
