@@ -149,9 +149,18 @@ public partial class PlayGame : Node2D
         }
     }
 
-    /// <summary>Script step: opens the research or people window.</summary>
+    /// <summary>For screenshots of test scenarios: a debug key (0 goods, 1 research, 2 map, 3 people, 4 next era).</summary>
+    public void ScriptDebug(int action) => _session?.Play(PlayCommandKind.Debug, action);
+
+    /// <summary>For screenshots: opens a window by name ("Help" for the help).</summary>
     public void ScriptOpen(string mode)
     {
+        if (mode == "Help")
+        {
+            _help.Visible = true;
+            return;
+        }
+
         _bigMode = mode;
         _bigSignature = "";
         if (mode == "Summary")
@@ -491,6 +500,8 @@ public partial class PlayGame : Node2D
 
         switch (e)
         {
+            case InputEventMouseButton { ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown } when OverUi():
+                break; // A16 (tests 2026-11-20): the wheel over a window or panel scrolls that, never the map as well
             case InputEventMouseButton { ButtonIndex: MouseButton.WheelUp, Pressed: true } w:
                 ZoomAt(1.15f, w.Position);
                 break;
@@ -539,6 +550,10 @@ public partial class PlayGame : Node2D
                 else if (!right.Pressed && _drawing && _drawMode == DrawMode.Move)
                 {
                     FinishDraw();
+                }
+                else if (right.Pressed && _session.PlayView is { Picking: false })
+                {
+                    Toast("Select units first: click them (a second click on a hex picks what stands on it), or pick them in Units (6).");
                 }
 
                 break;
@@ -612,6 +627,9 @@ public partial class PlayGame : Node2D
 
         GetViewport().SetInputAsHandled();
     }
+
+    // True when the mouse is over a panel or window of the screen (not over the map).
+    private bool OverUi() => GetViewport().GuiGetHoveredControl() is { } c && c.IsVisibleInTree();
 
     // Why the player cannot start on a hex (the same rules as the server: land, not mountains, away from the taken starts).
     private string? StartProblem((int Col, int Row) h)
@@ -687,7 +705,7 @@ public partial class PlayGame : Node2D
             }
             else
             {
-                Toast(PlaceProblem());
+                Toast(PlaceProblem(cell.Col, cell.Row));
             }
 
             return;
@@ -777,7 +795,8 @@ public partial class PlayGame : Node2D
         return false;
     }
 
-    private string PlaceProblem()
+    // A19 (tests 2026-11-20): the real reason first (not our land, no free place), the terrain only when it is the terrain.
+    private string PlaceProblem(int col, int row)
     {
         if (_session?.PlayContent is not { } c || _placing <= 0)
         {
@@ -785,7 +804,28 @@ public partial class PlayGame : Node2D
         }
 
         PlayBuildingInfo t = c.Buildings[_placing];
-        return string.IsNullOrEmpty(t.Needs) ? "Build on a free hex of your land." : $"{t.Name} needs {t.Needs}, on a free hex of your land.";
+        if (_session.Worlds.TryGetValue(0, out ClientWorld? w) && _session.PlayView is { } v)
+        {
+            int i = w.Index(col, row);
+            bool road = t.Groups is { } g && Array.IndexOf(g, "road") >= 0;
+            if (!road && w.Owner[i] != v.Civ)
+            {
+                return w.Owner[i] < 0 ? "Not our land: build inside our border." : "That is the land of another people.";
+            }
+
+            bool biomeFits = _session.Content is { } world && t.Needs.Contains(world.Biomes[w.Biome[i]].Key.Replace('_', ' '), StringComparison.Ordinal);
+            if (string.IsNullOrEmpty(t.Needs))
+            {
+                return $"No free place for the {t.Name.ToLowerInvariant()} on this hex.";
+            }
+
+            if (biomeFits)
+            {
+                return $"Not here: the hex has no free place, or lacks the rest of what the {t.Name.ToLowerInvariant()} needs ({t.Needs}).";
+            }
+        }
+
+        return string.IsNullOrEmpty(t.Needs) ? "Build on a free hex of your land." : $"{t.Name} needs {t.Needs}.";
     }
 
     private void StartPlacing(int type)

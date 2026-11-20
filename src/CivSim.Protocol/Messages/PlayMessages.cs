@@ -319,7 +319,8 @@ public sealed record PlayViewMessage(
     [property: Key(46)] int[]? KindKills = null,
     [property: Key(47)] int[]? KindLevel = null,
     [property: Key(48)] int[]? KindPending = null,
-    [property: Key(49)] int[]? KindPicks = null) : IProtocolMessage;
+    [property: Key(49)] int[]? KindPicks = null,
+    [property: Key(50)] bool Won = false) : IProtocolMessage;
 
 /// <summary>
 /// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this

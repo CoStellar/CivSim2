@@ -209,6 +209,10 @@ Kod: `SimGame.Rations.cs` (`InSupply`, `ProvisionsMax`, `LandFood`), `SupplyUnit
 - **Ziemia:** mały oddział żyje z ziemi dłużej. 10 wojowników na bogatym heksie dostaje ok. połowę racji, a 30 tylko ok. 1/6.
 - **Dostawa:** komenda `SupplyUnitCommand` (w kliencie przycisk „Send N food from …” w opisie oddziału w polu). Karawana z jedzeniem idzie za oddziałem, a jeśli on się przesunął, idzie dalej (najwyżej 6 razy). Napad na nią zabiera jedzenie.
 - **AI:** oddział w polu z jedzeniem na mniej niż 1,5 minuty dostaje karawanę z domu, jeśli dom ma ponad 2 razy tyle jedzenia i 40 zapasu. Głodny oddział bez dostawy wraca do domu.
+- **Bez drogi (testy 2026-11-20, A2):** karawana do oddziału, do którego nie ma drogi, jest odrzucana od razu („No way to our …”). Karawana, która w drodze straci drogę za oddziałem, wraca do domu (bez kolejnych szukań po całej mapie). AI nie wysyła wtedy do tego oddziału nic przez `supply.noWaySeconds` = 60 s. Odrzucane są też dostawy do oddziału z pełnymi jukami i drugi transport, gdy jeden już jedzie.
+- **Atak bez drogi (A7):** rozkaz ataku na cel, do którego nie prowadzi żadna droga (rzeka bez brodu, morze), jest odrzucany: „No way there”. Mury się nie liczą, bo można je rozbić.
+- **Mgła (A8):** atakować można tylko osadę, którą lud widzi teraz albo pamięta. Na niewidzianą osadę odpowiedź jest taka sama jak na pusty heks.
+- **Mury po zdobyciu (A6):** mury i palisady zdobytej osady przechodzą na zdobywcę. Mury ruin i ludu, który wyginął, są niczyje i nikogo nie zatrzymują; osadnicy, którzy zajmą ruiny, przejmują je.
 
 ## Limit oddziałów i doświadczenie rodzajów (decyzje Patryka z 2026-11-20, pytania 9 i 11)
 

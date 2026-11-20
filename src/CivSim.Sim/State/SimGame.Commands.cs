@@ -263,6 +263,19 @@ public sealed partial class SimGame
         return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
     }
 
+    /// <summary>A price times a percent, as paid (<see cref="Pay"/>).</summary>
+    public static long[] Scaled(long[] price, int percent)
+    {
+        ArgumentNullException.ThrowIfNull(price);
+        var r = new long[price.Length];
+        for (int g = 0; g < price.Length; g++)
+        {
+            r[g] = price[g] * percent / 100;
+        }
+
+        return r;
+    }
+
     /// <summary>The goods of a price a store lacks, as "29 of 30 clay, 0 of 40 pottery" ("nothing" when it has them all).</summary>
     public string ShortText(long[] stock, long[] price)
     {
@@ -383,6 +396,11 @@ public sealed partial class SimGame
             text = text.Length == 0 ? dep : $"{text} (or {dep} on the hex)";
         }
 
+        if (t.OrTrees)
+        {
+            text = text.Length == 0 ? "a grove" : $"{text} or a grove"; // A12 (tests 2026-11-20)
+        }
+
         return text;
     }
 
@@ -410,6 +428,11 @@ public sealed partial class SimGame
         {
             // M2 (2026-11-19): allowed, the deposit stays, but no mine fits while this stands.
             News.Add((civ.Id, $"{t.Name} stands on a {Content.World.Deposit(Map.Deposit[cell]).Key.Replace('_', ' ')} deposit: the deposit stays, but its mine needs the hex free."));
+        }
+        else if (t.OrDeposit == 0 && DepositHidden(civ, cell) && Mineable(cell) && !civ.IsAi)
+        {
+            // A12 (tests 2026-11-20): the same warning for a deposit we do not know yet ("???").
+            News.Add((civ.Id, $"{t.Name} stands on an unknown deposit (???): there may be ore here, and a mine will need the hex free."));
         }
 
         return null;

@@ -331,13 +331,13 @@ public partial class PlayGame
             }));
             cells.Add(new CellItem(c.Units[u.Kind].Name, null, () =>
             {
-                _unit = id;
+                Focus(col, row); // first: it clears the selection
+                _unit = id; // A18 (tests 2026-11-20): the click selects the unit, not only moves the camera
                 if (_overlay is not null)
                 {
                     _overlay.SelectedUnit = id;
                 }
 
-                Focus(col, row);
                 _bigMode = "";
                 UpdateUi();
             }));

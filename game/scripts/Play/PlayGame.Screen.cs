@@ -21,7 +21,10 @@ public partial class PlayGame
     // Decorative years at the start of each era and at the end of the last (only for the screen, never for the rules).
     private static readonly int[] EraYears = [-10000, -6000, -3000, -1200, 500, 1500];
 
-    private HBoxContainer _resBox = null!;
+    private HFlowContainer _resBox = null!;
+    private PanelContainer _top = null!;
+    private Control _rightCol = null!;
+    private float _topBottom;
     private Label _eraLabel = null!;
     private Label _yearLabel = null!;
     private VBoxContainer _eraBarBox = null!;
@@ -55,6 +58,12 @@ public partial class PlayGame
     private string _resSig = "";
 
     private CanvasLayer? _uiLayer;
+
+    // A22 (tests 2026-11-20): a screen at the end of the game, shown once; the game goes on behind it if the player wants.
+    private PanelContainer _endPanel = null!;
+    private Label _endTitle = null!;
+    private Label _endText = null!;
+    private bool _endShown;
 
     // The chronicle sits above the height of the action bar, so a wide bar never covers it.
     private static int ChronicleBottom => -((3 * PixelTheme.FontSize) + 104);
@@ -93,14 +102,21 @@ public partial class PlayGame
         var top = new PanelContainer { AnchorRight = 1, OffsetBottom = topH };
         top.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.11f, 0.09f, 0.08f, 0.94f), new Color(0.35f, 0.28f, 0.2f), 0, 2));
         root.AddChild(top);
+        _top = top;
+        _topBottom = topH;
         var topRow = new HBoxContainer();
         topRow.AddThemeConstantOverride("separation", 10);
         top.AddChild(topRow);
-        _resBox = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        _resBox.AddThemeConstantOverride("separation", 12);
-        topRow.AddChild(_resBox);
 
-        var right = new HBoxContainer();
+        // A15 (tests 2026-11-20): the goods stop before the era in the middle and wrap onto more rows; the bar grows with them
+        // and what sits under it moves down (UpdateUnderTop).
+        _resBox = new HFlowContainer { SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin, CustomMinimumSize = new Vector2(Math.Max(160, (screen.X / 2) - UiKit.W(240) - 16), 0) };
+        _resBox.AddThemeConstantOverride("h_separation", 12);
+        _resBox.AddThemeConstantOverride("v_separation", 2);
+        topRow.AddChild(_resBox);
+        topRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore });
+
+        var right = new HBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin }; // stays one row when the goods take two
         right.AddThemeConstantOverride("separation", 4);
         topRow.AddChild(right);
         _clockLabel = UiKit.Label("0:00", 16, UiKit.Text);
@@ -150,6 +166,7 @@ public partial class PlayGame
         var rightCol = new VBoxContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -UiKit.W(380), OffsetRight = -8, OffsetTop = topH + 8, MouseFilter = Control.MouseFilterEnum.Ignore };
         rightCol.AddThemeConstantOverride("separation", 8);
         root.AddChild(rightCol);
+        _rightCol = rightCol;
         _advisorPanel = new PanelContainer();
         rightCol.AddChild(_advisorPanel);
         var adv = new HBoxContainer();
@@ -237,6 +254,29 @@ public partial class PlayGame
         _windowBox.AddThemeConstantOverride("separation", 6);
         winScroll.AddChild(_windowBox);
 
+        _endPanel = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -UiKit.W(300), OffsetRight = UiKit.W(300), OffsetTop = -120, OffsetBottom = 120, Visible = false };
+        _endPanel.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.12f, 0.1f, 0.08f, 0.98f), UiKit.Heading, 6, 3));
+        root.AddChild(_endPanel);
+        var end = new VBoxContainer();
+        end.AddThemeConstantOverride("separation", 10);
+        _endPanel.AddChild(end);
+        _endTitle = UiKit.Label("", 24, UiKit.Heading);
+        _endTitle.HorizontalAlignment = HorizontalAlignment.Center;
+        end.AddChild(_endTitle);
+        _endText = UiKit.Label("", 15, UiKit.Text, wrap: true);
+        _endText.HorizontalAlignment = HorizontalAlignment.Center;
+        _endText.CustomMinimumSize = new Vector2(UiKit.W(560), 0);
+        end.AddChild(_endText);
+        var endButtons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        endButtons.AddThemeConstantOverride("separation", 10);
+        end.AddChild(endButtons);
+        endButtons.AddChild(UiKit.Button("Summary", () =>
+        {
+            _endPanel.Visible = false;
+            OpenWindow("Summary", toggle: false);
+        }, "How the game went, people by people (5)"));
+        endButtons.AddChild(UiKit.Button("Go on watching", () => _endPanel.Visible = false, "Close this and let the world go on"));
+        endButtons.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
         int helpHalf = (int)Math.Min(UiKit.W(360), (screen.X / 2) - 16);
         _help = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -helpHalf, OffsetRight = helpHalf, OffsetTop = -(screen.Y / 2) + topH + 8, OffsetBottom = (screen.Y / 2) - 150, Visible = false };
         root.AddChild(_help);
@@ -268,7 +308,7 @@ public partial class PlayGame
     }
 
     private const string HelpText =
-        "Left click: select a settlement, building, unit or hex. Its panel opens on the left.\n" +
+        "Left click: select a settlement, building, unit or hex. Its panel opens on the left. A second click on the same hex picks what stands on it (units).\n" +
         "Right click: send the selected units there (on an enemy: attack). Hold the right button and draw over the hexes: they walk exactly that way.\n" +
         "Shift + left click: add the units on a hex to the selection.\n" +
         "F: combat mode. The left button picks soldiers only: click one, drag a box, Ctrl + click a line of one kind side by side, Shift + drag paints hexes they guard. Right click with several soldiers: they go in formation (melee in front, archers behind, riders on the ends). Z hold, X aggressive, C passive, V split in half, B refit at home, N stop guarding.\n" +
@@ -277,7 +317,7 @@ public partial class PlayGame
         "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +
         "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
         "WASD, arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
-        "Space: pause. + and -: faster, slower. 1-5: windows. L: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
+        "Space: pause. + and -: faster, slower. 1-6: windows. L: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
         "FIRST STEPS\n" +
         "1. Food first: a Gatherers' hut, then a Woodcutter. People without work forage a little.\n" +
         "2. Huts give homes: people grow only while there are free homes and food.\n" +
@@ -321,6 +361,7 @@ public partial class PlayGame
         }
 
         UpdateTop(v, c);
+        UpdateUnderTop();
         UpdateAdvisor(v);
         UpdateAlerts(v);
         UpdateActionBar(v, c);
@@ -372,6 +413,16 @@ public partial class PlayGame
         }
 
         _eraLabel.Text = v.Lost ? "Our people are gone" : v.Winner is { } w ? $"{w} have won" : c.Eras[v.Era];
+        if (!_endShown && (v.Lost || v.Winner is not null))
+        {
+            _endShown = true;
+            _endTitle.Text = v.Won ? "VICTORY" : v.Lost ? "OUR PEOPLE ARE GONE" : "THE GAME IS WON";
+            _endText.Text = (v.Won ? $"We have won after {Clock()} of play." : v.Lost ? $"No settlement of ours is left after {Clock()} of play." : $"{v.Winner} have won after {Clock()} of play.")
+                + (v.Goal is { Length: > 0 } goal ? $"\nGoal: {goal}" : "") + $"\nOur score: {v.Score}. The game is paused; it can go on behind this.";
+            _endPanel.Visible = true;
+            _session?.SetSpeed(SimulationSpeed.Paused);
+        }
+
         _eraLabel.TooltipText = v.Goal ?? "";
         float progress = v.EraNeed > 0 ? Math.Min(1f, (float)v.EraKnown / v.EraNeed) : 1f;
         int y0 = EraYears[Math.Min(v.Era, EraYears.Length - 2)];
@@ -490,23 +541,52 @@ public partial class PlayGame
             int col = a.Col;
             int row = a.Row;
             Color color = a.Kind <= 2 ? UiKit.Bad : UiKit.Warn;
-            var b = new Button { FocusMode = Control.FocusModeEnum.None, TooltipText = a.Text + "\nClick to go there.", CustomMinimumSize = new Vector2(0, 40) };
-            b.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.14f, 0.11f, 0.1f, 0.92f), color, 4, 2));
-            b.AddThemeStyleboxOverride("hover", UiKit.Flat(new Color(0.22f, 0.17f, 0.14f, 0.95f), color, 4, 2));
+
+            // A17 (tests 2026-11-20): the whole text, wrapped, instead of a line cut at the edge of the screen.
+            var b = new PanelContainer { TooltipText = "Click to go there.", MouseFilter = Control.MouseFilterEnum.Stop, MouseDefaultCursorShape = Control.CursorShape.PointingHand };
+            StyleBoxFlat normal = UiKit.Flat(new Color(0.14f, 0.11f, 0.1f, 0.92f), color, 4, 2);
+            StyleBoxFlat hover = UiKit.Flat(new Color(0.22f, 0.17f, 0.14f, 0.95f), color, 4, 2);
+            b.AddThemeStyleboxOverride("panel", normal);
+            b.MouseEntered += () => b.AddThemeStyleboxOverride("panel", hover);
+            b.MouseExited += () => b.AddThemeStyleboxOverride("panel", normal);
             var inner = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-            inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-            inner.OffsetLeft = 4;
+            inner.AddThemeConstantOverride("separation", 6);
             inner.AddChild(new Glyph(color, "!", 26, round: true) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
-            Label text = UiKit.Label(a.Text, 13, UiKit.Text);
+            Label text = UiKit.Label(a.Text, 13, UiKit.Text, wrap: true);
             text.MouseFilter = Control.MouseFilterEnum.Ignore;
-            text.ClipText = true;
             text.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            text.CustomMinimumSize = new Vector2(UiKit.W(380) - 60, 0);
             text.VerticalAlignment = VerticalAlignment.Center;
             inner.AddChild(text);
             b.AddChild(inner);
-            b.Pressed += () => Focus(col, row);
+            b.GuiInput += e =>
+            {
+                if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+                {
+                    Focus(col, row);
+                }
+            };
             _alertsBox.AddChild(b);
         }
+    }
+
+    // A15: everything under the top bar starts where the bar ends (the goods may take two rows).
+    private void UpdateUnderTop()
+    {
+        float bottom = Math.Max(_top.Size.Y, _top.GetCombinedMinimumSize().Y);
+        if (Math.Abs(bottom - _topBottom) < 0.5f)
+        {
+            return;
+        }
+
+        float shift = bottom - _topBottom;
+        _topBottom = bottom;
+        _inspector.OffsetTop += shift;
+        _rightCol.OffsetTop += shift;
+        _banner.OffsetTop += shift;
+        _toastPanel.OffsetTop += shift;
+        _window.OffsetTop += shift;
+        _help.OffsetTop += shift;
     }
 
     private void UpdateBanner(PlayContentMessage c)

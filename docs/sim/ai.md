@@ -67,6 +67,19 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/SimAi.cs` i `SimAi.Care.cs`. Ta strona op
 | N34 | Droga do celu i zwiad bez skoków (sprint 2026-11-20) | wybór osady do ataku; zwiadowca szuka nowego celu | atakuje tylko osadę, do której jest droga z miejsca jego wojska (pamięta wynik 2 min, szuka najwyżej 20 000 heksów); zwiadowca próbuje tylko heksów lądu, jedno szukanie drogi (do 1500 heksów) na myślenie, a gdy nic nie wyszło, czeka 30 s; nie wypowiada wojny ponad `war.maxWars` | 2 min, 20 000, 1500, 30 s | `Ai/SimAi.cs` (`WayTo`, `Scouts`, `War`) |
 | N33 | Premie rodzajów (#112) | rodzaj jednostki osiągnął poziom | łucznicy i machiny: Hardened; jazda: na zmianę Forced march i Hardened; piechota: na zmianę Hardened i Shield wall | — | `Ai/SimAi.cs` (`VeteranChoiceFor`) |
 
+## Zmiany z testów 2026-11-20
+
+1. **Awans karawanami (A1):** po nieudanym awansie AI czeka 60 s (`upgradeCaravans.aiRetrySeconds`) i nie próbuje, gdy towary już jadą. Pomiar (mapa 98×60, 4 ludy, 100 min): nieudane awanse 673 → 12 (seed 1) i 751 → 7 (seed 2).
+2. **Zaopatrzenie (A2):** bez drogi do oddziału AI nie wysyła karawany ani nie cofa oddziału przez 60 s.
+3. **Cel wojny (A3, A9):** AI szuka celu tylko u ludów, z którymi walczy albo może zacząć wojnę; zna tylko osady, które widzi albo pamięta (`SeenSettlements`), a obronę zapamiętanej ocenia z tego, co widziała (ludzie, straż, obrona). Pamięć „czy jest droga” trzyma się celu i pierwszej osady AI, nie heksu armii.
+
+Czas taktu (sama symulacja, wszystkie ludy AI, przed → po):
+
+| Mapa | Ludy | Minuty | Średnio [ms] | 99% taktów poniżej [ms] | 99,9% poniżej [ms] | Najdłuższy [ms] |
+| --- | --- | --- | --- | --- | --- | --- |
+| 98×60 | 8 | 120 | 0,55 → 0,37 | 8,3 → 2,9 | 23 → 6 | 77 → 69 |
+| 194×120 | 16 | 90 | 1,11 → 0,53 | 16,8 → 3,7 | 77 → 11 | 158 → 91 |
+
 ## Zmiany z 2026-11-19
 
 1. **Racje:** jedzenie netto (N4, N14, N16) i chude czasy (N3) liczą racje mieszkańców i jednostek. Tempo jedzenia w osadzie pokazuje je na minutę. Wojsko trenuje osada, która je wyżywi (N16).
