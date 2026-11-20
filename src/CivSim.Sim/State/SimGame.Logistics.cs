@@ -227,6 +227,19 @@ public sealed partial class SimGame
     private void Walk(Unit u, int cell)
     {
         bool way = FindPath(u.Cell, cell, u.Path, Content.Units[u.Kind].Naval, u.Civ);
+        if (!way && u.Job == CarrierJob.ToUnit)
+        {
+            // A2 (tests 2026-11-20): no way to the unit it follows: home at once, no more searches over the whole map.
+            u.Path.Clear();
+            if ((uint)u.Target < (uint)Units.Count)
+            {
+                Units[u.Target].SupplyNoWayTick = Ticks;
+            }
+
+            GoHome(u);
+            return;
+        }
+
         if (!way && u.Job == CarrierJob.ToSettlement)
         {
             u.Path.Clear();
@@ -297,7 +310,10 @@ public sealed partial class SimGame
                         long give = Math.Min(u.Cargo![Content.Food], Math.Max(0, ProvisionsMax(army) - army.Provisions));
                         army.Provisions += give;
                         u.Cargo[Content.Food] -= give;
-                        News.Add((u.Civ, $"Food reached our {Content.Units[army.Kind].Name.ToLowerInvariant()}: {give / SimContent.One} more in their packs."));
+                        string whom = Content.Units[army.Kind].Name.ToLowerInvariant();
+                        News.Add((u.Civ, give >= SimContent.One
+                            ? $"Food reached our {whom}: {give / SimContent.One} more in their packs."
+                            : $"Food reached our {whom}, but their packs were already full: the caravan takes it home."));
                     }
                 }
 
@@ -454,6 +470,8 @@ public sealed partial class SimGame
         News.Add((killerCiv, $"We destroyed {Civs[carrier.Civ].Name}' {kind}; their {what} is lost."));
     }
 
+    private readonly List<int> _wayCheck = [];
+
     private string? SupplyUnit(Civ civ, int from, int unit, long amount)
     {
         if ((uint)from >= (uint)Settlements.Count || Settlements[from].Civ != civ.Id || Settlements[from].Abandoned)
@@ -472,15 +490,38 @@ public sealed partial class SimGame
             return $"{s.Name} is under siege: no caravans come or go.";
         }
 
+        Unit army = Units[unit];
+        string whom = Content.Units[army.Kind].Name.ToLowerInvariant();
+        if (ProvisionsMax(army) - army.Provisions < SimContent.One)
+        {
+            return $"Our {whom} have full packs."; // R2-6 (tests 2026-11-20)
+        }
+
+        foreach (int cid in civ.Units)
+        {
+            if (Units[cid].Job == CarrierJob.ToUnit && Units[cid].Target == unit && Units[cid].State != UnitState.Gone)
+            {
+                return $"A caravan with food is already on its way to our {whom}.";
+            }
+        }
+
         long send = Math.Min(amount, s.Stock[Content.Food]);
         if (send < SimContent.One)
         {
             return $"{s.Name} has no food to send.";
         }
 
+        // A2 (tests 2026-11-20): refused at once when there is no way, instead of a caravan that searches the whole map again and again.
+        int store = NearestStore(s, army.Cell);
+        if (!FindPath(store, army.Cell, _wayCheck, Content.Units[Content.Caravans].Naval, civ.Id))
+        {
+            army.SupplyNoWayTick = Ticks;
+            return $"No way to our {whom}: a river, the sea or walls are in the way.";
+        }
+
         var load = new long[Content.Goods.Count];
         load[Content.Food] = send;
-        Unit c = NewCarrier(civ, Content.Caravans, s, NearestStore(s, Units[unit].Cell), load, 100);
+        Unit c = NewCarrier(civ, Content.Caravans, s, store, load, 100);
         c.Job = CarrierJob.ToUnit;
         c.Target = unit;
         c.ChaseFails = 0;

@@ -358,7 +358,14 @@ public sealed record VeteranOption(string Key, string Name, string Text, int Str
 public sealed record VeteranRules(int[] Levels, VeteranOption[] Options);
 
 /// <summary>Supplies of the army in the field (Patryk, 2026-11-20, question 1): see the supply section of the data.</summary>
-public sealed record SupplyRules(int RangeHexes, int CarryMinutes, int LandHands, int LandPercent);
+public sealed record SupplyRules(int RangeHexes, int CarryMinutes, int LandHands, int LandPercent)
+{
+    /// <summary>A caravan to a unit with no way to it is refused; the AI sends none to that unit for this long (ticks).</summary>
+    public int NoWayTicks { get; init; } = 60 * SimContent.TicksPerSecond;
+}
+
+/// <summary>Caravans for a settlement's upgrade (A1, tests 2026-11-20): margin carried, and the AI's wait after a failure.</summary>
+public sealed record UpgradeCaravanRules(int ExtraPercent, int AiRetryTicks);
 
 public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, int SurpriseReputation)
 {
@@ -650,6 +657,9 @@ public sealed class SimContent
 
     /// <summary>Extra price, percent, for resuming a paused construction.</summary>
     public int ResumeCostPercent { get; init; }
+
+    /// <summary>Caravans for upgrades (upgradeCaravans).</summary>
+    public UpgradeCaravanRules UpgradeCaravans { get; init; } = new(10, 60 * TicksPerSecond);
 
     /// <summary>Rations of the units, paid by their home settlement.</summary>
     public RationRules Rations { get; init; } = new(600, 75, 50, 20);
@@ -1538,7 +1548,13 @@ public sealed class SimContent
             Supply = root.TryGetProperty("supply", out JsonElement supplyEl)
                 ? new SupplyRules(supplyEl.GetProperty("rangeHexes").GetInt32(), supplyEl.GetProperty("carryMinutes").GetInt32(),
                     supplyEl.GetProperty("landHands").GetInt32(), supplyEl.GetProperty("landPercent").GetInt32())
+                {
+                    NoWayTicks = (supplyEl.TryGetProperty("noWaySeconds", out JsonElement nws) ? nws.GetInt32() : 60) * TicksPerSecond,
+                }
                 : new SupplyRules(3, 4, 10, 100),
+            UpgradeCaravans = root.TryGetProperty("upgradeCaravans", out JsonElement ucEl)
+                ? new UpgradeCaravanRules(ucEl.GetProperty("extraPercent").GetInt32(), ucEl.GetProperty("aiRetrySeconds").GetInt32() * TicksPerSecond)
+                : new UpgradeCaravanRules(10, 60 * TicksPerSecond),
             Siege = root.TryGetProperty("siege", out JsonElement siegeEl)
                 ? new SiegeRules(siegeEl.GetProperty("blockadeRange").GetInt32(), siegeEl.GetProperty("blockadeWorkPercent").GetInt32(), siegeEl.GetProperty("liftSeconds").GetInt32(),
                     siegeEl.GetProperty("guardPerPalisadeHexPercent").GetInt32(), siegeEl.GetProperty("guardPerWallHexPercent").GetInt32(), siegeEl.GetProperty("guardStrength").GetInt32(),

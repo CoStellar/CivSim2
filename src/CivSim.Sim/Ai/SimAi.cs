@@ -871,7 +871,8 @@ public static partial class SimAi
         foreach (int sid in civ.Settlements)
         {
             Settlement s = g.Settlements[sid];
-            if (s.Level + 1 < g.Content.Levels.Count && s.People >= s.Housing - 2 && Affordable(civ, g.Content.Levels[s.Level + 1].UpgradePrice, 20)
+            bool waited = s.UpgradeFailedTick < 0 || g.Ticks - s.UpgradeFailedTick >= g.Content.UpgradeCaravans.AiRetryTicks; // A1: not again at once
+            if (waited && !s.UpgradeWaiting && s.Level + 1 < g.Content.Levels.Count && s.People >= s.Housing - 2 && Affordable(civ, g.Content.Levels[s.Level + 1].UpgradePrice, 20)
                 && g.Apply(new UpgradeSettlementCommand(civ.Id, sid)) is null)
             {
                 return true;
@@ -1241,8 +1242,16 @@ public static partial class SimAi
                 continue;
             }
 
-            Settlement? target = NearestKnownSettlement(g, civ, other, idle.Count > 0 ? idle[0].Cell : -1);
-            if (g.AtWar(civ.Id, other.Id))
+            bool atWar = g.AtWar(civ.Id, other.Id);
+            if (!atWar && (civ.Aggression < 40 || idle.Count == 0 || g.Ticks < PeacefulStartTicks
+                || g.WarsOf(civ.Id) >= g.Content.War.MaxWars || g.WarsOf(other.Id) >= g.Content.War.MaxWars
+                || g.Has(civ.Id, other.Id, TreatyKind.Alliance) || (g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 85)))
+            {
+                continue; // A3 (tests 2026-11-20): no war to start, so no search for a target
+            }
+
+            Settlement? target = atWar && (idle.Count == 0 || power <= 0) ? null : NearestKnownSettlement(g, civ, other);
+            if (atWar)
             {
                 // Peace when the war has turned against us or dragged on; the course of the war sets the terms.
                 int mine = g.Score(civ.Id, other.Id);
@@ -1265,14 +1274,16 @@ public static partial class SimAi
 
             // Start a war only after the first minutes, when strong enough against the target's defenders and warlike enough;
             // allies are left alone, trade partners only by the most warlike.
-            if (target is null || civ.Aggression < 40 || idle.Count == 0 || g.Ticks < PeacefulStartTicks
-                || g.WarsOf(civ.Id) >= g.Content.War.MaxWars || g.WarsOf(other.Id) >= g.Content.War.MaxWars
-                || g.Has(civ.Id, other.Id, TreatyKind.Alliance) || (g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 85))
+            if (target is null)
             {
                 continue;
             }
 
-            long defence = (((long)target.People * g.Content.War.DefenderPercent / 100 * g.Content.War.DefenderStrength) + ((long)target.Guard * g.Content.Siege.GuardStrength)) * g.Defense(target);
+            // A9 (tests 2026-11-20): the defence as we see it now, or as we last saw it.
+            (int people, int guard, int defensePct) = g.Visible(civ, target.Center)
+                ? (target.People, target.Guard, g.Defense(target))
+                : civ.SeenSettlements.TryGetValue(target.Center, out SettlementMemory? seen) ? (seen.People, seen.Guard, seen.DefensePercent) : (target.People, target.Guard, g.Defense(target));
+            long defence = (((long)people * g.Content.War.DefenderPercent / 100 * g.Content.War.DefenderStrength) + ((long)guard * g.Content.Siege.GuardStrength)) * defensePct;
             if (power > defence * 2 && g.AiRandom.NextInt(100) < civ.Aggression / 10)
             {
                 if (civ.Aggression < 75)
@@ -1331,9 +1342,11 @@ public static partial class SimAi
     }
 
     // Tick spikes (2026-11-20): armies sent to a settlement beyond the sea searched a way twice a second for good. The AI
-    // remembers for two minutes which settlements its armies can reach from home.
-    private static bool WayTo(SimGame g, Civ civ, Settlement s, int from)
+    // remembers for two minutes which settlements its armies can reach from home. A3 (tests 2026-11-20): the answer is kept per
+    // target settlement and searched from our first settlement, not from the army's hex (it moves, so the old key never hit).
+    private static bool WayTo(SimGame g, Civ civ, Settlement s)
     {
+        int from = g.Settlements[civ.Settlements[0]].Center;
         long key = ((long)s.Id * g.Geo.CellCount) + from;
         if (civ.AiWayTo.TryGetValue(key, out (bool Way, long Tick) known) && g.Ticks - known.Tick < 2 * SimContent.TicksPerMinute)
         {
@@ -1342,30 +1355,36 @@ public static partial class SimAi
 
         if (civ.AiWayTo.Count > 256)
         {
-            civ.AiWayTo.Clear(); // old answers from hexes the army left
+            civ.AiWayTo.Clear(); // answers about settlements long gone
         }
 
-        bool way = g.FindPath(from, s.Center, new List<int>(), false, civ.Id, 20_000);
+        bool way = g.FindPath(from, s.Center, WayScratch, false, civ.Id, 20_000);
         civ.AiWayTo[key] = (way, g.Ticks);
         return way;
     }
 
-    private static Settlement? NearestKnownSettlement(SimGame g, Civ civ, Civ other, int from = -1)
+    [ThreadStatic]
+    private static List<int>? _wayScratch;
+
+    private static List<int> WayScratch => _wayScratch ??= [];
+
+    // A9 (tests 2026-11-20): only settlements the people sees now or remembers having seen, not every hex it once uncovered.
+    private static Settlement? NearestKnownSettlement(SimGame g, Civ civ, Civ other)
     {
-        from = from >= 0 ? from : g.Settlements[civ.Settlements[0]].Center;
         Settlement? best = null;
         int bestD = int.MaxValue;
         HexCoord home = g.Geo.FromIndex(g.Settlements[civ.Settlements[0]].Center);
         foreach (int sid in other.Settlements)
         {
             Settlement s = g.Settlements[sid];
-            if (!civ.Known[s.Center] || !WayTo(g, civ, s, from))
+            bool known = g.Visible(civ, s.Center) || (civ.SeenSettlements.TryGetValue(s.Center, out SettlementMemory? m) && m.Settlement == s.Id && m.Civ == other.Id);
+            if (!known)
             {
                 continue;
             }
 
             int d = g.Geo.Distance(home, g.Geo.FromIndex(s.Center));
-            if (d < bestD)
+            if (d < bestD && WayTo(g, civ, s))
             {
                 best = s;
                 bestD = d;
@@ -1524,6 +1543,11 @@ public static partial class SimAi
             if (u.Provisions >= perMinute * 3 / 2)
             {
                 continue;
+            }
+
+            if (u.SupplyNoWayTick >= 0 && g.Ticks - u.SupplyNoWayTick < g.Content.Supply.NoWayTicks)
+            {
+                continue; // A2 (tests 2026-11-20): no way to it a moment ago; no caravan and no march home for a while
             }
 
             bool coming = false;

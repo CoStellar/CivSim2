@@ -47,6 +47,32 @@ public sealed class SupplyTests
     }
 
     [Fact]
+    public void FoodForAUnitWithNoWayToItIsRefused()
+    {
+        // A2 (tests 2026-11-20): the caravan searched the whole map up to 7 times, went home, and the AI sent the next one.
+        (SimGame g, Unit u, Settlement home) = Army(10);
+        int island = Enumerable.Range(0, g.Geo.CellCount).First(c => !Content.World.Biomes[g.Map.Biome[c]].IsWater
+            && g.Settlements.All(s => g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(s.Center)) > 12)
+            && !g.FindPath(home.Center, c, new System.Collections.Generic.List<int>(), false, 0));
+        g.Place(u, island);
+        u.Provisions = 0;
+        int carriers = g.Units.Count;
+        string? why = g.Apply(new SupplyUnitCommand(0, home.Id, u.Id, 50 * SimContent.One));
+        Assert.NotNull(why);
+        Assert.StartsWith("No way to our", why, StringComparison.Ordinal);
+        Assert.Equal(carriers, g.Units.Count); // no caravan left
+        Assert.Equal(g.Ticks, u.SupplyNoWayTick);
+    }
+
+    [Fact]
+    public void FoodForAUnitWithFullPacksIsRefused()
+    {
+        (SimGame g, Unit u, Settlement home) = Army(10);
+        g.Place(u, Wild(g));
+        Assert.Equal("Our warriors have full packs.", g.Apply(new SupplyUnitCommand(0, home.Id, u.Id, 50 * SimContent.One)));
+    }
+
+    [Fact]
     public void ANewUnitLeavesWithFullPacks()
     {
         (SimGame g, Unit u, _) = Army(10);

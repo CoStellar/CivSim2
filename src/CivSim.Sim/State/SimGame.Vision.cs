@@ -5,7 +5,8 @@ using CivSim.Core.Map;
 namespace CivSim.Sim.State;
 
 /// <summary>What a people remembers of a settlement it no longer sees.</summary>
-public sealed record SettlementMemory(int Settlement, int Civ, string Name, int Level, int Center);
+/// <summary>A settlement as last seen; People, Guard and DefensePercent are what the AI judges its defence by (A9, tests 2026-11-20).</summary>
+public sealed record SettlementMemory(int Settlement, int Civ, string Name, int Level, int Center, int People = 0, int Guard = 0, int DefensePercent = 100);
 
 /// <summary>What a people remembers of a building it no longer sees.</summary>
 public sealed record BuildingMemory(int Building, int Type, int Civ, BuildingState State, int Cell, int Slots = 15);
@@ -194,7 +195,7 @@ public sealed partial class SimGame
         if (sid >= 0 && Settlements[sid].Center == cell && !Settlements[sid].Abandoned)
         {
             Settlement s = Settlements[sid];
-            civ.SeenSettlements[cell] = new SettlementMemory(s.Id, s.Civ, s.Name, s.Level, cell);
+            civ.SeenSettlements[cell] = new SettlementMemory(s.Id, s.Civ, s.Name, s.Level, cell, s.People, s.Guard, Defense(s));
         }
         else
         {

@@ -343,6 +343,14 @@ if "pace:" not in d["research"]["comment"]:
     d["research"]["comment"]+=" pace: percent of the price, of the experience and goods made asked for, and of the time of the technologies of each era (index = era)."
 if "maxSupportPercent:" not in d["research"]["comment"]:
     d["research"]["comment"]+=" maxSupportPercent: schools and academies speed a branch of research at most this much."
+# A1 (tests 2026-11-20): caravans for a settlement's upgrade carry a margin, because the settlement keeps using the goods
+# while they are on the way (775 of 777 AI upgrades failed on 29 of 30 clay). The rest stays in the settlement.
+d["upgradeCaravans"]={"comment":"A settlement short of the goods for its upgrade gets them by caravan from our other settlements: they carry what is missing plus extraPercent of the price of that good (at least 1), as far as the senders have it. When they arrive short, the AI asks again only after aiRetrySeconds.",
+  "extraPercent":10,"aiRetrySeconds":60}
+# A2/A3 (tests 2026-11-20): a caravan to a unit with no way to it is refused; the AI does not send another for noWaySeconds.
+d["supply"]["noWaySeconds"]=60
+if "noWaySeconds:" not in d["supply"]["comment"]:
+    d["supply"]["comment"]+=" noWaySeconds: a caravan to a unit there is no way to is refused, and the AI sends none to that unit for this long."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist
