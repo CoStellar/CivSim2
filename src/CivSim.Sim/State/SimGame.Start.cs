@@ -285,6 +285,19 @@ public sealed partial class SimGame
         }
     }
 
+    /// <summary>
+    /// Gives the people choosing now its full time again (a player gets <see cref="PickTicks"/>, the AI one second). Called when the
+    /// server has handed peoples to players before any tick: the phase began while every people was still the AI's, so a player who
+    /// chose first had one second instead of thirty (found while fixing A13, 2026-11-20).
+    /// </summary>
+    public void RestartPickClock()
+    {
+        if (Picking && Ticks == 0)
+        {
+            PickTicksLeft = Civs[PickOrder[PickIndex]].IsAi ? SimContent.TicksPerSecond : PickTicks;
+        }
+    }
+
     // One tick of the start phase: the chooser's time runs out, then the AI picks for it.
     private void PickingTick()
     {

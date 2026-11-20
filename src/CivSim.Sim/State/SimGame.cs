@@ -344,6 +344,11 @@ public sealed partial class SimGame
                 Ai.SimAi.Think(this, civ);
             }
         }
+
+        foreach (Civ civ in Civs)
+        {
+            SettlePlayer(civ);
+        }
     }
 
     /// <summary>The winner, once the goal is met (−1 = the game goes on).</summary>

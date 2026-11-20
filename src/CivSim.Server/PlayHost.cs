@@ -69,6 +69,17 @@ public sealed class PlayHost : IDisposable
     /// <summary>Creates the game and starts its thread (paused).</summary>
     public static PlayHost Start(PlayOptions options, string? dataDirectory = null)
     {
+        PlayHost host = Create(options, dataDirectory);
+        host._thread.Start();
+        return host;
+    }
+
+    /// <summary>
+    /// Creates the game without starting its thread: tests and the test bot drive it with <see cref="RunTicks"/>, with no clock
+    /// (tests 2026-11-20: a public way into the server without a thread).
+    /// </summary>
+    public static PlayHost Create(PlayOptions options, string? dataDirectory = null)
+    {
         ArgumentNullException.ThrowIfNull(options);
         SimContent content = SimContent.Load(dataDirectory);
         SavedGame? save = null;
@@ -98,9 +109,100 @@ public sealed class PlayHost : IDisposable
         }
 
         game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
-        var host = new PlayHost(game, options) { _replay = save };
-        host._thread.Start();
-        return host;
+        game.RestartPickClock();
+        return new PlayHost(game, options) { _replay = save };
+    }
+
+    /// <summary>The game itself, for tests in this solution only.</summary>
+    internal SimGame Game => _game;
+
+    /// <summary>Builds the view of every people (what an observer would get), for determinism tests.</summary>
+    internal void ViewEveryPeople()
+    {
+        for (int c = 0; c < _game.Civs.Count; c++)
+        {
+            _ = View(c);
+        }
+    }
+
+    /// <summary>Hash of the whole game state (all peoples).</summary>
+    public ulong StateHash => _game.StateHash();
+
+    /// <summary>Ticks played.</summary>
+    public long Ticks => _game.Ticks;
+
+    /// <summary>True while peoples choose their start.</summary>
+    public bool Picking => _game.Picking;
+
+    /// <summary>
+    /// Without the thread: loads the save (once), then plays <paramref name="ticks"/> ticks, reading the clients' messages before each
+    /// and sending views every <paramref name="viewEvery"/> ticks (0 = never). The speed asked for by clients does not matter here.
+    /// </summary>
+    public void RunTicks(int ticks, int viewEvery = 1)
+    {
+        if (_thread.IsAlive)
+        {
+            throw new InvalidOperationException("The host runs on its own thread.");
+        }
+
+        LoadSave();
+        for (int t = 0; t < ticks; t++)
+        {
+            Pump();
+            Advance();
+            if (viewEvery > 0 && t % viewEvery == 0)
+            {
+                SendViews();
+            }
+        }
+
+        Pump();
+    }
+
+    /// <summary>Without the thread: reads the clients' messages and sends them views now.</summary>
+    public void ViewNow()
+    {
+        LoadSave();
+        Pump();
+        SendViews();
+    }
+
+    private void LoadSave()
+    {
+        if (_replay is { } replay)
+        {
+            _replay = null;
+            Replay(replay);
+        }
+    }
+
+    private void Pump()
+    {
+        while (_pending.TryDequeue(out IConnection? c))
+        {
+            _clients.Add(new PlayClient(c, _game.Geo.CellCount));
+        }
+
+        foreach (PlayClient client in _clients)
+        {
+            Receive(client);
+        }
+
+        _clients.RemoveAll(c => !c.Connection.IsOpen);
+    }
+
+    private void Advance()
+    {
+        _game.Tick();
+        SlowForBattle();
+        Autosave();
+        foreach ((int civ, string text) in _game.News)
+        {
+            if (civ < 0 || civ == 0)
+            {
+                _news.Add(text);
+            }
+        }
     }
 
     /// <summary>Opens an in-memory connection for a local client.</summary>
@@ -115,33 +217,22 @@ public sealed class PlayHost : IDisposable
     public void Dispose()
     {
         _stopping = true;
-        _thread.Join(TimeSpan.FromSeconds(2));
+        if (_thread.IsAlive)
+        {
+            _thread.Join(TimeSpan.FromSeconds(2));
+        }
     }
 
     private void Run()
     {
         try
         {
-            if (_replay is { } replay)
-            {
-                Replay(replay);
-            }
-
+            LoadSave();
             long lastTick = Stopwatch.GetTimestamp();
             long lastView = 0;
             while (!_stopping)
             {
-                while (_pending.TryDequeue(out IConnection? c))
-                {
-                    _clients.Add(new PlayClient(c, _game.Geo.CellCount));
-                }
-
-                foreach (PlayClient client in _clients)
-                {
-                    Receive(client);
-                }
-
-                _clients.RemoveAll(c => !c.Connection.IsOpen);
+                Pump();
                 int ticksPerSecond = (int)_speed * SimContent.TicksPerSecond;
                 if (_speed == SimulationSpeed.Max)
                 {
@@ -160,17 +251,7 @@ public sealed class PlayHost : IDisposable
                     int ran = 0;
                     while (Stopwatch.GetElapsedTime(lastTick).TotalSeconds >= wait && ran < 50)
                     {
-                        _game.Tick();
-                        SlowForBattle();
-                        Autosave();
-                        foreach ((int civ, string text) in _game.News)
-                        {
-                            if (civ < 0 || civ == 0)
-                            {
-                                _news.Add(text);
-                            }
-                        }
-
+                        Advance();
                         lastTick += (long)(wait * Stopwatch.Frequency);
                         ran++;
                     }
@@ -372,9 +453,12 @@ public sealed class PlayHost : IDisposable
         }
     }
 
+    /// <summary>Saves every <see cref="AutosaveMinutes"/> game minutes (tests turn it off so they write no files).</summary>
+    public bool AutosaveOn { get; set; } = true;
+
     private void Autosave()
     {
-        if (_game.Picking || _game.Ticks - _lastAutosave < AutosaveMinutes * SimContent.TicksPerMinute)
+        if (!AutosaveOn || _game.Picking || _game.Ticks - _lastAutosave < AutosaveMinutes * SimContent.TicksPerMinute)
         {
             return;
         }
@@ -391,8 +475,18 @@ public sealed class PlayHost : IDisposable
             c.IsAi = !save.Players.Contains(c.Id);
         }
 
+        _game.RestartPickClock();
+
         foreach (SavedCommand c in save.Commands)
         {
+            // A13 (tests 2026-11-20): ticks stand still while peoples choose their start, so every command of that phase has tick 0.
+            // The phase is played again until it is this people's turn (a pick) or until everyone has chosen (anything else).
+            bool pick = c.Kind == PlayCommandKind.PickStart;
+            while (_game.Picking && (!pick || _game.PickOrder[_game.PickIndex] != c.Civ))
+            {
+                _game.Tick();
+            }
+
             while (_game.Ticks < c.Tick)
             {
                 _game.Tick();
@@ -937,11 +1031,9 @@ public sealed class PlayHost : IDisposable
     private PlayViewMessage View(int civId)
     {
         Civ civ = _game.Civs[civId];
-        if (civ.Dirty)
-        {
-            _game.Recompute(civ);
-        }
 
+        // A14/B1 (tests 2026-11-20): the view only reads. The simulation keeps a player's people recomputed itself
+        // (SimGame.SettlePlayer); an AI people seen by an observer shows its numbers from its last thought.
         bool[] known = civ.Known;
         var settlements = new List<PlaySettlementView>();
         foreach (Settlement s in _game.Settlements)
