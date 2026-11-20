@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CivSim.Core.Map;
 using CivSim.Core.Random;
 using CivSim.Core.WorldGen;
@@ -43,6 +44,9 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>The AI leads every people (the host hands people to players afterwards); false in rule tests.</summary>
     public bool Ai { get; init; } = true;
+
+    /// <summary>12B: peoples start near each other on the main continent (startPhase.neighbourMaxHexes); test scenarios keep the generator's starts.</summary>
+    public bool NearStarts { get; init; } = true;
 }
 
 /// <summary>
@@ -188,10 +192,17 @@ public sealed partial class SimGame
             civ.Expansion = game.AiRandom.NextInt(0, 101);
             civ.StartError = game.AiRandom.NextInt(0, 31);
             game.Civs.Add(civ);
-            if (!settings.StartPhase)
+        }
+
+        if (!settings.StartPhase)
+        {
+            int[] starts = settings.NearStarts && content.StartPhase.NeighbourMaxHexes > 0
+                ? game.NearStarts([.. report.Starts.Take(game.Civs.Count).Select(map.Geometry.Index)])
+                : [.. report.Starts.Take(game.Civs.Count).Select(map.Geometry.Index)];
+            foreach (Civ civ in game.Civs)
             {
-                game.StartMetals(civ, map.Geometry.Index(report.Starts[c]));
-                game.FoundSettlement(civ, map.Geometry.Index(report.Starts[c]), content.StartPeople);
+                game.StartMetals(civ, starts[civ.Id]);
+                game.FoundSettlement(civ, starts[civ.Id], content.StartPeople);
             }
         }
 

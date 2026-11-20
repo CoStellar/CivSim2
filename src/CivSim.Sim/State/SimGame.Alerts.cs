@@ -33,6 +33,9 @@ public enum AlertKind
 
     /// <summary>The settlement will not have the food for its units' next ration (or did not have it at the last one).</summary>
     Rations = 8,
+
+    /// <summary>11B (2026-11-20): the settlement eats more than it makes and its food runs out within alerts.foodLowMinutes.</summary>
+    FoodLow = 9,
 }
 
 /// <summary>One alert. <see cref="Good"/> is −1 when it is not about a good; <see cref="Cell"/> is where to look.</summary>
@@ -75,6 +78,13 @@ public sealed partial class SimGame
                 list.Add(new Alert(AlertKind.Hungry, s.Id, s.Center, Content.Food, s.HungerStreak >= 2
                     ? $"{s.Name} starves: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" without food, some die at every ration (next in {secs} s)."
                     : $"{s.Name} goes hungry: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" got no ration. Missing the next one in {secs} s kills some."));
+            }
+            else if (s.Rate[Content.Food] < 0 && s.Stock[Content.Food] * SimContent.TicksPerSecond * 60 / -s.Rate[Content.Food] <= (long)Content.FoodLowMinutes * SimContent.TicksPerMinute)
+            {
+                // 11B (Patryk, 2026-11-20): an early warning while there is still time, with what to do.
+                long left = s.Stock[Content.Food] * 60 / -s.Rate[Content.Food];
+                list.Add(new Alert(AlertKind.FoodLow, s.Id, s.Center, Content.Food,
+                    $"Food in {s.Name} runs out in {left / 60}:{left % 60:00}: build a Gatherers' hut (Food) or put more people to food."));
             }
             else if (ration > 0 && then < ration)
             {

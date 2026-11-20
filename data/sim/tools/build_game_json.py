@@ -276,7 +276,7 @@ for b_ in d["buildings"]:
     if b_["key"]=="castle": b_["guard"]=40
 d["ruins"]={"comment":"A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.","emptySeconds":60,"rebuildPercent":50}
 # Every start has copper and tin near it (Patryk, 2026-11-19, M4): placed on free land when the map has none within max hexes.
-d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1}]
+d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1},{"deposit":"iron_ore","min":15,"max":20,"depth":1}]  # iron: 7A, 2026-11-20
 # Gateways (Patryk, 2026-11-19, M1): to leave an era a people must also know its gateway technology (metal opens the next era).
 d["eraGateways"]={"comment":"Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
   "neolithic":"copper_working","bronze_age":"bronze_working","iron_age":"iron_working"}
@@ -368,6 +368,24 @@ if "shareNearHexes:" not in d["veterans"]["comment"]:
     d["veterans"]["comment"]+=" shareNearHexes: an enemy killed counts for every kind of ours fighting within this many hexes of it, once per kind."
 if "tributeAfterSeconds:" not in d["war"]["comment"]:
     d["war"]["comment"]+=" The war score counts from the start of the current war; tributeAfterSeconds: peace with tribute only this long after the war began. reputationFloor: reputation never falls below it; badReputation: below it the AI declares new wars half as often."
+# 9B: homes per settlement level (camp 60, village 250, town 800, city no limit); 10B: building technologies raise the
+# homes of a stone house on the same hex (houses grow upward), the upgrade lets a settlement grow wider.
+for l_ in d["settlementLevels"]:
+    l_["maxHousing"]={"camp":60,"village":250,"town":800,"city":0}[l_["key"]]
+for t_ in d["technologies"]:
+    up={"construction":4,"engineering":4,"guilds":8}.get(t_["key"])
+    if up and not any(e.get("kind")=="housing" for e in t_.get("effects",[])):
+        t_.setdefault("effects",[]).append({"kind":"housing","target":"stone_house","value":up})
+        t_["gives"]=(t_.get("gives","")+f" Stone houses: +{up} homes (they grow a storey).").strip()
+# 11B: an early food alert.
+d["alerts"]={"comment":"foodLowMinutes: a settlement that eats more than it makes is warned when its food lasts this long or less.","foodLowMinutes":3}
+# 12B: until the AI uses ships, peoples start on the main continent, at most 60 hexes by land from another people.
+d["startPhase"]["neighbourMaxHexes"]=60
+d["startPhase"]["neighbourMinHexes"]=25
+if "neighbourMaxHexes:" not in d["startPhase"]["comment"]:
+    d["startPhase"]["comment"]+=" neighbourMaxHexes: every people starts on the main continent (the largest land) and, after the first, at most this many hexes by land from a people already placed (while choosing: from the shown circles); 0 = anywhere. neighbourMinHexes: placed starts and the AI's choices keep this far from other starts when the land allows (room to grow)."
+# 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
+d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5}}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist

@@ -11,7 +11,7 @@ namespace CivSim.Headless;
 
 /// <summary>
 /// The AI of the new game over many seeds (2026-11-19): a small change moves the result of one game by 20–30%, so tuning
-/// needs a mean over many. <c>--sim-report [--seeds 12] [--minutes 40] [--peoples 4] [--csv file]</c>.
+/// needs a mean over many. <c>--sim-report [--seeds 12] [--minutes 40] [--peoples 4] [--size 98x60] [--csv file]</c>. The default map is the client's default ("Normal", 98×60; decision 8B of 2026-11-20).
 /// </summary>
 public static class SimReport
 {
@@ -66,14 +66,15 @@ public static class SimReport
         int seeds = Arg(args, "--seeds", 12);
         int minutes = Arg(args, "--minutes", 40);
         int peoples = Arg(args, "--peoples", 4);
+        (int width, int height) = Size(args);
         string? csv = args.SkipWhile(a => a != "--csv").Skip(1).FirstOrDefault();
         SimContent content = SimContent.Load();
         var rows = new Row[seeds];
         var parallel = new ParallelOptions { MaxDegreeOfParallelism = args.Contains("--serial") ? 1 : Environment.ProcessorCount };
-        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, peoples));
+        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, peoples, width, height));
 
         CultureInfo inv = CultureInfo.InvariantCulture;
-        output.WriteLine(string.Create(inv, $"New game AI: {seeds} seeds, {peoples} peoples, {minutes} minutes each (map 66x40)."));
+        output.WriteLine(string.Create(inv, $"New game AI: {seeds} seeds, {peoples} peoples, {minutes} minutes each (map {width}x{height})."));
         output.WriteLine("seed  people  settl  units  soldiers  dead  era   neolithic  hungry%  wars  buildings  techs");
         foreach (Row r in rows)
         {
@@ -144,9 +145,25 @@ public static class SimReport
         return 0;
     }
 
-    private static Row Play(SimContent content, ulong seed, int minutes, int peoples)
+    // --size WxH (legacy width and height, as the client's map sizes: 66x40 small, 98x60 normal, 130x80 large).
+    private static (int Width, int Height) Size(string[] args)
     {
-        SimGame g = SimGame.Create(content, new SimSettings(seed, 66, 40, peoples));
+        int i = Array.IndexOf(args, "--size");
+        if (i >= 0 && i + 1 < args.Length)
+        {
+            string[] p = args[i + 1].Split('x', 'X');
+            if (p.Length == 2 && int.TryParse(p[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int w) && int.TryParse(p[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int h))
+            {
+                return (w, h);
+            }
+        }
+
+        return (98, 60);
+    }
+
+    private static Row Play(SimContent content, ulong seed, int minutes, int peoples, int width, int height)
+    {
+        SimGame g = SimGame.Create(content, new SimSettings(seed, width, height, peoples));
         int samples = 0;
         int hungry = 0;
         int neolithic = -1;

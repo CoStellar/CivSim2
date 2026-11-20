@@ -176,7 +176,7 @@ public sealed class AiTests
     public void AiPeoplesGrowBuildResearchAndSpreadOnTheirOwn()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(5, 98, 60, 4)).Basics();
-        for (int i = 0; i < 13 * SimContent.TicksPerMinute; i++) // research goes faster since 2026-11-19 and takes the early wood
+        for (int i = 0; i < 16 * SimContent.TicksPerMinute; i++) // research goes faster since 2026-11-19 and takes the early wood; 16 min since the starts moved closer (12B)
         {
             g.Tick();
         }
