@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CivSim.Core.Map;
 using CivSim.Sim.Content;
 
 namespace CivSim.Sim.State;
@@ -14,6 +15,9 @@ namespace CivSim.Sim.State;
 public sealed partial class SimGame
 {
     private readonly List<Unit> _toFeed = [];
+
+    /// <summary>Soldiers who starved in the field, all peoples (for reports).</summary>
+    public int FieldDeaths { get; private set; }
     private readonly List<int> _rationOrder = [];
 
     /// <summary>Ticks until a people's next ration.</summary>
@@ -68,6 +72,68 @@ public sealed partial class SimGame
         _ => Content.Rations.StarvingPercent,
     };
 
+    /// <summary>True when an army unit is on its people's land or within supply.rangeHexes of it (fed from home).</summary>
+    public bool InSupply(Unit u)
+    {
+        ArgumentNullException.ThrowIfNull(u);
+        if (OwnerAt[u.Cell] == u.Civ)
+        {
+            return true;
+        }
+
+        int range = Content.Supply.RangeHexes;
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(range)];
+        int n = Geo.Range(Geo.FromIndex(u.Cell), range, area);
+        for (int k = 0; k < n; k++)
+        {
+            if (OwnerAt[Geo.Index(area[k])] == u.Civ)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>Most food an army unit carries: its people's food for supply.carryMinutes.</summary>
+    public long ProvisionsMax(Unit u)
+    {
+        ArgumentNullException.ThrowIfNull(u);
+        return Content.Units[u.Kind].Army ? (long)u.People * Content.FoodPerPersonPerMinute * Content.Supply.CarryMinutes : 0;
+    }
+
+    /// <summary>Food the land of its hex gives an army unit in the field at a ration (hundredths).</summary>
+    public long LandFood(Unit u)
+    {
+        ArgumentNullException.ThrowIfNull(u);
+        int biome = Map.Biome[u.Cell];
+        if (Content.World.Biomes[biome].IsWater)
+        {
+            return 0;
+        }
+
+        long hands = Math.Min(u.People, Content.Supply.LandHands);
+        long perMinute = hands * Content.ForagePerMinute[Content.Food] * Content.ForageBiome[biome * 2] / 100 * Content.Supply.LandPercent / 100;
+        return perMinute * Content.Rations.EveryTicks / SimContent.TicksPerMinute;
+    }
+
+    // A new army unit leaves with full packs, paid from its home's food (as far as it has).
+    private void FillPacks(Unit u)
+    {
+        if (!Content.Units[u.Kind].Army || (uint)u.Home >= (uint)Settlements.Count)
+        {
+            return;
+        }
+
+        Settlement home = Settlements[u.Home];
+        long top = Math.Min(Math.Max(0, ProvisionsMax(u) - u.Provisions), home.Stock[Content.Food]);
+        u.Provisions += top;
+        home.Stock[Content.Food] -= top;
+    }
+
+    // Army units out of supply eat from their provisions and the land, not from home.
+    private bool OutOfSupply(Unit u) => Content.Units[u.Kind].Army && u.Aboard < 0 && !InSupply(u);
+
     // People of the units a settlement feeds (for its eating rate).
     private int UnitPeopleOf(Civ civ, Settlement s)
     {
@@ -75,7 +141,7 @@ public sealed partial class SimGame
         foreach (int uid in civ.Units)
         {
             Unit u = Units[uid];
-            if (u.State != UnitState.Gone && FedBy(u)?.Id == s.Id)
+            if (u.State != UnitState.Gone && FedBy(u)?.Id == s.Id && !OutOfSupply(u))
             {
                 people += u.People;
             }
@@ -153,14 +219,35 @@ public sealed partial class SimGame
                     need -= own;
                 }
 
-                if (s.Stock[Content.Food] >= need)
+                bool field = OutOfSupply(u);
+                if (field)
+                {
+                    // Supply (2026-11-20): in the field the land gives a little, the provisions the rest.
+                    need -= Math.Min(need, LandFood(u));
+                    long carried = Math.Min(u.Provisions, need);
+                    u.Provisions -= carried;
+                    need -= carried;
+                    if (need <= 0)
+                    {
+                        u.Hunger = 0;
+                        continue;
+                    }
+                }
+                else if (s.Stock[Content.Food] >= need)
                 {
                     s.Stock[Content.Food] -= need;
                     u.Hunger = 0;
+                    long top = Math.Min(Math.Max(0, ProvisionsMax(u) - u.Provisions), s.Stock[Content.Food]);
+                    u.Provisions += top; // at home it fills its packs
+                    s.Stock[Content.Food] -= top;
                     continue;
                 }
 
-                s.RationShort++;
+                if (!field)
+                {
+                    s.RationShort++;
+                }
+
                 u.Hunger = (byte)Math.Min(2, u.Hunger + 1);
                 if (u.Hunger == 2)
                 {
@@ -169,11 +256,18 @@ public sealed partial class SimGame
                     u.People -= dead;
                     u.Injured = Math.Min(u.Injured, Math.Max(0, u.People));
                     s.RationDead += dead;
+                    FieldDeaths += field ? dead : 0;
                     if (u.People <= 0)
                     {
                         Gone(u);
-                        News.Add((civ.Id, $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} starved to death: {s.Name} had no food for them."));
+                        News.Add((civ.Id, field
+                            ? $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} starved to death in the field: their provisions ran out."
+                            : $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} starved to death: {s.Name} had no food for them."));
                     }
+                }
+                else if (field && u.Hunger == 1)
+                {
+                    News.Add((civ.Id, $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} ran out of provisions in the field: bring them home or send food."));
                 }
             }
 

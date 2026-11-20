@@ -366,6 +366,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.EndRoute => new EndRouteCommand(civ, m.A),
         PlayCommandKind.BringMaterials => new BringMaterialsCommand(civ, m.A),
         PlayCommandKind.TakeSettlement => new TakeSettlementCommand(civ, m.A, (TakeChoice)m.B),
+        PlayCommandKind.SupplyUnit => new SupplyUnitCommand(civ, m.A, m.B, (long)m.C * SimContent.One),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
@@ -944,7 +945,8 @@ public sealed class PlayHost : IDisposable
                 mine ? u.Hunger : 0, mine ? u.Home : -1, mine && u.Patrol.Count == 0 && u.LastPatrol.Count > 0 ? Pairs(u.LastPatrol, 0) : null,
                 mine && _game.Content.Units[u.Kind].Survey > 0 ? Found(u) : null, u.Weapon, u.Armour, (int)u.Stance, u.LastLoss,
                 mine && u.Guard.Count > 0 ? Pairs(u.Guard, 0) : null, Math.Max(u.Size, u.People), u.Struck.Count > 0 ? [.. u.Struck] : null,
-                u.ChargeTick >= 0 && _game.Ticks - u.ChargeTick < SimContent.TicksPerSecond));
+                u.ChargeTick >= 0 && _game.Ticks - u.ChargeTick < SimContent.TicksPerSecond,
+                mine ? u.Provisions : 0, mine ? _game.ProvisionsMax(u) : 0, !mine || !_game.Content.Units[u.Kind].Army || _game.InSupply(u)));
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),

@@ -348,6 +348,9 @@ public sealed record SiegeRules(
     int SackImmuneSeconds,
     int ChoiceSeconds);
 
+/// <summary>Supplies of the army in the field (Patryk, 2026-11-20, question 1): see the supply section of the data.</summary>
+public sealed record SupplyRules(int RangeHexes, int CarryMinutes, int LandHands, int LandPercent);
+
 public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, int SurpriseReputation)
 {
     /// <summary>Reputation every declaration of war costs (E1, 2026-11-19).</summary>
@@ -644,6 +647,9 @@ public sealed class SimContent
 
     /// <summary>Deposits every start has near it (startDeposits; M4, 2026-11-19).</summary>
     public StartDeposit[] StartDeposits { get; init; } = [];
+
+    /// <summary>Supplies of the army in the field (supply).</summary>
+    public SupplyRules Supply { get; init; } = new(3, 4, 10, 100);
 
     /// <summary>Sieges and garrisons (siege).</summary>
     public SiegeRules Siege { get; init; } = new(2, 50, 30, 50, 100, 8, 3, 40, 50, 180, 20);
@@ -1500,6 +1506,10 @@ public sealed class SimContent
                 ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
                     x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1))]
                 : [],
+            Supply = root.TryGetProperty("supply", out JsonElement supplyEl)
+                ? new SupplyRules(supplyEl.GetProperty("rangeHexes").GetInt32(), supplyEl.GetProperty("carryMinutes").GetInt32(),
+                    supplyEl.GetProperty("landHands").GetInt32(), supplyEl.GetProperty("landPercent").GetInt32())
+                : new SupplyRules(3, 4, 10, 100),
             Siege = root.TryGetProperty("siege", out JsonElement siegeEl)
                 ? new SiegeRules(siegeEl.GetProperty("blockadeRange").GetInt32(), siegeEl.GetProperty("blockadeWorkPercent").GetInt32(), siegeEl.GetProperty("liftSeconds").GetInt32(),
                     siegeEl.GetProperty("guardPerPalisadeHexPercent").GetInt32(), siegeEl.GetProperty("guardPerWallHexPercent").GetInt32(), siegeEl.GetProperty("guardStrength").GetInt32(),

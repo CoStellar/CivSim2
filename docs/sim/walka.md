@@ -190,6 +190,20 @@ i tylko przy agresji 75 lub więcej.
 
 **Oddziałów wojska nie da się rozwiązać** (decyzja 10): wojownik zostaje wojownikiem do końca.
 
+## Zaopatrzenie (decyzja Patryka z 2026-11-20, pytanie 1: D)
+
+Kod: `SimGame.Rations.cs` (`InSupply`, `ProvisionsMax`, `LandFood`), `SupplyUnit` w `SimGame.Logistics.cs`. Dane: sekcja `supply`.
+
+| Gdzie stoi oddział wojska | Skąd je |
+| --- | --- |
+| Na ziemi swojego ludu albo do 3 heksów od niej (`rangeHexes`) | Z racji osady jak dotąd, a do tego osada napełnia mu juki do pełna |
+| Dalej (w polu) | Najpierw ziemia: tyle, ile zebrałoby 10 zbieraczy na tym heksie (`landHands` 10, `forage.perMinute` jedzenia przy bogactwie heksa, razy `landPercent` 100%). Potem juki. Bez jedzenia głoduje (75%, potem 50% siły i straty), osada go nie karmi |
+
+- **Juki:** jedzenie na `carryMinutes` = 4 minuty dla wszystkich ludzi oddziału (np. 30 wojowników: 120 jedzenia). Nowy oddział wychodzi z pełnymi jukami z osady (o ile ma jedzenie). Przy dzieleniu oddziału juki dzielą się po równo na ludzi.
+- **Ziemia:** mały oddział żyje z ziemi dłużej. 10 wojowników na bogatym heksie dostaje ok. połowę racji, a 30 tylko ok. 1/6.
+- **Dostawa:** komenda `SupplyUnitCommand` (w kliencie przycisk „Send N food from …” w opisie oddziału w polu). Karawana z jedzeniem idzie za oddziałem, a jeśli on się przesunął, idzie dalej (najwyżej 6 razy). Napad na nią zabiera jedzenie.
+- **AI:** oddział w polu z jedzeniem na mniej niż 1,5 minuty dostaje karawanę z domu, jeśli dom ma ponad 2 razy tyle jedzenia i 40 zapasu. Głodny oddział bez dostawy wraca do domu.
+
 ## Czego jeszcze nie ma (kolejne paczki)
 
-Zaopatrzenie wojsk; limit oddziałów i doświadczenie rodzajów jednostek; AI walki (formacje, flanki, odskoki jazdy).
+Limit oddziałów i doświadczenie rodzajów jednostek; AI walki (formacje, flanki, odskoki jazdy).

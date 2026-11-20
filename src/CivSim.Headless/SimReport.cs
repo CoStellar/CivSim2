@@ -38,6 +38,9 @@ public static class SimReport
         /// <summary>Settlements taken, sacked and razed.</summary>
         public int Taken { get; init; }
 
+        /// <summary>Soldiers starved in the field.</summary>
+        public int FieldDeaths { get; init; }
+
         /// <summary>Settlements sacked.</summary>
         public int Sacked { get; init; }
 
@@ -99,6 +102,7 @@ public static class SimReport
         Line("settlements taken", r => r.Taken);
         Line("settlements sacked", r => r.Sacked);
         Line("settlements razed", r => r.Razed);
+        Line("soldiers starved in field", r => r.FieldDeaths);
         Line("clothing in store", r => r.Clothing);
         Line("technologies known", r => r.Techs);
         var neo = rows.Where(r => r.Neolithic >= 0).Select(r => (double)r.Neolithic).ToList();
@@ -249,6 +253,7 @@ public static class SimReport
             Taken = g.Falls[0],
             Sacked = g.Falls[1],
             Razed = g.Falls[2],
+            FieldDeaths = g.FieldDeaths,
             Towns = alive.Sum(c => c.Settlements.Count(s => g.Settlements[s].Level >= 2)),
             Clothing = content.Clothing < 0 ? 0 : alive.Sum(c => c.Stock[content.Clothing]) / SimContent.One,
         };

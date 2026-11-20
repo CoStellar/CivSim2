@@ -107,6 +107,11 @@ public sealed partial class SimGame
             return "Only soldiers attack.";
         }
 
+        if ((uint)cell >= (uint)Geo.CellCount)
+        {
+            return "Outside the map.";
+        }
+
         int enemyUnit = -1;
         foreach (Unit other in Units)
         {

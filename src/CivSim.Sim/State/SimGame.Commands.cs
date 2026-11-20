@@ -93,6 +93,7 @@ public sealed partial class SimGame
             HireCommand c => Hire(civ, c.Advisor),
             DismissAdvisorCommand => Dismiss(civ),
             SendCaravanCommand c => SendCaravan(civ, c.From, c.To, c.Good, c.Amount),
+            SupplyUnitCommand c => SupplyUnit(civ, c.From, c.Unit, c.Amount),
             RouteCommand c => AddRoute(civ, c.From, c.To, c.Good, c.Amount, c.Path, c.KeepAtSource, c.UntilTargetHas),
             BringMaterialsCommand c => BringMaterials(civ, c.Building),
             EndRouteCommand c => EndRoute(civ, c.Route),

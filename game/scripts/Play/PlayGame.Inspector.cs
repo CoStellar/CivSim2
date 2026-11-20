@@ -588,8 +588,25 @@ public partial class PlayGame
             }
         }
 
-        // Rations: the home settlement feeds the unit once a minute, wherever it is.
-        if (u.State != 0)
+        // Supply (2026-11-20): an army unit away from our land eats its provisions; a caravan can bring more.
+        if (t.Army && u.State != 0 && u.ProvisionsMax > 0)
+        {
+            int perMinute = Math.Max(1, u.People);
+            long minutes = u.Provisions / 100 / perMinute;
+            string packs = $"Provisions {u.Provisions / 100} of {u.ProvisionsMax / 100} food (about {minutes} min)";
+            items.Add(new LineItem(u.InSupply ? packs + ": near our land, fed from home and the packs fill up" : "IN THE FIELD: " + packs + ", the land gives a little",
+                u.InSupply ? UiKit.Muted : minutes < 1 ? UiKit.Bad : UiKit.Warn, 13));
+            if (!u.InSupply && v.Settlements.FirstOrDefault(x => x.Id == u.Home && x.Civ == v.Civ) is { } from)
+            {
+                int uid = u.Id;
+                int amount = (int)Math.Max(10, (u.ProvisionsMax - u.Provisions) / 100);
+                items.Add(new ActItem($"Send {amount} food from {from.Name}", () => _session!.Play(PlayCommandKind.SupplyUnit, from.Id, b: uid, c: amount),
+                    "A caravan follows the unit with food for its packs. It can be raided on the way."));
+            }
+        }
+
+        // Rations: the home settlement feeds the unit once a minute near our land.
+        if (u.State != 0 && !(t.Army && !u.InSupply))
         {
             string home = v.Settlements.FirstOrDefault(x => x.Id == u.Home)?.Name ?? "our nearest settlement";
             if (u.Hunger == 0)

@@ -18,6 +18,9 @@ public sealed record RouteCommand(int Civ, int From, int To, int Good, long Amou
 /// <summary>Send porters with the materials a construction is still missing (after porters were killed on the way).</summary>
 public sealed record BringMaterialsCommand(int Civ, int Building) : SimCommand(Civ);
 
+/// <summary>Send a caravan with food from one of our settlements to an army unit of ours in the field (supply).</summary>
+public sealed record SupplyUnitCommand(int Civ, int From, int Unit, long Amount) : SimCommand(Civ);
+
 /// <summary>End a standing route (by its index in <see cref="SimGame.Routes"/>).</summary>
 public sealed record EndRouteCommand(int Civ, int Route) : SimCommand(Civ);
 
@@ -279,6 +282,27 @@ public sealed partial class SimGame
 
                 GoHome(u);
                 break;
+            case CarrierJob.ToUnit:
+                Unit army = Units[u.Target];
+                if (army.State != UnitState.Gone && army.Civ == u.Civ && army.People > 0)
+                {
+                    if (Distance(u.Cell, army.Cell) > 1 && u.ChaseFails++ < 6)
+                    {
+                        Walk(u, army.Cell); // it moved: follow it
+                        break;
+                    }
+
+                    if (Distance(u.Cell, army.Cell) <= 1)
+                    {
+                        long give = Math.Min(u.Cargo![Content.Food], Math.Max(0, ProvisionsMax(army) - army.Provisions));
+                        army.Provisions += give;
+                        u.Cargo[Content.Food] -= give;
+                        News.Add((u.Civ, $"Food reached our {Content.Units[army.Kind].Name.ToLowerInvariant()}: {give / SimContent.One} more in their packs."));
+                    }
+                }
+
+                GoHome(u);
+                break;
             case CarrierJob.Returning:
                 Settlement home = u.Home >= 0 && Settlements[u.Home].Civ == u.Civ ? Settlements[u.Home] : NearestOwn(civ, u.Cell) ?? Settlements[u.Home];
                 home.People += u.People;
@@ -428,6 +452,41 @@ public sealed partial class SimGame
             : "";
         News.Add((carrier.Civ, $"Our {kind} were killed by {Civs[killerCiv].Name} and {what} is lost{where}."));
         News.Add((killerCiv, $"We destroyed {Civs[carrier.Civ].Name}' {kind}; their {what} is lost."));
+    }
+
+    private string? SupplyUnit(Civ civ, int from, int unit, long amount)
+    {
+        if ((uint)from >= (uint)Settlements.Count || Settlements[from].Civ != civ.Id || Settlements[from].Abandoned)
+        {
+            return "Food leaves from one of our settlements.";
+        }
+
+        if ((uint)unit >= (uint)Units.Count || Units[unit].Civ != civ.Id || Units[unit].State is UnitState.Gone or UnitState.Training || !Content.Units[Units[unit].Kind].Army)
+        {
+            return "Food goes to one of our army units.";
+        }
+
+        Settlement s = Settlements[from];
+        if (s.Besieged)
+        {
+            return $"{s.Name} is under siege: no caravans come or go.";
+        }
+
+        long send = Math.Min(amount, s.Stock[Content.Food]);
+        if (send < SimContent.One)
+        {
+            return $"{s.Name} has no food to send.";
+        }
+
+        var load = new long[Content.Goods.Count];
+        load[Content.Food] = send;
+        Unit c = NewCarrier(civ, Content.Caravans, s, NearestStore(s, Units[unit].Cell), load, 100);
+        c.Job = CarrierJob.ToUnit;
+        c.Target = unit;
+        c.ChaseFails = 0;
+        Walk(c, Units[unit].Cell);
+        civ.Dirty = true;
+        return null;
     }
 
     private string? SendCaravan(Civ civ, int from, int to, int good, long amount, int route = -1)
