@@ -175,7 +175,7 @@ public static partial class SimAi
                 }
 
                 // Where hands are free: a working building goes where its workers live.
-                int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (Math.Min(s.Idle, t.Workers) * 10);
+                int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (Math.Min(s.Idle, t.Workers) * 10) + InputsAtHand(s, t);
                 if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.KnowsDeposit(civ, cell))
                 {
                     score += 20;
@@ -194,7 +194,71 @@ public static partial class SimAi
             }
         }
 
+        if (best < 0 && !keepSaving)
+        {
+            Fund(g, civ, t);
+        }
+
         return best >= 0 && g.Apply(new BuildCommand(civ.Id, best, id)) is null;
+    }
+
+    // AI goods (2026-11-20): a building research waits for can stand only in a settlement that lacks its price (the copper
+    // deposit lay in a young camp with no tools): caravans from the richest settlements bring what is missing, and the next
+    // thought builds it.
+    private static void Fund(SimGame g, Civ civ, BuildingType t)
+    {
+        if (civ.Settlements.Count < 2 || !SimGame.CanAfford(civ.Stock, t.Price, 100))
+        {
+            return;
+        }
+
+        Settlement? site = null;
+        foreach (int sid in civ.Settlements)
+        {
+            Settlement s = g.Settlements[sid];
+            foreach (int cell in s.Cells)
+            {
+                if (g.CannotBuild(civ, cell, t, checkPrice: false) is null)
+                {
+                    site = s;
+                    break;
+                }
+            }
+
+            if (site is not null)
+            {
+                break;
+            }
+        }
+
+        if (site is null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < t.Price.Length; i++)
+        {
+            long missing = t.Price[i] - site.Stock[i];
+            if (missing <= 0 || Carrying(g, civ, site.Id, i))
+            {
+                continue;
+            }
+
+            Settlement? rich = null;
+            foreach (int o in civ.Settlements)
+            {
+                Settlement r = g.Settlements[o];
+                if (r != site && r.Stock[i] >= missing && (rich is null || r.Stock[i] > rich.Stock[i]))
+                {
+                    rich = r;
+                }
+            }
+
+            if (rich is not null)
+            {
+                g.Apply(new SendCaravanCommand(civ.Id, rich.Id, site.Id, i, missing + SimContent.One));
+            }
+        }
     }
 
     private static int Under(SimGame g, Civ civ)
@@ -215,7 +279,7 @@ public static partial class SimAi
     {
         // N26 (2026-11-19): the teacher of what research waits for jumps the queue of building sites (one more site allowed).
         int under = Under(g, civ);
-        if (under < 2 + civ.Settlements.Count && Teacher(g, civ, missingOnly: true) is string first && TryBuild(g, civ, first, keepSaving: false))
+        if (under < 2 + civ.Settlements.Count && Teacher(g, civ, missingOnly: true) is string first && (TryBuild(g, civ, first, keepSaving: false) || PriceMaker(g, civ, first)))
         {
             g.Apply(new PriorityCommand(civ.Id, civ.Buildings[^1], true));
             return true;
@@ -272,7 +336,7 @@ public static partial class SimAi
 
         // What teaches the experience the next technology lacks comes first, even without idle hands: it gets workers first.
         string? learn = Teacher(g, civ, missingOnly: true) ?? Teacher(g, civ);
-        if (learn is not null && !Has(g, civ, learn) && TryBuild(g, civ, learn, keepSaving: false))
+        if (learn is not null && !Has(g, civ, learn) && (TryBuild(g, civ, learn, keepSaving: false) || PriceMaker(g, civ, learn)))
         {
             g.Apply(new PriorityCommand(civ.Id, civ.Buildings[^1], true));
             return true;
@@ -479,7 +543,9 @@ public static partial class SimAi
 
                 foreach (BuildingType b in g.Content.Buildings)
                 {
-                    if (b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b) && !(missingOnly && Has(g, civ, b.Key)))
+                    // AI goods (2026-11-20): only a maker that can stand somewhere (a mine needs its deposit in our land);
+                    // otherwise the next technology gets its turn and settlers look for the deposit (WantedDeposits).
+                    if (b.Id > 0 && b.Produces[good] > 0 && SimGame.Knows(civ, b) && !(missingOnly && Has(g, civ, b.Key)) && (Has(g, civ, b.Key) || Buildable(g, civ, b)))
                     {
                         return b.Key;
                     }
@@ -516,25 +582,7 @@ public static partial class SimAi
 
                     if (b.Id > 0 && b.Tech == req && b.Workers > 0 && (b.Consumes.Length == 0 || NoInputsMissing(civ, b)))
                     {
-                        bool any = false;
-                        foreach (int sid in civ.Settlements)
-                        {
-                            foreach (int cell in g.Settlements[sid].Cells)
-                            {
-                                if (g.CannotBuild(civ, cell, b, checkPrice: false) is null)
-                                {
-                                    any = true;
-                                    break;
-                                }
-                            }
-
-                            if (any)
-                            {
-                                break;
-                            }
-                        }
-
-                        if (any && !(missingOnly && Has(g, civ, b.Key)))
+                        if (Buildable(g, civ, b) && !(missingOnly && Has(g, civ, b.Key)))
                         {
                             return b.Key;
                         }
@@ -544,6 +592,108 @@ public static partial class SimAi
         }
 
         return null;
+    }
+
+    // AI goods (2026-11-20): a teacher whose price asks for a good nobody makes (a farm needs tools, no toolmaker stands)
+    // gets that good's maker built first; otherwise neither ever came.
+    private static bool PriceMaker(SimGame g, Civ civ, string key)
+    {
+        int id = Key(g, key);
+        if (id < 0)
+        {
+            return false;
+        }
+
+        long[] price = g.Content.Buildings[id].Price;
+        for (int i = 0; i < price.Length; i++)
+        {
+            if (price[i] <= 0 || civ.Stock[i] >= price[i])
+            {
+                continue;
+            }
+
+            string[] makers = Makers(g.Content.Goods[i].Key);
+            if (makers.Length == 0 || Count(g, civ, makers) > 0)
+            {
+                continue;
+            }
+
+            foreach (string k in makers)
+            {
+                if (TryBuild(g, civ, k, keepSaving: false))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // AI goods (2026-11-20): a building that uses goods goes where they lie or are made: up to 20 for each input.
+    private static int InputsAtHand(Settlement s, BuildingType t)
+    {
+        int score = 0;
+        for (int i = 0; i < t.Consumes.Length; i++)
+        {
+            if (t.Consumes[i] > 0)
+            {
+                score += (int)Math.Min(20, (s.Stock[i] / SimContent.One / 2) + (s.Rate[i] > 0 ? 10 : 0));
+            }
+        }
+
+        return score;
+    }
+
+    // True when the building may stand on some hex of our settlements (its deposit, water and a free place).
+    private static bool Buildable(SimGame g, Civ civ, BuildingType b)
+    {
+        foreach (int sid in civ.Settlements)
+        {
+            foreach (int cell in g.Settlements[sid].Cells)
+            {
+                if (g.CannotBuild(civ, cell, b, checkPrice: false) is null)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // AI goods (2026-11-20): deposits the way to the era's gateway needs a mine on and none of our settlements has (bronze
+    // waited for copper outside the camp's land). Settlers look for them first.
+    private static bool[] WantedDeposits(SimGame g, Civ civ)
+    {
+        var want = new bool[g.Content.DepositSurvey.Length];
+        bool[] way = GatewayWay(g, civ);
+        foreach (SimTech t in g.Content.Techs)
+        {
+            if (!way[t.Id] || civ.KnownTech[t.Id])
+            {
+                continue;
+            }
+
+            foreach ((int good, long amount) in t.Made)
+            {
+                if (civ.Made[good] / SimContent.TicksPerMinute >= amount)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id > 0 && b.Produces[good] > 0 && b.OrDeposit > 0 && b.OrDeposit < want.Length
+                        && (SimGame.Knows(civ, b) || (b.Tech >= 0 && way[b.Tech])) && !Has(g, civ, b.Key) && !Buildable(g, civ, b))
+                    {
+                        want[b.OrDeposit] = true;
+                    }
+                }
+            }
+        }
+
+        return want;
     }
 
     private static bool NoInputsMissing(Civ civ, BuildingType b)
@@ -889,6 +1039,7 @@ public static partial class SimAi
         HexCoord c = g.Geo.FromIndex(from);
         int best = -1;
         int bestScore = int.MinValue;
+        bool[] wanted = WantedDeposits(g, civ);
         var ring = new HexCoord[HexGlobe.RingSize(12)];
         for (int r = 6; r <= 12; r += 2)
         {
@@ -901,7 +1052,7 @@ public static partial class SimAi
                     continue;
                 }
 
-                int score = (g.Content.World.Biomes[g.Map.Biome[cell]].Food * 10) + (g.NextToWater(cell) ? 15 : 0) - r + KnownGround(g, civ, cell);
+                int score = (g.Content.World.Biomes[g.Map.Biome[cell]].Food * 10) + (g.NextToWater(cell) ? 15 : 0) - r + KnownGround(g, civ, cell, wanted);
                 if (score > bestScore)
                 {
                     best = cell;
@@ -914,7 +1065,7 @@ public static partial class SimAi
     }
 
     // What we know of the ground around a hex is worth: fertile soil, food in the soil and on it, stone, clay and ores.
-    private static int KnownGround(SimGame g, Civ civ, int cell)
+    private static int KnownGround(SimGame g, Civ civ, int cell, bool[] wanted)
     {
         Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(2)];
         int n = g.Geo.Range(g.Geo.FromIndex(cell), 2, area);
@@ -931,6 +1082,7 @@ public static partial class SimAi
             {
                 int kind = g.Content.DepositSurvey[g.Map.Deposit[c]];
                 score += kind == 1 ? 6 : 4; // rock (stone, clay, ores) or food (game, fish, grain, herds)
+                score += g.Map.Deposit[c] < wanted.Length && wanted[g.Map.Deposit[c]] && g.Mineable(c) ? 60 : 0; // what the gateway waits for
             }
         }
 
@@ -1182,6 +1334,76 @@ public static partial class SimAi
                 g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, g.Content.Food, 40 * SimContent.One));
             }
         }
+
+        Inputs(g, civ);
+    }
+
+    // AI goods (2026-11-20): goods lie in each settlement. A working building whose inputs run short at home gets them by
+    // caravan from the settlement that has the most to spare: one caravan per good and target at a time, at most two new
+    // caravans a thought.
+    private static void Inputs(SimGame g, Civ civ)
+    {
+        if (civ.Settlements.Count < 2)
+        {
+            return;
+        }
+
+        const long Low = 10 * SimContent.One;
+        const long Keep = 20 * SimContent.One;
+        const long Trip = 30 * SimContent.One;
+        int sent = 0;
+        foreach (int id in civ.Buildings)
+        {
+            Building b = g.Buildings[id];
+            BuildingType t = g.Content.Buildings[b.Type];
+            if (b.State != BuildingState.Active || t.Workers == 0 || b.Workers == 0)
+            {
+                continue;
+            }
+
+            Settlement s = g.Settlements[b.Settlement];
+            for (int i = 0; i < t.Consumes.Length; i++)
+            {
+                if (t.Consumes[i] <= 0 || s.Stock[i] >= Low || Carrying(g, civ, s.Id, i))
+                {
+                    continue;
+                }
+
+                Settlement? rich = null;
+                foreach (int o in civ.Settlements)
+                {
+                    Settlement r = g.Settlements[o];
+                    if (r != s && !r.Hungry && r.Stock[i] > Keep + (5 * SimContent.One) && (rich is null || r.Stock[i] > rich.Stock[i]))
+                    {
+                        rich = r;
+                    }
+                }
+
+                if (rich is null || g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, i, Math.Min(Trip, rich.Stock[i] - Keep))) is not null)
+                {
+                    continue;
+                }
+
+                if (++sent >= 2)
+                {
+                    return;
+                }
+            }
+        }
+    }
+
+    private static bool Carrying(SimGame g, Civ civ, int to, int good)
+    {
+        foreach (int id in civ.Units)
+        {
+            Unit u = g.Units[id];
+            if (u.Job == CarrierJob.ToSettlement && u.Target == to && u.Cargo is { } load && load[good] > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool Carrying(SimGame g, Civ civ, int to)
