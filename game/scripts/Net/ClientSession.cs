@@ -102,6 +102,12 @@ public sealed class ClientSession
     /// <summary>Raised when the server refuses a command (text of the reason).</summary>
     public event Action<string>? CommandRefused;
 
+    /// <summary>Raised with the server's answer to a save.</summary>
+    public event Action<SaveGameResultMessage>? Saved;
+
+    /// <summary>Asks the server to save the game under a name.</summary>
+    public void SaveGame(string name) => _connection.Send(new SaveGameRequestMessage(name));
+
     /// <summary>Asks for other names in the same language for a civilization or a settlement.</summary>
     public void RequestNames(NameTarget target, int id, int page, int count = 8) =>
         _connection.Send(new NameSuggestionsRequestMessage(target, id, page, count));
@@ -308,6 +314,9 @@ public sealed class ClientSession
             case CommandRejectedMessage rejected:
                 LastError = rejected.Reason;
                 CommandRefused?.Invoke(rejected.Reason);
+                break;
+            case SaveGameResultMessage saved:
+                Saved?.Invoke(saved);
                 break;
             case NameSuggestionsMessage names:
                 NamesReceived?.Invoke(names);

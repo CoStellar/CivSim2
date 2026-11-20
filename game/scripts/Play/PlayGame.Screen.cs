@@ -126,6 +126,7 @@ public partial class PlayGame
         right.AddChild(_patrolsButton);
         right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
         right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls, first steps and the font (H)"));
+        right.AddChild(UiKit.Button("Save", SaveNow, "Save the game (it also saves itself every 5 minutes as 'autosave'); load it from the start menu (F5)"));
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
         // Era and years in the middle of the top bar, over the bar.
@@ -539,6 +540,17 @@ public partial class PlayGame
             _toastTime -= delta;
             _toastPanel.Visible = _toastTime > 0;
         }
+    }
+
+    // A save named after the game's seed and minute.
+    private void SaveNow()
+    {
+        if (_session?.PlayView is null)
+        {
+            return;
+        }
+
+        _session.SaveGame(""); // the server names it after the game's seed (or scenario) and minute
     }
 
     private void Toast(string text)

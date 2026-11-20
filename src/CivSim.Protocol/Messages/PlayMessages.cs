@@ -508,6 +508,14 @@ public sealed record PlayCommandMessage(
     [property: Key(8)] int[]? Cells = null,
     [property: Key(9)] int D = 0) : IProtocolMessage;
 
+/// <summary>Client → server: save the game under <c>Name</c> (file name without folder or extension).</summary>
+[MessagePackObject]
+public sealed record SaveGameRequestMessage([property: Key(0)] string Name) : IProtocolMessage;
+
+/// <summary>Server → client: whether the save worked, and what to tell the player.</summary>
+[MessagePackObject]
+public sealed record SaveGameResultMessage([property: Key(0)] bool Saved, [property: Key(1)] string Text) : IProtocolMessage;
+
 /// <summary>Client → server: where can building type <c>Type</c> go?</summary>
 [MessagePackObject]
 public sealed record PlacesRequestMessage([property: Key(0)] int Type) : IProtocolMessage;

@@ -22,14 +22,14 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | # | Zadanie | Stan |
 | --- | --- | --- |
 | 1 | Poprawki po rundzie testów 2 (`claude/runda-testow-2.md`) | czeka na wyniki Patryka |
-| 2 | Zapis i wczytanie partii | do zrobienia |
-| 3 | Skoki czasu taktu (najgorszy takt 212 ms w scenariuszu 10) | do zrobienia |
-| 4 | Najwyżej 2–3 wojny naraz u jednego ludu (projekt gry, rozdział 8) | do zrobienia |
+| 2 | Zapis i wczytanie partii | PR `feat/save-menu` (przycisk Save / F5, autozapis co 5 min, sekcja Load game w menu) |
+| 3 | Skoki czasu taktu (najgorszy takt 212 ms w scenariuszu 10) | PR #114 |
+| 4 | Najwyżej 2–3 wojny naraz u jednego ludu (projekt gry, rozdział 8) | PR #114 (`war.maxWars` = 3) |
 | 5 | Późne ery: węgiel drzewny, cegła, deski, wełna i sukno, zaprawa; koszty nowej ery; przebudowa budynku w lepszy i zastąpienie na heksie | do zrobienia (decyzje 13–15 w `claude/decyzje-wojna-i-pozne-ery.md`) |
 | 6 | Tempo pierwszych 15 minut (brak drewna na starcie, pierwszy narzędziarz w 13. minucie) | do zrobienia, potem ocena Patryka |
 | 7 | AI walki: szyk, flanki, odwrót rannych | do zrobienia |
 | 8 | Pokój z negocjacji: zasoby, osada, okres pokoju, podpowiedź łupów z przebiegu wojny | do zrobienia |
-| 9 | Drobne rzeczy w kliencie: głód oddziału w polu w panelu, przegląd tekstów | do zrobienia |
+| 9 | Drobne rzeczy w kliencie: głód oddziału w polu w panelu, przegląd tekstów | menu startowe uporządkowane (PR `feat/save-menu`); reszta do zrobienia |
 | 10 | Pomiar FPS na komputerze Patryka | Patryk |
 
 ## Po demo

@@ -4,7 +4,7 @@ Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud j
 
 - **Pliki:** `data/sim/scenarios/*.json`. Opis pól jest w `data/sim/scenarios/README.md`, a wszystkie pola są opcjonalne.
 - **Start:**
-  - w menu startowym lista „Test: …” obok „Play new game”;
+  - w menu startowym sekcja „Test scenarios” (przycisk Play przy każdym scenariuszu);
   - z wiersza poleceń `--play --play-scenario <nazwa pliku bez .json>`.
 - **Co da się ustawić dla każdego ludu:**
   - erę (zna wszystko z er wcześniejszych, razem z doświadczeniem i wyprodukowanymi dobrami, których wymagają dalsze technologie) i dodatkowe technologie;
@@ -31,3 +31,13 @@ Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud j
   3. `03_war_bronze`: wojna od startu z ludem 1, obie strony w epoce brązu z wojskiem gotowym do walki;
   4. `04_middle_ages`: my w średniowieczu, z miastem i trzema miasteczkami, reszta w epoce żelaza.
 - **Testy:** `ScenarioTests` sprawdza każdy plik: era, poziom, budynki, jednostki i wojny. Każdą grę puszcza też na 2 minuty. Tak samo będę testował wojnę (scenariusz zamiast ręcznego ustawiania w każdym teście).
+
+## Zapis i wczytanie partii (2026-11-20)
+
+- **Zapis:** przycisk „Save” na górnym pasku albo F5. Gra zapisuje się też sama co 5 minut gry jako „autosave”.
+- **Wczytanie:** menu startowe, sekcja „Load game” (najnowsze na górze). Pliki `.civsave` leżą w folderze danych użytkownika
+  (`CivSim2/saves`), przycisk „Open saves folder” go otwiera.
+- **Jak to działa:** gra jest deterministyczna, więc zapis to ustawienia partii i każda komenda graczy z taktem, w którym weszła.
+  Wczytanie zaczyna tę samą grę i odgrywa komendy jeszcze raz, potem sprawdza hasz stanu. Gdy hasz się nie zgadza (zapis ze starszej
+  wersji zasad albo danych), gra idzie dalej, ale kronika mówi, że stan jest inny. Kod: `src/CivSim.Server/PlaySaves.cs`, `PlayHost.Replay`.
+- **Czas wczytania:** tyle, ile symulacja liczy grę bez okna (godzina gry z 4 ludami: kilkanaście sekund).

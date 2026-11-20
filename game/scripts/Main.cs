@@ -190,13 +190,13 @@ public partial class Main : Node2D
     }
 
     // The new game (ADR 0028): replaces the legacy viewer while it runs.
-    private void StartPlay(string seedText, int goal = 1, string? scenario = null)
+    private void StartPlay(string seedText, int goal = 1, string? scenario = null, CivSim.Server.PlayOptions? options = null)
     {
         StopGame();
         _menu?.QueueFree();
         _menu = null;
         ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
-        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal, scenario: scenario ?? _playScenario);
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal, scenario: scenario ?? _playScenario, options: options);
         if (_playScreenshot is not null)
         {
             // --play-demo builds a few things on the way, to check the screen without clicking.
@@ -319,7 +319,6 @@ public partial class Main : Node2D
 
         _menu = new StartMenu(LocalServerHost.Describe(_dataDirectory), _menuSettings ?? _saved.Start.Copy(), _dataDirectory, _art, ArtPack.Discover(ArtLibrary.FindArtDirectory()));
         _menuSettings = null;
-        _menu.StartRequested += settings => StartGame(settings, save: true);
         _menu.ArtPackChosen += key =>
         {
             // Keep what the user typed, reload the pictures and the theme, and show the menu again with them.
@@ -330,7 +329,13 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
-        _menu.PlayRequested += (settings, goal, scenario) => StartPlay(settings.Seed, goal, scenario);
+        _menu.PlayRequested += options =>
+        {
+            // The menu's choices are kept for next time.
+            _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
+            _saved.Save();
+            StartPlay(options.Seed.ToString(CultureInfo.InvariantCulture), options.Goal, options.Scenario, options);
+        };
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {
