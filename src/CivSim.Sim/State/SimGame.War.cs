@@ -227,6 +227,11 @@ public sealed partial class SimGame
         }
 
         Unit u = Units[id];
+        if (Content.Units[u.Kind].Army)
+        {
+            return "Warriors stay warriors: army units cannot be disbanded."; // Patryk, 2026-11-20, question 10
+        }
+
         int sid = SettlementAt[u.Cell];
         if (sid < 0 || Settlements[sid].Civ != civ.Id)
         {
@@ -375,28 +380,50 @@ public sealed partial class SimGame
         }
     }
 
+    // Siege (2026-11-20): the blows fall on the guard first, then on the fighting residents (never below the floor); the
+    // guard and the fighters strike back, raised by the walls. With nobody left to defend it the settlement falls.
     private void Siege(Unit attacker, Settlement target)
     {
+        if (target.FallenTo >= 0 || Ticks < target.SackedUntil)
+        {
+            return;
+        }
+
         attacker.Fighting = true;
-        target.Besieged = true;
+        target.EnemyNearTick = Ticks;
+        if (!target.Besieged)
+        {
+            BeginSiege(target);
+        }
+
         Fought(attacker.Civ);
         Fought(target.Civ);
         UnitType at = Content.Units[attacker.Kind];
+        SiegeRules r = Content.Siege;
         int siege = 100 + at.SiegePercent + (at.SiegePercent > 0 ? Bonus(Civs[attacker.Civ], EffectKind.Siege, at.Key, at.Groups) : 0);
         // Power is a second's damage; a step of battle is a part of a second.
         target.Wounds += Luck(Power(attacker)) * siege / 100 / 100 * Content.Combat.StepTicks / SimContent.TicksPerSecond;
-        int dead = (int)Math.Min(target.People, target.Wounds / SimContent.One);
-        if (dead > 0)
+        int dead = (int)(target.Wounds / SimContent.One);
+        target.Wounds -= dead * SimContent.One;
+        int guard = Math.Min(dead, target.Guard);
+        target.Guard -= guard;
+        dead -= guard;
+        int floor = target.SiegeStart * r.ResidentsFloorPercent / 100;
+        int residents = Math.Min(dead, Math.Min(target.Fighters, Math.Max(0, target.People - floor)));
+        if (residents > 0)
         {
-            target.Wounds -= dead * SimContent.One;
-            target.People -= dead;
+            target.People -= residents;
+            target.Fighters -= residents;
             Civs[target.Civ].Dirty = true;
-            Scores()[(attacker.Civ * Civs.Count) + target.Civ] += dead;
         }
 
-        // The defenders strike back, raised by the walls.
-        long defenders = (long)target.People * Content.War.DefenderPercent / 100;
-        long back = defenders * Content.War.DefenderStrength * Defense(target);
+        if (guard + residents > 0)
+        {
+            Scores()[(attacker.Civ * Civs.Count) + target.Civ] += guard + residents;
+        }
+
+        // The guard and the fighting residents strike back, raised by the walls.
+        long back = (((long)target.Guard * r.GuardStrength) + ((long)target.Fighters * Content.War.DefenderStrength)) * target.DefensePct;
         attacker.Wounds += Luck(back) / 100 * Content.Combat.StepTicks / SimContent.TicksPerSecond;
         int lost = (int)Math.Min(attacker.People, attacker.Wounds / SimContent.One);
         if (lost > 0)
@@ -415,9 +442,9 @@ public sealed partial class SimGame
             }
         }
 
-        if (target.People < Content.War.CaptureBelowPeople)
+        if (target.Guard == 0 && (target.Fighters <= 0 || target.People <= floor) && !Defended(target))
         {
-            Capture(Civs[attacker.Civ], target);
+            Fall(attacker, target);
         }
     }
 
@@ -428,6 +455,7 @@ public sealed partial class SimGame
         winner.Settlements.Add(s.Id);
         s.Civ = winner.Id;
         s.Wounds = 0;
+        s.Guard = 0; // the garrison of the old owner is gone
         foreach (int cell in s.Cells)
         {
             OwnerAt[cell] = (short)winner.Id;
@@ -452,16 +480,22 @@ public sealed partial class SimGame
         NewsAbout(winner.Id, loser.Id, $"{winner.Name} took {s.Name} from {loser.Name}.");
         if (loser.Settlements.Count == 0)
         {
-            loser.Dead = true;
-            foreach (int uid in loser.Units)
-            {
-                Unwatch(Units[uid]);
-                Units[uid].State = UnitState.Gone;
-            }
-
-            loser.Units.Clear();
-            NewsAbout(loser.Id, winner.Id, $"{loser.Name} are no more.");
+            Perish(loser, winner);
         }
+    }
+
+    // A people with no settlement left is no more.
+    private void Perish(Civ loser, Civ winner)
+    {
+        loser.Dead = true;
+        foreach (int uid in loser.Units)
+        {
+            Unwatch(Units[uid]);
+            Units[uid].State = UnitState.Gone;
+        }
+
+        loser.Units.Clear();
+        NewsAbout(loser.Id, winner.Id, $"{loser.Name} are no more.");
     }
 
     // Walk toward the target until it is within reach.

@@ -68,6 +68,11 @@ public sealed partial class SimGame
             ? Math.Min(Content.ClothingWinterMaxPercent * 10L, winterBase + (bonus * sets / 1000))
             : 1000 + (bonus * Math.Min(sets, 1000) / 1000);
         work = Math.Max(work, 0);
+        if (s.Besieged)
+        {
+            work = work * Content.Siege.BlockadeWorkPercent / 100; // siege: a blockaded settlement works less
+        }
+
         return (int)(work / Content.WorkStepPermille * Content.WorkStepPermille);
     }
 

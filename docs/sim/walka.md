@@ -156,7 +156,40 @@ Zrzut z ekranu: `--play --play-scenario 06_battle_field --play-window Battle --p
 w obrażeniach, flanka, wysokość i las, strefa kontroli, odejście (½, jazda ¼, nic przy osłonie), szarża, łucznicy tylko stojąc,
 dzielenie, szyk.
 
+## Oblężenie i garnizon (decyzje Patryka z 2026-11-20)
+
+Kod: `src/CivSim.Sim/State/SimGame.Siege.cs`, `Siege` w `SimGame.War.cs`. Dane: sekcja `siege`.
+
+| Etap | Co się dzieje | Dane |
+| --- | --- | --- |
+| Otoczenie | Oddział wojska wroga (w stanie wojny) w promieniu 2 od środka osady. Osada pracuje na 50%, nie szkoli, nie zaczyna budów, karawany nie wyjeżdżają ani nie przyjeżdżają. Kończy się 30 s po odejściu ostatniego takiego oddziału | `blockadeRange` 2, `blockadeWorkPercent` 50, `liftSeconds` 30 |
+| Głód | Osada pracuje słabiej i nie dostaje dostaw, więc z czasem głoduje (zwykłe racje) | `rations` |
+| Szturm | Oddział z celem na osadzie uderza jak dotąd (machiny mocniej). Ciosy idą najpierw w straż, potem w walczących mieszkańców | `combat`, `war` |
+| Upadek | Brak straży, brak walczących mieszkańców i żadnego oddziału obrońcy na ziemi osady: osada pada. Zdobywca ma 20 s na wybór, potem osada jest zajęta | `choiceSeconds` 20 |
+
+**Kto broni:**
+- **Oddziały obrońcy** stojące na ziemi swojej osady: dostają obrażenia podzielone przez obronę osady (np. przy 220% z zamkiem ponad 2 razy mniej).
+- **Straż**: stała załoga z umocnień. 0,5 człowieka za heks palisady i 1 za heks muru na ziemi osady (`guardPerPalisadeHexPercent` 50,
+  `guardPerWallHexPercent` 100) plus straż budynków (zamek 40, pole `guard`). Siła 8 na człowieka (`guardStrength`). Odrasta 3 na minutę
+  (`guardRegrowPerMinute`), gdy nie ma oblężenia, i nic nie kosztuje.
+- **Mieszkańcy**: walczy 30% mieszkańców z chwili otoczenia (`war.defenderPercent`), siła 6 (`war.defenderStrength`).
+  Tylko oni giną w obronie, a walka nie zbija mieszkańców poniżej 40% tej liczby (`residentsFloorPercent`). Reszta jest bezbronna.
+
+Straż i walczący mieszkańcy oddają ciosy razy obrona osady w procentach.
+
+**Wybór po zdobyciu** (komenda `TakeSettlementCommand`, w kliencie trzy przyciski w opisie osady):
+
+| Wybór | Skutek |
+| --- | --- |
+| Zajmij | Osada przechodzi do zdobywcy z ludźmi i budynkami (straż starego właściciela znika) |
+| Złup | 50% każdego towaru trafia do najbliższej osady zdobywcy. Osada zostaje u właściciela i przez 180 s nikt jej nie oblega (`sackPercent`, `sackImmuneSeconds`) |
+| Zburz | Osada staje się ruiną (G2). Mieszkańcy uciekają do najbliższej osady swojego ludu; gdy to była ostatnia, lud ginie |
+
+AI wybiera: zajmij, gdy osada leży do 20 heksów od jego najbliższej osady; złup, gdy dalej; zburz tylko ostatnią osadę wroga
+i tylko przy agresji 75 lub więcej.
+
+**Oddziałów wojska nie da się rozwiązać** (decyzja 10): wojownik zostaje wojownikiem do końca.
+
 ## Czego jeszcze nie ma (kolejne paczki)
 
-Zaopatrzenie wojsk; garnizon i oblężenie etapami;
-weterani, rezerwiści, limit dowodzenia, zmęczenie wojną; AI walki (formacje, flanki, odskoki jazdy).
+Zaopatrzenie wojsk; limit oddziałów i doświadczenie rodzajów jednostek; AI walki (formacje, flanki, odskoki jazdy).

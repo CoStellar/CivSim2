@@ -199,7 +199,11 @@ public sealed record PlaySettlementView(
     [property: Key(22)] int RationShort = 0,
     [property: Key(23)] int RationDead = 0,
     [property: Key(24)] int HungryPeople = 0,
-    [property: Key(25)] int HungryWorkers = 0);
+    [property: Key(25)] int HungryWorkers = 0,
+    [property: Key(26)] int Guard = 0,
+    [property: Key(27)] int GuardMax = 0,
+    [property: Key(28)] bool FallenToUs = false,
+    [property: Key(29)] int Fighters = 0);
 
 /// <summary>A standing caravan route of the player.</summary>
 [MessagePackObject]
@@ -382,7 +386,7 @@ public enum PlayCommandKind
     /// <summary>Answer the peace offer of people <c>A</c> (accept when <c>Flag</c>).</summary>
     AnswerPeace = 15,
 
-    /// <summary>Unit <c>A</c> goes home and its people join the settlement there.</summary>
+    /// <summary>Unit <c>A</c> (not an army unit) goes home and its people join the settlement there.</summary>
     Disband = 16,
 
     /// <summary>Start the people on (<c>Col</c>, <c>Row</c>) during the start phase.</summary>
@@ -468,6 +472,9 @@ public enum PlayCommandKind
 
     /// <summary>Unit <c>A</c> patrols the drawn loop <c>Cells</c> (col, row pairs) round and round.</summary>
     Patrol = 27,
+
+    /// <summary>Settlement <c>A</c> fell to us: <c>B</c> 0 take it, 1 sack it, 2 raze it.</summary>
+    TakeSettlement = 44,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

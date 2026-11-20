@@ -1217,7 +1217,7 @@ public static partial class SimAi
                 continue;
             }
 
-            long defence = (long)target.People * g.Content.War.DefenderPercent / 100 * g.Content.War.DefenderStrength * g.Defense(target);
+            long defence = (((long)target.People * g.Content.War.DefenderPercent / 100 * g.Content.War.DefenderStrength) + ((long)target.Guard * g.Content.Siege.GuardStrength)) * g.Defense(target);
             if (power > defence * 2 && g.AiRandom.NextInt(100) < civ.Aggression / 10)
             {
                 if (civ.Aggression < 75)
@@ -1233,6 +1233,29 @@ public static partial class SimAi
                 return;
             }
         }
+    }
+
+    /// <summary>
+    /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within 20 hexes of its own, sacks one farther away (it could
+    /// not hold it), and razes it only when it is the loser's last home.
+    /// </summary>
+    public static TakeChoice TakeChoiceFor(SimGame g, Civ civ, Settlement s)
+    {
+        ArgumentNullException.ThrowIfNull(g);
+        ArgumentNullException.ThrowIfNull(civ);
+        ArgumentNullException.ThrowIfNull(s);
+        if (g.Civs[s.Civ].Settlements.Count <= 1 && civ.Aggression >= 75)
+        {
+            return TakeChoice.Raze;
+        }
+
+        int nearest = int.MaxValue;
+        foreach (int sid in civ.Settlements)
+        {
+            nearest = Math.Min(nearest, g.Geo.Distance(g.Geo.FromIndex(g.Settlements[sid].Center), g.Geo.FromIndex(s.Center)));
+        }
+
+        return nearest <= 20 ? TakeChoice.Take : TakeChoice.Sack;
     }
 
     private static Settlement? NearestKnownSettlement(SimGame g, Civ civ, Civ other)

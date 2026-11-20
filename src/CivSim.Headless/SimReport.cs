@@ -35,6 +35,15 @@ public static class SimReport
         /// <summary>Peoples whose food falls at the end.</summary>
         public int FoodFalling { get; init; }
 
+        /// <summary>Settlements taken, sacked and razed.</summary>
+        public int Taken { get; init; }
+
+        /// <summary>Settlements sacked.</summary>
+        public int Sacked { get; init; }
+
+        /// <summary>Settlements razed.</summary>
+        public int Razed { get; init; }
+
         /// <summary>Settlements that are towns or more at the end.</summary>
         public int Towns { get; init; }
 
@@ -87,6 +96,9 @@ public static class SimReport
         Line("food/min per people", r => r.FoodPerMinute);
         Line("peoples losing food", r => r.FoodFalling);
         Line("towns (level 2+)", r => r.Towns);
+        Line("settlements taken", r => r.Taken);
+        Line("settlements sacked", r => r.Sacked);
+        Line("settlements razed", r => r.Razed);
         Line("clothing in store", r => r.Clothing);
         Line("technologies known", r => r.Techs);
         var neo = rows.Where(r => r.Neolithic >= 0).Select(r => (double)r.Neolithic).ToList();
@@ -234,6 +246,9 @@ public static class SimReport
             FreeJobs = free,
             FoodPerMinute = alive.Count == 0 ? 0 : alive.Average(c => c.Rate[content.Food] / (double)SimContent.One),
             FoodFalling = alive.Count(c => c.Rate[content.Food] < 0),
+            Taken = g.Falls[0],
+            Sacked = g.Falls[1],
+            Razed = g.Falls[2],
             Towns = alive.Sum(c => c.Settlements.Count(s => g.Settlements[s].Level >= 2)),
             Clothing = content.Clothing < 0 ? 0 : alive.Sum(c => c.Stock[content.Clothing]) / SimContent.One,
         };

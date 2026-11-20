@@ -77,12 +77,29 @@ public partial class PlayGame
         }
 
         items.Add(new HeaderItem(s.Name, mine ? level.Name : $"{level.Name} of {PeopleName(v, s.Civ)}", mine ? new Color("c8a050") : new Color("8a5050"), level.Name[..1]));
+        if (s.FallenToUs)
+        {
+            int sid = s.Id;
+            items.Add(new LineItem($"{s.Name} has fallen to us. What now? (taken if we wait)", UiKit.Good, 16));
+            items.Add(new ActItem("Take it", () => _session!.Play(PlayCommandKind.TakeSettlement, sid, b: 0), "It becomes ours, with its people and buildings.", Accent: UiKit.Good));
+            items.Add(new ActItem("Sack it", () => _session!.Play(PlayCommandKind.TakeSettlement, sid, b: 1), "We carry off half its goods; it stays theirs and cannot be besieged for a while."));
+            items.Add(new ActItem("Raze it", () => _session!.Play(PlayCommandKind.TakeSettlement, sid, b: 2), "It becomes a ruin; its people flee to their nearest settlement.", Accent: UiKit.Bad));
+        }
+
         if (s.Besieged)
         {
-            items.Add(new LineItem("UNDER ATTACK", UiKit.Bad, 18));
+            items.Add(new LineItem(mine ? "UNDER SIEGE: no caravans, half the work, no new training or building" : "UNDER SIEGE", UiKit.Bad, 16));
+            if (s.Fighters > 0)
+            {
+                items.Add(new LineItem($"{s.Fighters} residents still fight", UiKit.Warn, 13));
+            }
         }
 
         items.Add(new LineItem($"Defence {s.DefensePercent}%" + (s.DefensePercent > 100 ? " (walls)" : ""), UiKit.Muted, 14));
+        if (s.Guard > 0 || s.GuardMax > 0)
+        {
+            items.Add(new LineItem(mine ? $"Guard {s.Guard} of {s.GuardMax} (from palisades, walls and castles; grows back in peace)" : $"Guard {s.Guard}", UiKit.Muted, 13));
+        }
         if (!mine)
         {
             items.Add(new BarItem("People", 1, $"{s.People}", new Color("4f7fb8")));
@@ -630,7 +647,7 @@ public partial class PlayGame
             items.Add(new ActItem("Found a camp here", () => _session!.Play(PlayCommandKind.Found, id), "A new settlement with these people and the goods they carry.", Accent: UiKit.Good));
         }
 
-        if (u.State != 0)
+        if (u.State != 0 && !t.Army) // warriors stay warriors (Patryk, 2026-11-20)
         {
             items.Add(new ActItem("Go home (join the settlement here)", () => _session!.Play(PlayCommandKind.Disband, id)));
         }

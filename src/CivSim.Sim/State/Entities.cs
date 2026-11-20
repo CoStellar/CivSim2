@@ -211,8 +211,35 @@ public sealed class Settlement
     /// <summary>Hundredths of a person of damage taken but not yet a death.</summary>
     public long Wounds { get; set; }
 
-    /// <summary>Under attack in the last combat step (for the view).</summary>
+    /// <summary>Blockaded: an enemy army stands near (siege; for the view too).</summary>
     public bool Besieged { get; set; }
+
+    /// <summary>Last tick an enemy army stood near (the blockade lifts siege.liftSeconds after).</summary>
+    public long EnemyNearTick { get; set; } = -1;
+
+    /// <summary>Standing guard (siege): men of the garrison its works and buildings give.</summary>
+    public int Guard { get; set; }
+
+    /// <summary>Hundredths of a guardsman growing back.</summary>
+    public long GuardGrowth { get; set; }
+
+    /// <summary>Residents when the blockade began (0 = no siege).</summary>
+    public int SiegeStart { get; set; }
+
+    /// <summary>Residents still fighting in this siege.</summary>
+    public int Fighters { get; set; }
+
+    /// <summary>People that took it and has yet to choose what to do (−1 = none).</summary>
+    public int FallenTo { get; set; } = -1;
+
+    /// <summary>Tick it fell.</summary>
+    public long FallenTick { get; set; }
+
+    /// <summary>Sacked: nobody besieges it before this tick.</summary>
+    public long SackedUntil { get; set; }
+
+    /// <summary>Defence in percent from its fortifications, worked out once a second.</summary>
+    public int DefensePct { get; set; } = 100;
 
     /// <summary>People whose sight this settlement adds to (−1 = none).</summary>
     public int WatchCiv { get; set; } = -1;
