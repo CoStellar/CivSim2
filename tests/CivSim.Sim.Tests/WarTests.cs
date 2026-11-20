@@ -140,7 +140,7 @@ public sealed class WarTests
 
             Unit u = Soldiers(g, a, "warriors", target.Center);
             g.Apply(new AttackCommand(a.Id, u.Id, target.Center));
-            Run(g, 100);
+            Run(g, Content.Siege.AssaultAfterTicks + 100); // 13B: the assault waits for the blockade
             return Content.Unit("warriors").People - u.People;
         }
 
@@ -157,6 +157,8 @@ public sealed class WarTests
         a.Known[g.Settlements[b.Settlements[0]].Center] = true;
         Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
         Assert.Equal(Content.War.DeclareReputation, a.Reputation); // an open declaration costs a little (E1)
+        Assert.NotNull(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 20))); // 1C: tribute only after 2 minutes of war
+        Run(g, Content.War.TributeAfterTicks);
         long wood = b.Stock[Content.GoodId("wood")];
         Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 20)));
         Assert.Null(g.Apply(new AnswerPeaceCommand(b.Id, a.Id, true)));

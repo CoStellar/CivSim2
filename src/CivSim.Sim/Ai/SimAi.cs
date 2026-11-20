@@ -1073,7 +1073,7 @@ public static partial class SimAi
                 continue;
             }
 
-            if (g.CannotFound(u.Cell) is null)
+            if (g.CannotFound(u.Cell, civ) is null)
             {
                 g.Apply(new FoundCommand(civ.Id, u.Id));
                 continue;
@@ -1102,7 +1102,7 @@ public static partial class SimAi
             for (int k = 0; k < n; k += 2)
             {
                 int cell = g.Geo.Index(ring[k]);
-                if (!civ.Known[cell] || g.CannotFound(cell) is not null)
+                if (!civ.Known[cell] || g.CannotFound(cell, civ) is not null)
                 {
                     continue;
                 }
@@ -1258,7 +1258,8 @@ public static partial class SimAi
                 int theirs = g.Score(other.Id, civ.Id);
                 if ((theirs > mine + 20 || g.AiRandom.NextInt(100) < 3) && !g.PeaceOffers.Exists(o => o.From == civ.Id && o.To == other.Id))
                 {
-                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, g.SuggestedTribute(civ.Id, other.Id)));
+                    bool early = g.Ticks - g.WarStart(civ.Id, other.Id) < g.Content.War.TributeAfterTicks; // 1C: no tribute yet
+                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, early ? 0 : g.SuggestedTribute(civ.Id, other.Id)));
                 }
 
                 if (target is not null && idle.Count > 0 && power > 0)
@@ -1284,7 +1285,8 @@ public static partial class SimAi
                 ? (target.People, target.Guard, g.Defense(target))
                 : civ.SeenSettlements.TryGetValue(target.Center, out SettlementMemory? seen) ? (seen.People, seen.Guard, seen.DefensePercent) : (target.People, target.Guard, g.Defense(target));
             long defence = (((long)people * g.Content.War.DefenderPercent / 100 * g.Content.War.DefenderStrength) + ((long)guard * g.Content.Siege.GuardStrength)) * defensePct;
-            if (power > defence * 2 && g.AiRandom.NextInt(100) < civ.Aggression / 10)
+            int warlike = civ.Reputation < g.Content.War.BadReputation ? civ.Aggression / 20 : civ.Aggression / 10; // 6C: a bad name, half as often
+            if (power > defence * 2 && g.AiRandom.NextInt(100) < warlike)
             {
                 if (civ.Aggression < 75)
                 {
@@ -1319,7 +1321,7 @@ public static partial class SimAi
     }
 
     /// <summary>
-    /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within 20 hexes of its own, sacks one farther away (it could
+    /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within siege.aiTakeWithinHexes (12) of its own, sacks one farther away (it could
     /// not hold it), and razes it only when it is the loser's last home.
     /// </summary>
     public static TakeChoice TakeChoiceFor(SimGame g, Civ civ, Settlement s)
@@ -1338,7 +1340,7 @@ public static partial class SimAi
             nearest = Math.Min(nearest, g.Geo.Distance(g.Geo.FromIndex(g.Settlements[sid].Center), g.Geo.FromIndex(s.Center)));
         }
 
-        return nearest <= 20 ? TakeChoice.Take : TakeChoice.Sack;
+        return nearest <= g.Content.Siege.AiTakeWithinHexes ? TakeChoice.Take : TakeChoice.Sack; // 2B: 12 hexes (was 20)
     }
 
     // Tick spikes (2026-11-20): armies sent to a settlement beyond the sea searched a way twice a second for good. The AI
