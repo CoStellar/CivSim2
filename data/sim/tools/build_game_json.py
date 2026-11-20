@@ -64,7 +64,7 @@ b("armourer","Armourer","bronze_weapons",2,{"stone":40,"wood":30},30,consumes={"
 b("school","School","writing",3,{"stone":60,"clay":40},40,produces={},researchPercent=15,groups=["learn"])
 b("stable","Stable","horseback_riding",2,{"wood":60},30,consumes={"food":2},produces={"horses":0.5},bonusDeposit="horses",bonusPercent=100,goodLimit={"horses":16},groups=["food"])
 b("harbour","Harbour","sailing",3,{"wood":80,"stone":20},40,needsWater=True,produces={"food":4},groups=["food"])
-b("mint","Mint","currency",2,{"stone":60,"wood":20},35,consumes={"copper":1},produces={"coins":10},groups=["craft"])
+b("mint","Mint","currency",2,{"stone":60,"wood":20},35,consumes={"copper":1},produces={"coins":4},groups=["craft"])
 b("barracks","Barracks","barracks",2,{"wood":80,"stone":40},40,produces={},trainPercent=50,groups=["army","armoury"])
 # Iron
 b("iron_mine","Iron mine","iron_working",4,{"wood":50,"tools":20},35,orDeposit="iron_ore",produces={"iron":1},groups=["tools","mine"])
@@ -351,6 +351,23 @@ d["upgradeCaravans"]={"comment":"A settlement short of the goods for its upgrade
 d["supply"]["noWaySeconds"]=60
 if "noWaySeconds:" not in d["supply"]["comment"]:
     d["supply"]["comment"]+=" noWaySeconds: a caravan to a unit there is no way to is refused, and the AI sends none to that unit for this long."
+# Decisions of Patryk after the tests of 2026-11-20 (claude/decyzje-testy-2026-11-20.md).
+d["war"].update({"tributeAfterSeconds":120,"reputationFloor":-200,"badReputation":-100})
+# 2B: loot goes home by caravan; the same settlement may be sacked again only after 10 minutes. AI takes within 12 hexes.
+# 13B: the assault starts 30 s after the blockade (time to react: see docs/sim/walka.md). 3B: 25% of a razed store stays.
+d["siege"].update({"sackImmuneSeconds":600,"assaultAfterSeconds":30,"aiTakeWithinHexes":12})
+if "assaultAfterSeconds:" not in d["siege"]["comment"]:
+    d["siege"]["comment"]=d["siege"]["comment"].replace("sackPercent of each good goes to the taker's nearest settlement","sackPercent of each good goes by caravan to the taker's nearest settlement, and can be raided on the way")
+    d["siege"]["comment"]+=" assaultAfterSeconds: the attackers strike the guard and residents only this long after the blockade began (time for the defender to react). aiTakeWithinHexes: the AI takes a fallen settlement this close to its own and sacks one farther away."
+d["ruins"]["razedKeepPercent"]=25
+if "razedKeepPercent:" not in d["ruins"]["comment"]:
+    d["ruins"]["comment"]+=" razedKeepPercent: of a razed settlement's store this percent stays in the ruins, the rest is lost."
+d["veterans"]["levels"]=[50,150,350,700]
+d["veterans"]["shareNearHexes"]=2
+if "shareNearHexes:" not in d["veterans"]["comment"]:
+    d["veterans"]["comment"]+=" shareNearHexes: an enemy killed counts for every kind of ours fighting within this many hexes of it, once per kind."
+if "tributeAfterSeconds:" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" The war score counts from the start of the current war; tributeAfterSeconds: peace with tribute only this long after the war began. reputationFloor: reputation never falls below it; badReputation: below it the AI declares new wars half as often."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist

@@ -1,3 +1,4 @@
+using CivSim.Core.Map;
 using System;
 using CivSim.Sim.Content;
 
@@ -97,6 +98,38 @@ public sealed partial class SimGame
     private int VetSpeed(Unit u) => VetSum(u, o => o.SpeedPercent);
 
     // Kills of units of a kind raise its level; each level waits for a choice (the AI chooses at once).
+    // 14C (Patryk, 2026-11-20): the killer's kind and every other kind of its people fighting near the fallen get the kills, once each.
+    private void CreditNear(int civId, int kind, int cell, int kills)
+    {
+        Credit(civId, kind, kills);
+        int r = Content.Veterans.ShareNearHexes;
+        if (r <= 0 || civId < 0)
+        {
+            return;
+        }
+
+        Span<HexCoord> area = stackalloc HexCoord[HexGlobe.RangeSize(r)];
+        Span<bool> done = stackalloc bool[Content.Units.Count];
+        if ((uint)kind < (uint)done.Length)
+        {
+            done[kind] = true;
+        }
+
+        int n = Geo.Range(Geo.FromIndex(cell), r, area);
+        for (int k = 0; k < n; k++)
+        {
+            foreach (int id in UnitsAt(Geo.Index(area[k])))
+            {
+                Unit o = Units[id];
+                if (o.Civ == civId && o.Fighting && o.State != UnitState.Gone && !done[o.Kind])
+                {
+                    done[o.Kind] = true;
+                    Credit(civId, o.Kind, kills);
+                }
+            }
+        }
+    }
+
     private void Credit(int civId, int kind, int kills)
     {
         if (civId < 0 || kind < 0 || kills <= 0 || Content.Veterans.Levels.Length == 0 || !Content.Units[kind].Army)
