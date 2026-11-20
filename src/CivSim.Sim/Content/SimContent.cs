@@ -133,6 +133,9 @@ public sealed record SettlementLevel(int Id, string Key, string Name, int Radius
 
     /// <summary>People the settlement must have to reach this level (E2, 2026-11-19).</summary>
     public int MinPeople { get; init; }
+
+    /// <summary>9B (Patryk, 2026-11-20): most homes a settlement of this level has, whatever it builds (0 = no limit).</summary>
+    public int MaxHousing { get; init; }
 }
 
 /// <summary>An era (Stone Age … Middle Ages).</summary>
@@ -346,7 +349,14 @@ public sealed record SiegeRules(
     int ResidentsFloorPercent,
     int SackPercent,
     int SackImmuneSeconds,
-    int ChoiceSeconds);
+    int ChoiceSeconds)
+{
+    /// <summary>13B (Patryk, 2026-11-20): the attackers strike the defenders only this long after the blockade began (ticks).</summary>
+    public int AssaultAfterTicks { get; init; }
+
+    /// <summary>2B: AI takes a fallen settlement within this many hexes of its own (farther: sacks it).</summary>
+    public int AiTakeWithinHexes { get; init; } = 20;
+}
 
 /// <summary>How many army units a people may have (Patryk, 2026-11-20, question 11): see the armyLimit section of the data.</summary>
 public sealed record ArmyLimitRules(int[] PerLevel, (int Building, int Add)[] PerBuilding, (int Tech, int Add)[] PerTech);
@@ -355,7 +365,11 @@ public sealed record ArmyLimitRules(int[] PerLevel, (int Building, int Add)[] Pe
 public sealed record VeteranOption(string Key, string Name, string Text, int StrengthPercent, int TakenPercent, int SpeedPercent);
 
 /// <summary>Experience of each kind of unit (Patryk, 2026-11-20, question 9): see the veterans section of the data.</summary>
-public sealed record VeteranRules(int[] Levels, VeteranOption[] Options);
+public sealed record VeteranRules(int[] Levels, VeteranOption[] Options)
+{
+    /// <summary>14C (Patryk, 2026-11-20): a kill counts for every kind of ours fighting this close to the enemy (0 = only the killer's kind).</summary>
+    public int ShareNearHexes { get; init; }
+}
 
 /// <summary>Supplies of the army in the field (Patryk, 2026-11-20, question 1): see the supply section of the data.</summary>
 public sealed record SupplyRules(int RangeHexes, int CarryMinutes, int LandHands, int LandPercent)
@@ -375,6 +389,15 @@ public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int High
     /// <summary>People a people must have lost to the war before its AI agrees to pay tribute.</summary>
     public int TributeNeedsKills { get; init; } = 5;
 
+    /// <summary>1C (Patryk, 2026-11-20): peace with tribute only this long after the war began (ticks).</summary>
+    public int TributeAfterTicks { get; init; } = 120 * SimContent.TicksPerSecond;
+
+    /// <summary>6C: reputation never falls below this.</summary>
+    public int ReputationFloor { get; init; } = -200;
+
+    /// <summary>6C: below this reputation the AI declares new wars half as often.</summary>
+    public int BadReputation { get; init; } = -100;
+
     /// <summary>Most food, percent of the payer's, a tribute takes (E3).</summary>
     public int TributeFoodMaxPercent { get; init; } = 10;
 
@@ -386,7 +409,14 @@ public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int High
 }
 
 /// <summary>Choosing the start (startPhase in the data): ticks to pick, the block radius and its fuzz, the scoring radii.</summary>
-public sealed record StartPhaseRules(int PickTicks, int BlockRadius, int BlockFuzz, int ScoreRadius, int RoomRadius);
+public sealed record StartPhaseRules(int PickTicks, int BlockRadius, int BlockFuzz, int ScoreRadius, int RoomRadius)
+{
+    /// <summary>12B (Patryk, 2026-11-20): every people starts at most this many hexes by land from another (0 = anywhere), on the main continent.</summary>
+    public int NeighbourMaxHexes { get; init; }
+
+    /// <summary>12B: placed starts (and the AI's choices) keep at least this distance from other starts when the land allows.</summary>
+    public int NeighbourMinHexes { get; init; }
+}
 
 /// <summary>Rations: every <paramref name="EveryTicks"/> a settlement feeds all its people, residents and units (Patryk, 2026-11-19).</summary>
 public sealed record RationRules(int EveryTicks, int HungryPercent, int StarvingPercent, int StarveLosePercent);
@@ -658,6 +688,9 @@ public sealed class SimContent
     /// <summary>Extra price, percent, for resuming a paused construction.</summary>
     public int ResumeCostPercent { get; init; }
 
+    /// <summary>11B (2026-11-20): the food alert comes when a settlement's food lasts this many minutes or less (alerts.foodLowMinutes).</summary>
+    public int FoodLowMinutes { get; init; } = 3;
+
     /// <summary>Caravans for upgrades (upgradeCaravans).</summary>
     public UpgradeCaravanRules UpgradeCaravans { get; init; } = new(10, 60 * TicksPerSecond);
 
@@ -688,11 +721,17 @@ public sealed class SimContent
     /// <summary>Share of a ruined building's price its rebuilding costs, percent.</summary>
     public int RuinRebuildPercent { get; init; } = 50;
 
+    /// <summary>3B (Patryk, 2026-11-20): percent of a razed settlement's store that stays in its ruins (the rest is lost).</summary>
+    public int RuinKeepPercent { get; init; } = 100;
+
     /// <summary>Buildings a new camp starts with, finished, paid from the settlers' provisions (foundWith).</summary>
     public int[] FoundWith { get; init; } = [];
 
     /// <summary>Per era: the technology that must be known to leave it (−1 = none; M1, 2026-11-19).</summary>
     public int[] EraGateway { get; init; } = [];
+
+    /// <summary>Per era: goods (hundredths) the people must have made in all to enter it (7A, 2026-11-20; empty = none).</summary>
+    public long[][] EraEntryMade { get; init; } = [];
 
     /// <summary>The gateway technology of an era, −1 when it has none.</summary>
     public int GatewayOf(int era) => (uint)era < (uint)EraGateway.Length ? EraGateway[era] : -1;
@@ -1187,6 +1226,7 @@ public sealed class SimContent
                 Tech = TechOf(l, "tech"),
                 AlsoTechs = TechList(l, "alsoTechs"),
                 MinPeople = l.TryGetProperty("minPeople", out JsonElement mp) ? mp.GetInt32() : 0,
+                MaxHousing = l.TryGetProperty("maxHousing", out JsonElement mh) ? mh.GetInt32() : 0,
             });
         }
 
@@ -1513,6 +1553,10 @@ public sealed class SimContent
             StartPhase = root.TryGetProperty("startPhase", out JsonElement sp)
                 ? new StartPhaseRules(sp.GetProperty("pickSeconds").GetInt32() * TicksPerSecond, sp.GetProperty("blockRadius").GetInt32(), sp.GetProperty("blockFuzz").GetInt32(),
                     sp.GetProperty("scoreRadius").GetInt32(), sp.GetProperty("roomRadius").GetInt32())
+                {
+                    NeighbourMaxHexes = sp.TryGetProperty("neighbourMaxHexes", out JsonElement nmh) ? nmh.GetInt32() : 0,
+                    NeighbourMinHexes = sp.TryGetProperty("neighbourMinHexes", out JsonElement nmn) ? nmn.GetInt32() : 0,
+                }
                 : new StartPhaseRules(300, 10, 3, 3, 6),
             Clothing = clothing.ValueKind == JsonValueKind.Object ? GoodOf(clothing.GetProperty("good").GetString()!) : -1,
             ClothingBonusPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("bonusPercent").GetInt32() : 0,
@@ -1544,6 +1588,9 @@ public sealed class SimContent
                     [.. vetEl.GetProperty("options").EnumerateArray().Select(o => new VeteranOption(o.GetProperty("key").GetString()!, o.GetProperty("name").GetString()!,
                         o.GetProperty("text").GetString()!, o.TryGetProperty("strengthPercent", out JsonElement sp) ? sp.GetInt32() : 0,
                         o.TryGetProperty("takenPercent", out JsonElement tk) ? tk.GetInt32() : 0, o.TryGetProperty("speedPercent", out JsonElement spd) ? spd.GetInt32() : 0))])
+                {
+                    ShareNearHexes = vetEl.TryGetProperty("shareNearHexes", out JsonElement snh) ? snh.GetInt32() : 0,
+                }
                 : new VeteranRules([], []),
             Supply = root.TryGetProperty("supply", out JsonElement supplyEl)
                 ? new SupplyRules(supplyEl.GetProperty("rangeHexes").GetInt32(), supplyEl.GetProperty("carryMinutes").GetInt32(),
@@ -1552,6 +1599,7 @@ public sealed class SimContent
                     NoWayTicks = (supplyEl.TryGetProperty("noWaySeconds", out JsonElement nws) ? nws.GetInt32() : 60) * TicksPerSecond,
                 }
                 : new SupplyRules(3, 4, 10, 100),
+            FoodLowMinutes = root.TryGetProperty("alerts", out JsonElement alEl) && alEl.TryGetProperty("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryGetProperty("upgradeCaravans", out JsonElement ucEl)
                 ? new UpgradeCaravanRules(ucEl.GetProperty("extraPercent").GetInt32(), ucEl.GetProperty("aiRetrySeconds").GetInt32() * TicksPerSecond)
                 : new UpgradeCaravanRules(10, 60 * TicksPerSecond),
@@ -1560,12 +1608,19 @@ public sealed class SimContent
                     siegeEl.GetProperty("guardPerPalisadeHexPercent").GetInt32(), siegeEl.GetProperty("guardPerWallHexPercent").GetInt32(), siegeEl.GetProperty("guardStrength").GetInt32(),
                     siegeEl.GetProperty("guardRegrowPerMinute").GetInt32(), siegeEl.GetProperty("residentsFloorPercent").GetInt32(), siegeEl.GetProperty("sackPercent").GetInt32(),
                     siegeEl.GetProperty("sackImmuneSeconds").GetInt32(), siegeEl.GetProperty("choiceSeconds").GetInt32())
+                {
+                    AssaultAfterTicks = (siegeEl.TryGetProperty("assaultAfterSeconds", out JsonElement aas) ? aas.GetInt32() : 0) * TicksPerSecond,
+                    AiTakeWithinHexes = siegeEl.TryGetProperty("aiTakeWithinHexes", out JsonElement atw) ? atw.GetInt32() : 20,
+                }
                 : new SiegeRules(2, 50, 30, 50, 100, 8, 3, 40, 50, 180, 20),
             RuinEmptySeconds = root.TryGetProperty("ruins", out JsonElement ru) && ru.TryGetProperty("emptySeconds", out JsonElement res) ? res.GetInt32() : 60,
             RuinRebuildPercent = root.TryGetProperty("ruins", out JsonElement ru2) && ru2.TryGetProperty("rebuildPercent", out JsonElement rrp) ? rrp.GetInt32() : 50,
+            RuinKeepPercent = root.TryGetProperty("ruins", out JsonElement ru3) && ru3.TryGetProperty("razedKeepPercent", out JsonElement rkp) ? rkp.GetInt32() : 100,
             FoundWith = root.TryGetProperty("foundWith", out JsonElement fw) ? [.. fw.EnumerateArray().Select(x => buildings.FindIndex(b => b.Key == x.GetString())).Where(i => i > 0)] : [],
             EraGateway = [.. eras.Select(e => root.TryGetProperty("eraGateways", out JsonElement gw) && gw.TryGetProperty(e.Key, out JsonElement gk)
                 ? techs.FindIndex(t => t.Key == gk.GetString()) : -1)],
+            EraEntryMade = [.. eras.Select(e => root.TryGetProperty("eraEntryMade", out JsonElement em) && em.TryGetProperty(e.Key, out JsonElement ek)
+                ? Amounts(ek) : new long[goods.Count])],
             TechCategories = Strings(root, "techCategories"),
             Food = GoodOf("food"),
             Units = units,
@@ -1624,6 +1679,9 @@ public sealed class SimContent
                 TributeFoodMaxPercent = root.GetProperty("war").TryGetProperty("tributeFoodMaxPercent", out JsonElement tf) ? tf.GetInt32() : 10,
                 TruceSeconds = root.GetProperty("war").TryGetProperty("truceSeconds", out JsonElement trs) ? trs.GetInt32() : 180,
                 MaxWars = root.GetProperty("war").TryGetProperty("maxWars", out JsonElement mw) ? mw.GetInt32() : 3,
+                TributeAfterTicks = (root.GetProperty("war").TryGetProperty("tributeAfterSeconds", out JsonElement tas) ? tas.GetInt32() : 120) * TicksPerSecond,
+                ReputationFloor = root.GetProperty("war").TryGetProperty("reputationFloor", out JsonElement rf) ? rf.GetInt32() : -200,
+                BadReputation = root.GetProperty("war").TryGetProperty("badReputation", out JsonElement br) ? br.GetInt32() : -100,
             },
         };
     }

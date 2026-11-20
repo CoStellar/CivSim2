@@ -116,7 +116,8 @@ public sealed partial class SimGame
             return civ.Era < prev
                 ? $"Our people must first reach the {Content.Eras[prev].Name}."
                 : $"Opens in the {Content.Eras[era].Name}: know {Content.EraAdvanceTechs} technologies of the {Content.Eras[civ.Era].Name}, basics not counted (we know {KnownIn(civ, civ.Era)})"
-                    + (Content.GatewayOf(civ.Era) is int gate and >= 0 ? $", among them the gateway {Content.Techs[gate].Name}{(civ.KnownTech[gate] ? " (known)" : "")}." : ".");
+                    + (Content.GatewayOf(civ.Era) is int gate and >= 0 ? $", among them the gateway {Content.Techs[gate].Name}{(civ.KnownTech[gate] ? " (known)" : "")}" : "")
+                    + (EntryMissing(civ, era) is string made ? $", and make {made} first." : ".");
         }
 
         foreach (int req in Content.Techs[tech].Requires)
@@ -233,10 +234,33 @@ public sealed partial class SimGame
     }
 
     // Raises the era while the people knows enough technologies of its current one.
+    /// <summary>7A (2026-11-20): the goods still to make before entering <paramref name="era"/>, as "bronze 2 of 5" (null = none).</summary>
+    public string? EntryMissing(Civ civ, int era)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        if ((uint)era >= (uint)Content.EraEntryMade.Length)
+        {
+            return null;
+        }
+
+        long[] need = Content.EraEntryMade[era];
+        var parts = new System.Collections.Generic.List<string>();
+        for (int g = 0; g < need.Length; g++)
+        {
+            long made = civ.Made[g] / SimContent.TicksPerMinute;
+            if (need[g] > 0 && made < need[g])
+            {
+                parts.Add($"{Content.Goods[g].Name.ToLowerInvariant()} {made / SimContent.One} of {need[g] / SimContent.One}");
+            }
+        }
+
+        return parts.Count == 0 ? null : string.Join(", ", parts);
+    }
+
     internal void AdvanceEra(Civ civ, bool tell)
     {
         while (civ.Era + 1 < Content.Eras.Count && KnownIn(civ, civ.Era) >= Content.EraAdvanceTechs
-            && (Content.GatewayOf(civ.Era) < 0 || civ.KnownTech[Content.GatewayOf(civ.Era)]))
+            && (Content.GatewayOf(civ.Era) < 0 || civ.KnownTech[Content.GatewayOf(civ.Era)]) && EntryMissing(civ, civ.Era + 1) is null)
         {
             civ.Era++;
             if (tell)

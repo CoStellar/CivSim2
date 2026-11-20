@@ -62,8 +62,11 @@ public sealed partial class SimGame
     private int _stamp;
     private readonly PriorityQueue<int, int> _open = new();
 
-    /// <summary>Why settlers cannot found a camp on <paramref name="cell"/> (null = they can).</summary>
-    public string? CannotFound(int cell)
+    /// <summary>
+    /// Why settlers cannot found a camp on <paramref name="cell"/> (null = they can). With <paramref name="civ"/>, only settlements
+    /// that people sees or remembers count for the distance (5B, Patryk 2026-11-20: the refusal gave hidden cities away).
+    /// </summary>
+    public string? CannotFound(int cell, Civ? civ = null)
     {
         if (Content.World.Biomes[Map.Biome[cell]].IsWater)
         {
@@ -77,7 +80,8 @@ public sealed partial class SimGame
 
         foreach (Settlement s in Settlements)
         {
-            if (!s.Abandoned && Geo.Distance(Geo.FromIndex(s.Center), Geo.FromIndex(cell)) < Content.FoundMinDistance)
+            if (!s.Abandoned && Geo.Distance(Geo.FromIndex(s.Center), Geo.FromIndex(cell)) < Content.FoundMinDistance
+                && (civ is null || s.Civ == civ.Id || Visible(civ, s.Center) || (civ.SeenSettlements.TryGetValue(s.Center, out SettlementMemory? m) && m.Settlement == s.Id)))
             {
                 return $"Too close to {s.Name}: a camp needs {Content.FoundMinDistance} hexes from other settlements.";
             }
@@ -319,7 +323,7 @@ public sealed partial class SimGame
             return null;
         }
 
-        string? why = CannotFound(u.Cell);
+        string? why = CannotFound(u.Cell, civ);
         if (why is not null)
         {
             return why;

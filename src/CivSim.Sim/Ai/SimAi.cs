@@ -316,7 +316,8 @@ public static partial class SimAi
         {
             Settlement s = g.Settlements[sid];
             idle += s.Idle;
-            crowded |= s.People >= s.Housing - 4;
+            int most = g.Content.Levels[s.Level].MaxHousing;
+            crowded |= s.People >= s.Housing - 4 && (most <= 0 || s.Housing < most); // 9B: no homes past the level's limit
         }
 
         if (crowded && (TryBuild(g, civ, "stone_house") || TryBuild(g, civ, "hut")))
@@ -729,6 +730,33 @@ public static partial class SimAi
             }
         }
 
+        // 7A (Patryk, 2026-11-20): experience that only a mine gives (iron working: an iron mine) for the technologies of our era.
+        // Without such a mine in our land, settlers go to the deposit ("a settlement by the iron ore").
+        foreach (SimTech t in g.Content.Techs)
+        {
+            if (civ.KnownTech[t.Id] || t.Era != civ.Era)
+            {
+                continue;
+            }
+
+            foreach ((int req, long need) in t.Experience)
+            {
+                if (!civ.KnownTech[req] || civ.Experience[req] >= need)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && b.OrDeposit > 0 && b.OrDeposit < want.Length && SimGame.Knows(civ, b)
+                        && !Has(g, civ, b.Key) && !Buildable(g, civ, b))
+                    {
+                        want[b.OrDeposit] = true;
+                    }
+                }
+            }
+        }
+
         return want;
     }
 
@@ -1021,10 +1049,14 @@ public static partial class SimAi
                 ulong z = ((ulong)g.Ticks * 0x9E3779B97F4A7C15UL) ^ ((ulong)(u.Id + 1) * 0xBF58476D1CE4E5B9UL);
                 Settlement home = g.Settlements[civ.Settlements[(int)(Mix(ref z) % (ulong)civ.Settlements.Count)]];
                 HexCoord c = g.Geo.FromIndex(home.Center);
+                // 7A (2026-11-20): while a deposit we need is not found (iron 15-20 hexes away), prospectors look farther.
+                bool far = t.Survey == 1 && Array.IndexOf(WantedDeposits(g, civ), true) >= 0;
+                int wide = far ? 22 : 12;
+                int tall = far ? 18 : 9;
                 for (int tries = 0; tries < 16; tries++)
                 {
-                    int dc = (int)(Mix(ref z) % 25) - 12;
-                    int dr = (int)(Mix(ref z) % 19) - 9;
+                    int dc = (int)(Mix(ref z) % (ulong)((2 * wide) + 1)) - wide;
+                    int dr = (int)(Mix(ref z) % (ulong)((2 * tall) + 1)) - tall;
                     int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
                     bool looked = t.Survey == 1 ? g.RockLookedAt(civ, cell) : g.KnowsSoil(civ, cell);
                     if (civ.Known[cell] && !looked && g.OwnerAt[cell] < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater
@@ -1073,7 +1105,7 @@ public static partial class SimAi
                 continue;
             }
 
-            if (g.CannotFound(u.Cell) is null)
+            if (g.CannotFound(u.Cell, civ) is null)
             {
                 g.Apply(new FoundCommand(civ.Id, u.Id));
                 continue;
@@ -1102,7 +1134,7 @@ public static partial class SimAi
             for (int k = 0; k < n; k += 2)
             {
                 int cell = g.Geo.Index(ring[k]);
-                if (!civ.Known[cell] || g.CannotFound(cell) is not null)
+                if (!civ.Known[cell] || g.CannotFound(cell, civ) is not null)
                 {
                     continue;
                 }
@@ -1258,7 +1290,8 @@ public static partial class SimAi
                 int theirs = g.Score(other.Id, civ.Id);
                 if ((theirs > mine + 20 || g.AiRandom.NextInt(100) < 3) && !g.PeaceOffers.Exists(o => o.From == civ.Id && o.To == other.Id))
                 {
-                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, g.SuggestedTribute(civ.Id, other.Id)));
+                    bool early = g.Ticks - g.WarStart(civ.Id, other.Id) < g.Content.War.TributeAfterTicks; // 1C: no tribute yet
+                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, early ? 0 : g.SuggestedTribute(civ.Id, other.Id)));
                 }
 
                 if (target is not null && idle.Count > 0 && power > 0)
@@ -1284,7 +1317,8 @@ public static partial class SimAi
                 ? (target.People, target.Guard, g.Defense(target))
                 : civ.SeenSettlements.TryGetValue(target.Center, out SettlementMemory? seen) ? (seen.People, seen.Guard, seen.DefensePercent) : (target.People, target.Guard, g.Defense(target));
             long defence = (((long)people * g.Content.War.DefenderPercent / 100 * g.Content.War.DefenderStrength) + ((long)guard * g.Content.Siege.GuardStrength)) * defensePct;
-            if (power > defence * 2 && g.AiRandom.NextInt(100) < civ.Aggression / 10)
+            int warlike = civ.Reputation < g.Content.War.BadReputation ? civ.Aggression / 20 : civ.Aggression / 10; // 6C: a bad name, half as often
+            if (power > defence * 2 && g.AiRandom.NextInt(100) < warlike)
             {
                 if (civ.Aggression < 75)
                 {
@@ -1319,7 +1353,7 @@ public static partial class SimAi
     }
 
     /// <summary>
-    /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within 20 hexes of its own, sacks one farther away (it could
+    /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within siege.aiTakeWithinHexes (12) of its own, sacks one farther away (it could
     /// not hold it), and razes it only when it is the loser's last home.
     /// </summary>
     public static TakeChoice TakeChoiceFor(SimGame g, Civ civ, Settlement s)
@@ -1338,7 +1372,7 @@ public static partial class SimAi
             nearest = Math.Min(nearest, g.Geo.Distance(g.Geo.FromIndex(g.Settlements[sid].Center), g.Geo.FromIndex(s.Center)));
         }
 
-        return nearest <= 20 ? TakeChoice.Take : TakeChoice.Sack;
+        return nearest <= g.Content.Siege.AiTakeWithinHexes ? TakeChoice.Take : TakeChoice.Sack; // 2B: 12 hexes (was 20)
     }
 
     // Tick spikes (2026-11-20): armies sent to a settlement beyond the sea searched a way twice a second for good. The AI
