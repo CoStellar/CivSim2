@@ -346,6 +346,18 @@ public sealed class Civ
     /// <summary>Technologies known.</summary>
     public bool[] KnownTech { get; set; } = [];
 
+    /// <summary>Enemies killed by units of each kind (veterans).</summary>
+    public int[] KindKills { get; set; } = [];
+
+    /// <summary>Levels of experience each kind reached.</summary>
+    public int[] KindLevel { get; set; } = [];
+
+    /// <summary>Choices of each kind, per option: index kind * options + option (veterans).</summary>
+    public int[] KindPicks { get; set; } = [];
+
+    /// <summary>Levels of each kind still waiting for a choice.</summary>
+    public int[] KindPending { get; set; } = [];
+
     /// <summary>Era reached: a level, raised by knowing enough technologies of the era before.</summary>
     public int Era { get; set; }
 

@@ -348,6 +348,15 @@ public sealed record SiegeRules(
     int SackImmuneSeconds,
     int ChoiceSeconds);
 
+/// <summary>How many army units a people may have (Patryk, 2026-11-20, question 11): see the armyLimit section of the data.</summary>
+public sealed record ArmyLimitRules(int[] PerLevel, (int Building, int Add)[] PerBuilding, (int Tech, int Add)[] PerTech);
+
+/// <summary>One of the bonuses a kind of unit may take at a level of experience (veterans).</summary>
+public sealed record VeteranOption(string Key, string Name, string Text, int StrengthPercent, int TakenPercent, int SpeedPercent);
+
+/// <summary>Experience of each kind of unit (Patryk, 2026-11-20, question 9): see the veterans section of the data.</summary>
+public sealed record VeteranRules(int[] Levels, VeteranOption[] Options);
+
 /// <summary>Supplies of the army in the field (Patryk, 2026-11-20, question 1): see the supply section of the data.</summary>
 public sealed record SupplyRules(int RangeHexes, int CarryMinutes, int LandHands, int LandPercent);
 
@@ -647,6 +656,12 @@ public sealed class SimContent
 
     /// <summary>Deposits every start has near it (startDeposits; M4, 2026-11-19).</summary>
     public StartDeposit[] StartDeposits { get; init; } = [];
+
+    /// <summary>How many army units a people may have (armyLimit).</summary>
+    public ArmyLimitRules ArmyLimit { get; init; } = new([1, 2, 4, 6], [], []);
+
+    /// <summary>Experience of each kind of unit (veterans).</summary>
+    public VeteranRules Veterans { get; init; } = new([], []);
 
     /// <summary>Supplies of the army in the field (supply).</summary>
     public SupplyRules Supply { get; init; } = new(3, 4, 10, 100);
@@ -1506,6 +1521,17 @@ public sealed class SimContent
                 ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
                     x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1))]
                 : [],
+            ArmyLimit = root.TryGetProperty("armyLimit", out JsonElement limitEl)
+                ? new ArmyLimitRules([.. limitEl.GetProperty("perLevel").EnumerateArray().Select(x => x.GetInt32())],
+                    [.. limitEl.GetProperty("perBuilding").EnumerateObject().Select(p => (buildings.FindIndex(b => b.Key == p.Name), p.Value.GetInt32())).Where(x => x.Item1 > 0)],
+                    [.. limitEl.GetProperty("perTech").EnumerateObject().Select(p => (techs.FindIndex(t => t.Key == p.Name), p.Value.GetInt32())).Where(x => x.Item1 >= 0)])
+                : new ArmyLimitRules([1, 2, 4, 6], [], []),
+            Veterans = root.TryGetProperty("veterans", out JsonElement vetEl)
+                ? new VeteranRules([.. vetEl.GetProperty("levels").EnumerateArray().Select(x => x.GetInt32())],
+                    [.. vetEl.GetProperty("options").EnumerateArray().Select(o => new VeteranOption(o.GetProperty("key").GetString()!, o.GetProperty("name").GetString()!,
+                        o.GetProperty("text").GetString()!, o.TryGetProperty("strengthPercent", out JsonElement sp) ? sp.GetInt32() : 0,
+                        o.TryGetProperty("takenPercent", out JsonElement tk) ? tk.GetInt32() : 0, o.TryGetProperty("speedPercent", out JsonElement spd) ? spd.GetInt32() : 0))])
+                : new VeteranRules([], []),
             Supply = root.TryGetProperty("supply", out JsonElement supplyEl)
                 ? new SupplyRules(supplyEl.GetProperty("rangeHexes").GetInt32(), supplyEl.GetProperty("carryMinutes").GetInt32(),
                     supplyEl.GetProperty("landHands").GetInt32(), supplyEl.GetProperty("landPercent").GetInt32())

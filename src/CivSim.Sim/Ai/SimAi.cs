@@ -1237,6 +1237,23 @@ public static partial class SimAi
     }
 
     /// <summary>
+    /// The bonus the AI picks for a level of a kind of unit (2026-11-20): archers and machines hit harder, cavalry marches faster,
+    /// the infantry of the front alternates more damage and a shield wall.
+    /// </summary>
+    public static int VeteranChoiceFor(SimGame g, Civ civ, int kind)
+    {
+        ArgumentNullException.ThrowIfNull(g);
+        ArgumentNullException.ThrowIfNull(civ);
+        VeteranOption[] options = g.Content.Veterans.Options;
+        UnitType t = g.Content.Units[kind];
+        string want = t.Ranged || t.SiegePercent > 0 ? "hardened"
+            : Array.IndexOf(t.Groups, "cavalry") >= 0 ? (civ.KindLevel[kind] % 2 == 1 ? "forced_march" : "hardened")
+            : civ.KindLevel[kind] % 2 == 1 ? "hardened" : "shield_wall";
+        int pick = Array.FindIndex(options, o => o.Key == want);
+        return pick >= 0 ? pick : 0;
+    }
+
+    /// <summary>
     /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within 20 hexes of its own, sacks one farther away (it could
     /// not hold it), and razes it only when it is the loser's last home.
     /// </summary>

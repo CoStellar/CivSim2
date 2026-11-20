@@ -142,7 +142,9 @@ public sealed record PlayContentMessage(
     [property: Key(15)] int[]? ArmourGoods = null,
     [property: Key(16)] int[]? WeaponPercent = null,
     [property: Key(17)] int[]? ArmourPercent = null,
-    [property: Key(18)] PlayCombatInfo? Combat = null) : IProtocolMessage;
+    [property: Key(18)] PlayCombatInfo? Combat = null,
+    [property: Key(19)] string[]? VeteranOptions = null,
+    [property: Key(20)] int[]? VeteranLevels = null) : IProtocolMessage;
 
 /// <summary>
 /// Numbers of battle the client shows on hexes (cover markers): cover of trees, palisade and wall against ranged and melee,
@@ -311,7 +313,13 @@ public sealed record PlayViewMessage(
     [property: Key(40)] bool Winter = false,
     [property: Key(41)] int SeasonSeconds = 0,
     [property: Key(42)] int RationSeconds = 0,
-    [property: Key(43)] bool Debug = false) : IProtocolMessage;
+    [property: Key(43)] bool Debug = false,
+    [property: Key(44)] int ArmyUnits = 0,
+    [property: Key(45)] int ArmyLimit = 0,
+    [property: Key(46)] int[]? KindKills = null,
+    [property: Key(47)] int[]? KindLevel = null,
+    [property: Key(48)] int[]? KindPending = null,
+    [property: Key(49)] int[]? KindPicks = null) : IProtocolMessage;
 
 /// <summary>
 /// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this
@@ -481,6 +489,9 @@ public enum PlayCommandKind
 
     /// <summary>A caravan with <c>C</c> food from settlement <c>A</c> to our army unit <c>B</c> in the field.</summary>
     SupplyUnit = 45,
+
+    /// <summary>Our units of kind <c>A</c> learn veteran option <c>B</c> for a level they reached.</summary>
+    ChooseVeteran = 46,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>
