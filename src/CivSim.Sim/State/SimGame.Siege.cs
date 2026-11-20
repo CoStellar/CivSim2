@@ -136,10 +136,13 @@ public sealed partial class SimGame
     private void BeginSiege(Settlement s)
     {
         s.Besieged = true;
+        s.SiegeBeganTick = Ticks;
         s.SiegeStart = s.People;
         s.Fighters = s.People * Content.War.DefenderPercent / 100;
         Civs[s.Civ].Dirty = true; // it works less now
-        News.Add((s.Civ, $"{s.Name} is under siege: no caravans come or go, it works at {Content.Siege.BlockadeWorkPercent}% and trains and builds nothing new."));
+        int wait = Content.Siege.AssaultAfterTicks / SimContent.TicksPerSecond;
+        News.Add((s.Civ, $"{s.Name} is under siege: no caravans come or go, it works at {Content.Siege.BlockadeWorkPercent}% and trains and builds nothing new."
+            + (wait > 0 ? $" The assault can begin in {wait} s: send help." : "")));
     }
 
     // An army unit of a people at war with the settlement's within range of its centre.
@@ -262,21 +265,33 @@ public sealed partial class SimGame
             }
         }
 
+        // 2B (Patryk, 2026-11-20): the loot goes home in a caravan, which can be raided on the way.
         long total = 0;
+        var load = new long[s.Stock.Length];
         for (int g = 0; g < s.Stock.Length; g++)
         {
             long loot = s.Stock[g] * Content.Siege.SackPercent / 100;
             s.Stock[g] -= loot;
-            if (home is not null)
+            load[g] = loot;
+            total += loot;
+        }
+
+        if (home is not null && total > 0)
+        {
+            for (int g = 0; g < load.Length; g++)
             {
-                home.Stock[g] += loot;
-                total += loot;
+                home.Stock[g] += load[g]; // the carriers take it from the store they start with, at the sacked settlement
             }
+
+            Unit c = NewCarrier(winner, Content.Caravans, home, s.Center, load, 100);
+            c.Job = CarrierJob.ToSettlement;
+            c.Target = home.Id;
+            Walk(c, NearestStore(home, s.Center));
         }
 
         s.SackedUntil = Ticks + (Content.Siege.SackImmuneSeconds * SimContent.TicksPerSecond);
         Scores()[(winner.Id * Civs.Count) + s.Civ] += 20;
-        NewsAbout(winner.Id, s.Civ, $"{winner.Name} sacked {s.Name} and carried off {total / SimContent.One} goods.");
+        NewsAbout(winner.Id, s.Civ, home is null ? $"{winner.Name} sacked {s.Name}." : $"{winner.Name} sacked {s.Name}: a caravan carries {total / SimContent.One} goods to {home.Name}.");
     }
 
     private void Raze(Civ winner, Civ loser, Settlement s)
@@ -298,6 +313,11 @@ public sealed partial class SimGame
         }
 
         s.People = 0;
+        for (int g = 0; g < s.Stock.Length; g++)
+        {
+            s.Stock[g] = s.Stock[g] * Content.RuinKeepPercent / 100; // 3B (Patryk, 2026-11-20): most of the store burns
+        }
+
         Scores()[(winner.Id * Civs.Count) + loser.Id] += 30;
         NewsAbout(winner.Id, loser.Id, refuge is null
             ? $"{winner.Name} razed {s.Name}, the last home of {loser.Name}."

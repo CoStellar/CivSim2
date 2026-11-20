@@ -229,6 +229,9 @@ public sealed class Settlement
     /// <summary>Residents when the blockade began (0 = no siege).</summary>
     public int SiegeStart { get; set; }
 
+    /// <summary>Tick the current blockade began (13B: the assault waits siege.assaultAfterSeconds after it).</summary>
+    public long SiegeBeganTick { get; set; }
+
     /// <summary>Residents still fighting in this siege.</summary>
     public int Fighters { get; set; }
 

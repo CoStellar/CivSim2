@@ -29,6 +29,7 @@ public sealed partial class SimGame
 {
     private int[]? _war;
     private int[]? _score;
+    private long[]? _warStart;
     private long[]? _truceUntil;
 
     /// <summary>Peace offers waiting for an answer.</summary>
@@ -53,7 +54,23 @@ public sealed partial class SimGame
     {
         War()[(a * Civs.Count) + b] = war ? 1 : 0;
         War()[(b * Civs.Count) + a] = war ? 1 : 0;
+        if (war)
+        {
+            // 1C (Patryk, 2026-11-20): the score of a war counts from its start, not over the whole game.
+            Scores()[(a * Civs.Count) + b] = 0;
+            Scores()[(b * Civs.Count) + a] = 0;
+            WarStarts()[(a * Civs.Count) + b] = Ticks;
+            WarStarts()[(b * Civs.Count) + a] = Ticks;
+        }
     }
+
+    private long[] WarStarts() => _warStart ??= new long[Civs.Count * Civs.Count];
+
+    /// <summary>Tick the war between the two began (0 when it began at the start).</summary>
+    public long WarStart(int a, int b) => WarStarts()[(a * Civs.Count) + b];
+
+    // 6C (Patryk, 2026-11-20): reputation has a floor, so it keeps meaning something.
+    private void AddReputation(Civ civ, int delta) => civ.Reputation = Math.Max(Content.War.ReputationFloor, civ.Reputation + delta);
 
     /// <summary>Wars a people is in now.</summary>
     public int WarsOf(int civ)
@@ -100,16 +117,16 @@ public sealed partial class SimGame
         TreatiesOnWar(civ.Id, other);
         if (treaty)
         {
-            civ.Reputation += Content.War.SurpriseReputation / 2; // breaking a treaty is remembered too
+            AddReputation(civ, Content.War.SurpriseReputation / 2); // breaking a treaty is remembered too
         }
         if (surprise || truce)
         {
-            civ.Reputation += Content.War.SurpriseReputation;
+            AddReputation(civ, Content.War.SurpriseReputation);
             NewsAbout(civ.Id, other, $"{civ.Name} attacked {Civs[other].Name} {(surprise ? "without declaring war" : "breaking a truce")}.");
         }
         else
         {
-            civ.Reputation += Content.War.DeclareReputation; // E1: no free wars
+            AddReputation(civ, Content.War.DeclareReputation); // E1: no free wars
             NewsAbout(civ.Id, other, $"{civ.Name} declared war on {Civs[other].Name}.");
         }
 
@@ -186,6 +203,12 @@ public sealed partial class SimGame
         if ((uint)other >= (uint)Civs.Count || !AtWar(civ.Id, other))
         {
             return "We are not at war with them.";
+        }
+
+        long left = WarStart(civ.Id, other) + Content.War.TributeAfterTicks - Ticks;
+        if (tribute != 0 && left > 0)
+        {
+            return $"Tribute can be asked for only after {Content.War.TributeAfterTicks / SimContent.TicksPerSecond} s of war ({(left + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond} s more); peace without tribute is possible now.";
         }
 
         PeaceOffers.RemoveAll(o => o.From == civ.Id && o.To == other);
@@ -440,6 +463,11 @@ public sealed partial class SimGame
         if (!target.Besieged)
         {
             BeginSiege(target);
+        }
+
+        if (Ticks - target.SiegeBeganTick < Content.Siege.AssaultAfterTicks)
+        {
+            return; // 13B (Patryk, 2026-11-20): first the blockade, the assault after siege.assaultAfterSeconds
         }
 
         Fought(attacker.Civ);

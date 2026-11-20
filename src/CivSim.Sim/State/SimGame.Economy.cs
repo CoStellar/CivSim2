@@ -81,6 +81,12 @@ public sealed partial class SimGame
         foreach (int sid in civ.Settlements)
         {
             Settlement s = Settlements[sid];
+            int most = Content.Levels[s.Level].MaxHousing;
+            if (most > 0 && s.Housing > most)
+            {
+                s.Housing = most; // 9B (Patryk, 2026-11-20): a settlement grows past its level's homes only by its upgrade
+            }
+
             for (int g = 0; g < goods; g++)
             {
                 if (Content.LimitedGoods[g])
@@ -323,6 +329,11 @@ public sealed partial class SimGame
         if (civ.Dirty)
         {
             Recompute(civ);
+        }
+
+        if (Content.EraEntryMade.Length > civ.Era + 1 && EntryMissing(civ, civ.Era + 1) is null)
+        {
+            AdvanceEra(civ, tell: true); // 7A: an era may wait only for goods made, so look again as they are made
         }
 
         for (int t = 0; t < civ.ExperienceRate.Length; t++)
