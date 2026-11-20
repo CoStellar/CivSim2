@@ -113,6 +113,11 @@ public sealed partial class SimGame
 
         kind = Upgraded(civ, kind);
         Settlement s = Settlements[sid];
+        if (s.Besieged)
+        {
+            return $"{s.Name} is under siege: it trains nothing new.";
+        }
+
         UnitType t = Content.Units[kind];
         if (!Knows(civ, t))
         {

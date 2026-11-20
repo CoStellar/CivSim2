@@ -301,6 +301,7 @@ public sealed partial class SimGame
             HealStep();
             PalisadeStep();
             WallStep();
+            SiegeStep();
         }
 
         if (Ticks % SimContent.TicksPerMinute == 0)

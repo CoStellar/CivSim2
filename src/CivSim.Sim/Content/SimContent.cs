@@ -332,6 +332,22 @@ public sealed record UnitType(int Id, string Key, string Name, int People, long[
 }
 
 /// <summary>Rules of fighting.</summary>
+/// <summary>
+/// Sieges and garrisons (Patryk, 2026-11-20, questions 3, 5, 7, 8): see the siege section of the data.
+/// </summary>
+public sealed record SiegeRules(
+    int BlockadeRange,
+    int BlockadeWorkPercent,
+    int LiftSeconds,
+    int GuardPerPalisadeHexPercent,
+    int GuardPerWallHexPercent,
+    int GuardStrength,
+    int GuardRegrowPerMinute,
+    int ResidentsFloorPercent,
+    int SackPercent,
+    int SackImmuneSeconds,
+    int ChoiceSeconds);
+
 public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int HighLuckPercent, int DefenderPercent, int DefenderStrength, int CaptureBelowPeople, int SurpriseReputation)
 {
     /// <summary>Reputation every declaration of war costs (E1, 2026-11-19).</summary>
@@ -427,6 +443,9 @@ public sealed class BuildingType
 
     /// <summary>Defence of its settlement, percent (fortifications).</summary>
     public int DefensePercent { get; init; }
+
+    /// <summary>Standing guard this building gives its settlement (siege; a castle's garrison).</summary>
+    public int Guard { get; init; }
 
     /// <summary>Training time in its settlement, percent (barracks).</summary>
     public int TrainPercent { get; init; }
@@ -625,6 +644,9 @@ public sealed class SimContent
 
     /// <summary>Deposits every start has near it (startDeposits; M4, 2026-11-19).</summary>
     public StartDeposit[] StartDeposits { get; init; } = [];
+
+    /// <summary>Sieges and garrisons (siege).</summary>
+    public SiegeRules Siege { get; init; } = new(2, 50, 30, 50, 100, 8, 3, 40, 50, 180, 20);
 
     /// <summary>Seconds a settlement stays empty before it falls to ruin (ruins.emptySeconds; G2, 2026-11-19).</summary>
     public int RuinEmptySeconds { get; init; } = 60;
@@ -1219,6 +1241,7 @@ public sealed class SimContent
                 MinFertility = b.TryGetProperty("minFertility", out JsonElement mf) ? mf.GetInt32() : 0,
                 ResearchDiscountPercent = b.TryGetProperty("researchDiscountPercent", out JsonElement rd) ? rd.GetInt32() : 0,
                 DefensePercent = b.TryGetProperty("defensePercent", out JsonElement dp) ? dp.GetInt32() : 0,
+                Guard = b.TryGetProperty("guard", out JsonElement gd) ? gd.GetInt32() : 0,
                 BonusReliefs = ReliefsOf(b, "bonusRelief"),
                 Groups = Strings(b, "groups"),
                 BonusReliefPercent = b.TryGetProperty("bonusReliefPercent", out JsonElement brp) ? brp.GetInt32() : 0,
@@ -1477,6 +1500,12 @@ public sealed class SimContent
                 ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
                     x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1))]
                 : [],
+            Siege = root.TryGetProperty("siege", out JsonElement siegeEl)
+                ? new SiegeRules(siegeEl.GetProperty("blockadeRange").GetInt32(), siegeEl.GetProperty("blockadeWorkPercent").GetInt32(), siegeEl.GetProperty("liftSeconds").GetInt32(),
+                    siegeEl.GetProperty("guardPerPalisadeHexPercent").GetInt32(), siegeEl.GetProperty("guardPerWallHexPercent").GetInt32(), siegeEl.GetProperty("guardStrength").GetInt32(),
+                    siegeEl.GetProperty("guardRegrowPerMinute").GetInt32(), siegeEl.GetProperty("residentsFloorPercent").GetInt32(), siegeEl.GetProperty("sackPercent").GetInt32(),
+                    siegeEl.GetProperty("sackImmuneSeconds").GetInt32(), siegeEl.GetProperty("choiceSeconds").GetInt32())
+                : new SiegeRules(2, 50, 30, 50, 100, 8, 3, 40, 50, 180, 20),
             RuinEmptySeconds = root.TryGetProperty("ruins", out JsonElement ru) && ru.TryGetProperty("emptySeconds", out JsonElement res) ? res.GetInt32() : 60,
             RuinRebuildPercent = root.TryGetProperty("ruins", out JsonElement ru2) && ru2.TryGetProperty("rebuildPercent", out JsonElement rrp) ? rrp.GetInt32() : 50,
             FoundWith = root.TryGetProperty("foundWith", out JsonElement fw) ? [.. fw.EnumerateArray().Select(x => buildings.FindIndex(b => b.Key == x.GetString())).Where(i => i > 0)] : [],

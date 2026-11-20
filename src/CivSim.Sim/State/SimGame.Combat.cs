@@ -628,10 +628,13 @@ public sealed partial class SimGame
         }
 
         int ground = 100 + Ground(a, d, ranged);
+
+        // Siege (2026-11-20): our units on our settlement's land defend from behind its fortifications.
+        int held = SettlementAt[d.Cell] is int hs and >= 0 && Settlements[hs].Civ == d.Civ ? Math.Max(100, Settlements[hs].DefensePct) : 100;
         int flank = r.Flank.Length == 0 ? 100 : r.Flank[Math.Min(Flankers(d), r.Flank.Length - 1)];
         long damage = (long)engaged * at.Strength * WeaponPercent(a) / 100;
         damage = damage * drill / 100 * FedPercent(a) / 100;
-        damage = damage * 100 / Math.Max(1, armour);
+        damage = damage * 100 / Math.Max(1, armour) * 100 / held;
         damage = damage * Math.Max(10, ground) / 100 * flank / 100 * extraPercent / 100;
         return damage * 100 / r.KillDivisor;
     }
@@ -726,11 +729,6 @@ public sealed partial class SimGame
             u.Fighting = false;
             u.LastLoss = 0;
             u.Struck.Clear();
-        }
-
-        foreach (Settlement s in Settlements)
-        {
-            s.Besieged = false;
         }
 
         CombatRules r = Content.Combat;

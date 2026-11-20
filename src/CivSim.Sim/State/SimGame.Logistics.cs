@@ -443,6 +443,11 @@ public sealed partial class SimGame
         }
 
         Settlement s = Settlements[from];
+        if (s.Besieged || Settlements[to].Besieged)
+        {
+            return $"{(s.Besieged ? s.Name : Settlements[to].Name)} is under siege: no caravans come or go.";
+        }
+
         long send = Math.Min(amount, s.Stock[good]);
         if (send < SimContent.One)
         {

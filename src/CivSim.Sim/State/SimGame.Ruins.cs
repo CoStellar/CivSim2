@@ -33,7 +33,7 @@ public sealed partial class SimGame
         }
     }
 
-    private void Ruin(Civ civ, Settlement s)
+    private void Ruin(Civ civ, Settlement s, bool silent = false)
     {
         Unwatch(s);
         s.Abandoned = true;
@@ -62,14 +62,18 @@ public sealed partial class SimGame
         // Units that called it home go to the people's first settlement.
         foreach (int id in civ.Units)
         {
-            if (Units[id].Home == s.Id)
+            if (Units[id].Home == s.Id && civ.Settlements.Count > 0)
             {
                 Units[id].Home = civ.Settlements[0];
             }
         }
 
         civ.Dirty = true;
-        News.Add((civ.Id, $"{s.Name} stood empty and fell to ruin. Settlers can take it again."));
+        s.Guard = 0;
+        if (!silent)
+        {
+            News.Add((civ.Id, $"{s.Name} stood empty and fell to ruin. Settlers can take it again."));
+        }
     }
 
     /// <summary>The ruin whose centre is the cell or next to it, if any.</summary>

@@ -1516,7 +1516,8 @@
         "fort",
         "armoury"
       ],
-      "size": 4
+      "size": 4,
+      "guard": 40
     },
     {
       "key": "mill",
@@ -3350,5 +3351,19 @@
     "comment": "A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.",
     "emptySeconds": 60,
     "rebuildPercent": 50
+  },
+  "siege": {
+    "comment": "An enemy army unit at war within blockadeRange of a settlement's centre blockades it: it works at blockadeWorkPercent, trains no units, starts no buildings and sends or takes no caravans; the blockade lifts liftSeconds after the last such unit leaves. Defenders: the settlement's own army units standing on its land (they take damage divided by its defence), its guard and its residents. Guard: a standing garrison from its works and buildings, guardPerPalisadeHexPercent / guardPerWallHexPercent hundredths of a man per palisade or wall hex of its land, plus each building's guard (a castle); it grows back guardRegrowPerMinute a minute when not blockaded and costs nothing. Guard strikes with guardStrength, residents with war.defenderStrength, times the settlement's defence. Attackers' blows fall on the guard first, then on the fighting residents (war.defenderPercent of the residents when the blockade began); residents never fall below residentsFloorPercent of that number by fighting; the rest are defenceless. With no guard, no defending units and no fighting residents left the settlement falls: its taker chooses within choiceSeconds (else it is taken): take it, sack it (sackPercent of each good goes to the taker's nearest settlement; nobody may besiege it again for sackImmuneSeconds) or raze it (a ruin; its residents flee to their people's nearest settlement).",
+    "blockadeRange": 2,
+    "blockadeWorkPercent": 50,
+    "liftSeconds": 30,
+    "guardPerPalisadeHexPercent": 50,
+    "guardPerWallHexPercent": 100,
+    "guardStrength": 8,
+    "guardRegrowPerMinute": 3,
+    "residentsFloorPercent": 40,
+    "sackPercent": 50,
+    "sackImmuneSeconds": 180,
+    "choiceSeconds": 20
   }
 }

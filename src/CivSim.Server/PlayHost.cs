@@ -365,6 +365,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Route => new RouteCommand(civ, m.A, m.B, m.Col, m.C * SimContent.One, Cells(m.Cells), m.Row * SimContent.One, m.D * SimContent.One),
         PlayCommandKind.EndRoute => new EndRouteCommand(civ, m.A),
         PlayCommandKind.BringMaterials => new BringMaterialsCommand(civ, m.A),
+        PlayCommandKind.TakeSettlement => new TakeSettlementCommand(civ, m.A, (TakeChoice)m.B),
         PlayCommandKind.PickStart => new PickStartCommand(civ, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         _ => new UpgradeSettlementCommand(civ, m.A),
     };
@@ -646,7 +647,7 @@ public sealed class PlayHost : IDisposable
     private static int Sig(PlayBuildingView b) => HashCode.Combine(HashCode.Combine(b.Type, b.Civ, b.Col, b.Row, b.State, b.Workers, b.Starved, b.Priority),
         HashCode.Combine(b.ProgressPermille, b.YieldPercent, b.Missing, b.Porters, b.Remembered, b.Slots, HashCode.Combine(b.Focus is null ? 0 : string.Join(",", b.Focus).GetHashCode(StringComparison.Ordinal), b.UpgradeBlocked, b.UpgradeCost)));
 
-    private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, s.DefensePercent),
+    private static int Sig(PlaySettlementView s) => HashCode.Combine(HashCode.Combine(s.Civ, s.Name, s.Level, s.People, s.Housing, s.Idle, s.Besieged, HashCode.Combine(s.DefensePercent, s.Guard, s.FallenToUs, s.Fighters)),
         HashCode.Combine(Arr(s.Stock), Arr(s.Capacity), Arr(s.Rate), s.Remembered, s.Col, s.Row, HashCode.Combine(s.Gathering, Arr(s.Richness), s.WorkPermille, s.HealPerMinute, s.RationUnits, s.RationFood, s.RationShort, HashCode.Combine(s.RationDead, s.HungryPeople, s.HungryWorkers))));
 
     private static int Sig(PlayUnitView u) => HashCode.Combine(HashCode.Combine(u.Kind, u.Civ, u.Col, u.Row, u.People, u.State, u.Hidden, u.ToCol),
@@ -858,7 +859,8 @@ public sealed class PlayHost : IDisposable
                 Gathering: own && s.Gathering, Richness: own ? (int[])_game.Richness(s).Clone() : null, WorkPermille: own ? s.WorkPermille : 1000,
                 HealPerMinute: own ? s.HealPerMinute : 0, RationUnits: rUnits, RationPeople: rPeople, RationFood: rFood,
                 RationShort: own ? s.RationShort : 0, RationDead: own ? s.RationDead : 0,
-                HungryPeople: own ? s.HungryPeople : 0, HungryWorkers: own ? s.HungryWorkers : 0));
+                HungryPeople: own ? s.HungryPeople : 0, HungryWorkers: own ? s.HungryWorkers : 0,
+                Guard: s.Guard, GuardMax: own ? _game.GuardMax(s) : 0, FallenToUs: s.FallenTo == civId, Fighters: s.Besieged ? s.Fighters : 0));
         }
 
         if (!_game.Picking)

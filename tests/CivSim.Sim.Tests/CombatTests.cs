@@ -390,13 +390,13 @@ public sealed class CombatTests
     }
 
     [Fact]
-    public void DisbandingGivesTheArmsBack()
+    public void WarriorsStayWarriors()
     {
+        // Patryk, 2026-11-20 (question 10): army units are never disbanded.
         SimGame g = War();
         Settlement home = g.Settlements[g.Civs[0].Settlements[0]];
         Unit u = Soldiers(g, 0, "warriors", home.Center, 10, weapon: 2, armour: 1);
-        long before = home.Stock[Content.GoodId("bronze_weapons")];
-        Assert.Null(g.Apply(new DisbandCommand(0, u.Id)));
-        Assert.Equal(before + (10 * SimContent.One), home.Stock[Content.GoodId("bronze_weapons")]);
+        Assert.NotNull(g.Apply(new DisbandCommand(0, u.Id)));
+        Assert.Equal(10, u.People);
     }
 }

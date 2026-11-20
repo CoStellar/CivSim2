@@ -58,6 +58,9 @@ public sealed partial class SimGame
             Add(s.GrowthRemainder);
             Add(s.Cells.Count);
             Add(s.Gathering ? 1 : 0);
+            Add(s.Guard);
+            Add(s.Fighters);
+            Add(s.FallenTo);
             foreach (long v in s.Stock)
             {
                 Add(v);

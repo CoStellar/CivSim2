@@ -101,6 +101,7 @@ public sealed partial class SimGame
             ProposePeaceCommand c => NoPeace ? "This test scenario allows no peace." : ProposePeace(civ, c.Other, c.TributePercent),
             AnswerPeaceCommand c => AnswerPeace(civ, c.From, c.Accept),
             DisbandCommand c => Disband(civ, c.Unit),
+            TakeSettlementCommand c => TakeSettlement(civ, c.Settlement, c.Choice),
             ProposeTreatyCommand c => ProposeTreaty(civ, c.Other, c.Kind),
             AnswerTreatyCommand c => AnswerTreaty(civ, c.From, c.Kind, c.Accept),
             CancelTreatyCommand c => CancelTreaty(civ, c.Other, c.Kind),
@@ -362,6 +363,11 @@ public sealed partial class SimGame
         if (why is not null)
         {
             return why;
+        }
+
+        if (SettlementAt[cell] is int bs and >= 0 && Settlements[bs].Besieged && Array.IndexOf(t.Groups, "road") < 0)
+        {
+            return $"{Settlements[bs].Name} is under siege: nothing new is built there.";
         }
 
         Place(civ, cell, t, SlotsFor(cell, t.Size), null);
