@@ -207,9 +207,13 @@ public sealed partial class SimGame
         Map.MarkCellDirty(cell);
     }
 
-    private ushort WallBit => (ushort)(Content.Work("wall")?.Bit ?? 0);
+    // Tick spikes (2026-11-20): looked up by name once, not at every step of every way search.
+    private int _wallBit = -1;
+    private int _palisadeBit = -1;
 
-    private ushort PalisadeBit => (ushort)(Content.Work("palisade")?.Bit ?? 0);
+    private ushort WallBit => (ushort)(_wallBit >= 0 ? _wallBit : (_wallBit = Content.Work("wall")?.Bit ?? 0));
+
+    private ushort PalisadeBit => (ushort)(_palisadeBit >= 0 ? _palisadeBit : (_palisadeBit = Content.Work("palisade")?.Bit ?? 0));
 
     /// <summary>True when foreign walkers may not enter the hex: a wall of another people stands there.</summary>
     public bool WalledAgainst(int civ, int cell) => civ >= 0 && WallBit != 0 && (WorksAt[cell] & WallBit) != 0 && WorksCiv[cell] != civ;

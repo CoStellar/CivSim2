@@ -187,4 +187,26 @@ public sealed class DecisionTests
         SimAi.Think(g, civ);
         Assert.Contains(civ.Units, id => g.Units[id].Target == home.Id && g.Units[id].Cargo is { } load && load[clay] > 0);
     }
+
+    [Fact]
+    public void APeopleFightsAtMostMaxWarsAtOnce()
+    {
+        // Design chapter 8 (2026-11-20 sprint): at most war.maxWars wars at once.
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, Content.War.MaxWars + 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        for (int o = 1; o < g.Civs.Count; o++)
+        {
+            civ.Known[g.Settlements[g.Civs[o].Settlements[0]].Center] = true;
+            g.Civs[o].Known[g.Settlements[civ.Settlements[0]].Center] = true;
+        }
+
+        for (int o = 1; o <= Content.War.MaxWars; o++)
+        {
+            Assert.Null(g.Apply(new DeclareWarCommand(0, o)));
+        }
+
+        Assert.Equal(Content.War.MaxWars, g.WarsOf(0));
+        Assert.NotNull(g.Apply(new DeclareWarCommand(0, Content.War.MaxWars + 1)));
+        Assert.NotNull(g.Apply(new DeclareWarCommand(Content.War.MaxWars + 1, 0))); // nor may others join in on us
+    }
 }

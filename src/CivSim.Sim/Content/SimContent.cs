@@ -373,6 +373,9 @@ public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int High
 
     /// <summary>Truce after peace, seconds.</summary>
     public int TruceSeconds { get; init; } = 180;
+
+    /// <summary>Most wars a people may be in at once (design, chapter 8: 2-3).</summary>
+    public int MaxWars { get; init; } = 3;
 }
 
 /// <summary>Choosing the start (startPhase in the data): ticks to pick, the block radius and its fuzz, the scoring radii.</summary>
@@ -1604,6 +1607,7 @@ public sealed class SimContent
                 TributeNeedsKills = root.GetProperty("war").TryGetProperty("tributeNeedsKills", out JsonElement tk) ? tk.GetInt32() : 5,
                 TributeFoodMaxPercent = root.GetProperty("war").TryGetProperty("tributeFoodMaxPercent", out JsonElement tf) ? tf.GetInt32() : 10,
                 TruceSeconds = root.GetProperty("war").TryGetProperty("truceSeconds", out JsonElement trs) ? trs.GetInt32() : 180,
+                MaxWars = root.GetProperty("war").TryGetProperty("maxWars", out JsonElement mw) ? mw.GetInt32() : 3,
             },
         };
     }

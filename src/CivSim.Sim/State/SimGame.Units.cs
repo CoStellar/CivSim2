@@ -13,7 +13,11 @@ namespace CivSim.Sim.State;
 public sealed record TrainCommand(int Civ, int Settlement, int Kind, int People = 0, bool Shock = false) : SimCommand(Civ);
 
 /// <summary>Send a unit to a hex, hidden or in the open (scouts).</summary>
-public sealed record MoveCommand(int Civ, int Unit, int Cell, bool Hidden, int[]? Path = null) : SimCommand(Civ);
+/// <summary>
+/// Move a unit to a hex. <paramref name="SearchLimit"/>: most hexes the way search may look at (0 = the usual limit); a cheap
+/// try for far targets that may be out of reach.
+/// </summary>
+public sealed record MoveCommand(int Civ, int Unit, int Cell, bool Hidden, int[]? Path = null, int SearchLimit = 0) : SimCommand(Civ);
 
 /// <summary>Settlers found a camp where they stand.</summary>
 public sealed record FoundCommand(int Civ, int Unit) : SimCommand(Civ);
@@ -22,6 +26,37 @@ public sealed partial class SimGame
 {
     private const int MaxPathNodes = 60_000;
     private int[]? _pathCost;
+
+    // Tick spikes (2026-11-20): the neighbours and edges of every hex, worked out once (way searches asked the globe for them
+    // at every step).
+    private int[] _next = [];
+    private int[] _edgeOf = [];
+
+    private void Tables()
+    {
+        if (_next.Length == Geo.CellCount * 6)
+        {
+            return;
+        }
+
+        int n = Geo.CellCount;
+        var next = new int[n * 6];
+        var edges = new int[n * 6];
+        Span<HexCoord> nb = stackalloc HexCoord[6];
+        for (int i = 0; i < n; i++)
+        {
+            HexCoord c = Geo.FromIndex(i);
+            Geo.GetNeighbors(c, nb);
+            for (int d = 0; d < 6; d++)
+            {
+                next[(i * 6) + d] = Geo.Index(nb[d]);
+                edges[(i * 6) + d] = Geo.EdgeIndex(Geo.Edge(c, (HexDirection)d));
+            }
+        }
+
+        _edgeOf = edges;
+        _next = next;
+    }
     private int[]? _pathFrom;
     private int[]? _pathStamp;
     private int _stamp;
@@ -205,7 +240,7 @@ public sealed partial class SimGame
         return null;
     }
 
-    private string? Move(Civ civ, int id, int cell, bool hidden, int[]? drawn = null)
+    private string? Move(Civ civ, int id, int cell, bool hidden, int[]? drawn = null, int searchLimit = 0)
     {
         if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
         {
@@ -233,7 +268,7 @@ public sealed partial class SimGame
         }
 
         // Found into a spare list first: a refused move leaves the unit on its old way (B1, 2026-11-19 tests).
-        if (!FindPath(u.Cell, cell, _way, t.Naval, u.Civ))
+        if (!FindPath(u.Cell, cell, _way, t.Naval, u.Civ, searchLimit))
         {
             return "There is no way there on foot.";
         }
@@ -463,14 +498,14 @@ public sealed partial class SimGame
             return true;
         }
 
-        HexCoord c = Geo.FromIndex(from);
-        int edge = Geo.EdgeIndex(Geo.Edge(c, (HexDirection)dir));
+        Tables();
+        int edge = _edgeOf[(from * 6) + dir];
         if (Map.River[edge] == 0 || (BridgeAt.Length > 0 && BridgeAt[edge] != 0))
         {
             return true;
         }
 
-        int to = Geo.Index(Geo.Neighbor(c, (HexDirection)dir));
+        int to = _next[(from * 6) + dir];
         return CrossingAt(civ, from) || CrossingAt(civ, to);
     }
 
@@ -525,8 +560,9 @@ public sealed partial class SimGame
     }
 
     /// <summary>Finds a way from a hex to another (cleared first), true when there is one.</summary>
-    public bool FindPath(int from, int to, List<int> path, bool naval = false, int civ = -1)
+    public bool FindPath(int from, int to, List<int> path, bool naval = false, int civ = -1, int searchLimit = 0)
     {
+        int limit = searchLimit > 0 ? Math.Min(searchLimit, MaxPathNodes) : MaxPathNodes;
         ArgumentNullException.ThrowIfNull(path);
         path.Clear();
         if (from == to)
@@ -550,7 +586,7 @@ public sealed partial class SimGame
         _pathCost[from] = 0;
         _pathFrom[from] = -1;
         _open.Enqueue(from, Geo.Distance(Geo.FromIndex(from), goal) * 50);
-        Span<HexCoord> nb = stackalloc HexCoord[6];
+        Tables();
         int visited = 0;
         while (_open.TryDequeue(out int cur, out int _))
         {
@@ -565,15 +601,14 @@ public sealed partial class SimGame
                 return true;
             }
 
-            if (++visited > MaxPathNodes)
+            if (++visited > limit)
             {
                 return false;
             }
 
-            Geo.GetNeighbors(Geo.FromIndex(cur), nb);
             for (int d = 0; d < 6; d++)
             {
-                int next = Geo.Index(nb[d]);
+                int next = _next[(cur * 6) + d];
                 int step = Cost(next, naval);
                 if (step == 0 || (!naval && (!Crossable(civ, cur, d) || WalledAgainst(civ, next))))
                 {
@@ -586,7 +621,7 @@ public sealed partial class SimGame
                     _pathStamp[next] = _stamp;
                     _pathCost[next] = cost;
                     _pathFrom[next] = cur;
-                    _open.Enqueue(next, cost + (Geo.Distance(nb[d], goal) * 50));
+                    _open.Enqueue(next, cost + (Geo.Distance(Geo.FromIndex(next), goal) * 50));
                 }
             }
         }

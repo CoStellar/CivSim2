@@ -78,7 +78,7 @@ public sealed partial class SimGame
             StanceCommand c => SetStance(civ, c.Unit, c.Stance),
             GuardCommand c => SetGuard(civ, c.Unit, c.Cells),
             FormationCommand c => Formation(civ, c.Units, c.Cell, c.Facing),
-            MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path),
+            MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path, c.SearchLimit),
             PatrolCommand c => Patrol(civ, c.Unit, c.Loop ?? []),
             BuildRoadCommand c => BuildRoad(civ, c.Cells ?? [], c.Level),
             GatherCommand c => Gather(civ, c.Settlement, c.On),

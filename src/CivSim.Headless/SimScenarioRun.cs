@@ -43,6 +43,8 @@ public static class SimScenarioRun
         output.WriteLine($"Scenario {scenario.Key}: {scenario.Name}, {minutes} min.");
         double totalMs = 0;
         double worst = 0;
+        long worstTick = 0;
+        int slow = 0;
         long ticks = 0;
         for (int minute = 1; minute <= minutes; minute++)
         {
@@ -51,7 +53,13 @@ public static class SimScenarioRun
                 long start = Stopwatch.GetTimestamp();
                 g.Tick();
                 double ms = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
-                worst = Math.Max(worst, ms);
+                if (ms > worst)
+                {
+                    worst = ms;
+                    worstTick = g.Ticks;
+                }
+
+                slow += ms > 16 ? 1 : 0;
                 ticks++;
                 totalMs += ms;
             }
@@ -68,7 +76,7 @@ public static class SimScenarioRun
             output.WriteLine($"{minute,3} min  " + string.Join("  |  ", g.Civs.Select(c => Line(g, c))));
         }
 
-        output.WriteLine(string.Create(inv, $"tick: mean {totalMs / Math.Max(1, ticks):F3} ms, worst {worst:F1} ms"));
+        output.WriteLine(string.Create(inv, $"tick: mean {totalMs / Math.Max(1, ticks):F3} ms, worst {worst:F1} ms (tick {worstTick}), over 16 ms: {slow}"));
         return 0;
     }
 

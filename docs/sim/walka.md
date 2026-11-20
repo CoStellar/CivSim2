@@ -190,6 +190,12 @@ i tylko przy agresji 75 lub więcej.
 
 **Oddziałów wojska nie da się rozwiązać** (decyzja 10): wojownik zostaje wojownikiem do końca.
 
+**Najwyżej 3 wojny naraz** (`war.maxWars`, projekt gry rozdz. 8): lud w 3 wojnach nie wypowie kolejnej i nikt nie wypowie wojny jemu.
+Atak bez wypowiedzenia podlega tej samej zasadzie.
+
+**Cel poza zasięgiem:** oddział, który 3 razy nie znajdzie drogi do osady (np. za morzem) i nie ma po drodze muru do rozbicia,
+porzuca cel i czeka na rozkazy (kronika: „find no way to …”).
+
 ## Zaopatrzenie (decyzja Patryka z 2026-11-20, pytanie 1: D)
 
 Kod: `SimGame.Rations.cs` (`InSupply`, `ProvisionsMax`, `LandFood`), `SupplyUnit` w `SimGame.Logistics.cs`. Dane: sekcja `supply`.

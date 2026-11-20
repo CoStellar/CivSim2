@@ -55,6 +55,18 @@ public sealed partial class SimGame
         War()[(b * Civs.Count) + a] = war ? 1 : 0;
     }
 
+    /// <summary>Wars a people is in now.</summary>
+    public int WarsOf(int civ)
+    {
+        int n = 0;
+        for (int o = 0; o < Civs.Count; o++)
+        {
+            n += o != civ && !Civs[o].Dead && AtWar(civ, o) ? 1 : 0;
+        }
+
+        return n;
+    }
+
     private string? DeclareWar(Civ civ, int other, bool surprise)
     {
         if ((uint)other >= (uint)Civs.Count || other == civ.Id || Civs[other].Dead)
@@ -70,6 +82,16 @@ public sealed partial class SimGame
         if (AtWar(civ.Id, other))
         {
             return "We are already at war with them.";
+        }
+
+        if (WarsOf(civ.Id) >= Content.War.MaxWars)
+        {
+            return $"We already fight {Content.War.MaxWars} wars: make peace somewhere first.";
+        }
+
+        if (WarsOf(other) >= Content.War.MaxWars)
+        {
+            return $"{Civs[other].Name} already fight {Content.War.MaxWars} wars.";
         }
 
         bool truce = Truces()[(civ.Id * Civs.Count) + other] > Ticks;
@@ -130,9 +152,9 @@ public sealed partial class SimGame
             return "There is no enemy there.";
         }
 
-        if (!AtWar(civ.Id, victim))
+        if (!AtWar(civ.Id, victim) && DeclareWar(civ, victim, surprise: true) is string refused)
         {
-            DeclareWar(civ, victim, surprise: true);
+            return refused;
         }
 
         u.TargetUnit = enemyUnit;
@@ -549,17 +571,25 @@ public sealed partial class SimGame
         if (!PathFor(u, goal))
         {
             u.ChaseFailTick = Ticks;
-            if (++u.ChaseFails >= Content.Combat.ChaseGiveUp && u.TargetUnit >= 0)
-            {
-                u.TargetUnit = -1;
-                u.ChaseFails = 0;
-                return;
-            }
 
             // Walled in: break the wall nearest to us on the way.
             if (u.TargetSettlement >= 0 && NearestEnemyWall(u, goal) is int wall and >= 0)
             {
                 AttackWall(Civs[u.Civ], u.Id, wall);
+                return;
+            }
+
+            if (++u.ChaseFails >= Content.Combat.ChaseGiveUp)
+            {
+                // Tick spikes (2026-11-20): a settlement out of reach (over the sea) is given up too, not searched for good.
+                if (u.TargetUnit < 0 && u.TargetSettlement >= 0)
+                {
+                    News.Add((u.Civ, $"Our {Content.Units[u.Kind].Name.ToLowerInvariant()} find no way to {Settlements[u.TargetSettlement].Name} and wait for orders."));
+                }
+
+                u.TargetUnit = -1;
+                u.TargetSettlement = -1;
+                u.ChaseFails = 0;
             }
 
             return;

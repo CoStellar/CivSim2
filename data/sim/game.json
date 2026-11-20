@@ -2935,7 +2935,7 @@
     ]
   },
   "war": {
-    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation). declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. truceSeconds: truce after peace.",
+    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation). declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. truceSeconds: truce after peace. maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many.",
     "combatEveryTicks": 10,
     "lowLuckPercent": 80,
     "highLuckPercent": 120,
@@ -2948,7 +2948,8 @@
     "declareReputation": -10,
     "tributeNeedsKills": 5,
     "tributeFoodMaxPercent": 10,
-    "truceSeconds": 180
+    "truceSeconds": 180,
+    "maxWars": 3
   },
   "events": {
     "comment": "Every people draws one event from the shared pool every everyMinutes (a random minute within the spread), never one another people has right now. An event lasts its seconds. productionPercent changes the production of the listed goods, eatPercent what people eat, losePercentPerMinute kills that share of people a minute, destroyBuilding burns one random finished building at the start. field: the advisor field that gives advice on it.",
