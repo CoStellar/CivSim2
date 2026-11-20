@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using CivSim.Core.Map;
 using CivSim.Sim.Content;
@@ -233,7 +234,10 @@ public sealed partial class SimGame
     }
 
     /// <summary>Why a people cannot start on <paramref name="cell"/> now (null = it can).</summary>
-    public string? CannotStart(int cell)
+    public string? CannotStart(int cell) => CannotStart(cell, near: true);
+
+    // near: also the 12B rule (main continent, near the others); the AI drops it only when no place at all fits it.
+    private string? CannotStart(int cell, bool near)
     {
         if ((uint)cell >= (uint)Geo.CellCount || Content.World.Biomes[Map.Biome[cell]].IsWater)
         {
@@ -255,7 +259,7 @@ public sealed partial class SimGame
             }
         }
 
-        return null;
+        return near ? TooFar(cell) : null;
     }
 
     private void BeginPicking()
@@ -279,6 +283,7 @@ public sealed partial class SimGame
 
         PickIndex = 0;
         PickTicksLeft = Civs[PickOrder[0]].IsAi ? SimContent.TicksPerSecond : PickTicks;
+        RefreshNear();
         foreach (Civ civ in Civs)
         {
             Array.Fill(civ.Known, true); // the whole map, but the server hides deposits and fertility while picking
@@ -298,9 +303,17 @@ public sealed partial class SimGame
         }
     }
 
+    /// <summary>E13 (Patryk, 2026-11-20): a player alone chooses the start without a time limit (the AI keeps its second).</summary>
+    public bool PickWaitsForPlayers { get; set; }
+
     // One tick of the start phase: the chooser's time runs out, then the AI picks for it.
     private void PickingTick()
     {
+        if (PickWaitsForPlayers && !Civs[PickOrder[PickIndex]].IsAi)
+        {
+            return; // waits for the player's choice
+        }
+
         if (--PickTicksLeft > 0)
         {
             return;
@@ -324,14 +337,37 @@ public sealed partial class SimGame
             }
         }
 
+        bool near = best > 0;
+        if (!near)
+        {
+            for (int i = 0; i < Geo.CellCount; i++)
+            {
+                if (sites.Seen[i] > best && CannotStart(i, near: false) is null)
+                {
+                    best = sites.Seen[i]; // no place near the others is free: anywhere (12B, a fallback that should not happen)
+                }
+            }
+        }
+
         int error = civ.StartError;
         int bar = best * (100 - error) / 100;
         var pool = new List<int>();
         for (int i = 0; i < Geo.CellCount; i++)
         {
-            if (sites.Seen[i] >= bar && CannotStart(i) is null)
+            if (sites.Seen[i] >= bar && CannotStart(i, near) is null)
             {
                 pool.Add(i);
+            }
+        }
+
+        // 12B: room to grow first, when such places are left.
+        int room = Content.StartPhase.NeighbourMinHexes - BlockFuzz;
+        if (room > ShownBlockRadius)
+        {
+            var roomy = pool.FindAll(i => Array.TrueForAll(BlockCenter, b => b < 0 || Geo.Distance(Geo.FromIndex(b), Geo.FromIndex(i)) >= room));
+            if (roomy.Count > 0)
+            {
+                pool = roomy;
             }
         }
 
@@ -375,6 +411,7 @@ public sealed partial class SimGame
 
         StartCell[civ.Id] = cell;
         BlockCenter[civ.Id] = FuzzedCenter(civ.Id, cell);
+        RefreshNear();
         PickIndex++;
         if (PickIndex < PickOrder.Count)
         {
@@ -396,7 +433,16 @@ public sealed partial class SimGame
             StartMetals(c, StartCell[c.Id]);
             FoundSettlement(c, StartCell[c.Id], Content.StartPeople);
             News.Add((c.Id, StoryOf(c, StartCell[c.Id])));
+            News.Add((c.Id, StartNote())); // E14 (2026-11-20)
         }
+    }
+
+    /// <summary>E14: what the people knows after the start, and how to see more.</summary>
+    public string StartNote()
+    {
+        int scouts = Content.Units.ToList().FindIndex(u => u.Key == "scouts");
+        string tech = scouts >= 0 ? Content.Techs[Content.Units[scouts].Tech].Name : "Scouting";
+        return $"Our people know only this valley. Train scouts ({tech}) to see the world.";
     }
 
     /// <summary>Three sentences of the tribe's past, from the land it chose.</summary>
@@ -458,7 +504,21 @@ public sealed partial class SimGame
             }
 
             spots.Sort();
-            int pick = spots[(int)((((ulong)(civ.Id + 1) * 0x9E3779B97F4A7C15UL) ^ (ulong)want.Deposit) % (ulong)spots.Count)];
+            int first = (int)((((ulong)(civ.Id + 1) * 0x9E3779B97F4A7C15UL) ^ (ulong)want.Deposit) % (ulong)spots.Count);
+            int pick = spots[first];
+
+            // 7A (Patryk, 2026-11-20): a far deposit (iron 15-20 hexes) must lie on the same land, not over the sea.
+            var way = new List<int>();
+            for (int k = 0; k < Math.Min(12, spots.Count); k++)
+            {
+                int c = spots[(first + (k * 7919)) % spots.Count];
+                if (FindPath(center, c, way, false, -1, 6000))
+                {
+                    pick = c;
+                    break;
+                }
+            }
+
             Map.Deposit.Set(pick, (ushort)want.Deposit);
             Map.DepositDepth.Set(pick, (byte)want.Depth);
         }

@@ -41,6 +41,11 @@ public sealed class DecisionTests
         Civ b = g.Civs[1];
         a.Known[g.Settlements[b.Settlements[0]].Center] = true;
         Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
+        for (int i = 0; i < Content.War.TributeAfterTicks; i++)
+        {
+            g.Tick(); // 1C: tribute may be asked for only after 2 minutes of war
+        }
+
         Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 5)));
         b.IsAi = true;
         SimAi.Think(g, b);

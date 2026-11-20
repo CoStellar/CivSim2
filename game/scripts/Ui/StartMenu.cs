@@ -168,6 +168,10 @@ public partial class StartMenu : CanvasLayer
         choose.Toggled += on => _settings.ChooseStart = on;
         game.AddChild(new Control());
         game.AddChild(choose);
+        var tutorial = new CheckBox { Text = "Tutorial: first steps on screen", ButtonPressed = _settings.Tutorial, TooltipText = "A task list of the first steps; it can be turned on and off in the game (Tutorial, key T)" };
+        tutorial.Toggled += on => _settings.Tutorial = on;
+        game.AddChild(new Control());
+        game.AddChild(tutorial);
 
         _content.AddChild(new Control { CustomMinimumSize = new Vector2(0, 12) });
         var play = new Button { Text = "Play", CustomMinimumSize = new Vector2(220, 48), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
@@ -183,6 +187,7 @@ public partial class StartMenu : CanvasLayer
         return new PlayOptions(seed, width, height, Math.Clamp(_settings.Peoples, 2, 8))
         {
             StartPhase = _settings.ChooseStart,
+            Tutorial = _settings.Tutorial,
             Goal = _settings.Goal,
             WorldType = Math.Max(0, Array.FindIndex(WorldTypes, w => w.Key == _settings.WorldType)),
             WaterPercent = Waters.FirstOrDefault(w => w.Key == _settings.Water, Waters[1]).Percent,

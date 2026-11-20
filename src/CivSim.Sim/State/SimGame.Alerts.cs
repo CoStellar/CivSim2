@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using CivSim.Sim.Content;
 
@@ -33,6 +34,12 @@ public enum AlertKind
 
     /// <summary>The settlement will not have the food for its units' next ration (or did not have it at the last one).</summary>
     Rations = 8,
+
+    /// <summary>11B (2026-11-20): the settlement eats more than it makes and its food runs out within alerts.foodLowMinutes.</summary>
+    FoodLow = 9,
+
+    /// <summary>E2 (2026-11-20): nothing is being researched though something could be (the client opens the research window).</summary>
+    NoResearch = 10,
 }
 
 /// <summary>One alert. <see cref="Good"/> is −1 when it is not about a good; <see cref="Cell"/> is where to look.</summary>
@@ -61,9 +68,12 @@ public sealed partial class SimGame
             if (Content.Clothing >= 0 && (IsWinter || TicksToSeasonChange <= SimContent.TicksPerMinute) && s.People > 0
                 && s.Stock[Content.Clothing] < (long)s.People * SimContent.One)
             {
+                // E1 (2026-11-20): what winter does and what helps.
                 string when = IsWinter ? "It is winter" : $"Winter comes in {TicksToSeasonChange / SimContent.TicksPerSecond} s";
+                BuildingType? tailor = Content.Buildings.FirstOrDefault(b => b.Id > 0 && b.Produces[Content.Clothing] > 0);
+                string help = tailor is null ? "" : Knows(civ, tailor) ? $" Build a {Where(tailor.Key)}." : $" Research {Content.Techs[tailor.Tech].Name} for clothing.";
                 list.Add(new Alert(AlertKind.Clothing, s.Id, s.Center, Content.Clothing,
-                    $"{when}: {s.Name} has {s.Stock[Content.Clothing] / SimContent.One} sets of clothing for {s.People} people; its workers will be slower."));
+                    $"{when}: workers work at {Content.WinterWorkPercent}% without clothing; {s.Name} has {s.Stock[Content.Clothing] / SimContent.One} sets for {s.People} people. Keep food in store.{help}"));
             }
 
             // The next ration: what it will have by then (its makers keep making) against what everyone eats.
@@ -72,14 +82,22 @@ public sealed partial class SimGame
             long then = s.Stock[Content.Food] + ((s.Rate[Content.Food] + s.Eating) * secs / 60);
             if (s.Hungry || s.RationShort > 0)
             {
-                list.Add(new Alert(AlertKind.Hungry, s.Id, s.Center, Content.Food, s.HungerStreak >= 2
-                    ? $"{s.Name} starves: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" without food, some die at every ration (next in {secs} s)."
-                    : $"{s.Name} goes hungry: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" got no ration. Missing the next one in {secs} s kills some."));
+                list.Add(new Alert(AlertKind.Hungry, s.Id, s.Center, Content.Food, (s.HungerStreak >= 2
+                    ? $"{s.Name} starves: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" without food, some die at every ration (next in {secs} s). "
+                    : $"{s.Name} goes hungry: {s.HungryPeople} people" + (s.RationShort > 0 ? $" and {s.RationShort} units" : "") + $" got no ration. Missing the next one in {secs} s kills some. ")
+                    + HungerAdvice(civ, s)));
+            }
+            else if (s.Rate[Content.Food] < 0 && s.Stock[Content.Food] * SimContent.TicksPerSecond * 60 / -s.Rate[Content.Food] <= (long)Content.FoodLowMinutes * SimContent.TicksPerMinute)
+            {
+                // 11B (Patryk, 2026-11-20): an early warning while there is still time, with what to do.
+                long left = s.Stock[Content.Food] * 60 / -s.Rate[Content.Food];
+                list.Add(new Alert(AlertKind.FoodLow, s.Id, s.Center, Content.Food,
+                    $"Food in {s.Name} runs out in {left / 60}:{left % 60:00}: build a Gatherers' hut (Food) or put more people to food."));
             }
             else if (ration > 0 && then < ration)
             {
                 list.Add(new Alert(AlertKind.Rations, s.Id, s.Center, Content.Food,
-                    $"{s.Name} will lack food for the next ration in {secs} s: {then / SimContent.One} of {ration / SimContent.One} needed. The idle go hungry first."));
+                    $"{s.Name} will lack food for the next ration in {secs} s: {then / SimContent.One} of {ration / SimContent.One} needed. The idle go hungry first. {HungerAdvice(civ, s)}"));
             }
 
             long reported = 0;
@@ -113,7 +131,12 @@ public sealed partial class SimGame
 
             if (s.People >= s.Housing && !s.Hungry)
             {
-                list.Add(new Alert(AlertKind.NoRoom, s.Id, s.Center, -1, $"{s.Name} has no homes left and stopped growing."));
+                BuildingType? hut = Content.Buildings.FirstOrDefault(b => b.Key == "hut");
+                string next = s.Level + 1 < Content.Levels.Count ? Content.Levels[s.Level + 1].Name.ToLowerInvariant() : "";
+                string fix = Content.Levels[s.Level].MaxHousing > 0 && s.Housing >= Content.Levels[s.Level].MaxHousing
+                    ? $"upgrade it to a {next} (its panel)"
+                    : hut is not null && Knows(civ, hut) ? $"build {Where("hut")}s" : hut is not null ? $"research {Content.Techs[hut.Tech].Name} for huts" : "build homes";
+                list.Add(new Alert(AlertKind.NoRoom, s.Id, s.Center, -1, $"{s.Name} has no homes left and stopped growing: {fix}."));
             }
 
             for (int g = 0; g < Content.Goods.Count; g++)
@@ -121,6 +144,20 @@ public sealed partial class SimGame
                 if ((s.FullMask & (1L << g)) != 0 && s.Rate[g] >= 0 && MadeIn(civ, s, g))
                 {
                     list.Add(new Alert(AlertKind.StoreFull, s.Id, s.Center, g, $"{s.Name}: {Content.Goods[g].Key} is full, its makers stopped. Build a storehouse or send it away."));
+                }
+            }
+        }
+
+        // E2: nothing is being researched though something could be.
+        if (civ.Researching < 0 && civ.Settlements.Count > 0 && !Picking)
+        {
+            foreach (SimTech t in Content.Techs)
+            {
+                if (CannotResearch(civ, t.Id) is null)
+                {
+                    list.Add(new Alert(AlertKind.NoResearch, civ.Settlements[0], Settlements[civ.Settlements[0]].Center, -1,
+                        $"Nothing is being researched: {t.Name} and maybe more can be. Click to choose (Research, key 2)."));
+                    break;
                 }
             }
         }

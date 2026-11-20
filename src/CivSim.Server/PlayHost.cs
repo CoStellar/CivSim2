@@ -33,6 +33,9 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>A save to load (the other options then come from the save).</summary>
     public string? LoadPath { get; init; }
+
+    /// <summary>E6 (2026-11-20): the tutorial's task list shows on screen (its progress is kept either way).</summary>
+    public bool Tutorial { get; init; }
 }
 
 /// <summary>
@@ -51,7 +54,7 @@ public sealed class PlayHost : IDisposable
     private volatile bool _stopping;
     private volatile string? _error;
     private SimulationSpeed _speed = SimulationSpeed.Paused;
-    private readonly PlayOptions _options;
+    private PlayOptions _options;
     private readonly List<SavedCommand> _log = [];
     private SavedGame? _replay;
     private long _lastAutosave;
@@ -109,6 +112,7 @@ public sealed class PlayHost : IDisposable
         }
 
         game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
+        game.PickWaitsForPlayers = true; // E13 (2026-11-20): alone, the player chooses the start without a time limit
         game.RestartPickClock();
         return new PlayHost(game, options) { _replay = save };
     }
@@ -323,6 +327,9 @@ public sealed class PlayHost : IDisposable
                         _log.Add(SavedCommand.Of(_game.Ticks, client.Civ, command)); // the save plays it again at this tick
                     }
 
+                    break;
+                case SetTutorialMessage tutorial when client.Civ >= 0:
+                    _options = _options with { Tutorial = tutorial.On }; // kept in the next saves
                     break;
                 case SaveGameRequestMessage save when client.Civ >= 0:
                     client.Connection.Send(Save(save.Name));
@@ -647,7 +654,7 @@ public sealed class PlayHost : IDisposable
         var buildings = new List<PlayBuildingInfo>();
         foreach (BuildingType t in content.Buildings)
         {
-            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech, t.Groups, t.Size, t.UpgradesTo));
+            buildings.Add(new PlayBuildingInfo(t.Id, t.Key, t.Name, t.Workers, t.Price, t.BuildTicks / SimContent.TicksPerSecond, t.Produces, t.Consumes, t.Housing, t.Storage, t.Id == 0 ? "" : _game.Needs(t), t.Tech, t.Groups, t.Size, t.UpgradesTo, Carriers(content, t)));
         }
 
         var levels = new List<PlayLevelInfo>();
@@ -1065,7 +1072,8 @@ public sealed class PlayHost : IDisposable
                 HealPerMinute: own ? s.HealPerMinute : 0, RationUnits: rUnits, RationPeople: rPeople, RationFood: rFood,
                 RationShort: own ? s.RationShort : 0, RationDead: own ? s.RationDead : 0,
                 HungryPeople: own ? s.HungryPeople : 0, HungryWorkers: own ? s.HungryWorkers : 0,
-                Guard: s.Guard, GuardMax: own ? _game.GuardMax(s) : 0, FallenToUs: s.FallenTo == civId, Fighters: s.Besieged ? s.Fighters : 0));
+                Guard: s.Guard, GuardMax: own ? _game.GuardMax(s) : 0, FallenToUs: s.FallenTo == civId, Fighters: s.Besieged ? s.Fighters : 0,
+                FoodBalance: own ? _game.FoodBalance(civ, s) : null));
         }
 
         if (!_game.Picking)
@@ -1164,7 +1172,23 @@ public sealed class PlayHost : IDisposable
             AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0,
             Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond),
             RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond, Debug: _game.DebugOn,
-            ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone(), Won: _game.Winner == civId);
+            ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone(), Won: _game.Winner == civId,
+            EventInfo: civ.Event >= 0 ? _game.EventInfo(_game.Content.Events[civ.Event]) : null,
+            Tutorial: civ.Settlements.Count > 0 ? [.. _game.Tutorial(civ).Select(t => new PlayTutorialStep(t.Text, t.Done, t.Highlight))] : null,
+            TutorialOn: _options.Tutorial, PickNoLimit: _game.PickWaitsForPlayers);
+    }
+
+    // E9 (2026-11-20): people the materials of a building take from home while porters carry them (as NewCarrier counts them).
+    private static int Carriers(SimContent content, BuildingType t)
+    {
+        long total = 0;
+        foreach (long p in t.Price)
+        {
+            total += p;
+        }
+
+        long each = Math.Max(1, content.Units[content.Porters].CargoPerPerson);
+        return total <= 0 ? 0 : (int)((total + each - 1) / each);
     }
 
     // What a technology opens and changes, worked out from the data (so the player sees exactly what it does).

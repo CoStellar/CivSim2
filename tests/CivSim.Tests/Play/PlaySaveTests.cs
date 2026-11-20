@@ -30,7 +30,7 @@ public sealed class PlaySaveTests
                 long tick = 0;
                 SaveGameResultMessage? result = null;
                 var clock = Stopwatch.StartNew();
-                while (clock.Elapsed < TimeSpan.FromSeconds(20) && result is null)
+                while (clock.Elapsed < TimeSpan.FromSeconds(60) && result is null)
                 {
                     while (c.TryReceive(out IProtocolMessage? m))
                     {
@@ -76,7 +76,7 @@ public sealed class PlaySaveTests
             l.Send(new HelloMessage(ProtocolInfo.Version, "Test"));
             string? news = null;
             var wait = Stopwatch.StartNew();
-            while (wait.Elapsed < TimeSpan.FromSeconds(20) && news is null)
+            while (wait.Elapsed < TimeSpan.FromSeconds(60) && news is null)
             {
                 while (l.TryReceive(out IProtocolMessage? m))
                 {

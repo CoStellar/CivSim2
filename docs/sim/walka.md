@@ -244,6 +244,19 @@ Gracz wybiera w opisie oddziału (przyciski pojawiają się po nowym poziomie). 
 - jazda: na zmianę Forced march i Hardened;
 - piechota: na zmianę Hardened i Shield wall.
 
+## Decyzje po testach z 2026-11-20 (`claude/decyzje-testy-2026-11-20.md`)
+
+| Nr | Zasada | Dane |
+| --- | --- | --- |
+| 1C | Wynik wojny liczy się od początku bieżącej wojny (przy wypowiedzeniu zeruje się dla obu stron). Pokój z trybutem można zaproponować dopiero 120 s po wypowiedzeniu; zwykły pokój zawsze | `war.tributeAfterSeconds` |
+| 2B | Łupy (50% każdego dobra) jadą karawaną z łupionej osady do naszej najbliższej; napad na karawanę je zabiera. Tę samą osadę można złupić znowu dopiero po 600 s. AI zajmuje osadę do 12 heksów od swojej, dalej łupi | `siege.sackImmuneSeconds`, `siege.aiTakeWithinHexes` |
+| 3B | Zrównana osada: w ruinach zostaje 25% magazynu, reszta przepada | `ruins.razedKeepPercent` |
+| 4B | Mennica: 1 miedź → 4 monety (było 10) | budynek `mint` |
+| 5B | Osadnicy liczą odległość tylko od osad, które ich lud widzi albo pamięta | — |
+| 6C | Reputacja nie spada poniżej −200. AI z reputacją poniżej −100 wypowiada nowe wojny o połowę rzadziej | `war.reputationFloor`, `war.badReputation` |
+| 13B | Szturm zaczyna się 30 s po początku blokady; wcześniej oblegający tylko blokują (nikt nie ginie). Skąd 30 s: alert przychodzi od razu, a gra zwalnia do ×1; ok. 10 s na zauważenie i rozkaz; najbliższa własna osada stoi zwykle 6 heksów dalej (pomiar: 3 gry AI po 70 min, mediana 6), a piechota idzie 0,6–0,9 s na heks, czyli 4–6 s; z odległości 15 heksów 9–14 s. Razem ok. 20–25 s, z zapasem 30 s | `siege.assaultAfterSeconds` |
+| 14C | Progi weteranów 50/150/350/700 zabitych. Zabity liczy się dla rodzaju, który go zabił, i dla każdego innego rodzaju naszego wojska walczącego do 2 heksów od niego (raz na rodzaj) | `veterans.levels`, `veterans.shareNearHexes` |
+
 ## Czego jeszcze nie ma (kolejne paczki)
 
 AI walki (formacje, flanki, odskoki jazdy).

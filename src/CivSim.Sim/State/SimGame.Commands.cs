@@ -263,6 +263,21 @@ public sealed partial class SimGame
         return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
     }
 
+    /// <summary>9B (Patryk, 2026-11-20): why no more homes go up in a settlement at its level's limit (null = they may).</summary>
+    public string? HomesFull(Settlement s, BuildingType t)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        ArgumentNullException.ThrowIfNull(t);
+        int most = Content.Levels[s.Level].MaxHousing;
+        if (most <= 0 || t.Housing <= 0 || t.Warm || Array.IndexOf(t.Groups, "house") < 0 || s.Housing < most)
+        {
+            return null;
+        }
+
+        string next = s.Level + 1 < Content.Levels.Count ? $" Upgrade it to a {Content.Levels[s.Level + 1].Name.ToLowerInvariant()} to grow on." : "";
+        return $"{s.Name} has all the homes a {Content.Levels[s.Level].Name.ToLowerInvariant()} can have ({most}).{next}";
+    }
+
     /// <summary>A price times a percent, as paid (<see cref="Pay"/>).</summary>
     public static long[] Scaled(long[] price, int percent)
     {
@@ -421,6 +436,11 @@ public sealed partial class SimGame
         if (SettlementAt[cell] is int bs and >= 0 && Settlements[bs].Besieged && Array.IndexOf(t.Groups, "road") < 0)
         {
             return $"{Settlements[bs].Name} is under siege: nothing new is built there.";
+        }
+
+        if (SettlementAt[cell] is int hs and >= 0 && HomesFull(Settlements[hs], t) is string full)
+        {
+            return full;
         }
 
         Place(civ, cell, t, SlotsFor(cell, t.Size), null);

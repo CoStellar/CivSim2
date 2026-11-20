@@ -145,6 +145,11 @@ public static partial class SimAi
             {
                 return false;
             }
+
+            if (civ.People < g.Content.AiSmallPeople && freeJobs > 0)
+            {
+                return false; // 17B (Patryk, 2026-11-20): a small people fills the jobs it has first (8 huts for 9 people)
+            }
         }
 
         int best = -1;
@@ -316,10 +321,20 @@ public static partial class SimAi
         {
             Settlement s = g.Settlements[sid];
             idle += s.Idle;
-            crowded |= s.People >= s.Housing - 4;
+            int most = g.Content.Levels[s.Level].MaxHousing;
+            crowded |= s.People >= s.Housing - 4 && (most <= 0 || s.Housing < most); // 9B: no homes past the level's limit
         }
 
-        if (crowded && (TryBuild(g, civ, "stone_house") || TryBuild(g, civ, "hut")))
+        // 16B (Patryk, 2026-11-20): new homes only with food on hand for homesFoodMinutes of eating; without it more people
+        // only starve the next winter.
+        long eating = 0;
+        foreach (int sid in civ.Settlements)
+        {
+            eating += g.Settlements[sid].Eating;
+        }
+
+        bool fed = civ.Stock[g.Content.Food] >= eating * g.Content.AiHomesFoodMinutes;
+        if (crowded && fed && (TryBuild(g, civ, "stone_house") || TryBuild(g, civ, "hut")))
         {
             return true;
         }
@@ -506,8 +521,69 @@ public static partial class SimAi
         }
     }
 
+    // The buildable maker of an input the building lacks (none in store and none made), or null.
+    private static string? InputMaker(SimGame g, Civ civ, BuildingType b)
+    {
+        for (int i = 0; i < b.Consumes.Length; i++)
+        {
+            if (b.Consumes[i] <= 0 || civ.Stock[i] >= 5 * SimContent.One || civ.Rate[i] > 0)
+            {
+                continue;
+            }
+
+            foreach (BuildingType m in g.Content.Buildings)
+            {
+                if (m.Id > 0 && m.Produces[i] > 0 && SimGame.Knows(civ, m) && !Has(g, civ, m.Key) && Buildable(g, civ, m))
+                {
+                    return m.Key;
+                }
+            }
+        }
+
+        return null;
+    }
+
     internal static string? Teacher(SimGame g, Civ civ, bool missingOnly = false)
     {
+        // 7A (2026-11-20): goods the next era asks to have made (iron age: bronze) come first once its gateway is known.
+        int nextEra = civ.Era + 1;
+        int gate0 = g.Content.GatewayOf(civ.Era);
+        if (nextEra < g.Content.EraEntryMade.Length && (gate0 < 0 || civ.KnownTech[gate0]))
+        {
+            long[] need = g.Content.EraEntryMade[nextEra];
+            for (int good = 0; good < need.Length; good++)
+            {
+                if (need[good] <= 0 || civ.Made[good] / SimContent.TicksPerMinute >= need[good])
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id <= 0 || b.Produces[good] <= 0 || !SimGame.Knows(civ, b))
+                    {
+                        continue;
+                    }
+
+                    if (!Has(g, civ, b.Key))
+                    {
+                        if (Buildable(g, civ, b))
+                        {
+                            return b.Key;
+                        }
+
+                        continue;
+                    }
+
+                    // The maker stands: what it lacks (bronze waited for tin) is the next thing to build.
+                    if (InputMaker(g, civ, b) is string input)
+                    {
+                        return input;
+                    }
+                }
+            }
+        }
+
         // The gateway's way first, then the rest in the order of the tree.
         bool[] way = GatewayWay(g, civ);
         var order = new List<SimTech>(g.Content.Techs.Count);
@@ -729,6 +805,71 @@ public static partial class SimAi
             }
         }
 
+        // 7A: the inputs of what the next era asks to have made (bronze: copper and tin), when only a mine makes them.
+        if (civ.Era + 1 < g.Content.EraEntryMade.Length)
+        {
+            long[] need = g.Content.EraEntryMade[civ.Era + 1];
+            for (int good = 0; good < need.Length; good++)
+            {
+                if (need[good] <= 0 || civ.Made[good] / SimContent.TicksPerMinute >= need[good])
+                {
+                    continue;
+                }
+
+                foreach (BuildingType maker in g.Content.Buildings)
+                {
+                    if (maker.Id <= 0 || maker.Produces[good] <= 0)
+                    {
+                        continue;
+                    }
+
+                    for (int i = 0; i < maker.Consumes.Length; i++)
+                    {
+                        if (maker.Consumes[i] <= 0 || civ.Rate[i] > 0)
+                        {
+                            continue;
+                        }
+
+                        foreach (BuildingType mine in g.Content.Buildings)
+                        {
+                            if (mine.Id > 0 && mine.Produces[i] > 0 && mine.OrDeposit > 0 && mine.OrDeposit < want.Length && SimGame.Knows(civ, mine)
+                                && !Has(g, civ, mine.Key) && !Buildable(g, civ, mine))
+                            {
+                                want[mine.OrDeposit] = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 7A (Patryk, 2026-11-20): experience that only a mine gives (iron working: an iron mine) for the technologies of our era.
+        // Without such a mine in our land, settlers go to the deposit ("a settlement by the iron ore").
+        foreach (SimTech t in g.Content.Techs)
+        {
+            if (civ.KnownTech[t.Id] || t.Era != civ.Era)
+            {
+                continue;
+            }
+
+            foreach ((int req, long need) in t.Experience)
+            {
+                if (!civ.KnownTech[req] || civ.Experience[req] >= need)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && b.OrDeposit > 0 && b.OrDeposit < want.Length && SimGame.Knows(civ, b)
+                        && !Has(g, civ, b.Key) && !Buildable(g, civ, b))
+                    {
+                        want[b.OrDeposit] = true;
+                    }
+                }
+            }
+        }
+
         return want;
     }
 
@@ -937,10 +1078,13 @@ public static partial class SimAi
     // Hexes a scout's way search may look at: a target ~14 hexes off needs far fewer; one beyond a river or a sea fails fast.
     private const int ScoutSearchLimit = 1500;
 
+    // 17B (Patryk, 2026-11-20): a people this small needs every person at home.
+    private static bool Small(SimGame g, Civ civ) => civ.People < g.Content.AiSmallPeople;
+
     private static void Scouts(SimGame g, Civ civ)
     {
         UnitType scouts = g.Content.Unit("scouts");
-        if (Own(g, civ, t => t.Key == "scouts") == 0 && g.Ticks < 20 * SimContent.TicksPerMinute && Affordable(civ, scouts.Price, 50))
+        if (Own(g, civ, t => t.Key == "scouts") == 0 && g.Ticks < 30 * SimContent.TicksPerMinute && Affordable(civ, scouts.Price, 50) && !Small(g, civ)) // 17B: later, once 30 people
         {
             g.Apply(new TrainCommand(civ.Id, civ.Settlements[0], scouts.Id));
         }
@@ -1002,7 +1146,7 @@ public static partial class SimAi
             }
 
             bool wanted = t.Survey == 1 ? civ.Era >= 1 : civ.Era == 0;
-            if (!any && wanted && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
+            if (!any && wanted && !Small(g, civ) && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
                 && Own(g, civ, _ => true) == Own(g, civ, _ => true, includeTraining: false))
             {
                 g.Apply(new TrainCommand(civ.Id, civ.Settlements[0], t.Id));
@@ -1021,10 +1165,14 @@ public static partial class SimAi
                 ulong z = ((ulong)g.Ticks * 0x9E3779B97F4A7C15UL) ^ ((ulong)(u.Id + 1) * 0xBF58476D1CE4E5B9UL);
                 Settlement home = g.Settlements[civ.Settlements[(int)(Mix(ref z) % (ulong)civ.Settlements.Count)]];
                 HexCoord c = g.Geo.FromIndex(home.Center);
+                // 7A (2026-11-20): while a deposit we need is not found (iron 15-20 hexes away), prospectors look farther.
+                bool far = t.Survey == 1 && Array.IndexOf(WantedDeposits(g, civ), true) >= 0;
+                int wide = far ? 22 : 12;
+                int tall = far ? 18 : 9;
                 for (int tries = 0; tries < 16; tries++)
                 {
-                    int dc = (int)(Mix(ref z) % 25) - 12;
-                    int dr = (int)(Mix(ref z) % 19) - 9;
+                    int dc = (int)(Mix(ref z) % (ulong)((2 * wide) + 1)) - wide;
+                    int dr = (int)(Mix(ref z) % (ulong)((2 * tall) + 1)) - tall;
                     int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
                     bool looked = t.Survey == 1 ? g.RockLookedAt(civ, cell) : g.KnowsSoil(civ, cell);
                     if (civ.Known[cell] && !looked && g.OwnerAt[cell] < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater
@@ -1052,6 +1200,11 @@ public static partial class SimAi
     {
         UnitType settlers = g.Content.Unit("settlers");
         int cap = 2 + (civ.Expansion / 25) + g.EraOf(civ);
+        if (DepositSite(g, civ, g.Settlements[civ.Settlements[0]].Center) >= 0)
+        {
+            cap++; // 7A (2026-11-20): one more camp for a deposit the way on needs (tin, iron) when one is known
+        }
+
         if (Own(g, civ, t => t.Founds) == 0 && civ.Settlements.Count < cap && NetFood(g, civ) > 0)
         {
             foreach (int sid in civ.Settlements)
@@ -1073,7 +1226,7 @@ public static partial class SimAi
                 continue;
             }
 
-            if (g.CannotFound(u.Cell) is null)
+            if (g.CannotFound(u.Cell, civ) is null)
             {
                 g.Apply(new FoundCommand(civ.Id, u.Id));
                 continue;
@@ -1089,8 +1242,54 @@ public static partial class SimAi
 
     // A known free land hex 6–12 hexes away where a camp may stand, with the most food-friendly land around: the biome and
     // water, plus what our prospectors and surveyors found within 2 hexes (known soil and deposits only, 2026-11-19).
+    // 7A (2026-11-20): a free place to found a camp within 2 hexes of a known deposit the way on needs and none of our
+    // settlements holds, the nearest to us within 25 hexes (−1 = none).
+    private static int DepositSite(SimGame g, Civ civ, int from)
+    {
+        bool[] wanted = WantedDeposits(g, civ);
+        if (Array.IndexOf(wanted, true) < 0)
+        {
+            return -1;
+        }
+
+        HexCoord c = g.Geo.FromIndex(from);
+        Span<HexCoord> around = stackalloc HexCoord[HexGlobe.RangeSize(2)];
+        var area = new HexCoord[HexGlobe.RangeSize(25)];
+        int n = g.Geo.Range(c, 25, area);
+        int best = -1;
+        int bestD = int.MaxValue;
+        for (int k = 0; k < n; k++)
+        {
+            int cell = g.Geo.Index(area[k]);
+            int d = g.Map.Deposit[cell];
+            if (d <= 0 || d >= wanted.Length || !wanted[d] || g.OwnerAt[cell] >= 0 || !g.KnowsDeposit(civ, cell))
+            {
+                continue;
+            }
+
+            int m = g.Geo.Range(area[k], 2, around);
+            for (int j = 0; j < m; j++)
+            {
+                int site = g.Geo.Index(around[j]);
+                int dist = g.Geo.Distance(c, around[j]);
+                if (dist < bestD && civ.Known[site] && g.Map.Relief[site] < 2 && g.CannotFound(site, civ) is null)
+                {
+                    best = site;
+                    bestD = dist;
+                }
+            }
+        }
+
+        return best;
+    }
+
     private static int BestSite(SimGame g, Civ civ, int from)
     {
+        if (DepositSite(g, civ, from) is int deposit and >= 0)
+        {
+            return deposit;
+        }
+
         HexCoord c = g.Geo.FromIndex(from);
         int best = -1;
         int bestScore = int.MinValue;
@@ -1102,7 +1301,7 @@ public static partial class SimAi
             for (int k = 0; k < n; k += 2)
             {
                 int cell = g.Geo.Index(ring[k]);
-                if (!civ.Known[cell] || g.CannotFound(cell) is not null)
+                if (!civ.Known[cell] || g.CannotFound(cell, civ) is not null)
                 {
                     continue;
                 }
@@ -1168,7 +1367,7 @@ public static partial class SimAi
         }
 
         int want = civ.People * (5 + (civ.Aggression / 5)) / 100;
-        if (soldiers >= want || NetFood(g, civ) < 2 * SimContent.One)
+        if (soldiers >= want || NetFood(g, civ) < 2 * SimContent.One || Small(g, civ))
         {
             return;
         }
@@ -1258,7 +1457,8 @@ public static partial class SimAi
                 int theirs = g.Score(other.Id, civ.Id);
                 if ((theirs > mine + 20 || g.AiRandom.NextInt(100) < 3) && !g.PeaceOffers.Exists(o => o.From == civ.Id && o.To == other.Id))
                 {
-                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, g.SuggestedTribute(civ.Id, other.Id)));
+                    bool early = g.Ticks - g.WarStart(civ.Id, other.Id) < g.Content.War.TributeAfterTicks; // 1C: no tribute yet
+                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, early ? 0 : g.SuggestedTribute(civ.Id, other.Id)));
                 }
 
                 if (target is not null && idle.Count > 0 && power > 0)
@@ -1284,7 +1484,8 @@ public static partial class SimAi
                 ? (target.People, target.Guard, g.Defense(target))
                 : civ.SeenSettlements.TryGetValue(target.Center, out SettlementMemory? seen) ? (seen.People, seen.Guard, seen.DefensePercent) : (target.People, target.Guard, g.Defense(target));
             long defence = (((long)people * g.Content.War.DefenderPercent / 100 * g.Content.War.DefenderStrength) + ((long)guard * g.Content.Siege.GuardStrength)) * defensePct;
-            if (power > defence * 2 && g.AiRandom.NextInt(100) < civ.Aggression / 10)
+            int warlike = civ.Reputation < g.Content.War.BadReputation ? civ.Aggression / 20 : civ.Aggression / 10; // 6C: a bad name, half as often
+            if (power > defence * 2 && g.AiRandom.NextInt(100) < warlike)
             {
                 if (civ.Aggression < 75)
                 {
@@ -1319,7 +1520,7 @@ public static partial class SimAi
     }
 
     /// <summary>
-    /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within 20 hexes of its own, sacks one farther away (it could
+    /// What the AI does with a settlement that fell to it (2026-11-20): it takes one within siege.aiTakeWithinHexes (12) of its own, sacks one farther away (it could
     /// not hold it), and razes it only when it is the loser's last home.
     /// </summary>
     public static TakeChoice TakeChoiceFor(SimGame g, Civ civ, Settlement s)
@@ -1338,7 +1539,7 @@ public static partial class SimAi
             nearest = Math.Min(nearest, g.Geo.Distance(g.Geo.FromIndex(g.Settlements[sid].Center), g.Geo.FromIndex(s.Center)));
         }
 
-        return nearest <= 20 ? TakeChoice.Take : TakeChoice.Sack;
+        return nearest <= g.Content.Siege.AiTakeWithinHexes ? TakeChoice.Take : TakeChoice.Sack; // 2B: 12 hexes (was 20)
     }
 
     // Tick spikes (2026-11-20): armies sent to a settlement beyond the sea searched a way twice a second for good. The AI

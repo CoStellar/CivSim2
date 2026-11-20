@@ -79,7 +79,7 @@ python3 data/sim/tools/build_game_json.py                      # po zmianie skry
 dotnet build -c Release -v q                                     # ostrzeżenia są błędami
 dotnet test tests/CivSim.Sim.Tests -c Release -v q
 dotnet test tests/CivSim.Tests -c Release -v q
-dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12 --minutes 75   # pomiar AI i tempa er
+dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12 --minutes 75 [--size 98x60]   # pomiar AI i tempa er (domyślnie mapa „Normal” 98×60)
 dotnet run --project src/CivSim.Headless -c Release -- --sim-scenario <nazwa> [--minutes N] [--ai-all]
 cd game && dotnet build                                         # klient
 ```

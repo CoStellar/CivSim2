@@ -171,6 +171,9 @@ public sealed class StartSettings
     /// <summary>New game: peoples choose where they start.</summary>
     public bool ChooseStart { get; set; } = true;
 
+    /// <summary>New game: the tutorial's task list on screen (E6, 2026-11-20).</summary>
+    public bool Tutorial { get; set; } = true;
+
     /// <summary>New game: number of peoples (the player's included).</summary>
     public int Peoples { get; set; } = 4;
 

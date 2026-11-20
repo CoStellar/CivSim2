@@ -24,7 +24,8 @@ public sealed record PlayBuildingInfo(
     [property: Key(11)] int Tech = 0,
     [property: Key(12)] string[]? Groups = null,
     [property: Key(13)] int Size = 1,
-    [property: Key(14)] int UpgradesTo = 0);
+    [property: Key(14)] int UpgradesTo = 0,
+    [property: Key(15)] int Carriers = 0);
 
 /// <summary>A unit kind of the new game.</summary>
 [MessagePackObject]
@@ -208,7 +209,8 @@ public sealed record PlaySettlementView(
     [property: Key(26)] int Guard = 0,
     [property: Key(27)] int GuardMax = 0,
     [property: Key(28)] bool FallenToUs = false,
-    [property: Key(29)] int Fighters = 0);
+    [property: Key(29)] int Fighters = 0,
+    [property: Key(30)] string? FoodBalance = null);
 
 /// <summary>A standing caravan route of the player.</summary>
 [MessagePackObject]
@@ -320,7 +322,15 @@ public sealed record PlayViewMessage(
     [property: Key(47)] int[]? KindLevel = null,
     [property: Key(48)] int[]? KindPending = null,
     [property: Key(49)] int[]? KindPicks = null,
-    [property: Key(50)] bool Won = false) : IProtocolMessage;
+    [property: Key(50)] bool Won = false,
+    [property: Key(51)] string? EventInfo = null,
+    [property: Key(52)] IReadOnlyList<PlayTutorialStep>? Tutorial = null,
+    [property: Key(53)] bool TutorialOn = false,
+    [property: Key(54)] bool PickNoLimit = false) : IProtocolMessage;
+
+/// <summary>One step of the tutorial (E6, 2026-11-20): what to do, whether it is done, the building key to highlight ("" = none).</summary>
+[MessagePackObject]
+public sealed record PlayTutorialStep([property: Key(0)] string Text, [property: Key(1)] bool Done, [property: Key(2)] string Highlight);
 
 /// <summary>
 /// Server → client, up to ten times a second: only the buildings, settlements and units that appeared or changed for this
@@ -508,6 +518,10 @@ public sealed record PlayCommandMessage(
     [property: Key(7)] int C = 0,
     [property: Key(8)] int[]? Cells = null,
     [property: Key(9)] int D = 0) : IProtocolMessage;
+
+/// <summary>Client → server: the tutorial's task list on or off for this game (kept in its saves).</summary>
+[MessagePackObject]
+public sealed record SetTutorialMessage([property: Key(0)] bool On) : IProtocolMessage;
 
 /// <summary>Client → server: save the game under <c>Name</c> (file name without folder or extension).</summary>
 [MessagePackObject]
