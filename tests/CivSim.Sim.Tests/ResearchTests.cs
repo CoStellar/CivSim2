@@ -78,18 +78,37 @@ public sealed class ResearchTests
     {
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
-        while (civ.ThinkerOffer is null)
-        {
-            g.Tick();
-        }
 
+        // A candidate only asks for goods the people knows (E17), so the people holds some of every good first.
         for (int i = 0; i < civ.Stock.Length; i++)
         {
             g.Settlements[civ.Settlements[0]].Stock[i] = 900 * SimContent.One;
         }
 
+        long limit = g.Ticks + (10L * SimContent.TicksPerMinute);
+        while (civ.ThinkerOffer is null && g.Ticks < limit)
+        {
+            g.Tick();
+        }
+
+        Assert.NotNull(civ.ThinkerOffer);
         Person offer = civ.ThinkerOffer;
         Assert.Null(g.Apply(new HireCommand(civ.Id, false)));
         Assert.Same(offer, civ.Thinker);
+    }
+
+    [Fact]
+    public void NoCandidateAsksForGoodsThePeopleDoesNotKnow()
+    {
+        // E17: thinkers ask for clay; a people that has none and knows no building making it gets no offer yet.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Assert.Equal(0, civ.Stock[Content.GoodId("clay")]);
+        for (long t = 0; t < 10L * SimContent.TicksPerMinute; t++)
+        {
+            g.Tick();
+        }
+
+        Assert.Null(civ.ThinkerOffer);
     }
 }
