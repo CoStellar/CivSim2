@@ -412,6 +412,12 @@ public sealed class Civ
     /// <summary>AI: goods it saves for the technology it wants next (null = none); building and training leave them.</summary>
     public long[]? AiSaving { get; set; }
 
+    /// <summary>AI memory: whether its army can reach a settlement on foot from a hex (key: settlement × hexes + hex), and when it looked.</summary>
+    public Dictionary<long, (bool Way, long Tick)> AiWayTo { get; } = [];
+
+    /// <summary>AI memory: its scouts found no way to new land; they try again after this tick.</summary>
+    public long AiScoutWait { get; set; }
+
     /// <summary>Character of an AI: how eager to spread, 0–100.</summary>
     public int Expansion { get; set; }
 

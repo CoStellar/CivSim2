@@ -324,7 +324,9 @@ d["food"].pop("idleForagePerMinute",None)
 d["war"]["injuredPercent"]=30
 # E1, E3 (Patryk, 2026-11-19): declaring war costs reputation; the AI pays tribute only after it lost tributeNeedsKills people
 # to the war; food in a tribute is at most tributeFoodMaxPercent of the payer's food; truceSeconds after peace.
-d["war"].update({"declareReputation":-10,"tributeNeedsKills":5,"tributeFoodMaxPercent":10,"truceSeconds":180})
+d["war"].update({"declareReputation":-10,"tributeNeedsKills":5,"tributeFoodMaxPercent":10,"truceSeconds":180,"maxWars":3})
+if "maxWars" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many."
 if "declareReputation" not in d["war"]["comment"]:
     d["war"]["comment"]+=" declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. truceSeconds: truce after peace."
 d["war"].pop("soldierFoodPerMinute", None)

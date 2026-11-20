@@ -8,7 +8,6 @@ gdy znajdziesz nowy, dopisz go z datą, źródłem i tym, co już wiadomo. Probl
 | # | Problem | Skąd wiemy | Co wiadomo | Co dalej |
 | --- | --- | --- | --- | --- |
 | 1 | **FPS klienta nie jest zmierzony.** | — | W chmurze nie da się uruchomić Godota z oknem. | Pomiar na komputerze Patryka. |
-| 2 | **Skoki czasu taktu.** Średnio 0,9 ms, najgorszy takt 212 ms. | `--sim-scenario 10_siege_supply --minutes 6`, 2026-11-20 | Przyczyny jeszcze nie szukaliśmy. | Pomiar, który system trwa długo (ROADMAP, zadanie 3). |
 | 3 | **Niestabilny test serwera** `ObserverLayerTests.ObserverGetsLayersAndTheFogOfAWatchedCivilization`: raz na kilka przebiegów pada w całym zestawie, sam przechodzi. | pamięć projektu | W przebiegach z 2026-11-20 nie padł. | Gdy padnie: przyczyna (zależność od czasu?), nie wyłączać testu. |
 | 4 | **AI nie korzysta ze statków.** Nie wsiada na transportowce i nie szuka handlu morskiego. | przegląd 2026-11-18 | U gracza statki działają. | Po demo; do demo mapy kontynentalne. |
 | 5 | **AI trochę głoduje**, głównie w świeżych obozach. | `--sim-report`, 2026-11-20: 7–8% próbek z głodem | Lepiej od zapasu osadników i chaty zbieraczy na start (#107). | Ocena Patryka po graniu. |
@@ -22,6 +21,7 @@ gdy znajdziesz nowy, dopisz go z datą, źródłem i tym, co już wiadomo. Probl
 
 | Problem | PR |
 | --- | --- |
+| Skoki czasu taktu do 300 ms: armie szukały drogi do osad za morzem dwa razy na sekundę, zwiadowcy szukali drogi do 12 razy na myślenie, szukanie drogi pytało o nazwę muru na każdym kroku | sprint 2026-11-20 (`feat/war-limit-ticks`) |
 | AI nie stawiało kopalni miedzi w młodych obozach (złoże w osadzie bez towarów) | #109 |
 | Atak na heks spoza mapy rzucał wyjątek | #111 |
 | Ludy AI ginęły w wojnach w pierwszych 20–40 minutach (teraz 0,1–0,2 na grę) | #110 (oblężenie) |

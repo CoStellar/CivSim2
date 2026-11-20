@@ -1,7 +1,7 @@
 {
   "name": "Siege and supply",
   "description": "Bronze Age, at war. Our army stands at home; the enemy town is far away and does not attack. Walk there: away from our land the units eat their packs (see Provisions in the unit panel), send food caravans, blockade the town (it works at half and gets no caravans), beat its guard and fighting residents, then take, sack or raze it.",
-  "seed": 12,
+  "seed": 16,
   "peoples": 2,
   "revealMap": true,
   "wars": [[0, 1]],

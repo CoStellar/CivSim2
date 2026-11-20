@@ -647,7 +647,42 @@ public static partial class SimAi
     }
 
     // True when the building may stand on some hex of our settlements (its deposit, water and a free place).
+    // Tick spikes (2026-11-20): Buildable looks at every hex of every settlement; one thought asks for the same building many
+    // times (the teacher is sought up to three times), so the answers are kept for the thought.
+    // Per thread (games may run side by side in tests and tools) and per game.
+    [ThreadStatic]
+    private static SimGame? _buildableGame;
+    [ThreadStatic]
+    private static long _buildableTick;
+    [ThreadStatic]
+    private static int _buildableCiv;
+    [ThreadStatic]
+    private static sbyte[]? _buildable;
+
     private static bool Buildable(SimGame g, Civ civ, BuildingType b)
+    {
+        if (_buildable is null || _buildableGame != g || _buildableTick != g.Ticks || _buildableCiv != civ.Id || _buildable.Length != g.Content.Buildings.Count)
+        {
+            _buildableGame = g;
+            _buildableTick = g.Ticks;
+            _buildableCiv = civ.Id;
+            if (_buildable is null || _buildable.Length != g.Content.Buildings.Count)
+            {
+                _buildable = new sbyte[g.Content.Buildings.Count];
+            }
+
+            Array.Fill(_buildable, (sbyte)-1);
+        }
+
+        if (_buildable[b.Id] < 0)
+        {
+            _buildable[b.Id] = (sbyte)(BuildableNow(g, civ, b) ? 1 : 0);
+        }
+
+        return _buildable[b.Id] == 1;
+    }
+
+    private static bool BuildableNow(SimGame g, Civ civ, BuildingType b)
     {
         foreach (int sid in civ.Settlements)
         {
@@ -898,6 +933,9 @@ public static partial class SimAi
         return n;
     }
 
+    // Hexes a scout's way search may look at: a target ~14 hexes off needs far fewer; one beyond a river or a sea fails fast.
+    private const int ScoutSearchLimit = 1500;
+
     private static void Scouts(SimGame g, Civ civ)
     {
         UnitType scouts = g.Content.Unit("scouts");
@@ -909,19 +947,34 @@ public static partial class SimAi
         foreach (int id in civ.Units.ToArray())
         {
             Unit u = g.Units[id];
-            if (u.Kind == scouts.Id && u.State == UnitState.Idle)
+            if (u.Kind == scouts.Id && u.State == UnitState.Idle && g.Ticks >= civ.AiScoutWait)
             {
-                // Walk to an unknown land hex some way off; the hex is picked from the AI's own random stream.
-                for (int tries = 0; tries < 12; tries++)
+                // Walk to an unknown land hex some way off; the hex is picked from the AI's own random stream. Tick spikes
+                // (2026-11-20): each refused try searched a way over the whole map (water, other continents), up to 12 a
+                // thought; now only land hexes are tried, and one search a thought.
+                int searches = 0;
+                for (int tries = 0; tries < 12 && searches < 1; tries++)
                 {
                     HexCoord c = g.Geo.FromIndex(u.Cell);
                     int dc = g.AiRandom.NextInt(-14, 15);
                     int dr = g.AiRandom.NextInt(-10, 11);
                     int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
-                    if (!civ.Known[cell] && g.Apply(new MoveCommand(civ.Id, u.Id, cell, false)) is null)
+                    if (civ.Known[cell] || g.Content.World.Biomes[g.Map.Biome[cell]].IsWater)
                     {
+                        continue;
+                    }
+
+                    searches++;
+                    if (g.Apply(new MoveCommand(civ.Id, u.Id, cell, false, null, ScoutSearchLimit)) is null)
+                    {
+                        searches = -1;
                         break;
                     }
+                }
+
+                if (searches > 0)
+                {
+                    civ.AiScoutWait = g.Ticks + (30 * SimContent.TicksPerSecond); // nothing reachable around: look again later
                 }
             }
         }
@@ -1188,7 +1241,7 @@ public static partial class SimAi
                 continue;
             }
 
-            Settlement? target = NearestKnownSettlement(g, civ, other);
+            Settlement? target = NearestKnownSettlement(g, civ, other, idle.Count > 0 ? idle[0].Cell : -1);
             if (g.AtWar(civ.Id, other.Id))
             {
                 // Peace when the war has turned against us or dragged on; the course of the war sets the terms.
@@ -1213,6 +1266,7 @@ public static partial class SimAi
             // Start a war only after the first minutes, when strong enough against the target's defenders and warlike enough;
             // allies are left alone, trade partners only by the most warlike.
             if (target is null || civ.Aggression < 40 || idle.Count == 0 || g.Ticks < PeacefulStartTicks
+                || g.WarsOf(civ.Id) >= g.Content.War.MaxWars || g.WarsOf(other.Id) >= g.Content.War.MaxWars
                 || g.Has(civ.Id, other.Id, TreatyKind.Alliance) || (g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 85))
             {
                 continue;
@@ -1276,15 +1330,36 @@ public static partial class SimAi
         return nearest <= 20 ? TakeChoice.Take : TakeChoice.Sack;
     }
 
-    private static Settlement? NearestKnownSettlement(SimGame g, Civ civ, Civ other)
+    // Tick spikes (2026-11-20): armies sent to a settlement beyond the sea searched a way twice a second for good. The AI
+    // remembers for two minutes which settlements its armies can reach from home.
+    private static bool WayTo(SimGame g, Civ civ, Settlement s, int from)
     {
+        long key = ((long)s.Id * g.Geo.CellCount) + from;
+        if (civ.AiWayTo.TryGetValue(key, out (bool Way, long Tick) known) && g.Ticks - known.Tick < 2 * SimContent.TicksPerMinute)
+        {
+            return known.Way;
+        }
+
+        if (civ.AiWayTo.Count > 256)
+        {
+            civ.AiWayTo.Clear(); // old answers from hexes the army left
+        }
+
+        bool way = g.FindPath(from, s.Center, new List<int>(), false, civ.Id, 20_000);
+        civ.AiWayTo[key] = (way, g.Ticks);
+        return way;
+    }
+
+    private static Settlement? NearestKnownSettlement(SimGame g, Civ civ, Civ other, int from = -1)
+    {
+        from = from >= 0 ? from : g.Settlements[civ.Settlements[0]].Center;
         Settlement? best = null;
         int bestD = int.MaxValue;
         HexCoord home = g.Geo.FromIndex(g.Settlements[civ.Settlements[0]].Center);
         foreach (int sid in other.Settlements)
         {
             Settlement s = g.Settlements[sid];
-            if (!civ.Known[s.Center])
+            if (!civ.Known[s.Center] || !WayTo(g, civ, s, from))
             {
                 continue;
             }
