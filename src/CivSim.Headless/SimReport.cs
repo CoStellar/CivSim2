@@ -23,6 +23,9 @@ public static class SimReport
         /// <summary>Working buildings (built, with jobs) with nobody in them at the end, percent.</summary>
         public int EmptyPercent { get; init; }
 
+        /// <summary>Working buildings that use goods and stand without them at the end, percent.</summary>
+        public int StarvedPercent { get; init; }
+
         /// <summary>Free jobs in working buildings at the end, all peoples.</summary>
         public int FreeJobs { get; init; }
 
@@ -79,6 +82,7 @@ public static class SimReport
         Line("wars declared", r => r.Wars);
         Line("buildings", r => r.Buildings);
         Line("empty working bldgs %", r => r.EmptyPercent);
+        Line("bldgs short of inputs %", r => r.StarvedPercent);
         Line("free jobs", r => r.FreeJobs);
         Line("food/min per people", r => r.FoodPerMinute);
         Line("peoples losing food", r => r.FoodFalling);
@@ -186,6 +190,8 @@ public static class SimReport
         int working = 0;
         int empty = 0;
         int free = 0;
+        int users = 0;
+        int starved = 0;
         foreach (Civ c in alive)
         {
             foreach (int id in c.Buildings)
@@ -200,6 +206,11 @@ public static class SimReport
                 working++;
                 empty += b.Workers == 0 ? 1 : 0;
                 free += Math.Max(0, jobs - b.Workers);
+                if (Array.Exists(content.Buildings[b.Type].Consumes, x => x > 0) && b.Workers > 0)
+                {
+                    users++;
+                    starved += b.Starved ? 1 : 0;
+                }
             }
         }
 
@@ -219,6 +230,7 @@ public static class SimReport
         {
             FirstEra = firstEra,
             EmptyPercent = working == 0 ? 0 : empty * 100 / working,
+            StarvedPercent = users == 0 ? 0 : starved * 100 / users,
             FreeJobs = free,
             FoodPerMinute = alive.Count == 0 ? 0 : alive.Average(c => c.Rate[content.Food] / (double)SimContent.One),
             FoodFalling = alive.Count(c => c.Rate[content.Food] < 0),

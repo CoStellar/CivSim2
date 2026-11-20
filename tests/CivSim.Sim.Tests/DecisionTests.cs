@@ -151,4 +151,40 @@ public sealed class DecisionTests
 
         Assert.Equal(1, home.Level); // the caravans came and the camp became a village
     }
+
+    [Fact]
+    public void TheAiBringsAWorkshopTheGoodsItUses()
+    {
+        // AI goods (2026-11-20): goods lie in each settlement; a potter with no clay at home gets it from the other camp.
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int site = Enumerable.Range(0, g.Geo.CellCount).First(c => g.OwnerAt[c] < 0 && !Content.World.Biomes[g.Map.Biome[c]].IsWater
+            && g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(home.Center)) == 8 && g.FindPath(home.Center, c, new List<int>(), false, civ.Id));
+        Settlement camp = g.FoundSettlement(civ, site, 30);
+        civ.KnownTech[Content.TechId("pottery")] = true;
+        BuildingType potter = Content.Building("potter");
+        int clay = Content.GoodId("clay");
+        home.Stock[Content.GoodId("wood")] = 100 * SimContent.One;
+        home.Stock[Content.GoodId("stone")] = 100 * SimContent.One;
+        home.People = 40;
+        int cell = home.Cells.First(c => g.CannotBuild(civ, c, potter, checkPrice: false) is null);
+        Assert.Null(g.Apply(new BuildCommand(civ.Id, cell, potter.Id)));
+        Building b = g.Buildings[g.BuildingAt[cell]];
+        for (int i = 0; i < 3000 && b.State is BuildingState.Delivery or BuildingState.Construction; i++)
+        {
+            g.Tick();
+        }
+
+        for (int i = 0; i < Content.EconomyEveryTicks * 2; i++)
+        {
+            g.Tick();
+        }
+
+        Assert.True(b.Workers > 0);
+        home.Stock[clay] = 0;
+        camp.Stock[clay] = 100 * SimContent.One;
+        SimAi.Think(g, civ);
+        Assert.Contains(civ.Units, id => g.Units[id].Target == home.Id && g.Units[id].Cargo is { } load && load[clay] > 0);
+    }
 }
