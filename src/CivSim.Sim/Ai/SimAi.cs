@@ -316,7 +316,8 @@ public static partial class SimAi
         {
             Settlement s = g.Settlements[sid];
             idle += s.Idle;
-            crowded |= s.People >= s.Housing - 4;
+            int most = g.Content.Levels[s.Level].MaxHousing;
+            crowded |= s.People >= s.Housing - 4 && (most <= 0 || s.Housing < most); // 9B: no homes past the level's limit
         }
 
         if (crowded && (TryBuild(g, civ, "stone_house") || TryBuild(g, civ, "hut")))
@@ -729,6 +730,33 @@ public static partial class SimAi
             }
         }
 
+        // 7A (Patryk, 2026-11-20): experience that only a mine gives (iron working: an iron mine) for the technologies of our era.
+        // Without such a mine in our land, settlers go to the deposit ("a settlement by the iron ore").
+        foreach (SimTech t in g.Content.Techs)
+        {
+            if (civ.KnownTech[t.Id] || t.Era != civ.Era)
+            {
+                continue;
+            }
+
+            foreach ((int req, long need) in t.Experience)
+            {
+                if (!civ.KnownTech[req] || civ.Experience[req] >= need)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && b.OrDeposit > 0 && b.OrDeposit < want.Length && SimGame.Knows(civ, b)
+                        && !Has(g, civ, b.Key) && !Buildable(g, civ, b))
+                    {
+                        want[b.OrDeposit] = true;
+                    }
+                }
+            }
+        }
+
         return want;
     }
 
@@ -1021,10 +1049,14 @@ public static partial class SimAi
                 ulong z = ((ulong)g.Ticks * 0x9E3779B97F4A7C15UL) ^ ((ulong)(u.Id + 1) * 0xBF58476D1CE4E5B9UL);
                 Settlement home = g.Settlements[civ.Settlements[(int)(Mix(ref z) % (ulong)civ.Settlements.Count)]];
                 HexCoord c = g.Geo.FromIndex(home.Center);
+                // 7A (2026-11-20): while a deposit we need is not found (iron 15-20 hexes away), prospectors look farther.
+                bool far = t.Survey == 1 && Array.IndexOf(WantedDeposits(g, civ), true) >= 0;
+                int wide = far ? 22 : 12;
+                int tall = far ? 18 : 9;
                 for (int tries = 0; tries < 16; tries++)
                 {
-                    int dc = (int)(Mix(ref z) % 25) - 12;
-                    int dr = (int)(Mix(ref z) % 19) - 9;
+                    int dc = (int)(Mix(ref z) % (ulong)((2 * wide) + 1)) - wide;
+                    int dr = (int)(Mix(ref z) % (ulong)((2 * tall) + 1)) - tall;
                     int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
                     bool looked = t.Survey == 1 ? g.RockLookedAt(civ, cell) : g.KnowsSoil(civ, cell);
                     if (civ.Known[cell] && !looked && g.OwnerAt[cell] < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater

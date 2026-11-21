@@ -153,7 +153,8 @@
       "radius": 3,
       "housing": 25,
       "storage": 150,
-      "upgradePrice": {}
+      "upgradePrice": {},
+      "maxHousing": 60
     },
     {
       "key": "village",
@@ -167,7 +168,8 @@
         "clay": 30
       },
       "tech": "agriculture",
-      "minPeople": 40
+      "minPeople": 40,
+      "maxHousing": 250
     },
     {
       "key": "town",
@@ -185,7 +187,8 @@
       "alsoTechs": [
         "masonry"
       ],
-      "minPeople": 150
+      "minPeople": 150,
+      "maxHousing": 800
     },
     {
       "key": "city",
@@ -204,7 +207,8 @@
       "alsoTechs": [
         "construction"
       ],
-      "minPeople": 400
+      "minPeople": 400,
+      "maxHousing": 0
     }
   ],
   "foundSettlement": {
@@ -2399,7 +2403,7 @@
       "key": "construction",
       "name": "Construction",
       "era": "iron_age",
-      "gives": "Great storehouses; with Civil service, towns can become cities.",
+      "gives": "Great storehouses; with Civil service, towns can become cities. Stone houses: +4 homes (they grow a storey).",
       "experience": {
         "masonry": 60,
         "mathematics": 10
@@ -2410,7 +2414,14 @@
         "tools": 60
       },
       "seconds": 100,
-      "category": "building"
+      "category": "building",
+      "effects": [
+        {
+          "kind": "housing",
+          "target": "stone_house",
+          "value": 4
+        }
+      ]
     },
     {
       "key": "civil_service",
@@ -2454,7 +2465,7 @@
       "key": "engineering",
       "name": "Engineering",
       "era": "iron_age",
-      "gives": "Siege workshops (their workers build engines faster), catapults; aqueducts drawn from water to towns.",
+      "gives": "Siege workshops (their workers build engines faster), catapults; aqueducts drawn from water to towns. Stone houses: +4 homes (they grow a storey).",
       "requires": [
         "construction"
       ],
@@ -2468,7 +2479,14 @@
         "iron": 20
       },
       "seconds": 90,
-      "category": "building"
+      "category": "building",
+      "effects": [
+        {
+          "kind": "housing",
+          "target": "stone_house",
+          "value": 4
+        }
+      ]
     },
     {
       "key": "medicine",
@@ -2712,7 +2730,7 @@
       "key": "guilds",
       "name": "Guilds",
       "era": "middle_ages",
-      "gives": "Guild halls: workshops in their settlement +25% while they work.",
+      "gives": "Guild halls: workshops in their settlement +25% while they work. Stone houses: +8 homes (they grow a storey).",
       "experience": {
         "currency": 60,
         "weaving": 60
@@ -2722,7 +2740,14 @@
         "pottery": 60
       },
       "seconds": 100,
-      "category": "industry"
+      "category": "industry",
+      "effects": [
+        {
+          "kind": "housing",
+          "target": "stone_house",
+          "value": 8
+        }
+      ]
     },
     {
       "key": "mills",
@@ -3230,12 +3255,14 @@
   },
   "upgradeCreditPercent": 50,
   "startPhase": {
-    "comment": "pickSeconds: time a player has to choose. blockRadius: hexes around a taken start where no other people may start. blockFuzz: the shown circle is centred up to this many hexes from the real start and is this much wider, so it hides the start. scoreRadius, roomRadius: hexes looked at when scoring a start (its own land, the room around).",
+    "comment": "pickSeconds: time a player has to choose. blockRadius: hexes around a taken start where no other people may start. blockFuzz: the shown circle is centred up to this many hexes from the real start and is this much wider, so it hides the start. scoreRadius, roomRadius: hexes looked at when scoring a start (its own land, the room around). neighbourMaxHexes: every people starts on the main continent (the largest land) and, after the first, at most this many hexes by land from a people already placed (while choosing: from the shown circles); 0 = anywhere. neighbourMinHexes: placed starts and the AI's choices keep this far from other starts when the land allows (room to grow).",
     "pickSeconds": 30,
     "blockRadius": 10,
     "blockFuzz": 3,
     "scoreRadius": 3,
-    "roomRadius": 6
+    "roomRadius": 6,
+    "neighbourMaxHexes": 60,
+    "neighbourMinHexes": 25
   },
   "survey": {
     "comment": "What is known of the land (Patryk, 2026-11-19). On our own land everything is known. Beyond it, seeing a hex shows only the surface deposits; the rest is found by units that survey (units[].survey): standing still, they look at every hex within radius. rock: prospectors find stone, clay, flint and ores, each ore only from the era in eras (a people recognises an ore once it is in the era of the technology that works it, even before it knows the technology); ores not listed are never found in these eras. soil: surveyors find fertility and the deposits in soil.",
@@ -3349,6 +3376,12 @@
       "min": 5,
       "max": 12,
       "depth": 1
+    },
+    {
+      "deposit": "iron_ore",
+      "min": 15,
+      "max": 20,
+      "depth": 1
     }
   ],
   "ruins": {
@@ -3433,5 +3466,15 @@
     "comment": "A settlement short of the goods for its upgrade gets them by caravan from our other settlements: they carry what is missing plus extraPercent of the price of that good (at least 1), as far as the senders have it. When they arrive short, the AI asks again only after aiRetrySeconds.",
     "extraPercent": 10,
     "aiRetrySeconds": 60
+  },
+  "eraEntryMade": {
+    "comment": "Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.",
+    "iron_age": {
+      "bronze": 5
+    }
+  },
+  "alerts": {
+    "comment": "foodLowMinutes: a settlement that eats more than it makes is warned when its food lasts this long or less.",
+    "foodLowMinutes": 3
   }
 }

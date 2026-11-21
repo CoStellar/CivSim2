@@ -45,7 +45,7 @@ public sealed partial class SimGame
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(scenario);
-        SimGame g = Create(content, new SimSettings(scenario.Seed, scenario.Width, scenario.Height, Math.Max(scenario.Peoples, scenario.Civs.Count)) { StartPhase = false });
+        SimGame g = Create(content, new SimSettings(scenario.Seed, scenario.Width, scenario.Height, Math.Max(scenario.Peoples, scenario.Civs.Count)) { StartPhase = false, NearStarts = false });
         g.DebugOn = scenario.Debug;
         for (int i = 0; i < g.Civs.Count; i++)
         {

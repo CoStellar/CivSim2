@@ -360,3 +360,15 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
 | G2 | Osada pusta przez 60 s (nie ostatnia ludu) zmienia się w ruinę: ziemia jest niczyja, budynki stoją zrujnowane. Osadnicy na środku ruiny albo obok przejmują ją dla swojego ludu, a budynki wracają jako budowy za 50% ceny | `ruins.emptySeconds`, `ruins.rebuildPercent` |
 | G6 | Gdy osadzie brakuje towarów na awans, karawany z innych osad przywożą brakujące towary (najpierw z najbliższych). Awans kończy się, gdy wszystko dojedzie. Napad na taką karawanę odwołuje awans. **Od testów z 2026-11-20 (A1):** karawany wiozą brakującą ilość plus 10% ceny tego dobra (co najmniej 1), bo osada zużywa towar w czasie drogi; nadwyżka zostaje w osadzie. Gdy mimo to czegoś zabraknie, komunikat mówi czego („29 of 30 clay”), a AI próbuje znowu dopiero po 60 s | `upgradeCaravans.extraPercent`, `upgradeCaravans.aiRetrySeconds` |
 | G5 | Ubrania zużywają się tylko zimą, a krawiec robi 2 ubrania na pracownika na minutę (było 1) | `clothing.wearOnlyInWinter`, `tailor.produces` |
+
+
+## Decyzje po testach z 2026-11-20 (`claude/decyzje-testy-2026-11-20.md`)
+
+| Nr | Zasada | Dane |
+| --- | --- | --- |
+| 7A | Każdy start ma rudę żelaza 15–20 heksów od siebie, na tym samym lądzie (sprawdzane drogą lądem; jak miedź i cyna, „???” do epoki żelaza). Wejście w epokę żelaza wymaga też zrobienia 5 brązu (poza 5 technologiami i bramą). AI szuka złoża, którego kopalnia daje brakujące doświadczenie (żelazo: kopalnia żelaza), a jej poszukiwacze szukają dalej (do 22 heksów), dopóki go nie znajdą | `startDeposits`, `eraEntryMade` |
+| 8B | `--sim-report` liczy domyślnie na mapie „Normal” 98×60; inna: `--size 66x40` | — |
+| 9B | Limit domów na poziom osady: obóz 60, wioska 250, miasteczko 800, miasto bez limitu. Domy ponad limit nic nie dają, a budowa nowej chaty jest odrzucana: „… has all the homes a camp can have (60). Upgrade it to a village to grow on.” | `settlementLevels[].maxHousing` |
+| 10B | Domy rosną w górę: Construction +4, Engineering +4, Guilds +8 miejsc w każdym kamiennym domu (16 → 32), także w już stojących. Awans osady daje szerszą ziemię | efekty technologii |
+| 11B | Alert „Food in X runs out in 2:40: build a Gatherers' hut (Food) or put more people to food.”, gdy osada je więcej, niż robi, a jedzenia starczy na 3 minuty lub mniej | `alerts.foodLowMinutes` |
+| 12B | Do czasu statków AI wszystkie ludy startują na głównym kontynencie (największy ląd), najdalej 60 heksów lądem od innego ludu. Bez fazy wyboru generator zostawia swój start, jeśli pasuje; inaczej lud bierze najlepsze miejsce (ocena „widziana”) co najmniej 25 heksów od innych (gdy się nie da, 13). Przy wyborze startu: odmowa „Too far from the other peoples” albo „Start on the main continent”; liczone od środków pokazanych kółek, więc nikt nie wie więcej, niż widać. Scenariusze testowe zostają przy starcie generatora | `startPhase.neighbourMaxHexes`, `startPhase.neighbourMinHexes` |

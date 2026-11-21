@@ -130,7 +130,10 @@ public sealed class SiegeTests
         Assert.Null(g.Apply(new TakeSettlementCommand(0, target.Id, TakeChoice.Sack)));
         Assert.Equal(1, target.Civ);
         Assert.Equal(50 * SimContent.One, target.Stock[wood]);
-        Assert.Equal(homeWood + (50 * SimContent.One), home.Stock[wood]);
+        // 2B (2026-11-20): the loot goes home in a caravan (or at once when no way leads home).
+        Unit? caravan = g.Units.LastOrDefault(u => u.Civ == 0 && u.Job == CarrierJob.ToSettlement && u.State != UnitState.Gone);
+        long carried = caravan?.Cargo?[wood] ?? 0;
+        Assert.Equal(homeWood + (50 * SimContent.One), home.Stock[wood] + carried);
         Assert.True(target.SackedUntil > g.Ticks);
     }
 
