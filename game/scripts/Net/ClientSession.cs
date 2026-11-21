@@ -108,6 +108,9 @@ public sealed class ClientSession
     /// <summary>Asks the server to save the game under a name.</summary>
     public void SaveGame(string name) => _connection.Send(new SaveGameRequestMessage(name));
 
+    /// <summary>Turns the tutorial's task list on or off for this game.</summary>
+    public void SetTutorial(bool on) => _connection.Send(new SetTutorialMessage(on));
+
     /// <summary>Asks for other names in the same language for a civilization or a settlement.</summary>
     public void RequestNames(NameTarget target, int id, int page, int count = 8) =>
         _connection.Send(new NameSuggestionsRequestMessage(target, id, page, count));

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CivSim.Protocol.Messages;
 using Godot;
 
@@ -122,7 +123,10 @@ public partial class PlayGame
             }
         }
 
-        string sig = $"{_tab}|{string.Join(",", counts)}|{string.Join(",", _slotTypes)}|{string.Join(",", affordable)}|{_placing}|{v.Picking}|{_drawMode}{_drawRoad}";
+        // E6 (2026-11-20): in the tutorial the building of the next step lights up (and its tab).
+        string glow = v.TutorialOn && v.Tutorial?.FirstOrDefault(x => !x.Done) is { } next ? next.Highlight : "";
+        int glowTab = glow.Length > 0 && c.Buildings.FirstOrDefault(x => x.Key == glow) is { } gb ? TabOf(gb) : -1;
+        string sig = $"{_tab}|{string.Join(",", counts)}|{string.Join(",", _slotTypes)}|{string.Join(",", affordable)}|{_placing}|{v.Picking}|{_drawMode}{_drawRoad}|{glow}";
         if (sig == _barSig)
         {
             return;
@@ -139,6 +143,11 @@ public partial class PlayGame
 
             int tab = i;
             var b = new Button { Text = Tabs[i], ToggleMode = true, ButtonPressed = i == _tab, FocusMode = Control.FocusModeEnum.None, TooltipText = "Kinds of buildings (Tab)" };
+            if (i == glowTab && i != _tab)
+            {
+                b.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
+            }
+
             b.Pressed += () =>
             {
                 _tab = tab;
@@ -161,6 +170,11 @@ public partial class PlayGame
             int id = t.Id;
             bool can = affordable[i];
             var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = Describe(c, t) + (can ? "" : "\n\nWe do not have the goods for it now."), ToggleMode = true, ButtonPressed = _placing == id };
+            if (t.Key == glow)
+            {
+                slot.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
+            }
+
             var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
             inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
             inner.AddThemeConstantOverride("separation", 1);
@@ -288,12 +302,19 @@ public partial class PlayGame
         ArmDraw(DrawMode.Road);
     }
 
+    private static long[] Times(long[] a, int n) => [.. a.Select(x => x * n)];
+
     private static string Describe(PlayContentMessage content, PlayBuildingInfo b)
     {
         var lines = new List<string> { b.Name, $"Costs {Amounts(content, b.Price)}; builds in {b.BuildSeconds} s once the materials are there." };
+        if (b.Carriers > 0)
+        {
+            lines.Add($"Building it takes {b.Carriers} of our people away while they carry the materials (they come back)."); // E9
+        }
         if (b.Workers > 0)
         {
-            lines.Add($"Jobs: {b.Workers}. Each worker a minute makes {Amounts(content, b.Produces)}" + (Any(b.Consumes) ? $" from {Amounts(content, b.Consumes)}." : "."));
+            lines.Add($"Jobs: {b.Workers}. Each worker a minute makes {Amounts(content, b.Produces)}" + (Any(b.Consumes) ? $" from {Amounts(content, b.Consumes)}" : "")
+                + $"; all {b.Workers} together: {Amounts(content, Times(b.Produces, b.Workers))} a minute.");
         }
 
         if (b.Housing > 0)

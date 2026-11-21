@@ -124,8 +124,13 @@ public partial class PlayGame
         {
             int food = c.Goods.ToList().FindIndex(x => x.Key == "food");
             bool enough = s.Stock is { } st && food >= 0 && food < st.Length && st[food] >= s.RationFood;
-            string who = s.RationUnits > 0 ? $"{s.People} residents and {s.RationPeople} in {s.RationUnits} units" : $"{s.People} residents";
-            items.Add(new LineItem($"Ration: {UiKit.Num(s.RationFood)} food for {who} in {v.RationSeconds} s", s.HungryPeople > 0 || s.RationShort > 0 ? UiKit.Bad : enough ? UiKit.Muted : UiKit.Warn, 13));
+            // E16 (2026-11-20): who eats, in plain words (building crews and porters are units too).
+            string who = s.RationUnits > 0 ? $"{s.People} at home, {s.RationPeople} in {s.RationUnits} group{(s.RationUnits == 1 ? "" : "s")} out (soldiers, builders, carriers)" : $"{s.People} at home";
+            items.Add(new LineItem($"Ration in {v.RationSeconds} s: {UiKit.Num(s.RationFood)} food ({who})", s.HungryPeople > 0 || s.RationShort > 0 ? UiKit.Bad : enough ? UiKit.Muted : UiKit.Warn, 13));
+            if (s.FoodBalance is { Length: > 0 } balance)
+            {
+                items.Add(new LineItem(balance, balance.Contains("short", StringComparison.Ordinal) ? UiKit.Warn : UiKit.Muted, 13)); // E3
+            }
             if (s.HungryPeople > 0 || s.RationShort > 0)
             {
                 string hungry = (s.HungryPeople > 0 ? $"{s.HungryPeople} people ({s.HungryWorkers} of them workers)" : "") + (s.RationShort > 0 ? (s.HungryPeople > 0 ? " and " : "") + $"{s.RationShort} units" : "");

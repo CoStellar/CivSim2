@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CivSim.Game.Map;
+using CivSim.Game.Net;
 using CivSim.Game.Ui;
 using CivSim.Protocol.Messages;
 using Godot;
@@ -61,6 +62,11 @@ public partial class PlayGame
 
     // A22 (tests 2026-11-20): a screen at the end of the game, shown once; the game goes on behind it if the player wants.
     private PanelContainer _endPanel = null!;
+    private PanelContainer _tutorialPanel = null!;
+    private VBoxContainer _tutorialBox = null!;
+    private string _tutorialSig = "";
+    private Label _hexTip = null!;
+    private PanelContainer _hexTipPanel = null!;
     private Label _endTitle = null!;
     private Label _endText = null!;
     private bool _endShown;
@@ -141,7 +147,8 @@ public partial class PlayGame
         _patrolsButton = UiKit.Button("Patrols", () => OpenWindow("Units"), "Our patrols and units: stop one or all of them (P)");
         right.AddChild(_patrolsButton);
         right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
-        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls, first steps and the font (H)"));
+        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls and the font (H)"));
+        right.AddChild(UiKit.Button("Tutorial", () => OpenWindow("Tutorial"), "First steps: what to do next, and the task list on screen (T)"));
         right.AddChild(UiKit.Button("Save", SaveNow, "Save the game (it also saves itself every 5 minutes as 'autosave'); load it from the start menu (F5)"));
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
@@ -201,6 +208,21 @@ public partial class PlayGame
         _chronicleText = new RichTextLabel { ScrollFollowing = true, FitContent = false, SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         _chronicleText.AddThemeFontSizeOverride("normal_font_size", PixelTheme.FontSize);
         chron.AddChild(_chronicleText);
+
+        // ---- Tutorial task list (above the chronicle), E6 ----
+        _tutorialPanel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -UiKit.W(440), OffsetRight = -8, OffsetBottom = ChronicleBottom - 118, OffsetTop = ChronicleBottom - 118, GrowVertical = Control.GrowDirection.Begin, Visible = false };
+        _tutorialPanel.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.12f, 0.1f, 0.06f, 0.95f), UiKit.Heading, 4, 2));
+        root.AddChild(_tutorialPanel);
+        _tutorialBox = new VBoxContainer();
+        _tutorialPanel.AddChild(_tutorialBox);
+
+        // ---- What lies under the mouse (E8) ----
+        _hexTipPanel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Visible = false };
+        _hexTipPanel.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.08f, 0.07f, 0.06f, 0.88f), new Color(0.4f, 0.33f, 0.24f), 3, 1));
+        _hexTip = UiKit.Label("", 13, UiKit.Text);
+        _hexTip.MouseFilter = Control.MouseFilterEnum.Ignore;
+        _hexTipPanel.AddChild(_hexTip);
+        root.AddChild(_hexTipPanel);
 
         // ---- Side panel (left) ----
         _inspector = new PanelContainer { OffsetLeft = 8, OffsetTop = topH + 8, OffsetRight = 8 + UiKit.W(332) };
@@ -317,14 +339,9 @@ public partial class PlayGame
         "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +
         "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
         "WASD, arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
-        "Space: pause. + and -: faster, slower. 1-6: windows. L: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
-        "FIRST STEPS\n" +
-        "1. Food first: a Gatherers' hut, then a Woodcutter. People without work forage a little.\n" +
-        "2. Huts give homes: people grow only while there are free homes and food.\n" +
-        "3. A Storehouse near new buildings makes porters' walks short, so building goes faster.\n" +
-        "4. Research (2) opens new buildings. Five technologies of an era open the next one.\n" +
-        "5. Scouts find land and peoples; settlers found new camps.\n" +
-        "6. Alerts on the right say what needs you. Click one to go there.";
+        "Space: pause. + and -: faster, slower. 1-6: windows. T: tutorial. L: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
+        "Alerts on the right say what needs you and what to do. Click one to go there.\n" +
+        "What to do first: the Tutorial button at the top (T), with the task list on screen.";
 
     private void OpenWindow(string name, bool toggle = true)
     {
@@ -362,6 +379,7 @@ public partial class PlayGame
 
         UpdateTop(v, c);
         UpdateUnderTop();
+        UpdateTutorial(v);
         UpdateAdvisor(v);
         UpdateAlerts(v);
         UpdateActionBar(v, c);
@@ -407,7 +425,7 @@ public partial class PlayGame
 
         if (v.Picking)
         {
-            _eraLabel.Text = v.MyPick ? $"Your turn: {v.PickSecondsLeft} s" : $"{v.WhoPicks} are choosing…";
+            _eraLabel.Text = v.MyPick ? (v.PickNoLimit ? "Your turn: choose the start" : $"Your turn: {v.PickSecondsLeft} s") : $"{v.WhoPicks} are choosing…";
             SetResources("pick", () => _resBox.AddChild(UiKit.Label("Choosing the start", 14, UiKit.Muted)));
             return;
         }
@@ -440,6 +458,16 @@ public partial class PlayGame
 
         _researchChip.Text = v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "Choose research (2)";
         _researchChip.AddThemeColorOverride("font_color", v.Researching >= 0 ? UiKit.Text : UiKit.Warn);
+        if (v.Researching < 0)
+        {
+            // E2: an empty research queue is easy to miss: the chip pulses.
+            float pulse = 0.5f + (0.5f * Mathf.Sin((float)_time * 4f));
+            _researchChip.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.35f * pulse, 0.25f * pulse, 0.05f, 0.95f), UiKit.Warn, 4, 3));
+        }
+        else
+        {
+            _researchChip.RemoveThemeStyleboxOverride("normal");
+        }
 
         // Resources: an icon, the amount and the trend a minute, for goods we have or make.
         var cells = new List<(int Good, long Stock, long Rate, bool Full)>();
@@ -500,7 +528,7 @@ public partial class PlayGame
         bool hasEvent = v.Event is not null;
         string season = v.SeasonSeconds <= 0 ? "" : v.Winter ? $"WINTER: {v.SeasonSeconds / 60}:{v.SeasonSeconds % 60:00} left" : v.SeasonSeconds <= 60 ? $"Winter in {v.SeasonSeconds} s" : "";
         _eventLabel.Visible = hasEvent || season.Length > 0;
-        _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" + (season.Length > 0 ? $"   {season}" : "") : season;
+        _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" + (season.Length > 0 ? $"   {season}" : "") + (v.EventInfo is { } info ? $"\n{info}" : "") : season;
         if (v.Advisor is { } a)
         {
             _advisorName.Text = $"{a.Name}, {a.Rarity.ToLowerInvariant()} advisor";
@@ -559,11 +587,19 @@ public partial class PlayGame
             text.VerticalAlignment = VerticalAlignment.Center;
             inner.AddChild(text);
             b.AddChild(inner);
+            int kind = a.Kind;
             b.GuiInput += e =>
             {
                 if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
                 {
-                    Focus(col, row);
+                    if (kind == 10)
+                    {
+                        OpenWindow("Research", toggle: false); // E2: nothing is researched: the tree opens
+                    }
+                    else
+                    {
+                        Focus(col, row);
+                    }
                 }
             };
             _alertsBox.AddChild(b);
@@ -589,13 +625,137 @@ public partial class PlayGame
         _help.OffsetTop += shift;
     }
 
+    // E6: the next steps of the tutorial on screen, when it is on.
+    private void UpdateTutorial(PlayViewMessage v)
+    {
+        IReadOnlyList<PlayTutorialStep> steps = v.Tutorial ?? [];
+        bool show = v.TutorialOn && !v.Picking && steps.Any(x => !x.Done);
+        _tutorialPanel.Visible = show;
+        string sig = show ? string.Join("|", steps.Select(x => $"{x.Done}{x.Text}")) : "";
+        if (!show || sig == _tutorialSig)
+        {
+            return;
+        }
+
+        _tutorialSig = sig;
+        UiKit.Clear(_tutorialBox);
+        var head = new HBoxContainer();
+        Label title = UiKit.Label($"TUTORIAL  {steps.Count(x => x.Done)}/{steps.Count}", 13, UiKit.Heading);
+        title.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        head.AddChild(title);
+        head.AddChild(UiKit.Button("all", () => OpenWindow("Tutorial", toggle: false), "Every step (T)"));
+        head.AddChild(UiKit.Button("hide", () => _session?.SetTutorial(false), "Hide the task list (the progress is kept; Tutorial at the top shows it again)"));
+        _tutorialBox.AddChild(head);
+        int shown = 0;
+        foreach (PlayTutorialStep st in steps)
+        {
+            if (st.Done)
+            {
+                continue;
+            }
+
+            Label l = UiKit.Label((shown == 0 ? "> " : "  ") + st.Text, 13, shown == 0 ? UiKit.Heading : UiKit.Muted, wrap: true);
+            l.CustomMinimumSize = new Vector2(UiKit.W(420), 0);
+            _tutorialBox.AddChild(l);
+            if (++shown == 3)
+            {
+                break;
+            }
+        }
+    }
+
+    // E8 (2026-11-20): what lies under the mouse (biome, hills, river, whose land), also while building and choosing the start.
+    private void UpdateHexTip()
+    {
+        if (_session is null || OverUi() || MouseCell() is not { } h || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.Content is not { } content || _session.PlayView is not { } v)
+        {
+            _hexTipPanel.Visible = false;
+            return;
+        }
+
+        int i = w.Index(h.Col, h.Row);
+        if (w.Visibility[i] == MapChunkMessage.Unknown && !v.Picking)
+        {
+            _hexTipPanel.Visible = false;
+            return;
+        }
+
+        BiomeInfo b = content.Biomes[w.Biome[i]];
+        bool river = RiverAt(w, h.Col, h.Row);
+        string text = b.Name + (w.Relief[i] > 0 ? $", {content.Reliefs[w.Relief[i]].ToLowerInvariant()}" : "") + (river ? ", by a river" : "");
+        if (!b.IsWater)
+        {
+            text += w.Owner[i] < 0 ? " - nobody's land" : w.Owner[i] == v.Civ ? " - our land" : " - land of another people";
+        }
+
+        if (v.Picking && v.MyPick && !b.IsWater)
+        {
+            // E13: a quick word on the place (what everyone sees while choosing: terrain, water, trees).
+            var good = new List<string>();
+            if (river)
+            {
+                good.Add("fresh water");
+            }
+
+            if (b.Key is "grassland" or "plains" or "savanna" or "temperate_forest" or "floodplain")
+            {
+                good.Add("good land");
+            }
+
+            if (w.Relief[i] == 1)
+            {
+                good.Add("hills to defend");
+            }
+
+            if (w.Trees[i] > 0)
+            {
+                good.Add("wood");
+            }
+
+            text += good.Count >= 2 ? $"\nGood start: {string.Join(", ", good)}" : good.Count == 1 ? $"\nFair start: {good[0]}" : "\nPoor start: little food or water";
+        }
+
+        _hexTip.Text = text;
+        _hexTipPanel.Visible = true;
+        _hexTipPanel.Size = Vector2.Zero;
+        _hexTipPanel.Position = GetViewport().GetMousePosition() + new Vector2(18, 20);
+    }
+
+    // A river on any of the hex's six edges (its own N, NE, SE and the neighbours' facing edges).
+    private static bool RiverAt(ClientWorld w, int col, int row)
+    {
+        int i = w.Index(col, row);
+        if (w.River[i] != 0)
+        {
+            return true;
+        }
+
+        foreach (int e in new[] { 3, 4, 5 })
+        {
+            (int nc, int nr) = OverlayColors.Neighbor(col, row, e);
+            if (nr >= 0 && nr < w.Height)
+            {
+                int n = w.Index(nc, nr);
+                int bits = w.River[n];
+                int facing = e - 3; // S faces their N, SW their NE, NW their SE
+                if (((bits >> (facing * 2)) & 3) != 0)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private void UpdateBanner(PlayContentMessage c)
     {
         if (_session?.PlayView is { Picking: true } pick)
         {
             _banner.Visible = true;
             _bannerText.Text = pick.MyPick
-                ? $"Click a land hex on the map where your people should start ({pick.PickSecondsLeft} s left; then the AI chooses for you).\nGreen under the mouse: you may start there. Red circles: taken by other peoples. Deposits and soil stay hidden until everyone has chosen."
+                ? (pick.PickNoLimit ? "Click a land hex on the map where your people should start (take your time: the game waits)." : $"Click a land hex on the map where your people should start ({pick.PickSecondsLeft} s left; then the AI chooses for you).")
+                  + "\nGreen under the mouse: you may start there. Red circles: taken by other peoples; start on the main continent, within 60 hexes by land of a circle. Deposits and soil stay hidden until everyone has chosen."
                 : $"{pick.WhoPicks} are choosing where to start. Your turn comes; look around the map meanwhile.";
             return;
         }

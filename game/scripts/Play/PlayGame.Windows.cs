@@ -38,6 +38,7 @@ public partial class PlayGame
             "Peoples" => "Other peoples",
             "Thinkers" => "Thinkers and advisors",
             "Units" => "Our units and patrols",
+            "Tutorial" => "Tutorial",
             _ => "Summary",
         };
         var items = new List<UiItem>();
@@ -57,6 +58,9 @@ public partial class PlayGame
                 break;
             case "Units":
                 UnitTable(v, c, items);
+                break;
+            case "Tutorial":
+                TutorialItems(v, items);
                 break;
             default:
                 SummaryItems(v, items);
@@ -259,6 +263,28 @@ public partial class PlayGame
     private readonly HashSet<int> _unitPicks = [];
 
     // Every unit of ours, patrols first: stop, recall or send out again one, a picked group or all of them (Patryk, 2026-11-19).
+    // E6/E7 (Patryk, 2026-11-20): the tutorial's own panel: every step with its state, and the task list on screen on or off.
+    private void TutorialItems(PlayViewMessage v, List<UiItem> items)
+    {
+        IReadOnlyList<PlayTutorialStep> steps = v.Tutorial ?? [];
+        int done = steps.Count(x => x.Done);
+        items.Add(new LineItem($"First steps: {done} of {steps.Count} done. The progress is kept also with the task list off.", UiKit.Muted, 13));
+        bool next = true;
+        foreach (PlayTutorialStep st in steps)
+        {
+            Color color = st.Done ? UiKit.Good : next ? UiKit.Heading : UiKit.Text;
+            items.Add(new LineItem((st.Done ? "[x] " : next ? "[>] " : "[ ] ") + st.Text, color, 14));
+            next &= st.Done;
+        }
+
+        bool on = v.TutorialOn;
+        items.Add(new ButtonsItem(
+        [
+            new ActItem(on ? "Hide the task list" : "Show the task list on screen", () => _session?.SetTutorial(!on),
+                "The next steps stay on screen above the chronicle; the building to build next lights up in the bar."),
+        ]));
+    }
+
     private void UnitTable(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
         var mine = v.Units.Where(u => u.Civ == v.Civ && !c.Units[u.Kind].System)

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using CivSim.Core.Map;
 using CivSim.Sim.Content;
@@ -302,9 +303,17 @@ public sealed partial class SimGame
         }
     }
 
+    /// <summary>E13 (Patryk, 2026-11-20): a player alone chooses the start without a time limit (the AI keeps its second).</summary>
+    public bool PickWaitsForPlayers { get; set; }
+
     // One tick of the start phase: the chooser's time runs out, then the AI picks for it.
     private void PickingTick()
     {
+        if (PickWaitsForPlayers && !Civs[PickOrder[PickIndex]].IsAi)
+        {
+            return; // waits for the player's choice
+        }
+
         if (--PickTicksLeft > 0)
         {
             return;
@@ -424,7 +433,16 @@ public sealed partial class SimGame
             StartMetals(c, StartCell[c.Id]);
             FoundSettlement(c, StartCell[c.Id], Content.StartPeople);
             News.Add((c.Id, StoryOf(c, StartCell[c.Id])));
+            News.Add((c.Id, StartNote())); // E14 (2026-11-20)
         }
+    }
+
+    /// <summary>E14: what the people knows after the start, and how to see more.</summary>
+    public string StartNote()
+    {
+        int scouts = Content.Units.ToList().FindIndex(u => u.Key == "scouts");
+        string tech = scouts >= 0 ? Content.Techs[Content.Units[scouts].Tech].Name : "Scouting";
+        return $"Our people know only this valley. Train scouts ({tech}) to see the world.";
     }
 
     /// <summary>Three sentences of the tribe's past, from the land it chose.</summary>
