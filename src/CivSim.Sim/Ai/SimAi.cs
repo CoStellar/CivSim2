@@ -1400,17 +1400,40 @@ public static partial class SimAi
     {
         long power = 0;
         var idle = new List<Unit>();
+        var fresh = new List<Unit>();
+        AiBattleRules rules = g.Content.AiBattle;
         foreach (int id in civ.Units)
         {
             Unit u = g.Units[id];
-            if (g.Content.Units[u.Kind].Army && u.State != UnitState.Training)
+            if (!g.Content.Units[u.Kind].Army || u.State == UnitState.Training || g.Content.Units[u.Kind].Naval || u.Aboard >= 0)
             {
-                power += g.Power(u);
-                if (u.TargetSettlement < 0 && u.TargetUnit < 0)
+                continue;
+            }
+
+            // Roadmap 7 (2026-11-21): a badly hurt unit at war goes home to heal and guards it; it does not go on campaign.
+            bool hurt = Hurt(u, rules);
+            if (hurt && g.OwnerAt[u.Cell] != civ.Id && AtWarAny(g, civ) && Home(g, civ, u) is int home && !(u.State == UnitState.Moving && u.Path.Count > 0 && u.Path[^1] == home))
+            {
+                g.Apply(new MoveCommand(civ.Id, u.Id, home, false));
+                continue;
+            }
+
+            power += g.Power(u);
+            if (u.TargetSettlement < 0 && u.TargetUnit < 0 && !(u.State == UnitState.Moving && g.OwnerAt[u.Cell] != civ.Id && hurt))
+            {
+                idle.Add(u);
+                if (!hurt)
                 {
-                    idle.Add(u);
+                    fresh.Add(u);
                 }
             }
+        }
+
+        // Field battle (roadmap 7): an enemy army close to one of our soldiers is fought before anything else, all of our
+        // soldiers near it on the same enemy, so they surround it (flank).
+        if (FieldBattle(g, civ, rules))
+        {
+            return;
         }
 
         // Defend: enemies seen on our land are attacked first.
@@ -1460,12 +1483,9 @@ public static partial class SimAi
                     g.Apply(new ProposePeaceCommand(civ.Id, other.Id, early ? 0 : g.SuggestedTribute(civ.Id, other.Id)));
                 }
 
-                if (target is not null && idle.Count > 0 && power > 0)
+                if (target is not null && fresh.Count > 0 && power > 0)
                 {
-                    foreach (Unit u in idle)
-                    {
-                        g.Apply(new AttackCommand(civ.Id, u.Id, target.Center));
-                    }
+                    Offensive(g, civ, fresh, target, rules);
                 }
 
                 continue;
@@ -1491,13 +1511,158 @@ public static partial class SimAi
                     g.Apply(new DeclareWarCommand(civ.Id, other.Id));
                 }
 
-                foreach (Unit u in idle)
-                {
-                    g.Apply(new AttackCommand(civ.Id, u.Id, target.Center));
-                }
-
+                Offensive(g, civ, fresh.Count > 0 ? fresh : idle, target, rules);
                 return;
             }
+        }
+    }
+
+    // A unit at war that lost too many: more than injuredPercent of its people wounded, or fewer than sizePercent of its size.
+    private static bool Hurt(Unit u, AiBattleRules r) =>
+        u.People > 0 && ((long)u.Injured * 100 >= (long)u.People * r.RetreatInjuredPercent || (u.Size > 0 && (long)u.People * 100 < (long)u.Size * r.RetreatSizePercent));
+
+    private static bool AtWarAny(SimGame g, Civ civ)
+    {
+        foreach (Civ other in g.Civs)
+        {
+            if (other.Id != civ.Id && !other.Dead && g.AtWar(civ.Id, other.Id))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static int Hexes(SimGame g, int a, int b) => g.Geo.Distance(g.Geo.FromIndex(a), g.Geo.FromIndex(b));
+
+    // The centre of the unit's home settlement, or of our settlement nearest to it.
+    private static int? Home(SimGame g, Civ civ, Unit u)
+    {
+        if (u.Home >= 0 && g.Settlements[u.Home].Civ == civ.Id && !g.Settlements[u.Home].Abandoned)
+        {
+            return g.Settlements[u.Home].Center;
+        }
+
+        int best = -1;
+        int bestDist = int.MaxValue;
+        foreach (int sid in civ.Settlements)
+        {
+            int d = Hexes(g, g.Settlements[sid].Center, u.Cell);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = g.Settlements[sid].Center;
+            }
+        }
+
+        return best >= 0 ? best : null;
+    }
+
+    // Roadmap 7 (2026-11-21): a seen enemy army within engageHexes of a fresh soldier of ours is attacked by every fresh soldier
+    // within engageHexes of it: the same target from several sides is the flank. Soldiers already on it are left alone.
+    private static bool FieldBattle(SimGame g, Civ civ, AiBattleRules r)
+    {
+        bool any = false;
+        foreach (int id in civ.Units)
+        {
+            Unit u = g.Units[id];
+            UnitType t = g.Content.Units[u.Kind];
+            if (!t.Army || t.Naval || u.State == UnitState.Training || u.Aboard >= 0 || Hurt(u, r) || u.TargetUnit >= 0)
+            {
+                continue;
+            }
+
+            Unit? enemy = null;
+            int best = r.EngageHexes + 1;
+            foreach (Unit e in g.ActiveUnits())
+            {
+                if (e.Civ == civ.Id || e.Aboard >= 0 || !g.Content.Units[e.Kind].Army || g.Content.Units[e.Kind].Naval || !g.AtWar(civ.Id, e.Civ))
+                {
+                    continue;
+                }
+
+                int d = Hexes(g, u.Cell, e.Cell);
+                if (d < best && g.Sees(civ, e))
+                {
+                    best = d;
+                    enemy = e;
+                }
+            }
+
+            if (enemy is not null && g.Apply(new AttackCommand(civ.Id, u.Id, enemy.Cell)) is null)
+            {
+                any = true;
+            }
+        }
+
+        return any;
+    }
+
+    // Roadmap 7 (2026-11-21): an offensive starts from a muster: our settlement nearest the target. Soldiers farther than
+    // musterHexes from it gather there in formation first (melee in front, archers behind, riders on the wings); once
+    // musterPercent of the power stands there (or others are already at the target), all march on the target.
+    private static void Offensive(SimGame g, Civ civ, List<Unit> units, Settlement target, AiBattleRules r)
+    {
+        if (units.Count == 0)
+        {
+            return;
+        }
+
+        bool underway = false;
+        foreach (int id in civ.Units)
+        {
+            underway |= g.Units[id].TargetSettlement == target.Id;
+        }
+
+        int muster = -1;
+        int bestDist = int.MaxValue;
+        foreach (int sid in civ.Settlements)
+        {
+            int d = Hexes(g, g.Settlements[sid].Center, target.Center);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                muster = g.Settlements[sid].Center;
+            }
+        }
+
+        long all = 0;
+        long there = 0;
+        int coming = 0;
+        var away = new List<int>();
+        foreach (Unit u in units)
+        {
+            long p = g.Power(u);
+            all += p;
+            int d = muster < 0 ? 0 : Hexes(g, u.Cell, muster);
+            if (d <= r.MusterHexes)
+            {
+                there += p;
+            }
+            else if (d <= r.MusterFromHexes && u.State != UnitState.Moving)
+            {
+                away.Add(u.Id);
+            }
+            else if (d <= r.MusterFromHexes)
+            {
+                coming++;
+            }
+        }
+
+        if (underway || muster < 0 || there * 100 >= all * r.MusterPercent || (away.Count == 0 && coming == 0))
+        {
+            foreach (Unit u in units)
+            {
+                g.Apply(new AttackCommand(civ.Id, u.Id, target.Center));
+            }
+
+            return;
+        }
+
+        if (away.Count > 0)
+        {
+            g.Apply(new FormationCommand(civ.Id, [.. away], muster));
         }
     }
 

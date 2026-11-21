@@ -391,6 +391,9 @@ d["ai"]={"comment":"homesFoodMinutes: the AI builds new homes only while its foo
 d["ai"]["peacefulStartMinutes"]=15
 d["ai"]["comment"]+=" peacefulStartMinutes: the AI declares no war in the first this many minutes of a game."
 # 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
+# AI battle (roadmap 7, 2026-11-21): retreat of the hurt, field battles before marching on, a muster in formation first.
+d["aiBattle"]={"comment":"retreatInjuredPercent: a unit at war with this share of its people wounded goes home to heal; retreatSizePercent: one with fewer people than this share of its size goes home and guards it. engageHexes: a seen enemy army this close to a soldier is fought first, by every soldier this close to it (a flank). An offensive starts from our settlement nearest the target: soldiers within musterFromHexes but farther than musterHexes gather there in formation, and the march starts once musterPercent of the power stands there.",
+  "retreatInjuredPercent":50,"retreatSizePercent":30,"engageHexes":5,"musterHexes":3,"musterFromHexes":30,"musterPercent":70}
 d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5}}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
