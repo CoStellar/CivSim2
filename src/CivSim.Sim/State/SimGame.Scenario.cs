@@ -174,6 +174,23 @@ public sealed partial class SimGame
             }
         }
 
+        if (p.WallRing > 0)
+        {
+            int wall = IndexOf(Content.Works, w => w.Key == "wall");
+            if (wall < 0)
+            {
+                throw new ArgumentException("Scenario: no wall work in the data.");
+            }
+
+            foreach (int cell in s.Cells)
+            {
+                if (Distance(cell, s.Center) == p.WallRing && OwnerAt[cell] == civ.Id)
+                {
+                    FinishWorkHex(civ, Content.Works[wall], cell);
+                }
+            }
+        }
+
         foreach ((string key, int count) in p.Units)
         {
             UnitType t = Content.Unit(key);

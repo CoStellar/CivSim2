@@ -62,7 +62,7 @@ b("tin_mine","Tin mine","bronze_working",4,{"wood":40,"tools":15},30,orDeposit="
 b("bronze_smith","Bronze smith","bronze_working",3,{"stone":40,"clay":30},30,consumes={"copper":2,"tin":1,"wood":1},produces={"bronze":1},groups=["craft"])
 b("armourer","Armourer","bronze_weapons",2,{"stone":40,"wood":30},30,consumes={"bronze":1,"wood":1},produces={"bronze_weapons":1,"bronze_armour":0.5},groups=["craft","armoury"])
 b("school","School","writing",3,{"stone":60,"clay":40},40,produces={},researchPercent=15,groups=["learn"])
-b("stable","Stable","horseback_riding",2,{"wood":60},30,consumes={"food":2},produces={"horses":0.5},bonusDeposit="horses",bonusPercent=100,goodLimit={"horses":16},groups=["food"])
+b("stable","Stable","horseback_riding",2,{"wood":60},30,consumes={"food":2},produces={"horses":1},bonusDeposit="horses",bonusPercent=100,goodLimit={"horses":32},groups=["food"])
 b("harbour","Harbour","sailing",3,{"wood":80,"stone":20},40,needsWater=True,produces={"food":4},groups=["food"])
 b("mint","Mint","currency",2,{"stone":60,"wood":20},35,consumes={"copper":1},produces={"coins":4},groups=["craft"])
 b("barracks","Barracks","barracks",2,{"wood":80,"stone":40},40,produces={},trainPercent=50,groups=["army","armoury"])
@@ -202,7 +202,7 @@ t("bronze_working","Bronze working",BR,{"copper_working":30},{"copper":40,"wood"
 t("bronze_weapons","Bronze weapons",BR,{"bronze_working":15},{"bronze":20,"wood":40},50,"Armourers (arms), spearmen.",made={"bronze":20})
 t("the_wheel","The wheel",BR,{"agriculture":60,"masonry":20},{"wood":120,"tools":20},70,"With Horseback riding: caravans (they take horses). Porters and caravans 50% faster.",[("speed","carriers",50)])
 t("writing","Writing",BR,{"pottery":40},{"clay":80,"food":100},70,"Schools: every worker speeds one branch of research we choose (+15%).",made={"pottery":40})
-t("horseback_riding","Horseback riding",BR,{"animal_husbandry":40},{"food":150,"hides":40},70,"Stables (horses, at most 16 each), horsemen.")
+t("horseback_riding","Horseback riding",BR,{"animal_husbandry":40},{"food":150,"hides":40},70,"Stables (horses, at most 32 each), horsemen.")
 t("sailing","Sailing",BR,{"fishing":40,"rafts":20},{"wood":150,"textiles":20},70,"Harbours; transport ships (carry armies) and trade ships (carry goods).")
 t("currency","Currency",BR,{"copper_working":20},{"copper":30,"pottery":30},70,"Mints (coins from copper); pay and be paid in coins; research −5%.",[("research","*",5)],req=["barter"])
 t("code_of_laws","Code of laws",BR,{"writing":10},{"clay":60,"food":80},60,"A town office: with Masonry, villages can become towns.")
@@ -387,6 +387,9 @@ if "neighbourMaxHexes:" not in d["startPhase"]["comment"]:
 # 16B, 17B: the AI builds homes only with food for 3 minutes, and a people under 30 trains no units (but settlers) and
 # builds no workplace while jobs are free.
 d["ai"]={"comment":"homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free.","homesFoodMinutes":3,"smallPeople":30}
+# Patryk, 2026-11-21: a longer calm start for the AI (it was 8 minutes in code), and stables give twice the horses and keep 32.
+d["ai"]["peacefulStartMinutes"]=15
+d["ai"]["comment"]+=" peacefulStartMinutes: the AI declares no war in the first this many minutes of a game."
 # 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
 d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5}}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')

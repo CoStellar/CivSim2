@@ -1200,12 +1200,12 @@
         "food": 2
       },
       "produces": {
-        "horses": 0.5
+        "horses": 1
       },
       "bonusDeposit": "horses",
       "bonusPercent": 100,
       "goodLimit": {
-        "horses": 16
+        "horses": 32
       },
       "groups": [
         "food"
@@ -2184,7 +2184,7 @@
       "key": "horseback_riding",
       "name": "Horseback riding",
       "era": "bronze_age",
-      "gives": "Stables (horses, at most 16 each), horsemen.",
+      "gives": "Stables (horses, at most 32 each), horsemen.",
       "experience": {
         "animal_husbandry": 40
       },
@@ -3478,8 +3478,9 @@
     "foodLowMinutes": 3
   },
   "ai": {
-    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free.",
+    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game.",
     "homesFoodMinutes": 3,
-    "smallPeople": 30
+    "smallPeople": 30,
+    "peacefulStartMinutes": 15
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "Battle 4: against the AI",
-  "description": "Bronze Age, both armies on a field 6 hexes apart; people 1 is an aggressive AI that attacks. Test everything together against an enemy that moves.",
+  "description": "Bronze Age, both armies on a field 6 hexes apart; people 1 is an aggressive AI that attacks. Our town has stone walls two hexes out, so the enemy has to break them or beat our army first. Test everything together against an enemy that moves.",
   "seed": 44,
   "peoples": 2,
   "revealMap": true,
@@ -9,7 +9,7 @@
   "field": [0, 1],
   "fieldGap": 6,
   "civs": [
-    { "era": "bronze_age", "techs": ["bronze_weapons", "barracks", "archery", "horseback_riding"], "level": "town", "people": 100, "unitPeople": 15,
+    { "era": "bronze_age", "techs": ["bronze_weapons", "barracks", "archery", "horseback_riding", "stone_walls"], "level": "town", "people": 100, "unitPeople": 15, "wallRing": 2,
       "stock": { "food": 600, "wood": 400, "stone": 300, "bronze_weapons": 100, "bronze_armour": 80, "horses": 30 },
       "buildings": { "farm": 2, "woodcutter": 1, "stone_house": 3, "storehouse": 1, "armourer": 1, "barracks": 1 },
       "units": { "scouts": 1, "spearmen": 2, "warriors": 2, "archers": 2, "horsemen": 1 } },

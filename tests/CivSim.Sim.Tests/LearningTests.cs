@@ -104,7 +104,7 @@ public sealed class LearningTests
         Assert.Equal(0, s.Capacity[horses]);
         BuildDone(g, civ, s, "stable");
         g.Recompute(civ);
-        Assert.Equal(16 * SimContent.One, s.Capacity[horses]);
+        Assert.Equal(32 * SimContent.One, s.Capacity[horses]); // 2026-11-21: 32 horses a stable
     }
 
     [Fact]

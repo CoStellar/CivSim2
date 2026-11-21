@@ -232,8 +232,8 @@ Liczy się do progu: 10 technologii zwykłych i ulepszenia; podstawowe nie.
 ### Horseback riding — wojsko
 
 - **Wymaga:** Animal husbandry 40 pkt. **Cena:** 150 food, 40 hides. **Czas:** 70 s.
-- **Opis w grze:** Stables (horses, at most 16 each), horsemen.
-- Budynek: **Stable** (koszt 60 wood, 30 s): 2 miejsc pracy, każdy pracownik na minutę: 0.5 horses z 2 food; mieści 16 horses; 2 miejsca na heksie; na złożu +100%
+- **Opis w grze:** Stables (horses, at most 32 each), horsemen.
+- Budynek: **Stable** (koszt 60 wood, 30 s): 2 miejsc pracy, każdy pracownik na minutę: 1 horses z 2 food; mieści 32 horses; 2 miejsca na heksie; na złożu +100%
 - Jednostka: **Caravan** (2 os., koszt nic, 0 s, wysyłani przez grę (nie szkoli się ich), wymaga też: Horseback riding, zabiera 2 konie (wracają z nią))
 - Jednostka: **Horsemen** (6 os., koszt 40 food, 6 horses, 20 s, siła 18)
 
