@@ -42,6 +42,26 @@ public sealed class LearningTests
     }
 
     [Fact]
+    public void LateEraMaterialsComeFromTheirChains()
+    {
+        // 2026-11-21 (decisions 13-14): bricks from clay and charcoal, mortar from stone and charcoal; a city costs bricks.
+        (SimGame g, Civ civ, Settlement s) = NewGame();
+        int bricks = Content.GoodId("bricks");
+        int mortar = Content.GoodId("mortar");
+        BuildDone(g, civ, s, "charcoal_burner");
+        BuildDone(g, civ, s, "brickworks");
+        BuildDone(g, civ, s, "lime_kiln"); // costs bricks
+        s.Stock[bricks] = 0;
+        s.Stock[mortar] = 0;
+        Run(g, 2 * SimContent.TicksPerMinute);
+        Assert.True(s.Stock[bricks] > 0);
+        Assert.True(s.Stock[mortar] > 0);
+        Assert.True(Content.Levels[^1].UpgradePrice[bricks] > 0);
+        Assert.True(Content.Building("castle").Price[mortar] > 0);
+        Assert.True(Content.Building("bronze_smith").Consumes[Content.GoodId("charcoal")] > 0);
+    }
+
+    [Fact]
     public void EveryWorkerOfASchoolSpeedsTheBranchItIsSetTo()
     {
         (SimGame g, Civ civ, Settlement s) = NewGame();

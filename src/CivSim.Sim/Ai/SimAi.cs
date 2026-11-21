@@ -382,7 +382,7 @@ public static partial class SimAi
                     continue;
                 }
 
-                string[] makers = Makers(g.Content.Goods[i].Key);
+                string[] makers = Makers(g, g.Content.Goods[i].Key);
                 if (makers.Length > 0 && Count(g, civ, makers) == 0)
                 {
                     foreach (string k in makers)
@@ -397,13 +397,23 @@ public static partial class SimAi
             }
         }
 
+        // Late eras (2026-11-21): a workshop whose input nobody makes (a bronze smith with no charcoal) gets its maker.
+        foreach (int id in civ.Buildings)
+        {
+            Building b = g.Buildings[id];
+            if (b.State == BuildingState.Active && InputMaker(g, civ, g.Content.Buildings[b.Type]) is string maker && TryBuild(g, civ, maker, keepSaving: false))
+            {
+                return true;
+            }
+        }
+
         if (idle < 3)
         {
             return false;
         }
 
         // Work for the idle: the good we have least of.
-        string[] order = Makers(Wanted(g, civ) ?? Lowest(g, civ));
+        string[] order = Makers(g, Wanted(g, civ) ?? Lowest(g, civ));
         if (order.Length == 0)
         {
             order = ["gatherers_hut", "hunters_lodge"];
@@ -429,7 +439,7 @@ public static partial class SimAi
     }
 
     // Buildings that make a good, best first ([] = none the AI builds for it).
-    private static string[] Makers(string good) => good switch
+    private static string[] Makers(SimGame g, string good) => good switch
     {
         "wood" => ["woodcutter", "gatherers_hut"],
         "stone" => ["quarry"],
@@ -441,6 +451,13 @@ public static partial class SimAi
         "iron" => ["iron_mine"],
         "hides" => ["hunters_lodge"],
         "pottery" => ["potter"],
+        "charcoal" => ["charcoal_burner"],
+        "bricks" => ["brickworks"],
+        "planks" => ["sawmill"],
+        "mortar" => ["lime_kiln"],
+        "wool" => ["sheepfold"],
+        "cloth" => ["cloth_weaver"],
+        "textiles" => ["weaver"],
         _ => [],
     };
 
@@ -497,6 +514,29 @@ public static partial class SimAi
         }
 
         Mark(gate, 3);
+
+        // Late eras (2026-11-21): the technologies of the makers of what the next era asks to have made (bricks) are on the way too.
+        int next = civ.Era + 1;
+        if (next < g.Content.EraEntryMade.Length)
+        {
+            long[] need = g.Content.EraEntryMade[next];
+            for (int good = 0; good < need.Length; good++)
+            {
+                if (need[good] <= 0)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id > 0 && b.Produces[good] > 0 && b.Tech >= 0)
+                    {
+                        Mark(b.Tech, 3);
+                    }
+                }
+            }
+        }
+
         return way;
 
         void Mark(int tech, int depth)
@@ -644,7 +684,7 @@ public static partial class SimAi
                         {
                             if (b.Consumes[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < 20 * SimContent.One)
                             {
-                                foreach (string k in Makers(g.Content.Goods[i].Key))
+                                foreach (string k in Makers(g, g.Content.Goods[i].Key))
                                 {
                                     int id = Key(g, k);
                                     if (id >= 0 && SimGame.Knows(civ, g.Content.Buildings[id]) && !Has(g, civ, k))
@@ -688,7 +728,7 @@ public static partial class SimAi
                 continue;
             }
 
-            string[] makers = Makers(g.Content.Goods[i].Key);
+            string[] makers = Makers(g, g.Content.Goods[i].Key);
             if (makers.Length == 0 || Count(g, civ, makers) > 0)
             {
                 continue;
@@ -911,7 +951,7 @@ public static partial class SimAi
     // The known good (one we can make) whose stock is lowest.
     private static string Lowest(SimGame g, Civ civ)
     {
-        string[] makeable = ["wood", "stone", "clay", "tools", "copper", "tin", "bronze", "iron"];
+        string[] makeable = ["wood", "stone", "clay", "tools", "copper", "tin", "bronze", "iron", "charcoal", "bricks", "planks", "mortar", "cloth"];
         string best = "";
         long bestStock = long.MaxValue;
         foreach (string k in makeable)

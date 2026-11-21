@@ -127,7 +127,7 @@ public sealed class WarTests
             {
                 b.KnownTech[Content.TechId("castles")] = true;
                 Settlement home = g.Settlements[b.Settlements[0]];
-                foreach (string k in new[] { "stone", "wood", "iron" })
+                foreach (string k in new[] { "stone", "wood", "iron", "mortar", "planks" })
                 {
                     home.Stock[Content.GoodId(k)] = 500 * SimContent.One;
                 }

@@ -82,6 +82,12 @@ public static class UiKit
         ["bronze"] = new Color("cd8f42"),
         ["iron"] = new Color("707a86"),
         ["arms"] = new Color("b03838"),
+        ["charcoal"] = new Color("3a3634"),
+        ["bricks"] = new Color("a84a32"),
+        ["wool"] = new Color("e8e0cc"),
+        ["cloth"] = new Color("6a88c0"),
+        ["planks"] = new Color("c49a5c"),
+        ["mortar"] = new Color("d8d2c0"),
     };
 
     private static readonly Dictionary<string, Color> GroupColors = new()

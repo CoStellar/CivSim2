@@ -127,6 +127,36 @@
       "key": "coins",
       "name": "Coins",
       "worth": 1
+    },
+    {
+      "key": "charcoal",
+      "name": "Charcoal",
+      "worth": 2
+    },
+    {
+      "key": "bricks",
+      "name": "Bricks",
+      "worth": 3
+    },
+    {
+      "key": "wool",
+      "name": "Wool",
+      "worth": 1.5
+    },
+    {
+      "key": "cloth",
+      "name": "Cloth",
+      "worth": 4
+    },
+    {
+      "key": "planks",
+      "name": "Planks",
+      "worth": 2.5
+    },
+    {
+      "key": "mortar",
+      "name": "Mortar",
+      "worth": 3
     }
   ],
   "start": {
@@ -197,9 +227,10 @@
       "housing": 90,
       "storage": 500,
       "upgradePrice": {
-        "wood": 500,
-        "stone": 500,
-        "textiles": 80,
+        "wood": 400,
+        "stone": 400,
+        "bricks": 120,
+        "cloth": 40,
         "pottery": 80,
         "tools": 60
       },
@@ -652,7 +683,7 @@
       "groups": [
         "food"
       ],
-      "size": 2,
+      "size": 1,
       "upgradesTo": "farm"
     },
     {
@@ -1061,7 +1092,8 @@
       "groups": [
         "craft"
       ],
-      "size": 1
+      "size": 1,
+      "upgradesTo": "cloth_weaver"
     },
     {
       "key": "trading_post",
@@ -1134,10 +1166,31 @@
       "consumes": {
         "copper": 2,
         "tin": 1,
-        "wood": 1
+        "charcoal": 1
       },
       "produces": {
         "bronze": 1
+      },
+      "groups": [
+        "craft"
+      ],
+      "size": 1
+    },
+    {
+      "key": "charcoal_burner",
+      "name": "Charcoal burner",
+      "tech": "bronze_working",
+      "workers": 2,
+      "price": {
+        "wood": 30,
+        "clay": 10
+      },
+      "buildSeconds": 20,
+      "consumes": {
+        "wood": 2
+      },
+      "produces": {
+        "charcoal": 2
       },
       "groups": [
         "craft"
@@ -1302,7 +1355,7 @@
       "buildSeconds": 30,
       "consumes": {
         "iron": 1,
-        "wood": 1
+        "charcoal": 1
       },
       "produces": {
         "tools": 2
@@ -1325,7 +1378,7 @@
       "buildSeconds": 30,
       "consumes": {
         "iron": 1,
-        "wood": 1
+        "charcoal": 1
       },
       "produces": {
         "iron_weapons": 1.5,
@@ -1343,8 +1396,9 @@
       "tech": "mathematics",
       "workers": 3,
       "price": {
-        "stone": 80,
-        "wood": 60
+        "stone": 60,
+        "wood": 40,
+        "bricks": 30
       },
       "buildSeconds": 40,
       "produces": {},
@@ -1360,8 +1414,9 @@
       "tech": "construction",
       "workers": 0,
       "price": {
-        "stone": 150,
-        "wood": 80
+        "stone": 100,
+        "wood": 60,
+        "bricks": 60
       },
       "buildSeconds": 45,
       "storage": 1000,
@@ -1376,8 +1431,9 @@
       "tech": "civil_service",
       "workers": 3,
       "price": {
-        "stone": 120,
-        "wood": 60
+        "stone": 80,
+        "wood": 40,
+        "bricks": 50
       },
       "buildSeconds": 50,
       "produces": {},
@@ -1409,7 +1465,8 @@
       "tech": "medicine",
       "workers": 2,
       "price": {
-        "stone": 80,
+        "stone": 50,
+        "bricks": 30,
         "pottery": 20
       },
       "buildSeconds": 40,
@@ -1427,8 +1484,9 @@
       "tech": "philosophy",
       "workers": 3,
       "price": {
-        "stone": 120,
-        "textiles": 20
+        "stone": 80,
+        "bricks": 40,
+        "cloth": 10
       },
       "buildSeconds": 50,
       "produces": {},
@@ -1458,13 +1516,84 @@
       "size": 4
     },
     {
+      "key": "brickworks",
+      "name": "Brickworks",
+      "tech": "brick_making",
+      "workers": 3,
+      "price": {
+        "wood": 40,
+        "stone": 30
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "clay": 2,
+        "charcoal": 1
+      },
+      "produces": {
+        "bricks": 2
+      },
+      "groups": [
+        "craft"
+      ],
+      "size": 2
+    },
+    {
+      "key": "sheepfold",
+      "name": "Sheepfold",
+      "tech": "shepherding",
+      "workers": 2,
+      "price": {
+        "wood": 40
+      },
+      "buildSeconds": 25,
+      "biomes": [
+        "grassland",
+        "steppe",
+        "tundra",
+        "savanna"
+      ],
+      "produces": {
+        "wool": 2,
+        "food": 1
+      },
+      "bonusDeposit": "sheep",
+      "bonusPercent": 100,
+      "groups": [
+        "food"
+      ],
+      "size": 2
+    },
+    {
+      "key": "cloth_weaver",
+      "name": "Cloth weaver",
+      "tech": "shepherding",
+      "workers": 2,
+      "price": {
+        "wood": 30,
+        "tools": 10
+      },
+      "buildSeconds": 25,
+      "consumes": {
+        "wool": 2
+      },
+      "produces": {
+        "cloth": 1,
+        "clothing": 2
+      },
+      "groups": [
+        "craft"
+      ],
+      "size": 1
+    },
+    {
       "key": "manor",
       "name": "Manor",
       "tech": "feudalism",
       "workers": 4,
       "price": {
-        "stone": 200,
-        "wood": 100
+        "stone": 150,
+        "planks": 60,
+        "mortar": 30
       },
       "buildSeconds": 60,
       "produces": {
@@ -1484,13 +1613,14 @@
       "tech": "steel",
       "workers": 3,
       "price": {
-        "stone": 150,
+        "stone": 100,
+        "bricks": 60,
         "iron": 40
       },
       "buildSeconds": 60,
       "consumes": {
         "iron": 2,
-        "wood": 2
+        "charcoal": 2
       },
       "produces": {
         "tools": 4,
@@ -1509,8 +1639,9 @@
       "tech": "castles",
       "workers": 0,
       "price": {
-        "stone": 400,
-        "wood": 100,
+        "stone": 300,
+        "mortar": 100,
+        "planks": 40,
         "iron": 30
       },
       "buildSeconds": 90,
@@ -1529,8 +1660,8 @@
       "tech": "mills",
       "workers": 2,
       "price": {
-        "wood": 80,
-        "stone": 60,
+        "planks": 50,
+        "stone": 40,
         "tools": 10
       },
       "buildSeconds": 40,
@@ -1549,8 +1680,10 @@
       "tech": "guilds",
       "workers": 3,
       "price": {
-        "stone": 150,
-        "textiles": 30
+        "stone": 80,
+        "bricks": 40,
+        "planks": 30,
+        "cloth": 20
       },
       "buildSeconds": 50,
       "produces": {},
@@ -1567,9 +1700,10 @@
       "tech": "university",
       "workers": 4,
       "price": {
-        "stone": 200,
-        "textiles": 40,
-        "pottery": 40
+        "stone": 120,
+        "bricks": 60,
+        "mortar": 40,
+        "cloth": 30
       },
       "buildSeconds": 60,
       "produces": {},
@@ -1578,6 +1712,51 @@
         "learn"
       ],
       "size": 2
+    },
+    {
+      "key": "sawmill",
+      "name": "Sawmill",
+      "tech": "sawmills",
+      "workers": 3,
+      "price": {
+        "wood": 60,
+        "stone": 40,
+        "tools": 10
+      },
+      "buildSeconds": 35,
+      "needsWater": true,
+      "consumes": {
+        "wood": 3
+      },
+      "produces": {
+        "planks": 2
+      },
+      "groups": [
+        "craft"
+      ],
+      "size": 2
+    },
+    {
+      "key": "lime_kiln",
+      "name": "Lime kiln",
+      "tech": "lime_mortar",
+      "workers": 2,
+      "price": {
+        "stone": 60,
+        "bricks": 20
+      },
+      "buildSeconds": 30,
+      "consumes": {
+        "stone": 2,
+        "charcoal": 1
+      },
+      "produces": {
+        "mortar": 2
+      },
+      "groups": [
+        "craft"
+      ],
+      "size": 1
     }
   ],
   "eras": [
@@ -2106,7 +2285,7 @@
       "key": "bronze_working",
       "name": "Bronze working",
       "era": "bronze_age",
-      "gives": "Tin mines, bronze smiths.",
+      "gives": "Tin mines, bronze smiths, charcoal burners (charcoal from wood: the fuel of smiths).",
       "made": {
         "copper": 30
       },
@@ -2544,6 +2723,41 @@
       "category": "trade"
     },
     {
+      "key": "brick_making",
+      "name": "Brick making",
+      "era": "iron_age",
+      "gives": "Brickworks (bricks from clay and charcoal): iron-age buildings and cities are built of bricks.",
+      "made": {
+        "charcoal": 30
+      },
+      "experience": {
+        "pottery": 60,
+        "bronze_working": 20
+      },
+      "price": {
+        "clay": 120,
+        "charcoal": 30
+      },
+      "seconds": 70,
+      "category": "building"
+    },
+    {
+      "key": "shepherding",
+      "name": "Shepherding",
+      "era": "iron_age",
+      "gives": "Sheepfolds (wool) and cloth weavers (cloth and better clothing from wool); weavers can become cloth weavers.",
+      "experience": {
+        "animal_husbandry": 60,
+        "weaving": 20
+      },
+      "price": {
+        "food": 150,
+        "textiles": 30
+      },
+      "seconds": 60,
+      "category": "industry"
+    },
+    {
       "key": "iron_age_arms",
       "name": "Iron age arms",
       "era": "iron_age",
@@ -2867,6 +3081,44 @@
       ],
       "upgrade": true,
       "category": "military"
+    },
+    {
+      "key": "sawmills",
+      "name": "Sawmills",
+      "era": "middle_ages",
+      "gives": "Sawmills by rivers (planks from wood): medieval buildings are built of planks.",
+      "requires": [
+        "the_wheel"
+      ],
+      "experience": {
+        "mathematics": 30,
+        "iron_working": 30
+      },
+      "price": {
+        "wood": 200,
+        "iron": 30
+      },
+      "seconds": 80,
+      "category": "building"
+    },
+    {
+      "key": "lime_mortar",
+      "name": "Lime mortar",
+      "era": "middle_ages",
+      "gives": "Lime kilns (mortar from stone and charcoal): castles, manors and universities need mortar.",
+      "made": {
+        "bricks": 40
+      },
+      "experience": {
+        "masonry": 100,
+        "brick_making": 20
+      },
+      "price": {
+        "stone": 200,
+        "bricks": 40
+      },
+      "seconds": 80,
+      "category": "building"
     },
     {
       "key": "trebuchet",
@@ -3471,6 +3723,9 @@
     "comment": "Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.",
     "iron_age": {
       "bronze": 5
+    },
+    "middle_ages": {
+      "bricks": 20
     }
   },
   "alerts": {
