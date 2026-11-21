@@ -17,7 +17,6 @@ public static partial class SimAi
     public const int ThinkEveryTicks = 30;
 
     /// <summary>No AI starts a war before this tick (8 minutes): every people gets time to settle.</summary>
-    public const long PeacefulStartTicks = 8 * SimContent.TicksPerMinute;
 
     private static readonly string[] FoodBuildings = ["farm", "fishing_hut", "gatherers_hut", "hunters_lodge", "pasture", "manor"];
 
@@ -1442,7 +1441,7 @@ public static partial class SimAi
             }
 
             bool atWar = g.AtWar(civ.Id, other.Id);
-            if (!atWar && (civ.Aggression < 40 || idle.Count == 0 || g.Ticks < PeacefulStartTicks
+            if (!atWar && (civ.Aggression < 40 || idle.Count == 0 || g.Ticks < (long)g.Content.AiPeacefulStartMinutes * SimContent.TicksPerMinute
                 || g.WarsOf(civ.Id) >= g.Content.War.MaxWars || g.WarsOf(other.Id) >= g.Content.War.MaxWars
                 || g.Has(civ.Id, other.Id, TreatyKind.Alliance) || (g.Has(civ.Id, other.Id, TreatyKind.Trade) && civ.Aggression < 85)))
             {

@@ -103,6 +103,7 @@ public sealed record SimScenario
                     UnitPeople = Int(c, "unitPeople", 0),
                     Weapon = Int(c, "weapon", -1),
                     Armour = Int(c, "armour", -1),
+                    WallRing = Int(c, "wallRing", 0),
                 });
             }
         }
@@ -159,6 +160,9 @@ public sealed record SimScenario
 /// <summary>How one people starts in a scenario. Empty fields keep the normal start.</summary>
 public sealed record ScenarioPeople
 {
+    /// <summary>A finished stone wall on every hex of its land this far from its centre (0 = none).</summary>
+    public int WallRing { get; init; }
+
     /// <summary>Size of every army unit it starts with (0 = the kind's default).</summary>
     public int UnitPeople { get; init; }
 

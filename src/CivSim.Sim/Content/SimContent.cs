@@ -697,6 +697,9 @@ public sealed class SimContent
     /// <summary>17B (2026-11-20): below this many people the AI trains no units but settlers and builds no workplace while jobs are free (ai.smallPeople).</summary>
     public int AiSmallPeople { get; init; } = 30;
 
+    /// <summary>Patryk, 2026-11-21: the AI declares no war in the first this many minutes of a game (ai.peacefulStartMinutes).</summary>
+    public int AiPeacefulStartMinutes { get; init; } = 15;
+
     /// <summary>Caravans for upgrades (upgradeCaravans).</summary>
     public UpgradeCaravanRules UpgradeCaravans { get; init; } = new(10, 60 * TicksPerSecond);
 
@@ -1606,6 +1609,7 @@ public sealed class SimContent
                 }
                 : new SupplyRules(3, 4, 10, 100),
             AiHomesFoodMinutes = root.TryGetProperty("ai", out JsonElement aiEl) && aiEl.TryGetProperty("homesFoodMinutes", out JsonElement hfm) ? hfm.GetInt32() : 3,
+            AiPeacefulStartMinutes = root.TryGetProperty("ai", out JsonElement aiEl3) && aiEl3.TryGetProperty("peacefulStartMinutes", out JsonElement psm) ? psm.GetInt32() : 15,
             AiSmallPeople = root.TryGetProperty("ai", out JsonElement aiEl2) && aiEl2.TryGetProperty("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
             FoodLowMinutes = root.TryGetProperty("alerts", out JsonElement alEl) && alEl.TryGetProperty("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryGetProperty("upgradeCaravans", out JsonElement ucEl)

@@ -136,7 +136,7 @@ tylko po działaniach.
 - **Walczy:**
   - utrzymuje wojsko według charakteru;
   - broni swojej ziemi;
-  - przez pierwsze 8 minut nikogo nie atakuje;
+  - przez pierwsze 15 minut nikogo nie atakuje (`ai.peacefulStartMinutes`, decyzja z 2026-11-21);
   - wojnę zaczyna, gdy ma dwa razy więcej siły niż obrona celu;
   - pokój proponuje, gdy przegrywa.
 
