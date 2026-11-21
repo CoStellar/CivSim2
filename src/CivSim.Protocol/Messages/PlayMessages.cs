@@ -504,6 +504,9 @@ public enum PlayCommandKind
 
     /// <summary>Our units of kind <c>A</c> learn veteran option <c>B</c> for a level they reached.</summary>
     ChooseVeteran = 46,
+
+    /// <summary>Replace finished building <c>A</c> by a building of kind <c>B</c> on its places (half of its price counts).</summary>
+    ReplaceBuilding = 47,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

@@ -111,15 +111,90 @@ public sealed partial class SimGame
             return why;
         }
 
+        Rebuild(civ, old, to!);
+        return null;
+    }
+
+    /// <summary>
+    /// Why building <paramref name="b"/> cannot be replaced by a building of kind <paramref name="to"/> on its places now
+    /// (null = it can). Patryk, 2026-11-20 (15B): like an upgrade, half of the old price counts toward the new one.
+    /// </summary>
+    public string? CannotReplace(Civ civ, Building b, BuildingType to)
+    {
+        ArgumentNullException.ThrowIfNull(civ);
+        ArgumentNullException.ThrowIfNull(b);
+        ArgumentNullException.ThrowIfNull(to);
+        BuildingType from = Content.Buildings[b.Type];
+        if (b.Civ != civ.Id || b.State is not (BuildingState.Active or BuildingState.Stopped))
+        {
+            return "Only a finished building of ours can be replaced.";
+        }
+
+        if (to.Id <= 0 || to.Id == from.Id || Array.IndexOf(to.Groups, "road") >= 0)
+        {
+            return $"{from.Name} cannot be replaced by {to.Name.ToLowerInvariant()}.";
+        }
+
+        if (!Knows(civ, to))
+        {
+            return $"{to.Name} needs {NeedText(to.Tech, to.AlsoTechs)}.";
+        }
+
+        Settlement s = Settlements[b.Settlement];
+        if (s.Besieged)
+        {
+            return $"{s.Name} is under siege: nothing new is built there.";
+        }
+
+        if (HomesFull(s, to) is string full && to.Housing > from.Housing)
+        {
+            return full;
+        }
+
+        if (UpgradeSlots(b, to) == 0)
+        {
+            return $"{to.Name} needs {(to.Size == 4 ? "the whole hex" : $"{to.Size} places")} here: free the other places first.";
+        }
+
+        if (!TerrainAllows(b.Cell, to, civ))
+        {
+            return $"{to.Name} needs {Needs(to)}.";
+        }
+
+        long[] rest = UpgradeRest(from, to);
+        return CanAfford(s.Stock, rest, 100) ? null : $"Not enough goods in {s.Name}: {to.Name} here costs {PriceText(rest)}.";
+    }
+
+    private string? ReplaceBuilding(Civ civ, int id, int type)
+    {
+        if ((uint)id >= (uint)Buildings.Count || type <= 0 || type >= Content.Buildings.Count)
+        {
+            return "Unknown building.";
+        }
+
+        Building old = Buildings[id];
+        BuildingType to = Content.Buildings[type];
+        string? why = CannotReplace(civ, old, to);
+        if (why is not null)
+        {
+            return why;
+        }
+
+        Rebuild(civ, old, to);
+        return null;
+    }
+
+    // The old building comes down; the new one is built on its places with half of the old price already at the site.
+    private void Rebuild(Civ civ, Building old, BuildingType to)
+    {
         BuildingType from = Content.Buildings[old.Type];
-        int slots = UpgradeSlots(old, to!);
+        int slots = UpgradeSlots(old, to);
         old.State = BuildingState.Removed;
         TakeOffHex(old);
         civ.Buildings.Remove(old.Id);
         civ.Dirty = true;
-        Building b = Place(civ, old.Cell, to!, slots, UpgradeCredit(from, to!));
-        b.Priority = old.Priority;
-        News.Add((civ.Id, $"{from.Name} in {Settlements[b.Settlement].Name} is being rebuilt as {to!.Name.ToLowerInvariant()}."));
-        return null;
+        Building b = Place(civ, old.Cell, to, slots, UpgradeCredit(from, to));
+        b.Priority = old.Priority && to.Workers > 0;
+        News.Add((civ.Id, $"{from.Name} in {Settlements[b.Settlement].Name} is being rebuilt as {to.Name.ToLowerInvariant()}."));
     }
 }
