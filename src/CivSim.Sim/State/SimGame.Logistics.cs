@@ -422,7 +422,7 @@ public sealed partial class SimGame
         {
             if (cargo[g] >= SimContent.One)
             {
-                parts.Add($"{cargo[g] / SimContent.One} {Content.Goods[g].Key}");
+                parts.Add($"{cargo[g] / SimContent.One} {GoodText(g)}");
             }
         }
 
@@ -552,7 +552,7 @@ public sealed partial class SimGame
         long send = Math.Min(amount, s.Stock[good]);
         if (send < SimContent.One)
         {
-            return $"{s.Name} has no {Content.Goods[good].Key} to send.";
+            return $"{s.Name} has no {GoodText(good)} to send.";
         }
 
         var load = new long[Content.Goods.Count];
@@ -655,7 +655,7 @@ public sealed partial class SimGame
             // No way on land: the goods go by trade ships between the harbours.
             ShipGoods(a, b, giveGood, giveAmount);
             ShipGoods(b, a, wantGood, wantAmount);
-            string sea = $"Trade ships set out: {giveAmount / SimContent.One} {Content.Goods[giveGood].Key} of {a.Name} for {wantAmount / SimContent.One} {Content.Goods[wantGood].Key} of {b.Name}.";
+            string sea = $"Trade ships set out: {giveAmount / SimContent.One} {GoodText(giveGood)} of {a.Name} for {wantAmount / SimContent.One} {GoodText(wantGood)} of {b.Name}.";
             News.Add((a.Id, sea));
             News.Add((b.Id, sea));
             SyncTotals(a);
@@ -678,7 +678,7 @@ public sealed partial class SimGame
         cb.Job = CarrierJob.ToSettlement;
         cb.Target = sa.Id;
         Walk(cb, NearestStore(sa, sb.Center));
-        string text = $"Caravans set out: {giveAmount / SimContent.One} {Content.Goods[giveGood].Key} of {a.Name} for {wantAmount / SimContent.One} {Content.Goods[wantGood].Key} of {b.Name}.";
+        string text = $"Caravans set out: {giveAmount / SimContent.One} {GoodText(giveGood)} of {a.Name} for {wantAmount / SimContent.One} {GoodText(wantGood)} of {b.Name}.";
         News.Add((a.Id, text));
         News.Add((b.Id, text));
         SyncTotals(a);

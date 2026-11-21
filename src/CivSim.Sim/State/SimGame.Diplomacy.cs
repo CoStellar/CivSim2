@@ -285,7 +285,7 @@ public sealed partial class SimGame
 
         if (civ.Stock[give] < giveAmount)
         {
-            return $"We have only {civ.Stock[give] / SimContent.One} {Content.Goods[give].Key}.";
+            return $"We have only {civ.Stock[give] / SimContent.One} {GoodText(give)}.";
         }
 
         Civ partner = Civs[other];
@@ -298,7 +298,7 @@ public sealed partial class SimGame
         {
             BarterOffers.RemoveAll(o => o.From == civ.Id && o.To == other);
             BarterOffers.Add(new BarterOffer(civ.Id, other, give, giveAmount, want, wantAmount));
-            News.Add((other, $"{civ.Name} offer {giveAmount / SimContent.One} {Content.Goods[give].Key} for {wantAmount / SimContent.One} {Content.Goods[want].Key}."));
+            News.Add((other, $"{civ.Name} offer {giveAmount / SimContent.One} {GoodText(give)} for {wantAmount / SimContent.One} {GoodText(want)}."));
             return null;
         }
 

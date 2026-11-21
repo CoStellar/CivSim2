@@ -139,7 +139,7 @@ public sealed partial class SimGame
     {
         if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
         {
-            return "Not your unit, or it is not ready.";
+            return "Not our unit, or it is not ready.";
         }
 
         Unit u = Units[id];
@@ -291,7 +291,7 @@ public sealed partial class SimGame
     {
         if ((uint)id >= (uint)Units.Count || Units[id].Civ != civ.Id || Units[id].State is UnitState.Gone or UnitState.Training)
         {
-            return "Not your unit.";
+            return "Not our unit.";
         }
 
         Unit u = Units[id];

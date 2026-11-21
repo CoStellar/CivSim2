@@ -123,7 +123,7 @@ public sealed partial class SimGame
                         if (needs[g] > 0 && (s.EmptyMask & bit) != 0 && (reported & bit) == 0 && g != Content.Food)
                         {
                             reported |= bit;
-                            list.Add(new Alert(AlertKind.NeedsGood, s.Id, s.Center, g, $"{s.Name} needs {Content.Goods[g].Key}: its {Content.Buildings[b.Type].Name.ToLowerInvariant()} stands still."));
+                            list.Add(new Alert(AlertKind.NeedsGood, s.Id, s.Center, g, $"{s.Name} needs {GoodText(g)}: its {Content.Buildings[b.Type].Name.ToLowerInvariant()} stands still."));
                         }
                     }
                 }
@@ -143,7 +143,7 @@ public sealed partial class SimGame
             {
                 if ((s.FullMask & (1L << g)) != 0 && s.Rate[g] >= 0 && MadeIn(civ, s, g))
                 {
-                    list.Add(new Alert(AlertKind.StoreFull, s.Id, s.Center, g, $"{s.Name}: {Content.Goods[g].Key} is full, its makers stopped. Build a storehouse or send it away."));
+                    list.Add(new Alert(AlertKind.StoreFull, s.Id, s.Center, g, $"{s.Name}: {GoodText(g)} is full, its makers stopped. Build a storehouse or send it away."));
                 }
             }
         }
