@@ -28,7 +28,7 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | 5 | Późne ery: węgiel drzewny, cegła, deski, wełna i sukno, zaprawa; koszty nowej ery; przebudowa budynku w lepszy i zastąpienie na heksie | PR #127 (materiały i koszty), #128 (zastąpienie budynku) |
 | 6 | Tempo pierwszych 15 minut (brak drewna na starcie, pierwszy narzędziarz w 13. minucie) | PR #129 (100 drewna na start: narzędziarz w 10. minucie u wszystkich ludów); czeka na ocenę Patryka |
 | 7 | AI walki: szyk, flanki, odwrót rannych | PR #130 |
-| 8 | Pokój z negocjacji: zasoby, osada, okres pokoju, podpowiedź łupów z przebiegu wojny | do zrobienia |
+| 8 | Pokój z negocjacji: zasoby, osada, okres pokoju, podpowiedź łupów z przebiegu wojny | czeka na odpowiedzi Patryka: `claude/kwestionariusz-pokoj.md` |
 | 9 | Drobne rzeczy w kliencie: głód oddziału w polu w panelu, przegląd tekstów | głód i juki oddziału w panelu już są; przegląd tekstów: PR `fix/text-review` |
 | 10 | Pomiar FPS na komputerze Patryka | Patryk |
 
