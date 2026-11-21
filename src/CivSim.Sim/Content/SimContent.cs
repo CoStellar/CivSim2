@@ -691,6 +691,12 @@ public sealed class SimContent
     /// <summary>11B (2026-11-20): the food alert comes when a settlement's food lasts this many minutes or less (alerts.foodLowMinutes).</summary>
     public int FoodLowMinutes { get; init; } = 3;
 
+    /// <summary>16B (2026-11-20): the AI builds new homes only with food for this many minutes of eating (ai.homesFoodMinutes).</summary>
+    public int AiHomesFoodMinutes { get; init; } = 3;
+
+    /// <summary>17B (2026-11-20): below this many people the AI trains no units but settlers and builds no workplace while jobs are free (ai.smallPeople).</summary>
+    public int AiSmallPeople { get; init; } = 30;
+
     /// <summary>Caravans for upgrades (upgradeCaravans).</summary>
     public UpgradeCaravanRules UpgradeCaravans { get; init; } = new(10, 60 * TicksPerSecond);
 
@@ -1599,6 +1605,8 @@ public sealed class SimContent
                     NoWayTicks = (supplyEl.TryGetProperty("noWaySeconds", out JsonElement nws) ? nws.GetInt32() : 60) * TicksPerSecond,
                 }
                 : new SupplyRules(3, 4, 10, 100),
+            AiHomesFoodMinutes = root.TryGetProperty("ai", out JsonElement aiEl) && aiEl.TryGetProperty("homesFoodMinutes", out JsonElement hfm) ? hfm.GetInt32() : 3,
+            AiSmallPeople = root.TryGetProperty("ai", out JsonElement aiEl2) && aiEl2.TryGetProperty("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
             FoodLowMinutes = root.TryGetProperty("alerts", out JsonElement alEl) && alEl.TryGetProperty("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryGetProperty("upgradeCaravans", out JsonElement ucEl)
                 ? new UpgradeCaravanRules(ucEl.GetProperty("extraPercent").GetInt32(), ucEl.GetProperty("aiRetrySeconds").GetInt32() * TicksPerSecond)
