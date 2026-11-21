@@ -63,7 +63,7 @@ b("copper_mine","Copper mine","copper_working",4,{"wood":40,"tools":15},30,orDep
 # Bronze
 b("tin_mine","Tin mine","bronze_working",4,{"wood":40,"tools":15},30,orDeposit="tin",produces={"tin":2},groups=["tools","mine"])
 b("bronze_smith","Bronze smith","bronze_working",3,{"stone":40,"clay":30},30,consumes={"copper":2,"tin":1,"charcoal":1},produces={"bronze":1},groups=["craft"])
-b("charcoal_burner","Charcoal burner","bronze_working",2,{"wood":30,"clay":10},20,consumes={"wood":2},produces={"charcoal":2},groups=["craft"])
+b("charcoal_burner","Charcoal burner","bronze_working",2,{"wood":30,"clay":10},20,consumes={"wood":2},produces={"charcoal":3},groups=["craft"])
 b("armourer","Armourer","bronze_weapons",2,{"stone":40,"wood":30},30,consumes={"bronze":1,"wood":1},produces={"bronze_weapons":1,"bronze_armour":0.5},groups=["craft","armoury"])
 b("school","School","writing",3,{"stone":60,"clay":40},40,produces={},researchPercent=15,groups=["learn"])
 b("stable","Stable","horseback_riding",2,{"wood":60},30,consumes={"food":2},produces={"horses":1},bonusDeposit="horses",bonusPercent=100,goodLimit={"horses":32},groups=["food"])

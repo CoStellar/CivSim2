@@ -379,7 +379,7 @@ Nowe dobra i łańcuchy (liczby na pracownika na minutę):
 
 | Dobro | Budynek | Technologia (era) | Z czego | Do czego |
 | --- | --- | --- | --- | --- |
-| węgiel drzewny | Charcoal burner (2 prac.) | Bronze working (brąz) | 2 drewna → 2 węgla | paliwo: brązownik, kowal, płatnerz żelaza, huta (zamiast drewna) |
+| węgiel drzewny | Charcoal burner (2 prac.) | Bronze working (brąz) | 2 drewna → 3 węgla | paliwo: brązownik, kowal, płatnerz żelaza, huta (zamiast drewna) |
 | cegła | Brickworks (3) | Brick making (żelazo) | 2 gliny + 1 węgiel → 2 cegły | budynki epoki żelaza, awans na miasto, huta, wapiennik |
 | wełna | Sheepfold (2) | Shepherding (żelazo) | → 2 wełny + 1 jedzenie (owce na złożu ×2) | sukno |
 | sukno | Cloth weaver (2) | Shepherding (żelazo) | 2 wełny → 1 sukno + 2 ubrania | akademia, cechy, uniwersytet, awans na miasto |

@@ -1190,7 +1190,7 @@
         "wood": 2
       },
       "produces": {
-        "charcoal": 2
+        "charcoal": 3
       },
       "groups": [
         "craft"

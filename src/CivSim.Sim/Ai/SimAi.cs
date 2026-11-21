@@ -572,7 +572,9 @@ public static partial class SimAi
 
             foreach (BuildingType m in g.Content.Buildings)
             {
-                if (m.Id > 0 && m.Produces[i] > 0 && SimGame.Knows(civ, m) && !Has(g, civ, m.Key) && Buildable(g, civ, m))
+                // Late eras (2026-11-21): one charcoal burner does not feed every smith; another maker goes up while the good
+                // runs out and none is being built.
+                if (m.Id > 0 && m.Produces[i] > 0 && SimGame.Knows(civ, m) && !Building(g, civ, [m.Key]) && Buildable(g, civ, m))
                 {
                     return m.Key;
                 }
