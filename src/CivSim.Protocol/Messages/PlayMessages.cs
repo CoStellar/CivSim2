@@ -326,7 +326,8 @@ public sealed record PlayViewMessage(
     [property: Key(51)] string? EventInfo = null,
     [property: Key(52)] IReadOnlyList<PlayTutorialStep>? Tutorial = null,
     [property: Key(53)] bool TutorialOn = false,
-    [property: Key(54)] bool PickNoLimit = false) : IProtocolMessage;
+    [property: Key(54)] bool PickNoLimit = false,
+    [property: Key(55)] int PickMaxHexes = 0) : IProtocolMessage;
 
 /// <summary>One step of the tutorial (E6, 2026-11-20): what to do, whether it is done, the building key to highlight ("" = none).</summary>
 [MessagePackObject]

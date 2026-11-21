@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using CivSim.Protocol;
@@ -20,8 +19,10 @@ public sealed class PlaySaveTests
         string path = PlaySaves.PathOf(name);
         try
         {
-            using (PlayHost host = PlayHost.Start(new PlayOptions(3, 66, 40, 2) { StartPhase = false }))
+            // Driven without the server's thread and clock (RunTicks), so a busy machine cannot make it run out of time.
+            using (PlayHost host = PlayHost.Create(new PlayOptions(3, 66, 40, 2) { StartPhase = false }))
             {
+                host.AutosaveOn = false;
                 IConnection c = host.Connect();
                 c.Send(new HelloMessage(ProtocolInfo.Version, "Test"));
                 c.Send(new SetSpeedMessage(SimulationSpeed.Max));
@@ -29,9 +30,9 @@ public sealed class PlaySaveTests
                 bool built = false;
                 long tick = 0;
                 SaveGameResultMessage? result = null;
-                var clock = Stopwatch.StartNew();
-                while (clock.Elapsed < TimeSpan.FromSeconds(60) && result is null)
+                for (int step = 0; step < 4000 && result is null; step++)
                 {
+                    host.RunTicks(1);
                     while (c.TryReceive(out IProtocolMessage? m))
                     {
                         switch (m)
@@ -57,8 +58,6 @@ public sealed class PlaySaveTests
                                 break;
                         }
                     }
-
-                    System.Threading.Thread.Sleep(5);
                 }
 
                 Assert.Null(host.Error);
@@ -71,13 +70,14 @@ public sealed class PlaySaveTests
             Assert.NotEmpty(save.Commands);
             Assert.Contains(PlaySaves.List(), s => s.Name == name);
 
-            using PlayHost loaded = PlayHost.Start(new PlayOptions(0) { LoadPath = path });
+            using PlayHost loaded = PlayHost.Create(new PlayOptions(0) { LoadPath = path });
+            loaded.AutosaveOn = false;
             IConnection l = loaded.Connect();
             l.Send(new HelloMessage(ProtocolInfo.Version, "Test"));
             string? news = null;
-            var wait = Stopwatch.StartNew();
-            while (wait.Elapsed < TimeSpan.FromSeconds(60) && news is null)
+            for (int step = 0; step < 50 && news is null; step++)
             {
+                loaded.RunTicks(1);
                 while (l.TryReceive(out IProtocolMessage? m))
                 {
                     if (m is PlayViewMessage v && v.News.FirstOrDefault(x => x.StartsWith("Loaded", StringComparison.Ordinal)) is { } n)
@@ -86,8 +86,6 @@ public sealed class PlaySaveTests
                         Assert.True(v.Tick >= save.Tick);
                     }
                 }
-
-                System.Threading.Thread.Sleep(5);
             }
 
             Assert.Null(loaded.Error);
