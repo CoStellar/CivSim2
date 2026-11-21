@@ -23,6 +23,7 @@ public sealed class PlaySaveTests
             using (PlayHost host = PlayHost.Create(new PlayOptions(3, 66, 40, 2) { StartPhase = false }))
             {
                 host.AutosaveOn = false;
+                host.FullViewEvery = TimeSpan.Zero; // views at every tick: 4000 fast ticks fit in the server's 250 ms
                 IConnection c = host.Connect();
                 c.Send(new HelloMessage(ProtocolInfo.Version, "Test"));
                 c.Send(new SetSpeedMessage(SimulationSpeed.Max));
@@ -72,6 +73,7 @@ public sealed class PlaySaveTests
 
             using PlayHost loaded = PlayHost.Create(new PlayOptions(0) { LoadPath = path });
             loaded.AutosaveOn = false;
+            loaded.FullViewEvery = TimeSpan.Zero;
             IConnection l = loaded.Connect();
             l.Send(new HelloMessage(ProtocolInfo.Version, "Test"));
             string? news = null;
