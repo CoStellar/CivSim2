@@ -636,6 +636,107 @@ public partial class PlayGame : Node2D
     private bool OverUi() => GetViewport().GuiGetHoveredControl() is { } c && c.IsVisibleInTree();
 
     // Why the player cannot start on a hex (the same rules as the server: land, not mountains, away from the taken starts).
+    private (string Sig, int[] Part, int Main, int[] Steps)? _near;
+
+    // Land parts (the largest is the main continent) and steps over land from the shown circles, worked out again only when a
+    // circle is added. The client sees the whole map while choosing, so it can check the rule the server checks.
+    private (string Sig, int[] Part, int Main, int[] Steps)? NearStarts(ClientWorld w, ContentMessage content, PlayViewMessage v)
+    {
+        string sig = $"{w.Width}x{w.Height}|{string.Join(",", v.TakenStarts ?? [])}";
+        if (_near is { } cached && cached.Sig == sig)
+        {
+            return cached;
+        }
+
+        int n = w.Width * w.Height;
+        bool Land(int col, int row, out int idx)
+        {
+            idx = -1;
+            if (row < 0 || row >= w.Height)
+            {
+                return false;
+            }
+
+            idx = w.Index(col, row);
+            return !content.Biomes[w.Biome[idx]].IsWater;
+        }
+
+        var part = new int[n];
+        Array.Fill(part, -1);
+        var sizes = new List<int>();
+        var queue = new Queue<(int, int)>();
+        for (int row = 0; row < w.Height; row++)
+        {
+            for (int col = 0; col < w.Width; col++)
+            {
+                if (!Land(col, row, out int start) || part[start] >= 0)
+                {
+                    continue;
+                }
+
+                int id = sizes.Count;
+                int size = 0;
+                part[start] = id;
+                queue.Enqueue((col, row));
+                while (queue.TryDequeue(out (int C, int R) cur))
+                {
+                    size++;
+                    for (int e = 0; e < 6; e++)
+                    {
+                        (int nc, int nr) = OverlayColors.Neighbor(cur.C, cur.R, e);
+                        nc = ((nc % w.Width) + w.Width) % w.Width;
+                        if (Land(nc, nr, out int ni) && part[ni] < 0)
+                        {
+                            part[ni] = id;
+                            queue.Enqueue((nc, nr));
+                        }
+                    }
+                }
+
+                sizes.Add(size);
+            }
+        }
+
+        int main = sizes.Count == 0 ? -1 : sizes.IndexOf(sizes.Max());
+        var steps = new int[n];
+        Array.Fill(steps, int.MaxValue);
+        if (v.TakenStarts is { } taken)
+        {
+            for (int k = 0; k + 1 < taken.Length; k += 2)
+            {
+                int c0 = ((taken[k] % w.Width) + w.Width) % w.Width;
+                if (taken[k + 1] >= 0 && taken[k + 1] < w.Height)
+                {
+                    steps[w.Index(c0, taken[k + 1])] = 0;
+                    queue.Enqueue((c0, taken[k + 1]));
+                }
+            }
+        }
+
+        while (queue.TryDequeue(out (int C, int R) cur))
+        {
+            int here = steps[w.Index(cur.C, cur.R)];
+            if (here >= v.PickMaxHexes)
+            {
+                continue;
+            }
+
+            for (int e = 0; e < 6; e++)
+            {
+                (int nc, int nr) = OverlayColors.Neighbor(cur.C, cur.R, e);
+                nc = ((nc % w.Width) + w.Width) % w.Width;
+                if (Land(nc, nr, out int ni) && steps[ni] == int.MaxValue)
+                {
+                    steps[ni] = here + 1;
+                    queue.Enqueue((nc, nr));
+                }
+            }
+        }
+
+        _near = (sig, part, main, steps);
+        return _near;
+    }
+
     private string? StartProblem((int Col, int Row) h)
     {
         if (_session is null || !_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.Content is not { } content || _session.PlayView is not { } v)
@@ -652,6 +753,20 @@ public partial class PlayGame : Node2D
         if (w.Relief[i] == 2)
         {
             return "Mountains: not here";
+        }
+
+        if (v.PickMaxHexes > 0 && NearStarts(w, content, v) is { } near)
+        {
+            // 12B: the same rule as the server's (main continent, within the limit by land of a circle).
+            if (near.Steps.Length > 0 && near.Part[i] != near.Main)
+            {
+                return "Start on the main continent: peoples cannot cross the sea yet";
+            }
+
+            if (near.Steps.Length > 0 && v.TakenStarts is { Length: > 0 } && near.Steps[i] > v.PickMaxHexes)
+            {
+                return "Too far from the other peoples: start nearer a red circle";
+            }
         }
 
         if (v.TakenStarts is { } taken)

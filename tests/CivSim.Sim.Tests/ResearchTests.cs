@@ -78,11 +78,17 @@ public sealed class ResearchTests
     {
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
-        while (civ.ThinkerOffer is null)
+        for (int i = 0; i < civ.Stock.Length; i++)
+        {
+            g.Settlements[civ.Settlements[0]].Stock[i] = 900 * SimContent.One; // E17: thinkers ask only for goods the people knows
+        }
+
+        for (int t = 0; t < 30 * SimContent.TicksPerMinute && civ.ThinkerOffer is null; t++)
         {
             g.Tick();
         }
 
+        Assert.NotNull(civ.ThinkerOffer);
         for (int i = 0; i < civ.Stock.Length; i++)
         {
             g.Settlements[civ.Settlements[0]].Stock[i] = 900 * SimContent.One;

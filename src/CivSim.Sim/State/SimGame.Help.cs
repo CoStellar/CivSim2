@@ -230,7 +230,7 @@ public sealed partial class SimGame
             new($"Build a second {Where("gatherers_hut")}: one hut feeds few people.", Count("gatherers_hut") >= 2, "gatherers_hut"),
             new($"Build a {Where("woodcutter")}: wood for everything else.", Count("woodcutter") >= 1, "woodcutter"),
             new("Research Dwellings (Research, key 2): homes.", Known("dwellings"), ""),
-            new($"Build {Where("hut")}s: people grow only with free homes and food.", Count("hut") >= 1, "hut"),
+            new($"Build {Where("hut")}: people grow only with free homes and food.", Count("hut") >= 1, "hut"),
             new($"Research {scoutsTech} (Research, key 2).", Known("scouting"), ""),
             new("Train scouts in the settlement's panel and send them out (right click on the map).", Trained("scouts"), ""),
         ];

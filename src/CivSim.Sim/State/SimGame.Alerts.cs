@@ -135,7 +135,7 @@ public sealed partial class SimGame
                 string next = s.Level + 1 < Content.Levels.Count ? Content.Levels[s.Level + 1].Name.ToLowerInvariant() : "";
                 string fix = Content.Levels[s.Level].MaxHousing > 0 && s.Housing >= Content.Levels[s.Level].MaxHousing
                     ? $"upgrade it to a {next} (its panel)"
-                    : hut is not null && Knows(civ, hut) ? $"build {Where("hut")}s" : hut is not null ? $"research {Content.Techs[hut.Tech].Name} for huts" : "build homes";
+                    : hut is not null && Knows(civ, hut) ? $"build {Where("hut")}" : hut is not null ? $"research {Content.Techs[hut.Tech].Name} for huts" : "build homes";
                 list.Add(new Alert(AlertKind.NoRoom, s.Id, s.Center, -1, $"{s.Name} has no homes left and stopped growing: {fix}."));
             }
 

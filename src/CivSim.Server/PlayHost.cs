@@ -1175,7 +1175,8 @@ public sealed class PlayHost : IDisposable
             ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone(), Won: _game.Winner == civId,
             EventInfo: civ.Event >= 0 ? _game.EventInfo(_game.Content.Events[civ.Event]) : null,
             Tutorial: civ.Settlements.Count > 0 ? [.. _game.Tutorial(civ).Select(t => new PlayTutorialStep(t.Text, t.Done, t.Highlight))] : null,
-            TutorialOn: _options.Tutorial, PickNoLimit: _game.PickWaitsForPlayers);
+            TutorialOn: _options.Tutorial, PickNoLimit: _game.PickWaitsForPlayers,
+            PickMaxHexes: _game.Picking ? _game.Content.StartPhase.NeighbourMaxHexes + _game.Content.StartPhase.BlockFuzz : 0);
     }
 
     // E9 (2026-11-20): people the materials of a building take from home while porters carry them (as NewCarrier counts them).
