@@ -103,15 +103,15 @@ public sealed partial class SimGame
     public static List<SimEvent> LoadEvents(JsonElement root, IReadOnlyList<SimGood> goods)
     {
         var list = new List<SimEvent>();
-        if (!root.TryGetProperty("events", out JsonElement ev))
+        if (!root.TryProp("events", out JsonElement ev))
         {
             return list;
         }
 
-        foreach (JsonElement e in ev.GetProperty("pool").EnumerateArray())
+        foreach (JsonElement e in ev.Prop("pool").EnumerateArray())
         {
             var g = new bool[goods.Count];
-            if (e.TryGetProperty("goods", out JsonElement ge))
+            if (e.TryProp("goods", out JsonElement ge))
             {
                 foreach (JsonElement k in ge.EnumerateArray())
                 {
@@ -123,10 +123,10 @@ public sealed partial class SimGame
             }
 
             list.Add(new SimEvent(
-                list.Count, e.GetProperty("key").GetString()!, e.GetProperty("name").GetString()!, e.GetProperty("seconds").GetInt32() * SimContent.TicksPerSecond, g,
-                e.TryGetProperty("productionPercent", out JsonElement pp) ? pp.GetInt32() : 100, e.TryGetProperty("eatPercent", out JsonElement ep) ? ep.GetInt32() : 100,
-                e.TryGetProperty("losePercentPerMinute", out JsonElement lp) ? lp.GetInt32() : 0, e.TryGetProperty("destroyBuilding", out JsonElement db) && db.GetBoolean(),
-                e.GetProperty("field").GetString()!, e.GetProperty("advice").GetString()!));
+                list.Count, e.Prop("key").GetString()!, e.Prop("name").GetString()!, e.Prop("seconds").GetInt32() * SimContent.TicksPerSecond, g,
+                e.TryProp("productionPercent", out JsonElement pp) ? pp.GetInt32() : 100, e.TryProp("eatPercent", out JsonElement ep) ? ep.GetInt32() : 100,
+                e.TryProp("losePercentPerMinute", out JsonElement lp) ? lp.GetInt32() : 0, e.TryProp("destroyBuilding", out JsonElement db) && db.GetBoolean(),
+                e.Prop("field").GetString()!, e.Prop("advice").GetString()!));
         }
 
         return list;

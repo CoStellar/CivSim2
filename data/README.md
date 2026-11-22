@@ -1,4 +1,4 @@
-**The new game's data is `data/sim/` (`game.json`, built by `data/sim/tools/build_game_json.py`, and test scenarios).** The other files here belong to the legacy game (`docs/legacy/README.md`).
+**The new game's data is `data/sim/` (`game.json`, built by `data/sim/tools/build_game_json.py`, and test scenarios).** The start menu, Reload data and the tests check `game.json`: it must load, and every key must be one the game reads (`comment` keys and the top-level `version` aside), so a typo in a key name is reported instead of falling back to the default (`SimContent.Check`). The other files here belong to the legacy game (`docs/legacy/README.md`).
 
 # Game content (data)
 

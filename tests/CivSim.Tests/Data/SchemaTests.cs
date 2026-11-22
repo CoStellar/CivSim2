@@ -77,6 +77,14 @@ public sealed class SchemaTests
                 File.Copy(file, Path.Combine(dir, SchemaValidator.FolderName, Path.GetFileName(file)), overwrite: true);
             }
 
+            // The check covers the new game's sim/ folder too (2026-11-22).
+            foreach (string file in Directory.GetFiles(Path.Combine(DataDir, "sim"), "*", SearchOption.AllDirectories))
+            {
+                string to = Path.Combine(dir, "sim", Path.GetRelativePath(Path.Combine(DataDir, "sim"), file));
+                Directory.CreateDirectory(Path.GetDirectoryName(to)!);
+                File.Copy(file, to, overwrite: true);
+            }
+
             Assert.Empty(LocalServerHost.CheckData(dir));
             string path = Path.Combine(dir, "units.json");
             File.WriteAllText(path, File.ReadAllText(path).Replace("\"routeNodeLimit\"", "\"routeNodeLimt\"", StringComparison.Ordinal));
