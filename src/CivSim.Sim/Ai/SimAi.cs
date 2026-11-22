@@ -510,7 +510,7 @@ public static partial class SimAi
     }
 
     // Eating of the whole people a minute: residents, units and the advisor.
-    private static long Eating(SimGame g, Civ civ)
+    internal static long Eating(SimGame g, Civ civ)
     {
         long eating = 0;
         foreach (int sid in civ.Settlements)
@@ -522,11 +522,11 @@ public static partial class SimAi
     }
 
     // Outside winter: food made a minute falls short of eating plus ai.foodMarginPercent (the winter would eat the store).
-    private static bool ShortOfFood(SimGame g, Civ civ, long eating) =>
+    internal static bool ShortOfFood(SimGame g, Civ civ, long eating) =>
         !g.IsWinter && civ.MadeRate[g.Content.Food] * 100 < eating * (100 + g.Content.AiFoodMarginPercent);
 
     // More housing (a settlement level, better homes) waits while the food made does not cover the winter (2026-11-22).
-    private static bool Lean(SimGame g, Civ civ) => civ.Hungry || ShortOfFood(g, civ, Eating(g, civ));
+    internal static bool Lean(SimGame g, Civ civ) => civ.Hungry || ShortOfFood(g, civ, Eating(g, civ));
 
     // True when a building of one of these kinds is being built.
     private static bool Building(SimGame g, Civ civ, string[] keys)
@@ -1090,7 +1090,7 @@ public static partial class SimAi
         }
     }
 
-    private static bool Upgrade(SimGame g, Civ civ)
+    internal static bool Upgrade(SimGame g, Civ civ)
     {
         if (Lean(g, civ))
         {
@@ -1900,7 +1900,7 @@ public static partial class SimAi
     }
 
     // Feeds a hungry settlement from the one with the most food, with a caravan.
-    private static void Supply(SimGame g, Civ civ)
+    internal static void Supply(SimGame g, Civ civ)
     {
         // Constructions whose porters were killed: the AI sends the missing materials again when it has them.
         foreach (int id in civ.Buildings)
