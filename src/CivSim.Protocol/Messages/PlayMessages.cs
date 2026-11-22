@@ -327,7 +327,9 @@ public sealed record PlayViewMessage(
     [property: Key(52)] IReadOnlyList<PlayTutorialStep>? Tutorial = null,
     [property: Key(53)] bool TutorialOn = false,
     [property: Key(54)] bool PickNoLimit = false,
-    [property: Key(55)] int PickMaxHexes = 0) : IProtocolMessage;
+    [property: Key(55)] int PickMaxHexes = 0,
+    [property: Key(56)] int[]? Signs = null,
+    [property: Key(57)] int SignRadius = 0) : IProtocolMessage;
 
 /// <summary>One step of the tutorial (E6, 2026-11-20): what to do, whether it is done, the building key to highlight ("" = none).</summary>
 [MessagePackObject]
@@ -507,6 +509,9 @@ public enum PlayCommandKind
 
     /// <summary>Replace finished building <c>A</c> by a building of kind <c>B</c> on its places (half of its price counts).</summary>
     ReplaceBuilding = 47,
+
+    /// <summary>Prospectors <c>A</c> search the ore signs one by one, nearest first.</summary>
+    SearchSigns = 48,
 }
 
 /// <summary>Client → server: a command of the new game. Refusals come back as <see cref="CommandRejectedMessage"/>.</summary>

@@ -200,6 +200,7 @@ t("weaving","Weaving",N,{"animal_husbandry":20},{"hides":30,"tools":10},50,"Weav
 t("irrigation","Irrigation",N,{"agriculture":40},{"stone":60,"tools":15},55,"Irrigation ditches drawn from water (at most 4 hexes): farms on watered hexes +25%; droughts 40% milder.",[("resist","drought",40)])
 t("barter","Barter",N,{"pottery":15},{"pottery":20,"food":60},50,"Trading posts; trade with other peoples (one agreement per trading post).",made={"pottery":30})
 t("palisade","Palisade",N,{"stone_tools":30},{"wood":80},40,"Palisades drawn on hexes: they wound enemies attacking through them.")
+t("prospecting","Prospecting",N,{"masonry":10},{"food":40,"stone":20},40,"Ore signs: circles on seen land where an ore of our era lies; prospectors can search them one by one. New signs with each era: copper, then tin, gold and silver, iron ore, saltpeter.")
 t("copper_working","Copper working",N,{"masonry":20,"pottery":20},{"stone":60,"clay":40,"tools":30},70,"Copper mines.",made={"tools":30})
 t("fishing","Fishing",N,{"hunting":15},{"food":30,"wood":20},25,"Fishing huts by rivers and the sea.")
 t("rafts","Rafts",N,{"fishing":15},{"wood":50},30,"Raft landings: our people cross the river next to them.")
@@ -261,6 +262,7 @@ CAT={
 "bronze_working":"industry","bronze_weapons":"military","the_wheel":"trade","writing":"science","horseback_riding":"military","sailing":"trade","currency":"trade","code_of_laws":"governance","archery":"military","barracks":"military","stone_walls":"military","bronze_age_arms":"military","bronze_tools":"industry",
 "iron_working":"industry","iron_weapons":"military","mathematics":"science","construction":"building","civil_service":"governance","roads":"trade","engineering":"building","medicine":"science","philosophy":"science","shipbuilding":"trade","iron_age_arms":"military","iron_tools":"industry",
 "brick_making":"building","shepherding":"industry","sawmills":"building","lime_mortar":"building",
+"prospecting":"industry",
 "feudalism":"governance","chivalry":"military","steel":"industry","castles":"military","heavy_plough":"food","crossbows":"military","guilds":"industry","mills":"food","university":"science","medieval_arms":"military","crop_rotation":"food","longbow":"military","trebuchet":"military"
 }
 for x in T:
@@ -290,7 +292,13 @@ for b_ in d["buildings"]:
     if b_["key"]=="castle": b_["guard"]=40
 d["ruins"]={"comment":"A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.","emptySeconds":60,"rebuildPercent":50}
 # Every start has copper and tin near it (Patryk, 2026-11-19, M4): placed on free land when the map has none within max hexes.
-d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1},{"deposit":"iron_ore","min":15,"max":20,"depth":1}]  # iron: 7A, 2026-11-20
+d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1,"size":"small"},{"deposit":"iron_ore","min":15,"max":20,"depth":1}]  # iron: 7A, 2026-11-20; tin small: 2026-11-22
+# Lodes (Patryk, 2026-11-22): deposit sizes, regions of rare ores, ore signs from Prospecting.
+d["lodes"]={"comment":"sizes: every deposit is small, medium or large (a mine or a bonus on it gives percent of the usual), drawn by weight; inside a region of its kind by regionWeight. regional: these deposits gather in regions: `regions` centres per 10000 land hexes, each `regionHexes` around; outside them only outsideKeepPercent of the deposits stay, and as many are added inside. signs: Prospecting shows, for each ore of the people's era (eras), up to perOre circles of signRadius hexes on land the people has seen within reachHexes of its settlements; the ore lies in the circle, its centre is moved up to offsetHexes away. Signs are worked out every recountSeconds.",
+  "sizes":[{"key":"small","name":"small","percent":50,"weight":20,"regionWeight":10},{"key":"medium","name":"medium","percent":100,"weight":50,"regionWeight":45},{"key":"large","name":"large","percent":150,"weight":30,"regionWeight":45}],
+  "regional":{"deposits":["tin","gold","silver","horses"],"regions":4,"regionHexes":10,"outsideKeepPercent":30},
+  "signs":{"tech":"prospecting","signRadius":3,"offsetHexes":2,"perOre":3,"reachHexes":30,"recountSeconds":20,
+    "eras":{"neolithic":["copper"],"bronze_age":["tin","gold","silver"],"iron_age":["iron_ore"],"middle_ages":["saltpeter"]}}}
 # Gateways (Patryk, 2026-11-19, M1): to leave an era a people must also know its gateway technology (metal opens the next era).
 d["eraGateways"]={"comment":"Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
   "neolithic":"copper_working","bronze_age":"bronze_working","iron_age":"iron_working"}

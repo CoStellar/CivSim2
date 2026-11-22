@@ -521,6 +521,14 @@ public sealed partial class SimGame
 
             Map.Deposit.Set(pick, (ushort)want.Deposit);
             Map.DepositDepth.Set(pick, (byte)want.Depth);
+            if (want.Size >= 0 && want.Size < Content.Lodes.Sizes.Length)
+            {
+                Map.DepositRichness.Set(pick, Content.Lodes.Sizes[want.Size].Percent); // 2026-11-22: the start's tin is small
+            }
+            else if (Content.Lodes.Sizes.Length > 0)
+            {
+                Map.DepositRichness.Set(pick, 100);
+            }
         }
     }
 }

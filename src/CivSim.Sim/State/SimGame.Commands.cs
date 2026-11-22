@@ -74,6 +74,7 @@ public sealed partial class SimGame
             UpgradeSettlementCommand c => Upgrade(civ, c.Settlement),
             UpgradeBuildingCommand c => UpgradeBuilding(civ, c.Building),
             ReplaceBuildingCommand c => ReplaceBuilding(civ, c.Building, c.Type),
+            SearchSignsCommand c => SearchSignsOrder(civ, c.Unit),
             DebugCommand c => Debug(civ, c.Action),
             ResumePatrolCommand c => ResumePatrol(civ, c.Unit),
             TrainCommand c => Train(civ, c.Settlement, c.Kind, c.People, c.Shock),
@@ -472,7 +473,12 @@ public sealed partial class SimGame
         int yield = 100;
         if (t.BonusDeposit != 0 && Map.Deposit[cell] == t.BonusDeposit && KnowsDeposit(civ, cell))
         {
-            yield += t.BonusPercent;
+            yield += t.BonusPercent * DepositSizePercent(cell) / 100; // 2026-11-22: a small deposit gives half the bonus
+        }
+
+        if (t.OrDeposit != 0 && Map.Deposit[cell] == t.OrDeposit)
+        {
+            yield = yield * DepositSizePercent(cell) / 100; // 2026-11-22: a mine on a small deposit gives half, on a large one half more
         }
 
         if (t.BonusReliefs.Length > 0 && t.BonusReliefs[Map.Relief[cell]])

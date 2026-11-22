@@ -157,6 +157,7 @@ public sealed partial class SimGame
         var options = new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.Civilizations);
         WorldGenReport report = WorldGenerator.Generate(content.World, map, streams[RandomStreamId.World], settings.Seed, options);
         var game = new SimGame(content, settings, map, streams[RandomStreamId.Events]);
+        game.ShapeLodes();
         for (int c = 0; c < settings.Civilizations && c < report.Starts.Count; c++)
         {
             var language = CivSim.Core.Naming.NameLanguage.Create(content.World.Names, CivSim.Core.Naming.Names.LanguageSeed(settings.Seed, c));
@@ -313,6 +314,8 @@ public sealed partial class SimGame
         {
             RoadStep();
             SurveyStep();
+            UpdateSigns();
+            SearchSigns();
             SeasonStep();
             HealStep();
             PalisadeStep();

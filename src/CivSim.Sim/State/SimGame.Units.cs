@@ -259,6 +259,7 @@ public sealed partial class SimGame
         }
 
         Unit u = Units[id];
+        u.SearchingSigns = false; // a new order ends a search of the ore signs (the search itself sets it again)
         UnitType t = Content.Units[u.Kind];
         if (t.System)
         {

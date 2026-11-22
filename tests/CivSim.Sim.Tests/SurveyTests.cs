@@ -10,6 +10,8 @@ public sealed class SurveyTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
+    private static int Hexes(SimGame g, int a, int b) => g.Geo.Distance(g.Geo.FromIndex(a), g.Geo.FromIndex(b));
+
     private static int DepositId(string key) => Content.World.Deposits.First(d => d.Key == key).Id;
 
     private static (SimGame G, Civ Civ) NewGame()
@@ -33,6 +35,45 @@ public sealed class SurveyTests
         {
             g.Tick();
         }
+    }
+
+    [Fact]
+    public void ProspectingShowsSignsOfEraOresAndProspectorsSearchThem()
+    {
+        // 2026-11-22: signs on seen land near our settlements; the ore lies within offsetHexes of the centre; a search walks there.
+        (SimGame g, Civ civ) = NewGame();
+        int copper = DepositId("copper");
+        civ.Era = Content.Eras.ToList().FindIndex(e => e.Key == "neolithic");
+        int home = g.Settlements[civ.Settlements[0]].Center;
+        int ore = Enumerable.Range(0, g.Geo.CellCount)
+            .Where(i => g.Map.Deposit[i] == copper && g.OwnerAt[i] < 0 && Hexes(g, home, i) <= Content.Lodes.ReachHexes)
+            .OrderBy(i => Hexes(g, home, i)).First();
+        civ.Known[ore] = true;
+        Seconds(g, Content.Lodes.RecountTicks / SimContent.TicksPerSecond);
+        Assert.Empty(civ.Signs); // no Prospecting yet
+
+        civ.KnownTech[Content.Lodes.SignTech] = true;
+        Seconds(g, Content.Lodes.RecountTicks / SimContent.TicksPerSecond);
+        OreSign sign = Assert.Single(civ.Signs, x => x.Deposit == copper && Hexes(g, x.Center, ore) <= Content.Lodes.OffsetHexes);
+
+        Unit p = Put(g, civ, "prospectors", home);
+        Assert.Null(g.Apply(new SearchSignsCommand(civ.Id, p.Id)));
+        Seconds(g, 120);
+        Assert.True(g.KnowsDeposit(civ, ore)); // found: the sign goes at the next count
+        Seconds(g, Content.Lodes.RecountTicks / SimContent.TicksPerSecond);
+        Assert.DoesNotContain(civ.Signs, x => x.Center == sign.Center && x.Deposit == copper && Hexes(g, x.Center, ore) <= Content.Lodes.OffsetHexes);
+    }
+
+    [Fact]
+    public void EveryDepositHasASizeAndAMineOnASmallOneGivesHalf()
+    {
+        (SimGame g, Civ civ) = NewGame();
+        int[] sizes = [.. Content.Lodes.Sizes.Select(z => z.Percent)];
+        Assert.All(Enumerable.Range(0, g.Geo.CellCount).Where(i => g.Map.Deposit[i] != 0), i => Assert.Contains(g.DepositSizePercent(i), sizes));
+        int stone = DepositId("stone");
+        Assert.Contains(Enumerable.Range(0, g.Geo.CellCount), i => g.Map.Deposit[i] == stone && g.DepositSizePercent(i) == 50);
+        Assert.Contains(Enumerable.Range(0, g.Geo.CellCount), i => g.Map.Deposit[i] == stone && g.DepositSizePercent(i) == 150);
+        Assert.Equal("small", g.DepositSizeName(Enumerable.Range(0, g.Geo.CellCount).First(i => g.Map.Deposit[i] != 0 && g.DepositSizePercent(i) == 50)));
     }
 
     [Fact]

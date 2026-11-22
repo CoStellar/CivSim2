@@ -2165,6 +2165,21 @@
       "category": "military"
     },
     {
+      "key": "prospecting",
+      "name": "Prospecting",
+      "era": "neolithic",
+      "gives": "Ore signs: circles on seen land where an ore of our era lies; prospectors can search them one by one. New signs with each era: copper, then tin, gold and silver, iron ore, saltpeter.",
+      "experience": {
+        "masonry": 10
+      },
+      "price": {
+        "food": 40,
+        "stone": 20
+      },
+      "seconds": 40,
+      "category": "industry"
+    },
+    {
       "key": "copper_working",
       "name": "Copper working",
       "era": "neolithic",
@@ -3627,7 +3642,8 @@
       "deposit": "tin",
       "min": 5,
       "max": 12,
-      "depth": 1
+      "depth": 1,
+      "size": "small"
     },
     {
       "deposit": "iron_ore",
@@ -3746,5 +3762,66 @@
     "musterHexes": 3,
     "musterFromHexes": 30,
     "musterPercent": 70
+  },
+  "lodes": {
+    "comment": "sizes: every deposit is small, medium or large (a mine or a bonus on it gives percent of the usual), drawn by weight; inside a region of its kind by regionWeight. regional: these deposits gather in regions: `regions` centres per 10000 land hexes, each `regionHexes` around; outside them only outsideKeepPercent of the deposits stay, and as many are added inside. signs: Prospecting shows, for each ore of the people's era (eras), up to perOre circles of signRadius hexes on land the people has seen within reachHexes of its settlements; the ore lies in the circle, its centre is moved up to offsetHexes away. Signs are worked out every recountSeconds.",
+    "sizes": [
+      {
+        "key": "small",
+        "name": "small",
+        "percent": 50,
+        "weight": 20,
+        "regionWeight": 10
+      },
+      {
+        "key": "medium",
+        "name": "medium",
+        "percent": 100,
+        "weight": 50,
+        "regionWeight": 45
+      },
+      {
+        "key": "large",
+        "name": "large",
+        "percent": 150,
+        "weight": 30,
+        "regionWeight": 45
+      }
+    ],
+    "regional": {
+      "deposits": [
+        "tin",
+        "gold",
+        "silver",
+        "horses"
+      ],
+      "regions": 4,
+      "regionHexes": 10,
+      "outsideKeepPercent": 30
+    },
+    "signs": {
+      "tech": "prospecting",
+      "signRadius": 3,
+      "offsetHexes": 2,
+      "perOre": 3,
+      "reachHexes": 30,
+      "recountSeconds": 20,
+      "eras": {
+        "neolithic": [
+          "copper"
+        ],
+        "bronze_age": [
+          "tin",
+          "gold",
+          "silver"
+        ],
+        "iron_age": [
+          "iron_ore"
+        ],
+        "middle_ages": [
+          "saltpeter"
+        ]
+      }
+    }
   }
 }

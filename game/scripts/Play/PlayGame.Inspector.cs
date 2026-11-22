@@ -609,6 +609,14 @@ public partial class PlayGame
             {
                 items.Add(new LineItem("Nothing of this kind around here.", UiKit.Muted, 13));
             }
+
+            // 2026-11-22: with Prospecting, prospectors walk the ore signs one by one (nearest first) and look at each.
+            if (t.Survey == 1 && _session?.PlayView is { Signs: { Length: > 0 } signs })
+            {
+                int uid = u.Id;
+                items.Add(new ButtonsItem([new ActItem($"Search the ore signs ({signs.Length / 2})", () => _session!.Play(PlayCommandKind.SearchSigns, uid),
+                    "Walk to the nearest ore sign, look at the rock there, then go on to the next one until all are searched.")]));
+            }
         }
 
         // Supply (2026-11-20): an army unit away from our land eats its provisions; a caravan can bring more.
@@ -769,7 +777,10 @@ public partial class PlayGame
         // Only what we know of the ground (2026-11-19): beyond our land prospectors find the rock, surveyors the soil.
         if (w.Deposit[i] != 0)
         {
-            items.Add(new LineItem($"Deposit: {content.Deposits[w.Deposit[i] - 1].Name}", UiKit.Good, 14));
+            // 2026-11-22: deposits are small, medium or large (a mine gives half, the usual, or half more).
+            int rich = w.DepositRichness[i];
+            string size = rich <= 0 || rich == 100 ? (rich == 100 ? " (medium)" : "") : rich < 100 ? $" (small: a mine gives {rich}%)" : $" (large: a mine gives {rich}%)";
+            items.Add(new LineItem($"Deposit: {content.Deposits[w.Deposit[i] - 1].Name}{size}", UiKit.Good, 14));
         }
         else if (w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0)
         {
