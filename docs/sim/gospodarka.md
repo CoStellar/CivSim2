@@ -372,3 +372,25 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
 | 10B | Domy rosną w górę: Construction +4, Engineering +4, Guilds +8 miejsc w każdym kamiennym domu (16 → 32), także w już stojących. Awans osady daje szerszą ziemię | efekty technologii |
 | 11B | Alert „Food in X runs out in 2:40: build a Gatherers' hut (Food) or put more people to food.”, gdy osada je więcej, niż robi, a jedzenia starczy na 3 minuty lub mniej | `alerts.foodLowMinutes` |
 | 12B | Do czasu statków AI wszystkie ludy startują na głównym kontynencie (największy ląd), najdalej 60 heksów lądem od innego ludu. Bez fazy wyboru generator zostawia swój start, jeśli pasuje; inaczej lud bierze najlepsze miejsce (ocena „widziana”) co najmniej 25 heksów od innych (gdy się nie da, 13). Przy wyborze startu: odmowa „Too far from the other peoples” albo „Start on the main continent”; liczone od środków pokazanych kółek, więc nikt nie wie więcej, niż widać. Scenariusze testowe zostają przy starcie generatora | `startPhase.neighbourMaxHexes`, `startPhase.neighbourMinHexes` |
+
+## Materiały późnych er (decyzje 13–15 z 2026-11-20, wdrożone 2026-11-21)
+
+Nowe dobra i łańcuchy (liczby na pracownika na minutę):
+
+| Dobro | Budynek | Technologia (era) | Z czego | Do czego |
+| --- | --- | --- | --- | --- |
+| węgiel drzewny | Charcoal burner (2 prac.) | Bronze working (brąz) | 2 drewna → 3 węgla | paliwo: brązownik, kowal, płatnerz żelaza, huta (zamiast drewna) |
+| cegła | Brickworks (3) | Brick making (żelazo) | 2 gliny + 1 węgiel → 2 cegły | budynki epoki żelaza, awans na miasto, huta, wapiennik |
+| wełna | Sheepfold (2) | Shepherding (żelazo) | → 2 wełny + 1 jedzenie (owce na złożu ×2) | sukno |
+| sukno | Cloth weaver (2) | Shepherding (żelazo) | 2 wełny → 1 sukno + 2 ubrania | akademia, cechy, uniwersytet, awans na miasto |
+| deski | Sawmill (3, nad wodą) | Sawmills (średniowiecze) | 3 drewna → 2 deski | dwór, zamek, młyn, cechy |
+| zaprawa | Lime kiln (2) | Lime mortar (średniowiecze) | 2 kamienia + 1 węgiel → 2 zaprawy | zamek, dwór, uniwersytet |
+
+Koszty (14C):
+- Budynki epoki żelaza (plac budowniczych, wielki magazyn, urząd prowincji, łaźnia, akademia) kosztują cegły; mniej kamienia i drewna niż dawniej.
+- Budynki średniowiecza kosztują deski i zaprawę (dwór, zamek, młyn, cechy, uniwersytet); huta cegły.
+- Awans na miasto: 400 drewna, 400 kamienia, 120 cegieł, 40 sukna, 80 ceramiki, 60 narzędzi (było 500/500 i 80 tkanin).
+- Wejście w średniowiecze wymaga wyprodukowania łącznie 20 cegieł (`eraEntryMade`), tak jak epoka żelaza 5 brązu.
+- Przebudowa budynku w lepszy płaci różnicę ceny, więc też w nowych materiałach. Nowa przebudowa: tkalnia → tkalnia sukna.
+
+Stare łańcuchy zostają (15B): drewno idzie do węgla i desek, glina do cegły, kamień do zaprawy.

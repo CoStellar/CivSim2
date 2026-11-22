@@ -14,7 +14,10 @@ d['goods'] = [
  {"key":"iron_weapons","name":"Iron weapons","worth":12,"storedIn":"armoury"},{"key":"steel_weapons","name":"Steel weapons","worth":18,"storedIn":"armoury"},
  {"key":"hide_armour","name":"Hide armour","worth":3,"storedIn":"armoury"},{"key":"bronze_armour","name":"Bronze armour","worth":9,"storedIn":"armoury"},
  {"key":"iron_armour","name":"Iron armour","worth":12,"storedIn":"armoury"},{"key":"steel_armour","name":"Plate armour","worth":18,"storedIn":"armoury"},
- {"key":"horses","name":"Horses","worth":12},{"key":"coins","name":"Coins","worth":1}]
+ {"key":"horses","name":"Horses","worth":12},{"key":"coins","name":"Coins","worth":1},
+ # Late-era materials (Patryk, 2026-11-20, question 13: all of them, in this order).
+ {"key":"charcoal","name":"Charcoal","worth":2},{"key":"bricks","name":"Bricks","worth":3},{"key":"wool","name":"Wool","worth":1.5},
+ {"key":"cloth","name":"Cloth","worth":4},{"key":"planks","name":"Planks","worth":2.5},{"key":"mortar","name":"Mortar","worth":3}]
 d['buildingStorage'] = 20
 EXTRA = " Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools)."
 d['comment'] = (d['comment'].split(" Storage: goods lie")[0] + EXTRA).replace("idle people forage idleForagePerMinute each", "people told to gather pick up food, wood and stone around their settlement (forage)")
@@ -26,7 +29,7 @@ d['settlementLevels'] = [
  {"key":"camp","name":"Camp","radius":3,"housing":25,"storage":150,"upgradePrice":{}},
  {"key":"village","name":"Village","radius":4,"housing":40,"storage":200,"upgradePrice":{"wood":120,"stone":60,"clay":30},"tech":"agriculture","minPeople":40},
  {"key":"town","name":"Town","radius":5,"housing":60,"storage":300,"upgradePrice":{"wood":250,"stone":200,"pottery":40,"clothing":30},"tech":"code_of_laws","alsoTechs":["masonry"],"minPeople":150},
- {"key":"city","name":"City","radius":6,"housing":90,"storage":500,"upgradePrice":{"wood":500,"stone":500,"textiles":80,"pottery":80,"tools":60},"tech":"civil_service","alsoTechs":["construction"],"minPeople":400}]
+ {"key":"city","name":"City","radius":6,"housing":90,"storage":500,"upgradePrice":{"wood":400,"stone":400,"bricks":120,"cloth":40,"pottery":80,"tools":60},"tech":"civil_service","alsoTechs":["construction"],"minPeople":400}]
 # minPeople (Patryk, 2026-11-19, E2): people a settlement must have to reach the level (wide steps: village 40, town 150).
 
 FOREST=["deciduous_forest","taiga","jungle","swamp"]
@@ -59,7 +62,8 @@ b("trading_post","Trading post","barter",2,{"wood":40,"pottery":10},30,storage=1
 b("copper_mine","Copper mine","copper_working",4,{"wood":40,"tools":15},30,orDeposit="copper",produces={"copper":2},groups=["tools","mine"])
 # Bronze
 b("tin_mine","Tin mine","bronze_working",4,{"wood":40,"tools":15},30,orDeposit="tin",produces={"tin":2},groups=["tools","mine"])
-b("bronze_smith","Bronze smith","bronze_working",3,{"stone":40,"clay":30},30,consumes={"copper":2,"tin":1,"wood":1},produces={"bronze":1},groups=["craft"])
+b("bronze_smith","Bronze smith","bronze_working",3,{"stone":40,"clay":30},30,consumes={"copper":2,"tin":1,"charcoal":1},produces={"bronze":1},groups=["craft"])
+b("charcoal_burner","Charcoal burner","bronze_working",2,{"wood":30,"clay":10},20,consumes={"wood":2},produces={"charcoal":3},groups=["craft"])
 b("armourer","Armourer","bronze_weapons",2,{"stone":40,"wood":30},30,consumes={"bronze":1,"wood":1},produces={"bronze_weapons":1,"bronze_armour":0.5},groups=["craft","armoury"])
 b("school","School","writing",3,{"stone":60,"clay":40},40,produces={},researchPercent=15,groups=["learn"])
 b("stable","Stable","horseback_riding",2,{"wood":60},30,consumes={"food":2},produces={"horses":1},bonusDeposit="horses",bonusPercent=100,goodLimit={"horses":32},groups=["food"])
@@ -68,35 +72,40 @@ b("mint","Mint","currency",2,{"stone":60,"wood":20},35,consumes={"copper":1},pro
 b("barracks","Barracks","barracks",2,{"wood":80,"stone":40},40,produces={},trainPercent=50,groups=["army","armoury"])
 # Iron
 b("iron_mine","Iron mine","iron_working",4,{"wood":50,"tools":20},35,orDeposit="iron_ore",produces={"iron":1},groups=["tools","mine"])
-b("blacksmith","Blacksmith","iron_working",2,{"stone":40,"wood":30},30,consumes={"iron":1,"wood":1},produces={"tools":2},groups=["craft"])
-b("weaponsmith","Weaponsmith","iron_weapons",2,{"stone":40,"wood":30},30,consumes={"iron":1,"wood":1},produces={"iron_weapons":1.5,"iron_armour":1},groups=["craft","armoury"])
-b("builders_yard","Builders' yard","mathematics",3,{"stone":80,"wood":60},40,produces={},buildPercent=30,groups=["care"])
-b("great_storehouse","Great storehouse","construction",0,{"stone":150,"wood":80},45,storage=1000,groups=["store"])
-b("province_office","Province office","civil_service",3,{"stone":120,"wood":60},50,produces={},groups=["govern"])
+b("blacksmith","Blacksmith","iron_working",2,{"stone":40,"wood":30},30,consumes={"iron":1,"charcoal":1},produces={"tools":2},groups=["craft"])
+b("weaponsmith","Weaponsmith","iron_weapons",2,{"stone":40,"wood":30},30,consumes={"iron":1,"charcoal":1},produces={"iron_weapons":1.5,"iron_armour":1},groups=["craft","armoury"])
+b("builders_yard","Builders' yard","mathematics",3,{"stone":60,"wood":40,"bricks":30},40,produces={},buildPercent=30,groups=["care"])
+b("great_storehouse","Great storehouse","construction",0,{"stone":100,"wood":60,"bricks":60},45,storage=1000,groups=["store"])
+b("province_office","Province office","civil_service",3,{"stone":80,"wood":40,"bricks":50},50,produces={},groups=["govern"])
 b("siege_workshop","Siege workshop","engineering",3,{"wood":100,"tools":30},45,produces={},trainPercent=70,groups=["army"])
-b("bathhouse","Bathhouse","medicine",2,{"stone":80,"pottery":20},40,produces={},resistEpidemicPercent=30,growthBonus=2,groups=["care"])
-b("academy","Academy","philosophy",3,{"stone":120,"textiles":20},50,produces={},researchPercent=20,groups=["learn"])
+b("bathhouse","Bathhouse","medicine",2,{"stone":50,"bricks":30,"pottery":20},40,produces={},resistEpidemicPercent=30,growthBonus=2,groups=["care"])
+b("academy","Academy","philosophy",3,{"stone":80,"bricks":40,"cloth":10},50,produces={},researchPercent=20,groups=["learn"])
 b("shipyard","Shipyard","shipbuilding",4,{"wood":150,"tools":30},50,needsWater=True,produces={},trainPercent=60,groups=["army"])
+b("brickworks","Brickworks","brick_making",3,{"wood":40,"stone":30},30,consumes={"clay":2,"charcoal":1},produces={"bricks":2},groups=["craft"])
+b("sheepfold","Sheepfold","shepherding",2,{"wood":40},25,biomes=["grassland","steppe","tundra","savanna"],produces={"wool":2,"food":1},bonusDeposit="sheep",bonusPercent=100,groups=["food"])
+b("cloth_weaver","Cloth weaver","shepherding",2,{"wood":30,"tools":10},25,consumes={"wool":2},produces={"cloth":1,"clothing":2},groups=["craft"])
 # Middle ages
-b("manor","Manor","feudalism",4,{"stone":200,"wood":100},60,produces={"food":8},housing=10,winterPercent=50,groups=["food","farm"])
-b("steelworks","Steelworks","steel",3,{"stone":150,"iron":40},60,consumes={"iron":2,"wood":2},produces={"tools":4,"steel_weapons":1,"steel_armour":1},groups=["craft","armoury"])
-b("castle","Castle","castles",0,{"stone":400,"wood":100,"iron":30},90,defensePercent=220,housing=10,groups=["fort","armoury"])
-b("mill","Mill","mills",2,{"wood":80,"stone":60,"tools":10},40,needsWater=True,produces={},supportGroup="farm",supportPercent=20,groups=["care"])
-b("guildhall","Guild hall","guilds",3,{"stone":150,"textiles":30},50,produces={},supportGroup="craft",supportPercent=25,groups=["care"])
-b("university","University","university",4,{"stone":200,"textiles":40,"pottery":40},60,produces={},researchPercent=25,groups=["learn"])
+b("manor","Manor","feudalism",4,{"stone":150,"planks":60,"mortar":30},60,produces={"food":8},housing=10,winterPercent=50,groups=["food","farm"])
+b("steelworks","Steelworks","steel",3,{"stone":100,"bricks":60,"iron":40},60,consumes={"iron":2,"charcoal":2},produces={"tools":4,"steel_weapons":1,"steel_armour":1},groups=["craft","armoury"])
+b("castle","Castle","castles",0,{"stone":300,"mortar":100,"planks":40,"iron":30},90,defensePercent=220,housing=10,groups=["fort","armoury"])
+b("mill","Mill","mills",2,{"planks":50,"stone":40,"tools":10},40,needsWater=True,produces={},supportGroup="farm",supportPercent=20,groups=["care"])
+b("guildhall","Guild hall","guilds",3,{"stone":80,"bricks":40,"planks":30,"cloth":20},50,produces={},supportGroup="craft",supportPercent=25,groups=["care"])
+b("university","University","university",4,{"stone":120,"bricks":60,"mortar":40,"cloth":30},60,produces={},researchPercent=25,groups=["learn"])
+b("sawmill","Sawmill","sawmills",3,{"wood":60,"stone":40,"tools":10},35,needsWater=True,consumes={"wood":3},produces={"planks":2},groups=["craft"])
+b("lime_kiln","Lime kiln","lime_mortar",2,{"stone":60,"bricks":20},30,consumes={"stone":2,"charcoal":1},produces={"mortar":2},groups=["craft"])
 for x in B:
     x.setdefault("produces",{}) if x["workers"]>0 else None
 # Places on a hex (decision of 2026-11-18): 4 per hex. Fields, mines, quarries, harbours and castles take the whole hex (they use
 # the land itself); stores, stables and halls take two; houses and workshops one. Huts that gather from the land take two, so
 # that a deposit is not worked by four of them at once.
 WHOLE={"farm","pasture","quarry","copper_mine","tin_mine","iron_mine","fishing_hut","harbour","raft_landing","castle","manor","shipyard","great_storehouse"}
-TWO={"gatherers_hut","woodcutter","hunters_lodge","clay_pit","storehouse","granary","stable","barracks","trading_post","siege_workshop","bathhouse","academy","university","guildhall","steelworks","mill","province_office","builders_yard"}
+TWO={"sheepfold","sawmill","brickworks","woodcutter","hunters_lodge","clay_pit","storehouse","granary","stable","barracks","trading_post","siege_workshop","bathhouse","academy","university","guildhall","steelworks","mill","province_office","builders_yard"}
 for x in B:
     x["size"]=4 if x["key"] in WHOLE else 2 if x["key"] in TWO else 1
 # Upgrades in place (Patryk, 2026-11-19): a building becomes its better kind once that is known; half of its own price counts
 # toward the new one (upgradeCreditPercent), the rest porters bring as for any construction. A bigger kind needs the free places.
 UP={"hut":"stone_house","storehouse":"great_storehouse","gatherers_hut":"farm","hunters_lodge":"pasture","fishing_hut":"harbour",
-    "farm":"manor","toolmaker":"blacksmith","blacksmith":"steelworks","armourer":"weaponsmith","school":"academy","academy":"university"}
+    "farm":"manor","toolmaker":"blacksmith","blacksmith":"steelworks","armourer":"weaponsmith","school":"academy","academy":"university","weaver":"cloth_weaver"}
 for x in B:
     if x["key"] in UP: x["upgradesTo"]=UP[x["key"]]
 d["upgradeCreditPercent"]=50
@@ -198,7 +207,7 @@ t("polished_stone","Polished stone tools",N,{"masonry":20},{"stone":60,"tools":1
 t("hide_shields","Hide shields",N,{"animal_husbandry":20},{"hides":40},40,"Warriors and residents +15%.",[("strength","melee",15)],True)
 t("hafted_weapons","Hafted weapons",N,{"stone_tools":30},{"stone":30,"tools":5},30,"Warriors and residents +20%.",[("strength","melee",20)],True)
 # Bronze
-t("bronze_working","Bronze working",BR,{"copper_working":30},{"copper":40,"wood":80,"tools":30},80,"Tin mines, bronze smiths.",made={"copper":30})
+t("bronze_working","Bronze working",BR,{"copper_working":30},{"copper":40,"wood":80,"tools":30},80,"Tin mines, bronze smiths, charcoal burners (charcoal from wood: the fuel of smiths).",made={"copper":30})
 t("bronze_weapons","Bronze weapons",BR,{"bronze_working":15},{"bronze":20,"wood":40},50,"Armourers (arms), spearmen.",made={"bronze":20})
 t("the_wheel","The wheel",BR,{"agriculture":60,"masonry":20},{"wood":120,"tools":20},70,"With Horseback riding: caravans (they take horses). Porters and caravans 50% faster.",[("speed","carriers",50)])
 t("writing","Writing",BR,{"pottery":40},{"clay":80,"food":100},70,"Schools: every worker speeds one branch of research we choose (+15%).",made={"pottery":40})
@@ -222,6 +231,8 @@ t("engineering","Engineering",IR,{"mathematics":20,"masonry":40},{"wood":200,"to
 t("medicine","Medicine",IR,{"herbal_lore":40,"writing":30},{"food":150,"pottery":40},80,"Bathhouses: in their settlement epidemics are milder and people grow faster.")
 t("philosophy","Philosophy",IR,{"writing":60,"mathematics":20},{"clay":150,"textiles":40},90,"Academies (every worker speeds one branch of research, +20%); rarer thinkers and advisors.",[("luck","*",40)])
 t("shipbuilding","Shipbuilding",IR,{"sailing":40,"iron_working":20},{"wood":250,"iron":30},90,"Shipyards, warships (fight at sea, carry armies); larger trade ships.")
+t("brick_making","Brick making",IR,{"pottery":60,"bronze_working":20},{"clay":120,"charcoal":30},70,"Brickworks (bricks from clay and charcoal): iron-age buildings and cities are built of bricks.",made={"charcoal":30})
+t("shepherding","Shepherding",IR,{"animal_husbandry":60,"weaving":20},{"food":150,"textiles":30},60,"Sheepfolds (wool) and cloth weavers (cloth and better clothing from wool); weavers can become cloth weavers.")
 t("iron_age_arms","Iron age arms",IR,{"iron_weapons":30},{"iron":60,"hides":30},70,"Better weapons and armour: melee +30%, infantry and cavalry +25%.",[("strength","melee",30),("strength","infantry",25),("strength","cavalry",25)],True)
 t("iron_tools","Iron tools",IR,{"iron_working":30},{"iron":40,"tools":30},65,"Quarries, woodcutters, mines +25%; farms +15%.",[("production","tools",25),("production","farm",15)],True)
 # Middle ages
@@ -237,6 +248,8 @@ t("university","University",M,{"philosophy":40,"writing":120},{"stone":300,"text
 t("medieval_arms","Medieval arms",M,{"steel":30},{"iron":120,"textiles":30},100,"Steel weapons and plate armour: melee, infantry and cavalry +30%.",[("strength","melee",30),("strength","infantry",30),("strength","cavalry",30)],True)
 t("crop_rotation","Crop rotation",M,{"agriculture":120},{"food":200,"tools":40},70,"Farms +25%.",[("production","farm",25)],True,req=["irrigation"])
 t("longbow","Longbow",M,{"hunting":60},{"wood":150,"iron":20},80,"Archers and crossbowmen +30%.",[("strength","ranged",30)],True,req=["archery"])
+t("sawmills","Sawmills",M,{"mathematics":30,"iron_working":30},{"wood":200,"iron":30},80,"Sawmills by rivers (planks from wood): medieval buildings are built of planks.",req=["the_wheel"])
+t("lime_mortar","Lime mortar",M,{"masonry":100,"brick_making":20},{"stone":200,"bricks":40},80,"Lime kilns (mortar from stone and charcoal): castles, manors and universities need mortar.",made={"bricks":40})
 t("trebuchet","Trebuchet",M,{"engineering":40},{"wood":250,"iron":40},90,"Siege engines +100% against settlements.",[("siege","*",100)],True)
 for x in T:
     if "experience" in x:
@@ -247,6 +260,7 @@ CAT={
 "agriculture":"food","pottery":"industry","animal_husbandry":"food","masonry":"building","weaving":"industry","irrigation":"food","barter":"trade","palisade":"military","copper_working":"industry","fishing":"food","rafts":"trade","polished_stone":"industry","hide_shields":"military","hafted_weapons":"military",
 "bronze_working":"industry","bronze_weapons":"military","the_wheel":"trade","writing":"science","horseback_riding":"military","sailing":"trade","currency":"trade","code_of_laws":"governance","archery":"military","barracks":"military","stone_walls":"military","bronze_age_arms":"military","bronze_tools":"industry",
 "iron_working":"industry","iron_weapons":"military","mathematics":"science","construction":"building","civil_service":"governance","roads":"trade","engineering":"building","medicine":"science","philosophy":"science","shipbuilding":"trade","iron_age_arms":"military","iron_tools":"industry",
+"brick_making":"building","shepherding":"industry","sawmills":"building","lime_mortar":"building",
 "feudalism":"governance","chivalry":"military","steel":"industry","castles":"military","heavy_plough":"food","crossbows":"military","guilds":"industry","mills":"food","university":"science","medieval_arms":"military","crop_rotation":"food","longbow":"military","trebuchet":"military"
 }
 for x in T:
@@ -391,7 +405,7 @@ d["ai"]={"comment":"homesFoodMinutes: the AI builds new homes only while its foo
 d["ai"]["peacefulStartMinutes"]=15
 d["ai"]["comment"]+=" peacefulStartMinutes: the AI declares no war in the first this many minutes of a game."
 # 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
-d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5}}
+d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5},"middle_ages":{"bricks":20}}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist
