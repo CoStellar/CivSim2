@@ -700,6 +700,9 @@ public sealed class SimContent
     /// <summary>Patryk, 2026-11-21: the AI declares no war in the first this many minutes of a game (ai.peacefulStartMinutes).</summary>
     public int AiPeacefulStartMinutes { get; init; } = 15;
 
+    /// <summary>How the AI fights (roadmap 7, 2026-11-21): <c>aiBattle</c>.</summary>
+    public AiBattleRules AiBattle { get; init; } = new();
+
     /// <summary>Caravans for upgrades (upgradeCaravans).</summary>
     public UpgradeCaravanRules UpgradeCaravans { get; init; } = new(10, 60 * TicksPerSecond);
 
@@ -1609,6 +1612,15 @@ public sealed class SimContent
                 }
                 : new SupplyRules(3, 4, 10, 100),
             AiHomesFoodMinutes = root.TryGetProperty("ai", out JsonElement aiEl) && aiEl.TryGetProperty("homesFoodMinutes", out JsonElement hfm) ? hfm.GetInt32() : 3,
+            AiBattle = root.TryGetProperty("aiBattle", out JsonElement abEl) ? new AiBattleRules
+            {
+                RetreatInjuredPercent = abEl.GetProperty("retreatInjuredPercent").GetInt32(),
+                RetreatSizePercent = abEl.GetProperty("retreatSizePercent").GetInt32(),
+                EngageHexes = abEl.GetProperty("engageHexes").GetInt32(),
+                MusterHexes = abEl.GetProperty("musterHexes").GetInt32(),
+                MusterFromHexes = abEl.GetProperty("musterFromHexes").GetInt32(),
+                MusterPercent = abEl.GetProperty("musterPercent").GetInt32(),
+            } : new AiBattleRules(),
             AiPeacefulStartMinutes = root.TryGetProperty("ai", out JsonElement aiEl3) && aiEl3.TryGetProperty("peacefulStartMinutes", out JsonElement psm) ? psm.GetInt32() : 15,
             AiSmallPeople = root.TryGetProperty("ai", out JsonElement aiEl2) && aiEl2.TryGetProperty("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
             FoodLowMinutes = root.TryGetProperty("alerts", out JsonElement alEl) && alEl.TryGetProperty("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
@@ -1785,4 +1797,26 @@ public sealed class SimContent
         long f = long.Parse(frac, CultureInfo.InvariantCulture);
         return (whole * One) + (text.StartsWith('-') ? -f : f);
     }
+}
+
+/// <summary>How the AI fights (roadmap 7, 2026-11-21).</summary>
+public sealed record AiBattleRules
+{
+    /// <summary>A unit at war with this share of its people wounded (percent) goes home to heal.</summary>
+    public int RetreatInjuredPercent { get; init; } = 50;
+
+    /// <summary>A unit at war with fewer people than this share of its size (percent) goes home and guards it.</summary>
+    public int RetreatSizePercent { get; init; } = 30;
+
+    /// <summary>A seen enemy army this close (hexes) to a soldier of ours is fought first.</summary>
+    public int EngageHexes { get; init; } = 5;
+
+    /// <summary>Soldiers this close to the muster (hexes) are there.</summary>
+    public int MusterHexes { get; init; } = 3;
+
+    /// <summary>Soldiers farther than this from the muster (hexes) are not waited for.</summary>
+    public int MusterFromHexes { get; init; } = 30;
+
+    /// <summary>Share of the power (percent) that must stand at the muster before the march.</summary>
+    public int MusterPercent { get; init; } = 70;
 }

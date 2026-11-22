@@ -1,5 +1,6 @@
 using System.Linq;
 using CivSim.Core.Map;
+using CivSim.Sim.Ai;
 using CivSim.Sim.Content;
 using CivSim.Sim.State;
 using Xunit;
@@ -34,6 +35,28 @@ public sealed class WarTests
         HexCoord c = g.Geo.FromIndex(near);
         g.Place(u, g.Geo.Index(g.Geo.Neighbor(c, HexDirection.N)));
         return u;
+    }
+
+    [Fact]
+    public void TheAiSendsAHurtUnitHomeAndFightsAnEnemyArmyNearItsSoldiers()
+    {
+        // Roadmap 7 (2026-11-21): retreat of the hurt; a field battle before marching on.
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Civ a = g.Civs[0];
+        Civ b = g.Civs[1];
+        Settlement theirs = g.Settlements[b.Settlements[0]];
+        Settlement ours = g.Settlements[a.Settlements[0]];
+        Unit enemy = Soldiers(g, b, "warriors", ours.Center);
+        Unit hurt = Soldiers(g, a, "warriors", theirs.Center);
+        Unit fresh = Soldiers(g, a, "warriors", ours.Center);
+        g.Place(fresh, g.Geo.Index(g.Geo.Neighbor(g.Geo.FromIndex(enemy.Cell), HexDirection.N)));
+        Run(g, 2); // they see each other: we have met
+        Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
+        hurt.Injured = hurt.People * 6 / 10;
+        SimAi.Think(g, a);
+        Assert.Equal(UnitState.Moving, hurt.State);
+        Assert.Equal(ours.Center, hurt.Path[^1]);
+        Assert.Equal(enemy.Id, fresh.TargetUnit);
     }
 
     [Fact]
