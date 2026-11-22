@@ -19,7 +19,7 @@ public sealed partial class SimGame
     {
         if ((uint)sid >= (uint)Settlements.Count || Settlements[sid].Civ != civ.Id)
         {
-            return "Not your settlement.";
+            return "Not our settlement.";
         }
 
         Settlements[sid].Gathering = on;

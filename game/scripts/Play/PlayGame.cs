@@ -357,7 +357,7 @@ public partial class PlayGame : Node2D
                 _overlay?.SetPlaces(m.Cells);
                 if (m.Cells.Length == 0)
                 {
-                    Toast("No hex of your land suits this building.");
+                    Toast("No hex of our land suits this building.");
                 }
             }
         };

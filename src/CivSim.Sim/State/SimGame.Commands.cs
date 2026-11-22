@@ -172,7 +172,7 @@ public sealed partial class SimGame
 
         if (OwnerAt[cell] != civ.Id)
         {
-            return "Build only on your own land.";
+            return "Build only on our own land.";
         }
 
         if (Settlements[SettlementAt[cell]].Center == cell)
@@ -251,6 +251,9 @@ public sealed partial class SimGame
         return false;
     }
 
+    /// <summary>A good's name as it reads in a sentence ("stone weapons", not the key "stone_weapons").</summary>
+    public string GoodText(int good) => Content.Goods[good].Name.ToLowerInvariant();
+
     /// <summary>Price as text, e.g. "20 wood, 10 stone".</summary>
     public string PriceText(long[] price)
     {
@@ -260,7 +263,7 @@ public sealed partial class SimGame
         {
             if (price[g] > 0)
             {
-                parts.Add($"{price[g] / SimContent.One} {Content.Goods[g].Key}");
+                parts.Add($"{price[g] / SimContent.One} {GoodText(g)}");
             }
         }
 
@@ -305,7 +308,7 @@ public sealed partial class SimGame
         {
             if (price[g] > 0 && stock[g] < price[g])
             {
-                parts.Add($"{stock[g] / SimContent.One} of {price[g] / SimContent.One} {Content.Goods[g].Key}");
+                parts.Add($"{stock[g] / SimContent.One} of {price[g] / SimContent.One} {GoodText(g)}");
             }
         }
 
@@ -569,7 +572,7 @@ public sealed partial class SimGame
     {
         if ((uint)sid >= (uint)Settlements.Count || Settlements[sid].Civ != civ.Id || Settlements[sid].Abandoned)
         {
-            return "Not your settlement.";
+            return "Not our settlement.";
         }
 
         Settlement s = Settlements[sid];
@@ -716,7 +719,7 @@ public sealed partial class SimGame
     {
         if ((uint)id >= (uint)Buildings.Count || Buildings[id].Civ != civ.Id || Buildings[id].State == BuildingState.Removed)
         {
-            return "Not your building.";
+            return "Not our building.";
         }
 
         return action(Buildings[id]);
