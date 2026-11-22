@@ -306,8 +306,15 @@ public static partial class SimAi
             return true;
         }
 
+        long eating = Eating(g, civ);
+
+        // 2026-11-22 (long runs: big peoples starved after 90 minutes): the summer surplus has to cover the winter, so outside
+        // winter food made must exceed eating by ai.foodMarginPercent; a fixed +3 a minute meant nothing to thousands of
+        // people. Big peoples may build several food makers at once (one more per ai.foodSitesPerPeople people).
         long food = NetFood(g, civ);
-        if ((food < 3 * SimContent.One || civ.Hungry) && !Building(g, civ, FoodBuildings) && (civ.Hungry || Count(g, civ, FoodBuildings) <= civ.People / 5))
+        bool lean = ShortOfFood(g, civ, eating);
+        int sites = 1 + (civ.People / Math.Max(1, g.Content.AiFoodSitesPerPeople));
+        if ((food < 3 * SimContent.One || civ.Hungry || lean) && Building(g, civ, FoodBuildings, sites) < sites && (civ.Hungry || Count(g, civ, FoodBuildings) <= civ.People / 5))
         {
             // Hungry: what feeds fastest and needs no tools comes first.
             foreach (string k in civ.Hungry ? ["gatherers_hut", "hunters_lodge", "fishing_hut", "farm", "pasture"] : FoodBuildings)
@@ -330,14 +337,9 @@ public static partial class SimAi
         }
 
         // 16B (Patryk, 2026-11-20): new homes only with food on hand for homesFoodMinutes of eating; without it more people
-        // only starve the next winter.
-        long eating = 0;
-        foreach (int sid in civ.Settlements)
-        {
-            eating += g.Settlements[sid].Eating;
-        }
-
-        bool fed = civ.Stock[g.Content.Food] >= eating * g.Content.AiHomesFoodMinutes;
+        // only starve the next winter. 2026-11-22: and only while the food made covers the winter too (not in winter, not
+        // short of the margin above): the store alone let big peoples outgrow their fields.
+        bool fed = civ.Stock[g.Content.Food] >= eating * g.Content.AiHomesFoodMinutes && !g.IsWinter && !lean;
         if (crowded && fed && (TryBuild(g, civ, "stone_house") || TryBuild(g, civ, "hut")))
         {
             return true;
@@ -490,6 +492,41 @@ public static partial class SimAi
 
         return n;
     }
+
+    // Buildings of these kinds being built, counted up to `upTo`.
+    private static int Building(SimGame g, Civ civ, string[] keys, int upTo)
+    {
+        int n = 0;
+        foreach (int id in civ.Buildings)
+        {
+            Building b = g.Buildings[id];
+            if (b.State is BuildingState.Delivery or BuildingState.Construction or BuildingState.ConstructionPaused && Array.IndexOf(keys, g.Content.Buildings[b.Type].Key) >= 0 && ++n >= upTo)
+            {
+                break;
+            }
+        }
+
+        return n;
+    }
+
+    // Eating of the whole people a minute: residents, units and the advisor.
+    private static long Eating(SimGame g, Civ civ)
+    {
+        long eating = 0;
+        foreach (int sid in civ.Settlements)
+        {
+            eating += g.Settlements[sid].Eating;
+        }
+
+        return eating;
+    }
+
+    // Outside winter: food made a minute falls short of eating plus ai.foodMarginPercent (the winter would eat the store).
+    private static bool ShortOfFood(SimGame g, Civ civ, long eating) =>
+        !g.IsWinter && civ.MadeRate[g.Content.Food] * 100 < eating * (100 + g.Content.AiFoodMarginPercent);
+
+    // More housing (a settlement level, better homes) waits while the food made does not cover the winter (2026-11-22).
+    private static bool Lean(SimGame g, Civ civ) => civ.Hungry || ShortOfFood(g, civ, Eating(g, civ));
 
     // True when a building of one of these kinds is being built.
     private static bool Building(SimGame g, Civ civ, string[] keys)
@@ -1055,6 +1092,11 @@ public static partial class SimAi
 
     private static bool Upgrade(SimGame g, Civ civ)
     {
+        if (Lean(g, civ))
+        {
+            return false;
+        }
+
         foreach (int sid in civ.Settlements)
         {
             Settlement s = g.Settlements[sid];
@@ -1078,8 +1120,14 @@ public static partial class SimAi
             return false;
         }
 
+        bool lean = Lean(g, civ);
         foreach (bool homes in new[] { true, false })
         {
+            if (homes && lean)
+            {
+                continue;
+            }
+
             foreach (int id in civ.Buildings.ToArray())
             {
                 Building b = g.Buildings[id];
@@ -1292,10 +1340,10 @@ public static partial class SimAi
         }
     }
 
-    // A known free land hex 6–12 hexes away where a camp may stand, with the most food-friendly land around: the biome and
+    // A known free land hex 6â€“12 hexes away where a camp may stand, with the most food-friendly land around: the biome and
     // water, plus what our prospectors and surveyors found within 2 hexes (known soil and deposits only, 2026-11-19).
     // 7A (2026-11-20): a free place to found a camp within 2 hexes of a known deposit the way on needs and none of our
-    // settlements holds, the nearest to us within 25 hexes (−1 = none).
+    // settlements holds, the nearest to us within 25 hexes (â’1 = none).
     private static int DepositSite(SimGame g, Civ civ, int from)
     {
         bool[] wanted = WantedDeposits(g, civ);
@@ -1864,27 +1912,36 @@ public static partial class SimAi
             }
         }
 
+        // 2026-11-22: a settlement that is hungry, or eats more than it makes with less than a minute of food, gets two
+        // minutes of its eating from the settlement with the most to spare (it keeps two minutes of its own); a fixed 40 fed
+        // nobody in a town of hundreds.
+        int food = g.Content.Food;
         foreach (int sid in civ.Settlements)
         {
             Settlement s = g.Settlements[sid];
-            if (!s.Hungry)
+            bool low = s.Rate[food] < 0 && s.Stock[food] < s.Eating;
+            if (!s.Hungry && !low)
             {
                 continue;
             }
 
             Settlement? rich = null;
+            long richSpare = 0;
             foreach (int o in civ.Settlements)
             {
                 Settlement r = g.Settlements[o];
-                if (r != s && r.Stock[g.Content.Food] > 60 * SimContent.One && (rich is null || r.Stock[g.Content.Food] > rich.Stock[g.Content.Food]))
+                long spare = r.Stock[food] - Math.Max(60 * SimContent.One, 2 * r.Eating);
+                if (r != s && spare > richSpare)
                 {
                     rich = r;
+                    richSpare = spare;
                 }
             }
 
+            long need = Math.Max(40 * SimContent.One, (2 * s.Eating) - s.Stock[food]);
             if (rich is not null && !Carrying(g, civ, s.Id))
             {
-                g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, g.Content.Food, 40 * SimContent.One));
+                g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, food, Math.Min(need, richSpare)));
             }
         }
 

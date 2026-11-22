@@ -3749,8 +3749,10 @@
     "foodLowMinutes": 3
   },
   "ai": {
-    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game.",
+    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game. foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people.",
     "homesFoodMinutes": 3,
+    "foodMarginPercent": 30,
+    "foodSitesPerPeople": 400,
     "smallPeople": 30,
     "peacefulStartMinutes": 15
   },
