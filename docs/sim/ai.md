@@ -1,6 +1,6 @@
 # AI nowej gry (ADR 0028): wszystkie decyzje
 
-AI nowej gry jest w `src/CivSim.Sim/Ai/SimAi.cs` i `SimAi.Care.cs`. Ta strona opisuje każdą jego decyzję.
+AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne narzędzia), `SimAi.Economy.cs` (budowa, badania, awanse), `SimAi.Expansion.cs` (zwiadowcy, poszukiwacze, osadnicy), `SimAi.War.cs` (wojsko i wojna), `SimAi.Diplomacy.cs`, `SimAi.Supply.cs` (karawany i zaopatrzenie) i `SimAi.Care.cs` (opieka). Podział z 2026-11-22; starsze ścieżki `SimAi.cs:linia` w tabelach niżej wskazują stan przed podziałem. Ta strona opisuje każdą jego decyzję.
 
 **Stan:** N1–N25 według commita `8b03118` (2026-11-19; ścieżki `plik:linia` dla tego commita), N26–N33 z PR-ów #108–#112 (2026-11-20; ścieżki z nazwą metody).
 
