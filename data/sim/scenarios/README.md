@@ -30,7 +30,7 @@ Per people:
 | `unitPeople` | size of every army unit it starts with (within the kind's 5–30; default: the kind's usual size) |
 | `wallRing` | a finished stone wall on every hex of its land this far from its centre (for example 2; 0 = none) |
 | `weapon`, `armour` | levels 0–4 of its starting soldiers' arms; without them they take the best the stock holds |
-| `settlements`, `settlementPeople` | more settlements founded around the first, and their people |
+| `settlements`, `settlementPeople` | more settlements founded around the first, and their people (each with the start stock) |
 | `aggression`, `expansion` | AI character 0–100 |
 | `ai` | played by the AI (default: everyone but people 0) |
 
