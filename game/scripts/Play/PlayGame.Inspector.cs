@@ -499,6 +499,18 @@ public partial class PlayGame
             }
         }
 
+        // 15B (2026-11-21): another kind on the same places; half of the old price counts toward it.
+        if (b.State is 2 or 3)
+        {
+            items.Add(new ActItem("Replace with another building", () =>
+                {
+                    StopPlacing();
+                    _replacing = id;
+                    Toast($"Pick the new building in the bar below: it goes up where {t.Name.ToLowerInvariant()} stands, and half of its price counts. Esc: cancel.");
+                },
+                "Take this building down and build another kind on its places. It stops working while the new one is built."));
+        }
+
         if (b.Missing is not null && b.State is 0 or 1 or 5)
         {
             items.Add(new ActItem($"Bring the missing materials", () => _session!.Play(PlayCommandKind.BringMaterials, id), $"Porters carry {b.Missing} from the nearest storehouse. We pay for it again.", Accent: UiKit.Good));

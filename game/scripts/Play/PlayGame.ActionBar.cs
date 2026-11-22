@@ -197,6 +197,16 @@ public partial class PlayGame
 
             slot.Pressed += () =>
             {
+                if (_replacing >= 0)
+                {
+                    // 15B: the picked kind goes up on the places of the building chosen in the inspector.
+                    _session!.Play(PlayCommandKind.ReplaceBuilding, _replacing, b: id);
+                    _replacing = -1;
+                    _barSig = "";
+                    UpdateUi();
+                    return;
+                }
+
                 if (_placing == id)
                 {
                     StopPlacing();

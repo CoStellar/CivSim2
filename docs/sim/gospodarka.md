@@ -292,6 +292,8 @@ tylko po działaniach.
 - W czasie przebudowy budynek nie działa (domy też: chaty znikają, dopóki nie stanie kamienny dom).
 - Warunki terenu nowego rodzaju muszą pasować (farma potrzebuje żyznej ziemi).
 
+**Zastąpienie innym budynkiem (decyzja 15B, 2026-11-21).** Każdy gotowy budynek można zastąpić dowolnym znanym rodzajem na tych samych miejscach: w panelu budynku „Replace with another building”, potem wybór rodzaju na pasku budowy (Esc: anuluj). Zasady jak przy ulepszeniu: połowa ceny starego budynku liczy się do nowego, reszta jedzie tragarzami, większy rodzaj potrzebuje wolnych miejsc obok, teren musi pasować; w oblężonej osadzie nie wolno, domów nie ponad limit poziomu osady (komenda `ReplaceBuildingCommand`, protokół 40).
+
 ## Podgląd heksa (2026-11-19)
 
 Po kliknięciu heksa z budynkami lewy panel pokazuje:

@@ -36,6 +36,9 @@ public partial class PlayGame : Node2D
     private bool _bound;
     private bool _centred;
     private int _placing;
+
+    // 15B (2026-11-21): the building to replace by the kind picked next in the building bar (-1 = none).
+    private int _replacing = -1;
     private (int Col, int Row)? _selected;
     private int _unit = -1;
     private bool _pickView;
@@ -575,6 +578,11 @@ public partial class PlayGame : Node2D
                 {
                     StopPlacing();
                     UpdateUi();
+                }
+                else if (_replacing >= 0)
+                {
+                    _replacing = -1;
+                    Toast("Replacing cancelled.");
                 }
                 else if (_selected is not null || _unit >= 0)
                 {

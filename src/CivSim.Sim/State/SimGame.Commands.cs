@@ -27,6 +27,9 @@ public sealed record DemolishCommand(int Civ, int Building) : SimCommand(Civ);
 /// <summary>Upgrade a building in place to its better kind (Patryk, 2026-11-19).</summary>
 public sealed record UpgradeBuildingCommand(int Civ, int Building) : SimCommand(Civ);
 
+/// <summary>Takes a finished building down and builds another kind on its places (Patryk, 2026-11-20, 15B).</summary>
+public sealed record ReplaceBuildingCommand(int Civ, int Building, int Type) : SimCommand(Civ);
+
 /// <summary>Raise a settlement one level (camp → village → town → city).</summary>
 public sealed record UpgradeSettlementCommand(int Civ, int Settlement) : SimCommand(Civ);
 
@@ -70,6 +73,7 @@ public sealed partial class SimGame
             }),
             UpgradeSettlementCommand c => Upgrade(civ, c.Settlement),
             UpgradeBuildingCommand c => UpgradeBuilding(civ, c.Building),
+            ReplaceBuildingCommand c => ReplaceBuilding(civ, c.Building, c.Type),
             DebugCommand c => Debug(civ, c.Action),
             ResumePatrolCommand c => ResumePatrol(civ, c.Unit),
             TrainCommand c => Train(civ, c.Settlement, c.Kind, c.People, c.Shock),

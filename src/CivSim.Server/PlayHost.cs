@@ -552,6 +552,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Board => new BoardCommand(civ, m.A, m.B),
         PlayCommandKind.Land => new LandCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         PlayCommandKind.UpgradeBuilding => new UpgradeBuildingCommand(civ, m.A),
+        PlayCommandKind.ReplaceBuilding => new ReplaceBuildingCommand(civ, m.A, m.B),
         PlayCommandKind.Debug => new DebugCommand(civ, (DebugAction)m.A),
         PlayCommandKind.ResumePatrol => new ResumePatrolCommand(civ, m.A),
         PlayCommandKind.SetFocus => new SetFocusCommand(civ, m.A, m.B, (uint)m.C < (uint)_game.Content.TechCategories.Length ? _game.Content.TechCategories[m.C] : ""),
