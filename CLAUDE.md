@@ -67,7 +67,8 @@ data/sim/game.json         wszystkie dane gry (budowany skryptem, patrz niżej)
 data/sim/tools/build_game_json.py   skrypt danych: edytuje game.json w miejscu; zmiany danych rób tutaj
 data/sim/scenarios/        scenariusze testowe (README.md w środku)
 tests/CivSim.Sim.Tests/    testy symulacji
-tests/CivSim.Tests/        testy protokołu, serwera i reszty
+tests/CivSim.Tests/        testy protokołu, nowego serwera (PlayHost), danych i wspólnego fundamentu (mapa, losowanie, generator świata)
+tests/CivSim.Legacy.Tests/ testy gry legacy (stary serwer tur, doradcy AI, dyplomacja, gospodarka...; ADR 0029)
 docs/sim/                  opis nowej gry
 ```
 
@@ -79,6 +80,7 @@ python3 data/sim/tools/build_game_json.py                      # po zmianie skry
 dotnet build -c Release -v q                                     # ostrzeżenia są błędami
 dotnet test tests/CivSim.Sim.Tests -c Release -v q
 dotnet test tests/CivSim.Tests -c Release -v q
+dotnet test tests/CivSim.Legacy.Tests -c Release -v q              # gra legacy; przed PR i tak całość: dotnet test -c Release
 dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12 --minutes 75 [--size 98x60]   # pomiar AI i tempa er (domyślnie mapa „Normal” 98×60)
 dotnet run --project src/CivSim.Headless -c Release -- --sim-scenario <nazwa> [--minutes N] [--ai-all]
 cd game && dotnet build                                         # klient

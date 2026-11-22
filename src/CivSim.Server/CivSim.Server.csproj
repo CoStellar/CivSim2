@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CivSim.Tests" />
+    <InternalsVisibleTo Include="CivSim.Legacy.Tests" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
