@@ -228,7 +228,7 @@ public sealed partial class SimGame
                 break;
             }
 
-            FoundSettlement(civ, cell, p.SettlementPeople);
+            FoundSettlement(civ, cell, p.SettlementPeople, (long[])Content.StartStock.Clone()); // 2026-11-22: not with empty stores (food ran out in 0:28)
         }
 
         civ.Dirty = true;
