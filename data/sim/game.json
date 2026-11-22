@@ -163,7 +163,7 @@
     "people": 20,
     "stock": {
       "food": 120,
-      "wood": 60,
+      "wood": 100,
       "stone": 20
     }
   },

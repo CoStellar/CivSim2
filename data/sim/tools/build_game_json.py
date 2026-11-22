@@ -428,3 +428,5 @@ base=[x for x in T if not x.get('upgrade')]; up=[x for x in T if x.get('upgrade'
 print(len(base),len(up),probs)
 from collections import Counter
 print(Counter(x['era'] for x in base))
+# Pace of the first minutes (roadmap 6, 2026-11-21): the start had too little wood (huts at 7 minutes, the first toolmaker at 12).
+d=json.load(open(p)); d["start"]["stock"]={"food":120,"wood":100,"stone":20}; json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')

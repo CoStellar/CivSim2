@@ -120,6 +120,9 @@ public sealed class PlayHost : IDisposable
     /// <summary>The game itself, for tests in this solution only.</summary>
     internal SimGame Game => _game;
 
+    /// <summary>Least time between two full views of a client (tests driving RunTicks set it to zero).</summary>
+    internal TimeSpan FullViewEvery { get; set; } = TimeSpan.FromMilliseconds(250);
+
     /// <summary>Builds the view of every people (what an observer would get), for determinism tests.</summary>
     internal void ViewEveryPeople()
     {
@@ -802,7 +805,7 @@ public sealed class PlayHost : IDisposable
         }
 
         long now = Stopwatch.GetTimestamp();
-        if (!client.ViewSoon && _game.Ticks > 0 && Stopwatch.GetElapsedTime(client.LastFullView, now) < TimeSpan.FromMilliseconds(250) && client.LastFullView != long.MinValue)
+        if (!client.ViewSoon && _game.Ticks > 0 && Stopwatch.GetElapsedTime(client.LastFullView, now) < FullViewEvery && client.LastFullView != long.MinValue)
         {
             return;
         }

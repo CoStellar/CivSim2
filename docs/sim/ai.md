@@ -185,3 +185,17 @@ W ziarnie 3 farma mogła stanąć od 16. minuty, a AI postawiła ją dopiero w 2
 5. **Liczby są w kodzie**, nie w danych: progi z kolumny „Liczby”. Przeniesienie ich do `data/sim/ai.json` jest w planie razem ze strojeniem po nowym systemie walki.
 4. **Średniowiecze poza zasięgiem AI:** droga do epoki żelaza i dalej idzie przez miedź. Doświadczenie w obróbce miedzi daje tylko kopalnia miedzi, a ta wymaga znanego złoża na własnej ziemi. Bez miedzi nie ma brązu, a bez brązu ani epoki żelaza, ani średniowiecza. Podobnie matematyka: doświadczenie daje tylko plac budowniczych, a prawo i budownictwo nie mają żadnego budynku-nauczyciela. Do decyzji Patryka: drugi nauczyciel dla tych technologii albo osadnicy AI, którzy celują w złoża miedzi.
 5. **Dużo ludzi:** po 80 minutach 4 ludy mają średnio ok. 8900 ludzi. To dobrze dla tempa, ale trzeba sprawdzić czas taktu na dużej mapie.
+
+## Tempo pierwszych 15 minut (roadmapa 6, 2026-11-21)
+
+Zapas na starcie: 120 jedzenia, **100 drewna** (było 60), **20 kamienia** (bez zmian). Pomiar: 12 gier × 4 ludy, pierwsze 15 minut, `development` → po zmianie:
+
+| | przed | po |
+| --- | --- | --- |
+| pierwsze chaty | 7,4 min | 1,9 min |
+| pierwszy kamieniołom | 9,4 min (47/48) | 7,8 min (48/48) |
+| pierwszy narzędziarz | 11,8 min (35/48 ludów do 15. min) | 10,4 min (48/48) |
+| pierwsza farma do 15. min | 9/48 ludów | 14/48 |
+| drewno w 5. min (mediana) | 8 | 14 |
+| drewno w 10. min (mediana) | 18 | 20 |
+| neolit | 7,6 min | 5,9 min |
