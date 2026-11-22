@@ -396,3 +396,14 @@ Koszty (14C):
 - Przebudowa budynku w lepszy płaci różnicę ceny, więc też w nowych materiałach. Nowa przebudowa: tkalnia → tkalnia sukna.
 
 Stare łańcuchy zostają (15B): drewno idzie do węgla i desek, glina do cegły, kamień do zaprawy.
+
+## Złoża: wielkość, regiony i znaki rud (Patryk, 2026-11-22)
+
+Liczby są w `lodes` w `data/sim/game.json`.
+
+- **Wielkość złoża.** Każde złoże jest małe, średnie albo duże. Kopalnia na nim (albo premia z niego, np. owce dla owczarni) daje odpowiednio 50%, 100% albo 150%. Wylosowane są z wagami 20/50/30, a w regionie rzadkich złóż 10/45/45. Wielkość widać po odkryciu złoża, np. „Deposit: Copper (large: a mine gives 150%)”. Gwarantowana cyna przy starcie jest mała. AI stawia kopalnię najpierw na większym złożu.
+- **Regiony.** Cyna, złoto, srebro i konie skupiają się w regionach: 4 środki na 10 000 heksów lądu, każdy region ma 10 heksów promienia. Poza regionami zostaje 30% tych złóż, a tyle samo, ile ubyło, dochodzi w regionach. Ogólna liczba złóż się nie zmienia.
+- **Znaki rud (technologia Prospecting, neolit).** Dla każdej rudy ery ludu gra pokazuje do 3 kół o promieniu 3 heksów. W kole na pewno leży ruda, a środek koła jest przesunięty o 0–2 heksy od niej. Znaki pojawiają się tylko na ziemi, którą lud już widział, najwyżej 30 heksów od jego osad, i nie na jego ziemi (tam zna wszystko). Liczone są co 20 s. Znak znika, gdy ruda zostanie odkryta.
+  - Ery: neolit miedź, epoka brązu cyna, złoto i srebro, epoka żelaza ruda żelaza, średniowiecze saletra. Wraz z wejściem w erę pojawiają się nowe znaki.
+- **Ścieżka szukania.** W panelu poszukiwaczy jest przycisk „Search the ore signs”. Poszukiwacze idą do najbliższego znaku, stają, przeszukują teren, potem idą do następnego, aż przejdą wszystkie. Nowy rozkaz ruchu przerywa szukanie. AI używa tego samego rozkazu.
+- **Wyczerpywanie się złóż: nie** (na razie).

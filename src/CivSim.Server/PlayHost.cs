@@ -556,6 +556,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Land => new LandCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         PlayCommandKind.UpgradeBuilding => new UpgradeBuildingCommand(civ, m.A),
         PlayCommandKind.ReplaceBuilding => new ReplaceBuildingCommand(civ, m.A, m.B),
+        PlayCommandKind.SearchSigns => new SearchSignsCommand(civ, m.A),
         PlayCommandKind.Debug => new DebugCommand(civ, (DebugAction)m.A),
         PlayCommandKind.ResumePatrol => new ResumePatrolCommand(civ, m.A),
         PlayCommandKind.SetFocus => new SetFocusCommand(civ, m.A, m.B, (uint)m.C < (uint)_game.Content.TechCategories.Length ? _game.Content.TechCategories[m.C] : ""),
@@ -1008,6 +1009,25 @@ public sealed class PlayHost : IDisposable
         }
     }
 
+    // Ore signs of the people as pairs (deposit, centre hex); null with none (2026-11-22).
+    private int[]? SignsFor(Civ civ)
+    {
+        IReadOnlyList<OreSign> signs = _game.SignsOf(civ);
+        if (signs.Count == 0)
+        {
+            return null;
+        }
+
+        var list = new int[signs.Count * 2];
+        for (int k = 0; k < signs.Count; k++)
+        {
+            list[2 * k] = signs[k].Deposit;
+            list[(2 * k) + 1] = signs[k].Center;
+        }
+
+        return list;
+    }
+
     // What the people knows of a hex's ground: rock looked at in its era (1), soil known (2).
     private byte SurveyFor(Civ civ, int i) => (byte)((_game.RockLookedAt(civ, i) ? MapChunkMessage.RockLooked : 0) | (_game.KnowsSoil(civ, i) ? MapChunkMessage.SoilKnown : 0)
         | (_game.KnowsDeposit(civ, i) ? MapChunkMessage.DepositKnown : 0) | (_game.DepositHidden(civ, i) ? MapChunkMessage.DepositHidden : 0));
@@ -1180,7 +1200,9 @@ public sealed class PlayHost : IDisposable
             EventInfo: civ.Event >= 0 ? _game.EventInfo(_game.Content.Events[civ.Event]) : null,
             Tutorial: civ.Settlements.Count > 0 ? [.. _game.Tutorial(civ).Select(t => new PlayTutorialStep(t.Text, t.Done, t.Highlight))] : null,
             TutorialOn: _options.Tutorial, PickNoLimit: _game.PickWaitsForPlayers,
-            PickMaxHexes: _game.Picking ? _game.Content.StartPhase.NeighbourMaxHexes + _game.Content.StartPhase.BlockFuzz : 0);
+            PickMaxHexes: _game.Picking ? _game.Content.StartPhase.NeighbourMaxHexes + _game.Content.StartPhase.BlockFuzz : 0,
+            Signs: SignsFor(civ),
+            SignRadius: _game.Content.Lodes.SignRadius);
     }
 
     // E9 (2026-11-20): people the materials of a building take from home while porters carry them (as NewCarrier counts them).

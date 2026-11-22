@@ -127,7 +127,7 @@ public class ProtocolSerializerTests
         // Version 22: the new game (ADR 0028). Versions 23 to 26: alerts, fog with memory, the Stone Age rebuild.
         // Version 27: rations of the settlements and their units. Version 28: building upgrades and patrols to resume. Version 29: branches of the technology tree. Version 30: test scenarios. Version 31: surveys of the ground.
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("28000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
+        Assert.Equal("29000000" + "920094" + "01A14100FF", Convert.ToHexString(frame));
     }
 
     [Fact]

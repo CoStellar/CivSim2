@@ -417,6 +417,21 @@ public partial class PlayOverlay : Node2D
             }
         }
 
+        // Ore signs (2026-11-22, Prospecting): a circle in the ore's colour where an ore of our era lies.
+        if (_view is { Signs: { } signs } && World is { } sw)
+        {
+            for (int i = 0; i + 1 < signs.Length; i += 2)
+            {
+                var ore = new Color(1f, 0.78f, 0.25f);
+                foreach (Vector2 c in Copies(signs[i + 1] % sw.Width, signs[i + 1] / sw.Width))
+                {
+                    float r = (_view.SignRadius + 0.5f) * HexLayout.ColumnStep;
+                    g.DrawCircle(c, r, new Color(ore, 0.10f));
+                    g.DrawArc(c, r, 0, MathF.Tau, 48, new Color(ore, 0.85f), 3);
+                }
+            }
+        }
+
         if (_view is not null && SelectedSettlement() is { } sel && sel.Civ == _view.Civ)
         {
             int radius = _content.Levels[sel.Level].Radius;

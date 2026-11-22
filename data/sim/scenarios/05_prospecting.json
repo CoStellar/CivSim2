@@ -1,11 +1,11 @@
 {
   "name": "Prospecting",
-  "description": "Neolithic, the map known: prospectors and surveyors ready at home. Send them out and let them stand to find ores and good soil beyond our land.",
+  "description": "Neolithic, the map known, Prospecting learnt: yellow circles are ore signs (copper lies inside). Prospectors can search them one by one (Search the ore signs), or go anywhere and stand to find ores; surveyors find good soil. Deposits are small, medium or large.",
   "seed": 44,
   "peoples": 3,
   "revealMap": true,
   "civs": [
-    { "era": "neolithic", "level": "village", "people": 40, "stock": { "food": 300, "wood": 200, "stone": 100, "tools": 30 },
+    { "era": "neolithic", "techs": ["prospecting"], "level": "village", "people": 40, "stock": { "food": 300, "wood": 200, "stone": 100, "tools": 30 },
       "buildings": { "gatherers_hut": 2, "woodcutter": 1, "hut": 3, "storehouse": 1 },
       "units": { "prospectors": 2, "surveyors": 1, "scouts": 1 } },
     { "era": "neolithic", "level": "village", "people": 40 },

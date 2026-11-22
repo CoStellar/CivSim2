@@ -42,6 +42,11 @@ public sealed partial class SimGame
             {
                 Add(m);
             }
+
+            foreach (OreSign sign in c.Signs)
+            {
+                Add((sign.Deposit * 1_000_003L) + sign.Center);
+            }
         }
 
         for (int i = 0; i < WorksAt.Length; i++)
@@ -90,6 +95,7 @@ public sealed partial class SimGame
             Add(u.Cell);
             Add(u.People);
             Add(u.Hunger);
+            Add(u.SearchingSigns ? 1 : 0);
             Add(u.Weapon | (u.Armour << 8) | ((int)u.Stance << 16));
             Add(u.Wounds);
             Add(u.Provisions);

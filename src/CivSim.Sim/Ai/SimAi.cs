@@ -183,7 +183,12 @@ public static partial class SimAi
                 int score = -g.Geo.Distance(g.Geo.FromIndex(cell), g.Geo.FromIndex(s.Center)) + (Math.Min(s.Idle, t.Workers) * 10) + InputsAtHand(s, t);
                 if (t.BonusDeposit != 0 && g.Map.Deposit[cell] == t.BonusDeposit && g.KnowsDeposit(civ, cell))
                 {
-                    score += 20;
+                    score += 20 * g.DepositSizePercent(cell) / 100;
+                }
+
+                if (t.OrDeposit != 0 && g.Map.Deposit[cell] == t.OrDeposit)
+                {
+                    score += g.DepositSizePercent(cell) / 5; // 2026-11-22: the larger deposit first (large +30, small +10)
                 }
 
                 if (t.BonusReliefs.Length > 0 && t.BonusReliefs[g.Map.Relief[cell]])
@@ -1196,9 +1201,15 @@ public static partial class SimAi
             foreach (int id in civ.Units.ToArray())
             {
                 Unit u = g.Units[id];
-                if (u.Kind != t.Id || u.State != UnitState.Idle || u.SurveyedAt != (u.Cell * 16) + civ.Era)
+                if (u.Kind != t.Id || u.SearchingSigns || u.State != UnitState.Idle || u.SurveyedAt != (u.Cell * 16) + civ.Era)
                 {
                     continue; // still walking, or not yet looked around where it stands
+                }
+
+                // 2026-11-22: with ore signs, prospectors search them first (the same order as the player's).
+                if (t.Survey == 1 && !u.SearchingSigns && civ.Signs.Count > 0 && g.Apply(new SearchSignsCommand(civ.Id, u.Id)) is null)
+                {
+                    continue;
                 }
 
                 // Targets come from a hash of the unit and the time, not from the AI's random stream, so surveys do not

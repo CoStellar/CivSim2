@@ -321,6 +321,9 @@ public sealed class Civ
     /// <summary>Per hex: 1 + the era in which prospectors last looked at it (0 = never).</summary>
     public byte[] RockSeen { get; set; } = [];
 
+    /// <summary>Ore signs now (2026-11-22, Prospecting): worked out again every few seconds.</summary>
+    public List<OreSign> Signs { get; } = [];
+
     /// <summary>Per hex: surveyors have looked at its soil.</summary>
     public bool[] SoilSeen { get; set; } = [];
 
@@ -557,6 +560,9 @@ public sealed class Unit
 
     /// <summary>Hex and era of its last survey (prospectors and surveyors look again only when these change).</summary>
     public int SurveyedAt { get; set; } = -1;
+
+    /// <summary>A prospector searching the ore signs one by one (2026-11-22).</summary>
+    public bool SearchingSigns { get; set; }
 
     /// <summary>The last patrol loop it walked, kept after it stops, to walk it again.</summary>
     public List<int> LastPatrol { get; } = [];

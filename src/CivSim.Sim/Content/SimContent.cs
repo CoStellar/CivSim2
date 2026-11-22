@@ -19,7 +19,50 @@ public sealed record SimGood(int Id, string Key, string Name)
 }
 
 /// <summary>A deposit every start has between <paramref name="Min"/> and <paramref name="Max"/> hexes, at depth <paramref name="Depth"/>.</summary>
-public sealed record StartDeposit(int Deposit, int Min, int Max, int Depth);
+public sealed record StartDeposit(int Deposit, int Min, int Max, int Depth, int Size = -1);
+
+/// <summary>A size of deposit (2026-11-22): what a mine or a bonus on it gives, percent of the usual; weights where drawn.</summary>
+public sealed record LodeSize(string Key, string Name, int Percent, int Weight, int RegionWeight);
+
+/// <summary>Deposit sizes, regions of rare ores and ore signs (Patryk, 2026-11-22): <c>lodes</c>.</summary>
+public sealed record LodeRules
+{
+    /// <summary>Sizes, smallest first.</summary>
+    public LodeSize[] Sizes { get; init; } = [];
+
+    /// <summary>Deposit ids that gather in regions.</summary>
+    public int[] Regional { get; init; } = [];
+
+    /// <summary>Region centres per 10000 land hexes (each regional deposit has its own).</summary>
+    public int Regions { get; init; } = 4;
+
+    /// <summary>Radius of a region in hexes.</summary>
+    public int RegionHexes { get; init; } = 10;
+
+    /// <summary>Share of the deposits outside their regions that stay (percent); as many as go are added inside.</summary>
+    public int OutsideKeepPercent { get; init; } = 100;
+
+    /// <summary>Technology that shows ore signs (-1 = none).</summary>
+    public int SignTech { get; init; } = -1;
+
+    /// <summary>Radius of a sign circle in hexes.</summary>
+    public int SignRadius { get; init; } = 3;
+
+    /// <summary>How far the circle's centre lies from the ore, at most (hexes).</summary>
+    public int OffsetHexes { get; init; } = 2;
+
+    /// <summary>Signs per ore at most.</summary>
+    public int PerOre { get; init; } = 3;
+
+    /// <summary>Signs only within this many hexes of our settlements.</summary>
+    public int ReachHexes { get; init; } = 30;
+
+    /// <summary>Signs are worked out again this often (ticks).</summary>
+    public int RecountTicks { get; init; } = 200;
+
+    /// <summary>Ores shown as signs in each era (index = era): deposit ids.</summary>
+    public int[][] EraOres { get; init; } = [];
+}
 
 /// <summary>Percent of the price, of the experience and goods made, and of the time of research, by era (index = era).</summary>
 public sealed record ResearchPace(int[] PricePercent, int[] ExperiencePercent, int[] SecondsPercent)
@@ -702,6 +745,9 @@ public sealed class SimContent
 
     /// <summary>How the AI fights (roadmap 7, 2026-11-21): <c>aiBattle</c>.</summary>
     public AiBattleRules AiBattle { get; init; } = new();
+
+    /// <summary>Deposit sizes, regions and ore signs (2026-11-22).</summary>
+    public LodeRules Lodes { get; init; } = new();
 
     /// <summary>Caravans for upgrades (upgradeCaravans).</summary>
     public UpgradeCaravanRules UpgradeCaravans { get; init; } = new(10, 60 * TicksPerSecond);
@@ -1588,7 +1634,8 @@ public sealed class SimContent
             EraAdvanceTechs = root.TryGetProperty("eraAdvanceTechs", out JsonElement eat) ? eat.GetInt32() : 5,
             StartDeposits = root.TryGetProperty("startDeposits", out JsonElement sd)
                 ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
-                    x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1))]
+                    x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1,
+                    x.TryGetProperty("size", out JsonElement sz) && root.TryGetProperty("lodes", out JsonElement lz) ? lz.GetProperty("sizes").EnumerateArray().Select((e, k) => (e, k)).First(p => p.e.GetProperty("key").GetString() == sz.GetString()).k : -1))]
                 : [],
             ArmyLimit = root.TryGetProperty("armyLimit", out JsonElement limitEl)
                 ? new ArmyLimitRules([.. limitEl.GetProperty("perLevel").EnumerateArray().Select(x => x.GetInt32())],
@@ -1612,6 +1659,23 @@ public sealed class SimContent
                 }
                 : new SupplyRules(3, 4, 10, 100),
             AiHomesFoodMinutes = root.TryGetProperty("ai", out JsonElement aiEl) && aiEl.TryGetProperty("homesFoodMinutes", out JsonElement hfm) ? hfm.GetInt32() : 3,
+            Lodes = root.TryGetProperty("lodes", out JsonElement lodeEl) ? new LodeRules
+            {
+                Sizes = [.. lodeEl.GetProperty("sizes").EnumerateArray().Select(e => new LodeSize(e.GetProperty("key").GetString()!, e.GetProperty("name").GetString()!,
+                    e.GetProperty("percent").GetInt32(), e.GetProperty("weight").GetInt32(), e.GetProperty("regionWeight").GetInt32()))],
+                Regional = [.. lodeEl.GetProperty("regional").GetProperty("deposits").EnumerateArray().Select(e => world.Deposits.First(dd => dd.Key == e.GetString()).Id)],
+                Regions = lodeEl.GetProperty("regional").GetProperty("regions").GetInt32(),
+                RegionHexes = lodeEl.GetProperty("regional").GetProperty("regionHexes").GetInt32(),
+                OutsideKeepPercent = lodeEl.GetProperty("regional").GetProperty("outsideKeepPercent").GetInt32(),
+                SignTech = techs.FindIndex(t => t.Key == lodeEl.GetProperty("signs").GetProperty("tech").GetString()),
+                SignRadius = lodeEl.GetProperty("signs").GetProperty("signRadius").GetInt32(),
+                OffsetHexes = lodeEl.GetProperty("signs").GetProperty("offsetHexes").GetInt32(),
+                PerOre = lodeEl.GetProperty("signs").GetProperty("perOre").GetInt32(),
+                ReachHexes = lodeEl.GetProperty("signs").GetProperty("reachHexes").GetInt32(),
+                RecountTicks = lodeEl.GetProperty("signs").GetProperty("recountSeconds").GetInt32() * TicksPerSecond,
+                EraOres = [.. eras.Select(era => lodeEl.GetProperty("signs").GetProperty("eras").TryGetProperty(era.Key, out JsonElement list)
+                    ? list.EnumerateArray().Select(e => world.Deposits.First(dd => dd.Key == e.GetString()).Id).ToArray() : Array.Empty<int>())],
+            } : new LodeRules(),
             AiBattle = root.TryGetProperty("aiBattle", out JsonElement abEl) ? new AiBattleRules
             {
                 RetreatInjuredPercent = abEl.GetProperty("retreatInjuredPercent").GetInt32(),
