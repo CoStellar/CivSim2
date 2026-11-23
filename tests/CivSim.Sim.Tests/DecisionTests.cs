@@ -226,6 +226,14 @@ public sealed class DecisionTests
         home.Stock[clay] = 0;
         camp.Stock[clay] = 100 * SimContent.One;
         SimAi.Think(g, civ);
+
+        // Known issue 13 (2026-11-23): a standing route, whose first caravan leaves at the next logistics step.
+        Assert.Contains(g.Routes, r => r.Civ == civ.Id && r.From == camp.Id && r.To == home.Id && r.Good == clay && !r.Ended);
+        for (int i = 0; i < 2 * SimContent.TicksPerSecond; i++)
+        {
+            g.Tick();
+        }
+
         Assert.Contains(civ.Units, id => g.Units[id].Target == home.Id && g.Units[id].Cargo is { } load && load[clay] > 0);
     }
 

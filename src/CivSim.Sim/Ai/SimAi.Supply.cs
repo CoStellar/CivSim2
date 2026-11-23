@@ -68,6 +68,8 @@ public static partial class SimAi
             return;
         }
 
+        InputRoutes(g, civ);
+
         const long Low = 10 * SimContent.One;
         const long Keep = 20 * SimContent.One;
         const long Trip = 30 * SimContent.One;
@@ -84,7 +86,7 @@ public static partial class SimAi
             Settlement s = g.Settlements[b.Settlement];
             for (int i = 0; i < t.Consumes.Length; i++)
             {
-                if (t.Consumes[i] <= 0 || s.Stock[i] >= Low || Carrying(g, civ, s.Id, i))
+                if (t.Consumes[i] <= 0 || s.Stock[i] >= Low || Carrying(g, civ, s.Id, i) || HasInputRoute(g, civ, s.Id, i))
                 {
                     continue;
                 }
@@ -110,6 +112,110 @@ public static partial class SimAi
                 }
             }
         }
+    }
+
+    // Known issue 13 (2026-11-23): single caravans came too late for steady workshops (41% stood without inputs after 120
+    // minutes). A settlement whose workshops use more of a good than it makes gets a standing route from our settlement with
+    // the most to spare of it; a route whose source has nothing to spare any more is ended, so a better source can take over.
+    private static void InputRoutes(SimGame g, Civ civ)
+    {
+        SimContent c = g.Content;
+        int goods = c.Goods.Count;
+        int n = civ.Settlements.Count;
+        var use = new long[n * goods]; // per settlement (by index in civ.Settlements) and good: full-staff use a minute
+        for (int k = 0; k < n; k++)
+        {
+            int sid = civ.Settlements[k];
+            foreach (int id in civ.Buildings)
+            {
+                Building b = g.Buildings[id];
+                BuildingType t = c.Buildings[b.Type];
+                if (b.Settlement != sid || b.State != BuildingState.Active || !t.HasInputs)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < t.Consumes.Length; i++)
+                {
+                    use[(k * goods) + i] += t.Consumes[i] * t.Workers;
+                }
+            }
+        }
+
+        int routes = 0;
+        for (int r = 0; r < g.Routes.Count; r++)
+        {
+            TradeRoute route = g.Routes[r];
+            if (route.Civ != civ.Id || route.Ended) // the AI opens routes only for inputs
+            {
+                continue;
+            }
+
+            int from = civ.Settlements.IndexOf(route.From);
+            long keep = from < 0 ? 0 : use[(from * goods) + route.Good] * c.AiInputRouteKeepMinutes;
+            if (from >= 0 && route.Caravan < 0 && g.Settlements[route.From].Stock[route.Good] - Math.Max(keep, route.KeepAtSource) < 10 * SimContent.One
+                && g.Settlements[route.From].Rate[route.Good] <= 0)
+            {
+                g.Apply(new EndRouteCommand(civ.Id, r)); // nothing to spare there any more
+                continue;
+            }
+
+            routes++;
+        }
+
+        int most = n * c.AiInputRoutesPerSettlement;
+        for (int k = 0; k < n && routes < most; k++)
+        {
+            Settlement s = g.Settlements[civ.Settlements[k]];
+            for (int i = 0; i < goods && routes < most; i++)
+            {
+                long need = use[(k * goods) + i];
+                // A starved workshop uses nothing, so the rate looks fine: what counts is the store against the full use.
+                if (need <= 0 || s.Stock[i] >= need * c.AiInputRouteTargetMinutes || HasInputRoute(g, civ, s.Id, i))
+                {
+                    continue;
+                }
+
+                int best = -1;
+                long bestSpare = 0;
+                for (int o = 0; o < n; o++)
+                {
+                    Settlement src = g.Settlements[civ.Settlements[o]];
+                    long spare = src.Stock[i] - (use[(o * goods) + i] * c.AiInputRouteKeepMinutes);
+                    if (o != k && !src.Hungry && (src.Rate[i] > 0 || spare >= 20 * SimContent.One) && spare > bestSpare)
+                    {
+                        best = o;
+                        bestSpare = spare;
+                    }
+                }
+
+                if (best < 0)
+                {
+                    continue;
+                }
+
+                int src2 = civ.Settlements[best];
+                long trip = Math.Max(10 * SimContent.One, need * c.AiInputRouteTripMinutes);
+                long keepAtSource = use[(best * goods) + i] * c.AiInputRouteKeepMinutes;
+                if (g.Apply(new RouteCommand(civ.Id, src2, s.Id, i, trip, null, keepAtSource, need * c.AiInputRouteTargetMinutes)) is null)
+                {
+                    routes++;
+                }
+            }
+        }
+    }
+
+    private static bool HasInputRoute(SimGame g, Civ civ, int to, int good)
+    {
+        foreach (TradeRoute r in g.Routes)
+        {
+            if (r.Civ == civ.Id && !r.Ended && r.To == to && r.Good == good)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Supply (2026-11-20): an army unit in the field with less than a minute and a half of provisions gets a food caravan from

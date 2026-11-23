@@ -842,6 +842,22 @@ public sealed class SimContent
     /// <summary>2026-11-22: the AI builds one more food building at a time per this many people (ai.foodSitesPerPeople).</summary>
     public int AiFoodSitesPerPeople { get; init; } = 400;
 
+    /// <summary>
+    /// Known issue 13 (2026-11-23): a standing route the AI opens for a workshop's input carries this many minutes of the
+    /// target's use a trip, while the target holds less than <see cref="AiInputRouteTargetMinutes"/>; the source keeps
+    /// <see cref="AiInputRouteKeepMinutes"/> of its own use (ai.inputRoute*).
+    /// </summary>
+    public int AiInputRouteTripMinutes { get; init; } = 3;
+
+    /// <summary>See <see cref="AiInputRouteTripMinutes"/>.</summary>
+    public int AiInputRouteTargetMinutes { get; init; } = 6;
+
+    /// <summary>See <see cref="AiInputRouteTripMinutes"/>.</summary>
+    public int AiInputRouteKeepMinutes { get; init; } = 2;
+
+    /// <summary>Most standing input routes the AI keeps, per settlement it has.</summary>
+    public int AiInputRoutesPerSettlement { get; init; } = 4;
+
     /// <summary>17B (2026-11-20): below this many people the AI trains no units but settlers and builds no workplace while jobs are free (ai.smallPeople).</summary>
     public int AiSmallPeople { get; init; } = 30;
 
@@ -1889,6 +1905,10 @@ public sealed class SimContent
             AiSmallPeople = root.TryProp("ai", out JsonElement aiEl2) && aiEl2.TryProp("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
             AiFoodMarginPercent = root.TryProp("ai", out JsonElement aiEl4) && aiEl4.TryProp("foodMarginPercent", out JsonElement fmp) ? fmp.GetInt32() : 30,
             AiFoodSitesPerPeople = root.TryProp("ai", out JsonElement aiEl5) && aiEl5.TryProp("foodSitesPerPeople", out JsonElement fsp) ? fsp.GetInt32() : 400,
+            AiInputRouteTripMinutes = root.TryProp("ai", out JsonElement aiEl6) && aiEl6.TryProp("inputRouteTripMinutes", out JsonElement irt) ? irt.GetInt32() : 3,
+            AiInputRouteTargetMinutes = root.TryProp("ai", out JsonElement aiEl7) && aiEl7.TryProp("inputRouteTargetMinutes", out JsonElement irg) ? irg.GetInt32() : 6,
+            AiInputRouteKeepMinutes = root.TryProp("ai", out JsonElement aiEl8) && aiEl8.TryProp("inputRouteKeepMinutes", out JsonElement irk) ? irk.GetInt32() : 2,
+            AiInputRoutesPerSettlement = root.TryProp("ai", out JsonElement aiEl9) && aiEl9.TryProp("inputRoutesPerSettlement", out JsonElement irs) ? irs.GetInt32() : 4,
             FoodLowMinutes = root.TryProp("alerts", out JsonElement alEl) && alEl.TryProp("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryProp("upgradeCaravans", out JsonElement ucEl)
                 ? new UpgradeCaravanRules(ucEl.Prop("extraPercent").GetInt32(), ucEl.Prop("aiRetrySeconds").GetInt32() * TicksPerSecond)
