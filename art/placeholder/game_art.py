@@ -1486,6 +1486,249 @@ def generate_works():
     wall_edge().save("works", "work_wall_edge")
     wall_tower().save("works", "work_wall_tower")
     palisade_edge().save("works", "work_palisade_edge")
+    generate_ways()
+
+
+# ------------------------------------------------------------------------------------------------ roads, ditches, aqueducts
+
+# The six arms of a hex, from its centre to the middle of each edge (2x pixels; the game's neighbour order n, s, ne, se, nw, sw).
+ARM_ENDS = {"n": (48, 0), "s": (48, 84), "ne": (84, 21), "se": (84, 63), "nw": (12, 21), "sw": (12, 63)}
+CENTRE = (48.0, 42.0)
+
+# Way kinds: half width of the surface, half width of its bank (drawn first under every arm of the hex, so junctions
+# stay clean), and the materials.
+WAYS = {
+    "track": (5.5, 7.0),
+    "road": (7.5, 9.5),
+    "ditch": (3.0, 6.5),
+    "aqueduct": (4.0, 7.0),
+}
+
+
+def _tones(*rgbs):
+    """Five tones, darkest first, picked by hand from the palette (the automatic ramps run into pink at the light end)."""
+    return [P(v) for v in rgbs]
+
+
+BANKS = {}
+SURFACES = {}
+
+
+def _init_ways():
+    BANKS.update({
+        "track": _tones((29, 23, 16), (69, 31, 7), (86, 44, 24), (105, 56, 41), (105, 56, 41)),
+        "road": _tones((47, 46, 45), (79, 75, 69), (101, 99, 98), (147, 138, 130), (169, 162, 160)),
+        "ditch": _tones((29, 23, 16), (69, 31, 7), (86, 44, 24), (105, 56, 41), (105, 56, 41)),
+        "aqueduct": _tones((62, 60, 58), (101, 99, 98), (113, 111, 108), (169, 162, 160), (169, 162, 160)),
+    })
+    SURFACES.update({
+        "track": _tones((86, 44, 24), (105, 56, 41), (138, 86, 45), (170, 101, 39), (147, 138, 130)),
+        "road": _tones((79, 75, 69), (113, 111, 108), (147, 138, 130), (147, 138, 130), (169, 162, 160)),
+        "water": _tones((14, 63, 107), (19, 103, 157), (25, 119, 208), (25, 119, 208), (63, 167, 201)),
+        "ditch": _tones((69, 31, 7), (86, 44, 24), (105, 56, 41), (105, 56, 41), (138, 86, 45)),
+        "aqueduct": _tones((79, 75, 69), (101, 99, 98), (113, 111, 108), (113, 111, 108), (147, 138, 130)),
+    })
+
+
+def _arm_hit(x, y, arm, hw):
+    """Where pixel (x, y) lies against an arm of half width hw: None outside, else (t, s, ox, oy): the distance along
+    the arm, across it, and the unit offset from the axis (for lighting the banks)."""
+    px, py = x + 0.5, y + 0.5
+    cx, cy = CENTRE
+    if arm == "c":
+        dx, dy = px - cx, py - cy
+        r = math.hypot(dx, dy)
+        return (0.0, r, dx / (r or 1), dy / (r or 1)) if r <= hw else None
+    ex, ey = ARM_ENDS[arm]
+    length = math.hypot(ex - cx, ey - cy)
+    ux, uy = (ex - cx) / length, (ey - cy) / length
+    t = (px - cx) * ux + (py - cy) * uy
+    s = -(px - cx) * uy + (py - cy) * ux
+    if t > length + 0.25:
+        return None  # cut flat on the hex edge: the neighbour's arm goes on from there
+    if t >= 0:
+        if abs(s) > hw:
+            return None
+        ox, oy = -uy * (1 if s >= 0 else -1), ux * (1 if s >= 0 else -1)
+        return (t, s, ox, oy)
+    dx, dy = px - cx, py - cy
+    r = math.hypot(dx, dy)
+    return (t, r, dx / (r or 1), dy / (r or 1)) if r <= hw else None
+
+
+def _cell_hash(a, b, seed):
+    h = (a * 73856093) ^ (b * 19349663) ^ (seed * 83492791)
+    h = (h ^ (h >> 13)) * 1274126177
+    return (h ^ (h >> 16)) & 0xFFFF
+
+
+def _way_bank(kind, arm):
+    """The bank under an arm: a darker band around the surface, lit on the side towards the light."""
+    hw, bank = WAYS[kind]
+    c = canvas(HW, HH)
+    r = BANKS[kind]
+    for y in range(HH):
+        for x in range(HW):
+            hit = _arm_hit(x, y, arm, bank)
+            if hit is None:
+                continue
+            t, s, ox, oy = hit
+            facing = -(ox * LIGHT[0] + oy * LIGHT[1])  # > 0: the bank's inner face looks to the light
+            edge = abs(s) > bank - 1.2
+            if kind in ("road", "aqueduct"):
+                col = r[0] if edge else (r[3] if facing < 0 else r[1])  # kerb stones lit on the far side
+                if not edge and kind == "aqueduct" and int(t + 40) % 6 == 0:
+                    col = r[0]  # joints of the channel's stones
+            else:
+                col = P(OUTLINE) if edge else (r[3] if facing < 0 else r[1])  # a heaped bank, lit on its far side
+            c.px(x, y, col)
+    return c
+
+
+def _way_surface(kind, arm, wet=None):
+    """The surface of an arm. Patterns are laid in hex-wide coordinates whose periods divide the hex steps (72 across,
+    42 down at 2x), so arms that overlap at the centre and arms of neighbouring hexes meet without a seam."""
+    hw, _ = WAYS[kind]
+    c = canvas(HW, HH)
+    r = SURFACES["water" if wet else kind]
+    for y in range(HH):
+        for x in range(HW):
+            hit = _arm_hit(x, y, arm, hw)
+            if hit is None:
+                continue
+            t, s, _, _ = hit
+            col = r[2]
+            if kind == "road":
+                row = y // 7  # cobbles 6x7, rows staggered; 72/6 and 42/7 whole, so the pattern runs on
+                shift = 3 if row % 2 else 0
+                cx = (x + shift) // 6
+                hsh = _cell_hash(cx % 12, row % 6, 5)
+                lx, ly = (x + shift) % 6, y % 7
+                if lx == 5 or ly == 6:
+                    col = r[0]  # mortar
+                elif lx == 0 or ly == 0:
+                    col = r[4] if hsh % 3 else r[3]  # lit edge of the stone
+                elif lx == 4 or ly == 5:
+                    col = r[1]
+                else:
+                    col = (r[2], r[3], r[2], r[1])[hsh % 4]
+            elif kind == "track":
+                hsh = _cell_hash(x % 72, y % 42, 3)
+                if t > hw * 1.8 and abs(abs(s) - hw * 0.45) < 0.8:
+                    col = r[1]  # wheel ruts, away from the centre so crossings stay plain
+                elif hsh % 23 == 0:
+                    col = r[4]  # pebbles
+                elif hsh % 11 == 0:
+                    col = r[1]
+                elif hsh % 7 == 0:
+                    col = r[3]
+            elif wet:
+                if (x * 2 + y * 3) % 13 == 0 or (x * 5 + y) % 17 == 0:
+                    col = r[4]  # glints on the water
+                elif (x + y * 2) % 7 == 0:
+                    col = r[3]
+                elif abs(s) > hw - 1:
+                    col = r[1]
+            else:
+                hsh = _cell_hash(x % 72, y % 42, 9)
+                if abs(s) > hw - 1:
+                    col = r[1]
+                elif hsh % 5 == 0:
+                    col = r[1] if hsh % 2 else r[3]
+            c.px(x, y, col)
+    return c
+
+
+def bridge(edge):
+    """A stone bridge over a river on the hex's n, ne or se edge, along the way that crosses it: a deck of cut stone with
+    a parapet on each side, its ends resting on the banks. 40x40 at 2x, centred on the middle of the edge."""
+    size = 40
+    c = canvas(size, size)
+    ex, ey = ARM_ENDS[edge]
+    length = math.hypot(ex - CENTRE[0], ey - CENTRE[1])
+    ux, uy = (ex - CENTRE[0]) / length, (ey - CENTRE[1]) / length
+    deck = SURFACES["road"]
+    wall = BANKS["aqueduct"]
+    half_len, half_w = 15.5, 6.5
+    for y in range(size):
+        for x in range(size):
+            px, py = x + 0.5 - size / 2, y + 0.5 - size / 2
+            t = px * ux + py * uy
+            s = -px * uy + py * ux
+            if abs(t) > half_len or abs(s) > half_w + 2:
+                continue
+            if abs(s) > half_w:
+                # the parapets: lit on the side towards the light
+                facing = (-uy if s > 0 else uy) * LIGHT[0] + (ux if s > 0 else -ux) * LIGHT[1]
+                col = wall[3] if facing < 0 else wall[1]
+                if abs(s) > half_w + 1.2:
+                    col = wall[0]
+            else:
+                col = deck[2]
+                if int(t + 40) % 5 == 0:
+                    col = deck[1]  # joints of the deck stones
+                elif int(t + 40) % 5 == 1:
+                    col = deck[3]
+            c.px(x, y, col)
+    c.outline(P(OUTLINE))
+    return c
+
+
+def way_icon(kind):
+    """A button picture for drawing a way: a patch of grass with the way crossing it, lit and outlined like the map."""
+    size = 40
+    c = canvas(size, size)
+    g = [P(v) for v in ((30, 52, 19), (45, 77, 29), (51, 88, 33), (57, 99, 37), (79, 132, 47))]
+    for y in range(2, size - 2):
+        for x in range(2, size - 2):
+            hsh = _cell_hash(x, y, 11)
+            c.px(x, y, g[3] if hsh % 9 == 0 else g[1] if hsh % 7 == 0 else g[2])
+    wet = True if kind in ("ditch", "aqueduct") else None
+    pics = [_way_bank(kind, "c"), _way_bank(kind, "sw"), _way_bank(kind, "ne"),
+            _way_surface(kind, "c", wet), _way_surface(kind, "sw", wet), _way_surface(kind, "ne", wet)]
+    for pic in pics:  # the hex's arms, cut to the middle of the picture
+        for y in range(size - 4):
+            for x in range(size - 4):
+                v = pic.im.getpixel((x + 30, y + 22))
+                if v[3]:
+                    c.im.putpixel((x + 2, y + 2), v)
+    c.outline(P(OUTLINE))
+    return c
+
+
+def generate_ways():
+    _init_ways()
+    for kind in WAYS:
+        for arm in list(ARM_ENDS) + ["c"]:
+            _way_bank(kind, arm).save("works", f"work_{kind}_{arm}_bank")
+            if kind in ("ditch", "aqueduct"):
+                _way_surface(kind, arm, True).save("works", f"work_{kind}_{arm}_wet")
+                _way_surface(kind, arm, False).save("works", f"work_{kind}_{arm}_dry")
+            else:
+                _way_surface(kind, arm).save("works", f"work_{kind}_{arm}")
+        way_icon(kind).save("works", f"work_icon_{kind}")
+    for edge in ("n", "ne", "se"):
+        bridge(edge).save("works", f"work_bridge_{edge}")
+    for kind, piece in (("wall", wall_edge()), ("palisade", palisade_edge())):
+        edge_icon(kind, piece).save("works", f"work_icon_{kind}")
+
+
+def edge_icon(kind, piece):
+    """A button picture for a wall or palisade: a patch of grass with a piece of it standing across."""
+    size = 40
+    c = canvas(size, size)
+    g = [P(v) for v in ((30, 52, 19), (45, 77, 29), (51, 88, 33), (57, 99, 37), (79, 132, 47))]
+    for y in range(2, size - 2):
+        for x in range(2, size - 2):
+            hsh = _cell_hash(x, y, 11)
+            c.px(x, y, g[3] if hsh % 9 == 0 else g[1] if hsh % 7 == 0 else g[2])
+    for y in range(EDGE_H):
+        for x in range(size - 4):
+            v = piece.im.getpixel((x + (EDGE_W - size + 4) // 2, y))
+            if v[3]:
+                c.im.putpixel((x + 2, y + (size - EDGE_H) // 2), v)
+    c.outline(P(OUTLINE))
+    return c
 
 
 # ------------------------------------------------------------------------------------------------ interface frames (textured)

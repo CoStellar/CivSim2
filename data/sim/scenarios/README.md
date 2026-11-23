@@ -29,6 +29,8 @@ Per people:
 | `units` | units ready at the first settlement (key: count) |
 | `unitPeople` | size of every army unit it starts with (within the kind's 5–30; default: the kind's usual size) |
 | `wallRing` | a finished stone wall on every hex of its land this far from its centre (for example 2; 0 = none) |
+| `workRings` | finished works on every hex of its land at a distance from its centre (key: distance, for example `{ "ditch": 3 }`) |
+| `roadStar` | finished roads from its centre this many hexes in all six directions, paved and tracks in turn, with bridges where they cross rivers (to look at roads) |
 | `weapon`, `armour` | levels 0–4 of its starting soldiers' arms; without them they take the best the stock holds |
 | `settlements`, `settlementPeople` | more settlements founded around the first, and their people (each with the start stock) |
 | `aggression`, `expansion` | AI character 0–100 |

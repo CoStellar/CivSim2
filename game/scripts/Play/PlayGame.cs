@@ -175,6 +175,14 @@ public partial class PlayGame : Node2D
     /// <summary>Script step: sets the zoom.</summary>
     public void ScriptZoom(float zoom) => _camera.Zoom = new Vector2(zoom, zoom);
 
+    /// <summary>Script step: opens the tab of the decision bar with this name (for screenshots).</summary>
+    public void ScriptTab(string name)
+    {
+        _tab = Math.Max(0, Array.IndexOf(Tabs, name));
+        _barSig = "";
+        UpdateUi();
+    }
+
     /// <summary>Script step: sets the speed.</summary>
     public void ScriptSpeed(SimulationSpeed speed) => _session?.SetSpeed(speed);
 

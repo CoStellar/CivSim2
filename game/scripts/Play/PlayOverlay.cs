@@ -579,8 +579,20 @@ public partial class PlayOverlay : Node2D
         }
     }
 
-    // One chunk's roads, buildings and settlement centres (in the coordinates of the map's first copy).
+    // One chunk's roads, buildings and settlement centres (in the coordinates of the map's first copy), then its walls and
+    // palisades over all of them (Patryk, 2026-11-23: walls above everything).
     private void PaintChunkGround(CanvasItem g, int chunk)
+    {
+        PaintChunkBelowWalls(g, chunk);
+        if (_content is not null && World is { } w)
+        {
+            int cx = chunk % ChunksX;
+            int cy = chunk / ChunksX;
+            PaintWorks(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1, walls: true);
+        }
+    }
+
+    private void PaintChunkBelowWalls(CanvasItem g, int chunk)
     {
         if (_content is null || World is not { } w)
         {
@@ -592,6 +604,12 @@ public partial class PlayOverlay : Node2D
         PaintGroves(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
         PaintWorks(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
         PaintRoads(g, w, cx * ChunkSize, cy * ChunkSize, Math.Min(w.Width, (cx + 1) * ChunkSize) - 1, Math.Min(w.Height, (cy + 1) * ChunkSize) - 1);
+        foreach ((Texture2D span, Vector2 mid) in _bridges)
+        {
+            g.DrawTextureRect(span, new Rect2(mid - new Vector2(10, 10), new Vector2(20, 20)), false); // 40x40 at 2x
+        }
+
+        _bridges.Clear();
         if (!_content2.TryGetValue(chunk, out ChunkContent? cc))
         {
             return;
@@ -998,6 +1016,11 @@ public partial class PlayOverlay : Node2D
                 bool grey = w.Visibility[i] == MapChunkMessage.Remembered;
                 Vector2 c = HexLayout.Center(col, row);
                 bool odd = (col & 1) == 1;
+                if (!thin && WayPictures(g, w, col, row, level == 1 ? "track" : "road", "", grey, j => w.Road[j] != 0))
+                {
+                    continue;
+                }
+
                 int linked = 0;
                 foreach ((int dc, int dr) in odd ? OddNeighbours : EvenNeighbours)
                 {
@@ -1066,7 +1089,8 @@ public partial class PlayOverlay : Node2D
     // Works on hexes, under the roads: ditches and aqueducts run between neighbouring hexes of their kind along the cross between
     // the building places (blue when water reaches them); palisades and walls line the inside of the hex's edges; bridges are
     // planks over the river edges.
-    private void PaintWorks(CanvasItem g, CivSim.Game.Net.ClientWorld w, int c0, int r0, int c1, int r1)
+    // walls: only the palisades and walls (drawn last); otherwise everything but them.
+    private void PaintWorks(CanvasItem g, CivSim.Game.Net.ClientWorld w, int c0, int r0, int c1, int r1, bool walls = false)
     {
         var enclosed = new Dictionary<(int, int), bool>();
         var towers = new Dictionary<(int, int), (Vector2 At, bool Grey)>();
@@ -1084,6 +1108,16 @@ public partial class PlayOverlay : Node2D
                 bool grey = w.Visibility[i] == MapChunkMessage.Remembered;
                 Vector2 c = HexLayout.Center(col, row);
                 bool odd = (col & 1) == 1;
+                if (walls)
+                {
+                    if ((works & (2 | 4)) != 0)
+                    {
+                        WallEdges(g, w, col, row, c, (works & 4) != 0 ? 4 : 2, grey, enclosed, towers);
+                    }
+
+                    continue;
+                }
+
                 foreach ((int bit, Color wet, Color dry, float width) in new[] { (1, new Color(0.35f, 0.62f, 0.95f), new Color(0.45f, 0.4f, 0.32f), 3f), (8, new Color(0.55f, 0.75f, 0.95f), new Color(0.62f, 0.6f, 0.56f), 5f) })
                 {
                     if ((works & bit) == 0)
@@ -1092,6 +1126,11 @@ public partial class PlayOverlay : Node2D
                     }
 
                     bool flowing = (works & (bit == 1 ? 16 : 32)) != 0;
+                    if (Detail > 0 && WayPictures(g, w, col, row, bit == 1 ? "ditch" : "aqueduct", flowing ? "_wet" : "_dry", grey, j => (w.Works[j] & bit) != 0))
+                    {
+                        continue;
+                    }
+
                     Color col2 = grey ? Grey(flowing ? wet : dry) : flowing ? wet : dry;
                     int linked = 0;
                     foreach ((int dc, int dr) in odd ? OddNeighbours : EvenNeighbours)
@@ -1112,11 +1151,6 @@ public partial class PlayOverlay : Node2D
                     }
                 }
 
-                if ((works & (2 | 4)) != 0)
-                {
-                    WallEdges(g, w, col, row, c, (works & 4) != 0 ? 4 : 2, grey, enclosed, towers);
-                }
-
                 for (int e = 0; e < 3; e++)
                 {
                     if ((works & (1 << (8 + e))) == 0)
@@ -1126,6 +1160,12 @@ public partial class PlayOverlay : Node2D
 
                     (int a, int b) = HexLayout.EdgeCorners[e];
                     Vector2 mid = c + ((HexLayout.Corners[a] + HexLayout.Corners[b]) * 0.5f);
+                    if (Detail > 0 && Sprite("works", "work_bridge_" + BridgeEdges[e], 0, grey) is { } span)
+                    {
+                        _bridges.Add((span, mid)); // drawn over the roads, after them
+                        continue;
+                    }
+
                     Vector2 along = (HexLayout.Corners[b] - HexLayout.Corners[a]).Normalized() * 6;
                     Vector2 across = (mid - c).Normalized() * 7;
                     Color plank = grey ? Grey(new Color(0.6f, 0.45f, 0.28f)) : new Color(0.6f, 0.45f, 0.28f);
@@ -1276,6 +1316,46 @@ public partial class PlayOverlay : Node2D
                 g.DrawTextureRect(tower, new Rect2(at - new Vector2(5, 5), new Vector2(10, 10)), false);
             }
         }
+    }
+
+    // The arms of a way in the order of the neighbour tables, as the pictures name them (art/placeholder/game_art.py).
+    private static readonly string[] ArmNames = ["n", "s", "ne", "se", "nw", "sw"];
+    private static readonly string[] BridgeEdges = ["n", "ne", "se"];
+    private readonly List<(Texture2D Span, Vector2 Mid)> _bridges = [];
+
+    // A way on a hex from its pictures (2026-11-23, Patryk: roads drawn, not lines): an arm to every neighbour on the
+    // same way, their banks first so junctions stay clean, a round end alone; false when the pictures are missing.
+    private bool WayPictures(CanvasItem g, CivSim.Game.Net.ClientWorld w, int col, int row, string kind, string surface, bool grey, Func<int, bool> on)
+    {
+        Span<int> arms = stackalloc int[6];
+        int count = 0;
+        (int, int)[] near = (col & 1) == 1 ? OddNeighbours : EvenNeighbours;
+        for (int k = 0; k < near.Length; k++)
+        {
+            int nr = row + near[k].Item2;
+            if (nr >= 0 && nr < w.Height && on(w.Index(col + near[k].Item1, nr)))
+            {
+                arms[count++] = k;
+            }
+        }
+
+        Rect2 rect = HexRect(HexLayout.Center(col, row), 1f);
+        for (int pass = 0; pass < 2; pass++)
+        {
+            for (int k = 0; k < Math.Max(1, count); k++)
+            {
+                string arm = count == 0 ? "c" : ArmNames[arms[k]];
+                string name = pass == 0 ? $"work_{kind}_{arm}_bank" : $"work_{kind}_{arm}{surface}";
+                if (Sprite("works", name, 0, grey) is not { } pic)
+                {
+                    return false;
+                }
+
+                g.DrawTextureRect(pic, rect, false);
+            }
+        }
+
+        return true;
     }
 
     private static readonly (int, int)[] EvenNeighbours = [(0, -1), (0, 1), (1, -1), (1, 0), (-1, -1), (-1, 0)];

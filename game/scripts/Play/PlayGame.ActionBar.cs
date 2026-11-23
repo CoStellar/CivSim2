@@ -266,10 +266,12 @@ public partial class PlayGame
         string tip;
         string label;
         Color color;
+        string picture;
         if (level >= WorkSlotBase)
         {
             PlayWorkInfo wk = c.Works![level - WorkSlotBase];
             label = wk.Name;
+            picture = wk.Key;
             tip = $"{wk.Name}: {Amounts(c, wk.Price)} and {wk.Seconds} s a hex, paid by our nearest settlement.\n{wk.Text}\nDraw it hex by hex on our land; remove it from the hex panel.";
             color = wk.Key switch { "ditch" => new Color(0.35f, 0.62f, 0.95f), "aqueduct" => new Color(0.55f, 0.75f, 0.95f), "wall" => new Color(0.72f, 0.72f, 0.7f), _ => new Color(0.55f, 0.38f, 0.2f) };
         }
@@ -277,6 +279,7 @@ public partial class PlayGame
         {
             PlayRoadInfo road = c.Roads![level - 1];
             label = road.Name;
+            picture = level == 1 ? "track" : "road";
             tip = $"{road.Name}: {Amounts(c, road.Price)} and {road.Seconds} s a hex, paid by our nearest settlement.\n"
                 + (level == 1 ? "Walking on it is faster; caravans and armies take it by themselves." : "Much faster than a track, also over hills; a major trade route.")
                 + "\nDraw it hex by hex, also into empty land: settlers who found a camp at its end get goods along it. With Masonry it bridges the rivers it crosses.";
@@ -287,7 +290,12 @@ public partial class PlayGame
         var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = tip, ToggleMode = true, ButtonPressed = _drawMode == DrawMode.Road && _drawRoad == level };
         var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
         inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-        inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(r.Name), 44) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter });
+        Texture2D? pic = UiKit.Picture?.Invoke("works", "work_icon_" + picture); // 2026-11-23: the way's picture, not letters
+        inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(r.Name), 44, icon: pic)
+        {
+            MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+            Modulate = can ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f),
+        });
         Label name = UiKit.Label(r.Name, 11, can ? UiKit.Text : UiKit.Muted);
         name.HorizontalAlignment = HorizontalAlignment.Center;
         name.MouseFilter = Control.MouseFilterEnum.Ignore;

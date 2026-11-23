@@ -32,6 +32,9 @@ Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud j
   4. `04_middle_ages`: my w średniowieczu, z miastem i trzema miasteczkami, reszta w epoce żelaza.
   5. `11_peace` (2026-11-23, ADR 0030): wojna od startu z ludem 1, który ma miasteczko i dwie wioski; test okna pokoju (Peoples):
      podpowiedź warunków, dobra, osada oblegana przez nasze wojsko, długość pokoju i zmęczenie wojną.
+  6. `12_roads` (2026-11-23, grafiki): nasze miasto w średniowieczu z gotowymi drogami w sześciu kierunkach (na zmianę droga
+     i ścieżka, z mostami na rzekach), rowem (pierścień 2), murem (pierścień 3) i akweduktem (pierścień 4). Do oglądania grafik
+     dróg i prac. Nowe klucze scenariusza: `roadStar` i `workRings`.
 - **Testy:** `ScenarioTests` sprawdza każdy plik: era, poziom, budynki, jednostki i wojny. Każdą grę puszcza też na 2 minuty. Tak samo będę testował wojnę (scenariusz zamiast ręcznego ustawiania w każdym teście).
 
 ## Zapis i wczytanie partii (2026-11-20)
