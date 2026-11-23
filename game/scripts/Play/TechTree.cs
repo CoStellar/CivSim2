@@ -45,6 +45,9 @@ public partial class TechTree : Control
     /// <summary>The technology under the mouse, kept when the window is drawn again (-1: none).</summary>
     public static int Hovered { get; set; } = -1;
 
+    /// <summary>The middle of a technology's card on the screen (for scripted screenshots), or null.</summary>
+    public Vector2? CardCenter(int tech) => _cards.TryGetValue(tech, out Button? b) ? b.GetGlobalRect().GetCenter() : null;
+
     private sealed class Node
     {
         public int Tech = -1; // -1: a waypoint of a long line

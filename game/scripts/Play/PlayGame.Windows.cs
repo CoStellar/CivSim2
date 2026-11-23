@@ -176,28 +176,42 @@ public partial class PlayGame
             : st.Blocked is null ? (new Color(0.3f, 0.24f, 0.12f), UiKit.Heading, UiKit.Text)
             : (new Color(0.12f, 0.11f, 0.1f), new Color(0.28f, 0.25f, 0.22f), UiKit.Muted);
         string name = (info.Gateway.Length > 0 ? "» " : "") + (info.Upgrade ? $"{info.Name} +" : info.Name);
-        var tip = new StringBuilder($"{info.Name}" + (info.Upgrade ? " (upgrade of its era)" : "")
-            + (info.Gateway.Length > 0 ? $"\nGATEWAY to the {info.Gateway}: needed, besides enough technologies of its era, to enter it." : "") + $"\n{info.Gives}");
+        // The tooltip (Patryk, 2026-11-23): the name, what it gives, then the facts one a line.
+        var tip = new StringBuilder("# " + info.Name + (info.Upgrade ? " (upgrade of its era)" : ""));
+        tip.Append($"\n{info.Gives}");
         if (info.Unlocks.Length > 0)
         {
-            tip.Append($"\n\n{info.Unlocks}");
+            tip.Append($"\n{info.Unlocks}");
         }
-        if (!st.Known)
+
+        tip.Append('\n');
+        if (info.Gateway.Length > 0)
+        {
+            tip.Append($"\n@Gateway|to the {info.Gateway}: needed, besides enough technologies of its era, to enter it");
+        }
+
+        if (st.Known)
+        {
+            tip.Append("\n@State|known");
+        }
+        else
         {
             int secs = st.Seconds > 0 ? st.Seconds : info.Seconds;
-            tip.Append($"\n\nPrice: {(st.Price is null ? "?" : Amounts(c, st.Price))}, {secs} s" + (secs < info.Seconds ? $" (schools: {info.Seconds} s without)." : "."));
+            tip.Append($"\n@Cost|{(st.Price is null ? "?" : Amounts(c, st.Price, icons: true))}");
+            tip.Append($"\n@Research time|{secs} s" + (secs < info.Seconds ? $" ({info.Seconds} s without schools)" : ""));
             if (info.Needs.Length > 0)
             {
-                tip.Append($"\nNeeds experience: {info.Needs} points (1 point = 1 worker for 1 minute in their buildings).");
+                tip.Append($"\n@Experience|{info.Needs}");
+                tip.Append("\n(1 point of experience = 1 worker for 1 minute in their buildings)");
             }
 
             if (st.Blocked is { } why)
             {
-                tip.Append($"\n\n{why}");
+                tip.Append($"\n@Not yet|{why}");
             }
         }
 
-        var b = new Button { Text = name, FocusMode = Control.FocusModeEnum.None, TooltipText = tip.ToString(), CustomMinimumSize = new Vector2(UiKit.W(176), Ui.PixelTheme.FontSize + 14), Alignment = HorizontalAlignment.Left, ClipText = true };
+        var b = new RichTipButton { Text = name, FocusMode = Control.FocusModeEnum.None, TooltipText = tip.ToString(), CustomMinimumSize = new Vector2(UiKit.W(176), Ui.PixelTheme.FontSize + 14), Alignment = HorizontalAlignment.Left, ClipText = true };
         b.AddThemeFontSizeOverride("font_size", Ui.PixelTheme.FontSize);
         b.AddThemeColorOverride("font_color", ink);
         b.AddThemeColorOverride("font_hover_color", UiKit.Text);

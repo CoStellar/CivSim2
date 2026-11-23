@@ -146,6 +146,106 @@ public static class UiKit
     /// <summary>Pictures in a people's colour (layer, name, people or -1 for ours, grey); set by the play screen.</summary>
     public static Func<string, string, int, bool, Texture2D?>? CivPicture { get; set; }
 
+    /// <summary>The mark of a good in a rich tooltip: drawn as its picture by <see cref="RichTip"/>.</summary>
+    public static string GoodMark(string key) => "\u27EA" + key + "\u27EB";
+
+    /// <summary>A tooltip's text with goods marked by <see cref="GoodMark"/> drawn as their pictures, on lines that wrap.</summary>
+    public static Control RichTip(string text)
+    {
+        var label = new RichTextLabel
+        {
+            FitContent = true,
+            ScrollActive = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(W(440), 0),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        label.AddThemeColorOverride("default_color", new Color(0.114f, 0.09f, 0.063f));
+        label.AddThemeFontSizeOverride("normal_font_size", Ui.PixelTheme.FontSize);
+        // Lines (Patryk, 2026-11-23: a clear structure): "# name" is the heading, "@key|value" a fact with its key in
+        // brown, anything else plain text; goods and biomes marked by GoodMark are drawn as pictures.
+        string[] rows = text.Split('\n');
+        for (int r = 0; r < rows.Length; r++)
+        {
+            string row = rows[r];
+            if (r > 0)
+            {
+                label.AddText("\n");
+            }
+
+            if (row.StartsWith("# ", StringComparison.Ordinal))
+            {
+                label.PushFontSize(Ui.PixelTheme.FontSize + 4);
+                label.PushColor(new Color(0.45f, 0.13f, 0.04f));
+                label.AddText(row[2..]);
+                label.Pop();
+                label.Pop();
+            }
+            else if (row.StartsWith('@') && row.IndexOf('|') is var bar and > 0)
+            {
+                label.PushColor(new Color(0.42f, 0.27f, 0.12f));
+                label.AddText(row[1..bar] + ":  ");
+                label.Pop();
+                AddRich(label, row[(bar + 1)..]);
+            }
+            else
+            {
+                AddRich(label, row);
+            }
+        }
+
+        // Godot places a tooltip by its size before the text is laid out, so a tall one ran off the screen: its height is
+        // worked out here from the text's width in the font (a little more for words that wrap early).
+        float width = W(440);
+        int fontSize = Ui.PixelTheme.FontSize;
+        Font font = Font;
+        float lines = 0;
+        foreach (string para in text.Replace("\u27EA", "WW").Replace("\u27EB", " ").Split('\n'))
+        {
+            float w = font.GetStringSize(para, HorizontalAlignment.Left, -1, para.StartsWith("# ", StringComparison.Ordinal) ? fontSize + 4 : fontSize).X;
+            lines += Math.Max(1, MathF.Ceiling(w * 1.05f / width));
+        }
+
+        label.CustomMinimumSize = new Vector2(width, (lines * (font.GetHeight(fontSize) + 4)) + 6);
+        return label;
+    }
+
+    // Text with goods and biomes marked by GoodMark drawn as their pictures.
+    private static void AddRich(RichTextLabel label, string text)
+    {
+        int at = 0;
+        while (at < text.Length)
+        {
+            int open = text.IndexOf('\u27EA', at);
+            int close = open < 0 ? -1 : text.IndexOf('\u27EB', open);
+            if (open < 0 || close < 0)
+            {
+                label.AddText(text[at..]);
+                break;
+            }
+
+            label.AddText(text[at..open]);
+            string key = text[(open + 1)..close];
+            int h = Ui.PixelTheme.FontSize + 6;
+            if (key.StartsWith("b:", StringComparison.Ordinal))
+            {
+                // A piece of the biome's own tile (Patryk, 2026-11-23: easier to tell which biome it is).
+                if (Picture?.Invoke("biome", $"biome_{key[2..]}_01") is { } tile)
+                {
+                    label.AddImage(tile, h * 8 / 7, h, null, InlineAlignment.Center);
+                    label.AddText("\u00A0"); // the picture stays with its name
+                }
+            }
+            else if (Picture?.Invoke("goods", "good_" + key) is { } icon)
+            {
+                label.AddImage(icon, h, h, null, InlineAlignment.Center);
+                label.AddText("\u00A0");
+            }
+
+            at = close + 1;
+        }
+    }
+
     /// <summary>The picture "layer/name" in a people's colour (-1: ours), or null for letters.</summary>
     public static Texture2D? PictureOf(string? pic, int civ = -1, bool grey = false)
     {
@@ -300,4 +400,14 @@ public static class UiKit
             n.QueueFree();
         }
     }
+}
+
+/// <summary>
+/// A button whose tooltip shows goods as their pictures (Patryk, 2026-11-23): "⟪food⟫" in the tooltip text is drawn as the
+/// food icon, so prices read at a glance. Godot puts the tooltip on the theme's parchment panel.
+/// </summary>
+public partial class RichTipButton : Button
+{
+    /// <inheritdoc/>
+    public override GodotObject _MakeCustomTooltip(string forText) => UiKit.RichTip(forText);
 }

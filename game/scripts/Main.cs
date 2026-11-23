@@ -231,6 +231,15 @@ public partial class Main : Node2D
                 // Placing a building (2026-11-23): the free places of every hex it may go on show as slots.
                 demo = [(_playSeconds - 2, g => g.ScriptPlace("potter")), (_playSeconds - 1.5, g => g.ScriptZoom(2.2f))];
             }
+            else if (_playWindow == "TechTip")
+            {
+                // A technology's tooltip with the goods' pictures (2026-11-23), over a tree that is not built anew.
+                demo = [.. demo, (_playSeconds - 3, g => g.ScriptOpen("Research")), (_playSeconds - 2, g => g.ScriptHoverCard("agriculture"))];
+            }
+            else if (_playWindow == "SlotTip")
+            {
+                demo = [.. demo, (_playSeconds - 2, g => g.ScriptHoverSlot())];
+            }
             else if (_playWindow == "PanelEnd")
             {
                 // The end of the side panel (training buttons and the like), 2026-11-23.

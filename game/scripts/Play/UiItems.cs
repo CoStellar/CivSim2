@@ -170,14 +170,57 @@ internal static class UiRender
     }
 
     /// <summary>Fills <paramref name="box"/> with nodes for the items; <paramref name="clicked"/> runs after any action.</summary>
+    /// <remarks>
+    /// Patryk (2026-11-23): the interface was built anew whenever anything in it changed (a research bar every second), so it
+    /// flickered and a tooltip or a hovered card vanished. Now an item whose signature is the same keeps its node; only the
+    /// changed items are made again, in place.
+    /// </remarks>
     public static void Render(VBoxContainer box, List<UiItem> items, Action clicked)
     {
-        UiKit.Clear(box);
-        foreach (UiItem item in items)
+        ulong key = box.GetInstanceId();
+        if (!Sigs.TryGetValue(key, out List<string>? old) || old.Count != box.GetChildCount())
         {
-            box.AddChild(Make(item, clicked));
+            UiKit.Clear(box);
+            old = [];
         }
+
+        var sigs = new List<string>(items.Count);
+        for (int i = 0; i < items.Count; i++)
+        {
+            string sig = items[i].Sig;
+            sigs.Add(sig);
+            if (i < old.Count && old[i] == sig)
+            {
+                continue; // the same: keep the node (and its hover, tooltip and scroll)
+            }
+
+            Control made = Make(items[i], clicked);
+            if (i < box.GetChildCount())
+            {
+                Node was = box.GetChild(i);
+                box.AddChild(made);
+                box.MoveChild(made, i);
+                box.RemoveChild(was);
+                was.QueueFree();
+            }
+            else
+            {
+                box.AddChild(made);
+            }
+        }
+
+        while (box.GetChildCount() > items.Count)
+        {
+            Node extra = box.GetChild(items.Count);
+            box.RemoveChild(extra);
+            extra.QueueFree();
+        }
+
+        Sigs[key] = sigs;
     }
+
+    // The signatures of the items each box shows, by the box's instance id.
+    private static readonly Dictionary<ulong, List<string>> Sigs = [];
 
     private static Control Make(UiItem item, Action clicked)
     {
