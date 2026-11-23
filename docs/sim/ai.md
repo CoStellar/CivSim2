@@ -70,6 +70,17 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 | N37 | Zbiórka w szyku przed wyprawą (roadmapa 7) | wyprawa na osadę | punkt zbiórki: nasza osada najbliższa celu; żołnierze dalej niż 3 heksy (ale do 30) idą tam w szyku (piechota z przodu, łucznicy z tyłu, jazda na skrzydłach); marsz na cel, gdy stoi tam 70% siły albo inni już idą na ten cel | `aiBattle.musterHexes` 3, `musterFromHexes` 30, `musterPercent` 70 | `Ai/SimAi.cs` (`Offensive`) |
 | N33 | Premie rodzajów (#112) | rodzaj jednostki osiągnął poziom | łucznicy i machiny: Hardened; jazda: na zmianę Forced march i Hardened; piechota: na zmianę Hardened i Shield wall | — | `Ai/SimAi.cs` (`VeteranChoiceFor`) |
 
+## Warsztaty i ich surowce (2026-11-22)
+
+Po 120 minutach 60% warsztatów, które zużywają towary, stało bez wsadu (12 seedów), głównie kowale bez węgla drzewnego i żelaza oraz brązownicy bez cyny. Przyczyny: lista „praca dla bezrobotnych” stawiała kowala i brązownika bez patrzenia na surowce; przebudowa zamieniała narzędziarzy w kowali; nowy wytwórca surowca powstawał dopiero przy zapasie < 5 i zerowym przyroście, a warsztat bez wsadu nic nie zużywa, więc bilans wyglądał dobrze.
+
+1. **Zapotrzebowanie zamiast bilansu:** AI liczy, ile wszystkie jej pracujące (i budowane) warsztaty zużyłyby przy pełnej obsadzie (`Demand`).
+2. **Nowy warsztat tylko z pokrytym wsadem:** z listy „praca dla bezrobotnych” i jako drugi (i kolejny) wytwórca dobra AI stawia warsztat tylko wtedy, gdy produkcja każdego jego surowca pokrywa zapotrzebowanie razem z nim albo w magazynie leży 10 minut jego zużycia (`InputsCovered`). Pierwszy warsztat danego rodzaju może stanąć zawsze, żeby jego surowce dostały wytwórców.
+3. **Przebudowa** (N11) w rodzaj, którego wsadu nie starcza, czeka.
+4. **Wytwórca surowca** (późne ery, `InputMaker`): gdy produkcja dobra jest mniejsza niż zapotrzebowanie, a zapas < 20 (było: zero produkcji i zapas < 5).
+
+Pomiar `--sim-report --seeds 12 --minutes 120` (mapa 98×60, 4 ludy), przed → po: warsztaty bez wsadu 60,2% → 41,4%, ludzie 12 196 → 13 145, głód 3,8% → 3,4%, technologie 56,3 → 56,3, epoka brązu 33,2 → 34,2 min, żelaza 60,9 → 60,0 min (11 z 12 gier; było 12), średniowiecze 70,8 → 69,1 min (11 z 12). Gra 5 nie doszła do żelaza: nikt na jej mapie nie znalazł cyny (wcześniej przebieg był szczęśliwszy). Większe karawany z wsadem (5 minut zużycia) sprawdzone i odrzucone: nie pomagały.
+
 ## Jedzenie dużych ludów (2026-11-22)
 
 Długie biegi (6 seedów, 120 minut) pokazały, że największe ludy (4000+ osób) od ok. 90. minuty przerastają swoje jedzenie: latem jedzenia jest tyle, ile się zjada, zimą zapas znika i ludzie umierają (do 3000 głodnych w jednym ludzie). Przyczyna: stałe progi AI, które nie rosną z ludem (+3 jedzenia na minutę, jedna budowa jedzenia naraz, karawana 40 jedzenia), a domy i awanse liczyły tylko zapas w magazynie.

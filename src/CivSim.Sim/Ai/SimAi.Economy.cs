@@ -152,6 +152,13 @@ public static partial class SimAi
 
         foreach (string k in order)
         {
+            // 2026-11-22: a second workshop of a kind only when its inputs are covered (one seed had 21 bronze smiths and no
+            // tin); the first may stand, so that its inputs get their makers.
+            if (Has(g, civ, k) && !InputsCovered(g, civ, g.Content.Building(k)))
+            {
+                continue;
+            }
+
             if (TryBuild(g, civ, k))
             {
                 return true;
@@ -160,6 +167,13 @@ public static partial class SimAi
 
         foreach (string k in new[] { "school", "academy", "farm", "pasture", "woodcutter", "quarry", "mason", "clay_pit", "toolmaker", "copper_mine", "tin_mine", "bronze_smith", "iron_mine", "blacksmith", "potter", "tailor", "herbalist", "gatherers_hut", "hunters_lodge" })
         {
+            // 2026-11-22 (long runs: 66% of the workshops stood without inputs at 120 minutes, mostly blacksmiths without
+            // charcoal): a workshop goes up only when what its people makes covers what it would use.
+            if (!InputsCovered(g, civ, g.Content.Building(k)))
+            {
+                continue;
+            }
+
             if (TryBuild(g, civ, k))
             {
                 return true;
@@ -275,7 +289,9 @@ public static partial class SimAi
     {
         for (int i = 0; i < b.Consumes.Length; i++)
         {
-            if (b.Consumes[i] <= 0 || civ.Stock[i] >= 5 * SimContent.One || civ.Rate[i] > 0)
+            // 2026-11-22: a good we make less of than our workshops would use and of which less than 20 is left (was: none made
+            // and under 5 in store; workshops without input use nothing, so the rate hid the shortage).
+            if (b.Consumes[i] <= 0 || civ.Stock[i] >= 20 * SimContent.One || civ.MadeRate[i] >= Demand(g, civ, i))
             {
                 continue;
             }
@@ -627,6 +643,40 @@ public static partial class SimAi
         return want;
     }
 
+    // 2026-11-22: what all our working buildings would use of a good a minute with every job filled. A workshop without its
+    // input uses nothing, so the plain rate looked fine and more smiths went up while the first ones stood idle.
+    private static long Demand(SimGame g, Civ civ, int good)
+    {
+        long sum = 0;
+        foreach (int id in civ.Buildings)
+        {
+            Building b = g.Buildings[id];
+            BuildingType t = g.Content.Buildings[b.Type];
+            if (b.State is BuildingState.Active or BuildingState.Construction or BuildingState.Delivery && t.Consumes.Length > good)
+            {
+                sum += t.Consumes[good] * t.Workers;
+            }
+        }
+
+        return sum;
+    }
+
+    // 2026-11-22: what our people makes of every input covers what all its workshops use plus this one, or ten minutes of
+    // this one's use lie in store.
+    private static bool InputsCovered(SimGame g, Civ civ, BuildingType b)
+    {
+        for (int i = 0; i < b.Consumes.Length; i++)
+        {
+            long need = b.Consumes[i] * Math.Max(1, b.Workers);
+            if (need > 0 && civ.MadeRate[i] < Demand(g, civ, i) + need && civ.Stock[i] < 10 * need)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private static bool NoInputsMissing(Civ civ, BuildingType b)
     {
         for (int i = 0; i < b.Consumes.Length; i++)
@@ -814,7 +864,9 @@ public static partial class SimAi
                     continue;
                 }
 
-                if (g.CannotUpgrade(civ, b, out BuildingType? to) is null && Affordable(civ, g.UpgradeRest(t, to!), 20)
+                // 2026-11-22: not into a kind whose inputs nobody makes enough of (toolmakers became blacksmiths without
+                // charcoal or iron and stood idle).
+                if (g.CannotUpgrade(civ, b, out BuildingType? to) is null && Affordable(civ, g.UpgradeRest(t, to!), 20) && InputsCovered(g, civ, to!)
                     && g.Apply(new UpgradeBuildingCommand(civ.Id, b.Id)) is null)
                 {
                     return true;
