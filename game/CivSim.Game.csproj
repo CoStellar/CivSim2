@@ -9,6 +9,11 @@
     -->
     <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     <TargetFramework>net10.0</TargetFramework>
+    <!--
+      Exporting the game (dotnet publish) sees Core, Data and Sim twice: as run-time content above and through Server.
+      They are the same files, so publish keeps one copy instead of failing (NETSDK1152).
+    -->
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\CivSim.Protocol\CivSim.Protocol.csproj" />

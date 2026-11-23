@@ -12,7 +12,7 @@ BenchmarkDotNet.Artifacts/
 # Godot
 game/.godot/
 game/.import/
-game/export_presets.cfg
+build/
 game/mono_crash.*
 *.translation
 

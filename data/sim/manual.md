@@ -104,6 +104,7 @@ Turn on "Tutorial" in the start menu (or press `T`): a task list on screen leads
 - **Research.** Open Research (`2`) and pick Dwellings. Research costs goods and time, one at a time.
 - **Homes.** People grow only with free homes and food. Build Huts as soon as homes run out.
 - **Look around.** Research Scouting, train scouts in the settlement's panel and send them out with a right click. What we never saw stays dark.
+- **Prepare a defence.** For the first 15 minutes nobody attacks; after that other peoples may come. Before then research Flint weapons and train a few warriors, or research Palisade and draw one around the camp.
 
 People without work gather around the settlement by themselves (the "Stop gathering" button turns it off). Every building has places for workers; people fill free places on their own. A building can be paused or put first in its panel.
 
@@ -119,6 +120,7 @@ Winter comes every 8 minutes and lasts 2: everybody works at half speed and gath
 - **Moving goods:** the settlement's panel offers "Bring 20 of a good" (one trip) and "Supply route" (a standing route) from the nearest settlement that has enough. Carriers walk the map, so roads make them faster.
 - **Roads:** a track and later a road (Roads & works tab) make walking faster; with Masonry they bridge rivers.
 - **Ruins** left by a people that is gone can be taken over.
+- **Joining a settlement:** a unit standing in one of our settlements can join it ("Go home" in its panel). Soldiers can too ("Lay down arms"), but they lose their weapons, armour and supplies.
 - **Better buildings:** select a building and press "Replace with another building" in its panel, then pick the new one in the bar.
 
 # Research and eras
@@ -163,12 +165,12 @@ Surround an enemy settlement to cut it off: it works slower. Its units, the guar
 ## Peace
 A war ends with peace or when one side is gone. In the Peoples window (`3`) propose peace: goods, maybe a settlement, and how long the peace lasts (3, 6 or 10 minutes). Only the side the war favours may demand; the other may offer a white peace or give something. "Suggest terms" fills in what the course of the war justifies. A long war tires a people: from half of the weariness bar the workshops work slower.
 
-At most 3 wars at a time. An attack without declaring war, or breaking a peace, costs reputation: others trust us less for a while.
+At most 3 wars at a time. An attack without declaring war, or breaking a peace, costs reputation. A people with a bad name finds others on guard against it: they keep more soldiers and seek alliances against it. Reputation slowly comes back in peace.
 
 # Other peoples
 We meet other peoples by seeing them: scouts, borders, their units. The Peoples window (`3`) lists those we know: how they feel about us, our treaties, and the buttons for war, peace, a trade agreement, an alliance and exchange of goods (barter). A people's character shows only in what it does.
 
-Scouts can go hidden: slower, but nobody can tell whose they are.
+Scouts can go hidden: slower, but nobody can tell whose they are. When units of a people we have not met come near one of our settlements and have seen it, the alert **Strangers** tells us, but not who they are or where they come from.
 
 # Tips
 - Watch the red numbers on the goods bar: something is used faster than it is made.
