@@ -267,6 +267,7 @@ i okno zrzutu `--play-window Ways` (zakładka dróg na pasku, mapa z bliska).
   z daleka lekki odcień heksa.
 
 Podgląd w grze: scenariusz `13_deposits`.
+
 ## 14. Obrazki w panelu bocznym: szkolenie i nagłówki (2026-11-23)
 
 - **Przyciski szkolenia** (sekcja TRAIN) pokazują figurki jednostki w kolorze naszego ludu zamiast liter („Se”, „Sc”…).
