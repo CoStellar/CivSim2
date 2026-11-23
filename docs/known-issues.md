@@ -7,10 +7,11 @@ gdy znajdziesz nowy, dopisz go z datą, źródłem i tym, co już wiadomo. Probl
 
 | # | Problem | Skąd wiemy | Co wiadomo | Co dalej |
 | --- | --- | --- | --- | --- |
-| 1 | **FPS klienta nie jest zmierzony.** | — | W chmurze Godot działa pod xvfb (zrzuty ekranu są możliwe), ale rysuje procesor, więc FPS nic nie mówi. | Pomiar na komputerze Patryka. |
 | 3 | **Niestabilny test serwera** `ObserverLayerTests.ObserverGetsLayersAndTheFogOfAWatchedCivilization`: raz na kilka przebiegów pada w całym zestawie, sam przechodzi. | pamięć projektu | W przebiegach z 2026-11-20 nie padł. | Gdy padnie: przyczyna (zależność od czasu?), nie wyłączać testu. |
 | 4 | **AI nie korzysta ze statków.** Nie wsiada na transportowce i nie szuka handlu morskiego. | przegląd 2026-11-18 | U gracza statki działają. | Po demo; do demo mapy kontynentalne. |
-| 5 | **AI trochę głoduje**, głównie w świeżych obozach. | `--sim-report`, 2026-11-22: 9,8% próbek z głodem (było 7–8%) | Ludzi przybywa szybciej od startu ze 100 drewna (#129), jedzenia nie przybywa tak samo. | Ocena Patryka w testach demo; jeśli przeszkadza, AI stawia chaty zbieraczy wcześniej. |
+| 5 | **AI trochę głoduje**, głównie w świeżych obozach. | `--sim-report`, 2026-11-22: 4,8% próbek z głodem po `fix/ai-food-scale` (było 11,8%) | Ludzi przybywa szybciej od startu ze 100 drewna (#129). Duży lud bez miejsca na nowe budynki dorasta do domów i głoduje co zimę (1 lud z 24 w 120 min): wzrost patrzy tylko na domy i jedzenie w magazynie. | Ocena Patryka w testach demo; trwała naprawa to zasada wzrostu (wzrost tylko przy nadwyżce jedzenia), decyzja Patryka. |
+| 13 | **Warsztaty bez wsadu w późnej grze:** po 120 minutach 53–59% pracujących budynków, które zużywają dobra, stoi bez wsadu. | `--sim-report --minutes 120`, 2026-11-22 | Po 40 minutach tylko 3,5%. Przyczyna niezbadana (pewnie jak w punkcie 8: wsad w innej osadzie). | Zbadać przy strojeniu AI. |
+| 14 | **Wycieki przy wyjściu z klienta:** Godot zgłasza 1 RID czcionki, 1 CanvasItem i 6 obiektów. | log Godota, komputer Patryka, 2026-11-22 | Bez wpływu na grę. | Przy porządkach klienta. |
 | 6 | **Civil service nie daje prowincji ani limitu administracji.** | plan technologii, 2026-11-18 | Daje urząd prowincji, awans do city (z Construction) i +3 do limitu oddziałów. | Etap „zarządca i prowincje” (po demo). |
 | 8 | **Warsztaty bez wsadu** (24% próbek), głównie odlewnie brązu bez cyny i kuźnie bez węgla w swojej osadzie. | `--sim-report`, 2026-11-22 | Było 30% przed #132 (regiony cyny, AI wybiera większe złoża) i #127 (AI dostawia smolarzy). Cyna leży zwykle w innej osadzie albo dalej. | Przy strojeniu AI po demo: dowóz wsadu między osadami przy mniejszym zapasie. |
 | 9 | **AI głównie łupi, rzadko zajmuje** (0,8 zajętej, 4,8 złupionych na grę). | `--sim-report`, 2026-11-22 | Mniej łupienia niż 2026-11-20 (11 na grę) dzięki bitwom w polu i zbiórce (#130). | Ocena Patryka w testach demo. |
@@ -22,6 +23,8 @@ gdy znajdziesz nowy, dopisz go z datą, źródłem i tym, co już wiadomo. Probl
 | Problem | PR |
 | --- | --- |
 | Lud bez miejsca na nowe pola dorastał do domów i głodował co zimę (wzrost patrzył tylko na domy i jedzenie w magazynie); teraz wzrost staje, gdy jedzenia ubywa i zostało < 2 racje (wariant C) | `feat/growth-needs-food` |
+| FPS klienta zmierzony na komputerze Patryka (Ryzen 5 3600XT, RTX 3060 Ti, 2560×1440, V-Sync 180 Hz): menu 180, gra ręczna 6 min średnio 165 (najniżej 98), dwie gry skryptowe po 10 min (×4 i maks.) średnio 180 | pomiar 2026-11-22 |
+| Duże ludy AI głodowały od 90. minuty (stałe progi jedzenia, domy i awanse bez zapasu na zimę, karawana 40 jedzenia) | `fix/ai-food-scale` |
 | Scenariusze: dodatkowe osady (`settlements`) zaczynały z pustym magazynem (w 04 jedzenie kończyło się po 28 s); teraz dostają zapas startowy (120 jedzenia, 100 drewna, 20 kamienia) | `docs/known-issues-before-demo` |
 | Wolny neolit, pierwszy narzędziarz ok. 13. minuty: teraz neolit 6,2 min, narzędziarz 10 min u wszystkich ludów | #129 |
 | Głód oddziału w polu niewidoczny w panelu: panel pokazuje juki, stan głodu i dowóz | sprawdzone 2026-11-21 (#131) |

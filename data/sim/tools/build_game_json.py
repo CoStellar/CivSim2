@@ -412,6 +412,11 @@ d["ai"]={"comment":"homesFoodMinutes: the AI builds new homes only while its foo
 # Patryk, 2026-11-21: a longer calm start for the AI (it was 8 minutes in code), and stables give twice the horses and keep 32.
 d["ai"]["peacefulStartMinutes"]=15
 d["ai"]["comment"]+=" peacefulStartMinutes: the AI declares no war in the first this many minutes of a game."
+# 2026-11-22 (long runs: big peoples starved after 90 minutes): food made must cover the winter, and big peoples build
+# several food makers at once.
+d["ai"]["foodMarginPercent"]=30
+d["ai"]["foodSitesPerPeople"]=400
+d["ai"]["comment"]+=" foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people."
 # AI battle (roadmap 7, 2026-11-21): retreat of the hurt, field battles before marching on, a muster in formation first.
 d["aiBattle"]={"comment":"retreatInjuredPercent: a unit at war with this share of its people wounded goes home to heal; retreatSizePercent: one with fewer people than this share of its size goes home and guards it. engageHexes: a seen enemy army this close to a soldier is fought first, by every soldier this close to it (a flank). An offensive starts from our settlement nearest the target: soldiers within musterFromHexes but farther than musterHexes gather there in formation, and the march starts once musterPercent of the power stands there.",
   "retreatInjuredPercent":50,"retreatSizePercent":30,"engageHexes":5,"musterHexes":3,"musterFromHexes":30,"musterPercent":70}
