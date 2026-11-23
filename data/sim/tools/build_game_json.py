@@ -443,6 +443,10 @@ if "inputRouteTripMinutes:" not in d["ai"]["comment"]:
 d["ai"]["inputMakerStoreMinutes"]=10
 if "inputMakerStoreMinutes:" not in d["ai"]["comment"]:
     d["ai"]["comment"]+=" inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall."
+# 2026-11-23 (known-issues 13): workshops idle for an ore no known deposit gives: more prospectors, looking farther.
+d["ai"]["starvedProspectors"]=2
+if "starvedProspectors:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" starvedProspectors: while our workshops use more of an ore (iron, copper...) than we make and no deposit of it we know is free for a mine, the AI keeps up to this many prospectors (else one) and sends them farther."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist

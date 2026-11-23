@@ -3748,7 +3748,7 @@
     "foodLowMinutes": 3
   },
   "ai": {
-    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game. foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people. inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have. inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall.",
+    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game. foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people. inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have. inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall. starvedProspectors: while our workshops use more of an ore (iron, copper...) than we make and no deposit of it we know is free for a mine, the AI keeps up to this many prospectors (else one) and sends them farther.",
     "homesFoodMinutes": 3,
     "smallPeople": 30,
     "peacefulStartMinutes": 15,
@@ -3758,7 +3758,8 @@
     "inputRouteTargetMinutes": 6,
     "inputRouteKeepMinutes": 2,
     "inputRoutesPerSettlement": 4,
-    "inputMakerStoreMinutes": 10
+    "inputMakerStoreMinutes": 10,
+    "starvedProspectors": 2
   },
   "aiBattle": {
     "comment": "retreatInjuredPercent: a unit at war with this share of its people wounded goes home to heal; retreatSizePercent: one with fewer people than this share of its size goes home and guards it. engageHexes: a seen enemy army this close to a soldier is fought first, by every soldier this close to it (a flank). An offensive starts from our settlement nearest the target: soldiers within musterFromHexes but farther than musterHexes gather there in formation, and the march starts once musterPercent of the power stands there.",

@@ -646,6 +646,31 @@ public static partial class SimAi
         return want;
     }
 
+    // 2026-11-23 (known-issues 13): deposits whose mine would feed workshops we have that use more of its good than we make,
+    // where no deposit of it we know is free for a mine (iron and copper smiths standing idle). Prospectors look for them.
+    internal static bool[] StarvedDeposits(SimGame g, Civ civ)
+    {
+        var want = new bool[g.Content.DepositSurvey.Length];
+        for (int good = 0; good < g.Content.Goods.Count; good++)
+        {
+            long demand = Demand(g, civ, good);
+            if (demand <= 0 || civ.MadeRate[good] >= demand)
+            {
+                continue;
+            }
+
+            foreach (BuildingType b in g.Content.Buildings)
+            {
+                if (b.Id > 0 && b.Produces[good] > 0 && b.OrDeposit > 0 && b.OrDeposit < want.Length && SimGame.Knows(civ, b) && !Buildable(g, civ, b))
+                {
+                    want[b.OrDeposit] = true;
+                }
+            }
+        }
+
+        return want;
+    }
+
     // 2026-11-22: what all our working buildings would use of a good a minute with every job filled. A workshop without its
     // input uses nothing, so the plain rate looked fine and more smiths went up while the first ones stood idle.
     private static long Demand(SimGame g, Civ civ, int good)
