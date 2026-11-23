@@ -16,9 +16,10 @@ internal abstract record UiItem
 }
 
 /// <summary>A title with a tile and a second line.</summary>
-internal sealed record HeaderItem(string Title, string Sub, Color Color, string Short) : UiItem
+/// <remarks>Pic: a picture ("layer/name") instead of the letters, in the colour of people PicCiv (-1: ours), grey when PicGrey.</remarks>
+internal sealed record HeaderItem(string Title, string Sub, Color Color, string Short, string? Pic = null, int PicCiv = -1, bool PicGrey = false) : UiItem
 {
-    public override string Sig => $"H{Title}|{Sub}|{Short}";
+    public override string Sig => $"H{Title}|{Sub}|{Short}|{Pic}|{PicCiv}|{PicGrey}";
 }
 
 /// <summary>A line of text.</summary>
@@ -67,7 +68,7 @@ internal sealed record ActItem(string Text, Action Do, string Tooltip = "", bool
 }
 
 /// <summary>A picture tile with a caption below: units to train and the like.</summary>
-internal sealed record TileCell(string Name, string Short, Color Color, string Tooltip, Action Do, bool Enabled, string Caption);
+internal sealed record TileCell(string Name, string Short, Color Color, string Tooltip, Action Do, bool Enabled, string Caption, string? Pic = null);
 
 /// <summary>A row of picture tiles that wraps.</summary>
 internal sealed record TilesItem(IReadOnlyList<TileCell> Tiles) : UiItem
@@ -186,7 +187,7 @@ internal static class UiRender
             {
                 var row = new HBoxContainer();
                 row.AddThemeConstantOverride("separation", 8);
-                row.AddChild(new Glyph(h.Color, h.Short, 40));
+                row.AddChild(new Glyph(h.Color, h.Short, h.Pic is null ? 40 : 48, icon: UiKit.PictureOf(h.Pic, h.PicCiv, h.PicGrey)));
                 var col = new VBoxContainer();
                 col.AddThemeConstantOverride("separation", 0);
                 col.AddChild(UiKit.Label(h.Title, 20, UiKit.Heading));
@@ -271,7 +272,11 @@ internal static class UiRender
                     var button = new Button { FocusMode = Control.FocusModeEnum.None, TooltipText = tile.Tooltip, Disabled = !tile.Enabled, CustomMinimumSize = new Vector2(UiKit.W(92), 40 + Ui.PixelTheme.FontSize) };
                     var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
                     inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-                    var glyph = new Glyph(tile.Enabled ? tile.Color : tile.Color.Darkened(0.5f), tile.Short, 32) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter };
+                    var glyph = new Glyph(tile.Enabled ? tile.Color : tile.Color.Darkened(0.5f), tile.Short, tile.Pic is null ? 32 : 40, icon: UiKit.PictureOf(tile.Pic))
+                    {
+                        MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+                        Modulate = tile.Enabled ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f),
+                    };
                     inner.AddChild(glyph);
                     Label cap = UiKit.Label(tile.Caption, 11, tile.Enabled ? UiKit.Text : UiKit.Muted);
                     cap.HorizontalAlignment = HorizontalAlignment.Center;

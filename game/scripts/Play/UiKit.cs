@@ -143,6 +143,36 @@ public static class UiKit
     /// <summary>Pictures for the interface (layer, name), in our people's colour; null: letters (set by the play screen).</summary>
     public static Func<string, string, Texture2D?>? Picture { get; set; }
 
+    /// <summary>Pictures in a people's colour (layer, name, people or -1 for ours, grey); set by the play screen.</summary>
+    public static Func<string, string, int, bool, Texture2D?>? CivPicture { get; set; }
+
+    /// <summary>The picture "layer/name" in a people's colour (-1: ours), or null for letters.</summary>
+    public static Texture2D? PictureOf(string? pic, int civ = -1, bool grey = false)
+    {
+        int slash = pic?.IndexOf('/') ?? -1;
+        return slash <= 0 ? null : Trimmed(CivPicture?.Invoke(pic![..slash], pic[(slash + 1)..], civ, grey));
+    }
+
+    private static readonly Dictionary<Texture2D, Texture2D> TrimmedCache = [];
+
+    // The picture cut to what is drawn on it (unit pictures leave room around their figures on the map), made once.
+    private static Texture2D? Trimmed(Texture2D? tex)
+    {
+        if (tex is null)
+        {
+            return null;
+        }
+
+        if (!TrimmedCache.TryGetValue(tex, out Texture2D? cut))
+        {
+            Rect2I used = tex.GetImage()?.GetUsedRect() ?? new Rect2I(0, 0, tex.GetWidth(), tex.GetHeight());
+            cut = used.Size.X <= 0 || used.Size == new Vector2I(tex.GetWidth(), tex.GetHeight()) ? tex : new AtlasTexture { Atlas = tex, Region = used };
+            TrimmedCache[tex] = cut;
+        }
+
+        return cut;
+    }
+
     /// <summary>The interface font (the pixel font when the theme is loaded).</summary>
     public static Font Font => Ui.PixelTheme.Current?.DefaultFont ?? ThemeDB.FallbackFont;
 

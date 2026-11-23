@@ -175,6 +175,9 @@ public partial class PlayGame : Node2D
     /// <summary>Script step: sets the zoom.</summary>
     public void ScriptZoom(float zoom) => _camera.Zoom = new Vector2(zoom, zoom);
 
+    /// <summary>Script step: scrolls the side panel to its end (for screenshots of what is low in it).</summary>
+    public void ScriptPanelEnd() => _inspectorScroll.ScrollVertical = 100000;
+
     /// <summary>Script step: opens the tab of the decision bar with this name (for screenshots).</summary>
     public void ScriptTab(string name)
     {
@@ -389,6 +392,7 @@ public partial class PlayGame : Node2D
         _overlay = new PlayOverlay { ZIndex = 50, Art = _art };
         PlayOverlay overlay = _overlay;
         UiKit.Picture = (layer, name) => overlay.Sprite(layer, name, _session?.PlayView?.Civ ?? 0);
+        UiKit.CivPicture = (layer, name, civ, grey) => overlay.Sprite(layer, name, civ < 0 ? _session?.PlayView?.Civ ?? 0 : civ, grey);
         AddChild(_overlay);
         BuildUi();
     }

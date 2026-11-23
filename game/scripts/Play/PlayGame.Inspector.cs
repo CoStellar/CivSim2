@@ -71,12 +71,12 @@ public partial class PlayGame
         bool mine = s.Civ == v.Civ;
         if (s.Remembered)
         {
-            items.Add(new HeaderItem(s.Name, $"{level.Name} of {PeopleName(v, s.Civ)} - as we last saw it", new Color("6a6a6a"), level.Name[..1]));
+            items.Add(new HeaderItem(s.Name, $"{level.Name} of {PeopleName(v, s.Civ)} - as we last saw it", new Color("6a6a6a"), level.Name[..1], "buildings/settlement_" + level.Key, s.Civ, true));
             items.Add(new LineItem("Out of sight. Send scouts to see what is there now.", UiKit.Muted, 14));
             return;
         }
 
-        items.Add(new HeaderItem(s.Name, mine ? level.Name : $"{level.Name} of {PeopleName(v, s.Civ)}", mine ? new Color("c8a050") : new Color("8a5050"), level.Name[..1]));
+        items.Add(new HeaderItem(s.Name, mine ? level.Name : $"{level.Name} of {PeopleName(v, s.Civ)}", mine ? new Color("c8a050") : new Color("8a5050"), level.Name[..1], "buildings/settlement_" + level.Key, s.Civ));
         if (s.FallenToUs)
         {
             int sid = s.Id;
@@ -198,7 +198,7 @@ public partial class PlayGame
                     + (ut.NeedsBuilding.Length > 0 ? $"\nNeeds a {ut.NeedsBuilding.Replace('_', ' ')} in the settlement." : "")
                     + (can ? "" : "\n\nNot enough people or goods here now.");
                 tiles.Add(new TileCell(ut.Name, UiKit.Short(ut.Name), ut.Army ? new Color("b84040") : new Color("4f8f7f"), tip,
-                    () => _session!.Play(PlayCommandKind.Train, sid, c: _trainSize > 0 && ut.MaxPeople > 0 ? size : 0, flag: shock, b: kind), can, $"{ut.Name}"));
+                    () => _session!.Play(PlayCommandKind.Train, sid, c: _trainSize > 0 && ut.MaxPeople > 0 ? size : 0, flag: shock, b: kind), can, $"{ut.Name}", "units/unit_" + ut.Key));
             }
 
             items.Add(new TilesItem(tiles));
@@ -383,7 +383,7 @@ public partial class PlayGame
 
         if (b.Remembered)
         {
-            items.Add(new HeaderItem(t.Name, $"{PeopleName(v, b.Civ)} - as we last saw it", new Color("6a6a6a"), UiKit.Short(t.Name)));
+            items.Add(new HeaderItem(t.Name, $"{PeopleName(v, b.Civ)} - as we last saw it", new Color("6a6a6a"), UiKit.Short(t.Name), "buildings/building_" + t.Key, b.Civ, true));
             items.Add(new LineItem("Out of sight. It may be gone or changed.", UiKit.Muted, 14));
             return;
         }
@@ -400,7 +400,7 @@ public partial class PlayGame
         bool mine = b.Civ == v.Civ;
         if (number == 0)
         {
-            items.Add(new HeaderItem(t.Name, mine ? state : $"{state} - {PeopleName(v, b.Civ)}", UiKit.GroupColor(t.Groups), UiKit.Short(t.Name)));
+            items.Add(new HeaderItem(t.Name, mine ? state : $"{state} - {PeopleName(v, b.Civ)}", UiKit.GroupColor(t.Groups), UiKit.Short(t.Name), "buildings/building_" + t.Key, b.Civ));
         }
         else
         {
@@ -570,7 +570,7 @@ public partial class PlayGame
     {
         PlayUnitInfo t = c.Units[u.Kind];
         string state = u.State == 0 ? "Training" : u.Fighting ? "FIGHTING" : u.State == 2 ? "Walking" : "Standing";
-        items.Add(new HeaderItem(t.Name, $"{u.People} people - {state}", t.Army ? new Color("b84040") : new Color("4f8f7f"), UiKit.Short(t.Name)));
+        items.Add(new HeaderItem(t.Name, $"{u.People} people - {state}", t.Army ? new Color("b84040") : new Color("4f8f7f"), UiKit.Short(t.Name), "units/unit_" + t.Key, u.Civ));
         if (u.Cargo is { } load && load != "nothing")
         {
             items.Add(new LineItem($"Carrying {load}", UiKit.Text, 14));
@@ -773,7 +773,7 @@ public partial class PlayGame
         string biome = content.Biomes[w.Biome[i]].Name;
         string relief = content.Reliefs[w.Relief[i]];
         string owner = w.Owner[i] < 0 ? "Nobody's land" : w.Owner[i] == _session.PlayView?.Civ ? "Our land" : "Land of another people";
-        items.Add(new HeaderItem(biome, $"{relief} - {owner}", new Color("5f7f4a"), UiKit.Short(biome)));
+        items.Add(new HeaderItem(biome, $"{relief} - {owner}", new Color("5f7f4a"), UiKit.Short(biome), $"biome/biome_{content.Biomes[w.Biome[i]].Key}_01"));
         // Only what we know of the ground (2026-11-19): beyond our land prospectors find the rock, surveyors the soil.
         if (w.Deposit[i] != 0)
         {
