@@ -1023,6 +1023,7 @@ def generate(root):
     for g in d["goods"]:
         good(g["key"]).save("goods", f"good_{g['key']}")
     finish(root)
+    generate_works()  # after finish: walls carry their own stone and wood texture
 
 
 # Patryk's own icons from the first CivSim (art/legacy/map_visuals, 32x32), used as they are for these goods.
@@ -1210,3 +1211,74 @@ def stone_wall(c, x0, x1, top, bottom, rgb):
     for y in range(top + 3, bottom, 4):  # courses of stone
         for x in range(x0 + (y // 4 % 2) * 3, x1, 6):
             c.px(x, y, r[1])
+
+
+# ------------------------------------------------------------------------------------------------ walls along hex edges
+
+EDGE_W, EDGE_H = 48, 16  # one hex edge (24 world units long) at 2x, the wall standing on its line
+
+
+def wall_edge():
+    """A stone wall segment along one hex edge, seen from above at a slant: courses of cut stone with mortar lines,
+    battlements on the outer side, lit from the top left. Drawn by the game only on the outside edges of a walled
+    area, like a border (Patryk, 2026-11-23)."""
+    c = canvas(EDGE_W, EDGE_H)
+    r = ramp((147, 138, 130))
+    top, bottom = 5, EDGE_H - 2
+    c.rect(0, top, EDGE_W - 1, bottom, r[2])
+    c.line(0, top, EDGE_W - 1, top, r[3])
+    c.line(0, bottom, EDGE_W - 1, bottom, r[0])
+    for row, y in enumerate(range(top + 1, bottom, 3)):  # courses of stone: mortar lines and staggered joints
+        c.line(0, y + 2, EDGE_W - 1, y + 2, r[1])
+        for x in range((row % 2) * 4, EDGE_W, 8):
+            c.line(x, y, x, y + 1, r[1])
+            c.px(x + 1, y, r[3])
+    for x in range(1, EDGE_W - 2, 6):  # battlements
+        c.rect(x, 1, x + 3, top - 1, r[2])
+        c.line(x, 1, x + 3, 1, r[4])
+        c.line(x + 3, 1, x + 3, top - 1, r[1])
+    c.outline(P(OUTLINE))
+    return c
+
+
+def wall_tower():
+    """A round tower where two wall segments meet (and at the ends of a wall)."""
+    c = canvas(20, 20)
+    r = ramp((147, 138, 130))
+    for y in range(20):
+        for x in range(20):
+            u, v = (x - 9.5) / 8.5, (y - 9.5) / 8.5
+            if u * u + v * v <= 1:
+                c.px(x, y, lit(r, u, v, math.sqrt(max(0.0, 1 - u * u - v * v))))
+    for a in range(0, 360, 45):  # merlons round the top
+        x = round(9.5 + 6 * math.cos(math.radians(a)))
+        y = round(9.5 + 6 * math.sin(math.radians(a)))
+        c.px(x, y, r[4])
+    c.disc(9.5, 9.5, 2.5, r[0])
+    c.outline(P(OUTLINE))
+    return c
+
+
+def palisade_edge():
+    """A palisade segment along one hex edge: sharpened logs side by side, each lit on its left, bark lines."""
+    c = canvas(EDGE_W, EDGE_H)
+    r = ramp((138, 86, 45))
+    for x in range(0, EDGE_W - 1, 4):
+        top = 2 if (x // 4) % 2 == 0 else 3
+        for y in range(top + 2, EDGE_H - 1):
+            c.px(x, y, r[3])
+            c.px(x + 1, y, r[2])
+            c.px(x + 2, y, r[1])
+        c.px(x + 1, top, r[3])
+        c.line(x, top + 1, x + 2, top + 1, r[2])
+        for y in range(top + 4, EDGE_H - 2, 4):  # bark
+            c.px(x + 1, y, r[0])
+    c.line(0, EDGE_H - 5, EDGE_W - 1, EDGE_H - 5, r[0])  # the binding rope
+    c.outline(P(OUTLINE))
+    return c
+
+
+def generate_works():
+    wall_edge().save("works", "work_wall_edge")
+    wall_tower().save("works", "work_wall_tower")
+    palisade_edge().save("works", "work_palisade_edge")

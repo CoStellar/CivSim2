@@ -86,7 +86,7 @@ public partial class MapView : Node2D
         _world = world;
         _period = HexLayout.MapSize(world.Width, world.Height);
         _hexMesh ??= BuildHexMesh(1f);
-        _hexMeshGrid ??= BuildHexMesh(0.93f);
+        _hexMeshGrid ??= BuildHexMesh(0.975f); // 2026-11-23 (Patryk): a thinner gap between hexes (was 0.93)
         _quadMesh ??= BuildQuadMesh();
         _hexMaterial ??= BuildHexMaterial(session.Content);
         _chunks.Clear();
@@ -643,6 +643,11 @@ public partial class MapView : Node2D
                     if (OverlayColors.Hidden(hiddenBy, 1f, i))
                     {
                         continue; // the followed civilization does not know this cell
+                    }
+
+                    if (world.Visibility[i] == MapChunkMessage.Unknown)
+                    {
+                        continue; // 2026-11-23 (Patryk): nothing of an unknown hex shows, not even its rivers
                     }
 
                     for (int e = 0; e < MapChunkMessage.RiverEdgesPerCell; e++)

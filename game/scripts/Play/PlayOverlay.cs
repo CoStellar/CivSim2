@@ -249,15 +249,22 @@ public partial class PlayOverlay : Node2D
     // Detail by zoom: 0 far (marks only), 1 middle (no small numbers), 2 near (everything).
     private int Detail => _zoom < 0.35f ? 0 : _zoom < 0.8f ? 1 : 2;
 
-    /// <summary>Hexes to highlight while placing (null = not placing).</summary>
-    public void SetPlaces(int[]? cells)
+    private readonly Dictionary<(int, int), int> _freeSlots = [];
+
+    /// <summary>Hexes to highlight while placing (null = not placing), with the free building places on each.</summary>
+    public void SetPlaces(int[]? cells, int[]? free = null)
     {
         _places.Clear();
+        _freeSlots.Clear();
         if (cells is not null)
         {
             for (int i = 0; i + 1 < cells.Length; i += 2)
             {
                 _places.Add((cells[i], cells[i + 1]));
+                if (free is not null && i / 2 < free.Length)
+                {
+                    _freeSlots[(cells[i], cells[i + 1])] = free[i / 2];
+                }
             }
         }
 
@@ -506,9 +513,23 @@ public partial class PlayOverlay : Node2D
             foreach (Vector2 c in Copies(col, row))
             {
                 // E12 (2026-11-20): a light outline, not green on green grass.
-                Vector2[] hex = Hex(c, 0.86f);
-                g.DrawPolygon(hex, [new Color(1f, 1f, 0.85f, 0.12f)]);
-                g.DrawPolyline([.. hex, hex[0]], new Color(1f, 0.95f, 0.55f, 0.95f), 3f);
+                Vector2[] hex = Hex(c, 0.9f);
+                g.DrawPolygon(hex, [new Color(1f, 1f, 0.85f, 0.08f)]);
+                g.DrawPolyline([.. hex, hex[0]], new Color(1f, 0.95f, 0.55f, 0.8f), 1.5f);
+
+                // 2026-11-23 (Patryk): the free building places on the hex, as slots.
+                if (_freeSlots.TryGetValue((col, row), out int free))
+                {
+                    for (int k = 0; k < 4; k++)
+                    {
+                        if ((free & (1 << k)) != 0)
+                        {
+                            Rect2 slot = SlotRect(c, 1 << k, 1f).Grow(-1.5f);
+                            g.DrawRect(slot, new Color(1f, 0.95f, 0.6f, 0.18f));
+                            g.DrawRect(slot, new Color(1f, 0.93f, 0.5f, 0.95f), false, 1.2f);
+                        }
+                    }
+                }
             }
         }
 
@@ -1040,6 +1061,8 @@ public partial class PlayOverlay : Node2D
     // planks over the river edges.
     private void PaintWorks(CanvasItem g, CivSim.Game.Net.ClientWorld w, int c0, int r0, int c1, int r1)
     {
+        var enclosed = new Dictionary<(int, int), bool>();
+        var towers = new Dictionary<(int, int), (Vector2 At, bool Grey)>();
         for (int row = r0; row <= r1; row++)
         {
             for (int col = c0; col <= c1; col++)
@@ -1084,22 +1107,7 @@ public partial class PlayOverlay : Node2D
 
                 if ((works & (2 | 4)) != 0)
                 {
-                    bool wall = (works & 4) != 0;
-                    Color edge = wall ? new Color(0.72f, 0.72f, 0.7f) : new Color(0.55f, 0.38f, 0.2f);
-                    edge = grey ? Grey(edge) : edge;
-                    Vector2[] ring = Closed(Hex(c, 0.9f));
-                    if (wall)
-                    {
-                        g.DrawPolyline(ring, new Color(0.2f, 0.2f, 0.2f, 0.9f), 6);
-                        g.DrawPolyline(ring, edge, 4);
-                    }
-                    else
-                    {
-                        for (int k = 0; k + 1 < ring.Length; k++)
-                        {
-                            g.DrawDashedLine(ring[k], ring[k + 1], edge, 3, 4);
-                        }
-                    }
+                    WallEdges(g, w, col, row, c, (works & 4) != 0 ? 4 : 2, grey, enclosed, towers);
                 }
 
                 for (int e = 0; e < 3; e++)
@@ -1118,6 +1126,147 @@ public partial class PlayOverlay : Node2D
                     g.DrawLine(mid - across + along, mid + across + along, plank, 2);
                     g.DrawRect(new Rect2(mid - new Vector2(4, 4), new Vector2(8, 8)), plank);
                 }
+            }
+        }
+
+        DrawTowers(g, towers);
+    }
+
+    // Neighbour across edge e (0 N, 1 NE, 2 SE, 3 S, 4 SW, 5 NW) of a flat-top hex, as the map's borders count them.
+    private static (int Col, int Row) Across(int col, int row, int e)
+    {
+        bool odd = (col & 1) == 1;
+        return e switch
+        {
+            0 => (col, row - 1),
+            1 => (col + 1, odd ? row : row - 1),
+            2 => (col + 1, odd ? row + 1 : row),
+            3 => (col, row + 1),
+            4 => (col - 1, odd ? row + 1 : row),
+            _ => (col - 1, odd ? row : row - 1),
+        };
+    }
+
+    // Corners of the six edges N, NE, SE, S, SW, NW (indexes into HexLayout.Corners).
+    private static readonly (int A, int B)[] EdgeCornerPairs = [(4, 5), (5, 0), (0, 1), (1, 2), (2, 3), (3, 4)];
+
+    // True when a hex without this work lies inside a ring of it: a search over hexes without the work runs out before
+    // it gets far (Patryk, 2026-11-23: a wall is drawn only on the outer edges of the area it closes, like a border).
+    private static bool Enclosed(CivSim.Game.Net.ClientWorld w, int col, int row, int bit, Dictionary<(int, int), bool> cache)
+    {
+        if (row < 0 || row >= w.Height)
+        {
+            return false;
+        }
+
+        int start = w.Index(col, row);
+        if (cache.TryGetValue((start, bit), out bool known))
+        {
+            return known;
+        }
+
+        var seen = new HashSet<int> { start };
+        var open = new Queue<(int, int)>();
+        open.Enqueue((col, row));
+        bool inside = true;
+        while (open.Count > 0)
+        {
+            (int cc, int rr) = open.Dequeue();
+            if (seen.Count > 400)
+            {
+                inside = false; // it goes on: open land, not a closed courtyard
+                break;
+            }
+
+            for (int e = 0; e < 6; e++)
+            {
+                (int nc, int nr) = Across(cc, rr, e);
+                if (nr < 0 || nr >= w.Height)
+                {
+                    inside = false;
+                    break;
+                }
+
+                int n = w.Index(nc, nr);
+                if ((w.Works[n] & bit) == 0 && seen.Add(n))
+                {
+                    open.Enqueue((nc, nr));
+                }
+            }
+
+            if (!inside)
+            {
+                break;
+            }
+        }
+
+        foreach (int cell in seen)
+        {
+            cache[(cell, bit)] = inside;
+        }
+
+        return inside;
+    }
+
+    // A wall or palisade on the hex's edges that face out of the walled area: not between two walled hexes, not
+    // towards the courtyard it closes. Pictures along the edge, round towers where segments of a stone wall meet.
+    private void WallEdges(CanvasItem g, CivSim.Game.Net.ClientWorld w, int col, int row, Vector2 c, int bit, bool grey,
+        Dictionary<(int, int), bool> enclosed, Dictionary<(int, int), (Vector2 At, bool Grey)> towers)
+    {
+        bool wall = bit == 4;
+        Texture2D? tex = Sprite("works", wall ? "work_wall_edge" : "work_palisade_edge", 0, grey);
+        for (int e = 0; e < 6; e++)
+        {
+            (int nc, int nr) = Across(col, row, e);
+            bool outside = nr < 0 || nr >= w.Height || ((w.Works[w.Index(nc, nr)] & bit) == 0 && !Enclosed(w, nc, nr, bit, enclosed));
+            if (!outside)
+            {
+                continue;
+            }
+
+            (int ia, int ib) = EdgeCornerPairs[e];
+            Vector2 a = c + HexLayout.Corners[ia];
+            Vector2 b = c + HexLayout.Corners[ib];
+            Vector2 mid = (a + b) * 0.5f;
+            Vector2 outward = (mid - c).Normalized();
+            float angle = (b - a).Angle();
+            // The picture's top (battlements, the logs' points) faces out of the walled area.
+            if (new Vector2(MathF.Sin(angle), -MathF.Cos(angle)).Dot(outward) < 0)
+            {
+                angle += MathF.PI;
+            }
+
+            float length = (b - a).Length();
+            if (tex is not null)
+            {
+                g.DrawSetTransform(mid - (outward * 3f), angle, Vector2.One);
+                g.DrawTextureRect(tex, new Rect2(-length / 2, -4, length, 8), false);
+                g.DrawSetTransform(Vector2.Zero, 0, Vector2.One);
+            }
+            else
+            {
+                Color edge = wall ? new Color(0.72f, 0.72f, 0.7f) : new Color(0.55f, 0.38f, 0.2f);
+                g.DrawLine(a - (outward * 3f), b - (outward * 3f), grey ? Grey(edge) : edge, 4);
+            }
+
+            if (wall)
+            {
+                foreach (Vector2 p in new[] { a, b })
+                {
+                    Vector2 at = p - (outward * 3f);
+                    towers[((int)MathF.Round(p.X), (int)MathF.Round(p.Y))] = (at, grey);
+                }
+            }
+        }
+    }
+
+    private void DrawTowers(CanvasItem g, Dictionary<(int, int), (Vector2 At, bool Grey)> towers)
+    {
+        foreach (((int, int) _, (Vector2 at, bool grey)) in towers)
+        {
+            if (Sprite("works", "work_wall_tower", 0, grey) is { } tower)
+            {
+                g.DrawTextureRect(tower, new Rect2(at - new Vector2(5, 5), new Vector2(10, 10)), false);
             }
         }
     }

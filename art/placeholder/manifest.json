@@ -1271,6 +1271,21 @@
    "file": "units/unit_workers_idle_01.png",
    "width": 32,
    "height": 32
+  },
+  {
+   "file": "works/work_palisade_edge.png",
+   "width": 48,
+   "height": 16
+  },
+  {
+   "file": "works/work_wall_edge.png",
+   "width": 48,
+   "height": 16
+  },
+  {
+   "file": "works/work_wall_tower.png",
+   "width": 20,
+   "height": 20
   }
  ]
 }

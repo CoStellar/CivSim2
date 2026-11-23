@@ -226,6 +226,11 @@ public partial class Main : Node2D
             {
                 demo = [.. demo, (3, g => g.ScriptRoad())];
             }
+            else if (_playWindow == "Place")
+            {
+                // Placing a building (2026-11-23): the free places of every hex it may go on show as slots.
+                demo = [(_playSeconds - 2, g => g.ScriptPlace("potter")), (_playSeconds - 1.5, g => g.ScriptZoom(2.2f))];
+            }
             else if (_playWindow is "Close" or "Closest")
             {
                 // The pictures from near (decisions G1-G6, 2026-11-23): the map zoomed in on our first settlement.

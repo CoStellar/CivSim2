@@ -301,6 +301,14 @@ drogi do tego celu w ostatnich 5 sekundach, idzie najpierw tam (krótkie szukani
 `shareSeconds`, `joinSearch`). Dotyczy sprawdzenia drogi przy rozkazie ataku i marszu za celem. Wyprawa szuka więc długiej drogi raz,
 nie raz na oddział. Oddziały idą jedną drogą (kolumną), a w zasięgu celu rozchodzą się do walki jak dotąd.
 
+## Mury i palisady na mapie (2026-11-23, prośba Patryka)
+
+Mur i palisada działają jak granica cywilizacji: rysujesz pierścień heksów (np. koło wokół osady), a mur widać tylko na
+zewnętrznych krawędziach obszaru, który pierścień zamyka. Między dwoma heksami muru i od strony dziedzińca muru nie ma.
+Zasady się nie zmieniają: każdy heks pierścienia ma mur (cena i czas na heks jak dotąd), a wróg nie wejdzie na heks muru,
+dopóki go nie rozbije. Grafika: kamienne bloki z blankami i okrągłe wieże tam, gdzie odcinki się spotykają; palisada
+to zaostrzone pale.
+
 ## Czego jeszcze nie ma (kolejne paczki)
 
 AI walki (formacje, flanki, odskoki jazdy).
