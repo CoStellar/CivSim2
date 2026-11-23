@@ -276,7 +276,9 @@ public static class OverlayColors
             return (Colors.Black, 0);
         }
 
+        // 2026-11-23: a faint tint only (the deposit's picture shows near; far away the tint tells where they are), so the
+        // layer can be on in play without painting whole hexes over.
         Color c = Rgb(content.Deposits[d - 1].Color);
-        return (w.DepositDepth[i] == 0 ? c : c.Darkened(0.5f), 1);
+        return (w.DepositDepth[i] == 0 ? c : c.Darkened(0.5f), 0.22f);
     }
 }

@@ -35,6 +35,8 @@ Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud j
   6. `12_roads` (2026-11-23, grafiki): nasze miasto w średniowieczu z gotowymi drogami w sześciu kierunkach (na zmianę droga
      i ścieżka, z mostami na rzekach), rowem (pierścień 2), murem (pierścień 3) i akweduktem (pierścień 4). Do oglądania grafik
      dróg i prac. Nowe klucze scenariusza: `roadStar` i `workRings`.
+  7. `13_deposits` (2026-11-23, grafiki): my w epoce brązu z miasteczkiem; cała mapa znana i przeszukana (nowy klucz
+     `surveyed`), więc widać wszystkie złoża: naszych er z obrazkami, rudy późniejszych er jako „???”.
 - **Testy:** `ScenarioTests` sprawdza każdy plik: era, poziom, budynki, jednostki i wojny. Każdą grę puszcza też na 2 minuty. Tak samo będę testował wojnę (scenariusz zamiast ręcznego ustawiania w każdym teście).
 
 ## Zapis i wczytanie partii (2026-11-20)
