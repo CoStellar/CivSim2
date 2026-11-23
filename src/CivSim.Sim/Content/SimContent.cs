@@ -737,6 +737,15 @@ public sealed class SimContent
     /// <summary>16B (2026-11-20): the AI builds new homes only with food for this many minutes of eating (ai.homesFoodMinutes).</summary>
     public int AiHomesFoodMinutes { get; init; } = 3;
 
+    /// <summary>
+    /// 2026-11-22: outside winter the AI wants food made to exceed its eating by this percent (ai.foodMarginPercent), so the
+    /// summer surplus covers the next winter; short of it, it builds food and no new homes.
+    /// </summary>
+    public int AiFoodMarginPercent { get; init; } = 30;
+
+    /// <summary>2026-11-22: the AI builds one more food building at a time per this many people (ai.foodSitesPerPeople).</summary>
+    public int AiFoodSitesPerPeople { get; init; } = 400;
+
     /// <summary>17B (2026-11-20): below this many people the AI trains no units but settlers and builds no workplace while jobs are free (ai.smallPeople).</summary>
     public int AiSmallPeople { get; init; } = 30;
 
@@ -1687,6 +1696,8 @@ public sealed class SimContent
             } : new AiBattleRules(),
             AiPeacefulStartMinutes = root.TryGetProperty("ai", out JsonElement aiEl3) && aiEl3.TryGetProperty("peacefulStartMinutes", out JsonElement psm) ? psm.GetInt32() : 15,
             AiSmallPeople = root.TryGetProperty("ai", out JsonElement aiEl2) && aiEl2.TryGetProperty("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
+            AiFoodMarginPercent = root.TryGetProperty("ai", out JsonElement aiEl4) && aiEl4.TryGetProperty("foodMarginPercent", out JsonElement fmp) ? fmp.GetInt32() : 30,
+            AiFoodSitesPerPeople = root.TryGetProperty("ai", out JsonElement aiEl5) && aiEl5.TryGetProperty("foodSitesPerPeople", out JsonElement fsp) ? fsp.GetInt32() : 400,
             FoodLowMinutes = root.TryGetProperty("alerts", out JsonElement alEl) && alEl.TryGetProperty("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryGetProperty("upgradeCaravans", out JsonElement ucEl)
                 ? new UpgradeCaravanRules(ucEl.GetProperty("extraPercent").GetInt32(), ucEl.GetProperty("aiRetrySeconds").GetInt32() * TicksPerSecond)
