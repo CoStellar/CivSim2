@@ -675,6 +675,7 @@ def main():
             if game_art.MASK[y][x]:
                 template.putpixel((x, y), (255, 255, 255, 255))
     template.save(os.path.join(ROOT, "art", "templates", f"hex_template_{game_art.HW}x{game_art.HH}.png"))
+    game_art.generate_alerts()  # 2026-11-23: a picture for every kind of alert
     game_art.generate_deposits(deposits)  # 2026-11-23: deposits at 2x in the style of the map, and the "???" sign
     for level in ("camp", "hearth", "village", "walled", "town"):
         for state in ("active", "abandoned", "ruins"):

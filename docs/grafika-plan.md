@@ -277,3 +277,22 @@ Podgląd w grze: scenariusz `13_deposits`.
 
 Podgląd w grze: okno zrzutu `--play-window PanelEnd` (panel przewinięty do przycisków szkolenia).
 
+## 15. Ikony alertów (2026-11-23)
+
+Każdy rodzaj alertu ma swoją ikonę zamiast znaku „!”. To okrągła plakietka: czerwona przy zagrożeniu (atak, wróg blisko, głód),
+bursztynowa przy ostrzeżeniu. W środku znak z ciemnym konturem:
+
+| Alert | Znak |
+| --- | --- |
+| osada atakowana | skrzyżowane miecze |
+| wróg blisko | oko |
+| głód | pusta miska |
+| brak dobra, warsztat stoi | ikona tego dobra (gdy wiadomo, którego), inaczej skrzynia |
+| brak domów | dom |
+| pełny magazyn | ikona tego dobra, inaczej stos skrzyń |
+| budowie brakuje materiałów | cegła |
+| ubrania na zimę | płatek śniegu |
+| racje dla oddziałów | worek |
+| jedzenie się kończy | kłos |
+| nic się nie bada | księga |
+

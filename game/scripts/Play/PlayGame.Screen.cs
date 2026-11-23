@@ -581,7 +581,12 @@ public partial class PlayGame
             b.MouseExited += () => b.AddThemeStyleboxOverride("panel", normal);
             var inner = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
             inner.AddThemeConstantOverride("separation", 6);
-            inner.AddChild(new Glyph(color, "!", 26, round: true) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+            // 2026-11-23: a picture per kind of alert; for a good that is missing or full, the good's own picture.
+            Texture2D? alertPic = (a.Kind is 3 or 5) && a.Good >= 0 && _session?.PlayContent is { } pc && a.Good < pc.Goods.Count
+                ? UiKit.Picture?.Invoke("goods", "good_" + pc.Goods[a.Good].Key)
+                : null;
+            alertPic ??= UiKit.Picture?.Invoke("ui", "alert_" + a.Kind);
+            inner.AddChild(new Glyph(color, "!", alertPic is null ? 26 : 36, round: true, icon: alertPic) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
             Label text = UiKit.Label(a.Text, 13, UiKit.Text, wrap: true);
             text.MouseFilter = Control.MouseFilterEnum.Ignore;
             text.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
