@@ -100,13 +100,36 @@ public static partial class SimAi
                 continue;
             }
 
-            // Accept terms no worse than the course of the war suggests, with some give from peaceful characters. E1
-            // (2026-11-19): tribute only after real losses (tributeNeedsKills people killed by them).
-            int fair = g.SuggestedTribute(offer.From, civ.Id);
-            bool hurt = g.Score(offer.From, civ.Id) >= g.Content.War.TributeNeedsKills;
-            bool accept = offer.TributePercent <= 0 ? offer.TributePercent <= fair + ((100 - civ.Aggression) / 10)
-                : hurt && offer.TributePercent <= fair + ((100 - civ.Aggression) / 10);
-            g.Apply(new AnswerPeaceCommand(civ.Id, offer.From, accept));
+            g.Apply(new AnswerPeaceCommand(civ.Id, offer.From, AcceptsPeace(g, civ, offer)));
+            continue;
         }
+    }
+
+    /// <summary>
+    /// 5A (ADR 0030): the AI values the terms in worth and takes them when they are no worse than the course of the war asks,
+    /// with up to peace.aiGiveMarginPercent more give the more peaceful it is; 3B: a long peace is welcome while it loses,
+    /// a short one while it wins. E1: it gives anything only after real losses or when weary.
+    /// </summary>
+    internal static bool AcceptsPeace(SimGame g, Civ civ, PeaceOffer offer)
+    {
+        PeaceRules r = g.Content.Peace;
+        long fair = g.FairWorth(civ.Id, offer.From); // what the proposer should give us (negative: we should give)
+        long value = offer.Terms.IsWhite ? 0 : (offer.Terms.WeGive ? 1 : -1) * g.TermsWorth(offer.Terms);
+        int length = Math.Clamp(offer.Terms.Length, 0, r.Minutes.Length - 1);
+        int margin = r.AiGiveMarginPercent * (100 - civ.Aggression) / 100;
+        int[] lengthPct = fair < 0 ? r.AiLosingLengthPercent : r.AiWinningLengthPercent;
+        margin += length < lengthPct.Length ? lengthPct[length] : 0;
+        if (value < 0)
+        {
+            bool hurt = g.Score(offer.From, civ.Id) >= g.Content.War.TributeNeedsKills || g.Weariness(civ.Id, offer.From) >= g.Content.Weariness.AiPeaceAt;
+            if (!hurt)
+            {
+                return false;
+            }
+        }
+
+        // We take terms worth at least what the war asks, less our margin of that (or of a tenth of the offer when the war asks nothing).
+        long basis = Math.Max(Math.Abs(fair), Math.Abs(value) / 10);
+        return value >= fair - (basis * margin / 100);
     }
 }

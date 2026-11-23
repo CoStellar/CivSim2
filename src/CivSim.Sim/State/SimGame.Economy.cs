@@ -162,6 +162,11 @@ public sealed partial class SimGame
             Settlement s = Settlements[b.Settlement];
             long boost = 100 + Bonus(civ, EffectKind.Production, t.Key, t.Groups) + Support(s, t) + WaterBonus(b.Cell, t);
             long work = s.WorkPermille * (winter ? t.WinterPercent : 100) / 100 * s.WorkersFedPermille / 1000;
+            if (t.HasInputs && civ.WarWorkLoss > 0)
+            {
+                work = work * (100 - civ.WarWorkLoss) / 100; // 7.2A: war weariness slows the workshops
+            }
+
             for (int g = 0; g < goods; g++)
             {
                 long made = t.Produces[g] * b.Workers * b.YieldPercent / 100 * boost / 100 * EventProduction(civ, g) / 100 * work / 1000;

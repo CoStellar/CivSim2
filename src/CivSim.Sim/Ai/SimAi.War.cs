@@ -141,13 +141,16 @@ public static partial class SimAi
             Settlement? target = atWar && (idle.Count == 0 || power <= 0) ? null : NearestKnownSettlement(g, civ, other);
             if (atWar)
             {
-                // Peace when the war has turned against us or dragged on; the course of the war sets the terms.
+                // Peace when the war has turned against us, when we are weary of it (7.1A), or now and then; the course of the
+                // war sets the terms (4A): a winner demands what the war gives it, a loser offers a white peace, and goods
+                // once it is very weary.
                 int mine = g.Score(civ.Id, other.Id);
                 int theirs = g.Score(other.Id, civ.Id);
-                if ((theirs > mine + 20 || g.AiRandom.NextInt(100) < 3) && !g.PeaceOffers.Exists(o => o.From == civ.Id && o.To == other.Id))
+                int weary = g.Weariness(civ.Id, other.Id);
+                if ((theirs > mine + 20 || weary >= g.Content.Weariness.AiPeaceAt || g.AiRandom.NextInt(100) < 3)
+                    && !g.PeaceOffers.Exists(o => o.From == civ.Id && o.To == other.Id))
                 {
-                    bool early = g.Ticks - g.WarStart(civ.Id, other.Id) < g.Content.War.TributeAfterTicks; // 1C: no tribute yet
-                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, early ? 0 : g.SuggestedTribute(civ.Id, other.Id)));
+                    g.Apply(new ProposePeaceCommand(civ.Id, other.Id, PeaceOffer(g, civ, other)));
                 }
 
                 if (target is not null && fresh.Count > 0 && power > 0)
@@ -422,5 +425,27 @@ public static partial class SimAi
         }
 
         return best;
+    }
+
+    // The terms the AI offers: losing, a long white peace (goods once very weary); winning, the suggested terms for a short one.
+    private static PeaceTerms PeaceOffer(SimGame g, Civ civ, Civ other)
+    {
+        int lengths = g.Content.Peace.Minutes.Length;
+        long fair = g.FairWorth(civ.Id, other.Id);
+        if (fair > 0)
+        {
+            return g.SuggestTerms(civ.Id, other.Id, 0);
+        }
+
+        if (fair < 0 && g.Weariness(civ.Id, other.Id) >= g.Content.Weariness.AiPayAt)
+        {
+            PeaceTerms gift = g.GiftTerms(civ, other, -fair, lengths - 1);
+            if (gift.Goods.Count > 0)
+            {
+                return gift;
+            }
+        }
+
+        return PeaceTerms.White(lengths - 1);
     }
 }

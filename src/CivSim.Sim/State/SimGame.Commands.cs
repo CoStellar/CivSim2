@@ -104,7 +104,7 @@ public sealed partial class SimGame
             EndRouteCommand c => EndRoute(civ, c.Route),
             DeclareWarCommand c => DeclareWar(civ, c.Other, surprise: false),
             AttackCommand c => Attack(civ, c.Unit, c.Cell),
-            ProposePeaceCommand c => NoPeace ? "This test scenario allows no peace." : ProposePeace(civ, c.Other, c.TributePercent),
+            ProposePeaceCommand c => NoPeace ? "This test scenario allows no peace." : ProposePeace(civ, c.Other, c.Terms),
             AnswerPeaceCommand c => AnswerPeace(civ, c.From, c.Accept),
             DisbandCommand c => Disband(civ, c.Unit),
             TakeSettlementCommand c => TakeSettlement(civ, c.Settlement, c.Choice),

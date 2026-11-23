@@ -34,7 +34,7 @@ public sealed class DecisionTests
     }
 
     [Fact]
-    public void TheAiPaysNoTributeBeforeItLostPeople()
+    public void NobodyDemandsBeforeABattleAndTheAiTakesAWhitePeace()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         Civ a = g.Civs[0];
@@ -46,11 +46,10 @@ public sealed class DecisionTests
             g.Tick(); // 1C: tribute may be asked for only after 2 minutes of war
         }
 
-        Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 5)));
+        // ADR 0030 (6A): no battle yet, so nobody is ahead and nobody may demand (E1 holds by itself).
+        Assert.NotNull(g.Apply(new ProposePeaceCommand(a.Id, b.Id, new PeaceTerms(false, 0, -1, [(Content.Food, SimContent.One)]))));
         b.IsAi = true;
-        SimAi.Think(g, b);
-        Assert.True(g.AtWar(a.Id, b.Id)); // refused: no battle yet (E1)
-        Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 0)));
+        Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, PeaceTerms.White())));
         SimAi.Think(g, b);
         Assert.False(g.AtWar(a.Id, b.Id)); // a plain peace is fine
     }

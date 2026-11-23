@@ -843,6 +843,7 @@ public sealed partial class SimGame
         if (byCiv >= 0)
         {
             Scores()[(byCiv * Civs.Count) + u.Civ] += dead;
+            AddLoss(u.Civ, byCiv, dead);
             CreditNear(byCiv, byKind, u.Cell, dead);
         }
 

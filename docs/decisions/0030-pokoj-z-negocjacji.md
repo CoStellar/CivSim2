@@ -1,7 +1,7 @@
 # ADR 0030: Pokój z negocjacji
 
-**Status:** przyjęta w części, 2026-11-23. Punkty 1–6 to decyzje Patryka z kwestionariusza (wszystkie rekomendacje).
-Punkt 7 (zmęczenie wojną) to propozycja i czeka na decyzję Patryka. Roadmapa: zadanie 8.
+**Status:** przyjęta, 2026-11-23. Punkty 1–6: decyzje Patryka z kwestionariusza (wszystkie rekomendacje). Punkt 7: decyzja Patryka
+z 2026-11-23, wszystkie rekomendacje (7.1A, 7.2A, 7.3A, 7.4B, 7.5B). Wdrożenie: PR `feat/peace-negotiation`, opis w `docs/sim/walka.md`. Roadmapa: zadanie 8.
 
 ## Kontekst
 
@@ -28,7 +28,7 @@ Wojna nic nie kosztowała z samego trwania: lud mógł walczyć bez końca, pók
    spokojnych charakterów. Tak samo liczy, czego sama żąda od gracza.
 6. **Kto żąda (6A):** tylko strona z lepszym wynikiem wojny. Przegrywający może proponować biały pokój albo sam coś oddać.
 
-## 7. Propozycja: zmęczenie wojną (do decyzji Patryka)
+## 7. Zmęczenie wojną (decyzja Patryka z 2026-11-23: 7.1A, 7.2A, 7.3A, 7.4B, 7.5B)
 
 Pytanie Patryka (2026-11-23): negocjuje się wtedy, gdy jedno z państw nie może już udźwignąć wojny, a zaatakowanemu, który wygrywa,
 zwycięstwo musi się opłacić. Jak to wyglądało w historii?
@@ -66,7 +66,7 @@ Spada powoli w pokoju. Proponowane skutki:
 | | B | Tylko informacja na ekranie, bez wpływu na AI. |
 | 7.2 | **A (rekomendacja)** | Zmęczenie kosztuje: od 50 wzwyż mniej pracy w warsztatach (do −20% przy 100), bo ludzie są w wojsku i w żałobie. Gracz to odczuwa, nie tylko widzi. |
 | | B | Bez kar, tylko wpływ na AI. |
-| 7.3 | **A (rekomendacja)** | Kto wypowiedział wojnę i przegrał, oddaje o 25% więcej (odszkodowanie dla zaatakowanego). Zaatakowany, który wygrywa, może żądać osady także 12 heksów od **każdej** swojej oblężonej wcześniej osady (pas ochronny). |
+| 7.3 | **A (rekomendacja)** | Kto wypowiedział wojnę i przegrał, oddaje o 25% więcej (odszkodowanie dla zaatakowanego). Zaatakowany, który wygrywa, może żądać osady także 12 heksów od **każdej** swojej oblężonej wcześniej osady (pas ochronny). *Przy wdrożeniu: oblężona osada to nasza ziemia, więc pas ochronny już obejmuje zasada 2B (12 heksów od naszej ziemi); nie ma osobnej reguły.* |
 | | B | Bez premii dla zaatakowanego. |
 | 7.4 | A | Danina w ratach przez okres pokoju (3, 6 albo 10 minut). Złamanie pokoju zatrzymuje raty. |
 | | **B (rekomendacja na demo)** | Danina od razu, jak dziś (jedna karawana). Raty to dobry pomysł na po demo. |

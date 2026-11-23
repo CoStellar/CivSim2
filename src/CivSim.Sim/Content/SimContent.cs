@@ -444,11 +444,94 @@ public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int High
     /// <summary>Most food, percent of the payer's, a tribute takes (E3).</summary>
     public int TributeFoodMaxPercent { get; init; } = 10;
 
-    /// <summary>Truce after peace, seconds.</summary>
-    public int TruceSeconds { get; init; } = 180;
-
     /// <summary>Most wars a people may be in at once (design, chapter 8: 2-3).</summary>
     public int MaxWars { get; init; } = 3;
+}
+
+/// <summary>
+/// Peace from negotiation (ADR 0030, Patryk 2026-11-23): goods and a settlement as terms, a chosen length of peace, and terms
+/// valued in worth (the <c>peace</c> section of the data).
+/// </summary>
+public sealed record PeaceRules
+{
+    /// <summary>3B: the lengths of peace one may choose, minutes.</summary>
+    public int[] Minutes { get; init; } = [3, 6, 10];
+
+    /// <summary>3B: reputation for breaking a peace of each length, percent of the surprise attack's cost.</summary>
+    public int[] BreakPercent { get; init; } = [100, 100, 200];
+
+    /// <summary>2B: a settlement may be demanded when our army besieges it or it lies this close to our land.</summary>
+    public int SettlementHexes { get; init; } = 12;
+
+    /// <summary>5A: worth of a settlement: this many food units per person ...</summary>
+    public int SettlementWorthPerPerson { get; init; } = 10;
+
+    /// <summary>5A: ... plus this percent of the price of its finished buildings.</summary>
+    public int SettlementBuildingPercent { get; init; } = 50;
+
+    /// <summary>5A: one percent of the loser's wealth per this many points of war score lead.</summary>
+    public int ScorePerPercent { get; init; } = 5;
+
+    /// <summary>7.1A: one percent of the loser's wealth per this many points of weariness lead.</summary>
+    public int WearinessPerPercent { get; init; } = 4;
+
+    /// <summary>Most of its wealth (goods and settlements but its first), percent, the course of a war asks a loser to give.</summary>
+    public int MaxPercent { get; init; } = 40;
+
+    /// <summary>7.3A: a loser who declared the war gives this much more, percent.</summary>
+    public int AggressorExtraPercent { get; init; } = 25;
+
+    /// <summary>5A: the most peaceful AI gives or forgives this much more than the course of the war asks, percent (0 for the most warlike).</summary>
+    public int AiGiveMarginPercent { get; init; } = 20;
+
+    /// <summary>3B: the AI's margin changes by these percents for each length of peace while it loses (longer is welcome).</summary>
+    public int[] AiLosingLengthPercent { get; init; } = [-10, 0, 10];
+
+    /// <summary>3B: ... and by these while it wins (shorter is welcome).</summary>
+    public int[] AiWinningLengthPercent { get; init; } = [10, 0, -10];
+}
+
+/// <summary>
+/// 7 (ADR 0030, Patryk 2026-11-23): war weariness of a people in each war, 0-100 points: it grows with the length of the war,
+/// losses, hunger, besieged, sacked and taken settlements and raided caravans, and falls in peace.
+/// </summary>
+public sealed record WearinessRules
+{
+    /// <summary>Points a minute of war.</summary>
+    public int PerMinute { get; init; } = 1;
+
+    /// <summary>Points per one percent of the people killed by the enemy.</summary>
+    public int PerLostPercent { get; init; } = 2;
+
+    /// <summary>Points a minute while some settlement of ours is hungry.</summary>
+    public int HungerPerMinute { get; init; } = 2;
+
+    /// <summary>Points a minute for each settlement of ours the enemy besieges.</summary>
+    public int BesiegedPerMinute { get; init; } = 2;
+
+    /// <summary>Points when the enemy sacks a settlement of ours.</summary>
+    public int Sacked { get; init; } = 10;
+
+    /// <summary>Points when the enemy takes or razes a settlement of ours.</summary>
+    public int Taken { get; init; } = 15;
+
+    /// <summary>Points when the enemy raids a caravan of ours.</summary>
+    public int CaravanRaided { get; init; } = 3;
+
+    /// <summary>Points a minute it falls in peace.</summary>
+    public int PeaceFallPerMinute { get; init; } = 5;
+
+    /// <summary>7.2A: from this weariness our workshops (buildings that use goods) work less ...</summary>
+    public int WorkFrom { get; init; } = 50;
+
+    /// <summary>7.2A: ... down to this many percent less at 100.</summary>
+    public int WorkMaxLossPercent { get; init; } = 20;
+
+    /// <summary>7.1A: at this weariness the AI looks for peace.</summary>
+    public int AiPeaceAt { get; init; } = 60;
+
+    /// <summary>At this weariness a losing AI offers goods for peace, not only a white peace.</summary>
+    public int AiPayAt { get; init; } = 80;
 }
 
 /// <summary>Choosing the start (startPhase in the data): ticks to pick, the block radius and its fuzz, the scoring radii.</summary>
@@ -786,6 +869,12 @@ public sealed class SimContent
     public SupplyRules Supply { get; init; } = new(3, 4, 10, 100);
 
     /// <summary>Sieges and garrisons (siege).</summary>
+    /// <summary>Peace from negotiation (ADR 0030).</summary>
+    public PeaceRules Peace { get; init; } = new();
+
+    /// <summary>War weariness (ADR 0030, point 7).</summary>
+    public WearinessRules Weariness { get; init; } = new();
+
     public SiegeRules Siege { get; init; } = new(2, 50, 30, 50, 100, 8, 3, 40, 50, 180, 20);
 
     /// <summary>Seconds a settlement stays empty before it falls to ruin (ruins.emptySeconds; G2, 2026-11-19).</summary>
@@ -1868,12 +1957,41 @@ public sealed class SimContent
                 DeclareReputation = root.Prop("war").TryProp("declareReputation", out JsonElement dr) ? dr.GetInt32() : -10,
                 TributeNeedsKills = root.Prop("war").TryProp("tributeNeedsKills", out JsonElement tk) ? tk.GetInt32() : 5,
                 TributeFoodMaxPercent = root.Prop("war").TryProp("tributeFoodMaxPercent", out JsonElement tf) ? tf.GetInt32() : 10,
-                TruceSeconds = root.Prop("war").TryProp("truceSeconds", out JsonElement trs) ? trs.GetInt32() : 180,
                 MaxWars = root.Prop("war").TryProp("maxWars", out JsonElement mw) ? mw.GetInt32() : 3,
                 TributeAfterTicks = (root.Prop("war").TryProp("tributeAfterSeconds", out JsonElement tas) ? tas.GetInt32() : 120) * TicksPerSecond,
                 ReputationFloor = root.Prop("war").TryProp("reputationFloor", out JsonElement rf) ? rf.GetInt32() : -200,
                 BadReputation = root.Prop("war").TryProp("badReputation", out JsonElement br) ? br.GetInt32() : -100,
             },
+            Peace = root.TryProp("peace", out JsonElement peaceEl) ? new PeaceRules
+            {
+                Minutes = Ints(peaceEl, "minutes"),
+                BreakPercent = Ints(peaceEl, "breakPercent"),
+                SettlementHexes = peaceEl.Prop("settlementHexes").GetInt32(),
+                SettlementWorthPerPerson = peaceEl.Prop("settlementWorthPerPerson").GetInt32(),
+                SettlementBuildingPercent = peaceEl.Prop("settlementBuildingPercent").GetInt32(),
+                ScorePerPercent = Math.Max(1, peaceEl.Prop("scorePerPercent").GetInt32()),
+                WearinessPerPercent = Math.Max(1, peaceEl.Prop("wearinessPerPercent").GetInt32()),
+                MaxPercent = peaceEl.Prop("maxPercent").GetInt32(),
+                AggressorExtraPercent = peaceEl.Prop("aggressorExtraPercent").GetInt32(),
+                AiGiveMarginPercent = peaceEl.Prop("aiGiveMarginPercent").GetInt32(),
+                AiLosingLengthPercent = Ints(peaceEl, "aiLosingLengthPercent"),
+                AiWinningLengthPercent = Ints(peaceEl, "aiWinningLengthPercent"),
+            } : new PeaceRules(),
+            Weariness = root.TryProp("weariness", out JsonElement wEl) ? new WearinessRules
+            {
+                PerMinute = wEl.Prop("perMinute").GetInt32(),
+                PerLostPercent = wEl.Prop("perLostPercent").GetInt32(),
+                HungerPerMinute = wEl.Prop("hungerPerMinute").GetInt32(),
+                BesiegedPerMinute = wEl.Prop("besiegedPerMinute").GetInt32(),
+                Sacked = wEl.Prop("sacked").GetInt32(),
+                Taken = wEl.Prop("taken").GetInt32(),
+                CaravanRaided = wEl.Prop("caravanRaided").GetInt32(),
+                PeaceFallPerMinute = wEl.Prop("peaceFallPerMinute").GetInt32(),
+                WorkFrom = wEl.Prop("workFrom").GetInt32(),
+                WorkMaxLossPercent = wEl.Prop("workMaxLossPercent").GetInt32(),
+                AiPeaceAt = wEl.Prop("aiPeaceAt").GetInt32(),
+                AiPayAt = wEl.Prop("aiPayAt").GetInt32(),
+            } : new WearinessRules(),
         };
     }
 

@@ -1,0 +1,18 @@
+{
+  "name": "Peace test: terms and weariness",
+  "description": "We and people 1 are at war from the start, both in the Bronze Age; they have two villages around their town. Test the peace window (Peoples): suggested terms, goods, a settlement our army besieges, the length of peace, and war weariness.",
+  "seed": 56,
+  "peoples": 3,
+  "revealMap": true,
+  "wars": [[0, 1]],
+  "civs": [
+    { "era": "bronze_age", "techs": ["bronze_weapons", "barracks", "archery", "horseback_riding"], "level": "town", "people": 70, "stock": { "food": 500, "wood": 400, "stone": 300, "bronze_weapons": 60, "bronze_armour": 40, "horses": 30, "tools": 40 },
+      "buildings": { "farm": 2, "woodcutter": 1, "stone_house": 3, "storehouse": 1, "armourer": 1, "stable": 1, "herbalist": 1 },
+      "units": { "spearmen": 4, "archers": 2, "horsemen": 2, "scouts": 1 } },
+    { "era": "bronze_age", "techs": ["bronze_weapons", "barracks"], "level": "town", "people": 60, "aggression": 50, "settlements": 2, "settlementPeople": 25,
+      "stock": { "food": 500, "wood": 400, "stone": 300, "copper": 60, "tin": 40, "bronze": 50, "bronze_weapons": 20, "horses": 20 },
+      "buildings": { "farm": 2, "woodcutter": 1, "stone_house": 3, "storehouse": 1 },
+      "units": { "spearmen": 2 } },
+    { "era": "neolithic", "level": "village", "people": 40, "aggression": 10 }
+  ]
+}

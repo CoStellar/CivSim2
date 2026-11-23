@@ -28,10 +28,10 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | 5 | Późne ery: węgiel drzewny, cegła, deski, wełna i sukno, zaprawa; koszty nowej ery; przebudowa budynku w lepszy i zastąpienie na heksie | zrobione: #127 (materiały i koszty), #128 (zastąpienie budynku) |
 | 6 | Tempo pierwszych 15 minut (brak drewna na starcie, pierwszy narzędziarz w 13. minucie) | zrobione: #129 (100 drewna na start: narzędziarz w 10. minucie u wszystkich ludów); ocena Patryka w testach demo |
 | 7 | AI walki: szyk, flanki, odwrót rannych | zrobione: #130 |
-| 8 | Pokój z negocjacji: zasoby, osada, okres pokoju, podpowiedź łupów z przebiegu wojny | decyzje Patryka 2026-11-23: wszystkie rekomendacje (`docs/decisions/0030-pokoj-z-negocjacji.md`); czeka na decyzję o zmęczeniu wojną, potem jeden PR |
+| 8 | Pokój z negocjacji: zasoby, osada, okres pokoju, podpowiedź łupów z przebiegu wojny | zrobione: PR `feat/peace-negotiation` (ADR 0030: warunki z dóbr, osady i długości pokoju, zmęczenie wojną) |
 | 9 | Drobne rzeczy w kliencie: głód oddziału w polu w panelu, przegląd tekstów | zrobione: #131 |
 | 10 | Pomiar FPS na komputerze Patryka | zrobione 2026-11-22: średnio 165–180 FPS |
-| 11 | Nowy pomiar `--sim-report` po PR #134–#142 (głód, warsztaty, takty, wojny) | do zrobienia |
+| 11 | Nowy pomiar `--sim-report` po PR #134–#142 (głód, warsztaty, takty, wojny) | zrobione 2026-11-23 (liczby w `docs/sim/ai.md`, sekcja o pokoju) |
 | 12 | Dowóz wsadu do warsztatów stałymi trasami (known-issues #13) | do zrobienia |
 | 13 | Wspólna droga dla oddziałów jednej wyprawy (known-issues #15) | do zrobienia |
 | 14 | Scenariusz 03 testuje samą walkę (`noPeace`, decyzja Patryka 2026-11-23) | zrobione |

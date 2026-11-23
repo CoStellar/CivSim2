@@ -315,6 +315,9 @@ public sealed class Civ
     /// <summary>Some buildings wait for an input.</summary>
     public bool AnyStarved { get; set; }
 
+    /// <summary>7.2A (ADR 0030): percent less work in the workshops from war weariness, as last worked out.</summary>
+    public int WarWorkLoss { get; set; }
+
     /// <summary>Gone from the game.</summary>
     public bool Dead { get; set; }
 

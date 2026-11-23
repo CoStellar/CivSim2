@@ -3228,7 +3228,7 @@
     ]
   },
   "war": {
-    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation). declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. truceSeconds: truce after peace. maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many. The war score counts from the start of the current war; tributeAfterSeconds: peace with tribute only this long after the war began. reputationFloor: reputation never falls below it; badReputation: below it the AI declares new wars half as often.",
+    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation). declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many. The war score counts from the start of the current war; tributeAfterSeconds: peace with tribute only this long after the war began. reputationFloor: reputation never falls below it; badReputation: below it the AI declares new wars half as often.",
     "combatEveryTicks": 10,
     "lowLuckPercent": 80,
     "highLuckPercent": 120,
@@ -3240,7 +3240,6 @@
     "declareReputation": -10,
     "tributeNeedsKills": 5,
     "tributeFoodMaxPercent": 10,
-    "truceSeconds": 180,
     "maxWars": 3,
     "tributeAfterSeconds": 120,
     "reputationFloor": -200,
@@ -3825,5 +3824,51 @@
         ]
       }
     }
+  },
+  "peace": {
+    "comment": "Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the people's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's.",
+    "minutes": [
+      3,
+      6,
+      10
+    ],
+    "breakPercent": [
+      100,
+      100,
+      200
+    ],
+    "settlementHexes": 12,
+    "settlementWorthPerPerson": 10,
+    "settlementBuildingPercent": 50,
+    "scorePerPercent": 5,
+    "wearinessPerPercent": 4,
+    "maxPercent": 40,
+    "aggressorExtraPercent": 25,
+    "aiGiveMarginPercent": 20,
+    "aiLosingLengthPercent": [
+      -10,
+      0,
+      10
+    ],
+    "aiWinningLengthPercent": [
+      10,
+      0,
+      -10
+    ]
+  },
+  "weariness": {
+    "comment": "War weariness of a people in each of its wars, 0-100: perMinute a minute of war, perLostPercent for each percent of its people the enemy killed, hungerPerMinute a minute while a settlement of it is hungry, besiegedPerMinute a minute for each settlement the enemy besieges, sacked, taken (also razed) and caravanRaided at once; it falls by peaceFallPerMinute a minute in peace. From workFrom up, buildings that use goods work less, down to workMaxLossPercent less at 100 (the highest weariness of its wars counts). The AI looks for peace from aiPeaceAt, and a losing AI offers goods from aiPayAt.",
+    "perMinute": 1,
+    "perLostPercent": 2,
+    "hungerPerMinute": 2,
+    "besiegedPerMinute": 2,
+    "sacked": 10,
+    "taken": 15,
+    "caravanRaided": 3,
+    "peaceFallPerMinute": 5,
+    "workFrom": 50,
+    "workMaxLossPercent": 20,
+    "aiPeaceAt": 60,
+    "aiPayAt": 80
   }
 }

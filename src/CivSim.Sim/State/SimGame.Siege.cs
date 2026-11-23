@@ -291,6 +291,7 @@ public sealed partial class SimGame
 
         s.SackedUntil = Ticks + (Content.Siege.SackImmuneSeconds * SimContent.TicksPerSecond);
         Scores()[(winner.Id * Civs.Count) + s.Civ] += 20;
+        AddWeariness(s.Civ, winner.Id, Content.Weariness.Sacked * 100L);
         NewsAbout(winner.Id, s.Civ, home is null ? $"{winner.Name} sacked {s.Name}." : $"{winner.Name} sacked {s.Name}: a caravan carries {total / SimContent.One} goods to {home.Name}.");
     }
 
@@ -319,6 +320,7 @@ public sealed partial class SimGame
         }
 
         Scores()[(winner.Id * Civs.Count) + loser.Id] += 30;
+        AddWeariness(loser.Id, winner.Id, Content.Weariness.Taken * 100L);
         NewsAbout(winner.Id, loser.Id, refuge is null
             ? $"{winner.Name} razed {s.Name}, the last home of {loser.Name}."
             : $"{winner.Name} razed {s.Name}; {fled} of its people fled to {refuge.Name}.");

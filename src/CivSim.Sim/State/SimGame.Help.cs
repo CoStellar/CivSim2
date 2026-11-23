@@ -183,8 +183,8 @@ public sealed partial class SimGame
         return $"{e.Name}: {string.Join(", ", parts)}, for {e.Ticks / SimContent.TicksPerSecond} s.";
     }
 
-    // E17: a good the people knows: it has some, makes some, or a building it knows makes it.
-    internal bool KnowsGood(Civ civ, int good)
+    /// <summary>E17: a good the people knows: it has some, makes some, or a building it knows makes it.</summary>
+    public bool KnowsGood(Civ civ, int good)
     {
         if (civ.Stock[good] > 0 || civ.Made[good] > 0)
         {

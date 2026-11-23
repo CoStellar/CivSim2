@@ -93,11 +93,12 @@ public sealed class WarRulesTests
         Assert.True(g.Score(0, 1) > 0);
         g.Apply(new TakeSettlementCommand(0, target.Id, TakeChoice.Sack));
         g.MakePeace(g.Civs[0], g.Civs[1], 0);
-        Run(g, (Content.War.TruceSeconds * SimContent.TicksPerSecond) + 1);
+        Run(g, (Content.Peace.Minutes[0] * SimContent.TicksPerMinute) + 1);
         Assert.Null(g.Apply(new DeclareWarCommand(0, 1)));
         Assert.Equal(0, g.Score(0, 1));
-        Assert.NotNull(g.Apply(new ProposePeaceCommand(0, 1, 15))); // and no tribute in the first 2 minutes
-        Assert.Null(g.Apply(new ProposePeaceCommand(0, 1, 0)));
+        var demand = new PeaceTerms(false, 0, -1, [(Content.Food, SimContent.One)]);
+        Assert.NotNull(g.Apply(new ProposePeaceCommand(0, 1, demand))); // and no demands from an even war
+        Assert.Null(g.Apply(new ProposePeaceCommand(0, 1, PeaceTerms.White())));
     }
 
     [Fact]
