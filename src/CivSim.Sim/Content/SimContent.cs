@@ -725,6 +725,12 @@ public sealed class SimContent
     /// <summary>Least growth per minute (people).</summary>
     public int MinGrowthPerMinute { get; init; }
 
+    /// <summary>
+    /// Patryk, 2026-11-22 (variant C): a settlement whose food falls stops growing while less than this many rations of food
+    /// are left (growth.stopBelowRations; 0 = only an empty store stops it).
+    /// </summary>
+    public int GrowthStopRations { get; init; } = 2;
+
     /// <summary>Starvation loss percent per minute.</summary>
     public int StarvePercentPerMinute { get; init; }
 
@@ -736,6 +742,15 @@ public sealed class SimContent
 
     /// <summary>16B (2026-11-20): the AI builds new homes only with food for this many minutes of eating (ai.homesFoodMinutes).</summary>
     public int AiHomesFoodMinutes { get; init; } = 3;
+
+    /// <summary>
+    /// 2026-11-22: outside winter the AI wants food made to exceed its eating by this percent (ai.foodMarginPercent), so the
+    /// summer surplus covers the next winter; short of it, it builds food and no new homes.
+    /// </summary>
+    public int AiFoodMarginPercent { get; init; } = 30;
+
+    /// <summary>2026-11-22: the AI builds one more food building at a time per this many people (ai.foodSitesPerPeople).</summary>
+    public int AiFoodSitesPerPeople { get; init; } = 400;
 
     /// <summary>17B (2026-11-20): below this many people the AI trains no units but settlers and builds no workplace while jobs are free (ai.smallPeople).</summary>
     public int AiSmallPeople { get; init; } = 30;
@@ -1710,6 +1725,7 @@ public sealed class SimContent
             RiversFreeEra = root.TryProp("rivers", out JsonElement rv) ? eras.FindIndex(e => e.Key == rv.Prop("freeFromEra").GetString()) is int rfe && rfe >= 0 ? rfe : int.MaxValue : int.MaxValue,
             GrowthPercentPerMinute = growth.Prop("growthPercentPerMinute").GetInt32(),
             MinGrowthPerMinute = growth.Prop("minGrowthPerMinute").GetInt32(),
+            GrowthStopRations = growth.TryProp("stopBelowRations", out JsonElement sbr) ? sbr.GetInt32() : 2,
             StarvePercentPerMinute = growth.Prop("starvePercentPerMinute").GetInt32(),
             ResumeCostPercent = root.Prop("resumeCostPercent").GetInt32(),
             Rations = root.TryProp("rations", out JsonElement ra)
@@ -1772,6 +1788,8 @@ public sealed class SimContent
             } : new AiBattleRules(),
             AiPeacefulStartMinutes = root.TryProp("ai", out JsonElement aiEl3) && aiEl3.TryProp("peacefulStartMinutes", out JsonElement psm) ? psm.GetInt32() : 15,
             AiSmallPeople = root.TryProp("ai", out JsonElement aiEl2) && aiEl2.TryProp("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
+            AiFoodMarginPercent = root.TryProp("ai", out JsonElement aiEl4) && aiEl4.TryProp("foodMarginPercent", out JsonElement fmp) ? fmp.GetInt32() : 30,
+            AiFoodSitesPerPeople = root.TryProp("ai", out JsonElement aiEl5) && aiEl5.TryProp("foodSitesPerPeople", out JsonElement fsp) ? fsp.GetInt32() : 400,
             FoodLowMinutes = root.TryProp("alerts", out JsonElement alEl) && alEl.TryProp("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryProp("upgradeCaravans", out JsonElement ucEl)
                 ? new UpgradeCaravanRules(ucEl.Prop("extraPercent").GetInt32(), ucEl.Prop("aiRetrySeconds").GetInt32() * TicksPerSecond)

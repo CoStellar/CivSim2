@@ -99,7 +99,11 @@ public sealed partial class SimGame
             text += $", about {workers} more food worker{(workers == 1 ? "" : "s")} ({maker!.Name})";
         }
 
-        return text + $". The food lasts {lasts / 60}:{lasts % 60:00}.";
+        text += $". The food lasts {lasts / 60}:{lasts % 60:00}.";
+        // Variant C (2026-11-22): why the settlement does not grow although homes are free.
+        return s.GrowthStopped && s.People < s.Housing
+            ? text + $" It does not grow while its food falls and less than {Content.GrowthStopRations} rations are left."
+            : text;
     }
 
     /// <summary>E5: what a technology opens, and where to find it.</summary>

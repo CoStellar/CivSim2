@@ -190,6 +190,12 @@ public sealed class Settlement
     /// <summary>Food everyone it feeds eats a minute (residents, its units, the advisor in the capital), paid at the ration.</summary>
     public long Eating { get; set; }
 
+    /// <summary>Not growing although homes are free: its food falls and few rations are left (variant C, 2026-11-22).</summary>
+    public bool GrowthStopped { get; set; }
+
+    /// <summary>Tick the chronicle last told that it stopped growing (−1 = never; told at most every few minutes).</summary>
+    public long GrowthStopToldTick { get; set; } = -1;
+
     /// <summary>Units it could not feed at the last ration.</summary>
     public int RationShort { get; set; }
 

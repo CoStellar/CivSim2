@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute, paid once a minute at the ration (see rations); people told to gather pick up food, wood and stone around their settlement (forage). Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); it does not grow while it has no food (deaths from hunger come at the rations; starvePercentPerMinute is not used). resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools).",
+  "comment": "Rules of the new game (ADR 0028, docs/projekt-gry.md). Time: 10 ticks a second; rates are per minute of play. Amounts are whole units (two decimals allowed). density: how many times more hexes than the legacy map of the same size (a hex is room for one building). economyEveryTicks, populationEveryTicks: rhythms of docs/wydajnosc.md. Start: the stock and people of a new tribe. Food: every person eats foodPerPersonPerMinute, paid once a minute at the ration (see rations); people told to gather pick up food, wood and stone around their settlement (forage). Growth: a fed settlement below its housing grows growthPercentPerMinute of its people a minute (at least minGrowthPerMinute); it does not grow while it has no food, nor while its food falls and less than stopBelowRations rations are left (Patryk, 2026-11-22: variant C; deaths from hunger come at the rations; starvePercentPerMinute is not used). resumeCostPercent: resuming a paused construction costs this much of the building's price again. Settlement levels: radius in hexes of the territory, housing and storage given by the settlement itself, the price of the upgrade. Buildings: workers (jobs), price, buildSeconds, terrain rules (biomes, relief, needsWater = next to a lake, sea or river, deposit = a surface deposit on the hex, minFertility), production per worker per minute, deposit bonus in percent, housing and storage they add. bonusRelief and bonusReliefPercent: extra production on hills or mountains. Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools).",
   "density": 7,
   "economyEveryTicks": 10,
   "populationEveryTicks": 50,
@@ -173,7 +173,8 @@
   "growth": {
     "growthPercentPerMinute": 8,
     "minGrowthPerMinute": 1,
-    "starvePercentPerMinute": 12
+    "starvePercentPerMinute": 12,
+    "stopBelowRations": 2
   },
   "resumeCostPercent": 15,
   "settlementLevels": [
@@ -3748,10 +3749,12 @@
     "foodLowMinutes": 3
   },
   "ai": {
-    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game.",
+    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game. foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people.",
     "homesFoodMinutes": 3,
     "smallPeople": 30,
-    "peacefulStartMinutes": 15
+    "peacefulStartMinutes": 15,
+    "foodMarginPercent": 30,
+    "foodSitesPerPeople": 400
   },
   "aiBattle": {
     "comment": "retreatInjuredPercent: a unit at war with this share of its people wounded goes home to heal; retreatSizePercent: one with fewer people than this share of its size goes home and guards it. engageHexes: a seen enemy army this close to a soldier is fought first, by every soldier this close to it (a flank). An offensive starts from our settlement nearest the target: soldiers within musterFromHexes but farther than musterHexes gather there in formation, and the march starts once musterPercent of the power stands there.",
