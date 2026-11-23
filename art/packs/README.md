@@ -14,8 +14,9 @@ rozmiarach co grafiki zastępcze w `art/placeholder/`. Pełna lista nazw i rozmi
 ```
 moja-paczka/
   pack.json              opcjonalnie: {"name": "Moja paczka", "author": "Patryk", "description": "Cieplejsze biomy"}
-  biome/biome_grassland_01.png      48×42
-  objects/settlement_camp_active.png 48×42
+  biome/biome_grassland_01.png      96×84 (od 2026-11-23: grafiki nowej gry w 2×)
+  buildings/building_farm.png       96×84
+  units/unit_spearmen.png           64×64
   ui/frame_panel.png                24×24 (ramka 9-slice)
   ...
 ```
@@ -33,7 +34,7 @@ problemów pojawia się:
 Przykładowy raport:
 ```
 Art check of Test pack: 3 of 140 pictures used, 5 problems.
-- biome/biome_desert_01.png: is 50×40 px, must be 48×42 px; the default picture is used
+- biome/biome_desert_01.png: is 48×42 px, must be 96×84 px; the default picture is used
 - biome/biome_volcano_01.png: unknown name; ignored (see art/placeholder/manifest.json for the names the game uses)
 - objects/deposit_fish.png: cannot be read as a PNG; the default picture is used
 - settlement_camp_active.png: wrong folder; ignored (it belongs in objects/settlement_camp_active.png)

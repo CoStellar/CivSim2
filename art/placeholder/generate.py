@@ -19,6 +19,8 @@ import re
 
 from PIL import Image
 
+import game_art
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "art", "placeholder")
 W, H = 48, 42
@@ -684,17 +686,15 @@ def main():
         deposits = json.load(f)["deposits"]
     with open(os.path.join(ROOT, "data", "effects.json"), encoding="utf-8") as f:
         effects = json.load(f)["effects"]
-    for b in biomes:
-        for v in (1, 2, 3):
-            biome_tile(b["key"], hexrgb(b["color"]), v)
-    for kind in ("hills", "mountains"):
-        for v in (1, 2):
-            relief(kind, v)
-    for key in ("oasis", "reef", "ice_field"):
-        feature(key)
-    for edge in EDGES:
-        for width in ("stream", "river"):
-            river(edge, width)
+    # Hex tiles, buildings, settlement centres, units and goods of the new game at 2x (game_art.py, decisions G1-G6).
+    game_art.G.update(nearest=nearest, shade=shade, Canvas=Canvas)
+    game_art.generate(ROOT)
+    template = Image.new("RGBA", (game_art.HW, game_art.HH), (0, 0, 0, 0))
+    for y in range(game_art.HH):
+        for x in range(game_art.HW):
+            if game_art.MASK[y][x]:
+                template.putpixel((x, y), (255, 255, 255, 255))
+    template.save(os.path.join(ROOT, "art", "templates", f"hex_template_{game_art.HW}x{game_art.HH}.png"))
     for d in deposits:
         deposit(d["key"], hexrgb(d["color"]))
     for level in ("camp", "hearth", "village", "walled", "town"):

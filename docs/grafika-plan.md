@@ -1,6 +1,6 @@
 # Plan grafik: zastępcze teraz, pixel art Patryka później
 
-**Stan:** propozycja, 2026-11-23. Do decyzji Patryka: pytania w rozdziale 2. Grafiki zastępcze robi Claude Code (skrypt, paleta, te same
+**Stan:** decyzje Patryka z 2026-11-23 (rozdział 2). Pierwsza paczka grafik zastępczych w 2× jest w grze (rozdział 8). Grafiki zastępcze robi Claude Code (skrypt, paleta, te same
 nazwy i rozmiary). Pixel art Patryka podmienia je pod tymi samymi nazwami, po demo albo w trakcie (bez zmian w kodzie: `art/export/`
 i paczki w `art/packs/` wygrywają z `art/placeholder/`).
 
@@ -19,7 +19,16 @@ i paczki w `art/packs/` wygrywają z `art/placeholder/`).
 
 Pozostałe grafiki zastępcze z etapu 5 (osady „hearth” i „walled”, wędrujący obóz, pole) pochodzą z gry legacy i jej podglądu obserwatora (`MapObjects.cs`). Budynki, osady i jednostki nowej gry rysuje kod z tabeli wyżej.
 
-## 2. Do decyzji Patryka
+## 2. Decyzje Patryka (2026-11-23)
+
+- **G1: 2×.** Heks 96×84, miejsce 32×28. Wydajność: grafiki ładują się raz, a mapa z daleka rysuje średnie kolory i znaczniki zamiast obrazków, więc 2× nie zwalnia gry przy oddaleniu. Na testy przybliżenie mapy sięga teraz ×5 (było ×3,5).
+- **G2: 3/4 z boku**, światło z lewej góry.
+- **G3: grupka figurek, wyodrębniona od heksa pod nią:** obrys, cień pod stopami, pierścień przy zaznaczeniu.
+- **G4: jeden wygląd budynku** do demo.
+- **G5: wspólne nakładki stanów.**
+- **G6: magenta podmieniana w grze.** Patryk dodał: granica i odcień cywilizacji przykrywały grafiki (np. rzekę). Teraz granica jest cieńsza (2,5 zamiast 4), odcień ziemi słabszy (20% zamiast 45%), a rzeka ma ciemniejszy brzeg. **Najważniejsza jest spójność stylu**, potem czytelność.
+
+Pytania z rekomendacjami (zostawione dla historii):
 
 | Nr | Pytanie | Rekomendacja |
 | --- | --- | --- |
@@ -157,3 +166,23 @@ i odniesienie, np.:
 
 > `building_bronze_smith.png`, 32×28 (2×), warstwa obiektów, 1 wariant, paleta CivSim 2. Mały kamienny warsztat z kominem i czerwonym
 > żarem w drzwiach, sztaba brązu przy wejściu. Odniesienie: piece do wytopu z epoki brązu; kuźnia z *HoMM III* jako czytelność sylwetki.
+
+## 8. Zasady stylu (spójność przede wszystkim) i stan
+
+Zasady dla grafik zastępczych i dla pixel artu Patryka (skrypt `art/placeholder/game_art.py` ich pilnuje):
+- **gęstość 2×:** heks 96×84, miejsce 32×28, jednostka 64×64, dobro 32×32;
+- **widok 3/4, światło z lewej góry:** jaśniejsza lewa i górna strona, ciemniejsza prawa i dolna, trzy odcienie na materiał;
+- **obrys 1 px** w najciemniejszym brązie (`#1D1710`) wokół każdego obiektu; kafle ziemi bez obrysu;
+- **kolor cywilizacji tylko w magentach:** flagi, kalenice dachów, tuniki;
+- **dachy według ery budynku:** skóry (epoka kamienia), strzecha (neolit), czerwona dachówka (brąz), łupek (żelazo), ciemny łupek (średniowiecze);
+- **znak fachu na jasnej tabliczce:** młot, dzban, kłos, kowadło, płomień, księga…;
+- **jednostki:** grupka 2–3 figurek z bronią rodzaju; gra rysuje pod nimi cień;
+- **gaje:** okrągłe korony jak w lasach, przy krawędziach heksa, żeby miejsca na budynki zostały czytelne.
+
+Stan (2026-11-23):
+- **W grze:** biomy, teren i rzeki w 2×, 52 budynki, 4 centra osad, 19 jednostek i gaje. Na mapie stany budynków pokazują nakładki: rusztowanie, przygaszenie, czerwony znak braku wsadu, złota ramka priorytetu.
+- **Gotowe pliki, jeszcze nieużyte:** 29 ikon dóbr. Pasek zasobów i przyciski paska decyzji nadal pokazują litery.
+- **Dalej:** ikony w pasku i przyciskach, potem drogi, mury, złoża i interfejs (kolejność z rozdziału 4).
+
+Walidator paczek sprawdza rozmiar każdego pliku z `art/placeholder/manifest.json`. Plik w starym rozmiarze (np. biom 48×42) jest pomijany z komunikatem „must be 96×84 px”.
+

@@ -1,0 +1,1030 @@
+"""Placeholder art of the new game at twice the size (decisions G1-G6 of Patryk, 2026-11-23, docs/grafika-plan.md).
+
+One style for everything, so the pieces sit together on the map:
+  * pixel density 2x: a hex is 96x84, one of its four places 32x28;
+  * 3/4 view from the side, light from the top left: a lighter left/top, a darker right/bottom, three tones per material;
+  * a 1-pixel outline in the darkest brown (OUTLINE) around every object, never around ground tiles;
+  * civilization colour only in the reserved magentas (CIV), on flags, roofs' ridges and tunics;
+  * roofs by the era of the building (thatch, reed, red tile, slate, dark slate), so an era reads at a glance;
+  * units stand on their own: a group of 2-3 figures with an outline (the game draws a soft shadow under them).
+
+Drawn from the data (data/sim/game.json): every building, unit, good and settlement level gets a picture under its key.
+"""
+
+import json
+import os
+import random
+
+S = 2                      # pixel density against the 48x42 hex of the stage 5 placeholders
+HW, HH = 48 * S, 42 * S    # hex tile
+PW, PH = 16 * S, 14 * S    # one of the four places of a hex
+
+# Filled by generate.py (shared helpers: palette, Canvas, nearest, shade).
+G = {}
+
+
+def P(rgb):
+    return G["nearest"](rgb)
+
+
+def sh(c, step):
+    return G["shade"](c, step)
+
+
+OUTLINE = (29, 23, 16)
+CIV = [(255, 0, 255), (192, 0, 192), (128, 0, 128)]
+
+
+def tones(rgb):
+    base = P(rgb)
+    return sh(base, 1), base, sh(base, -1)
+
+
+# Materials (light, base, dark).
+WOOD = None
+THATCH = None
+STONE = None
+MUD = None
+ROOFS = {}
+
+
+def init_materials():
+    global WOOD, THATCH, STONE, MUD, ROOFS, HIDE, SKIN, IRON, WATER
+    WOOD = tones((138, 86, 45))
+    THATCH = tones((228, 191, 68))
+    STONE = tones((147, 138, 130))
+    MUD = tones((204, 126, 87))
+    HIDE = tones((170, 101, 39))
+    SKIN = P((204, 126, 87))
+    IRON = tones((120, 121, 121))
+    WATER = tones((25, 119, 208))
+    ROOFS = {
+        "stone_age": HIDE,
+        "neolithic": THATCH,
+        "bronze_age": tones((187, 110, 70)),
+        "iron_age": tones((101, 99, 98)),
+        "middle_ages": tones((79, 75, 69)),
+    }
+
+
+def canvas(w, h):
+    return G["Canvas"](w, h)
+
+
+# ------------------------------------------------------------------------------------------------ hex mask at 2x
+
+def hex_mask():
+    # The 48x42 template doubled pixel for pixel: it tiles (columns every 72 px, rows every 84, odd columns 42 down)
+    # exactly as the 48x42 one does at half the size.
+    from PIL import Image
+    here = os.path.dirname(os.path.abspath(__file__))
+    tpl = Image.open(os.path.join(here, "..", "templates", "hex_template_48x42.png")).convert("RGBA")
+    return [[tpl.getpixel((x // S, y // S))[3] > 0 for x in range(HW)] for y in range(HH)]
+
+
+MASK = hex_mask()
+
+
+def inside(x, y, margin=0):
+    if not (0 <= x < HW and 0 <= y < HH) or not MASK[y][x]:
+        return False
+    for dx, dy in ((margin, 0), (-margin, 0), (0, margin), (0, -margin)):
+        xx, yy = x + dx, y + dy
+        if not (0 <= xx < HW and 0 <= yy < HH) or not MASK[yy][xx]:
+            return False
+    return True
+
+
+# ------------------------------------------------------------------------------------------------ drawing pieces
+
+def box(c, x0, y0, x1, y1, t):
+    """A wall in 3/4 view: lit left column, base, shaded right column."""
+    c.rect(x0, y0, x1, y1, t[1])
+    c.rect(x0, y0, x0, y1, t[0])
+    c.rect(x1, y0, x1, y1, t[2])
+
+
+def gable(c, x0, x1, base_y, height, t, ridge_civ=True):
+    """A pitched roof over x0..x1 whose eaves stand at base_y: lit left slope, shaded right, a civ-coloured ridge."""
+    mid = (x0 + x1) / 2
+    for k in range(height + 1):
+        y = base_y - k
+        half = (x1 - x0) / 2 * (1 - k / (height + 1)) + 1
+        l, r = round(mid - half), round(mid + half)
+        c.line(l, y, round(mid), y, t[0])
+        c.line(round(mid) + 1, y, r, y, t[2] if k < height else t[1])
+        c.px(l, y, t[1])
+    c.line(x0 - 1, base_y, x1 + 1, base_y, t[2])
+    if ridge_civ:
+        c.px(round(mid), base_y - height, CIV[0])
+        c.px(round(mid) + 1, base_y - height, CIV[1])
+
+
+def flat_roof(c, x0, x1, y, t):
+    c.rect(x0 - 1, y - 2, x1 + 1, y, t[1])
+    c.line(x0 - 1, y - 2, x1 + 1, y - 2, t[0])
+    c.line(x0 - 1, y, x1 + 1, y, t[2])
+
+
+def door(c, x, y, h=5):
+    c.rect(x, y - h + 1, x + 2, y, P((47, 46, 45)))
+    c.px(x, y - h + 1, P((79, 75, 69)))
+
+
+def flag(c, x, y, h=8):
+    c.line(x, y, x, y - h, P((47, 46, 45)))
+    c.rect(x + 1, y - h, x + 4, y - h + 2, CIV[1])
+    c.line(x + 1, y - h, x + 4, y - h, CIV[0])
+
+
+def tent(c, x, y, w, h, t):
+    for k in range(h):
+        half = round(w / 2 * (1 - k / h))
+        c.line(x - half, y - k, x, y - k, t[0])
+        c.line(x + 1, y - k, x + half, y - k, t[2])
+    c.line(x, y - 3, x, y, P((47, 46, 45)))
+    c.px(x, y - h, P((47, 46, 45)))
+
+
+def fire(c, x, y):
+    c.rect(x - 2, y, x + 2, y, STONE[2])
+    c.rect(x - 1, y - 3, x + 1, y - 1, P((236, 39, 30)))
+    c.px(x, y - 4, P((234, 210, 32)))
+    c.px(x, y - 2, P((234, 210, 32)))
+
+
+def person(c, x, y, tunic=CIV, item=None, head=None):
+    """A figure 13 px tall standing at (x, y): head, tunic in the civ colour, legs, and what it carries."""
+    c.rect(x - 1, y - 12, x + 1, y - 10, SKIN)
+    if head == "helmet":
+        c.rect(x - 1, y - 13, x + 1, y - 12, IRON[0])
+    elif head == "hood":
+        c.rect(x - 2, y - 13, x + 2, y - 12, HIDE[1])
+    c.rect(x - 2, y - 9, x + 2, y - 4, tunic[1])
+    c.line(x - 2, y - 9, x - 2, y - 4, tunic[0])
+    c.line(x + 2, y - 9, x + 2, y - 4, tunic[2])
+    c.rect(x - 2, y - 3, x - 1, y, P((86, 44, 24)))
+    c.rect(x + 1, y - 3, x + 2, y, P((86, 44, 24)))
+    hand = (x + 3, y - 7)
+    if item == "spear":
+        c.line(x + 3, y - 15, x + 3, y, WOOD[1])
+        c.rect(x + 2, y - 17, x + 4, y - 16, IRON[0])
+    elif item == "club":
+        c.line(x + 3, y - 12, x + 3, y - 5, WOOD[1])
+        c.rect(x + 2, y - 14, x + 4, y - 12, STONE[1])
+    elif item == "sword":
+        c.line(x + 4, y - 14, x + 4, y - 6, IRON[0])
+        c.line(x + 3, y - 7, x + 5, y - 7, P((223, 143, 19)))
+        c.rect(x - 5, y - 9, x - 3, y - 4, IRON[1])  # shield
+        c.px(x - 4, y - 7, CIV[0])
+    elif item == "bow":
+        for k in range(-5, 6):
+            c.px(x + 4 + (1 if abs(k) < 3 else 0), y - 8 + k, WOOD[1])
+        c.line(x + 4, y - 13, x + 4, y - 3, P((228, 241, 247)))
+    elif item == "crossbow":
+        c.line(x + 2, y - 8, x + 7, y - 8, WOOD[1])
+        c.line(x + 6, y - 11, x + 6, y - 5, IRON[0])
+    elif item == "bundle":
+        c.rect(x - 6, y - 11, x - 3, y - 6, HIDE[1])
+        c.px(x - 6, y - 11, HIDE[0])
+    elif item == "staff":
+        c.line(x + 3, y - 15, x + 3, y, WOOD[0])
+    elif item == "pick":
+        c.line(x + 3, y - 11, x + 3, y - 3, WOOD[1])
+        c.line(x + 1, y - 12, x + 6, y - 11, IRON[0])
+    elif item == "rod":
+        c.line(x + 3, y - 14, x + 3, y - 2, WOOD[0])
+        c.rect(x + 2, y - 15, x + 4, y - 14, CIV[0])
+    elif item == "sack":
+        c.rect(x - 6, y - 10, x - 3, y - 4, THATCH[1])
+        c.px(x - 6, y - 10, THATCH[0])
+    elif item == "fork":
+        c.line(x + 3, y - 14, x + 3, y, WOOD[1])
+        c.line(x + 2, y - 15, x + 2, y - 13, IRON[0])
+        c.line(x + 4, y - 15, x + 4, y - 13, IRON[0])
+    return hand
+
+
+def horse(c, x, y, rider_item="spear", armoured=False):
+    body = tones((138, 86, 45))
+    c.rect(x - 7, y - 9, x + 5, y - 5, body[1])
+    c.line(x - 7, y - 9, x + 5, y - 9, body[0])
+    c.rect(x + 5, y - 13, x + 8, y - 8, body[1])  # neck and head
+    c.px(x + 8, y - 13, body[2])
+    for lx in (x - 6, x - 3, x + 1, x + 4):
+        c.line(lx, y - 4, lx, y, body[2])
+    c.line(x - 8, y - 8, x - 9, y - 4, P((47, 46, 45)))  # tail
+    if armoured:
+        c.rect(x - 7, y - 8, x + 5, y - 6, CIV[1])
+    if rider_item is None:
+        return
+    # rider
+    c.rect(x - 2, y - 17, x, y - 15, SKIN)
+    c.rect(x - 3, y - 14, x + 1, y - 9, CIV[1])
+    c.line(x - 3, y - 14, x - 3, y - 9, CIV[0])
+    if armoured:
+        c.rect(x - 2, y - 18, x, y - 17, IRON[0])
+    if rider_item == "spear":
+        c.line(x + 2, y - 19, x + 2, y - 8, WOOD[1])
+        c.rect(x + 1, y - 21, x + 3, y - 20, IRON[0])
+    elif rider_item == "lance":
+        c.line(x - 1, y - 13, x + 9, y - 17, WOOD[0])
+        c.px(x + 10, y - 18, IRON[0])
+
+
+def boat(c, x, y, w, mast=True, sails=1, war=False):
+    hull = WOOD
+    for k in range(5):
+        c.line(x - w + k, y - k, x + w - k, y - k, hull[1] if k else hull[2])
+    c.line(x - w + 4, y - 4, x + w - 4, y - 4, hull[0])
+    if war:
+        for k in range(-w + 6, w - 4, 4):
+            c.px(x + k, y - 2, CIV[0])
+    if mast:
+        c.line(x, y - 4, x, y - 22, WOOD[2])
+        for s in range(sails):
+            top = y - 21 + s * 9
+            c.rect(x + 1, top, x + 9, top + 7, P((242, 194, 121)) if not war else CIV[1])
+            c.line(x + 1, top, x + 9, top, P((251, 249, 251)) if not war else CIV[0])
+
+
+# ------------------------------------------------------------------------------------------------ signs of trades
+
+def sign(c, kind, x, y):
+    """A small mark (about 7x7) of the building's trade, at its top-left corner (x, y)."""
+    if kind == "grain":
+        c.line(x + 3, y + 7, x + 3, y + 1, THATCH[2])
+        for k in (1, 3, 5):
+            c.px(x + 2, y + k, THATCH[0])
+            c.px(x + 4, y + k, THATCH[0])
+    elif kind == "axe":
+        c.line(x + 1, y + 7, x + 5, y + 1, WOOD[1])
+        c.rect(x + 4, y, x + 6, y + 2, IRON[0])
+    elif kind == "pot":
+        c.rect(x + 1, y + 2, x + 5, y + 6, MUD[1])
+        c.line(x + 2, y + 1, x + 4, y + 1, MUD[2])
+        c.px(x + 1, y + 3, MUD[0])
+    elif kind == "hammer":
+        c.line(x + 2, y + 7, x + 4, y + 2, WOOD[1])
+        c.rect(x + 2, y, x + 6, y + 2, IRON[1])
+    elif kind == "anvil":
+        c.rect(x, y + 2, x + 6, y + 3, IRON[1])
+        c.rect(x + 2, y + 4, x + 4, y + 6, IRON[2])
+        c.line(x, y + 2, x + 6, y + 2, IRON[0])
+    elif kind == "flame":
+        c.rect(x + 2, y + 3, x + 4, y + 6, P((236, 39, 30)))
+        c.px(x + 3, y + 2, P((223, 143, 19)))
+        c.px(x + 3, y + 5, P((234, 210, 32)))
+    elif kind == "leaf":
+        c.rect(x + 2, y + 2, x + 5, y + 4, P((79, 132, 47)))
+        c.px(x + 1, y + 5, P((51, 88, 33)))
+        c.px(x + 3, y + 2, P((123, 161, 84)))
+    elif kind == "needle":
+        c.line(x + 1, y + 6, x + 6, y + 1, IRON[0])
+        c.line(x + 1, y + 2, x + 4, y + 5, CIV[0])
+    elif kind == "spool":
+        c.rect(x + 1, y + 1, x + 5, y + 6, P((242, 194, 121)))
+        c.line(x + 1, y + 3, x + 5, y + 3, CIV[1])
+        c.line(x + 1, y + 5, x + 5, y + 5, CIV[1])
+    elif kind == "block":
+        c.rect(x + 1, y + 2, x + 6, y + 6, STONE[1])
+        c.line(x + 1, y + 2, x + 6, y + 2, STONE[0])
+    elif kind == "brick":
+        for k in range(3):
+            c.rect(x + (k % 2), y + 1 + k * 2, x + 5 + (k % 2), y + 2 + k * 2, P((183, 10, 9)) if k % 2 else P((165, 77, 6)))
+    elif kind == "coin":
+        c.disc(x + 3.5, y + 3.5, 3, P((223, 143, 19)))
+        c.px(x + 3, y + 3, P((234, 210, 32)))
+    elif kind == "book":
+        c.rect(x, y + 2, x + 6, y + 6, P((251, 249, 251)))
+        c.line(x + 3, y + 2, x + 3, y + 6, P((147, 138, 130)))
+        c.line(x, y + 6, x + 6, y + 6, P((122, 45, 2)))
+    elif kind == "shield":
+        c.rect(x + 1, y + 1, x + 5, y + 5, IRON[1])
+        c.px(x + 3, y + 6, IRON[1])
+        c.rect(x + 2, y + 2, x + 4, y + 4, CIV[1])
+    elif kind == "swords":
+        c.line(x, y + 6, x + 6, y, IRON[0])
+        c.line(x, y, x + 6, y + 6, IRON[0])
+    elif kind == "horse":
+        c.rect(x + 1, y + 3, x + 5, y + 5, WOOD[1])
+        c.rect(x + 5, y + 1, x + 6, y + 3, WOOD[1])
+        c.px(x + 1, y + 6, WOOD[2])
+        c.px(x + 5, y + 6, WOOD[2])
+    elif kind == "sheep":
+        c.rect(x + 1, y + 2, x + 5, y + 5, P((251, 249, 251)))
+        c.px(x + 6, y + 3, P((47, 46, 45)))
+        c.px(x + 2, y + 6, P((47, 46, 45)))
+        c.px(x + 4, y + 6, P((47, 46, 45)))
+    elif kind == "drop":
+        c.disc(x + 3, y + 4.5, 2.2, WATER[1])
+        c.px(x + 3, y + 1, WATER[1])
+        c.px(x + 2, y + 4, WATER[0])
+    elif kind == "scroll":
+        c.rect(x + 1, y + 1, x + 5, y + 6, P((242, 194, 121)))
+        c.line(x + 2, y + 3, x + 4, y + 3, P((47, 46, 45)))
+        c.line(x + 2, y + 5, x + 4, y + 5, P((47, 46, 45)))
+    elif kind == "wheel":
+        c.disc(x + 3.5, y + 3.5, 3.2, WOOD[1])
+        c.disc(x + 3.5, y + 3.5, 1.5, WOOD[2])
+    elif kind == "saw":
+        c.rect(x, y + 3, x + 6, y + 4, IRON[0])
+        for k in range(0, 7, 2):
+            c.px(x + k, y + 5, IRON[1])
+    elif kind == "lime":
+        c.rect(x + 1, y + 2, x + 5, y + 6, P((251, 249, 251)))
+        c.line(x + 1, y + 2, x + 5, y + 2, P((228, 241, 247)))
+    elif kind == "crate":
+        c.rect(x, y + 1, x + 6, y + 6, WOOD[1])
+        c.line(x, y + 1, x + 6, y + 6, WOOD[2])
+    elif kind == "scales":
+        c.line(x + 3, y + 1, x + 3, y + 6, P((223, 143, 19)))
+        c.line(x, y + 2, x + 6, y + 2, P((223, 143, 19)))
+        c.px(x, y + 4, P((223, 143, 19)))
+        c.px(x + 6, y + 4, P((223, 143, 19)))
+    elif kind == "tower":
+        c.rect(x + 1, y + 2, x + 5, y + 6, STONE[1])
+        for k in (1, 3, 5):
+            c.px(x + k, y + 1, STONE[0])
+    elif kind == "bow":
+        for k in range(7):
+            c.px(x + 2 + (1 if 1 < k < 5 else 0), y + k, WOOD[1])
+        c.line(x + 2, y, x + 2, y + 6, P((228, 241, 247)))
+    elif kind == "gear":
+        c.disc(x + 3.5, y + 3.5, 3, IRON[1])
+        c.disc(x + 3.5, y + 3.5, 1, IRON[2])
+
+
+def board(c, kind, x, y, k=1):
+    """The trade's sign on a small light board (k = 2: drawn twice as big), its top-left corner at (x, y)."""
+    from PIL import Image
+    t = canvas(9, 9)
+    t.rect(0, 0, 8, 8, P((242, 194, 121)))
+    t.line(0, 8, 8, 8, P((170, 101, 39)))
+    t.line(8, 0, 8, 8, P((170, 101, 39)))
+    sign(t, kind, 1, 1)
+    im = t.im.resize((9 * k, 9 * k), Image.NEAREST) if k > 1 else t.im
+    c.im.alpha_composite(im, (x, y))
+
+
+# Every building: (sign, wall material, roof kind) by key; its size and era come from the data.
+BUILDINGS = {
+    "gatherers_hut": ("grain", "wood", "hide"), "woodcutter": ("axe", "wood", "hide"), "hut": (None, "wood", "hide"),
+    "storehouse": ("crate", "wood", "hide"), "hearth": ("flame", "stone", "none"), "toolmaker": ("hammer", "wood", "hide"),
+    "hunters_lodge": ("bow", "wood", "hide"), "clay_pit": ("pot", "mud", "none"), "herbalist": ("leaf", "wood", "hide"),
+    "tailor": ("needle", "wood", "hide"), "potter": ("pot", "mud", "era"), "granary": ("grain", "mud", "era"),
+    "stone_house": (None, "stone", "era"), "mason": ("block", "stone", "era"), "weaver": ("spool", "mud", "era"),
+    "trading_post": ("scales", "wood", "era"), "bronze_smith": ("anvil", "stone", "era"), "charcoal_burner": ("flame", "mud", "none"),
+    "armourer": ("shield", "stone", "era"), "school": ("book", "mud", "era"), "stable": ("horse", "wood", "era"),
+    "mint": ("coin", "stone", "era"), "barracks": ("swords", "stone", "era"), "blacksmith": ("anvil", "stone", "era"),
+    "weaponsmith": ("swords", "stone", "era"), "builders_yard": ("hammer", "wood", "era"), "province_office": ("scroll", "stone", "era"),
+    "siege_workshop": ("wheel", "wood", "era"), "bathhouse": ("drop", "stone", "era"), "academy": ("book", "stone", "era"),
+    "brickworks": ("brick", "mud", "era"), "sheepfold": ("sheep", "wood", "era"), "cloth_weaver": ("spool", "stone", "era"),
+    "steelworks": ("gear", "stone", "era"), "mill": ("wheel", "stone", "era"), "guildhall": ("scales", "stone", "era"),
+    "university": ("book", "stone", "era"), "sawmill": ("saw", "wood", "era"), "lime_kiln": ("lime", "stone", "none"),
+}
+
+
+def wall_tones(kind):
+    return {"wood": WOOD, "stone": STONE, "mud": MUD}[kind]
+
+
+def small_building(key, era, places, rnd):
+    """A building on one or two places of a hex: a house in 3/4 view with the sign of its trade."""
+    w = PW * places
+    c = canvas(w, PH)
+    signk, wall, roof = BUILDINGS.get(key, (None, "wood", "era"))
+    wt = wall_tones(wall)
+    rt = HIDE if roof == "hide" else ROOFS[era]
+    x0, x1 = 3, w - 4
+    eaves = 12
+    if roof == "hide" and places == 1:
+        tent(c, w // 2, PH - 3, w - 8, 16, HIDE)
+        if signk:
+            board(c, signk, w // 2 + 3, PH - 11)
+        c.outline(P(OUTLINE))
+        return c
+    if key in ("charcoal_burner", "lime_kiln"):
+        # a kiln: a round mound with smoke and a door
+        for k in range(10):
+            half = round(10 * (1 - (k / 11) ** 2))
+            c.line(w // 2 - half, PH - 3 - k, w // 2, PH - 3 - k, wt[0])
+            c.line(w // 2 + 1, PH - 3 - k, w // 2 + half, PH - 3 - k, wt[2])
+        door(c, w // 2 - 1, PH - 3, 4)
+        for sx, sy in ((w // 2 + 1, PH - 15), (w // 2 + 2, PH - 18), (w // 2 + 1, PH - 21)):
+            c.px(sx, sy, P((147, 138, 130)))
+        board(c, signk, 1, 1)
+        c.outline(P(OUTLINE))
+        return c
+    if key == "hearth":
+        c.disc(w // 2, PH - 7, 7, STONE[1])
+        c.disc(w // 2 - 1, PH - 8, 6, STONE[0])
+        c.disc(w // 2, PH - 7, 4, STONE[2])
+        fire(c, w // 2, PH - 6)
+        c.outline(P(OUTLINE))
+        return c
+    if key == "clay_pit":
+        c.rect(6, PH - 10, w - 7, PH - 3, MUD[2])
+        c.rect(8, PH - 9, w - 9, PH - 4, MUD[1])
+        for k in range(4):
+            c.rect(10 + k * 12, PH - 14, 15 + k * 12, PH - 11, MUD[0])
+        flag(c, 4, PH - 4, 10)
+        c.outline(P(OUTLINE))
+        return c
+    box(c, x0, eaves, x1, PH - 3, wt)
+    if roof == "none":
+        flat_roof(c, x0, x1, eaves, STONE)
+    else:
+        gable(c, x0, x1, eaves, 10 if places == 1 else 11, rt)
+    door(c, x0 + 3, PH - 3, 6)
+    if places == 2:
+        c.rect(x0 + 12, eaves + 3, x0 + 14, eaves + 5, P((47, 46, 45)))  # window
+    if signk:
+        board(c, signk, x1 - 10 if places == 1 else x1 - 19, eaves + 1 if places == 1 else eaves - 6, 1 if places == 1 else 2)
+    if places == 2 and key in ("barracks", "province_office", "guildhall", "university", "academy"):
+        flag(c, x0 + 1, eaves - 2, 10)
+    c.outline(P(OUTLINE))
+    return c
+
+
+def hex_building(key, era, rnd):
+    """A building on the whole hex: a small scene inside the hex mask."""
+    c = canvas(HW, HH)
+    cx, cy = HW // 2, HH // 2
+    rt = ROOFS[era]
+
+    def mini_house(x, y, w=12, roof=rt, wall=WOOD):
+        box(c, x, y - 8, x + w, y, wall)
+        gable(c, x, x + w, y - 8, 6, roof)
+        door(c, x + 2, y, 4)
+
+    if key in ("farm", "manor"):
+        for y in range(16, HH - 12):
+            for x in range(10, HW - 10):
+                if inside(x, y, 4):
+                    stripe = (y // 4) % 2 == 0
+                    c.px(x, y, THATCH[1] if stripe else THATCH[2])
+                    if (x * 7 + y * 3) % 13 == 0:
+                        c.px(x, y, THATCH[0] if stripe else P((138, 86, 45)))
+        if key == "manor":
+            box(c, cx - 14, cy - 2, cx + 14, cy + 14, STONE)
+            gable(c, cx - 14, cx + 14, cy - 2, 12, rt)
+            door(c, cx - 2, cy + 14, 6)
+            for k in (-9, 7):
+                c.rect(cx + k, cy + 3, cx + k + 2, cy + 6, P((47, 46, 45)))
+            flag(c, cx + 16, cy - 2, 14)
+        else:
+            mini_house(cx + 10, cy + 20, 14, THATCH)
+    elif key == "pasture":
+        for x in range(12, HW - 12, 6):
+            c.line(x, 22, x, 26, WOOD[1])
+            c.line(x, HH - 20, x, HH - 16, WOOD[1])
+        c.line(12, 23, HW - 13, 23, WOOD[0])
+        c.line(12, HH - 19, HW - 13, HH - 19, WOOD[0])
+        for x, y in ((30, 44), (50, 40), (62, 52), (40, 56)):
+            c.rect(x, y, x + 7, y + 3, P((251, 249, 251)) if (x // 10) % 2 else WOOD[1])
+            c.px(x + 8, y, P((47, 46, 45)))
+            c.px(x + 1, y + 4, P((47, 46, 45)))
+            c.px(x + 6, y + 4, P((47, 46, 45)))
+    elif key in ("quarry", "copper_mine", "tin_mine", "iron_mine"):
+        rock = STONE if key == "quarry" else tones((113, 111, 108))
+        for k in range(22):
+            half = round(30 * (1 - (k / 23) ** 1.6))
+            y = cy + 14 - k
+            c.line(cx - half, y, cx, y, rock[0])
+            c.line(cx + 1, y, cx + half, y, rock[2])
+        if key == "quarry":
+            for x, y in ((cx - 14, cy + 22), (cx + 6, cy + 24), (cx - 4, cy + 26)):
+                c.rect(x, y, x + 7, y + 4, STONE[1])
+                c.line(x, y, x + 7, y, STONE[0])
+            c.rect(cx - 6, cy + 2, cx + 6, cy + 8, STONE[2])
+        else:
+            ore = {"copper_mine": (201, 113, 21), "tin_mine": (185, 216, 230), "iron_mine": (105, 56, 41)}[key]
+            c.rect(cx - 5, cy + 4, cx + 5, cy + 14, P((29, 23, 16)))
+            c.line(cx - 6, cy + 3, cx + 6, cy + 3, WOOD[1])
+            c.line(cx - 6, cy + 3, cx - 6, cy + 14, WOOD[1])
+            c.line(cx + 6, cy + 3, cx + 6, cy + 14, WOOD[1])
+            for x, y in ((cx - 18, cy - 2), (cx + 12, cy), (cx - 10, cy - 8), (cx + 4, cy - 10)):
+                c.rect(x, y, x + 2, y + 1, P(ore))
+            c.rect(cx + 12, cy + 20, cx + 20, cy + 24, WOOD[1])  # a cart
+            c.rect(cx + 13, cy + 18, cx + 19, cy + 19, P(ore))
+            c.px(cx + 13, cy + 25, P((47, 46, 45)))
+            c.px(cx + 19, cy + 25, P((47, 46, 45)))
+        flag(c, cx - 24, cy + 16, 12)
+    elif key in ("fishing_hut", "raft_landing", "harbour", "shipyard"):
+        for y in range(cy + 6, HH):
+            for x in range(HW):
+                if inside(x, y, 1):
+                    c.px(x, y, WATER[1] if (x + y * 3) % 13 else WATER[0])
+        c.rect(cx - 2, cy + 4, cx + 26, cy + 8, WOOD[1])  # pier
+        c.line(cx - 2, cy + 4, cx + 26, cy + 4, WOOD[0])
+        if key == "fishing_hut":
+            mini_house(cx - 26, cy + 4, 14, ROOFS["neolithic"])
+            for k in range(5):
+                c.line(cx + 4 + k * 3, cy - 6, cx + 4 + k * 3, cy + 2, P((147, 138, 130)))  # net
+        elif key == "raft_landing":
+            mini_house(cx - 26, cy + 4, 14, ROOFS["neolithic"])
+            for k in range(2):
+                c.rect(cx + 2 + k * 12, cy + 12, cx + 11 + k * 12, cy + 15, WOOD[2])
+                c.line(cx + 2 + k * 12, cy + 12, cx + 11 + k * 12, cy + 12, WOOD[0])
+        elif key == "harbour":
+            box(c, cx - 30, cy - 8, cx - 8, cy + 4, STONE)
+            gable(c, cx - 30, cx - 8, cy - 8, 8, rt)
+            boat(c, cx + 14, cy + 22, 12, sails=1)
+        else:
+            boat(c, cx + 2, cy + 2, 18, mast=True, sails=2)
+            c.line(cx - 22, cy + 6, cx + 26, cy + 6, WOOD[2])
+            box(c, cx - 34, cy - 10, cx - 18, cy + 4, WOOD)
+            gable(c, cx - 34, cx - 18, cy - 10, 7, rt)
+        flag(c, cx + 26, cy + 4, 14)
+    elif key in ("great_storehouse",):
+        box(c, cx - 24, cy - 4, cx + 24, cy + 18, WOOD)
+        gable(c, cx - 24, cx + 24, cy - 4, 16, rt)
+        door(c, cx - 4, cy + 18, 9)
+        c.rect(cx - 3, cy + 10, cx + 3, cy + 18, P((47, 46, 45)))
+        for x in (cx - 18, cx + 10):
+            sign(c, "crate", x, cy + 6)
+    elif key == "castle":
+        wall = STONE
+        for y in range(cy - 8, cy + 24):
+            for x in range(cx - 30, cx + 31):
+                edge = x in (cx - 30, cx + 30) or y in (cy - 8, cy + 23)
+                if edge or (cx - 28 <= x <= cx + 28 and cy + 18 <= y):
+                    c.px(x, y, wall[1] if x > cx - 28 else wall[0])
+        box(c, cx - 30, cy + 10, cx + 30, cy + 24, STONE)
+        for tx in (cx - 34, cx + 26):
+            box(c, tx, cy - 6, tx + 8, cy + 24, STONE)
+            for k in range(0, 9, 3):
+                c.rect(tx + k, cy - 9, tx + k + 1, cy - 7, STONE[0])
+        box(c, cx - 9, cy - 22, cx + 9, cy + 12, STONE)  # keep
+        for k in range(0, 19, 4):
+            c.rect(cx - 9 + k, cy - 25, cx - 8 + k, cy - 23, STONE[0])
+        c.rect(cx - 4, cy + 16, cx + 4, cy + 24, P((47, 46, 45)))  # gate
+        flag(c, cx, cy - 25, 12)
+    else:
+        mini_house(cx - 8, cy + 10, 16)
+    c.outline(P(OUTLINE))
+    return c
+
+
+HEX_SIGNS = {"farm": "grain", "manor": "grain", "pasture": "horse", "quarry": "block", "copper_mine": "hammer", "tin_mine": "hammer",
+             "iron_mine": "hammer", "fishing_hut": "drop", "raft_landing": "drop", "harbour": "crate", "shipyard": "wheel",
+             "great_storehouse": "crate", "castle": "shield"}
+
+# ------------------------------------------------------------------------------------------------ settlement centres
+
+def centre(level):
+    c = canvas(HW, HH)
+    cx, cy = HW // 2, HH // 2 + 4
+    if level == "camp":
+        tent(c, cx - 14, cy + 6, 22, 18, HIDE)
+        tent(c, cx + 12, cy + 12, 18, 14, HIDE)
+        tent(c, cx + 2, cy - 6, 16, 12, HIDE)
+        fire(c, cx - 1, cy + 16)
+        flag(c, cx + 22, cy + 4, 16)
+    elif level == "village":
+        for x, y, w in ((cx - 24, cy + 2, 14), (cx + 4, cy - 4, 16), (cx - 6, cy + 16, 14), (cx + 16, cy + 14, 12)):
+            box(c, x, y - 9, x + w, y, MUD)
+            gable(c, x, x + w, y - 9, 7, ROOFS["neolithic"])
+            door(c, x + 3, y, 4)
+        fire(c, cx - 8, cy + 4)
+        flag(c, cx + 24, cy - 6, 16)
+    else:
+        walled = level == "city"
+        roof = ROOFS["bronze_age"] if level == "town" else ROOFS["middle_ages"]
+        if walled:
+            for y in range(HH):
+                for x in range(HW):
+                    if inside(x, y, 4) and not inside(x, y, 9) and y > 14:
+                        c.px(x, y, STONE[1] if (x + y) % 9 else STONE[2])
+            for tx, ty in ((14, cy - 4), (HW - 22, cy - 4), (cx - 4, HH - 18)):
+                box(c, tx, ty - 10, tx + 8, ty + 6, STONE)
+                for k in range(0, 9, 3):
+                    c.rect(tx + k, ty - 13, tx + k + 1, ty - 11, STONE[0])
+        houses = [(cx - 22, cy + 4, 14), (cx + 6, cy, 16), (cx - 8, cy + 16, 14), (cx + 14, cy + 14, 12), (cx - 26, cy + 18, 10)]
+        for x, y, w in houses:
+            box(c, x, y - 10, x + w, y, STONE)
+            gable(c, x, x + w, y - 10, 7, roof)
+            door(c, x + 3, y, 5)
+        # the hall in the middle
+        box(c, cx - 8, cy - 18, cx + 8, cy - 2, STONE)
+        gable(c, cx - 8, cx + 8, cy - 18, 10, roof)
+        door(c, cx - 2, cy - 2, 6)
+        flag(c, cx + 2, cy - 28, 12)
+    c.outline(P(OUTLINE))
+    return c
+
+
+# ------------------------------------------------------------------------------------------------ units (64x64)
+
+UNIT_FIGURES = {
+    "settlers": [("bundle", None), ("staff", None), ("sack", None)],
+    "scouts": [("staff", "hood"), ("bow", "hood")],
+    "prospectors": [("pick", None), ("pick", "hood")],
+    "surveyors": [("rod", None), ("staff", None)],
+    "porters": [("sack", None), ("bundle", None)],
+    "levy": [("fork", None), ("club", None), ("fork", None)],
+    "hunters": [("spear", "hood"), ("bow", "hood")],
+    "warriors": [("club", None), ("club", None), ("spear", None)],
+    "archers": [("bow", None), ("bow", None), ("bow", None)],
+    "spearmen": [("spear", "helmet"), ("spear", "helmet"), ("spear", "helmet")],
+    "swordsmen": [("sword", "helmet"), ("sword", "helmet"), ("sword", "helmet")],
+    "crossbowmen": [("crossbow", "helmet"), ("crossbow", "helmet"), ("crossbow", "helmet")],
+}
+
+
+def grow(c, most=2.0, margin=3):
+    """Scales what is drawn on the canvas (nearest neighbour) up to `most` times, keeping it inside the canvas, standing on
+    the bottom: units get figures big enough to read while the pixels stay square."""
+    from PIL import Image
+    box_ = c.im.getbbox()
+    if box_ is None:
+        return
+    part = c.im.crop(box_)
+    k = min(most, (c.w - 2 * margin) / part.width, (c.h - 2 * margin) / part.height)
+    k = max(1, int(k))
+    part = part.resize((part.width * k, part.height * k), Image.NEAREST)
+    c.im = Image.new("RGBA", (c.w, c.h), (0, 0, 0, 0))
+    c.im.alpha_composite(part, ((c.w - part.width) // 2, c.h - margin - part.height))
+
+
+def unit(key):
+    c = canvas(64, 64)
+    base = 52
+    if key in UNIT_FIGURES:
+        figs = UNIT_FIGURES[key]
+        spots = [(22, base - 6), (40, base - 4), (31, base + 4)][:len(figs)]
+        for (item, head), (x, y) in sorted(zip(figs, spots), key=lambda f: f[1][1]):
+            person(c, x, y, CIV, item, head)
+    elif key == "caravan":
+        c.rect(14, base - 12, 34, base - 4, WOOD[1])  # cart
+        c.line(14, base - 12, 34, base - 12, WOOD[0])
+        c.rect(16, base - 17, 32, base - 13, THATCH[1])
+        c.disc(18, base - 2, 3, WOOD[2])
+        c.disc(30, base - 2, 3, WOOD[2])
+        c.rect(36, base - 10, 46, base - 6, P((138, 86, 45)))  # ox
+        c.rect(46, base - 13, 49, base - 8, P((138, 86, 45)))
+        for lx in (37, 40, 43, 45):
+            c.line(lx, base - 5, lx, base - 2, P((105, 56, 41)))
+        person(c, 52, base + 2, CIV, "staff")
+    elif key == "horsemen":
+        horse(c, 26, base, "spear")
+        horse(c, 36, base + 5, "spear")
+    elif key == "knights":
+        horse(c, 27, base, "lance", armoured=True)
+        horse(c, 32, base + 5, "lance", armoured=True)
+    elif key == "catapult":
+        c.rect(20, base - 7, 40, base - 4, WOOD[1])
+        c.line(20, base - 7, 40, base - 7, WOOD[0])
+        c.line(24, base - 7, 36, base - 21, WOOD[2])
+        c.line(25, base - 7, 37, base - 21, WOOD[1])
+        c.rect(34, base - 24, 38, base - 21, STONE[1])
+        c.disc(23, base - 2, 2.5, WOOD[2])
+        c.disc(37, base - 2, 2.5, WOOD[2])
+        person(c, 44, base + 1, CIV, "club", "helmet")
+    elif key in ("transport", "trade_ship", "warship"):
+        boat(c, 32, base, 22, sails=1 if key == "transport" else 2, war=key == "warship")
+        if key == "trade_ship":
+            for x in (20, 26):
+                sign(c, "crate", x, base - 12)
+        if key == "transport":
+            for x in (20, 26, 40):
+                c.rect(x, base - 10, x + 2, base - 7, CIV[1])
+                c.px(x + 1, base - 11, SKIN)
+    grow(c)
+    c.outline(P(OUTLINE))
+    return c
+
+
+# ------------------------------------------------------------------------------------------------ goods (32x32)
+
+def good(key):
+    c = canvas(32, 32)
+    g = key
+    if g == "food":
+        c.disc(13, 18, 7, P((183, 10, 9)))
+        c.disc(11, 16, 2, P((236, 39, 30)))
+        c.line(14, 11, 16, 7, WOOD[1])
+        c.rect(17, 7, 21, 9, P((79, 132, 47)))
+        sign(c, "grain", 19, 14)
+    elif g == "wood":
+        for k, y in enumerate((20, 15, 10)):
+            c.rect(6 + k * 2, y, 25 - k * 2, y + 4, WOOD[1])
+            c.line(6 + k * 2, y, 25 - k * 2, y, WOOD[0])
+            c.disc(6 + k * 2, y + 2, 2, THATCH[1])
+    elif g in ("stone", "clay", "bricks", "mortar", "charcoal", "copper", "tin", "iron", "bronze"):
+        col = {"stone": (147, 138, 130), "clay": (204, 126, 87), "bricks": (183, 10, 9), "mortar": (228, 241, 247),
+               "charcoal": (62, 60, 58), "copper": (201, 113, 21), "tin": (185, 216, 230), "iron": (105, 56, 41),
+               "bronze": (223, 143, 19)}[g]
+        t = tones(col)
+        if g in ("copper", "tin", "iron", "bronze"):  # bars
+            for k, y in enumerate((20, 14)):
+                c.rect(7 + k * 4, y, 24 - k * 4, y + 5, t[1])
+                c.line(7 + k * 4, y, 24 - k * 4, y, t[0])
+                c.line(24 - k * 4, y, 24 - k * 4, y + 5, t[2])
+        elif g == "bricks":
+            for row in range(3):
+                for k in range(2):
+                    x = 6 + k * 10 + (row % 2) * 5
+                    c.rect(x, 12 + row * 5, x + 8, 15 + row * 5, t[1])
+                    c.line(x, 12 + row * 5, x + 8, 12 + row * 5, t[0])
+        else:  # a heap
+            for k in range(10):
+                half = round(11 * (1 - (k / 11) ** 2))
+                c.line(16 - half, 25 - k, 16, 25 - k, t[0])
+                c.line(17, 25 - k, 16 + half, 25 - k, t[2])
+    elif g == "hides":
+        c.rect(8, 9, 24, 23, HIDE[1])
+        for x, y in ((7, 9), (24, 9), (7, 23), (24, 23)):
+            c.px(x, y, HIDE[0])
+        c.line(8, 9, 24, 9, HIDE[0])
+    elif g in ("tools",):
+        sign_big(c, "hammer")
+    elif g in ("clothing", "cloth", "textiles", "wool"):
+        col = {"clothing": CIV[1], "cloth": (26, 74, 208), "textiles": (242, 194, 121), "wool": (251, 249, 251)}[g]
+        t = tones(col) if g != "clothing" else (CIV[0], CIV[1], CIV[2])
+        if g == "wool":
+            for x, y in ((12, 16), (19, 16), (15, 11), (16, 20)):
+                c.disc(x, y, 5, t[1])
+            c.disc(13, 13, 2, t[0])
+        elif g == "clothing":
+            c.rect(10, 10, 22, 24, t[1])
+            c.rect(6, 10, 9, 16, t[1])
+            c.rect(23, 10, 26, 16, t[1])
+            c.line(10, 10, 22, 10, t[0])
+        else:
+            c.rect(8, 10, 24, 22, t[1])
+            c.disc(8, 16, 4, t[2])
+            c.line(8, 10, 24, 10, t[0])
+    elif g == "pottery":
+        c.disc(16, 19, 7, MUD[1])
+        c.rect(13, 9, 19, 13, MUD[1])
+        c.line(12, 9, 20, 9, MUD[2])
+        c.disc(13, 17, 2, MUD[0])
+    elif g == "horses":
+        horse(c, 16, 28, rider_item=None)
+    elif g == "coins":
+        for x, y in ((12, 19), (19, 17), (15, 13)):
+            c.disc(x, y, 5, P((223, 143, 19)))
+            c.disc(x - 1, y - 1, 2, P((234, 210, 32)))
+    elif g == "planks":
+        for k in range(4):
+            c.rect(6, 10 + k * 4, 26, 12 + k * 4, WOOD[1] if k % 2 else WOOD[0])
+    elif g.endswith("_weapons"):
+        metal = {"stone": STONE, "bronze": tones((223, 143, 19)), "iron": IRON, "steel": tones((185, 216, 230))}[g.split("_")[0]]
+        c.line(8, 25, 24, 7, WOOD[1], 2)
+        c.rect(21, 5, 26, 10, metal[1])
+        c.line(10, 6, 24, 24, metal[0], 2)
+        c.line(9, 20, 13, 24, P((86, 44, 24)), 2)
+    elif g.endswith("_armour"):
+        metal = {"hide": HIDE, "bronze": tones((223, 143, 19)), "iron": IRON, "steel": tones((185, 216, 230))}[g.split("_")[0]]
+        c.rect(9, 8, 23, 25, metal[1])
+        c.line(9, 8, 23, 8, metal[0])
+        c.line(9, 8, 9, 25, metal[0])
+        c.line(23, 8, 23, 25, metal[2])
+        c.rect(14, 8, 18, 10, metal[2])  # the neck
+    c.outline(P(OUTLINE))
+    return c
+
+
+def sign_big(c, kind):
+    if kind == "hammer":
+        c.line(10, 26, 18, 12, WOOD[1], 2)
+        c.rect(13, 6, 25, 11, IRON[1])
+        c.line(13, 6, 25, 6, IRON[0])
+
+
+# ------------------------------------------------------------------------------------------------ hex tiles at 2x
+
+def biome_tile(key, color, variant):
+    rnd = random.Random(f"{key}-{variant}-2x")
+    base = P(color)
+    light, dark = sh(base, 1), sh(base, -1)
+    c = canvas(HW, HH)
+    for y in range(HH):
+        for x in range(HW):
+            if MASK[y][x]:
+                c.px(x, y, base)
+
+    def speckle(n, col):
+        for _ in range(n):
+            x, y = rnd.randrange(2, HW - 2), rnd.randrange(2, HH - 2)
+            if inside(x, y, 2):
+                c.px(x, y, col)
+
+    water = key in ("deep_ocean", "shallow_sea", "coast", "lake")
+    if water:
+        for _ in range(16):
+            x, y = rnd.randrange(10, HW - 16), rnd.randrange(8, HH - 8)
+            if inside(x, y, 4) and inside(x + 8, y, 4):
+                c.line(x, y, x + 5, y, light)
+                c.line(x + 6, y - 1, x + 8, y - 1, light)
+        speckle(30, dark)
+    elif key in ("deciduous_forest", "taiga", "jungle"):
+        speckle(60, dark)
+        n = {"jungle": 26, "deciduous_forest": 18, "taiga": 20}[key]
+        trees = sorted((rnd.randrange(8, HW - 8), rnd.randrange(10, HH - 6)) for _ in range(n))
+        for x, y in sorted(trees, key=lambda t: t[1]):
+            if not inside(x, y, 5):
+                continue
+            if key == "taiga":
+                fir = P((45, 77, 29))
+                for k in range(7):
+                    half = k // 2 + 1
+                    c.line(x - half, y - 7 + k, x, y - 7 + k, sh(fir, 1))
+                    c.line(x + 1, y - 7 + k, x + half, y - 7 + k, fir)
+                c.px(x, y + 1, P((86, 44, 24)))
+            else:
+                crown = P((57, 99, 37)) if key == "deciduous_forest" else P((51, 88, 33))
+                c.disc(x, y - 3, 3.2, crown)
+                c.disc(x - 1, y - 4, 1.4, sh(crown, 1))
+                c.px(x + 2, y - 1, sh(crown, -1))
+                c.line(x, y, x, y + 1, P((86, 44, 24)))
+    elif key in ("grassland", "steppe", "savanna"):
+        speckle(50, dark)
+        for _ in range(40 if key == "grassland" else 28):
+            x, y = rnd.randrange(4, HW - 4), rnd.randrange(4, HH - 4)
+            if inside(x, y, 3):
+                c.px(x, y, light)
+                c.px(x - 1, y + 1, light)
+                c.px(x + 1, y + 1, light if key != "steppe" else dark)
+        if key == "savanna":
+            for _ in range(4):
+                x, y = rnd.randrange(14, HW - 14), rnd.randrange(14, HH - 10)
+                if inside(x, y, 8):
+                    tree = P((57, 99, 37))
+                    c.rect(x - 4, y - 3, x + 4, y - 2, tree)
+                    c.line(x - 3, y - 4, x + 3, y - 4, sh(tree, 1))
+                    c.line(x, y - 1, x, y + 2, P((86, 44, 24)))
+    elif key == "desert":
+        speckle(50, light)
+        speckle(25, dark)
+        for _ in range(4):
+            x, y = rnd.randrange(14, HW - 30), rnd.randrange(16, HH - 14)
+            if inside(x, y, 6):
+                c.line(x, y, x + 10, y - 3, light)
+                c.line(x + 10, y - 3, x + 18, y, dark)
+    elif key in ("tundra", "ice"):
+        speckle(50, light)
+        speckle(20 if key == "tundra" else 10, dark)
+    elif key == "swamp":
+        pool = P((19, 103, 157))
+        for _ in range(7):
+            x, y = rnd.randrange(14, HW - 14), rnd.randrange(14, HH - 12)
+            if inside(x, y, 6):
+                c.rect(x - 4, y, x + 4, y + 2, pool)
+                c.line(x - 4, y, x - 1, y, sh(pool, 1))
+                c.px(x + 5, y - 2, P((79, 132, 47)))
+        speckle(40, light)
+    else:
+        speckle(40, light)
+        speckle(30, dark)
+    for y in range(HH):
+        for x in range(HW):
+            if not MASK[y][x]:
+                continue
+            ul = (x - 1 < 0 or not MASK[y][x - 1]) or (y - 1 < 0 or not MASK[y - 1][x])
+            lr = (x + 1 >= HW or not MASK[y][x + 1]) or (y + 1 >= HH or not MASK[y + 1][x])
+            if ul and y < HH // 2:
+                c.px(x, y, light)
+            elif lr and y >= HH // 2:
+                c.px(x, y, dark)
+    c.save("biome", f"biome_{key}_{variant:02d}")
+
+
+def relief(kind, variant):
+    rnd = random.Random(f"{kind}-{variant}-2x")
+    c = canvas(HW, HH)
+    if kind == "hills":
+        body = P((138, 86, 45))
+        for i in range(3):
+            cx = 22 + i * 26 + rnd.randrange(-4, 5)
+            cy = 54 + rnd.randrange(-6, 5) - (i % 2) * 10
+            r = 12 + rnd.randrange(0, 5)
+            for y in range(cy - r, cy + 1):
+                for x in range(cx - r, cx + r + 1):
+                    if (x - cx) ** 2 + ((y - cy) * 1.6) ** 2 <= r * r and inside(x, y, 2):
+                        c.px(x, y, sh(body, 1) if x < cx - 2 else body if x < cx + 4 else sh(body, -1))
+    else:
+        rock, snow = P((113, 111, 108)), P((251, 249, 251))
+        peaks = [(32, 64, 20), (62, 66, 24)] if variant == 1 else [(26, 64, 18), (50, 66, 26), (72, 64, 16)]
+        for px_, base_y, half in peaks:
+            top = base_y - int(half * 1.6)
+            for y in range(top, base_y + 1):
+                w = int((y - top) / 1.6)
+                for x in range(px_ - w, px_ + w + 1):
+                    if not inside(x, y, 2):
+                        continue
+                    col = sh(rock, 1) if x <= px_ else sh(rock, -1)
+                    if y < top + 8:
+                        col = snow if x <= px_ else P((169, 162, 160))
+                    c.px(x, y, col)
+    c.outline(P((62, 60, 58)))
+    c.save("terrain", f"terrain_{kind}_{variant:02d}")
+
+
+def feature(key):
+    c = canvas(HW, HH)
+    if key == "oasis":
+        water = P((63, 167, 201))
+        c.disc(42, 50, 12, water)
+        c.disc(38, 46, 4, sh(water, 1))
+        palm = P((51, 88, 33))
+        c.line(60, 56, 62, 32, P((122, 45, 2)), 3)
+        for dx, dy in ((-10, 4), (10, 4), (-8, -2), (8, -2)):
+            c.line(62, 30, 62 + dx, 30 + dy, palm, 3)
+    elif key == "reef":
+        coral, rnd = P((240, 154, 168)), random.Random("reef-2x")
+        for _ in range(18):
+            x, y = rnd.randrange(20, HW - 20), rnd.randrange(20, HH - 20)
+            if inside(x, y, 8):
+                c.rect(x, y, x + 2, y + 2, coral)
+                c.px(x, y, sh(coral, 1))
+    else:
+        ice, rnd = P((228, 241, 247)), random.Random("ice-2x")
+        for _ in range(10):
+            x, y = rnd.randrange(16, HW - 24), rnd.randrange(16, HH - 20)
+            if inside(x, y, 8):
+                c.rect(x, y, x + 10, y + 4, ice)
+                c.line(x, y, x + 10, y, P((251, 249, 251)))
+    c.outline(P((62, 60, 58)) if key != "reef" else P((105, 56, 41)))
+    c.save("terrain", f"terrain_{key}_01")
+
+
+CORNERS = [(HW - 1, HH // 2), (HW * 3 // 4, HH - 1), (HW // 4, HH - 1), (0, HH // 2), (HW // 4, 0), (HW * 3 // 4 - 1, 0)]
+EDGES = {"n": (4, 5), "ne": (5, 0), "se": (0, 1), "s": (1, 2), "sw": (2, 3), "nw": (3, 4)}
+
+
+def river(edge, width_name):
+    c = canvas(HW, HH)
+    a, b = EDGES[edge]
+    (x0, y0), (x1, y1) = CORNERS[a], CORNERS[b]
+    width = 4 if width_name == "stream" else 8
+    water = P((25, 119, 208))
+    cx, cy = HW / 2, HH / 2
+    inset = 0.05 if width_name == "stream" else 0.08
+    ix0, iy0 = round(x0 + (cx - x0) * inset), round(y0 + (cy - y0) * inset)
+    ix1, iy1 = round(x1 + (cx - x1) * inset), round(y1 + (cy - y1) * inset)
+    c.line(ix0, iy0, ix1, iy1, sh(water, -1), width + 2)  # a darker bank so rivers read on any biome
+    c.line(ix0, iy0, ix1, iy1, water, width)
+    c.line(ix0, iy0, ix1, iy1, sh(water, 1), max(1, width // 4))
+    c.save("terrain", f"terrain_river_{edge}_{width_name}")
+
+
+def grove(variant):
+    """Trees on open land (data: trees.groveChance), drawn over the biome: round crowns lit from the top left, an outline,
+    in the same style as the forest tiles; they stand near the edges, so the building places stay readable."""
+    rnd = random.Random(f"grove-{variant}")
+    c = canvas(HW, HH)
+    spots = [(20, 26), (74, 24), (14, 56), (80, 58), (34, 72), (62, 74), (48, 14)]
+    rnd.shuffle(spots)
+    crown = P((57, 99, 37))
+    for x, y in sorted(spots[:4 + variant], key=lambda t: t[1]):
+        x += rnd.randrange(-3, 4)
+        y += rnd.randrange(-3, 4)
+        c.line(x, y - 1, x, y + 3, P((86, 44, 24)), 2)
+        c.disc(x, y - 6, 5.5, crown)
+        c.disc(x - 2, y - 8, 2.2, sh(crown, 1))
+        c.disc(x + 2, y - 4, 2, sh(crown, -1))
+    c.outline(P(OUTLINE))
+    c.save("terrain", f"terrain_grove_{variant:02d}")
+
+
+# ------------------------------------------------------------------------------------------------ everything
+
+def generate(root):
+    init_materials()
+    with open(os.path.join(root, "data", "sim", "game.json"), encoding="utf-8") as f:
+        d = json.load(f)
+    with open(os.path.join(root, "data", "biomes.json"), encoding="utf-8") as f:
+        biomes = json.load(f)["biomes"]
+    era = {t["key"]: t["era"] for t in d["technologies"]}
+    for b in biomes:
+        color = tuple(int(b["color"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+        for v in (1, 2, 3):
+            biome_tile(b["key"], color, v)
+    for kind in ("hills", "mountains"):
+        for v in (1, 2):
+            relief(kind, v)
+    for key in ("oasis", "reef", "ice_field"):
+        feature(key)
+    for edge in EDGES:
+        for width in ("stream", "river"):
+            river(edge, width)
+    for v in (1, 2, 3):
+        grove(v)
+    for b in d["buildings"]:
+        rnd = random.Random(b["key"])
+        e = era.get(b["tech"], "stone_age")
+        size = b.get("size", 4)
+        pic = hex_building(b["key"], e, rnd) if size == 4 else small_building(b["key"], e, 1 if size == 1 else 2, rnd)
+        if size == 4 and b["key"] in HEX_SIGNS:
+            board(pic, HEX_SIGNS[b["key"]], HW // 2 - 9, 6, 2)
+            pic.outline(P(OUTLINE))
+        pic.save("buildings", f"building_{b['key']}")
+    for level in d["settlementLevels"]:
+        centre(level["key"]).save("buildings", f"settlement_{level['key']}")
+    for u in d["units"]:
+        unit(u["key"]).save("units", f"unit_{u['key']}")
+    for g in d["goods"]:
+        good(g["key"]).save("goods", f"good_{g['key']}")

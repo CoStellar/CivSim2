@@ -4,213 +4,493 @@
  "files": [
   {
    "file": "biome/biome_coast_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_coast_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_coast_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_deciduous_forest_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_deciduous_forest_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_deciduous_forest_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_deep_ocean_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_deep_ocean_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_deep_ocean_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_desert_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_desert_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_desert_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_grassland_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_grassland_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_grassland_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_ice_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_ice_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_ice_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_jungle_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_jungle_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_jungle_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_lake_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_lake_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_lake_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_savanna_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_savanna_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_savanna_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_shallow_sea_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_shallow_sea_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_shallow_sea_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_steppe_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_steppe_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_steppe_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_swamp_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_swamp_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_swamp_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_taiga_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_taiga_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_taiga_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_tundra_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_tundra_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "biome/biome_tundra_03.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_academy.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_armourer.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_barracks.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_bathhouse.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_blacksmith.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_brickworks.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_bronze_smith.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_builders_yard.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_castle.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_charcoal_burner.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_clay_pit.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_cloth_weaver.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_copper_mine.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_farm.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_fishing_hut.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_gatherers_hut.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_granary.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_great_storehouse.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_guildhall.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_harbour.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_hearth.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_herbalist.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_hunters_lodge.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_hut.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_iron_mine.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_lime_kiln.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_manor.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_mason.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_mill.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_mint.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_pasture.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_potter.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_province_office.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_quarry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_raft_landing.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_sawmill.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_school.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_sheepfold.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_shipyard.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_siege_workshop.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_stable.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_steelworks.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_stone_house.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_storehouse.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_tailor.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_tin_mine.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/building_toolmaker.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_trading_post.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_university.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_weaponsmith.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_weaver.png",
+   "width": 32,
+   "height": 28
+  },
+  {
+   "file": "buildings/building_woodcutter.png",
+   "width": 64,
+   "height": 28
+  },
+  {
+   "file": "buildings/settlement_camp.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/settlement_city.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/settlement_town.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "buildings/settlement_village.png",
+   "width": 96,
+   "height": 84
   },
   {
    "file": "effects/event_damage.png",
@@ -241,6 +521,151 @@
    "file": "effects/event_movement_slowdown.png",
    "width": 24,
    "height": 24
+  },
+  {
+   "file": "goods/good_bricks.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_bronze.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_bronze_armour.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_bronze_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_charcoal.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_clay.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_cloth.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_clothing.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_coins.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_copper.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_food.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_hide_armour.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_hides.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_horses.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_iron.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_iron_armour.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_iron_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_mortar.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_planks.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_pottery.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_steel_armour.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_steel_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_stone.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_stone_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_textiles.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_tin.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_tools.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_wood.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "goods/good_wool.png",
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_bauxite.png",
@@ -433,99 +858,114 @@
    "height": 42
   },
   {
+   "file": "terrain/terrain_grove_01.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "terrain/terrain_grove_02.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "terrain/terrain_grove_03.png",
+   "width": 96,
+   "height": 84
+  },
+  {
    "file": "terrain/terrain_hills_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_hills_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_ice_field_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_mountains_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_mountains_02.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_oasis_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_reef_01.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_n_river.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_n_stream.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_ne_river.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_ne_stream.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_nw_river.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_nw_stream.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_s_river.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_s_stream.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_se_river.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_se_stream.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_sw_river.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "terrain/terrain_river_sw_stream.png",
-   "width": 48,
-   "height": 42
+   "width": 96,
+   "height": 84
   },
   {
    "file": "ui/button_disabled.png",
@@ -723,14 +1163,109 @@
    "height": 12
   },
   {
+   "file": "units/unit_archers.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_caravan.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_catapult.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_crossbowmen.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_horsemen.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_hunters.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_knights.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_levy.png",
+   "width": 64,
+   "height": 64
+  },
+  {
    "file": "units/unit_migrants_idle_01.png",
    "width": 32,
    "height": 32
   },
   {
+   "file": "units/unit_porters.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_prospectors.png",
+   "width": 64,
+   "height": 64
+  },
+  {
    "file": "units/unit_scout_idle_01.png",
    "width": 32,
    "height": 32
+  },
+  {
+   "file": "units/unit_scouts.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_settlers.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_spearmen.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_surveyors.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_swordsmen.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_trade_ship.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_transport.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_warriors.png",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "file": "units/unit_warship.png",
+   "width": 64,
+   "height": 64
   },
   {
    "file": "units/unit_workers_idle_01.png",
