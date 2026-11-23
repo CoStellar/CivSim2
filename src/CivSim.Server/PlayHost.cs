@@ -617,6 +617,7 @@ public sealed class PlayHost : IDisposable
                 return new PlacesMessage(type, [.. cells]);
             }
 
+            var free = new List<int>();
             foreach (int sid in c.Settlements)
             {
                 foreach (int cell in _game.Settlements[sid].Cells)
@@ -626,9 +627,12 @@ public sealed class PlayHost : IDisposable
                         HexCoord h = _game.Geo.FromIndex(cell);
                         cells.Add(h.Col);
                         cells.Add(h.Row);
+                        free.Add(_game.FreeSlots(cell)); // 2026-11-23 (Patryk): the places show as slots while placing
                     }
                 }
             }
+
+            return new PlacesMessage(type, [.. cells], [.. free]);
         }
 
         return new PlacesMessage(type, [.. cells]);

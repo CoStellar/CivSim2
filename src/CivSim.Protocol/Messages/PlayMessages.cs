@@ -561,9 +561,12 @@ public sealed record SaveGameResultMessage([property: Key(0)] bool Saved, [prope
 [MessagePackObject]
 public sealed record PlacesRequestMessage([property: Key(0)] int Type) : IProtocolMessage;
 
-/// <summary>Server → client: hexes (col, row pairs) of the player's land where <c>Type</c> can be built (price not checked).</summary>
+/// <summary>
+/// Server → client: hexes (col, row pairs) of the player's land where <c>Type</c> can be built (price not checked), and for
+/// each hex the free building places on it (bits 1, 2, 4, 8: top left, top right, bottom left, bottom right).
+/// </summary>
 [MessagePackObject]
-public sealed record PlacesMessage([property: Key(0)] int Type, [property: Key(1)] int[] Cells) : IProtocolMessage;
+public sealed record PlacesMessage([property: Key(0)] int Type, [property: Key(1)] int[] Cells, [property: Key(2)] int[]? Free = null) : IProtocolMessage;
 
 /// <summary>Client → server: send the summary (history and start quality).</summary>
 [MessagePackObject]
