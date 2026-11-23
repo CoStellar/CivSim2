@@ -32,6 +32,7 @@ public partial class StartMenu : CanvasLayer
     private readonly Map.ArtLibrary? _art;
     private readonly IReadOnlyList<Map.ArtPack> _packs;
     private VBoxContainer _content = null!;
+    private ManualView? _manual;
     private string _section = "new";
 
     /// <summary>Creates the menu filled with <paramref name="settings"/> (edited in place).</summary>
@@ -48,6 +49,13 @@ public partial class StartMenu : CanvasLayer
     public StartMenu()
         : this(new LocalSetupInfo([]), new StartSettings(), string.Empty)
     {
+    }
+
+    /// <summary>The section shown first: "new", "load", "manual", "tests" or "settings".</summary>
+    public string Section
+    {
+        get => _section;
+        set => _section = value;
     }
 
     /// <summary>The settings as edited so far.</summary>
@@ -72,7 +80,8 @@ public partial class StartMenu : CanvasLayer
         AddChild(root);
         var center = new CenterContainer();
         root.AddChild(center);
-        var page = new HBoxContainer { CustomMinimumSize = new Vector2(1000, 600) };
+        // The manual gets a bigger page, so its text reads without a second scroll bar.
+        var page = new HBoxContainer { CustomMinimumSize = _section == "manual" ? new Vector2(1500, 820) : new Vector2(1000, 600) };
         page.AddThemeConstantOverride("separation", 32);
         center.AddChild(page);
 
@@ -85,11 +94,13 @@ public partial class StartMenu : CanvasLayer
         nav.AddChild(title);
         nav.AddChild(new Label { Text = "Lead your people through the ages.", Modulate = new Color(0.75f, 0.75f, 0.75f) });
         nav.AddChild(new Control { CustomMinimumSize = new Vector2(0, 16) });
-        foreach ((string key, string label) in new[] { ("new", "New game"), ("load", "Load game"), ("tests", "Test scenarios"), ("settings", "Settings") })
+        Button? current = null;
+        foreach ((string key, string label) in new[] { ("new", "New game"), ("load", "Load game"), ("manual", "How to play"), ("tests", "Test scenarios"), ("settings", "Settings") })
         {
-            var b = new Button { Text = label, CustomMinimumSize = new Vector2(240, 44), ToggleMode = true, ButtonPressed = key == _section };
+            var b = new Button { Text = label, CustomMinimumSize = new Vector2(240, 44), ToggleMode = true, ButtonPressed = key == _section, TooltipText = key == "manual" ? "The manual: the goal, the eras, war and peace, every key (F1)" : "" };
             b.Pressed += () => Show(key);
             nav.AddChild(b);
+            current = key == _section ? b : current;
         }
 
         nav.AddChild(new Control { SizeFlagsVertical = Control.SizeFlags.ExpandFill });
@@ -106,6 +117,34 @@ public partial class StartMenu : CanvasLayer
         _content.AddThemeConstantOverride("separation", 12);
         scroll.AddChild(_content);
         Fill();
+
+        // The whole menu works from the keyboard: something always has the focus (arrows and Tab move it, Enter presses).
+        Callable.From(() =>
+        {
+            if (GetViewport()?.GuiGetFocusOwner() is null)
+            {
+                current?.GrabFocus();
+            }
+        }).CallDeferred();
+    }
+
+    /// <inheritdoc />
+    public override void _UnhandledInput(InputEvent e)
+    {
+        if (e is not InputEventKey { Pressed: true } key)
+        {
+            return;
+        }
+
+        if (key.Keycode == Key.F1 && !key.Echo)
+        {
+            Show(_section == "manual" ? "new" : "manual");
+            GetViewport().SetInputAsHandled();
+        }
+        else if (_manual is not null && key.Keycode is Key.Pageup or Key.Pagedown or Key.Home or Key.End && _manual.HandleKey(key.Keycode))
+        {
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     private void Show(string section)
@@ -119,8 +158,17 @@ public partial class StartMenu : CanvasLayer
         Build();
     }
 
+    // How to play: the manual (data/sim/manual.md), the same as F1 in the game.
+    private void ManualSection()
+    {
+        _manual = new ManualView(Manual.Load(_dataDirectory), focusable: true) { CustomMinimumSize = new Vector2(0, 790) };
+        _content.AddChild(_manual);
+        Callable.From(() => _manual?.FocusChapter()).CallDeferred();
+    }
+
     private void Fill()
     {
+        _manual = null;
         switch (_section)
         {
             case "load":
@@ -131,6 +179,9 @@ public partial class StartMenu : CanvasLayer
                 break;
             case "settings":
                 SettingsSection();
+                break;
+            case "manual":
+                ManualSection();
                 break;
             default:
                 NewGameSection();

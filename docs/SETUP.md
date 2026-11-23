@@ -125,3 +125,21 @@ dotnet run -c Release --project src/CivSim.Headless -- --seed 7 --turns 0 --map-
 ```
 
 Na końcu program wypisuje podsumowanie świata (woda, rzeki, jeziora, starty, wynik walidatora), hash stanu (dwa uruchomienia z tym samym seedem muszą dać ten sam), czasy tur i zużycie pamięci.
+
+## Paczka gry dla testera (Windows)
+
+Tester dostaje plik zip: rozpakowuje go w dowolnym folderze i uruchamia `CivSim2.exe`. Nie potrzebuje Godota ani .NET
+(wszystko jest w paczce). Zapisy gry trafiają do `%APPDATA%\CivSim2\saves`.
+
+**Budowanie u siebie w Godocie:**
+
+1. Otwórz projekt `game/project.godot`.
+2. **Project → Export…** Ustawienie „Windows Desktop” jest już w repo (`game/export_presets.cfg`).
+3. Za pierwszym razem Godot poprosi o **export templates**: kliknij **Manage Export Templates → Download and Install** (ok. 1,2 GB, raz na wersję Godota).
+4. **Export Project** (bez „Export With Debug”). Godot zapisze `build/windows/CivSim2.exe`.
+5. Skopiuj obok exe foldery `data` i `art/placeholder` (jako `art/placeholder`) z repo oraz pliki czcionek z `game/fonts` do `fonts`:
+   gra czyta dane, obrazki i czcionki z plików obok exe.
+6. Spakuj cały folder `build/windows` do zip.
+
+**Albo skryptem** (Linux albo Git Bash, z zainstalowanymi export templates): `tools/export/export_windows.sh <ścieżka do Godota>`.
+Robi kroki 4–6 i zapisuje `build/CivSim2-windows.zip`. Folder `build/` nie trafia do repo.
