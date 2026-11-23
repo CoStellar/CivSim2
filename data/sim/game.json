@@ -3870,5 +3870,11 @@
     "workMaxLossPercent": 20,
     "aiPeaceAt": 60,
     "aiPayAt": 80
+  },
+  "march": {
+    "comment": "Soldiers sent at the same goal share a way: a soldier within shareHexes of where the last search for that goal started, less than shareSeconds ago, walks there (a search of at most joinSearch hexes) and then the same way. One long search per expedition instead of one per soldier.",
+    "shareSeconds": 5,
+    "shareHexes": 3,
+    "joinSearch": 300
   }
 }

@@ -33,7 +33,7 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | 10 | Pomiar FPS na komputerze Patryka | zrobione 2026-11-22: średnio 165–180 FPS |
 | 11 | Nowy pomiar `--sim-report` po PR #134–#142 (głód, warsztaty, takty, wojny) | zrobione 2026-11-23 (liczby w `docs/sim/ai.md`, sekcja o pokoju) |
 | 12 | Dowóz wsadu do warsztatów stałymi trasami (known-issues #13) | do zrobienia |
-| 13 | Wspólna droga dla oddziałów jednej wyprawy (known-issues #15) | do zrobienia |
+| 13 | Wspólna droga dla oddziałów jednej wyprawy (known-issues #15) | zrobione: PR `fix/march-shared-path` (takty ponad 25 ms 7,9 → 3,0 na grę) |
 | 14 | Scenariusz 03 testuje samą walkę (`noPeace`, decyzja Patryka 2026-11-23) | zrobione |
 | 15 | Runda testów demo na komputerze Patryka | Patryk, po 8 i 11–13 |
 

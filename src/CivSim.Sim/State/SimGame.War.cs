@@ -182,7 +182,7 @@ public sealed partial class SimGame
 
         // A7 (tests 2026-11-20): refused at once when no way leads there (walls do not count: they can be broken).
         if (u.Aboard < 0 && Distance(u.Cell, cell) > Content.Units[u.Kind].Range
-            && !FindPath(u.Cell, cell, _attackWay, Content.Units[u.Kind].Naval, civ.Id, ignoreWalls: true))
+            && !FindSharedPath(u.Cell, cell, _attackWay, Content.Units[u.Kind].Naval, civ.Id, ignoreWalls: true))
         {
             return "No way there: a river or the sea is in the way.";
         }
@@ -590,7 +590,7 @@ public sealed partial class SimGame
             return;
         }
 
-        if (!PathFor(u, goal))
+        if (!FindSharedPath(u.Cell, goal, _way, Content.Units[u.Kind].Naval, u.Civ))
         {
             u.ChaseFailTick = Ticks;
 
@@ -618,6 +618,8 @@ public sealed partial class SimGame
         }
 
         u.ChaseFails = 0;
+        u.Path.Clear();
+        u.Path.AddRange(_way);
 
         // Stop short of the goal: as far as the unit's reach.
         int keep = Math.Max(0, u.Path.Count - Content.Units[u.Kind].Range);

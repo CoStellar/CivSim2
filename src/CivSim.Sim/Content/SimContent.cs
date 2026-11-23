@@ -534,6 +534,13 @@ public sealed record WearinessRules
     public int AiPayAt { get; init; } = 80;
 }
 
+/// <summary>
+/// Known issue 15 (2026-11-23): soldiers marching on the same goal share one search of the way. A soldier within
+/// <see cref="ShareHexes"/> of where the last search for that goal started, less than <see cref="ShareTicks"/> ago, walks
+/// to that start (a search of at most <see cref="JoinSearch"/> hexes) and then the same way.
+/// </summary>
+public sealed record MarchRules(int ShareTicks = 50, int ShareHexes = 3, int JoinSearch = 300);
+
 /// <summary>Choosing the start (startPhase in the data): ticks to pick, the block radius and its fuzz, the scoring radii.</summary>
 public sealed record StartPhaseRules(int PickTicks, int BlockRadius, int BlockFuzz, int ScoreRadius, int RoomRadius)
 {
@@ -871,6 +878,9 @@ public sealed class SimContent
     /// <summary>Sieges and garrisons (siege).</summary>
     /// <summary>Peace from negotiation (ADR 0030).</summary>
     public PeaceRules Peace { get; init; } = new();
+
+    /// <summary>A shared way for soldiers marching on one goal (known issue 15).</summary>
+    public MarchRules March { get; init; } = new();
 
     /// <summary>War weariness (ADR 0030, point 7).</summary>
     public WearinessRules Weariness { get; init; } = new();
@@ -1977,6 +1987,9 @@ public sealed class SimContent
                 AiLosingLengthPercent = Ints(peaceEl, "aiLosingLengthPercent"),
                 AiWinningLengthPercent = Ints(peaceEl, "aiWinningLengthPercent"),
             } : new PeaceRules(),
+            March = root.TryProp("march", out JsonElement mEl)
+                ? new MarchRules(mEl.Prop("shareSeconds").GetInt32() * TicksPerSecond, mEl.Prop("shareHexes").GetInt32(), mEl.Prop("joinSearch").GetInt32())
+                : new MarchRules(),
             Weariness = root.TryProp("weariness", out JsonElement wEl) ? new WearinessRules
             {
                 PerMinute = wEl.Prop("perMinute").GetInt32(),

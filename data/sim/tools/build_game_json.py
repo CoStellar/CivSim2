@@ -432,6 +432,9 @@ d["peace"]={"comment":"Peace offers name goods and amounts, maybe one settlement
 d["weariness"]={"comment":"War weariness of a people in each of its wars, 0-100: perMinute a minute of war, perLostPercent for each percent of its people the enemy killed, hungerPerMinute a minute while a settlement of it is hungry, besiegedPerMinute a minute for each settlement the enemy besieges, sacked, taken (also razed) and caravanRaided at once; it falls by peaceFallPerMinute a minute in peace. From workFrom up, buildings that use goods work less, down to workMaxLossPercent less at 100 (the highest weariness of its wars counts). The AI looks for peace from aiPeaceAt, and a losing AI offers goods from aiPayAt.",
   "perMinute":1,"perLostPercent":2,"hungerPerMinute":2,"besiegedPerMinute":2,"sacked":10,"taken":15,"caravanRaided":3,"peaceFallPerMinute":5,
   "workFrom":50,"workMaxLossPercent":20,"aiPeaceAt":60,"aiPayAt":80}
+# Known issue 15 (2026-11-23): one search of the way for soldiers marching on the same goal.
+d["march"]={"comment":"Soldiers sent at the same goal share a way: a soldier within shareHexes of where the last search for that goal started, less than shareSeconds ago, walks there (a search of at most joinSearch hexes) and then the same way. One long search per expedition instead of one per soldier.",
+  "shareSeconds":5,"shareHexes":3,"joinSearch":300}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist
