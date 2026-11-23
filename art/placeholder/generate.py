@@ -709,6 +709,11 @@ def main():
     for name in ICONS:
         icon(name)
     theme()
+    game_art.generate_ui()  # 2026-11-23: textured frames of the interface (stone, leather, wood) over the plain ones
+    unique = {}
+    for entry in MANIFEST:
+        unique[entry["file"]] = entry
+    MANIFEST[:] = list(unique.values())
     manifest = {
         "version": 1,
         "comment": "Every picture the viewer loads, with its size in pixels. An art pack (art/packs/<name>/ or "

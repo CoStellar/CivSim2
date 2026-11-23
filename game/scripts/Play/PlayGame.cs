@@ -379,6 +379,8 @@ public partial class PlayGame : Node2D
         _map = new MapView(_layers, _art);
         AddChild(_map);
         _overlay = new PlayOverlay { ZIndex = 50, Art = _art };
+        PlayOverlay overlay = _overlay;
+        UiKit.Picture = (layer, name) => overlay.Sprite(layer, name, _session?.PlayView?.Civ ?? 0);
         AddChild(_overlay);
         BuildUi();
     }

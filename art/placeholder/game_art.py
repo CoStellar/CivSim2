@@ -50,11 +50,12 @@ ROOFS = {}
 
 
 def init_materials():
-    global WOOD, THATCH, STONE, MUD, ROOFS, HIDE, SKIN, IRON, WATER
+    global WOOD, THATCH, STONE, MUD, ROOFS, HIDE, SKIN, IRON, WATER, BRICK
     WOOD = tones((138, 86, 45))
     THATCH = tones((228, 191, 68))
     STONE = tones((147, 138, 130))
     MUD = tones((204, 126, 87))
+    BRICK = tones((165, 77, 6))
     HIDE = tones((170, 101, 39))
     SKIN = P((204, 126, 87))
     IRON = tones((120, 121, 121))
@@ -98,24 +99,113 @@ def inside(x, y, margin=0):
 
 # ------------------------------------------------------------------------------------------------ drawing pieces
 
-def box(c, x0, y0, x1, y1, t):
-    """A wall in 3/4 view: lit left column, base, shaded right column."""
-    c.rect(x0, y0, x1, y1, t[1])
-    c.rect(x0, y0, x0, y1, t[0])
-    c.rect(x1, y0, x1, y1, t[2])
+def _h(x, y, seed=0):
+    """A fixed pseudo-random number 0-1 for a pixel: patterns that look hand-made but never change."""
+    v = (x * 73856093) ^ (y * 19349663) ^ (seed * 83492791)
+    v = (v ^ (v >> 13)) * 1274126177 & 0xFFFFFFFF
+    return ((v ^ (v >> 16)) & 0xFFFF) / 0xFFFF
 
 
-def gable(c, x0, x1, base_y, height, t, ridge_civ=True):
-    """A pitched roof over x0..x1 whose eaves stand at base_y: lit left slope, shaded right, a civ-coloured ridge."""
+def _mark(c, x, y):
+    """Keep this pixel out of the texture pass (signs, flags: they stay clean)."""
+    if not hasattr(c, "protect"):
+        c.protect = set()
+    c.protect.add((x, y))
+
+
+def box(c, x0, y0, x1, y1, t, moss=True):
+    """A wall in 3/4 view, drawn in its material: courses of cut stone, rows of brick, plaster with cracks or upright
+    planks. Lit on the left, in shadow on the right, darker at the foot and right under the eaves (depth), and green moss
+    creeping up the foot of stone and brick walls."""
+    mat = "stone" if t is STONE else "wood" if t is WOOD else "mud" if t is MUD else "brick" if t is BRICK else "plain"
+    r = ramp(t[1])
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            ly, lx = y - y0, x - x0
+            col = r[2]
+            if mat == "stone":
+                row = ly // 3
+                off = (row % 2) * 3 + int(_h(row, 0, 5) * 3)
+                if ly % 3 == 2:
+                    col = r[1]  # mortar bed
+                elif (lx + off) % 6 == 0:
+                    col = r[1]  # joint
+                elif (lx + off) % 6 == 1 and ly % 3 == 0:
+                    col = r[3]  # lit edge of the block
+                elif _h(x, y, 1) < 0.12:
+                    col = r[1]
+            elif mat == "brick":
+                row = ly // 2
+                if ly % 2 == 1:
+                    col = P((147, 138, 130))  # light mortar
+                elif (lx + (row % 2) * 2) % 4 == 0:
+                    col = P((147, 138, 130))
+                elif _h(x, y, 2) < 0.2:
+                    col = r[3]
+            elif mat == "wood":
+                if lx % 4 == 3:
+                    col = r[0]  # gap between planks
+                elif lx % 4 == 0:
+                    col = r[3]
+                elif _h(lx // 4, ly // 2, 3) < 0.25:
+                    col = r[1]  # grain
+            elif mat == "mud":
+                if _h(x, y, 4) < 0.08:
+                    col = r[3]
+                elif _h(x // 2, y, 6) < 0.05:
+                    col = r[1]
+            # depth: light from the left, shadow on the right, at the foot and under the eaves
+            if x <= x0 + 1:
+                col = tone(col, 1)
+            elif x >= x1 - 2:
+                col = tone(col, -1)
+            if y == y0:
+                col = tone(col, -2)
+            elif y >= y1 - 1:
+                col = tone(col, -1)
+            c.px(x, y, col)
+    if moss and mat in ("stone", "brick"):
+        green = ramp((79, 132, 47))
+        for x in range(x0, x1 + 1):
+            hgt = int(_h(x, y1, 9) * 4) - 1
+            for k in range(max(0, hgt)):
+                c.px(x, y1 - k, green[2] if k == 0 else green[3] if _h(x, k, 8) < 0.5 else green[1])
+
+
+def gable(c, x0, x1, base_y, height, t, ridge_civ=False):
+    """A pitched roof over x0..x1 whose eaves stand at base_y, drawn in its covering: stitched hides, straw thatch in
+    strokes, rows of clay tiles or slates. Lit left slope, shaded right slope, a light ridge, a dark eaves line."""
+    kind = "hide" if t is HIDE else "thatch" if t is THATCH else "tile" if t is ROOFS.get("bronze_age") else "slate"
+    r = ramp(t[1])
     mid = (x0 + x1) / 2
     for k in range(height + 1):
         y = base_y - k
         half = (x1 - x0) / 2 * (1 - k / (height + 1)) + 1
-        l, r = round(mid - half), round(mid + half)
-        c.line(l, y, round(mid), y, t[0])
-        c.line(round(mid) + 1, y, r, y, t[2] if k < height else t[1])
-        c.px(l, y, t[1])
-    c.line(x0 - 1, base_y, x1 + 1, base_y, t[2])
+        l, rr = round(mid - half), round(mid + half)
+        for x in range(l, rr + 1):
+            col = r[2]
+            if kind == "thatch":
+                col = r[3] if _h(x, y // 2, 11) < 0.3 else r[1] if _h(x, y // 2, 12) < 0.25 else r[2]
+            elif kind == "tile":
+                if k % 3 == 0:
+                    col = r[1]
+                elif (x + (k // 3) * 2) % 4 == 0:
+                    col = r[1]
+                elif k % 3 == 2:
+                    col = r[3]
+            elif kind == "slate":
+                if k % 2 == 0:
+                    col = r[1]
+                elif (x + k) % 5 == 0:
+                    col = r[1]
+            elif kind == "hide":
+                if (x + k) % 7 == 0:
+                    col = r[3]
+            col = tone(col, 1) if x <= mid else tone(col, -1)
+            if k == height:
+                col = r[4]
+            c.px(x, y, col)
+    c.line(x0 - 1, base_y, x1 + 1, base_y, r[0])
     if ridge_civ:
         c.px(round(mid), base_y - height, CIV[0])
         c.px(round(mid) + 1, base_y - height, CIV[1])
@@ -136,6 +226,9 @@ def flag(c, x, y, h=8):
     c.line(x, y, x, y - h, P((47, 46, 45)))
     c.rect(x + 1, y - h, x + 4, y - h + 2, CIV[1])
     c.line(x + 1, y - h, x + 4, y - h, CIV[0])
+    for yy in range(y - h, y + 1):
+        for xx in range(x, x + 5):
+            _mark(c, xx, yy)
 
 
 def tent(c, x, y, w, h, t):
@@ -286,11 +379,11 @@ def sign(c, kind, x, y):
         c.px(x + 3, y + 2, P((123, 161, 84)))
     elif kind == "needle":
         c.line(x + 1, y + 6, x + 6, y + 1, IRON[0])
-        c.line(x + 1, y + 2, x + 4, y + 5, CIV[0])
+        c.line(x + 1, y + 2, x + 4, y + 5, P((183, 10, 9)))
     elif kind == "spool":
         c.rect(x + 1, y + 1, x + 5, y + 6, P((242, 194, 121)))
-        c.line(x + 1, y + 3, x + 5, y + 3, CIV[1])
-        c.line(x + 1, y + 5, x + 5, y + 5, CIV[1])
+        c.line(x + 1, y + 3, x + 5, y + 3, P((26, 74, 208)))
+        c.line(x + 1, y + 5, x + 5, y + 5, P((26, 74, 208)))
     elif kind == "block":
         c.rect(x + 1, y + 2, x + 6, y + 6, STONE[1])
         c.line(x + 1, y + 2, x + 6, y + 2, STONE[0])
@@ -307,7 +400,7 @@ def sign(c, kind, x, y):
     elif kind == "shield":
         c.rect(x + 1, y + 1, x + 5, y + 5, IRON[1])
         c.px(x + 3, y + 6, IRON[1])
-        c.rect(x + 2, y + 2, x + 4, y + 4, CIV[1])
+        c.rect(x + 2, y + 2, x + 4, y + 4, P((183, 10, 9)))
     elif kind == "swords":
         c.line(x, y + 6, x + 6, y, IRON[0])
         c.line(x, y, x + 6, y + 6, IRON[0])
@@ -361,15 +454,20 @@ def sign(c, kind, x, y):
 
 
 def board(c, kind, x, y, k=1):
-    """The trade's sign on a small light board (k = 2: drawn twice as big), its top-left corner at (x, y)."""
+    """The trade's sign on a light board with a dark frame (k = 2: drawn twice as big), its top-left corner at (x, y).
+    Clean: the texture pass leaves it alone, so the sign stands out from the building (Patryk, 2026-11-23)."""
     from PIL import Image
-    t = canvas(9, 9)
-    t.rect(0, 0, 8, 8, P((242, 194, 121)))
-    t.line(0, 8, 8, 8, P((170, 101, 39)))
-    t.line(8, 0, 8, 8, P((170, 101, 39)))
-    sign(t, kind, 1, 1)
-    im = t.im.resize((9 * k, 9 * k), Image.NEAREST) if k > 1 else t.im
+    t = canvas(11, 11)
+    t.rect(0, 0, 10, 10, P(OUTLINE))
+    t.rect(1, 1, 9, 9, P((242, 194, 121)))
+    t.line(1, 1, 9, 1, P((251, 249, 251)))
+    t.line(1, 9, 9, 9, P((229, 168, 98)))
+    sign(t, kind, 2, 2)
+    im = t.im.resize((11 * k, 11 * k), Image.NEAREST) if k > 1 else t.im
     c.im.alpha_composite(im, (x, y))
+    for yy in range(y, y + 11 * k):
+        for xx in range(x, x + 11 * k):
+            _mark(c, xx, yy)
 
 
 # Every building: (sign, wall material, roof kind) by key; its size and era come from the data.
@@ -381,17 +479,17 @@ BUILDINGS = {
     "stone_house": (None, "stone", "era"), "mason": ("block", "stone", "era"), "weaver": ("spool", "mud", "era"),
     "trading_post": ("scales", "wood", "era"), "bronze_smith": ("anvil", "stone", "era"), "charcoal_burner": ("flame", "mud", "none"),
     "armourer": ("shield", "stone", "era"), "school": ("book", "mud", "era"), "stable": ("horse", "wood", "era"),
-    "mint": ("coin", "stone", "era"), "barracks": ("swords", "stone", "era"), "blacksmith": ("anvil", "stone", "era"),
+    "mint": ("coin", "brick", "era"), "barracks": ("swords", "stone", "era"), "blacksmith": ("anvil", "stone", "era"),
     "weaponsmith": ("swords", "stone", "era"), "builders_yard": ("hammer", "wood", "era"), "province_office": ("scroll", "stone", "era"),
-    "siege_workshop": ("wheel", "wood", "era"), "bathhouse": ("drop", "stone", "era"), "academy": ("book", "stone", "era"),
-    "brickworks": ("brick", "mud", "era"), "sheepfold": ("sheep", "wood", "era"), "cloth_weaver": ("spool", "stone", "era"),
-    "steelworks": ("gear", "stone", "era"), "mill": ("wheel", "stone", "era"), "guildhall": ("scales", "stone", "era"),
-    "university": ("book", "stone", "era"), "sawmill": ("saw", "wood", "era"), "lime_kiln": ("lime", "stone", "none"),
+    "siege_workshop": ("wheel", "wood", "era"), "bathhouse": ("drop", "brick", "era"), "academy": ("book", "stone", "era"),
+    "brickworks": ("brick", "brick", "era"), "sheepfold": ("sheep", "wood", "era"), "cloth_weaver": ("spool", "stone", "era"),
+    "steelworks": ("gear", "stone", "era"), "mill": ("wheel", "stone", "era"), "guildhall": ("scales", "brick", "era"),
+    "university": ("book", "brick", "era"), "sawmill": ("saw", "wood", "era"), "lime_kiln": ("lime", "stone", "none"),
 }
 
 
 def wall_tones(kind):
-    return {"wood": WOOD, "stone": STONE, "mud": MUD}[kind]
+    return {"wood": WOOD, "stone": STONE, "mud": MUD, "brick": BRICK}[kind]
 
 
 def small_building(key, era, places, rnd):
@@ -406,7 +504,7 @@ def small_building(key, era, places, rnd):
     if roof == "hide" and places == 1:
         tent(c, w // 2, PH - 3, w - 8, 16, HIDE)
         if signk:
-            board(c, signk, w // 2 + 3, PH - 11)
+            board(c, signk, w // 2 + 2, PH - 13)
         c.outline(P(OUTLINE))
         return c
     if key in ("charcoal_burner", "lime_kiln"):
@@ -436,20 +534,82 @@ def small_building(key, era, places, rnd):
         flag(c, 4, PH - 4, 10)
         c.outline(P(OUTLINE))
         return c
-    box(c, x0, eaves, x1, PH - 3, wt)
-    if roof == "none":
-        flat_roof(c, x0, x1, eaves, STONE)
+    smoky = key in ("toolmaker", "potter", "bronze_smith", "armourer", "mint", "blacksmith", "weaponsmith", "brickworks",
+                    "steelworks", "bathhouse", "cloth_weaver")
+    if places == 1:
+        box(c, x0, eaves + 1, x1, PH - 3, wt)
+        if roof == "none":
+            flat_roof(c, x0, x1, eaves + 1, STONE)
+        else:
+            gable(c, x0, x1, eaves + 1, 10, rt)
+        door_frame(c, x0 + 3, PH - 3, 7)
+        if signk:
+            board(c, signk, x1 - 11, eaves + 3)
+        else:
+            window(c, x1 - 8, eaves + 5)
+        if smoky:
+            chimney(c, x0 + 7, eaves - 3)
     else:
-        gable(c, x0, x1, eaves, 10 if places == 1 else 11, rt)
-    door(c, x0 + 3, PH - 3, 6)
-    if places == 2:
-        c.rect(x0 + 12, eaves + 3, x0 + 14, eaves + 5, P((47, 46, 45)))  # window
-    if signk:
-        board(c, signk, x1 - 10 if places == 1 else x1 - 19, eaves + 1 if places == 1 else eaves - 6, 1 if places == 1 else 2)
-    if places == 2 and key in ("barracks", "province_office", "guildhall", "university", "academy"):
-        flag(c, x0 + 1, eaves - 2, 10)
+        # two volumes: the hall and a lower annex with a lean-to roof (a varied outline, depth between them)
+        split = x1 - 15
+        box(c, split + 1, eaves + 3, x1, PH - 3, wt)
+        lean_to(c, split + 1, x1, eaves + 3, 6, rt)
+        box(c, x0, eaves + 1, split, PH - 3, wt)
+        if roof == "none":
+            flat_roof(c, x0, split, eaves + 1, STONE)
+        else:
+            gable(c, x0, split, eaves + 1, 11, rt)
+        c.line(split + 1, eaves + 3, split + 1, PH - 3, tone(wt[1], -2))  # the hall's shadow on the annex
+        door_frame(c, x0 + 4, PH - 3, 8)
+        window(c, x0 + 12, eaves + 5)
+        window(c, split - 7, eaves + 5)
+        if signk:
+            board(c, signk, split + 3, eaves + 5)
+        if smoky:
+            chimney(c, x0 + 9, eaves - 4)
+        if key in ("barracks", "province_office", "guildhall", "university", "academy"):
+            flag(c, split - 2, eaves - 6, 10)
     c.outline(P(OUTLINE))
     return c
+
+
+def door_frame(c, x, y, h):
+    """A plank door in a light frame with a dark threshold."""
+    c.rect(x - 1, y - h, x + 3, y, WOOD[2])
+    c.rect(x, y - h + 1, x + 2, y, WOOD[0] if False else P((86, 44, 24)))
+    c.line(x + 1, y - h + 1, x + 1, y, P((69, 31, 7)))
+    c.px(x + 2, y - h // 2, P((223, 143, 19)))  # the latch
+    c.line(x - 1, y, x + 3, y, P((47, 46, 45)))
+
+
+def window(c, x, y):
+    """A small window: dark opening, a lit sill, a frame cross."""
+    c.rect(x, y, x + 3, y + 3, P((29, 23, 16)))
+    c.px(x + 1, y + 1, P((63, 167, 201)))
+    c.line(x, y + 4, x + 3, y + 4, P((242, 194, 121)))
+    c.line(x - 1, y - 1, x + 4, y - 1, WOOD[2])
+
+
+def chimney(c, x, y):
+    """A chimney with a puff of smoke: the workshop is at work."""
+    r = ramp((147, 138, 130))
+    c.rect(x, y, x + 2, y + 5, r[2])
+    c.line(x, y, x, y + 5, r[3])
+    c.line(x - 1, y, x + 3, y, r[1])
+    for k, (dx, dy) in enumerate(((1, -2), (2, -4), (1, -6))):
+        c.px(x + dx, y + dy, P((169, 162, 160)) if k else P((147, 138, 130)))
+
+
+def lean_to(c, x0, x1, base_y, height, t):
+    """A single-slope roof falling to the right, over an annex."""
+    r = ramp(t[1])
+    for k in range(height):
+        y = base_y - k
+        right = x1 - round(k * (x1 - x0) / (height * 2.2))
+        for x in range(x0, right + 1):
+            col = r[2] if (x + k) % 4 else r[1]
+            c.px(x, y, tone(col, -1) if x > (x0 + right) / 2 else col)
+    c.line(x0, base_y, x1 + 1, base_y, r[0])
 
 
 def hex_building(key, era, rnd):
@@ -1013,8 +1173,9 @@ def generate(root):
         size = b.get("size", 4)
         pic = hex_building(b["key"], e, rnd) if size == 4 else small_building(b["key"], e, 1 if size == 1 else 2, rnd)
         if size == 4 and b["key"] in HEX_SIGNS:
-            board(pic, HEX_SIGNS[b["key"]], HW // 2 - 9, 6, 2)
+            board(pic, HEX_SIGNS[b["key"]], HW // 2 - 11, 4, 2)
             pic.outline(P(OUTLINE))
+        texturize(pic.im, seed=sum(map(ord, b["key"])), strength=0.35, protect=getattr(pic, "protect", set()))
         pic.save("buildings", f"building_{b['key']}")
     for level in d["settlementLevels"]:
         centre(level["key"]).save("buildings", f"settlement_{level['key']}")
@@ -1037,7 +1198,7 @@ def finish(root):
     upright grass strokes on grounds, and Patryk's old icons for the goods they show."""
     from PIL import Image
     out = os.path.join(root, "art", "placeholder")
-    for layer in ("biome", "terrain", "buildings", "units", "goods"):
+    for layer in ("biome", "terrain", "units", "goods"):  # buildings get their own texture with clean signs
         folder = os.path.join(out, layer)
         for name in sorted(os.listdir(folder)):
             if not name.endswith(".png") or (layer == "units" and name.endswith("_idle_01.png")):
@@ -1046,7 +1207,7 @@ def finish(root):
             im = Image.open(path).convert("RGBA")
             key = name[:-4]
             grass = layer == "biome" and any(key.startswith(f"biome_{g}_") for g in GRASS)
-            texturize(im, seed=sum(map(ord, key)), strength=1.3 if layer == "biome" else 1.0, strokes=grass)
+            texturize(im, seed=sum(map(ord, key)), strength=1.3 if layer in ("biome", "units") else 1.0, strokes=grass)
             im.save(path)
     for good_key, old in OLD_ICONS.items():
         src = os.path.join(root, "art", "legacy", "map_visuals", old + ".png")
@@ -1073,7 +1234,7 @@ def _noise(x, y, seed, cell):
     return top + (bot - top) * fy
 
 
-def texturize(im, seed=1, strength=1.0, outline=OUTLINE, strokes=False):
+def texturize(im, seed=1, strength=1.0, outline=OUTLINE, strokes=False, protect=frozenset()):
     """The old CivSim texture over flat colours: every pixel of a surface takes a lighter or darker palette tone by a mix of
     blotchy and fine noise, wood in horizontal grain, so grass, stone and wood read as materials. The outline, the
     civilization magentas and tiny details (lone pixels) stay as drawn."""
@@ -1085,7 +1246,7 @@ def texturize(im, seed=1, strength=1.0, outline=OUTLINE, strokes=False):
     for y in range(h):
         for x in range(w):
             r, g, b, a = px[x, y]
-            if a < 128 or (r, g, b) in keep or (g < 5 and abs(r - b) < 5 and r > 100):
+            if a < 128 or (r, g, b) in keep or (g < 5 and abs(r - b) < 5 and r > 100) or (x, y) in protect:
                 continue
             # same-colour neighbours: only surfaces get a texture, not single-pixel details
             same = sum(1 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -1282,3 +1443,72 @@ def generate_works():
     wall_edge().save("works", "work_wall_edge")
     wall_tower().save("works", "work_wall_tower")
     palisade_edge().save("works", "work_palisade_edge")
+
+
+# ------------------------------------------------------------------------------------------------ interface frames (textured)
+
+def _frame(name, w, h, base_rgb, margin, pattern, raised=True, stitch=None):
+    """A 9-slice frame of the interface in a material (Patryk, 2026-11-23: the whole interface textured): a dark outline,
+    a bevel (lit top-left when raised, sunk otherwise) and a material pattern whose period divides the centre, so it
+    repeats seamlessly when the game tiles the centre."""
+    c = canvas(w, h)
+    r = ramp(base_rgb)
+    for y in range(h):
+        for x in range(w):
+            col = r[2]
+            if pattern == "stone":
+                row = y // 3
+                if y % 3 == 2 or (x + (row % 2) * 3) % 6 == 0:
+                    col = r[1]
+                elif (x + (row % 2) * 3) % 6 == 1 and y % 3 == 0:
+                    col = r[3]
+            elif pattern == "leather":
+                if (x * 3 + y * 5) % 7 == 0:
+                    col = r[1]
+                elif (x * 5 + y) % 11 == 0:
+                    col = r[3]
+            elif pattern == "wood":
+                if x % 6 == 5:
+                    col = r[0]
+                elif (x // 6 + y) % 5 == 0:
+                    col = r[1]
+            elif pattern == "parchment":
+                if (x * 7 + y * 3) % 9 == 0:
+                    col = r[3]
+            c.px(x, y, col)
+    lit, dark = (r[4], r[0]) if raised else (r[0], r[3])
+    c.line(1, 1, w - 2, 1, lit)
+    c.line(1, 1, 1, h - 2, lit)
+    c.line(1, h - 2, w - 2, h - 2, dark)
+    c.line(w - 2, 1, w - 2, h - 2, dark)
+    if margin >= 4:
+        c.line(2, 2, w - 3, 2, r[3])
+        c.line(2, h - 3, w - 3, h - 3, r[1])
+    if stitch is not None:
+        for x in range(4, w - 4, 2):
+            c.px(x, 3, stitch)
+            c.px(x, h - 4, stitch)
+        for y in range(4, h - 4, 2):
+            c.px(3, y, stitch)
+            c.px(w - 4, y, stitch)
+    c.rect(0, 0, w - 1, 0, P(OUTLINE))
+    c.rect(0, h - 1, w - 1, h - 1, P(OUTLINE))
+    c.rect(0, 0, 0, h - 1, P(OUTLINE))
+    c.rect(w - 1, 0, w - 1, h - 1, P(OUTLINE))
+    for x, y in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)):
+        c.im.putpixel((x, y), (0, 0, 0, 0))
+    c.save("ui", name)
+
+
+def generate_ui():
+    stone, leather, wood = (79, 75, 69), (86, 44, 24), (122, 45, 2)
+    _frame("frame_panel", 24, 24, (62, 60, 58), 6, "stone")
+    _frame("frame_bar", 24, 24, leather, 6, "leather", stitch=P((170, 101, 39)))
+    _frame("frame_header", 24, 16, (105, 56, 41), 4, "leather")
+    _frame("button_normal", 12, 12, stone, 3, "stone")
+    _frame("button_hover", 12, 12, (101, 99, 98), 3, "stone")
+    _frame("button_pressed", 12, 12, wood, 3, "wood", raised=False)
+    _frame("button_disabled", 12, 12, (47, 46, 45), 3, "stone")
+    _frame("tab_selected", 12, 12, wood, 3, "wood")
+    _frame("tab_unselected", 12, 12, (62, 60, 58), 3, "stone")
+    _frame("tooltip", 12, 12, (242, 194, 121), 3, "parchment")

@@ -280,7 +280,13 @@ public static class PixelTheme
             return null;
         }
 
-        var box = new StyleBoxTexture { Texture = texture };
+        // 2026-11-23: the frames carry a stone, leather or wood pattern; the centre and edges repeat it instead of stretching.
+        var box = new StyleBoxTexture
+        {
+            Texture = texture,
+            AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.TileFit,
+            AxisStretchVertical = StyleBoxTexture.AxisStretchMode.TileFit,
+        };
         box.SetTextureMarginAll(margin * Scale);
         box.SetContentMarginAll(System.Math.Max(margin, content / 2) * Scale);
         return box;

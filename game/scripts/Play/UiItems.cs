@@ -227,7 +227,8 @@ internal static class UiRender
                 foreach (GoodCell c in g.Cells)
                 {
                     var cell = new HBoxContainer { TooltipText = $"{c.Name}: {c.Stock / 100} of {c.Capacity / 100}, {UiKit.Rate(c.Rate)} a minute", MouseFilter = Control.MouseFilterEnum.Pass };
-                    cell.AddChild(new Glyph(UiKit.GoodColor(c.Key), UiKit.Short(c.Name)[..1], 24, round: true));
+                    Texture2D? icon = UiKit.Picture?.Invoke("goods", "good_" + c.Key); // 2026-11-23: pictures, not letters
+                    cell.AddChild(new Glyph(UiKit.GoodColor(c.Key), UiKit.Short(c.Name)[..1], icon is null ? 24 : 36, round: icon is null, icon: icon));
                     var stack = new VBoxContainer();
                     stack.AddThemeConstantOverride("separation", 0);
                     Color rate = c.Rate > 0 ? UiKit.Good : c.Rate < 0 ? UiKit.Bad : UiKit.Muted;
