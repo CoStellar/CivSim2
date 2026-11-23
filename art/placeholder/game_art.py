@@ -493,6 +493,18 @@ def sign_more(c, kind, x, y):
         c.line(x + 2, y + 1, x + 4, y + 1, THATCH[0])
         c.px(x + 3, y, P((86, 44, 24)))
         c.line(x + 5, y + 3, x + 5, y + 6, THATCH[2])
+    elif kind == "cross":  # wounded: a red cross on white
+        c.rect(x + 2, y, x + 4, y + 6, P((183, 10, 9)))
+        c.rect(x, y + 2, x + 6, y + 4, P((183, 10, 9)))
+    elif kind == "white_flag":  # passive: a white flag on a pole
+        c.line(x + 1, y, x + 1, y + 6, WOOD[0])
+        c.rect(x + 2, y, x + 6, y + 3, P((251, 249, 251)))
+        c.line(x + 2, y + 3, x + 6, y + 3, P((169, 162, 160)))
+    elif kind == "spear_up":  # aggressive: a spear point forward
+        c.line(x, y + 6, x + 5, y + 1, WOOD[0])
+        c.rect(x + 5, y, x + 6, y + 1, IRON[1])
+        c.px(x + 4, y, IRON[1])
+        c.px(x + 6, y + 2, IRON[1])
     elif kind == "stack":
         for bx, by in ((x, y + 4), (x + 4, y + 4), (x + 2, y)):
             c.rect(bx, by, bx + 2, by + 2, WOOD[1])
@@ -508,16 +520,22 @@ ALERTS = ["swords", "eye", "bowl", "crate", "house", "stack", "brick", "snow", "
 def alert_icon(kind_index):
     """An alert's picture (2026-11-23): a round parchment badge with a red (danger) or amber (warning) rim and the mark of
     what is wrong, drawn at 16x16 and doubled to 32x32 at 2x."""
+    return badge(ALERTS[kind_index], "red" if kind_index <= 2 else "amber")
+
+
+def badge(mark_kind, rim_kind):
+    """A round parchment badge with a rim (red, amber, blue or grey) and an outlined mark, 16x16 doubled to 32x32."""
     from PIL import Image
     t = canvas(16, 16)
-    rim = P((183, 10, 9)) if kind_index <= 2 else P((223, 143, 19))
-    rim_light = P((236, 39, 30)) if kind_index <= 2 else P((234, 210, 32))
+    rims = {"red": ((183, 10, 9), (236, 39, 30)), "amber": ((223, 143, 19), (234, 210, 32)),
+            "blue": ((19, 103, 157), (63, 167, 201)), "grey": ((79, 75, 69), (147, 138, 130))}
+    rim, rim_light = (P(v) for v in rims[rim_kind])
     t.disc(7.5, 7.5, 7.5, rim)
     t.disc(7.0, 7.0, 6.0, rim_light)
     t.disc(7.5, 7.5, 5.6, P((242, 194, 121)))
     t.outline(P(OUTLINE))
     mark = canvas(9, 9)  # the mark on its own, outlined in dark brown so it reads on the parchment
-    sign_more(mark, ALERTS[kind_index], 1, 1)
+    sign_more(mark, mark_kind, 1, 1)
     for yy in range(9):
         for xx in range(9):
             r_, g_, b_, a_ = mark.im.getpixel((xx, yy))
@@ -2000,6 +2018,11 @@ def deposit_unknown():
 def generate_alerts():
     for k in range(len(ALERTS)):
         alert_icon(k).save("ui", f"alert_{k}")
+    # Marks over units (2026-11-23): their stance when not the usual one, their wounded, their hunger.
+    for name, mark_kind, rim_kind in (("mark_stance_aggressive", "spear_up", "red"), ("mark_stance_passive", "white_flag", "grey"),
+                                      ("mark_wounded", "cross", "red"), ("mark_hungry", "bowl", "amber"),
+                                      ("mark_starving", "bowl", "red")):
+        badge(mark_kind, rim_kind).save("ui", name)
 
 
 def generate_deposits(deposits):

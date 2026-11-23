@@ -1188,6 +1188,31 @@
    "height": 16
   },
   {
+   "file": "ui/mark_hungry.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/mark_stance_aggressive.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/mark_stance_passive.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/mark_starving.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/mark_wounded.png",
+   "width": 32,
+   "height": 32
+  },
+  {
    "file": "ui/scroll_grabber.png",
    "width": 6,
    "height": 12

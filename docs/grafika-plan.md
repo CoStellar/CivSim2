@@ -296,3 +296,12 @@ bursztynowa przy ostrzeżeniu. W środku znak z ciemnym konturem:
 | jedzenie się kończy | kłos |
 | nic się nie bada | księga |
 
+## 16. Znaczniki nad oddziałami (2026-11-23)
+
+Małe plakietki z prawej strony oddziału, jedna pod drugą, w tym samym stylu co ikony alertów:
+- **postawa**, gdy nie jest zwykłą „Hold”: zaczepna (włócznia, czerwona) albo bierna (biała flaga, szara);
+- **ranni** w oddziale: czerwony krzyż;
+- **głód:** miska z bursztynową obwódką (głodni), z czerwoną (głodują).
+
+Szyku nie ma jeszcze w danych widoku, więc nie ma dla niego znacznika.
+
