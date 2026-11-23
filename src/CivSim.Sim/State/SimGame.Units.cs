@@ -566,6 +566,54 @@ public sealed partial class SimGame
         return true;
     }
 
+    // Known issue 15 (2026-11-23): the last searches of a way to a goal, shared by soldiers starting near the same hex.
+    private sealed record SharedWay(long Tick, int Civ, int To, bool Naval, bool IgnoreWalls, int From, int[] Path);
+
+    private readonly List<SharedWay> _shared = [];
+    private readonly List<int> _join = [];
+
+    /// <summary>Searches of a way saved by sharing (for tests and --sim-report).</summary>
+    public int SharedWays { get; private set; }
+
+    /// <summary>
+    /// A way for a soldier: when another soldier of the same people searched a way to the same goal from within march.shareHexes
+    /// moments ago, this one walks to where that one started (a short search) and then the same way.
+    /// </summary>
+    internal bool FindSharedPath(int from, int to, List<int> path, bool naval, int civ, bool ignoreWalls = false)
+    {
+        MarchRules r = Content.March;
+        _shared.RemoveAll(w => Ticks - w.Tick > r.ShareTicks);
+        foreach (SharedWay w in _shared)
+        {
+            if (w.Civ != civ || w.To != to || w.Naval != naval || w.IgnoreWalls != ignoreWalls || Distance(from, w.From) > r.ShareHexes)
+            {
+                continue;
+            }
+
+            if (from == w.From || FindPath(from, w.From, _join, naval, civ, r.JoinSearch, ignoreWalls))
+            {
+                path.Clear();
+                path.AddRange(_join.Count > 0 && from != w.From ? _join : []);
+                path.AddRange(w.Path);
+                SharedWays++;
+                return true;
+            }
+        }
+
+        if (!FindPath(from, to, path, naval, civ, 0, ignoreWalls))
+        {
+            return false;
+        }
+
+        if (_shared.Count >= 8)
+        {
+            _shared.RemoveAt(0);
+        }
+
+        _shared.Add(new SharedWay(Ticks, civ, to, naval, ignoreWalls, from, [.. path]));
+        return true;
+    }
+
     /// <summary>Finds a way from a hex to another (cleared first), true when there is one; <paramref name="ignoreWalls"/>: as if no wall stood (walls can be broken).</summary>
     public bool FindPath(int from, int to, List<int> path, bool naval = false, int civ = -1, int searchLimit = 0, bool ignoreWalls = false)
     {

@@ -294,6 +294,13 @@ Pomiar przed → po (`--sim-report --seeds 12 --minutes 120`, mapa 98×60, 4 lud
 pokoje 48,6 na grę (średnio 506 jedzenia wartości w jednym pokoju), osady przekazane w pokoju 2,4 na grę, zajęte zbrojnie 3,3 → 4,1,
 złupione 6,1 → 6,0, zmęczenie na końcu gry średnio 30, ludzie 12 066 → 13 271. Liczby z 12 gier mają duży rozrzut (od ±16% do ±136%).
 
+## Wspólna droga wyprawy (2026-11-23, znany problem 15)
+
+Żołnierze wysłani na ten sam cel dzielą jedno szukanie drogi: kto stoi najwyżej 3 heksy od miejsca, z którego ktoś z jego ludu szukał
+drogi do tego celu w ostatnich 5 sekundach, idzie najpierw tam (krótkie szukanie, do 300 heksów), a potem tą samą drogą (`march.shareHexes`,
+`shareSeconds`, `joinSearch`). Dotyczy sprawdzenia drogi przy rozkazie ataku i marszu za celem. Wyprawa szuka więc długiej drogi raz,
+nie raz na oddział. Oddziały idą jedną drogą (kolumną), a w zasięgu celu rozchodzą się do walki jak dotąd.
+
 ## Czego jeszcze nie ma (kolejne paczki)
 
 AI walki (formacje, flanki, odskoki jazdy).
