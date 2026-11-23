@@ -4,6 +4,14 @@ Czytasz ten plik na początku każdej sesji. Jest źródłem zasad pracy w tym r
 
 **Teraz: sprint do grywalnego demo (do średniowiecza).** Lista prac i stan: `ROADMAP.md`.
 
+- **Do czego dążymy teraz:** partia ok. 60 minut przeciw kilku ludom AI, od wyboru startu do celu partii. Ostatnie prace przed demo
+  (ROADMAP „Do demo”): pokój z negocjacji i zmęczenie wojną (ADR 0030), AI bez bezczynnych warsztatów, płynne takty przy wyprawach,
+  potem runda testów Patryka.
+- **Potem (po demo):** wydzielenie legacy (ADR 0029, kroki 2–4), zarządca i prowincje, AI na statkach, pixel art Patryka,
+  multiplayer przez sieć, kolejne ery.
+
+Na starcie sesji przeczytaj `ROADMAP.md`, `docs/known-issues.md` i ostatnie commity (`git log --oneline -20 origin/development`).
+
 ## Gra
 
 CivSim 2 to strategia na żywo, „Cywilizacja 6 w czasie rzeczywistym”, na heksagonalnej mapie-planecie (wschód–zachód zawija się,
@@ -43,7 +51,8 @@ losowaniem, haszem i nazwami) i w plikach `data/*.json` poza `data/sim/`.
 - **Po każdym wdrożeniu:** szczegółowe wyjaśnienie z liczbami (przed/po z `--sim-report`).
 - **Przed otwarciem PR:** sprawdź otwarte PR-y względem siebie (konflikty, zależności, kolejność merge'a).
 - **Testy uruchamiaj wtedy, gdy są potrzebne** (przed commitem zmian w kodzie, nie po każdej drobnej edycji).
-- **Wszystkie liczby w danych** (`data/sim/game.json`), nie w kodzie.
+- **Wszystkie liczby w danych** (`data/sim/game.json`), nie w kodzie. Klucze czytaj przez `Prop`/`TryProp`/`Entries` (`Content/JsonRead.cs`),
+  nie przez `GetProperty`: inaczej kontrola danych (menu, `GameDataTests`) zgłosi nowy klucz jako nieznany.
 - **Czego lud nie zna, tego nie widać** (złoża późniejszych er jako „???”, budynki i jednostki dopiero po technologii). Wyjątek: drzewo technologii.
 - **Gałęzie:** `feat/<opis>` albo `fix/<opis>` od `development`. PR do `development`, opis po polsku: co, dlaczego, liczby, wyniki testów.
   **Merge robi Patryk.** Nigdy nie pushuj do `main`.
@@ -75,7 +84,7 @@ docs/sim/                  opis nowej gry
 ## Polecenia
 
 ```
-export PATH=$HOME/.dotnet:$PATH
+export PATH=$HOME/.dotnet:$PATH                                 # w sesji w chmurze bez .NET: apt-get install -y dotnet-sdk-10.0
 python3 data/sim/tools/build_game_json.py                      # po zmianie skryptu danych
 dotnet build -c Release -v q                                     # ostrzeżenia są błędami
 dotnet test tests/CivSim.Sim.Tests -c Release -v q
