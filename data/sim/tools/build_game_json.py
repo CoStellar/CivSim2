@@ -195,20 +195,20 @@ t("flint_weapons","Flint weapons",S,{"stone_tools":15},{"stone":20,"wood":10},20
 t("agriculture","Agriculture",N,{"foraging":40,"stone_tools":10},{"food":80,"wood":40,"stone":20},60,"Farms (the more fertile the land, the more they give); camps can become villages.")
 t("pottery","Pottery",N,{"agriculture":15,"shelters":10},{"clay":40,"wood":30},45,"Potters (pottery, used in many later things), granaries.")
 t("animal_husbandry","Animal husbandry",N,{"agriculture":20,"hunting":20},{"food":100,"wood":40},50,"Pastures (twice as good on cattle).")
-t("masonry","Masonry",N,{"stone_tools":40,"agriculture":15},{"stone":80,"tools":20},60,"Stone houses (more homes, warmer in winter); masons (quarries near them dig more); bridges where roads cross rivers.")
+t("masonry","Masonry",N,{"stone_tools":40,"agriculture":15},{"stone":40,"tools":10},60,"Stone houses (more homes, warmer in winter); masons (quarries near them dig more); bridges where roads cross rivers.")
 t("weaving","Weaving",N,{"animal_husbandry":20},{"hides":30,"tools":10},50,"Weavers (textiles).",made={"clothing":20})
 t("irrigation","Irrigation",N,{"agriculture":40},{"stone":60,"tools":15},55,"Irrigation ditches drawn from water (at most 4 hexes): farms on watered hexes +25%; droughts 40% milder.",[("resist","drought",40)])
 t("barter","Barter",N,{"pottery":15},{"pottery":20,"food":60},50,"Trading posts; trade with other peoples (one agreement per trading post).",made={"pottery":30})
 t("palisade","Palisade",N,{"stone_tools":30},{"wood":80},40,"Palisades drawn on hexes: they wound enemies attacking through them.")
 t("prospecting","Prospecting",N,{"masonry":10},{"food":40,"stone":20},40,"Ore signs: circles on seen land where an ore of our era lies; prospectors can search them one by one. New signs with each era: copper, then tin, gold and silver, iron ore, saltpeter.")
-t("copper_working","Copper working",N,{"masonry":20,"pottery":20},{"stone":60,"clay":40,"tools":30},70,"Copper mines.",made={"tools":30})
+t("copper_working","Copper working",N,{"masonry":20,"pottery":20},{"stone":30,"clay":20,"tools":15},70,"Copper mines.",made={"tools":30})
 t("fishing","Fishing",N,{"hunting":15},{"food":30,"wood":20},25,"Fishing huts by rivers and the sea.")
 t("rafts","Rafts",N,{"fishing":15},{"wood":50},30,"Raft landings: our people cross the river next to them.")
 t("polished_stone","Polished stone tools",N,{"masonry":20},{"stone":60,"tools":10},40,"Quarries, woodcutters, clay pits +15%.",[("production","tools",15)],True)
 t("hide_shields","Hide shields",N,{"animal_husbandry":20},{"hides":40},40,"Warriors and residents +15%.",[("strength","melee",15)],True)
 t("hafted_weapons","Hafted weapons",N,{"stone_tools":30},{"stone":30,"tools":5},30,"Warriors and residents +20%.",[("strength","melee",20)],True)
 # Bronze
-t("bronze_working","Bronze working",BR,{"copper_working":30},{"copper":40,"wood":80,"tools":30},80,"Tin mines, bronze smiths, charcoal burners (charcoal from wood: the fuel of smiths).",made={"copper":30})
+t("bronze_working","Bronze working",BR,{"copper_working":30},{"copper":20,"wood":80,"tools":20},80,"Tin mines, bronze smiths, charcoal burners (charcoal from wood: the fuel of smiths).",made={"copper":30})
 t("bronze_weapons","Bronze weapons",BR,{"bronze_working":15},{"bronze":20,"wood":40},50,"Armourers (arms), spearmen.",made={"bronze":20})
 t("the_wheel","The wheel",BR,{"agriculture":60,"masonry":20},{"wood":120,"tools":20},70,"With Horseback riding: caravans (they take horses). Porters and caravans 50% faster.",[("speed","carriers",50)])
 t("writing","Writing",BR,{"pottery":40},{"clay":80,"food":100},70,"Schools: every worker speeds one branch of research we choose (+15%).",made={"pottery":40})
@@ -361,7 +361,9 @@ d['technologies']=T
 d["research"]["maxSupportPercent"]=50
 # Pace of research by era (2026-11-19: about 60 minutes to the Middle Ages): percent of the price, of the experience and goods
 # made asked for, and of the time, for the technologies of each era (stone, neolithic, bronze, iron, middle ages).
-d["research"]["pace"]={"pricePercent":[40,35,25,25,25],"experiencePercent":[40,35,22,22,22],"secondsPercent":[60,50,35,35,35]}
+# Tests 2026-11-23 (Patryk: experience is a bad brake, eras about equal): experience and goods made are no longer asked (0);
+# the stone age takes its time from research, the neolithic is cheap, the iron age costs more.
+d["research"]["pace"]={"pricePercent":[100,20,18,45,25],"experiencePercent":[0,0,0,0,0],"secondsPercent":[120,50,35,60,35]}
 if "pace:" not in d["research"]["comment"]:
     d["research"]["comment"]+=" pace: percent of the price, of the experience and goods made asked for, and of the time of the technologies of each era (index = era)."
 if "maxSupportPercent:" not in d["research"]["comment"]:
@@ -422,7 +424,9 @@ d["ai"]["comment"]+=" foodMarginPercent: outside winter the AI wants food made t
 d["aiBattle"]={"comment":"retreatInjuredPercent: a unit at war with this share of its people wounded goes home to heal; retreatSizePercent: one with fewer people than this share of its size goes home and guards it. engageHexes: a seen enemy army this close to a soldier is fought first, by every soldier this close to it (a flank). An offensive starts from our settlement nearest the target: soldiers within musterFromHexes but farther than musterHexes gather there in formation, and the march starts once musterPercent of the power stands there.",
   "retreatInjuredPercent":50,"retreatSizePercent":30,"engageHexes":5,"musterHexes":3,"musterFromHexes":30,"musterPercent":70}
 # 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
-d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5},"middle_ages":{"bricks":20}}
+# Tests 2026-11-23 (P4, equal eras): the iron age no longer asks for bronze made (7A); iron working's price needs bronze anyway,
+# and the wait for tin was the longest of the game (bronze age 28 minutes, iron age 7).
+d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","middle_ages":{"bricks":20}}
 # ADR 0030 (Patryk, 2026-11-23): peace from negotiation (1B 2B 3B 4A 5A 6A) and war weariness (7.1A 7.2A 7.3A 7.4B 7.5B).
 d["war"]["comment"]=d["war"]["comment"].replace(" truceSeconds: truce after peace.","")
 d["peace"]={"comment":"Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the people's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's.",
@@ -471,3 +475,39 @@ from collections import Counter
 print(Counter(x['era'] for x in base))
 # Pace of the first minutes (roadmap 6, 2026-11-21): the start had too little wood (huts at 7 minutes, the first toolmaker at 12).
 d=json.load(open(p)); d["start"]["stock"]={"food":120,"wood":100,"stone":20}; json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+# Tests 2026-11-23 (Patryk): the AI looks before it attacks and weighs the gain (P1), reputation heals in peace (P2), settlements
+# see farther (P3).
+d=json.load(open(p))
+d["aiWar"]={"comment":"When the AI starts a war (Patryk, 2026-11-23). It never breaks a peace that still runs. A target settlement not seen for intelMinutes gets a scout first. It attacks when its power is powerTimes the defence it knows, the settlement holds at least gainPercent of the soldiers it sends in people (the gain), and the target people is not small: a people whose known people is below smallTargetPercent of ours, or below smallTargetPeople, is spared unless its reputation is below war.badReputation. Only an AI with aggression of at least surpriseAggression attacks without declaring war. While a people it met has a bad name, the AI keeps fearArmyPercent more soldiers and seeks defensive alliances against it. At war it offers peace when the enemy's score is losingScoreMargin above its own, when weary, or with randomPeacePercent chance a thought.",
+ "intelMinutes":3,"powerTimes":2,"gainPercent":60,"smallTargetPercent":40,"smallTargetPeople":40,"fearArmyPercent":50,"randomPeacePercent":3,"losingScoreMargin":20,"surpriseAggression":75}
+d["war"]["reputationRegenPerMinute"]=4
+if "reputationRegenPerMinute" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" reputationRegenPerMinute: a bad name heals by this much a minute (up to 0) while the people is not the aggressor of a war going on."
+d["vision"]={"comment":"settlementSightBeyond: hexes a settlement sees beyond its own land. Units of a people we have not met that our settlements see, and whose people has seen the settlement, raise the alert 'Strangers' (not who nor where).","settlementSightBeyond":2}
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+# Patryk, 2026-11-23: a people left alone survives on gathering, but does not grow on it.
+d=json.load(open(p))
+d["forage"]["subsistencePercent"]=100
+if "subsistencePercent" not in d["forage"]["comment"]:
+    d["forage"]["comment"]+=" subsistencePercent: idle gatherers always find at least this share of the food they eat (any land, any season), so a people left alone survives but gathers no surplus."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+# A6 (tests 2026-11-23): numbers of the AI out of the code.
+d=json.load(open(p))
+d["ai"]["wayToMinutes"]=2
+d["ai"]["thinkEveryTicks"]=30
+d["ai"]["careSettlementPeople"]={"school":40,"bathhouse":50,"academy":70,"university":90}
+if "wayToMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" thinkEveryTicks: ticks between two thoughts of one AI people. wayToMinutes: the AI remembers this long (plus up to a minute, different for each target) whether its armies can reach a settlement; one thought searches one way at most. careSettlementPeople: people a settlement needs before the AI builds there a school, bathhouse, academy or university."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+d=json.load(open(p))
+d["ai"]["researchKeepFoodMinutes"]=3
+if "researchKeepFoodMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" researchKeepFoodMinutes: the AI starts a research only when this many minutes of its eating stay in store after paying."
+if "thinkEveryTicks:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" thinkEveryTicks: ticks between two thoughts of one AI people."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+
+# Tests 2026-11-23 (P4): peoples grow 10% a minute (was 8): the neolithic took 20 minutes with too few hands.
+d=json.load(open(p))
+d["growth"]["growthPercentPerMinute"]=10
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')

@@ -433,6 +433,9 @@ public sealed class Civ
     /// <summary>AI memory: whether its army can reach a settlement on foot from a hex (key: settlement × hexes + hex), and when it looked.</summary>
     public Dictionary<long, (bool Way, long Tick)> AiWayTo { get; } = [];
 
+    /// <summary>Tick of the AI's last fresh way search (tests 2026-11-23: one a thought, the rest wait with the old answer).</summary>
+    public long AiWaySearchTick { get; set; } = -1;
+
     /// <summary>AI memory: its scouts found no way to new land; they try again after this tick.</summary>
     public long AiScoutWait { get; set; }
 

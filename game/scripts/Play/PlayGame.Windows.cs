@@ -608,6 +608,9 @@ public partial class PlayGame
         5 => "store full",
         7 => "clothing",
         8 => "rations",
+        9 => "food low",
+        10 => "no research",
+        11 => "strangers",
         _ => "materials missing",
     };
 

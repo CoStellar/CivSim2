@@ -441,6 +441,9 @@ public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int High
     /// <summary>6C: below this reputation the AI declares new wars half as often.</summary>
     public int BadReputation { get; init; } = -100;
 
+    /// <summary>P2 (tests 2026-11-23): a bad name heals by this much a minute while the people starts no war (up to 0).</summary>
+    public int ReputationRegenPerMinute { get; init; }
+
     /// <summary>Most food, percent of the payer's, a tribute takes (E3).</summary>
     public int TributeFoodMaxPercent { get; init; } = 10;
 
@@ -728,6 +731,12 @@ public sealed class SimContent
     /// <summary>Goods a gatherer picks up per minute around a settlement of richness 100, hundredths, per good.</summary>
     public required long[] ForagePerMinute { get; init; }
 
+    /// <summary>
+    /// Patryk, 2026-11-23: idle people told to gather find at least this share (percent) of the food they eat, in any land and
+    /// season, so a people left alone survives but gathers nothing to grow on (<c>forage.subsistencePercent</c>).
+    /// </summary>
+    public int ForageSubsistencePercent { get; init; }
+
     /// <summary>Food and wood richness of each biome: index biome * 2 (+0 food, +1 wood).</summary>
     public required int[] ForageBiome { get; init; }
 
@@ -870,11 +879,29 @@ public sealed class SimContent
     /// <summary>17B (2026-11-20): below this many people the AI trains no units but settlers and builds no workplace while jobs are free (ai.smallPeople).</summary>
     public int AiSmallPeople { get; init; } = 30;
 
+    /// <summary>The AI researches only while this many minutes of its eating stay in store after the price (ai.researchKeepFoodMinutes).</summary>
+    public int AiResearchKeepFoodMinutes { get; init; } = 3;
+
+    /// <summary>Ticks between two thoughts of one AI people (ai.thinkEveryTicks).</summary>
+    public int AiThinkEveryTicks { get; init; } = 30;
+
+    /// <summary>The AI remembers for this many minutes whether its armies can reach a settlement (ai.wayToMinutes).</summary>
+    public int AiWayToMinutes { get; init; } = 2;
+
+    /// <summary>A6 (tests 2026-11-23): people a settlement needs before the AI builds a school, bathhouse, academy, university there (ai.careSettlementPeople).</summary>
+    public IReadOnlyDictionary<string, int> AiCarePeople { get; init; } = new Dictionary<string, int> { ["school"] = 40, ["bathhouse"] = 50, ["academy"] = 70, ["university"] = 90 };
+
     /// <summary>Patryk, 2026-11-21: the AI declares no war in the first this many minutes of a game (ai.peacefulStartMinutes).</summary>
     public int AiPeacefulStartMinutes { get; init; } = 15;
 
     /// <summary>How the AI fights (roadmap 7, 2026-11-21): <c>aiBattle</c>.</summary>
     public AiBattleRules AiBattle { get; init; } = new();
+
+    /// <summary>Hexes a settlement sees beyond its own land (P3, Patryk 2026-11-23: 2, was 1): <c>vision.settlementSightBeyond</c>.</summary>
+    public int SettlementSightBeyond { get; init; } = 1;
+
+    /// <summary>When the AI starts a war (tests 2026-11-23): <c>aiWar</c>.</summary>
+    public AiWarRules AiWar { get; init; } = new();
 
     /// <summary>Deposit sizes, regions and ore signs (2026-11-22).</summary>
     public LodeRules Lodes { get; init; } = new();
@@ -1816,6 +1843,7 @@ public sealed class SimContent
             StartStock = Amounts(start.Prop("stock")),
             FoodPerPersonPerMinute = Hundredths(food.Prop("foodPerPersonPerMinute")),
             ForagePerMinute = forage.TryProp("perMinute", out JsonElement fpm) ? Amounts(fpm) : new long[goods.Count],
+            ForageSubsistencePercent = forage.TryProp("subsistencePercent", out JsonElement fsub) ? fsub.GetInt32() : 0,
             ForageBiome = forageBiome,
             ForageRelief = forageRelief,
             ForageDeposit = forageDeposit,
@@ -1910,6 +1938,25 @@ public sealed class SimContent
                 MusterFromHexes = abEl.Prop("musterFromHexes").GetInt32(),
                 MusterPercent = abEl.Prop("musterPercent").GetInt32(),
             } : new AiBattleRules(),
+            SettlementSightBeyond = root.TryProp("vision", out JsonElement visEl) ? visEl.Prop("settlementSightBeyond").GetInt32() : 1,
+            AiWar = root.TryProp("aiWar", out JsonElement awEl) ? new AiWarRules
+            {
+                IntelMinutes = awEl.Prop("intelMinutes").GetInt32(),
+                PowerTimes = awEl.Prop("powerTimes").GetInt32(),
+                GainPercent = awEl.Prop("gainPercent").GetInt32(),
+                SmallTargetPercent = awEl.Prop("smallTargetPercent").GetInt32(),
+                SmallTargetPeople = awEl.Prop("smallTargetPeople").GetInt32(),
+                FearArmyPercent = awEl.Prop("fearArmyPercent").GetInt32(),
+                RandomPeacePercent = awEl.Prop("randomPeacePercent").GetInt32(),
+                LosingScoreMargin = awEl.Prop("losingScoreMargin").GetInt32(),
+                SurpriseAggression = awEl.Prop("surpriseAggression").GetInt32(),
+            } : new AiWarRules(),
+            AiResearchKeepFoodMinutes = root.TryProp("ai", out JsonElement aiElKeep) && aiElKeep.TryProp("researchKeepFoodMinutes", out JsonElement rkf) ? rkf.GetInt32() : 3,
+            AiThinkEveryTicks = root.TryProp("ai", out JsonElement aiElThink) && aiElThink.TryProp("thinkEveryTicks", out JsonElement tet) ? Math.Max(1, tet.GetInt32()) : 30,
+            AiWayToMinutes = root.TryProp("ai", out JsonElement aiElWay) && aiElWay.TryProp("wayToMinutes", out JsonElement wtm) ? wtm.GetInt32() : 2,
+            AiCarePeople = root.TryProp("ai", out JsonElement aiElCare) && aiElCare.TryProp("careSettlementPeople", out JsonElement csp)
+                ? csp.Entries().Where(e => e.Name != "comment").ToDictionary(e => e.Name, e => e.Value.GetInt32())
+                : new Dictionary<string, int> { ["school"] = 40, ["bathhouse"] = 50, ["academy"] = 70, ["university"] = 90 },
             AiPeacefulStartMinutes = root.TryProp("ai", out JsonElement aiEl3) && aiEl3.TryProp("peacefulStartMinutes", out JsonElement psm) ? psm.GetInt32() : 15,
             AiSmallPeople = root.TryProp("ai", out JsonElement aiEl2) && aiEl2.TryProp("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
             AiFoodMarginPercent = root.TryProp("ai", out JsonElement aiEl4) && aiEl4.TryProp("foodMarginPercent", out JsonElement fmp) ? fmp.GetInt32() : 30,
@@ -2002,6 +2049,7 @@ public sealed class SimContent
                 TributeAfterTicks = (root.Prop("war").TryProp("tributeAfterSeconds", out JsonElement tas) ? tas.GetInt32() : 120) * TicksPerSecond,
                 ReputationFloor = root.Prop("war").TryProp("reputationFloor", out JsonElement rf) ? rf.GetInt32() : -200,
                 BadReputation = root.Prop("war").TryProp("badReputation", out JsonElement br) ? br.GetInt32() : -100,
+                ReputationRegenPerMinute = root.Prop("war").TryProp("reputationRegenPerMinute", out JsonElement rrm) ? rrm.GetInt32() : 0,
             },
             Peace = root.TryProp("peace", out JsonElement peaceEl) ? new PeaceRules
             {
@@ -2148,4 +2196,38 @@ public sealed record AiBattleRules
 
     /// <summary>Share of the power (percent) that must stand at the muster before the march.</summary>
     public int MusterPercent { get; init; } = 70;
+}
+
+/// <summary>
+/// When the AI starts a war (tests 2026-11-23, P1): it looks at the target first, judges the gain against the cost and spares
+/// small peoples; a people with a bad name makes it careful, not warlike (P2).
+/// </summary>
+public sealed record AiWarRules
+{
+    /// <summary>A target seen within this many minutes counts as scouted; an older memory sends a scout to look first.</summary>
+    public int IntelMinutes { get; init; } = 3;
+
+    /// <summary>Our power must be this many times the target's defence as we know it.</summary>
+    public int PowerTimes { get; init; } = 2;
+
+    /// <summary>The target settlement's people must be at least this share (percent) of the soldiers we would send: the gain.</summary>
+    public int GainPercent { get; init; } = 60;
+
+    /// <summary>A people whose known people is below this share (percent) of ours is not attacked first (small peoples).</summary>
+    public int SmallTargetPercent { get; init; } = 40;
+
+    /// <summary>A people with fewer known people than this is never attacked first (unless its name is bad).</summary>
+    public int SmallTargetPeople { get; init; } = 40;
+
+    /// <summary>The AI keeps this much more army (percent) while a people it met has a bad name (badReputation).</summary>
+    public int FearArmyPercent { get; init; } = 50;
+
+    /// <summary>The AI at war offers peace now and then: this chance (percent) a thought.</summary>
+    public int RandomPeacePercent { get; init; } = 3;
+
+    /// <summary>The AI offers peace when the enemy's war score is this much above its own.</summary>
+    public int LosingScoreMargin { get; init; } = 20;
+
+    /// <summary>Only the most warlike (aggression at least this) attack without declaring war.</summary>
+    public int SurpriseAggression { get; init; } = 75;
 }

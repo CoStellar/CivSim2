@@ -171,7 +171,7 @@
     "foodPerPersonPerMinute": 1
   },
   "growth": {
-    "growthPercentPerMinute": 8,
+    "growthPercentPerMinute": 10,
     "minGrowthPerMinute": 1,
     "starvePercentPerMinute": 12,
     "stopBelowRations": 2
@@ -1789,24 +1789,24 @@
     "maxSupportPercent": 50,
     "pace": {
       "pricePercent": [
-        40,
-        35,
-        25,
-        25,
+        100,
+        20,
+        18,
+        45,
         25
       ],
       "experiencePercent": [
-        40,
-        35,
-        22,
-        22,
-        22
+        0,
+        0,
+        0,
+        0,
+        0
       ],
       "secondsPercent": [
-        60,
+        120,
         50,
         35,
-        35,
+        60,
         35
       ]
     }
@@ -2087,8 +2087,8 @@
         "agriculture": 15
       },
       "price": {
-        "stone": 80,
-        "tools": 20
+        "stone": 40,
+        "tools": 10
       },
       "seconds": 60,
       "category": "building"
@@ -2193,9 +2193,9 @@
         "pottery": 20
       },
       "price": {
-        "stone": 60,
-        "clay": 40,
-        "tools": 30
+        "stone": 30,
+        "clay": 20,
+        "tools": 15
       },
       "seconds": 70,
       "category": "industry"
@@ -2309,9 +2309,9 @@
         "copper_working": 30
       },
       "price": {
-        "copper": 40,
+        "copper": 20,
         "wood": 80,
-        "tools": 30
+        "tools": 20
       },
       "seconds": 80,
       "category": "industry"
@@ -3228,7 +3228,7 @@
     ]
   },
   "war": {
-    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation). declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many. The war score counts from the start of the current war; tributeAfterSeconds: peace with tribute only this long after the war began. reputationFloor: reputation never falls below it; badReputation: below it the AI declares new wars half as often.",
+    "comment": "Units fight once a second (combatEveryTicks). A side deals people × strength × (100 + terrain bonus + upgrades) / 100 × luck (lowLuckPercent..highLuckPercent) hundredths of a person, killed on the other side. Melee reaches the next hex, ranged units their range. A settlement under attack defends with defenderPercent of its people at defenderStrength each, raised by its finished fortifications; at captureBelowPeople it is taken. Soldiers are fed by rations (see rations). Attacking a people without a declared war is a surprise attack: the victim and everyone who met both remember it (reputation). declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many. The war score counts from the start of the current war; tributeAfterSeconds: peace with tribute only this long after the war began. reputationFloor: reputation never falls below it; badReputation: below it the AI declares new wars half as often. reputationRegenPerMinute: a bad name heals by this much a minute (up to 0) while the people is not the aggressor of a war going on.",
     "combatEveryTicks": 10,
     "lowLuckPercent": 80,
     "highLuckPercent": 120,
@@ -3243,7 +3243,8 @@
     "maxWars": 3,
     "tributeAfterSeconds": 120,
     "reputationFloor": -200,
-    "badReputation": -100
+    "badReputation": -100,
+    "reputationRegenPerMinute": 4
   },
   "events": {
     "comment": "Every people draws one event from the shared pool every everyMinutes (a random minute within the spread), never one another people has right now. An event lasts its seconds. productionPercent changes the production of the listed goods, eatPercent what people eat, losePercentPerMinute kills that share of people a minute, destroyBuilding burns one random finished building at the start. field: the advisor field that gives advice on it.",
@@ -3373,7 +3374,7 @@
     "wearOnlyInWinter": true
   },
   "forage": {
-    "comment": "People of a settlement told to gather pick up food, wood and stone around it. Per gatherer per minute at richness 100: perMinute. A hex's richness: food and wood by biome, stone by relief; deposits and rivers add. A settlement's richness is the mean over the land hexes in its radius (worked out when it is founded or grows).",
+    "comment": "People of a settlement told to gather pick up food, wood and stone around it. Per gatherer per minute at richness 100: perMinute. A hex's richness: food and wood by biome, stone by relief; deposits and rivers add. A settlement's richness is the mean over the land hexes in its radius (worked out when it is founded or grows). subsistencePercent: idle gatherers always find at least this share of the food they eat (any land, any season), so a people left alone survives but gathers no surplus.",
     "perMinute": {
       "food": 0.5,
       "wood": 0.25,
@@ -3440,7 +3441,8 @@
         "food": 30
       }
     },
-    "riverFood": 20
+    "riverFood": 20,
+    "subsistencePercent": 100
   },
   "rivers": {
     "comment": "Until freeFromEra, rivers can be crossed only next to one's own building that gives a crossing (raft landings).",
@@ -3736,9 +3738,6 @@
   },
   "eraEntryMade": {
     "comment": "Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.",
-    "iron_age": {
-      "bronze": 5
-    },
     "middle_ages": {
       "bricks": 20
     }
@@ -3748,7 +3747,7 @@
     "foodLowMinutes": 3
   },
   "ai": {
-    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game. foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people. inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have. inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall. starvedProspectors: while our workshops use more of an ore (iron, copper...) than we make and no deposit of it we know is free for a mine, the AI keeps up to this many prospectors (else one) and sends them farther.",
+    "comment": "homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free. peacefulStartMinutes: the AI declares no war in the first this many minutes of a game. foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people. inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have. inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall. starvedProspectors: while our workshops use more of an ore (iron, copper...) than we make and no deposit of it we know is free for a mine, the AI keeps up to this many prospectors (else one) and sends them farther. thinkEveryTicks: ticks between two thoughts of one AI people. wayToMinutes: the AI remembers this long (plus up to a minute, different for each target) whether its armies can reach a settlement; one thought searches one way at most. careSettlementPeople: people a settlement needs before the AI builds there a school, bathhouse, academy or university. researchKeepFoodMinutes: the AI starts a research only when this many minutes of its eating stay in store after paying.",
     "homesFoodMinutes": 3,
     "smallPeople": 30,
     "peacefulStartMinutes": 15,
@@ -3759,7 +3758,16 @@
     "inputRouteKeepMinutes": 2,
     "inputRoutesPerSettlement": 4,
     "inputMakerStoreMinutes": 10,
-    "starvedProspectors": 2
+    "starvedProspectors": 2,
+    "wayToMinutes": 2,
+    "thinkEveryTicks": 30,
+    "careSettlementPeople": {
+      "school": 40,
+      "bathhouse": 50,
+      "academy": 70,
+      "university": 90
+    },
+    "researchKeepFoodMinutes": 3
   },
   "aiBattle": {
     "comment": "retreatInjuredPercent: a unit at war with this share of its people wounded goes home to heal; retreatSizePercent: one with fewer people than this share of its size goes home and guards it. engageHexes: a seen enemy army this close to a soldier is fought first, by every soldier this close to it (a flank). An offensive starts from our settlement nearest the target: soldiers within musterFromHexes but farther than musterHexes gather there in formation, and the march starts once musterPercent of the power stands there.",
@@ -3882,5 +3890,21 @@
     "shareSeconds": 5,
     "shareHexes": 3,
     "joinSearch": 300
+  },
+  "aiWar": {
+    "comment": "When the AI starts a war (Patryk, 2026-11-23). It never breaks a peace that still runs. A target settlement not seen for intelMinutes gets a scout first. It attacks when its power is powerTimes the defence it knows, the settlement holds at least gainPercent of the soldiers it sends in people (the gain), and the target people is not small: a people whose known people is below smallTargetPercent of ours, or below smallTargetPeople, is spared unless its reputation is below war.badReputation. Only an AI with aggression of at least surpriseAggression attacks without declaring war. While a people it met has a bad name, the AI keeps fearArmyPercent more soldiers and seeks defensive alliances against it. At war it offers peace when the enemy's score is losingScoreMargin above its own, when weary, or with randomPeacePercent chance a thought.",
+    "intelMinutes": 3,
+    "powerTimes": 2,
+    "gainPercent": 60,
+    "smallTargetPercent": 40,
+    "smallTargetPeople": 40,
+    "fearArmyPercent": 50,
+    "randomPeacePercent": 3,
+    "losingScoreMargin": 20,
+    "surpriseAggression": 75
+  },
+  "vision": {
+    "comment": "settlementSightBeyond: hexes a settlement sees beyond its own land. Units of a people we have not met that our settlements see, and whose people has seen the settlement, raise the alert 'Strangers' (not who nor where).",
+    "settlementSightBeyond": 2
   }
 }

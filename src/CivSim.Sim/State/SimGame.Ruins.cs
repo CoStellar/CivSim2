@@ -13,6 +13,11 @@ public sealed partial class SimGame
     // Once a second per people.
     private void RuinStep(Civ civ)
     {
+        if (DieOut(civ))
+        {
+            return;
+        }
+
         for (int k = civ.Settlements.Count - 1; k >= 0; k--)
         {
             Settlement s = Settlements[civ.Settlements[k]];
@@ -31,6 +36,40 @@ public sealed partial class SimGame
                 Ruin(civ, s);
             }
         }
+    }
+
+    // P5 (Patryk, 2026-11-23): a people with nobody left, in its settlements or in its units, has lost: its empty settlements
+    // fall to ruin and the people is no more. While a unit lives, the people goes on (it can join a settlement and start again).
+    private bool DieOut(Civ civ)
+    {
+        if (civ.Dead || civ.Settlements.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (int sid in civ.Settlements)
+        {
+            if (Settlements[sid].People > 0)
+            {
+                return false;
+            }
+        }
+
+        foreach (int id in civ.Units)
+        {
+            if (Units[id].State != UnitState.Gone && Units[id].People > 0)
+            {
+                return false;
+            }
+        }
+
+        for (int k = civ.Settlements.Count - 1; k >= 0; k--)
+        {
+            Ruin(civ, Settlements[civ.Settlements[k]], silent: true);
+        }
+
+        Perish(civ, null);
+        return true;
     }
 
     private void Ruin(Civ civ, Settlement s, bool silent = false)

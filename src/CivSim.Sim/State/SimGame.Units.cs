@@ -205,6 +205,7 @@ public sealed partial class SimGame
 
         Pay(s.Stock, t.Price, pricePct);
         s.People -= people;
+        s.Idle = Math.Min(s.Idle, s.People); // B6 (tests 2026-11-23): never more idle than people until the next count
         civ.Dirty = true;
         // Training halls speed their own kind (siege workshops their engines, shipyards their ships), barracks all others; each
         // by the share of its jobs filled.

@@ -578,15 +578,22 @@ Do tego:
 ## Tempo badań (2026-11-19)
 
 `research.pace` w `data/sim/game.json` skaluje każdą technologię według jej ery: `pricePercent` (cena w dobrach),
-`experiencePercent` (doświadczenie i wyroby, których technologia wymaga) i `secondsPercent` (czas badania). Obecnie:
+`experiencePercent` (doświadczenie i wyroby, których technologia wymaga) i `secondsPercent` (czas badania).
+
+**Od 2026-11-23 technologie nie wymagają doświadczenia ani wyrobów** (Patryk: „zła forma blokady rozwoju”): `experiencePercent` jest 0 we wszystkich erach.
+Badanie kosztuje tylko dobra i czas. Brama ery (5 technologii ery i technologia-brama) zostaje; wyroby przy wejściu w erę (`eraEntryMade`)
+zostały tylko dla średniowiecza (20 cegieł). Warunek „5 brązu” przed epoką żelaza usunięto, bo przy kosztach z dóbr i tak trzeba robić brąz.
 
 | Era | Cena | Doświadczenie i wyroby | Czas |
 | --- | --- | --- | --- |
-| Epoka kamienia | 40% | 40% | 60% |
-| Neolit | 35% | 35% | 50% |
-| Epoka brązu | 25% | 22% | 35% |
-| Epoka żelaza | 25% | 22% | 35% |
-| Średniowiecze | 25% | 22% | 35% |
+| Epoka kamienia | 100% | 0 | 120% |
+| Neolit | 20% | 0 | 50% |
+| Epoka brązu | 18% | 0 | 35% |
+| Epoka żelaza | 45% | 0 | 60% |
+| Średniowiecze | 25% | 0 | 35% |
 
-Przykład: garncarstwo ma w drzewie cenę 40 gliny i 30 drewna oraz 45 s; w neolicie kosztuje 14 gliny i 10 drewna i trwa 22 s (przed premiami myśliciela i sąsiadów). Okno badań i podpowiedzi
+Dlaczego tak: bez doświadczenia epoka kamienia mijałaby w kilka minut, więc jej cena i czas wzrosły; neolit i brąz staniały, żeby trwały podobnie
+długo jak inne ery; żelazo podrożało, bo bez tego biegło szybciej niż brąz. Ceny trzech technologii zmieniono w drzewie: obróbka kamienia
+(40 kamienia, 10 narzędzi), obróbka miedzi (30 kamienia, 20 gliny, 15 narzędzi), obróbka brązu (20 miedzi, 80 drewna, 20 narzędzi).
+Okno badań i podpowiedzi
 pokazują liczby już po skalowaniu. Pomiar AI (12 ziaren) i powody: `docs/sim/ai.md`, sekcja „Tempo er”.

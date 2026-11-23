@@ -8,14 +8,11 @@ namespace CivSim.Sim.Ai;
 
 /// <summary>
 /// The AI player (ADR 0028): it plays a people with the same commands as a person and sees only what its people has seen.
-/// It thinks every <see cref="ThinkEveryTicks"/> ticks, staggered by people, and does at most a few things each time, so it
+/// It thinks every ai.thinkEveryTicks ticks (<see cref="SimContent.AiThinkEveryTicks"/>), staggered by people, and does at most a few things each time, so it
 /// costs little (docs/wydajnosc.md). Its character (aggression, expansion) shows only in what it does.
 /// </summary>
 public static partial class SimAi
 {
-    /// <summary>Ticks between two thoughts of one AI people.</summary>
-    public const int ThinkEveryTicks = 30;
-
     /// <summary>No AI starts a war before this tick (8 minutes): every people gets time to settle.</summary>
 
     private static readonly string[] FoodBuildings = ["farm", "fishing_hut", "gatherers_hut", "hunters_lodge", "pasture", "manor"];
@@ -64,9 +61,9 @@ public static partial class SimAi
         }
 
         War(g, civ);
-        if (!lean && actions == 0)
+        if (!lean && (actions == 0 || g.Ticks % (4 * g.Content.AiThinkEveryTicks) < g.Content.AiThinkEveryTicks))
         {
-            Surveys(g, civ); // last: settlers and soldiers come first
+            Surveys(g, civ); // last: settlers and soldiers come first (tests 2026-11-23: but every fourth thought anyway)
         }
     }
 
