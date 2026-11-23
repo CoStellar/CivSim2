@@ -493,7 +493,7 @@ public partial class PlayGame
                 PlayGoodInfo good = c.Goods[g];
                 Color trend = full ? UiKit.Warn : rate > 0 ? UiKit.Good : rate < 0 ? UiKit.Bad : UiKit.Muted;
                 _resBox.AddChild(Chip(UiKit.GoodColor(good.Key), UiKit.Short(good.Name)[..1], $"{stock / 100}", full ? "full" : UiKit.Rate(rate), trend,
-                    $"{good.Name}: {stock / 100} in all our settlements (room for {v.Capacity[g] / 100}), {UiKit.Rate(rate)} a minute." + (full ? " Full: its makers stop." : "")));
+                    $"{good.Name}: {stock / 100} in all our settlements (room for {v.Capacity[g] / 100}), {UiKit.Rate(rate)} a minute." + (full ? " Full: its makers stop." : ""), good.Key));
             }
         });
     }
@@ -510,11 +510,13 @@ public partial class PlayGame
         fill();
     }
 
-    private static Control Chip(Color color, string letter, string amount, string trend, Color trendColor, string tooltip)
+    private static Control Chip(Color color, string letter, string amount, string trend, Color trendColor, string tooltip, string? good = null)
     {
         var row = new HBoxContainer { TooltipText = tooltip, MouseFilter = Control.MouseFilterEnum.Pass };
         row.AddThemeConstantOverride("separation", 4);
-        row.AddChild(new Glyph(color, letter, 26, round: true));
+        // 2026-11-23 (Patryk): the goods' pictures in the top bar instead of letters.
+        Texture2D? icon = good is null ? null : UiKit.Picture?.Invoke("goods", "good_" + good);
+        row.AddChild(new Glyph(color, letter, icon is null ? 26 : 34, round: icon is null, icon: icon));
         var col = new VBoxContainer();
         col.AddThemeConstantOverride("separation", -4);
         col.AddChild(UiKit.Label(amount, 16));

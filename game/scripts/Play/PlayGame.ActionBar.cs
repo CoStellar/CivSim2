@@ -169,7 +169,7 @@ public partial class PlayGame
             PlayBuildingInfo t = c.Buildings[_slotTypes[i]];
             int id = t.Id;
             bool can = affordable[i];
-            var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = Describe(c, t) + (can ? "" : "\n\nWe do not have the goods for it now."), ToggleMode = true, ButtonPressed = _placing == id };
+            var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 80 + (2 * Ui.PixelTheme.FontSize)), TooltipText = Describe(c, t) + (can ? "" : "\n\nWe do not have the goods for it now."), ToggleMode = true, ButtonPressed = _placing == id };
             if (t.Key == glow)
             {
                 slot.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
@@ -179,7 +179,12 @@ public partial class PlayGame
             inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
             inner.AddThemeConstantOverride("separation", 1);
             Color color = UiKit.GroupColor(t.Groups);
-            inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(t.Name), 44) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter });
+            Texture2D? pic = UiKit.Picture?.Invoke("buildings", "building_" + t.Key);
+            inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(t.Name), pic is null ? 44 : 68, icon: pic)
+            {
+                MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+                Modulate = can ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f),
+            });
             Label name = UiKit.Label(t.Name, 11, can ? UiKit.Text : UiKit.Muted);
             name.HorizontalAlignment = HorizontalAlignment.Center;
             name.AutowrapMode = TextServer.AutowrapMode.WordSmart;

@@ -14,13 +14,15 @@ public partial class Glyph : Control
     private readonly Color _color;
     private readonly string _text;
     private readonly bool _round;
+    private readonly Texture2D? _icon;
 
-    /// <summary>Creates a tile of <paramref name="size"/> pixels.</summary>
-    public Glyph(Color color, string text, int size = 24, bool round = false)
+    /// <summary>Creates a tile of <paramref name="size"/> pixels; with <paramref name="icon"/>, the picture instead of the letters.</summary>
+    public Glyph(Color color, string text, int size = 24, bool round = false, Texture2D? icon = null)
     {
         _color = color;
         _text = text;
         _round = round;
+        _icon = icon;
         CustomMinimumSize = new Vector2(size, size);
         MouseFilter = MouseFilterEnum.Pass;
     }
@@ -28,6 +30,26 @@ public partial class Glyph : Control
     /// <inheritdoc/>
     public override void _Draw()
     {
+        if (_icon is not null)
+        {
+            // 2026-11-23 (Patryk): pictures in the interface, the same as on the map: on a dark slate tile with a frame
+            // in the tile's colour, the picture as large as fits, its pixels kept square.
+            var frame = new StyleBoxFlat { BgColor = new Color(0.13f, 0.11f, 0.09f, 0.95f), BorderColor = _color.Darkened(0.2f), CornerDetail = 4 };
+            frame.SetBorderWidthAll(2);
+            frame.SetCornerRadiusAll(_round ? (int)(Size.X / 2) : 3);
+            DrawStyleBox(frame, new Rect2(Vector2.Zero, Size));
+            Vector2 tex = _icon.GetSize();
+            float k = MathF.Max(1, MathF.Floor(MathF.Min((Size.X - 4) / tex.X, (Size.Y - 4) / tex.Y)));
+            if ((Size.X - 4) / tex.X < 1)
+            {
+                k = MathF.Min((Size.X - 4) / tex.X, (Size.Y - 4) / tex.Y);
+            }
+
+            Vector2 drawn = tex * k;
+            DrawTextureRect(_icon, new Rect2((Size - drawn) / 2, drawn), false);
+            return;
+        }
+
         var box = new StyleBoxFlat
         {
             BgColor = _color,
@@ -117,6 +139,9 @@ public static class UiKit
         ["governance"] = new Color("4f7fb8"),
         ["science"] = new Color("8a5ab8"),
     };
+
+    /// <summary>Pictures for the interface (layer, name), in our people's colour; null: letters (set by the play screen).</summary>
+    public static Func<string, string, Texture2D?>? Picture { get; set; }
 
     /// <summary>The interface font (the pixel font when the theme is loaded).</summary>
     public static Font Font => Ui.PixelTheme.Current?.DefaultFont ?? ThemeDB.FallbackFont;

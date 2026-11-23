@@ -200,3 +200,29 @@ wypełniające kafel i nasycone akcenty (czerwone dachy, flagi).
 3. **Przerysowanie z bryłą** najważniejszych obiektów: centra osad według starego zamku, głazy i kopalnie według starego kamienia,
    jednostki z hełmami i bronią jak stary rycerz, ikony dóbr wypełniające kafel (osobny PR).
 
+## 10. Uwagi Patryka z 2026-11-23 (po pierwszych zrzutach) i co zrobione
+
+- **SpriteCook:** sprawdzony i odrzucony (koszt). Grafiki robi dalej skrypt `art/placeholder/game_art.py`.
+- **Szum był losowy i słaby, a magenta pojawiała się w środku budynków:** budynki nie dostają już losowego szumu na całość.
+  Faktura wynika z materiału. Magenta została tylko na flagach; znikła z kalenic dachów i ze znaków fachu.
+- **Materiały ścian:**
+  - kamień: bloki z zaprawą i przesuniętymi spoinami;
+  - cegła: rzędy cegieł z jasną zaprawą;
+  - tynk z pęknięciami;
+  - deski ze szczelinami i słojami;
+  - mech pnie się po podstawie ścian z kamienia i cegły.
+- **Dachy:** skóry ze szwem, strzecha w pociągnięciach, rzędy dachówki, łupek.
+- **Głębia:**
+  - ściana jasna z lewej, w cieniu z prawej, ciemniejsza u stóp i pod okapem;
+  - ciemna linia okapu;
+  - cień budynku na ziemi (rysuje go gra).
+- **Więcej detalu:** okna z parapetem, drzwi z deskami i skobelkiem, kominy z dymem przy warsztatach. Budynki na 2 miejscach mają
+  dwie bryły (hala i niższa przybudówka z dachem pulpitowym).
+- **Znaki fachu** na czystej tabliczce z ciemną ramą; faktura ich nie dotyka.
+- **Jednostki:** gęstsza faktura.
+- **Interfejs:**
+  - ikony dóbr w górnym pasku i w magazynie;
+  - obrazki budynków na przyciskach budowy;
+  - panele z ciemnego kamienia w blokach, paski ze skóry ze ściegiem, przyciski z kamienia (wciśnięty: drewno), dymek z pergaminu;
+  - wzór powtarza się, zamiast się rozciągać.
+

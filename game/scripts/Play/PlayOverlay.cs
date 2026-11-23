@@ -86,7 +86,7 @@ public partial class PlayOverlay : Node2D
 
     // A picture with the people's colour in place of the reserved magentas (light, middle, dark: as civ_sprite.gdshader),
     // or grey all over for what we only remember; made once per picture, colour and greyness.
-    private Texture2D? Sprite(string layer, string name, int civ, bool grey = false)
+    internal Texture2D? Sprite(string layer, string name, int civ, bool grey = false)
     {
         if (Art is null)
         {
@@ -153,6 +153,13 @@ public partial class PlayOverlay : Node2D
 
     // Where a unit's body is drawn on its hex: the middle with pictures (Patryk, 2026-11-23), beside the centre as a token.
     private Vector2 UnitBody => Art is null ? new Vector2(10, -8) : new Vector2(0, -6);
+
+    // A soft shadow on the ground under a picture, a little to the right (light from the top left).
+    private static void GroundShadow(CanvasItem g, Rect2 area, float flat = 0.13f)
+    {
+        var c = new Vector2(area.Position.X + (area.Size.X * 0.56f), area.End.Y - (area.Size.Y * 0.06f));
+        Ellipse(g, c, area.Size.X * 0.48f, area.Size.Y * flat, new Color(0, 0, 0, 0.26f));
+    }
 
     // The hex rectangle shrunk about its centre (a hex picture drawn there stays inside the hex, clear of the border).
     private static Rect2 HexInner(Vector2 c, float scale, float k)
@@ -1370,6 +1377,10 @@ public partial class PlayOverlay : Node2D
             // Patryk (2026-11-23): pictures stay inside their hex, clear of the border: a whole-hex building keeps a margin,
             // a small one alone on its hex (farther zoom) more.
             Rect2 area = HexInner(c, scale, t.Size < 4 ? 0.62f : 0.86f);
+            if (!b.Remembered && t.Size < 4)
+            {
+                GroundShadow(g, area, 0.1f);
+            }
 
             DrawFit(g, pic, area, b.Remembered ? Colors.White : StateModulate(b));
             if (b.Remembered)
@@ -1467,6 +1478,11 @@ public partial class PlayOverlay : Node2D
         Rect2 r = SlotRect(c, b.Slots, scale);
         if (Sprite("buildings", "building_" + t.Key, b.Civ, b.Remembered) is { } pic)
         {
+            if (!b.Remembered)
+            {
+                GroundShadow(g, r.Grow(-1.5f * scale), 0.12f);
+            }
+
             DrawFit(g, pic, r.Grow(-1.5f * scale), b.Remembered ? Colors.White : StateModulate(b)); // inside its places, clear of the hex edges
             if (b.Remembered)
             {
@@ -1528,6 +1544,7 @@ public partial class PlayOverlay : Node2D
         Color civ = s.Remembered ? Grey(CivColor(s.Civ)) : CivColor(s.Civ);
         if (Sprite("buildings", "settlement_" + _content!.Levels[s.Level].Key, s.Civ, s.Remembered) is { } pic)
         {
+            GroundShadow(g, HexInner(c, scale, 0.8f), 0.1f);
             DrawFit(g, pic, HexInner(c, scale, 0.88f), Colors.White);
             if (s.Besieged)
             {
