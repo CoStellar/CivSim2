@@ -103,6 +103,38 @@ public sealed class AiFoodTests
         Assert.Equal(100 * SimContent.One, caravan.Cargo![Content.Food]);
     }
 
+    [Fact]
+    public void AWorkshopShortOfItsInputGetsAStandingRouteFromTheSettlementThatHasIt()
+    {
+        // Known issue 13 (2026-11-23): steady routes instead of single caravans for a workshop's inputs.
+        (SimGame g, Civ civ) = NewGame();
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        Settlement camp = g.FoundSettlement(civ, FreeSite(g, home), 20, new long[Content.Goods.Count]);
+        BuildingType potter = Content.Building("potter");
+        int cell = camp.Cells.First(c => c != camp.Center && g.FreeSlots(c) == 15);
+        var b = new Building { Id = g.Buildings.Count, Civ = civ.Id, Type = potter.Id, Cell = cell, Settlement = camp.Id, State = BuildingState.Active, Workers = potter.Workers };
+        g.Buildings.Add(b);
+        civ.Buildings.Add(b.Id);
+        g.PlaceForTest(b);
+        int clay = Content.GoodId("clay");
+        home.Stock[clay] = 300 * SimContent.One;
+        camp.Stock[clay] = 0;
+
+        SimAi.Supply(g, civ);
+
+        TradeRoute route = Assert.Single(g.Routes, r => r.Civ == civ.Id && !r.Ended && r.Good == clay);
+        Assert.Equal(home.Id, route.From);
+        Assert.Equal(camp.Id, route.To);
+        long use = potter.Consumes[clay] * potter.Workers;
+        Assert.Equal(use * Content.AiInputRouteTripMinutes, route.Amount);
+        Assert.Equal(use * Content.AiInputRouteTargetMinutes, route.UntilTargetHas);
+
+        // Nothing to spare at the source any more: the AI ends the route, so a better source can take over.
+        home.Stock[clay] = 0;
+        SimAi.Supply(g, civ);
+        Assert.True(route.Ended);
+    }
+
     private static (SimGame G, Civ Civ) NewGame()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();

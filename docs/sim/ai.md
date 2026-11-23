@@ -69,6 +69,7 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 | N36 | Bitwa w polu i flanka (roadmapa 7) | co myślenie | widoczna wroga armia do 5 heksów od naszego zdrowego żołnierza: atakują ją wszyscy nasi żołnierze w tej odległości, więc otaczają ten sam cel (flanka); dopiero potem obrona ziemi i wyprawy | `aiBattle.engageHexes` 5 | `Ai/SimAi.cs` (`FieldBattle`) |
 | N37 | Zbiórka w szyku przed wyprawą (roadmapa 7) | wyprawa na osadę | punkt zbiórki: nasza osada najbliższa celu; żołnierze dalej niż 3 heksy (ale do 30) idą tam w szyku (piechota z przodu, łucznicy z tyłu, jazda na skrzydłach); marsz na cel, gdy stoi tam 70% siły albo inni już idą na ten cel | `aiBattle.musterHexes` 3, `musterFromHexes` 30, `musterPercent` 70 | `Ai/SimAi.cs` (`Offensive`) |
 | N38 | Warunki pokoju AI (ADR 0030, 2026-11-23) | AI proponuje pokój (N17) | wygrywając: podpowiedź gry (osada, którą wolno wziąć, i dobra, których jej brakuje, na wartość z przebiegu wojny), pokój 3 min; przegrywając: biały pokój na 10 min, a przy zmęczeniu ≥ 80 dobra na wartość, którą powinna oddać | `weariness.aiPayAt` 80 | `Ai/SimAi.War.cs` (`PeaceOffer`), `SimGame.SuggestTerms` |
+| N39 | Stałe trasy z wsadem (2026-11-23) | osada ma < 6 minut pełnego zużycia wsadu swoich warsztatów | stała trasa z osady, która ma najwięcej do oddania: 3 minuty zużycia na kurs, dopóki cel ma < 6 minut; źródło zatrzymuje 2 minuty swojego zużycia; trasę bez zapasu w źródle zamyka; najwyżej 4 trasy na osadę | `ai.inputRouteTripMinutes` 3, `inputRouteTargetMinutes` 6, `inputRouteKeepMinutes` 2, `inputRoutesPerSettlement` 4 | `Ai/SimAi.Supply.cs` (`InputRoutes`) |
 | N33 | Premie rodzajów (#112) | rodzaj jednostki osiągnął poziom | łucznicy i machiny: Hardened; jazda: na zmianę Forced march i Hardened; piechota: na zmianę Hardened i Shield wall | — | `Ai/SimAi.cs` (`VeteranChoiceFor`) |
 
 ## Warsztaty i ich surowce (2026-11-22)
@@ -81,6 +82,26 @@ Po 120 minutach 60% warsztatów, które zużywają towary, stało bez wsadu (12 
 4. **Wytwórca surowca** (późne ery, `InputMaker`): gdy produkcja dobra jest mniejsza niż zapotrzebowanie, a zapas < 20 (było: zero produkcji i zapas < 5).
 
 Pomiar `--sim-report --seeds 12 --minutes 120` (mapa 98×60, 4 ludy), przed → po: warsztaty bez wsadu 60,2% → 41,4%, ludzie 12 196 → 13 145, głód 3,8% → 3,4%, technologie 56,3 → 56,3, epoka brązu 33,2 → 34,2 min, żelaza 60,9 → 60,0 min (11 z 12 gier; było 12), średniowiecze 70,8 → 69,1 min (11 z 12). Gra 5 nie doszła do żelaza: nikt na jej mapie nie znalazł cyny (wcześniej przebieg był szczęśliwszy). Większe karawany z wsadem (5 minut zużycia) sprawdzone i odrzucone: nie pomagały.
+
+## Stałe trasy z wsadem dla warsztatów (2026-11-23, znany problem 13)
+
+Pojedyncze karawany z wsadem (do 30 sztuk, gdy w osadzie zostało < 10) przychodziły za późno dla stale pracujących warsztatów.
+Teraz (N39, `SimAi.Supply.cs`, `InputRoutes`):
+
+1. **Zużycie przy pełnej obsadzie:** AI liczy, ile warsztaty każdej osady zużyłyby na minutę.
+2. **Trasa zamiast karawany:** osada, która ma mniej niż 6 minut tego zużycia (`ai.inputRouteTargetMinutes`), dostaje stałą trasę
+   z naszej osady, która ma tego dobra najwięcej do oddania. Trasa wozi 3 minuty zużycia na kurs (`inputRouteTripMinutes`) i jeździ,
+   dopóki cel ma mniej niż 6 minut zużycia. Źródło zatrzymuje 2 minuty własnego zużycia (`inputRouteKeepMinutes`).
+   Warsztat bez wsadu nic nie zużywa, więc AI patrzy na zapas względem pełnego zużycia, a nie na bilans.
+3. **Zamknięcie trasy:** gdy źródło nie ma już nic do oddania i samo tego nie robi, AI kończy trasę. Lepsze źródło może wtedy przejąć dowóz.
+4. **Limit:** najwyżej 4 trasy na każdą osadę ludu (`inputRoutesPerSettlement`). Przy 2 część ludów stała na limicie.
+   Pojedyncza karawana zostaje tam, gdzie nie ma trasy.
+
+Pomiar `--sim-report --seeds 12 --minutes 120` przed → po: warsztaty bez wsadu 36,1% → 28,0% (mediana 41% → 30%), głód 4,1% → 2,2%,
+ludzie 11 704 → 11 625, epoka żelaza 56,7 → 57,7 min, średniowiecze 66,1 → 68,1 min (w granicach rozrzutu).
+Raport pokazuje teraz, czego brakuje stojącym warsztatom: po zmianie głównie żelaza (328) i węgla drzewnego (277), a lud prawie zawsze
+ma je gdzie indziej. **Zostaje:** produkcja żelaza i węgla bywa kilka razy mniejsza niż zużycie (np. żelazo: wydobycie 16 na minutę,
+zużycie 90). Tego trasy nie naprawią: AI stawia więcej kuźni, niż starcza wsadu (znany problem 13).
 
 ## Jedzenie dużych ludów (2026-11-22)
 

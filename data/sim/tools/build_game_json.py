@@ -435,6 +435,10 @@ d["weariness"]={"comment":"War weariness of a people in each of its wars, 0-100:
 # Known issue 15 (2026-11-23): one search of the way for soldiers marching on the same goal.
 d["march"]={"comment":"Soldiers sent at the same goal share a way: a soldier within shareHexes of where the last search for that goal started, less than shareSeconds ago, walks there (a search of at most joinSearch hexes) and then the same way. One long search per expedition instead of one per soldier.",
   "shareSeconds":5,"shareHexes":3,"joinSearch":300}
+# Known issue 13 (2026-11-23): the AI feeds workshops by standing routes from the settlement that makes their input.
+d["ai"].update({"inputRouteTripMinutes":3,"inputRouteTargetMinutes":6,"inputRouteKeepMinutes":2,"inputRoutesPerSettlement":4})
+if "inputRouteTripMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist

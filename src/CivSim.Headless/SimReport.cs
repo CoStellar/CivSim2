@@ -80,6 +80,9 @@ public static class SimReport
 
         /// <summary>Wars going on at the end.</summary>
         public int WarsNow { get; init; }
+
+        /// <summary>Starved workshops by the input they lack: [good × 2] = lacking at home, and of those the people has none anywhere.</summary>
+        public int[] ShortBy { get; init; } = [];
     }
 
     /// <summary>Runs the report; exit code 0.</summary>
@@ -148,6 +151,20 @@ public static class SimReport
         {
             output.WriteLine(string.Create(inv, $"{"first Neolithic (min)",-22} mean {neo.Average(),8:F1}   in {neo.Count} of {seeds} games"));
         }
+
+        // Which inputs the starved workshops lack (all games): at home, and of those, none anywhere in the people.
+        var parts = new List<string>();
+        for (int k = 0; k < content.Goods.Count; k++)
+        {
+            int home = rows.Sum(r => r.ShortBy.Length > k * 2 ? r.ShortBy[k * 2] : 0);
+            int none = rows.Sum(r => r.ShortBy.Length > k * 2 ? r.ShortBy[(k * 2) + 1] : 0);
+            if (home > 0)
+            {
+                parts.Add(string.Create(inv, $"{content.Goods[k].Key} {home} ({none} none anywhere)"));
+            }
+        }
+
+        output.WriteLine("starved workshops lack: " + (parts.Count == 0 ? "-" : string.Join(", ", parts)));
 
         // When the first people of each game enters each era.
         for (int e = 2; e < content.Eras.Count; e++)
@@ -268,6 +285,7 @@ public static class SimReport
         int free = 0;
         int users = 0;
         int starved = 0;
+        int[] shortBy = new int[content.Goods.Count * 2];
         foreach (Civ c in alive)
         {
             foreach (int id in c.Buildings)
@@ -286,6 +304,15 @@ public static class SimReport
                 {
                     users++;
                     starved += b.Starved ? 1 : 0;
+                    long[] use = content.Buildings[b.Type].Consumes;
+                    for (int k = 0; b.Starved && k < use.Length; k++)
+                    {
+                        if (use[k] > 0 && g.Settlements[b.Settlement].Stock[k] < use[k] * b.Workers)
+                        {
+                            shortBy[k * 2]++;
+                            shortBy[(k * 2) + 1] += c.Stock[k] < use[k] * b.Workers ? 1 : 0;
+                        }
+                    }
                 }
             }
         }
@@ -325,6 +352,7 @@ public static class SimReport
             ByPeace = g.SettlementsByPeace,
             Weariness = alive.Count == 0 ? 0 : alive.Average(c => g.Weariness(c)),
             WarsNow = alive.Sum(c => g.WarsOf(c.Id)) / 2,
+            ShortBy = shortBy,
         };
     }
 
