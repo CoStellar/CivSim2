@@ -63,6 +63,14 @@ public partial class PlayGame
 
     private void UpdateActionBar(PlayViewMessage v, PlayContentMessage c)
     {
+        if (BiomeKeys.Count == 0 && _session?.Content is { } world)
+        {
+            foreach (BiomeInfo bi in world.Biomes)
+            {
+                BiomeKeys[bi.Name] = bi.Key;
+            }
+        }
+
         var known = new List<PlayBuildingInfo>();
         var counts = new int[Tabs.Length];
         foreach (PlayBuildingInfo b in c.Buildings)
@@ -169,7 +177,7 @@ public partial class PlayGame
             PlayBuildingInfo t = c.Buildings[_slotTypes[i]];
             int id = t.Id;
             bool can = affordable[i];
-            var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 80 + (2 * Ui.PixelTheme.FontSize)), TooltipText = Describe(c, t) + (can ? "" : "\n\nWe do not have the goods for it now."), ToggleMode = true, ButtonPressed = _placing == id };
+            var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 80 + (2 * Ui.PixelTheme.FontSize)), TooltipText = Describe(c, t) + (can ? "" : "\n@Now|we do not have the goods for it"), ToggleMode = true, ButtonPressed = _placing == id };
             if (t.Key == glow)
             {
                 slot.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
@@ -272,7 +280,7 @@ public partial class PlayGame
             PlayWorkInfo wk = c.Works![level - WorkSlotBase];
             label = wk.Name;
             picture = wk.Key;
-            tip = $"{wk.Name}: {Amounts(c, wk.Price)} and {wk.Seconds} s a hex, paid by our nearest settlement.\n{wk.Text}\nDraw it hex by hex on our land; remove it from the hex panel.";
+            tip = $"# {wk.Name}\n{wk.Text}\n\n@Cost|{Amounts(c, wk.Price, icons: true)} a hex, paid by our nearest settlement\n@Build time|{wk.Seconds} s a hex\n@How|draw it hex by hex on our land; remove it from the hex panel";
             color = wk.Key switch { "ditch" => new Color(0.35f, 0.62f, 0.95f), "aqueduct" => new Color(0.55f, 0.75f, 0.95f), "wall" => new Color(0.72f, 0.72f, 0.7f), _ => new Color(0.55f, 0.38f, 0.2f) };
         }
         else
@@ -280,14 +288,15 @@ public partial class PlayGame
             PlayRoadInfo road = c.Roads![level - 1];
             label = road.Name;
             picture = level == 1 ? "track" : "road";
-            tip = $"{road.Name}: {Amounts(c, road.Price)} and {road.Seconds} s a hex, paid by our nearest settlement.\n"
+            tip = $"# {road.Name}\n"
                 + (level == 1 ? "Walking on it is faster; caravans and armies take it by themselves." : "Much faster than a track, also over hills; a major trade route.")
-                + "\nDraw it hex by hex, also into empty land: settlers who found a camp at its end get goods along it. With Masonry it bridges the rivers it crosses.";
+                + $"\n\n@Cost|{Amounts(c, road.Price, icons: true)} a hex, paid by our nearest settlement\n@Build time|{road.Seconds} s a hex"
+                + "\n@How|draw it hex by hex, also into empty land: settlers who found a camp at its end get goods along it\n@Bridges|with Masonry it bridges the rivers it crosses";
             color = level == 1 ? new Color(0.66f, 0.52f, 0.34f) : new Color(0.78f, 0.74f, 0.64f);
         }
 
         PlayRoadInfo r = new(level, label, [], 0, 0);
-        var slot = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = tip, ToggleMode = true, ButtonPressed = _drawMode == DrawMode.Road && _drawRoad == level };
+        var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = tip, ToggleMode = true, ButtonPressed = _drawMode == DrawMode.Road && _drawRoad == level };
         var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
         inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         Texture2D? pic = UiKit.Picture?.Invoke("works", "work_icon_" + picture); // 2026-11-23: the way's picture, not letters
@@ -327,32 +336,90 @@ public partial class PlayGame
 
     private static long[] Times(long[] a, int n) => [.. a.Select(x => x * n)];
 
+    // The goods' names, lower case, joined with "and".
+    private static string GoodNames(PlayContentMessage content, long[] a)
+    {
+        var names = new List<string>();
+        for (int g = 0; g < a.Length; g++)
+        {
+            if (a[g] > 0)
+            {
+                names.Add(content.Goods[g].Name.ToLowerInvariant());
+            }
+        }
+
+        return string.Join(" and ", names);
+    }
+
+    // Biome keys by name (any case), filled when the world's content arrives.
+    private static readonly Dictionary<string, string> BiomeKeys = new(StringComparer.OrdinalIgnoreCase);
+
+    // "tundra or swamp or ..." (Patryk, 2026-11-23): the choices split by "/", each biome led by a piece of its tile.
+    private static string NeedsText(PlayContentMessage content, string needs)
+    {
+        string[] parts = needs.Split(" or ");
+        for (int i = 0; i < parts.Length; i++)
+        {
+            string part = parts[i].Trim();
+            if (BiomeKeys.TryGetValue(part, out string? key))
+            {
+                parts[i] = UiKit.GoodMark("b:" + key) + part.Replace(' ', '\u00A0');
+            }
+        }
+
+        return string.Join(" / ", parts);
+    }
+
+    // The building's tooltip (Patryk, 2026-11-23): its name, what it does, then the facts one a line.
     private static string Describe(PlayContentMessage content, PlayBuildingInfo b)
     {
-        var lines = new List<string> { b.Name, $"Costs {Amounts(content, b.Price)}; builds in {b.BuildSeconds} s once the materials are there." };
+        var lines = new List<string> { "# " + b.Name };
+        if (b.Workers > 0 && Any(b.Produces))
+        {
+            lines.Add($"Its {b.Workers} workers make {GoodNames(content, b.Produces)}" + (Any(b.Consumes) ? $" from {GoodNames(content, b.Consumes)}." : "."));
+        }
+        else if (b.Housing > 0)
+        {
+            lines.Add("Homes for our people.");
+        }
+        else if (b.Storage > 0)
+        {
+            lines.Add("A store: more room for every good.");
+        }
+
+        lines.Add("");
+        lines.Add($"@Cost|{Amounts(content, b.Price, icons: true)}");
+        lines.Add($"@Build time|{b.BuildSeconds} s (once the materials are there)");
         if (b.Carriers > 0)
         {
-            lines.Add($"Building it takes {b.Carriers} of our people away while they carry the materials (they come back)."); // E9
+            lines.Add($"@Carriers|{b.Carriers} people (they come back)"); // E9
         }
+
         if (b.Workers > 0)
         {
-            lines.Add($"Jobs: {b.Workers}. Each worker a minute makes {Amounts(content, b.Produces)}" + (Any(b.Consumes) ? $" from {Amounts(content, b.Consumes)}" : "")
-                + $"; all {b.Workers} together: {Amounts(content, Times(b.Produces, b.Workers))} a minute.");
+            lines.Add($"@Jobs|{b.Workers}");
+            lines.Add($"@Each worker makes|{Amounts(content, b.Produces, icons: true)} a minute");
+            if (Any(b.Consumes))
+            {
+                lines.Add($"@Each worker uses|{Amounts(content, b.Consumes, icons: true)} a minute");
+            }
+
+            lines.Add($"@All workers|{Amounts(content, Times(b.Produces, b.Workers), icons: true)} a minute");
         }
 
         if (b.Housing > 0)
         {
-            lines.Add($"Homes for {b.Housing} people.");
+            lines.Add($"@Homes|{b.Housing} people");
         }
 
         if (b.Storage > 0)
         {
-            lines.Add($"Room for {b.Storage / 100} more of every good.");
+            lines.Add($"@Storage|+{b.Storage / 100} of every good");
         }
 
         if (!string.IsNullOrEmpty(b.Needs))
         {
-            lines.Add($"Needs {b.Needs}.");
+            lines.Add($"@Needs|{NeedsText(content, b.Needs)}");
         }
 
         return string.Join("\n", lines);

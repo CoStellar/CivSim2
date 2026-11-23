@@ -56,6 +56,7 @@ public partial class PlayGame
     private Label _toast = null!;
     private double _toastTime;
     private string _alertSig = "";
+    private string _alertLayout = "";
     private string _resSig = "";
 
     private CanvasLayer? _uiLayer;
@@ -483,6 +484,27 @@ public partial class PlayGame
         }
 
         string resSig = $"{v.People}{v.Hungry}" + string.Join(";", cells.ConvertAll(x => $"{x.Good}:{x.Stock / 100}:{x.Rate}:{x.Full}"));
+        // 2026-11-23: the same goods as before: only the numbers change, in the chips that are there (no flicker, the
+        // tooltip under the mouse stays).
+        string layout = string.Join(",", cells.ConvertAll(x => x.Good));
+        if (resSig != _resSig && layout == _resLayout && _resBox.GetChildCount() == cells.Count + 1)
+        {
+            _resSig = resSig;
+            SetChip(_resBox.GetChild<Control>(0), $"{v.People}", v.Hungry ? "hungry" : "", v.Hungry ? UiKit.Bad : UiKit.Muted,
+                $"People: {v.People}" + (v.Hungry ? ". Some settlements go hungry!" : "."));
+            for (int k = 0; k < cells.Count; k++)
+            {
+                (int g, long stock, long rate, bool full) = cells[k];
+                PlayGoodInfo good = c.Goods[g];
+                Color trend = full ? UiKit.Warn : rate > 0 ? UiKit.Good : rate < 0 ? UiKit.Bad : UiKit.Muted;
+                SetChip(_resBox.GetChild<Control>(k + 1), $"{stock / 100}", full ? "full" : UiKit.Rate(rate), trend,
+                    $"{good.Name}: {stock / 100} in all our settlements (room for {v.Capacity[g] / 100}), {UiKit.Rate(rate)} a minute." + (full ? " Full: its makers stop." : ""));
+            }
+
+            return;
+        }
+
+        _resLayout = layout;
         SetResources(resSig, () =>
         {
             Control people = Chip(new Color("e0c090"), "P", $"{v.People}", v.Hungry ? "hungry" : "", v.Hungry ? UiKit.Bad : UiKit.Muted,
@@ -508,6 +530,21 @@ public partial class PlayGame
         _resSig = sig;
         UiKit.Clear(_resBox);
         fill();
+    }
+
+    private string _resLayout = "";
+
+    // A chip's numbers changed in place: the amount and trend labels are the chip's second child's two labels.
+    private static void SetChip(Control chip, string amount, string trend, Color trendColor, string tooltip)
+    {
+        chip.TooltipText = tooltip;
+        if (chip.GetChildCount() > 1 && chip.GetChild(1) is VBoxContainer col && col.GetChildCount() > 1
+            && col.GetChild(0) is Label a && col.GetChild(1) is Label t)
+        {
+            a.Text = amount;
+            t.Text = trend;
+            t.AddThemeColorOverride("font_color", trendColor);
+        }
     }
 
     private static Control Chip(Color color, string letter, string amount, string trend, Color trendColor, string tooltip, string? good = null)
@@ -557,6 +594,24 @@ public partial class PlayGame
             return;
         }
 
+        // 2026-11-23: the same alerts as before whose text only counts down ("food runs out in 2:32"): the texts change in
+        // place, so the list does not flicker and a hovered alert stays.
+        string layout = string.Join("|", System.Linq.Enumerable.Select(alerts, a => $"{a.Kind}:{a.Col}:{a.Row}:{a.Good}"));
+        if (layout == _alertLayout && alerts.Count <= 7 && _alertsBox.GetChildCount() == alerts.Count)
+        {
+            _alertSig = sig;
+            for (int k = 0; k < alerts.Count; k++)
+            {
+                if (_alertsBox.GetChild(k).GetChildOrNull<Node>(0)?.GetChildOrNull<Label>(1) is { } label)
+                {
+                    label.Text = alerts[k].Text;
+                }
+            }
+
+            return;
+        }
+
+        _alertLayout = layout;
         _alertSig = sig;
         UiKit.Clear(_alertsBox);
         int shown = 0;
@@ -842,14 +897,17 @@ public partial class PlayGame
         return false;
     }
 
-    private static string Amounts(PlayContentMessage content, long[] a)
+    // icons: each good led by its picture's mark, for rich tooltips (RichTipButton).
+    private static string Amounts(PlayContentMessage content, long[] a, bool icons = false)
     {
         var parts = new List<string>();
         for (int g = 0; g < a.Length; g++)
         {
             if (a[g] != 0)
             {
-                parts.Add($"{UiKit.Num(a[g])} {content.Goods[g].Name.ToLowerInvariant()}");
+                parts.Add(icons
+                    ? UiKit.GoodMark(content.Goods[g].Key) + $"{UiKit.Num(a[g])}\u00A0{content.Goods[g].Name.ToLowerInvariant().Replace(' ', '\u00A0')}"
+                    : $"{UiKit.Num(a[g])} {content.Goods[g].Name.ToLowerInvariant()}");
             }
         }
 

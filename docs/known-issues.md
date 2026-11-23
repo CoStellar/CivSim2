@@ -21,6 +21,7 @@ gdy znajdziesz nowy, dopisz go z datą, źródłem i tym, co już wiadomo. Probl
 
 | Problem | PR |
 | --- | --- |
+| Interfejs migał, a dymki (np. koszt technologii) znikały lub nie chciały się pokazać: okno badań, panel boczny, pasek dóbr i alerty budowały się od nowa przy każdej zmianie liczby (pasek postępu badań, odliczanie w alercie). Teraz podmieniane są tylko zmienione elementy, a liczby na pasku dóbr i w alertach zmieniają się w miejscu (zgłosił Patryk 2026-11-23) | `fix/ui-redraw` |
 | Za mało smolarzy i innych wytwórców wsadu: AI stawiała nowego dopiero przy zapasie < 20, więc duży zapas rozrzucony po osadach blokował budowę. Teraz buduje, dopóki zapas nie starcza na 10 minut niedoboru (warsztaty bez wsadu 28% → 21%, braki węgla drzewnego 277 → 6) | `fix/ai-input-makers` |
 | Warsztaty bez wsadu z powodu transportu: AI wysyłała pojedyncze karawany. Teraz zakłada stałe trasy z wsadem od osady, która go ma (36,1% → 28,0% warsztatów bez wsadu). Problem 13 zostaje z powodu za małej produkcji | `fix/ai-input-routes` |
 | Długie takty przy wyprawach wojennych: każdy oddział osobno szukał drogi do dalekiego celu (przy ataku i w marszu). Teraz żołnierze wysłani na ten sam cel do 3 heksów od siebie dzielą jedno szukanie (`march`). Pomiar `--sim-report --seeds 8 --minutes 120 --serial`: takty ponad 25 ms 7,9 → 3,0 na grę, najgorszy takt 48,8 → 40,6 ms (resztę zawyża pierwsza kompilacja kodu w procesie) | `fix/march-shared-path` |

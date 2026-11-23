@@ -175,6 +175,43 @@ public partial class PlayGame : Node2D
     /// <summary>Script step: sets the zoom.</summary>
     public void ScriptZoom(float zoom) => _camera.Zoom = new Vector2(zoom, zoom);
 
+    /// <summary>Script step: the mouse over a technology's card in the open tree (its tooltip shows after a moment).</summary>
+    public void ScriptHoverCard(string key)
+    {
+        if (_session?.PlayContent is { } c && c.Techs.FirstOrDefault(t => t.Key == key) is { } t
+            && FindTree(_windowBox) is { } tree && tree.CardCenter(t.Id) is { } at)
+        {
+            ScriptMouseMove(at);
+        }
+    }
+
+    /// <summary>Script step: the mouse over the first button of the decision bar (its tooltip shows after a moment).</summary>
+    public void ScriptHoverSlot()
+    {
+        if (_slotsBox.GetChildCount() > 0 && _slotsBox.GetChild(0) is Control slot)
+        {
+            ScriptMouseMove(slot.GetGlobalRect().GetCenter());
+        }
+    }
+
+    private static TechTree? FindTree(Node n)
+    {
+        if (n is TechTree t)
+        {
+            return t;
+        }
+
+        foreach (Node child in n.GetChildren())
+        {
+            if (FindTree(child) is { } found)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>Script step: scrolls the side panel to its end (for screenshots of what is low in it).</summary>
     public void ScriptPanelEnd() => _inspectorScroll.ScrollVertical = 100000;
 
