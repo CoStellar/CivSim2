@@ -462,6 +462,74 @@ def sign(c, kind, x, y):
         c.disc(x + 3.5, y + 3.5, 1, IRON[2])
 
 
+def sign_more(c, kind, x, y):
+    """More 7x7 marks, for the alerts (2026-11-23): an eye, an empty bowl, a house, a snowflake, a sack, stacked crates."""
+    dark = P((47, 46, 45))
+    if kind == "eye":
+        c.line(x + 1, y + 3, x + 5, y + 3, P((251, 249, 251)))
+        c.line(x + 2, y + 2, x + 4, y + 2, dark)
+        c.line(x + 2, y + 4, x + 4, y + 4, dark)
+        c.px(x, y + 3, dark)
+        c.px(x + 6, y + 3, dark)
+        c.px(x + 3, y + 3, P((19, 103, 157)))
+    elif kind == "bowl":
+        c.line(x, y + 3, x + 6, y + 3, MUD[0])
+        c.line(x + 1, y + 4, x + 5, y + 4, MUD[1])
+        c.line(x + 2, y + 5, x + 4, y + 5, MUD[2])
+        c.line(x + 1, y + 3, x + 5, y + 3, P((69, 31, 7)))  # nothing in it
+    elif kind == "house":
+        c.rect(x + 1, y + 3, x + 5, y + 6, WOOD[1])
+        for k in range(4):
+            c.line(x + 3 - k, y + k, x + 3 + k, y + k, BRICK[1])
+        c.rect(x + 3, y + 5, x + 3, y + 6, dark)
+    elif kind == "snow":
+        ice = P((19, 103, 157))
+        c.line(x + 3, y, x + 3, y + 6, ice)
+        c.line(x, y + 3, x + 6, y + 3, ice)
+        c.line(x + 1, y + 1, x + 5, y + 5, ice)
+        c.line(x + 1, y + 5, x + 5, y + 1, ice)
+    elif kind == "sack":
+        c.rect(x + 1, y + 2, x + 5, y + 6, THATCH[1])
+        c.line(x + 2, y + 1, x + 4, y + 1, THATCH[0])
+        c.px(x + 3, y, P((86, 44, 24)))
+        c.line(x + 5, y + 3, x + 5, y + 6, THATCH[2])
+    elif kind == "stack":
+        for bx, by in ((x, y + 4), (x + 4, y + 4), (x + 2, y)):
+            c.rect(bx, by, bx + 2, by + 2, WOOD[1])
+            c.px(bx, by, WOOD[0])
+    else:
+        sign(c, kind, x, y)
+
+
+# Alerts by kind (SimGame.Alerts.cs: AlertKind): the mark and whether it is a danger (red rim) or a warning (amber rim).
+ALERTS = ["swords", "eye", "bowl", "crate", "house", "stack", "brick", "snow", "sack", "grain", "book"]
+
+
+def alert_icon(kind_index):
+    """An alert's picture (2026-11-23): a round parchment badge with a red (danger) or amber (warning) rim and the mark of
+    what is wrong, drawn at 16x16 and doubled to 32x32 at 2x."""
+    from PIL import Image
+    t = canvas(16, 16)
+    rim = P((183, 10, 9)) if kind_index <= 2 else P((223, 143, 19))
+    rim_light = P((236, 39, 30)) if kind_index <= 2 else P((234, 210, 32))
+    t.disc(7.5, 7.5, 7.5, rim)
+    t.disc(7.0, 7.0, 6.0, rim_light)
+    t.disc(7.5, 7.5, 5.6, P((242, 194, 121)))
+    t.outline(P(OUTLINE))
+    mark = canvas(9, 9)  # the mark on its own, outlined in dark brown so it reads on the parchment
+    sign_more(mark, ALERTS[kind_index], 1, 1)
+    for yy in range(9):
+        for xx in range(9):
+            r_, g_, b_, a_ = mark.im.getpixel((xx, yy))
+            if a_ and 0.3 * r_ + 0.59 * g_ + 0.11 * b_ > 150:
+                mark.px(xx, yy, tone(P((r_, g_, b_)), -2))  # light marks (grain, steel) darker on the light badge
+    mark.outline(P(OUTLINE))
+    t.im.alpha_composite(mark.im, (3, 3))
+    c = canvas(32, 32)
+    c.im = t.im.resize((32, 32), Image.NEAREST)
+    return c
+
+
 def board(c, kind, x, y, k=1):
     """The trade's sign on a light board with a dark frame (k = 2: drawn twice as big), its top-left corner at (x, y).
     Clean: the texture pass leaves it alone, so the sign stands out from the building (Patryk, 2026-11-23)."""
@@ -1927,6 +1995,11 @@ def deposit_unknown():
         c.px(x, y, q)
     c.outline(P(OUTLINE))
     return c
+
+
+def generate_alerts():
+    for k in range(len(ALERTS)):
+        alert_icon(k).save("ui", f"alert_{k}")
 
 
 def generate_deposits(deposits):

@@ -973,6 +973,61 @@
    "height": 84
   },
   {
+   "file": "ui/alert_0.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_1.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_10.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_2.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_3.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_4.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_5.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_6.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_7.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_8.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_9.png",
+   "width": 32,
+   "height": 32
+  },
+  {
    "file": "ui/button_disabled.png",
    "width": 12,
    "height": 12
