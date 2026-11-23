@@ -103,6 +103,14 @@ Raport pokazuje teraz, czego brakuje stojącym warsztatom: po zmianie głównie 
 ma je gdzie indziej. **Zostaje:** produkcja żelaza i węgla bywa kilka razy mniejsza niż zużycie (np. żelazo: wydobycie 16 na minutę,
 zużycie 90). Tego trasy nie naprawią: AI stawia więcej kuźni, niż starcza wsadu (znany problem 13).
 
+### Więcej wytwórców brakującego wsadu (2026-11-23)
+
+Wytwórca surowca (`InputMaker`) powstawał tylko przy zapasie poniżej 20 sztuk. Duży zapas rozrzucony po osadach blokował nowych smolarzy,
+choć węgla robiło się 32 na minutę przy zużyciu 110. Teraz AI stawia kolejnego wytwórcę (jednego naraz), dopóki zapas nie starcza na
+10 minut niedoboru (`ai.inputMakerStoreMinutes`). Pomiar (12 seedów, 120 min) po stałych trasach → po tej zmianie: warsztaty bez wsadu
+28,0% → 20,9%, braki węgla drzewnego 277 → 6, głód 2,2% → 1,8%, ludzie 11 625 → 13 172, średniowiecze 68,1 → 65,5 min.
+Zostaje żelazo (345 stojących warsztatów): kopalnia żelaza potrzebuje znanego złoża.
+
 ## Jedzenie dużych ludów (2026-11-22)
 
 Długie biegi (6 seedów, 120 minut) pokazały, że największe ludy (4000+ osób) od ok. 90. minuty przerastają swoje jedzenie: latem jedzenia jest tyle, ile się zjada, zimą zapas znika i ludzie umierają (do 3000 głodnych w jednym ludzie). Przyczyna: stałe progi AI, które nie rosną z ludem (+3 jedzenia na minutę, jedna budowa jedzenia naraz, karawana 40 jedzenia), a domy i awanse liczyły tylko zapas w magazynie.

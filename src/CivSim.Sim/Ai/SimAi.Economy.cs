@@ -289,9 +289,12 @@ public static partial class SimAi
     {
         for (int i = 0; i < b.Consumes.Length; i++)
         {
-            // 2026-11-22: a good we make less of than our workshops would use and of which less than 20 is left (was: none made
-            // and under 5 in store; workshops without input use nothing, so the rate hid the shortage).
-            if (b.Consumes[i] <= 0 || civ.Stock[i] >= 20 * SimContent.One || civ.MadeRate[i] >= Demand(g, civ, i))
+            // 2026-11-22: a good we make less of than our workshops would use (was: none made and under 5 in store; workshops
+            // without input use nothing, so the rate hid the shortage). 2026-11-23: and of which the store lasts less than
+            // ai.inputMakerStoreMinutes of the shortfall (was: under 20, so a big store spread over the settlements stopped
+            // new makers while iron was made at a sixth of its use).
+            long shortfall = b.Consumes[i] <= 0 ? 0 : Demand(g, civ, i) - civ.MadeRate[i];
+            if (shortfall <= 0 || civ.Stock[i] >= Math.Max(20 * SimContent.One, shortfall * g.Content.AiInputMakerStoreMinutes))
             {
                 continue;
             }
