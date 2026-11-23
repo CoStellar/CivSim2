@@ -205,7 +205,12 @@ def gable(c, x0, x1, base_y, height, t, ridge_civ=False):
             if k == height:
                 col = r[4]
             c.px(x, y, col)
-    c.line(x0 - 1, base_y, x1 + 1, base_y, r[0])
+    # the eaves painted in the people's colour (2026-11-23, Patryk): every roof says whose it is, from afar too
+    c.line(x0 - 1, base_y, x1 + 1, base_y, CIV[2])
+    c.line(x0, base_y - 1, x1, base_y - 1, CIV[1])
+    for xx in range(x0 - 1, x1 + 2):
+        _mark(c, xx, base_y)
+        _mark(c, xx, base_y - 1)
     if ridge_civ:
         c.px(round(mid), base_y - height, CIV[0])
         c.px(round(mid) + 1, base_y - height, CIV[1])
@@ -234,8 +239,12 @@ def flag(c, x, y, h=8):
 def tent(c, x, y, w, h, t):
     for k in range(h):
         half = round(w / 2 * (1 - k / h))
-        c.line(x - half, y - k, x, y - k, t[0])
-        c.line(x + 1, y - k, x + half, y - k, t[2])
+        band = k == h // 3  # a painted band in the people's colour round the tent
+        c.line(x - half, y - k, x, y - k, CIV[0] if band else t[0])
+        c.line(x + 1, y - k, x + half, y - k, CIV[1] if band else t[2])
+        if band:
+            for xx in range(x - half, x + half + 1):
+                _mark(c, xx, y - k)
     c.line(x, y - 3, x, y, P((47, 46, 45)))
     c.px(x, y - h, P((47, 46, 45)))
 
@@ -549,6 +558,8 @@ def small_building(key, era, places, rnd):
             window(c, x1 - 8, eaves + 5)
         if smoky:
             chimney(c, x0 + 7, eaves - 3)
+        if roof != "none":
+            pennant(c, (x0 + x1) // 2, eaves - 9)
     else:
         # two volumes: the hall and a lower annex with a lean-to roof (a varied outline, depth between them)
         split = x1 - 15
@@ -562,7 +573,7 @@ def small_building(key, era, places, rnd):
         c.line(split + 1, eaves + 3, split + 1, PH - 3, tone(wt[1], -2))  # the hall's shadow on the annex
         door_frame(c, x0 + 4, PH - 3, 8)
         window(c, x0 + 12, eaves + 5)
-        window(c, split - 7, eaves + 5)
+        banner(c, split - 8, eaves + 3)
         if signk:
             board(c, signk, split + 3, eaves + 5)
         if smoky:
@@ -574,12 +585,41 @@ def small_building(key, era, places, rnd):
 
 
 def door_frame(c, x, y, h):
-    """A plank door in a light frame with a dark threshold."""
+    """A door painted in the people's colour (2026-11-23, Patryk: colours of the civilization on the buildings) in a
+    wooden frame, with a dark plank line, a brass latch and a dark threshold."""
     c.rect(x - 1, y - h, x + 3, y, WOOD[2])
-    c.rect(x, y - h + 1, x + 2, y, WOOD[0] if False else P((86, 44, 24)))
-    c.line(x + 1, y - h + 1, x + 1, y, P((69, 31, 7)))
+    c.rect(x, y - h + 1, x + 2, y, CIV[1])
+    c.line(x, y - h + 1, x + 2, y - h + 1, CIV[0])
+    c.line(x + 1, y - h + 2, x + 1, y, CIV[2])
     c.px(x + 2, y - h // 2, P((223, 143, 19)))  # the latch
     c.line(x - 1, y, x + 3, y, P((47, 46, 45)))
+    for yy in range(y - h, y + 1):
+        for xx in range(x - 1, x + 4):
+            _mark(c, xx, yy)
+
+
+def pennant(c, x, y):
+    """A pennant on the apex of a roof, in the people's colour."""
+    c.line(x, y, x, y - 6, P((47, 46, 45)))
+    c.line(x + 1, y - 6, x + 5, y - 6, CIV[0])
+    c.line(x + 1, y - 5, x + 4, y - 5, CIV[1])
+    c.line(x + 1, y - 4, x + 2, y - 4, CIV[2])
+    for yy in range(y - 6, y + 1):
+        for xx in range(x, x + 6):
+            _mark(c, xx, yy)
+
+
+def banner(c, x, y, h=6):
+    """A cloth banner hanging from the eaves on a hall's wall, in the people's colour, with a pale border."""
+    c.rect(x, y, x + 3, y + h - 2, CIV[1])
+    c.line(x, y, x, y + h - 2, CIV[0])
+    c.line(x + 3, y, x + 3, y + h - 2, CIV[2])
+    c.px(x + 1, y + h - 1, CIV[1])
+    c.px(x + 2, y + h - 1, CIV[1])
+    c.line(x - 1, y - 1, x + 4, y - 1, WOOD[2])
+    for yy in range(y - 1, y + h):
+        for xx in range(x - 1, x + 5):
+            _mark(c, xx, yy)
 
 
 def window(c, x, y):
@@ -640,6 +680,7 @@ def hex_building(key, era, rnd):
             flag(c, cx + 16, cy - 2, 14)
         else:
             mini_house(cx + 10, cy + 20, 14, THATCH)
+            flag(c, cx - 22, cy + 14, 14)
     elif key == "pasture":
         for x in range(12, HW - 12, 6):
             c.line(x, 22, x, 26, WOOD[1])
@@ -721,6 +762,8 @@ def hex_building(key, era, rnd):
             c.rect(cx - 9 + k, cy - 25, cx - 8 + k, cy - 23, STONE[0])
         c.rect(cx - 4, cy + 16, cx + 4, cy + 24, P((47, 46, 45)))  # gate
         flag(c, cx, cy - 25, 12)
+        for bx in (cx - 7, cx + 4):
+            banner(c, bx, cy - 14, 9)  # the people's banners on the keep
     else:
         mini_house(cx - 8, cy + 10, 16)
     c.outline(P(OUTLINE))
