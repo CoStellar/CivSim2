@@ -37,6 +37,9 @@ public sealed record SimScenario
     /// <summary>Everyone knows the whole map and every people from the start.</summary>
     public bool RevealMap { get; init; }
 
+    /// <summary>Every hex we know is looked at by prospectors and surveyors: its deposits show (later eras' ores as "???").</summary>
+    public bool Surveyed { get; init; }
+
     /// <summary>The debug keys work (goods, finish research, reveal the map, more people).</summary>
     public bool Debug { get; init; } = true;
 
@@ -129,6 +132,7 @@ public sealed record SimScenario
             Height = Int(r, "height", 60),
             Peoples = Int(r, "peoples", Math.Max(2, civs.Count)),
             RevealMap = r.TryGetProperty("revealMap", out JsonElement rm) && rm.GetBoolean(),
+            Surveyed = r.TryGetProperty("surveyed", out JsonElement sv) && sv.GetBoolean(),
             Debug = !r.TryGetProperty("debug", out JsonElement db) || db.GetBoolean(),
             Civs = civs,
             Wars = wars,

@@ -669,113 +669,118 @@
   },
   {
    "file": "objects/deposit_bauxite.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_cattle.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_clay.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_coal.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_copper.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_fish.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_flint.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_game.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_gold.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_horses.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_iron_ore.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_lithium.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_marble.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_oil.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_salt.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_saltpeter.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_sheep.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_silver.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_stone.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_tin.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "objects/deposit_unknown.png",
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_uranium.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/deposit_wild_grain.png",
-   "width": 24,
-   "height": 24
+   "width": 32,
+   "height": 32
   },
   {
    "file": "objects/improvement_field_01.png",

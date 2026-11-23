@@ -216,7 +216,7 @@ public sealed class LayerStack
 
     private static int Group(MapLayer layer) => layer == MapLayer.Biomes ? 0 : layer == MapLayer.Fog ? 2 : IsCellLayer(layer) ? 1 : 3;
 
-    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Hillshade or MapLayer.Fog or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields
+    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Hillshade or MapLayer.Fog or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields or MapLayer.Deposits
         or MapLayer.Borders or MapLayer.Settlements or MapLayer.Units or MapLayer.Events;
 
     private static int DefaultOpacity(MapLayer layer) => layer switch

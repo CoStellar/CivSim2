@@ -284,6 +284,11 @@ public partial class MapObjects : Node2D
         }
     }
 
+    // A deposit picture's size at 2x and its place on the hex: 16x16 in the lower left, inside the hex's edges.
+    private const int DepositArt = 32;
+
+    private static Rect2 DepositRect(int col, int row) => new(HexLayout.Center(col, row) + new Vector2(-16, 1), new Vector2(15, 15));
+
     // Deposit icons only when zoomed in; far away the Deposits cell layer shows them as colours.
     private void PaintDeposits(LayerPainter p)
     {
@@ -303,7 +308,14 @@ public partial class MapObjects : Node2D
                 if (d == 0 && w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0 && w.Visibility[i] != MapChunkMessage.Unknown && !Fogged(col, row))
                 {
                     // M6 (2026-11-19): a deposit of a later era: we know it is there, not what it is.
-                    if (p.Lines)
+                    if (_art.Get("objects", "deposit_unknown") is { } unknown)
+                    {
+                        if (!p.Lines)
+                        {
+                            p.DrawTextureRect(unknown, DepositRect(col, row), false);
+                        }
+                    }
+                    else if (p.Lines)
                     {
                         Vector2 q = HexLayout.Center(col, row) + new Vector2(-20, -2);
                         p.DrawRect(new Rect2(q + new Vector2(2, 4), new Vector2(22, 16)), new Color(0.2f, 0.18f, 0.15f, 0.85f));
@@ -320,12 +332,28 @@ public partial class MapObjects : Node2D
 
                 Texture2D? icon = _art.Get("objects", "deposit_" + content.Deposits[d - 1].Key);
                 Vector2 at = HexLayout.Center(col, row) + new Vector2(-20, -2);
-                Color tint = Colors.White; // only known deposits are sent (survey, 2026-11-19)
-                if (icon is not null)
+                if (icon is not null && icon.GetWidth() == DepositArt)
+                {
+                    // 2026-11-23: the deposit's picture (32x32 at 2x) in the lower left of the hex, its size as dots.
+                    if (!p.Lines)
+                    {
+                        Rect2 r = DepositRect(col, row);
+                        p.DrawTextureRect(icon, r, false);
+                        int rich = w.DepositRichness[i];
+                        int dots = rich <= 0 ? 0 : rich < 100 ? 1 : rich == 100 ? 2 : 3;
+                        for (int k = 0; k < dots; k++)
+                        {
+                            Vector2 dot = new(r.End.X + 1.5f, r.End.Y - 2 - (k * 3.2f));
+                            p.DrawCircle(dot, 1.4f, new Color(0.11f, 0.09f, 0.06f));
+                            p.DrawCircle(dot, 1f, new Color(0.95f, 0.8f, 0.35f));
+                        }
+                    }
+                }
+                else if (icon is not null)
                 {
                     if (!p.Lines)
                     {
-                        p.DrawTexture(icon, at, tint);
+                        p.DrawTexture(icon, at, Colors.White); // only known deposits are sent (survey, 2026-11-19)
                     }
                 }
                 else if (p.Lines)

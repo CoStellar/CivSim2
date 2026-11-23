@@ -10,6 +10,7 @@ Fields (all optional):
 | `name`, `description` | shown in the menu |
 | `seed`, `width`, `height`, `peoples` | the world (width and height of the legacy map; the game map is denser) |
 | `revealMap` | everyone knows the whole map (and so has met everyone) |
+| `surveyed` | every hex everyone knows is looked at by prospectors and surveyors: deposits show, ores of later eras as "???" |
 | `debug` | the debug keys work (default true): F5 +200 of every good, F6 finish the research, F7 reveal the map, F8 +10 people, F9 next era |
 | `wars` | pairs of peoples at war from the start, e.g. `[[0, 1]]` |
 | `noPeace` | nobody can propose peace (battles to the end; the battle scenarios use it) |

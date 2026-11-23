@@ -64,6 +64,23 @@ public sealed partial class SimGame
             }
         }
 
+        if (scenario.Surveyed)
+        {
+            // Every known hex looked at by prospectors and surveyors (to see the deposits on the map).
+            foreach (Civ c in g.Civs)
+            {
+                for (int cell = 0; cell < c.Known.Length; cell++)
+                {
+                    if (c.Known[cell])
+                    {
+                        c.RockSeen[cell] = (byte)Math.Min(255, c.Era + 1);
+                        c.SoilSeen[cell] = true;
+                        c.NewlyKnown.Add(g.Map.Chunks.ChunkOfIndex(cell));
+                    }
+                }
+            }
+        }
+
         foreach (int[] w in scenario.Wars)
         {
             if (w.Length == 2 && w[0] != w[1] && (uint)w[0] < (uint)g.Civs.Count && (uint)w[1] < (uint)g.Civs.Count)

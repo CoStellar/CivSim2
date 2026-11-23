@@ -1731,6 +1731,211 @@ def edge_icon(kind, piece):
     return c
 
 
+# ------------------------------------------------------------------------------------------------ deposits (32x32 at 2x)
+
+DW = 32  # a deposit picture: 16x16 world units in a corner of the hex
+CRYSTAL = {(228, 241, 247): ((124, 137, 142), (185, 216, 230), (228, 241, 247), (251, 249, 251), (251, 249, 251)),
+           (242, 194, 121): ((165, 77, 6), (201, 113, 21), (229, 168, 98), (242, 194, 121), (251, 249, 251))}
+
+
+def _specks(c, cx, cy, rx, ry, rgb, count, seed):
+    """Bits of ore in a rock: lit nuggets of the ore's colour, each with a highlight and a dark side."""
+    r = _tones(sh(P(rgb), -1) if False else rgb, rgb, rgb, rgb, rgb)
+    k = random.Random(seed)
+    dark, mid, light = sh(P(rgb), -1), P(rgb), sh(P(rgb), 1)
+    for _ in range(count):
+        x = int(cx + k.uniform(-0.6, 0.55) * rx)
+        y = int(cy + k.uniform(-0.55, 0.35) * ry)
+        c.px(x, y, mid)
+        c.px(x + 1, y, mid)
+        c.px(x, y + 1, dark)
+        c.px(x + 1, y + 1, dark)
+        c.px(x, y - 1 if False else y, light)
+
+
+def _rock_pile(c, rgb, seed, big=True):
+    """Two or three rocks of a material lying together, the largest at the back."""
+    if big:
+        boulder(c, 18, 17, 10, 8, rgb, seed=seed)
+        boulder(c, 10, 22, 7, 5.5, rgb, seed=seed + 1)
+        boulder(c, 22, 24, 5, 4, rgb, seed=seed + 2)
+    else:
+        boulder(c, 16, 20, 9, 7, rgb, seed=seed)
+
+
+def _shard(c, cx, base_y, half, height, tones5):
+    """A pointed shard or crystal: lit on the left, dark on the right, a highlight down its middle (no flag)."""
+    for k in range(height):
+        y = base_y - k
+        w = half * (1 - k / height)
+        for x in range(int(round(cx - w)), int(round(cx + w)) + 1):
+            col = tones5[3] if x < cx - 0.5 else tones5[1] if x > cx + 0.5 else tones5[4]
+            c.px(x, y, col)
+
+
+def _crystals(c, rgb, seed):
+    """A cluster of pale crystals (salt, saltpeter) on a grey stone."""
+    boulder(c, 16, 24, 10, 4.5, (101, 99, 98), seed=seed)
+    k = random.Random(seed)
+    tops = [(9, 11), (13, 7), (17, 5), (21, 9), (25, 13)]
+    for x, h in tops:
+        h += k.randrange(-1, 2)
+        _shard(c, x, 23, 2.5, h, _tones(*(CRYSTAL[rgb])))
+
+
+def _animal(c, kind):
+    """A beast of the land, seen from the side, standing on its legs, lit from the top left."""
+    if kind == "sheep":
+        wool = _tones((147, 138, 130), (169, 162, 160), (251, 249, 251), (251, 249, 251), (251, 249, 251))
+        for x, y, r in ((12, 16, 5), (17, 14, 5.5), (22, 16, 5), (16, 18, 5), (21, 19, 4)):
+            c.disc(x, y, r, wool[1])
+        for x, y, r in ((12, 15, 3.5), (17, 13, 4), (22, 15, 3.5)):
+            c.disc(x - 1, y - 1, r, wool[2])
+        c.rect(5, 12, 9, 17, P((47, 46, 45)))  # the head
+        c.px(6, 13, P((169, 162, 160)))
+        for x in (11, 15, 19, 23):
+            c.rect(x, 21, x + 1, 26, P((47, 46, 45)))
+        return
+    body = {"cattle": (105, 56, 41), "horses": (95, 36, 5), "game": (138, 86, 45)}[kind]
+    t = _tones(sh(P(body), -1), sh(P(body), -1), P(body), sh(P(body), 1), sh(P(body), 1))
+    c.rect(9, 12, 24, 20, t[2])  # the body
+    c.line(9, 12, 24, 12, t[3])
+    c.line(9, 20, 24, 20, t[0])
+    for x in (10, 13, 20, 23):  # the legs
+        c.rect(x, 21, x + 1, 27, t[0])
+    if kind == "horses":
+        c.rect(23, 6, 27, 14, t[2])  # the neck and head, high
+        c.rect(26, 7, 29, 11, t[2])
+        c.line(22, 6, 22, 13, P((29, 23, 16)))  # the mane
+        c.line(8, 13, 6, 19, P((29, 23, 16)))  # the tail
+    elif kind == "cattle":
+        c.rect(24, 10, 29, 17, t[2])
+        c.px(25, 9, P((242, 194, 121)))  # horns
+        c.px(28, 9, P((242, 194, 121)))
+        c.rect(13, 14, 16, 17, P((251, 249, 251)))  # a white patch
+        c.rect(19, 13, 21, 15, P((251, 249, 251)))
+        c.line(8, 13, 7, 19, t[0])
+    else:  # a deer with antlers
+        c.rect(23, 7, 27, 13, t[2])
+        c.px(26, 9, P((29, 23, 16)))
+        for x0, x1 in ((23, 20), (26, 29)):
+            c.line(x0, 7, x1, 2, P((242, 194, 121)))
+            c.px(x1 + (1 if x1 > x0 else -1), 4, P((242, 194, 121)))
+        c.rect(13, 15, 14, 16, P((229, 168, 98)))  # spots
+        c.rect(18, 14, 19, 15, P((229, 168, 98)))
+
+
+def _fish(c):
+    water = _tones((14, 63, 107), (19, 103, 157), (25, 119, 208), (63, 167, 201), (185, 216, 230))
+    for y in range(14, 28):  # a little pool
+        for x in range(2, 30):
+            u, v = (x - 15.5) / 13.5, (y - 21) / 6.5
+            if u * u + v * v <= 1:
+                c.px(x, y, water[2] if (x + y) % 5 else water[3])
+    for fx, fy, flip in ((10, 18, 1), (21, 23, -1)):
+        scale = (169, 162, 160)
+        for k in range(-4, 5):
+            h = 2 if abs(k) < 3 else 1
+            c.line(fx + k * flip, fy - h, fx + k * flip, fy + h, P(scale))
+        c.line(fx - 5 * flip, fy - 2, fx - 6 * flip, fy + 2, P((120, 121, 121)))  # the tail
+        c.px(fx + 3 * flip, fy - 1, P((29, 23, 16)))  # the eye
+        c.line(fx - 3 * flip, fy - 2, fx + 2 * flip, fy - 2, P((251, 249, 251)))
+
+
+def _grain(c):
+    stalk, ear, ear_l = P((182, 168, 35)), P((223, 143, 19)), P((234, 210, 32))
+    for k, x in enumerate((8, 12, 16, 20, 24)):
+        top = 7 + (k % 2) * 3
+        c.line(x, 28, x + (k - 2) // 2, top + 6, stalk)
+        for y in range(top, top + 7, 2):
+            c.px(x - 1 + (k - 2) // 2, y, ear)
+            c.px(x + 1 + (k - 2) // 2, y + 1, ear_l)
+            c.px(x + (k - 2) // 2, y, ear_l)
+
+
+def _oil(c):
+    pool = _tones((0, 0, 0), (29, 23, 16), (47, 46, 45), (79, 75, 69), (124, 137, 142))
+    for y in range(18, 29):
+        for x in range(3, 29):
+            u, v = (x - 16) / 12.5, (y - 24) / 4.5
+            if u * u + v * v <= 1:
+                c.px(x, y, pool[1] if v > 0 else pool[2])
+    for x, y in ((9, 22), (10, 22), (11, 22), (18, 25), (19, 25), (22, 21), (23, 21)):  # a sheen on the oil
+        c.px(x, y, pool[4])
+    for x, y in ((14, 20), (15, 19), (16, 19), (13, 21)):
+        c.px(x, y, pool[3])
+
+
+def deposit_art(key, color):
+    """The picture of a deposit, drawn as the thing itself lying on the ground (2026-11-23, in the style of the map)."""
+    c = canvas(DW, DW)
+    seed = sum(map(ord, key))
+    if key in ("game", "cattle", "horses", "sheep"):
+        _animal(c, key)
+    elif key == "fish":
+        _fish(c)
+    elif key == "wild_grain":
+        _grain(c)
+    elif key == "oil":
+        _oil(c)
+    elif key in ("salt", "saltpeter"):
+        _crystals(c, (228, 241, 247) if key == "salt" else (242, 194, 121), seed)
+    elif key == "clay":
+        boulder(c, 16, 21, 12, 7, (187, 110, 70), seed=seed)
+        c.line(9, 18, 14, 18, P((148, 64, 16)))
+        c.line(17, 21, 23, 21, P((148, 64, 16)))
+    elif key == "flint":
+        for x, h in ((10, 14), (16, 18), (22, 12)):  # dark glassy shards
+            _shard(c, x, 26, 4, h, _tones((0, 0, 0), (29, 23, 16), (47, 46, 45), (62, 60, 58), (124, 137, 142)))
+    elif key == "stone":
+        _rock_pile(c, (147, 138, 130), seed)
+    elif key == "marble":  # a cut white block with grey veins: lit top, mid front, dark side
+        top, front, side = P((251, 249, 251)), P((228, 241, 247)), P((169, 162, 160))
+        c.rect(7, 13, 21, 25, front)
+        for k in range(5):
+            c.line(7 + k, 13 - k, 21 + k, 13 - k, top)
+            c.line(22 + k, 13 - k, 22 + k, 25 - k, side)
+        c.line(9, 15, 16, 24, P((124, 137, 142)))
+        c.line(13, 15, 19, 19, P((169, 162, 160)))
+        c.line(10, 11, 20, 9, P((185, 216, 230)))
+    elif key == "coal":
+        _rock_pile(c, (47, 46, 45), seed)
+        _specks(c, 18, 17, 10, 8, (124, 137, 142), 4, seed)
+    else:  # ores in rock: copper, tin, iron ore, gold, silver, bauxite, uranium, lithium
+        host = (101, 99, 98) if key not in ("bauxite",) else (148, 64, 16)
+        _rock_pile(c, host, seed)
+        ore = {"copper": (201, 113, 21), "tin": (185, 216, 230), "iron_ore": (148, 64, 16), "gold": (234, 210, 32),
+               "silver": (228, 241, 247), "bauxite": (229, 168, 98), "uranium": (123, 161, 84),
+               "lithium": (124, 137, 142)}.get(key, color)
+        _specks(c, 18, 17, 10, 8, ore, 7, seed)
+        _specks(c, 10, 22, 7, 5.5, ore, 3, seed + 3)
+    c.outline(P(OUTLINE))
+    return c
+
+
+def deposit_unknown():
+    """A deposit we know is there but not what it is (an ore of a later era): a grey rock with a pale question mark."""
+    c = canvas(DW, DW)
+    boulder(c, 16, 19, 11, 9, (79, 75, 69), seed=7)
+    q = P((242, 194, 121))
+    for x, y in ((13, 12), (14, 11), (15, 11), (16, 11), (17, 11), (18, 12), (18, 13), (18, 14), (17, 15), (16, 16),
+                 (16, 17), (16, 20)):
+        c.px(x, y, q)
+        c.px(x + 1, y + 1, P((29, 23, 16)))
+    for x, y in ((13, 12), (14, 11), (15, 11), (16, 11), (17, 11), (18, 12), (18, 13), (18, 14), (17, 15), (16, 16),
+                 (16, 17), (16, 20)):
+        c.px(x, y, q)
+    c.outline(P(OUTLINE))
+    return c
+
+
+def generate_deposits(deposits):
+    for d in deposits:
+        color = tuple(int(d["color"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+        deposit_art(d["key"], color).save("objects", f"deposit_{d['key']}")
+    deposit_unknown().save("objects", "deposit_unknown")
+
+
 # ------------------------------------------------------------------------------------------------ interface frames (textured)
 
 def _frame(name, w, h, base_rgb, margin, pattern, raised=True, stitch=None):

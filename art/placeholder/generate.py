@@ -317,27 +317,7 @@ def river(edge, width_name):
     c.save("terrain", f"terrain_river_{edge}_{width_name}")
 
 
-# ---------------------------------------------------------------- objects: deposits (24×24)
-
-def deposit(key, color):
-    c = Canvas(24, 24)
-    fill = nearest(color)
-    c.disc(11.5, 11.5, 8.5, shade(fill, -1))
-    c.disc(11.5, 11.5, 7.0, fill)
-    c.disc(9, 9, 2.5, shade(fill, 1))
-    # A tiny mark by kind of good: food animals a dot pair, stone and ores a square, plants a stalk.
-    mark = shade(fill, -2)
-    if key in ("game", "cattle", "sheep", "horses", "fish"):
-        c.rect(10, 13, 11, 14, mark)
-        c.rect(14, 13, 15, 14, mark)
-    elif key in ("wild_grain",):
-        c.line(12, 16, 12, 9, mark)
-        c.px(11, 10, mark)
-        c.px(13, 11, mark)
-    else:
-        c.rect(11, 12, 14, 15, mark)
-    c.outline(nearest((29, 23, 16)))
-    c.save("objects", f"deposit_{key}")
+# Deposits are drawn by game_art.generate_deposits (2x, 2026-11-23).
 
 
 # ---------------------------------------------------------------- objects: settlements (48×42, 5 looks × 3 states; stage 6 PR P2b)
@@ -695,8 +675,7 @@ def main():
             if game_art.MASK[y][x]:
                 template.putpixel((x, y), (255, 255, 255, 255))
     template.save(os.path.join(ROOT, "art", "templates", f"hex_template_{game_art.HW}x{game_art.HH}.png"))
-    for d in deposits:
-        deposit(d["key"], hexrgb(d["color"]))
+    game_art.generate_deposits(deposits)  # 2026-11-23: deposits at 2x in the style of the map, and the "???" sign
     for level in ("camp", "hearth", "village", "walled", "town"):
         for state in ("active", "abandoned", "ruins"):
             settlement(level, state)

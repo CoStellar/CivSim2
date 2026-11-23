@@ -254,3 +254,17 @@ Dotąd gra rysowała je kodem jako kreski. Teraz mają obrazki w warstwie `works
 Z daleka (najmniejsze przybliżenie) zostają kreski, bo obrazki byłyby za małe. Podgląd w grze: scenariusz `12_roads`
 i okno zrzutu `--play-window Ways` (zakładka dróg na pasku, mapa z bliska).
 
+## 13. Złoża i znak „???” (2026-11-23)
+
+- **22 złoża w nowym stylu** (32×32 przy 2×, na mapie 16×16 w lewym dolnym rogu heksa), narysowane jako sama rzecz na ziemi:
+  - zwierzęta z boku: jeleń, krowa, owca, koń; ryby w sadzawce; kłosy dzikiego zboża;
+  - kamień i rudy jako głazy z bryłą, w nich grudki rudy w jej kolorze (miedź, cyna, ruda żelaza, złoto, srebro, węgiel, boksyt…);
+  - kryształy soli i saletry, czarne odłamki krzemienia, bryła gliny, ciosany blok marmuru, kałuża ropy.
+- **Znak „???”** (ruda późniejszej ery): szary głaz z jasnym znakiem zapytania zamiast napisu w ramce.
+- **Wielkość złoża:** obok obrazka 1, 2 albo 3 kropki (małe, średnie, duże), jak w panelu heksa.
+- **Złoża widać na mapie:** warstwa złóż była w nowej grze wyłączona i nie dało się jej włączyć, więc złoża były tylko w panelu
+  heksa. Teraz jest włączona, a jej kolor na heksie jest delikatny (22%), żeby nie zamalowywał mapy: z bliska widać obrazek,
+  z daleka lekki odcień heksa.
+
+Podgląd w grze: scenariusz `13_deposits`.
+
