@@ -75,7 +75,7 @@ public sealed partial class SimGame
 
         if (OwnerAt[cell] >= 0)
         {
-            return "This land already belongs to a people.";
+            return "This land already belongs to a civilization.";
         }
 
         foreach (Settlement s in Settlements)

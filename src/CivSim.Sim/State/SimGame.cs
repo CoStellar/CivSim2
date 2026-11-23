@@ -162,7 +162,7 @@ public sealed partial class SimGame
         {
             var language = CivSim.Core.Naming.NameLanguage.Create(content.World.Names, CivSim.Core.Naming.Names.LanguageSeed(settings.Seed, c));
             string name = language.PeopleName(0);
-            var civ = new Civ(c, name.Length > 0 ? name : $"People {c + 1}", content.Goods.Count)
+            var civ = new Civ(c, name.Length > 0 ? name : $"Civilization {c + 1}", content.Goods.Count)
             {
                 Known = new bool[map.Geometry.CellCount],
                 RockSeen = new byte[map.Geometry.CellCount],
@@ -397,8 +397,8 @@ public sealed partial class SimGame
     /// <summary>The goal as a sentence.</summary>
     public string GoalText => Settings.Goal switch
     {
-        GameGoal.LastStanding => "The last people standing wins.",
-        GameGoal.FirstToEra => $"The first people to reach the {Content.Eras[Math.Clamp(Settings.GoalEra, 0, Content.Eras.Count - 1)].Name} wins.",
+        GameGoal.LastStanding => "The last civilization standing wins.",
+        GameGoal.FirstToEra => $"The first civilization to reach the {Content.Eras[Math.Clamp(Settings.GoalEra, 0, Content.Eras.Count - 1)].Name} wins.",
         _ => $"After {Settings.GoalMinutes} minutes the best score wins.",
     };
 

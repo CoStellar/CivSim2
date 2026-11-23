@@ -114,7 +114,7 @@ public sealed partial class SimGame
         {
             int prev = Math.Max(0, era - 1);
             return civ.Era < prev
-                ? $"Our people must first reach the {Content.Eras[prev].Name}."
+                ? $"Our civilization must first reach the {Content.Eras[prev].Name}."
                 : $"Opens in the {Content.Eras[era].Name}: know {Content.EraAdvanceTechs} technologies of the {Content.Eras[civ.Era].Name}, basics not counted (we know {KnownIn(civ, civ.Era)})"
                     + (Content.GatewayOf(civ.Era) is int gate and >= 0 ? $", among them the gateway {Content.Techs[gate].Name}{(civ.KnownTech[gate] ? " (known)" : "")}" : "")
                     + (EntryMissing(civ, era) is string made ? $", and make {made} first." : ".");
@@ -265,7 +265,7 @@ public sealed partial class SimGame
             civ.Era++;
             if (tell)
             {
-                News.Add((civ.Id, $"Our people enter the {Content.Eras[civ.Era].Name}: its technologies can now be researched."));
+                News.Add((civ.Id, $"Our civilization enters the {Content.Eras[civ.Era].Name}: its technologies can now be researched."));
             }
         }
     }

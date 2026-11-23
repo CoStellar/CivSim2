@@ -81,7 +81,7 @@ public sealed partial class SimGame
 
             if (OwnerAt[cell] >= 0 && OwnerAt[cell] != civ.Id)
             {
-                return "Not over another people's land.";
+                return "Not over another civilization's land.";
             }
 
             Settlement? near = NearestOwn(civ, cell);

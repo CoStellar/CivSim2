@@ -2137,7 +2137,7 @@
       "key": "barter",
       "name": "Barter",
       "era": "neolithic",
-      "gives": "Trading posts; trade with other peoples (one agreement per trading post).",
+      "gives": "Trading posts; trade with other civilizations (one agreement per trading post).",
       "made": {
         "pottery": 30
       },

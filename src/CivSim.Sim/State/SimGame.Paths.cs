@@ -99,7 +99,7 @@ public sealed partial class SimGame
 
             if (!naval && WalledAgainst(civ, cell))
             {
-                return "A wall of another people stands there: break it first.";
+                return "A wall of another civilization stands there: break it first.";
             }
 
             if (!naval && !Crossable(civ, last, DirectionTo(last, cell)))

@@ -45,7 +45,7 @@ Dzięki temu **każdy przycisk gry jest osiągalny z klawiatury**. W trybie kurs
 
 **Instrukcja:** `data/sim/manual.md` (po angielsku, jak wszystkie teksty w grze; prosty format, można ją zmieniać bez kodu).
 Rozdziały: cel gry, ekran, sterowanie (wszystkie klawisze), pierwsze minuty, osady i ludzie, badania i ery (jak przejść do kolejnej ery),
-wojna i pokój, inne ludy, wskazówki. W grze: przycisk **Manual** na górze albo F1; strzałki lewo/prawo zmieniają rozdział, góra/dół przewijają.
+wojna i pokój, inne cywilizacje, wskazówki. W grze: przycisk **Manual** na górze albo F1; strzałki lewo/prawo zmieniają rozdział, góra/dół przewijają.
 Pomoc pod H pokazuje teraz rozdział „Controls” z tej samej instrukcji, więc klawisze są opisane w jednym miejscu.
 
 ## Czego nadal nie da się zrobić bez myszy
