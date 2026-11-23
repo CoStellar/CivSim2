@@ -28,7 +28,7 @@ Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud j
 - **Scenariusze na start:**
   1. `01_neolithic_start`: wszyscy wchodzą w neolit z wioską 40 osób;
   2. `02_bronze_age_empire`: my w epoce brązu, z miasteczkiem i dwiema wioskami, reszta w neolicie;
-  3. `03_war_bronze`: wojna od startu z ludem 1, obie strony w epoce brązu z wojskiem gotowym do walki;
+  3. `03_war_bronze`: wojna od startu z ludem 1, obie strony w epoce brązu z wojskiem gotowym do walki; bez pokoju (`noPeace`, decyzja Patryka 2026-11-23: scenariusz testuje samą walkę);
   4. `04_middle_ages`: my w średniowieczu, z miastem i trzema miasteczkami, reszta w epoce żelaza.
 - **Testy:** `ScenarioTests` sprawdza każdy plik: era, poziom, budynki, jednostki i wojny. Każdą grę puszcza też na 2 minuty. Tak samo będę testował wojnę (scenariusz zamiast ręcznego ustawiania w każdym teście).
 
