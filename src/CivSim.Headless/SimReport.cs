@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -58,6 +59,12 @@ public static class SimReport
 
         /// <summary>Clothing in store at the end, all peoples.</summary>
         public long Clothing { get; init; }
+
+        /// <summary>The longest tick, milliseconds (wall clock; run with --serial for clean numbers).</summary>
+        public double WorstTickMs { get; init; }
+
+        /// <summary>Ticks longer than 25 ms (a tick's share of a second at speed x4).</summary>
+        public int SlowTicks { get; init; }
     }
 
     /// <summary>Runs the report; exit code 0.</summary>
@@ -113,6 +120,8 @@ public static class SimReport
         Line("top veteran level", r => r.VeteranLevel);
         Line("peoples at army limit", r => r.AtArmyLimit);
         Line("clothing in store", r => r.Clothing);
+        Line("worst tick (ms)", r => r.WorstTickMs);
+        Line("ticks over 25 ms", r => r.SlowTicks);
         Line("technologies known", r => r.Techs);
         var neo = rows.Where(r => r.Neolithic >= 0).Select(r => (double)r.Neolithic).ToList();
         if (neo.Count > 0)
@@ -165,6 +174,8 @@ public static class SimReport
     {
         SimGame g = SimGame.Create(content, new SimSettings(seed, width, height, peoples));
         int samples = 0;
+        double worstTick = 0;
+        int slowTicks = 0;
         int hungry = 0;
         int neolithic = -1;
         int[] firstEra = [.. Enumerable.Repeat(-1, content.Eras.Count)];
@@ -174,7 +185,11 @@ public static class SimReport
         {
             for (int t = 0; t < SimContent.TicksPerSecond; t++)
             {
+                long started = Stopwatch.GetTimestamp();
                 g.Tick();
+                double ms = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+                worstTick = Math.Max(worstTick, ms);
+                slowTicks += ms > 25 ? 1 : 0;
             }
 
             g.News.Clear();
@@ -283,6 +298,8 @@ public static class SimReport
             AtArmyLimit = alive.Count(c => g.ArmyUnits(c) >= g.ArmyLimit(c)),
             Towns = alive.Sum(c => c.Settlements.Count(s => g.Settlements[s].Level >= 2)),
             Clothing = content.Clothing < 0 ? 0 : alive.Sum(c => c.Stock[content.Clothing]) / SimContent.One,
+            WorstTickMs = worstTick,
+            SlowTicks = slowTicks,
         };
     }
 
