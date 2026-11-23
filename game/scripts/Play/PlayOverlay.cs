@@ -471,7 +471,7 @@ public partial class PlayOverlay : Node2D
 
         foreach (PlayUnitView u in cc.Units)
         {
-            h.Add(HashCode.Combine(u.Id, u.Col, u.Row, u.People, u.Hidden, u.Fighting, u.Cargo, HashCode.Combine(u.Id == SelectedUnit || SelectedUnits.Contains(u.Id), u.Size, u.Injured)));
+            h.Add(HashCode.Combine(u.Id, u.Col, u.Row, u.People, u.Hidden, u.Fighting, u.Cargo, HashCode.Combine(u.Id == SelectedUnit || SelectedUnits.Contains(u.Id), u.Size, u.Injured, u.Stance, u.Hunger)));
         }
 
         h.Add(chunk);
@@ -844,6 +844,7 @@ public partial class PlayOverlay : Node2D
                     HealthBar(g, feet + new Vector2(-12, -33), u);
                 }
 
+                UnitMarks(g, feet + new Vector2(13, -32), u);
                 if (detail == 2)
                 {
                     g.DrawString(font, feet + new Vector2(-11, 13), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 11, Colors.White);
@@ -867,6 +868,36 @@ public partial class PlayOverlay : Node2D
             if (detail == 2)
             {
                 g.DrawString(font, p + new Vector2(-11, 22), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 12, Colors.White);
+            }
+        }
+    }
+
+    // Marks beside a unit, one under another (2026-11-23): its stance when not the usual hold, wounded, hungry or starving.
+    private void UnitMarks(CanvasItem g, Vector2 at, PlayUnitView u)
+    {
+        Span<int> marks = stackalloc int[3];
+        int n = 0;
+        if (_content!.Units[u.Kind].Army && u.Stance is 1 or 2)
+        {
+            marks[n++] = u.Stance; // 1 aggressive, 2 passive
+        }
+
+        if (u.Injured > 0)
+        {
+            marks[n++] = 3;
+        }
+
+        if (u.Hunger > 0)
+        {
+            marks[n++] = u.Hunger >= 2 ? 5 : 4;
+        }
+
+        for (int k = 0; k < n; k++)
+        {
+            string name = marks[k] switch { 1 => "mark_stance_aggressive", 2 => "mark_stance_passive", 3 => "mark_wounded", 4 => "mark_hungry", _ => "mark_starving" };
+            if (Sprite("ui", name, 0) is { } pic)
+            {
+                g.DrawTextureRect(pic, new Rect2(at + new Vector2(0, k * 10.5f), new Vector2(10, 10)), false);
             }
         }
     }
