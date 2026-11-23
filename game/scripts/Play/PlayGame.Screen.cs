@@ -148,7 +148,8 @@ public partial class PlayGame
         _patrolsButton = UiKit.Button("Patrols", () => OpenWindow("Units"), "Our patrols and units: stop one or all of them (P)");
         right.AddChild(_patrolsButton);
         right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
-        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "Controls and the font (H)"));
+        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "The keys and the font (H)"));
+        right.AddChild(UiKit.Button("Manual", () => ToggleManual(), "How to play: the goal, the eras, war and peace, every key (F1)"));
         right.AddChild(UiKit.Button("Tutorial", () => OpenWindow("Tutorial"), "First steps: what to do next, and the task list on screen (T)"));
         right.AddChild(UiKit.Button("Save", SaveNow, "Save the game (it also saves itself every 5 minutes as 'autosave'); load it from the start menu (F5)"));
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
@@ -325,24 +326,20 @@ public partial class PlayGame
             fonts.AddChild(b);
         }
 
-        help.AddChild(UiKit.Label("CONTROLS", 18, UiKit.Heading));
-        help.AddChild(UiKit.Label(HelpText, 15, UiKit.Text, wrap: true));
-        help.AddChild(UiKit.Button("Close", () => _help.Visible = false));
+        // The controls: the "Controls" chapter of the manual (data/sim/manual.md), so the keys are written in one place.
+        var controls = new RichTextLabel { BbcodeEnabled = true, FitContent = true, ScrollActive = false, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.None };
+        controls.AddThemeFontSizeOverride("normal_font_size", PixelTheme.FontSize);
+        List<ManualChapter> chapters = ManualChapters();
+        int controlsAt = ManualChapterOf("Controls");
+        controls.Text = chapters.Count > 0 ? Manual.ToBbCode(chapters[controlsAt], PixelTheme.FontSize) : "The manual (data/sim/manual.md) is missing.";
+        help.AddChild(controls);
+        var helpButtons = new HBoxContainer();
+        helpButtons.AddThemeConstantOverride("separation", 8);
+        help.AddChild(helpButtons);
+        helpButtons.AddChild(UiKit.Button("The whole manual (F1)", () => ToggleManual(0), "How to play: the goal, the first minutes, the eras, war and peace, every key"));
+        helpButtons.AddChild(UiKit.Button("Close", () => _help.Visible = false, "Close (Esc or H)"));
+        BuildKeysUi(root, topH);
     }
-
-    private const string HelpText =
-        "Left click: select a settlement, building, unit or hex. Its panel opens on the left. A second click on the same hex picks what stands on it (units).\n" +
-        "Right click: send the selected units there (on an enemy: attack). Hold the right button and draw over the hexes: they walk exactly that way.\n" +
-        "Shift + left click: add the units on a hex to the selection.\n" +
-        "F: combat mode. The left button picks soldiers only: click one, drag a box, Ctrl + click a line of one kind side by side, Shift + drag paints hexes they guard. Right click with several soldiers: they go in formation (melee in front, archers behind, riders on the ends). Z hold, X aggressive, C passive, V split in half, B refit at home, N stop guarding.\n" +
-        "G: which routes show - none, orders under way, or those and the standing ones (patrols, caravan routes). The routes of what is selected always show.\n" +
-        "Roads tab in the bar: pick a track or road, then draw it hex by hex with the left button.\n" +
-        "Bottom bar: pick a building (or its key Z, X, C, V…), then click a green hex. Hold Shift to place more.\n" +
-        "Tabs above the bar (Tab key) switch between kinds of buildings.\n" +
-        "WASD, arrows or middle mouse drag: move the map. Wheel: zoom.\n" +
-        "Space: pause. + and -: faster, slower. 1-6: windows. T: tutorial. L: chronicle. H: this help. Esc: close / cancel / menu.\n\n" +
-        "Alerts on the right say what needs you and what to do. Click one to go there.\n" +
-        "What to do first: the Tutorial button at the top (T), with the task list on screen.";
 
     private void OpenWindow(string name, bool toggle = true)
     {

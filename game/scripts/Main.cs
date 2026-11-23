@@ -65,6 +65,7 @@ public partial class Main : Node2D
     private float _startZoom = 0.5f;
     private MapLayer? _startOverlay;
     private string? _menuScreenshot;
+    private string? _menuSection;
     private StartSettings? _menuSettings;
     private StartSettings? _lastSettings;
     private AcceptDialog? _dataDialog;
@@ -131,6 +132,9 @@ public partial class Main : Node2D
                     break;
                 case "--menu-screenshot":
                     _menuScreenshot = next;
+                    break;
+                case "--menu-section":
+                    _menuSection = next;
                     break;
                 case "--zoom":
                     _startZoom = float.Parse(next, CultureInfo.InvariantCulture);
@@ -256,6 +260,30 @@ public partial class Main : Node2D
                 float zoom = _playWindow == "Close" ? 3.5f : 5f;
                 demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(zoom))];
             }
+            else if (_playWindow == "Manual")
+            {
+                // The manual over the game (F1), turned to its second chapter with the Right key (2026-11-23).
+                demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.F1)), (_playSeconds - 1, g => g.ScriptKey(Key.Right))];
+            }
+            else if (_playWindow == "Controls")
+            {
+                demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.F1)), (_playSeconds - 1.2, g => g.ScriptKey(Key.Right)), (_playSeconds - 1, g => g.ScriptKey(Key.Right))];
+            }
+            else if (_playWindow == "Cursor")
+            {
+                // The keyboard cursor (Enter) moved down the side panel with the arrows (2026-11-23).
+                demo = [(_playSeconds - 2, g => g.ScriptKey(Key.Enter)), (_playSeconds - 1.6, g => g.ScriptKey(Key.Down)), (_playSeconds - 1.3, g => g.ScriptKey(Key.Down))];
+            }
+            else if (_playWindow == "CursorResearch")
+            {
+                // The keyboard cursor in the research tree: 2 opens it, Enter the cursor, the arrows walk the cards.
+                demo = [(_playSeconds - 2.5, g => g.ScriptKey(Key.Key2)), (_playSeconds - 2, g => g.ScriptKey(Key.Enter)), (_playSeconds - 1.6, g => g.ScriptKey(Key.Down)), (_playSeconds - 1.3, g => g.ScriptKey(Key.Right))];
+            }
+            else if (_playWindow == "KeysSettlement")
+            {
+                // Q, E: our settlements; R: our units (2026-11-23).
+                demo = [(_playSeconds - 2, g => g.ScriptKey(Key.R)), (_playSeconds - 1, g => g.ScriptKey(Key.E))];
+            }
             else if (_playWindow == "Pick")
             {
                 demo = [(5.0, g => g.ScriptMouseClick(new Vector2(800, 450)))];
@@ -378,6 +406,11 @@ public partial class Main : Node2D
             _saved.Save();
             StartPlay(options.Seed.ToString(CultureInfo.InvariantCulture), options.Goal, options.Scenario, options);
         };
+        if (_menuSection is not null)
+        {
+            _menu.Section = _menuSection; // for screenshots of a section (e.g. "manual")
+        }
+
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {

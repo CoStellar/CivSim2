@@ -236,12 +236,12 @@ public partial class PlayGame
         }
     }
 
-    // Keys Z…/ pick the slots of the open tab; Tab moves to the next tab. True when the key was used.
+    // Keys Z…/ pick the slots of the open tab; Tab moves to the next tab, Shift + Tab to the one before. True when the key was used.
     private bool ActionKey(Key key)
     {
         if (key == Key.Tab)
         {
-            _tab = (_tab + 1) % Tabs.Length;
+            _tab = (_tab + (Input.IsKeyPressed(Key.Shift) ? Tabs.Length - 1 : 1)) % Tabs.Length;
             _barSig = "";
             UpdateUi();
             return true;

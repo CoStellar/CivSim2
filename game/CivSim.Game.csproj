@@ -20,5 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\data\**\*.json" Link="data\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\data\sim\manual.md" Link="data\sim\manual.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

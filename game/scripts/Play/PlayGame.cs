@@ -52,6 +52,7 @@ public partial class PlayGame : Node2D
     private int _screenshotFrames = -1;
     private readonly List<(double At, Action Do)> _script = [];
     private double _time;
+    private double _escapeAt = -10;
 
     private readonly string? _scenario;
 
@@ -492,6 +493,12 @@ public partial class PlayGame : Node2D
         }
 
         MoveCamera((float)delta);
+        if (_cursor.Active)
+        {
+            _cursor.Roots = CursorRoots();
+            _cursor.Refresh();
+        }
+
         Rect2 visible = VisibleRect();
         _map.SetGrid(_camera.Zoom.X >= 0.6f);
         _map.Refresh(visible, _camera.Zoom.X);
@@ -548,6 +555,12 @@ public partial class PlayGame : Node2D
         }
 
         if (CombatInput(e))
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (e is InputEventKey keyEvent && MoreKeys(keyEvent))
         {
             GetViewport().SetInputAsHandled();
             return;
@@ -641,9 +654,15 @@ public partial class PlayGame : Node2D
                     _unit = -1;
                     UpdateUi();
                 }
-                else
+                else if (_time - _escapeAt < 3)
                 {
                     MenuRequested?.Invoke();
+                }
+                else
+                {
+                    // 2026-11-23: one Esc too many used to drop the game unsaved; leaving now takes a second Esc.
+                    _escapeAt = _time;
+                    Toast("Press Esc again to leave for the menu. The game is not saved on the way: F5 saves it.");
                 }
 
                 break;
@@ -1043,23 +1062,30 @@ public partial class PlayGame : Node2D
 
     private void MoveCamera(float delta)
     {
+        // The manual takes WASD and the arrows; the keyboard cursor takes the arrows (WASD still move the map).
+        if (_manualPanel.Visible)
+        {
+            return;
+        }
+
+        bool arrows = ArrowsForCamera;
         var dir = Vector2.Zero;
-        if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left))
+        if (Input.IsKeyPressed(Key.A) || (arrows && Input.IsKeyPressed(Key.Left)))
         {
             dir.X -= 1;
         }
 
-        if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right))
+        if (Input.IsKeyPressed(Key.D) || (arrows && Input.IsKeyPressed(Key.Right)))
         {
             dir.X += 1;
         }
 
-        if (Input.IsKeyPressed(Key.W) || Input.IsKeyPressed(Key.Up))
+        if (Input.IsKeyPressed(Key.W) || (arrows && Input.IsKeyPressed(Key.Up)))
         {
             dir.Y -= 1;
         }
 
-        if (Input.IsKeyPressed(Key.S) || Input.IsKeyPressed(Key.Down))
+        if (Input.IsKeyPressed(Key.S) || (arrows && Input.IsKeyPressed(Key.Down)))
         {
             dir.Y += 1;
         }
