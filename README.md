@@ -18,7 +18,9 @@ in Godot, or run the tools:
 
 ```
 dotnet build -c Release
-dotnet test tests/CivSim.Sim.Tests -c Release
+dotnet test tests/CivSim.Sim.Tests -c Release          # the new game
+dotnet test tests/CivSim.Tests -c Release              # protocol, server, data, map and world generation
+dotnet test tests/CivSim.Legacy.Tests -c Release       # the legacy game (ADR 0029)
 dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12
 ```
 

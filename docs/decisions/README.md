@@ -27,3 +27,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0023 Ustroje w danych, tytuł w nazwie i opóźnienie decyzji państwowych](0023-ustroje.md)
 - [0024 Gra na żywo między RTS-em a strategią: gracz ponad światem](0024-gra-na-zywo.md)
 - [0025 Czas w grze na żywo: takt, pulsy cywilizacji i licznik lat](0025-takt-pulsy-licznik-lat.md)
+- [0029 Wydzielenie gry legacy z repozytorium nowej gry](0029-wydzielenie-legacy.md) (propozycja; krok 1 zrobiony)
