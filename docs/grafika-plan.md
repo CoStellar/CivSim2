@@ -237,3 +237,20 @@ Kolor ludu (magenty podmieniane przez grę) jest teraz na każdym budynku, zawsz
 Podgląd wszystkich budynków i porównanie 8 kolorów: `python3 -I art/placeholder/showcase.py <katalog>` (zapisuje
 `showcase_all.png` i `showcase_colours.png`).
 
+## 12. Drogi, mosty, rowy i akwedukty (2026-11-23)
+
+Dotąd gra rysowała je kodem jako kreski. Teraz mają obrazki w warstwie `works` (82 pliki):
+- **ramię** od środka heksa do środka każdej z 6 krawędzi, osobno **brzeg** (ciemniejszy pas pod spodem) i **nawierzchnia**.
+  Gra kładzie najpierw brzegi wszystkich ramion heksa, potem nawierzchnie, więc skrzyżowania są czyste. Heks bez sąsiadów
+  dostaje okrągły kawałek (`_c`);
+- **ścieżka:** ubita ziemia z koleinami i kamykami; **droga:** bruk z kamieni 6×7 pikseli. Wzór bruku ma okres, który dzieli
+  odstęp heksów, więc ramiona sąsiednich heksów łączą się bez szwu;
+- **rów:** woda między brzegami z usypanej ziemi; **akwedukt:** woda w kamiennym korycie ze spoinami. Oba mają wersję z wodą
+  (`_wet`) i suchą (`_dry`), jak dotąd kolory;
+- **most:** kamienny pomost z balustradami, w trzech kierunkach (krawędzie n, ne, se). Leży nad drogą;
+- **przyciski** na pasku „Roads & works”: kawałek trawy z drogą, rowem, akweduktem, palisadą albo murem (`work_icon_*`);
+- **mury i palisady nad wszystkim** (Patryk, 2026-11-23): gra rysuje je na końcu, nad drogami, mostami i budynkami.
+
+Z daleka (najmniejsze przybliżenie) zostają kreski, bo obrazki byłyby za małe. Podgląd w grze: scenariusz `12_roads`
+i okno zrzutu `--play-window Ways` (zakładka dróg na pasku, mapa z bliska).
+

@@ -1273,9 +1273,404 @@
    "height": 32
   },
   {
+   "file": "works/work_aqueduct_c_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_c_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_c_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_n_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_n_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_n_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_ne_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_ne_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_ne_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_nw_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_nw_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_nw_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_s_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_s_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_s_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_se_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_se_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_se_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_sw_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_sw_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_aqueduct_sw_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_bridge_n.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_bridge_ne.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_bridge_se.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_ditch_c_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_c_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_c_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_n_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_n_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_n_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_ne_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_ne_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_ne_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_nw_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_nw_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_nw_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_s_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_s_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_s_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_se_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_se_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_se_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_sw_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_sw_dry.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_ditch_sw_wet.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_icon_aqueduct.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_icon_ditch.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_icon_palisade.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_icon_road.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_icon_track.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "works/work_icon_wall.png",
+   "width": 40,
+   "height": 40
+  },
+  {
    "file": "works/work_palisade_edge.png",
    "width": 48,
    "height": 16
+  },
+  {
+   "file": "works/work_road_c.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_c_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_n.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_n_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_ne.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_ne_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_nw.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_nw_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_s.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_s_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_se.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_se_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_sw.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_road_sw_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_c.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_c_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_n.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_n_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_ne.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_ne_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_nw.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_nw_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_s.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_s_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_se.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_se_bank.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_sw.png",
+   "width": 96,
+   "height": 84
+  },
+  {
+   "file": "works/work_track_sw_bank.png",
+   "width": 96,
+   "height": 84
   },
   {
    "file": "works/work_wall_edge.png",

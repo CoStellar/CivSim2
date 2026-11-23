@@ -104,6 +104,8 @@ public sealed record SimScenario
                     Weapon = Int(c, "weapon", -1),
                     Armour = Int(c, "armour", -1),
                     WallRing = Int(c, "wallRing", 0),
+                    RoadStar = Int(c, "roadStar", 0),
+                    WorkRings = Amounts(c, "workRings").ToDictionary(p => p.Key, p => (int)p.Value),
                 });
             }
         }
@@ -162,6 +164,13 @@ public sealed record ScenarioPeople
 {
     /// <summary>A finished stone wall on every hex of its land this far from its centre (0 = none).</summary>
     public int WallRing { get; init; }
+
+    /// <summary>Finished roads from the first settlement's centre, this many hexes in each of the six directions: paved
+    /// on every other one, tracks on the rest (to see roads, junctions and bridges); 0 = none.</summary>
+    public int RoadStar { get; init; }
+
+    /// <summary>Finished works (key: distance) on every hex of its land at that distance from the centre.</summary>
+    public IReadOnlyDictionary<string, int> WorkRings { get; init; } = new Dictionary<string, int>();
 
     /// <summary>Size of every army unit it starts with (0 = the kind's default).</summary>
     public int UnitPeople { get; init; }

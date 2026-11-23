@@ -191,6 +191,51 @@ public sealed partial class SimGame
             }
         }
 
+        foreach ((string key, int ring) in p.WorkRings)
+        {
+            int work = IndexOf(Content.Works, w => w.Key == key);
+            if (work < 0)
+            {
+                throw new ArgumentException($"Scenario: no work {key} in the data.");
+            }
+
+            foreach (int cell in s.Cells)
+            {
+                if (Distance(cell, s.Center) == ring && OwnerAt[cell] == civ.Id)
+                {
+                    FinishWorkHex(civ, Content.Works[work], cell);
+                }
+            }
+        }
+
+        if (p.RoadStar > 0)
+        {
+            var laid = new List<int> { s.Center };
+            RoadAt[s.Center] = 2;
+            Map.MarkCellDirty(s.Center);
+            for (int dir = 0; dir < 6; dir++)
+            {
+                int cell = s.Center;
+                for (int k = 0; k < p.RoadStar; k++)
+                {
+                    cell = Geo.Index(Geo.Neighbor(Geo.FromIndex(cell), (HexDirection)dir));
+                    if (Content.WalkCost[(Map.Biome[cell] * 3) + Map.Relief[cell]] <= 0)
+                    {
+                        break;
+                    }
+
+                    RoadAt[cell] = (byte)Math.Max(RoadAt[cell], dir % 2 == 0 ? 2 : 1);
+                    Map.MarkCellDirty(cell);
+                    laid.Add(cell);
+                }
+            }
+
+            foreach (int cell in laid)
+            {
+                BridgeRoad(civ, cell);
+            }
+        }
+
         foreach ((string key, int count) in p.Units)
         {
             UnitType t = Content.Unit(key);
