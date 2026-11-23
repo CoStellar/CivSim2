@@ -402,6 +402,20 @@ public sealed partial class SimGame
         SyncTotals(civ);
     }
 
+    // The chronicle tells a settlement stopped growing at most every five minutes.
+    private const long GrowthStopTellTicks = 5 * SimContent.TicksPerMinute;
+
+    /// <summary>
+    /// True when a settlement does not grow for food (variant C, 2026-11-22): it eats more than it makes and less than
+    /// growth.stopBelowRations rations of food are left.
+    /// </summary>
+    public bool FoodStopsGrowth(Settlement s)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        long ration = s.Eating * Content.Rations.EveryTicks / SimContent.TicksPerMinute;
+        return s.Rate[Content.Food] <= 0 && s.Stock[Content.Food] < Content.GrowthStopRations * ration;
+    }
+
     // People grow toward the housing while there is food and die off while there is none.
     private void PopulationStep(Civ civ)
     {
@@ -431,8 +445,23 @@ public sealed partial class SimGame
                 s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
                 continue;
             }
+            else if (s.People < s.Housing && FoodStopsGrowth(s))
+            {
+                // Patryk, 2026-11-22 (variant C): no growth while the food falls and less than growth.stopBelowRations rations
+                // are left; otherwise a big people grew up to its homes every summer and starved every winter.
+                s.GrowthRemainder = Math.Min(0, s.GrowthRemainder);
+                if (!s.GrowthStopped && (s.GrowthStopToldTick < 0 || Ticks - s.GrowthStopToldTick >= GrowthStopTellTicks))
+                {
+                    News.Add((civ.Id, $"{s.Name} stops growing: its food falls and less than {Content.GrowthStopRations} rations are left."));
+                    s.GrowthStopToldTick = Ticks;
+                }
+
+                s.GrowthStopped = true;
+                continue;
+            }
             else if (s.People < s.Housing)
             {
+                s.GrowthStopped = false;
                 perMinute = Math.Max(Content.MinGrowthPerMinute * SimContent.One, s.People * (Content.GrowthPercentPerMinute + Bonus(civ, EffectKind.Growth, "*") + s.GrowthBonus));
             }
             else

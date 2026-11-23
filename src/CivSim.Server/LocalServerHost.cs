@@ -119,18 +119,20 @@ public sealed class LocalServerHost : IDisposable
     /// <summary>
     /// Loads the data files of <paramref name="dataDirectory"/> (null = next to the program) and returns every problem found,
     /// empty when the data is valid (stage 6, T14: the viewer shows these instead of stopping, and reloads data with F5).
+    /// 2026-11-22: the new game's data/sim/game.json too, unknown keys included (<see cref="CivSim.Sim.Content.SimContent.Check"/>).
     /// </summary>
     public static IReadOnlyList<string> CheckData(string? dataDirectory = null)
     {
         try
         {
             ContentLoader.Load(dataDirectory);
-            return [];
         }
         catch (ContentException ex)
         {
             return ex.Errors;
         }
+
+        return CivSim.Sim.Content.SimContent.Check(dataDirectory);
     }
 
     /// <summary>The planet presets the start menu offers (stage 5), read from the data files.</summary>

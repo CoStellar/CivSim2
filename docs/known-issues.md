@@ -22,6 +22,8 @@ gdy znajdziesz nowy, dopisz go z datą, źródłem i tym, co już wiadomo. Probl
 
 | Problem | PR |
 | --- | --- |
+| `data/sim/game.json` nie był sprawdzany w menu ani przy Reload data, a literówka w nazwie klucza dawała po cichu wartość domyślną; teraz menu, Reload data, start nowej gry i test pokazują nieznane klucze. Przy okazji usunięty martwy klucz `war.levyStrength` (nikt go nie czytał) | `feat/check-game-json` |
+| Lud bez miejsca na nowe pola dorastał do domów i głodował co zimę (wzrost patrzył tylko na domy i jedzenie w magazynie); teraz wzrost staje, gdy jedzenia ubywa i zostało < 2 racje (wariant C) | `feat/growth-needs-food` |
 | FPS klienta zmierzony na komputerze Patryka (Ryzen 5 3600XT, RTX 3060 Ti, 2560×1440, V-Sync 180 Hz): menu 180, gra ręczna 6 min średnio 165 (najniżej 98), dwie gry skryptowe po 10 min (×4 i maks.) średnio 180 | pomiar 2026-11-22 |
 | Duże ludy AI głodowały od 90. minuty (stałe progi jedzenia, domy i awanse bez zapasu na zimę, karawana 40 jedzenia) | `fix/ai-food-scale` |
 | Scenariusze: dodatkowe osady (`settlements`) zaczynały z pustym magazynem (w 04 jedzenie kończyło się po 28 s); teraz dostają zapas startowy (120 jedzenia, 100 drewna, 20 kamienia) | `docs/known-issues-before-demo` |

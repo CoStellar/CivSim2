@@ -192,6 +192,12 @@ public partial class Main : Node2D
     // The new game (ADR 0028): replaces the legacy viewer while it runs.
     private void StartPlay(string seedText, int goal = 1, string? scenario = null, CivSim.Server.PlayOptions? options = null)
     {
+        // 2026-11-22: game.json may have changed while the menu was open (typos, unknown keys): check it before a game.
+        if (!DataReady(() => StartPlay(seedText, goal, scenario, options)))
+        {
+            return;
+        }
+
         StopGame();
         _menu?.QueueFree();
         _menu = null;

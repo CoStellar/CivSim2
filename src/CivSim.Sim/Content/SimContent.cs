@@ -725,6 +725,12 @@ public sealed class SimContent
     /// <summary>Least growth per minute (people).</summary>
     public int MinGrowthPerMinute { get; init; }
 
+    /// <summary>
+    /// Patryk, 2026-11-22 (variant C): a settlement whose food falls stops growing while less than this many rations of food
+    /// are left (growth.stopBelowRations; 0 = only an empty store stops it).
+    /// </summary>
+    public int GrowthStopRations { get; init; } = 2;
+
     /// <summary>Starvation loss percent per minute.</summary>
     public int StarvePercentPerMinute { get; init; }
 
@@ -1040,14 +1046,14 @@ public sealed class SimContent
     }
 
     /// <summary>Loads the rules from a data folder (default: the folder next to the program).</summary>
-    private static int[] Ints(JsonElement e, string name) => e.TryGetProperty(name, out JsonElement v) ? [.. v.EnumerateArray().Select(x => x.GetInt32())] : [];
+    private static int[] Ints(JsonElement e, string name) => e.TryProp(name, out JsonElement v) ? [.. v.EnumerateArray().Select(x => x.GetInt32())] : [];
 
     private static CombatRules ReadCombat(JsonElement c)
     {
-        int I(string name, int fallback) => c.TryGetProperty(name, out JsonElement v) ? v.GetInt32() : fallback;
-        int[] A(string name, int[] fallback) => c.TryGetProperty(name, out JsonElement v) ? [.. v.EnumerateArray().Select(x => x.GetInt32())] : fallback;
-        (int, int) Cover(string name, (int, int) fallback) => c.TryGetProperty("cover", out JsonElement cv) && cv.TryGetProperty(name, out JsonElement k)
-            ? (k.GetProperty("ranged").GetInt32(), k.GetProperty("melee").GetInt32()) : fallback;
+        int I(string name, int fallback) => c.TryProp(name, out JsonElement v) ? v.GetInt32() : fallback;
+        int[] A(string name, int[] fallback) => c.TryProp(name, out JsonElement v) ? [.. v.EnumerateArray().Select(x => x.GetInt32())] : fallback;
+        (int, int) Cover(string name, (int, int) fallback) => c.TryProp("cover", out JsonElement cv) && cv.TryProp(name, out JsonElement k)
+            ? (k.Prop("ranged").GetInt32(), k.Prop("melee").GetInt32()) : fallback;
         var d = new CombatRules();
         return new CombatRules
         {
@@ -1085,13 +1091,13 @@ public sealed class SimContent
     {
         int max = world.Deposits.Count == 0 ? 0 : world.Deposits.Max(d => d.Id);
         var kinds = new int[max + 1];
-        if (!root.TryGetProperty("survey", out JsonElement sv))
+        if (!root.TryProp("survey", out JsonElement sv))
         {
             return kinds;
         }
 
-        var surface = sv.GetProperty("surface").EnumerateArray().Select(x => x.GetString()).ToHashSet();
-        var soil = sv.GetProperty("soil").EnumerateArray().Select(x => x.GetString()).ToHashSet();
+        var surface = sv.Prop("surface").EnumerateArray().Select(x => x.GetString()).ToHashSet();
+        var soil = sv.Prop("soil").EnumerateArray().Select(x => x.GetString()).ToHashSet();
         foreach (DepositDefinition d in world.Deposits)
         {
             kinds[d.Id] = surface.Contains(d.Key) ? 0 : soil.Contains(d.Key) ? 2 : 1;
@@ -1105,20 +1111,105 @@ public sealed class SimContent
     {
         int max = world.Deposits.Count == 0 ? 0 : world.Deposits.Max(d => d.Id);
         var at = new int[max + 1];
-        if (!root.TryGetProperty("survey", out JsonElement sv))
+        if (!root.TryProp("survey", out JsonElement sv))
         {
             return at;
         }
 
-        JsonElement byEra = sv.GetProperty("eras");
+        JsonElement byEra = sv.Prop("eras");
         foreach (DepositDefinition d in world.Deposits)
         {
-            at[d.Id] = byEra.TryGetProperty(d.Key, out JsonElement e) && eras.FindIndex(x => x.Key == e.GetString()) is int i && i >= 0 ? i : int.MaxValue;
+            at[d.Id] = byEra.TryProp(d.Key, out JsonElement e) && eras.FindIndex(x => x.Key == e.GetString()) is int i && i >= 0 ? i : int.MaxValue;
         }
 
         return at;
     }
 
+    /// <summary>
+    /// Checks data/sim/game.json (2026-11-22): it must load, and every key in it must be one the game reads ("comment"
+    /// keys aside). Returns the problems, empty when the file is fine. The start menu and Reload data show them.
+    /// </summary>
+    public static IReadOnlyList<string> Check(string? directory = null)
+    {
+        directory ??= CivSim.Data.ContentLoader.DefaultDirectory;
+        var errors = new List<string>();
+        HashSet<string> read = JsonRead.Begin();
+        try
+        {
+            SimContent content = Load(directory);
+            using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "sim", "game.json")));
+            UnknownKeys(doc.RootElement, string.Empty, read, errors);
+            MapKeys(doc.RootElement, content, errors);
+        }
+        catch (CivSim.Data.ContentException ex)
+        {
+            errors.AddRange(ex.Errors);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or KeyNotFoundException or JsonException or InvalidOperationException or FormatException or IOException)
+        {
+            errors.Add($"sim/game.json: {ex.Message}");
+        }
+        finally
+        {
+            JsonRead.End();
+        }
+
+        return errors;
+    }
+
+    // Keys the game never asked for, with their place in the file.
+    private static void UnknownKeys(JsonElement e, string path, HashSet<string> read, List<string> errors)
+    {
+        if (e.ValueKind == JsonValueKind.Object)
+        {
+            foreach (JsonProperty p in e.EnumerateObject())
+            {
+                string at = path.Length == 0 ? p.Name : path + "." + p.Name;
+                bool note = p.Name == "comment" || (path.Length == 0 && p.Name == "version"); // notes for people, the file's version
+                if (!note && !read.Contains(p.Name))
+                {
+                    errors.Add($"sim/game.json: unknown key '{at}' (the game does not read it: a typo or an old setting?)");
+                    continue;
+                }
+
+                UnknownKeys(p.Value, at, read, errors);
+            }
+        }
+        else if (e.ValueKind == JsonValueKind.Array)
+        {
+            int i = 0;
+            foreach (JsonElement x in e.EnumerateArray())
+            {
+                UnknownKeys(x, $"{path}[{i++}]", read, errors);
+            }
+        }
+    }
+
+    // Maps whose keys name buildings or technologies and that the loader skips quietly when a key is unknown.
+    private static void MapKeys(JsonElement root, SimContent content, List<string> errors)
+    {
+        if (!root.TryGetProperty("armyLimit", out JsonElement limit))
+        {
+            return;
+        }
+
+        foreach (var (map, keys) in new[] { ("perBuilding", content.Buildings.Select(b => b.Key)), ("perTech", content.Techs.Select(t => t.Key)) })
+        {
+            if (limit.TryGetProperty(map, out JsonElement m))
+            {
+                var known = keys.ToHashSet();
+                foreach (JsonProperty p in m.EnumerateObject())
+                {
+                    if (!known.Contains(p.Name))
+                    {
+                        errors.Add($"sim/game.json: unknown {(map == "perBuilding" ? "building" : "technology")} '{p.Name}' in armyLimit.{map}");
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>Reads the rules of the new game from data/sim/game.json (the legacy content from the same folder too).</summary>
     public static SimContent Load(string? directory = null)
     {
         directory ??= CivSim.Data.ContentLoader.DefaultDirectory;
@@ -1128,12 +1219,12 @@ public sealed class SimContent
         JsonElement root = doc.RootElement;
 
         var goods = new List<SimGood>();
-        foreach (JsonElement g in root.GetProperty("goods").EnumerateArray())
+        foreach (JsonElement g in root.Prop("goods").EnumerateArray())
         {
-            goods.Add(new SimGood(goods.Count, g.GetProperty("key").GetString()!, g.GetProperty("name").GetString()!)
+            goods.Add(new SimGood(goods.Count, g.Prop("key").GetString()!, g.Prop("name").GetString()!)
             {
-                WorthPercent = g.TryGetProperty("worth", out JsonElement w) ? (int)(Hundredths(w)) : 100,
-                StoredIn = g.TryGetProperty("storedIn", out JsonElement si) ? si.GetString() ?? "" : "",
+                WorthPercent = g.TryProp("worth", out JsonElement w) ? (int)(Hundredths(w)) : 100,
+                StoredIn = g.TryProp("storedIn", out JsonElement si) ? si.GetString() ?? "" : "",
             });
         }
 
@@ -1148,7 +1239,7 @@ public sealed class SimContent
             var a = new long[goods.Count];
             if (e.ValueKind == JsonValueKind.Object)
             {
-                foreach (JsonProperty p in e.EnumerateObject())
+                foreach (JsonProperty p in e.Entries())
                 {
                     a[GoodOf(p.Name)] += Hundredths(p.Value);
                 }
@@ -1159,7 +1250,7 @@ public sealed class SimContent
 
         int DepositOf(JsonElement b, string name)
         {
-            if (!b.TryGetProperty(name, out JsonElement e) || string.IsNullOrEmpty(e.GetString()))
+            if (!b.TryProp(name, out JsonElement e) || string.IsNullOrEmpty(e.GetString()))
             {
                 return 0;
             }
@@ -1177,20 +1268,20 @@ public sealed class SimContent
         }
 
         var eras = new List<SimEra>();
-        foreach (JsonElement e in root.GetProperty("eras").EnumerateArray())
+        foreach (JsonElement e in root.Prop("eras").EnumerateArray())
         {
-            eras.Add(new SimEra(eras.Count, e.GetProperty("key").GetString()!, e.GetProperty("name").GetString()!));
+            eras.Add(new SimEra(eras.Count, e.Prop("key").GetString()!, e.Prop("name").GetString()!));
         }
 
         var techKeys = new List<string>();
-        foreach (JsonElement t in root.GetProperty("technologies").EnumerateArray())
+        foreach (JsonElement t in root.Prop("technologies").EnumerateArray())
         {
-            techKeys.Add(t.GetProperty("key").GetString()!);
+            techKeys.Add(t.Prop("key").GetString()!);
         }
 
         int TechOf(JsonElement e, string name)
         {
-            if (!e.TryGetProperty(name, out JsonElement v))
+            if (!e.TryProp(name, out JsonElement v))
             {
                 return -1;
             }
@@ -1202,7 +1293,7 @@ public sealed class SimContent
         int[] TechList(JsonElement e, string name)
         {
             var list = new List<int>();
-            if (e.TryGetProperty(name, out JsonElement arr))
+            if (e.TryProp(name, out JsonElement arr))
             {
                 foreach (JsonElement k in arr.EnumerateArray())
                 {
@@ -1217,9 +1308,9 @@ public sealed class SimContent
         (int, long)[] MadeOf(JsonElement t)
         {
             var list = new List<(int, long)>();
-            if (t.TryGetProperty("made", out JsonElement m))
+            if (t.TryProp("made", out JsonElement m))
             {
-                foreach (JsonProperty p in m.EnumerateObject())
+                foreach (JsonProperty p in m.Entries())
                 {
                     list.Add((GoodOf(p.Name), Hundredths(p.Value)));
                 }
@@ -1231,17 +1322,17 @@ public sealed class SimContent
         static TechEffect[] EffectsOf(JsonElement t)
         {
             var list = new List<TechEffect>();
-            if (t.TryGetProperty("effects", out JsonElement ef))
+            if (t.TryProp("effects", out JsonElement ef))
             {
                 foreach (JsonElement e in ef.EnumerateArray())
                 {
-                    string kind = e.GetProperty("kind").GetString()!;
+                    string kind = e.Prop("kind").GetString()!;
                     if (!Enum.TryParse(kind, ignoreCase: true, out EffectKind k))
                     {
                         throw new InvalidDataException($"sim/game.json: unknown effect '{kind}'.");
                     }
 
-                    list.Add(new TechEffect(k, e.TryGetProperty("target", out JsonElement tg) ? tg.GetString()! : "*", e.GetProperty("value").GetInt32()));
+                    list.Add(new TechEffect(k, e.TryProp("target", out JsonElement tg) ? tg.GetString()! : "*", e.Prop("value").GetInt32()));
                 }
             }
 
@@ -1249,12 +1340,12 @@ public sealed class SimContent
         }
 
         var techs = new List<SimTech>();
-        foreach (JsonElement t in root.GetProperty("technologies").EnumerateArray())
+        foreach (JsonElement t in root.Prop("technologies").EnumerateArray())
         {
             var exp = new List<(int, long)>();
-            if (t.TryGetProperty("experience", out JsonElement xe))
+            if (t.TryProp("experience", out JsonElement xe))
             {
-                foreach (JsonProperty p in xe.EnumerateObject())
+                foreach (JsonProperty p in xe.Entries())
                 {
                     int ti = techKeys.IndexOf(p.Name);
                     if (ti < 0)
@@ -1266,41 +1357,41 @@ public sealed class SimContent
                 }
             }
 
-            string eraKey = t.GetProperty("era").GetString()!;
+            string eraKey = t.Prop("era").GetString()!;
             int era = eras.FindIndex(x => x.Key == eraKey);
             techs.Add(new SimTech(
-                techs.Count, techKeys[techs.Count], t.GetProperty("name").GetString()!, era >= 0 ? era : throw new InvalidDataException($"sim/game.json: unknown era '{eraKey}'."),
-                t.TryGetProperty("known", out JsonElement k) && k.GetBoolean(), [.. exp],
-                t.TryGetProperty("price", out JsonElement tp) ? Amounts(tp) : new long[goods.Count],
-                t.TryGetProperty("seconds", out JsonElement ts) ? ts.GetInt32() * TicksPerSecond : 0)
+                techs.Count, techKeys[techs.Count], t.Prop("name").GetString()!, era >= 0 ? era : throw new InvalidDataException($"sim/game.json: unknown era '{eraKey}'."),
+                t.TryProp("known", out JsonElement k) && k.GetBoolean(), [.. exp],
+                t.TryProp("price", out JsonElement tp) ? Amounts(tp) : new long[goods.Count],
+                t.TryProp("seconds", out JsonElement ts) ? ts.GetInt32() * TicksPerSecond : 0)
             {
                 Effects = EffectsOf(t),
-                Upgrade = t.TryGetProperty("upgrade", out JsonElement ug) && ug.GetBoolean(),
-                Gives = t.TryGetProperty("gives", out JsonElement gv) ? gv.GetString() ?? "" : "",
-                Category = t.TryGetProperty("category", out JsonElement cat) ? cat.GetString() ?? "" : "",
+                Upgrade = t.TryProp("upgrade", out JsonElement ug) && ug.GetBoolean(),
+                Gives = t.TryProp("gives", out JsonElement gv) ? gv.GetString() ?? "" : "",
+                Category = t.TryProp("category", out JsonElement cat) ? cat.GetString() ?? "" : "",
                 Requires = TechList(t, "requires"),
                 Made = MadeOf(t),
             });
         }
 
         var levels = new List<SettlementLevel>();
-        foreach (JsonElement l in root.GetProperty("settlementLevels").EnumerateArray())
+        foreach (JsonElement l in root.Prop("settlementLevels").EnumerateArray())
         {
             levels.Add(new SettlementLevel(
-                levels.Count, l.GetProperty("key").GetString()!, l.GetProperty("name").GetString()!, l.GetProperty("radius").GetInt32(),
-                l.GetProperty("housing").GetInt32(), Hundredths(l.GetProperty("storage")), Amounts(l.GetProperty("upgradePrice")))
+                levels.Count, l.Prop("key").GetString()!, l.Prop("name").GetString()!, l.Prop("radius").GetInt32(),
+                l.Prop("housing").GetInt32(), Hundredths(l.Prop("storage")), Amounts(l.Prop("upgradePrice")))
             {
                 Tech = TechOf(l, "tech"),
                 AlsoTechs = TechList(l, "alsoTechs"),
-                MinPeople = l.TryGetProperty("minPeople", out JsonElement mp) ? mp.GetInt32() : 0,
-                MaxHousing = l.TryGetProperty("maxHousing", out JsonElement mh) ? mh.GetInt32() : 0,
+                MinPeople = l.TryProp("minPeople", out JsonElement mp) ? mp.GetInt32() : 0,
+                MaxHousing = l.TryProp("maxHousing", out JsonElement mh) ? mh.GetInt32() : 0,
             });
         }
 
         static string[] Strings(JsonElement e, string name)
         {
             var list = new List<string>();
-            if (e.TryGetProperty(name, out JsonElement arr))
+            if (e.TryProp(name, out JsonElement arr))
             {
                 foreach (JsonElement k in arr.EnumerateArray())
                 {
@@ -1314,7 +1405,7 @@ public sealed class SimContent
         static bool[] ReliefsOf(JsonElement e, string name)
         {
             var f = new bool[3];
-            if (e.TryGetProperty(name, out JsonElement arr))
+            if (e.TryProp(name, out JsonElement arr))
             {
                 foreach (JsonElement k in arr.EnumerateArray())
                 {
@@ -1326,10 +1417,10 @@ public sealed class SimContent
         }
 
         var buildings = new List<BuildingType> { new() { Id = 0, Key = "", Name = "" } };
-        foreach (JsonElement b in root.GetProperty("buildings").EnumerateArray())
+        foreach (JsonElement b in root.Prop("buildings").EnumerateArray())
         {
             var biomes = new bool[world.Biomes.Count];
-            if (b.TryGetProperty("biomes", out JsonElement be))
+            if (b.TryProp("biomes", out JsonElement be))
             {
                 foreach (JsonElement k in be.EnumerateArray())
                 {
@@ -1338,7 +1429,7 @@ public sealed class SimContent
             }
 
             var reliefs = new bool[3];
-            if (b.TryGetProperty("relief", out JsonElement re))
+            if (b.TryProp("relief", out JsonElement re))
             {
                 foreach (JsonElement k in re.EnumerateArray())
                 {
@@ -1352,7 +1443,7 @@ public sealed class SimContent
                 }
             }
 
-            long[] consumes = b.TryGetProperty("consumes", out JsonElement ce) ? Amounts(ce) : new long[goods.Count];
+            long[] consumes = b.TryProp("consumes", out JsonElement ce) ? Amounts(ce) : new long[goods.Count];
             bool hasInputs = false;
             foreach (long c in consumes)
             {
@@ -1362,46 +1453,46 @@ public sealed class SimContent
             buildings.Add(new BuildingType
             {
                 Id = buildings.Count,
-                Key = b.GetProperty("key").GetString()!,
-                Name = b.GetProperty("name").GetString()!,
-                Workers = b.GetProperty("workers").GetInt32(),
-                Price = Amounts(b.GetProperty("price")),
-                BuildTicks = (int)(Hundredths(b.GetProperty("buildSeconds")) * TicksPerSecond / One),
+                Key = b.Prop("key").GetString()!,
+                Name = b.Prop("name").GetString()!,
+                Workers = b.Prop("workers").GetInt32(),
+                Price = Amounts(b.Prop("price")),
+                BuildTicks = (int)(Hundredths(b.Prop("buildSeconds")) * TicksPerSecond / One),
                 Biomes = biomes,
                 Reliefs = reliefs,
-                NeedsWater = b.TryGetProperty("needsWater", out JsonElement w) && w.GetBoolean(),
+                NeedsWater = b.TryProp("needsWater", out JsonElement w) && w.GetBoolean(),
                 OrDeposit = DepositOf(b, "orDeposit"),
-                Produces = b.TryGetProperty("produces", out JsonElement pe) ? Amounts(pe) : new long[goods.Count],
+                Produces = b.TryProp("produces", out JsonElement pe) ? Amounts(pe) : new long[goods.Count],
                 Consumes = consumes,
                 HasInputs = hasInputs,
                 BonusDeposit = DepositOf(b, "bonusDeposit"),
-                BonusPercent = b.TryGetProperty("bonusPercent", out JsonElement bp) ? bp.GetInt32() : 0,
-                Housing = b.TryGetProperty("housing", out JsonElement h) ? h.GetInt32() : 0,
-                Storage = b.TryGetProperty("storage", out JsonElement s) ? Hundredths(s) : 0,
+                BonusPercent = b.TryProp("bonusPercent", out JsonElement bp) ? bp.GetInt32() : 0,
+                Housing = b.TryProp("housing", out JsonElement h) ? h.GetInt32() : 0,
+                Storage = b.TryProp("storage", out JsonElement s) ? Hundredths(s) : 0,
                 Tech = Math.Max(0, TechOf(b, "tech")),
-                MinFertility = b.TryGetProperty("minFertility", out JsonElement mf) ? mf.GetInt32() : 0,
-                ResearchDiscountPercent = b.TryGetProperty("researchDiscountPercent", out JsonElement rd) ? rd.GetInt32() : 0,
-                DefensePercent = b.TryGetProperty("defensePercent", out JsonElement dp) ? dp.GetInt32() : 0,
-                Guard = b.TryGetProperty("guard", out JsonElement gd) ? gd.GetInt32() : 0,
+                MinFertility = b.TryProp("minFertility", out JsonElement mf) ? mf.GetInt32() : 0,
+                ResearchDiscountPercent = b.TryProp("researchDiscountPercent", out JsonElement rd) ? rd.GetInt32() : 0,
+                DefensePercent = b.TryProp("defensePercent", out JsonElement dp) ? dp.GetInt32() : 0,
+                Guard = b.TryProp("guard", out JsonElement gd) ? gd.GetInt32() : 0,
                 BonusReliefs = ReliefsOf(b, "bonusRelief"),
                 Groups = Strings(b, "groups"),
-                BonusReliefPercent = b.TryGetProperty("bonusReliefPercent", out JsonElement brp) ? brp.GetInt32() : 0,
-                TrainPercent = b.TryGetProperty("trainPercent", out JsonElement tp2) ? tp2.GetInt32() : 100,
-                WinterPercent = b.TryGetProperty("winterPercent", out JsonElement wp) ? wp.GetInt32() : 100,
-                Size = b.TryGetProperty("size", out JsonElement sz) ? sz.GetInt32() is 1 or 2 or 4 ? sz.GetInt32() : throw new InvalidDataException($"sim/game.json: size of '{b.GetProperty("key").GetString()}' must be 1, 2 or 4.") : 1,
+                BonusReliefPercent = b.TryProp("bonusReliefPercent", out JsonElement brp) ? brp.GetInt32() : 0,
+                TrainPercent = b.TryProp("trainPercent", out JsonElement tp2) ? tp2.GetInt32() : 100,
+                WinterPercent = b.TryProp("winterPercent", out JsonElement wp) ? wp.GetInt32() : 100,
+                Size = b.TryProp("size", out JsonElement sz) ? sz.GetInt32() is 1 or 2 or 4 ? sz.GetInt32() : throw new InvalidDataException($"sim/game.json: size of '{b.Prop("key").GetString()}' must be 1, 2 or 4.") : 1,
                 AlsoTechs = TechList(b, "alsoTechs"),
-                ResearchPercent = b.TryGetProperty("researchPercent", out JsonElement rpc) ? rpc.GetInt32() : 0,
-                BuildPercent = b.TryGetProperty("buildPercent", out JsonElement bpc2) ? bpc2.GetInt32() : 0,
-                ResistEpidemicPercent = b.TryGetProperty("resistEpidemicPercent", out JsonElement rep) ? rep.GetInt32() : 0,
-                GrowthBonus = b.TryGetProperty("growthBonus", out JsonElement gb) ? gb.GetInt32() : 0,
-                GoodLimit = b.TryGetProperty("goodLimit", out JsonElement gl) ? Amounts(gl) : new long[goods.Count],
-                Warm = b.TryGetProperty("warm", out JsonElement wm) && wm.GetBoolean(),
-                Crossing = b.TryGetProperty("crossing", out JsonElement cr) && cr.GetBoolean(),
-                OrTrees = b.TryGetProperty("orTrees", out JsonElement ot) && ot.GetBoolean(),
-                UpgradeKey = b.TryGetProperty("upgradesTo", out JsonElement ut) ? ut.GetString() ?? "" : "",
-                SupportGroup = b.TryGetProperty("supportGroup", out JsonElement sgp) ? sgp.GetString() ?? "" : "",
-                SupportPercent = b.TryGetProperty("supportPercent", out JsonElement spc) ? spc.GetInt32() : 0,
-                HealsPerMinute = b.TryGetProperty("healsPerMinute", out JsonElement hpm) ? hpm.GetInt32() : 0,
+                ResearchPercent = b.TryProp("researchPercent", out JsonElement rpc) ? rpc.GetInt32() : 0,
+                BuildPercent = b.TryProp("buildPercent", out JsonElement bpc2) ? bpc2.GetInt32() : 0,
+                ResistEpidemicPercent = b.TryProp("resistEpidemicPercent", out JsonElement rep) ? rep.GetInt32() : 0,
+                GrowthBonus = b.TryProp("growthBonus", out JsonElement gb) ? gb.GetInt32() : 0,
+                GoodLimit = b.TryProp("goodLimit", out JsonElement gl) ? Amounts(gl) : new long[goods.Count],
+                Warm = b.TryProp("warm", out JsonElement wm) && wm.GetBoolean(),
+                Crossing = b.TryProp("crossing", out JsonElement cr) && cr.GetBoolean(),
+                OrTrees = b.TryProp("orTrees", out JsonElement ot) && ot.GetBoolean(),
+                UpgradeKey = b.TryProp("upgradesTo", out JsonElement ut) ? ut.GetString() ?? "" : "",
+                SupportGroup = b.TryProp("supportGroup", out JsonElement sgp) ? sgp.GetString() ?? "" : "",
+                SupportPercent = b.TryProp("supportPercent", out JsonElement spc) ? spc.GetInt32() : 0,
+                HealsPerMinute = b.TryProp("healsPerMinute", out JsonElement hpm) ? hpm.GetInt32() : 0,
             });
         }
 
@@ -1417,7 +1508,7 @@ public sealed class SimContent
         bool[] Flags(JsonElement e, string name)
         {
             var f = new bool[world.Biomes.Count];
-            if (e.TryGetProperty(name, out JsonElement arr))
+            if (e.TryProp(name, out JsonElement arr))
             {
                 foreach (JsonElement k in arr.EnumerateArray())
                 {
@@ -1431,7 +1522,7 @@ public sealed class SimContent
         bool[] Reliefs(JsonElement e, string name)
         {
             var f = new bool[3];
-            if (e.TryGetProperty(name, out JsonElement arr))
+            if (e.TryProp(name, out JsonElement arr))
             {
                 foreach (JsonElement k in arr.EnumerateArray())
                 {
@@ -1445,9 +1536,9 @@ public sealed class SimContent
         (int, int)[] Upgrades(JsonElement e)
         {
             var list = new List<(int, int)>();
-            if (e.TryGetProperty("upgrades", out JsonElement up))
+            if (e.TryProp("upgrades", out JsonElement up))
             {
-                foreach (JsonProperty p in up.EnumerateObject())
+                foreach (JsonProperty p in up.Entries())
                 {
                     int ti = techKeys.IndexOf(p.Name);
                     list.Add((ti >= 0 ? ti : throw new InvalidDataException($"sim/game.json: unknown technology '{p.Name}'."), p.Value.GetInt32()));
@@ -1458,50 +1549,50 @@ public sealed class SimContent
         }
 
         var units = new List<UnitType>();
-        foreach (JsonElement u in root.GetProperty("units").EnumerateArray())
+        foreach (JsonElement u in root.Prop("units").EnumerateArray())
         {
-            int perHex = u.GetProperty("ticksPerHex").GetInt32();
+            int perHex = u.Prop("ticksPerHex").GetInt32();
             units.Add(new UnitType(
-                units.Count, u.GetProperty("key").GetString()!, u.GetProperty("name").GetString()!, u.GetProperty("people").GetInt32(), Amounts(u.GetProperty("price")),
-                (int)(Hundredths(u.GetProperty("trainSeconds")) * TicksPerSecond / One), perHex,
-                u.TryGetProperty("hiddenTicksPerHex", out JsonElement hp) ? hp.GetInt32() : 0, u.GetProperty("sight").GetInt32(),
-                u.TryGetProperty("founds", out JsonElement f) && f.GetBoolean())
+                units.Count, u.Prop("key").GetString()!, u.Prop("name").GetString()!, u.Prop("people").GetInt32(), Amounts(u.Prop("price")),
+                (int)(Hundredths(u.Prop("trainSeconds")) * TicksPerSecond / One), perHex,
+                u.TryProp("hiddenTicksPerHex", out JsonElement hp) ? hp.GetInt32() : 0, u.Prop("sight").GetInt32(),
+                u.TryProp("founds", out JsonElement f) && f.GetBoolean())
             {
                 Tech = Math.Max(0, TechOf(u, "tech")),
-                System = u.TryGetProperty("system", out JsonElement sy) && sy.GetBoolean(),
+                System = u.TryProp("system", out JsonElement sy) && sy.GetBoolean(),
                 Groups = Strings(u, "groups"),
-                NeedsBuilding = u.TryGetProperty("needsBuilding", out JsonElement nb) ? nb.GetString() ?? "" : "",
-                SiegePercent = u.TryGetProperty("siege", out JsonElement sg) ? sg.GetInt32() : 0,
-                Naval = u.TryGetProperty("naval", out JsonElement nv) && nv.GetBoolean(),
-                CargoPerPerson = u.TryGetProperty("cargoPerPerson", out JsonElement cp) ? Hundredths(cp) : 0,
-                Army = u.TryGetProperty("army", out JsonElement ar) && ar.GetBoolean(),
-                Levy = u.TryGetProperty("levy", out JsonElement lv) && lv.GetBoolean(),
-                Strength = u.TryGetProperty("strength", out JsonElement st) ? st.GetInt32() : 0,
-                Range = u.TryGetProperty("range", out JsonElement rg) ? rg.GetInt32() : 1,
+                NeedsBuilding = u.TryProp("needsBuilding", out JsonElement nb) ? nb.GetString() ?? "" : "",
+                SiegePercent = u.TryProp("siege", out JsonElement sg) ? sg.GetInt32() : 0,
+                Naval = u.TryProp("naval", out JsonElement nv) && nv.GetBoolean(),
+                CargoPerPerson = u.TryProp("cargoPerPerson", out JsonElement cp) ? Hundredths(cp) : 0,
+                Army = u.TryProp("army", out JsonElement ar) && ar.GetBoolean(),
+                Levy = u.TryProp("levy", out JsonElement lv) && lv.GetBoolean(),
+                Strength = u.TryProp("strength", out JsonElement st) ? st.GetInt32() : 0,
+                Range = u.TryProp("range", out JsonElement rg) ? rg.GetInt32() : 1,
                 BonusBiomes = Flags(u, "bonusBiomes"),
                 BonusReliefs = Reliefs(u, "bonusRelief"),
-                BonusPercent = u.TryGetProperty("bonusPercent", out JsonElement bpc) ? bpc.GetInt32() : 0,
+                BonusPercent = u.TryProp("bonusPercent", out JsonElement bpc) ? bpc.GetInt32() : 0,
                 Upgrades = Upgrades(u),
                 AlsoTechs = TechList(u, "alsoTechs"),
-                CarriesArmies = u.TryGetProperty("carriesArmies", out JsonElement ca) && ca.GetBoolean(),
-                BonusVs = u.TryGetProperty("bonusVs", out JsonElement bv) ? [.. bv.EnumerateObject().Select(p => (p.Name, p.Value.GetInt32()))] : [],
-                StopsCharge = u.TryGetProperty("stopsCharge", out JsonElement sc) && sc.GetBoolean(),
-                Pierce = u.TryGetProperty("pierce", out JsonElement pi) ? pi.GetInt32() : 0,
-                MinPeople = u.TryGetProperty("minPeople", out JsonElement mnp) ? mnp.GetInt32() : 0,
-                MaxPeople = u.TryGetProperty("maxPeople", out JsonElement mxp) ? mxp.GetInt32() : 0,
-                Survey = u.TryGetProperty("survey", out JsonElement sv) ? sv.GetString() switch { "rock" => 1, "soil" => 2, _ => 0 } : 0,
-                Carries = u.TryGetProperty("carries", out JsonElement cr2) ? cr2.GetInt32() : 0,
-                HorsesPerCaravan = u.TryGetProperty("horsesPerCaravan", out JsonElement hpc) ? Hundredths(hpc) : 0,
+                CarriesArmies = u.TryProp("carriesArmies", out JsonElement ca) && ca.GetBoolean(),
+                BonusVs = u.TryProp("bonusVs", out JsonElement bv) ? [.. bv.Entries().Select(p => (p.Name, p.Value.GetInt32()))] : [],
+                StopsCharge = u.TryProp("stopsCharge", out JsonElement sc) && sc.GetBoolean(),
+                Pierce = u.TryProp("pierce", out JsonElement pi) ? pi.GetInt32() : 0,
+                MinPeople = u.TryProp("minPeople", out JsonElement mnp) ? mnp.GetInt32() : 0,
+                MaxPeople = u.TryProp("maxPeople", out JsonElement mxp) ? mxp.GetInt32() : 0,
+                Survey = u.TryProp("survey", out JsonElement sv) ? sv.GetString() switch { "rock" => 1, "soil" => 2, _ => 0 } : 0,
+                Carries = u.TryProp("carries", out JsonElement cr2) ? cr2.GetInt32() : 0,
+                HorsesPerCaravan = u.TryProp("horsesPerCaravan", out JsonElement hpc) ? Hundredths(hpc) : 0,
             });
         }
 
         int ui = 0;
-        foreach (JsonElement u in root.GetProperty("units").EnumerateArray())
+        foreach (JsonElement u in root.Prop("units").EnumerateArray())
         {
-            if (u.TryGetProperty("becomes", out JsonElement bec))
+            if (u.TryProp("becomes", out JsonElement bec))
             {
                 var list = new List<(int, int)>();
-                foreach (JsonProperty p in bec.EnumerateObject())
+                foreach (JsonProperty p in bec.Entries())
                 {
                     int ti = techKeys.IndexOf(p.Name);
                     int to = units.FindIndex(x => x.Key == p.Value.GetString());
@@ -1514,9 +1605,9 @@ public sealed class SimContent
             ui++;
         }
 
-        JsonElement tc = root.GetProperty("terrainCost");
+        JsonElement tc = root.Prop("terrainCost");
         var forest = new bool[world.Biomes.Count];
-        foreach (JsonElement k in tc.GetProperty("forestBiomes").EnumerateArray())
+        foreach (JsonElement k in tc.Prop("forestBiomes").EnumerateArray())
         {
             forest[world.Biome(k.GetString()!).Id] = true;
         }
@@ -1530,40 +1621,40 @@ public sealed class SimContent
                 int cost = world.Biomes[b].IsWater ? 0 : 100;
                 if (cost > 0)
                 {
-                    cost = cost * (r == 1 ? tc.GetProperty("hills").GetInt32() : r == 2 ? tc.GetProperty("mountains").GetInt32() : 100) / 100;
-                    cost = forest[b] ? cost * tc.GetProperty("forest").GetInt32() / 100 : cost;
+                    cost = cost * (r == 1 ? tc.Prop("hills").GetInt32() : r == 2 ? tc.Prop("mountains").GetInt32() : 100) / 100;
+                    cost = forest[b] ? cost * tc.Prop("forest").GetInt32() / 100 : cost;
                 }
 
                 walk[(b * 3) + r] = cost;
             }
         }
 
-        JsonElement research = root.GetProperty("research");
-        JsonElement thinkers = root.GetProperty("thinkers");
-        JsonElement advisors = root.GetProperty("advisors");
+        JsonElement research = root.Prop("research");
+        JsonElement thinkers = root.Prop("thinkers");
+        JsonElement advisors = root.Prop("advisors");
         var rarities = new List<Rarity>();
-        foreach (JsonElement r in thinkers.GetProperty("rarities").EnumerateArray())
+        foreach (JsonElement r in thinkers.Prop("rarities").EnumerateArray())
         {
             rarities.Add(new Rarity(
-                rarities.Count, r.GetProperty("key").GetString()!, r.GetProperty("name").GetString()!, r.GetProperty("weight").GetInt32(),
-                r.GetProperty("costPercent").GetInt32(), r.GetProperty("experiencePercent").GetInt32(), r.GetProperty("priceTimes").GetInt32()));
+                rarities.Count, r.Prop("key").GetString()!, r.Prop("name").GetString()!, r.Prop("weight").GetInt32(),
+                r.Prop("costPercent").GetInt32(), r.Prop("experiencePercent").GetInt32(), r.Prop("priceTimes").GetInt32()));
         }
 
         var fields = new List<string>();
-        foreach (JsonElement f in advisors.GetProperty("fields").EnumerateArray())
+        foreach (JsonElement f in advisors.Prop("fields").EnumerateArray())
         {
             fields.Add(f.GetString()!);
         }
 
-        JsonElement seasons = root.TryGetProperty("seasons", out JsonElement se) ? se : default;
-        JsonElement clothing = root.TryGetProperty("clothing", out JsonElement cl) ? cl : default;
-        JsonElement forage = root.TryGetProperty("forage", out JsonElement fo) ? fo : default;
+        JsonElement seasons = root.TryProp("seasons", out JsonElement se) ? se : default;
+        JsonElement clothing = root.TryProp("clothing", out JsonElement cl) ? cl : default;
+        JsonElement forage = root.TryProp("forage", out JsonElement fo) ? fo : default;
         var forageBiome = new int[world.Biomes.Count * 2];
         var forageRelief = new int[3];
         var forageDeposit = new int[(world.Deposits.Count + 1) * goods.Count];
         if (forage.ValueKind == JsonValueKind.Object)
         {
-            foreach (JsonProperty p in forage.GetProperty("biomes").EnumerateObject())
+            foreach (JsonProperty p in forage.Prop("biomes").Entries())
             {
                 int bi = world.Biome(p.Name).Id;
                 forageBiome[bi * 2] = p.Value[0].GetInt32();
@@ -1572,215 +1663,216 @@ public sealed class SimContent
 
             for (int r = 0; r < 3; r++)
             {
-                forageRelief[r] = forage.GetProperty("relief")[r].GetInt32();
+                forageRelief[r] = forage.Prop("relief")[r].GetInt32();
             }
 
-            foreach (JsonProperty p in forage.GetProperty("deposits").EnumerateObject())
+            foreach (JsonProperty p in forage.Prop("deposits").Entries())
             {
                 DepositDefinition dep = world.Deposits.First(x => x.Key == p.Name);
-                foreach (JsonProperty gp in p.Value.EnumerateObject())
+                foreach (JsonProperty gp in p.Value.Entries())
                 {
                     forageDeposit[(dep.Id * goods.Count) + GoodOf(gp.Name)] = gp.Value.GetInt32();
                 }
             }
         }
 
-        JsonElement start = root.GetProperty("start");
-        JsonElement food = root.GetProperty("food");
-        JsonElement growth = root.GetProperty("growth");
+        JsonElement start = root.Prop("start");
+        JsonElement food = root.Prop("food");
+        JsonElement growth = root.Prop("growth");
         return new SimContent
         {
             World = world,
-            Density = root.GetProperty("density").GetInt32(),
-            EconomyEveryTicks = root.GetProperty("economyEveryTicks").GetInt32(),
-            PopulationEveryTicks = root.GetProperty("populationEveryTicks").GetInt32(),
+            Density = root.Prop("density").GetInt32(),
+            EconomyEveryTicks = root.Prop("economyEveryTicks").GetInt32(),
+            PopulationEveryTicks = root.Prop("populationEveryTicks").GetInt32(),
             Goods = goods,
             Levels = levels,
             Buildings = buildings,
-            StartPeople = start.GetProperty("people").GetInt32(),
-            StartStock = Amounts(start.GetProperty("stock")),
-            FoodPerPersonPerMinute = Hundredths(food.GetProperty("foodPerPersonPerMinute")),
-            ForagePerMinute = forage.TryGetProperty("perMinute", out JsonElement fpm) ? Amounts(fpm) : new long[goods.Count],
+            StartPeople = start.Prop("people").GetInt32(),
+            StartStock = Amounts(start.Prop("stock")),
+            FoodPerPersonPerMinute = Hundredths(food.Prop("foodPerPersonPerMinute")),
+            ForagePerMinute = forage.TryProp("perMinute", out JsonElement fpm) ? Amounts(fpm) : new long[goods.Count],
             ForageBiome = forageBiome,
             ForageRelief = forageRelief,
             ForageDeposit = forageDeposit,
-            Combat = root.TryGetProperty("combat", out JsonElement cbt) ? ReadCombat(cbt) with { OpenBiomes = Flags(cbt, "openBiomes") } : new CombatRules(),
+            Combat = root.TryProp("combat", out JsonElement cbt) ? ReadCombat(cbt) with { OpenBiomes = Flags(cbt, "openBiomes") } : new CombatRules(),
             WeaponGoods = [-1, .. new[] { "stone_weapons", "bronze_weapons", "iron_weapons", "steel_weapons" }.Select(k => goods.FindIndex(x => x.Key == k))],
             ArmourGoods = [-1, .. new[] { "hide_armour", "bronze_armour", "iron_armour", "steel_armour" }.Select(k => goods.FindIndex(x => x.Key == k))],
-            ForageRiverFood = forage.TryGetProperty("riverFood", out JsonElement frf) ? frf.GetInt32() : 0,
-            SeasonCycleTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("cycleMinutes").GetInt32() * TicksPerMinute : 0,
-            WinterTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("winterMinutes").GetInt32() * TicksPerMinute : 0,
-            WinterWarnTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("warnSeconds").GetInt32() * TicksPerSecond : 0,
-            WinterWorkPercent = seasons.ValueKind == JsonValueKind.Object ? seasons.GetProperty("winterWorkPercent").GetInt32() : 100,
-            WorkStepPermille = seasons.ValueKind == JsonValueKind.Object && seasons.TryGetProperty("workStepPermille", out JsonElement wsp) ? Math.Max(1, wsp.GetInt32()) : 25,
-            MaxResearchSupportPercent = research.TryGetProperty("maxSupportPercent", out JsonElement msp) ? msp.GetInt32() : 50,
-            Pace = research.TryGetProperty("pace", out JsonElement pace)
+            ForageRiverFood = forage.TryProp("riverFood", out JsonElement frf) ? frf.GetInt32() : 0,
+            SeasonCycleTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.Prop("cycleMinutes").GetInt32() * TicksPerMinute : 0,
+            WinterTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.Prop("winterMinutes").GetInt32() * TicksPerMinute : 0,
+            WinterWarnTicks = seasons.ValueKind == JsonValueKind.Object ? seasons.Prop("warnSeconds").GetInt32() * TicksPerSecond : 0,
+            WinterWorkPercent = seasons.ValueKind == JsonValueKind.Object ? seasons.Prop("winterWorkPercent").GetInt32() : 100,
+            WorkStepPermille = seasons.ValueKind == JsonValueKind.Object && seasons.TryProp("workStepPermille", out JsonElement wsp) ? Math.Max(1, wsp.GetInt32()) : 25,
+            MaxResearchSupportPercent = research.TryProp("maxSupportPercent", out JsonElement msp) ? msp.GetInt32() : 50,
+            Pace = research.TryProp("pace", out JsonElement pace)
                 ? new ResearchPace(Ints(pace, "pricePercent"), Ints(pace, "experiencePercent"), Ints(pace, "secondsPercent"))
                 : new ResearchPace([], [], []),
-            StartPhase = root.TryGetProperty("startPhase", out JsonElement sp)
-                ? new StartPhaseRules(sp.GetProperty("pickSeconds").GetInt32() * TicksPerSecond, sp.GetProperty("blockRadius").GetInt32(), sp.GetProperty("blockFuzz").GetInt32(),
-                    sp.GetProperty("scoreRadius").GetInt32(), sp.GetProperty("roomRadius").GetInt32())
+            StartPhase = root.TryProp("startPhase", out JsonElement sp)
+                ? new StartPhaseRules(sp.Prop("pickSeconds").GetInt32() * TicksPerSecond, sp.Prop("blockRadius").GetInt32(), sp.Prop("blockFuzz").GetInt32(),
+                    sp.Prop("scoreRadius").GetInt32(), sp.Prop("roomRadius").GetInt32())
                 {
-                    NeighbourMaxHexes = sp.TryGetProperty("neighbourMaxHexes", out JsonElement nmh) ? nmh.GetInt32() : 0,
-                    NeighbourMinHexes = sp.TryGetProperty("neighbourMinHexes", out JsonElement nmn) ? nmn.GetInt32() : 0,
+                    NeighbourMaxHexes = sp.TryProp("neighbourMaxHexes", out JsonElement nmh) ? nmh.GetInt32() : 0,
+                    NeighbourMinHexes = sp.TryProp("neighbourMinHexes", out JsonElement nmn) ? nmn.GetInt32() : 0,
                 }
                 : new StartPhaseRules(300, 10, 3, 3, 6),
-            Clothing = clothing.ValueKind == JsonValueKind.Object ? GoodOf(clothing.GetProperty("good").GetString()!) : -1,
-            ClothingBonusPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("bonusPercent").GetInt32() : 0,
-            ClothingWinterMaxPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.GetProperty("winterMaxPercent").GetInt32() : 100,
-            ClothingWearPerPersonPerMinute = clothing.ValueKind == JsonValueKind.Object ? Hundredths(clothing.GetProperty("wearPerPersonPerMinute")) : 0,
-            ClothingWearOnlyInWinter = clothing.ValueKind == JsonValueKind.Object && clothing.TryGetProperty("wearOnlyInWinter", out JsonElement woiw) && woiw.GetBoolean(),
-            InjuredPercent = root.GetProperty("war").TryGetProperty("injuredPercent", out JsonElement inj) ? inj.GetInt32() : 0,
-            RiversFreeEra = root.TryGetProperty("rivers", out JsonElement rv) ? eras.FindIndex(e => e.Key == rv.GetProperty("freeFromEra").GetString()) is int rfe && rfe >= 0 ? rfe : int.MaxValue : int.MaxValue,
-            GrowthPercentPerMinute = growth.GetProperty("growthPercentPerMinute").GetInt32(),
-            MinGrowthPerMinute = growth.GetProperty("minGrowthPerMinute").GetInt32(),
-            StarvePercentPerMinute = growth.GetProperty("starvePercentPerMinute").GetInt32(),
-            ResumeCostPercent = root.GetProperty("resumeCostPercent").GetInt32(),
-            Rations = root.TryGetProperty("rations", out JsonElement ra)
-                ? new RationRules(ra.GetProperty("everySeconds").GetInt32() * TicksPerSecond, ra.GetProperty("hungryPercent").GetInt32(),
-                    ra.GetProperty("starvingPercent").GetInt32(), ra.GetProperty("starveLosePercent").GetInt32())
+            Clothing = clothing.ValueKind == JsonValueKind.Object ? GoodOf(clothing.Prop("good").GetString()!) : -1,
+            ClothingBonusPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.Prop("bonusPercent").GetInt32() : 0,
+            ClothingWinterMaxPercent = clothing.ValueKind == JsonValueKind.Object ? clothing.Prop("winterMaxPercent").GetInt32() : 100,
+            ClothingWearPerPersonPerMinute = clothing.ValueKind == JsonValueKind.Object ? Hundredths(clothing.Prop("wearPerPersonPerMinute")) : 0,
+            ClothingWearOnlyInWinter = clothing.ValueKind == JsonValueKind.Object && clothing.TryProp("wearOnlyInWinter", out JsonElement woiw) && woiw.GetBoolean(),
+            InjuredPercent = root.Prop("war").TryProp("injuredPercent", out JsonElement inj) ? inj.GetInt32() : 0,
+            RiversFreeEra = root.TryProp("rivers", out JsonElement rv) ? eras.FindIndex(e => e.Key == rv.Prop("freeFromEra").GetString()) is int rfe && rfe >= 0 ? rfe : int.MaxValue : int.MaxValue,
+            GrowthPercentPerMinute = growth.Prop("growthPercentPerMinute").GetInt32(),
+            MinGrowthPerMinute = growth.Prop("minGrowthPerMinute").GetInt32(),
+            GrowthStopRations = growth.TryProp("stopBelowRations", out JsonElement sbr) ? sbr.GetInt32() : 2,
+            StarvePercentPerMinute = growth.Prop("starvePercentPerMinute").GetInt32(),
+            ResumeCostPercent = root.Prop("resumeCostPercent").GetInt32(),
+            Rations = root.TryProp("rations", out JsonElement ra)
+                ? new RationRules(ra.Prop("everySeconds").GetInt32() * TicksPerSecond, ra.Prop("hungryPercent").GetInt32(),
+                    ra.Prop("starvingPercent").GetInt32(), ra.Prop("starveLosePercent").GetInt32())
                 : new RationRules(600, 75, 50, 20),
-            EraAdvanceTechs = root.TryGetProperty("eraAdvanceTechs", out JsonElement eat) ? eat.GetInt32() : 5,
-            StartDeposits = root.TryGetProperty("startDeposits", out JsonElement sd)
-                ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.GetProperty("deposit").GetString()).Id,
-                    x.GetProperty("min").GetInt32(), x.GetProperty("max").GetInt32(), x.TryGetProperty("depth", out JsonElement dp) ? dp.GetInt32() : 1,
-                    x.TryGetProperty("size", out JsonElement sz) && root.TryGetProperty("lodes", out JsonElement lz) ? lz.GetProperty("sizes").EnumerateArray().Select((e, k) => (e, k)).First(p => p.e.GetProperty("key").GetString() == sz.GetString()).k : -1))]
+            EraAdvanceTechs = root.TryProp("eraAdvanceTechs", out JsonElement eat) ? eat.GetInt32() : 5,
+            StartDeposits = root.TryProp("startDeposits", out JsonElement sd)
+                ? [.. sd.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object).Select(x => new StartDeposit(world.Deposits.First(dd => dd.Key == x.Prop("deposit").GetString()).Id,
+                    x.Prop("min").GetInt32(), x.Prop("max").GetInt32(), x.TryProp("depth", out JsonElement dp) ? dp.GetInt32() : 1,
+                    x.TryProp("size", out JsonElement sz) && root.TryProp("lodes", out JsonElement lz) ? lz.Prop("sizes").EnumerateArray().Select((e, k) => (e, k)).First(p => p.e.Prop("key").GetString() == sz.GetString()).k : -1))]
                 : [],
-            ArmyLimit = root.TryGetProperty("armyLimit", out JsonElement limitEl)
-                ? new ArmyLimitRules([.. limitEl.GetProperty("perLevel").EnumerateArray().Select(x => x.GetInt32())],
-                    [.. limitEl.GetProperty("perBuilding").EnumerateObject().Select(p => (buildings.FindIndex(b => b.Key == p.Name), p.Value.GetInt32())).Where(x => x.Item1 > 0)],
-                    [.. limitEl.GetProperty("perTech").EnumerateObject().Select(p => (techs.FindIndex(t => t.Key == p.Name), p.Value.GetInt32())).Where(x => x.Item1 >= 0)])
+            ArmyLimit = root.TryProp("armyLimit", out JsonElement limitEl)
+                ? new ArmyLimitRules([.. limitEl.Prop("perLevel").EnumerateArray().Select(x => x.GetInt32())],
+                    [.. limitEl.Prop("perBuilding").Entries().Select(p => (buildings.FindIndex(b => b.Key == p.Name), p.Value.GetInt32())).Where(x => x.Item1 > 0)],
+                    [.. limitEl.Prop("perTech").Entries().Select(p => (techs.FindIndex(t => t.Key == p.Name), p.Value.GetInt32())).Where(x => x.Item1 >= 0)])
                 : new ArmyLimitRules([1, 2, 4, 6], [], []),
-            Veterans = root.TryGetProperty("veterans", out JsonElement vetEl)
-                ? new VeteranRules([.. vetEl.GetProperty("levels").EnumerateArray().Select(x => x.GetInt32())],
-                    [.. vetEl.GetProperty("options").EnumerateArray().Select(o => new VeteranOption(o.GetProperty("key").GetString()!, o.GetProperty("name").GetString()!,
-                        o.GetProperty("text").GetString()!, o.TryGetProperty("strengthPercent", out JsonElement sp) ? sp.GetInt32() : 0,
-                        o.TryGetProperty("takenPercent", out JsonElement tk) ? tk.GetInt32() : 0, o.TryGetProperty("speedPercent", out JsonElement spd) ? spd.GetInt32() : 0))])
+            Veterans = root.TryProp("veterans", out JsonElement vetEl)
+                ? new VeteranRules([.. vetEl.Prop("levels").EnumerateArray().Select(x => x.GetInt32())],
+                    [.. vetEl.Prop("options").EnumerateArray().Select(o => new VeteranOption(o.Prop("key").GetString()!, o.Prop("name").GetString()!,
+                        o.Prop("text").GetString()!, o.TryProp("strengthPercent", out JsonElement sp) ? sp.GetInt32() : 0,
+                        o.TryProp("takenPercent", out JsonElement tk) ? tk.GetInt32() : 0, o.TryProp("speedPercent", out JsonElement spd) ? spd.GetInt32() : 0))])
                 {
-                    ShareNearHexes = vetEl.TryGetProperty("shareNearHexes", out JsonElement snh) ? snh.GetInt32() : 0,
+                    ShareNearHexes = vetEl.TryProp("shareNearHexes", out JsonElement snh) ? snh.GetInt32() : 0,
                 }
                 : new VeteranRules([], []),
-            Supply = root.TryGetProperty("supply", out JsonElement supplyEl)
-                ? new SupplyRules(supplyEl.GetProperty("rangeHexes").GetInt32(), supplyEl.GetProperty("carryMinutes").GetInt32(),
-                    supplyEl.GetProperty("landHands").GetInt32(), supplyEl.GetProperty("landPercent").GetInt32())
+            Supply = root.TryProp("supply", out JsonElement supplyEl)
+                ? new SupplyRules(supplyEl.Prop("rangeHexes").GetInt32(), supplyEl.Prop("carryMinutes").GetInt32(),
+                    supplyEl.Prop("landHands").GetInt32(), supplyEl.Prop("landPercent").GetInt32())
                 {
-                    NoWayTicks = (supplyEl.TryGetProperty("noWaySeconds", out JsonElement nws) ? nws.GetInt32() : 60) * TicksPerSecond,
+                    NoWayTicks = (supplyEl.TryProp("noWaySeconds", out JsonElement nws) ? nws.GetInt32() : 60) * TicksPerSecond,
                 }
                 : new SupplyRules(3, 4, 10, 100),
-            AiHomesFoodMinutes = root.TryGetProperty("ai", out JsonElement aiEl) && aiEl.TryGetProperty("homesFoodMinutes", out JsonElement hfm) ? hfm.GetInt32() : 3,
-            Lodes = root.TryGetProperty("lodes", out JsonElement lodeEl) ? new LodeRules
+            AiHomesFoodMinutes = root.TryProp("ai", out JsonElement aiEl) && aiEl.TryProp("homesFoodMinutes", out JsonElement hfm) ? hfm.GetInt32() : 3,
+            Lodes = root.TryProp("lodes", out JsonElement lodeEl) ? new LodeRules
             {
-                Sizes = [.. lodeEl.GetProperty("sizes").EnumerateArray().Select(e => new LodeSize(e.GetProperty("key").GetString()!, e.GetProperty("name").GetString()!,
-                    e.GetProperty("percent").GetInt32(), e.GetProperty("weight").GetInt32(), e.GetProperty("regionWeight").GetInt32()))],
-                Regional = [.. lodeEl.GetProperty("regional").GetProperty("deposits").EnumerateArray().Select(e => world.Deposits.First(dd => dd.Key == e.GetString()).Id)],
-                Regions = lodeEl.GetProperty("regional").GetProperty("regions").GetInt32(),
-                RegionHexes = lodeEl.GetProperty("regional").GetProperty("regionHexes").GetInt32(),
-                OutsideKeepPercent = lodeEl.GetProperty("regional").GetProperty("outsideKeepPercent").GetInt32(),
-                SignTech = techs.FindIndex(t => t.Key == lodeEl.GetProperty("signs").GetProperty("tech").GetString()),
-                SignRadius = lodeEl.GetProperty("signs").GetProperty("signRadius").GetInt32(),
-                OffsetHexes = lodeEl.GetProperty("signs").GetProperty("offsetHexes").GetInt32(),
-                PerOre = lodeEl.GetProperty("signs").GetProperty("perOre").GetInt32(),
-                ReachHexes = lodeEl.GetProperty("signs").GetProperty("reachHexes").GetInt32(),
-                RecountTicks = lodeEl.GetProperty("signs").GetProperty("recountSeconds").GetInt32() * TicksPerSecond,
-                EraOres = [.. eras.Select(era => lodeEl.GetProperty("signs").GetProperty("eras").TryGetProperty(era.Key, out JsonElement list)
+                Sizes = [.. lodeEl.Prop("sizes").EnumerateArray().Select(e => new LodeSize(e.Prop("key").GetString()!, e.Prop("name").GetString()!,
+                    e.Prop("percent").GetInt32(), e.Prop("weight").GetInt32(), e.Prop("regionWeight").GetInt32()))],
+                Regional = [.. lodeEl.Prop("regional").Prop("deposits").EnumerateArray().Select(e => world.Deposits.First(dd => dd.Key == e.GetString()).Id)],
+                Regions = lodeEl.Prop("regional").Prop("regions").GetInt32(),
+                RegionHexes = lodeEl.Prop("regional").Prop("regionHexes").GetInt32(),
+                OutsideKeepPercent = lodeEl.Prop("regional").Prop("outsideKeepPercent").GetInt32(),
+                SignTech = techs.FindIndex(t => t.Key == lodeEl.Prop("signs").Prop("tech").GetString()),
+                SignRadius = lodeEl.Prop("signs").Prop("signRadius").GetInt32(),
+                OffsetHexes = lodeEl.Prop("signs").Prop("offsetHexes").GetInt32(),
+                PerOre = lodeEl.Prop("signs").Prop("perOre").GetInt32(),
+                ReachHexes = lodeEl.Prop("signs").Prop("reachHexes").GetInt32(),
+                RecountTicks = lodeEl.Prop("signs").Prop("recountSeconds").GetInt32() * TicksPerSecond,
+                EraOres = [.. eras.Select(era => lodeEl.Prop("signs").Prop("eras").TryProp(era.Key, out JsonElement list)
                     ? list.EnumerateArray().Select(e => world.Deposits.First(dd => dd.Key == e.GetString()).Id).ToArray() : Array.Empty<int>())],
             } : new LodeRules(),
-            AiBattle = root.TryGetProperty("aiBattle", out JsonElement abEl) ? new AiBattleRules
+            AiBattle = root.TryProp("aiBattle", out JsonElement abEl) ? new AiBattleRules
             {
-                RetreatInjuredPercent = abEl.GetProperty("retreatInjuredPercent").GetInt32(),
-                RetreatSizePercent = abEl.GetProperty("retreatSizePercent").GetInt32(),
-                EngageHexes = abEl.GetProperty("engageHexes").GetInt32(),
-                MusterHexes = abEl.GetProperty("musterHexes").GetInt32(),
-                MusterFromHexes = abEl.GetProperty("musterFromHexes").GetInt32(),
-                MusterPercent = abEl.GetProperty("musterPercent").GetInt32(),
+                RetreatInjuredPercent = abEl.Prop("retreatInjuredPercent").GetInt32(),
+                RetreatSizePercent = abEl.Prop("retreatSizePercent").GetInt32(),
+                EngageHexes = abEl.Prop("engageHexes").GetInt32(),
+                MusterHexes = abEl.Prop("musterHexes").GetInt32(),
+                MusterFromHexes = abEl.Prop("musterFromHexes").GetInt32(),
+                MusterPercent = abEl.Prop("musterPercent").GetInt32(),
             } : new AiBattleRules(),
-            AiPeacefulStartMinutes = root.TryGetProperty("ai", out JsonElement aiEl3) && aiEl3.TryGetProperty("peacefulStartMinutes", out JsonElement psm) ? psm.GetInt32() : 15,
-            AiSmallPeople = root.TryGetProperty("ai", out JsonElement aiEl2) && aiEl2.TryGetProperty("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
-            AiFoodMarginPercent = root.TryGetProperty("ai", out JsonElement aiEl4) && aiEl4.TryGetProperty("foodMarginPercent", out JsonElement fmp) ? fmp.GetInt32() : 30,
-            AiFoodSitesPerPeople = root.TryGetProperty("ai", out JsonElement aiEl5) && aiEl5.TryGetProperty("foodSitesPerPeople", out JsonElement fsp) ? fsp.GetInt32() : 400,
-            FoodLowMinutes = root.TryGetProperty("alerts", out JsonElement alEl) && alEl.TryGetProperty("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
-            UpgradeCaravans = root.TryGetProperty("upgradeCaravans", out JsonElement ucEl)
-                ? new UpgradeCaravanRules(ucEl.GetProperty("extraPercent").GetInt32(), ucEl.GetProperty("aiRetrySeconds").GetInt32() * TicksPerSecond)
+            AiPeacefulStartMinutes = root.TryProp("ai", out JsonElement aiEl3) && aiEl3.TryProp("peacefulStartMinutes", out JsonElement psm) ? psm.GetInt32() : 15,
+            AiSmallPeople = root.TryProp("ai", out JsonElement aiEl2) && aiEl2.TryProp("smallPeople", out JsonElement spp) ? spp.GetInt32() : 30,
+            AiFoodMarginPercent = root.TryProp("ai", out JsonElement aiEl4) && aiEl4.TryProp("foodMarginPercent", out JsonElement fmp) ? fmp.GetInt32() : 30,
+            AiFoodSitesPerPeople = root.TryProp("ai", out JsonElement aiEl5) && aiEl5.TryProp("foodSitesPerPeople", out JsonElement fsp) ? fsp.GetInt32() : 400,
+            FoodLowMinutes = root.TryProp("alerts", out JsonElement alEl) && alEl.TryProp("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
+            UpgradeCaravans = root.TryProp("upgradeCaravans", out JsonElement ucEl)
+                ? new UpgradeCaravanRules(ucEl.Prop("extraPercent").GetInt32(), ucEl.Prop("aiRetrySeconds").GetInt32() * TicksPerSecond)
                 : new UpgradeCaravanRules(10, 60 * TicksPerSecond),
-            Siege = root.TryGetProperty("siege", out JsonElement siegeEl)
-                ? new SiegeRules(siegeEl.GetProperty("blockadeRange").GetInt32(), siegeEl.GetProperty("blockadeWorkPercent").GetInt32(), siegeEl.GetProperty("liftSeconds").GetInt32(),
-                    siegeEl.GetProperty("guardPerPalisadeHexPercent").GetInt32(), siegeEl.GetProperty("guardPerWallHexPercent").GetInt32(), siegeEl.GetProperty("guardStrength").GetInt32(),
-                    siegeEl.GetProperty("guardRegrowPerMinute").GetInt32(), siegeEl.GetProperty("residentsFloorPercent").GetInt32(), siegeEl.GetProperty("sackPercent").GetInt32(),
-                    siegeEl.GetProperty("sackImmuneSeconds").GetInt32(), siegeEl.GetProperty("choiceSeconds").GetInt32())
+            Siege = root.TryProp("siege", out JsonElement siegeEl)
+                ? new SiegeRules(siegeEl.Prop("blockadeRange").GetInt32(), siegeEl.Prop("blockadeWorkPercent").GetInt32(), siegeEl.Prop("liftSeconds").GetInt32(),
+                    siegeEl.Prop("guardPerPalisadeHexPercent").GetInt32(), siegeEl.Prop("guardPerWallHexPercent").GetInt32(), siegeEl.Prop("guardStrength").GetInt32(),
+                    siegeEl.Prop("guardRegrowPerMinute").GetInt32(), siegeEl.Prop("residentsFloorPercent").GetInt32(), siegeEl.Prop("sackPercent").GetInt32(),
+                    siegeEl.Prop("sackImmuneSeconds").GetInt32(), siegeEl.Prop("choiceSeconds").GetInt32())
                 {
-                    AssaultAfterTicks = (siegeEl.TryGetProperty("assaultAfterSeconds", out JsonElement aas) ? aas.GetInt32() : 0) * TicksPerSecond,
-                    AiTakeWithinHexes = siegeEl.TryGetProperty("aiTakeWithinHexes", out JsonElement atw) ? atw.GetInt32() : 20,
+                    AssaultAfterTicks = (siegeEl.TryProp("assaultAfterSeconds", out JsonElement aas) ? aas.GetInt32() : 0) * TicksPerSecond,
+                    AiTakeWithinHexes = siegeEl.TryProp("aiTakeWithinHexes", out JsonElement atw) ? atw.GetInt32() : 20,
                 }
                 : new SiegeRules(2, 50, 30, 50, 100, 8, 3, 40, 50, 180, 20),
-            RuinEmptySeconds = root.TryGetProperty("ruins", out JsonElement ru) && ru.TryGetProperty("emptySeconds", out JsonElement res) ? res.GetInt32() : 60,
-            RuinRebuildPercent = root.TryGetProperty("ruins", out JsonElement ru2) && ru2.TryGetProperty("rebuildPercent", out JsonElement rrp) ? rrp.GetInt32() : 50,
-            RuinKeepPercent = root.TryGetProperty("ruins", out JsonElement ru3) && ru3.TryGetProperty("razedKeepPercent", out JsonElement rkp) ? rkp.GetInt32() : 100,
-            FoundWith = root.TryGetProperty("foundWith", out JsonElement fw) ? [.. fw.EnumerateArray().Select(x => buildings.FindIndex(b => b.Key == x.GetString())).Where(i => i > 0)] : [],
-            EraGateway = [.. eras.Select(e => root.TryGetProperty("eraGateways", out JsonElement gw) && gw.TryGetProperty(e.Key, out JsonElement gk)
+            RuinEmptySeconds = root.TryProp("ruins", out JsonElement ru) && ru.TryProp("emptySeconds", out JsonElement res) ? res.GetInt32() : 60,
+            RuinRebuildPercent = root.TryProp("ruins", out JsonElement ru2) && ru2.TryProp("rebuildPercent", out JsonElement rrp) ? rrp.GetInt32() : 50,
+            RuinKeepPercent = root.TryProp("ruins", out JsonElement ru3) && ru3.TryProp("razedKeepPercent", out JsonElement rkp) ? rkp.GetInt32() : 100,
+            FoundWith = root.TryProp("foundWith", out JsonElement fw) ? [.. fw.EnumerateArray().Select(x => buildings.FindIndex(b => b.Key == x.GetString())).Where(i => i > 0)] : [],
+            EraGateway = [.. eras.Select(e => root.TryProp("eraGateways", out JsonElement gw) && gw.TryProp(e.Key, out JsonElement gk)
                 ? techs.FindIndex(t => t.Key == gk.GetString()) : -1)],
-            EraEntryMade = [.. eras.Select(e => root.TryGetProperty("eraEntryMade", out JsonElement em) && em.TryGetProperty(e.Key, out JsonElement ek)
+            EraEntryMade = [.. eras.Select(e => root.TryProp("eraEntryMade", out JsonElement em) && em.TryProp(e.Key, out JsonElement ek)
                 ? Amounts(ek) : new long[goods.Count])],
             TechCategories = Strings(root, "techCategories"),
             Food = GoodOf("food"),
             Units = units,
-            FoundMinDistance = root.GetProperty("foundSettlement").GetProperty("minDistance").GetInt32(),
-            UpgradeCreditPercent = root.TryGetProperty("upgradeCreditPercent", out JsonElement ucp) ? ucp.GetInt32() : 50,
+            FoundMinDistance = root.Prop("foundSettlement").Prop("minDistance").GetInt32(),
+            UpgradeCreditPercent = root.TryProp("upgradeCreditPercent", out JsonElement ucp) ? ucp.GetInt32() : 50,
             WalkCost = walk,
             Eras = eras,
             Techs = techs,
-            NeighbourDiscountPercent = research.GetProperty("neighbourDiscountPercent").GetInt32(),
-            MaxNeighbourDiscountPercent = research.GetProperty("maxNeighbourDiscountPercent").GetInt32(),
+            NeighbourDiscountPercent = research.Prop("neighbourDiscountPercent").GetInt32(),
+            MaxNeighbourDiscountPercent = research.Prop("maxNeighbourDiscountPercent").GetInt32(),
             Rarities = rarities,
-            ThinkerRetireTicks = thinkers.GetProperty("retireMinutes").GetInt32() * TicksPerMinute,
-            ThinkerOfferTicks = thinkers.GetProperty("offerMinutes").GetInt32() * TicksPerMinute,
-            GenerationLossPercent = thinkers.GetProperty("generationLossPercent").GetInt32(),
-            ThinkerPrice = Amounts(thinkers.GetProperty("hirePrice")),
-            AdvisorOfferTicks = advisors.GetProperty("offerMinutes").GetInt32() * TicksPerMinute,
-            AdvisorPrice = Amounts(advisors.GetProperty("hirePrice")),
-            AdvisorUpkeep = Hundredths(advisors.GetProperty("upkeepFoodPerMinute")),
+            ThinkerRetireTicks = thinkers.Prop("retireMinutes").GetInt32() * TicksPerMinute,
+            ThinkerOfferTicks = thinkers.Prop("offerMinutes").GetInt32() * TicksPerMinute,
+            GenerationLossPercent = thinkers.Prop("generationLossPercent").GetInt32(),
+            ThinkerPrice = Amounts(thinkers.Prop("hirePrice")),
+            AdvisorOfferTicks = advisors.Prop("offerMinutes").GetInt32() * TicksPerMinute,
+            AdvisorPrice = Amounts(advisors.Prop("hirePrice")),
+            AdvisorUpkeep = Hundredths(advisors.Prop("upkeepFoodPerMinute")),
             AdvisorFields = fields,
-            BuildingStorage = Hundredths(root.GetProperty("buildingStorage")),
+            BuildingStorage = Hundredths(root.Prop("buildingStorage")),
             Porters = units.FindIndex(x => x.Key == "porters"),
             Caravans = units.FindIndex(x => x.Key == "caravan"),
-            TradeTech = techKeys.IndexOf(root.GetProperty("diplomacy").GetProperty("tradeTech").GetString()!),
+            TradeTech = techKeys.IndexOf(root.Prop("diplomacy").Prop("tradeTech").GetString()!),
             RoadTech = techKeys.IndexOf("roads"),
             RoadLevels = RoadLevelsOf(root, techKeys, Amounts),
             Works = WorksOf(root, techKeys, Amounts),
             GroveChance = GroveChanceOf(root, world),
-            GroveWoodPercent = root.TryGetProperty("trees", out JsonElement tr) && tr.TryGetProperty("groveWoodPercent", out JsonElement gwp) ? gwp.GetInt32() : 60,
-            SurveyRadius = root.TryGetProperty("survey", out JsonElement svy) ? svy.GetProperty("radius").GetInt32() : 3,
+            GroveWoodPercent = root.TryProp("trees", out JsonElement tr) && tr.TryProp("groveWoodPercent", out JsonElement gwp) ? gwp.GetInt32() : 60,
+            SurveyRadius = root.TryProp("survey", out JsonElement svy) ? svy.Prop("radius").GetInt32() : 3,
             DepositSurvey = SurveyKinds(world, root),
             DepositEra = SurveyEras(world, root, eras),
             ForestBiomes = ForestOf(root, world),
-            BridgeTech = root.TryGetProperty("works", out JsonElement wb) && wb.TryGetProperty("bridgeTech", out JsonElement bt) ? techKeys.IndexOf(bt.GetString()!) : -1,
-            BridgePrice = root.TryGetProperty("works", out JsonElement wbp) && wbp.TryGetProperty("bridgePrice", out JsonElement bp2) ? Amounts(bp2) : new long[goods.Count],
-            RoadReach = root.TryGetProperty("roads", out JsonElement rr) ? rr.GetProperty("reach").GetInt32() : 25,
-            RoadSupply = root.TryGetProperty("roads", out JsonElement rs) ? Amounts(rs.GetProperty("supply")) : new long[goods.Count],
+            BridgeTech = root.TryProp("works", out JsonElement wb) && wb.TryProp("bridgeTech", out JsonElement bt) ? techKeys.IndexOf(bt.GetString()!) : -1,
+            BridgePrice = root.TryProp("works", out JsonElement wbp) && wbp.TryProp("bridgePrice", out JsonElement bp2) ? Amounts(bp2) : new long[goods.Count],
+            RoadReach = root.TryProp("roads", out JsonElement rr) ? rr.Prop("reach").GetInt32() : 25,
+            RoadSupply = root.TryProp("roads", out JsonElement rs) ? Amounts(rs.Prop("supply")) : new long[goods.Count],
             Events = State.SimGame.LoadEvents(root, goods),
-            TradeResearchDiscount = root.GetProperty("diplomacy").GetProperty("researchDiscountPerPartner").GetInt32(),
-            AcceptWorthPercent = root.GetProperty("diplomacy").GetProperty("acceptWorthPercent").GetInt32(),
-            TreatyKnownTicks = root.GetProperty("diplomacy").GetProperty("knownMinutes").GetInt32() * TicksPerMinute,
-            TreatyBorderHexes = root.GetProperty("diplomacy").GetProperty("borderHexes").GetInt32(),
-            TreatyPeaceTicks = root.GetProperty("diplomacy").GetProperty("peaceMinutes").GetInt32() * TicksPerMinute,
-            TreatyMinReputation = root.GetProperty("diplomacy").GetProperty("minReputation").GetInt32(),
-            OfferCooldownTicks = root.GetProperty("diplomacy").GetProperty("offerCooldownMinutes").GetInt32() * TicksPerMinute,
-            RefusalCooldownTicks = root.GetProperty("diplomacy").GetProperty("refusalCooldownMinutes").GetInt32() * TicksPerMinute,
-            EventEveryTicks = root.TryGetProperty("events", out JsonElement evr) ? evr.GetProperty("everyMinutes").GetInt32() * TicksPerMinute : 0,
-            EventSpreadTicks = root.TryGetProperty("events", out JsonElement evs) ? evs.GetProperty("spreadMinutes").GetInt32() * TicksPerMinute : 0,
+            TradeResearchDiscount = root.Prop("diplomacy").Prop("researchDiscountPerPartner").GetInt32(),
+            AcceptWorthPercent = root.Prop("diplomacy").Prop("acceptWorthPercent").GetInt32(),
+            TreatyKnownTicks = root.Prop("diplomacy").Prop("knownMinutes").GetInt32() * TicksPerMinute,
+            TreatyBorderHexes = root.Prop("diplomacy").Prop("borderHexes").GetInt32(),
+            TreatyPeaceTicks = root.Prop("diplomacy").Prop("peaceMinutes").GetInt32() * TicksPerMinute,
+            TreatyMinReputation = root.Prop("diplomacy").Prop("minReputation").GetInt32(),
+            OfferCooldownTicks = root.Prop("diplomacy").Prop("offerCooldownMinutes").GetInt32() * TicksPerMinute,
+            RefusalCooldownTicks = root.Prop("diplomacy").Prop("refusalCooldownMinutes").GetInt32() * TicksPerMinute,
+            EventEveryTicks = root.TryProp("events", out JsonElement evr) ? evr.Prop("everyMinutes").GetInt32() * TicksPerMinute : 0,
+            EventSpreadTicks = root.TryProp("events", out JsonElement evs) ? evs.Prop("spreadMinutes").GetInt32() * TicksPerMinute : 0,
             War = new WarRules(
-                root.GetProperty("war").GetProperty("combatEveryTicks").GetInt32(), root.GetProperty("war").GetProperty("lowLuckPercent").GetInt32(),
-                root.GetProperty("war").GetProperty("highLuckPercent").GetInt32(), root.GetProperty("war").GetProperty("defenderPercent").GetInt32(),
-                root.GetProperty("war").GetProperty("defenderStrength").GetInt32(), root.GetProperty("war").GetProperty("captureBelowPeople").GetInt32(),
-                root.GetProperty("war").GetProperty("surpriseReputation").GetInt32())
+                root.Prop("war").Prop("combatEveryTicks").GetInt32(), root.Prop("war").Prop("lowLuckPercent").GetInt32(),
+                root.Prop("war").Prop("highLuckPercent").GetInt32(), root.Prop("war").Prop("defenderPercent").GetInt32(),
+                root.Prop("war").Prop("defenderStrength").GetInt32(), root.Prop("war").Prop("captureBelowPeople").GetInt32(),
+                root.Prop("war").Prop("surpriseReputation").GetInt32())
             {
-                DeclareReputation = root.GetProperty("war").TryGetProperty("declareReputation", out JsonElement dr) ? dr.GetInt32() : -10,
-                TributeNeedsKills = root.GetProperty("war").TryGetProperty("tributeNeedsKills", out JsonElement tk) ? tk.GetInt32() : 5,
-                TributeFoodMaxPercent = root.GetProperty("war").TryGetProperty("tributeFoodMaxPercent", out JsonElement tf) ? tf.GetInt32() : 10,
-                TruceSeconds = root.GetProperty("war").TryGetProperty("truceSeconds", out JsonElement trs) ? trs.GetInt32() : 180,
-                MaxWars = root.GetProperty("war").TryGetProperty("maxWars", out JsonElement mw) ? mw.GetInt32() : 3,
-                TributeAfterTicks = (root.GetProperty("war").TryGetProperty("tributeAfterSeconds", out JsonElement tas) ? tas.GetInt32() : 120) * TicksPerSecond,
-                ReputationFloor = root.GetProperty("war").TryGetProperty("reputationFloor", out JsonElement rf) ? rf.GetInt32() : -200,
-                BadReputation = root.GetProperty("war").TryGetProperty("badReputation", out JsonElement br) ? br.GetInt32() : -100,
+                DeclareReputation = root.Prop("war").TryProp("declareReputation", out JsonElement dr) ? dr.GetInt32() : -10,
+                TributeNeedsKills = root.Prop("war").TryProp("tributeNeedsKills", out JsonElement tk) ? tk.GetInt32() : 5,
+                TributeFoodMaxPercent = root.Prop("war").TryProp("tributeFoodMaxPercent", out JsonElement tf) ? tf.GetInt32() : 10,
+                TruceSeconds = root.Prop("war").TryProp("truceSeconds", out JsonElement trs) ? trs.GetInt32() : 180,
+                MaxWars = root.Prop("war").TryProp("maxWars", out JsonElement mw) ? mw.GetInt32() : 3,
+                TributeAfterTicks = (root.Prop("war").TryProp("tributeAfterSeconds", out JsonElement tas) ? tas.GetInt32() : 120) * TicksPerSecond,
+                ReputationFloor = root.Prop("war").TryProp("reputationFloor", out JsonElement rf) ? rf.GetInt32() : -200,
+                BadReputation = root.Prop("war").TryProp("badReputation", out JsonElement br) ? br.GetInt32() : -100,
             },
         };
     }
@@ -1788,9 +1880,9 @@ public sealed class SimContent
     private static int[] GroveChanceOf(JsonElement root, GameContent world)
     {
         var chance = new int[world.Biomes.Count];
-        if (root.TryGetProperty("trees", out JsonElement trees) && trees.TryGetProperty("groveChance", out JsonElement gc))
+        if (root.TryProp("trees", out JsonElement trees) && trees.TryProp("groveChance", out JsonElement gc))
         {
-            foreach (JsonProperty p in gc.EnumerateObject())
+            foreach (JsonProperty p in gc.Entries())
             {
                 chance[world.Biome(p.Name).Id] = p.Value.GetInt32();
             }
@@ -1802,7 +1894,7 @@ public sealed class SimContent
     private static bool[] ForestOf(JsonElement root, GameContent world)
     {
         var forest = new bool[world.Biomes.Count];
-        foreach (JsonElement k in root.GetProperty("terrainCost").GetProperty("forestBiomes").EnumerateArray())
+        foreach (JsonElement k in root.Prop("terrainCost").Prop("forestBiomes").EnumerateArray())
         {
             forest[world.Biome(k.GetString()!).Id] = true;
         }
@@ -1813,18 +1905,18 @@ public sealed class SimContent
     private static List<WorkKind> WorksOf(JsonElement root, List<string> techKeys, Func<JsonElement, long[]> amounts)
     {
         var list = new List<WorkKind>();
-        if (!root.TryGetProperty("works", out JsonElement works))
+        if (!root.TryProp("works", out JsonElement works))
         {
             return list;
         }
 
-        foreach (JsonElement w in works.GetProperty("kinds").EnumerateArray())
+        foreach (JsonElement w in works.Prop("kinds").EnumerateArray())
         {
-            int Int(string name) => w.TryGetProperty(name, out JsonElement e) ? e.GetInt32() : 0;
-            string tech = w.GetProperty("tech").GetString()!;
+            int Int(string name) => w.TryProp(name, out JsonElement e) ? e.GetInt32() : 0;
+            string tech = w.Prop("tech").GetString()!;
             int ti = techKeys.IndexOf(tech);
-            list.Add(new WorkKind(list.Count, w.GetProperty("key").GetString()!, w.GetProperty("name").GetString()!,
-                ti >= 0 ? ti : throw new InvalidDataException($"sim/game.json: unknown technology '{tech}'."), amounts(w.GetProperty("price")),
+            list.Add(new WorkKind(list.Count, w.Prop("key").GetString()!, w.Prop("name").GetString()!,
+                ti >= 0 ? ti : throw new InvalidDataException($"sim/game.json: unknown technology '{tech}'."), amounts(w.Prop("price")),
                 Int("seconds") * TicksPerSecond)
             {
                 FromWater = Int("fromWater"),
@@ -1843,16 +1935,16 @@ public sealed class SimContent
     private static List<RoadLevel> RoadLevelsOf(JsonElement root, List<string> techKeys, Func<JsonElement, long[]> amounts)
     {
         var list = new List<RoadLevel>();
-        if (!root.TryGetProperty("roads", out JsonElement roads))
+        if (!root.TryProp("roads", out JsonElement roads))
         {
             return list;
         }
 
-        foreach (JsonElement l in roads.GetProperty("levels").EnumerateArray())
+        foreach (JsonElement l in roads.Prop("levels").EnumerateArray())
         {
-            list.Add(new RoadLevel(list.Count + 1, l.GetProperty("key").GetString()!, l.GetProperty("name").GetString()!,
-                Math.Max(0, techKeys.IndexOf(l.GetProperty("tech").GetString()!)), amounts(l.GetProperty("price")),
-                l.GetProperty("seconds").GetInt32() * TicksPerSecond, l.GetProperty("walkPercent").GetInt32()));
+            list.Add(new RoadLevel(list.Count + 1, l.Prop("key").GetString()!, l.Prop("name").GetString()!,
+                Math.Max(0, techKeys.IndexOf(l.Prop("tech").GetString()!)), amounts(l.Prop("price")),
+                l.Prop("seconds").GetInt32() * TicksPerSecond, l.Prop("walkPercent").GetInt32()));
         }
 
         return list;
