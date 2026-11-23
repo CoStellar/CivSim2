@@ -439,6 +439,10 @@ d["march"]={"comment":"Soldiers sent at the same goal share a way: a soldier wit
 d["ai"].update({"inputRouteTripMinutes":3,"inputRouteTargetMinutes":6,"inputRouteKeepMinutes":2,"inputRoutesPerSettlement":4})
 if "inputRouteTripMinutes:" not in d["ai"]["comment"]:
     d["ai"]["comment"]+=" inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have."
+# 2026-11-23: another maker of a short input until the store lasts 10 minutes of the shortfall (was: until 20 in store).
+d["ai"]["inputMakerStoreMinutes"]=10
+if "inputMakerStoreMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist

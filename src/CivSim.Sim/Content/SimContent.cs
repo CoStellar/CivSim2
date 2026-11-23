@@ -855,6 +855,12 @@ public sealed class SimContent
     /// <summary>See <see cref="AiInputRouteTripMinutes"/>.</summary>
     public int AiInputRouteKeepMinutes { get; init; } = 2;
 
+    /// <summary>
+    /// 2026-11-23: the AI builds another maker of an input its workshops use more of than its people makes, until the store
+    /// lasts this many minutes of the shortfall (ai.inputMakerStoreMinutes).
+    /// </summary>
+    public int AiInputMakerStoreMinutes { get; init; } = 10;
+
     /// <summary>Most standing input routes the AI keeps, per settlement it has.</summary>
     public int AiInputRoutesPerSettlement { get; init; } = 4;
 
@@ -1908,6 +1914,7 @@ public sealed class SimContent
             AiInputRouteTripMinutes = root.TryProp("ai", out JsonElement aiEl6) && aiEl6.TryProp("inputRouteTripMinutes", out JsonElement irt) ? irt.GetInt32() : 3,
             AiInputRouteTargetMinutes = root.TryProp("ai", out JsonElement aiEl7) && aiEl7.TryProp("inputRouteTargetMinutes", out JsonElement irg) ? irg.GetInt32() : 6,
             AiInputRouteKeepMinutes = root.TryProp("ai", out JsonElement aiEl8) && aiEl8.TryProp("inputRouteKeepMinutes", out JsonElement irk) ? irk.GetInt32() : 2,
+            AiInputMakerStoreMinutes = root.TryProp("ai", out JsonElement aiEl10) && aiEl10.TryProp("inputMakerStoreMinutes", out JsonElement ims) ? ims.GetInt32() : 10,
             AiInputRoutesPerSettlement = root.TryProp("ai", out JsonElement aiEl9) && aiEl9.TryProp("inputRoutesPerSettlement", out JsonElement irs) ? irs.GetInt32() : 4,
             FoodLowMinutes = root.TryProp("alerts", out JsonElement alEl) && alEl.TryProp("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryProp("upgradeCaravans", out JsonElement ucEl)

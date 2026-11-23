@@ -135,6 +135,48 @@ public sealed class AiFoodTests
         Assert.True(route.Ended);
     }
 
+    [Fact]
+    public void ABigStoreDoesNotStopTheNextMakerWhileTheShortfallLasts()
+    {
+        // 2026-11-23: the next charcoal burner goes up until the store lasts ai.inputMakerStoreMinutes of the shortfall.
+        BuildingType smith = Content.Building("bronze_smith");
+        int charcoal = Content.GoodId("charcoal");
+        for (ulong seed = 1; seed < 30; seed++)
+        {
+            SimGame g = SimGame.Create(Content, new SimSettings(seed, 66, 40, 2) { Ai = false }).Basics();
+            Civ civ = g.Civs[0];
+            civ.KnownTech[Content.Building("charcoal_burner").Tech] = true;
+            civ.KnownTech[smith.Tech] = true;
+            Settlement home = g.Settlements[civ.Settlements[0]];
+            Array.Fill(home.Stock, 500 * SimContent.One);
+            for (int k = 0; k < 4; k++)
+            {
+                int cell = home.Cells.First(c => c != home.Center && g.FreeSlots(c) == 15);
+                var b = new Building { Id = g.Buildings.Count, Civ = civ.Id, Type = smith.Id, Cell = cell, Settlement = home.Id, State = BuildingState.Active };
+                g.Buildings.Add(b);
+                civ.Buildings.Add(b.Id);
+                g.PlaceForTest(b);
+            }
+
+            g.SyncForTest(civ);
+            long shortfall = 4 * smith.Consumes[charcoal] * smith.Workers; // nobody makes charcoal yet
+            civ.Stock[charcoal] = 0;
+            if (SimAi.InputMaker(g, civ, smith) != "charcoal_burner")
+            {
+                continue; // no place for a burner on this map
+            }
+
+            civ.Stock[charcoal] = shortfall * (Content.AiInputMakerStoreMinutes - 1); // far above the old limit of 20
+            Assert.True(civ.Stock[charcoal] > 20 * SimContent.One);
+            Assert.Equal("charcoal_burner", SimAi.InputMaker(g, civ, smith));
+            civ.Stock[charcoal] = shortfall * Content.AiInputMakerStoreMinutes;
+            Assert.Null(SimAi.InputMaker(g, civ, smith));
+            return;
+        }
+
+        Assert.Fail("no map with a place for a charcoal burner");
+    }
+
     private static (SimGame G, Civ Civ) NewGame()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
