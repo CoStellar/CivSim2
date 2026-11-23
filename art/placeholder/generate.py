@@ -687,7 +687,7 @@ def main():
     with open(os.path.join(ROOT, "data", "effects.json"), encoding="utf-8") as f:
         effects = json.load(f)["effects"]
     # Hex tiles, buildings, settlement centres, units and goods of the new game at 2x (game_art.py, decisions G1-G6).
-    game_art.G.update(nearest=nearest, shade=shade, Canvas=Canvas)
+    game_art.G.update(nearest=nearest, shade=shade, Canvas=Canvas, palette=PAL)
     game_art.generate(ROOT)
     template = Image.new("RGBA", (game_art.HW, game_art.HH), (0, 0, 0, 0))
     for y in range(game_art.HH):

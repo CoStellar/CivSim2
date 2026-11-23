@@ -1028,3 +1028,81 @@ def generate(root):
         unit(u["key"]).save("units", f"unit_{u['key']}")
     for g in d["goods"]:
         good(g["key"]).save("goods", f"good_{g['key']}")
+
+
+# ------------------------------------------------------------------------------------------------ texture (old CivSim look)
+
+def _hash(x, y, seed):
+    h = (x * 374761393 + y * 668265263 + seed * 2246822519) & 0xFFFFFFFF
+    h = ((h ^ (h >> 13)) * 1274126177) & 0xFFFFFFFF
+    return (h ^ (h >> 16)) / 0xFFFFFFFF
+
+
+def _noise(x, y, seed, cell):
+    """Value noise in cells of `cell` pixels, bilinear: blotches like the old CivSim grass and stone."""
+    gx, gy = x / cell, y / cell
+    x0, y0 = int(gx), int(gy)
+    fx, fy = gx - x0, gy - y0
+    a, b = _hash(x0, y0, seed), _hash(x0 + 1, y0, seed)
+    c, d = _hash(x0, y0 + 1, seed), _hash(x0 + 1, y0 + 1, seed)
+    top, bot = a + (b - a) * fx, c + (d - c) * fx
+    return top + (bot - top) * fy
+
+
+def texturize(im, seed=1, strength=1.0, outline=OUTLINE):  # 2026-11-23: a trial, not used yet (waits for Patryk)
+    """The old CivSim texture over flat colours: every pixel of a surface takes a lighter or darker palette tone by a mix of
+    blotchy and fine noise, wood in horizontal grain, so grass, stone and wood read as materials. The outline, the
+    civilization magentas and tiny details (lone pixels) stay as drawn."""
+    w, h = im.size
+    src = im.copy()
+    px = src.load()
+    out = im.load()
+    keep = {tuple(P(outline))}
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 128 or (r, g, b) in keep or (g < 5 and abs(r - b) < 5 and r > 100):
+                continue
+            # same-colour neighbours: only surfaces get a texture, not single-pixel details
+            same = sum(1 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                       if 0 <= x + dx < w and 0 <= y + dy < h and px[x + dx, y + dy][:3] == (r, g, b))
+            if same < 3:
+                continue
+            woody = r > g > b and r - b > 60 and r < 200  # browns: grain along the board
+            n = 0.6 * _noise(x, y * (4 if woody else 1), seed, 3) + 0.4 * _hash(x, y, seed + 7)
+            step = 0
+            if n > 1 - 0.22 * strength:
+                step = 1
+            elif n < 0.24 * strength:
+                step = -1
+            if n < 0.08 * strength:
+                step = -2
+            if step:
+                out[x, y] = tuple(tone((r, g, b), step)) + (255,)
+    return im
+
+
+_TONES = {}
+
+
+def tone(c, step):
+    """A palette colour `step` steps lighter or darker of the same hue (the old CivSim ramps: greens stay green, stone
+    stays grey), falling back to the plain shade."""
+    key = (tuple(c), step)
+    if key in _TONES:
+        return _TONES[key]
+    import colorsys
+    h0, l0, s0 = colorsys.rgb_to_hls(*(v / 255 for v in c))
+    best, best_d = None, 9.0
+    for p in G["palette"]:
+        h, l, sat = colorsys.rgb_to_hls(*(v / 255 for v in p))
+        dl = l - l0
+        if (dl > 0.03) != (step > 0) or abs(dl) < 0.03:
+            continue
+        dh = min(abs(h - h0), 1 - abs(h - h0)) if s0 > 0.12 and sat > 0.12 else (0 if s0 <= 0.12 and sat <= 0.15 else 1)
+        d = dh * 4 + abs(sat - s0) + abs(abs(dl) - 0.07 * abs(step)) * 3
+        if d < best_d:
+            best, best_d = p, d
+    result = best if best is not None and best_d < 1.2 else sh(c, step)
+    _TONES[key] = result
+    return result
