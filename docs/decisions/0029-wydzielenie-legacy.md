@@ -1,6 +1,6 @@
 # ADR 0029: Wydzielenie gry legacy z repozytorium nowej gry
 
-**Status:** propozycja, 2026-11-22 (krok 1 zrobiony; kroki 2–4 czekają na decyzję Patryka). Rozwija punkt 7 ADR 0028
+**Status:** przyjęta, 2026-11-23 (krok 1 zrobiony w #140; kroki 2–4 po demo, decyzja Patryka 2026-11-23). Rozwija punkt 7 ADR 0028
 („stary kod to legacy, zastępujemy go kawałek po kawałku”).
 
 ## Kontekst
