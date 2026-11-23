@@ -23,6 +23,11 @@ public static partial class SimAi
             Civ from = g.Civs[offer.From];
             bool accept = from.Reputation > g.Content.TreatyMinReputation && Interest(g, civ, from, offer.Kind) &&
                 (offer.Kind == TreatyKind.Trade ? civ.Aggression < 85 : civ.Aggression < 70 && from.Reputation >= 0);
+            if (g.AiLogOn)
+            {
+                g.AiLog(civ, AiLogKind.Diplomacy, $"{(accept ? "accepts" : "refuses")} the {offer.Kind} treaty of {from.Name} (their reputation {from.Reputation})");
+            }
+
             g.Apply(new AnswerTreatyCommand(civ.Id, offer.From, offer.Kind, accept));
         }
 
@@ -57,6 +62,13 @@ public static partial class SimAi
             foreach (Civ third in g.Civs)
             {
                 if (third.Id != civ.Id && third.Id != other.Id && g.AtWar(civ.Id, third.Id) && g.AtWar(other.Id, third.Id))
+                {
+                    return true;
+                }
+
+                // P2 (Patryk, 2026-11-23): a neighbour of both with a bad name is a reason to stand together (a defensive alliance).
+                if (third.Id != civ.Id && third.Id != other.Id && !third.Dead && third.Reputation < g.Content.War.BadReputation
+                    && g.Met(civ, third) && g.Met(other, third))
                 {
                     return true;
                 }
@@ -100,7 +112,13 @@ public static partial class SimAi
                 continue;
             }
 
-            g.Apply(new AnswerPeaceCommand(civ.Id, offer.From, AcceptsPeace(g, civ, offer)));
+            bool yes = AcceptsPeace(g, civ, offer);
+            if (g.AiLogOn)
+            {
+                g.AiLog(civ, AiLogKind.Peace, $"{(yes ? "accepts" : "refuses")} the peace of {g.Civs[offer.From].Name}: {g.TermsText(offer.Terms, offer.From, civ.Id)}");
+            }
+
+            g.Apply(new AnswerPeaceCommand(civ.Id, offer.From, yes));
             continue;
         }
     }

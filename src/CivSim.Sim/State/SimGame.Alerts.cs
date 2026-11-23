@@ -40,6 +40,9 @@ public enum AlertKind
 
     /// <summary>E2 (2026-11-20): nothing is being researched though something could be (the client opens the research window).</summary>
     NoResearch = 10,
+
+    /// <summary>P3 (Patryk, 2026-11-23): units of a people we have not met were seen by our settlement, and they have seen it.</summary>
+    Strangers = 11,
 }
 
 /// <summary>One alert. <see cref="Good"/> is −1 when it is not about a good; <see cref="Cell"/> is where to look.</summary>
@@ -63,6 +66,12 @@ public sealed partial class SimGame
             if (EnemyNear(civ, s))
             {
                 list.Add(new Alert(AlertKind.EnemyNear, s.Id, s.Center, -1, $"Enemy soldiers near {s.Name}."));
+            }
+
+            if (StrangersNear(civ, s))
+            {
+                // P3: only that they are there and saw us; not who they are nor where they came from.
+                list.Add(new Alert(AlertKind.Strangers, s.Id, s.Center, -1, $"Strangers were seen near {s.Name}, and they have seen us. Who they are and where they come from, we do not know."));
             }
 
             if (Content.Clothing >= 0 && (IsWinter || TicksToSeasonChange <= SimContent.TicksPerMinute) && s.People > 0
@@ -175,6 +184,32 @@ public sealed partial class SimGame
             if (b.Settlement == s.Id && b.State == BuildingState.Active && Content.Buildings[b.Type].Produces[good] > 0)
             {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    // P3 (Patryk, 2026-11-23): a unit of a people we have not met, seen by us near the settlement, whose people has seen the
+    // settlement (its scouts looked at it).
+    private bool StrangersNear(Civ civ, Settlement s)
+    {
+        int reach = Content.Levels[s.Level].Radius + Content.SettlementSightBeyond;
+        var centre = Geo.FromIndex(s.Center);
+        foreach (Civ other in Civs)
+        {
+            if (other.Id == civ.Id || other.Dead || AtWar(civ.Id, other.Id) || Met(civ, other) || !other.Known[s.Center])
+            {
+                continue;
+            }
+
+            foreach (int uid in other.Units)
+            {
+                Unit u = Units[uid];
+                if (u.State is not (UnitState.Gone or UnitState.Training) && u.Aboard < 0 && Sees(civ, u) && Geo.Distance(centre, Geo.FromIndex(u.Cell)) <= reach)
+                {
+                    return true;
+                }
             }
         }
 

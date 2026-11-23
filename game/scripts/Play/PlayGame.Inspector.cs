@@ -696,9 +696,14 @@ public partial class PlayGame
             items.Add(new ActItem("Found a camp here", () => _session!.Play(PlayCommandKind.Found, id), "A new settlement with these people and the goods they carry.", Accent: UiKit.Good));
         }
 
-        if (u.State != 0 && !t.Army) // warriors stay warriors (Patryk, 2026-11-20)
+        if (u.State != 0 && !t.Army)
         {
             items.Add(new ActItem("Go home (join the settlement here)", () => _session!.Play(PlayCommandKind.Disband, id)));
+        }
+        else if (u.State != 0 && t.Army) // P5 (Patryk, 2026-11-23): soldiers may join too, but lose their arms and training
+        {
+            items.Add(new ActItem("Lay down arms (join the settlement here)", () => _session!.Play(PlayCommandKind.Disband, id),
+                "The soldiers become settlers' people again: their weapons, armour and supplies are lost.", Accent: UiKit.Bad));
         }
     }
 

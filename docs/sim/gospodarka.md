@@ -30,7 +30,7 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 
 - Środek osady i ziemia w promieniu poziomu: obóz 3, wioska 4, miasteczko 5, miasto 6 heksów.
 - Poziom daje domy i magazyn; awans kosztuje dobra i od razu poszerza ziemię.
-- Ludzie rosną 8% na minutę (co najmniej 1), dopóki są domy i jedzenie w magazynie. Głód i śmierć z głodu przychodzą przy racjach (niżej).
+- Ludzie rosną 10% na minutę (było 8%, od 2026-11-23: krótszy neolit) (co najmniej 1), dopóki są domy i jedzenie w magazynie. Głód i śmierć z głodu przychodzą przy racjach (niżej).
 - **Wzrost staje przy ubywającym jedzeniu** (wariant C, decyzja Patryka z 2026-11-22): gdy osada je więcej, niż robi, a jedzenia zostało
   na mniej niż 2 racje (`growth.stopBelowRations`), nie rośnie. Panel osady dopisuje do bilansu jedzenia „It does not grow while its food
   falls…”, a kronika odnotowuje to najwyżej raz na 5 minut. Kod: `SimGame.FoodStopsGrowth`, `PopulationStep`.
@@ -115,7 +115,21 @@ Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
 - Wojna to stan:
   - atak bez wypowiedzenia albo w czasie rozejmu psuje reputację;
   - pokój proponuje się z daniną liczoną z przebiegu wojny (zabici i zdobyte osady);
-  - po pokoju jest rozejm na 3 minuty.
+  - po pokoju jest rozejm tak długi jak pokój: 3, 6 albo 10 minut (`peace.minutes`); AI nie łamie trwającego pokoju;
+  - zła reputacja się odnawia: +4 na minutę aż do 0 (`war.reputationRegenPerMinute`), ale nie u ludu, który wypowiedział trwającą wojnę.
+- **Przegrana** (Patryk, 2026-11-23, P5): lud, który nie ma nikogo w osadach ani w jednostkach, przegrywa; jego puste osady stają się ruinami.
+  Jednostki liczą się do ludu: dopóki choć jedna żyje, lud trwa i może ją wcielić do stojącej osady (traci wtedy wszystko, co dawała jednostka).
+
+## Zbieractwo zawsze wyżywi bezczynnych (2026-11-23)
+
+Lud, który nic nie robi, zawsze przeżyje (Patryk, 2026-11-23): ludzie bez pracy zbierają co najmniej tyle jedzenia, ile zjadają,
+w każdej porze roku i w każdym biomie (`forage.subsistencePercent` = 100%). Nic ponad to: lud bez budynków nie rośnie i nie zbiera zapasów.
+
+## Wzrok osady i alarm „obcy” (2026-11-23, P3)
+
+- Osada widzi 2 heksy poza swoją ziemią (`vision.settlementSightBeyond`, było 1).
+- Alarm **Strangers**: gdy przy naszej osadzie widać jednostkę ludu, którego jeszcze nie poznaliśmy, a jego lud już widział tę osadę.
+  Tekst mówi tylko, że obcy są i że nas widzieli, bez tego, kim są i skąd przyszli.
 
 ## Gracz AI (etap F)
 

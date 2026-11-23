@@ -11,6 +11,21 @@ public static partial class SimAi
 {
     private static bool Economy(SimGame g, Civ civ)
     {
+        // The teacher stands already: it gets workers first. Tests 2026-11-23: checked before anything else, since the
+        // branches below often end the thought first (a toolmaker for the price of Masonry stood 15 minutes without workers).
+        if ((Teacher(g, civ, missingOnly: true) ?? Teacher(g, civ)) is string standing)
+        {
+            foreach (int id in civ.Buildings)
+            {
+                Building b = g.Buildings[id];
+                if (!b.Priority && b.State == BuildingState.Active && g.Content.Buildings[b.Type].Key == standing)
+                {
+                    g.Apply(new PriorityCommand(civ.Id, id, true));
+                    break;
+                }
+            }
+        }
+
         // N26 (2026-11-19): the teacher of what research waits for jumps the queue of building sites (one more site allowed).
         int under = Under(g, civ);
         if (under < 2 + civ.Settlements.Count && Teacher(g, civ, missingOnly: true) is string first && (TryBuild(g, civ, first, keepSaving: false) || PriceMaker(g, civ, first)))
@@ -88,19 +103,6 @@ public static partial class SimAi
             return true;
         }
 
-        // The teacher stands already: it gets workers first.
-        if (learn is not null)
-        {
-            foreach (int id in civ.Buildings)
-            {
-                Building b = g.Buildings[id];
-                if (!b.Priority && b.State == BuildingState.Active && g.Content.Buildings[b.Type].Key == learn)
-                {
-                    g.Apply(new PriorityCommand(civ.Id, id, true));
-                    break;
-                }
-            }
-        }
 
         // N22 (2026-11-19, era pacing): a good the saved-for technology lacks, with nobody making it, gets its maker even
         // without idle hands (like the teacher above).
@@ -154,7 +156,7 @@ public static partial class SimAi
         {
             // 2026-11-22: a second workshop of a kind only when its inputs are covered (one seed had 21 bronze smiths and no
             // tin); the first may stand, so that its inputs get their makers.
-            if (Has(g, civ, k) && !InputsCovered(g, civ, g.Content.Building(k)))
+            if ((Has(g, civ, k) && !InputsCovered(g, civ, g.Content.Building(k))) || Plenty(civ, g.Content.Building(k)))
             {
                 continue;
             }
@@ -169,7 +171,7 @@ public static partial class SimAi
         {
             // 2026-11-22 (long runs: 66% of the workshops stood without inputs at 120 minutes, mostly blacksmiths without
             // charcoal): a workshop goes up only when what its people makes covers what it would use.
-            if (!InputsCovered(g, civ, g.Content.Building(k)))
+            if (!InputsCovered(g, civ, g.Content.Building(k)) || Plenty(civ, g.Content.Building(k)))
             {
                 continue;
             }
@@ -181,6 +183,28 @@ public static partial class SimAi
         }
 
         return false;
+    }
+
+    // Tests 2026-11-23: everything the building makes lies at half the room of the store or more (30 woodcutters, 89 workers,
+    // 2856 wood nobody used): another one only gives the idle work nobody needs.
+    private static bool Plenty(Civ civ, BuildingType b)
+    {
+        bool any = false;
+        for (int i = 0; i < b.Produces.Length; i++)
+        {
+            if (b.Produces[i] <= 0)
+            {
+                continue;
+            }
+
+            any = true;
+            if (civ.Stock[i] * 2 < civ.Capacity[i])
+            {
+                return false;
+            }
+        }
+
+        return any;
     }
 
     // Buildings that make a good, best first ([] = none the AI builds for it).
@@ -380,10 +404,14 @@ public static partial class SimAi
                 continue;
             }
 
+            // Tests 2026-11-23: what the technology asks for is scaled like in CannotResearch (research.pace and the thinker): the
+            // AI taught toward the full amounts of the tree and gave teachers priority long after nothing was asked.
+            int pct = g.Edge(civ.Thinker, cost: false) * g.Content.Pace.Experience(t.Era) / 100;
+
             // Goods to make: the first building that makes the missing good.
             foreach ((int good, long amount) in t.Made)
             {
-                if (civ.Made[good] / SimContent.TicksPerMinute >= amount)
+                if (civ.Made[good] / SimContent.TicksPerMinute >= amount * pct / 100)
                 {
                     continue;
                 }
@@ -401,7 +429,7 @@ public static partial class SimAi
 
             foreach ((int req, long need) in t.Experience)
             {
-                if (!civ.KnownTech[req] || civ.Experience[req] >= need)
+                if (!civ.KnownTech[req] || civ.Experience[req] >= need * pct / 100)
                 {
                     continue;
                 }
@@ -433,6 +461,34 @@ public static partial class SimAi
                         {
                             return b.Key;
                         }
+                    }
+                }
+            }
+        }
+
+        // Tests 2026-11-23 (experience no longer asked): the price is what research waits for. The first technology of the
+        // gateway's way (then of the tree) that could be researched but for a good nobody makes gets that good's maker.
+        foreach (SimTech t in order)
+        {
+            if (civ.KnownTech[t.Id] || t.Era > civ.Era || g.CannotResearch(civ, t.Id) is not null)
+            {
+                continue;
+            }
+
+            long[] price = g.ResearchPrice(civ, t.Id);
+            for (int i = 0; i < price.Length; i++)
+            {
+                if (price[i] <= 0 || i == g.Content.Food || civ.Stock[i] >= price[i] || civ.Rate[i] > 0)
+                {
+                    continue;
+                }
+
+                foreach (string k in Makers(g, g.Content.Goods[i].Key))
+                {
+                    int id = Key(g, k);
+                    if (id >= 0 && SimGame.Knows(civ, g.Content.Buildings[id]) && !(missingOnly && Has(g, civ, k)) && (Has(g, civ, k) || Buildable(g, civ, g.Content.Buildings[id])))
+                    {
+                        return k;
                     }
                 }
             }
@@ -562,7 +618,7 @@ public static partial class SimAi
 
             foreach ((int good, long amount) in t.Made)
             {
-                if (civ.Made[good] / SimContent.TicksPerMinute >= amount)
+                if (civ.Made[good] / SimContent.TicksPerMinute >= amount * g.Edge(civ.Thinker, cost: false) * g.Content.Pace.Experience(t.Era) / 10000)
                 {
                     continue;
                 }
@@ -573,6 +629,47 @@ public static partial class SimAi
                         && (SimGame.Knows(civ, b) || (b.Tech >= 0 && way[b.Tech])) && !Has(g, civ, b.Key) && !Buildable(g, civ, b))
                     {
                         want[b.OrDeposit] = true;
+                    }
+                }
+            }
+
+            // Tests 2026-11-23: an ore in the price of the way on (bronze working asks for copper) is wanted the same way, and
+            // so is the ore of a workshop that makes a good of the price (iron working asks for bronze: tin and copper).
+            long[] price = t.Price;
+            for (int good = 0; good < price.Length; good++)
+            {
+                if (price[good] <= 0 || civ.Stock[good] >= price[good] || civ.Rate[good] > 0)
+                {
+                    continue;
+                }
+
+                foreach (BuildingType b in g.Content.Buildings)
+                {
+                    if (b.Id <= 0 || b.Produces[good] <= 0 || !(SimGame.Knows(civ, b) || (b.Tech >= 0 && way[b.Tech])))
+                    {
+                        continue;
+                    }
+
+                    if (b.OrDeposit > 0 && b.OrDeposit < want.Length && !Has(g, civ, b.Key) && !Buildable(g, civ, b))
+                    {
+                        want[b.OrDeposit] = true;
+                    }
+
+                    for (int input = 0; b.OrDeposit == 0 && input < b.Consumes.Length; input++)
+                    {
+                        if (b.Consumes[input] <= 0 || civ.Rate[input] > 0)
+                        {
+                            continue;
+                        }
+
+                        foreach (BuildingType mine in g.Content.Buildings)
+                        {
+                            if (mine.Id > 0 && mine.Produces[input] > 0 && mine.OrDeposit > 0 && mine.OrDeposit < want.Length && SimGame.Knows(civ, mine)
+                                && !Has(g, civ, mine.Key) && !Buildable(g, civ, mine))
+                            {
+                                want[mine.OrDeposit] = true;
+                            }
+                        }
                     }
                 }
             }
@@ -627,7 +724,7 @@ public static partial class SimAi
 
             foreach ((int req, long need) in t.Experience)
             {
-                if (!civ.KnownTech[req] || civ.Experience[req] >= need)
+                if (!civ.KnownTech[req] || civ.Experience[req] >= need * g.Edge(civ.Thinker, cost: false) * g.Content.Pace.Experience(t.Era) / 10000)
                 {
                     continue;
                 }
@@ -777,6 +874,16 @@ public static partial class SimAi
         }
 
         bool[] way = GatewayWay(g, civ);
+
+        // Tests 2026-11-23: research never eats the food of the next minutes (ai.researchKeepFoodMinutes of eating stay).
+        int food = g.Content.Food;
+        long eating = 0;
+        foreach (int sid in civ.Settlements)
+        {
+            eating += g.Settlements[sid].Eating;
+        }
+
+        long keepFood = eating * g.Content.AiResearchKeepFoodMinutes;
         int pick = -1;
         int want = -1;
         int wantScore = int.MinValue;
@@ -799,7 +906,7 @@ public static partial class SimAi
             }
 
             long[] price = g.ResearchPrice(civ, t.Id);
-            if (score > bestScore && Affordable(civ, price, keepSaving: false))
+            if (score > bestScore && Affordable(civ, price, keepSaving: false) && civ.Stock[food] - price[food] >= keepFood)
             {
                 pick = t.Id;
                 bestScore = score;
@@ -823,7 +930,10 @@ public static partial class SimAi
         if (pick >= 0)
         {
             civ.AiSaving = null;
-            g.Apply(new ResearchCommand(civ.Id, pick));
+            if (g.Apply(new ResearchCommand(civ.Id, pick)) is null && g.AiLogOn)
+            {
+                g.AiLog(civ, AiLogKind.Research, $"researches {g.Content.Techs[pick].Name}");
+            }
         }
         else
         {

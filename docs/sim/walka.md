@@ -188,7 +188,9 @@ Straż i walczący mieszkańcy oddają ciosy razy obrona osady w procentach.
 AI wybiera: zajmij, gdy osada leży do 20 heksów od jego najbliższej osady; złup, gdy dalej; zburz tylko ostatnią osadę wroga
 i tylko przy agresji 75 lub więcej.
 
-**Oddziałów wojska nie da się rozwiązać** (decyzja 10): wojownik zostaje wojownikiem do końca.
+**Złożenie broni** (Patryk, 2026-11-23, P5; zastępuje decyzję 10): każdą jednostkę, także wojsko, można wcielić do stojącej osady, na której heksie stoi
+(nie w trakcie walki). Ludzie i ranni dołączają do mieszkańców, ładunek trafia do magazynu (do jego pojemności), a jednostka traci wszystko, co dawała:
+doświadczenie, uzbrojenie i rodzaj. Narzędzia i dobra wydane na szkolenie wojska nie wracają; jednostki cywilne oddają swój sprzęt jak dotąd.
 
 **Najwyżej 3 wojny naraz** (`war.maxWars`, projekt gry rozdz. 8): lud w 3 wojnach nie wypowie kolejnej i nikt nie wypowie wojny jemu.
 Atak bez wypowiedzenia podlega tej samej zasadzie.

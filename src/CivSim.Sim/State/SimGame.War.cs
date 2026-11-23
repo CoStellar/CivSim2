@@ -70,6 +70,39 @@ public sealed partial class SimGame
     // 6C (Patryk, 2026-11-20): reputation has a floor, so it keeps meaning something.
     private void AddReputation(Civ civ, int delta) => civ.Reputation = Math.Max(Content.War.ReputationFloor, civ.Reputation + delta);
 
+    /// <summary>True while a peace made between the two peoples still runs (breaking it costs more reputation).</summary>
+    public bool InTruce(int a, int b) => a != b && Truces()[(a * Civs.Count) + b] > Ticks;
+
+    // P2 (Patryk, 2026-11-23): reputation is renewable. Once a minute a bad name heals by war.reputationRegenPerMinute (up to 0)
+    // for every people that is not the aggressor of a war going on now.
+    private void ReputationStep()
+    {
+        int regen = Content.War.ReputationRegenPerMinute;
+        if (regen <= 0)
+        {
+            return;
+        }
+
+        foreach (Civ c in Civs)
+        {
+            if (c.Dead || c.Reputation >= 0)
+            {
+                continue;
+            }
+
+            bool aggressor = false;
+            for (int o = 0; o < Civs.Count && !aggressor; o++)
+            {
+                aggressor = o != c.Id && AtWar(c.Id, o) && Aggressor(c.Id, o);
+            }
+
+            if (!aggressor)
+            {
+                c.Reputation = Math.Min(0, c.Reputation + regen);
+            }
+        }
+    }
+
     /// <summary>Wars a people is in now.</summary>
     public int WarsOf(int civ)
     {
@@ -257,33 +290,43 @@ public sealed partial class SimGame
         }
 
         Unit u = Units[id];
-        if (Content.Units[u.Kind].Army)
-        {
-            return "Warriors stay warriors: army units cannot be disbanded."; // Patryk, 2026-11-20, question 10
-        }
-
+        UnitType kind = Content.Units[u.Kind];
         int sid = SettlementAt[u.Cell];
-        if (sid < 0 || Settlements[sid].Civ != civ.Id)
+        if (sid < 0 || Settlements[sid].Civ != civ.Id || Settlements[sid].Abandoned)
         {
             return "Units go home only on our own land.";
         }
 
-        // B6 (2026-11-19 tests): arms and whatever it carries go back to the store, not only the people.
+        if (u.Fighting)
+        {
+            return "Not while it fights.";
+        }
+
+        // P5 (Patryk, 2026-11-23): soldiers may join a settlement too (to start again when it is all that is left), but they
+        // lose everything the unit had: its arms and armour, its supplies and its training. Other units bring their gear home
+        // (B6, 2026-11-19 tests). The wounded come home with them.
         Settlement s = Settlements[sid];
-        s.People += u.People;
-        if (Geared(Content.Units[u.Kind]))
+        s.People += u.People + u.Injured;
+        if (!kind.Army && Geared(kind))
         {
             ReturnGear(s.Stock, u);
         }
 
         if (u.Cargo is { } cargo)
         {
+            // B7 (tests 2026-11-23): what does not fit in the store is lost.
             for (int g = 0; g < cargo.Length && g < s.Stock.Length; g++)
             {
-                s.Stock[g] += Math.Max(0, cargo[g]);
+                long room = Math.Max(0, s.Capacity[g] - s.Stock[g]);
+                s.Stock[g] += Math.Min(room, Math.Max(0, cargo[g]));
             }
 
             u.Cargo = null;
+        }
+
+        if (kind.Army)
+        {
+            News.Add((civ.Id, $"Our {kind.Name.ToLowerInvariant()} laid down their arms and joined {s.Name}."));
         }
 
         SyncTotals(civ);
@@ -454,6 +497,7 @@ public sealed partial class SimGame
         if (residents > 0)
         {
             target.People -= residents;
+            target.Idle = Math.Min(target.Idle, target.People); // B6 (tests 2026-11-23): never more idle than people until the next count
             target.Fighters -= residents;
             Civs[target.Civ].Dirty = true;
         }
@@ -534,8 +578,8 @@ public sealed partial class SimGame
         }
     }
 
-    // A people with no settlement left is no more.
-    private void Perish(Civ loser, Civ winner)
+    // A people with no settlement left is no more (P5, 2026-11-23: or with nobody left; then there is no winner).
+    private void Perish(Civ loser, Civ? winner)
     {
         loser.Dead = true;
         DisownWorks(System.Linq.Enumerable.Range(0, Geo.CellCount), loser.Id); // A6: its walls stop nobody
@@ -546,7 +590,8 @@ public sealed partial class SimGame
         }
 
         loser.Units.Clear();
-        NewsAbout(loser.Id, winner.Id, $"{loser.Name} are no more.");
+        loser.People = 0; // B5 (tests 2026-11-23)
+        NewsAbout(loser.Id, winner?.Id ?? loser.Id, winner is null ? $"{loser.Name} died out: nobody of them is left." : $"{loser.Name} are no more.");
     }
 
     // Walk toward the target until it is within reach.

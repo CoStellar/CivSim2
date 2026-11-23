@@ -326,6 +326,7 @@ public sealed partial class SimGame
         if (Ticks % SimContent.TicksPerMinute == 0)
         {
             WearinessStep();
+            ReputationStep();
             Sample();
             CheckGoal();
         }
@@ -354,7 +355,7 @@ public sealed partial class SimGame
                 EventStep(civ);
             }
 
-            if (civ.IsAi && (Ticks + (civ.Id * 7)) % Ai.SimAi.ThinkEveryTicks == 0)
+            if (civ.IsAi && (Ticks + (civ.Id * 7)) % Content.AiThinkEveryTicks == 0)
             {
                 Ai.SimAi.Think(this, civ);
             }

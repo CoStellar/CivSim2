@@ -6,7 +6,7 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 
 ## Zasady ogólne
 
-- **Rytm:** AI myśli co 30 taktów, czyli co 3 sekundy gry (`SimAi.ThinkEveryTicks`). Każdy lud ma przesunięty takt (`Ticks + civ.Id × 7`), więc nie myślą wszyscy naraz.
+- **Rytm:** AI myśli co 30 taktów, czyli co 3 sekundy gry (`ai.thinkEveryTicks`). Każdy lud ma przesunięty takt (`Ticks + civ.Id × 7`), więc nie myślą wszyscy naraz.
 - **Te same komendy co gracz.** AI niczego nie zmienia samo: wydaje komendy, a gra sprawdza je tak samo jak komendy gracza (`SimGame.Apply`). Odrzucona komenda przepada.
 - **Wie tylko to, co gracz:**
   - widzi wyłącznie heksy, które jego lud odkrył (`civ.Known`);
@@ -24,7 +24,7 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
   8. osadnicy (N14);
   9. wojsko (N16), gdy w tym myśleniu nic nie zbudował;
   10. wojna (N17);
-  11. poszukiwacze i mierniczy (N13).
+  11. poszukiwacze i mierniczy (N13): gdy w tym myśleniu nic nie zrobił, a poza tym co czwarte myślenie.
 
   W jednym myśleniu AI buduje najwyżej jedną rzecz.
 
@@ -71,6 +71,34 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 | N38 | Warunki pokoju AI (ADR 0030, 2026-11-23) | AI proponuje pokój (N17) | wygrywając: podpowiedź gry (osada, którą wolno wziąć, i dobra, których jej brakuje, na wartość z przebiegu wojny), pokój 3 min; przegrywając: biały pokój na 10 min, a przy zmęczeniu ≥ 80 dobra na wartość, którą powinna oddać | `weariness.aiPayAt` 80 | `Ai/SimAi.War.cs` (`PeaceOffer`), `SimGame.SuggestTerms` |
 | N39 | Stałe trasy z wsadem (2026-11-23) | osada ma < 6 minut pełnego zużycia wsadu swoich warsztatów | stała trasa z osady, która ma najwięcej do oddania: 3 minuty zużycia na kurs, dopóki cel ma < 6 minut; źródło zatrzymuje 2 minuty swojego zużycia; trasę bez zapasu w źródle zamyka; najwyżej 4 trasy na osadę | `ai.inputRouteTripMinutes` 3, `inputRouteTargetMinutes` 6, `inputRouteKeepMinutes` 2, `inputRoutesPerSettlement` 4 | `Ai/SimAi.Supply.cs` (`InputRoutes`) |
 | N33 | Premie rodzajów (#112) | rodzaj jednostki osiągnął poziom | łucznicy i machiny: Hardened; jazda: na zmianę Forced march i Hardened; piechota: na zmianę Hardened i Shield wall | — | `Ai/SimAi.cs` (`VeteranChoiceFor`) |
+
+## Decyzje po testach z 2026-11-23 (P1–P4, B1, A6)
+
+Wszystkie liczby w `aiWar` i `ai` w `data/sim/game.json`.
+
+**Wojna (P1): najpierw poznaj, potem oceń zysk.** AI wypowiada wojnę tylko wtedy, gdy spełnione są wszystkie warunki:
+- **Zwiad:** cel widziała w ciągu ostatnich 3 minut (`aiWar.intelMinutes`), na żywo albo w pamięci osady. Jeśli nie, wysyła tam
+  bezczynnego zwiadowcę albo go szkoli i wraca do decyzji, gdy wie więcej.
+- **Siła:** jej wojsko jest ponad 2 razy silniejsze od obrony celu (`aiWar.powerTimes`).
+- **Zysk:** lud celu (znana liczba ludzi) to co najmniej 60% liczby jej żołnierzy (`aiWar.gainPercent`): nie wysyła armii po małe łupy.
+- **Ochrona małych:** nie atakuje ludu mniejszego niż 40% jej ludu albo mniejszego niż 40 ludzi (`aiWar.smallTargetPercent`, `aiWar.smallTargetPeople`),
+  chyba że ten lud ma złą reputację.
+- **Charakter:** na końcu jak dotąd losowanie według wojowniczości; atak z zaskoczenia tylko przy wojowniczości 75+ (`aiWar.surpriseAggression`).
+- **Pokój dotrzymany (B1):** AI nie wypowiada wojny ludowi, z którym ma trwający pokój (rozejm).
+- **Pokój:** proponuje go, gdy przegrywa o 20 punktów wyniku (`aiWar.losingScoreMargin`), a poza tym losowo 3% na myślenie (`aiWar.randomPeacePercent`).
+
+**Reputacja (P2): wrogo, ale obronnie.** Gdy poznany lud ma złą reputację, AI chce o 50% więcej wojska (`aiWar.fearArmyPercent`)
+i chętniej zawiera sojusze obronne. Sama zła reputacja nie jest powodem do ataku, zdejmuje tylko ochronę małych. Reputacja wraca do 0 o 4 na minutę.
+
+**Dziennik decyzji AI.** `SimGame.AiLogOn` włącza zapis powodów decyzji: wojna (atak, oszczędzenie celu, zwiad), pokój, dyplomacja, badania i ekspansja.
+Wyłączony domyślnie, więc nie obciąża gry; w grze nie wchodzi do hasza stanu. Zapis do pliku: `--sim-report ... --ai-log plik.csv` (takt, lud, rodzaj, tekst).
+
+**Inne (A6, skok taktu):** progi opieki (szkoła 40, łaźnia 50, akademia 70, uniwersytet 90 mieszkańców, `ai.careSettlementPeople`),
+rezerwa jedzenia po opłaceniu badania (3 minuty jedzenia, `ai.researchKeepFoodMinutes`) i życie pamięci dróg (2 minuty, `ai.wayToMinutes`) są w danych.
+Pamięć dróg wygasa w różnych chwilach dla różnych celów, a lud szuka najwyżej jednej nowej drogi na takt: skok najdłuższego taktu znika.
+
+**Gospodarka bez doświadczenia:** AI płaci badania towarami i czasem, więc pilnuje, by pierwsza technologia na drodze miała wytwórcę swojej ceny,
+nie stawia nowych wytwórców dobra, którego ma ponad połowę pojemności, a głodny obóz najpierw daje pierwszeństwo budynkom z jedzeniem.
 
 ## Warsztaty i ich surowce (2026-11-22)
 

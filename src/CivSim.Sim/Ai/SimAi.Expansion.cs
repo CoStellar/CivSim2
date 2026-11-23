@@ -65,7 +65,9 @@ public static partial class SimAi
     private static void Surveys(SimGame g, Civ civ)
     {
         // Not before the people has spread a little: early on every person is needed at home.
-        if (g.Ticks < 15 * SimContent.TicksPerMinute || civ.Settlements.Count < 3 || civ.Hungry)
+        // Tests 2026-11-23: an ore the way to the next era needs sends prospectors from the first settlement on.
+        bool needOre = civ.Era >= 1 && Array.IndexOf(WantedDeposits(g, civ), true) >= 0;
+        if (g.Ticks < 15 * SimContent.TicksPerMinute || (civ.Settlements.Count < 3 && !needOre) || civ.Hungry)
         {
             return;
         }
@@ -112,8 +114,16 @@ public static partial class SimAi
                 bool far = t.Survey == 1 && (starved || Array.IndexOf(WantedDeposits(g, civ), true) >= 0);
                 int wide = far ? 22 : 12;
                 int tall = far ? 18 : 9;
-                for (int tries = 0; tries < 16; tries++)
+                bool moved = false;
+                for (int tries = 0; tries < 48 && !moved; tries++)
                 {
+                    // Tests 2026-11-23: with every near hex looked at, the box grows (prospectors stood idle 12 minutes).
+                    if (tries == 16 || tries == 32)
+                    {
+                        wide += 12;
+                        tall += 9;
+                    }
+
                     int dc = (int)(Mix(ref z) % (ulong)((2 * wide) + 1)) - wide;
                     int dr = (int)(Mix(ref z) % (ulong)((2 * tall) + 1)) - tall;
                     int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
@@ -121,8 +131,13 @@ public static partial class SimAi
                     if (civ.Known[cell] && !looked && g.OwnerAt[cell] < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater
                         && g.Apply(new MoveCommand(civ.Id, u.Id, cell, false)) is null)
                     {
-                        break;
+                        moved = true;
                     }
+                }
+
+                if (!moved && g.AiLogOn)
+                {
+                    g.AiLog(civ, AiLogKind.Expansion, $"{t.Name.ToLowerInvariant()} find no new ground to look at");
                 }
             }
         }
@@ -160,7 +175,11 @@ public static partial class SimAi
 
             if (g.CannotFound(u.Cell, civ) is null)
             {
-                g.Apply(new FoundCommand(civ.Id, u.Id));
+                if (g.Apply(new FoundCommand(civ.Id, u.Id)) is null && g.AiLogOn)
+                {
+                    g.AiLog(civ, AiLogKind.Expansion, $"founds a settlement at {g.Geo.FromIndex(u.Cell)}");
+                }
+
                 continue;
             }
 

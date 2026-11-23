@@ -188,6 +188,12 @@ public sealed partial class SimGame
                 for (int g = 0; g < goods; g++)
                 {
                     long got = s.Idle * Content.ForagePerMinute[g] * rich[g] / 100 * EventProduction(civ, g) / 100 * work / 1000;
+                    if (g == Content.Food)
+                    {
+                        // Patryk, 2026-11-23: gathering always feeds the gatherers (never more): a people left alone lives on.
+                        got = Math.Max(got, (long)s.Idle * Content.FoodPerPersonPerMinute * eat / 100 * Content.ForageSubsistencePercent / 100);
+                    }
+
                     s.Rate[g] += got;
                     civ.MadeRate[g] += got;
                 }

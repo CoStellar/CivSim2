@@ -25,6 +25,8 @@ public sealed partial class SimGame
             Add(c.People);
             Add(c.Hungry ? 1 : 0);
             Add(c.Era);
+            Add(c.Reputation);
+            Add(c.Dead ? 1 : 0);
             foreach (int k in c.KindPicks)
             {
                 Add(k);

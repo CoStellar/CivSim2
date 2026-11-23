@@ -77,6 +77,31 @@ public static partial class SimAi
                 continue;
             }
 
+            // Tests 2026-11-23: a food maker here with free jobs gets the workers first (priority) instead of another empty one:
+            // new huts got no workers while older woodcutters took them all (47 huts, 2 with workers).
+            bool freeFoodJobs = false;
+            foreach (int id in civ.Buildings)
+            {
+                Building b = g.Buildings[id];
+                BuildingType bt = g.Content.Buildings[b.Type];
+                if (b.Settlement != s.Id || b.State != BuildingState.Active || Array.IndexOf(FoodBuildings, bt.Key) < 0 || b.Workers >= bt.Workers)
+                {
+                    continue;
+                }
+
+                freeFoodJobs = true;
+                if (!b.Priority)
+                {
+                    g.Apply(new PriorityCommand(civ.Id, id, true));
+                    return true;
+                }
+            }
+
+            if (freeFoodJobs)
+            {
+                continue; // every food job here is first in line already: more huts would stand empty
+            }
+
             foreach (string k in new[] { "gatherers_hut", "hunters_lodge", "fishing_hut", "farm", "pasture" })
             {
                 if (TryBuildIn(g, civ, s, k))
@@ -121,10 +146,10 @@ public static partial class SimAi
                 || (InSettlement(g, civ, s, "quarry") >= 1 && Here(g, civ, s, "mason") == 0 && TryBuildIn(g, civ, s, "mason"))
                 || (InSettlement(g, civ, s, "farm") >= 2 && Here(g, civ, s, "mill") == 0 && TryBuildIn(g, civ, s, "mill"))
                 || (InSettlement(g, civ, s, "craft") >= 3 && Here(g, civ, s, "guildhall") == 0 && TryBuildIn(g, civ, s, "guildhall"))
-                || (s.People >= 50 && Here(g, civ, s, "bathhouse") == 0 && TryBuildIn(g, civ, s, "bathhouse"))
-                || (s.People >= 40 && Here(g, civ, s, "school") == 0 && TryBuildIn(g, civ, s, "school"))
-                || (s.People >= 70 && Here(g, civ, s, "academy") == 0 && TryBuildIn(g, civ, s, "academy"))
-                || (s.People >= 90 && Here(g, civ, s, "university") == 0 && TryBuildIn(g, civ, s, "university")))
+                || (s.People >= g.Content.AiCarePeople["bathhouse"] && Here(g, civ, s, "bathhouse") == 0 && TryBuildIn(g, civ, s, "bathhouse"))
+                || (s.People >= g.Content.AiCarePeople["school"] && Here(g, civ, s, "school") == 0 && TryBuildIn(g, civ, s, "school"))
+                || (s.People >= g.Content.AiCarePeople["academy"] && Here(g, civ, s, "academy") == 0 && TryBuildIn(g, civ, s, "academy"))
+                || (s.People >= g.Content.AiCarePeople["university"] && Here(g, civ, s, "university") == 0 && TryBuildIn(g, civ, s, "university")))
             {
                 return true;
             }

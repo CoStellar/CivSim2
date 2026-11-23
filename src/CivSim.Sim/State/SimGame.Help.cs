@@ -202,6 +202,26 @@ public sealed partial class SimGame
         return false;
     }
 
+    // C1: a palisade stands on any hex of our land.
+    private bool HasPalisade(Civ civ)
+    {
+        ushort bit = PalisadeBit;
+        if (bit == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < WorksAt.Length; i++)
+        {
+            if ((WorksAt[i] & bit) != 0 && OwnerAt[i] == civ.Id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>One step of the tutorial: what to do, whether it is done, and the building to highlight in the bar (or "").</summary>
     public sealed record TutorialStep(string Text, bool Done, string Highlight);
 
@@ -237,6 +257,10 @@ public sealed partial class SimGame
             new($"Build {Where("hut")}: people grow only with free homes and food.", Count("hut") >= 1, "hut"),
             new($"Research {scoutsTech} (Research, key 2).", Known("scouting"), ""),
             new("Train scouts in the settlement's panel and send them out (right click on the map).", Trained("scouts"), ""),
+
+            // C1 (tests 2026-11-23): other peoples may come to fight after the first minutes; a few warriors or a palisade help.
+            new($"Prepare a defence before minute {Content.AiPeacefulStartMinutes}: research Flint weapons and train warriors, or research Palisade and draw one.",
+                Known("flint_weapons") && Trained("warriors") || Known("palisade") && HasPalisade(civ), ""),
         ];
     }
 }

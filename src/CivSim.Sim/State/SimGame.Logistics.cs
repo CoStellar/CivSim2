@@ -216,6 +216,7 @@ public sealed partial class SimGame
         long each = t.CargoPerPerson + (Bonus(civ, EffectKind.Cargo, t.Key, t.Groups) * SimContent.One); // baskets: Carrying
         int people = (int)Math.Clamp((total + each - 1) / Math.Max(1, each), 1, Math.Max(1, home.People - 1));
         home.People = Math.Max(1, home.People - people);
+        home.Idle = Math.Min(home.Idle, home.People); // B6: never more idle than people until the next count
         var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = fromCell, State = UnitState.Idle, Cargo = cargo, Home = home.Id, ReturnCell = fromCell, Horses = horses };
         Units.Add(u);
         civ.Units.Add(u.Id);
@@ -589,6 +590,11 @@ public sealed partial class SimGame
         if ((uint)good >= (uint)Content.Goods.Count || amount <= 0)
         {
             return "Choose a good and an amount.";
+        }
+
+        if (keep < 0 || until < 0)
+        {
+            return "What stays at the source and what the target should have cannot be less than nothing."; // E2 (tests 2026-11-23)
         }
 
         var route = new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount, KeepAtSource = Math.Max(0, keep), UntilTargetHas = Math.Max(0, until) };
