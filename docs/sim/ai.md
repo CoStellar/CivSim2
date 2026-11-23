@@ -44,7 +44,7 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 | N10 | Awans osady | ludzi ≥ domy − 2, cena zostawia 20% zapasów, lud nie głoduje i ma zapas jedzenia na zimę (jak N4) | awansuje osadę | −2, 20% | `Ai/SimAi.cs:480` |
 | N11 | Przebudowa (nowa 2026-11-19) | nic innego nie zbudował; lepszy rodzaj znany, miejsce i teren pasują | przebudowuje budynek w lepszy, najpierw domy w pełnych osadach (domy tylko bez braku jedzenia, jak N4), gdy reszta ceny zostawia 20% zapasów | domy −4, 20% | `Ai/SimAi.cs:497` |
 | N12 | Zwiadowcy | jeden, przez pierwsze 20 minut, gdy stać przy zostawieniu połowy | trenuje; stojący idzie na losowy nieznany heks w promieniu ok. 14 × 10 | 20 min, 50% | `Ai/SimAi.cs:547` |
-| N13 | Poszukiwacze i mierniczy (nowa 2026-11-19) | po 15. minucie, ≥ 3 osady, bez głodu, bez osadników w drodze i bez innego szkolenia | jeden naraz: mierniczy w epoce kamienia, poszukiwacz od neolitu; po zbadaniu miejsca idzie na niezbadaną wolną ziemię do ok. 12 heksów od losowej osady (cel ze skrótu, nie z losowania AI) | 15 min, 3 osady | `Ai/SimAi.cs:579` |
+| N13 | Poszukiwacze i mierniczy (nowa 2026-11-19; 2026-11-23: więcej poszukiwaczy przy braku rudy) | po 15. minucie, ≥ 3 osady, bez głodu, bez osadników w drodze i bez innego szkolenia | jeden naraz: mierniczy w epoce kamienia, poszukiwacz od neolitu; po zbadaniu miejsca idzie na niezbadaną wolną ziemię do ok. 12 heksów od losowej osady (cel ze skrótu, nie z losowania AI). **Od 2026-11-23 (known-issues 13):** gdy warsztaty zużywają więcej rudy (żelazo, miedź…), niż lud wytwarza, a żadne znane złoże tej rudy nie jest wolne pod kopalnię, AI trzyma do `ai.starvedProspectors` (2) poszukiwaczy i wysyła ich dalej (do 22 heksów) | 15 min, 3 osady, 2 poszukiwaczy | `Ai/SimAi.Expansion.cs` (`Surveys`), `StarvedDeposits` w `SimAi.Economy.cs` |
 | N14 | Osadnicy | żadnych w drodze, osad < 2 + ekspansja/25 + era, jedzenie netto > 0, osada ≥ 20 ludzi, cena zostawia 30% | trenuje; osadnicy zakładają obóz, gdzie stoją, jeśli wolno, inaczej idą do najlepszego miejsca (N15) | 20 ludzi, 30% | `Ai/SimAi.cs:643` |
 | N15 | Miejsce nowej osady | osadnicy szukają | znany wolny heks 6–12 od osadników: jedzenie biomu × 10, +15 przy wodzie, − odległość, + znana gleba w promieniu 2 (żyzność / 40 na heks) + 6 za każde znane złoże skalne, + 4 za złoże z jedzeniem (zmiana 2026-11-19) | ×10, +15, /40, +6, +4 | `Ai/SimAi.cs:684`, `:714` |
 | N16 | Wojsko | żołnierzy < ludzie × (5 + wojowniczość/5)%, jedzenie netto ≥ 2, cena zostawia 20% | najsilniejszy znany rodzaj; trenuje go osada, która ma ≥ ludzi oddziału + 15 i najwięcej jedzenia na zbyciu, co najmniej tyle, ile oddział je (racje) | 5–25% ludzi | `Ai/SimAi.cs:751` |
@@ -263,3 +263,19 @@ Zapas na starcie: 120 jedzenia, **100 drewna** (było 60), **20 kamienia** (bez 
 | drewno w 5. min (mediana) | 8 | 14 |
 | drewno w 10. min (mediana) | 18 | 20 |
 | neolit | 7,6 min | 5,9 min |
+
+## Pomiar 2026-11-23: poszukiwacze przy braku rudy (known-issues 13)
+
+`--sim-report --seeds 12`, 4 ludy. Bez `--serial`, więc czasy taktów są zawyżone przez równoległe gry i nie służą do porównań.
+
+| | 60 min przed | 60 min po | 120 min przed | 120 min po |
+| --- | --- | --- | --- | --- |
+| budynki bez wsadu | 5,2% | 4,5% | 20,9% | 18,8% |
+| warsztaty bez miedzi, której nie ma w całym ludzie | 0 | 0 | 103 | 6 |
+| warsztaty bez żelaza (w tym: nigdzie w ludzie) | 5 (4) | 3 (0) | 345 (32) | 315 (20) |
+| głód (% próbek) | 3,5 | 3,6 | 1,8 | 2,6 |
+| ludzie (średnio) | 1305 | 1257 | 13172 | 11592 |
+| pierwsze średniowiecze (min) | 56,8 (4 z 12 gier) | 57,0 (2 z 12) | 65,5 | 66,8 |
+
+Brak miedzi prawie znika, a żelaza ubywa mniej. Liczba ludzi i głód różnią się w granicach rozrzutu między grami (±30%).
+
