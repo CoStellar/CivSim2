@@ -11,16 +11,16 @@ public sealed class ResearchTests
     private static SimGame NewGame() => SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
 
     [Fact]
-    public void ATechnologyNeedsExperiencePriceAndTime()
+    public void ATechnologyNeedsPriceAndTime()
     {
+        // Tests 2026-11-23 (Patryk): experience is no longer a brake; the price and the time are.
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
         int tools = Content.TechId("stone_tools");
-        Assert.Contains("experience", g.Apply(new ResearchCommand(civ.Id, tools)), System.StringComparison.Ordinal);
-        civ.Experience[Content.TechId("foraging")] = 1000 * SimContent.TicksPerMinute;
         Assert.Null(g.Apply(new ResearchCommand(civ.Id, tools)));
         Assert.NotNull(g.Apply(new ResearchCommand(civ.Id, Content.TechId("fishing"))));
-        for (int i = 0; i <= Content.Techs[tools].ResearchTicks; i++)
+        long end = civ.ResearchEnd;
+        while (g.Ticks < end)
         {
             g.Tick();
         }

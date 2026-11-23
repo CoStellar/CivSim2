@@ -12,7 +12,7 @@ namespace CivSim.Headless;
 
 /// <summary>
 /// The AI of the new game over many seeds (2026-11-19): a small change moves the result of one game by 20–30%, so tuning
-/// needs a mean over many. <c>--sim-report [--seeds 12] [--minutes 40] [--peoples 4] [--size 98x60] [--csv file]</c>. The default map is the client's default ("Normal", 98×60; decision 8B of 2026-11-20).
+/// needs a mean over many. <c>--sim-report [--seeds 12] [--minutes 40] [--peoples 4] [--size 98x60] [--csv file] [--ai-log file.csv]</c>. The default map is the client's default ("Normal", 98×60; decision 8B of 2026-11-20).
 /// </summary>
 public static class SimReport
 {
@@ -20,6 +20,21 @@ public static class SimReport
     {
         /// <summary>Minute the first people entered each era (index = era; −1 = not reached).</summary>
         public int[] FirstEra { get; init; } = [];
+
+        /// <summary>Minute each people entered each era (era × people; −1 = never): how long eras last for everyone.</summary>
+        public int[][] EraAt { get; init; } = [];
+
+        /// <summary>Wars begun while a peace between the two still ran (tests 2026-11-23, B1).</summary>
+        public int TruceBroken { get; init; }
+
+        /// <summary>Mean reputation of the living peoples at the end, and how many are at the floor.</summary>
+        public double Reputation { get; init; }
+
+        /// <summary>Peoples at the reputation floor at the end.</summary>
+        public int AtFloor { get; init; }
+
+        /// <summary>The AI decision log of the game (with --ai-log).</summary>
+        public IReadOnlyList<AiLogEntry> Log { get; init; } = [];
 
         /// <summary>Working buildings (built, with jobs) with nobody in them at the end, percent.</summary>
         public int EmptyPercent { get; init; }
@@ -93,10 +108,11 @@ public static class SimReport
         int peoples = Arg(args, "--peoples", 4);
         (int width, int height) = Size(args);
         string? csv = args.SkipWhile(a => a != "--csv").Skip(1).FirstOrDefault();
+        string? aiLog = args.SkipWhile(a => a != "--ai-log").Skip(1).FirstOrDefault();
         SimContent content = SimContent.Load();
         var rows = new Row[seeds];
         var parallel = new ParallelOptions { MaxDegreeOfParallelism = args.Contains("--serial") ? 1 : Environment.ProcessorCount };
-        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, peoples, width, height));
+        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, peoples, width, height, aiLog is not null));
 
         CultureInfo inv = CultureInfo.InvariantCulture;
         output.WriteLine(string.Create(inv, $"New game AI: {seeds} seeds, {peoples} peoples, {minutes} minutes each (map {width}x{height})."));
@@ -146,6 +162,9 @@ public static class SimReport
         Line("worst tick (ms)", r => r.WorstTickMs);
         Line("ticks over 25 ms", r => r.SlowTicks);
         Line("technologies known", r => r.Techs);
+        Line("wars breaking a peace", r => r.TruceBroken);
+        Line("reputation at end", r => r.Reputation);
+        Line("peoples at rep. floor", r => r.AtFloor);
         var neo = rows.Where(r => r.Neolithic >= 0).Select(r => (double)r.Neolithic).ToList();
         if (neo.Count > 0)
         {
@@ -174,6 +193,34 @@ public static class SimReport
             output.WriteLine(at.Count == 0
                 ? $"first {content.Eras[era].Name,-16} not reached in {minutes} min"
                 : string.Create(inv, $"{"first " + content.Eras[era].Name + " (min)",-22} mean {at.Average(),8:F1}   median {at[at.Count / 2],8:F1}   in {at.Count} of {seeds} games"));
+        }
+
+        // Tests 2026-11-23 (P4): when every people (not only the first) enters each era, and how long each era lasts for it.
+        for (int e = 1; e < content.Eras.Count; e++)
+        {
+            int era = e;
+            var at = rows.SelectMany(r => r.EraAt.Length > era ? r.EraAt[era] : []).Where(m => m >= 0).Select(m => (double)m).OrderBy(x => x).ToList();
+            var spans = rows.SelectMany(r => r.EraAt.Length > era ? r.EraAt[era].Select((m, c) => m >= 0 && r.EraAt[era - 1][c] >= 0 ? (double)(m - r.EraAt[era - 1][c]) : -1) : [])
+                .Where(x => x >= 0).OrderBy(x => x).ToList();
+            int all = rows.Sum(r => r.EraAt.Length > era ? r.EraAt[era].Length : 0);
+            output.WriteLine(at.Count == 0
+                ? $"peoples in {content.Eras[era].Name,-14} none in {minutes} min"
+                : string.Create(inv, $"{"peoples in " + content.Eras[era].Name + " (min)",-28} median {at[at.Count / 2],6:F1}   {content.Eras[era - 1].Name} lasted median {(spans.Count == 0 ? 0 : spans[spans.Count / 2]),5:F1} min   {at.Count} of {all} peoples"));
+        }
+
+        if (aiLog is not null)
+        {
+            using var w = new StreamWriter(aiLog);
+            w.WriteLine("seed,minute,people,kind,decision");
+            foreach (Row r in rows)
+            {
+                foreach (AiLogEntry e in r.Log)
+                {
+                    w.WriteLine(string.Create(inv, $"{r.Seed},{e.Tick / (double)SimContent.TicksPerMinute:F2},{e.Civ},{e.Kind},\"{e.Text.Replace("\"", "'", StringComparison.Ordinal)}\""));
+                }
+            }
+
+            output.WriteLine($"AI decision log: {aiLog} ({rows.Sum(r => r.Log.Count)} decisions)");
         }
 
         if (csv is not null)
@@ -207,9 +254,12 @@ public static class SimReport
         return (98, 60);
     }
 
-    private static Row Play(SimContent content, ulong seed, int minutes, int peoples, int width, int height)
+    private static Row Play(SimContent content, ulong seed, int minutes, int peoples, int width, int height, bool log)
     {
         SimGame g = SimGame.Create(content, new SimSettings(seed, width, height, peoples));
+        g.AiLogOn = log;
+        int truceBroken = 0;
+        int[][] eraAt = [.. Enumerable.Range(0, content.Eras.Count).Select(e => Enumerable.Repeat(e == 0 ? 0 : -1, g.Civs.Count).ToArray())];
         int samples = 0;
         double worstTick = 0;
         int slowTicks = 0;
@@ -247,6 +297,7 @@ public static class SimReport
                 for (int e = 1; e <= c.Era && e < firstEra.Length; e++)
                 {
                     firstEra[e] = firstEra[e] < 0 ? sec / 60 : firstEra[e];
+                    eraAt[e][c.Id] = eraAt[e][c.Id] < 0 ? sec / 60 : eraAt[e][c.Id];
                 }
 
                 foreach (Civ o in g.Civs.Where(o => o.Id > c.Id))
@@ -254,6 +305,7 @@ public static class SimReport
                     if (g.AtWar(c.Id, o.Id) && atWar.Add((c.Id, o.Id)))
                     {
                         wars++;
+                        truceBroken += g.InTruce(c.Id, o.Id) ? 1 : 0;
                     }
                     else if (!g.AtWar(c.Id, o.Id))
                     {
@@ -332,6 +384,11 @@ public static class SimReport
             alive.Count == 0 ? 0 : (int)alive.Average(c => c.KnownTech.Count(k => k)))
         {
             FirstEra = firstEra,
+            EraAt = eraAt,
+            TruceBroken = truceBroken,
+            Reputation = alive.Count == 0 ? 0 : alive.Average(c => c.Reputation),
+            AtFloor = alive.Count(c => c.Reputation <= content.War.ReputationFloor),
+            Log = log ? [.. g.AiLogEntries] : [],
             EmptyPercent = working == 0 ? 0 : empty * 100 / working,
             StarvedPercent = users == 0 ? 0 : starved * 100 / users,
             FreeJobs = free,

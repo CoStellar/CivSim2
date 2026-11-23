@@ -6,7 +6,8 @@ namespace CivSim.Sim.State;
 
 /// <summary>What a people remembers of a settlement it no longer sees.</summary>
 /// <summary>A settlement as last seen; People, Guard and DefensePercent are what the AI judges its defence by (A9, tests 2026-11-20).</summary>
-public sealed record SettlementMemory(int Settlement, int Civ, string Name, int Level, int Center, int People = 0, int Guard = 0, int DefensePercent = 100);
+/// <remarks>SeenAt: the tick it was last seen (tests 2026-11-23, P1: the AI attacks only what it has looked at lately).</remarks>
+public sealed record SettlementMemory(int Settlement, int Civ, string Name, int Level, int Center, int People = 0, int Guard = 0, int DefensePercent = 100, long SeenAt = 0);
 
 /// <summary>What a people remembers of a building it no longer sees.</summary>
 public sealed record BuildingMemory(int Building, int Type, int Civ, BuildingState State, int Cell, int Slots = 15);
@@ -19,9 +20,6 @@ public sealed record BuildingMemory(int Building, int Type, int Civ, BuildingSta
 /// </summary>
 public sealed partial class SimGame
 {
-    /// <summary>Hexes a settlement sees beyond its own land.</summary>
-    public const int SettlementSightBeyond = 1;
-
     /// <summary>True when <paramref name="civ"/> sees the hex now (always true while the start is being chosen).</summary>
     public bool Visible(Civ civ, int cell)
     {
@@ -131,7 +129,7 @@ public sealed partial class SimGame
         }
 
         s.WatchCiv = s.Civ;
-        s.WatchRadius = Content.Levels[s.Level].Radius + SettlementSightBeyond;
+        s.WatchRadius = Content.Levels[s.Level].Radius + Content.SettlementSightBeyond;
         See(Civs[s.Civ], s.Center, s.WatchRadius, +1);
     }
 
@@ -195,7 +193,7 @@ public sealed partial class SimGame
         if (sid >= 0 && Settlements[sid].Center == cell && !Settlements[sid].Abandoned)
         {
             Settlement s = Settlements[sid];
-            civ.SeenSettlements[cell] = new SettlementMemory(s.Id, s.Civ, s.Name, s.Level, cell, s.People, s.Guard, Defense(s));
+            civ.SeenSettlements[cell] = new SettlementMemory(s.Id, s.Civ, s.Name, s.Level, cell, s.People, s.Guard, Defense(s), Ticks);
         }
         else
         {

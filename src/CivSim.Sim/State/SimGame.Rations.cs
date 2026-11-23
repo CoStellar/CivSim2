@@ -253,8 +253,7 @@ public sealed partial class SimGame
                 {
                     // The second missed ration in a row, and every one after it.
                     int dead = Math.Max(1, u.People * r.StarveLosePercent / 100);
-                    u.People -= dead;
-                    u.Injured = Math.Min(u.Injured, Math.Max(0, u.People));
+                    u.People -= dead; // B4 (tests 2026-11-23): the wounded are counted apart from People (they heal back into it)
                     s.RationDead += dead;
                     FieldDeaths += field ? dead : 0;
                     if (u.People <= 0)
@@ -288,6 +287,7 @@ public sealed partial class SimGame
             {
                 int died = Math.Min(s.People - 1, Math.Max(1, s.HungryPeople * r.StarveLosePercent / 100));
                 s.People -= died;
+                s.Idle = Math.Min(s.Idle, s.People); // B6 (tests 2026-11-23): never more idle than people until the next count
                 s.RationDead += died;
             }
 

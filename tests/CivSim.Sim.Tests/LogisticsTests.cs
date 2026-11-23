@@ -246,9 +246,8 @@ public sealed class LogisticsTests
         civ.KnownTech[currency] = false;
         civ.Era = 2;
         Assert.Contains("Barter first", g.CannotResearch(civ, currency));
-        civ.Experience[Content.TechId("pottery")] = 1000 * SimContent.TicksPerMinute;
-        Assert.Contains("pottery made", g.CannotResearch(civ, barter));
-        civ.Made[Content.GoodId("pottery")] = 30 * SimContent.One * SimContent.TicksPerMinute;
+
+        // Tests 2026-11-23 (Patryk): goods made and experience are no longer asked (research.pace.experiencePercent 0).
         Assert.Null(g.CannotResearch(civ, barter));
     }
 

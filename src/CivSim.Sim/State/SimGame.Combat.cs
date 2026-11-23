@@ -261,7 +261,12 @@ public sealed partial class SimGame
 
     private string? SetStance(Civ civ, int id, Stance stance)
     {
-        if (OwnReady(civ, id) is not Unit u || !Content.Units[u.Kind].Army || !Enum.IsDefined(stance))
+        if (!Enum.IsDefined(stance))
+        {
+            return "Unknown stance."; // B8 (tests 2026-11-23)
+        }
+
+        if (OwnReady(civ, id) is not Unit u || !Content.Units[u.Kind].Army)
         {
             return "Not a soldier of ours, or not ready.";
         }

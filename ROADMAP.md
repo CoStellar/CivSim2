@@ -35,7 +35,8 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | 12 | Dowóz wsadu do warsztatów stałymi trasami (known-issues #13) | zrobione: PR `fix/ai-input-routes` (warsztaty bez wsadu 36% → 28%); zostaje za mała produkcja żelaza i węgla |
 | 13 | Wspólna droga dla oddziałów jednej wyprawy (known-issues #15) | zrobione: PR `fix/march-shared-path` (takty ponad 25 ms 7,9 → 3,0 na grę) |
 | 14 | Scenariusz 03 testuje samą walkę (`noPeace`, decyzja Patryka 2026-11-23) | zrobione |
-| 16 | Sterowanie z klawiatury (kursor klawiatury, Q/E/R/J, Home, Page Up/Down) i instrukcja gry w menu i pod F1 (`docs/sterowanie-i-instrukcja.md`) | zrobione: PR `claude/project-thread-ea3s8b` |
+| 16 | Zmiany po testach z 2026-11-23: krótszy neolit, badania bez doświadczenia, przeżycie biernego ludu, AI z oceną zysku i zwiadem, odnawialna reputacja, alarm „obcy”, przegrana przy zerze ludzi, dziennik decyzji AI | zrobione: PR z `claude/project-thread-wrj4qa`; zostaje cel średniowiecza w 45. minucie (known-issues 17) |
+| 17 | Sterowanie z klawiatury (kursor klawiatury, Q/E/R/J, Home, Page Up/Down) i instrukcja gry w menu i pod F1 (`docs/sterowanie-i-instrukcja.md`) | zrobione: PR `claude/project-thread-ea3s8b` |
 | 15 | Runda testów demo na komputerze Patryka | Patryk, po 8 i 11–13 |
 
 ## Po demo

@@ -51,33 +51,35 @@ public sealed class PaceRulesTests
     }
 
     [Fact]
-    public void TheIronAgeWaitsForBronzeMade()
+    public void TheMiddleAgesWaitForBricksMade()
     {
-        // 7A: knowing the bronze age's techs and its gateway is not enough; the people must have made bronze too.
+        // 7A: knowing the iron age's techs and its gateway is not enough; the people must have made bricks too. (Tests
+        // 2026-11-23: the iron age itself no longer asks for bronze made.)
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         Civ civ = g.Civs[0];
-        int bronzeAge = Content.Eras.ToList().FindIndex(e => e.Key == "bronze_age");
-        foreach (SimTech t in Content.Techs.Where(t => t.Era <= bronzeAge && !t.Upgrade))
+        int ironAge = Content.Eras.ToList().FindIndex(e => e.Key == "iron_age");
+        Assert.Null(g.EntryMissing(civ, ironAge));
+        foreach (SimTech t in Content.Techs.Where(t => t.Era <= ironAge && !t.Upgrade))
         {
             civ.KnownTech[t.Id] = true;
         }
 
-        civ.Era = bronzeAge;
-        int bronze = Content.GoodId("bronze");
+        civ.Era = ironAge;
+        int bricks = Content.GoodId("bricks");
         for (int i = 0; i < 100; i++)
         {
             g.Tick();
         }
 
-        Assert.Equal(bronzeAge, civ.Era);
-        Assert.Contains("bronze 0 of 5", g.EntryMissing(civ, bronzeAge + 1) ?? "", System.StringComparison.Ordinal);
-        civ.Made[bronze] = 5 * SimContent.One * SimContent.TicksPerMinute;
+        Assert.Equal(ironAge, civ.Era);
+        Assert.Contains("bricks 0 of 20", g.EntryMissing(civ, ironAge + 1) ?? "", System.StringComparison.Ordinal);
+        civ.Made[bricks] = 20 * SimContent.One * SimContent.TicksPerMinute;
         for (int i = 0; i < 100; i++)
         {
             g.Tick();
         }
 
-        Assert.Equal(bronzeAge + 1, civ.Era);
+        Assert.Equal(ironAge + 1, civ.Era);
     }
 
     [Fact]

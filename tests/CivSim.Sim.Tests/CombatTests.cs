@@ -395,13 +395,18 @@ public sealed class CombatTests
     }
 
     [Fact]
-    public void WarriorsStayWarriors()
+    public void SoldiersJoinASettlementAndLoseTheirArms()
     {
-        // Patryk, 2026-11-20 (question 10): army units are never disbanded.
+        // P5 (Patryk, 2026-11-23): army units may join a settlement on our land; their people come home, their arms do not.
         SimGame g = War();
         Settlement home = g.Settlements[g.Civs[0].Settlements[0]];
         Unit u = Soldiers(g, 0, "warriors", home.Center, 10, weapon: 2, armour: 1);
-        Assert.NotNull(g.Apply(new DisbandCommand(0, u.Id)));
-        Assert.Equal(10, u.People);
+        int before = home.People;
+        long[] stock = (long[])home.Stock.Clone();
+        u.Injured = 2;
+        Assert.Null(g.Apply(new DisbandCommand(0, u.Id)));
+        Assert.Equal(UnitState.Gone, u.State);
+        Assert.Equal(before + 12, home.People);
+        Assert.Equal(stock, home.Stock);
     }
 }
