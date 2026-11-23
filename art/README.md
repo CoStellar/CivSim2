@@ -12,15 +12,18 @@
 
 ## Zasady
 
-- **Heks:** flat-top 48×42 px. Kolumny co 36 px, rzędy co 42 px, co druga kolumna przesunięta o 21 px w dół.
-  Maska w szablonie jest wyliczona co do piksela i sprawdzona: heksy łączą się bez szpar i nakładania.
+- **Heks (od 2026-11-23, decyzja G1): 96×84 px** (dwa razy szablon 48×42). Kolumny co 72 px, rzędy co 84 px, co druga kolumna
+  przesunięta o 42 px w dół. Szablon: `templates/hex_template_96x84.png` (powiększony piksel w piksel z 48×42, który jest
+  wyliczony co do piksela: heksy łączą się bez szpar i nakładania).
 - **Narzędzie:** LibreSprite (darmowy fork Aseprite). Źródła `.ase` w `src/`, gotowe PNG w `export/`.
 - **Paleta:** tylko kolory z `civsim2_palette.gpl`. Ostatnie 8 kolorów (rozszerzenie) czeka na akceptację.
 - **Warstwy (od dołu):** `biome/` → `terrain/` (rzeźba, cechy, rzeki na krawędziach) → `objects/` → `units/`; do tego `effects/`
   (znaczniki zdarzeń) i `ui/` (ikony warstw 16×16, ramki interfejsu 9-slice).
 - **Kolor cywilizacji:** `#FF00FF`, `#C000C0`, `#800080`. Shader podmienia je na barwy cywilizacji.
 - **Światło z lewej góry**, kontury ciemniejszym odcieniem wypełnienia, bez półprzezroczystych krawędzi.
-- **Rozmiary:** biomy, teren, osady, ulepszenia 48×42; jednostki 32×32; ikony złóż 24×24; ikony UI 16×16; portrety 64×64.
+- **Rozmiary nowej gry (2×, `docs/grafika-plan.md`):** biomy i teren 96×84; budynki 32×28 (1 miejsce), 64×28 (2 miejsca),
+  96×84 (cały heks); centra osad 96×84; jednostki 64×64; ikony dóbr 32×32. Stare grafiki gry legacy (osady `objects/`, złoża
+  24×24, jednostki 32×32, ikony UI 16×16) bez zmian. Dokładna lista: `placeholder/manifest.json`.
 - **Interfejs:** motyw na każdą erę, ramki 9-slice (rogi 16×16, krawędzie, tło, przyciski w 3 stanach).
 - **Nazwy plików:** `kategoria_nazwa_wariant.png`, po angielsku, np. `terrain_grassland_02.png`.
 

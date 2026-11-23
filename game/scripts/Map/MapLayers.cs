@@ -221,7 +221,7 @@ public sealed class LayerStack
 
     private static int DefaultOpacity(MapLayer layer) => layer switch
     {
-        MapLayer.Influence => 45,
+        MapLayer.Influence => 20, // 2026-11-23 (Patryk): the people's tint lets the pictures under it read (was 45)
         MapLayer.Hillshade => 50,
         MapLayer.Owner => 60,
         MapLayer.Fog => 100,

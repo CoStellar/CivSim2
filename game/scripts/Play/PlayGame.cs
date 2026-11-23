@@ -19,7 +19,7 @@ public partial class PlayGame : Node2D
 {
     private const float PanSpeed = 900f;
     private const float MinZoom = 0.08f;
-    private const float MaxZoom = 3.5f;
+    private const float MaxZoom = 5f; // G1 (2026-11-23): pictures at twice the hex, so closer is still sharp
 
     private readonly ulong _seed;
     private readonly bool _startPhase;
@@ -378,7 +378,7 @@ public partial class PlayGame : Node2D
         AddChild(new ParchmentBackground()); // the unknown world: an old map, not black
         _map = new MapView(_layers, _art);
         AddChild(_map);
-        _overlay = new PlayOverlay { ZIndex = 50 };
+        _overlay = new PlayOverlay { ZIndex = 50, Art = _art };
         AddChild(_overlay);
         BuildUi();
     }

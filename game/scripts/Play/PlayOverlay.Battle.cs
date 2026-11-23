@@ -125,8 +125,8 @@ public partial class PlayOverlay : Node2D
                 Color color = flanked ? new Color(1f, 0.25f, 0.2f, 0.95f) : ours ? new Color(1f, 0.85f, 0.35f, 0.9f) : new Color(1f, 0.55f, 0.3f, 0.9f);
                 foreach (Vector2 from in Copies(u.Col, u.Row))
                 {
-                    Vector2 a = from + new Vector2(10, -8);
-                    Vector2 b = Nearest(a, HexLayout.Center(target.Col, target.Row) + new Vector2(10, -8));
+                    Vector2 a = from + UnitBody;
+                    Vector2 b = Nearest(a, HexLayout.Center(target.Col, target.Row) + UnitBody);
                     Arrow(g, a, b, color, ranged ? 1.5f : flanked ? 3.5f : 2.5f, ranged);
                 }
             }

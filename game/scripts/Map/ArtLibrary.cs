@@ -18,11 +18,11 @@ public sealed class ArtLibrary
     /// <summary>Variants of each biome tile (GDD 12.2).</summary>
     public const int BiomeVariants = 3;
 
-    /// <summary>Hex tile size in pixels.</summary>
-    public const int TileWidth = 48;
+    /// <summary>Hex tile size in pixels (G1, 2026-11-23: pictures at twice the 48x42 of the map's hex).</summary>
+    public const int TileWidth = 96;
 
     /// <summary>Hex tile height in pixels.</summary>
-    public const int TileHeight = 42;
+    public const int TileHeight = 84;
 
     /// <summary>River edges in drawing order (N, NE, SE, S, SW, NW) as used in the file names.</summary>
     public static readonly string[] RiverEdges = ["n", "ne", "se", "s", "sw", "nw"];
@@ -249,9 +249,9 @@ public sealed class ArtLibrary
         {
             for (int x = 0; x < TileWidth; x++)
             {
-                // Flat-top hex: the slanted sides run from the middle of the left and right edges to 12 px in.
+                // Flat-top hex: the slanted sides run from the middle of the left and right edges a quarter of the width in.
                 float dy = MathF.Abs(y + 0.5f - (TileHeight / 2f)) / (TileHeight / 2f);
-                float inset = 12 * dy;
+                float inset = TileWidth / 4f * dy;
                 if (x + 0.5f >= inset && x + 0.5f <= TileWidth - inset)
                 {
                     image.SetPixel(x, y, color);

@@ -19,7 +19,7 @@ public partial class MapView : Node2D
     public const float TexturedZoom = 0.4f;
 
     private const float RiverBaseWidth = 4f;
-    private const float BorderWidth = 4f;
+    private const float BorderWidth = 2.5f; // 2026-11-23 (Patryk): a thinner border, so the pictures under it read
 
     // Recolouring is spread over frames so switching a layer on a huge map never stalls one frame: chunks about to
     // be drawn for the first time are always done, the rest only while this much time is left in the frame.
@@ -399,7 +399,7 @@ public partial class MapView : Node2D
         }
     }
 
-    // Hex polygon with UVs over the 48×42 tile, so the shader can sample the tile pictures.
+    // Hex polygon with UVs over the hex tile (the pictures are 96×84, twice the hex), so the shader can sample the tile pictures.
     private static ArrayMesh BuildHexMesh(float scale)
     {
         var verts = new Vector2[7];
@@ -679,7 +679,7 @@ public partial class MapView : Node2D
                         }
 
                         // A dark outline under the colour, so borders read on any biome.
-                        borders.Add((Segment(center, AllEdges[e], borderWidth + 3, 0.1f), new Color(0.11f, 0.09f, 0.06f)));
+                        borders.Add((Segment(center, AllEdges[e], borderWidth + 1.5f, 0.1f), new Color(0.11f, 0.09f, 0.06f)));
                         borders.Add((Segment(center, AllEdges[e], borderWidth, 0.12f), OverlayColors.CivColor(owner)));
                     }
                 }

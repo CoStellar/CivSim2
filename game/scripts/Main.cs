@@ -226,6 +226,12 @@ public partial class Main : Node2D
             {
                 demo = [.. demo, (3, g => g.ScriptRoad())];
             }
+            else if (_playWindow is "Close" or "Closest")
+            {
+                // The pictures from near (decisions G1-G6, 2026-11-23): the map zoomed in on our first settlement.
+                float zoom = _playWindow == "Close" ? 3.5f : 5f;
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(zoom))];
+            }
             else if (_playWindow == "Pick")
             {
                 demo = [(5.0, g => g.ScriptMouseClick(new Vector2(800, 450)))];

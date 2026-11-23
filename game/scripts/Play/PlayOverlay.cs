@@ -79,6 +79,114 @@ public partial class PlayOverlay : Node2D
     /// <summary>How far the selected hex is lifted, 0–1 (grows over a tenth of a second after a click).</summary>
     public float Lift { get; private set; }
 
+    /// <summary>Pictures of buildings, settlements and units (decisions G1-G6, 2026-11-23); null: shapes and letters.</summary>
+    public ArtLibrary? Art { get; set; }
+
+    private readonly Dictionary<string, Texture2D?> _sprites = [];
+
+    // A picture with the people's colour in place of the reserved magentas (light, middle, dark: as civ_sprite.gdshader),
+    // or grey all over for what we only remember; made once per picture, colour and greyness.
+    private Texture2D? Sprite(string layer, string name, int civ, bool grey = false)
+    {
+        if (Art is null)
+        {
+            return null;
+        }
+
+        string key = $"{layer}/{name}/{civ}/{grey}";
+        if (_sprites.TryGetValue(key, out Texture2D? cached))
+        {
+            return cached;
+        }
+
+        Image? image = Art.LoadImage(layer, name);
+        Texture2D? tex = null;
+        if (image is not null)
+        {
+            Color color = CivColor(civ);
+            for (int y = 0; y < image.GetHeight(); y++)
+            {
+                for (int x = 0; x < image.GetWidth(); x++)
+                {
+                    Color p = image.GetPixel(x, y);
+                    if (p.A < 0.5f)
+                    {
+                        continue;
+                    }
+
+                    if (p.G < 0.02f && MathF.Abs(p.R - p.B) < 0.02f && p.R > 0.4f)
+                    {
+                        p = p.R > 0.9f ? color.Lerp(Colors.White, 0.25f) : p.R > 0.6f ? color : color * 0.6f;
+                        p.A = 1;
+                    }
+
+                    if (grey)
+                    {
+                        float l = (p.R * 0.3f) + (p.G * 0.59f) + (p.B * 0.11f);
+                        p = new Color(l * 0.95f, l * 0.95f, l * 0.95f, 1);
+                    }
+
+                    image.SetPixel(x, y, p);
+                }
+            }
+
+            tex = ImageTexture.CreateFromImage(image);
+        }
+
+        _sprites[key] = tex;
+        return tex;
+    }
+
+    // Draws a picture as large as fits in the area, keeping its shape, standing on the area's bottom edge.
+    private static void DrawFit(CanvasItem g, Texture2D tex, Rect2 area, Color modulate)
+    {
+        Vector2 size = tex.GetSize();
+        float k = MathF.Min(area.Size.X / size.X, area.Size.Y / size.Y);
+        Vector2 drawn = size * k;
+        var at = new Vector2(area.Position.X + ((area.Size.X - drawn.X) / 2), area.End.Y - drawn.Y);
+        g.DrawTextureRect(tex, new Rect2(at, drawn), false, modulate);
+    }
+
+    // The whole hex around a centre, as the hex pictures (96x84) cover it.
+    private static Rect2 HexRect(Vector2 c, float scale) =>
+        new(c - (new Vector2(HexLayout.HexWidth, HexLayout.HexHeight) * 0.5f * scale), new Vector2(HexLayout.HexWidth, HexLayout.HexHeight) * scale);
+
+    // Where a unit's body is drawn on its hex: the middle with pictures (Patryk, 2026-11-23), beside the centre as a token.
+    private Vector2 UnitBody => Art is null ? new Vector2(10, -8) : new Vector2(0, -6);
+
+    // The hex rectangle shrunk about its centre (a hex picture drawn there stays inside the hex, clear of the border).
+    private static Rect2 HexInner(Vector2 c, float scale, float k)
+    {
+        Vector2 size = new Vector2(HexLayout.HexWidth, HexLayout.HexHeight) * scale * k;
+        return new Rect2(c - (size * 0.5f), size);
+    }
+
+    // G5: one picture per building; its state is shown over it (faded with scaffolding while built, darker when stopped,
+    // a red mark without inputs, a gold frame for priority).
+    private static Color StateModulate(PlayBuildingView b) => b.State switch
+    {
+        0 or 1 or 5 => new Color(1, 1, 1, 0.55f),
+        3 => new Color(0.6f, 0.6f, 0.6f, 1),
+        _ => Colors.White,
+    };
+
+    private static void Scaffold(CanvasItem g, Rect2 r)
+    {
+        var wood = new Color(0.55f, 0.36f, 0.18f, 0.95f);
+        for (float x = r.Position.X + 2; x < r.End.X - 1; x += MathF.Max(5, r.Size.X / 4))
+        {
+            g.DrawLine(new Vector2(x, r.Position.Y + 2), new Vector2(x, r.End.Y), wood, 1.2f);
+        }
+
+        g.DrawLine(new Vector2(r.Position.X + 1, r.Position.Y + (r.Size.Y * 0.45f)), new Vector2(r.End.X - 1, r.Position.Y + (r.Size.Y * 0.45f)), wood, 1.2f);
+    }
+
+    private static void NoInputMark(CanvasItem g, Vector2 at)
+    {
+        g.DrawCircle(at, 4.5f, new Color(0.75f, 0.1f, 0.08f));
+        g.DrawString(UiKit.GlyphFont, at + new Vector2(-4, 4), "!", HorizontalAlignment.Center, 8, 10, Colors.White);
+    }
+
     /// <summary>Colour of a civilization.</summary>
     public static Color CivColor(int civ) => CivColors[((civ % CivColors.Length) + CivColors.Length) % CivColors.Length];
 
@@ -586,7 +694,7 @@ public partial class PlayOverlay : Node2D
 
             foreach (Vector2 c in Copies(u.Col, u.Row))
             {
-                Vector2 p = c + new Vector2(10, -2);
+                Vector2 p = c + (Art is null ? new Vector2(10, -2) : new Vector2(0, 8)); // under the feet of the group
                 g.DrawSetTransform(p, 0, new Vector2(1f, 0.45f));
                 g.DrawCircle(Vector2.Zero, 15 + (2 * pulse), new Color(CivColor(u.Civ), 0.35f + (0.25f * pulse)));
                 g.DrawSetTransform(Vector2.Zero, 0, Vector2.One);
@@ -673,6 +781,31 @@ public partial class PlayOverlay : Node2D
                 continue;
             }
 
+            if (Sprite("units", "unit_" + _content.Units[u.Kind].Key, u.Civ) is { } pic)
+            {
+                // G3: a group of figures standing on its own over the hex: a soft shadow under it, a ring when selected.
+                // Patryk (2026-11-23): the group stands on the middle of its hex, its feet and shadow just below the centre.
+                Vector2 feet = HexLayout.Center(u.Col, u.Row) + new Vector2(0, 8);
+                Ellipse(g, feet, 12, 4, new Color(0, 0, 0, 0.4f));
+                if (picked || u.Fighting)
+                {
+                    EllipseLine(g, feet, 14, 5, picked ? new Color(1f, 0.9f, 0.3f) : Colors.Red, 2);
+                }
+
+                DrawFit(g, pic, new Rect2(feet - new Vector2(16, 30), new Vector2(32, 31)), u.Hidden ? new Color(1, 1, 1, 0.55f) : Colors.White);
+                if (_content.Units[u.Kind].Army && u.Size > 0)
+                {
+                    HealthBar(g, feet + new Vector2(-12, -33), u);
+                }
+
+                if (detail == 2)
+                {
+                    g.DrawString(font, feet + new Vector2(-11, 13), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 11, Colors.White);
+                }
+
+                continue;
+            }
+
             g.DrawCircle(p, 11, u.Hidden ? civ.Darkened(0.6f) : civ.Darkened(0.3f));
             g.DrawArc(p, 11, 0, MathF.Tau, 20, picked ? new Color(1f, 0.9f, 0.3f) : u.Fighting ? Colors.Red : Colors.Black, picked || u.Fighting ? 3 : 1.5f);
             if (u.Cargo is { Length: > 0 } && u.Cargo != "nothing")
@@ -690,6 +823,30 @@ public partial class PlayOverlay : Node2D
                 g.DrawString(font, p + new Vector2(-11, 22), u.People.ToString(System.Globalization.CultureInfo.InvariantCulture), HorizontalAlignment.Center, 22, 12, Colors.White);
             }
         }
+    }
+
+    private static void Ellipse(CanvasItem g, Vector2 c, float rx, float ry, Color color)
+    {
+        var pts = new Vector2[16];
+        for (int k = 0; k < pts.Length; k++)
+        {
+            float a = k * MathF.Tau / pts.Length;
+            pts[k] = c + new Vector2(MathF.Cos(a) * rx, MathF.Sin(a) * ry);
+        }
+
+        g.DrawColoredPolygon(pts, color);
+    }
+
+    private static void EllipseLine(CanvasItem g, Vector2 c, float rx, float ry, Color color, float width)
+    {
+        var pts = new Vector2[17];
+        for (int k = 0; k < pts.Length; k++)
+        {
+            float a = k * MathF.Tau / (pts.Length - 1);
+            pts[k] = c + new Vector2(MathF.Cos(a) * rx, MathF.Sin(a) * ry);
+        }
+
+        g.DrawPolyline(pts, color, width);
     }
 
     private void PaintEffects(CanvasItem g)
@@ -856,6 +1013,12 @@ public partial class PlayOverlay : Node2D
                 }
 
                 bool grey = w.Visibility[i] == MapChunkMessage.Remembered;
+                if (Sprite("terrain", $"terrain_grove_{1 + (int)((uint)(i * 2654435761u) % 3u):D2}", 0, grey) is { } trees)
+                {
+                    g.DrawTextureRect(trees, HexRect(HexLayout.Center(col, row), 1f), false);
+                    continue;
+                }
+
                 Color crown = grey ? Grey(new Color(0.22f, 0.42f, 0.18f)) : new Color(0.22f, 0.42f, 0.18f);
                 Color dark = grey ? Grey(new Color(0.13f, 0.27f, 0.11f)) : new Color(0.13f, 0.27f, 0.11f);
                 Color trunk = grey ? Grey(new Color(0.36f, 0.25f, 0.14f)) : new Color(0.36f, 0.25f, 0.14f);
@@ -1053,6 +1216,58 @@ public partial class PlayOverlay : Node2D
 
         Font font = UiKit.GlyphFont;
         Color civ = CivColor(b.Civ);
+        if (Sprite("buildings", "building_" + t.Key, b.Civ, b.Remembered) is { } pic)
+        {
+            // Patryk (2026-11-23): pictures stay inside their hex, clear of the border: a whole-hex building keeps a margin,
+            // a small one alone on its hex (farther zoom) more.
+            Rect2 area = HexInner(c, scale, t.Size < 4 ? 0.62f : 0.86f);
+
+            DrawFit(g, pic, area, b.Remembered ? Colors.White : StateModulate(b));
+            if (b.Remembered)
+            {
+                return;
+            }
+
+            if (b.State is 0 or 1)
+            {
+                Scaffold(g, area.Grow(-10 * scale));
+            }
+
+            if (b.Priority)
+            {
+                g.DrawPolyline(Closed(Hex(c, 0.92f * scale)), new Color(1f, 0.85f, 0.2f), 2);
+            }
+
+            if (b.Starved && b.State == 2)
+            {
+                NoInputMark(g, c + (new Vector2(14, -12) * scale));
+            }
+
+            if (detail < 2)
+            {
+                return;
+            }
+
+            if (b.State == 5)
+            {
+                bool lost = b.Missing is not null && b.Porters == 0;
+                g.DrawString(font, c + new Vector2(-24, 18), lost ? "missing!" : "goods...", HorizontalAlignment.Center, 48, 12, lost ? new Color(1f, 0.5f, 0.4f) : new Color(0.8f, 0.85f, 1f));
+            }
+            else if (b.State is 0 or 1)
+            {
+                float p = b.ProgressPermille / 1000f;
+                g.DrawLine(c + new Vector2(-14, 16), c + new Vector2(14, 16), new Color(0, 0, 0, 0.8f), 4);
+                g.DrawLine(c + new Vector2(-14, 16), c + new Vector2(-14 + (28 * p), 16), b.State == 1 ? Colors.Orange : Colors.LightGreen, 4);
+            }
+            else if (t.Workers > 0 && b.Workers < t.Workers)
+            {
+                Color w = b.Workers == 0 ? Colors.Red : Colors.Yellow;
+                g.DrawString(font, c + new Vector2(-24, 19), $"{b.Workers}/{t.Workers}", HorizontalAlignment.Center, 48, 11, w);
+            }
+
+            return;
+        }
+
         if (b.Remembered)
         {
             // A building we saw before: grey, as we last saw it (like Age of Empires).
@@ -1101,6 +1316,32 @@ public partial class PlayOverlay : Node2D
     private void DrawInPlaces(CanvasItem g, Vector2 c, PlayBuildingView b, PlayBuildingInfo t, float scale)
     {
         Rect2 r = SlotRect(c, b.Slots, scale);
+        if (Sprite("buildings", "building_" + t.Key, b.Civ, b.Remembered) is { } pic)
+        {
+            DrawFit(g, pic, r.Grow(-1.5f * scale), b.Remembered ? Colors.White : StateModulate(b)); // inside its places, clear of the hex edges
+            if (b.Remembered)
+            {
+                return;
+            }
+
+            if (b.State is 0 or 1)
+            {
+                Scaffold(g, r);
+            }
+
+            if (b.Priority)
+            {
+                g.DrawRect(r, new Color(1f, 0.85f, 0.2f), false, 1.5f);
+            }
+
+            if (b.Starved && b.State == 2)
+            {
+                NoInputMark(g, r.Position + new Vector2(r.Size.X - 2, 2));
+            }
+
+            return;
+        }
+
         Color civ = b.Remembered ? Grey(CivColor(b.Civ)) : CivColor(b.Civ);
         bool built = b.State is 2 or 3;
         Color fill = b.Remembered ? new Color(0.46f, 0.46f, 0.46f, 0.85f) : b.State switch
@@ -1136,6 +1377,17 @@ public partial class PlayOverlay : Node2D
     private void DrawSettlement(CanvasItem g, Vector2 c, PlaySettlementView s, float scale)
     {
         Color civ = s.Remembered ? Grey(CivColor(s.Civ)) : CivColor(s.Civ);
+        if (Sprite("buildings", "settlement_" + _content!.Levels[s.Level].Key, s.Civ, s.Remembered) is { } pic)
+        {
+            DrawFit(g, pic, HexInner(c, scale, 0.88f), Colors.White);
+            if (s.Besieged)
+            {
+                g.DrawPolyline(Closed(Hex(c, 0.9f * scale)), Colors.Red, 3);
+            }
+
+            return;
+        }
+
         float size = (0.55f + (s.Level * 0.1f)) * scale;
         g.DrawPolygon(Hex(c, size), [civ.Darkened(0.45f)]);
         g.DrawPolyline(Closed(Hex(c, size)), s.Besieged ? Colors.Red : civ, s.Besieged ? 5 : 3);
