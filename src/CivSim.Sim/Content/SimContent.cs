@@ -861,6 +861,9 @@ public sealed class SimContent
     /// </summary>
     public int AiInputMakerStoreMinutes { get; init; } = 10;
 
+    /// <summary>Prospectors the AI keeps while workshops lack an ore no known free deposit gives (known-issues 13); else one.</summary>
+    public int AiStarvedProspectors { get; init; } = 2;
+
     /// <summary>Most standing input routes the AI keeps, per settlement it has.</summary>
     public int AiInputRoutesPerSettlement { get; init; } = 4;
 
@@ -1915,6 +1918,7 @@ public sealed class SimContent
             AiInputRouteTargetMinutes = root.TryProp("ai", out JsonElement aiEl7) && aiEl7.TryProp("inputRouteTargetMinutes", out JsonElement irg) ? irg.GetInt32() : 6,
             AiInputRouteKeepMinutes = root.TryProp("ai", out JsonElement aiEl8) && aiEl8.TryProp("inputRouteKeepMinutes", out JsonElement irk) ? irk.GetInt32() : 2,
             AiInputMakerStoreMinutes = root.TryProp("ai", out JsonElement aiEl10) && aiEl10.TryProp("inputMakerStoreMinutes", out JsonElement ims) ? ims.GetInt32() : 10,
+            AiStarvedProspectors = root.TryProp("ai", out JsonElement aiEl11) && aiEl11.TryProp("starvedProspectors", out JsonElement asp) ? asp.GetInt32() : 2,
             AiInputRoutesPerSettlement = root.TryProp("ai", out JsonElement aiEl9) && aiEl9.TryProp("inputRoutesPerSettlement", out JsonElement irs) ? irs.GetInt32() : 4,
             FoodLowMinutes = root.TryProp("alerts", out JsonElement alEl) && alEl.TryProp("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryProp("upgradeCaravans", out JsonElement ucEl)

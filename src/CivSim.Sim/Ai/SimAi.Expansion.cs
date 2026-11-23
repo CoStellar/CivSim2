@@ -70,7 +70,9 @@ public static partial class SimAi
             return;
         }
 
-        bool any = Own(g, civ, x => x.Survey > 0) > 0; // one at a time: prospectors once ores matter, else surveyors
+        int surveying = Own(g, civ, x => x.Survey > 0); // one at a time: prospectors once ores matter, else surveyors
+        // Known-issues 13 (2026-11-23): while workshops stand idle for an ore no known deposit gives, more prospectors.
+        bool starved = civ.Era >= 1 && Array.IndexOf(StarvedDeposits(g, civ), true) >= 0;
 
         foreach (UnitType t in g.Content.Units)
         {
@@ -80,7 +82,8 @@ public static partial class SimAi
             }
 
             bool wanted = t.Survey == 1 ? civ.Era >= 1 : civ.Era == 0;
-            if (!any && wanted && !Small(g, civ) && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
+            int cap = t.Survey == 1 && starved ? g.Content.AiStarvedProspectors : 1;
+            if (surveying < cap && wanted && !Small(g, civ) && Own(g, civ, x => x.Founds) == 0 && Affordable(civ, t.Price, 50)
                 && Own(g, civ, _ => true) == Own(g, civ, _ => true, includeTraining: false))
             {
                 g.Apply(new TrainCommand(civ.Id, civ.Settlements[0], t.Id));
@@ -106,7 +109,7 @@ public static partial class SimAi
                 Settlement home = g.Settlements[civ.Settlements[(int)(Mix(ref z) % (ulong)civ.Settlements.Count)]];
                 HexCoord c = g.Geo.FromIndex(home.Center);
                 // 7A (2026-11-20): while a deposit we need is not found (iron 15-20 hexes away), prospectors look farther.
-                bool far = t.Survey == 1 && Array.IndexOf(WantedDeposits(g, civ), true) >= 0;
+                bool far = t.Survey == 1 && (starved || Array.IndexOf(WantedDeposits(g, civ), true) >= 0);
                 int wide = far ? 22 : 12;
                 int tall = far ? 18 : 9;
                 for (int tries = 0; tries < 16; tries++)
