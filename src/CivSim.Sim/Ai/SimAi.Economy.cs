@@ -285,7 +285,7 @@ public static partial class SimAi
     }
 
     // The buildable maker of an input the building lacks (none in store and none made), or null.
-    private static string? InputMaker(SimGame g, Civ civ, BuildingType b)
+    internal static string? InputMaker(SimGame g, Civ civ, BuildingType b)
     {
         for (int i = 0; i < b.Consumes.Length; i++)
         {
