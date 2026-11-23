@@ -231,6 +231,11 @@ public partial class Main : Node2D
                 // Placing a building (2026-11-23): the free places of every hex it may go on show as slots.
                 demo = [(_playSeconds - 2, g => g.ScriptPlace("potter")), (_playSeconds - 1.5, g => g.ScriptZoom(2.2f))];
             }
+            else if (_playWindow == "PanelEnd")
+            {
+                // The end of the side panel (training buttons and the like), 2026-11-23.
+                demo = [.. demo, (_playSeconds - 0.8, g => g.ScriptPanelEnd())];
+            }
             else if (_playWindow == "Ways")
             {
                 // The roads and works tab of the bar with its pictures, over the map from near (2026-11-23).

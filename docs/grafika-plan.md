@@ -267,4 +267,12 @@ i okno zrzutu `--play-window Ways` (zakładka dróg na pasku, mapa z bliska).
   z daleka lekki odcień heksa.
 
 Podgląd w grze: scenariusz `13_deposits`.
+## 14. Obrazki w panelu bocznym: szkolenie i nagłówki (2026-11-23)
+
+- **Przyciski szkolenia** (sekcja TRAIN) pokazują figurki jednostki w kolorze naszego ludu zamiast liter („Se”, „Sc”…).
+  Obrazek jest przycięty do samych figurek, więc wypełnia przycisk; jednostka, której nie można szkolić, jest przyciemniona.
+- **Nagłówki panelu** mają obrazek tego, co zaznaczone: osada (jej centrum), budynek, oddział i heks (teren). Obce osady,
+  budynki i oddziały są w kolorze ich ludu, zapamiętane (poza wzrokiem) na szaro.
+
+Podgląd w grze: okno zrzutu `--play-window PanelEnd` (panel przewinięty do przycisków szkolenia).
 
