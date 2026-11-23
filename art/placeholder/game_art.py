@@ -796,9 +796,13 @@ def sign_big(c, kind):
 
 # ------------------------------------------------------------------------------------------------ hex tiles at 2x
 
+# Grounds closer to the old CivSim grass (Patryk, 2026-11-23): deeper greens than the data's map colours.
+OLD_GROUND = {"grassland": (79, 132, 47)}
+
+
 def biome_tile(key, color, variant):
     rnd = random.Random(f"{key}-{variant}-2x")
-    base = P(color)
+    base = P(OLD_GROUND.get(key, color))
     light, dark = sh(base, 1), sh(base, -1)
     c = canvas(HW, HH)
     for y in range(HH):
@@ -1028,6 +1032,35 @@ def generate(root):
         unit(u["key"]).save("units", f"unit_{u['key']}")
     for g in d["goods"]:
         good(g["key"]).save("goods", f"good_{g['key']}")
+    finish(root)
+
+
+# Patryk's own icons from the first CivSim (art/legacy/map_visuals, 32x32), used as they are for these goods.
+OLD_ICONS = {"food": "wheat", "wood": "wood_log", "stone": "stone", "iron": "iron", "hides": "cow"}
+
+GRASS = ("grassland", "savanna", "steppe", "deciduous_forest", "jungle", "taiga", "swamp", "tundra")
+
+
+def finish(root):
+    """The look of the first CivSim over everything drawn above (Patryk, 2026-11-23): a texture on every surface,
+    upright grass strokes on grounds, and Patryk's old icons for the goods they show."""
+    from PIL import Image
+    out = os.path.join(root, "art", "placeholder")
+    for layer in ("biome", "terrain", "buildings", "units", "goods"):
+        folder = os.path.join(out, layer)
+        for name in sorted(os.listdir(folder)):
+            if not name.endswith(".png") or (layer == "units" and name.endswith("_idle_01.png")):
+                continue  # the legacy units keep their look
+            path = os.path.join(folder, name)
+            im = Image.open(path).convert("RGBA")
+            key = name[:-4]
+            grass = layer == "biome" and any(key.startswith(f"biome_{g}_") for g in GRASS)
+            texturize(im, seed=sum(map(ord, key)), strength=1.3 if layer == "biome" else 1.0, strokes=grass)
+            im.save(path)
+    for good_key, old in OLD_ICONS.items():
+        src = os.path.join(root, "art", "legacy", "map_visuals", old + ".png")
+        if os.path.exists(src):
+            Image.open(src).convert("RGBA").save(os.path.join(out, "goods", f"good_{good_key}.png"))
 
 
 # ------------------------------------------------------------------------------------------------ texture (old CivSim look)
@@ -1049,7 +1082,7 @@ def _noise(x, y, seed, cell):
     return top + (bot - top) * fy
 
 
-def texturize(im, seed=1, strength=1.0, outline=OUTLINE):  # 2026-11-23: a trial, not used yet (waits for Patryk)
+def texturize(im, seed=1, strength=1.0, outline=OUTLINE, strokes=False):
     """The old CivSim texture over flat colours: every pixel of a surface takes a lighter or darker palette tone by a mix of
     blotchy and fine noise, wood in horizontal grain, so grass, stone and wood read as materials. The outline, the
     civilization magentas and tiny details (lone pixels) stay as drawn."""
@@ -1069,7 +1102,10 @@ def texturize(im, seed=1, strength=1.0, outline=OUTLINE):  # 2026-11-23: a trial
             if same < 3:
                 continue
             woody = r > g > b and r - b > 60 and r < 200  # browns: grain along the board
-            n = 0.6 * _noise(x, y * (4 if woody else 1), seed, 3) + 0.4 * _hash(x, y, seed + 7)
+            if strokes:  # grass: short upright strokes, as in the old CivSim grass
+                n = 0.55 * _noise(x * 3, y, seed, 4) + 0.45 * _hash(x, y // 2, seed + 7)
+            else:
+                n = 0.6 * _noise(x, y * (4 if woody else 1), seed, 3) + 0.4 * _hash(x, y, seed + 7)
             step = 0
             if n > 1 - 0.22 * strength:
                 step = 1

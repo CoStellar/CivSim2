@@ -186,3 +186,17 @@ Stan (2026-11-23):
 
 Walidator paczek sprawdza rozmiar każdego pliku z `art/placeholder/manifest.json`. Plik w starym rozmiarze (np. biom 48×42) jest pomijany z komunikatem „must be 96×84 px”.
 
+## 9. Wygląd pierwszego CivSim (decyzja Patryka z 2026-11-23: wszystkie trzy rekomendacje)
+
+Porównanie z grafikami pierwszego CivSim (`art/legacy/`, 32×32): ich styl to gęsta faktura na każdej powierzchni (trawa w plamach
+i pociągnięciach, kamień w plamach szarości, słoje drewna), bryła ze światłem i cieniem na kształcie, mocny ciemny obrys, obiekty
+wypełniające kafel i nasycone akcenty (czerwone dachy, flagi).
+
+1. **Stare ikony Patryka jako ikony dóbr:** zboże (`food`), drewno, kamień, żelazo, krowa (`hides`), bez zmian (zrobione).
+2. **Faktura starego CivSim na wszystkich grafikach nowej gry** (`texturize` w `game_art.py`): każdy piksel powierzchni bierze
+   jaśniejszy albo ciemniejszy odcień tej samej barwy z palety według szumu; na trawach krótkie pionowe pociągnięcia, na brązach
+   słoje; obrys, magenty i pojedyncze piksele detali zostają. Trawa ma ciemniejszą zieleń (`#4F842F` zamiast koloru mapy `#7BA154`)
+   (zrobione).
+3. **Przerysowanie z bryłą** najważniejszych obiektów: centra osad według starego zamku, głazy i kopalnie według starego kamienia,
+   jednostki z hełmami i bronią jak stary rycerz, ikony dóbr wypełniające kafel (osobny PR).
+
