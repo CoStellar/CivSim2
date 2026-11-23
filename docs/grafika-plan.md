@@ -226,3 +226,14 @@ wypełniające kafel i nasycone akcenty (czerwone dachy, flagi).
   - panele z ciemnego kamienia w blokach, paski ze skóry ze ściegiem, przyciski z kamienia (wciśnięty: drewno), dymek z pergaminu;
   - wzór powtarza się, zamiast się rozciągać.
 
+## 11. Kolory cywilizacji na budynkach (prośba Patryka z 2026-11-23)
+
+Kolor ludu (magenty podmieniane przez grę) jest teraz na każdym budynku, zawsze w tych samych miejscach i bez faktury:
+- **okap dachu**, czyli dwa dolne rzędy dachu (widać go z daleka);
+- **malowane drzwi**;
+- **proporczyk** na szczycie dachu budynku na 1 miejscu, **chorągiew** na hali budynku na 2 miejscach;
+- **pas na namiocie**, chorągwie na zamku, flagi na polach, kopalniach i w portach.
+
+Podgląd wszystkich budynków i porównanie 8 kolorów: `python3 -I art/placeholder/showcase.py <katalog>` (zapisuje
+`showcase_all.png` i `showcase_colours.png`).
+
