@@ -44,5 +44,5 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 - Zarządca i prowincje (`claude/decyzje-skalowanie.md`).
 - AI na statkach.
 - Przenoszenie mieszkańców za opłatą (złoże pod osadą) i przenosiny osad.
-- Grafika pixel art Patryka w miejsce grafik zastępczych.
+- Grafika pixel art Patryka w miejsce grafik zastępczych. Plan, lista wszystkich grafik i inspiracje: `docs/grafika-plan.md` (decyzje G1–G6 czekają na Patryka); grafiki zastępcze nowej gry mogą wejść już w trakcie testów demo.
 - Multiplayer przez sieć.
