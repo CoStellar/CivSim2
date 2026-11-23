@@ -725,6 +725,12 @@ public sealed class SimContent
     /// <summary>Least growth per minute (people).</summary>
     public int MinGrowthPerMinute { get; init; }
 
+    /// <summary>
+    /// Patryk, 2026-11-22 (variant C): a settlement whose food falls stops growing while less than this many rations of food
+    /// are left (growth.stopBelowRations; 0 = only an empty store stops it).
+    /// </summary>
+    public int GrowthStopRations { get; init; } = 2;
+
     /// <summary>Starvation loss percent per minute.</summary>
     public int StarvePercentPerMinute { get; init; }
 
@@ -1625,6 +1631,7 @@ public sealed class SimContent
             RiversFreeEra = root.TryGetProperty("rivers", out JsonElement rv) ? eras.FindIndex(e => e.Key == rv.GetProperty("freeFromEra").GetString()) is int rfe && rfe >= 0 ? rfe : int.MaxValue : int.MaxValue,
             GrowthPercentPerMinute = growth.GetProperty("growthPercentPerMinute").GetInt32(),
             MinGrowthPerMinute = growth.GetProperty("minGrowthPerMinute").GetInt32(),
+            GrowthStopRations = growth.TryGetProperty("stopBelowRations", out JsonElement sbr) ? sbr.GetInt32() : 2,
             StarvePercentPerMinute = growth.GetProperty("starvePercentPerMinute").GetInt32(),
             ResumeCostPercent = root.GetProperty("resumeCostPercent").GetInt32(),
             Rations = root.TryGetProperty("rations", out JsonElement ra)

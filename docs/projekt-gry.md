@@ -72,6 +72,8 @@ Projektu (`claude/projekt-gry.md`); przy zmianach aktualizujemy obie. **Najpierw
   - osady.
 - **Zawody** jak dziś (wytwórcy, rzemieślnicy, wojownicy, myśliciele…). Gracz widzi liczby i może wymusić zapotrzebowanie. Prosta wersja.
 - **Ludność** rośnie z dostatku, podbojów, jedzenia i liczby oraz wielkości domów. Ich brak ją ogranicza.
+  Osada przestaje rosnąć, gdy jedzenia jej ubywa, a zostało go na mniej niż dwie racje (decyzja Patryka z 2026-11-22, wariant C);
+  panel osady mówi wtedy dlaczego, a kronika to odnotowuje.
 - **Osady zakłada i awansuje gracz,** gdy ma zasoby. Lud nie ruszy się sam.
 - **Przenosiny osady:**
   - obóz traci część zasobów;

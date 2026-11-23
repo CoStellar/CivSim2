@@ -21,6 +21,7 @@ gdy znajdziesz nowy, dopisz go z datą, źródłem i tym, co już wiadomo. Probl
 
 | Problem | PR |
 | --- | --- |
+| Lud bez miejsca na nowe pola dorastał do domów i głodował co zimę (wzrost patrzył tylko na domy i jedzenie w magazynie); teraz wzrost staje, gdy jedzenia ubywa i zostało < 2 racje (wariant C) | `feat/growth-needs-food` |
 | Scenariusze: dodatkowe osady (`settlements`) zaczynały z pustym magazynem (w 04 jedzenie kończyło się po 28 s); teraz dostają zapas startowy (120 jedzenia, 100 drewna, 20 kamienia) | `docs/known-issues-before-demo` |
 | Wolny neolit, pierwszy narzędziarz ok. 13. minuty: teraz neolit 6,2 min, narzędziarz 10 min u wszystkich ludów | #129 |
 | Głód oddziału w polu niewidoczny w panelu: panel pokazuje juki, stan głodu i dowóz | sprawdzone 2026-11-21 (#131) |

@@ -31,6 +31,11 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 - Środek osady i ziemia w promieniu poziomu: obóz 3, wioska 4, miasteczko 5, miasto 6 heksów.
 - Poziom daje domy i magazyn; awans kosztuje dobra i od razu poszerza ziemię.
 - Ludzie rosną 8% na minutę (co najmniej 1), dopóki są domy i jedzenie w magazynie. Głód i śmierć z głodu przychodzą przy racjach (niżej).
+- **Wzrost staje przy ubywającym jedzeniu** (wariant C, decyzja Patryka z 2026-11-22): gdy osada je więcej, niż robi, a jedzenia zostało
+  na mniej niż 2 racje (`growth.stopBelowRations`), nie rośnie. Panel osady dopisuje do bilansu jedzenia „It does not grow while its food
+  falls…”, a kronika odnotowuje to najwyżej raz na 5 minut. Kod: `SimGame.FoodStopsGrowth`, `PopulationStep`.
+  Pomiar (12 gier × 120 min): z poprawkami AI z PR #134 i #139 głód 3,4% → 2,2%, ludzie bez zmian, średniowiecze 69 → 67 min;
+  na samym `development` głód 16,2% → 12,8%, ludzie 13 033 → 10 549, tempo er bez zmian.
 
 ## Budynki
 
