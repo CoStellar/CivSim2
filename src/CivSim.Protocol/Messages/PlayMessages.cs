@@ -145,7 +145,8 @@ public sealed record PlayContentMessage(
     [property: Key(17)] int[]? ArmourPercent = null,
     [property: Key(18)] PlayCombatInfo? Combat = null,
     [property: Key(19)] string[]? VeteranOptions = null,
-    [property: Key(20)] int[]? VeteranLevels = null) : IProtocolMessage;
+    [property: Key(20)] int[]? VeteranLevels = null,
+    [property: Key(21)] int[]? PeaceMinutes = null) : IProtocolMessage;
 
 /// <summary>
 /// Numbers of battle the client shows on hexes (cover markers): cover of trees, palisade and wall against ranged and melee,
@@ -216,7 +217,11 @@ public sealed record PlaySettlementView(
 [MessagePackObject]
 public sealed record PlayRouteView([property: Key(0)] int Index, [property: Key(1)] int From, [property: Key(2)] int To, [property: Key(3)] int Good, [property: Key(4)] int Amount, [property: Key(5)] bool OnTheRoad, [property: Key(6)] int[]? Path = null);
 
-/// <summary>Another people as the player knows it.</summary>
+/// <summary>
+/// Another people as the player knows it. At war (ADR 0030): <c>Favour</c> is how much the course of the war favours us, percent
+/// of the loser's wealth (above 0 we may demand); weariness 0-100 of both sides; their goods we know (whole units, by good index);
+/// settlements of theirs we may demand; the suggested terms as [we give 0/1, length index, settlement or -1, good, amount, ...].
+/// </summary>
 [MessagePackObject]
 public sealed record PlayPeopleView(
     [property: Key(0)] int Civ,
@@ -224,15 +229,24 @@ public sealed record PlayPeopleView(
     [property: Key(2)] bool AtWar,
     [property: Key(3)] int OurScore,
     [property: Key(4)] int TheirScore,
-    [property: Key(5)] int SuggestedTribute,
+    [property: Key(5)] int Favour,
     [property: Key(6)] int Reputation,
-    [property: Key(7)] int? TheyOfferTribute,
+    [property: Key(7)] string? TheirPeace,
     [property: Key(8)] bool Dead,
     [property: Key(9)] bool Trade = false,
     [property: Key(10)] bool Alliance = false,
     [property: Key(11)] bool TheyOfferTrade = false,
     [property: Key(12)] bool TheyOfferAlliance = false,
-    [property: Key(13)] string? TheirBarter = null);
+    [property: Key(13)] string? TheirBarter = null,
+    [property: Key(14)] int OurWeariness = 0,
+    [property: Key(15)] int TheirWeariness = 0,
+    [property: Key(16)] long[]? TheirGoods = null,
+    [property: Key(17)] int[]? Demandable = null,
+    [property: Key(18)] int[]? Suggested = null,
+    [property: Key(19)] int OurWorkLoss = 0,
+    [property: Key(20)] bool WeStarted = false,
+    [property: Key(21)] bool TheyStarted = false,
+    [property: Key(22)] long FairWorth = 0);
 
 /// <summary>A building as the player sees it. State: 0 construction, 1 paused construction, 2 working, 3 stopped.</summary>
 [MessagePackObject]
@@ -405,7 +419,10 @@ public enum PlayCommandKind
     /// <summary>Unit <c>A</c> attacks what stands on (<c>Col</c>, <c>Row</c>).</summary>
     Attack = 13,
 
-    /// <summary>Offer peace to people <c>A</c>; <c>B</c> is the tribute in percent (above 0 they pay, below 0 we pay).</summary>
+    /// <summary>
+    /// Offer peace to people <c>A</c> (ADR 0030): <c>B</c> the length (index into the content's peace minutes), <c>C</c> the
+    /// settlement demanded or given plus one (0 = none), <c>Cells</c> pairs of good and whole amount; <c>Flag</c>: we give them.
+    /// </summary>
     ProposePeace = 14,
 
     /// <summary>Answer the peace offer of people <c>A</c> (accept when <c>Flag</c>).</summary>

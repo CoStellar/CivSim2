@@ -325,6 +325,7 @@ public sealed partial class SimGame
 
         if (Ticks % SimContent.TicksPerMinute == 0)
         {
+            WearinessStep();
             Sample();
             CheckGoal();
         }

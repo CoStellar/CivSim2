@@ -19,6 +19,7 @@ public sealed partial class SimGame
         }
 
         Add(roads);
+        HashPeace(Add);
         foreach (Civ c in Civs)
         {
             Add(c.People);

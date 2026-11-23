@@ -349,6 +349,7 @@ public sealed partial class SimGame
             {
                 SetTreaty(c, attacker, TreatyKind.Trade, false);
                 SetWar(c, attacker, true);
+                MarkAggressor(attacker, c); // 7.3A: the ally was attacked too
                 NewsAbout(c, attacker, $"{Civs[c].Name} stand by their ally {Civs[victim].Name} and go to war with {Civs[attacker].Name}.");
             }
         }

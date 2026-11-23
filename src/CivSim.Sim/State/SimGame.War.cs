@@ -11,10 +11,8 @@ public sealed record DeclareWarCommand(int Civ, int Other) : SimCommand(Civ);
 /// <summary>Send an army unit to attack what stands on a hex (an enemy unit or settlement).</summary>
 public sealed record AttackCommand(int Civ, int Unit, int Cell) : SimCommand(Civ);
 
-/// <summary>
-/// Offer peace. <paramref name="TributePercent"/> above 0: the other people pays that share of every good to us; below 0: we pay.
-/// </summary>
-public sealed record ProposePeaceCommand(int Civ, int Other, int TributePercent) : SimCommand(Civ);
+/// <summary>Offer peace on the given terms (ADR 0030): goods, maybe a settlement, and the length of peace.</summary>
+public sealed record ProposePeaceCommand(int Civ, int Other, PeaceTerms Terms) : SimCommand(Civ);
 
 /// <summary>Answer a peace offer from <paramref name="From"/>.</summary>
 public sealed record AnswerPeaceCommand(int Civ, int From, bool Accept) : SimCommand(Civ);
@@ -23,7 +21,7 @@ public sealed record AnswerPeaceCommand(int Civ, int From, bool Accept) : SimCom
 public sealed record DisbandCommand(int Civ, int Unit) : SimCommand(Civ);
 
 /// <summary>A peace offer waiting for an answer.</summary>
-public sealed record PeaceOffer(int From, int To, int TributePercent, long Tick);
+public sealed record PeaceOffer(int From, int To, PeaceTerms Terms, long Tick);
 
 public sealed partial class SimGame
 {
@@ -41,9 +39,6 @@ public sealed partial class SimGame
     /// <summary>War score of <paramref name="a"/> against <paramref name="b"/>: enemies killed plus settlements taken.</summary>
     public int Score(int a, int b) => Scores()[(a * Civs.Count) + b];
 
-    /// <summary>The tribute in percent that the course of the war suggests <paramref name="b"/> pays <paramref name="a"/> (negative: a pays).</summary>
-    public int SuggestedTribute(int a, int b) => Math.Clamp((Score(a, b) - Score(b, a)) / 5, -30, 30);
-
     private int[] War() => _war ??= new int[Civs.Count * Civs.Count];
 
     private int[] Scores() => _score ??= new int[Civs.Count * Civs.Count];
@@ -56,6 +51,9 @@ public sealed partial class SimGame
         War()[(b * Civs.Count) + a] = war ? 1 : 0;
         if (war)
         {
+            Aggressors()[(a * Civs.Count) + b] = false;
+            Aggressors()[(b * Civs.Count) + a] = false;
+
             // 1C (Patryk, 2026-11-20): the score of a war counts from its start, not over the whole game.
             Scores()[(a * Civs.Count) + b] = 0;
             Scores()[(b * Civs.Count) + a] = 0;
@@ -112,8 +110,10 @@ public sealed partial class SimGame
         }
 
         bool truce = Truces()[(civ.Id * Civs.Count) + other] > Ticks;
+        int breakPct = truce && TruceBreaks()[(civ.Id * Civs.Count) + other] > 0 ? TruceBreaks()[(civ.Id * Civs.Count) + other] : 100;
         bool treaty = Has(civ.Id, other, TreatyKind.Trade);
         SetWar(civ.Id, other, true);
+        MarkAggressor(civ.Id, other); // 7.3A
         TreatiesOnWar(civ.Id, other);
         if (treaty)
         {
@@ -121,7 +121,7 @@ public sealed partial class SimGame
         }
         if (surprise || truce)
         {
-            AddReputation(civ, Content.War.SurpriseReputation);
+            AddReputation(civ, Content.War.SurpriseReputation * (truce ? breakPct : 100) / 100); // 3B: a long peace broken costs more
             NewsAbout(civ.Id, other, $"{civ.Name} attacked {Civs[other].Name} {(surprise ? "without declaring war" : "breaking a truce")}.");
         }
         else
@@ -198,22 +198,26 @@ public sealed partial class SimGame
         return null;
     }
 
-    private string? ProposePeace(Civ civ, int other, int tribute)
+    private string? ProposePeace(Civ civ, int other, PeaceTerms terms)
     {
         if ((uint)other >= (uint)Civs.Count || !AtWar(civ.Id, other))
         {
             return "We are not at war with them.";
         }
 
-        long left = WarStart(civ.Id, other) + Content.War.TributeAfterTicks - Ticks;
-        if (tribute != 0 && left > 0)
+        if (terms is null)
         {
-            return $"Tribute can be asked for only after {Content.War.TributeAfterTicks / SimContent.TicksPerSecond} s of war ({(left + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond} s more); peace without tribute is possible now.";
+            return "Name the terms.";
+        }
+
+        if (TermsRefused(civ, Civs[other], terms) is string refused)
+        {
+            return refused;
         }
 
         PeaceOffers.RemoveAll(o => o.From == civ.Id && o.To == other);
-        PeaceOffers.Add(new PeaceOffer(civ.Id, other, Math.Clamp(tribute, -50, 50), Ticks));
-        News.Add((other, $"{civ.Name} offer peace" + (tribute > 0 ? $" if we pay {tribute}% of our goods." : tribute < 0 ? $" and {-tribute}% of their goods." : ".")));
+        PeaceOffers.Add(new PeaceOffer(civ.Id, other, terms, Ticks));
+        News.Add((other, $"{civ.Name} offer {TermsText(terms, civ.Id, other)}."));
         return null;
     }
 
@@ -232,59 +236,17 @@ public sealed partial class SimGame
             return null;
         }
 
-        MakePeace(Civs[from], civ, offer.TributePercent);
+        // The goods named may have gone in the meantime: what is still there is given (MakePeace takes at most the store).
+        MakePeace(Civs[from], civ, offer.Terms);
         return null;
     }
 
-    /// <summary>Ends the war between two peoples; the tribute goes from <paramref name="b"/> to <paramref name="a"/> (negative: back).</summary>
-    public void MakePeace(Civ a, Civ b, int tributePercent)
+    /// <summary>Ends the war between two peoples with a white peace of the given length (tests and scenarios).</summary>
+    public void MakePeace(Civ a, Civ b, int length = 0)
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
-        Civ payer = tributePercent >= 0 ? b : a;
-        Civ taker = tributePercent >= 0 ? a : b;
-        int pct = Math.Abs(tributePercent);
-        if (pct > 0 && payer.Settlements.Count > 0 && taker.Settlements.Count > 0)
-        {
-            // The tribute travels in a caravan from the payer's settlement nearest the taker.
-            (Settlement from, Settlement to) = ClosestPair(payer, taker);
-            var load = new long[Content.Goods.Count];
-            for (int g = 0; g < load.Length; g++)
-            {
-                long total = 0;
-                foreach (int sid in payer.Settlements)
-                {
-                    total += Settlements[sid].Stock[g];
-                }
-
-                load[g] = total * (g == Content.Food ? Math.Min(pct, Content.War.TributeFoodMaxPercent) : pct) / 100; // E3: food capped
-                TakeFromCiv(payer, from, g, load[g]);
-                load[g] = Math.Min(load[g], from.Stock[g]);
-            }
-
-            Unit c = NewCarrier(payer, Content.Caravans, from, NearestStore(from, to.Center), load, 100);
-            c.Job = CarrierJob.ToSettlement;
-            c.Target = to.Id;
-            Walk(c, NearestStore(to, from.Center));
-            SyncTotals(payer);
-        }
-
-        SetWar(a.Id, b.Id, false);
-        PeaceMade(a.Id, b.Id);
-        long truce = Ticks + (Content.War.TruceSeconds * SimContent.TicksPerSecond);
-        Truces()[(a.Id * Civs.Count) + b.Id] = truce;
-        Truces()[(b.Id * Civs.Count) + a.Id] = truce;
-        foreach (Unit u in Units)
-        {
-            if ((u.Civ == a.Id && (u.TargetUnit >= 0 && Units[u.TargetUnit].Civ == b.Id || u.TargetSettlement >= 0 && Settlements[u.TargetSettlement].Civ == b.Id))
-                || (u.Civ == b.Id && (u.TargetUnit >= 0 && Units[u.TargetUnit].Civ == a.Id || u.TargetSettlement >= 0 && Settlements[u.TargetSettlement].Civ == a.Id)))
-            {
-                u.TargetUnit = -1;
-                u.TargetSettlement = -1;
-            }
-        }
-
-        NewsAbout(a.Id, b.Id, $"{a.Name} and {b.Name} made peace" + (pct > 0 ? $"; {payer.Name} pay {pct}% of their goods." : "."));
+        MakePeace(a, b, PeaceTerms.White(length));
     }
 
     private string? Disband(Civ civ, int id)
@@ -440,6 +402,11 @@ public sealed partial class SimGame
             News.Add((unit.Civ, $"The caravan with goods for {Settlements[unit.Target].Name} was raided: it does not grow this time."));
         }
 
+        if (carrier)
+        {
+            AddWeariness(unit.Civ, byCiv, Content.Weariness.CaravanRaided * 100L);
+        }
+
         Gone(unit); // first: the site still counts this load as on the way
         LoseLoad(unit, byCiv);
         if (!carrier)
@@ -494,6 +461,7 @@ public sealed partial class SimGame
         if (guard + residents > 0)
         {
             Scores()[(attacker.Civ * Civs.Count) + target.Civ] += guard + residents;
+            AddLoss(target.Civ, attacker.Civ, guard + residents);
             Credit(attacker.Civ, attacker.Kind, guard + residents);
         }
 
@@ -507,6 +475,7 @@ public sealed partial class SimGame
             attacker.People -= lost;
             Wound(attacker, lost);
             Scores()[(target.Civ * Civs.Count) + attacker.Civ] += lost;
+            AddLoss(attacker.Civ, target.Civ, lost);
             if (attacker.People <= 0)
             {
                 Unwatch(attacker);
@@ -523,9 +492,10 @@ public sealed partial class SimGame
         }
     }
 
-    private void Capture(Civ winner, Settlement s)
+    private void Capture(Civ winner, Settlement s, bool byPeace = false)
     {
         Civ loser = Civs[s.Civ];
+        AddWeariness(loser.Id, winner.Id, Content.Weariness.Taken * 100L);
         loser.Settlements.Remove(s.Id);
         winner.Settlements.Add(s.Id);
         s.Civ = winner.Id;
@@ -549,11 +519,15 @@ public sealed partial class SimGame
             }
         }
 
-        Scores()[(winner.Id * Civs.Count) + loser.Id] += 50;
+        if (!byPeace)
+        {
+            Scores()[(winner.Id * Civs.Count) + loser.Id] += 50;
+        }
+
         Watch(s); // the loser stops seeing from it, the winner starts
         winner.Dirty = true;
         loser.Dirty = true;
-        NewsAbout(winner.Id, loser.Id, $"{winner.Name} took {s.Name} from {loser.Name}.");
+        NewsAbout(winner.Id, loser.Id, byPeace ? $"{s.Name} passes from {loser.Name} to {winner.Name} by the peace." : $"{winner.Name} took {s.Name} from {loser.Name}.");
         if (loser.Settlements.Count == 0)
         {
             Perish(loser, winner);

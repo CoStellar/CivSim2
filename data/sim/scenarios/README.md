@@ -43,3 +43,6 @@ enemy stands still (no AI).
 
 War scenario (2026-11-20): `10_siege_supply`: march on a far enemy town that does not attack; provisions in the field, food
 caravans to units, the blockade, guard and fighting residents, then take, sack or raze.
+
+Peace scenario (2026-11-23, ADR 0030): `11_peace` (war from the start with a people of three settlements: the peace window,
+suggested terms, demanding a besieged settlement, the length of peace and war weariness). `03_war_bronze` tests fighting only (`noPeace`).

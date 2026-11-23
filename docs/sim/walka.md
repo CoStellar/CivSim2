@@ -248,7 +248,7 @@ Gracz wybiera w opisie oddziału (przyciski pojawiają się po nowym poziomie). 
 
 | Nr | Zasada | Dane |
 | --- | --- | --- |
-| 1C | Wynik wojny liczy się od początku bieżącej wojny (przy wypowiedzeniu zeruje się dla obu stron). Pokój z trybutem można zaproponować dopiero 120 s po wypowiedzeniu; zwykły pokój zawsze | `war.tributeAfterSeconds` |
+| 1C | Wynik wojny liczy się od początku bieżącej wojny (przy wypowiedzeniu zeruje się dla obu stron). Pokój z żądaniami można zaproponować dopiero 120 s po wypowiedzeniu; biały pokój zawsze (od 2026-11-23 warunki pokoju według ADR 0030, sekcja wyżej) | `war.tributeAfterSeconds` |
 | 2B | Łupy (50% każdego dobra) jadą karawaną z łupionej osady do naszej najbliższej; napad na karawanę je zabiera. Tę samą osadę można złupić znowu dopiero po 600 s. AI zajmuje osadę do 12 heksów od swojej, dalej łupi | `siege.sackImmuneSeconds`, `siege.aiTakeWithinHexes` |
 | 3B | Zrównana osada: w ruinach zostaje 25% magazynu, reszta przepada | `ruins.razedKeepPercent` |
 | 4B | Mennica: 1 miedź → 4 monety (było 10) | budynek `mint` |
@@ -256,6 +256,43 @@ Gracz wybiera w opisie oddziału (przyciski pojawiają się po nowym poziomie). 
 | 6C | Reputacja nie spada poniżej −200. AI z reputacją poniżej −100 wypowiada nowe wojny o połowę rzadziej | `war.reputationFloor`, `war.badReputation` |
 | 13B | Szturm zaczyna się 30 s po początku blokady; wcześniej oblegający tylko blokują (nikt nie ginie). Skąd 30 s: alert przychodzi od razu, a gra zwalnia do ×1; ok. 10 s na zauważenie i rozkaz; najbliższa własna osada stoi zwykle 6 heksów dalej (pomiar: 3 gry AI po 70 min, mediana 6), a piechota idzie 0,6–0,9 s na heks, czyli 4–6 s; z odległości 15 heksów 9–14 s. Razem ok. 20–25 s, z zapasem 30 s | `siege.assaultAfterSeconds` |
 | 14C | Progi weteranów 50/150/350/700 zabitych. Zabity liczy się dla rodzaju, który go zabił, i dla każdego innego rodzaju naszego wojska walczącego do 2 heksów od niego (raz na rodzaj) | `veterans.levels`, `veterans.shareNearHexes` |
+
+## Pokój z negocjacji i zmęczenie wojną (ADR 0030, decyzje Patryka z 2026-11-23)
+
+**Warunki pokoju** (komenda `ProposePeaceCommand` z `PeaceTerms`):
+- **Dobra i ilości** (1B), jak przy wymianie: np. 80 brązu + 40 koni. Okno pokoju pokazuje, ile przeciwnik ma każdego dobra, które znamy.
+  Jedzenia można zażądać najwyżej `war.tributeFoodMaxPercent` (10%) jego zapasu. Dobra jadą karawaną z jego osady najbliższej nam.
+- **Osada** (2B): nie pierwsza osada ludu; nasze wojsko ją oblega albo leży najwyżej 12 heksów od naszej ziemi (`peace.settlementHexes`).
+  Przechodzi od razu z mieszkańcami i budynkami, jak przy zajęciu (bez punktów wyniku wojny). Żądać można tylko osady, którą widzimy albo pamiętamy.
+- **Długość pokoju** (3B): 3, 6 albo 10 minut (`peace.minutes`). Złamanie pokoju kosztuje reputację ataku z zaskoczenia (−30), przy 10 minutach dwa razy tyle (`peace.breakPercent`).
+- **Kto żąda** (6A): tylko strona, której sprzyja przebieg wojny. Druga może proponować biały pokój albo sama coś dać. Żądać można po 120 s wojny (1C).
+
+**Ile „powinien” oddać przegrany** (5A, 7.1A, 7.3A): wartość = majątek przegranego (dobra po `worth` i osady poza pierwszą) × procent,
+gdzie procent = przewaga w wyniku wojny / 5 + przewaga w zmęczeniu / 4, najwyżej 40% (`peace.scorePerPercent`, `wearinessPerPercent`, `maxPercent`).
+Gdy przegrywa ten, kto wypowiedział wojnę, oddaje o 25% więcej (`peace.aggressorExtraPercent`). Osada jest warta 10 jedzenia na mieszkańca
++ połowę ceny jej gotowych budynków (`settlementWorthPerPerson`, `settlementBuildingPercent`). Przycisk „Suggest terms” (4A) wypełnia okno warunkami
+tej wartości: najpierw osada, którą wolno wziąć, potem dobra, których nam najbardziej brakuje (najwyżej połowa każdego, najwyżej 4 dobra).
+Ilości zaokrągla w dół, więc podpowiedź nie przekracza tego, co przegrany powinien przyjąć.
+
+**Zmęczenie wojną** (7, 0–100 punktów, osobno dla każdej wojny; `weariness`):
+
+| Co | Punkty |
+| --- | --- |
+| minuta wojny | +1 |
+| 1% ludu zabity przez wroga | +2 |
+| minuta, gdy któraś nasza osada głoduje | +2 |
+| minuta za każdą naszą oblężoną osadę | +2 |
+| złupiona osada | +10 |
+| zajęta albo zrównana osada | +15 |
+| napadnięta karawana | +3 |
+| minuta pokoju | −5 |
+
+Od 50 punktów (najwyższe zmęczenie ze wszystkich wojen ludu) warsztaty, czyli budynki zużywające dobra, pracują wolniej: do −20% przy 100 (7.2A).
+Budynki jedzenia i surowców pracują normalnie, żeby zmęczenie nie głodziło ludu. Raty daniny (7.4) i odwet (7.5) zostają na po demo.
+
+Pomiar przed → po (`--sim-report --seeds 12 --minutes 120`, mapa 98×60, 4 ludy): wypowiedziane wojny 58,4 → 43,2 na grę,
+pokoje 48,6 na grę (średnio 506 jedzenia wartości w jednym pokoju), osady przekazane w pokoju 2,4 na grę, zajęte zbrojnie 3,3 → 4,1,
+złupione 6,1 → 6,0, zmęczenie na końcu gry średnio 30, ludzie 12 066 → 13 271. Liczby z 12 gier mają duży rozrzut (od ±16% do ±136%).
 
 ## Czego jeszcze nie ma (kolejne paczki)
 

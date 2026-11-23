@@ -569,7 +569,7 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Dismiss => new DismissAdvisorCommand(civ),
         PlayCommandKind.DeclareWar => new DeclareWarCommand(civ, m.A),
         PlayCommandKind.Attack => new AttackCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
-        PlayCommandKind.ProposePeace => new ProposePeaceCommand(civ, m.A, m.B),
+        PlayCommandKind.ProposePeace => new ProposePeaceCommand(civ, m.A, PeaceTermsOf(m)),
         PlayCommandKind.AnswerPeace => new AnswerPeaceCommand(civ, m.A, m.Flag),
         PlayCommandKind.Disband => new DisbandCommand(civ, m.A),
         PlayCommandKind.ProposeTreaty => new ProposeTreatyCommand(civ, m.A, (TreatyKind)m.B),
@@ -731,7 +731,7 @@ public sealed class PlayHost : IDisposable
         client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories,
             _game.Content.Rations.HungryPercent, _game.Content.Rations.StarvingPercent, _game.Content.WeaponGoods, _game.Content.ArmourGoods,
             _game.Content.Combat.Weapon, _game.Content.Combat.Armour, CombatInfo(_game.Content.Combat),
-            [.. _game.Content.Veterans.Options.Select(o => $"{o.Name}|{o.Text}")], _game.Content.Veterans.Levels));
+            [.. _game.Content.Veterans.Options.Select(o => $"{o.Name}|{o.Text}")], _game.Content.Veterans.Levels, _game.Content.Peace.Minutes));
         client.SentChunks = false;
     }
 
@@ -1506,18 +1506,65 @@ public sealed class PlayHost : IDisposable
             }
 
             PeaceOffer? offer = _game.PeaceOffers.Find(o => o.From == other.Id && o.To == civ.Id);
+            bool war = _game.AtWar(civ.Id, other.Id);
             list.Add(new PlayPeopleView(
-                other.Id, other.Name, _game.AtWar(civ.Id, other.Id), _game.Score(civ.Id, other.Id), _game.Score(other.Id, civ.Id),
-                _game.SuggestedTribute(civ.Id, other.Id), other.Reputation, offer?.TributePercent, other.Dead,
+                other.Id, other.Name, war, _game.Score(civ.Id, other.Id), _game.Score(other.Id, civ.Id),
+                war ? _game.Favour(civ.Id, other.Id) : 0, other.Reputation, offer is null ? null : _game.TermsText(offer.Terms, other.Id, civ.Id), other.Dead,
                 _game.Has(civ.Id, other.Id, TreatyKind.Trade), _game.Has(civ.Id, other.Id, TreatyKind.Alliance),
                 _game.TreatyOffers.Exists(o => o.From == other.Id && o.To == civ.Id && o.Kind == TreatyKind.Trade),
                 _game.TreatyOffers.Exists(o => o.From == other.Id && o.To == civ.Id && o.Kind == TreatyKind.Alliance),
                 _game.BarterOffers.Find(o => o.From == other.Id && o.To == civ.Id) is { } b
                     ? $"{b.GiveAmount / SimContent.One} {_game.Content.Goods[b.GiveGood].Name.ToLowerInvariant()} for {b.WantAmount / SimContent.One} {_game.Content.Goods[b.WantGood].Name.ToLowerInvariant()}"
-                    : null));
+                    : null,
+                _game.Weariness(civ.Id, other.Id), _game.Weariness(other.Id, civ.Id),
+                war ? TheirGoods(civ, other) : null,
+                war ? [.. other.Settlements.Where(sid => _game.KnowsSettlement(civ, _game.Settlements[sid]) && _game.SettlementTermRefused(civ, _game.Settlements[sid]) is null)] : null,
+                war ? Encode(_game.SuggestTerms(civ.Id, other.Id)) : null,
+                _game.WarWorkLoss(civ), _game.Aggressor(civ.Id, other.Id), _game.Aggressor(other.Id, civ.Id),
+                war ? _game.FairWorth(civ.Id, other.Id) / SimContent.One : 0));
         }
 
         return list;
+    }
+
+    // 1B (ADR 0030): the peace window shows how much of each good we know the other people has (whole units).
+    private long[] TheirGoods(Civ civ, Civ other)
+    {
+        var goods = new long[_game.Content.Goods.Count];
+        for (int g = 0; g < goods.Length; g++)
+        {
+            goods[g] = _game.KnowsGood(civ, g) ? other.Stock[g] / SimContent.One : -1;
+        }
+
+        return goods;
+    }
+
+    // Terms as [we give 0/1, length, settlement, good, amount, ...] in whole units.
+    private static int[] Encode(PeaceTerms t)
+    {
+        var list = new List<int> { t.WeGive ? 1 : 0, t.Length, t.Settlement };
+        foreach ((int good, long amount) in t.Goods)
+        {
+            list.Add(good);
+            list.Add((int)Math.Min(int.MaxValue, amount / SimContent.One));
+        }
+
+        return [.. list];
+    }
+
+    // The terms of a peace command: Cells are pairs of good and whole amount, C the settlement plus one.
+    private static PeaceTerms PeaceTermsOf(PlayCommandMessage m)
+    {
+        var goods = new List<(int, long)>();
+        if (m.Cells is { } cells)
+        {
+            for (int k = 0; k + 1 < cells.Length; k += 2)
+            {
+                goods.Add((cells[k], (long)Math.Max(0, cells[k + 1]) * SimContent.One));
+            }
+        }
+
+        return new PeaceTerms(m.Flag, m.B, m.C - 1, goods);
     }
 
     private int ResearchPermille(Civ civ)

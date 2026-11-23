@@ -65,6 +65,21 @@ public static class SimReport
 
         /// <summary>Ticks longer than 25 ms (a tick's share of a second at speed x4).</summary>
         public int SlowTicks { get; init; }
+
+        /// <summary>Peaces made (ADR 0030).</summary>
+        public int Peaces { get; init; }
+
+        /// <summary>Worth given in a peace, mean of the peaces (food units).</summary>
+        public double PeaceWorth { get; init; }
+
+        /// <summary>Settlements that changed hands in peaces.</summary>
+        public int ByPeace { get; init; }
+
+        /// <summary>Highest war weariness at the end, mean of the peoples.</summary>
+        public double Weariness { get; init; }
+
+        /// <summary>Wars going on at the end.</summary>
+        public int WarsNow { get; init; }
     }
 
     /// <summary>Runs the report; exit code 0.</summary>
@@ -116,6 +131,11 @@ public static class SimReport
         Line("settlements taken", r => r.Taken);
         Line("settlements sacked", r => r.Sacked);
         Line("settlements razed", r => r.Razed);
+        Line("peaces made", r => r.Peaces);
+        Line("worth per peace", r => r.PeaceWorth);
+        Line("settlements by peace", r => r.ByPeace);
+        Line("wars at the end", r => r.WarsNow);
+        Line("war weariness at end", r => r.Weariness);
         Line("soldiers starved in field", r => r.FieldDeaths);
         Line("top veteran level", r => r.VeteranLevel);
         Line("peoples at army limit", r => r.AtArmyLimit);
@@ -300,6 +320,11 @@ public static class SimReport
             Clothing = content.Clothing < 0 ? 0 : alive.Sum(c => c.Stock[content.Clothing]) / SimContent.One,
             WorstTickMs = worstTick,
             SlowTicks = slowTicks,
+            Peaces = g.PeacesMade,
+            PeaceWorth = g.PeacesMade == 0 ? 0 : g.PeaceWorthGiven / (double)SimContent.One / g.PeacesMade,
+            ByPeace = g.SettlementsByPeace,
+            Weariness = alive.Count == 0 ? 0 : alive.Average(c => g.Weariness(c)),
+            WarsNow = alive.Sum(c => g.WarsOf(c.Id)) / 2,
         };
     }
 

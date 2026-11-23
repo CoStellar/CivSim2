@@ -426,6 +426,164 @@ public partial class PlayGame
         _uiTimer = 0.1;
     }
 
+    // A peace offer being put together for each people we fight (ADR 0030): goods and amounts, maybe a settlement, a length.
+    private sealed class PeaceDraft
+    {
+        public bool WeGive;
+        public int Length = 1;
+        public int Settlement = -1;
+        public readonly SortedDictionary<int, int> Goods = [];
+    }
+
+    private readonly Dictionary<int, PeaceDraft> _peaceDrafts = [];
+
+    private void PeaceItems(PlayViewMessage v, PlayContentMessage c, PlayPeopleView p, List<UiItem> items)
+    {
+        int other = p.Civ;
+        if (!_peaceDrafts.TryGetValue(other, out PeaceDraft? d))
+        {
+            d = new PeaceDraft();
+            _peaceDrafts[other] = d;
+        }
+
+        int[] minutes = c.PeaceMinutes is { Length: > 0 } pm ? pm : [3, 6, 10];
+        d.Length = Math.Clamp(d.Length, 0, minutes.Length - 1);
+        string started = p.WeStarted ? " We started this war." : p.TheyStarted ? " They started this war." : "";
+        items.Add(new LineItem($"War so far: we {p.OurScore}, they {p.TheirScore}.{started}", UiKit.Text, 14));
+        items.Add(new LineItem($"War weariness: we {p.OurWeariness}, they {p.TheirWeariness}" + (p.OurWorkLoss > 0 ? $" (our workshops work {p.OurWorkLoss}% less)." : "."),
+            p.OurWeariness >= 50 ? UiKit.Warn : UiKit.Text, 14));
+        items.Add(new LineItem(p.Favour > 0 ? $"The war favours us: they should give about {p.FairWorth} worth ({p.Favour}% of what they have)."
+            : p.Favour < 0 ? $"The war favours them: we should give about {-p.FairWorth} worth. We may offer a white peace or give something."
+            : "Nobody is ahead: a white peace is fair.", p.Favour < 0 ? UiKit.Warn : UiKit.Text, 14));
+
+        if (p.TheirPeace is { } theirs)
+        {
+            items.Add(new LineItem($"They offer {theirs}.", UiKit.Warn, 14));
+            items.Add(new ButtonsItem([
+                new ActItem("Accept their peace", () => _session!.Play(PlayCommandKind.AnswerPeace, other, flag: true), Accent: UiKit.Good),
+                new ActItem("Refuse", () => _session!.Play(PlayCommandKind.AnswerPeace, other, flag: false))]));
+        }
+
+        // Length of peace, who gives, and the suggestion.
+        var lengths = new List<ActItem>();
+        for (int k = 0; k < minutes.Length; k++)
+        {
+            int kk = k;
+            lengths.Add(new ActItem($"{minutes[k]} min", () => d.Length = kk, "Length of peace. Breaking a long peace costs more reputation.", Accent: d.Length == k ? UiKit.Good : null));
+        }
+
+        items.Add(new ButtonsItem(lengths));
+        items.Add(new ButtonsItem([
+            new ActItem("Suggest terms", () => FillDraft(d, p.Suggested), "Terms the course of the war suggests: what they should accept."),
+            new ActItem("White peace", () => { d.Goods.Clear(); d.Settlement = -1; d.WeGive = false; }),
+            new ActItem("We demand", () => { if (d.WeGive) { d.Goods.Clear(); } d.WeGive = false; }, "Only the side the war favours may demand.", p.Favour > 0, d.WeGive ? null : UiKit.Good),
+            new ActItem("We give", () => { if (!d.WeGive) { d.Goods.Clear(); d.Settlement = -1; } d.WeGive = true; }, "Give goods to buy peace.", Accent: d.WeGive ? UiKit.Good : null)]));
+
+        // Goods: what the giver has and what the terms name.
+        var cells = new List<CellItem> { new("Good", UiKit.Muted), new(d.WeGive ? "We have" : "They have", UiKit.Muted), new("Terms", UiKit.Muted), new(""), new("") };
+        for (int g = 0; g < c.Goods.Count; g++)
+        {
+            long has = d.WeGive ? v.Stock[g] / 100 : p.TheirGoods is { } tg && g < tg.Length ? tg[g] : -1;
+            int named = d.Goods.TryGetValue(g, out int n) ? n : 0;
+            if (has <= 0 && named == 0)
+            {
+                continue;
+            }
+
+            int gg = g;
+            int step = has >= 200 ? 50 : has >= 40 ? 10 : 1;
+            cells.Add(new CellItem(c.Goods[g].Name));
+            cells.Add(new CellItem(has.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            cells.Add(new CellItem(named > 0 ? named.ToString(System.Globalization.CultureInfo.InvariantCulture) : "-", named > 0 ? UiKit.Good : UiKit.Muted));
+            cells.Add(new CellItem($"-{step}", UiKit.Text, () => SetDraftGood(d, gg, named - step)));
+            cells.Add(new CellItem($"+{step}", UiKit.Text, () => SetDraftGood(d, gg, (int)Math.Min(has, named + step))));
+        }
+
+        if (cells.Count > 5)
+        {
+            items.Add(new TableItem(5, cells));
+        }
+
+        // Settlement: 2B, not their first, besieged by us or near our land; only when demanding.
+        if (!d.WeGive && p.Demandable is { Length: > 0 } places)
+        {
+            var acts = new List<ActItem> { new("No settlement", () => d.Settlement = -1, Accent: d.Settlement < 0 ? UiKit.Good : null) };
+            foreach (int sid in places)
+            {
+                int ss = sid;
+                string name = SettlementName(v, sid);
+                acts.Add(new ActItem(name, () => d.Settlement = ss, "It passes to us with its people and buildings.", p.Favour > 0, d.Settlement == sid ? UiKit.Good : null));
+            }
+
+            items.Add(new ButtonsItem(acts));
+        }
+
+        var pairs = new List<int>();
+        var words = new List<string>();
+        foreach ((int g, int n) in d.Goods)
+        {
+            pairs.Add(g);
+            pairs.Add(n);
+            words.Add($"{n} {c.Goods[g].Name.ToLowerInvariant()}");
+        }
+
+        if (d.Settlement >= 0)
+        {
+            words.Add(SettlementName(v, d.Settlement));
+        }
+
+        string text = words.Count == 0 ? $"White peace for {minutes[d.Length]} min." : $"Peace for {minutes[d.Length]} min; {(d.WeGive ? "we give" : "they give")} {string.Join(", ", words)}.";
+        items.Add(new LineItem(text, UiKit.Text, 14));
+        int[] goodsPairs = [.. pairs];
+        int length = d.Length;
+        int settlement = d.Settlement;
+        bool give = d.WeGive;
+        items.Add(new ActItem("Offer these terms", () => _session!.Play(PlayCommandKind.ProposePeace, other, flag: give, b: length, c: settlement + 1, cells: goodsPairs),
+            "They answer at once if they are led by the AI.", Accent: UiKit.Good));
+    }
+
+    private static string SettlementName(PlayViewMessage v, int id)
+    {
+        foreach (PlaySettlementView s in v.Settlements)
+        {
+            if (s.Id == id)
+            {
+                return s.Name;
+            }
+        }
+
+        return $"settlement {id}";
+    }
+
+    private static void SetDraftGood(PeaceDraft d, int good, int amount)
+    {
+        if (amount <= 0)
+        {
+            d.Goods.Remove(good);
+        }
+        else
+        {
+            d.Goods[good] = amount;
+        }
+    }
+
+    // Fills the draft from the server's suggestion: [we give, length, settlement, good, amount, ...].
+    private static void FillDraft(PeaceDraft d, int[]? s)
+    {
+        if (s is not { Length: >= 3 })
+        {
+            return;
+        }
+
+        d.Goods.Clear();
+        d.WeGive = s[0] == 1;
+        d.Settlement = s[2];
+        for (int k = 3; k + 1 < s.Length; k += 2)
+        {
+            d.Goods[s[k]] = s[k + 1];
+        }
+    }
+
     private static string AlertWord(int kind) => kind switch
     {
         0 => "attacked",
@@ -458,22 +616,7 @@ public partial class PlayGame
 
             if (p.AtWar)
             {
-                items.Add(new LineItem($"War so far: we {p.OurScore}, they {p.TheirScore}.", UiKit.Text, 14));
-                int fair = p.SuggestedTribute;
-                items.Add(new ActItem(fair > 0 ? $"Offer peace: they pay us {fair}% of their goods" : fair < 0 ? $"Offer peace: we pay them {-fair}% of our goods" : "Offer peace without tribute",
-                    () => _session!.Play(PlayCommandKind.ProposePeace, other, b: fair), "The tribute the course of the war suggests."));
-                if (fair <= 0)
-                {
-                    items.Add(new ActItem("Offer peace demanding 10% from them", () => _session!.Play(PlayCommandKind.ProposePeace, other, b: 10)));
-                }
-
-                if (p.TheyOfferTribute is { } t)
-                {
-                    items.Add(new LineItem(t > 0 ? $"They offer peace if we pay {t}% of our goods." : t < 0 ? $"They offer peace and {-t}% of their goods." : "They offer peace.", UiKit.Warn, 14));
-                    items.Add(new ActItem("Accept their peace", () => _session!.Play(PlayCommandKind.AnswerPeace, other, flag: true), Accent: UiKit.Good));
-                    items.Add(new ActItem("Refuse their peace", () => _session!.Play(PlayCommandKind.AnswerPeace, other, flag: false)));
-                }
-
+                PeaceItems(v, c, p, items);
                 continue;
             }
 

@@ -171,7 +171,7 @@ public sealed class WarTests
     }
 
     [Fact]
-    public void PeaceWithTributeMovesGoodsAndEndsTheWar()
+    public void PeaceWithGoodsMovesThemAndEndsTheWar()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
         Civ a = g.Civs[0];
@@ -180,14 +180,19 @@ public sealed class WarTests
         a.Known[g.Settlements[b.Settlements[0]].Center] = true;
         Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
         Assert.Equal(Content.War.DeclareReputation, a.Reputation); // an open declaration costs a little (E1)
-        Assert.NotNull(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 20))); // 1C: tribute only after 2 minutes of war
-        Run(g, Content.War.TributeAfterTicks);
-        long wood = b.Stock[Content.GoodId("wood")];
-        Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, 20)));
-        Assert.Null(g.Apply(new AnswerPeaceCommand(b.Id, a.Id, true)));
+        int wood = Content.GoodId("wood");
+        long before = b.Stock[wood];
+
+        // ADR 0030 (6A): the side the war does not favour may give something for peace, at once.
+        var gift = new PeaceTerms(true, 2, -1, [(wood, 20 * SimContent.One)]);
+        Assert.Null(g.Apply(new ProposePeaceCommand(b.Id, a.Id, gift)));
+        Assert.Null(g.Apply(new AnswerPeaceCommand(a.Id, b.Id, true)));
         Assert.False(g.AtWar(a.Id, b.Id));
-        // The tribute leaves in a caravan (it turns back when no way on land leads to the taker).
-        Assert.Equal(g.Reachable(b, a) ? wood - (wood * 20 / 100) : wood, b.Stock[Content.GoodId("wood")]);
+
+        // The goods leave in a caravan (it turns back when no way on land leads to the taker); 3B: 10 minutes of peace.
+        Assert.Equal(g.Reachable(b, a) ? before - (20 * SimContent.One) : before, b.Stock[wood]);
+        Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id))); // breaking a 10-minute peace costs twice a surprise attack
+        Assert.Equal(Content.War.DeclareReputation + (Content.War.SurpriseReputation * Content.Peace.BreakPercent[2] / 100), a.Reputation);
     }
 }
 

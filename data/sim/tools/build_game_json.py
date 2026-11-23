@@ -346,11 +346,12 @@ d["food"].pop("idleForagePerMinute",None)
 d["war"]["injuredPercent"]=30
 # E1, E3 (Patryk, 2026-11-19): declaring war costs reputation; the AI pays tribute only after it lost tributeNeedsKills people
 # to the war; food in a tribute is at most tributeFoodMaxPercent of the payer's food; truceSeconds after peace.
-d["war"].update({"declareReputation":-10,"tributeNeedsKills":5,"tributeFoodMaxPercent":10,"truceSeconds":180,"maxWars":3})
+d["war"].update({"declareReputation":-10,"tributeNeedsKills":5,"tributeFoodMaxPercent":10,"maxWars":3})
+d["war"].pop("truceSeconds", None)  # ADR 0030 (3B): the length of peace is chosen in the offer (peace.minutes)
 if "maxWars" not in d["war"]["comment"]:
     d["war"]["comment"]+=" maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many."
 if "declareReputation" not in d["war"]["comment"]:
-    d["war"]["comment"]+=" declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes. truceSeconds: truce after peace."
+    d["war"]["comment"]+=" declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes."
 d["war"].pop("soldierFoodPerMinute", None)
 d["war"]["comment"]=d["war"]["comment"].replace(" Soldiers eat soldierFoodPerMinute each.", " Soldiers are fed by rations (see rations).")
 d["rivers"]={"comment":"Until freeFromEra, rivers can be crossed only next to one's own building that gives a crossing (raft landings).","freeFromEra":"bronze_age"}
@@ -422,6 +423,15 @@ d["aiBattle"]={"comment":"retreatInjuredPercent: a unit at war with this share o
   "retreatInjuredPercent":50,"retreatSizePercent":30,"engageHexes":5,"musterHexes":3,"musterFromHexes":30,"musterPercent":70}
 # 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
 d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","iron_age":{"bronze":5},"middle_ages":{"bricks":20}}
+# ADR 0030 (Patryk, 2026-11-23): peace from negotiation (1B 2B 3B 4A 5A 6A) and war weariness (7.1A 7.2A 7.3A 7.4B 7.5B).
+d["war"]["comment"]=d["war"]["comment"].replace(" truceSeconds: truce after peace.","")
+d["peace"]={"comment":"Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the people's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's.",
+  "minutes":[3,6,10],"breakPercent":[100,100,200],"settlementHexes":12,"settlementWorthPerPerson":10,"settlementBuildingPercent":50,
+  "scorePerPercent":5,"wearinessPerPercent":4,"maxPercent":40,"aggressorExtraPercent":25,"aiGiveMarginPercent":20,
+  "aiLosingLengthPercent":[-10,0,10],"aiWinningLengthPercent":[10,0,-10]}
+d["weariness"]={"comment":"War weariness of a people in each of its wars, 0-100: perMinute a minute of war, perLostPercent for each percent of its people the enemy killed, hungerPerMinute a minute while a settlement of it is hungry, besiegedPerMinute a minute for each settlement the enemy besieges, sacked, taken (also razed) and caravanRaided at once; it falls by peaceFallPerMinute a minute in peace. From workFrom up, buildings that use goods work less, down to workMaxLossPercent less at 100 (the highest weariness of its wars counts). The AI looks for peace from aiPeaceAt, and a losing AI offers goods from aiPayAt.",
+  "perMinute":1,"perLostPercent":2,"hungerPerMinute":2,"besiegedPerMinute":2,"sacked":10,"taken":15,"caravanRaided":3,"peaceFallPerMinute":5,
+  "workFrom":50,"workMaxLossPercent":20,"aiPeaceAt":60,"aiPayAt":80}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
 # validation: experience refs must have a workers-building; buildings/units techs exist
