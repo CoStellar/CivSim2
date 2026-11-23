@@ -92,7 +92,7 @@ public sealed partial class SimGame
         g.NoPeace = scenario.NoPeace;
         if (scenario.Field is [int fa, int fb] && fa != fb && (uint)fa < (uint)g.Civs.Count && (uint)fb < (uint)g.Civs.Count && !g.PlaceField(fa, fb, scenario.FieldGap))
         {
-            g.News.Add((0, "Scenario: no field between the two peoples."));
+            g.News.Add((0, "Scenario: no field between the two civilizations."));
         }
 
         foreach (Civ c in g.Civs)

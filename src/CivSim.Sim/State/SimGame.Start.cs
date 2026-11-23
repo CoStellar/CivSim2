@@ -241,7 +241,7 @@ public sealed partial class SimGame
     {
         if ((uint)cell >= (uint)Geo.CellCount || Content.World.Biomes[Map.Biome[cell]].IsWater)
         {
-            return "A people starts on land.";
+            return "A civilization starts on land.";
         }
 
         if (Map.Relief[cell] == 2)
@@ -255,7 +255,7 @@ public sealed partial class SimGame
         {
             if (s >= 0 && Geo.Distance(Geo.FromIndex(s), c) < ShownBlockRadius)
             {
-                return "Too close to another people.";
+                return "Too close to another civilization.";
             }
         }
 

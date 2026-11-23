@@ -35,7 +35,7 @@ public partial class PlayGame
         {
             "Research" => "Research",
             "Settlements" => "Our settlements",
-            "Peoples" => "Other peoples",
+            "Civilizations" => "Other civilizations",
             "Thinkers" => "Thinkers and advisors",
             "Units" => "Our units and patrols",
             "Tutorial" => "Tutorial",
@@ -50,7 +50,7 @@ public partial class PlayGame
             case "Settlements":
                 SettlementTable(v, c, items);
                 break;
-            case "Peoples":
+            case "Civilizations":
                 PeoplesItems(v, c, items);
                 break;
             case "Thinkers":
@@ -618,7 +618,7 @@ public partial class PlayGame
     {
         if (v.Peoples.Count == 0)
         {
-            items.Add(new LineItem("We have met no other people yet. Send scouts to find them.", UiKit.Muted, 15));
+            items.Add(new LineItem("We have met no other civilization yet. Send scouts to find them.", UiKit.Muted, 15));
         }
 
         foreach (PlayPeopleView p in v.Peoples)

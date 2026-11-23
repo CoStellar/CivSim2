@@ -17,7 +17,7 @@ namespace CivSim.Game.Play;
 /// </summary>
 public partial class PlayGame
 {
-    private static readonly string[] WindowNames = ["Settlements", "Research", "Peoples", "Thinkers", "Summary", "Units"];
+    private static readonly string[] WindowNames = ["Settlements", "Research", "Civilizations", "Thinkers", "Summary", "Units"];
 
     // Decorative years at the start of each era and at the end of the last (only for the screen, never for the rules).
     private static readonly int[] EraYears = [-10000, -6000, -3000, -1200, 500, 1500];
@@ -298,7 +298,7 @@ public partial class PlayGame
         {
             _endPanel.Visible = false;
             OpenWindow("Summary", toggle: false);
-        }, "How the game went, people by people (5)"));
+        }, "How the game went, civilization by civilization (5)"));
         endButtons.AddChild(UiKit.Button("Go on watching", () => _endPanel.Visible = false, "Close this and let the world go on"));
         endButtons.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
         int helpHalf = (int)Math.Min(UiKit.W(360), (screen.X / 2) - 16);
@@ -428,7 +428,7 @@ public partial class PlayGame
             return;
         }
 
-        _eraLabel.Text = v.Lost ? "Our people are gone" : v.Winner is { } w ? $"{w} have won" : c.Eras[v.Era];
+        _eraLabel.Text = v.Lost ? "Our civilization is gone" : v.Winner is { } w ? $"{w} have won" : c.Eras[v.Era];
         if (!_endShown && (v.Lost || v.Winner is not null))
         {
             _endShown = true;
@@ -744,7 +744,7 @@ public partial class PlayGame
         string text = b.Name + (w.Relief[i] > 0 ? $", {content.Reliefs[w.Relief[i]].ToLowerInvariant()}" : "") + (river ? ", by a river" : "");
         if (!b.IsWater)
         {
-            text += w.Owner[i] < 0 ? " - nobody's land" : w.Owner[i] == v.Civ ? " - our land" : " - land of another people";
+            text += w.Owner[i] < 0 ? " - nobody's land" : w.Owner[i] == v.Civ ? " - our land" : " - land of another civilization";
         }
 
         if (v.Picking && v.MyPick && !b.IsWater)
@@ -813,8 +813,8 @@ public partial class PlayGame
         {
             _banner.Visible = true;
             _bannerText.Text = pick.MyPick
-                ? (pick.PickNoLimit ? "Click a land hex on the map where your people should start (take your time: the game waits)." : $"Click a land hex on the map where your people should start ({pick.PickSecondsLeft} s left; then the AI chooses for you).")
-                  + "\nGreen under the mouse: you may start there. Red circles: taken by other peoples; start on the main continent, within 60 hexes by land of a circle. Deposits and soil stay hidden until everyone has chosen."
+                ? (pick.PickNoLimit ? "Click a land hex on the map where your civilization should start (take your time: the game waits)." : $"Click a land hex on the map where your civilization should start ({pick.PickSecondsLeft} s left; then the AI chooses for you).")
+                  + "\nGreen under the mouse: you may start there. Red circles: taken by other civilizations; start on the main continent, within 60 hexes by land of a circle. Deposits and soil stay hidden until everyone has chosen."
                 : $"{pick.WhoPicks} are choosing where to start. Your turn comes; look around the map meanwhile.";
             return;
         }

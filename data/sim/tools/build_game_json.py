@@ -198,7 +198,7 @@ t("animal_husbandry","Animal husbandry",N,{"agriculture":20,"hunting":20},{"food
 t("masonry","Masonry",N,{"stone_tools":40,"agriculture":15},{"stone":40,"tools":10},60,"Stone houses (more homes, warmer in winter); masons (quarries near them dig more); bridges where roads cross rivers.")
 t("weaving","Weaving",N,{"animal_husbandry":20},{"hides":30,"tools":10},50,"Weavers (textiles).",made={"clothing":20})
 t("irrigation","Irrigation",N,{"agriculture":40},{"stone":60,"tools":15},55,"Irrigation ditches drawn from water (at most 4 hexes): farms on watered hexes +25%; droughts 40% milder.",[("resist","drought",40)])
-t("barter","Barter",N,{"pottery":15},{"pottery":20,"food":60},50,"Trading posts; trade with other peoples (one agreement per trading post).",made={"pottery":30})
+t("barter","Barter",N,{"pottery":15},{"pottery":20,"food":60},50,"Trading posts; trade with other civilizations (one agreement per trading post).",made={"pottery":30})
 t("palisade","Palisade",N,{"stone_tools":30},{"wood":80},40,"Palisades drawn on hexes: they wound enemies attacking through them.")
 t("prospecting","Prospecting",N,{"masonry":10},{"food":40,"stone":20},40,"Ore signs: circles on seen land where an ore of our era lies; prospectors can search them one by one. New signs with each era: copper, then tin, gold and silver, iron ore, saltpeter.")
 t("copper_working","Copper working",N,{"masonry":20,"pottery":20},{"stone":30,"clay":20,"tools":15},70,"Copper mines.",made={"tools":30})

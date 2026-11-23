@@ -41,13 +41,13 @@ public sealed partial class SimGame
         ArgumentNullException.ThrowIfNull(command);
         if ((uint)command.Civ >= (uint)Civs.Count || Civs[command.Civ].Dead)
         {
-            return "No such people.";
+            return "No such civilization.";
         }
 
         Civ civ = Civs[command.Civ];
         if (Picking != command is PickStartCommand)
         {
-            return Picking ? "First choose where our people starts." : "The start has been chosen.";
+            return Picking ? "First choose where our civilization starts." : "The start has been chosen.";
         }
 
         string? refused = command switch
@@ -154,7 +154,7 @@ public sealed partial class SimGame
             // Roads may run beyond our land, on free land we know, but must start from a settlement that pays for them.
             if (OwnerAt[cell] >= 0 && OwnerAt[cell] != civ.Id)
             {
-                return "Not on another people's land.";
+                return "Not on another civilization's land.";
             }
 
             if (!civ.Known[cell] || BuildingAt[cell] >= 0 || Content.World.Biomes[Map.Biome[cell]].IsWater || (SettlementAt[cell] >= 0 && Settlements[SettlementAt[cell]].Center == cell))

@@ -777,7 +777,7 @@ public partial class PlayGame
         int i = w.Index(sel.Col, sel.Row);
         string biome = content.Biomes[w.Biome[i]].Name;
         string relief = content.Reliefs[w.Relief[i]];
-        string owner = w.Owner[i] < 0 ? "Nobody's land" : w.Owner[i] == _session.PlayView?.Civ ? "Our land" : "Land of another people";
+        string owner = w.Owner[i] < 0 ? "Nobody's land" : w.Owner[i] == _session.PlayView?.Civ ? "Our land" : "Land of another civilization";
         items.Add(new HeaderItem(biome, $"{relief} - {owner}", new Color("5f7f4a"), UiKit.Short(biome), $"biome/biome_{content.Biomes[w.Biome[i]].Key}_01"));
         // Only what we know of the ground (2026-11-19): beyond our land prospectors find the rock, surveyors the soil.
         if (w.Deposit[i] != 0)
@@ -789,7 +789,7 @@ public partial class PlayGame
         }
         else if (w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0)
         {
-            items.Add(new LineItem("Deposit: ??? (an ore of a later era: we will know it when our people get there)", UiKit.Warn, 14));
+            items.Add(new LineItem("Deposit: ??? (an ore of a later era: we will know it when our civilization gets there)", UiKit.Warn, 14));
         }
 
         byte survey = w.Survey[i];

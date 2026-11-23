@@ -1,18 +1,18 @@
 # The goal
-You are a whole people. You choose where to build, what to research, where to settle, whom to trade with and whom to fight. Your people do the daily work by themselves: they take the free places in your buildings, gather around their settlements and feed everyone once a minute. Nobody else gives them orders.
+You are a whole civilization. You choose where to build, what to research, where to settle, whom to trade with and whom to fight. Your people do the daily work by themselves: they take the free places in your buildings, gather around their settlements and feed everyone once a minute. Nobody else gives them orders.
 
 Time runs all the time. You can pause (Space) whenever you like and give orders while paused.
 
 ## How a game is won
 The goal is set in the start menu:
-- **First to the Middle Ages:** be the first people to enter the Middle Ages.
-- **Last people standing:** every other people is gone.
+- **First to the Middle Ages:** be the first civilization to enter the Middle Ages.
+- **Last civilization standing:** every other civilization is gone.
 - **Best score after 2 hours:** the score counts people, land, technologies and the army.
 
-A people loses when it has nobody left: no settlement and no unit. A game to the Middle Ages takes about an hour.
+A civilization loses when it has nobody left: no settlement and no unit. A game to the Middle Ages takes about an hour.
 
 ## The start
-With "Choose where we start" on, the peoples pick their start in turns. First the map shows only the land for a moment, then you have 30 seconds to click a hex for your first camp. You cannot start on water or mountains, nor inside the circles around the starts already taken.
+With "Choose where we start" on, the civilizations pick their start in turns. First the map shows only the land for a moment, then you have 30 seconds to click a hex for your first camp. You cannot start on water or mountains, nor inside the circles around the starts already taken.
 
 # The screen
 - **Top left:** our goods. The number is the stock, the green or red number how much comes or goes in a minute. Hover a good to see who makes and who uses it.
@@ -26,9 +26,9 @@ With "Choose where we start" on, the peoples pick their start in turns. First th
 ## The windows
 | 1 | Settlements: all our settlements, their people, food, homes and problems.
 | 2 | Research: the tree of technologies; pick the next research here.
-| 3 | Peoples: the peoples we know, war, peace, treaties and exchange of goods.
+| 3 | Civilizations: the civilizations we know, war, peace, treaties and exchange of goods.
 | 4 | Thinkers: our thinker and advisor, and the ones we may hire.
-| 5 | Summary: how the game goes, people by people, with a timeline.
+| 5 | Summary: how the game goes, civilization by civilization, with a timeline.
 | 6 | Units: all our units and patrols; stop, resume or call them back.
 | T | Tutorial: the first steps as a task list.
 
@@ -65,7 +65,7 @@ Everything in the game can be done with the mouse. The keys below do the same fa
 In the Roads & works tab pick a track or road (or a ditch, palisade, wall), then draw it hex by hex with the left button held.
 
 ## Windows and help
-| 1 - 6 | Settlements, Research, Peoples, Thinkers, Summary, Units (the same key closes it).
+| 1 - 6 | Settlements, Research, Civilizations, Thinkers, Summary, Units (the same key closes it).
 | P | The Units window, patrols first.
 | T | The tutorial.
 | G | Which routes show: none, orders under way, or those and the standing ones.
@@ -104,7 +104,7 @@ Turn on "Tutorial" in the start menu (or press `T`): a task list on screen leads
 - **Research.** Open Research (`2`) and pick Dwellings. Research costs goods and time, one at a time.
 - **Homes.** People grow only with free homes and food. Build Huts as soon as homes run out.
 - **Look around.** Research Scouting, train scouts in the settlement's panel and send them out with a right click. What we never saw stays dark.
-- **Prepare a defence.** For the first 15 minutes nobody attacks; after that other peoples may come. Before then research Flint weapons and train a few warriors, or research Palisade and draw one around the camp.
+- **Prepare a defence.** For the first 15 minutes nobody attacks; after that other civilizations may come. Before then research Flint weapons and train a few warriors, or research Palisade and draw one around the camp.
 
 People without work gather around the settlement by themselves (the "Stop gathering" button turns it off). Every building has places for workers; people fill free places on their own. A building can be paused or put first in its panel.
 
@@ -119,7 +119,7 @@ Winter comes every 8 minutes and lasts 2: everybody works at half speed and gath
 - **New settlements:** research Migration, train Settlers and send them at least 5 hexes from any other settlement, on land nobody owns. They found a camp with the goods they carry.
 - **Moving goods:** the settlement's panel offers "Bring 20 of a good" (one trip) and "Supply route" (a standing route) from the nearest settlement that has enough. Carriers walk the map, so roads make them faster.
 - **Roads:** a track and later a road (Roads & works tab) make walking faster; with Masonry they bridge rivers.
-- **Ruins** left by a people that is gone can be taken over.
+- **Ruins** left by a civilization that is gone can be taken over.
 - **Joining a settlement:** a unit standing in one of our settlements can join it ("Go home" in its panel). Soldiers can too ("Lay down arms"), but they lose their weapons, armour and supplies.
 - **Better buildings:** select a building and press "Replace with another building" in its panel, then pick the new one in the bar.
 
@@ -128,10 +128,10 @@ The eras are: Stone Age, Neolithic, Bronze Age, Iron Age, Middle Ages.
 
 A technology costs goods, paid when its research starts, and takes some time. Its card in the research tree (hover it, or move the keyboard cursor onto it) says what it costs and, when it cannot be started yet, why. Research one technology at a time.
 
-It is cheaper for every people we know that already knows it, and with a good thinker. Schools and academies speed up a branch.
+It is cheaper for every civilization we know that already knows it, and with a good thinker. Schools and academies speed up a branch.
 
 ## Getting to the next era
-Our people enter the next era when they know **5 technologies of the present era** (the basics of the Stone Age do not count) and its gateway technology:
+Our civilization enters the next era when it knows **5 technologies of the present era** (the basics of the Stone Age do not count) and its gateway technology:
 - **To the Neolithic:** 5 Stone Age technologies.
 - **To the Bronze Age:** 5 Neolithic technologies, Copper working among them.
 - **To the Iron Age:** 5 Bronze Age technologies, Bronze working among them.
@@ -163,14 +163,14 @@ Select units and right click an enemy to attack. Combat mode (`F`) is for battle
 Surround an enemy settlement to cut it off: it works slower. Its units, the guard of its walls and some of its people defend it. When it falls, choose: occupy, loot or raze.
 
 ## Peace
-A war ends with peace or when one side is gone. In the Peoples window (`3`) propose peace: goods, maybe a settlement, and how long the peace lasts (3, 6 or 10 minutes). Only the side the war favours may demand; the other may offer a white peace or give something. "Suggest terms" fills in what the course of the war justifies. A long war tires a people: from half of the weariness bar the workshops work slower.
+A war ends with peace or when one side is gone. In the Civilizations window (`3`) propose peace: goods, maybe a settlement, and how long the peace lasts (3, 6 or 10 minutes). Only the side the war favours may demand; the other may offer a white peace or give something. "Suggest terms" fills in what the course of the war justifies. A long war tires a civilization: from half of the weariness bar the workshops work slower.
 
-At most 3 wars at a time. An attack without declaring war, or breaking a peace, costs reputation. A people with a bad name finds others on guard against it: they keep more soldiers and seek alliances against it. Reputation slowly comes back in peace.
+At most 3 wars at a time. An attack without declaring war, or breaking a peace, costs reputation. A civilization with a bad name finds others on guard against it: they keep more soldiers and seek alliances against it. Reputation slowly comes back in peace.
 
-# Other peoples
-We meet other peoples by seeing them: scouts, borders, their units. The Peoples window (`3`) lists those we know: how they feel about us, our treaties, and the buttons for war, peace, a trade agreement, an alliance and exchange of goods (barter). A people's character shows only in what it does.
+# Other civilizations
+We meet other civilizations by seeing them: scouts, borders, their units. The Civilizations window (`3`) lists those we know: how they feel about us, our treaties, and the buttons for war, peace, a trade agreement, an alliance and exchange of goods (barter). A civilization's character shows only in what it does.
 
-Scouts can go hidden: slower, but nobody can tell whose they are. When units of a people we have not met come near one of our settlements and have seen it, the alert **Strangers** tells us, but not who they are or where they come from.
+Scouts can go hidden: slower, but nobody can tell whose they are. When units of a civilization we have not met come near one of our settlements and have seen it, the alert **Strangers** tells us, but not who they are or where they come from.
 
 # Tips
 - Watch the red numbers on the goods bar: something is used faster than it is made.

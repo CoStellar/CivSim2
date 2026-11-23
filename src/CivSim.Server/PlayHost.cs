@@ -299,7 +299,7 @@ public sealed class PlayHost : IDisposable
                     client.Civ = NextFreeCiv();
                     if (client.Civ < 0)
                     {
-                        client.Connection.Send(new ConnectionRejectedMessage("Every people already has a player."));
+                        client.Connection.Send(new ConnectionRejectedMessage("Every civilization already has a player."));
                         break;
                     }
 

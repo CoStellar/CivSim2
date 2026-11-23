@@ -25,7 +25,7 @@ public partial class StartMenu : CanvasLayer
 
     private static readonly (string Key, string Label)[] WorldTypes = [("continents", "Continents"), ("pangea", "One big continent"), ("archipelago", "Islands")];
     private static readonly (string Key, string Label, int Percent)[] Waters = [("less", "Less sea", 45), ("", "Normal", 60), ("more", "More sea", 72)];
-    private static readonly (int Id, string Label)[] Goals = [(1, "First to the Middle Ages"), (0, "Last people standing"), (2, "Best score after 2 hours")];
+    private static readonly (int Id, string Label)[] Goals = [(1, "First to the Middle Ages"), (0, "Last civilization standing"), (2, "Best score after 2 hours")];
 
     private readonly StartSettings _settings;
     private readonly string _dataDirectory;
@@ -92,7 +92,7 @@ public partial class StartMenu : CanvasLayer
         var title = new Label { Text = "CivSim 2", ThemeTypeVariation = "Heading" };
         title.AddThemeFontSizeOverride("font_size", 40);
         nav.AddChild(title);
-        nav.AddChild(new Label { Text = "Lead your people through the ages.", Modulate = new Color(0.75f, 0.75f, 0.75f) });
+        nav.AddChild(new Label { Text = "Lead your civilization through the ages.", Modulate = new Color(0.75f, 0.75f, 0.75f) });
         nav.AddChild(new Control { CustomMinimumSize = new Vector2(0, 16) });
         Button? current = null;
         foreach ((string key, string label) in new[] { ("new", "New game"), ("load", "Load game"), ("manual", "How to play"), ("tests", "Test scenarios"), ("settings", "Settings") })
@@ -210,12 +210,12 @@ public partial class StartMenu : CanvasLayer
 
         _content.AddChild(Heading("Game"));
         GridContainer game = Grid();
-        game.AddChild(new Label { Text = "Peoples", CustomMinimumSize = new Vector2(120, 0) });
-        var peoples = new SpinBox { MinValue = 2, MaxValue = 8, Value = Math.Clamp(_settings.Peoples, 2, 8), Rounded = true, CustomMinimumSize = new Vector2(260, 0), TooltipText = "Your people and the AI peoples" };
+        game.AddChild(new Label { Text = "Civilizations", CustomMinimumSize = new Vector2(120, 0) });
+        var peoples = new SpinBox { MinValue = 2, MaxValue = 8, Value = Math.Clamp(_settings.Peoples, 2, 8), Rounded = true, CustomMinimumSize = new Vector2(260, 0), TooltipText = "Your civilization and the AI civilizations" };
         peoples.ValueChanged += v => _settings.Peoples = (int)v;
         game.AddChild(peoples);
         Choice(game, "Goal", [.. Goals.Select(g => g.Label)], Math.Max(0, Array.FindIndex(Goals, g => g.Id == _settings.Goal)), i => _settings.Goal = Goals[i].Id);
-        var choose = new CheckBox { Text = "Choose where we start", ButtonPressed = _settings.ChooseStart, TooltipText = "Peoples pick their start in turns on the map; otherwise the world gives each one a place" };
+        var choose = new CheckBox { Text = "Choose where we start", ButtonPressed = _settings.ChooseStart, TooltipText = "Civilizations pick their start in turns on the map; otherwise the world gives each one a place" };
         choose.Toggled += on => _settings.ChooseStart = on;
         game.AddChild(new Control());
         game.AddChild(choose);

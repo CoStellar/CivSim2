@@ -154,12 +154,12 @@ public sealed partial class SimGame
 
         if (!OnMainLand(cell))
         {
-            return "Start on the main continent: peoples cannot cross the sea yet.";
+            return "Start on the main continent: civilizations cannot cross the sea yet.";
         }
 
         if (_nearSteps is not null && _nearSteps[cell] > most + BlockFuzz)
         {
-            return $"Too far from the other peoples: start within {most} hexes by land of a red circle.";
+            return $"Too far from the other civilizations: start within {most} hexes by land of a red circle.";
         }
 
         return null;

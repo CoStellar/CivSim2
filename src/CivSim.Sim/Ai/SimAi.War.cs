@@ -228,7 +228,7 @@ public static partial class SimAi
             {
                 if (g.AiLogOn)
                 {
-                    g.AiLog(civ, AiLogKind.War, small ? $"spares {other.Name}: a small people ({theirPeople} known people)" : $"leaves {target.Name} of {other.Name}: {people} people are not worth {soldiers} soldiers");
+                    g.AiLog(civ, AiLogKind.War, small ? $"spares {other.Name}: a small civilization ({theirPeople} known people)" : $"leaves {target.Name} of {other.Name}: {people} people are not worth {soldiers} soldiers");
                 }
             }
         }

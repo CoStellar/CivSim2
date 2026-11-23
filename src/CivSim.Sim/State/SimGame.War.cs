@@ -119,12 +119,12 @@ public sealed partial class SimGame
     {
         if ((uint)other >= (uint)Civs.Count || other == civ.Id || Civs[other].Dead)
         {
-            return "No such people.";
+            return "No such civilization.";
         }
 
         if (!Met(civ, Civs[other]) && !Met(Civs[other], civ) && !surprise)
         {
-            return "We have not met this people.";
+            return "We have not met this civilization.";
         }
 
         if (AtWar(civ.Id, other))

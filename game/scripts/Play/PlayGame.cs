@@ -825,7 +825,7 @@ public partial class PlayGame : Node2D
         int i = w.Index(h.Col, h.Row);
         if (content.Biomes[w.Biome[i]].IsWater)
         {
-            return "Water: a people starts on land";
+            return "Water: a civilization starts on land";
         }
 
         if (w.Relief[i] == 2)
@@ -838,12 +838,12 @@ public partial class PlayGame : Node2D
             // 12B: the same rule as the server's (main continent, within the limit by land of a circle).
             if (near.Steps.Length > 0 && near.Part[i] != near.Main)
             {
-                return "Start on the main continent: peoples cannot cross the sea yet";
+                return "Start on the main continent: civilizations cannot cross the sea yet";
             }
 
             if (near.Steps.Length > 0 && v.TakenStarts is { Length: > 0 } && near.Steps[i] > v.PickMaxHexes)
             {
-                return "Too far from the other peoples: start nearer a red circle";
+                return "Too far from the other civilizations: start nearer a red circle";
             }
         }
 
@@ -857,7 +857,7 @@ public partial class PlayGame : Node2D
                 d.X = wrap > 0 ? Math.Abs(((d.X % wrap) + (wrap * 1.5f)) % wrap - (wrap / 2)) : d.X;
                 if (d.Length() < v.BlockRadius * HexLayout.ColumnStep)
                 {
-                    return "Too close to another people";
+                    return "Too close to another civilization";
                 }
             }
         }
@@ -1007,7 +1007,7 @@ public partial class PlayGame : Node2D
             bool road = t.Groups is { } g && Array.IndexOf(g, "road") >= 0;
             if (!road && w.Owner[i] != v.Civ)
             {
-                return w.Owner[i] < 0 ? "Not our land: build inside our border." : "That is the land of another people.";
+                return w.Owner[i] < 0 ? "Not our land: build inside our border." : "That is the land of another civilization.";
             }
 
             bool biomeFits = _session.Content is { } world && t.Needs.Contains(world.Biomes[w.Biome[i]].Key.Replace('_', ' '), StringComparison.Ordinal);
