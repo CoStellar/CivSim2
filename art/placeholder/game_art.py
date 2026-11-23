@@ -12,6 +12,7 @@ Drawn from the data (data/sim/game.json): every building, unit, good and settlem
 """
 
 import json
+import math
 import os
 import random
 
@@ -157,7 +158,10 @@ def person(c, x, y, tunic=CIV, item=None, head=None):
     """A figure 13 px tall standing at (x, y): head, tunic in the civ colour, legs, and what it carries."""
     c.rect(x - 1, y - 12, x + 1, y - 10, SKIN)
     if head == "helmet":
-        c.rect(x - 1, y - 13, x + 1, y - 12, IRON[0])
+        c.rect(x - 2, y - 13, x + 2, y - 12, IRON[0])
+        c.px(x + 2, y - 12, IRON[2])
+        c.rect(x - 1, y - 15, x + 1, y - 14, CIV[0])  # plume, like the old CivSim knight's
+        c.px(x - 2, y - 15, CIV[1])
     elif head == "hood":
         c.rect(x - 2, y - 13, x + 2, y - 12, HIDE[1])
     c.rect(x - 2, y - 9, x + 2, y - 4, tunic[1])
@@ -175,8 +179,9 @@ def person(c, x, y, tunic=CIV, item=None, head=None):
     elif item == "sword":
         c.line(x + 4, y - 14, x + 4, y - 6, IRON[0])
         c.line(x + 3, y - 7, x + 5, y - 7, P((223, 143, 19)))
-        c.rect(x - 5, y - 9, x - 3, y - 4, IRON[1])  # shield
-        c.px(x - 4, y - 7, CIV[0])
+        c.rect(x - 6, y - 10, x - 3, y - 3, IRON[1])  # shield
+        c.line(x - 6, y - 10, x - 6, y - 3, IRON[0])
+        c.rect(x - 5, y - 8, x - 4, y - 5, CIV[1])
     elif item == "bow":
         for k in range(-5, 6):
             c.px(x + 4 + (1 if abs(k) < 3 else 0), y - 8 + k, WOOD[1])
@@ -487,30 +492,25 @@ def hex_building(key, era, rnd):
             c.px(x + 1, y + 4, P((47, 46, 45)))
             c.px(x + 6, y + 4, P((47, 46, 45)))
     elif key in ("quarry", "copper_mine", "tin_mine", "iron_mine"):
-        rock = STONE if key == "quarry" else tones((113, 111, 108))
-        for k in range(22):
-            half = round(30 * (1 - (k / 23) ** 1.6))
-            y = cy + 14 - k
-            c.line(cx - half, y, cx, y, rock[0])
-            c.line(cx + 1, y, cx + half, y, rock[2])
+        # Step 3 (2026-11-23): rocks shaded as bodies, like the old CivSim stone.
         if key == "quarry":
-            for x, y in ((cx - 14, cy + 22), (cx + 6, cy + 24), (cx - 4, cy + 26)):
-                c.rect(x, y, x + 7, y + 4, STONE[1])
-                c.line(x, y, x + 7, y, STONE[0])
-            c.rect(cx - 6, cy + 2, cx + 6, cy + 8, STONE[2])
+            boulder(c, cx - 8, cy + 6, 20, 16, (147, 138, 130), seed=3)
+            boulder(c, cx + 16, cy + 14, 11, 9, (147, 138, 130), seed=5)
+            for x, y in ((cx - 20, cy + 22), (cx + 2, cy + 24)):
+                box(c, x, y, x + 8, y + 5, STONE)
+                c.line(x, y, x + 8, y, STONE[0])
         else:
             ore = {"copper_mine": (201, 113, 21), "tin_mine": (185, 216, 230), "iron_mine": (105, 56, 41)}[key]
-            c.rect(cx - 5, cy + 4, cx + 5, cy + 14, P((29, 23, 16)))
-            c.line(cx - 6, cy + 3, cx + 6, cy + 3, WOOD[1])
-            c.line(cx - 6, cy + 3, cx - 6, cy + 14, WOOD[1])
-            c.line(cx + 6, cy + 3, cx + 6, cy + 14, WOOD[1])
-            for x, y in ((cx - 18, cy - 2), (cx + 12, cy), (cx - 10, cy - 8), (cx + 4, cy - 10)):
-                c.rect(x, y, x + 2, y + 1, P(ore))
-            c.rect(cx + 12, cy + 20, cx + 20, cy + 24, WOOD[1])  # a cart
-            c.rect(cx + 13, cy + 18, cx + 19, cy + 19, P(ore))
-            c.px(cx + 13, cy + 25, P((47, 46, 45)))
-            c.px(cx + 19, cy + 25, P((47, 46, 45)))
-        flag(c, cx - 24, cy + 16, 12)
+            boulder(c, cx, cy + 6, 28, 22, (113, 111, 108), seed=len(key))
+            for k, (x, y) in enumerate(((cx - 14, cy - 4), (cx + 10, cy - 2), (cx - 4, cy - 10), (cx + 16, cy + 6), (cx - 18, cy + 8))):
+                boulder(c, x, y, 2.5, 2, ore, seed=k, flat_bottom=False)
+            c.rect(cx - 6, cy + 12, cx + 6, cy + 24, P((29, 23, 16)))  # the shaft
+            for x in (cx - 7, cx + 7):
+                c.line(x, cy + 11, x, cy + 24, WOOD[1])
+            c.line(cx - 7, cy + 11, cx + 7, cy + 11, WOOD[0])
+            c.rect(cx + 14, cy + 20, cx + 22, cy + 24, WOOD[1])  # a cart
+            boulder(c, cx + 18, cy + 18, 4, 2.5, ore, seed=9, flat_bottom=False)
+        flag(c, cx - 26, cy + 18, 12)
     elif key in ("fishing_hut", "raft_landing", "harbour", "shipyard"):
         for y in range(cy + 6, HH):
             for x in range(HW):
@@ -590,27 +590,23 @@ def centre(level):
         fire(c, cx - 8, cy + 4)
         flag(c, cx + 24, cy - 6, 16)
     else:
-        walled = level == "city"
-        roof = ROOFS["bronze_age"] if level == "town" else ROOFS["middle_ages"]
-        if walled:
-            for y in range(HH):
-                for x in range(HW):
-                    if inside(x, y, 4) and not inside(x, y, 9) and y > 14:
-                        c.px(x, y, STONE[1] if (x + y) % 9 else STONE[2])
-            for tx, ty in ((14, cy - 4), (HW - 22, cy - 4), (cx - 4, HH - 18)):
-                box(c, tx, ty - 10, tx + 8, ty + 6, STONE)
-                for k in range(0, 9, 3):
-                    c.rect(tx + k, ty - 13, tx + k + 1, ty - 11, STONE[0])
-        houses = [(cx - 22, cy + 4, 14), (cx + 6, cy, 16), (cx - 8, cy + 16, 14), (cx + 14, cy + 14, 12), (cx - 26, cy + 18, 10)]
-        for x, y, w in houses:
-            box(c, x, y - 10, x + w, y, STONE)
-            gable(c, x, x + w, y - 10, 7, roof)
-            door(c, x + 3, y, 5)
-        # the hall in the middle
-        box(c, cx - 8, cy - 18, cx + 8, cy - 2, STONE)
-        gable(c, cx - 8, cx + 8, cy - 18, 10, roof)
-        door(c, cx - 2, cy - 2, 6)
-        flag(c, cx + 2, cy - 28, 12)
+        # Step 3 (2026-11-23): the old CivSim castle: round towers with conical roofs, battlements, a gate, the hall behind.
+        roof = (183, 10, 9) if level == "city" else (187, 110, 70)
+        stone = (147, 138, 130)
+        if level == "city":
+            stone_wall(c, cx - 30, cx + 30, cy + 2, cy + 22, stone)
+            for tx in (cx - 36, cx + 26):
+                tower(c, tx, tx + 10, cy - 12, cy + 22, stone, roof)
+            tower(c, cx - 7, cx + 7, cy - 26, cy + 2, stone, roof)  # keep
+            c.rect(cx - 4, cy + 12, cx + 4, cy + 22, P((86, 44, 24)))  # gate
+            c.line(cx - 4, cy + 12, cx + 4, cy + 12, P((29, 23, 16)))
+        else:
+            stone_wall(c, cx - 22, cx + 22, cy + 6, cy + 22, stone)
+            for tx in (cx - 27, cx + 19):
+                tower(c, tx, tx + 8, cy - 4, cy + 22, stone, roof)
+            box(c, cx - 9, cy - 10, cx + 9, cy + 6, STONE)  # the hall
+            gable(c, cx - 9, cx + 9, cy - 10, 9, tones(roof))
+            c.rect(cx - 3, cy + 14, cx + 3, cy + 22, P((86, 44, 24)))
     c.outline(P(OUTLINE))
     return c
 
@@ -728,11 +724,10 @@ def good(key):
                     x = 6 + k * 10 + (row % 2) * 5
                     c.rect(x, 12 + row * 5, x + 8, 15 + row * 5, t[1])
                     c.line(x, 12 + row * 5, x + 8, 12 + row * 5, t[0])
-        else:  # a heap
-            for k in range(10):
-                half = round(11 * (1 - (k / 11) ** 2))
-                c.line(16 - half, 25 - k, 16, 25 - k, t[0])
-                c.line(17, 25 - k, 16 + half, 25 - k, t[2])
+        else:  # a heap of lumps, shaded like the old CivSim stone and filling the icon
+            boulder(c, 12, 20, 9, 8, col, seed=1)
+            boulder(c, 21, 21, 8, 7, col, seed=2)
+            boulder(c, 16, 13, 8, 7, col, seed=3)
     elif g == "hides":
         c.rect(8, 9, 24, 23, HIDE[1])
         for x, y in ((7, 9), (24, 9), (7, 23), (24, 23)):
@@ -900,15 +895,10 @@ def relief(kind, variant):
     rnd = random.Random(f"{kind}-{variant}-2x")
     c = canvas(HW, HH)
     if kind == "hills":
-        body = P((138, 86, 45))
         for i in range(3):
             cx = 22 + i * 26 + rnd.randrange(-4, 5)
-            cy = 54 + rnd.randrange(-6, 5) - (i % 2) * 10
-            r = 12 + rnd.randrange(0, 5)
-            for y in range(cy - r, cy + 1):
-                for x in range(cx - r, cx + r + 1):
-                    if (x - cx) ** 2 + ((y - cy) * 1.6) ** 2 <= r * r and inside(x, y, 2):
-                        c.px(x, y, sh(body, 1) if x < cx - 2 else body if x < cx + 4 else sh(body, -1))
+            cy = 56 + rnd.randrange(-6, 5) - (i % 2) * 10
+            boulder(c, cx, cy, 13 + rnd.randrange(0, 4), 9, (138, 86, 45), seed=i + variant * 3)
     else:
         rock, snow = P((113, 111, 108)), P((251, 249, 251))
         peaks = [(32, 64, 20), (62, 66, 24)] if variant == 1 else [(26, 64, 18), (50, 66, 26), (72, 64, 16)]
@@ -1142,3 +1132,81 @@ def tone(c, step):
     result = best if best is not None and best_d < 1.2 else sh(c, step)
     _TONES[key] = result
     return result
+
+# ------------------------------------------------------------------------------------------------ volume (step 3: shapes with light)
+
+LIGHT = (-0.55, -0.65, 0.52)  # from the top left, a little from the front
+
+
+def ramp(rgb):
+    """Four tones of one material, dark to highlight, from the palette (the old CivSim stone and grass ramps)."""
+    base = P(rgb)
+    return [tone(base, -2), tone(base, -1), base, tone(base, 1), tone(base, 2)]
+
+
+def lit(r, nx, ny, nz):
+    """The tone of a surface whose normal is (nx, ny, nz) under LIGHT, from a five-tone ramp."""
+    d = nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]
+    return r[0] if d < -0.1 else r[1] if d < 0.25 else r[2] if d < 0.6 else r[3] if d < 0.85 else r[4]
+
+
+def boulder(c, cx, cy, rx, ry, rgb, seed=1, flat_bottom=True):
+    """A rounded rock shaded as a body: the old CivSim stone. Its rim wobbles a little, so no two look alike."""
+    r = ramp(rgb)
+    for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
+        for x in range(int(cx - rx) - 1, int(cx + rx) + 2):
+            u, v = (x - cx) / rx, (y - cy) / ry
+            ang = math.atan2(v, u)
+            wobble = 1 + 0.08 * math.sin(ang * 3 + seed) + 0.05 * math.sin(ang * 5 + seed * 2)
+            d2 = (u * u + v * v) / (wobble * wobble)
+            if d2 > 1 or (flat_bottom and v > 0.75):
+                continue
+            nz = math.sqrt(max(0.0, 1 - d2))
+            c.px(x, y, lit(r, u / wobble, v / wobble, nz))
+    # a crack or two
+    k = random.Random(seed)
+    for _ in range(2):
+        x0 = int(cx + k.uniform(-0.4, 0.3) * rx)
+        y0 = int(cy + k.uniform(-0.5, 0.0) * ry)
+        for t in range(int(ry * 0.6)):
+            c.px(x0 + (t // 3) * (1 if seed % 2 else -1), y0 + t, r[0])
+
+
+def cone(c, cx, base_y, half, height, rgb):
+    """A conical roof shaded round: lit left, dark right, a civ-coloured flag on top."""
+    r = ramp(rgb)
+    for k in range(height):
+        y = base_y - k
+        w = half * (1 - k / height)
+        for x in range(int(cx - w), int(cx + w) + 1):
+            u = (x - cx) / max(1.0, w)
+            c.px(x, y, lit(r, u, -0.3, math.sqrt(max(0.0, 1 - u * u))))
+    flag(c, int(cx), int(base_y - height), 6)
+
+
+def tower(c, x0, x1, top, bottom, rgb, roof_rgb):
+    """A round stone tower: shaded across like a cylinder, battlements or a cone on top, a slit window."""
+    r = ramp(rgb)
+    cx = (x0 + x1) / 2
+    for x in range(x0, x1 + 1):
+        u = (x - cx) / max(1.0, (x1 - x0) / 2)
+        col = lit(r, u, 0, math.sqrt(max(0.0, 1 - u * u)))
+        c.line(x, top, x, bottom, col)
+    c.rect(int(cx), top + 4, int(cx) + 1, top + 7, P((29, 23, 16)))
+    if roof_rgb is None:
+        for x in range(x0, x1 + 1, 3):
+            c.rect(x, top - 3, min(x + 1, x1), top - 1, r[3])
+    else:
+        cone(c, cx, top - 1, (x1 - x0) / 2 + 2, max(6, (x1 - x0)), roof_rgb)
+
+
+def stone_wall(c, x0, x1, top, bottom, rgb):
+    r = ramp(rgb)
+    c.rect(x0, top, x1, bottom, r[2])
+    c.line(x0, top, x1, top, r[3])
+    c.line(x0, bottom, x1, bottom, r[1])
+    for x in range(x0, x1 + 1, 4):  # battlements
+        c.rect(x, top - 3, min(x + 1, x1), top - 1, r[3])
+    for y in range(top + 3, bottom, 4):  # courses of stone
+        for x in range(x0 + (y // 4 % 2) * 3, x1, 6):
+            c.px(x, y, r[1])
