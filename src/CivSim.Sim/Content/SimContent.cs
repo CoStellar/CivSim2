@@ -463,6 +463,9 @@ public sealed record PeaceRules
     /// <summary>3B: reputation for breaking a peace of each length, percent of the surprise attack's cost.</summary>
     public int[] BreakPercent { get; init; } = [100, 100, 200];
 
+    /// <summary>P5 (Patryk, 2026-11-24): minutes after a white peace in which neither side may start a new war on the other.</summary>
+    public int WhiteTruceMinutes { get; init; } = 3;
+
     /// <summary>2B: a settlement may be demanded when our army besieges it or it lies this close to our land.</summary>
     public int SettlementHexes { get; init; } = 12;
 
@@ -2075,6 +2078,7 @@ public sealed class SimContent
             {
                 Minutes = Ints(peaceEl, "minutes"),
                 BreakPercent = Ints(peaceEl, "breakPercent"),
+                WhiteTruceMinutes = peaceEl.TryProp("whiteTruceMinutes", out JsonElement wtEl) ? Math.Max(0, wtEl.GetInt32()) : 0,
                 SettlementHexes = peaceEl.Prop("settlementHexes").GetInt32(),
                 SettlementWorthPerPerson = peaceEl.Prop("settlementWorthPerPerson").GetInt32(),
                 SettlementBuildingPercent = peaceEl.Prop("settlementBuildingPercent").GetInt32(),

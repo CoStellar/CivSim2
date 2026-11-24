@@ -504,6 +504,14 @@ public sealed partial class SimGame
         bool settled = t.Settlement >= 0 && Settlements[t.Settlement].Civ == giver.Id && SettlementTermRefused(taker, Settlements[t.Settlement]) is null;
         SetWar(proposer.Id, answerer.Id, false);
         PeaceMade(proposer.Id, answerer.Id);
+        if (t.IsWhite)
+        {
+            // P5 (Patryk, 2026-11-24): after a white peace no new war between the two for a while.
+            long until = Ticks + ((long)Content.Peace.WhiteTruceMinutes * SimContent.TicksPerMinute);
+            NoWar()[(proposer.Id * Civs.Count) + answerer.Id] = until;
+            NoWar()[(answerer.Id * Civs.Count) + proposer.Id] = until;
+        }
+
         int length = Math.Clamp(t.Length, 0, Content.Peace.Minutes.Length - 1);
         long truce = Ticks + ((long)Content.Peace.Minutes[length] * SimContent.TicksPerMinute);
         int n = Civs.Count;
@@ -559,8 +567,20 @@ public sealed partial class SimGame
     // Tests: the people's totals after its settlements' stores were changed.
     internal void SyncForTest(Civ civ) => SyncTotals(civ);
 
+    private long[]? _noWarUntil;
+
+    private long[] NoWar() => _noWarUntil ??= new long[Civs.Count * Civs.Count];
+
+    /// <summary>The tick until which <paramref name="a"/> may not start a war on <paramref name="b"/> after a white peace (P5).</summary>
+    public long NoWarUntil(int a, int b) => a == b ? 0 : NoWar()[(a * Civs.Count) + b];
+
     private void HashPeace(Action<long> add)
     {
+        foreach (long n in NoWar())
+        {
+            add(n);
+        }
+
         foreach (int w in Weary())
         {
             add(w);

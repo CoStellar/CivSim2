@@ -519,3 +519,10 @@ json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 d=json.load(open(p))
 d["growth"]["growthPercentPerMinute"]=10
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+
+# P5 (Patryk, 2026-11-24, tests round): after a white peace neither side may start a new war on the other for a while.
+d=json.load(open(p))
+d["peace"]["whiteTruceMinutes"]=3
+if "whiteTruceMinutes:" not in d["peace"]["comment"]:
+    d["peace"]["comment"]+=" whiteTruceMinutes: after a white peace neither side may declare war on the other (or attack it) for this many minutes."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
