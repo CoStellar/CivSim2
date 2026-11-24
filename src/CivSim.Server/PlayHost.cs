@@ -36,6 +36,9 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>E6 (2026-11-20): the tutorial's task list shows on screen (its progress is kept either way).</summary>
     public bool Tutorial { get; init; }
+
+    /// <summary>Ores (2026-11-24): true fair (copper, tin and iron near every start), false realistic (where the world put them).</summary>
+    public bool FairOres { get; init; } = true;
 }
 
 /// <summary>
@@ -108,6 +111,7 @@ public sealed class PlayHost : IDisposable
                 Goal = (GameGoal)Math.Clamp(options.Goal, 0, 2),
                 WorldType = (CivSim.Core.WorldGen.WorldType)Math.Clamp(options.WorldType, 0, 2),
                 WaterPercent = Math.Clamp(options.WaterPercent, 30, 80),
+                FairOres = options.FairOres,
             });
         }
 
