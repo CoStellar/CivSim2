@@ -211,10 +211,32 @@ public partial class PlayGame
             }
         }
 
-        var b = new RichTipButton { Text = name, FocusMode = Control.FocusModeEnum.None, TooltipText = tip.ToString(), CustomMinimumSize = new Vector2(UiKit.W(176), Ui.PixelTheme.FontSize + 14), Alignment = HorizontalAlignment.Left, ClipText = true };
-        b.AddThemeFontSizeOverride("font_size", Ui.PixelTheme.FontSize);
-        b.AddThemeColorOverride("font_color", ink);
-        b.AddThemeColorOverride("font_hover_color", UiKit.Text);
+        // 2026-11-24 (Patryk): the card shows its picture (or the branch's mark), its name, and under it the pictures of what
+        // it unlocks: buildings, units, roads and works.
+        var b = new RichTipButton { FocusMode = Control.FocusModeEnum.None, TooltipText = tip.ToString(), CustomMinimumSize = new Vector2(TechTree.CardWidth, TechTree.CardHeight) };
+        var row = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Position = new Vector2(6, 4) };
+        row.AddThemeConstantOverride("separation", 6);
+        b.AddChild(row);
+        Texture2D? techPic = UiKit.Picture?.Invoke("techs", "tech_" + info.Key);
+        row.AddChild(new Glyph(cat.Darkened(st.Known || st.Blocked is null ? 0.1f : 0.5f), UiKit.Short(info.Name), TechTree.CardHeight - 10, icon: techPic) { MouseFilter = Control.MouseFilterEnum.Ignore });
+        var col = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+        col.AddThemeConstantOverride("separation", 2);
+        row.AddChild(col);
+        Label title = UiKit.Label(name, 14, ink);
+        title.MouseFilter = Control.MouseFilterEnum.Ignore;
+        title.ClipText = true;
+        title.CustomMinimumSize = new Vector2(TechTree.CardWidth - TechTree.CardHeight - 8, 0);
+        col.AddChild(title);
+        var unlocks = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+        unlocks.AddThemeConstantOverride("separation", 2);
+        col.AddChild(unlocks);
+        foreach (Texture2D? pic in UnlockPictures(c, info.Id).Take(6))
+        {
+            if (pic is not null)
+            {
+                unlocks.AddChild(new TextureRect { Texture = pic, ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, CustomMinimumSize = new Vector2(26, 26), MouseFilter = Control.MouseFilterEnum.Ignore, Modulate = st.Known || st.Blocked is null ? Colors.White : new Color(0.6f, 0.6f, 0.6f) });
+            }
+        }
         if (info.Gateway.Length > 0 && !st.Known)
         {
             border = new Color(1f, 0.82f, 0.3f); // gateways stand out in gold
@@ -235,6 +257,30 @@ public partial class PlayGame
         }
 
         return b;
+    }
+
+    // The pictures of what a technology unlocks: its buildings, units, roads and works.
+    private static IEnumerable<Texture2D?> UnlockPictures(PlayContentMessage c, int tech)
+    {
+        foreach (PlayBuildingInfo x in c.Buildings.Where(x => x.Id != 0 && x.Tech == tech))
+        {
+            yield return UiKit.PictureOf("buildings/building_" + x.Key);
+        }
+
+        foreach (PlayUnitInfo x in c.Units.Where(x => x.Tech == tech && x.Tech > 0))
+        {
+            yield return UiKit.PictureOf("units/unit_" + x.Key);
+        }
+
+        foreach (PlayRoadInfo x in (c.Roads ?? []).Where(x => x.Tech == tech))
+        {
+            yield return UiKit.PictureOf("works/work_icon_" + (x.Level == 1 ? "track" : "road"));
+        }
+
+        foreach (PlayWorkInfo x in (c.Works ?? []).Where(x => x.Tech == tech))
+        {
+            yield return UiKit.PictureOf("works/work_icon_" + x.Key);
+        }
     }
 
     private void SettlementTable(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
