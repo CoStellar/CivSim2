@@ -22,6 +22,9 @@ mkdir -p "$out/art"
 cp -r "$root/art/placeholder" "$out/art/placeholder"
 [ -d "$root/art/packs" ] && cp -r "$root/art/packs" "$out/art/packs"
 [ -d "$root/art/export" ] && cp -r "$root/art/export" "$out/art/export"
+# Sounds are read as plain .ogg files from next to the exe too (AudioManager.FindAudioDirectory).
+mkdir -p "$out/audio"
+cp -r "$root/audio/music" "$root/audio/ambient" "$root/audio/sfx" "$root/audio/sounds.json" "$root/audio/CREDITS.md" "$out/audio/"
 rm -rf "$out/data/schema/.git" 2>/dev/null || true
 cd "$root/build"
 rm -f CivSim2-windows.zip

@@ -14,6 +14,10 @@ config/name="CivSim 2"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
+[autoload]
+
+Audio="*res://scripts/Audio/AudioManager.cs"
+
 [display]
 
 window/size/viewport_width=1920

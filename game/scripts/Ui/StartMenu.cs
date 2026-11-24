@@ -365,6 +365,9 @@ public partial class StartMenu : CanvasLayer
         };
         sizeRow.AddChild(size);
 
+        _content.AddChild(Heading("Sound"));
+        _content.AddChild(Audio.AudioPanel.Build());
+
         _content.AddChild(Heading("Art"));
         var row = new HBoxContainer();
         _content.AddChild(row);

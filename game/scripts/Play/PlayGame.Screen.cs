@@ -373,6 +373,8 @@ public partial class PlayGame
             _layers.SetOpacity(MapLayer.Owner, (int)x);
         };
         help.AddChild(tint);
+        help.AddChild(UiKit.Label("SOUND", 18, UiKit.Heading));
+        help.AddChild(Audio.AudioPanel.Build());
 
         // The controls: the "Controls" chapter of the manual (data/sim/manual.md), so the keys are written in one place.
         var controls = new RichTextLabel { BbcodeEnabled = true, FitContent = true, ScrollActive = false, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.None };
@@ -405,7 +407,13 @@ public partial class PlayGame
 
     private void OpenWindow(string name, bool toggle = true)
     {
+        string was = _bigMode;
         _bigMode = toggle && _bigMode == name ? "" : name;
+        if (was != _bigMode)
+        {
+            Audio.AudioManager.Play(_bigMode.Length > 0 ? "window_open" : "window_close");
+        }
+
         _bigSignature = "";
         if (_bigMode == "Summary")
         {

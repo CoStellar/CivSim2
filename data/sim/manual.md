@@ -74,7 +74,8 @@ In the Roads & works tab pick a track or road (or a ditch, palisade, wall), then
 | T | The tutorial.
 | G | Which routes show: none, orders under way, or those and the standing ones.
 | L | A longer or shorter chronicle.
-| H | The keys, the font, the interface size and how strongly a civilization's colour covers its land.
+| H | The keys, the font, the interface size, how strongly a civilization's colour covers its land, and the sound volumes.
+| K | Sound off and on.
 | F1 | This manual.
 | Page Up / Page Down | Scroll the open window or the side panel.
 
