@@ -85,6 +85,13 @@ public partial class PlayGame : Node2D
     /// <summary>Raised when the player wants the start menu back.</summary>
     public event Action? MenuRequested;
 
+    /// <summary>
+    /// Raised when the player picks another art pack in the game's settings (folder name, empty for the default
+    /// pictures). The handler switches the shared <see cref="ArtLibrary"/> to it and saves the choice; the game then
+    /// redraws its pictures and interface.
+    /// </summary>
+    public event Action<string>? ArtPackChosen;
+
     /// <summary>Saves a screenshot after <paramref name="seconds"/> of play, then quits (for automated checks).</summary>
     public void ScreenshotAfter(string path, double seconds, IEnumerable<(double At, Action<PlayGame> Do)>? steps = null)
     {
@@ -166,6 +173,9 @@ public partial class PlayGame : Node2D
     /// <summary>For screenshots of test scenarios: a debug key (0 goods, 1 research, 2 map, 3 people, 4 next era).</summary>
     public void ScriptDebug(int action) => _session?.Play(PlayCommandKind.Debug, action);
 
+    /// <summary>Screenshots: switches the art pack as the settings would (folder name, empty for the default).</summary>
+    public void ScriptArtPack(string key) => UseArtPack(key);
+
     /// <summary>For screenshots: opens a window by name ("Help" for the help).</summary>
     public void ScriptOpen(string mode)
     {
@@ -177,7 +187,7 @@ public partial class PlayGame : Node2D
 
         _bigMode = mode;
         _bigSignature = "";
-        if (mode == "Summary")
+        if (mode is "Summary" or "Civilization")
         {
             _session?.AskSummary();
         }
@@ -446,6 +456,7 @@ public partial class PlayGame : Node2D
     /// <inheritdoc/>
     public override void _Ready()
     {
+        OverlayColors.Palette = PlayOverlay.CivColor; // the land's tint in the same colours as the borders and figures
         _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
@@ -493,6 +504,7 @@ public partial class PlayGame : Node2D
     /// <inheritdoc/>
     public override void _ExitTree()
     {
+        OverlayColors.Palette = null;
         _session?.Close();
         _host?.Dispose();
     }
@@ -748,6 +760,9 @@ public partial class PlayGame : Node2D
                 break;
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 or Key.Key6 } f:
                 OpenWindow(WindowNames[(int)(f.Keycode - Key.Key1)]);
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key0 }:
+                OpenWindow("Civilization"); // our emblem's window
                 break;
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P }:
                 OpenWindow("Units"); // patrols are listed first there

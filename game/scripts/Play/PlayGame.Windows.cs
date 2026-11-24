@@ -18,9 +18,27 @@ public partial class PlayGame
     private void UpdateWindow(PlayViewMessage v, PlayContentMessage c)
     {
         _window.Visible = _bigMode.Length > 0;
-        float half = _bigMode == "Research" ? (GetViewport().GetVisibleRect().Size.X / 2) - 12 : _windowHalf;
-        _window.OffsetLeft = -half;
-        _window.OffsetRight = half;
+        float screenX = GetViewport().GetVisibleRect().Size.X;
+        float half = _bigMode == "Research" ? (screenX / 2) - 12 : _windowHalf;
+        float left = (screenX / 2) - half, right = (screenX / 2) + half;
+
+        // 2026-11-24 (Patryk: some pictures do not fit): a window stands beside the side panel, not over it, so the panel's
+        // numbers and buttons stay whole; only when the screen is too narrow for both it covers the panel as before.
+        float panelRight = _inspector.Visible ? _inspector.Position.X + _inspector.Size.X + 8 : 0;
+        if (left < panelRight)
+        {
+            float width = right - left;
+            left = panelRight;
+            right = Math.Min(screenX - 8, left + width);
+            if (right - left < UiKit.W(520))
+            {
+                left = (screenX / 2) - half;
+                right = (screenX / 2) + half;
+            }
+        }
+
+        _window.OffsetLeft = left - (screenX / 2);
+        _window.OffsetRight = right - (screenX / 2);
         if (_bigMode.Length == 0)
         {
             return;
@@ -39,6 +57,7 @@ public partial class PlayGame
             "Thinkers" => "Thinkers and advisors",
             "Units" => "Our units and patrols",
             "Tutorial" => "Tutorial",
+            "Civilization" => "Our civilization",
             _ => "Summary",
         };
         var items = new List<UiItem>();
@@ -61,6 +80,9 @@ public partial class PlayGame
                 break;
             case "Tutorial":
                 TutorialItems(v, items);
+                break;
+            case "Civilization":
+                OurCivilizationItems(v, c, items);
                 break;
             default:
                 SummaryItems(v, items);
@@ -130,7 +152,8 @@ public partial class PlayGame
         foreach (string cat in (IEnumerable<string>?)c.Categories ?? Categories)
         {
             var one = new HBoxContainer();
-            one.AddChild(new Glyph(UiKit.CategoryColor(cat), "", 14, round: true) { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+            Texture2D? mark = UiKit.Picture?.Invoke("ui", "category_" + cat);
+            one.AddChild(new Glyph(UiKit.CategoryColor(cat), "", mark is null ? 14 : 22, round: mark is null, icon: mark) { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
             one.AddChild(UiKit.Label(char.ToUpperInvariant(cat[0]) + cat[1..], 13, UiKit.Text));
             row.AddChild(one);
         }
@@ -688,6 +711,7 @@ public partial class PlayGame
 
     private void PeoplesItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
+        items.Add(new HeaderItem("Our people", c.Eras[v.Era], new Color("c8a050"), "Us", UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), v.Civ), v.Civ, Portrait: true));
         if (v.Peoples.Count == 0)
         {
             items.Add(new LineItem("We have met no other civilization yet. Send scouts to find them.", UiKit.Muted, 15));
@@ -697,7 +721,8 @@ public partial class PlayGame
         {
             int other = p.Civ;
             string status = p.Dead ? "gone" : p.AtWar ? "AT WAR" : p.Alliance ? "allies" : p.Trade ? "trade partners" : "at peace";
-            items.Add(new HeaderItem(p.Name, status + (p.Reputation < 0 ? $" - known for treachery ({p.Reputation})" : ""), p.AtWar ? new Color("b84040") : new Color("6a7a5a"), UiKit.Short(p.Name)));
+            // 2026-11-24 (Patryk): each people's emblem, in the look of our era (board, stone, shield, banner, heraldry).
+            items.Add(new HeaderItem(p.Name, status + (p.Reputation < 0 ? $" - known for treachery ({p.Reputation})" : ""), p.AtWar ? new Color("b84040") : new Color("6a7a5a"), UiKit.Short(p.Name), UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), p.Civ), p.Civ, p.Dead, Portrait: true));
             if (p.Dead)
             {
                 continue;
@@ -779,7 +804,7 @@ public partial class PlayGame
         items.Add(new SectionItem("Thinker"));
         if (v.Thinker is { } t)
         {
-            items.Add(new HeaderItem(t.Name, $"{t.Rarity} thinker", new Color("8a5ab8"), UiKit.Short(t.Name)));
+            items.Add(new HeaderItem(t.Name, $"{t.Rarity} thinker", new Color("8a5ab8"), UiKit.Short(t.Name), ThinkerPortrait(t), Portrait: true));
             items.Add(new LineItem($"Research costs {t.CostPercent}% and needs {t.ExperiencePercent}% of the experience.", UiKit.Text, 14));
         }
         else
@@ -789,14 +814,14 @@ public partial class PlayGame
 
         if (v.ThinkerOffer is { } to)
         {
-            items.Add(new LineItem($"On offer: {to.Name}, {to.Rarity.ToLowerInvariant()}: costs {to.CostPercent}%, experience {to.ExperiencePercent}%.", UiKit.Warn, 14));
+            items.Add(new HeaderItem($"On offer: {to.Name}", $"{to.Rarity} thinker: research costs {to.CostPercent}%, experience {to.ExperiencePercent}%", new Color("8a5ab8"), UiKit.Short(to.Name), ThinkerPortrait(to), Portrait: true));
             items.Add(new ActItem($"Hire {to.Name} for {Amounts(c, to.HirePrice)}", () => _session!.Play(PlayCommandKind.Hire, 0, flag: false), Accent: UiKit.Good));
         }
 
         items.Add(new SectionItem("Advisor"));
         if (v.Advisor is { } a)
         {
-            items.Add(new HeaderItem(a.Name, $"{a.Rarity} advisor on {a.Fields}", new Color("8a6a40"), UiKit.Short(a.Name)));
+            items.Add(new HeaderItem(a.Name, $"{a.Rarity} advisor on {a.Fields}", new Color("8a6a40"), UiKit.Short(a.Name), AdvisorPortrait(a), Portrait: true));
             items.Add(new ActItem("Let the advisor go", () => _session!.Play(PlayCommandKind.Dismiss, 0)));
         }
         else
@@ -806,9 +831,19 @@ public partial class PlayGame
 
         if (v.AdvisorOffer is { } ao)
         {
-            items.Add(new LineItem($"On offer: {ao.Name}, {ao.Rarity.ToLowerInvariant()}, advises on {ao.Fields}.", UiKit.Warn, 14));
+            items.Add(new HeaderItem($"On offer: {ao.Name}", $"{ao.Rarity} advisor on {ao.Fields}", new Color("8a6a40"), UiKit.Short(ao.Name), AdvisorPortrait(ao), Portrait: true));
             items.Add(new ActItem($"Hire {ao.Name} for {Amounts(c, ao.HirePrice)}", () => _session!.Play(PlayCommandKind.Hire, 0, flag: true), Accent: UiKit.Good));
         }
+    }
+
+    // 2026-11-24 (Patryk): every thinker and advisor has a portrait with looks of their own; a thinker is dressed by rarity,
+    // an advisor holds the thing of their (first) field.
+    private static string ThinkerPortrait(PlayPersonView t) => UiKit.PortraitName("thinker", UiKit.KeyOf(t.Rarity), t.Name);
+
+    private static string AdvisorPortrait(PlayPersonView a)
+    {
+        string field = a.Fields.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "economy";
+        return UiKit.PortraitName("advisor", UiKit.KeyOf(field), a.Name);
     }
 
     private void SummaryItems(PlayViewMessage v, List<UiItem> items)
@@ -844,5 +879,61 @@ public partial class PlayGame
         }
 
         items.Add(new ActItem("Refresh", () => _session!.AskSummary()));
+    }
+
+    // 2026-11-24 (Patryk): the window behind our emblem: our whole civilization at a glance.
+    private void OurCivilizationItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
+    {
+        string eraKey = UiKit.KeyOf(c.Eras[v.Era]);
+        PlayHistoryView? ours = _session?.Summary?.Peoples.FirstOrDefault(p => p.Civ == v.Civ);
+        string name = ours?.Name ?? "Our people";
+        string next = v.Era + 1 < c.Eras.Count ? $"{v.EraKnown} of {v.EraNeed} technologies to the {c.Eras[v.Era + 1]}" : "the last era";
+        items.Add(new HeaderItem(name, $"{c.Eras[v.Era]} - {next}", new Color("c8a050"), "Us", UiKit.EmblemName(eraKey, v.Civ), v.Civ, v.Lost, Portrait: true));
+        if (v.Goal is { Length: > 0 } goal)
+        {
+            items.Add(new LineItem("Goal: " + goal, UiKit.Heading, 15));
+        }
+
+        items.Add(new LineItem($"Score {v.Score}. Played {Clock()}.", UiKit.Muted, 14));
+
+        var settlements = v.Settlements.Where(s => s.Civ == v.Civ && !s.Remembered).ToList();
+        int known = v.Techs.Count(t => t.Known);
+        int units = v.Units.Count(u => u.Civ == v.Civ);
+        int buildings = v.Buildings.Count(b => b.Civ == v.Civ);
+        int housing = settlements.Sum(s => s.Housing);
+        items.Add(new SectionItem("Our land and people"));
+        items.Add(new TableItem(2,
+        [
+            new("People", UiKit.Muted), new($"{v.People} (homes for {housing})"),
+            new("Settlements", UiKit.Muted), new(string.Join(", ", settlements.GroupBy(s => s.Level).OrderByDescending(g => g.Key).Select(g => $"{g.Count()} {(g.Key < c.Levels.Count ? c.Levels[g.Key].Name.ToLowerInvariant() : "?")}")) is { Length: > 0 } list ? $"{settlements.Count}: {list}" : "0"),
+            new("Buildings", UiKit.Muted), new($"{buildings}"),
+            new("Technologies", UiKit.Muted), new($"{known} of {c.Techs.Count}"),
+            new("Units", UiKit.Muted), new($"{units} (army {v.ArmyUnits} of {v.ArmyLimit})"),
+            new("Food", UiKit.Muted), new(v.Hungry ? "hungry" : "enough", v.Hungry ? UiKit.Bad : UiKit.Text),
+        ]));
+
+        items.Add(new SectionItem("Our people's minds"));
+        items.Add(new LineItem(v.Thinker is { } t ? $"Thinker: {t.Name} ({t.Rarity.ToLowerInvariant()})" : "No thinker.", UiKit.Text, 14));
+        items.Add(new LineItem(v.Advisor is { } a ? $"Advisor: {a.Name} ({a.Rarity.ToLowerInvariant()}, {a.Fields.ToLowerInvariant()})" : "No advisor.", UiKit.Text, 14));
+
+        items.Add(new SectionItem("Other peoples"));
+        var met = v.Peoples.Where(p => !p.Dead).ToList();
+        if (met.Count == 0)
+        {
+            items.Add(new LineItem("We have met no other civilization yet.", UiKit.Muted, 14));
+        }
+        else
+        {
+            items.Add(new LineItem($"We know {met.Count}: at war with {met.Count(p => p.AtWar)}, trading with {met.Count(p => p.Trade)}, allied with {met.Count(p => p.Alliance)}.", UiKit.Text, 14));
+        }
+
+        var acts = new List<ActItem>();
+        for (int i = 0; i < WindowNames.Length; i++)
+        {
+            string w = WindowNames[i];
+            acts.Add(new ActItem($"{i + 1} {w}", () => OpenWindow(w, toggle: false), Pic: "ui/window_" + w.ToLowerInvariant()));
+        }
+
+        items.Add(new ButtonsItem(acts));
     }
 }

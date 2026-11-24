@@ -16,13 +16,16 @@ import json
 import os
 import random
 import re
+import sys
 
 from PIL import Image
 
 import game_art
+import icon_art
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "art", "placeholder")
+FLAT_OUT = os.path.join(ROOT, "art", "packs", "flat")
 W, H = 48, 42
 
 MANIFEST = []  # every picture the viewer can load, with its size (art/placeholder/manifest.json)
@@ -95,16 +98,18 @@ class Canvas:
         self.im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
 
     def px(self, x, y, c):
+        x, y = int(x), int(y)
         if 0 <= x < self.w and 0 <= y < self.h:
             self.im.putpixel((x, y), tuple(c) + (255,))
 
     def rect(self, x0, y0, x1, y1, c):
+        x0, y0, x1, y1 = (int(round(v)) for v in (x0, y0, x1, y1))
         for y in range(y0, y1 + 1):
             for x in range(x0, x1 + 1):
                 self.px(x, y, c)
 
     def line(self, x0, y0, x1, y1, c, width=1):
-        n = max(abs(x1 - x0), abs(y1 - y0), 1)
+        n = int(round(max(abs(x1 - x0), abs(y1 - y0), 1)))
         for i in range(n + 1):
             x = round(x0 + (x1 - x0) * i / n)
             y = round(y0 + (y1 - y0) * i / n)
@@ -660,6 +665,12 @@ ICONS = ["biomes", "elevation", "hillshade", "temperature", "humidity", "fertili
 
 
 def main():
+    global OUT
+    flat = "--flat" in sys.argv
+    if flat:
+        # The flat pack (Patryk, 2026-11-24): the same pictures without the old CivSim texture, like the first placeholders.
+        game_art.FLAT = True
+        OUT = FLAT_OUT
     with open(os.path.join(ROOT, "data", "biomes.json"), encoding="utf-8") as f:
         biomes = json.load(f)["biomes"]
     with open(os.path.join(ROOT, "data", "resources.json"), encoding="utf-8") as f:
@@ -667,7 +678,7 @@ def main():
     with open(os.path.join(ROOT, "data", "effects.json"), encoding="utf-8") as f:
         effects = json.load(f)["effects"]
     # Hex tiles, buildings, settlement centres, units and goods of the new game at 2x (game_art.py, decisions G1-G6).
-    game_art.G.update(nearest=nearest, shade=shade, Canvas=Canvas, palette=PAL)
+    game_art.G.update(nearest=nearest, shade=shade, Canvas=Canvas, palette=PAL, out=OUT)
     game_art.generate(ROOT)
     template = Image.new("RGBA", (game_art.HW, game_art.HH), (0, 0, 0, 0))
     for y in range(game_art.HH):
@@ -690,6 +701,12 @@ def main():
         icon(name)
     theme()
     game_art.generate_ui()  # 2026-11-23: textured frames of the interface (stone, leather, wood) over the plain ones
+    game_art.generate_era_ui()  # 2026-11-24: frames of each era after the stone age (ui/<piece>_<era>.png)
+    with open(os.path.join(ROOT, "data", "sim", "game.json"), encoding="utf-8") as f:
+        icon_art.generate(json.load(f))  # 2026-11-24: technologies, branches, eras, events, portraits, emblems...
+    if flat:
+        finish_flat()
+        return
     unique = {}
     for entry in MANIFEST:
         unique[entry["file"]] = entry
@@ -705,6 +722,30 @@ def main():
         json.dump(manifest, f, indent=1)
         f.write("\n")
     print("placeholders written to", os.path.relpath(OUT, ROOT), f"({len(MANIFEST)} files)")
+
+
+def finish_flat():
+    """Keeps in the flat pack only the pictures that differ from the placeholders (a pack may hold any subset) and writes
+    its pack.json."""
+    kept = 0
+    for entry in MANIFEST:
+        mine = os.path.join(FLAT_OUT, entry["file"])
+        base = os.path.join(ROOT, "art", "placeholder", entry["file"])
+        if not os.path.exists(mine):
+            continue
+        a, b = Image.open(mine).convert("RGBA"), Image.open(base).convert("RGBA") if os.path.exists(base) else None
+        if b is not None and a.size == b.size and a.tobytes() == b.tobytes():
+            os.remove(mine)
+        else:
+            kept += 1
+    for d, dirs, files in os.walk(FLAT_OUT, topdown=False):
+        if not dirs and not files:
+            os.rmdir(d)
+    with open(os.path.join(FLAT_OUT, "pack.json"), "w", encoding="utf-8") as f:
+        json.dump({"name": "Flat", "author": "CivSim 2",
+                   "description": "Plain colours without texture, like the first placeholders"}, f, indent=1)
+        f.write("\n")
+    print("flat pack written to", os.path.relpath(FLAT_OUT, ROOT), f"({kept} files)")
 
 
 if __name__ == "__main__":

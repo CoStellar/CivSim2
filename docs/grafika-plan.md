@@ -15,7 +15,7 @@ i paczki w `art/packs/` wygrywają z `art/placeholder/`).
 | Drogi, rów, palisada, mur, akwedukt, mosty | linie i kreski | kod |
 | Złoża (22), „???”, znaki rudy | litery i kółka | kod |
 | Dobra (29) w pasku i oknach | litera w kółku („F”, „W”, „S”) | kod (`UiKit`) |
-| Technologie (70), ery (5), doradcy, myśliciele | tekst | kod |
+| Technologie (70), ery (5), doradcy, myśliciele | ikony, znaki er i portrety (od 2026-11-24, rozdział 17) | `art/placeholder/icon_art.py` |
 
 Pozostałe grafiki zastępcze z etapu 5 (osady „hearth” i „walled”, wędrujący obóz, pole) pochodzą z gry legacy i jej podglądu obserwatora (`MapObjects.cs`). Budynki, osady i jednostki nowej gry rysuje kod z tabeli wyżej.
 
@@ -305,3 +305,56 @@ Małe plakietki z prawej strony oddziału, jedna pod drugą, w tym samym stylu c
 
 Szyku nie ma jeszcze w danych widoku, więc nie ma dla niego znacznika.
 
+
+## 17. Brakujące ikony, portrety i herby (Patryk, 2026-11-24)
+
+Lista potwierdzona przez Patryka; wszystko robi skrypt `art/placeholder/icon_art.py` (wywoływany z `generate.py`) w zasadach
+z rozdziału 8 (paleta, obrys, światło z lewej góry, faktura; w paczce płaskiej bez faktury).
+
+| Co | Pliki | Rozmiar | Gdzie w grze |
+| --- | --- | --- | --- |
+| technologie | `techs/tech_<klucz>` (70) | 32×32 | karty w drzewie badań |
+| gałęzie drzewa | `ui/category_<gałąź>` (8) | 16×16 | legenda nad drzewem badań |
+| ery | `ui/era_<era>` (5) | 32×32 | obok nazwy ery w górnym pasku |
+| zdarzenia | `ui/event_<zdarzenie>` (5) | 32×32 | panel zdarzenia (zima pokazuje płatek śniegu) |
+| premie weteranów | `ui/veteran_<wybór>` (3) | 16×16 | przyciski wyboru premii w panelu oddziału |
+| przyciski okien | `ui/window_<okno>` (6) | 16×16 | przyciski okien w górnym pasku i w nagłówku okna |
+| doradca, alert „Strangers” | `ui/advisor`, `ui/alert_11` | 32×32 | pasek alertów |
+| portrety doradców | `portraits/advisor_<dziedzina>_01..12` | 64×92 | okno „Thinkers and advisors” (także oferty) |
+| portrety myślicieli | `portraits/thinker_<rzadkość>_01..12` | 64×92 | jak wyżej |
+| herby ludów | `emblems/emblem_<era>_<motyw>` (8 × 5) | 40×40 | okno „Civilizations” |
+
+**Portrety (prośba Patryka):** każdy portret ma własny, losowany wygląd: kolor skóry (7), włosy i fryzura, oczy, broda lub wąsy,
+wiek (zmarszczki, siwe włosy), nakrycie głowy, kobieta albo mężczyzna. Ubranie jest w kolorze ludu (trzy magenty jako światło,
+odcień i cień, więc w grze ubranie ma cieniowanie). Doradca trzyma rzecz swojej dziedziny: gospodarka sakiewkę albo wagę,
+wzrost snop albo kosz owoców, badania zwój, księgę albo pióro, ekspansja mapę albo kompas. Myśliciel jest ubrany według
+rzadkości: zwykły w prostej szacie z tabliczką, coraz rzadsi z obszyciem, białym kołnierzem, płaszczem, złotą zapinką,
+łańcuchem i opaską; legendarny najczęściej najstarszy, w diademie albo wieńcu, z kulą, astrolabium albo lampą. Ramka ma kolor
+dziedziny (doradca) albo rzadkości (myśliciel). Którego z 12 wariantów dostaje osoba, wynika z jej imienia (stały hasz), więc
+ta sama osoba zawsze wygląda tak samo. Zasady gry dla doradców i myślicieli się nie zmieniły.
+
+**Herb ludu zmienia się z erą:** epoka kamienia: stojący kamień ze znakiem; neolit: deska z desek na sznurku z namalowanym
+znakiem (zamiana na prośbę Patryka, 2026-11-24); epoka brązu: drewniana tarcza z brązowym okuciem; epoka żelaza: chorągiew z sukna na drążku; średniowiecze: tarcza
+herbowa ze złotym brzegiem i głową w kolorze ludu. Motywy (8): jeleń, słońce, drzewo, fala, góra, ptak, dłoń, spirala; lud
+dostaje motyw według swojego numeru przesuniętego o ziarno świata. Wszystkie herby w oknie pokazują erę naszego ludu (er innych ludów nie widzimy).
+Nasz herb jest stale widoczny w lewym górnym rogu (80×80, czyli 2×). Kliknięcie albo klawisz 0 otwiera okno „Our civilization”:
+ludność, osady, budynki, technologie, wojsko, myśliciel, doradca i stosunki z innymi ludami. Kolor i motyw herbu wynikają z ziarna
+świata, więc w każdej grze są inne.
+
+## 18. Paczka płaska „Flat” (Patryk, 2026-11-24)
+
+Druga paczka grafik: `art/packs/flat/`. Te same kształty, kolory ludu i rozmiary 2×, ale bez faktury starego CivSim: trawa
+i ziemia w kolorach mapy, ściany bez cegieł i kamieni, dachy bez dachówek, ramki interfejsu bez wzoru. Paczkę wybiera się
+w menu startowym albo w trakcie gry (przycisk „?”, sekcja ART PACK); przełączenie działa od razu.
+
+## 19. Interfejs według ery (Patryk, 2026-11-24)
+
+Ramki okien, przyciski, zakładki, dymki i górny pasek zmieniają wygląd, gdy lud wchodzi w nową erę (pliki
+`ui/<element>_<era>.png`, brakujący element bierze wygląd podstawowy):
+- epoka kamienia: kamień i skóra (wygląd podstawowy);
+- neolit: wiklina i glina;
+- epoka brązu: kamień ze złotą obwódką, pasek z blachy brązu z nitami;
+- epoka żelaza: żelazne płyty z nitami, łupek;
+- średniowiecze: ciemny kamień ze złotem, niebieskie sukno.
+
+Menu startowe ma zawsze wygląd podstawowy.

@@ -122,7 +122,10 @@ public sealed record PlayPersonView(
     [property: Key(4)] string Fields,
     [property: Key(5)] long[] HirePrice);
 
-/// <summary>Server → client, once: the rules a player needs to see (goods, buildings, levels).</summary>
+/// <summary>
+/// Server → client, once: the rules a player needs to see (goods, buildings, levels). <see cref="LookSeed"/> picks the
+/// colours and emblems of the peoples in this game (the world's seed), so they differ from game to game.
+/// </summary>
 [MessagePackObject]
 public sealed record PlayContentMessage(
     [property: Key(0)] IReadOnlyList<PlayGoodInfo> Goods,
@@ -146,7 +149,8 @@ public sealed record PlayContentMessage(
     [property: Key(18)] PlayCombatInfo? Combat = null,
     [property: Key(19)] string[]? VeteranOptions = null,
     [property: Key(20)] int[]? VeteranLevels = null,
-    [property: Key(21)] int[]? PeaceMinutes = null) : IProtocolMessage;
+    [property: Key(21)] int[]? PeaceMinutes = null,
+    [property: Key(22)] ulong LookSeed = 0) : IProtocolMessage;
 
 /// <summary>
 /// Numbers of battle the client shows on hexes (cover markers): cover of trees, palisade and wall against ranged and melee,

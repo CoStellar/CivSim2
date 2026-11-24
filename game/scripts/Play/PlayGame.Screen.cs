@@ -27,6 +27,12 @@ public partial class PlayGame
     private Control _rightCol = null!;
     private float _topBottom;
     private Label _eraLabel = null!;
+    private TextureRect _eraIcon = null!;
+    private TextureButton _emblemButton = null!;
+    private string _emblemPic = "";
+
+    // The era whose interface frames are in use (an era key), so the theme is built again only when the era changes.
+    private string? _themeEra;
     private Label _yearLabel = null!;
     private VBoxContainer _eraBarBox = null!;
     private Label _clockLabel = null!;
@@ -37,6 +43,8 @@ public partial class PlayGame
     private Label _advisorName = null!;
     private Label _advisorText = null!;
     private Label _eventLabel = null!;
+    private Glyph _eventGlyph = null!;
+    private TextureRect _eventIcon = null!;
     private HFlowContainer _alertsBox = null!;
     private RichTextLabel _chronicleText = null!;
     private PanelContainer _chroniclePanel = null!;
@@ -108,13 +116,33 @@ public partial class PlayGame
 
         // ---- Top bar: resources | era and years | time, speed, windows ----
         var top = new PanelContainer { AnchorRight = 1, OffsetBottom = topH };
-        top.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.11f, 0.09f, 0.08f, 0.94f), new Color(0.35f, 0.28f, 0.2f), 0, 2));
+        if (PixelTheme.Current is null)
+        {
+            top.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.11f, 0.09f, 0.08f, 0.94f), new Color(0.35f, 0.28f, 0.2f), 0, 2));
+        }
+        else
+        {
+            top.ThemeTypeVariation = "TopBar"; // 2026-11-24: the era's bar (leather, wicker, bronze, iron, cloth)
+        }
         root.AddChild(top);
         _top = top;
         _topBottom = topH;
         var topRow = new HBoxContainer();
         topRow.AddThemeConstantOverride("separation", 10);
         top.AddChild(topRow);
+
+        // 2026-11-24 (Patryk): our emblem, large and always in sight at the left of the top bar; it opens the window about
+        // our whole civilization. It takes the look of our era like the rest of the interface.
+        _emblemButton = new TextureButton
+        {
+            TooltipText = "Our civilization (key 0)", FocusMode = Control.FocusModeEnum.None, StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered,
+            IgnoreTextureSize = true, CustomMinimumSize = new Vector2(80, 80), TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, Visible = false,
+        };
+        _emblemButton.Pressed += () => OpenWindow("Civilization");
+        _emblemButton.MouseEntered += () => _emblemButton.Modulate = new Color(1.15f, 1.15f, 1.15f);
+        _emblemButton.MouseExited += () => _emblemButton.Modulate = Colors.White;
+        topRow.AddChild(_emblemButton);
 
         // A15 (tests 2026-11-20): the goods stop before the era in the middle and wrap onto more rows; the bar grows with them
         // and what sits under it moves down (UpdateUnderTop).
@@ -144,6 +172,7 @@ public partial class PlayGame
         {
             string name = WindowNames[i];
             Button wb = UiKit.Button($"{i + 1} {name}", () => OpenWindow(name), $"{name} (key {i + 1})");
+            UiKit.SetIcon(wb, "ui/window_" + name.ToLowerInvariant()); // 2026-11-24 (Patryk): a picture on each window button
             wb.AddThemeFontSizeOverride("font_size", Math.Max(12, PixelTheme.FontSize * 3 / 4));
             windows.AddChild(wb);
         }
@@ -179,10 +208,16 @@ public partial class PlayGame
         var centre = _centreBox = new VBoxContainer { CustomMinimumSize = new Vector2(UiKit.W(320), 0), SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
         centre.AddThemeConstantOverride("separation", 0);
         _topRow.AddChild(centre);
-        _topRow.MoveChild(centre, 1); // between the goods and the right group
+        _topRow.MoveChild(centre, 2); // between the goods and the right group (after the emblem and the goods)
         _eraLabel = UiKit.Label("", 24, UiKit.Heading);
         _eraLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        centre.AddChild(_eraLabel);
+        _eraLabel.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
+        _eraIcon = new TextureRect { ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, CustomMinimumSize = new Vector2(28, 28), TextureFilter = CanvasItem.TextureFilterEnum.Nearest, MouseFilter = Control.MouseFilterEnum.Ignore, Visible = false };
+        var eraRow = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = Control.MouseFilterEnum.Ignore };
+        eraRow.AddThemeConstantOverride("separation", 6);
+        eraRow.AddChild(_eraIcon);
+        eraRow.AddChild(_eraLabel);
+        centre.AddChild(eraRow);
         _eraBarBox = new VBoxContainer();
         centre.AddChild(_eraBarBox);
         _researchChip = UiKit.Button("Choose research", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (2).");
@@ -203,7 +238,10 @@ public partial class PlayGame
         var adv = new HBoxContainer();
         adv.AddThemeConstantOverride("separation", 8);
         _advisorPanel.AddChild(adv);
-        adv.AddChild(new Glyph(new Color("8a4030"), "!", 32, round: true));
+        _eventGlyph = new Glyph(new Color("8a4030"), "!", 32, round: true);
+        adv.AddChild(_eventGlyph);
+        _eventIcon = new TextureRect { CustomMinimumSize = new Vector2(32, 32), StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest, SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, Visible = false };
+        adv.AddChild(_eventIcon);
         var advText = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         adv.AddChild(advText);
         _advisorName = UiKit.Label("", 15, UiKit.Heading);
@@ -292,7 +330,10 @@ public partial class PlayGame
         for (int i = 0; i < WindowNames.Length; i++)
         {
             string name = WindowNames[i];
-            winHead.AddChild(UiKit.Button($"{i + 1} {name}", () => OpenWindow(name, toggle: false), $"key {i + 1}"));
+            // The picture and the key only (the name is in the tooltip and the window's title), so the row fits narrow windows.
+            Button hb = UiKit.Button($"{i + 1}", () => OpenWindow(name, toggle: false), $"{name} (key {i + 1})");
+            UiKit.SetIcon(hb, "ui/window_" + name.ToLowerInvariant(), 2);
+            winHead.AddChild(hb);
         }
 
         winHead.AddChild(UiKit.Button("Close", () => OpenWindow(""), "Close (Esc)"));
@@ -364,6 +405,19 @@ public partial class PlayGame
             sizes.AddChild(b);
         }
 
+        // 2026-11-24 (Patryk): the art pack, switched while playing (the start menu has the same choice).
+        help.AddChild(UiKit.Label("ART PACK", 18, UiKit.Heading));
+        var packs = new HFlowContainer();
+        help.AddChild(packs);
+        var packChoices = new List<(string Key, string Name, string Tip)> { ("", "Default", "The pictures of the game (Patryk's art, then the placeholders).") };
+        packChoices.AddRange(ArtPack.Discover(ArtLibrary.FindArtDirectory()).Select(p => (p.Key, p.Name, p.Description.Length > 0 ? p.Description : "Pictures from the folder " + p.Key)));
+        foreach ((string key, string name, string tip) in packChoices)
+        {
+            var b = new Button { Text = name, ToggleMode = true, ButtonPressed = (_art.Pack?.Key ?? "") == key, FocusMode = Control.FocusModeEnum.None, TooltipText = tip };
+            b.Pressed += () => UseArtPack(key);
+            packs.AddChild(b);
+        }
+
         // 2026-11-24 (Patryk): how strongly the civilizations' colour covers their land.
         help.AddChild(UiKit.Label("CIVILIZATION COLOUR ON LAND", 18, UiKit.Heading));
         var tint = new HSlider { MinValue = 0, MaxValue = 60, Step = 1, Value = _layers[MapLayer.Influence].Opacity, CustomMinimumSize = new Vector2(UiKit.W(300), 24), TooltipText = "0: only the borders; more: the land takes the civilization's colour" };
@@ -389,6 +443,28 @@ public partial class PlayGame
         BuildKeysUi(root, topH);
     }
 
+    // Another art pack: the shared library switches (Main saves the choice), then the coloured pictures, the map and the
+    // interface are made again from it.
+    private void UseArtPack(string key)
+    {
+        ArtPackChosen?.Invoke(key);
+        _overlay?.ClearSprites();
+        UiKit.ClearPictures();
+        ApplyTheme();
+    }
+
+    // Builds the interface theme for the people's era from the current pictures and lays the screen out again.
+    private void ApplyTheme()
+    {
+        if (PixelTheme.Build(_art, _themeEra) is { } theme)
+        {
+            PixelTheme.Current = theme;
+            GetWindow().Theme = theme;
+        }
+
+        RebuildUi();
+    }
+
     // Saves and applies the interface size, then lays the screen out again for the new size.
     private void SetUiScale(int percent)
     {
@@ -407,7 +483,7 @@ public partial class PlayGame
     {
         _bigMode = toggle && _bigMode == name ? "" : name;
         _bigSignature = "";
-        if (_bigMode == "Summary")
+        if (_bigMode is "Summary" or "Civilization")
         {
             _session?.AskSummary();
         }
@@ -516,6 +592,29 @@ public partial class PlayGame
         }
 
         _eraLabel.Text = v.Lost ? "Our civilization is gone" : v.Winner is { } w ? $"{w} have won" : c.Eras[v.Era];
+        string eraKey = UiKit.KeyOf(c.Eras[v.Era]);
+        if (eraKey != _themeEra)
+        {
+            // 2026-11-24 (Patryk): the interface takes the frames of the people's era; built again after this update.
+            _themeEra = eraKey;
+            Callable.From(ApplyTheme).CallDeferred();
+        }
+
+        if (UiKit.Picture?.Invoke("ui", "era_" + eraKey) is { } eraPic && _eraIcon.Texture != eraPic)
+        {
+            _eraIcon.Texture = eraPic;
+        }
+
+        _eraIcon.Visible = _eraIcon.Texture is not null && !v.Lost && v.Winner is null;
+        string emblem = UiKit.EmblemName(eraKey, v.Civ) + (v.Lost ? "|grey" : "");
+        if (emblem != _emblemPic || _emblemButton.TextureNormal is null)
+        {
+            _emblemPic = emblem;
+            Texture2D? pic = UiKit.PortraitOf(UiKit.EmblemName(eraKey, v.Civ), v.Civ, v.Lost);
+            _emblemButton.TextureNormal = pic is null ? null : UiKit.Scaled(pic, 2);
+        }
+
+        _emblemButton.Visible = _emblemButton.TextureNormal is not null;
         if (!_endShown && (v.Lost || v.Winner is not null))
         {
             _endShown = true;
@@ -574,6 +673,13 @@ public partial class PlayGame
         string season = v.SeasonSeconds <= 0 ? "" : v.Winter ? $"WINTER: {v.SeasonSeconds / 60}:{v.SeasonSeconds % 60:00} left" : v.SeasonSeconds <= 60 ? $"Winter in {v.SeasonSeconds} s" : "";
         _eventLabel.Visible = hasEvent || season.Length > 0;
         _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" + (season.Length > 0 ? $"   {season}" : "") + (v.EventInfo is { } info ? $"\n{info}" : "") : season;
+
+        // 2026-11-24 (Patryk): the event's picture (drought, hard winter, epidemic, fire, flood); the winter shows the snowflake.
+        string eventKey = hasEvent ? "event_" + UiKit.KeyOf(v.Event!) : season.Length > 0 ? "event_hard_winter" : "";
+        Texture2D? eventPic = eventKey.Length > 0 ? UiKit.Picture?.Invoke("ui", eventKey) : null;
+        _eventIcon.Texture = eventPic;
+        _eventIcon.Visible = eventPic is not null;
+        _eventGlyph.Visible = eventPic is null;
         if (v.Advisor is { } a)
         {
             _advisorName.Text = $"{a.Name}, {a.Rarity.ToLowerInvariant()} advisor";

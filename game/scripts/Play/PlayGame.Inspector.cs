@@ -763,7 +763,7 @@ public partial class PlayGame
             {
                 int option = o;
                 string[] parts = options[o].Split('|');
-                acts.Add(new ActItem(parts[0], () => _session!.Play(PlayCommandKind.ChooseVeteran, kind, b: option), parts.Length > 1 ? parts[1] : "", Accent: UiKit.Good));
+                acts.Add(new ActItem(parts[0], () => _session!.Play(PlayCommandKind.ChooseVeteran, kind, b: option), parts.Length > 1 ? parts[1] : "", Accent: UiKit.Good, Pic: "ui/veteran_" + UiKit.KeyOf(parts[0])));
             }
 
             items.Add(new ButtonsItem(acts));

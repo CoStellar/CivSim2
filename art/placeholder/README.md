@@ -25,5 +25,17 @@ Proste grafiki, które gra rysuje, dopóki nie ma pixel artu Patryka. Robi je sk
 | `objects/` | `improvement_field_01` (pole uprawne) | 48×42 | 1 |
 | `units/` | `unit_migrants_idle_01` (wędrujący obóz), `unit_scout_idle_01` | 32×32 | 2 |
 | `effects/` | `event_<efekt>` (efekty zdarzeń na polach i osadach z `data/effects.json`) | 24×24 | 6 |
+| `techs/` | `tech_<klucz>` (każda technologia z `data/sim/game.json`; skrypt `icon_art.py`) | 32×32 | 70 |
+| `ui/` | `category_<gałąź>` (gałęzie drzewa badań) | 16×16 | 8 |
+| `ui/` | `era_<era>` (znak ery obok jej nazwy w górnym pasku) | 32×32 | 5 |
+| `ui/` | `event_<zdarzenie>` (susza, ciężka zima, zaraza, pożar, powódź; panel zdarzenia) | 32×32 | 5 |
+| `ui/` | `veteran_<wybór>` (premie weteranów), `window_<okno>` (przyciski okien) | 16×16 | 3 + 6 |
+| `ui/` | `advisor` (doradca w pasku alertów), `alert_11` (alert „Strangers”) | 32×32 | 2 |
+| `ui/` | `<element>_<era>` (motyw interfejsu ery: ramki, przyciski, zakładki; epoka kamienia bez przyrostka) | 24×24, 24×16, 12×12 | 36 |
+| `portraits/` | `advisor_<dziedzina>_01..12`, `thinker_<rzadkość>_01..12` (portrety z losowym wyglądem) | 64×92 | 48 + 60 |
+| `emblems/` | `emblem_<era>_<motyw>` (herb ludu: 8 motywów × 5 er) | 40×40 | 40 |
+
+Paczka płaska `art/packs/flat/` powstaje tym samym skryptem: `python3 art/placeholder/generate.py --flat` (bez faktury starego CivSim,
+płaskie kolory jak w pierwszej wersji grafik zastępczych; w paczce zostają tylko pliki, które różnią się od zastępczych).
 
 Nowy biom, złoże albo efekt w danych: uruchom skrypt ponownie. Brakujący plik podgląd zastępuje kolorem z danych.

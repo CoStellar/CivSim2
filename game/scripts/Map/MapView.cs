@@ -55,6 +55,12 @@ public partial class MapView : Node2D
         Art = art;
     }
 
+    /// <inheritdoc />
+    public override void _EnterTree() => Art.Changed += ArtChanged;
+
+    /// <inheritdoc />
+    public override void _ExitTree() => Art.Changed -= ArtChanged;
+
     /// <summary>Required by Godot for scene instancing; not used.</summary>
     public MapView()
         : this(new LayerStack(), new ArtLibrary(ArtLibrary.FindArtDirectory()))
@@ -281,6 +287,21 @@ public partial class MapView : Node2D
     private ShaderMaterial BuildHexMaterial(ContentMessage? content)
     {
         var material = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/map_hex.gdshader") };
+        SetArt(material, content);
+        return material;
+    }
+
+    // The art pack changed while the game runs (2026-11-24): the same material takes the new atlases.
+    private void ArtChanged()
+    {
+        if (_hexMaterial is not null && _session is not null)
+        {
+            SetArt(_hexMaterial, _session.Content);
+        }
+    }
+
+    private void SetArt(ShaderMaterial material, ContentMessage? content)
+    {
         if (content is not null)
         {
             (ImageTexture tiles, ImageTexture flat) = Art.BuildBiomeAtlas(content);
@@ -295,7 +316,6 @@ public partial class MapView : Node2D
 
         material.SetShaderParameter("has_art", _hasArt);
         material.SetShaderParameter("textured", _textured && _hasArt);
-        return material;
     }
 
     private void UpdateOutline(Rect2 view)

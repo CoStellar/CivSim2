@@ -231,6 +231,12 @@ public partial class Main : Node2D
             {
                 demo = [.. demo, (3, g => g.ScriptRoad())];
             }
+            else if (_playWindow.StartsWith("Pack:", StringComparison.Ordinal))
+            {
+                // Switching the art pack while playing (2026-11-24), e.g. --play-window Pack:flat; then a close look at the map.
+                string pack = _playWindow[5..];
+                demo = [(_playSeconds - 3, g => g.ScriptArtPack(pack)), (_playSeconds - 2, g => g.ScriptZoom(2.2f))];
+            }
             else if (_playWindow == "Place")
             {
                 // Placing a building (2026-11-23): the free places of every hex it may go on show as slots.
@@ -265,13 +271,18 @@ public partial class Main : Node2D
                 float z = _playWindow == "ZoomIn" ? 5f : 0.08f;
                 demo = [(_playSeconds - 1, g => g.ScriptZoom(z))];
             }
-            else if (_playWindow is "Advisor" or "AdvisorTip")
+            else if (_playWindow is "Advisor" or "AdvisorTip" or "AdvisorWindow")
             {
                 // Hire the advisor who offers service (tried every few seconds), then look at the strip at the top right.
                 demo = [(0.5, g => g.ScriptSpeed(SimulationSpeed.X4)), .. Enumerable.Range(1, (int)_playSeconds / 2).Select(k => ((double)k * 2, (Action<Play.PlayGame>)(g => g.ScriptHireAdvisor())))];
                 if (_playWindow == "AdvisorTip")
                 {
                     demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverAdvisor())];
+                }
+                else if (_playWindow == "AdvisorWindow")
+                {
+                    // 2026-11-24: the window of thinkers and advisors with their portraits.
+                    demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen("Thinkers"))];
                 }
             }
             else if (_playWindow == "Help")
@@ -387,10 +398,18 @@ public partial class Main : Node2D
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
         }
 
+        _play.ArtPackChosen += key =>
+        {
+            // The game's settings switch the pack in place (the map and the game keep the same library) and keep the choice.
+            _art.UsePack(ArtPack.Find(ArtLibrary.FindArtDirectory(), key));
+            _saved.Start.ArtPack = key;
+            SaveSettings();
+        };
         _play.MenuRequested += () =>
         {
             _play?.QueueFree();
             _play = null;
+            ApplyMenuTheme();
             _camera.MakeCurrent();
             CallDeferred(MethodName.ShowMenu);
         };
@@ -419,6 +438,16 @@ public partial class Main : Node2D
         Theme? theme = PixelTheme.Build(_art);
         GetWindow().Theme = theme;
         PixelTheme.Current = theme;
+    }
+
+    // The menu has the plain frames, not those of the era the game had reached.
+    private void ApplyMenuTheme()
+    {
+        if (PixelTheme.Build(_art) is { } theme)
+        {
+            GetWindow().Theme = theme;
+            PixelTheme.Current = theme;
+        }
     }
 
     // The font and the interface size are set from inside a game (its own load and save): keep them, then save the rest.

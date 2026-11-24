@@ -87,6 +87,9 @@ public partial class PlayOverlay : Node2D
 
     private readonly Dictionary<string, Texture2D?> _sprites = [];
 
+    /// <summary>Forgets the coloured pictures (after the art pack changed).</summary>
+    public void ClearSprites() => _sprites.Clear();
+
     // A picture with the people's colour in place of the reserved magentas (light, middle, dark: as civ_sprite.gdshader),
     // or grey all over for what we only remember; made once per picture, colour and greyness.
     internal Texture2D? Sprite(string layer, string name, int civ, bool grey = false)
@@ -198,7 +201,29 @@ public partial class PlayOverlay : Node2D
     }
 
     /// <summary>Colour of a civilization.</summary>
-    public static Color CivColor(int civ) => CivColors[((civ % CivColors.Length) + CivColors.Length) % CivColors.Length];
+    public static Color CivColor(int civ) => CivColors[(((civ + ColorShift) % CivColors.Length) + CivColors.Length) % CivColors.Length];
+
+    /// <summary>How far this game turns the colours round (2026-11-24, Patryk: our people were always yellow).</summary>
+    public static int ColorShift { get; private set; }
+
+    /// <summary>How far this game turns the emblems' drawings round.</summary>
+    public static int MotifShift { get; private set; }
+
+    /// <summary>
+    /// Picks the peoples' colours and emblems for a game from its seed: every game turns both lists by its own steps, so each
+    /// people still has its own colour and drawing, but ours is not always the first. Returns whether they changed.
+    /// </summary>
+    public static bool ChooseLooks(ulong seed)
+    {
+        ulong z = (seed ^ 0x4C4F4F4B53UL) * 0x9E3779B97F4A7C15UL;
+        z ^= z >> 29;
+        int colour = (int)(z % (ulong)CivColors.Length);
+        int motif = (int)((z >> 16) % 8);
+        bool changed = colour != ColorShift || motif != MotifShift;
+        ColorShift = colour;
+        MotifShift = motif;
+        return changed;
+    }
 
     /// <inheritdoc/>
     public override void _Ready()
@@ -230,6 +255,12 @@ public partial class PlayOverlay : Node2D
     /// <summary>Sets what to draw; <paramref name="zoom"/> picks how much detail.</summary>
     public void Show(PlayContentMessage content, PlayViewMessage? view, Vector2 period, Rect2 visible, float zoom = 1)
     {
+        if (!ReferenceEquals(content, _content) && ChooseLooks(content.LookSeed))
+        {
+            ClearSprites();
+            UiKit.ClearPictures();
+        }
+
         _content = content;
         _period = period;
         Rect2 grown = visible.Grow(80);
