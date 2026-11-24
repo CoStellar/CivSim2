@@ -423,7 +423,7 @@ public sealed partial class PlayGame
         row.AddChild(label);
         row.AddChild(slider);
         box.AddChild(row);
-        var shock = new CheckBox { Text = "Weapons only (no armour, trained faster)", ButtonPressed = _trainShock, FocusMode = Control.FocusModeEnum.None,
+        var shock = new CheckBox { Text = "Weapons only (no armour, trained faster)", ButtonPressed = _trainShock, FocusMode = Control.FocusModeEnum.None, AutowrapMode = TextServer.AutowrapMode.WordSmart,
             TooltipText = "Quick soldiers: they take weapons from the store but no armour." };
         shock.Toggled += on => _trainShock = on;
         box.AddChild(shock);

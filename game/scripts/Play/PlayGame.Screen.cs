@@ -315,8 +315,9 @@ public partial class PlayGame
         for (int i = 0; i < WindowNames.Length; i++)
         {
             string name = WindowNames[i];
-            Button hb = UiKit.Button($"{i + 1} {name}", () => OpenWindow(name, toggle: false), $"key {i + 1}");
-            UiKit.SetIcon(hb, "ui/window_" + name.ToLowerInvariant());
+            // The picture and the key only (the name is in the tooltip and the window's title), so the row fits narrow windows.
+            Button hb = UiKit.Button($"{i + 1}", () => OpenWindow(name, toggle: false), $"{name} (key {i + 1})");
+            UiKit.SetIcon(hb, "ui/window_" + name.ToLowerInvariant(), 2);
             winHead.AddChild(hb);
         }
 

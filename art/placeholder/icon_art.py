@@ -1353,7 +1353,8 @@ def _motif(c, kind, cx, cy, s, era_key):
 def emblem(era_key, motif):
     c = canvas(40, 40)
     W = ga.WOOD
-    if era_key == "stone_age":  # a board of planks with the sign painted on, hung on a cord
+    # 2026-11-24 (Patryk): the Stone Age carves its sign in a stone; the Neolithic paints it on a board of planks.
+    if era_key == "neolithic":  # a board of planks with the sign painted on, hung on a cord
         t = ramp((138, 86, 45))
         for x in range(5, 35):
             for y in range(9, 36):
@@ -1361,7 +1362,7 @@ def emblem(era_key, motif):
         rope(c, 8, 9, 20, 2)
         rope(c, 32, 9, 20, 2)
         _motif(c, motif, 20, 22, 1.25, era_key)
-    elif era_key == "neolithic":  # a standing stone with the sign carved and painted
+    elif era_key == "stone_age":  # a standing stone with the sign carved and painted
         boulder(c, 20, 24, 14, 16, (147, 138, 130), seed=sum(map(ord, motif)), flat_bottom=True)
         _motif(c, motif, 20, 22, 1.2, era_key)
     elif era_key == "bronze_age":  # a round wooden shield with a bronze rim and boss

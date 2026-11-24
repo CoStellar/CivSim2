@@ -1,3 +1,4 @@
+using System;
 using CivSim.Game.Net;
 using CivSim.Protocol.Messages;
 using Godot;
@@ -24,7 +25,10 @@ public static class OverlayColors
     public static Color Rgb(uint rgb) => new(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f);
 
     /// <summary>Stable distinct colour of a civilization.</summary>
-    public static Color CivColor(int civ) => Color.FromHsv((civ * 0.618034f) % 1f, 0.75f, 0.95f);
+    public static Color CivColor(int civ) => Palette?.Invoke(civ) ?? Color.FromHsv((civ * 0.618034f) % 1f, 0.75f, 0.95f);
+
+    /// <summary>The peoples' colours of the game being played (the land under them takes the same colour as their borders).</summary>
+    public static Func<int, Color>? Palette { get; set; }
 
     /// <summary>
     /// Blends every enabled cell layer above the biomes into one tint for cell <paramref name="i"/> ("over"

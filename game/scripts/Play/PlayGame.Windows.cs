@@ -18,9 +18,27 @@ public partial class PlayGame
     private void UpdateWindow(PlayViewMessage v, PlayContentMessage c)
     {
         _window.Visible = _bigMode.Length > 0;
-        float half = _bigMode == "Research" ? (GetViewport().GetVisibleRect().Size.X / 2) - 12 : _windowHalf;
-        _window.OffsetLeft = -half;
-        _window.OffsetRight = half;
+        float screenX = GetViewport().GetVisibleRect().Size.X;
+        float half = _bigMode == "Research" ? (screenX / 2) - 12 : _windowHalf;
+        float left = (screenX / 2) - half, right = (screenX / 2) + half;
+
+        // 2026-11-24 (Patryk: some pictures do not fit): a window stands beside the side panel, not over it, so the panel's
+        // numbers and buttons stay whole; only when the screen is too narrow for both it covers the panel as before.
+        float panelRight = _inspector.Visible ? _inspector.Position.X + _inspector.Size.X + 8 : 0;
+        if (left < panelRight)
+        {
+            float width = right - left;
+            left = panelRight;
+            right = Math.Min(screenX - 8, left + width);
+            if (right - left < UiKit.W(520))
+            {
+                left = (screenX / 2) - half;
+                right = (screenX / 2) + half;
+            }
+        }
+
+        _window.OffsetLeft = left - (screenX / 2);
+        _window.OffsetRight = right - (screenX / 2);
         if (_bigMode.Length == 0)
         {
             return;

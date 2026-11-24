@@ -493,6 +493,8 @@ internal static class UiRender
                     inner.AddChild(glyph);
                     Label cap = UiKit.Label(tile.Caption, 11, tile.Enabled ? UiKit.Text : UiKit.Muted);
                     cap.HorizontalAlignment = HorizontalAlignment.Center;
+                    cap.ClipText = true; // a long name ("Prospectors") stays inside its tile; the tooltip has it whole
+                    cap.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
                     cap.MouseFilter = Control.MouseFilterEnum.Ignore;
                     inner.AddChild(cap);
                     button.AddChild(inner);

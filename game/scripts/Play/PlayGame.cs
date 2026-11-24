@@ -456,6 +456,7 @@ public partial class PlayGame : Node2D
     /// <inheritdoc/>
     public override void _Ready()
     {
+        OverlayColors.Palette = PlayOverlay.CivColor; // the land's tint in the same colours as the borders and figures
         _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
@@ -503,6 +504,7 @@ public partial class PlayGame : Node2D
     /// <inheritdoc/>
     public override void _ExitTree()
     {
+        OverlayColors.Palette = null;
         _session?.Close();
         _host?.Dispose();
     }

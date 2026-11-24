@@ -333,8 +333,8 @@ rzadkości: zwykły w prostej szacie z tabliczką, coraz rzadsi z obszyciem, bia
 dziedziny (doradca) albo rzadkości (myśliciel). Którego z 12 wariantów dostaje osoba, wynika z jej imienia (stały hasz), więc
 ta sama osoba zawsze wygląda tak samo. Zasady gry dla doradców i myślicieli się nie zmieniły.
 
-**Herb ludu zmienia się z erą:** epoka kamienia: deska z desek na sznurku z namalowanym znakiem; neolit: stojący kamień ze
-znakiem; epoka brązu: drewniana tarcza z brązowym okuciem; epoka żelaza: chorągiew z sukna na drążku; średniowiecze: tarcza
+**Herb ludu zmienia się z erą:** epoka kamienia: stojący kamień ze znakiem; neolit: deska z desek na sznurku z namalowanym
+znakiem (zamiana na prośbę Patryka, 2026-11-24); epoka brązu: drewniana tarcza z brązowym okuciem; epoka żelaza: chorągiew z sukna na drążku; średniowiecze: tarcza
 herbowa ze złotym brzegiem i głową w kolorze ludu. Motywy (8): jeleń, słońce, drzewo, fala, góra, ptak, dłoń, spirala; lud
 dostaje motyw według swojego numeru. Wszystkie herby w oknie pokazują erę naszego ludu (er innych ludów nie widzimy).
 

@@ -318,14 +318,31 @@ public static class UiKit
     }
 
     /// <summary>Puts a small picture ("layer/name", ours in colour) at the left of a button's text; nothing when missing.</summary>
-    public static void SetIcon(Button b, string? pic)
+    public static void SetIcon(Button b, string? pic, int scale = 1)
     {
         if (PictureOf(pic) is { } icon)
         {
-            b.Icon = icon;
+            b.Icon = scale > 1 ? Scaled(icon, scale) : icon;
             b.ExpandIcon = false;
+
             b.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
         }
+    }
+
+    private static readonly Dictionary<(Texture2D, int), Texture2D> ScaledCache = [];
+
+    // A small picture made larger by whole pixels (nearest), so it stays sharp.
+    private static Texture2D Scaled(Texture2D icon, int k)
+    {
+        if (!ScaledCache.TryGetValue((icon, k), out Texture2D? big))
+        {
+            Image img = icon.GetImage();
+            img.Resize(img.GetWidth() * k, img.GetHeight() * k, Image.Interpolation.Nearest);
+            big = ImageTexture.CreateFromImage(img);
+            ScaledCache[(icon, k)] = big;
+        }
+
+        return big;
     }
 
     /// <summary>Portraits drawn for each advisor field and thinker rarity (art/placeholder/icon_art.py).</summary>
@@ -350,10 +367,14 @@ public static class UiKit
     public static readonly string[] EmblemMotifs = ["deer", "sun", "tree", "wave", "mountain", "bird", "hand", "spiral"];
 
     /// <summary>A people's emblem in the look of an era: a board, a stone, a shield, a banner, a heraldic shield.</summary>
-    public static string EmblemName(string eraKey, int civ) => $"emblems/emblem_{eraKey}_{EmblemMotifs[((civ % EmblemMotifs.Length) + EmblemMotifs.Length) % EmblemMotifs.Length]}";
+    public static string EmblemName(string eraKey, int civ) => $"emblems/emblem_{eraKey}_{EmblemMotifs[(((civ + PlayOverlay.MotifShift) % EmblemMotifs.Length) + EmblemMotifs.Length) % EmblemMotifs.Length]}";
 
     /// <summary>Forgets the cut pictures (after the art pack changed).</summary>
-    public static void ClearPictures() => TrimmedCache.Clear();
+    public static void ClearPictures()
+    {
+        TrimmedCache.Clear();
+        ScaledCache.Clear();
+    }
 
     /// <summary>A key made from a name, as the data names its files: "Bronze Age" is "bronze_age".</summary>
     public static string KeyOf(string name) => name.Trim().ToLowerInvariant().Replace(' ', '_').Replace("'", "", StringComparison.Ordinal);

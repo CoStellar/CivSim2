@@ -744,7 +744,7 @@ public sealed class PlayHost : IDisposable
         client.Connection.Send(new PlayContentMessage(goods, buildings, levels, _game.Geo.Width, _game.Geo.Height, "Earth", units, techs, eras, roads, works, _game.Content.TechCategories,
             _game.Content.Rations.HungryPercent, _game.Content.Rations.StarvingPercent, _game.Content.WeaponGoods, _game.Content.ArmourGoods,
             _game.Content.Combat.Weapon, _game.Content.Combat.Armour, CombatInfo(_game.Content.Combat),
-            [.. _game.Content.Veterans.Options.Select(o => $"{o.Name}|{o.Text}")], _game.Content.Veterans.Levels, _game.Content.Peace.Minutes));
+            [.. _game.Content.Veterans.Options.Select(o => $"{o.Name}|{o.Text}")], _game.Content.Veterans.Levels, _game.Content.Peace.Minutes, _game.Settings.Seed));
         client.SentChunks = false;
     }
 
