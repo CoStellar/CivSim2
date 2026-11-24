@@ -427,6 +427,24 @@ Liczby są w `lodes` w `data/sim/game.json`.
 - **Ścieżka szukania.** W panelu poszukiwaczy jest przycisk „Search the ore signs”. Poszukiwacze idą do najbliższego znaku, stają, przeszukują teren, potem idą do następnego, aż przejdą wszystkie. Nowy rozkaz ruchu przerywa szukanie. AI używa tego samego rozkazu.
 - **Wyczerpywanie się złóż: nie** (na razie).
 
+## Tryby rud (decyzja 2 po testach z 2026-11-24)
+
+Nowa gra ma wybór „Ores” w menu:
+
+- **Fair (wyrównany, domyślny):** każdy start ma blisko siebie miedź (3–7 heksów), małe złoże cyny (4–8, było 5–12) i rudę
+  żelaza (9–12, było 15–20, decyzja 7A). Jeśli świat ma już takie złoże w tym zasięgu, nic nie jest dokładane (`startDeposits`).
+- **Realistic (realistyczny):** nic nie jest dokładane; rudy leżą tam, gdzie je położył generator świata. Brakujący metal trzeba
+  zdobyć dalszą osadą, handlem albo wojną.
+
+`--sim-report --seeds 12 --minutes 75` (opcja `--realistic-ores` dla trybu realistycznego):
+
+| | przed (5–12 i 15–20) | Fair | Realistic |
+| --- | --- | --- | --- |
+| pierwsze średniowiecze (min) | 57,2 | 58,4 | 59,9 (10 z 12 gier) |
+| ludy w epoce żelaza po 75 min | 41 z 48 | 40 z 48 | 25 z 48 |
+| ludy w średniowieczu po 75 min | 30 z 48 | 34 z 48 | 16 z 48 |
+| ludzie (średnio) | 9 637 | 9 511 | 8 633 |
+
 ## Decyzje po testach z 2026-11-24
 
 | Nr | Zasada | Kod |

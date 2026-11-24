@@ -45,6 +45,12 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
     /// <summary>The AI leads every people (the host hands people to players afterwards); false in rule tests.</summary>
     public bool Ai { get; init; } = true;
 
+    /// <summary>
+    /// Ores mode (Patryk, 2026-11-24): fair (true) puts copper, tin and iron near every start (startDeposits), so peoples have
+    /// about the same chance at the metal ages; realistic (false) leaves the ores where the world put them.
+    /// </summary>
+    public bool FairOres { get; init; } = true;
+
     /// <summary>12B: peoples start near each other on the main continent (startPhase.neighbourMaxHexes); test scenarios keep the generator's starts.</summary>
     public bool NearStarts { get; init; } = true;
 }
