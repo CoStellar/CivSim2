@@ -18,6 +18,16 @@ namespace CivSim.Game.Play;
 public partial class PlayGame : Node2D
 {
     private const float PanSpeed = 900f;
+    // How near the map is, as the player sees it (2026-11-24): the interface size scales the whole window, so the camera
+    // takes the zoom divided by it and the map stays the same on screen at every interface size.
+    private float Zoom
+    {
+        get => _camera.Zoom.X * UiScale;
+        set => _camera.Zoom = Vector2.One * (value / UiScale);
+    }
+
+    private float UiScale => Math.Max(0.1f, GetWindow().ContentScaleFactor);
+
     private const float MinZoom = 0.08f;
     private const float MaxZoom = 5f; // G1 (2026-11-23): pictures at twice the hex, so closer is still sharp
 
@@ -174,7 +184,7 @@ public partial class PlayGame : Node2D
     }
 
     /// <summary>Script step: sets the zoom.</summary>
-    public void ScriptZoom(float zoom) => _camera.Zoom = new Vector2(zoom, zoom);
+    public void ScriptZoom(float zoom) => Zoom = zoom;
 
     /// <summary>Script step: the mouse over a technology's card in the open tree (its tooltip shows after a moment).</summary>
     public void ScriptHoverCard(string key)
@@ -439,6 +449,7 @@ public partial class PlayGame : Node2D
         _camera = new Camera2D { Zoom = new Vector2(1.6f, 1.6f) };
         AddChild(_camera);
         _camera.MakeCurrent();
+        Zoom = 1.6f; // as the player sees it, whatever the interface size
         _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario, Tutorial = _scenario is null }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         _session.CommandRefused += reason => Toast(reason);
@@ -520,7 +531,7 @@ public partial class PlayGame : Node2D
         if (!_centred && !_pickView && _session.PlayView is { Picking: true })
         {
             _camera.Position = _map.Period / 2;
-            _camera.Zoom = new Vector2(0.3f, 0.3f);
+            Zoom = 0.3f;
             _pickView = true;
         }
 
@@ -546,8 +557,8 @@ public partial class PlayGame : Node2D
         }
 
         Rect2 visible = VisibleRect();
-        _map.SetGrid(_camera.Zoom.X >= 0.6f);
-        _map.Refresh(visible, _camera.Zoom.X);
+        _map.SetGrid(Zoom >= 0.6f);
+        _map.Refresh(visible, Zoom);
         if (_placing > 0 || _combat)
         {
             _overlay.SetHover(MouseCell());
@@ -563,7 +574,7 @@ public partial class PlayGame : Node2D
         _map.SetLift(_selected, _overlay.Lift, _camera.Position);
         if (_session.PlayContent is { } content)
         {
-            _overlay.Show(content, _session.PlayView, _map.Period, visible, _camera.Zoom.X);
+            _overlay.Show(content, _session.PlayView, _map.Period, visible, Zoom);
         }
 
         _uiTimer -= delta;
@@ -1146,7 +1157,7 @@ public partial class PlayGame : Node2D
             dir.Y += 1;
         }
 
-        _camera.Position += dir * PanSpeed * delta / _camera.Zoom.X;
+        _camera.Position += dir * PanSpeed * delta / Zoom;
         Vector2 p = _map?.Period ?? Vector2.Zero;
         if (p.X > 0 && p.Y > 0)
         {
@@ -1157,8 +1168,8 @@ public partial class PlayGame : Node2D
     private void ZoomAt(float factor, Vector2 screenPos)
     {
         Vector2 before = ScreenToWorld(screenPos);
-        float z = Mathf.Clamp(_camera.Zoom.X * factor, MinZoom, MaxZoom);
-        _camera.Zoom = new Vector2(z, z);
+        float z = Mathf.Clamp(Zoom * factor, MinZoom, MaxZoom);
+        Zoom = z;
         _camera.Position += before - ScreenToWorld(screenPos);
     }
 

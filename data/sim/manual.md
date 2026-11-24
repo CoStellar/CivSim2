@@ -15,7 +15,7 @@ A civilization loses when it has nobody left: no settlement and no unit. A game 
 With "Choose where we start" on, the civilizations pick their start in turns. First the map shows only the land for a moment, then you have 30 seconds to click a hex for your first camp. You cannot start on water or mountains, nor inside the circles around the starts already taken.
 
 # The screen
-- **Top left:** our goods. The number is the stock, the green or red number how much comes or goes in a minute. Hover a good to see who makes and who uses it.
+- **Top left:** our goods. The number is the stock, under it how much comes or goes in a minute. A red frame: the good runs out within 5 minutes (the time left shows); a yellow frame: a workshop waits for it, or the store is full. Hover a good: its store, when it runs out or fills up, where it is missing, who makes and who uses it.
 - **Top middle:** the era, how many technologies we still need for the next one and what we are researching. Click it to open the research tree.
 - **Top right:** the time of the game, the speed, Routes, the help (?), this manual, the tutorial, Save and Menu; under them the six windows (keys 1-6).
 - **Right, under the top bar:** a row of small icons: the advisor first, then one icon for each kind of alert, framed red (danger), orange (soon a problem) or yellow (worth a look), with how many there are. Hover an icon to read them all; click it (or press `J`) to go to the next place.

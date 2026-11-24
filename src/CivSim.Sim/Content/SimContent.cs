@@ -836,6 +836,9 @@ public sealed class SimContent
     /// <summary>Extra price, percent, for resuming a paused construction.</summary>
     public int ResumeCostPercent { get; init; }
 
+    /// <summary>Patryk, 2026-11-24: the "nothing is being researched" reminder waits this long after a research ends (alerts.noResearchSeconds).</summary>
+    public int NoResearchSeconds { get; init; } = 60;
+
     /// <summary>11B (2026-11-20): the food alert comes when a settlement's food lasts this many minutes or less (alerts.foodLowMinutes).</summary>
     public int FoodLowMinutes { get; init; } = 3;
 
@@ -1980,6 +1983,7 @@ public sealed class SimContent
             AiInputMakerStoreMinutes = root.TryProp("ai", out JsonElement aiEl10) && aiEl10.TryProp("inputMakerStoreMinutes", out JsonElement ims) ? ims.GetInt32() : 10,
             AiStarvedProspectors = root.TryProp("ai", out JsonElement aiEl11) && aiEl11.TryProp("starvedProspectors", out JsonElement asp) ? asp.GetInt32() : 2,
             AiInputRoutesPerSettlement = root.TryProp("ai", out JsonElement aiEl9) && aiEl9.TryProp("inputRoutesPerSettlement", out JsonElement irs) ? irs.GetInt32() : 4,
+            NoResearchSeconds = root.TryProp("alerts", out JsonElement nrEl) && nrEl.TryProp("noResearchSeconds", out JsonElement nrs) ? nrs.GetInt32() : 60,
             FoodLowMinutes = root.TryProp("alerts", out JsonElement alEl) && alEl.TryProp("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryProp("upgradeCaravans", out JsonElement ucEl)
                 ? new UpgradeCaravanRules(ucEl.Prop("extraPercent").GetInt32(), ucEl.Prop("aiRetrySeconds").GetInt32() * TicksPerSecond)

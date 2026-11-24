@@ -82,7 +82,6 @@ public partial class PlayGame
         _uiLayer?.QueueFree();
         _speedButtons.Clear();
         _alertIcons.Clear();
-        _chipPulse = null;
         _resSig = _alertSig = _inspectorSig = _barSig = _bigSignature = "";
         BuildUi();
         _help.Visible = help;
@@ -119,22 +118,27 @@ public partial class PlayGame
 
         // A15 (tests 2026-11-20): the goods stop before the era in the middle and wrap onto more rows; the bar grows with them
         // and what sits under it moves down (UpdateUnderTop).
-        _resBox = new HFlowContainer { SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin, CustomMinimumSize = new Vector2(Math.Max(160, (screen.X / 2) - UiKit.W(240) - 16), 0) };
+        // 2026-11-24: three columns that cannot overlap at any interface size: the goods (they wrap), the era, the right group.
+        _resBox = new HFlowContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(160, 0) };
         _resBox.AddThemeConstantOverride("h_separation", 12);
         _resBox.AddThemeConstantOverride("v_separation", 2);
         topRow.AddChild(_resBox);
-        topRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore });
+        _topRow = topRow;
 
         // 2026-11-24 (Patryk): two rows at the right: time, speed and the game's buttons; under them the windows (keys 1-6),
         // which left the action bar at the bottom.
-        var rightRows = new VBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
+        // Both rows wrap button by button and share the width with the goods, so a large interface takes more rows, not
+        // more width (2026-11-24: at 150% the goods were squeezed into five rows).
+        var rightRows = new VBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         rightRows.AddThemeConstantOverride("separation", 2);
         topRow.AddChild(rightRows);
-        var right = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
-        right.AddThemeConstantOverride("separation", 4);
+        var right = new HFlowContainer { Alignment = FlowContainer.AlignmentMode.End };
+        right.AddThemeConstantOverride("h_separation", 4);
+        right.AddThemeConstantOverride("v_separation", 2);
         rightRows.AddChild(right);
-        var windows = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
-        windows.AddThemeConstantOverride("separation", 4);
+        var windows = new HFlowContainer { Alignment = FlowContainer.AlignmentMode.End };
+        windows.AddThemeConstantOverride("h_separation", 4);
+        windows.AddThemeConstantOverride("v_separation", 2);
         rightRows.AddChild(windows);
         for (int i = 0; i < WindowNames.Length; i++)
         {
@@ -172,9 +176,10 @@ public partial class PlayGame
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
         // Era and years in the middle of the top bar, over the bar.
-        var centre = _centreBox = new VBoxContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(240), OffsetRight = UiKit.W(240), OffsetTop = 0, MouseFilter = Control.MouseFilterEnum.Ignore };
+        var centre = _centreBox = new VBoxContainer { CustomMinimumSize = new Vector2(UiKit.W(320), 0), SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
         centre.AddThemeConstantOverride("separation", 0);
-        root.AddChild(centre);
+        _topRow.AddChild(centre);
+        _topRow.MoveChild(centre, 1); // between the goods and the right group
         _eraLabel = UiKit.Label("", 24, UiKit.Heading);
         _eraLabel.HorizontalAlignment = HorizontalAlignment.Center;
         centre.AddChild(_eraLabel);
@@ -390,7 +395,9 @@ public partial class PlayGame
         ViewerSettings settings = ViewerSettings.Load();
         settings.UiScale = percent;
         settings.Save();
+        float zoom = Zoom; // the map stays as near as it was
         ViewerSettings.ApplyUiScale(GetWindow(), percent);
+        Zoom = zoom;
         bool help = _help.Visible;
         RebuildUi();
         _help.Visible = help;
@@ -531,73 +538,18 @@ public partial class PlayGame
         {
             _eraBarBox.SetMeta("sig", sig);
             UiKit.Clear(_eraBarBox);
-            _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, UiKit.W(460), PixelTheme.FontSize + 6, next));
+            _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, UiKit.W(320), PixelTheme.FontSize + 6, next));
         }
 
-        _researchChip.Text = v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "Choose research (2)";
-        _researchChip.AddThemeColorOverride("font_color", v.Researching >= 0 ? UiKit.Text : UiKit.Warn);
-        if (v.Researching < 0)
+        // Patryk, 2026-11-24: the chip shows only what is being researched; "Choose research" was the same as key 2 and the
+        // Research button, and the reminder is an alert now (it comes a while after a research ends).
+        _researchChip.Visible = v.Researching >= 0;
+        if (v.Researching >= 0)
         {
-            // E2: an empty research queue is easy to miss: the chip pulses.
-            float pulse = 0.5f + (0.5f * Mathf.Sin((float)_time * 4f));
-            // One style kept and recoloured (2026-11-24: a new one five times a second was garbage for nothing).
-            _chipPulse ??= UiKit.Flat(new Color(0.35f, 0.25f, 0.05f, 0.95f), UiKit.Warn, 4, 3);
-            _chipPulse.BgColor = new Color(0.35f * pulse, 0.25f * pulse, 0.05f, 0.95f);
-            _researchChip.AddThemeStyleboxOverride("normal", _chipPulse);
-        }
-        else
-        {
-            _researchChip.RemoveThemeStyleboxOverride("normal");
+            _researchChip.Text = $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%";
         }
 
-        // Resources: an icon, the amount and the trend a minute, for goods we have or make.
-        var cells = new List<(int Good, long Stock, long Rate, bool Full)>();
-        for (int g = 0; g < v.Stock.Length; g++)
-        {
-            long rate = v.RatePerMinute[g];
-            if (g > 2 && v.Stock[g] < 100 && rate == 0)
-            {
-                continue;
-            }
-
-            cells.Add((g, v.Stock[g], rate, v.Capacity[g] > 0 && v.Stock[g] >= v.Capacity[g] * 98 / 100));
-        }
-
-        string resSig = $"{v.People}{v.Hungry}" + string.Join(";", cells.ConvertAll(x => $"{x.Good}:{x.Stock / 100}:{x.Rate}:{x.Full}"));
-        // 2026-11-23: the same goods as before: only the numbers change, in the chips that are there (no flicker, the
-        // tooltip under the mouse stays).
-        string layout = string.Join(",", cells.ConvertAll(x => x.Good));
-        if (resSig != _resSig && layout == _resLayout && _resBox.GetChildCount() == cells.Count + 1)
-        {
-            _resSig = resSig;
-            SetChip(_resBox.GetChild<Control>(0), $"{v.People}", v.Hungry ? "hungry" : "", v.Hungry ? UiKit.Bad : UiKit.Muted,
-                $"People: {v.People}" + (v.Hungry ? ". Some settlements go hungry!" : "."));
-            for (int k = 0; k < cells.Count; k++)
-            {
-                (int g, long stock, long rate, bool full) = cells[k];
-                PlayGoodInfo good = c.Goods[g];
-                Color trend = full ? UiKit.Warn : rate > 0 ? UiKit.Good : rate < 0 ? UiKit.Bad : UiKit.Muted;
-                SetChip(_resBox.GetChild<Control>(k + 1), $"{stock / 100}", full ? "full" : UiKit.Rate(rate), trend,
-                    $"{good.Name}: {stock / 100} in all our settlements (room for {v.Capacity[g] / 100}), {UiKit.Rate(rate)} a minute." + (full ? " Full: its makers stop." : ""));
-            }
-
-            return;
-        }
-
-        _resLayout = layout;
-        SetResources(resSig, () =>
-        {
-            Control people = Chip(new Color("e0c090"), "P", $"{v.People}", v.Hungry ? "hungry" : "", v.Hungry ? UiKit.Bad : UiKit.Muted,
-                $"People: {v.People}" + (v.Hungry ? ". Some settlements go hungry!" : "."));
-            _resBox.AddChild(people);
-            foreach ((int g, long stock, long rate, bool full) in cells)
-            {
-                PlayGoodInfo good = c.Goods[g];
-                Color trend = full ? UiKit.Warn : rate > 0 ? UiKit.Good : rate < 0 ? UiKit.Bad : UiKit.Muted;
-                _resBox.AddChild(Chip(UiKit.GoodColor(good.Key), UiKit.Short(good.Name)[..1], $"{stock / 100}", full ? "full" : UiKit.Rate(rate), trend,
-                    $"{good.Name}: {stock / 100} in all our settlements (room for {v.Capacity[g] / 100}), {UiKit.Rate(rate)} a minute." + (full ? " Full: its makers stop." : ""), good.Key));
-            }
-        });
+        UpdateGoods(v, c);
     }
 
     private void SetResources(string sig, Action fill)
@@ -614,35 +566,7 @@ public partial class PlayGame
 
     private string _resLayout = "";
     private VBoxContainer _centreBox = null!;
-    private StyleBoxFlat? _chipPulse;
-
-    // A chip's numbers changed in place: the amount and trend labels are the chip's second child's two labels.
-    private static void SetChip(Control chip, string amount, string trend, Color trendColor, string tooltip)
-    {
-        chip.TooltipText = tooltip;
-        if (chip.GetChildCount() > 1 && chip.GetChild(1) is VBoxContainer col && col.GetChildCount() > 1
-            && col.GetChild(0) is Label a && col.GetChild(1) is Label t)
-        {
-            a.Text = amount;
-            t.Text = trend;
-            t.AddThemeColorOverride("font_color", trendColor);
-        }
-    }
-
-    private static Control Chip(Color color, string letter, string amount, string trend, Color trendColor, string tooltip, string? good = null)
-    {
-        var row = new HBoxContainer { TooltipText = tooltip, MouseFilter = Control.MouseFilterEnum.Pass };
-        row.AddThemeConstantOverride("separation", 4);
-        // 2026-11-23 (Patryk): the goods' pictures in the top bar instead of letters.
-        Texture2D? icon = good is null ? null : UiKit.Picture?.Invoke("goods", "good_" + good);
-        row.AddChild(new Glyph(color, letter, icon is null ? 26 : 34, round: icon is null, icon: icon));
-        var col = new VBoxContainer();
-        col.AddThemeConstantOverride("separation", -4);
-        col.AddChild(UiKit.Label(amount, 16));
-        col.AddChild(UiKit.Label(trend, 12, trendColor));
-        row.AddChild(col);
-        return row;
-    }
+    private HBoxContainer _topRow = null!;
 
     private void UpdateAdvisor(PlayViewMessage v)
     {

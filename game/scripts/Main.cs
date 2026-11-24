@@ -256,6 +256,24 @@ public partial class Main : Node2D
                 // 2026-11-24: road points in straight lines and a unit's planned way, before they are sent.
                 demo = [(_playSeconds - 1.5, g => g.ScriptPlans()), (_playSeconds - 1, g => g.ScriptZoom(1.4f))];
             }
+            else if (_playWindow == "GoodTip")
+            {
+                demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverGood())];
+            }
+            else if (_playWindow is "ZoomIn" or "ZoomOut")
+            {
+                float z = _playWindow == "ZoomIn" ? 5f : 0.08f;
+                demo = [(_playSeconds - 1, g => g.ScriptZoom(z))];
+            }
+            else if (_playWindow is "Advisor" or "AdvisorTip")
+            {
+                // Hire the advisor who offers service (tried every few seconds), then look at the strip at the top right.
+                demo = [(0.5, g => g.ScriptSpeed(SimulationSpeed.X4)), .. Enumerable.Range(1, (int)_playSeconds / 2).Select(k => ((double)k * 2, (Action<Play.PlayGame>)(g => g.ScriptHireAdvisor())))];
+                if (_playWindow == "AdvisorTip")
+                {
+                    demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverAdvisor())];
+                }
+            }
             else if (_playWindow == "Help")
             {
                 demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.H))];
