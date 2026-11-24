@@ -16,10 +16,17 @@ namespace CivSim.Game.Audio;
 /// </summary>
 public partial class GameAudio : Node
 {
-    // Alert kinds (PlayGame.AlertKinds): 0 under attack and 1 enemies near sound the horn; the rest a soft bell.
-    private static readonly int[] DangerAlerts = [0, 1];
+    // Alert kinds (PlayGame.AlertKinds): 0 under attack and 1 enemies near sound the horn (each its own pause, tests 2026-11-24
+    // D2: "under attack" was lost right after "enemies near"); the rest a soft bell, at most once a while per kind (D7).
+    private const int UnderAttack = 0;
+    private const int EnemiesNear = 1;
 
     private const double AmbientEvery = 0.5;
+
+    // D3 (tests 2026-11-24): the sound of an order waits this long (and a few frames) for a refusal from the server;
+    // a refused order then sounds only the refusal instead of the order and the refusal one after the other.
+    private const double OrderWait = 0.08;
+    private const int OrderWaitFrames = 3;
 
     private readonly ClientSession _session;
     private readonly Func<Camera2D> _camera;
@@ -36,6 +43,11 @@ public partial class GameAudio : Node
     private string _region = "";
     private string _candidate = "";
     private double _candidateFor;
+    private double _time;
+    private int _musicEra = -1;
+    private double _eraMusicAt = -1;
+    private readonly Dictionary<int, double> _bellAt = [];
+    private readonly List<(string Sound, double At, int Frames)> _orders = [];
 
     /// <summary>Sound for a game seen through <paramref name="session"/>; the camera tells where the player looks.</summary>
     public GameAudio(ClientSession session, Func<Camera2D> camera)
@@ -66,6 +78,14 @@ public partial class GameAudio : Node
             return;
         }
 
+        _time += delta;
+        Orders();
+        if (_eraMusicAt >= 0 && _time >= _eraMusicAt)
+        {
+            _eraMusicAt = -1;
+            _musicEra = _era; // D9: the music of the new era after its fanfare
+        }
+
         if (!ReferenceEquals(v, _last))
         {
             _last = v;
@@ -90,20 +110,24 @@ public partial class GameAudio : Node
         _primed = true;
         if (v.Era != _era)
         {
-            if (!first && v.Era > _era)
+            _era = v.Era;
+            if (!first && v.Era > _musicEra && _musicEra >= 0)
             {
                 AudioManager.Play("era_up");
+                _eraMusicAt = _time + audio.Manifest.EraMusicDelaySeconds;
             }
-
-            _era = v.Era;
-            if (_region.Length > 0)
+            else
             {
-                audio.SetMusic($"{EraKey(v.Era)}_{_region}");
+                _musicEra = v.Era;
+                if (_region.Length > 0)
+                {
+                    audio.SetMusic($"{EraKey(v.Era)}_{_region}");
+                }
             }
         }
         else if (!first && known > _known)
         {
-            AudioManager.Play("research_done");
+            Play(audio, v, "research_done");
         }
 
         _known = known;
@@ -122,7 +146,7 @@ public partial class GameAudio : Node
 
             if (!first && _buildingState.TryGetValue(b.Id, out int was) && was is 0 or 1 && b.State is 2 or 3)
             {
-                AudioManager.Play("build_done");
+                Play(audio, v, "build_done");
             }
 
             _buildingState[b.Id] = b.State;
@@ -134,6 +158,10 @@ public partial class GameAudio : Node
             {
                 AudioManager.Play(p.AtWar ? "war_declared" : "peace");
             }
+            else if (!first && !_atWar.ContainsKey(p.Civ) && p.AtWar && !p.Dead)
+            {
+                AudioManager.Play("war_declared"); // D1: a people we had not met attacks us: it is war all the same
+            }
 
             _atWar[p.Civ] = p.AtWar;
         }
@@ -141,9 +169,23 @@ public partial class GameAudio : Node
         var kinds = (v.Alerts ?? []).Select(a => a.Kind).ToHashSet();
         foreach (int kind in kinds.Where(k => !_alertKinds.Contains(k)))
         {
-            if (!first)
+            if (first)
             {
-                AudioManager.Play(DangerAlerts.Contains(kind) ? "alert_danger" : "alert_notice");
+                continue;
+            }
+
+            if (kind == UnderAttack)
+            {
+                AudioManager.Play("under_attack");
+            }
+            else if (kind == EnemiesNear)
+            {
+                AudioManager.Play("alert_danger");
+            }
+            else if (!_bellAt.TryGetValue(kind, out double rang) || _time - rang >= audio.Manifest.AlertKindSeconds)
+            {
+                _bellAt[kind] = _time;
+                Play(audio, v, "alert_notice");
             }
         }
 
@@ -195,7 +237,7 @@ public partial class GameAudio : Node
             _candidateFor = 0;
         }
 
-        audio.SetMusic($"{EraKey(v.Era)}_{_region}");
+        audio.SetMusic($"{EraKey(_musicEra >= 0 ? _musicEra : v.Era)}_{_region}");
     }
 
     // The terrain of most known land hexes on screen; the coast when water fills enough of it; null when nothing is known.
@@ -338,11 +380,51 @@ public partial class GameAudio : Node
             PlayCommandKind.SendCaravan or PlayCommandKind.Route or PlayCommandKind.SupplyUnit or PlayCommandKind.BringMaterials => "caravan_sent",
             _ => null,
         };
-        if (sound is not null)
+        // Every order waits, also the silent ones, so a refusal is matched to the order it answers.
+        _orders.Add((sound ?? "", _time, 0));
+    }
+
+    // The orders that met no refusal sound now (D3).
+    private void Orders()
+    {
+        for (int i = 0; i < _orders.Count; i++)
         {
-            AudioManager.Play(sound);
+            (string sound, double at, int frames) = _orders[i];
+            if (_time - at >= OrderWait && frames >= OrderWaitFrames)
+            {
+                if (sound.Length > 0)
+                {
+                    AudioManager.Play(sound);
+                }
+
+                _orders.RemoveAt(i--);
+            }
+            else
+            {
+                _orders[i] = (sound, at, frames + 1);
+            }
         }
     }
 
-    private void Refused(string reason) => AudioManager.Play("refused");
+    // The server answers in the order of the commands: a refusal is for the oldest order still waiting.
+    private void Refused(string reason)
+    {
+        if (_orders.Count > 0)
+        {
+            _orders.RemoveAt(0);
+        }
+
+        AudioManager.Play("refused");
+    }
+
+    // D8: at the Max speed the frequent sounds of sounds.json "quietAtMaxSpeed" are left out.
+    private static void Play(AudioManager audio, PlayViewMessage v, string sound)
+    {
+        if (v.Speed == SimulationSpeed.Max && Array.IndexOf(audio.Manifest.QuietAtMaxSpeed, sound) >= 0)
+        {
+            return;
+        }
+
+        AudioManager.Play(sound);
+    }
 }
