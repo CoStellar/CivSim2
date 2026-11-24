@@ -41,6 +41,8 @@ public partial class PlayGame
     private Label _advisorName = null!;
     private Label _advisorText = null!;
     private Label _eventLabel = null!;
+    private Glyph _eventGlyph = null!;
+    private TextureRect _eventIcon = null!;
     private HFlowContainer _alertsBox = null!;
     private RichTextLabel _chronicleText = null!;
     private PanelContainer _chroniclePanel = null!;
@@ -155,6 +157,7 @@ public partial class PlayGame
         {
             string name = WindowNames[i];
             Button wb = UiKit.Button($"{i + 1} {name}", () => OpenWindow(name), $"{name} (key {i + 1})");
+            UiKit.SetIcon(wb, "ui/window_" + name.ToLowerInvariant()); // 2026-11-24 (Patryk): a picture on each window button
             wb.AddThemeFontSizeOverride("font_size", Math.Max(12, PixelTheme.FontSize * 3 / 4));
             windows.AddChild(wb);
         }
@@ -220,7 +223,10 @@ public partial class PlayGame
         var adv = new HBoxContainer();
         adv.AddThemeConstantOverride("separation", 8);
         _advisorPanel.AddChild(adv);
-        adv.AddChild(new Glyph(new Color("8a4030"), "!", 32, round: true));
+        _eventGlyph = new Glyph(new Color("8a4030"), "!", 32, round: true);
+        adv.AddChild(_eventGlyph);
+        _eventIcon = new TextureRect { CustomMinimumSize = new Vector2(32, 32), StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest, SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, Visible = false };
+        adv.AddChild(_eventIcon);
         var advText = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         adv.AddChild(advText);
         _advisorName = UiKit.Label("", 15, UiKit.Heading);
@@ -309,7 +315,9 @@ public partial class PlayGame
         for (int i = 0; i < WindowNames.Length; i++)
         {
             string name = WindowNames[i];
-            winHead.AddChild(UiKit.Button($"{i + 1} {name}", () => OpenWindow(name, toggle: false), $"key {i + 1}"));
+            Button hb = UiKit.Button($"{i + 1} {name}", () => OpenWindow(name, toggle: false), $"key {i + 1}");
+            UiKit.SetIcon(hb, "ui/window_" + name.ToLowerInvariant());
+            winHead.AddChild(hb);
         }
 
         winHead.AddChild(UiKit.Button("Close", () => OpenWindow(""), "Close (Esc)"));
@@ -640,6 +648,13 @@ public partial class PlayGame
         string season = v.SeasonSeconds <= 0 ? "" : v.Winter ? $"WINTER: {v.SeasonSeconds / 60}:{v.SeasonSeconds % 60:00} left" : v.SeasonSeconds <= 60 ? $"Winter in {v.SeasonSeconds} s" : "";
         _eventLabel.Visible = hasEvent || season.Length > 0;
         _eventLabel.Text = hasEvent ? $"{v.Event!.ToUpperInvariant()}: {v.EventSecondsLeft} s left" + (season.Length > 0 ? $"   {season}" : "") + (v.EventInfo is { } info ? $"\n{info}" : "") : season;
+
+        // 2026-11-24 (Patryk): the event's picture (drought, hard winter, epidemic, fire, flood); the winter shows the snowflake.
+        string eventKey = hasEvent ? "event_" + UiKit.KeyOf(v.Event!) : season.Length > 0 ? "event_hard_winter" : "";
+        Texture2D? eventPic = eventKey.Length > 0 ? UiKit.Picture?.Invoke("ui", eventKey) : null;
+        _eventIcon.Texture = eventPic;
+        _eventIcon.Visible = eventPic is not null;
+        _eventGlyph.Visible = eventPic is null;
         if (v.Advisor is { } a)
         {
             _advisorName.Text = $"{a.Name}, {a.Rarity.ToLowerInvariant()} advisor";

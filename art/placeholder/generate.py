@@ -21,6 +21,7 @@ import sys
 from PIL import Image
 
 import game_art
+import icon_art
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "art", "placeholder")
@@ -97,16 +98,18 @@ class Canvas:
         self.im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
 
     def px(self, x, y, c):
+        x, y = int(x), int(y)
         if 0 <= x < self.w and 0 <= y < self.h:
             self.im.putpixel((x, y), tuple(c) + (255,))
 
     def rect(self, x0, y0, x1, y1, c):
+        x0, y0, x1, y1 = (int(round(v)) for v in (x0, y0, x1, y1))
         for y in range(y0, y1 + 1):
             for x in range(x0, x1 + 1):
                 self.px(x, y, c)
 
     def line(self, x0, y0, x1, y1, c, width=1):
-        n = max(abs(x1 - x0), abs(y1 - y0), 1)
+        n = int(round(max(abs(x1 - x0), abs(y1 - y0), 1)))
         for i in range(n + 1):
             x = round(x0 + (x1 - x0) * i / n)
             y = round(y0 + (y1 - y0) * i / n)
@@ -699,6 +702,8 @@ def main():
     theme()
     game_art.generate_ui()  # 2026-11-23: textured frames of the interface (stone, leather, wood) over the plain ones
     game_art.generate_era_ui()  # 2026-11-24: frames of each era after the stone age (ui/<piece>_<era>.png)
+    with open(os.path.join(ROOT, "data", "sim", "game.json"), encoding="utf-8") as f:
+        icon_art.generate(json.load(f))  # 2026-11-24: technologies, branches, eras, events, portraits, emblems...
     if flat:
         finish_flat()
         return

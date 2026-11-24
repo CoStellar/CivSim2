@@ -540,7 +540,10 @@ def badge(mark_kind, rim_kind):
     t.disc(7.5, 7.5, 5.6, P((242, 194, 121)))
     t.outline(P(OUTLINE))
     mark = canvas(9, 9)  # the mark on its own, outlined in dark brown so it reads on the parchment
-    sign_more(mark, mark_kind, 1, 1)
+    if callable(mark_kind):
+        mark_kind(mark, 1, 1)
+    else:
+        sign_more(mark, mark_kind, 1, 1)
     for yy in range(9):
         for xx in range(9):
             r_, g_, b_, a_ = mark.im.getpixel((xx, yy))
@@ -551,6 +554,11 @@ def badge(mark_kind, rim_kind):
     c = canvas(32, 32)
     c.im = t.im.resize((32, 32), Image.NEAREST)
     return c
+
+
+def badge_with(draw_mark, rim_kind):
+    """A badge whose mark is drawn by draw_mark(canvas, x, y) in a 7x7 box (icon_art.py: advisor, strangers)."""
+    return badge(draw_mark, rim_kind)
 
 
 def board(c, kind, x, y, k=1):
@@ -2142,7 +2150,7 @@ ERA_UI = {
         "tab_unselected": ((69, 31, 7), "wicker", {}),
     },
     "bronze_age": {  # sandstone and bronze
-        "frame_panel": ((79, 75, 69), "stone", {"trim": (201, 113, 21)}), "frame_bar": ((165, 77, 6), "plates", {}),
+        "frame_panel": ((79, 75, 69), "stone", {"trim": (201, 113, 21)}), "frame_bar": ((148, 64, 16), "plates", {}),
         "frame_header": ((122, 45, 2), "plates", {}), "button_normal": ((138, 86, 45), "stone", {"trim": (229, 168, 98)}),
         "button_hover": ((170, 101, 39), "stone", {"trim": (229, 168, 98)}), "button_pressed": ((122, 45, 2), "plates", {"raised": False}),
         "button_disabled": ((86, 44, 24), "stone", {}), "tab_selected": ((148, 64, 16), "plates", {}),

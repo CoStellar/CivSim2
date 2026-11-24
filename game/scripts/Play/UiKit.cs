@@ -310,6 +310,48 @@ public static class UiKit
 
     private static readonly Dictionary<Texture2D, Texture2D> TrimmedCache = [];
 
+    /// <summary>A portrait ("portraits/name") in a people's colour (-1: ours), uncut, or null.</summary>
+    public static Texture2D? PortraitOf(string? pic, int civ = -1)
+    {
+        int slash = pic?.IndexOf('/') ?? -1;
+        return slash <= 0 ? null : CivPicture?.Invoke(pic![..slash], pic[(slash + 1)..], civ, false);
+    }
+
+    /// <summary>Puts a small picture ("layer/name", ours in colour) at the left of a button's text; nothing when missing.</summary>
+    public static void SetIcon(Button b, string? pic)
+    {
+        if (PictureOf(pic) is { } icon)
+        {
+            b.Icon = icon;
+            b.ExpandIcon = false;
+            b.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+        }
+    }
+
+    /// <summary>Portraits drawn for each advisor field and thinker rarity (art/placeholder/icon_art.py).</summary>
+    public const int PortraitVariants = 12;
+
+    /// <summary>
+    /// The portrait of a person: "portraits/advisor_economy_07". The variant comes from the person's name (a stable hash,
+    /// the same on every machine), so each advisor and thinker keeps their looks and two of them rarely look alike.
+    /// </summary>
+    public static string PortraitName(string kind, string group, string name)
+    {
+        uint h = 2166136261;
+        foreach (char ch in name)
+        {
+            h = (h ^ ch) * 16777619;
+        }
+
+        return $"portraits/{kind}_{group}_{(h % PortraitVariants) + 1:00}";
+    }
+
+    /// <summary>Motifs of the peoples' emblems (art/placeholder/icon_art.py, MOTIFS), one per people by its number.</summary>
+    public static readonly string[] EmblemMotifs = ["deer", "sun", "tree", "wave", "mountain", "bird", "hand", "spiral"];
+
+    /// <summary>A people's emblem in the look of an era: a board, a stone, a shield, a banner, a heraldic shield.</summary>
+    public static string EmblemName(string eraKey, int civ) => $"emblems/emblem_{eraKey}_{EmblemMotifs[((civ % EmblemMotifs.Length) + EmblemMotifs.Length) % EmblemMotifs.Length]}";
+
     /// <summary>Forgets the cut pictures (after the art pack changed).</summary>
     public static void ClearPictures() => TrimmedCache.Clear();
 

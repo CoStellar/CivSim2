@@ -523,6 +523,206 @@
    "height": 24
   },
   {
+   "file": "emblems/emblem_bronze_age_bird.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_bronze_age_deer.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_bronze_age_hand.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_bronze_age_mountain.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_bronze_age_spiral.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_bronze_age_sun.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_bronze_age_tree.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_bronze_age_wave.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_bird.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_deer.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_hand.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_mountain.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_spiral.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_sun.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_tree.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_iron_age_wave.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_bird.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_deer.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_hand.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_mountain.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_spiral.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_sun.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_tree.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_middle_ages_wave.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_bird.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_deer.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_hand.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_mountain.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_spiral.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_sun.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_tree.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_neolithic_wave.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_bird.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_deer.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_hand.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_mountain.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_spiral.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_sun.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_tree.png",
+   "width": 40,
+   "height": 40
+  },
+  {
+   "file": "emblems/emblem_stone_age_wave.png",
+   "width": 40,
+   "height": 40
+  },
+  {
    "file": "goods/good_bricks.png",
    "width": 32,
    "height": 32
@@ -863,6 +1063,896 @@
    "height": 42
   },
   {
+   "file": "portraits/advisor_economy_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_economy_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_expansion_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_growth_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/advisor_research_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_common_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_gifted_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_legendary_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_rare_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_01.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_02.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_03.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_04.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_05.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_06.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_07.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_08.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_09.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_10.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_11.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "portraits/thinker_visionary_12.png",
+   "width": 64,
+   "height": 92
+  },
+  {
+   "file": "techs/tech_agriculture.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_animal_husbandry.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_archery.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_barracks.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_barter.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_brick_making.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_bronze_age_arms.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_bronze_tools.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_bronze_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_bronze_working.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_carrying.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_castles.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_chivalry.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_civil_service.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_code_of_laws.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_construction.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_copper_working.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_crop_rotation.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_crossbows.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_currency.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_dwellings.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_engineering.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_feudalism.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_fire.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_fishing.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_flint_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_foraging.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_guilds.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_hafted_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_heavy_plough.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_herbal_lore.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_hide_shields.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_horseback_riding.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_hunting.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_iron_age_arms.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_iron_tools.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_iron_weapons.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_iron_working.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_irrigation.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_lime_mortar.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_longbow.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_masonry.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_mathematics.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_medicine.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_medieval_arms.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_migration.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_mills.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_palisade.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_philosophy.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_polished_stone.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_pottery.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_prospecting.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_rafts.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_roads.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_sailing.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_sawmills.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_scouting.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_sewing.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_shelters.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_shepherding.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_shipbuilding.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_steel.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_stockpiling.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_stone_tools.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_stone_walls.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_the_wheel.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_trebuchet.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_university.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_weaving.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "techs/tech_writing.png",
+   "width": 32,
+   "height": 32
+  },
+  {
    "file": "terrain/terrain_grove_01.png",
    "width": 96,
    "height": 84
@@ -973,6 +2063,11 @@
    "height": 84
   },
   {
+   "file": "ui/advisor.png",
+   "width": 32,
+   "height": 32
+  },
+  {
    "file": "ui/alert_0.png",
    "width": 32,
    "height": 32
@@ -984,6 +2079,11 @@
   },
   {
    "file": "ui/alert_10.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/alert_11.png",
    "width": 32,
    "height": 32
   },
@@ -1128,6 +2228,46 @@
    "height": 12
   },
   {
+   "file": "ui/category_basics.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/category_building.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/category_food.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/category_governance.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/category_industry.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/category_military.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/category_science.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/category_trade.png",
+   "width": 16,
+   "height": 16
+  },
+  {
    "file": "ui/check_off.png",
    "width": 8,
    "height": 8
@@ -1136,6 +2276,56 @@
    "file": "ui/check_on.png",
    "width": 8,
    "height": 8
+  },
+  {
+   "file": "ui/era_bronze_age.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/era_iron_age.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/era_middle_ages.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/era_neolithic.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/era_stone_age.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/event_drought.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/event_epidemic.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/event_fire.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/event_flood.png",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "file": "ui/event_hard_winter.png",
+   "width": 32,
+   "height": 32
   },
   {
    "file": "ui/field.png",
@@ -1426,6 +2616,51 @@
    "file": "ui/tooltip.png",
    "width": 12,
    "height": 12
+  },
+  {
+   "file": "ui/veteran_forced_march.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/veteran_hardened.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/veteran_shield_wall.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/window_civilizations.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/window_research.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/window_settlements.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/window_summary.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/window_thinkers.png",
+   "width": 16,
+   "height": 16
+  },
+  {
+   "file": "ui/window_units.png",
+   "width": 16,
+   "height": 16
   },
   {
    "file": "units/unit_archers.png",

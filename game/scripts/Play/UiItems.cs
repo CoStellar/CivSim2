@@ -26,10 +26,11 @@ internal abstract record UiItem
 }
 
 /// <summary>A title with a tile and a second line.</summary>
-/// <remarks>Pic: a picture ("layer/name") instead of the letters, in the colour of people PicCiv (-1: ours), grey when PicGrey.</remarks>
-internal sealed record HeaderItem(string Title, string Sub, Color Color, string Short, string? Pic = null, int PicCiv = -1, bool PicGrey = false) : UiItem
+/// <remarks>Pic: a picture ("layer/name") instead of the letters, in the colour of people PicCiv (-1: ours), grey when PicGrey.
+/// Portrait: the picture is a portrait (64x92) shown at its own size instead of on a square tile (2026-11-24).</remarks>
+internal sealed record HeaderItem(string Title, string Sub, Color Color, string Short, string? Pic = null, int PicCiv = -1, bool PicGrey = false, bool Portrait = false) : UiItem
 {
-    public override string Sig => $"H{Title}|{Sub}|{Short}|{Pic}|{PicCiv}|{PicGrey}";
+    public override string Sig => $"H{Title}|{Sub}|{Short}|{Pic}|{PicCiv}|{PicGrey}|{Portrait}";
 }
 
 /// <summary>A line of text.</summary>
@@ -106,9 +107,10 @@ internal sealed record GoodsItem(IReadOnlyList<GoodCell> Cells) : UiItem
 }
 
 /// <summary>A button.</summary>
-internal sealed record ActItem(string Text, Action Do, string Tooltip = "", bool Enabled = true, Color? Accent = null) : UiItem
+/// <remarks>Pic: a small picture ("layer/name") at the left of the text (2026-11-24: veteran choices).</remarks>
+internal sealed record ActItem(string Text, Action Do, string Tooltip = "", bool Enabled = true, Color? Accent = null, string? Pic = null) : UiItem
 {
-    public override string Sig => $"A{Text}|{Tooltip}|{Enabled}";
+    public override string Sig => $"A{Text}|{Tooltip}|{Enabled}|{Pic}";
 
     public override string Look => $"A{Text}|{Enabled}|{Accent}";
 
@@ -364,7 +366,15 @@ internal static class UiRender
             {
                 var row = new HBoxContainer();
                 row.AddThemeConstantOverride("separation", 8);
-                row.AddChild(new Glyph(h.Color, h.Short, h.Pic is null ? 40 : 48, icon: UiKit.PictureOf(h.Pic, h.PicCiv, h.PicGrey)));
+                if (h.Portrait && UiKit.PortraitOf(h.Pic, h.PicCiv) is { } portrait)
+                {
+                    row.AddChild(new TextureRect { Texture = portrait, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest, SizeFlagsVertical = Control.SizeFlags.ShrinkBegin });
+                }
+                else
+                {
+                    row.AddChild(new Glyph(h.Color, h.Short, h.Pic is null ? 40 : 48, icon: UiKit.PictureOf(h.Pic, h.PicCiv, h.PicGrey)));
+                }
+
                 var col = new VBoxContainer();
                 col.AddThemeConstantOverride("separation", 0);
                 col.AddChild(UiKit.Label(h.Title, 20, UiKit.Heading));
@@ -454,6 +464,7 @@ internal static class UiRender
                     clicked();
                 }, a.Tooltip, a.Enabled);
                 b.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+                UiKit.SetIcon(b, a.Pic);
                 if (a.Accent is { } accent)
                 {
                     b.AddThemeColorOverride("font_color", accent);
@@ -533,6 +544,7 @@ internal static class UiRender
                         act.Do();
                         clicked();
                     }, a.Tooltip, a.Enabled);
+                    UiKit.SetIcon(b, a.Pic);
                     if (a.Accent is { } accent)
                     {
                         b.AddThemeColorOverride("font_color", accent);

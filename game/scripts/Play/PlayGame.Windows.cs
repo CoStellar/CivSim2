@@ -130,7 +130,8 @@ public partial class PlayGame
         foreach (string cat in (IEnumerable<string>?)c.Categories ?? Categories)
         {
             var one = new HBoxContainer();
-            one.AddChild(new Glyph(UiKit.CategoryColor(cat), "", 14, round: true) { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+            Texture2D? mark = UiKit.Picture?.Invoke("ui", "category_" + cat);
+            one.AddChild(new Glyph(UiKit.CategoryColor(cat), "", mark is null ? 14 : 22, round: mark is null, icon: mark) { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
             one.AddChild(UiKit.Label(char.ToUpperInvariant(cat[0]) + cat[1..], 13, UiKit.Text));
             row.AddChild(one);
         }
@@ -688,6 +689,7 @@ public partial class PlayGame
 
     private void PeoplesItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
+        items.Add(new HeaderItem("Our people", c.Eras[v.Era], new Color("c8a050"), "Us", UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), v.Civ), v.Civ));
         if (v.Peoples.Count == 0)
         {
             items.Add(new LineItem("We have met no other civilization yet. Send scouts to find them.", UiKit.Muted, 15));
@@ -697,7 +699,8 @@ public partial class PlayGame
         {
             int other = p.Civ;
             string status = p.Dead ? "gone" : p.AtWar ? "AT WAR" : p.Alliance ? "allies" : p.Trade ? "trade partners" : "at peace";
-            items.Add(new HeaderItem(p.Name, status + (p.Reputation < 0 ? $" - known for treachery ({p.Reputation})" : ""), p.AtWar ? new Color("b84040") : new Color("6a7a5a"), UiKit.Short(p.Name)));
+            // 2026-11-24 (Patryk): each people's emblem, in the look of our era (board, stone, shield, banner, heraldry).
+            items.Add(new HeaderItem(p.Name, status + (p.Reputation < 0 ? $" - known for treachery ({p.Reputation})" : ""), p.AtWar ? new Color("b84040") : new Color("6a7a5a"), UiKit.Short(p.Name), UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), p.Civ), p.Civ, p.Dead));
             if (p.Dead)
             {
                 continue;
@@ -779,7 +782,7 @@ public partial class PlayGame
         items.Add(new SectionItem("Thinker"));
         if (v.Thinker is { } t)
         {
-            items.Add(new HeaderItem(t.Name, $"{t.Rarity} thinker", new Color("8a5ab8"), UiKit.Short(t.Name)));
+            items.Add(new HeaderItem(t.Name, $"{t.Rarity} thinker", new Color("8a5ab8"), UiKit.Short(t.Name), ThinkerPortrait(t), Portrait: true));
             items.Add(new LineItem($"Research costs {t.CostPercent}% and needs {t.ExperiencePercent}% of the experience.", UiKit.Text, 14));
         }
         else
@@ -789,14 +792,14 @@ public partial class PlayGame
 
         if (v.ThinkerOffer is { } to)
         {
-            items.Add(new LineItem($"On offer: {to.Name}, {to.Rarity.ToLowerInvariant()}: costs {to.CostPercent}%, experience {to.ExperiencePercent}%.", UiKit.Warn, 14));
+            items.Add(new HeaderItem($"On offer: {to.Name}", $"{to.Rarity} thinker: research costs {to.CostPercent}%, experience {to.ExperiencePercent}%", new Color("8a5ab8"), UiKit.Short(to.Name), ThinkerPortrait(to), Portrait: true));
             items.Add(new ActItem($"Hire {to.Name} for {Amounts(c, to.HirePrice)}", () => _session!.Play(PlayCommandKind.Hire, 0, flag: false), Accent: UiKit.Good));
         }
 
         items.Add(new SectionItem("Advisor"));
         if (v.Advisor is { } a)
         {
-            items.Add(new HeaderItem(a.Name, $"{a.Rarity} advisor on {a.Fields}", new Color("8a6a40"), UiKit.Short(a.Name)));
+            items.Add(new HeaderItem(a.Name, $"{a.Rarity} advisor on {a.Fields}", new Color("8a6a40"), UiKit.Short(a.Name), AdvisorPortrait(a), Portrait: true));
             items.Add(new ActItem("Let the advisor go", () => _session!.Play(PlayCommandKind.Dismiss, 0)));
         }
         else
@@ -806,9 +809,19 @@ public partial class PlayGame
 
         if (v.AdvisorOffer is { } ao)
         {
-            items.Add(new LineItem($"On offer: {ao.Name}, {ao.Rarity.ToLowerInvariant()}, advises on {ao.Fields}.", UiKit.Warn, 14));
+            items.Add(new HeaderItem($"On offer: {ao.Name}", $"{ao.Rarity} advisor on {ao.Fields}", new Color("8a6a40"), UiKit.Short(ao.Name), AdvisorPortrait(ao), Portrait: true));
             items.Add(new ActItem($"Hire {ao.Name} for {Amounts(c, ao.HirePrice)}", () => _session!.Play(PlayCommandKind.Hire, 0, flag: true), Accent: UiKit.Good));
         }
+    }
+
+    // 2026-11-24 (Patryk): every thinker and advisor has a portrait with looks of their own; a thinker is dressed by rarity,
+    // an advisor holds the thing of their (first) field.
+    private static string ThinkerPortrait(PlayPersonView t) => UiKit.PortraitName("thinker", UiKit.KeyOf(t.Rarity), t.Name);
+
+    private static string AdvisorPortrait(PlayPersonView a)
+    {
+        string field = a.Fields.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "economy";
+        return UiKit.PortraitName("advisor", UiKit.KeyOf(field), a.Name);
     }
 
     private void SummaryItems(PlayViewMessage v, List<UiItem> items)

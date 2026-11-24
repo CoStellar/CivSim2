@@ -271,13 +271,18 @@ public partial class Main : Node2D
                 float z = _playWindow == "ZoomIn" ? 5f : 0.08f;
                 demo = [(_playSeconds - 1, g => g.ScriptZoom(z))];
             }
-            else if (_playWindow is "Advisor" or "AdvisorTip")
+            else if (_playWindow is "Advisor" or "AdvisorTip" or "AdvisorWindow")
             {
                 // Hire the advisor who offers service (tried every few seconds), then look at the strip at the top right.
                 demo = [(0.5, g => g.ScriptSpeed(SimulationSpeed.X4)), .. Enumerable.Range(1, (int)_playSeconds / 2).Select(k => ((double)k * 2, (Action<Play.PlayGame>)(g => g.ScriptHireAdvisor())))];
                 if (_playWindow == "AdvisorTip")
                 {
                     demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverAdvisor())];
+                }
+                else if (_playWindow == "AdvisorWindow")
+                {
+                    // 2026-11-24: the window of thinkers and advisors with their portraits.
+                    demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen("Thinkers"))];
                 }
             }
             else if (_playWindow == "Help")

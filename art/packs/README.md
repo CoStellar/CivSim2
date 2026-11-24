@@ -4,6 +4,14 @@ Każdy może podmienić grafiki gry bez zmian w kodzie: wystarczy folder z plika
 rozmiarach co grafiki zastępcze w `art/placeholder/`. Pełna lista nazw i rozmiarów: `art/placeholder/manifest.json`
 (spis w `art/placeholder/README.md`).
 
+## Paczki dołączone do gry
+- **Default** (bez paczki): grafiki zastępcze z fakturą starego CivSim (i pixel art Patryka z `art/export/`, gdy jest).
+- **Flat** (`art/packs/flat/`, od 2026-11-24): te same grafiki bez faktury, w płaskich kolorach jak pierwsza wersja grafik
+  zastępczych. Robi ją skrypt: `python3 art/placeholder/generate.py --flat`.
+
+Paczkę wybiera się w menu startowym (sekcja **Art**) albo w trakcie gry pod przyciskiem **„?”** (sekcja **ART PACK**): mapa,
+budynki, jednostki i interfejs przełączają się od razu, a wybór zostaje zapamiętany.
+
 ## Gdzie wrzucić paczkę
 - `art/packs/<nazwa-paczki>/` obok gry (paczki dołączone do gry), albo
 - folder użytkownika `user://art_packs/<nazwa-paczki>/`; w menu startowym przycisk **„Open packs folder”** otwiera go
