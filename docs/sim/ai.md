@@ -307,3 +307,11 @@ Zapas na starcie: 120 jedzenia, **100 drewna** (było 60), **20 kamienia** (bez 
 
 Brak miedzi prawie znika, a żelaza ubywa mniej. Liczba ludzi i głód różnią się w granicach rozrzutu między grami (±30%).
 
+## Zmiany po testach 2026-11-24
+
+- **A1:** próby budowy liczą wolne miejsca pracy i budowy w toku raz na takt (`SimAi.BuildScan`), a nie przy każdej próbie.
+- **A2:** szukając miejsca na zwiad i złoża pod kopalnię, AI patrzy na właściciela heksu takiego, jakiego jej lud widział
+  (`SimGame.OwnerSeen`), a nie na prawdziwego.
+- **A3:** 12 ilości, które były wpisane w kod AI (zapasy przy dowozie, braki towarów, narzędzia, jedzenie przed szkoleniem
+  wojska), jest teraz w `game.json` (`ai.amounts`), z tymi samymi wartościami.
+
