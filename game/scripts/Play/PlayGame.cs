@@ -173,6 +173,9 @@ public partial class PlayGame : Node2D
     /// <summary>For screenshots of test scenarios: a debug key (0 goods, 1 research, 2 map, 3 people, 4 next era).</summary>
     public void ScriptDebug(int action) => _session?.Play(PlayCommandKind.Debug, action);
 
+    /// <summary>Screenshots: switches the art pack as the settings would (folder name, empty for the default).</summary>
+    public void ScriptArtPack(string key) => UseArtPack(key);
+
     /// <summary>For screenshots: opens a window by name ("Help" for the help).</summary>
     public void ScriptOpen(string mode)
     {

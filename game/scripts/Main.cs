@@ -231,6 +231,12 @@ public partial class Main : Node2D
             {
                 demo = [.. demo, (3, g => g.ScriptRoad())];
             }
+            else if (_playWindow.StartsWith("Pack:", StringComparison.Ordinal))
+            {
+                // Switching the art pack while playing (2026-11-24), e.g. --play-window Pack:flat; then a close look at the map.
+                string pack = _playWindow[5..];
+                demo = [(_playSeconds - 3, g => g.ScriptArtPack(pack)), (_playSeconds - 2, g => g.ScriptZoom(2.2f))];
+            }
             else if (_playWindow == "Place")
             {
                 // Placing a building (2026-11-23): the free places of every hex it may go on show as slots.
