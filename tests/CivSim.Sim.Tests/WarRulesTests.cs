@@ -141,6 +141,7 @@ public sealed class WarRulesTests
         {
             Assert.Null(g.Apply(new DeclareWarCommand(0, 1)));
             g.MakePeace(a, g.Civs[1], 0);
+            g.EndWhiteTruceForTest(0, 1); // P5: a white peace forbids a new war for 3 minutes
         }
 
         Assert.Equal(Content.War.ReputationFloor, a.Reputation);

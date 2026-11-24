@@ -352,6 +352,15 @@ public sealed class AudioManifest
     /// <summary>Share of water among the hexes seen from which the music is the coast's (0–1).</summary>
     public double CoastWater { get; set; } = 0.45;
 
+    /// <summary>Seconds before the soft bell sounds again for the same kind of alert (tests 2026-11-24, D7).</summary>
+    public double AlertKindSeconds { get; set; } = 60;
+
+    /// <summary>Seconds after the fanfare of a new era before its music starts (D9).</summary>
+    public double EraMusicDelaySeconds { get; set; } = 3.5;
+
+    /// <summary>Sound events left out at the Max speed of play, where they would follow each other without pause (D8).</summary>
+    public string[] QuietAtMaxSpeed { get; set; } = [];
+
     /// <summary>Ambient layer → file in ambient/.</summary>
     public Dictionary<string, string> Ambient { get; set; } = [];
 

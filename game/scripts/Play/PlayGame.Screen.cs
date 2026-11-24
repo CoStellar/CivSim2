@@ -198,7 +198,7 @@ public partial class PlayGame
         _patrolsButton = UiKit.Button("Patrols", () => OpenWindow("Units"), "Our patrols and units: stop one or all of them (P)");
         right.AddChild(_patrolsButton);
         right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
-        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "The keys, the font and the interface size (H)"));
+        right.AddChild(UiKit.Button("?", () => ShowHelp(!_help.Visible), "The keys, the font and the interface size (H)"));
         right.AddChild(UiKit.Button("Manual", () => ToggleManual(), "How to play: the goal, the eras, war and peace, every key (F1)"));
         right.AddChild(UiKit.Button("Tutorial", () => OpenWindow("Tutorial"), "First steps: what to do next, and the task list on screen (T)"));
         right.AddChild(UiKit.Button("Save", SaveNow, "Save the game (it also saves itself every 5 minutes as 'autosave'); load it from the start menu (F5)"));
@@ -441,7 +441,7 @@ public partial class PlayGame
         helpButtons.AddThemeConstantOverride("separation", 8);
         help.AddChild(helpButtons);
         helpButtons.AddChild(UiKit.Button("The whole manual (F1)", () => ToggleManual(0), "How to play: the goal, the first minutes, the eras, war and peace, every key"));
-        helpButtons.AddChild(UiKit.Button("Close", () => _help.Visible = false, "Close (Esc or H)"));
+        helpButtons.AddChild(UiKit.Button("Close", () => ShowHelp(false), "Close (Esc or H)"));
         BuildKeysUi(root, topH);
     }
 
@@ -479,6 +479,17 @@ public partial class PlayGame
         bool help = _help.Visible;
         RebuildUi();
         _help.Visible = help;
+    }
+
+    // The help and settings panel (H) sounds like the other windows when it opens or closes (tests 2026-11-24, D12).
+    private void ShowHelp(bool show)
+    {
+        if (_help.Visible != show)
+        {
+            Audio.AudioManager.Play(show ? "window_open" : "window_close");
+        }
+
+        _help.Visible = show;
     }
 
     private void OpenWindow(string name, bool toggle = true)

@@ -101,7 +101,7 @@ public sealed partial class SimGame
                 // 11B (Patryk, 2026-11-20): an early warning while there is still time, with what to do.
                 long left = s.Stock[Content.Food] * 60 / -s.Rate[Content.Food];
                 list.Add(new Alert(AlertKind.FoodLow, s.Id, s.Center, Content.Food,
-                    $"Food in {s.Name} runs out in {left / 60}:{left % 60:00}: build a Gatherers' hut (Food) or put more people to food."));
+                    $"Food in {s.Name} runs out in {left / 60}:{left % 60:00}: " + (FreeWorkersAdvice(civ, s) ?? "build a Gatherers' hut (Food) or put more people to food.")));
             }
             else if (ration > 0 && then < ration)
             {

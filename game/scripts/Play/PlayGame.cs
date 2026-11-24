@@ -712,7 +712,7 @@ public partial class PlayGame : Node2D
                 }
                 else if (_help.Visible)
                 {
-                    _help.Visible = false;
+                    ShowHelp(false);
                 }
                 else if (_bigMode.Length > 0)
                 {
@@ -776,7 +776,7 @@ public partial class PlayGame : Node2D
                 ToggleRoutes();
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.H }:
-                _help.Visible = !_help.Visible;
+                ShowHelp(!_help.Visible);
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.L }:
                 ToggleChronicle();

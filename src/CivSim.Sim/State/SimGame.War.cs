@@ -49,6 +49,10 @@ public sealed partial class SimGame
     {
         War()[(a * Civs.Count) + b] = war ? 1 : 0;
         War()[(b * Civs.Count) + a] = war ? 1 : 0;
+
+        // Test round 2026-11-24 (B1): an offer belongs to the war it was made in; a new war or a peace ends every offer
+        // between the two, so an old offer cannot end the next war at once or be taken in peace.
+        PeaceOffers.RemoveAll(o => (o.From == a && o.To == b) || (o.From == b && o.To == a));
         if (war)
         {
             Aggressors()[(a * Civs.Count) + b] = false;
@@ -130,6 +134,12 @@ public sealed partial class SimGame
         if (AtWar(civ.Id, other))
         {
             return "We are already at war with them.";
+        }
+
+        if (NoWarUntil(civ.Id, other) > Ticks)
+        {
+            long left = (NoWarUntil(civ.Id, other) - Ticks + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond;
+            return $"We made a white peace with {Civs[other].Name}: no new war for {left / 60}:{left % 60:00}.";
         }
 
         if (WarsOf(civ.Id) >= Content.War.MaxWars)
@@ -260,6 +270,12 @@ public sealed partial class SimGame
         if (offer is null)
         {
             return "There is no such offer.";
+        }
+
+        if (!AtWar(civ.Id, from))
+        {
+            PeaceOffers.Remove(offer);
+            return "We are not at war with them.";
         }
 
         PeaceOffers.Remove(offer);

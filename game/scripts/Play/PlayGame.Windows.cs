@@ -912,11 +912,11 @@ public partial class PlayGame
             new("Food", UiKit.Muted), new(v.Hungry ? "hungry" : "enough", v.Hungry ? UiKit.Bad : UiKit.Text),
         ]));
 
-        items.Add(new SectionItem("Our people's minds"));
+        items.Add(new SectionItem("Our civilization's minds"));
         items.Add(new LineItem(v.Thinker is { } t ? $"Thinker: {t.Name} ({t.Rarity.ToLowerInvariant()})" : "No thinker.", UiKit.Text, 14));
         items.Add(new LineItem(v.Advisor is { } a ? $"Advisor: {a.Name} ({a.Rarity.ToLowerInvariant()}, {a.Fields.ToLowerInvariant()})" : "No advisor.", UiKit.Text, 14));
 
-        items.Add(new SectionItem("Other peoples"));
+        items.Add(new SectionItem("Other civilizations"));
         var met = v.Peoples.Where(p => !p.Dead).ToList();
         if (met.Count == 0)
         {

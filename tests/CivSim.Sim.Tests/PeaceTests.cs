@@ -202,4 +202,35 @@ public sealed class PeaceTests
 
         throw new Xunit.Sdk.XunitException("no free site near home");
     }
+
+    // B1 (tests 2026-11-24): an offer belongs to its war. When the war ends some other way, the other side's offer goes too,
+    // so it can neither be taken in peace nor end the next war at once.
+    [Fact]
+    public void APeaceEndsEveryOfferBetweenTheTwo()
+    {
+        SimGame g = AheadInAWar();
+        Civ a = g.Civs[0];
+        Civ b = g.Civs[1];
+        Assert.Null(g.Apply(new ProposePeaceCommand(b.Id, a.Id, PeaceTerms.White(2)))); // b offers, a does not answer
+        Assert.Null(g.Apply(new ProposePeaceCommand(a.Id, b.Id, PeaceTerms.White(0))));
+        Assert.Null(g.Apply(new AnswerPeaceCommand(b.Id, a.Id, true))); // the war ends by a's offer
+        Assert.False(g.AtWar(a.Id, b.Id));
+        Assert.DoesNotContain(g.PeaceOffers, o => (o.From == a.Id && o.To == b.Id) || (o.From == b.Id && o.To == a.Id));
+        Assert.NotNull(g.Apply(new AnswerPeaceCommand(a.Id, b.Id, true)));
+    }
+
+    // P5 (Patryk, 2026-11-24): after a white peace no new war for peace.whiteTruceMinutes, for either side.
+    [Fact]
+    public void AWhitePeaceForbidsANewWarForAWhile()
+    {
+        SimGame g = AheadInAWar();
+        Civ a = g.Civs[0];
+        Civ b = g.Civs[1];
+        Assert.Null(g.Apply(new ProposePeaceCommand(b.Id, a.Id, PeaceTerms.White(0))));
+        Assert.Null(g.Apply(new AnswerPeaceCommand(a.Id, b.Id, true)));
+        Assert.NotNull(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
+        Assert.NotNull(g.Apply(new DeclareWarCommand(b.Id, a.Id)));
+        Run(g, (Content.Peace.WhiteTruceMinutes * SimContent.TicksPerMinute) + 1);
+        Assert.Null(g.Apply(new DeclareWarCommand(a.Id, b.Id)));
+    }
 }

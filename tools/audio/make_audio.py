@@ -8,6 +8,8 @@ The same seeds give the same notes; the rendered sound may differ slightly betwe
 from __future__ import annotations
 
 import argparse
+
+import numpy as np
 import os
 import subprocess
 import sys
@@ -27,6 +29,22 @@ SOUNDFONT = "/usr/share/sounds/sf2/FluidR3_GM.sf2"
 PIECE_SECONDS = 300  # each piece about 5 minutes, looped by the game (Patryk, 2026-11-24)
 
 LOUDNESS = {"music": -20, "ambient": -24, "sfx": -18}
+
+# Ambient loops get one fixed gain to this mean level (dBFS), not ffmpeg's loudnorm: loudnorm changes the gain along the file,
+# so the end no longer met the start (a click every 48 s in amb_sea) and the sea came out 12-18 dB above the other loops
+# (tests 2026-11-24, D4).
+AMBIENT_RMS = {"amb_battle": -26.0}
+AMBIENT_RMS_DEFAULT = -28.0
+
+
+def fixed_level(x, rms_db, peak=0.89):
+    """Scales x by one gain to the mean level rms_db (dBFS), lowered when the peak would pass `peak`."""
+    rms = float(np.sqrt(np.mean(np.square(x))))
+    if rms == 0:
+        return x
+    gain = 10 ** (rms_db / 20) / rms
+    m = float(np.abs(x).max()) * gain
+    return x * (gain if m <= peak else gain * peak / m)
 
 
 def run(cmd):
@@ -109,8 +127,8 @@ def main():
             if not wanted(name):
                 continue
             wav = os.path.join(tmp, name + ".wav")
-            write_wav(wav, ambient.render(name, 1000 + i))
-            encode(wav, os.path.join(out, "ambient", name + ".ogg"), "ambient", quality=2)
+            write_wav(wav, fixed_level(ambient.render(name, 1000 + i), AMBIENT_RMS.get(name, AMBIENT_RMS_DEFAULT)))
+            encode(wav, os.path.join(out, "ambient", name + ".ogg"), "ambient", loudnorm=False, quality=2)
             print(f"ambient {name}")
 
         for i, name in enumerate(sfx.EFFECTS):

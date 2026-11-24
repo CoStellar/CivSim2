@@ -3856,7 +3856,7 @@
     }
   },
   "peace": {
-    "comment": "Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the people's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's.",
+    "comment": "Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the people's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's. whiteTruceMinutes: after a white peace neither side may declare war on the other (or attack it) for this many minutes.",
     "minutes": [
       3,
       6,
@@ -3884,7 +3884,8 @@
       10,
       0,
       -10
-    ]
+    ],
+    "whiteTruceMinutes": 3
   },
   "weariness": {
     "comment": "War weariness of a people in each of its wars, 0-100: perMinute a minute of war, perLostPercent for each percent of its people the enemy killed, hungerPerMinute a minute while a settlement of it is hungry, besiegedPerMinute a minute for each settlement the enemy besieges, sacked, taken (also razed) and caravanRaided at once; it falls by peaceFallPerMinute a minute in peace. From workFrom up, buildings that use goods work less, down to workMaxLossPercent less at 100 (the highest weariness of its wars counts). The AI looks for peace from aiPeaceAt, and a losing AI offers goods from aiPayAt.",

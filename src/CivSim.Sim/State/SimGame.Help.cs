@@ -55,6 +55,33 @@ public sealed partial class SimGame
         return null;
     }
 
+    // Jobs of working food buildings in a settlement that have nobody (tests 2026-11-24, P6).
+    private int EmptyFoodJobs(Civ civ, Settlement s)
+    {
+        int empty = 0;
+        foreach (int id in civ.Buildings)
+        {
+            Building b = Buildings[id];
+            BuildingType t = Content.Buildings[b.Type];
+            if (b.Settlement == s.Id && b.State == BuildingState.Active && t.Produces[Content.Food] > 0 && b.Workers < t.Workers)
+            {
+                empty += t.Workers - b.Workers;
+            }
+        }
+
+        return empty;
+    }
+
+    // P6 (tests 2026-11-24): food buildings stand half empty because every worker is elsewhere, so another hut would stand
+    // empty too; the advice is to free workers instead. Null when that is not the case.
+    private string? FreeWorkersAdvice(Civ civ, Settlement s)
+    {
+        int empty = s.Idle == 0 ? EmptyFoodJobs(civ, s) : 0;
+        return empty > 0
+            ? $"{empty} food job{(empty == 1 ? "" : "s")} stand{(empty == 1 ? "s" : "")} empty and nobody is idle: give the food buildings priority, or stop a woodcutter, quarry or workshop (Stop)."
+            : null;
+    }
+
     /// <summary>E1: what to do about a hungry settlement, from why it is hungry.</summary>
     public string HungerAdvice(Civ civ, Settlement s)
     {
@@ -65,6 +92,11 @@ public sealed partial class SimGame
         if (s.Idle >= 3)
         {
             return $"{s.Idle} people have no work: {build}.";
+        }
+
+        if (FreeWorkersAdvice(civ, s) is { } free)
+        {
+            return free;
         }
 
         if (IsWinter)
@@ -100,6 +132,11 @@ public sealed partial class SimGame
         }
 
         text += $". The food lasts {lasts / 60}:{lasts % 60:00}.";
+        if (FreeWorkersAdvice(civ, s) is { } free)
+        {
+            text += " " + free;
+        }
+
         // Variant C (2026-11-22): why the settlement does not grow although homes are free.
         return s.GrowthStopped && s.People < s.Housing
             ? text + $" It does not grow while its food falls and less than {Content.GrowthStopRations} rations are left."

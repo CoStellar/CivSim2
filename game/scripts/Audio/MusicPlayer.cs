@@ -189,7 +189,9 @@ public partial class MusicPlayer : Node
     private void StartTrack()
     {
         string name = _tracks[_track];
-        IVoice? voice = OggOverride(name) is { } ogg ? new OggVoice(this, ogg) : NoteVoice.Make(_font?.Result, Path.Combine(_musicDirectory, name + ".mid"));
+        // D10 (tests 2026-11-24): a broken .ogg put in by hand falls back to the notes instead of throwing.
+        IVoice? voice = (OggOverride(name) is { } ogg ? (IVoice?)OggVoice.Make(this, ogg) : null)
+            ?? NoteVoice.Make(_font?.Result, Path.Combine(_musicDirectory, name + ".mid"));
         if (voice is null)
         {
             GD.PrintErr($"audio: music {name} not found");
@@ -316,14 +318,26 @@ public partial class MusicPlayer : Node
         private readonly double _length;
         private float _gain;
 
-        public OggVoice(Node parent, string path)
+        private OggVoice(Node parent, AudioStreamOggVorbis stream)
         {
-            AudioStreamOggVorbis stream = AudioStreamOggVorbis.LoadFromFile(path);
             stream.Loop = true;
             _length = stream.GetLength();
             _player = new AudioStreamPlayer { Bus = "Music", Stream = stream, VolumeDb = -60 };
             parent.AddChild(_player);
             _player.Play();
+        }
+
+        /// <summary>The recorded piece, or null when the file is not a readable Ogg Vorbis stream.</summary>
+        public static OggVoice? Make(Node parent, string path)
+        {
+            AudioStreamOggVorbis? stream = AudioStreamOggVorbis.LoadFromFile(path);
+            if (stream is null || stream.GetLength() <= 0)
+            {
+                GD.PrintErr($"audio: {path} is not a readable .ogg, the notes play instead");
+                return null;
+            }
+
+            return new OggVoice(parent, stream);
         }
 
         public float Gain => _gain;

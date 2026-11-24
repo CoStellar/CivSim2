@@ -47,9 +47,13 @@ Nowa era zmienia muzykę od razu, po fanfarze.
 - **Otoczenie** (co pół sekundy, według środka ekranu): teren pod kamerą wybiera pętlę (las, łąka, mokradła, pustynia, mróz, morze;
   zimą każdy ląd brzmi mrozem). Blisko własnej osady dochodzi gwar osady, a gdy nasze oddziały walczą, odgłosy bitwy
   (głośno, gdy walka jest na ekranie, ciszej, gdy poza nim). Z daleka teren brzmi ciszej. Pętle przechodzą płynnie w ciągu ~2,5 s.
-- **Efekty rozkazów:** budowa, rozbiórka, marsz, atak, szkolenie, karawana (zaraz po wydaniu rozkazu); odmowa serwera; okna.
-- **Efekty zdarzeń:** budowa gotowa, nowa osada, odkrycie, wojna, pokój, nowy alert (róg przy ataku i wrogu blisko, dzwonek przy
-  pozostałych). Każdy dźwięk ma przerwę, przed którą się nie powtórzy (np. róg najwyżej co 20 s).
+- **Efekty rozkazów:** budowa, rozbiórka, marsz, atak, szkolenie, karawana (0,08 s i 3 klatki po wydaniu rozkazu; gdy serwer odmówi,
+  gra tylko dźwięk odmowy); okna (także panel pomocy H).
+- **Efekty zdarzeń:** budowa gotowa, nowa osada, odkrycie, wojna, pokój, nowy alert (osobny róg „pod atakiem”, róg przy wrogu blisko,
+  dzwonek przy pozostałych, każdy rodzaj alertu najwyżej raz na 60 s: `alertKindSeconds`). Każdy dźwięk ma przerwę, przed którą się nie
+  powtórzy (np. róg najwyżej co 20 s). Wojna gra też wtedy, gdy poznajemy lud, który już z nami walczy. Przy prędkości Max milkną
+  częste dźwięki „budowa gotowa”, „odkrycie” i dzwonek (`quietAtMaxSpeed`). Muzyka nowej ery wchodzi 3,5 s po fanfarze (`eraMusicDelaySeconds`).
+  Muzyka „wybrzeża” gra, gdy woda zajmuje co najmniej 30% ekranu (`coastWater`).
 - **Kliknięcie** przy każdym przycisku gry.
 
 ## Głośność
@@ -65,7 +69,10 @@ Klawisz **K** wycisza i włącza dźwięk. Ustawienia zapisują się w folderze 
 3. Wpisz go do tabeli w `audio/CREDITS.md` (źródło, autor, licencja; CC-BY wymaga podania autora).
 
 Czwarty utwór terenu: dodaj `<era>_<teren>_4.mid` (albo `.ogg` w `audio/custom/`), gra sama go znajdzie.
-Głośność dźwięku zmienisz w `audio/sounds.json` (`sounds.*.volumeDb`, `cooldown`, `musicGain`).
+Głośność dźwięku zmienisz w `audio/sounds.json` (`sounds.*.volumeDb`, `cooldown`, `musicGain`). Pętle otoczenia mają jeden stały poziom
+(średnio −28 dBFS, bitwa −26; `AMBIENT_RMS` w `tools/audio/make_audio.py`), bez `loudnorm`, który zmieniał głośność w trakcie pliku
+(trzask na styku pętli morza i morze 7 dB głośniejsze od muzyki; testy 2026-11-24). Zepsuty `.ogg` utworu w `audio/custom/` nie psuje
+muzyki: gra wraca do nut.
 
 ## Jak wygenerować pliki od nowa
 
