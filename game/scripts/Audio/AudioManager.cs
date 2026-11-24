@@ -31,11 +31,7 @@ public partial class AudioManager : Node
     private AudioManifest _manifest = new();
     private string _directory = "";
     private string[] _overrides = [];
-    private AudioStreamPlayer _musicA = null!;
-    private AudioStreamPlayer _musicB = null!;
-    private string _playlist = "";
-    private int _track;
-    private double _nextTrackAt = -1;
+    private MusicPlayer _music = null!;
     private double _now;
 
     /// <summary>The running manager (null before the autoload is ready, e.g. in tools).</summary>
@@ -79,10 +75,9 @@ public partial class AudioManager : Node
             _interface.Add(Player("Interface"));
         }
 
-        _musicA = Player("Music");
-        _musicB = Player("Music");
-        _musicA.Finished += TrackFinished;
-        _musicB.Finished += TrackFinished;
+        _music = new MusicPlayer();
+        _music.Setup(_manifest, _directory, _overrides);
+        AddChild(_music);
         Apply(AudioSettings.Load(), save: false);
         GetTree().NodeAdded += HookButton;
         SetMusic("menu");
@@ -101,18 +96,9 @@ public partial class AudioManager : Node
     public override void _Process(double delta)
     {
         _now += delta;
-        float fade = (float)(delta / Math.Max(0.1, _manifest.MusicFadeSeconds));
-        FadeTowards(_musicA, _musicA.HasMeta("on") ? 1f : 0f, fade);
-        FadeTowards(_musicB, _musicB.HasMeta("on") ? 1f : 0f, fade);
         foreach ((AudioStreamPlayer player, float target) in _ambient.Values)
         {
             FadeTowards(player, target, (float)delta / 2.5f);
-        }
-
-        if (_nextTrackAt >= 0 && _now >= _nextTrackAt)
-        {
-            _nextTrackAt = -1;
-            StartTrack(next: true);
         }
     }
 
@@ -148,27 +134,11 @@ public partial class AudioManager : Node
         SettingsChanged?.Invoke();
     }
 
-    /// <summary>Plays the playlist of <c>music</c> in sounds.json (an era key or "menu"); the same one keeps playing.</summary>
-    public void SetMusic(string playlist)
-    {
-        if (playlist == _playlist || !_manifest.Music.ContainsKey(playlist))
-        {
-            return;
-        }
-
-        _playlist = playlist;
-        _track = 0;
-        StartTrack(next: false);
-    }
+    /// <summary>Plays a playlist of music: "menu" or "&lt;era&gt;_&lt;terrain&gt;" (see <see cref="MusicPlayer"/>); the same one keeps playing.</summary>
+    public void SetMusic(string playlist) => _music.Play(playlist);
 
     /// <summary>Fades the music out (end of the game); <see cref="SetMusic"/> starts it again.</summary>
-    public void StopMusic()
-    {
-        _playlist = "";
-        _nextTrackAt = -1;
-        _musicA.RemoveMeta("on");
-        _musicB.RemoveMeta("on");
-    }
+    public void StopMusic() => _music.Stop();
 
     /// <summary>Sets how loud an ambient layer of sounds.json plays, 0 to 1 (it fades there over a few seconds).</summary>
     public void SetAmbient(string layer, float level)
@@ -201,6 +171,12 @@ public partial class AudioManager : Node
     /// <summary>The ambient layer of a biome key (sounds.json "biomeAmbient"), or null.</summary>
     public string? AmbientOfBiome(string biome) => _manifest.BiomeAmbient.GetValueOrDefault(biome);
 
+    /// <summary>The music terrain of a biome key (sounds.json "biomeRegion"), or null.</summary>
+    public string? RegionOfBiome(string biome) => _manifest.BiomeRegion.GetValueOrDefault(biome);
+
+    /// <summary>The sound settings of sounds.json.</summary>
+    public AudioManifest Manifest => _manifest;
+
     /// <summary>The ambient layers sounds.json knows.</summary>
     public IEnumerable<string> AmbientLayers => _manifest.Ambient.Keys;
 
@@ -230,57 +206,11 @@ public partial class AudioManager : Node
         player.Play();
     }
 
-    private void StartTrack(bool next)
-    {
-        if (!_manifest.Music.TryGetValue(_playlist, out string[]? tracks) || tracks.Length == 0)
-        {
-            return;
-        }
-
-        if (next)
-        {
-            _track = (_track + 1) % tracks.Length;
-        }
-
-        AudioStream? stream = Stream("music", tracks[_track]);
-        if (stream is null)
-        {
-            return;
-        }
-
-        // The old track fades out on one player while the new one fades in on the other.
-        AudioStreamPlayer from = _musicA.HasMeta("on") ? _musicA : _musicB;
-        AudioStreamPlayer to = from == _musicA ? _musicB : _musicA;
-        from.RemoveMeta("on");
-        to.Stream = stream;
-        to.VolumeDb = Silent;
-        to.SetMeta("on", true);
-        to.Play();
-        _nextTrackAt = -1;
-    }
-
-    private void TrackFinished()
-    {
-        if (_playlist.Length == 0 || _musicA.Playing || _musicB.Playing)
-        {
-            return;
-        }
-
-        double[] pause = _manifest.MusicPauseSeconds;
-        double lo = pause.Length > 0 ? pause[0] : 20;
-        double hi = pause.Length > 1 ? pause[1] : lo;
-        _nextTrackAt = _now + lo + (GD.Randf() * Math.Max(0, hi - lo));
-    }
-
     private static void FadeTowards(AudioStreamPlayer player, float target, float step)
     {
         float now = player.VolumeDb <= Silent ? 0f : Mathf.DbToLinear(player.VolumeDb);
         float next = now < target ? Math.Min(target, now + step) : Math.Max(target, now - step);
         player.VolumeDb = next <= 0.001f ? Silent : Mathf.LinearToDb(next);
-        if (next <= 0.001f && target <= 0 && player.Playing && player.Bus != "Ambient")
-        {
-            player.Stop();
-        }
     }
 
     private AudioStreamPlayer Player(string bus)
@@ -404,11 +334,23 @@ public sealed class AudioManifest
     /// <summary>Playlist key (era key or "menu") → music files.</summary>
     public Dictionary<string, string[]> Music { get; set; } = [];
 
-    /// <summary>Silence between two pieces, seconds [from, to].</summary>
-    public double[] MusicPauseSeconds { get; set; } = [20, 40];
+    /// <summary>Times a piece plays in a loop before the next one of its list.</summary>
+    public int PlaysBeforeNext { get; set; } = 2;
 
     /// <summary>Seconds a piece takes to fade in or out.</summary>
-    public double MusicFadeSeconds { get; set; } = 3;
+    public double MusicFadeSeconds { get; set; } = 4;
+
+    /// <summary>Loudness of the notes played on the instruments (1 = as the synthesizer gives them).</summary>
+    public float MusicGain { get; set; } = 1;
+
+    /// <summary>Biome key → terrain of the music (mountains, forest, steppe, desert, wetland, coast).</summary>
+    public Dictionary<string, string> BiomeRegion { get; set; } = [];
+
+    /// <summary>Seconds another terrain must fill most of the screen before its music starts.</summary>
+    public double RegionSwitchSeconds { get; set; } = 20;
+
+    /// <summary>Share of water among the hexes seen from which the music is the coast's (0–1).</summary>
+    public double CoastWater { get; set; } = 0.45;
 
     /// <summary>Ambient layer → file in ambient/.</summary>
     public Dictionary<string, string> Ambient { get; set; } = [];

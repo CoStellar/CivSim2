@@ -1,4 +1,5 @@
-"""Builds every sound of the game into audio/ (music, ambient loops, effects) from rules, no downloaded samples.
+"""Builds every sound of the game into audio/ from rules, no downloaded samples: the music as notes (.mid, played by the
+game on audio/instruments.sf2), ambient loops and effects as .ogg.
 
 Needs: python3 with numpy, scipy, mido; fluidsynth with the FluidR3 GM sound font (Debian/Ubuntu: fluid-soundfont-gm);
 ffmpeg with libvorbis. Usage: python3 tools/audio/make_audio.py [--only name,name] [--out audio]
@@ -18,14 +19,12 @@ sys.path.insert(0, HERE)
 import ambient  # noqa: E402
 import music  # noqa: E402
 import sfx  # noqa: E402
+import styles  # noqa: E402
+import trim_sf2  # noqa: E402
 from synth import write_wav  # noqa: E402
 
 SOUNDFONT = "/usr/share/sounds/sf2/FluidR3_GM.sf2"
-
-# Two pieces per era (they take turns), and the menu theme.
-TRACKS = [("menu", "menu", 11)] + [
-    (f"{era}_{i}", era, seed) for era in ("stone_age", "neolithic", "bronze_age", "iron_age", "middle_ages") for i, seed in ((1, 101), (2, 202))
-]
+PIECE_SECONDS = 300  # each piece about 5 minutes, looped by the game (Patryk, 2026-11-24)
 
 LOUDNESS = {"music": -20, "ambient": -24, "sfx": -18}
 
@@ -34,8 +33,8 @@ def run(cmd):
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def render_midi(mid, wav, gain=0.5):
-    run(["fluidsynth", "-ni", "-g", str(gain), "-r", "44100", "-F", wav, SOUNDFONT, mid])
+def render_midi(mid, wav, gain=0.5, sf=SOUNDFONT):
+    run(["fluidsynth", "-ni", "-g", str(gain), "-r", "44100", "-F", wav, sf, mid])
 
 
 def encode(wav, ogg, kind, fade_in=0.0, fade_out=0.0, loudnorm=True, trim=False, quality=4):
@@ -60,6 +59,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--out", default=os.path.join(HERE, "..", "..", "audio"))
     p.add_argument("--only", default="")
+    p.add_argument("--preview", default="", help="also render the music to .ogg here (for listening)")
+    p.add_argument("--preview-seconds", type=float, default=0, help="only the first seconds of each piece")
     a = p.parse_args()
     only = set(filter(None, a.only.split(",")))
     out = os.path.abspath(a.out)
@@ -70,17 +71,29 @@ def main():
         return not only or name in only
 
     with tempfile.TemporaryDirectory() as tmp:
-        for name, era, seed in TRACKS:
-            if not wanted(name):
+        # The instruments: the GM sound font cut down to what the music uses; the game plays the notes on it.
+        if wanted("instruments"):
+            used = styles.programs() | {(0, p) for _, (_, parts, _) in music.stingers().items() for p, _ in parts}
+            keys = styles.drum_keys() | {n for _, (_, _, drums) in music.stingers().items() for _, n, _ in drums}
+            trim_sf2.trim(SOUNDFONT, os.path.join(out, "instruments.sf2"), used, keys)
+
+        for index, (name, style) in enumerate(styles.tracks()):
+            if not wanted(name) and not wanted(style.name) and not wanted("music"):
                 continue
-            c = music.Composer(music.STYLES[era], seed)
-            beats = c.compose()
-            mid = os.path.join(tmp, name + ".mid")
-            wav = os.path.join(tmp, name + ".wav")
+            c = music.Composer(style, 7919 * (index + 1))
+            beats = c.compose(150 if name == "menu" else PIECE_SECONDS)
+            mid = os.path.join(out, "music", name + ".mid")
             c.write(mid)
-            render_midi(mid, wav)
-            encode(wav, os.path.join(out, "music", name + ".ogg"), "music", 1.5, 5, trim=True, quality=3)
-            print(f"music {name}: {beats * 60 / music.STYLES[era].tempo:.0f} s")
+            print(f"music {name}: {beats * 60 / style.tempo:.0f} s, {style.mode}, {style.tempo} bpm")
+            if a.preview:
+                os.makedirs(a.preview, exist_ok=True)
+                wav = os.path.join(tmp, name + ".wav")
+                render_midi(mid, wav, sf=os.path.join(out, "instruments.sf2"))
+                if a.preview_seconds:
+                    cut = os.path.join(tmp, name + "_cut.wav")
+                    run(["ffmpeg", "-y", "-i", wav, "-t", str(a.preview_seconds), cut])
+                    wav = cut
+                encode(wav, os.path.join(a.preview, name + ".ogg"), "music", 0, 4 if a.preview_seconds else 0, quality=0)
 
         for name, (tempo, parts, drums) in music.stingers().items():
             if not wanted(name):

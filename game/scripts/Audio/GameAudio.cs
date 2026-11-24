@@ -33,6 +33,9 @@ public partial class GameAudio : Node
     private int _settlements;
     private bool _ended;
     private double _ambientIn;
+    private string _region = "";
+    private string _candidate = "";
+    private double _candidateFor;
 
     /// <summary>Sound for a game seen through <paramref name="session"/>; the camera tells where the player looks.</summary>
     public GameAudio(ClientSession session, Func<Camera2D> camera)
@@ -74,6 +77,7 @@ public partial class GameAudio : Node
         {
             _ambientIn = AmbientEvery;
             Ambient(audio, v);
+            Music(audio, v, AmbientEvery);
         }
     }
 
@@ -92,7 +96,10 @@ public partial class GameAudio : Node
             }
 
             _era = v.Era;
-            audio.SetMusic(EraKey(v.Era));
+            if (_region.Length > 0)
+            {
+                audio.SetMusic($"{EraKey(v.Era)}_{_region}");
+            }
         }
         else if (!first && known > _known)
         {
@@ -156,6 +163,98 @@ public partial class GameAudio : Node
     {
         IReadOnlyList<string>? eras = _session.PlayContent?.Eras;
         return eras is not null && era >= 0 && era < eras.Count ? eras[era].Trim().ToLowerInvariant().Replace(' ', '_') : "stone_age";
+    }
+
+    // The music follows the terrain most of the screen shows (Patryk, 2026-11-24): another terrain must hold the screen for
+    // RegionSwitchSeconds before its music cross-fades in, so scrolling over the map does not jump between pieces.
+    private void Music(AudioManager audio, PlayViewMessage v, double step)
+    {
+        if (_ended || ScreenRegion(audio) is not { } seen)
+        {
+            return;
+        }
+
+        if (_region.Length == 0)
+        {
+            _region = seen;
+        }
+        else if (seen != _region)
+        {
+            _candidateFor = seen == _candidate ? _candidateFor + step : step;
+            _candidate = seen;
+            if (_candidateFor < audio.Manifest.RegionSwitchSeconds)
+            {
+                return;
+            }
+
+            _region = seen;
+        }
+        else
+        {
+            _candidate = "";
+            _candidateFor = 0;
+        }
+
+        audio.SetMusic($"{EraKey(v.Era)}_{_region}");
+    }
+
+    // The terrain of most known land hexes on screen; the coast when water fills enough of it; null when nothing is known.
+    private string? ScreenRegion(AudioManager audio)
+    {
+        if (!_session.Worlds.TryGetValue(0, out ClientWorld? w) || _session.Content is not { } content)
+        {
+            return null;
+        }
+
+        Camera2D camera = _camera();
+        Vector2 size = camera.GetViewportRect().Size / camera.Zoom;
+        Vector2 from = camera.Position - (size / 2);
+        int cols = Math.Max(1, (int)(size.X / HexLayout.ColumnStep));
+        int rows = Math.Max(1, (int)(size.Y / HexLayout.RowStep));
+        int stride = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(cols * rows / 400.0)));
+        (int col0, int row0) = HexLayout.CellAt(from);
+        var counts = new Dictionary<string, int>();
+        int water = 0, known = 0;
+        for (int r = 0; r <= rows; r += stride)
+        {
+            int row = row0 + r;
+            if (row < 0 || row >= w.Height)
+            {
+                continue;
+            }
+
+            for (int c = 0; c <= cols; c += stride)
+            {
+                int i = w.Index(col0 + c, row);
+                if (w.Visibility[i] == MapChunkMessage.Unknown || w.Biome[i] >= content.Biomes.Count)
+                {
+                    continue;
+                }
+
+                known++;
+                BiomeInfo biome = content.Biomes[w.Biome[i]];
+                if (biome.IsWater)
+                {
+                    water++;
+                }
+                else if (audio.RegionOfBiome(biome.Key) is { } region)
+                {
+                    counts[region] = counts.GetValueOrDefault(region) + 1;
+                }
+            }
+        }
+
+        if (known == 0)
+        {
+            return null;
+        }
+
+        if (counts.Count == 0 || water >= known * audio.Manifest.CoastWater)
+        {
+            return "coast";
+        }
+
+        return counts.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key, StringComparer.Ordinal).First().Key;
     }
 
     // The ambient layers: the terrain under the middle of the screen (cold in winter), our settlement when the camera is near,

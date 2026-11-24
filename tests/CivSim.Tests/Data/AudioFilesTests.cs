@@ -39,12 +39,13 @@ public sealed class AudioFilesTests
     public void EveryNamedFileExists()
     {
         JsonElement m = Manifest();
+        Assert.True(File.Exists(Path.Combine(AudioDirectory, "instruments.sf2")), "the instruments of the music");
         foreach (JsonProperty list in m.GetProperty("music").EnumerateObject())
         {
             Assert.NotEmpty(list.Value.EnumerateArray());
             foreach (JsonElement file in list.Value.EnumerateArray())
             {
-                Assert.True(File.Exists(Path.Combine(AudioDirectory, "music", file.GetString() + ".ogg")), $"music {file}");
+                Assert.True(File.Exists(Path.Combine(AudioDirectory, "music", file.GetString() + ".mid")), $"music {file}");
             }
         }
 
@@ -60,6 +61,9 @@ public sealed class AudioFilesTests
         }
     }
 
+    // The terrains of the music (Patryk, 2026-11-24); the coast is chosen when water fills the screen.
+    private static readonly string[] Regions = ["mountains", "forest", "steppe", "desert", "wetland", "coast"];
+
     [Fact]
     public void EveryEraHasMusicAndEveryBiomeAnAmbientLayer()
     {
@@ -70,7 +74,14 @@ public sealed class AudioFilesTests
         foreach (JsonElement era in game.RootElement.GetProperty("eras").EnumerateArray())
         {
             string key = era.GetProperty("name").GetString()!.Trim().ToLowerInvariant().Replace(' ', '_');
-            Assert.True(m.GetProperty("music").TryGetProperty(key, out _), $"no music for era {key}");
+            foreach (string region in Regions)
+            {
+                // Three pieces of about five minutes for each terrain in each era.
+                for (int k = 1; k <= 3; k++)
+                {
+                    Assert.True(File.Exists(Path.Combine(AudioDirectory, "music", $"{key}_{region}_{k}.mid")), $"no music {key}_{region}_{k}");
+                }
+            }
         }
 
         using JsonDocument biomes = JsonDocument.Parse(File.ReadAllText(Path.Combine(ContentLoader.DefaultDirectory, "biomes.json")));
@@ -80,6 +91,11 @@ public sealed class AudioFilesTests
             string key = biome.GetProperty("key").GetString()!;
             Assert.True(m.GetProperty("biomeAmbient").TryGetProperty(key, out JsonElement layer), $"no ambient for biome {key}");
             Assert.Contains(layer.GetString(), layers);
+            if (biome.GetProperty("kind").GetString() == "land")
+            {
+                Assert.True(m.GetProperty("biomeRegion").TryGetProperty(key, out JsonElement region), $"no music terrain for biome {key}");
+                Assert.Contains(region.GetString(), Regions);
+            }
         }
     }
 }

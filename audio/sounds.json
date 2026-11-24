@@ -1,15 +1,28 @@
 {
-  "comment": "Which file plays for what (files in music/, ambient/, sfx/ without .ogg). A file of the same name in audio/custom/ or in the user folder sounds/ replaces ours. See docs/audio.md.",
+  "comment": "Which file plays for what. Music: notes in music/<era>_<terrain>_<n>.mid played on instruments.sf2; ambient/ and sfx/ are .ogg (names without extension). A file of the same name in audio/custom/ or in the user folder sounds/ replaces ours (music as .ogg). See docs/audio.md.",
   "music": {
-    "menu": ["menu"],
-    "stone_age": ["stone_age_1", "stone_age_2"],
-    "neolithic": ["neolithic_1", "neolithic_2"],
-    "bronze_age": ["bronze_age_1", "bronze_age_2"],
-    "iron_age": ["iron_age_1", "iron_age_2"],
-    "middle_ages": ["middle_ages_1", "middle_ages_2"]
+    "menu": [
+      "menu"
+    ]
   },
-  "musicPauseSeconds": [15, 45],
-  "musicFadeSeconds": 3,
+  "playsBeforeNext": 2,
+  "musicFadeSeconds": 4,
+  "musicGain": 1.0,
+  "regionSwitchSeconds": 20,
+  "coastWater": 0.45,
+  "biomeRegion": {
+    "lake": "wetland",
+    "ice": "mountains",
+    "tundra": "mountains",
+    "desert": "desert",
+    "swamp": "wetland",
+    "jungle": "wetland",
+    "savanna": "steppe",
+    "taiga": "mountains",
+    "deciduous_forest": "forest",
+    "grassland": "steppe",
+    "steppe": "steppe"
+  },
   "ambient": {
     "forest": "amb_forest",
     "grassland": "amb_grassland",
@@ -37,25 +50,114 @@
     "steppe": "grassland"
   },
   "sounds": {
-    "click": { "file": "ui_click", "bus": "Interface", "volumeDb": -8, "cooldown": 0.04, "pitch": 0.06 },
-    "window_open": { "file": "ui_open", "bus": "Interface", "volumeDb": -14, "cooldown": 0.1 },
-    "window_close": { "file": "ui_close", "bus": "Interface", "volumeDb": -16, "cooldown": 0.1 },
-    "refused": { "file": "ui_error", "bus": "Interface", "volumeDb": -8, "cooldown": 0.4 },
-    "build_placed": { "file": "build_place", "volumeDb": -6, "cooldown": 0.1, "pitch": 0.08 },
-    "build_done": { "file": "build_done", "volumeDb": -8, "cooldown": 1.5, "pitch": 0.05 },
-    "tear_down": { "file": "tear_down", "volumeDb": -6, "cooldown": 0.3 },
-    "unit_order": { "file": "unit_order", "volumeDb": -8, "cooldown": 0.15, "pitch": 0.1 },
-    "unit_attack": { "file": "unit_attack", "volumeDb": -8, "cooldown": 0.3, "pitch": 0.08 },
-    "unit_trained": { "file": "unit_trained", "volumeDb": -6, "cooldown": 0.3 },
-    "caravan_sent": { "file": "caravan_sent", "volumeDb": -8, "cooldown": 0.3 },
-    "settlement_founded": { "file": "settlement_founded", "volumeDb": -4, "cooldown": 2 },
-    "research_done": { "file": "research_done", "volumeDb": -6, "cooldown": 2 },
-    "era_up": { "file": "era_up", "volumeDb": -2, "cooldown": 5 },
-    "war_declared": { "file": "war_declared", "volumeDb": -3, "cooldown": 5 },
-    "peace": { "file": "peace", "volumeDb": -5, "cooldown": 5 },
-    "alert_danger": { "file": "alert_danger", "volumeDb": -4, "cooldown": 20 },
-    "alert_notice": { "file": "alert_notice", "volumeDb": -10, "cooldown": 8 },
-    "victory": { "file": "victory", "volumeDb": -2, "cooldown": 30 },
-    "defeat": { "file": "defeat", "volumeDb": -2, "cooldown": 30 }
+    "click": {
+      "file": "ui_click",
+      "bus": "Interface",
+      "volumeDb": -8,
+      "cooldown": 0.04,
+      "pitch": 0.06
+    },
+    "window_open": {
+      "file": "ui_open",
+      "bus": "Interface",
+      "volumeDb": -14,
+      "cooldown": 0.1
+    },
+    "window_close": {
+      "file": "ui_close",
+      "bus": "Interface",
+      "volumeDb": -16,
+      "cooldown": 0.1
+    },
+    "refused": {
+      "file": "ui_error",
+      "bus": "Interface",
+      "volumeDb": -8,
+      "cooldown": 0.4
+    },
+    "build_placed": {
+      "file": "build_place",
+      "volumeDb": -6,
+      "cooldown": 0.1,
+      "pitch": 0.08
+    },
+    "build_done": {
+      "file": "build_done",
+      "volumeDb": -8,
+      "cooldown": 1.5,
+      "pitch": 0.05
+    },
+    "tear_down": {
+      "file": "tear_down",
+      "volumeDb": -6,
+      "cooldown": 0.3
+    },
+    "unit_order": {
+      "file": "unit_order",
+      "volumeDb": -8,
+      "cooldown": 0.15,
+      "pitch": 0.1
+    },
+    "unit_attack": {
+      "file": "unit_attack",
+      "volumeDb": -8,
+      "cooldown": 0.3,
+      "pitch": 0.08
+    },
+    "unit_trained": {
+      "file": "unit_trained",
+      "volumeDb": -6,
+      "cooldown": 0.3
+    },
+    "caravan_sent": {
+      "file": "caravan_sent",
+      "volumeDb": -8,
+      "cooldown": 0.3
+    },
+    "settlement_founded": {
+      "file": "settlement_founded",
+      "volumeDb": -4,
+      "cooldown": 2
+    },
+    "research_done": {
+      "file": "research_done",
+      "volumeDb": -6,
+      "cooldown": 2
+    },
+    "era_up": {
+      "file": "era_up",
+      "volumeDb": -2,
+      "cooldown": 5
+    },
+    "war_declared": {
+      "file": "war_declared",
+      "volumeDb": -3,
+      "cooldown": 5
+    },
+    "peace": {
+      "file": "peace",
+      "volumeDb": -5,
+      "cooldown": 5
+    },
+    "alert_danger": {
+      "file": "alert_danger",
+      "volumeDb": -4,
+      "cooldown": 20
+    },
+    "alert_notice": {
+      "file": "alert_notice",
+      "volumeDb": -10,
+      "cooldown": 8
+    },
+    "victory": {
+      "file": "victory",
+      "volumeDb": -2,
+      "cooldown": 30
+    },
+    "defeat": {
+      "file": "defeat",
+      "volumeDb": -2,
+      "cooldown": 30
+    }
   }
 }

@@ -123,10 +123,15 @@ class Composer:
             out.append((d, st))
         return out
 
-    def melody_phrase(self, start, chords, program, octave=0, vel=None):
+    def theme(self):
+        """Four bar-shapes of a melody: a motif, its variation, a contrast, the motif again varied (a a' b a'')."""
         bar = self.s.beats * self.s.chord_bars
         base = self.motif(bar)
-        shapes = [base, self.vary(base), self.motif(bar), self.vary(base)]
+        return [base, self.vary(base), self.motif(bar), self.vary(base)]
+
+    def melody_phrase(self, start, chords, program, octave=0, vel=None, shapes=None):
+        bar = self.s.beats * self.s.chord_bars
+        shapes = shapes or self.theme()
         t = start
         for i, degree in enumerate(chords):
             shape = shapes[i % len(shapes)]
@@ -208,14 +213,32 @@ class Composer:
 
     # ------------------------------------------------------------ whole track
 
-    def compose(self) -> float:
+    def compose(self, target_seconds: float = 0) -> float:
+        """Builds the piece. With a target length, themes come back (varied, other instruments) until it is reached."""
         s = self.s
         bar = s.beats * s.chord_bars
         prog_a = self.r.choice(s.progressions)
         prog_b = self.r.choice(s.bridge)
+        themes = {"A": self.theme(), "B": self.theme()}
+        sections = list(s.sections)
+        if target_seconds:
+            beats_per_second = s.tempo / 60
+            middle = ["A", "A2", "B", "A3", "C", "A2", "B", "A3"]
+            sections = ["intro"]
+            # intro and outro: 4 bars each; A-type and B sections: 2 phrases; C: 8 bars of rest.
+            def length(sec):
+                return bar * (4 if sec in ("intro", "outro") else 8 if sec == "C" else 2 * len(prog_b if sec == "B" else prog_a))
+            total = length("intro") + length("outro")
+            k = 0
+            while total / beats_per_second < target_seconds - 10:
+                sec = middle[k % len(middle)]
+                sections.append(sec)
+                total += length(sec)
+                k += 1
+            sections.append("outro")
         t = 0.0
         melody_turn = 0
-        for section in s.sections:
+        for section in sections:
             if section == "intro":
                 chords = [prog_a[0]] * 4
                 if s.bass is not None:
@@ -233,16 +256,32 @@ class Composer:
                 if s.arp is not None:
                     self.arpeggio(t, chords[:2], s.arp, vel=s.arp_vel - 20)
                 self.drum_part(t, 2 * s.chord_bars, s.drums_light, 0.5)
-                self.add(t + bar * 4, 0.1, 0, 1, s.melody[0])  # silent tail so the reverb rings out
+                self.add(t + bar * 4 - 0.2, 0.1, 0, 1, s.melody[0])  # the piece ends here (and loops from the start)
                 t += bar * 4
+            elif section == "C":
+                # A rest: drone, broken chords, light drums, a few long melody notes.
+                chords = (prog_b + prog_b)[:8]
+                if s.bass is not None:
+                    self.bass_part(t, chords, s.bass, drone=True, vel=s.bass_vel - 5)
+                if s.arp is not None:
+                    self.arpeggio(t, chords, s.arp, vel=s.arp_vel - 8)
+                elif s.harmony is not None:
+                    self.harmony(t, chords, s.harmony, vel=s.harmony_vel - 6)
+                self.drum_part(t, 8 * s.chord_bars, s.drums_light, 0.6)
+                for i in range(0, 8, 2):
+                    self.add(t + i * bar, bar * 1.8, scale_pitch(self.s, chords[i] + self.r.choice([2, 4])), s.melody_vel - 18, s.melody[-1])
+                t += bar * 8
             else:
-                prog = prog_b if section == "B" else prog_a
+                letter = "B" if section == "B" else "A"
+                prog = prog_b if letter == "B" else prog_a
                 chords = prog + prog  # two phrases
                 program = s.melody[melody_turn % len(s.melody)]
                 melody_turn += 1
-                octave = 1 if section == "B" and s.root < 64 else 0
-                self.melody_phrase(t, prog, program, octave)
-                self.melody_phrase(t + bar * len(prog), prog, program, octave)
+                octave = 1 if letter == "B" and s.root < 64 else 0
+                shapes = themes[letter]
+                again = [self.vary(x) for x in shapes] if section in ("A2", "A3") else shapes
+                self.melody_phrase(t, prog, program, octave, shapes=shapes)
+                self.melody_phrase(t + bar * len(prog), prog, program, octave, shapes=again)
                 if s.harmony is not None:
                     self.harmony(t, chords, s.harmony)
                 if s.arp is not None and section != "A":

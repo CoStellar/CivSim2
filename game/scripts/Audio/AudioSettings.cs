@@ -16,7 +16,7 @@ public sealed class AudioSettings
     public int Master { get; set; } = 80;
 
     /// <summary>Music, Ambient, Effects, Interface (the order of <see cref="AudioManager.Buses"/>).</summary>
-    public int[] Volumes { get; set; } = [60, 70, 80, 70];
+    public int[] Volumes { get; set; } = [60, 40, 80, 70];
 
     /// <summary>All sound off (key K).</summary>
     public bool Muted { get; set; }
