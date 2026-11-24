@@ -16,6 +16,10 @@
     <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Plays the music's notes on the game's instruments (audio/instruments.sf2); MIT licence, pure C#. -->
+    <PackageReference Include="MeltySynth" Version="2.4.1" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\src\CivSim.Protocol\CivSim.Protocol.csproj" />
     <ProjectReference Include="..\src\CivSim.Server\CivSim.Server.csproj" />
     <!-- Needed at run time by the local server, but not visible to client code. -->

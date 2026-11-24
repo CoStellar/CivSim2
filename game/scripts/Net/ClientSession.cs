@@ -148,9 +148,15 @@ public sealed class ClientSession
     /// <summary>News of the new game as they come.</summary>
     public event Action<IReadOnlyList<string>>? PlayNews;
 
+    /// <summary>A command of the new game was sent (the sound plays its effect).</summary>
+    public event Action<PlayCommandKind>? PlaySent;
+
     /// <summary>Sends a command of the new game.</summary>
-    public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false, int b = 0, int c = 0, int[]? cells = null, int d = 0) =>
+    public void Play(PlayCommandKind kind, int a, int col = 0, int row = 0, bool flag = false, int b = 0, int c = 0, int[]? cells = null, int d = 0)
+    {
         _connection.Send(new PlayCommandMessage(++_sequence, kind, a, col, row, flag, b, c, cells, d));
+        PlaySent?.Invoke(kind);
+    }
 
     private readonly SortedDictionary<int, PlayBuildingView> _buildings = [];
     private readonly SortedDictionary<int, PlaySettlementView> _settlements = [];

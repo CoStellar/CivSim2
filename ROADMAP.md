@@ -37,6 +37,7 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | 14 | Scenariusz 03 testuje samą walkę (`noPeace`, decyzja Patryka 2026-11-23) | zrobione |
 | 16 | Zmiany po testach z 2026-11-23: krótszy neolit, badania bez doświadczenia, przeżycie biernego ludu, AI z oceną zysku i zwiadem, odnawialna reputacja, alarm „obcy”, przegrana przy zerze ludzi, dziennik decyzji AI | zrobione: PR z `claude/project-thread-wrj4qa`; zostaje cel średniowiecza w 45. minucie (known-issues 17) |
 | 17 | Sterowanie z klawiatury (kursor klawiatury, Q/E/R/J, Home, Page Up/Down) i instrukcja gry w menu i pod F1 (`docs/sterowanie-i-instrukcja.md`) | zrobione: PR `claude/project-thread-ea3s8b` |
+| 18 | Dźwięk: muzyka według terenu i ery (3 utwory po 5 min na teren i erę, grane z nut), ciche otoczenie, efekty rozkazów i zdarzeń, suwaki głośności (`docs/audio.md`) | zrobione: PR `claude/project-thread-ex38kq`; ocena na słuch: Patryk (known-issues 18) |
 | 15 | Runda testów demo na komputerze Patryka | Patryk, po 8 i 11–13 |
 
 ## Po demo

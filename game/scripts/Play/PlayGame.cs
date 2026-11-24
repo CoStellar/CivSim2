@@ -463,6 +463,7 @@ public partial class PlayGame : Node2D
         Zoom = 1.6f; // as the player sees it, whatever the interface size
         _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario, Tutorial = _scenario is null }, _dataDirectory);
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
+        AddChild(new Audio.GameAudio(_session, () => _camera));
         _session.CommandRefused += reason => Toast(reason);
         _session.Saved += r => Toast(r.Text);
         _session.PlacesReceived += m =>
