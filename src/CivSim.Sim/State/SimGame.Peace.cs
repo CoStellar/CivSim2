@@ -567,6 +567,13 @@ public sealed partial class SimGame
     // Tests: the people's totals after its settlements' stores were changed.
     internal void SyncForTest(Civ civ) => SyncTotals(civ);
 
+    // Lifts the white-peace truce between two peoples (tests that declare war again at once).
+    internal void EndWhiteTruceForTest(int a, int b)
+    {
+        NoWar()[(a * Civs.Count) + b] = 0;
+        NoWar()[(b * Civs.Count) + a] = 0;
+    }
+
     private long[]? _noWarUntil;
 
     private long[] NoWar() => _noWarUntil ??= new long[Civs.Count * Civs.Count];

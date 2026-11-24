@@ -268,6 +268,10 @@ Gracz wybiera w opisie oddziału (przyciski pojawiają się po nowym poziomie). 
   Przechodzi od razu z mieszkańcami i budynkami, jak przy zajęciu (bez punktów wyniku wojny). Żądać można tylko osady, którą widzimy albo pamiętamy.
 - **Długość pokoju** (3B): 3, 6 albo 10 minut (`peace.minutes`). Złamanie pokoju kosztuje reputację ataku z zaskoczenia (−30), przy 10 minutach dwa razy tyle (`peace.breakPercent`).
 - **Kto żąda** (6A): tylko strona, której sprzyja przebieg wojny. Druga może proponować biały pokój albo sama coś dać. Żądać można po 120 s wojny (1C).
+- **Oferta należy do swojej wojny** (testy 2026-11-24, B1): pokój albo nowa wojna między dwoma ludami kasuje wszystkie ich oferty,
+  a ofertę można przyjąć tylko w czasie wojny. Wcześniej stara oferta AI przeżywała pokój i kończyła następną wojnę po 3 sekundach.
+- **Rozejm po białym pokoju** (Patryk, 2026-11-24, P5): przez 3 minuty po białym pokoju żadna ze stron nie może wypowiedzieć wojny
+  (`peace.whiteTruceMinutes`; dotyczy gracza i AI). Biały pokój nie ma długości, więc bez rozejmu wojna mogła wrócić od razu.
 
 **Ile „powinien” oddać przegrany** (5A, 7.1A, 7.3A): wartość = majątek przegranego (dobra po `worth` i osady poza pierwszą) × procent,
 gdzie procent = przewaga w wyniku wojny / 5 + przewaga w zmęczeniu / 4, najwyżej 40% (`peace.scorePerPercent`, `wearinessPerPercent`, `maxPercent`).

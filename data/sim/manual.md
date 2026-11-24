@@ -169,7 +169,7 @@ Select units and right click an enemy to attack. Combat mode (`F`) is for battle
 Surround an enemy settlement to cut it off: it works slower. Its units, the guard of its walls and some of its people defend it. When it falls, choose: occupy, loot or raze.
 
 ## Peace
-A war ends with peace or when one side is gone. In the Civilizations window (`3`) propose peace: goods, maybe a settlement, and how long the peace lasts (3, 6 or 10 minutes). Only the side the war favours may demand; the other may offer a white peace or give something. "Suggest terms" fills in what the course of the war justifies. A long war tires a civilization: from half of the weariness bar the workshops work slower.
+A war ends with peace or when one side is gone. In the Civilizations window (`3`) propose peace: goods, maybe a settlement, and how long the peace lasts (3, 6 or 10 minutes). Only the side the war favours may demand; the other may offer a white peace or give something. "Suggest terms" fills in what the course of the war justifies. After a white peace neither side may declare war again for 3 minutes. A long war tires a civilization: from half of the weariness bar the workshops work slower.
 
 At most 3 wars at a time. An attack without declaring war, or breaking a peace, costs reputation. A civilization with a bad name finds others on guard against it: they keep more soldiers and seek alliances against it. Reputation slowly comes back in peace.
 
