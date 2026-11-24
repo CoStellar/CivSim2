@@ -94,7 +94,10 @@ public sealed class Building
 /// <summary>A settlement: a centre hex and the territory around it.</summary>
 public sealed class Settlement
 {
-    /// <summary>Its people gather food, wood and stone around it when they have no job (the player's order; on at the start).</summary>
+    /// <summary>
+    /// Its people gather food, wood and stone around it when they have no job. Always on in a game (the player's switch was
+    /// removed on 2026-11-24: it could starve a whole civilization); tests turn it off to measure a store without gathering.
+    /// </summary>
     public bool Gathering { get; set; } = true;
 
     /// <summary>Richness of its land per good, percent (mean of its land hexes), worked out when its land changes.</summary>
@@ -429,6 +432,12 @@ public sealed class Civ
 
     /// <summary>AI: goods it saves for the technology it wants next (null = none); building and training leave them.</summary>
     public long[]? AiSaving { get; set; }
+
+    /// <summary>
+    /// AI, within one tick (A1, tests 2026-11-24): free jobs in its buildings and which kinds are rising, counted once instead of
+    /// at every building it tries. Not game state: always worked out again from the buildings.
+    /// </summary>
+    internal (long Tick, int Buildings, int FreeJobs, bool[] Rising)? AiBuildScan { get; set; }
 
     /// <summary>AI memory: whether its army can reach a settlement on foot from a hex (key: settlement × hexes + hex), and when it looked.</summary>
     public Dictionary<long, (bool Way, long Tick)> AiWayTo { get; } = [];

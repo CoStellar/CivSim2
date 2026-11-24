@@ -54,7 +54,7 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
 Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
 
 - Każdy człowiek je 1 jedzenia na minutę.
-- **Zbieranie z okolicy:** gracz włącza je w osadzie (na starcie jest włączone). Ludzie bez pracy zbierają wtedy na minutę 0,5 jedzenia, 0,25 drewna i 0,1 kamienia, razy wartość ziemi osady:
+- **Zbieranie z okolicy:** zawsze włączone (od 2026-11-24 nie ma przycisku „Stop gathering”). Ludzie bez pracy zbierają na minutę 0,5 jedzenia, 0,25 drewna i 0,1 kamienia, razy wartość ziemi osady:
   - jedzenie i drewno zależą od biomu;
   - kamień od rzeźby terenu;
   - złoża i rzeki dodają;
@@ -444,4 +444,13 @@ Nowa gra ma wybór „Ores” w menu:
 | ludy w epoce żelaza po 75 min | 41 z 48 | 40 z 48 | 25 z 48 |
 | ludy w średniowieczu po 75 min | 30 z 48 | 34 z 48 | 16 z 48 |
 | ludzie (średnio) | 9 637 | 9 511 | 8 633 |
+
+## Decyzje po testach z 2026-11-24
+
+| Nr | Zasada | Kod |
+| --- | --- | --- |
+| 1 | Zbieranie z okolicy jest zawsze włączone: przycisk „Stop gathering” usunięty (mógł zagłodzić cały lud). Serwer odrzuca starą komendę `Gather` („Gathering is always on…”), a stare zapisy ją pomijają | `PlayHost`, `Settlement.Gathering` (tylko dla testów) |
+| 3 | Magazyn nigdy nie trzyma więcej, niż mieści: gdy miejsce maleje (pożar, rozbiórka, przebudowa), nadmiar przepada w następnym kroku gospodarki | `SimGame.EconomyStep` |
+| 5 | Pracują i zbierają tylko ludzie z domem. Ludzie ponad domy (po pożarze, po rozwiązaniu oddziału) tylko jedzą; panel osady pisze „N without a home: they do not work”, alarm mówi, jak dać im domy. Alarm „brak domów” przy limicie poziomu mówi, czego brakuje do awansu (technologia, ludzie albo dobra) | `SimGame.Recompute`, `SimGame.HomesFix` |
+| 6 | Rozbiórka budowy w toku: materiały przepadają; dymek przycisku „Tear down” o tym mówi | klient |
 

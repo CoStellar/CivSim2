@@ -86,7 +86,6 @@ public sealed partial class SimGame
             MoveCommand c => Move(civ, c.Unit, c.Cell, c.Hidden, c.Path, c.SearchLimit),
             PatrolCommand c => Patrol(civ, c.Unit, c.Loop ?? []),
             BuildRoadCommand c => BuildRoad(civ, c.Cells ?? [], c.Level),
-            GatherCommand c => Gather(civ, c.Settlement, c.On),
             BuildWorkCommand c => BuildWork(civ, c.Cells ?? [], c.Work),
             SetFocusCommand c => SetFocus(civ, c.Building, c.Worker, c.Category),
             BoardCommand c => Board(civ, c.Unit, c.Ship),

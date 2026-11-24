@@ -124,7 +124,7 @@ public static partial class SimAi
 
         // Tools first when there are none: farms, tailors and mines need them.
         int tools = g.Content.GoodId("tools");
-        if (civ.Stock[tools] < 10 * SimContent.One && civ.Rate[tools] <= 0 && Count(g, civ, ["toolmaker", "blacksmith", "steelworks"]) == 0
+        if (civ.Stock[tools] < g.Content.AiAmount.LowTools && civ.Rate[tools] <= 0 && Count(g, civ, ["toolmaker", "blacksmith", "steelworks"]) == 0
             && Has(g, civ, "quarry") && TryBuild(g, civ, "toolmaker"))
         {
             return true;
@@ -154,10 +154,6 @@ public static partial class SimAi
                 return true;
             }
 
-            if (!s.Gathering)
-            {
-                g.Apply(new GatherCommand(civ.Id, s.Id, true));
-            }
         }
 
         return false;

@@ -128,7 +128,7 @@ public static partial class SimAi
                     int dr = (int)(Mix(ref z) % (ulong)((2 * tall) + 1)) - tall;
                     int cell = g.Geo.Index(g.Geo.Wrap(c.Col + dc, Math.Clamp(c.Row + dr, 0, g.Geo.Height - 1)));
                     bool looked = t.Survey == 1 ? g.RockLookedAt(civ, cell) : g.KnowsSoil(civ, cell);
-                    if (civ.Known[cell] && !looked && g.OwnerAt[cell] < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater
+                    if (civ.Known[cell] && !looked && g.OwnerSeen(civ, cell) < 0 && !g.Content.World.Biomes[g.Map.Biome[cell]].IsWater
                         && g.Apply(new MoveCommand(civ.Id, u.Id, cell, false)) is null)
                     {
                         moved = true;
@@ -213,7 +213,7 @@ public static partial class SimAi
         {
             int cell = g.Geo.Index(area[k]);
             int d = g.Map.Deposit[cell];
-            if (d <= 0 || d >= wanted.Length || !wanted[d] || g.OwnerAt[cell] >= 0 || !g.KnowsDeposit(civ, cell))
+            if (d <= 0 || d >= wanted.Length || !wanted[d] || g.OwnerSeen(civ, cell) >= 0 || !g.KnowsDeposit(civ, cell))
             {
                 continue;
             }

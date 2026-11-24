@@ -467,7 +467,7 @@ public enum PlayCommandKind
     /// <summary>Build a road of level <c>A</c> over the drawn hexes <c>Cells</c> (col, row pairs).</summary>
     BuildRoad = 28,
 
-    /// <summary>The people of settlement <c>A</c> gather around it while they have no job (<c>Flag</c>) or stop.</summary>
+    /// <summary>Removed 2026-11-24 (gathering is always on); the server refuses it. The number stays so the others keep theirs.</summary>
     Gather = 29,
 
     /// <summary>Build work <c>A</c> (ditch, palisade, wall, aqueduct) over the drawn hexes <c>Cells</c> (col, row pairs).</summary>

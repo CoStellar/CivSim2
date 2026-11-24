@@ -130,11 +130,32 @@ public sealed class EconomyTests
         g.Settlements[civ.Settlements[0]].Stock[Content.GoodId("wood")] = 90 * SimContent.One;
         Run(g, SimContent.TicksPerMinute / 2);
         Assert.True(b.Starved);
-        Assert.True(g.Settlements[civ.Settlements[0]].Stock[stone] < SimContent.One);
+        Assert.True(g.Settlements[civ.Settlements[0]].Stock[stone] < Content.StoreStillEmptyBelow); // asleep until the store is clearly back (P1)
         g.Settlements[civ.Settlements[0]].Stock[stone] = 50 * SimContent.One;
         Run(g, Content.EconomyEveryTicks * 2);
         Assert.False(b.Starved);
         Assert.True(civ.Rate[Content.GoodId("tools")] > 0);
+    }
+
+    [Fact]
+    public void AFullStoreStaysFullUntilItFallsClearlyBelowItsRoom()
+    {
+        // P1 (tests 2026-11-24): full from 98% of the room, full again only below 90%, so makers do not wake every second.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        int wood = Content.GoodId("wood");
+        g.Recompute(civ);
+        long bit = 1L << wood;
+        s.Stock[wood] = s.Capacity[wood];
+        Run(g, Content.EconomyEveryTicks);
+        Assert.NotEqual(0, s.FullMask & bit);
+        s.Stock[wood] = s.Capacity[wood] * 95 / 100;
+        Run(g, Content.EconomyEveryTicks);
+        Assert.NotEqual(0, s.FullMask & bit);
+        s.Stock[wood] = s.Capacity[wood] * 80 / 100;
+        Run(g, Content.EconomyEveryTicks);
+        Assert.Equal(0, s.FullMask & bit);
     }
 
     [Fact]
@@ -159,6 +180,35 @@ public sealed class EconomyTests
 
         Assert.True(civ.Hungry);
         Assert.True(s.People < before, $"people {before} -> {s.People}");
+    }
+
+    [Fact]
+    public void AStoreNeverHoldsMoreThanItsRoom()
+    {
+        // Decision 3 (2026-11-24): what does not fit when the room shrinks is lost at the next economy step.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        int wood = Content.GoodId("wood");
+        g.Recompute(civ);
+        s.Stock[wood] = s.Capacity[wood] + (50 * SimContent.One);
+        Run(g, Content.EconomyEveryTicks + 1);
+        Assert.Equal(s.Capacity[wood], s.Stock[wood]);
+    }
+
+    [Fact]
+    public void PeopleWithoutAHomeDoNotWork()
+    {
+        // Patryk, 2026-11-24: only people with a home work or gather; the rest only eat.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        g.Recompute(civ);
+        s.People = s.Housing + 30;
+        civ.Dirty = true;
+        g.Recompute(civ);
+        Assert.True(s.Idle <= s.Housing, $"idle {s.Idle}, homes {s.Housing}");
+        Assert.Contains(g.Alerts(civ), a => a.Text.Contains("have no home", StringComparison.Ordinal));
     }
 
     [Fact]

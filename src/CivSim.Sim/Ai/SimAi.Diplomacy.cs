@@ -93,7 +93,7 @@ public static partial class SimAi
 
             for (int i = 0; i < t.Produces.Length; i++)
             {
-                if (t.Produces[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < 20 * SimContent.One)
+                if (t.Produces[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < g.Content.AiAmount.LowGood)
                 {
                     return true;
                 }

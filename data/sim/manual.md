@@ -106,7 +106,7 @@ Turn on "Tutorial" in the start menu (or press `T`): a task list on screen leads
 - **Look around.** Research Scouting, train scouts in the settlement's panel and send them out with a right click. What we never saw stays dark.
 - **Prepare a defence.** For the first 15 minutes nobody attacks; after that other civilizations may come. Before then research Flint weapons and train a few warriors, or research Palisade and draw one around the camp.
 
-People without work gather around the settlement by themselves (the "Stop gathering" button turns it off). Every building has places for workers; people fill free places on their own. A building can be paused or put first in its panel.
+People without work always gather around the settlement by themselves. Every building has places for workers; people fill free places on their own. A building can be paused or put first in its panel.
 
 ## Food, rations and winter
 Once a minute each settlement feeds everyone who lives there and every unit that left from it. When food runs short the jobless go hungry first, then the workers, then the units; hungry people work slower, and after two missed rations some die. A settlement stops growing while its food falls and less than two rations are left.

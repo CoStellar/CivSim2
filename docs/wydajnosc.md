@@ -42,3 +42,24 @@ musi spełniać poniższe zasady; PR, który ich nie spełnia, opisuje dlaczego.
     - Cel: średnio poniżej 2 ms na takt przy 8 cywilizacjach w późnej grze na mapie standardowej.
     - Pomiar zawsze przed i po na tym samym komputerze.
     - Ostateczny pomiar robi Patryk przy grze.
+
+## Zmiany po testach 2026-11-24 (P1, A1)
+
+- **Magazyn na progu nie budzi ludu co sekundę.** Towar jest „pełny” od 98% miejsca i zostaje pełny, dopóki nie spadnie poniżej
+  90%. Jest „pusty” poniżej 1 i zostaje pusty, dopóki nie dojdzie do 3 sztuk (`stores` w `game.json`). Wcześniej zapas wahał się
+  przy progu, a każde przełączenie liczyło gospodarkę całego ludu od nowa (5 753 przeliczeń na 9 600 kroków w minutach 100–120).
+- **AI liczy wolne miejsca pracy raz na takt.** Każda z ok. 64 000 prób budowy na 20 minut przeglądała wszystkie budynki ludu
+  (ponad 1000). Teraz wynik jest zapamiętany w obrębie taktu (`Civ.AiBuildScan`) i liczony od nowa, gdy przybędzie budynek.
+
+Pomiar: bot „Builder”, ziarno 1, 8 ludów, mapa 98×60, 120 minut, ten sam komputer:
+
+| Minuty | Takt przed (ms) | Takt po (ms) | Ludzie AI przed | Ludzie AI po |
+| --- | --- | --- | --- | --- |
+| 0–20 | 0,28 | 0,28 | 72 | 70 |
+| 20–40 | 0,21 | 0,24 | 285 | 317 |
+| 40–60 | 0,37 | 0,41 | 1 195 | 1 040 |
+| 60–80 | 0,83 | 0,83 | 2 757 | 3 299 |
+| 80–100 | 1,35 | 1,14 | 4 759 | 4 818 |
+| 100–120 | **1,79** | **1,11** | 5 728 | 5 302 |
+| cała partia | 0,80 | 0,67 | | |
+| 99. centyl | 5,89 | 4,26 | | |

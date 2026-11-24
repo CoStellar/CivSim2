@@ -95,6 +95,8 @@ public sealed partial class SimGame
                 }
             }
 
+            // 2026-11-24 (Patryk): only people with a home work or gather; the rest (after a fire, a disbanded unit) only eat.
+            s.Idle = Math.Min(s.People, s.Housing);
             s.WorkPermille = WorkPermille(s);
         }
 
@@ -372,7 +374,8 @@ public sealed partial class SimGame
                 long stock = s.Stock[g] + whole;
                 if (stock > s.Capacity[g])
                 {
-                    stock = Math.Max(s.Stock[g], s.Capacity[g]);
+                    // 2026-11-24 (Patryk): never more than the room; what does not fit when the room shrinks (fire, demolition) is lost.
+                    stock = s.Capacity[g];
                     s.Remainder[g] = 0;
                 }
 
@@ -383,14 +386,19 @@ public sealed partial class SimGame
                 }
 
                 s.Stock[g] = stock;
-                if (stock < SimContent.One)
+                long bit = 1L << g;
+
+                // P1 (tests 2026-11-24): a store at the edge keeps its state until it is clearly past it, so its makers and users
+                // are not woken and put to sleep (and the whole people recomputed) every second.
+                if (stock < SimContent.One || ((s.EmptyMask & bit) != 0 && stock < Content.StoreStillEmptyBelow))
                 {
-                    empty |= 1L << g;
+                    empty |= bit;
                 }
 
-                if (s.Capacity[g] > 0 && stock * 100 >= s.Capacity[g] * 98)
+                if (s.Capacity[g] > 0 && (stock * 100 >= s.Capacity[g] * Content.StoreFullPercent
+                    || ((s.FullMask & bit) != 0 && stock * 100 >= s.Capacity[g] * Content.StoreStillFullPercent)))
                 {
-                    full |= 1L << g;
+                    full |= bit;
                 }
             }
 
