@@ -459,7 +459,7 @@ public sealed partial class PlayGame
 
                 Select(ours, add: false);
                 _camera.Position = HexLayout.Center(ours[0].Col, ours[0].Row);
-                _camera.Zoom = new Vector2(1.6f, 1.6f);
+                Zoom = 1.6f;
                 break;
             case 1:
                 if (v.Units.Where(u => u.Civ != v.Civ && Soldier(u)).OrderBy(u => Math.Abs(u.Row - ours[0].Row) + Math.Abs(u.Col - ours[0].Col)).FirstOrDefault() is { } foe)

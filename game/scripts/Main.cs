@@ -260,6 +260,11 @@ public partial class Main : Node2D
             {
                 demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverGood())];
             }
+            else if (_playWindow is "ZoomIn" or "ZoomOut")
+            {
+                float z = _playWindow == "ZoomIn" ? 5f : 0.08f;
+                demo = [(_playSeconds - 1, g => g.ScriptZoom(z))];
+            }
             else if (_playWindow == "Help")
             {
                 demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.H))];

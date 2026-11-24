@@ -396,7 +396,9 @@ public partial class PlayGame
         ViewerSettings settings = ViewerSettings.Load();
         settings.UiScale = percent;
         settings.Save();
+        float zoom = Zoom; // the map stays as near as it was
         ViewerSettings.ApplyUiScale(GetWindow(), percent);
+        Zoom = zoom;
         bool help = _help.Visible;
         RebuildUi();
         _help.Visible = help;
