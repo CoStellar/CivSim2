@@ -172,7 +172,7 @@ public partial class PlayGame
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
         // Era and years in the middle of the top bar, over the bar.
-        var centre = new VBoxContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(240), OffsetRight = UiKit.W(240), OffsetTop = 0, MouseFilter = Control.MouseFilterEnum.Ignore };
+        var centre = _centreBox = new VBoxContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(240), OffsetRight = UiKit.W(240), OffsetTop = 0, MouseFilter = Control.MouseFilterEnum.Ignore };
         centre.AddThemeConstantOverride("separation", 0);
         root.AddChild(centre);
         _eraLabel = UiKit.Label("", 24, UiKit.Heading);
@@ -257,17 +257,19 @@ public partial class PlayGame
         BuildActionBar(root);
 
         // ---- Placing banner, toast, windows, help ----
-        _banner = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(380), OffsetRight = UiKit.W(380), OffsetTop = topH + 70 + PixelTheme.FontSize, Visible = false };
+        // 2026-11-24 (Patryk): hints and messages sit right under the top bar (and the research chip), not over the map's middle.
+        int underTop = Math.Max(topH, (3 * PixelTheme.FontSize) + 30) + 4;
+        _banner = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(380), OffsetRight = UiKit.W(380), OffsetTop = underTop, Visible = false };
         _banner.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.16f, 0.24f, 0.12f, 0.95f), new Color(0.5f, 0.75f, 0.35f), 6, 2));
         root.AddChild(_banner);
-        _bannerText = UiKit.Label("", 15, UiKit.Text, wrap: true);
+        _bannerText = UiKit.Label("", 13, UiKit.Text, wrap: true);
         _bannerText.HorizontalAlignment = HorizontalAlignment.Center;
         _banner.AddChild(_bannerText);
 
-        _toastPanel = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(320), OffsetRight = UiKit.W(320), OffsetTop = topH + 140, Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
+        _toastPanel = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(320), OffsetRight = UiKit.W(320), OffsetTop = underTop + (2 * PixelTheme.FontSize) + 16, Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
         _toastPanel.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.3f, 0.1f, 0.08f, 0.95f), UiKit.Bad, 6, 2));
         root.AddChild(_toastPanel);
-        _toast = UiKit.Label("", 15, UiKit.Text, wrap: true);
+        _toast = UiKit.Label("", 13, UiKit.Text, wrap: true);
         _toast.HorizontalAlignment = HorizontalAlignment.Center;
         _toastPanel.AddChild(_toast);
 
@@ -430,6 +432,7 @@ public partial class PlayGame
 
         UpdateTop(v, c);
         UpdateUnderTop();
+        PlaceBanner();
         UpdateTutorial(v);
         UpdateAdvisor(v);
         UpdateAlerts(v);
@@ -610,6 +613,7 @@ public partial class PlayGame
     }
 
     private string _resLayout = "";
+    private VBoxContainer _centreBox = null!;
     private StyleBoxFlat? _chipPulse;
 
     // A chip's numbers changed in place: the amount and trend labels are the chip's second child's two labels.
@@ -666,6 +670,14 @@ public partial class PlayGame
     }
 
 
+    // Hints and messages right under the top bar or the research chip, whichever reaches lower (2026-11-24).
+    private void PlaceBanner()
+    {
+        float under = Math.Max(_topBottom, _centreBox.GetCombinedMinimumSize().Y) + 4;
+        _banner.OffsetTop = under;
+        _toastPanel.OffsetTop = under + (2 * PixelTheme.FontSize) + 16;
+    }
+
     // A15: everything under the top bar starts where the bar ends (the goods may take two rows).
     private void UpdateUnderTop()
     {
@@ -679,8 +691,7 @@ public partial class PlayGame
         _topBottom = bottom;
         _inspector.OffsetTop += shift;
         _rightCol.OffsetTop += shift;
-        _banner.OffsetTop += shift;
-        _toastPanel.OffsetTop += shift;
+        PlaceBanner();
         _window.OffsetTop += shift;
         _help.OffsetTop += shift;
     }
