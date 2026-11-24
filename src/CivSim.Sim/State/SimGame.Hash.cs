@@ -97,6 +97,7 @@ public sealed partial class SimGame
             Add((long)u.State);
             Add(u.Cell);
             Add(u.People);
+            Add(u.Lent);
             Add(u.Hunger);
             Add(u.SearchingSigns ? 1 : 0);
             Add(u.Weapon | (u.Armour << 8) | ((int)u.Stance << 16));

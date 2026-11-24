@@ -381,6 +381,8 @@ d["upgradeCaravans"]={"comment":"A settlement short of the goods for its upgrade
   "extraPercent":10,"aiRetrySeconds":60}
 # A2/A3 (tests 2026-11-20): a caravan to a unit with no way to it is refused; the AI does not send another for noWaySeconds.
 d["supply"]["noWaySeconds"]=60
+# Abuse tests 2026-11-24: 5000 standing routes sent 2000 caravans a minute from settlements of one person.
+d["supply"]["routesPerSettlement"]=8
 if "noWaySeconds:" not in d["supply"]["comment"]:
     d["supply"]["comment"]+=" noWaySeconds: a caravan to a unit there is no way to is refused, and the AI sends none to that unit for this long."
 # Decisions of Patryk after the tests of 2026-11-20 (claude/decyzje-testy-2026-11-20.md).

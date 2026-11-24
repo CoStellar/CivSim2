@@ -322,7 +322,7 @@ public sealed partial class SimGame
         // lose everything the unit had: its arms and armour, its supplies and its training. Other units bring their gear home
         // (B6, 2026-11-19 tests). The wounded come home with them.
         Settlement s = Settlements[sid];
-        s.People += u.People + u.Injured;
+        s.People += Math.Max(0, u.People - u.Lent) + u.Injured;
         if (!kind.Army && Geared(kind))
         {
             ReturnGear(s.Stock, u);
