@@ -550,54 +550,7 @@ public partial class PlayGame
             _researchChip.RemoveThemeStyleboxOverride("normal");
         }
 
-        // Resources: an icon, the amount and the trend a minute, for goods we have or make.
-        var cells = new List<(int Good, long Stock, long Rate, bool Full)>();
-        for (int g = 0; g < v.Stock.Length; g++)
-        {
-            long rate = v.RatePerMinute[g];
-            if (g > 2 && v.Stock[g] < 100 && rate == 0)
-            {
-                continue;
-            }
-
-            cells.Add((g, v.Stock[g], rate, v.Capacity[g] > 0 && v.Stock[g] >= v.Capacity[g] * 98 / 100));
-        }
-
-        string resSig = $"{v.People}{v.Hungry}" + string.Join(";", cells.ConvertAll(x => $"{x.Good}:{x.Stock / 100}:{x.Rate}:{x.Full}"));
-        // 2026-11-23: the same goods as before: only the numbers change, in the chips that are there (no flicker, the
-        // tooltip under the mouse stays).
-        string layout = string.Join(",", cells.ConvertAll(x => x.Good));
-        if (resSig != _resSig && layout == _resLayout && _resBox.GetChildCount() == cells.Count + 1)
-        {
-            _resSig = resSig;
-            SetChip(_resBox.GetChild<Control>(0), $"{v.People}", v.Hungry ? "hungry" : "", v.Hungry ? UiKit.Bad : UiKit.Muted,
-                $"People: {v.People}" + (v.Hungry ? ". Some settlements go hungry!" : "."));
-            for (int k = 0; k < cells.Count; k++)
-            {
-                (int g, long stock, long rate, bool full) = cells[k];
-                PlayGoodInfo good = c.Goods[g];
-                Color trend = full ? UiKit.Warn : rate > 0 ? UiKit.Good : rate < 0 ? UiKit.Bad : UiKit.Muted;
-                SetChip(_resBox.GetChild<Control>(k + 1), $"{stock / 100}", full ? "full" : UiKit.Rate(rate), trend,
-                    $"{good.Name}: {stock / 100} in all our settlements (room for {v.Capacity[g] / 100}), {UiKit.Rate(rate)} a minute." + (full ? " Full: its makers stop." : ""));
-            }
-
-            return;
-        }
-
-        _resLayout = layout;
-        SetResources(resSig, () =>
-        {
-            Control people = Chip(new Color("e0c090"), "P", $"{v.People}", v.Hungry ? "hungry" : "", v.Hungry ? UiKit.Bad : UiKit.Muted,
-                $"People: {v.People}" + (v.Hungry ? ". Some settlements go hungry!" : "."));
-            _resBox.AddChild(people);
-            foreach ((int g, long stock, long rate, bool full) in cells)
-            {
-                PlayGoodInfo good = c.Goods[g];
-                Color trend = full ? UiKit.Warn : rate > 0 ? UiKit.Good : rate < 0 ? UiKit.Bad : UiKit.Muted;
-                _resBox.AddChild(Chip(UiKit.GoodColor(good.Key), UiKit.Short(good.Name)[..1], $"{stock / 100}", full ? "full" : UiKit.Rate(rate), trend,
-                    $"{good.Name}: {stock / 100} in all our settlements (room for {v.Capacity[g] / 100}), {UiKit.Rate(rate)} a minute." + (full ? " Full: its makers stop." : ""), good.Key));
-            }
-        });
+        UpdateGoods(v, c);
     }
 
     private void SetResources(string sig, Action fill)
@@ -615,34 +568,6 @@ public partial class PlayGame
     private string _resLayout = "";
     private VBoxContainer _centreBox = null!;
     private StyleBoxFlat? _chipPulse;
-
-    // A chip's numbers changed in place: the amount and trend labels are the chip's second child's two labels.
-    private static void SetChip(Control chip, string amount, string trend, Color trendColor, string tooltip)
-    {
-        chip.TooltipText = tooltip;
-        if (chip.GetChildCount() > 1 && chip.GetChild(1) is VBoxContainer col && col.GetChildCount() > 1
-            && col.GetChild(0) is Label a && col.GetChild(1) is Label t)
-        {
-            a.Text = amount;
-            t.Text = trend;
-            t.AddThemeColorOverride("font_color", trendColor);
-        }
-    }
-
-    private static Control Chip(Color color, string letter, string amount, string trend, Color trendColor, string tooltip, string? good = null)
-    {
-        var row = new HBoxContainer { TooltipText = tooltip, MouseFilter = Control.MouseFilterEnum.Pass };
-        row.AddThemeConstantOverride("separation", 4);
-        // 2026-11-23 (Patryk): the goods' pictures in the top bar instead of letters.
-        Texture2D? icon = good is null ? null : UiKit.Picture?.Invoke("goods", "good_" + good);
-        row.AddChild(new Glyph(color, letter, icon is null ? 26 : 34, round: icon is null, icon: icon));
-        var col = new VBoxContainer();
-        col.AddThemeConstantOverride("separation", -4);
-        col.AddChild(UiKit.Label(amount, 16));
-        col.AddChild(UiKit.Label(trend, 12, trendColor));
-        row.AddChild(col);
-        return row;
-    }
 
     private void UpdateAdvisor(PlayViewMessage v)
     {

@@ -81,7 +81,7 @@ public partial class StartMenu : CanvasLayer
         var center = new CenterContainer();
         root.AddChild(center);
         // The manual gets a bigger page, so its text reads without a second scroll bar.
-        var page = new HBoxContainer { CustomMinimumSize = _section == "manual" ? new Vector2(1500, 820) : new Vector2(1000, 600) };
+        var page = new HBoxContainer { CustomMinimumSize = _section == "manual" ? new Vector2(1500, 820) : new Vector2(1000, 720) };
         page.AddThemeConstantOverride("separation", 32);
         center.AddChild(page);
 
@@ -111,8 +111,14 @@ public partial class StartMenu : CanvasLayer
         // Right: what the chosen section asks for.
         var panel = new PanelContainer { CustomMinimumSize = new Vector2(700, 0), SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         page.AddChild(panel);
-        var scroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
-        panel.AddChild(scroll);
+        // 2026-11-24: the section scrolls, its main button (Play) stays in a footer under it, never cut off.
+        var body = new VBoxContainer();
+        body.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(body);
+        var scroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        body.AddChild(scroll);
+        _footer = new HBoxContainer();
+        body.AddChild(_footer);
         _content = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         _content.AddThemeConstantOverride("separation", 12);
         scroll.AddChild(_content);
@@ -165,6 +171,8 @@ public partial class StartMenu : CanvasLayer
         _content.AddChild(_manual);
         Callable.From(() => _manual?.FocusChapter()).CallDeferred();
     }
+
+    private HBoxContainer _footer = null!;
 
     private void Fill()
     {
@@ -224,10 +232,9 @@ public partial class StartMenu : CanvasLayer
         game.AddChild(new Control());
         game.AddChild(tutorial);
 
-        _content.AddChild(new Control { CustomMinimumSize = new Vector2(0, 12) });
         var play = new Button { Text = "Play", CustomMinimumSize = new Vector2(220, 48), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
         play.Pressed += () => PlayRequested?.Invoke(NewGameOptions());
-        _content.AddChild(play);
+        _footer.AddChild(play);
         play.GrabFocus();
     }
 
