@@ -1033,7 +1033,47 @@
    "height": 12
   },
   {
+   "file": "ui/button_disabled_bronze_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_disabled_iron_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_disabled_middle_ages.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_disabled_neolithic.png",
+   "width": 12,
+   "height": 12
+  },
+  {
    "file": "ui/button_hover.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_hover_bronze_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_hover_iron_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_hover_middle_ages.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_hover_neolithic.png",
    "width": 12,
    "height": 12
   },
@@ -1043,7 +1083,47 @@
    "height": 12
   },
   {
+   "file": "ui/button_normal_bronze_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_normal_iron_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_normal_middle_ages.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_normal_neolithic.png",
+   "width": 12,
+   "height": 12
+  },
+  {
    "file": "ui/button_pressed.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_pressed_bronze_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_pressed_iron_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_pressed_middle_ages.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/button_pressed_neolithic.png",
    "width": 12,
    "height": 12
   },
@@ -1068,12 +1148,72 @@
    "height": 24
   },
   {
+   "file": "ui/frame_bar_bronze_age.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_bar_iron_age.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_bar_middle_ages.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_bar_neolithic.png",
+   "width": 24,
+   "height": 24
+  },
+  {
    "file": "ui/frame_header.png",
    "width": 24,
    "height": 16
   },
   {
+   "file": "ui/frame_header_bronze_age.png",
+   "width": 24,
+   "height": 16
+  },
+  {
+   "file": "ui/frame_header_iron_age.png",
+   "width": 24,
+   "height": 16
+  },
+  {
+   "file": "ui/frame_header_middle_ages.png",
+   "width": 24,
+   "height": 16
+  },
+  {
+   "file": "ui/frame_header_neolithic.png",
+   "width": 24,
+   "height": 16
+  },
+  {
    "file": "ui/frame_panel.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_panel_bronze_age.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_panel_iron_age.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_panel_middle_ages.png",
+   "width": 24,
+   "height": 24
+  },
+  {
+   "file": "ui/frame_panel_neolithic.png",
    "width": 24,
    "height": 24
   },
@@ -1238,7 +1378,47 @@
    "height": 12
   },
   {
+   "file": "ui/tab_selected_bronze_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_selected_iron_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_selected_middle_ages.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_selected_neolithic.png",
+   "width": 12,
+   "height": 12
+  },
+  {
    "file": "ui/tab_unselected.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_unselected_bronze_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_unselected_iron_age.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_unselected_middle_ages.png",
+   "width": 12,
+   "height": 12
+  },
+  {
+   "file": "ui/tab_unselected_neolithic.png",
    "width": 12,
    "height": 12
   },

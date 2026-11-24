@@ -387,10 +387,18 @@ public partial class Main : Node2D
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
         }
 
+        _play.ArtPackChosen += key =>
+        {
+            // The game's settings switch the pack in place (the map and the game keep the same library) and keep the choice.
+            _art.UsePack(ArtPack.Find(ArtLibrary.FindArtDirectory(), key));
+            _saved.Start.ArtPack = key;
+            SaveSettings();
+        };
         _play.MenuRequested += () =>
         {
             _play?.QueueFree();
             _play = null;
+            ApplyMenuTheme();
             _camera.MakeCurrent();
             CallDeferred(MethodName.ShowMenu);
         };
@@ -419,6 +427,16 @@ public partial class Main : Node2D
         Theme? theme = PixelTheme.Build(_art);
         GetWindow().Theme = theme;
         PixelTheme.Current = theme;
+    }
+
+    // The menu has the plain frames, not those of the era the game had reached.
+    private void ApplyMenuTheme()
+    {
+        if (PixelTheme.Build(_art) is { } theme)
+        {
+            GetWindow().Theme = theme;
+            PixelTheme.Current = theme;
+        }
     }
 
     // The font and the interface size are set from inside a game (its own load and save): keep them, then save the rest.

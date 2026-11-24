@@ -87,6 +87,9 @@ public partial class PlayOverlay : Node2D
 
     private readonly Dictionary<string, Texture2D?> _sprites = [];
 
+    /// <summary>Forgets the coloured pictures (after the art pack changed).</summary>
+    public void ClearSprites() => _sprites.Clear();
+
     // A picture with the people's colour in place of the reserved magentas (light, middle, dark: as civ_sprite.gdshader),
     // or grey all over for what we only remember; made once per picture, colour and greyness.
     internal Texture2D? Sprite(string layer, string name, int civ, bool grey = false)

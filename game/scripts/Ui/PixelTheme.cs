@@ -6,9 +6,10 @@ namespace CivSim.Game.Ui;
 /// <summary>
 /// The pixel interface theme (stage 5; GDD 12.4): opaque 9-slice frames from <c>ui/</c> pictures in the CivSim
 /// palette, drawn twice as large without smoothing, and the Pixelify Sans font without anti-aliasing. The frames are
-/// placeholders in the stone age look (leather and stone); Patryk's frames replace them by name in stage 13, and
-/// later eras get their own themes (a module). Returns null when the pictures are missing, so the viewer falls back
-/// to Godot's default look.
+/// placeholders in the stone age look (leather and stone); Patryk's frames replace them by name in stage 13. Each later
+/// era has its own frames (Patryk, 2026-11-24): <c>ui/frame_panel_bronze_age.png</c> and so on, and a frame missing for
+/// an era falls back to the plain name. Returns null when the pictures are missing, so the viewer falls back to Godot's
+/// default look.
 /// </summary>
 public static class PixelTheme
 {
@@ -77,9 +78,24 @@ public static class PixelTheme
     /// </summary>
     public static Theme? Current { get; set; }
 
-    /// <summary>Builds the theme from the pictures in <paramref name="art"/>.</summary>
-    public static Theme? Build(ArtLibrary art)
+    /// <summary>The pieces of the interface that change with the era (each <c>ui/&lt;piece&gt;_&lt;era&gt;.png</c>).</summary>
+    public static readonly string[] EraPieces =
+    [
+        "frame_panel", "frame_bar", "frame_header", "button_normal", "button_hover", "button_pressed", "button_disabled",
+        "tab_selected", "tab_unselected", "tooltip", "field",
+    ];
+
+    /// <summary>The era whose frames the current theme uses (an era key such as "bronze_age"), or null for the plain ones.</summary>
+    public static string? Era { get; private set; }
+
+    /// <summary>
+    /// Builds the theme from the pictures in <paramref name="art"/>, with the frames of <paramref name="era"/> (an era key)
+    /// where the pack has them.
+    /// </summary>
+    public static Theme? Build(ArtLibrary art, string? era = null)
     {
+        _era = era;
+        Era = era;
         StyleBox? panel = Frame(art, "frame_panel", 6, 10);
         StyleBox? normal = Frame(art, "button_normal", 3, 6);
         if (panel is null || normal is null)
@@ -292,9 +308,13 @@ public static class PixelTheme
         return box;
     }
 
+    // The era being built: frames are looked up as <name>_<era> first.
+    private static string? _era;
+
     private static ImageTexture? Icon(ArtLibrary art, string name)
     {
-        Image? image = art.LoadImage("ui", name);
+        Image? image = (_era is { Length: > 0 } && System.Array.IndexOf(EraPieces, name) >= 0 ? art.LoadImage("ui", name + "_" + _era) : null)
+            ?? art.LoadImage("ui", name);
         if (image is null)
         {
             return null;

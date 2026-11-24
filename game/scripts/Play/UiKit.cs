@@ -310,6 +310,12 @@ public static class UiKit
 
     private static readonly Dictionary<Texture2D, Texture2D> TrimmedCache = [];
 
+    /// <summary>Forgets the cut pictures (after the art pack changed).</summary>
+    public static void ClearPictures() => TrimmedCache.Clear();
+
+    /// <summary>A key made from a name, as the data names its files: "Bronze Age" is "bronze_age".</summary>
+    public static string KeyOf(string name) => name.Trim().ToLowerInvariant().Replace(' ', '_').Replace("'", "", StringComparison.Ordinal);
+
     // The picture cut to what is drawn on it (unit pictures leave room around their figures on the map), made once.
     private static Texture2D? Trimmed(Texture2D? tex)
     {

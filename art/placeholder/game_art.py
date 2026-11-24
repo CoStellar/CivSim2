@@ -22,6 +22,7 @@ PW, PH = 16 * S, 14 * S    # one of the four places of a hex
 
 # Filled by generate.py (shared helpers: palette, Canvas, nearest, shade).
 G = {}
+FLAT = False               # the flat pack (art/packs/flat): no old CivSim texture, plain colour surfaces
 
 
 def P(rgb):
@@ -118,6 +119,8 @@ def box(c, x0, y0, x1, y1, t, moss=True):
     planks. Lit on the left, in shadow on the right, darker at the foot and right under the eaves (depth), and green moss
     creeping up the foot of stone and brick walls."""
     mat = "stone" if t is STONE else "wood" if t is WOOD else "mud" if t is MUD else "brick" if t is BRICK else "plain"
+    if FLAT:
+        mat, moss = "plain", False  # the flat pack: plain walls with light and shadow only
     r = ramp(t[1])
     for y in range(y0, y1 + 1):
         for x in range(x0, x1 + 1):
@@ -176,6 +179,8 @@ def gable(c, x0, x1, base_y, height, t, ridge_civ=False):
     """A pitched roof over x0..x1 whose eaves stand at base_y, drawn in its covering: stitched hides, straw thatch in
     strokes, rows of clay tiles or slates. Lit left slope, shaded right slope, a light ridge, a dark eaves line."""
     kind = "hide" if t is HIDE else "thatch" if t is THATCH else "tile" if t is ROOFS.get("bronze_age") else "slate"
+    if FLAT:
+        kind = "plain"  # the flat pack: lit and shaded slopes only
     r = ramp(t[1])
     mid = (x0 + x1) / 2
     for k in range(height + 1):
@@ -1086,7 +1091,7 @@ OLD_GROUND = {"grassland": (79, 132, 47)}
 
 def biome_tile(key, color, variant):
     rnd = random.Random(f"{key}-{variant}-2x")
-    base = P(OLD_GROUND.get(key, color))
+    base = P(color if FLAT else OLD_GROUND.get(key, color))  # the flat pack keeps the map colours of the first placeholders
     light, dark = sh(base, 1), sh(base, -1)
     c = canvas(HW, HH)
     for y in range(HH):
@@ -1326,7 +1331,7 @@ def finish(root):
     """The look of the first CivSim over everything drawn above (Patryk, 2026-11-23): a texture on every surface,
     upright grass strokes on grounds, and Patryk's old icons for the goods they show."""
     from PIL import Image
-    out = os.path.join(root, "art", "placeholder")
+    out = G.get("out") or os.path.join(root, "art", "placeholder")
     for layer in ("biome", "terrain", "units", "goods"):  # buildings get their own texture with clean signs
         folder = os.path.join(out, layer)
         for name in sorted(os.listdir(folder)):
@@ -1366,7 +1371,9 @@ def _noise(x, y, seed, cell):
 def texturize(im, seed=1, strength=1.0, outline=OUTLINE, strokes=False, protect=frozenset()):
     """The old CivSim texture over flat colours: every pixel of a surface takes a lighter or darker palette tone by a mix of
     blotchy and fine noise, wood in horizontal grain, so grass, stone and wood read as materials. The outline, the
-    civilization magentas and tiny details (lone pixels) stay as drawn."""
+    civilization magentas and tiny details (lone pixels) stay as drawn. The flat pack (FLAT) keeps the flat colours."""
+    if FLAT:
+        return im
     w, h = im.size
     src = im.copy()
     px = src.load()
@@ -2034,16 +2041,42 @@ def generate_deposits(deposits):
 
 # ------------------------------------------------------------------------------------------------ interface frames (textured)
 
-def _frame(name, w, h, base_rgb, margin, pattern, raised=True, stitch=None):
+def _frame(name, w, h, base_rgb, margin, pattern, raised=True, stitch=None, trim=None):
     """A 9-slice frame of the interface in a material (Patryk, 2026-11-23: the whole interface textured): a dark outline,
     a bevel (lit top-left when raised, sunk otherwise) and a material pattern whose period divides the centre, so it
-    repeats seamlessly when the game tiles the centre."""
+    repeats seamlessly when the game tiles the centre. trim: a metal line inside the bevel (bronze, gold) of later eras.
+    The flat pack draws the frames without a pattern."""
     c = canvas(w, h)
     r = ramp(base_rgb)
+    if FLAT:
+        pattern = "plain"
     for y in range(h):
         for x in range(w):
             col = r[2]
-            if pattern == "stone":
+            if pattern == "wicker":  # woven reeds: 3x3 squares of strands, across and along by turns
+                across = ((x // 3) + (y // 3)) % 2 == 0
+                k = y % 3 if across else x % 3
+                col = r[3] if k == 0 else r[1] if k == 2 else r[2]
+            elif pattern == "plates":  # metal sheets: seams every 6 rows, a rivet at each joint
+                if y % 6 == 5:
+                    col = r[1]
+                elif y % 6 == 1 and x % 6 == 2:
+                    col = r[4]
+                elif y % 6 == 2 and x % 6 == 3:
+                    col = r[0]
+                elif (x + y) % 6 == 0 and y % 6 < 4:
+                    col = r[3]
+            elif pattern == "cloth":  # twill: fine diagonal lines
+                if (x + y) % 3 == 0:
+                    col = r[1]
+                elif (x - y) % 6 == 0:
+                    col = r[3]
+            elif pattern == "clay":  # fired clay: smooth with a few specks
+                if (x * 5 + y * 3) % 13 == 0:
+                    col = r[3]
+                elif (x * 2 + y * 7) % 17 == 0:
+                    col = r[1]
+            elif pattern == "stone":
                 row = y // 3
                 if y % 3 == 2 or (x + (row % 2) * 3) % 6 == 0:
                     col = r[1]
@@ -2071,6 +2104,17 @@ def _frame(name, w, h, base_rgb, margin, pattern, raised=True, stitch=None):
     if margin >= 4:
         c.line(2, 2, w - 3, 2, r[3])
         c.line(2, h - 3, w - 3, h - 3, r[1])
+    if trim is not None:
+        k = 2 if margin >= 4 else 1
+        tl, tr = P(trim), tone(P(trim), -1)
+        if margin >= 4:
+            c.line(k + 1, k + 1, w - k - 2, k + 1, tl)
+            c.line(k + 1, k + 1, k + 1, h - k - 2, tl)
+            c.line(k + 1, h - k - 2, w - k - 2, h - k - 2, tr)
+            c.line(w - k - 2, k + 1, w - k - 2, h - k - 2, tr)
+        else:  # small frames: metal corners only
+            for x, y in ((2, 2), (w - 3, 2), (2, h - 3), (w - 3, h - 3)):
+                c.px(x, y, tl)
     if stitch is not None:
         for x in range(4, w - 4, 2):
             c.px(x, 3, stitch)
@@ -2085,6 +2129,55 @@ def _frame(name, w, h, base_rgb, margin, pattern, raised=True, stitch=None):
     for x, y in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)):
         c.im.putpixel((x, y), (0, 0, 0, 0))
     c.save("ui", name)
+
+
+# The interface of each era after the stone age (Patryk, 2026-11-24): (base colour, pattern, extra) for every piece; the
+# stone age keeps the plain frames (stone panels, leather bars, wooden pressed buttons). Panels stay dark under light text.
+ERA_UI = {
+    "neolithic": {  # clay and wicker
+        "frame_panel": ((69, 31, 7), "wicker", {}), "frame_bar": ((138, 86, 45), "wicker", {}),
+        "frame_header": ((122, 45, 2), "wicker", {}), "button_normal": ((148, 64, 16), "clay", {}),
+        "button_hover": ((165, 77, 6), "clay", {}), "button_pressed": ((86, 44, 24), "wicker", {"raised": False}),
+        "button_disabled": ((69, 31, 7), "clay", {}), "tab_selected": ((148, 64, 16), "clay", {}),
+        "tab_unselected": ((69, 31, 7), "wicker", {}),
+    },
+    "bronze_age": {  # sandstone and bronze
+        "frame_panel": ((79, 75, 69), "stone", {"trim": (201, 113, 21)}), "frame_bar": ((165, 77, 6), "plates", {}),
+        "frame_header": ((122, 45, 2), "plates", {}), "button_normal": ((138, 86, 45), "stone", {"trim": (229, 168, 98)}),
+        "button_hover": ((170, 101, 39), "stone", {"trim": (229, 168, 98)}), "button_pressed": ((122, 45, 2), "plates", {"raised": False}),
+        "button_disabled": ((86, 44, 24), "stone", {}), "tab_selected": ((148, 64, 16), "plates", {}),
+        "tab_unselected": ((86, 44, 24), "stone", {}),
+    },
+    "iron_age": {  # iron and slate
+        "frame_panel": ((47, 46, 45), "plates", {}), "frame_bar": ((79, 75, 69), "plates", {}),
+        "frame_header": ((62, 60, 58), "plates", {}), "button_normal": ((86, 84, 83), "plates", {}),
+        "button_hover": ((113, 111, 108), "plates", {}), "button_pressed": ((95, 36, 5), "wood", {"raised": False}),
+        "button_disabled": ((47, 46, 45), "plates", {}), "tab_selected": ((101, 99, 98), "plates", {}),
+        "tab_unselected": ((47, 46, 45), "stone", {}),
+    },
+    "middle_ages": {  # dark stone, blue cloth and gold
+        "frame_panel": ((62, 60, 58), "stone", {"trim": (223, 143, 19)}),
+        "frame_bar": ((14, 63, 107), "cloth", {"stitch": (223, 143, 19)}),
+        "frame_header": ((10, 38, 71), "cloth", {"trim": (223, 143, 19)}),
+        "button_normal": ((79, 75, 69), "stone", {"trim": (223, 143, 19)}),
+        "button_hover": ((101, 99, 98), "stone", {"trim": (234, 210, 32)}),
+        "button_pressed": ((14, 63, 107), "cloth", {"raised": False}), "button_disabled": ((47, 46, 45), "stone", {}),
+        "tab_selected": ((14, 63, 107), "cloth", {"trim": (223, 143, 19)}), "tab_unselected": ((62, 60, 58), "stone", {}),
+    },
+}
+
+FRAME_SIZES = {"frame_panel": (24, 24, 6), "frame_bar": (24, 24, 6), "frame_header": (24, 16, 4)}
+
+
+def generate_era_ui():
+    for era, pieces in ERA_UI.items():
+        for piece, (rgb, pattern, extra) in pieces.items():
+            w, h, margin = FRAME_SIZES.get(piece, (12, 12, 3))
+            extra = dict(extra)
+            for k in ("stitch", "trim"):
+                if k in extra and k == "stitch":
+                    extra[k] = P(extra[k])
+            _frame(f"{piece}_{era}", w, h, rgb, margin, pattern, **extra)
 
 
 def generate_ui():

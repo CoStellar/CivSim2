@@ -85,6 +85,13 @@ public partial class PlayGame : Node2D
     /// <summary>Raised when the player wants the start menu back.</summary>
     public event Action? MenuRequested;
 
+    /// <summary>
+    /// Raised when the player picks another art pack in the game's settings (folder name, empty for the default
+    /// pictures). The handler switches the shared <see cref="ArtLibrary"/> to it and saves the choice; the game then
+    /// redraws its pictures and interface.
+    /// </summary>
+    public event Action<string>? ArtPackChosen;
+
     /// <summary>Saves a screenshot after <paramref name="seconds"/> of play, then quits (for automated checks).</summary>
     public void ScreenshotAfter(string path, double seconds, IEnumerable<(double At, Action<PlayGame> Do)>? steps = null)
     {
