@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Godot;
 
@@ -13,6 +14,15 @@ internal abstract record UiItem
 {
     /// <summary>Text that changes whenever what the item shows changes.</summary>
     public abstract string Sig { get; }
+
+    /// <summary>
+    /// What the item looks like without its tooltips (2026-11-24: a tooltip that counts down rebuilt its button every second,
+    /// so the tooltip under the mouse closed). When only the tooltips changed, <see cref="Retip"/> updates the node in place.
+    /// </summary>
+    public virtual string Look => Sig;
+
+    /// <summary>Puts the new tooltips on the node made for an item of the same look; false when it cannot.</summary>
+    public virtual bool Retip(Control node) => false;
 }
 
 /// <summary>A title with a tile and a second line.</summary>
@@ -59,12 +69,54 @@ internal sealed record GoodsItem(IReadOnlyList<GoodCell> Cells) : UiItem
             return sb.ToString();
         }
     }
+
+    // 2026-11-24: the same goods: only the numbers, bars and tooltips change in the cells that are there (the store changes
+    // every second while the game runs).
+    public override string Look => "G" + string.Concat(Cells.Select(c => c.Key + ";"));
+
+    public override bool Retip(Control node)
+    {
+        if (node.GetChildCount() != Cells.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < Cells.Count; i++)
+        {
+            GoodCell c = Cells[i];
+            var cell = (Control)node.GetChild(i);
+            if (cell.GetChildOrNull<Control>(1) is not { } stack || stack.GetChildOrNull<Control>(0) is not { } top
+                || top.GetChildOrNull<Label>(0) is not { } amount || top.GetChildOrNull<Label>(1) is not { } rate || stack.GetChildOrNull<ProgressBar>(1) is not { } bar)
+            {
+                return false;
+            }
+
+            cell.TooltipText = CellTip(c);
+            amount.Text = $"{c.Stock / 100}";
+            rate.Text = UiKit.Rate(c.Rate);
+            rate.AddThemeColorOverride("font_color", c.Rate > 0 ? UiKit.Good : c.Rate < 0 ? UiKit.Bad : UiKit.Muted);
+            bar.Value = c.Capacity <= 0 ? 0 : Math.Clamp((double)c.Stock / c.Capacity, 0, 1);
+        }
+
+        return true;
+    }
+
+    /// <summary>The tooltip of one good of the store.</summary>
+    public static string CellTip(GoodCell c) => $"{c.Name}: {c.Stock / 100} of {c.Capacity / 100}, {UiKit.Rate(c.Rate)} a minute";
 }
 
 /// <summary>A button.</summary>
 internal sealed record ActItem(string Text, Action Do, string Tooltip = "", bool Enabled = true, Color? Accent = null) : UiItem
 {
     public override string Sig => $"A{Text}|{Tooltip}|{Enabled}";
+
+    public override string Look => $"A{Text}|{Enabled}|{Accent}";
+
+    public override bool Retip(Control node)
+    {
+        node.TooltipText = Tooltip;
+        return true;
+    }
 }
 
 /// <summary>A picture tile with a caption below: units to train and the like.</summary>
@@ -85,6 +137,23 @@ internal sealed record TilesItem(IReadOnlyList<TileCell> Tiles) : UiItem
 
             return sb.ToString();
         }
+    }
+
+    public override string Look => "T" + string.Concat(Tiles.Select(t => $"{t.Name}{t.Enabled}{t.Caption}{t.Pic};"));
+
+    public override bool Retip(Control node)
+    {
+        if (node.GetChildCount() != Tiles.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < Tiles.Count; i++)
+        {
+            ((Control)node.GetChild(i)).TooltipText = Tiles[i].Tooltip;
+        }
+
+        return true;
     }
 }
 
@@ -125,6 +194,23 @@ internal sealed record ButtonsItem(IReadOnlyList<ActItem> Acts) : UiItem
 
             return sb.ToString();
         }
+    }
+
+    public override string Look => "R" + string.Concat(Acts.Select(a => a.Look + ";"));
+
+    public override bool Retip(Control node)
+    {
+        if (node.GetChildCount() != Acts.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < Acts.Count; i++)
+        {
+            ((Control)node.GetChild(i)).TooltipText = Acts[i].Tooltip;
+        }
+
+        return true;
     }
 }
 
@@ -178,20 +264,29 @@ internal static class UiRender
     public static void Render(VBoxContainer box, List<UiItem> items, Action clicked)
     {
         ulong key = box.GetInstanceId();
-        if (!Sigs.TryGetValue(key, out List<string>? old) || old.Count != box.GetChildCount())
+        if (!Sigs.TryGetValue(key, out List<string>? old) || old.Count != box.GetChildCount() || !Looks.TryGetValue(key, out List<string>? oldLooks))
         {
             UiKit.Clear(box);
             old = [];
+            oldLooks = [];
         }
 
         var sigs = new List<string>(items.Count);
+        var looks = new List<string>(items.Count);
         for (int i = 0; i < items.Count; i++)
         {
             string sig = items[i].Sig;
+            string look = items[i].Look;
             sigs.Add(sig);
+            looks.Add(look);
             if (i < old.Count && old[i] == sig)
             {
                 continue; // the same: keep the node (and its hover, tooltip and scroll)
+            }
+
+            if (i < oldLooks.Count && oldLooks[i] == look && items[i].Retip(box.GetChild<Control>(i)))
+            {
+                continue; // only the tooltips changed: they were put on the node that is there
             }
 
             Control made = Make(items[i], clicked);
@@ -217,10 +312,12 @@ internal static class UiRender
         }
 
         Sigs[key] = sigs;
+        Looks[key] = looks;
     }
 
     // The signatures of the items each box shows, by the box's instance id.
     private static readonly Dictionary<ulong, List<string>> Sigs = [];
+    private static readonly Dictionary<ulong, List<string>> Looks = [];
 
     private static Control Make(UiItem item, Action clicked)
     {
@@ -270,7 +367,7 @@ internal static class UiRender
                 grid.AddThemeConstantOverride("h_separation", 10);
                 foreach (GoodCell c in g.Cells)
                 {
-                    var cell = new HBoxContainer { TooltipText = $"{c.Name}: {c.Stock / 100} of {c.Capacity / 100}, {UiKit.Rate(c.Rate)} a minute", MouseFilter = Control.MouseFilterEnum.Pass };
+                    var cell = new HBoxContainer { TooltipText = GoodsItem.CellTip(c), MouseFilter = Control.MouseFilterEnum.Pass };
                     Texture2D? icon = UiKit.Picture?.Invoke("goods", "good_" + c.Key); // 2026-11-23: pictures, not letters
                     cell.AddChild(new Glyph(UiKit.GoodColor(c.Key), UiKit.Short(c.Name)[..1], icon is null ? 24 : 36, round: icon is null, icon: icon));
                     var stack = new VBoxContainer();
@@ -312,7 +409,7 @@ internal static class UiRender
                 flow.AddThemeConstantOverride("v_separation", 6);
                 foreach (TileCell tile in t.Tiles)
                 {
-                    var button = new Button { FocusMode = Control.FocusModeEnum.None, TooltipText = tile.Tooltip, Disabled = !tile.Enabled, CustomMinimumSize = new Vector2(UiKit.W(92), 40 + Ui.PixelTheme.FontSize) };
+                    var button = new RichTipButton { FocusMode = Control.FocusModeEnum.None, TooltipText = tile.Tooltip, Disabled = !tile.Enabled, CustomMinimumSize = new Vector2(UiKit.W(92), 40 + Ui.PixelTheme.FontSize) };
                     var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
                     inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
                     var glyph = new Glyph(tile.Enabled ? tile.Color : tile.Color.Darkened(0.5f), tile.Short, tile.Pic is null ? 32 : 40, icon: UiKit.PictureOf(tile.Pic))

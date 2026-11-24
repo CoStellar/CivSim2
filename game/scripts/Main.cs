@@ -83,6 +83,7 @@ public partial class Main : Node2D
     public override void _Ready()
     {
         GetNodeOrNull<Label>("StatusLabel")?.QueueFree();
+        ViewerSettings.ApplyUiScale(GetWindow(), _saved.UiScale);
         RenderingServer.SetDefaultClearColor(new Color(0.04f, 0.04f, 0.05f));
         _dataDirectory = FindDataDirectory();
         string[] early = GameArguments();
@@ -240,6 +241,20 @@ public partial class Main : Node2D
                 // A technology's tooltip with the goods' pictures (2026-11-23), over a tree that is not built anew.
                 demo = [.. demo, (_playSeconds - 3, g => g.ScriptOpen("Research")), (_playSeconds - 2, g => g.ScriptHoverCard("agriculture"))];
             }
+            else if (_playWindow is "Deposit" or "DepositFar")
+            {
+                // 2026-11-24: how a known deposit shows on its hex, near and from the middle distance.
+                float zoom = _playWindow == "Deposit" ? 2.2f : 0.9f;
+                demo = [(_playSeconds - 2, g => g.ScriptFocusDeposit()), (_playSeconds - 1, g => g.ScriptZoom(zoom))];
+            }
+            else if (_playWindow == "Help")
+            {
+                demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.H))];
+            }
+            else if (_playWindow == "AlertTip")
+            {
+                demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverAlert())];
+            }
             else if (_playWindow == "SlotTip")
             {
                 demo = [.. demo, (_playSeconds - 2, g => g.ScriptHoverSlot())];
@@ -358,7 +373,7 @@ public partial class Main : Node2D
     /// <inheritdoc />
     public override void _ExitTree()
     {
-        _saved.Save();
+        SaveSettings();
         StopGame();
     }
 
@@ -377,6 +392,15 @@ public partial class Main : Node2D
         Theme? theme = PixelTheme.Build(_art);
         GetWindow().Theme = theme;
         PixelTheme.Current = theme;
+    }
+
+    // The font and the interface size are set from inside a game (its own load and save): keep them, then save the rest.
+    private void SaveSettings()
+    {
+        ViewerSettings now = ViewerSettings.Load();
+        _saved.Font = now.Font;
+        _saved.UiScale = now.UiScale;
+        _saved.Save();
     }
 
     private void ShowMenu()
@@ -403,7 +427,7 @@ public partial class Main : Node2D
         {
             // The menu's choices are kept for next time.
             _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
-            _saved.Save();
+            SaveSettings();
             StartPlay(options.Seed.ToString(CultureInfo.InvariantCulture), options.Goal, options.Scenario, options);
         };
         if (_menuSection is not null)
@@ -439,7 +463,7 @@ public partial class Main : Node2D
         if (save)
         {
             _saved.Start = settings.Copy();
-            _saved.Save();
+            SaveSettings();
         }
 
         if (!DataReady(() => StartGame(settings, save)))

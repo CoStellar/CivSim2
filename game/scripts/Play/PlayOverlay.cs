@@ -494,6 +494,11 @@ public partial class PlayOverlay : Node2D
                     h.Add((i * 8) + 7 + (w.Visibility[i] * 1000000));
                 }
 
+                if (w.Deposit[i] != 0 || (w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0))
+                {
+                    h.Add((i * 16) + w.Deposit[i] + (w.Survey[i] * 7919) + (w.Visibility[i] * 1000000)); // deposit badges
+                }
+
                 if (w.Road[i] != 0 || w.Works[i] != 0)
                 {
                     h.Add((i * 4) + w.Road[i] + (w.Visibility[i] * 1000000));
@@ -991,8 +996,75 @@ public partial class PlayOverlay : Node2D
         }
     }
 
+    /// <summary>Keys of the world's deposits by id − 1 (pictures "objects/deposit_key").</summary>
+    public string[] DepositKeys { get; set; } = [];
+
+    /// <summary>Names of the world's deposits by id − 1.</summary>
+    public string[] DepositNames { get; set; } = [];
+
+    // Patryk, 2026-11-24: a deposit we know shows on its own hex, in the top right corner, as a dark round badge with a light
+    // ring and the deposit's picture, so it stands out on any land (before, one had to click hex after hex). A deposit of a
+    // later era is a "?" badge; far away a small coloured dot remains. Its size: one to three light dots under the badge.
+    private void PaintDepositBadges(CanvasItem g, int chunk)
+    {
+        if (World is not { } w)
+        {
+            return;
+        }
+
+        int cx = chunk % ChunksX;
+        int cy = chunk / ChunksX;
+        int r1 = Math.Min(w.Height, (cy + 1) * ChunkSize);
+        int c1 = Math.Min(w.Width, (cx + 1) * ChunkSize);
+        for (int row = cy * ChunkSize; row < r1; row++)
+        {
+            for (int col = cx * ChunkSize; col < c1; col++)
+            {
+                int i = w.Index(col, row);
+                int d = w.Deposit[i];
+                bool hidden = d == 0 && w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0;
+                if ((d == 0 && !hidden) || w.Visibility[i] == MapChunkMessage.Unknown)
+                {
+                    continue;
+                }
+
+                Vector2 at = HexLayout.Center(col, row) + new Vector2(12, -11);
+                var ring = new Color(1f, 0.92f, 0.55f);
+                if (Detail == 0)
+                {
+                    g.DrawCircle(at, 3.5f, new Color(0.06f, 0.05f, 0.04f));
+                    g.DrawCircle(at, 2.3f, hidden ? new Color(0.8f, 0.8f, 0.8f) : ring);
+                    continue;
+                }
+
+                g.DrawCircle(at, 7.5f, new Color(0.06f, 0.05f, 0.04f, 0.95f));
+                g.DrawArc(at, 7f, 0, Mathf.Tau, 20, ring, 1.2f);
+                Texture2D? icon = d > 0 && d <= DepositKeys.Length ? UiKit.Picture?.Invoke("objects", "deposit_" + DepositKeys[d - 1]) : null;
+                if (icon is not null)
+                {
+                    g.DrawTextureRect(icon, new Rect2(at - new Vector2(5.5f, 5.5f), new Vector2(11, 11)), false);
+                }
+                else
+                {
+                    string letter = hidden ? "?" : d <= DepositNames.Length ? DepositNames[d - 1][..1] : "?";
+                    g.DrawString(UiKit.GlyphFont, at + new Vector2(-5, 4), letter, HorizontalAlignment.Center, 10, 10, ring);
+                }
+
+                int rich = w.DepositRichness[i];
+                int dots = hidden || rich <= 0 ? 0 : rich < 100 ? 1 : rich == 100 ? 2 : 3;
+                for (int k = 0; k < dots; k++)
+                {
+                    Vector2 dot = at + new Vector2((k - ((dots - 1) / 2f)) * 3.5f, 9.5f);
+                    g.DrawCircle(dot, 1.5f, new Color(0.06f, 0.05f, 0.04f));
+                    g.DrawCircle(dot, 1f, ring);
+                }
+            }
+        }
+    }
+
     private void PaintChunkLabels(CanvasItem g, int chunk)
     {
+        PaintDepositBadges(g, chunk);
         // Names of settlements show at every zoom (Patryk, 2026-11-18); far away only the names and alert marks remain.
         if (_content is null || !_content2.TryGetValue(chunk, out ChunkContent? cc))
         {

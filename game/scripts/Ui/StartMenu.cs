@@ -334,6 +334,28 @@ public partial class StartMenu : CanvasLayer
     // Settings: the art pack (the font is chosen in the game's help window).
     private void SettingsSection()
     {
+        // 2026-11-24 (Patryk): the size of the whole interface, also in the game's "?" panel.
+        _content.AddChild(Heading("Interface"));
+        var sizeRow = new HBoxContainer();
+        _content.AddChild(sizeRow);
+        sizeRow.AddChild(new Label { Text = "Interface size", CustomMinimumSize = new Vector2(120, 0) });
+        var size = new OptionButton { CustomMinimumSize = new Vector2(260, 0), TooltipText = "Every panel, button and text this big" };
+        int now = ViewerSettings.Load().UiScale;
+        foreach (int percent in ViewerSettings.UiScales)
+        {
+            size.AddItem($"{percent}%");
+        }
+
+        size.Select(Math.Max(0, Array.IndexOf(ViewerSettings.UiScales, now)));
+        size.ItemSelected += i =>
+        {
+            ViewerSettings saved = ViewerSettings.Load();
+            saved.UiScale = ViewerSettings.UiScales[(int)i];
+            saved.Save();
+            ViewerSettings.ApplyUiScale(GetWindow(), saved.UiScale);
+        };
+        sizeRow.AddChild(size);
+
         _content.AddChild(Heading("Art"));
         var row = new HBoxContainer();
         _content.AddChild(row);

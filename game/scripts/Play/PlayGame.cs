@@ -195,6 +195,48 @@ public partial class PlayGame : Node2D
         }
     }
 
+    /// <summary>Screenshots: the mouse over the last icon of the alert strip (its tooltip opens).</summary>
+    public void ScriptHoverAlert()
+    {
+        if (_alertsBox.GetChildCount() > 0 && _alertsBox.GetChild(Math.Min(1, _alertsBox.GetChildCount() - 1)) is Control icon)
+        {
+            ScriptMouseMove(icon.GetGlobalRect().GetCenter());
+        }
+    }
+
+    /// <summary>Screenshots: the camera on the known deposit nearest our first settlement (or any known deposit).</summary>
+    public void ScriptFocusDeposit()
+    {
+        if (_session is null || !_session.Worlds.TryGetValue(0, out CivSim.Game.Net.ClientWorld? w) || _session.PlayView is not { } v)
+        {
+            return;
+        }
+
+        PlaySettlementView? home = v.Settlements.FirstOrDefault(s => s.Civ == v.Civ);
+        (int col, int row, int far) best = (-1, -1, int.MaxValue);
+        for (int row = 0; row < w.Height; row++)
+        {
+            for (int col = 0; col < w.Width; col++)
+            {
+                if (w.Deposit[w.Index(col, row)] == 0)
+                {
+                    continue;
+                }
+
+                int far = home is null ? 0 : Math.Abs(col - home.Col) + Math.Abs(row - home.Row);
+                if (far > 2 && far < best.far)
+                {
+                    best = (col, row, far);
+                }
+            }
+        }
+
+        if (best.col >= 0)
+        {
+            Focus(best.col, best.row);
+        }
+    }
+
     private static TechTree? FindTree(Node n)
     {
         if (n is TechTree t)
@@ -273,8 +315,10 @@ public partial class PlayGame : Node2D
     /// <summary>Script step: moves the mouse there as a real move (hover effects).</summary>
     public void ScriptMouseMove(Vector2 at)
     {
+        // The window may be larger than the canvas (stretch, interface size): the event goes in window pixels.
+        Vector2 window = GetViewport().GetScreenTransform() * at;
         GetViewport().WarpMouse(at);
-        Input.ParseInputEvent(new InputEventMouseMotion { Position = at, GlobalPosition = at, Relative = new Vector2(1, 0) });
+        Input.ParseInputEvent(new InputEventMouseMotion { Position = window, GlobalPosition = window, Relative = new Vector2(1, 0) });
     }
 
     /// <summary>Script step: researches a technology by key.</summary>
@@ -466,6 +510,8 @@ public partial class PlayGame : Node2D
         {
             _map.Bind(_session, earth);
             _overlay.World = earth;
+            _overlay.DepositKeys = [.. _session.Content.Deposits.Select(d => d.Key)];
+            _overlay.DepositNames = [.. _session.Content.Deposits.Select(d => d.Name)];
             _overlay.PickProblem = StartProblem;
             _bound = true;
             _session.SetSpeed(SimulationSpeed.X1);
