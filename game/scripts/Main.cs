@@ -358,6 +358,10 @@ public partial class Main : Node2D
                 // A test scenario with armies on a field: combat mode, all soldiers picked, sent in formation at the enemy.
                 demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1)), (_playSeconds - 0.6, g => g.ScriptBattle(3))];
             }
+            else if (_playWindow is "BattleNear")
+            {
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1)), (_playSeconds - 0.8, g => g.ScriptZoom(1.8f))];
+            }
             else if (_playWindow == "Victory")
             {
                 // The end of the game screen: a test scenario's debug key moves our people on by eras up to the goal.

@@ -19,6 +19,11 @@ public partial class PlayOverlay : Node2D
     private readonly Dictionary<int, int> _lastPeople = [];
     private readonly HashSet<int> _lastCharging = [];
 
+    // Patryk, 2026-11-24: a strike stays on screen a while and fades (the view holds only the last combat step, so an arrow
+    // flickered); archers' arrows fly along their line.
+    private const double StrikeSeconds = 1.5;
+    private readonly Dictionary<(int From, int To), double> _strikes = [];
+
     /// <summary>Combat mode is on: the hex under the mouse shows its cover and height.</summary>
     public bool CombatHover { get; set; }
 
@@ -49,6 +54,11 @@ public partial class PlayOverlay : Node2D
             }
 
             _lastPeople[u.Id] = u.People;
+            foreach (int t in u.Struck ?? [])
+            {
+                _strikes[(u.Id, t)] = _time;
+            }
+
             if (u.Charging && _lastCharging.Add(u.Id))
             {
                 Popup(u.Col, u.Row, "Charge!", new Color(1f, 0.85f, 0.3f));
@@ -105,31 +115,38 @@ public partial class PlayOverlay : Node2D
             }
         }
 
-        foreach (PlayUnitView u in _view.Units)
+        var old = new List<(int, int)>();
+        foreach (((int from, int to), double at) in _strikes)
         {
-            if (u.Struck is not { Length: > 0 } struck)
+            double age = (_time - at) / StrikeSeconds;
+            if (age >= 1 || !byId.TryGetValue(from, out PlayUnitView? u) || !byId.TryGetValue(to, out PlayUnitView? target))
             {
+                old.Add((from, to));
                 continue;
             }
 
             bool ranged = _content.Units[u.Kind].Range > 1;
             bool ours = u.Civ == _view.Civ;
-            foreach (int t in struck)
+            bool flanked = strikers.GetValueOrDefault(to) >= 2;
+            float fade = 1f - (float)(age * age);
+            Color color = flanked ? new Color(1f, 0.25f, 0.2f, 0.95f * fade) : ours ? new Color(1f, 0.85f, 0.35f, 0.9f * fade) : new Color(1f, 0.55f, 0.3f, 0.9f * fade);
+            foreach (Vector2 start in Copies(u.Col, u.Row))
             {
-                if (!byId.TryGetValue(t, out PlayUnitView? target))
+                Vector2 a = start + UnitBody;
+                Vector2 b = Nearest(a, HexLayout.Center(target.Col, target.Row) + UnitBody);
+                // As thick on screen at any zoom (far away the lines were hairs).
+                float k = Math.Clamp(1.2f / Math.Max(0.1f, _zoom), 1f, 4f);
+                Arrow(g, a, b, color, (ranged ? 2.5f : flanked ? 4.5f : 3.5f) * k, ranged, k);
+                if (ranged)
                 {
-                    continue;
-                }
-
-                bool flanked = strikers.GetValueOrDefault(t) >= 2;
-                Color color = flanked ? new Color(1f, 0.25f, 0.2f, 0.95f) : ours ? new Color(1f, 0.85f, 0.35f, 0.9f) : new Color(1f, 0.55f, 0.3f, 0.9f);
-                foreach (Vector2 from in Copies(u.Col, u.Row))
-                {
-                    Vector2 a = from + UnitBody;
-                    Vector2 b = Nearest(a, HexLayout.Center(target.Col, target.Row) + UnitBody);
-                    Arrow(g, a, b, color, ranged ? 1.5f : flanked ? 3.5f : 2.5f, ranged);
+                    Volley(g, a, b, color, k);
                 }
             }
+        }
+
+        foreach ((int, int) k in old)
+        {
+            _strikes.Remove(k);
         }
 
         // Losses and charges rising over the units.
@@ -170,7 +187,29 @@ public partial class PlayOverlay : Node2D
         return b;
     }
 
-    private static void Arrow(CanvasItem g, Vector2 a, Vector2 b, Color color, float width, bool dashed)
+    // Arrows in flight from archers to their target: three small darts moving along the line.
+    private void Volley(CanvasItem g, Vector2 a, Vector2 b, Color color, float scale = 1f)
+    {
+        Vector2 d = b - a;
+        float len = d.Length();
+        if (len < 20)
+        {
+            return;
+        }
+
+        Vector2 dir = d / len;
+        Vector2 side = new(-dir.Y, dir.X);
+        for (int k = 0; k < 3; k++)
+        {
+            float t = (float)(((_time * 1.6) + (k / 3.0)) % 1.0);
+            Vector2 p = a.Lerp(b, 0.15f + (0.7f * t)) + (side * ((k - 1) * 4f * scale));
+            g.DrawLine(p - (dir * 7 * scale), p, new Color(0.15f, 0.1f, 0.05f, color.A), 3f * scale);
+            g.DrawLine(p - (dir * 7 * scale), p, new Color(0.95f, 0.92f, 0.85f, color.A), 1.5f * scale);
+            g.DrawColoredPolygon([p + (dir * 3 * scale), p - (side * 2.5f * scale), p + (side * 2.5f * scale)], new Color(0.95f, 0.92f, 0.85f, color.A));
+        }
+    }
+
+    private static void Arrow(CanvasItem g, Vector2 a, Vector2 b, Color color, float width, bool dashed, float head = 1f)
     {
         Vector2 d = b - a;
         float len = d.Length();
@@ -192,7 +231,7 @@ public partial class PlayOverlay : Node2D
         }
 
         Vector2 side = new(-dir.Y, dir.X);
-        g.DrawColoredPolygon([end + (dir * 6), end - (dir * 4) + (side * 5), end - (dir * 4) - (side * 5)], color);
+        g.DrawColoredPolygon([end + (dir * 6 * head), end - (dir * 4 * head) + (side * 5 * head), end - (dir * 4 * head) - (side * 5 * head)], color);
     }
 
     // Cover and height of the hex under the mouse for one of our soldiers standing there: green good, yellow some, red open.
