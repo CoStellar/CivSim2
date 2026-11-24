@@ -24,3 +24,19 @@ public sealed class ResearchReminderTests
         Assert.Contains(g.Alerts(civ), a => a.Kind == AlertKind.NoResearch);
     }
 }
+
+/// <summary>Abuse tests 2026-11-24: a treaty of an unknown kind (7) was kept as an alliance without the trade agreement first.</summary>
+public sealed class TreatyKindTests
+{
+    private static readonly SimContent Content = SimContent.Load();
+
+    [Fact]
+    public void AnUnknownTreatyIsRefused()
+    {
+        SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
+        Assert.Equal("No such treaty.", g.Apply(new ProposeTreatyCommand(0, 1, (TreatyKind)7)));
+        Assert.Equal("No such treaty.", g.Apply(new AnswerTreatyCommand(0, 1, (TreatyKind)7, true)));
+        Assert.Equal("No such treaty.", g.Apply(new CancelTreatyCommand(0, 1, (TreatyKind)7)));
+    }
+}
+
