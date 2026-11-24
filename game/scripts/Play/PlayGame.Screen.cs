@@ -82,7 +82,6 @@ public partial class PlayGame
         _uiLayer?.QueueFree();
         _speedButtons.Clear();
         _alertIcons.Clear();
-        _chipPulse = null;
         _resSig = _alertSig = _inspectorSig = _barSig = _bigSignature = "";
         BuildUi();
         _help.Visible = help;
@@ -542,20 +541,12 @@ public partial class PlayGame
             _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, UiKit.W(320), PixelTheme.FontSize + 6, next));
         }
 
-        _researchChip.Text = v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "Choose research (2)";
-        _researchChip.AddThemeColorOverride("font_color", v.Researching >= 0 ? UiKit.Text : UiKit.Warn);
-        if (v.Researching < 0)
+        // Patryk, 2026-11-24: the chip shows only what is being researched; "Choose research" was the same as key 2 and the
+        // Research button, and the reminder is an alert now (it comes a while after a research ends).
+        _researchChip.Visible = v.Researching >= 0;
+        if (v.Researching >= 0)
         {
-            // E2: an empty research queue is easy to miss: the chip pulses.
-            float pulse = 0.5f + (0.5f * Mathf.Sin((float)_time * 4f));
-            // One style kept and recoloured (2026-11-24: a new one five times a second was garbage for nothing).
-            _chipPulse ??= UiKit.Flat(new Color(0.35f, 0.25f, 0.05f, 0.95f), UiKit.Warn, 4, 3);
-            _chipPulse.BgColor = new Color(0.35f * pulse, 0.25f * pulse, 0.05f, 0.95f);
-            _researchChip.AddThemeStyleboxOverride("normal", _chipPulse);
-        }
-        else
-        {
-            _researchChip.RemoveThemeStyleboxOverride("normal");
+            _researchChip.Text = $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%";
         }
 
         UpdateGoods(v, c);
@@ -576,7 +567,6 @@ public partial class PlayGame
     private string _resLayout = "";
     private VBoxContainer _centreBox = null!;
     private HBoxContainer _topRow = null!;
-    private StyleBoxFlat? _chipPulse;
 
     private void UpdateAdvisor(PlayViewMessage v)
     {

@@ -403,7 +403,7 @@ for t_ in d["technologies"]:
         t_.setdefault("effects",[]).append({"kind":"housing","target":"stone_house","value":up})
         t_["gives"]=(t_.get("gives","")+f" Stone houses: +{up} homes (they grow a storey).").strip()
 # 11B: an early food alert.
-d["alerts"]={"comment":"foodLowMinutes: a settlement that eats more than it makes is warned when its food lasts this long or less.","foodLowMinutes":3}
+d["alerts"]={"comment":"foodLowMinutes: a settlement that eats more than it makes is warned when its food lasts this long or less. noResearchSeconds: the reminder that nothing is being researched comes only this long after the last research ended (or the game began), and only when something can be researched.","foodLowMinutes":3,"noResearchSeconds":60}
 # 12B: until the AI uses ships, peoples start on the main continent, at most 60 hexes by land from another people.
 d["startPhase"]["neighbourMaxHexes"]=60
 d["startPhase"]["neighbourMinHexes"]=25

@@ -158,14 +158,15 @@ public sealed partial class SimGame
         }
 
         // E2: nothing is being researched though something could be.
-        if (civ.Researching < 0 && civ.Settlements.Count > 0 && !Picking)
+        // A reminder, not a fixture (Patryk, 2026-11-24): only a while after the last research ended (or the game began).
+        if (civ.Researching < 0 && civ.Settlements.Count > 0 && !Picking && Ticks - civ.ResearchEnd >= (long)Content.NoResearchSeconds * SimContent.TicksPerSecond)
         {
             foreach (SimTech t in Content.Techs)
             {
                 if (CannotResearch(civ, t.Id) is null)
                 {
                     list.Add(new Alert(AlertKind.NoResearch, civ.Settlements[0], Settlements[civ.Settlements[0]].Center, -1,
-                        $"Nothing is being researched: {t.Name} and maybe more can be. Click to choose (Research, key 2)."));
+                        $"Nothing has been researched for a while: {t.Name} and maybe more can be. Click to choose (Research, key 2)."));
                     break;
                 }
             }

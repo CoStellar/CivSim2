@@ -44,9 +44,12 @@ public partial class PlayGame
         var wanted = new List<(int Key, string Look, string Tip, Func<Control> Make)>();
         if (advice.Length > 0)
         {
+            // Grey: no advisor; green: ours, nothing to worry about; orange: ours, and he warns of something.
             bool worry = v.Advice is not null;
-            wanted.Add((-1, $"ad{worry}", advice, () => AlertIcon(
-                worry ? WeightColors[1] : new Color(0.45f, 0.62f, 0.4f), UiKit.Picture?.Invoke("ui", "advisor"), "Ad", 0, advice,
+            bool have = v.Advisor is not null;
+            Color adColor = !have ? new Color(0.5f, 0.5f, 0.5f) : worry ? WeightColors[1] : new Color(0.45f, 0.62f, 0.4f);
+            wanted.Add((-1, $"ad{worry}{have}", advice, () => AlertIcon(
+                adColor, UiKit.Picture?.Invoke("ui", "advisor"), "Ad", 0, advice,
                 () => OpenWindow("Thinkers", toggle: false))));
         }
 
@@ -89,6 +92,24 @@ public partial class PlayGame
             }
 
             _alertsBox.MoveChild(have.Icon, i);
+        }
+    }
+
+    /// <summary>Screenshots: hires the advisor on offer, if any.</summary>
+    public void ScriptHireAdvisor()
+    {
+        if (_session?.PlayView is { Advisor: null, AdvisorOffer: not null })
+        {
+            _session.Play(PlayCommandKind.Hire, 0, flag: true);
+        }
+    }
+
+    /// <summary>Screenshots: the mouse over the advisor's icon.</summary>
+    public void ScriptHoverAdvisor()
+    {
+        if (_alertIcons.TryGetValue(-1, out (Control Icon, string Look) ad))
+        {
+            ScriptMouseMove(ad.Icon.GetGlobalRect().GetCenter());
         }
     }
 
