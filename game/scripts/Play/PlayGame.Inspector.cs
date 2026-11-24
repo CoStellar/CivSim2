@@ -95,48 +95,56 @@ public partial class PlayGame
             }
         }
 
-        items.Add(new LineItem($"Defence {s.DefensePercent}%" + (s.DefensePercent > 100 ? " (walls)" : ""), UiKit.Muted, 14));
-        if (s.Guard > 0 || s.GuardMax > 0)
-        {
-            items.Add(new LineItem(mine ? $"Guard {s.Guard} of {s.GuardMax} (from palisades, walls and castles; grows back in peace)" : $"Guard {s.Guard}", UiKit.Muted, 13));
-        }
         if (!mine)
         {
+            items.Add(new LineItem($"Defence {s.DefensePercent}%" + (s.DefensePercent > 100 ? " (walls)" : "") + (s.Guard > 0 ? $", guard {s.Guard}" : ""), UiKit.Muted, 14));
             items.Add(new BarItem("People", 1, $"{s.People}", new Color("4f7fb8")));
             return;
         }
 
         items.Add(new BarItem("People", s.Housing <= 0 ? 0 : (float)s.People / s.Housing, $"{s.People} of {s.Housing} homes", new Color("4f7fb8")));
-        if (s.People > s.Housing)
-        {
-            // 2026-11-24: only people with a home work or gather.
-            items.Add(new LineItem($"{s.People - s.Housing} without a home: they do not work", UiKit.Warn, 13));
-        }
 
-        items.Add(new LineItem(s.Idle > 0 ? $"{s.Idle} without work (they gather around)" : "Everyone has work", UiKit.Muted, 13));
-        GatherItems(c, s, items);
-        int work = s.WorkPermille / 10;
-        if (work != 100)
-        {
-            items.Add(new LineItem($"Workers work at {work}%" + (v.Winter ? " (winter; clothing helps)" : " (clothing)"), work < 100 ? UiKit.Warn : UiKit.Good, 13));
-        }
-
-        if (s.HealPerMinute > 0)
-        {
-            items.Add(new LineItem($"Herbalists heal {s.HealPerMinute} wounded a minute in its land", UiKit.Muted, 13));
-        }
-
-        // Rations: everyone it feeds eats once a minute; short of food the idle go hungry first, then the workers, the units last.
+        // 2026-11-24 (Patryk): the settlement's facts as pictures with numbers; the sentences are in their tooltips.
         {
             int food = c.Goods.ToList().FindIndex(x => x.Key == "food");
             bool enough = s.Stock is { } st && food >= 0 && food < st.Length && st[food] >= s.RationFood;
-            // E16 (2026-11-20): who eats, in plain words (building crews and porters are units too).
+            long net = (food >= 0 && s.Rate is { } rates ? rates[food] : 0); // the rate already counts the eating (the ration)
             string who = s.RationUnits > 0 ? $"{s.People} at home, {s.RationPeople} in {s.RationUnits} group{(s.RationUnits == 1 ? "" : "s")} out (soldiers, builders, carriers)" : $"{s.People} at home";
-            items.Add(new LineItem($"Ration in {v.RationSeconds} s: {UiKit.Num(s.RationFood)} food ({who})", s.HungryPeople > 0 || s.RationShort > 0 ? UiKit.Bad : enough ? UiKit.Muted : UiKit.Warn, 13));
-            if (s.FoodBalance is { Length: > 0 } balance)
+            int work = s.WorkPermille / 10;
+            var stats = new List<StatCell>
             {
-                items.Add(new LineItem(balance, balance.Contains("short", StringComparison.Ordinal) ? UiKit.Warn : UiKit.Muted, 13)); // E3
+                new("goods/good_food", "R", $"{v.RationSeconds} s · {UiKit.Num(s.RationFood)}", s.HungryPeople > 0 || s.RationShort > 0 ? UiKit.Bad : enough ? UiKit.Text : UiKit.Warn,
+                    $"# Ration\nEveryone it feeds eats once a minute.\n@Next ration|in {v.RationSeconds} s\n@Food needed|{UiKit.Num(s.RationFood)}\n@Who eats|{who}"),
+                new("buildings/building_gatherers_hut", "F", $"{UiKit.Rate(net)}/min", net > 0 ? UiKit.Good : net < 0 ? UiKit.Bad : UiKit.Muted,
+                    $"# Food a minute\n{s.FoodBalance ?? ""}"),
+                new("units/unit_settlers", "I", $"{s.Idle}", UiKit.Text,
+                    s.Idle > 0 ? $"# Without work\n{s.Idle} people have no job: they gather around the settlement." : "# Without work\nEveryone has work."),
+                new("works/work_icon_palisade", "D", $"{s.DefensePercent}%", UiKit.Text,
+                    $"# Defence\n{s.DefensePercent}%" + (s.DefensePercent > 100 ? " (walls)" : "")),
+            };
+            if (s.People > s.Housing)
+            {
+                stats.Add(new("buildings/building_hut", "H", $"{s.People - s.Housing}", UiKit.Warn, "# Without a home\nThese people do not work or gather: build homes."));
             }
+
+            if (s.Guard > 0 || s.GuardMax > 0)
+            {
+                stats.Add(new("works/work_icon_wall", "G", $"{s.Guard}/{s.GuardMax}", UiKit.Text, "# Guard\nFrom palisades, walls and castles; it grows back in peace."));
+            }
+
+            if (work != 100)
+            {
+                stats.Add(new("goods/good_clothing", "W", $"{work}%", work < 100 ? UiKit.Warn : UiKit.Good,
+                    $"# Work\nWorkers work at {work}%" + (v.Winter ? " (winter; clothing helps)." : " (clothing).")));
+            }
+
+            if (s.HealPerMinute > 0)
+            {
+                stats.Add(new("buildings/building_herbalist", "+", $"+{s.HealPerMinute}/min", UiKit.Good, $"# Healing\nHerbalists heal {s.HealPerMinute} wounded a minute in its land."));
+            }
+
+            items.Add(new StatsItem(stats));
+            GatherItems(c, s, items);
             if (s.HungryPeople > 0 || s.RationShort > 0)
             {
                 string hungry = (s.HungryPeople > 0 ? $"{s.HungryPeople} people ({s.HungryWorkers} of them workers)" : "") + (s.RationShort > 0 ? (s.HungryPeople > 0 ? " and " : "") + $"{s.RationShort} units" : "");
@@ -197,7 +205,7 @@ public partial class PlayGame
                 bool can = CanPay(stock, price) && s.People > size;
                 // Decision 4 (2026-11-24): the price in its colour and what the unit does to the settlement's food.
                 int foodId = c.Goods.ToList().FindIndex(x => x.Key == "food");
-                long net = (foodId >= 0 && s.Rate is { } rates ? rates[foodId] : 0) - s.RationFood;
+                long net = (foodId >= 0 && s.Rate is { } rates ? rates[foodId] : 0); // the rate already counts the eating
                 long after = net - (size * 100L);
                 string foodLine = $"\n@Food|they eat {size} a minute from {s.Name}'s stores: {UiKit.Rate(net)} a minute now, {UiKit.Rate(after)} after"
                     + (after < 0 && net >= 0 ? "\nThe food will fall: make more food first, or the settlement goes hungry." : "");

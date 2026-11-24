@@ -119,6 +119,43 @@ internal sealed record ActItem(string Text, Action Do, string Tooltip = "", bool
     }
 }
 
+/// <summary>One fact of a panel as a small picture and its number; the words are in the tooltip.</summary>
+internal sealed record StatCell(string Pic, string Letter, string Value, Color Color, string Tooltip);
+
+/// <summary>
+/// Facts as pictures with numbers in a row that wraps (Patryk, 2026-11-24: "ration in 40 s" and the like read better as an
+/// icon with its numbers than as a sentence). Numbers and tooltips change in place.
+/// </summary>
+internal sealed record StatsItem(IReadOnlyList<StatCell> Cells) : UiItem
+{
+    public override string Sig => "Q" + string.Concat(Cells.Select(c => $"{c.Pic}|{c.Value}|{c.Color}|{c.Tooltip};"));
+
+    public override string Look => "Q" + string.Concat(Cells.Select(c => c.Pic + ";"));
+
+    public override bool Retip(Control node)
+    {
+        if (node.GetChildCount() != Cells.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < Cells.Count; i++)
+        {
+            var cell = (Control)node.GetChild(i);
+            if (cell.GetChildOrNull<Control>(0)?.GetChildOrNull<Label>(1) is not { } value)
+            {
+                return false;
+            }
+
+            cell.TooltipText = Cells[i].Tooltip;
+            value.Text = Cells[i].Value;
+            value.AddThemeColorOverride("font_color", Cells[i].Color);
+        }
+
+        return true;
+    }
+}
+
 /// <summary>A picture tile with a caption below: units to train and the like.</summary>
 internal sealed record TileCell(string Name, string Short, Color Color, string Tooltip, Action Do, bool Enabled, string Caption, string? Pic = null);
 
@@ -359,6 +396,29 @@ internal static class UiRender
                 col.AddChild(UiKit.Label(s.Title.ToUpperInvariant(), 13, UiKit.Heading));
                 col.AddChild(new HSeparator());
                 return col;
+            }
+
+            case StatsItem q:
+            {
+                var flow = new HFlowContainer();
+                flow.AddThemeConstantOverride("h_separation", 6);
+                flow.AddThemeConstantOverride("v_separation", 4);
+                foreach (StatCell c in q.Cells)
+                {
+                    var cell = new RichTipPanel { TooltipText = c.Tooltip, MouseFilter = Control.MouseFilterEnum.Stop };
+                    cell.AddThemeStyleboxOverride("panel", UiKit.Flat(new Color(0.1f, 0.09f, 0.08f, 0.85f), new Color(0.3f, 0.26f, 0.22f), 3, 1));
+                    var row = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+                    row.AddThemeConstantOverride("separation", 4);
+                    row.AddChild(new Glyph(new Color(0.35f, 0.3f, 0.24f), c.Letter, 24, icon: UiKit.PictureOf(c.Pic)) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+                    Label value = UiKit.Label(c.Value, 13, c.Color);
+                    value.MouseFilter = Control.MouseFilterEnum.Ignore;
+                    value.VerticalAlignment = VerticalAlignment.Center;
+                    row.AddChild(value);
+                    cell.AddChild(row);
+                    flow.AddChild(cell);
+                }
+
+                return flow;
             }
 
             case GoodsItem g:
