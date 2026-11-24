@@ -103,7 +103,7 @@ public sealed class StoneAgeTests
     }
 
     [Fact]
-    public void GatherersPickUpWhatTheirLandGivesAndStopWhenTold()
+    public void GatherersPickUpWhatTheirLandGives()
     {
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
@@ -112,7 +112,7 @@ public sealed class StoneAgeTests
         Assert.True(rich[Content.Food] > 0, "every land gives some food");
         g.Recompute(civ);
         long withGathering = s.Rate[Content.Food];
-        Assert.Null(g.Apply(new GatherCommand(civ.Id, s.Id, false)));
+        s.Gathering = false; // a test lever: the player cannot turn gathering off
         g.Recompute(civ);
         Assert.True(s.Rate[Content.Food] < withGathering, "without gathering the people only eat");
         int wood = Content.GoodId("wood");

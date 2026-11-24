@@ -162,6 +162,35 @@ public sealed class EconomyTests
     }
 
     [Fact]
+    public void AStoreNeverHoldsMoreThanItsRoom()
+    {
+        // Decision 3 (2026-11-24): what does not fit when the room shrinks is lost at the next economy step.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        int wood = Content.GoodId("wood");
+        g.Recompute(civ);
+        s.Stock[wood] = s.Capacity[wood] + (50 * SimContent.One);
+        Run(g, Content.EconomyEveryTicks + 1);
+        Assert.Equal(s.Capacity[wood], s.Stock[wood]);
+    }
+
+    [Fact]
+    public void PeopleWithoutAHomeDoNotWork()
+    {
+        // Patryk, 2026-11-24: only people with a home work or gather; the rest only eat.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement s = g.Settlements[civ.Settlements[0]];
+        g.Recompute(civ);
+        s.People = s.Housing + 30;
+        civ.Dirty = true;
+        g.Recompute(civ);
+        Assert.True(s.Idle <= s.Housing, $"idle {s.Idle}, homes {s.Housing}");
+        Assert.Contains(g.Alerts(civ), a => a.Text.Contains("have no home", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void UpgradingACampWidensItsLand()
     {
         SimGame g = NewGame();
