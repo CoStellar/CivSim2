@@ -433,6 +433,12 @@ public sealed class Civ
     /// <summary>AI: goods it saves for the technology it wants next (null = none); building and training leave them.</summary>
     public long[]? AiSaving { get; set; }
 
+    /// <summary>
+    /// AI, within one tick (A1, tests 2026-11-24): free jobs in its buildings and which kinds are rising, counted once instead of
+    /// at every building it tries. Not game state: always worked out again from the buildings.
+    /// </summary>
+    internal (long Tick, int Buildings, int FreeJobs, bool[] Rising)? AiBuildScan { get; set; }
+
     /// <summary>AI memory: whether its army can reach a settlement on foot from a hex (key: settlement × hexes + hex), and when it looked.</summary>
     public Dictionary<long, (bool Way, long Tick)> AiWayTo { get; } = [];
 

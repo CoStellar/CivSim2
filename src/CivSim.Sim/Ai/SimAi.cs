@@ -123,17 +123,10 @@ public static partial class SimAi
         {
             // A1 (2026-11-19 tests): a new workplace only when free jobs are fewer than idle hands; teachers and makers of
             // what research lacks (keepSaving off) and food for the hungry may still go first.
-            int freeJobs = 0;
-            foreach (int bid in civ.Buildings)
+            (int freeJobs, bool[] rising) = BuildScan(g, civ);
+            if (rising[id])
             {
-                Building b = g.Buildings[bid];
-                if (b.Type == id && b.State is BuildingState.Delivery or BuildingState.Construction)
-                {
-                    return false;
-                }
-
-                int jobs = g.Content.Buildings[b.Type].Workers;
-                freeJobs += b.State is BuildingState.Active or BuildingState.Delivery or BuildingState.Construction ? Math.Max(0, jobs - b.Workers) : 0;
+                return false;
             }
 
             bool urgent = !keepSaving || (civ.Hungry && Array.IndexOf(FoodBuildings, t.Key) >= 0);
@@ -207,6 +200,35 @@ public static partial class SimAi
         }
 
         return best >= 0 && g.Apply(new BuildCommand(civ.Id, best, id)) is null;
+    }
+
+    // Free jobs and the kinds still being built, counted once a tick (A1, tests 2026-11-24: 64 000 tries in 20 minutes each went
+    // through more than 1000 buildings); a new building (its count changes) counts again.
+    private static (int FreeJobs, bool[] Rising) BuildScan(SimGame g, Civ civ)
+    {
+        var scan = civ.AiBuildScan;
+        if (scan is { } last && last.Tick == g.Ticks && last.Buildings == civ.Buildings.Count)
+        {
+            return (last.FreeJobs, last.Rising);
+        }
+
+        bool[] rising = scan is { } before && before.Rising.Length == g.Content.Buildings.Count ? before.Rising : new bool[g.Content.Buildings.Count];
+        Array.Clear(rising);
+        int freeJobs = 0;
+        foreach (int bid in civ.Buildings)
+        {
+            Building b = g.Buildings[bid];
+            if (b.State is BuildingState.Delivery or BuildingState.Construction)
+            {
+                rising[b.Type] = true;
+            }
+
+            int jobs = g.Content.Buildings[b.Type].Workers;
+            freeJobs += b.State is BuildingState.Active or BuildingState.Delivery or BuildingState.Construction ? Math.Max(0, jobs - b.Workers) : 0;
+        }
+
+        civ.AiBuildScan = (g.Ticks, civ.Buildings.Count, freeJobs, rising);
+        return (freeJobs, rising);
     }
 
     // AI goods (2026-11-20): a building research waits for can stand only in a settlement that lacks its price (the copper

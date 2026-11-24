@@ -3641,15 +3641,15 @@
     },
     {
       "deposit": "tin",
-      "min": 5,
-      "max": 12,
+      "min": 4,
+      "max": 8,
       "depth": 1,
       "size": "small"
     },
     {
       "deposit": "iron_ore",
-      "min": 15,
-      "max": 20,
+      "min": 9,
+      "max": 12,
       "depth": 1
     }
   ],
@@ -3758,6 +3758,21 @@
     "inputRouteKeepMinutes": 2,
     "inputRoutesPerSettlement": 4,
     "inputMakerStoreMinutes": 10,
+    "amounts": {
+      "comment": "Whole units the AI decides by. lowFood: below it the AI builds food first. lowGood: a good it uses below this (and not made) is short: it builds a maker or asks for a trade. lowTools: builds a toolmaker below it. foodSourceKeep: a settlement sending food keeps at least this. foodSendAtLeast: a caravan of food carries at least this. shareLow: a workshop's input below this calls a caravan from the richest settlement, which keeps shareKeep plus shareMargin; a caravan carries shareTrip. routeSourceLow: an input route whose source falls below this (and makes none) ends; a route trip carries at least this. unitSupplyHomeKeep: a home settlement supplies its unit only while keeping this much food beyond twice the load. warNetFood: no new soldiers while food made a minute exceeds eating by less than this.",
+      "lowFood": 3,
+      "lowGood": 20,
+      "lowTools": 10,
+      "foodSourceKeep": 60,
+      "foodSendAtLeast": 40,
+      "shareLow": 10,
+      "shareKeep": 20,
+      "shareMargin": 5,
+      "shareTrip": 30,
+      "routeSourceLow": 10,
+      "unitSupplyHomeKeep": 40,
+      "warNetFood": 2
+    },
     "starvedProspectors": 2,
     "wayToMinutes": 2,
     "thinkEveryTicks": 30,
@@ -3906,5 +3921,11 @@
   "vision": {
     "comment": "settlementSightBeyond: hexes a settlement sees beyond its own land. Units of a people we have not met that our settlements see, and whose people has seen the settlement, raise the alert 'Strangers' (not who nor where).",
     "settlementSightBeyond": 2
+  },
+  "stores": {
+    "comment": "A good is full from fullPercent of the room until it falls below stillFullPercent; empty below 1 until it reaches stillEmptyBelow (whole units).",
+    "fullPercent": 98,
+    "stillFullPercent": 90,
+    "stillEmptyBelow": 3
   }
 }

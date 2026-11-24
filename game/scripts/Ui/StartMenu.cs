@@ -215,6 +215,7 @@ public partial class StartMenu : CanvasLayer
         peoples.ValueChanged += v => _settings.Peoples = (int)v;
         game.AddChild(peoples);
         Choice(game, "Goal", [.. Goals.Select(g => g.Label)], Math.Max(0, Array.FindIndex(Goals, g => g.Id == _settings.Goal)), i => _settings.Goal = Goals[i].Id);
+        Choice(game, "Ores", ["Fair: every civilization has metals near", "Realistic: where the world put them"], _settings.FairOres ? 0 : 1, i => _settings.FairOres = i == 0);
         var choose = new CheckBox { Text = "Choose where we start", ButtonPressed = _settings.ChooseStart, TooltipText = "Civilizations pick their start in turns on the map; otherwise the world gives each one a place" };
         choose.Toggled += on => _settings.ChooseStart = on;
         game.AddChild(new Control());
@@ -240,6 +241,7 @@ public partial class StartMenu : CanvasLayer
             StartPhase = _settings.ChooseStart,
             Tutorial = _settings.Tutorial,
             Goal = _settings.Goal,
+            FairOres = _settings.FairOres,
             WorldType = Math.Max(0, Array.FindIndex(WorldTypes, w => w.Key == _settings.WorldType)),
             WaterPercent = Waters.FirstOrDefault(w => w.Key == _settings.Water, Waters[1]).Percent,
         };
