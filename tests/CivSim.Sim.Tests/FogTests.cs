@@ -253,6 +253,22 @@ public sealed class FogTests
     }
 
     [Fact]
+    public void APathWithTooManyFarPointsIsRefusedAtOnce()
+    {
+        // Abuse tests 2026-11-24: 5000 far waypoints in one move searched 2500 ways and froze the game for a second.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Unit u = Scouts(g, civ);
+        HexCoord c = g.Geo.FromIndex(u.Cell);
+        int a = g.Geo.Index(c);
+        int b = g.Geo.Index(g.Geo.Neighbor(g.Geo.Neighbor(g.Geo.Neighbor(c, HexDirection.N), HexDirection.N), HexDirection.N));
+        int[] far = [.. Enumerable.Range(0, Content.DrawnMaxJumps + 2).Select(k => k % 2 == 0 ? b : a)];
+        Assert.Contains("points apart", g.Apply(new MoveCommand(civ.Id, u.Id, b, false, far)));
+        int[] long_ = [.. Enumerable.Repeat(a, Content.DrawnMaxHexes + 1)];
+        Assert.Contains("hexes", g.Apply(new MoveCommand(civ.Id, u.Id, a, false, long_)));
+    }
+
+    [Fact]
     public void SettlersOnARoadGetACaravanOfGoods()
     {
         SimGame g = NewGame();

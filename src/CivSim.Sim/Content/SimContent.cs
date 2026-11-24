@@ -839,6 +839,15 @@ public sealed class SimContent
     /// <summary>Extra price, percent, for resuming a paused construction.</summary>
     public int ResumeCostPercent { get; init; }
 
+    /// <summary>A drawn path has at most this many hexes in all (drawnPaths.maxHexes, abuse tests 2026-11-24).</summary>
+    public int DrawnMaxHexes { get; init; } = 1000;
+
+    /// <summary>A drawn path has at most this many points that do not touch the one before (drawnPaths.maxJumps).</summary>
+    public int DrawnMaxJumps { get; init; } = 32;
+
+    /// <summary>The way between two such points searches at most this many hexes (drawnPaths.jumpSearchNodes).</summary>
+    public int DrawnJumpSearch { get; init; } = 12000;
+
     /// <summary>Patryk, 2026-11-24: the "nothing is being researched" reminder waits this long after a research ends (alerts.noResearchSeconds).</summary>
     public int NoResearchSeconds { get; init; } = 60;
 
@@ -1986,6 +1995,9 @@ public sealed class SimContent
             AiInputMakerStoreMinutes = root.TryProp("ai", out JsonElement aiEl10) && aiEl10.TryProp("inputMakerStoreMinutes", out JsonElement ims) ? ims.GetInt32() : 10,
             AiStarvedProspectors = root.TryProp("ai", out JsonElement aiEl11) && aiEl11.TryProp("starvedProspectors", out JsonElement asp) ? asp.GetInt32() : 2,
             AiInputRoutesPerSettlement = root.TryProp("ai", out JsonElement aiEl9) && aiEl9.TryProp("inputRoutesPerSettlement", out JsonElement irs) ? irs.GetInt32() : 4,
+            DrawnMaxHexes = root.Prop("drawnPaths").Prop("maxHexes").GetInt32(),
+            DrawnMaxJumps = root.Prop("drawnPaths").Prop("maxJumps").GetInt32(),
+            DrawnJumpSearch = root.Prop("drawnPaths").Prop("jumpSearchNodes").GetInt32(),
             NoResearchSeconds = root.TryProp("alerts", out JsonElement nrEl) && nrEl.TryProp("noResearchSeconds", out JsonElement nrs) ? nrs.GetInt32() : 60,
             FoodLowMinutes = root.TryProp("alerts", out JsonElement alEl) && alEl.TryProp("foodLowMinutes", out JsonElement flm) ? flm.GetInt32() : 3,
             UpgradeCaravans = root.TryProp("upgradeCaravans", out JsonElement ucEl)

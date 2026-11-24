@@ -52,12 +52,30 @@ public sealed partial class SimGame
             return "The path leaves the map.";
         }
 
-        foreach (int c in drawn)
+        if (drawn.Count > Content.DrawnMaxHexes)
         {
+            return $"A path may have at most {Content.DrawnMaxHexes} hexes.";
+        }
+
+        int jumps = 0;
+        for (int k = 0; k < drawn.Count; k++)
+        {
+            int c = drawn[k];
             if ((uint)c >= (uint)Geo.CellCount)
             {
                 return "The path leaves the map."; // B5: refused, not thrown
             }
+
+            if (k > 0 && c != drawn[k - 1] && Distance(drawn[k - 1], c) > 1)
+            {
+                jumps++;
+            }
+        }
+
+        // Abuse tests 2026-11-24: thousands of far waypoints in one command froze the server; each jump is a path search.
+        if (jumps > Content.DrawnMaxJumps)
+        {
+            return $"A path may have at most {Content.DrawnMaxJumps} points apart.";
         }
 
         int start = 0;
@@ -94,9 +112,14 @@ public sealed partial class SimGame
             {
                 // Waypoints (Patryk, 2026-11-24): between two points that do not touch, the best way is found, as for a
                 // click; a road or unit given A, B and C goes from A to C through B.
-                if (!FindPath(last, cell, _gap, naval, civ))
+                if (!FindPath(last, cell, _gap, naval, civ, Content.DrawnJumpSearch))
                 {
                     return "There is no way between two points of the path.";
+                }
+
+                if (path.Count + _gap.Count > Content.DrawnMaxHexes)
+                {
+                    return $"A path may have at most {Content.DrawnMaxHexes} hexes.";
                 }
 
                 foreach (int step in _gap)

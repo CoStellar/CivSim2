@@ -3929,5 +3929,11 @@
     "fullPercent": 98,
     "stillFullPercent": 90,
     "stillEmptyBelow": 3
+  },
+  "drawnPaths": {
+    "comment": "A path given to a unit, a patrol, a road or a work: at most maxHexes hexes in all, at most maxJumps points that do not touch the one before (the way between them is searched, at most jumpSearchNodes hexes each).",
+    "maxHexes": 1000,
+    "maxJumps": 32,
+    "jumpSearchNodes": 12000
   }
 }
