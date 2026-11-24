@@ -319,7 +319,9 @@ public sealed class PlayHost : IDisposable
                     // E6 (2026-11-19 tests): debug keys of a test scenario only for the host (the first player who joined).
                     string? why = command.Kind == PlayCommandKind.Debug && _clients.Find(c => c.Civ >= 0) != client
                         ? "Only the host may use debug keys."
-                        : _game.Apply(ToCommand(client.Civ, command));
+                        : command.Kind == PlayCommandKind.Gather
+                            ? "Gathering is always on: people without work gather around their settlement."
+                            : _game.Apply(ToCommand(client.Civ, command));
                     if (why is not null)
                     {
                         client.Connection.Send(new CommandRejectedMessage(command.Sequence, why));
@@ -502,7 +504,11 @@ public sealed class PlayHost : IDisposable
                 _game.Tick();
             }
 
-            _game.Apply(ToCommand(c.Civ, c.ToMessage()));
+            if (c.ToMessage().Kind != PlayCommandKind.Gather) // removed 2026-11-24: older saves may still hold it
+            {
+                _game.Apply(ToCommand(c.Civ, c.ToMessage()));
+            }
+
             _log.Add(c);
         }
 
@@ -551,7 +557,6 @@ public sealed class PlayHost : IDisposable
         PlayCommandKind.Move => new MoveCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row)), m.Flag, Cells(m.Cells)),
         PlayCommandKind.Patrol => new PatrolCommand(civ, m.A, Cells(m.Cells) ?? []),
         PlayCommandKind.BuildRoad => new BuildRoadCommand(civ, Cells(m.Cells) ?? [], m.A),
-        PlayCommandKind.Gather => new GatherCommand(civ, m.A, m.Flag),
         PlayCommandKind.Board => new BoardCommand(civ, m.A, m.B),
         PlayCommandKind.Land => new LandCommand(civ, m.A, _game.Geo.Index(_game.Geo.Wrap(m.Col, m.Row))),
         PlayCommandKind.UpgradeBuilding => new UpgradeBuildingCommand(civ, m.A),

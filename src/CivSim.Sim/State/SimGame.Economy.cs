@@ -95,6 +95,8 @@ public sealed partial class SimGame
                 }
             }
 
+            // 2026-11-24 (Patryk): only people with a home work or gather; the rest (after a fire, a disbanded unit) only eat.
+            s.Idle = Math.Min(s.People, s.Housing);
             s.WorkPermille = WorkPermille(s);
         }
 
@@ -372,7 +374,8 @@ public sealed partial class SimGame
                 long stock = s.Stock[g] + whole;
                 if (stock > s.Capacity[g])
                 {
-                    stock = Math.Max(s.Stock[g], s.Capacity[g]);
+                    // 2026-11-24 (Patryk): never more than the room; what does not fit when the room shrinks (fire, demolition) is lost.
+                    stock = s.Capacity[g];
                     s.Remainder[g] = 0;
                 }
 

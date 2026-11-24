@@ -94,7 +94,10 @@ public sealed class Building
 /// <summary>A settlement: a centre hex and the territory around it.</summary>
 public sealed class Settlement
 {
-    /// <summary>Its people gather food, wood and stone around it when they have no job (the player's order; on at the start).</summary>
+    /// <summary>
+    /// Its people gather food, wood and stone around it when they have no job. Always on in a game (the player's switch was
+    /// removed on 2026-11-24: it could starve a whole civilization); tests turn it off to measure a store without gathering.
+    /// </summary>
     public bool Gathering { get; set; } = true;
 
     /// <summary>Richness of its land per good, percent (mean of its land hexes), worked out when its land changes.</summary>

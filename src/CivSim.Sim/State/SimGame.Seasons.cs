@@ -10,23 +10,8 @@ namespace CivSim.Sim.State;
 /// settlement (clothing in store / people), rounded to steps of 2.5%, and the rates are worked out again only when a step or
 /// the season changes (docs/wydajnosc.md: rates, not items). Herbalists heal wounded soldiers in their settlement's land.
 /// </summary>
-/// <summary>The people of a settlement gather food, wood and stone around it while they have no job, or stop.</summary>
-public sealed record GatherCommand(int Civ, int Settlement, bool On) : SimCommand(Civ);
-
 public sealed partial class SimGame
 {
-    private string? Gather(Civ civ, int sid, bool on)
-    {
-        if ((uint)sid >= (uint)Settlements.Count || Settlements[sid].Civ != civ.Id)
-        {
-            return "Not our settlement.";
-        }
-
-        Settlements[sid].Gathering = on;
-        civ.Dirty = true;
-        return null;
-    }
-
     /// <summary>True while it is winter.</summary>
     public bool IsWinter => Content.SeasonCycleTicks > 0 && Ticks % Content.SeasonCycleTicks >= Content.SeasonCycleTicks - Content.WinterTicks;
 

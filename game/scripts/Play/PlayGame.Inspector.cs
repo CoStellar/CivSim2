@@ -107,7 +107,13 @@ public partial class PlayGame
         }
 
         items.Add(new BarItem("People", s.Housing <= 0 ? 0 : (float)s.People / s.Housing, $"{s.People} of {s.Housing} homes", new Color("4f7fb8")));
-        items.Add(new LineItem(s.Idle > 0 ? $"{s.Idle} without work" + (s.Gathering ? " (they gather around)" : " (idle)") : "Everyone has work", UiKit.Muted, 13));
+        if (s.People > s.Housing)
+        {
+            // 2026-11-24: only people with a home work or gather.
+            items.Add(new LineItem($"{s.People - s.Housing} without a home: they do not work", UiKit.Warn, 13));
+        }
+
+        items.Add(new LineItem(s.Idle > 0 ? $"{s.Idle} without work (they gather around)" : "Everyone has work", UiKit.Muted, 13));
         GatherItems(c, s, items);
         int work = s.WorkPermille / 10;
         if (work != 100)
@@ -534,7 +540,11 @@ public partial class PlayGame
             items.Add(new ActItem("Start work", () => _session!.Play(PlayCommandKind.Stop, id, flag: false)));
         }
 
-        items.Add(new ActItem("Tear down", () => _session!.Play(PlayCommandKind.Demolish, id), "The building is gone; its places are free again.", Accent: UiKit.Bad));
+        // Decision 6 (2026-11-24): nothing comes back; a site in progress loses what was paid and brought.
+        string downTip = b.State is 0 or 1 or 5
+            ? "The building site is gone and its places are free again. What was paid and brought for it is lost."
+            : "The building is gone and its places are free again. Nothing of its price comes back.";
+        items.Add(new ActItem("Tear down", () => _session!.Play(PlayCommandKind.Demolish, id), downTip, Accent: UiKit.Bad));
         if (number > 0)
         {
             // Side by side: the buttons of this building in one row.
@@ -544,7 +554,7 @@ public partial class PlayGame
         }
     }
 
-    // The order to gather around the settlement, with what one gatherer brings here (the land's richness).
+    // What one gatherer brings here (the land's richness); gathering is always on.
     private void GatherItems(PlayContentMessage c, PlaySettlementView s, List<UiItem> items)
     {
         int sid = s.Id;
@@ -562,8 +572,8 @@ public partial class PlayGame
         }
 
         string land = per.Count == 0 ? "nothing to gather here" : string.Join(", ", per);
-        items.Add(new ActItem(s.Gathering ? "Stop gathering" : "Gather around", () => _session!.Play(PlayCommandKind.Gather, sid, flag: !s.Gathering),
-            $"People without a job pick up food, wood and stone around the settlement. How much depends on the land: {land} of a rich land."));
+        // 2026-11-24: gathering is always on (the switch could starve a whole civilization); only what the land gives is shown.
+        items.Add(new LineItem($"Gathering: {land} of a rich land", UiKit.Muted, 13));
     }
 
     private void UnitItems(PlayViewMessage v, PlayUnitView u, PlayContentMessage c, List<UiItem> items)
