@@ -332,7 +332,7 @@ public static class UiKit
     private static readonly Dictionary<(Texture2D, int), Texture2D> ScaledCache = [];
 
     // A small picture made larger by whole pixels (nearest), so it stays sharp.
-    private static Texture2D Scaled(Texture2D icon, int k)
+    public static Texture2D Scaled(Texture2D icon, int k)
     {
         if (!ScaledCache.TryGetValue((icon, k), out Texture2D? big))
         {

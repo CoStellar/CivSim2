@@ -57,6 +57,7 @@ public partial class PlayGame
             "Thinkers" => "Thinkers and advisors",
             "Units" => "Our units and patrols",
             "Tutorial" => "Tutorial",
+            "Civilization" => "Our civilization",
             _ => "Summary",
         };
         var items = new List<UiItem>();
@@ -79,6 +80,9 @@ public partial class PlayGame
                 break;
             case "Tutorial":
                 TutorialItems(v, items);
+                break;
+            case "Civilization":
+                OurCivilizationItems(v, c, items);
                 break;
             default:
                 SummaryItems(v, items);
@@ -875,5 +879,61 @@ public partial class PlayGame
         }
 
         items.Add(new ActItem("Refresh", () => _session!.AskSummary()));
+    }
+
+    // 2026-11-24 (Patryk): the window behind our emblem: our whole civilization at a glance.
+    private void OurCivilizationItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
+    {
+        string eraKey = UiKit.KeyOf(c.Eras[v.Era]);
+        PlayHistoryView? ours = _session?.Summary?.Peoples.FirstOrDefault(p => p.Civ == v.Civ);
+        string name = ours?.Name ?? "Our people";
+        string next = v.Era + 1 < c.Eras.Count ? $"{v.EraKnown} of {v.EraNeed} technologies to the {c.Eras[v.Era + 1]}" : "the last era";
+        items.Add(new HeaderItem(name, $"{c.Eras[v.Era]} - {next}", new Color("c8a050"), "Us", UiKit.EmblemName(eraKey, v.Civ), v.Civ, v.Lost, Portrait: true));
+        if (v.Goal is { Length: > 0 } goal)
+        {
+            items.Add(new LineItem("Goal: " + goal, UiKit.Heading, 15));
+        }
+
+        items.Add(new LineItem($"Score {v.Score}. Played {Clock()}.", UiKit.Muted, 14));
+
+        var settlements = v.Settlements.Where(s => s.Civ == v.Civ && !s.Remembered).ToList();
+        int known = v.Techs.Count(t => t.Known);
+        int units = v.Units.Count(u => u.Civ == v.Civ);
+        int buildings = v.Buildings.Count(b => b.Civ == v.Civ);
+        int housing = settlements.Sum(s => s.Housing);
+        items.Add(new SectionItem("Our land and people"));
+        items.Add(new TableItem(2,
+        [
+            new("People", UiKit.Muted), new($"{v.People} (homes for {housing})"),
+            new("Settlements", UiKit.Muted), new(string.Join(", ", settlements.GroupBy(s => s.Level).OrderByDescending(g => g.Key).Select(g => $"{g.Count()} {(g.Key < c.Levels.Count ? c.Levels[g.Key].Name.ToLowerInvariant() : "?")}")) is { Length: > 0 } list ? $"{settlements.Count}: {list}" : "0"),
+            new("Buildings", UiKit.Muted), new($"{buildings}"),
+            new("Technologies", UiKit.Muted), new($"{known} of {c.Techs.Count}"),
+            new("Units", UiKit.Muted), new($"{units} (army {v.ArmyUnits} of {v.ArmyLimit})"),
+            new("Food", UiKit.Muted), new(v.Hungry ? "hungry" : "enough", v.Hungry ? UiKit.Bad : UiKit.Text),
+        ]));
+
+        items.Add(new SectionItem("Our people's minds"));
+        items.Add(new LineItem(v.Thinker is { } t ? $"Thinker: {t.Name} ({t.Rarity.ToLowerInvariant()})" : "No thinker.", UiKit.Text, 14));
+        items.Add(new LineItem(v.Advisor is { } a ? $"Advisor: {a.Name} ({a.Rarity.ToLowerInvariant()}, {a.Fields.ToLowerInvariant()})" : "No advisor.", UiKit.Text, 14));
+
+        items.Add(new SectionItem("Other peoples"));
+        var met = v.Peoples.Where(p => !p.Dead).ToList();
+        if (met.Count == 0)
+        {
+            items.Add(new LineItem("We have met no other civilization yet.", UiKit.Muted, 14));
+        }
+        else
+        {
+            items.Add(new LineItem($"We know {met.Count}: at war with {met.Count(p => p.AtWar)}, trading with {met.Count(p => p.Trade)}, allied with {met.Count(p => p.Alliance)}.", UiKit.Text, 14));
+        }
+
+        var acts = new List<ActItem>();
+        for (int i = 0; i < WindowNames.Length; i++)
+        {
+            string w = WindowNames[i];
+            acts.Add(new ActItem($"{i + 1} {w}", () => OpenWindow(w, toggle: false), Pic: "ui/window_" + w.ToLowerInvariant()));
+        }
+
+        items.Add(new ButtonsItem(acts));
     }
 }

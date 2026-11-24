@@ -187,7 +187,7 @@ public partial class PlayGame : Node2D
 
         _bigMode = mode;
         _bigSignature = "";
-        if (mode == "Summary")
+        if (mode is "Summary" or "Civilization")
         {
             _session?.AskSummary();
         }
@@ -760,6 +760,9 @@ public partial class PlayGame : Node2D
                 break;
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key1 or Key.Key2 or Key.Key3 or Key.Key4 or Key.Key5 or Key.Key6 } f:
                 OpenWindow(WindowNames[(int)(f.Keycode - Key.Key1)]);
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Key0 }:
+                OpenWindow("Civilization"); // our emblem's window
                 break;
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P }:
                 OpenWindow("Units"); // patrols are listed first there

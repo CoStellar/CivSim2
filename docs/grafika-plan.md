@@ -336,7 +336,10 @@ ta sama osoba zawsze wygląda tak samo. Zasady gry dla doradców i myślicieli s
 **Herb ludu zmienia się z erą:** epoka kamienia: stojący kamień ze znakiem; neolit: deska z desek na sznurku z namalowanym
 znakiem (zamiana na prośbę Patryka, 2026-11-24); epoka brązu: drewniana tarcza z brązowym okuciem; epoka żelaza: chorągiew z sukna na drążku; średniowiecze: tarcza
 herbowa ze złotym brzegiem i głową w kolorze ludu. Motywy (8): jeleń, słońce, drzewo, fala, góra, ptak, dłoń, spirala; lud
-dostaje motyw według swojego numeru. Wszystkie herby w oknie pokazują erę naszego ludu (er innych ludów nie widzimy).
+dostaje motyw według swojego numeru przesuniętego o ziarno świata. Wszystkie herby w oknie pokazują erę naszego ludu (er innych ludów nie widzimy).
+Nasz herb jest stale widoczny w lewym górnym rogu (80×80, czyli 2×). Kliknięcie albo klawisz 0 otwiera okno „Our civilization”:
+ludność, osady, budynki, technologie, wojsko, myśliciel, doradca i stosunki z innymi ludami. Kolor i motyw herbu wynikają z ziarna
+świata, więc w każdej grze są inne.
 
 ## 18. Paczka płaska „Flat” (Patryk, 2026-11-24)
 

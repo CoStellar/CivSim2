@@ -28,6 +28,8 @@ public partial class PlayGame
     private float _topBottom;
     private Label _eraLabel = null!;
     private TextureRect _eraIcon = null!;
+    private TextureButton _emblemButton = null!;
+    private string _emblemPic = "";
 
     // The era whose interface frames are in use (an era key), so the theme is built again only when the era changes.
     private string? _themeEra;
@@ -129,6 +131,19 @@ public partial class PlayGame
         topRow.AddThemeConstantOverride("separation", 10);
         top.AddChild(topRow);
 
+        // 2026-11-24 (Patryk): our emblem, large and always in sight at the left of the top bar; it opens the window about
+        // our whole civilization. It takes the look of our era like the rest of the interface.
+        _emblemButton = new TextureButton
+        {
+            TooltipText = "Our civilization (key 0)", FocusMode = Control.FocusModeEnum.None, StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered,
+            IgnoreTextureSize = true, CustomMinimumSize = new Vector2(80, 80), TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, Visible = false,
+        };
+        _emblemButton.Pressed += () => OpenWindow("Civilization");
+        _emblemButton.MouseEntered += () => _emblemButton.Modulate = new Color(1.15f, 1.15f, 1.15f);
+        _emblemButton.MouseExited += () => _emblemButton.Modulate = Colors.White;
+        topRow.AddChild(_emblemButton);
+
         // A15 (tests 2026-11-20): the goods stop before the era in the middle and wrap onto more rows; the bar grows with them
         // and what sits under it moves down (UpdateUnderTop).
         // 2026-11-24: three columns that cannot overlap at any interface size: the goods (they wrap), the era, the right group.
@@ -193,7 +208,7 @@ public partial class PlayGame
         var centre = _centreBox = new VBoxContainer { CustomMinimumSize = new Vector2(UiKit.W(320), 0), SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
         centre.AddThemeConstantOverride("separation", 0);
         _topRow.AddChild(centre);
-        _topRow.MoveChild(centre, 1); // between the goods and the right group
+        _topRow.MoveChild(centre, 2); // between the goods and the right group (after the emblem and the goods)
         _eraLabel = UiKit.Label("", 24, UiKit.Heading);
         _eraLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _eraLabel.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
@@ -468,7 +483,7 @@ public partial class PlayGame
     {
         _bigMode = toggle && _bigMode == name ? "" : name;
         _bigSignature = "";
-        if (_bigMode == "Summary")
+        if (_bigMode is "Summary" or "Civilization")
         {
             _session?.AskSummary();
         }
@@ -591,6 +606,15 @@ public partial class PlayGame
         }
 
         _eraIcon.Visible = _eraIcon.Texture is not null && !v.Lost && v.Winner is null;
+        string emblem = UiKit.EmblemName(eraKey, v.Civ) + (v.Lost ? "|grey" : "");
+        if (emblem != _emblemPic || _emblemButton.TextureNormal is null)
+        {
+            _emblemPic = emblem;
+            Texture2D? pic = UiKit.PortraitOf(UiKit.EmblemName(eraKey, v.Civ), v.Civ, v.Lost);
+            _emblemButton.TextureNormal = pic is null ? null : UiKit.Scaled(pic, 2);
+        }
+
+        _emblemButton.Visible = _emblemButton.TextureNormal is not null;
         if (!_endShown && (v.Lost || v.Winner is not null))
         {
             _endShown = true;
