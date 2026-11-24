@@ -40,7 +40,7 @@ public static partial class SimAi
             foreach (int o in civ.Settlements)
             {
                 Settlement r = g.Settlements[o];
-                long spare = r.Stock[food] - Math.Max(60 * SimContent.One, 2 * r.Eating);
+                long spare = r.Stock[food] - Math.Max(g.Content.AiAmount.FoodSourceKeep, 2 * r.Eating);
                 if (r != s && spare > richSpare)
                 {
                     rich = r;
@@ -48,7 +48,7 @@ public static partial class SimAi
                 }
             }
 
-            long need = Math.Max(40 * SimContent.One, (2 * s.Eating) - s.Stock[food]);
+            long need = Math.Max(g.Content.AiAmount.FoodSendAtLeast, (2 * s.Eating) - s.Stock[food]);
             if (rich is not null && !Carrying(g, civ, s.Id))
             {
                 g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, food, Math.Min(need, richSpare)));
@@ -70,9 +70,9 @@ public static partial class SimAi
 
         InputRoutes(g, civ);
 
-        const long Low = 10 * SimContent.One;
-        const long Keep = 20 * SimContent.One;
-        const long Trip = 30 * SimContent.One;
+        long shareLow = g.Content.AiAmount.ShareLow;
+        long shareKeep = g.Content.AiAmount.ShareKeep;
+        long shareTrip = g.Content.AiAmount.ShareTrip;
         int sent = 0;
         foreach (int id in civ.Buildings)
         {
@@ -86,7 +86,7 @@ public static partial class SimAi
             Settlement s = g.Settlements[b.Settlement];
             for (int i = 0; i < t.Consumes.Length; i++)
             {
-                if (t.Consumes[i] <= 0 || s.Stock[i] >= Low || Carrying(g, civ, s.Id, i) || HasInputRoute(g, civ, s.Id, i))
+                if (t.Consumes[i] <= 0 || s.Stock[i] >= shareLow || Carrying(g, civ, s.Id, i) || HasInputRoute(g, civ, s.Id, i))
                 {
                     continue;
                 }
@@ -95,13 +95,13 @@ public static partial class SimAi
                 foreach (int o in civ.Settlements)
                 {
                     Settlement r = g.Settlements[o];
-                    if (r != s && !r.Hungry && r.Stock[i] > Keep + (5 * SimContent.One) && (rich is null || r.Stock[i] > rich.Stock[i]))
+                    if (r != s && !r.Hungry && r.Stock[i] > shareKeep + g.Content.AiAmount.ShareMargin && (rich is null || r.Stock[i] > rich.Stock[i]))
                     {
                         rich = r;
                     }
                 }
 
-                if (rich is null || g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, i, Math.Min(Trip, rich.Stock[i] - Keep))) is not null)
+                if (rich is null || g.Apply(new SendCaravanCommand(civ.Id, rich.Id, s.Id, i, Math.Min(shareTrip, rich.Stock[i] - shareKeep))) is not null)
                 {
                     continue;
                 }
@@ -153,7 +153,7 @@ public static partial class SimAi
 
             int from = civ.Settlements.IndexOf(route.From);
             long keep = from < 0 ? 0 : use[(from * goods) + route.Good] * c.AiInputRouteKeepMinutes;
-            if (from >= 0 && route.Caravan < 0 && g.Settlements[route.From].Stock[route.Good] - Math.Max(keep, route.KeepAtSource) < 10 * SimContent.One
+            if (from >= 0 && route.Caravan < 0 && g.Settlements[route.From].Stock[route.Good] - Math.Max(keep, route.KeepAtSource) < c.AiAmount.RouteSourceLow
                 && g.Settlements[route.From].Rate[route.Good] <= 0)
             {
                 g.Apply(new EndRouteCommand(civ.Id, r)); // nothing to spare there any more
@@ -182,7 +182,7 @@ public static partial class SimAi
                 {
                     Settlement src = g.Settlements[civ.Settlements[o]];
                     long spare = src.Stock[i] - (use[(o * goods) + i] * c.AiInputRouteKeepMinutes);
-                    if (o != k && !src.Hungry && (src.Rate[i] > 0 || spare >= 20 * SimContent.One) && spare > bestSpare)
+                    if (o != k && !src.Hungry && (src.Rate[i] > 0 || spare >= c.AiAmount.LowGood) && spare > bestSpare)
                     {
                         best = o;
                         bestSpare = spare;
@@ -195,7 +195,7 @@ public static partial class SimAi
                 }
 
                 int src2 = civ.Settlements[best];
-                long trip = Math.Max(10 * SimContent.One, need * c.AiInputRouteTripMinutes);
+                long trip = Math.Max(c.AiAmount.RouteSourceLow, need * c.AiInputRouteTripMinutes);
                 long keepAtSource = use[(best * goods) + i] * c.AiInputRouteKeepMinutes;
                 if (g.Apply(new RouteCommand(civ.Id, src2, s.Id, i, trip, null, keepAtSource, need * c.AiInputRouteTargetMinutes)) is null)
                 {
@@ -253,7 +253,7 @@ public static partial class SimAi
             }
 
             long want = g.ProvisionsMax(u) - u.Provisions;
-            if ((uint)u.Home < (uint)g.Settlements.Count && g.Settlements[u.Home].Civ == civ.Id && g.Settlements[u.Home].Stock[g.Content.Food] > (2 * want) + (40 * SimContent.One)
+            if ((uint)u.Home < (uint)g.Settlements.Count && g.Settlements[u.Home].Civ == civ.Id && g.Settlements[u.Home].Stock[g.Content.Food] > (2 * want) + g.Content.AiAmount.UnitSupplyHomeKeep
                 && g.Apply(new SupplyUnitCommand(civ.Id, u.Home, u.Id, want)) is null)
             {
                 continue;
