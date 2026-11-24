@@ -42,6 +42,12 @@ public partial class TechTree : Control
     private readonly List<(int Era, float X0, float X1)> _bands = [];
     private HashSet<int> _lit = [];
 
+    /// <summary>Width of a card: picture, name and what it unlocks (2026-11-24).</summary>
+    public static int CardWidth => UiKit.W(230);
+
+    /// <summary>Height of a card: the name over a row of small pictures.</summary>
+    public static int CardHeight => Ui.PixelTheme.FontSize + 38;
+
     /// <summary>The technology under the mouse, kept when the window is drawn again (-1: none).</summary>
     public static int Hovered { get; set; } = -1;
 
@@ -68,8 +74,8 @@ public partial class TechTree : Control
     {
         _view = view;
         _content = content;
-        _cardWidth = UiKit.W(176);
-        _cardHeight = Ui.PixelTheme.FontSize + 14;
+        _cardWidth = CardWidth;
+        _cardHeight = CardHeight;
         MouseFilter = MouseFilterEnum.Pass;
         var techs = content.Techs.Where(t => t.Key.Length > 0).ToList();
         Layers(techs);
