@@ -137,15 +137,26 @@ public sealed class FogTests
     }
 
     [Fact]
-    public void ADrawnPathMustNotJump()
+    public void AGapInADrawnPathIsWalkedTheBestWay()
     {
+        // Waypoints (Patryk, 2026-11-24): a path may jump; the unit finds the way between the points (it was refused).
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
         Unit u = Scouts(g, civ);
         HexCoord c = g.Geo.FromIndex(u.Cell);
         int near = g.Geo.Index(g.Geo.Neighbor(c, HexDirection.N));
         int far = g.Geo.Index(g.Geo.Neighbor(g.Geo.Neighbor(g.Geo.Neighbor(c, HexDirection.N), HexDirection.N), HexDirection.N));
-        Assert.Contains("neighbouring", g.Apply(new MoveCommand(civ.Id, u.Id, far, false, [near, far])));
+        if (!g.FindPath(near, far, new List<int>()))
+        {
+            return; // water in the way on this map: nothing to check
+        }
+
+        Assert.Null(g.Apply(new MoveCommand(civ.Id, u.Id, far, false, [near, far])));
+        Assert.Equal(far, u.Path[^1]);
+        for (int k = 1; k < u.Path.Count; k++)
+        {
+            Assert.Equal(1, g.Geo.Distance(g.Geo.FromIndex(u.Path[k - 1]), g.Geo.FromIndex(u.Path[k])));
+        }
     }
 
     [Fact]
@@ -224,6 +235,21 @@ public sealed class FogTests
         Assert.Null(g.Apply(new BuildRoadCommand(civ.Id, [.. drawn], 1)));
         Run(g, 20 * Content.RoadLevels[0].TicksPerHex);
         Assert.All(drawn, c => Assert.Equal(1, g.RoadAt[c]));
+    }
+
+    [Fact]
+    public void ATrackGivenOnlyItsEndsTakesTheBestWayBetweenThem()
+    {
+        // Waypoints (Patryk, 2026-11-24): two hexes that do not touch; the way between them is found and built whole.
+        SimGame g = NewGame();
+        Civ civ = g.Civs[0];
+        Settlement home = g.Settlements[civ.Settlements[0]];
+        int far = home.Cells.Where(c => g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(home.Center)) == 3 && g.FindPath(home.Center, c, new List<int>())).First();
+        var way = new List<int>();
+        Assert.True(g.FindPath(home.Center, far, way));
+        Assert.Null(g.Apply(new BuildRoadCommand(civ.Id, [home.Center, far], 1)));
+        Run(g, 30 * Content.RoadLevels[0].TicksPerHex);
+        Assert.All(way, c => Assert.Equal(1, g.RoadAt[c]));
     }
 
     [Fact]

@@ -53,6 +53,9 @@ Everything in the game can be done with the mouse. The keys below do the same fa
 | Shift + left click | Add the units on a hex to the selection.
 | Right click | Send the selected units there. On an enemy: attack.
 | Right button held | Draw the way over the hexes: they walk exactly that way.
+| Ctrl + right clicks | Points for the selected units to walk through, kept until Ctrl is let go; select other units meanwhile and give them theirs. Letting Ctrl go sends them all at once. Esc drops the plan.
+| Road or work picked, Shift + clicks | Points joined by the best way; letting Shift go starts building.
+| Road or work picked, Ctrl + clicks | Points joined in straight lines; letting Ctrl go starts building.
 | Q / E | The previous or next of our settlements.
 | R / Shift + R | The next or previous of our units.
 | J | The next alert: goes to the place it is about.
