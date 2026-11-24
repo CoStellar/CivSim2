@@ -20,7 +20,7 @@ With "Choose where we start" on, the civilizations pick their start in turns. Fi
 - **Top right:** the time of the game, the speed, Routes, the help (?), this manual, the tutorial, Save and Menu; under them the six windows (keys 1-6).
 - **Right, under the top bar:** a row of small icons: the advisor first, then one icon for each kind of alert, framed red (danger), orange (soon a problem) or yellow (worth a look), with how many there are. Hover an icon to read them all; click it (or press `J`) to go to the next place.
 - **Left:** the side panel of what is selected: a settlement, a building, a unit or a hex. Its buttons are the orders for it.
-- **Bottom:** the building bar. At the very bottom the kinds of buildings with their pictures; above them the buildings of the chosen kind we can build now. Prices in tooltips are blue.
+- **Bottom:** the building bar. At the very bottom the kinds of buildings with their pictures; above them the buildings of the chosen kind we can build now. Prices in tooltips are red, times blue.
 - **Bottom right:** the chronicle, what happened lately. "more" shows a longer piece.
 - **On the map:** a deposit we know shows in the top right corner of its hex as a round badge with its picture; the dots under it are its size (small, usual, large). A "?" badge is an ore of a later era.
 

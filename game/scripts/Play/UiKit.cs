@@ -89,10 +89,16 @@ public static class UiKit
     public static readonly Color Warn = new(1f, 0.82f, 0.35f);
 
     /// <summary>Costs on the dark panels (Patryk, 2026-11-24: prices in their own colour, easy to find).</summary>
-    public static readonly Color Cost = new(0.55f, 0.8f, 1f);
+    public static readonly Color Cost = new(1f, 0.55f, 0.5f);
 
     /// <summary>Costs on the parchment of the tooltips.</summary>
-    public static readonly Color CostOnPaper = new(0.1f, 0.3f, 0.66f);
+    public static readonly Color CostOnPaper = new(0.72f, 0.1f, 0.06f);
+
+    /// <summary>Times (building, training) on the parchment of the tooltips (Patryk, 2026-11-24: prices red, times blue).</summary>
+    public static readonly Color TimeOnPaper = new(0.1f, 0.3f, 0.66f);
+
+    // The facts of a tooltip that are times: their values are drawn in the time colour.
+    private static readonly HashSet<string> TimeKeys = ["Build time", "Time", "Training time"];
 
     /// <summary>A price inside a tooltip's text: drawn in <see cref="CostOnPaper"/> by <see cref="RichTip"/>.</summary>
     public static string CostMark(string text) => "⟦" + text + "⟧";
@@ -197,7 +203,17 @@ public static class UiKit
                 label.Pop();
                 string key = row[1..bar];
                 bool cost = CostKeys.Contains(key);
+                bool time = TimeKeys.Contains(key);
+                if (time)
+                {
+                    label.PushColor(TimeOnPaper);
+                }
+
                 AddRich(label, cost ? CostMark(row[(bar + 1)..]) : row[(bar + 1)..]);
+                if (time)
+                {
+                    label.Pop();
+                }
             }
             else
             {
