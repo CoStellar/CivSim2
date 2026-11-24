@@ -154,10 +154,6 @@ public static partial class SimAi
                 return true;
             }
 
-            if (!s.Gathering)
-            {
-                g.Apply(new GatherCommand(civ.Id, s.Id, true));
-            }
         }
 
         return false;
