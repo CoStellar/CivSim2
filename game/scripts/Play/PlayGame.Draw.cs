@@ -251,7 +251,9 @@ public partial class PlayGame
         DrawMode.Move when _drawing => "Draw the way over the hexes. Let go of the right button to send them.",
         DrawMode.Patrol => _drawing ? "Draw the patrol over the hexes. Let go to start it." : "Hold the left button and draw the patrol over the hexes. Esc: cancel.",
         DrawMode.Route => _drawing ? "Draw the caravans' way. Let go to set the route." : "Hold the left button and draw the caravans' way from here to the other settlement. Esc: cancel.",
-        DrawMode.Road => _drawing ? $"Draw the road over the hexes ({_overlay?.DrawPath.Count ?? 0} so far). Let go to start building." : "Hold the left button and draw the road over the hexes, also into empty land. Esc: cancel.",
+        DrawMode.Road => _drawing ? $"Draw the road over the hexes ({_overlay?.DrawPath.Count ?? 0} so far). Let go to start building."
+            : _roadPoints.Count > 0 ? $"{_roadPoints.Count} points: let go of {(_roadStraight ? "Ctrl" : "Shift")} to build {(_roadStraight ? "in straight lines" : "along the best way")} through them. Esc: cancel."
+            : "Hold the left button and draw the road over the hexes. Or hold Shift and click points (the best way), or Ctrl and click points (straight lines); let go of the key to build. Esc: cancel.",
         _ => null,
     };
 

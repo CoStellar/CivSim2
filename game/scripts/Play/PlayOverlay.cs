@@ -66,6 +66,9 @@ public partial class PlayOverlay : Node2D
     /// <summary>Hexes being drawn (a path, a patrol, a route), in order.</summary>
     public List<(int Col, int Row)> DrawPath { get; } = [];
 
+    /// <summary>Planned ways of units, each from the unit's hex through its waypoints (sent when Ctrl is let go).</summary>
+    public List<List<(int Col, int Row)>> Plans { get; } = [];
+
     /// <summary>Colour of the drawn path.</summary>
     public Color DrawColor { get; set; } = new(1f, 0.95f, 0.5f);
 
@@ -983,6 +986,34 @@ public partial class PlayOverlay : Node2D
                 }
 
                 StrokePath(g, moved, new Color(DrawColor, pulse), 3f, dashed: false, arrows: 2, EndMark.Dot);
+            }
+        }
+
+        // Planned ways (2026-11-24, Ctrl held): from each unit through its waypoints, dashed, a ring on every point.
+        foreach (List<(int Col, int Row)> plan in Plans)
+        {
+            if (plan.Count < 2)
+            {
+                continue;
+            }
+
+            var pts = new List<Vector2>();
+            Vector2 prev = Vector2.Zero;
+            foreach ((int col, int row) in plan)
+            {
+                Vector2 p = pts.Count == 0 ? HexLayout.Center(col, row) : Unwrapped(prev, col, row);
+                pts.Add(p);
+                prev = p;
+            }
+
+            foreach (Vector2 shift in Shifts(pts[0]))
+            {
+                var moved = pts.ConvertAll(p => p + shift);
+                StrokePath(g, moved, new Color(0.6f, 0.9f, 1f, 0.9f), 2.5f, dashed: true, arrows: 1, EndMark.Dot);
+                for (int k = 1; k < moved.Count; k++)
+                {
+                    g.DrawArc(moved[k], 9, 0, MathF.Tau, 20, new Color(0.6f, 0.9f, 1f), 2f);
+                }
             }
         }
 

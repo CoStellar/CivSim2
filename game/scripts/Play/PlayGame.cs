@@ -606,6 +606,12 @@ public partial class PlayGame : Node2D
             return;
         }
 
+        if (WaypointInput(e))
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         if (e is InputEventKey keyEvent && MoreKeys(keyEvent))
         {
             GetViewport().SetInputAsHandled();
@@ -672,7 +678,11 @@ public partial class PlayGame : Node2D
 
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Escape }:
-                if (_drawMode != DrawMode.None)
+                if (CancelPlans())
+                {
+                    Toast("Planned ways dropped.");
+                }
+                else if (_drawMode != DrawMode.None)
                 {
                     CancelDraw();
                 }

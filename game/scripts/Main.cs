@@ -247,6 +247,11 @@ public partial class Main : Node2D
                 float zoom = _playWindow == "Deposit" ? 2.2f : 0.9f;
                 demo = [(_playSeconds - 2, g => g.ScriptFocusDeposit()), (_playSeconds - 1, g => g.ScriptZoom(zoom))];
             }
+            else if (_playWindow == "Plans")
+            {
+                // 2026-11-24: road points in straight lines and a unit's planned way, before they are sent.
+                demo = [(_playSeconds - 1.5, g => g.ScriptPlans()), (_playSeconds - 1, g => g.ScriptZoom(1.4f))];
+            }
             else if (_playWindow == "Help")
             {
                 demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.H))];

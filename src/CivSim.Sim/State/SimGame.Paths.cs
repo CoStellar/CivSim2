@@ -30,6 +30,9 @@ public enum PatrolStage : byte
 /// </summary>
 public sealed partial class SimGame
 {
+    // The way between two waypoints of a drawn path that do not touch.
+    private readonly List<int> _gap = [];
+
     /// <summary>
     /// Builds the full walk from <paramref name="from"/> along the drawn hexes into <paramref name="path"/>. Returns null, or why
     /// the drawing cannot be walked.
@@ -89,7 +92,25 @@ public sealed partial class SimGame
 
             if (Distance(last, cell) != 1)
             {
-                return "A drawn path must go from hex to neighbouring hex.";
+                // Waypoints (Patryk, 2026-11-24): between two points that do not touch, the best way is found, as for a
+                // click; a road or unit given A, B and C goes from A to C through B.
+                if (!FindPath(last, cell, _gap, naval, civ))
+                {
+                    return "There is no way between two points of the path.";
+                }
+
+                foreach (int step in _gap)
+                {
+                    if (!naval && WalledAgainst(civ, step))
+                    {
+                        return "A wall of another civilization stands there: break it first.";
+                    }
+
+                    path.Add(step);
+                }
+
+                last = cell;
+                continue;
             }
 
             if (Cost(cell, naval) == 0)
