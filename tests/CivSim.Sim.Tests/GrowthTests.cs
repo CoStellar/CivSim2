@@ -70,6 +70,30 @@ public sealed class GrowthTests
         }
     }
 
+    [Fact]
+    public void EmptyFoodJobsWithNobodyIdleAskToFreeWorkersNotToBuildMore()
+    {
+        // P6 (tests 2026-11-24): another hut would stand empty too; the panel says to free workers instead.
+        (SimGame g, Settlement s) = NewCamp();
+        Civ civ = g.Civs[0];
+        BuildingType hut = Content.Building("gatherers_hut");
+        int cell = System.Linq.Enumerable.First(s.Cells, c => c != s.Center && g.FreeSlots(c) == 15);
+        var b = new Building { Id = g.Buildings.Count, Civ = civ.Id, Type = hut.Id, Cell = cell, Settlement = s.Id, State = BuildingState.Active, Workers = 0 };
+        g.Buildings.Add(b);
+        civ.Buildings.Add(b.Id);
+        g.PlaceForTest(b);
+        s.Eating = 30 * SimContent.One;
+        s.Rate[Content.Food] = -5 * SimContent.One;
+        s.Stock[Content.Food] = 40 * SimContent.One;
+
+        s.Idle = 0;
+        Assert.Contains("nobody is idle", g.FoodBalance(civ, s), System.StringComparison.Ordinal);
+        Assert.Contains("nobody is idle", g.HungerAdvice(civ, s), System.StringComparison.Ordinal);
+
+        s.Idle = 5; // people without work: building more is right again
+        Assert.DoesNotContain("nobody is idle", g.FoodBalance(civ, s), System.StringComparison.Ordinal);
+    }
+
     private static (SimGame G, Settlement S) NewCamp()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
