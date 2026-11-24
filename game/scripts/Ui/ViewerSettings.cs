@@ -306,6 +306,19 @@ public sealed class ViewerSettings
     /// <summary>Key of the interface font the player chose (null = default).</summary>
     public string? Font { get; set; }
 
+    /// <summary>Size of the interface in percent (Patryk, 2026-11-24: panels overlapped at 1440p); 100 = as designed.</summary>
+    public int UiScale { get; set; } = 100;
+
+    /// <summary>The sizes the player can choose, percent.</summary>
+    public static readonly int[] UiScales = [60, 70, 80, 90, 100, 110, 125, 150];
+
+    /// <summary>Applies an interface size to the window (everything drawn on screen, tooltips included).</summary>
+    public static void ApplyUiScale(Window window, int percent)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+        window.ContentScaleFactor = Math.Clamp(percent, 50, 200) / 100f;
+    }
+
     /// <summary>Reads the saved settings; defaults when there are none or the file is broken.</summary>
     public static ViewerSettings Load()
     {

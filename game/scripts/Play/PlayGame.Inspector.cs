@@ -195,8 +195,15 @@ public partial class PlayGame
                 long[] price = [.. ut.Price.Select(p => p * size / Math.Max(1, ut.People))];
                 bool shock = _trainShock && ut.MaxPeople > 0;
                 bool can = CanPay(stock, price) && s.People > size;
-                string tip = $"{ut.Name}: {size} people, {Amounts(c, price)}, {ut.TrainSeconds * size / Math.Max(1, ut.People)} s"
-                    + (shock ? " (faster: weapons only)." : ".")
+                // Decision 4 (2026-11-24): the price in its colour and what the unit does to the settlement's food.
+                int foodId = c.Goods.ToList().FindIndex(x => x.Key == "food");
+                long net = (foodId >= 0 && s.Rate is { } rates ? rates[foodId] : 0) - s.RationFood;
+                long after = net - (size * 100L);
+                string foodLine = $"\n@Food|they eat {size} a minute from {s.Name}'s stores: {UiKit.Rate(net)} a minute now, {UiKit.Rate(after)} after"
+                    + (after < 0 && net >= 0 ? "\nThe food will fall: make more food first, or the settlement goes hungry." : "");
+                string tip = $"# {ut.Name}\n@Training cost|{Amounts(c, price, icons: true)}\n@People|{size}\n@Time|{ut.TrainSeconds * size / Math.Max(1, ut.People)} s"
+                    + (shock ? " (faster: weapons only)" : "")
+                    + foodLine
                     + (ut.MaxPeople > 0 ? $"\nThey take the best weapons{(shock ? "" : " and armour")} the store holds for all {size}." : "")
                     + (ut.Army ? $"\nStrength {ut.Strength} each" + (ut.Range > 1 ? $", shoots {ut.Range} hexes." : ".") : "")
                     + (ut.Founds ? "\nThey found a new camp where you send them." : "")
@@ -220,7 +227,7 @@ public partial class PlayGame
                 PlayLevelInfo next = c.Levels[s.Level + 1];
                 bool tech = next.Tech < 0 || v.Techs[next.Tech].Known;
                 bool can = tech && CanPay(stock, next.UpgradePrice);
-                string tip = $"Becomes a {next.Name.ToLowerInvariant()}: land of {next.Radius} hexes around, {next.Housing} homes in the centre. Costs {Amounts(c, next.UpgradePrice)}."
+                string tip = $"# {next.Name}\nLand of {next.Radius} hexes around, {next.Housing} homes in the centre.\n@Cost|{Amounts(c, next.UpgradePrice, icons: true)}"
                     + (tech ? "" : $"\nNeeds {c.Techs[next.Tech].Name}.");
                 int sid = s.Id;
                 items.Add(new ActItem($"Upgrade to {next.Name.ToLowerInvariant()}", () => _session!.Play(PlayCommandKind.Upgrade, sid), tip, can));
@@ -490,7 +497,7 @@ public partial class PlayGame
             else if (b.UpgradeBlocked is { } why)
             {
                 items.Add(new ActItem($"Upgrade to {to.Name}", () => _session!.Play(PlayCommandKind.UpgradeBuilding, id),
-                    why.Length == 0 ? $"Rebuilt in place: half of its price counts, porters bring the rest ({b.UpgradeCost}). It stops working while it is rebuilt." : why,
+                    why.Length == 0 ? $"Rebuilt in place: half of its price counts, porters bring the rest.\n@Upgrade cost|{b.UpgradeCost}\nIt stops working while it is rebuilt." : why,
                     why.Length == 0, UiKit.Good));
                 if (why.Length > 0 && number > 0)
                 {
@@ -499,7 +506,7 @@ public partial class PlayGame
                 }
                 else if (why.Length == 0)
                 {
-                    items.Insert(start, new LineItem($"Upgrade to {to.Name} costs {b.UpgradeCost}", UiKit.Muted, 13));
+                    items.Insert(start, new LineItem($"Upgrade to {to.Name} costs {b.UpgradeCost}", UiKit.Cost, 13));
                     start++;
                 }
             }

@@ -25,28 +25,26 @@ public partial class PlayGame
 
     private void BuildActionBar(Control root)
     {
-        var bar = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 1, AnchorBottom = 1, OffsetTop = -6, OffsetBottom = -6, GrowHorizontal = Control.GrowDirection.Both, GrowVertical = Control.GrowDirection.Begin };
+        // 2026-11-24 (Patryk): the buildings of the chosen kind on top, the kinds (with their pictures) at the very bottom; the
+        // windows moved to the top bar, so the bar takes less of the screen.
+        var bar = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 1, AnchorBottom = 1, OffsetTop = -4, OffsetBottom = -4, GrowHorizontal = Control.GrowDirection.Both, GrowVertical = Control.GrowDirection.Begin };
         root.AddChild(bar);
+        _actionBar = bar;
         var col = new VBoxContainer();
         col.AddThemeConstantOverride("separation", 4);
         bar.AddChild(col);
-        var head = new HBoxContainer();
-        col.AddChild(head);
-        _tabsBox = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        _tabsBox.AddThemeConstantOverride("separation", 2);
-        head.AddChild(_tabsBox);
-
-        // The windows, like the small menu next to a World of Warcraft bar.
-        head.AddChild(new VSeparator());
-        for (int i = 0; i < WindowNames.Length; i++)
-        {
-            string name = WindowNames[i];
-            head.AddChild(UiKit.Button($"{i + 1} {name}", () => OpenWindow(name), $"{name} (key {i + 1})"));
-        }
         _slotsBox = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
         _slotsBox.AddThemeConstantOverride("separation", 4);
         col.AddChild(_slotsBox);
+        _tabsBox = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        _tabsBox.AddThemeConstantOverride("separation", 4);
+        col.AddChild(_tabsBox);
     }
+
+    private PanelContainer _actionBar = null!;
+
+    // The picture of a kind of buildings: one of its own buildings (no extra art needed until Patryk draws them).
+    private static readonly string[] TabPictures = ["building_gatherers_hut", "building_toolmaker", "building_hut", "building_barracks", "building_school", ""];
 
     private static int TabOf(PlayBuildingInfo b)
     {
@@ -134,9 +132,29 @@ public partial class PlayGame
         // E6 (2026-11-20): in the tutorial the building of the next step lights up (and its tab).
         string glow = v.TutorialOn && v.Tutorial?.FirstOrDefault(x => !x.Done) is { } next ? next.Highlight : "";
         int glowTab = glow.Length > 0 && c.Buildings.FirstOrDefault(x => x.Key == glow) is { } gb ? TabOf(gb) : -1;
-        string sig = $"{_tab}|{string.Join(",", counts)}|{string.Join(",", _slotTypes)}|{string.Join(",", affordable)}|{_placing}|{v.Picking}|{_drawMode}{_drawRoad}|{glow}";
+        string sig = $"{_tab}|{string.Join(",", counts)}|{string.Join(",", _slotTypes)}|{_placing}|{v.Picking}|{_drawMode}{_drawRoad}|{glow}";
         if (sig == _barSig)
         {
+            // 2026-11-24: only what we can pay for changed: the slots are greyed or lit in place (a rebuild closed the
+            // tooltip under the mouse whenever a good crossed a price).
+            for (int i = 0; i < affordable.Count && i < _slotsBox.GetChildCount(); i++)
+            {
+                if (_slotsBox.GetChild(i) is Control slot && slot.GetChildOrNull<Control>(0) is { } inner)
+                {
+                    bool can = affordable[i];
+                    if (inner.GetChildOrNull<Control>(0) is { } glyph)
+                    {
+                        glyph.Modulate = can ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f);
+                    }
+
+                    inner.GetChildOrNull<Label>(1)?.AddThemeColorOverride("font_color", can ? UiKit.Text : UiKit.Muted);
+                    if (_slotTypes[i] > 0)
+                    {
+                        slot.TooltipText = Describe(c, c.Buildings[_slotTypes[i]]) + (can ? "" : "\n@Now|we do not have the goods for it");
+                    }
+                }
+            }
+
             return;
         }
 
@@ -150,7 +168,9 @@ public partial class PlayGame
             }
 
             int tab = i;
-            var b = new Button { Text = Tabs[i], ToggleMode = true, ButtonPressed = i == _tab, FocusMode = Control.FocusModeEnum.None, TooltipText = "Kinds of buildings (Tab)" };
+            Texture2D? tabPic = i == RoadTab ? UiKit.Picture?.Invoke("works", "work_icon_road") : UiKit.Picture?.Invoke("buildings", TabPictures[i]);
+            var b = new Button { Text = Tabs[i], Icon = tabPic, ExpandIcon = false, ToggleMode = true, ButtonPressed = i == _tab, FocusMode = Control.FocusModeEnum.None, TooltipText = $"{Tabs[i]}: {counts[i]} kinds (Tab: next kind)" };
+            b.AddThemeConstantOverride("icon_max_width", 28);
             if (i == glowTab && i != _tab)
             {
                 b.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
@@ -177,7 +197,7 @@ public partial class PlayGame
             PlayBuildingInfo t = c.Buildings[_slotTypes[i]];
             int id = t.Id;
             bool can = affordable[i];
-            var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 80 + (2 * Ui.PixelTheme.FontSize)), TooltipText = Describe(c, t) + (can ? "" : "\n@Now|we do not have the goods for it"), ToggleMode = true, ButtonPressed = _placing == id };
+            var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(96), 56 + Ui.PixelTheme.FontSize), TooltipText = Describe(c, t) + (can ? "" : "\n@Now|we do not have the goods for it"), ToggleMode = true, ButtonPressed = _placing == id };
             if (t.Key == glow)
             {
                 slot.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
@@ -188,15 +208,15 @@ public partial class PlayGame
             inner.AddThemeConstantOverride("separation", 1);
             Color color = UiKit.GroupColor(t.Groups);
             Texture2D? pic = UiKit.Picture?.Invoke("buildings", "building_" + t.Key);
-            inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(t.Name), pic is null ? 44 : 68, icon: pic)
+            inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(t.Name), pic is null ? 40 : 52, icon: pic)
             {
                 MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
                 Modulate = can ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f),
             });
             Label name = UiKit.Label(t.Name, 11, can ? UiKit.Text : UiKit.Muted);
             name.HorizontalAlignment = HorizontalAlignment.Center;
-            name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            name.CustomMinimumSize = new Vector2(UiKit.W(104), 0);
+            name.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+            name.CustomMinimumSize = new Vector2(UiKit.W(90), 0);
             name.MouseFilter = Control.MouseFilterEnum.Ignore;
             inner.AddChild(name);
             slot.AddChild(inner);
@@ -296,7 +316,7 @@ public partial class PlayGame
         }
 
         PlayRoadInfo r = new(level, label, [], 0, 0);
-        var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(112), 58 + (2 * Ui.PixelTheme.FontSize)), TooltipText = tip, ToggleMode = true, ButtonPressed = _drawMode == DrawMode.Road && _drawRoad == level };
+        var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(96), 56 + Ui.PixelTheme.FontSize), TooltipText = tip, ToggleMode = true, ButtonPressed = _drawMode == DrawMode.Road && _drawRoad == level };
         var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
         inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         Texture2D? pic = UiKit.Picture?.Invoke("works", "work_icon_" + picture); // 2026-11-23: the way's picture, not letters

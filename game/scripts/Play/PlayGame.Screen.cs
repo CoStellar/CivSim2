@@ -37,7 +37,7 @@ public partial class PlayGame
     private Label _advisorName = null!;
     private Label _advisorText = null!;
     private Label _eventLabel = null!;
-    private VBoxContainer _alertsBox = null!;
+    private HFlowContainer _alertsBox = null!;
     private RichTextLabel _chronicleText = null!;
     private PanelContainer _chroniclePanel = null!;
     private bool _chronicleOpen;
@@ -81,6 +81,8 @@ public partial class PlayGame
         bool help = _help.Visible;
         _uiLayer?.QueueFree();
         _speedButtons.Clear();
+        _alertIcons.Clear();
+        _chipPulse = null;
         _resSig = _alertSig = _inspectorSig = _barSig = _bigSignature = "";
         BuildUi();
         _help.Visible = help;
@@ -123,9 +125,24 @@ public partial class PlayGame
         topRow.AddChild(_resBox);
         topRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore });
 
-        var right = new HBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin }; // stays one row when the goods take two
+        // 2026-11-24 (Patryk): two rows at the right: time, speed and the game's buttons; under them the windows (keys 1-6),
+        // which left the action bar at the bottom.
+        var rightRows = new VBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
+        rightRows.AddThemeConstantOverride("separation", 2);
+        topRow.AddChild(rightRows);
+        var right = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
         right.AddThemeConstantOverride("separation", 4);
-        topRow.AddChild(right);
+        rightRows.AddChild(right);
+        var windows = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
+        windows.AddThemeConstantOverride("separation", 4);
+        rightRows.AddChild(windows);
+        for (int i = 0; i < WindowNames.Length; i++)
+        {
+            string name = WindowNames[i];
+            Button wb = UiKit.Button($"{i + 1} {name}", () => OpenWindow(name), $"{name} (key {i + 1})");
+            wb.AddThemeFontSizeOverride("font_size", Math.Max(12, PixelTheme.FontSize * 3 / 4));
+            windows.AddChild(wb);
+        }
         _clockLabel = UiKit.Label("0:00", 16, UiKit.Text);
         _clockLabel.TooltipText = "Time of the game.";
         _clockLabel.CustomMinimumSize = new Vector2(64, 0);
@@ -148,7 +165,7 @@ public partial class PlayGame
         _patrolsButton = UiKit.Button("Patrols", () => OpenWindow("Units"), "Our patrols and units: stop one or all of them (P)");
         right.AddChild(_patrolsButton);
         right.AddChild(UiKit.Button("Routes", ToggleRoutes, "Show or hide all our routes, patrols and marches (G)"));
-        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "The keys and the font (H)"));
+        right.AddChild(UiKit.Button("?", () => _help.Visible = !_help.Visible, "The keys, the font and the interface size (H)"));
         right.AddChild(UiKit.Button("Manual", () => ToggleManual(), "How to play: the goal, the eras, war and peace, every key (F1)"));
         right.AddChild(UiKit.Button("Tutorial", () => OpenWindow("Tutorial"), "First steps: what to do next, and the task list on screen (T)"));
         right.AddChild(UiKit.Button("Save", SaveNow, "Save the game (it also saves itself every 5 minutes as 'autosave'); load it from the start menu (F5)"));
@@ -181,7 +198,7 @@ public partial class PlayGame
         var adv = new HBoxContainer();
         adv.AddThemeConstantOverride("separation", 8);
         _advisorPanel.AddChild(adv);
-        adv.AddChild(new Glyph(new Color("8a6a40"), "Ad", 40));
+        adv.AddChild(new Glyph(new Color("8a4030"), "!", 32, round: true));
         var advText = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         adv.AddChild(advText);
         _advisorName = UiKit.Label("", 15, UiKit.Heading);
@@ -191,8 +208,9 @@ public partial class PlayGame
         _advisorText = UiKit.Label("", 14, UiKit.Text, wrap: true);
         advText.AddChild(_advisorText);
 
-        _alertsBox = new VBoxContainer();
-        _alertsBox.AddThemeConstantOverride("separation", 4);
+        _alertsBox = new HFlowContainer { Alignment = FlowContainer.AlignmentMode.End, MouseFilter = Control.MouseFilterEnum.Ignore };
+        _alertsBox.AddThemeConstantOverride("h_separation", 6);
+        _alertsBox.AddThemeConstantOverride("v_separation", 6);
         rightCol.AddChild(_alertsBox);
 
         // ---- Chronicle (bottom right, opens wider) ----
@@ -326,6 +344,29 @@ public partial class PlayGame
             fonts.AddChild(b);
         }
 
+        // 2026-11-24 (Patryk): the size of the whole interface.
+        help.AddChild(UiKit.Label("INTERFACE SIZE", 18, UiKit.Heading));
+        var sizes = new HFlowContainer();
+        help.AddChild(sizes);
+        int scaleNow = ViewerSettings.Load().UiScale;
+        foreach (int percent in ViewerSettings.UiScales)
+        {
+            int p = percent;
+            var b = new Button { Text = $"{p}%", ToggleMode = true, ButtonPressed = scaleNow == p, FocusMode = Control.FocusModeEnum.None, TooltipText = "Make every panel, button and text this big." };
+            b.Pressed += () => SetUiScale(p);
+            sizes.AddChild(b);
+        }
+
+        // 2026-11-24 (Patryk): how strongly the civilizations' colour covers their land.
+        help.AddChild(UiKit.Label("CIVILIZATION COLOUR ON LAND", 18, UiKit.Heading));
+        var tint = new HSlider { MinValue = 0, MaxValue = 60, Step = 1, Value = _layers[MapLayer.Influence].Opacity, CustomMinimumSize = new Vector2(UiKit.W(300), 24), TooltipText = "0: only the borders; more: the land takes the civilization's colour" };
+        tint.ValueChanged += x =>
+        {
+            _layers.SetOpacity(MapLayer.Influence, (int)x);
+            _layers.SetOpacity(MapLayer.Owner, (int)x);
+        };
+        help.AddChild(tint);
+
         // The controls: the "Controls" chapter of the manual (data/sim/manual.md), so the keys are written in one place.
         var controls = new RichTextLabel { BbcodeEnabled = true, FitContent = true, ScrollActive = false, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.None };
         controls.AddThemeFontSizeOverride("normal_font_size", PixelTheme.FontSize);
@@ -339,6 +380,18 @@ public partial class PlayGame
         helpButtons.AddChild(UiKit.Button("The whole manual (F1)", () => ToggleManual(0), "How to play: the goal, the first minutes, the eras, war and peace, every key"));
         helpButtons.AddChild(UiKit.Button("Close", () => _help.Visible = false, "Close (Esc or H)"));
         BuildKeysUi(root, topH);
+    }
+
+    // Saves and applies the interface size, then lays the screen out again for the new size.
+    private void SetUiScale(int percent)
+    {
+        ViewerSettings settings = ViewerSettings.Load();
+        settings.UiScale = percent;
+        settings.Save();
+        ViewerSettings.ApplyUiScale(GetWindow(), percent);
+        bool help = _help.Visible;
+        RebuildUi();
+        _help.Visible = help;
     }
 
     private void OpenWindow(string name, bool toggle = true)
@@ -356,7 +409,7 @@ public partial class PlayGame
     private void ToggleChronicle()
     {
         _chronicleOpen = !_chronicleOpen;
-        _chroniclePanel.OffsetTop = ChronicleBottom - (_chronicleOpen ? 420 : 110);
+        _chroniclePanel.OffsetTop = _chroniclePanel.OffsetBottom - (_chronicleOpen ? 420 : 110);
         _chronicleToggle.Text = _chronicleOpen ? "less" : "more";
         RefreshChronicle();
     }
@@ -393,12 +446,36 @@ public partial class PlayGame
 
         _inspector.Visible = items.Count > 0;
 
-        // The side panel grows with what it shows, up to the action bar; then it scrolls.
-        float most = GetViewport().GetVisibleRect().Size.Y - (2 * PixelTheme.FontSize) - 200;
+        // The side panel grows with what it shows, up to the action bar (when the bar reaches under it) or the bottom of the
+        // screen; then it scrolls (2026-11-24: at 1440p it ran under the bar).
+        Vector2 screenSize = GetViewport().GetVisibleRect().Size;
+        Rect2 bar = _actionBar.GetGlobalRect();
+        float panelRight = _inspector.Position.X + UiKit.W(332);
+        float bottom = bar.Position.X < panelRight ? bar.Position.Y - 8 : screenSize.Y - 8;
+        float most = Math.Max(120, bottom - _inspector.Position.Y - 16);
         float want = Math.Min(_inspectorBox.GetCombinedMinimumSize().Y + 4, most);
         _inspectorScroll.CustomMinimumSize = new Vector2(UiKit.W(320), want);
         _inspector.Size = Vector2.Zero;
         UpdateWindow(v, c);
+        PlaceChronicle();
+    }
+
+    // The chronicle (and the tutorial list over it) sits at the bottom right, above the action bar only when the bar reaches
+    // under it (2026-11-24: the bar is narrower now, so usually it goes down to the edge).
+    private void PlaceChronicle()
+    {
+        Vector2 screenSize = GetViewport().GetVisibleRect().Size;
+        Rect2 bar = _actionBar.GetGlobalRect();
+        float left = screenSize.X - UiKit.W(440);
+        float bottom = bar.End.X > left ? bar.Position.Y - screenSize.Y - 8 : -8;
+        float height = _chronicleOpen ? 420 : 110;
+        if (Math.Abs(_chroniclePanel.OffsetBottom - bottom) > 0.5f || Math.Abs(_chroniclePanel.OffsetTop - (bottom - height)) > 0.5f)
+        {
+            _chroniclePanel.OffsetBottom = bottom;
+            _chroniclePanel.OffsetTop = bottom - height;
+            _tutorialPanel.OffsetBottom = bottom - height - 8;
+            _tutorialPanel.OffsetTop = bottom - height - 8;
+        }
     }
 
     private void UpdateTop(PlayViewMessage v, PlayContentMessage c)
@@ -460,7 +537,10 @@ public partial class PlayGame
         {
             // E2: an empty research queue is easy to miss: the chip pulses.
             float pulse = 0.5f + (0.5f * Mathf.Sin((float)_time * 4f));
-            _researchChip.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.35f * pulse, 0.25f * pulse, 0.05f, 0.95f), UiKit.Warn, 4, 3));
+            // One style kept and recoloured (2026-11-24: a new one five times a second was garbage for nothing).
+            _chipPulse ??= UiKit.Flat(new Color(0.35f, 0.25f, 0.05f, 0.95f), UiKit.Warn, 4, 3);
+            _chipPulse.BgColor = new Color(0.35f * pulse, 0.25f * pulse, 0.05f, 0.95f);
+            _researchChip.AddThemeStyleboxOverride("normal", _chipPulse);
         }
         else
         {
@@ -530,6 +610,7 @@ public partial class PlayGame
     }
 
     private string _resLayout = "";
+    private StyleBoxFlat? _chipPulse;
 
     // A chip's numbers changed in place: the amount and trend labels are the chip's second child's two labels.
     private static void SetChip(Control chip, string amount, string trend, Color trendColor, string tooltip)
@@ -578,92 +659,12 @@ public partial class PlayGame
             _advisorText.AddThemeColorOverride("font_color", UiKit.Muted);
         }
 
-        _advisorPanel.Visible = !v.Picking;
+        // 2026-11-24 (Patryk): the advisor is an icon in the alert strip; this panel shows only an event or the winter.
+        _advisorName.Visible = false;
+        _advisorText.Visible = false;
+        _advisorPanel.Visible = !v.Picking && _eventLabel.Visible;
     }
 
-    // Alerts on the right, under the advisor: what needs a reaction. A click goes to the place.
-    private void UpdateAlerts(PlayViewMessage v)
-    {
-        IReadOnlyList<PlayAlertView> alerts = v.Alerts ?? [];
-        string sig = string.Join("|", System.Linq.Enumerable.Select(alerts, a => a.Text));
-        if (sig == _alertSig)
-        {
-            return;
-        }
-
-        // 2026-11-23: the same alerts as before whose text only counts down ("food runs out in 2:32"): the texts change in
-        // place, so the list does not flicker and a hovered alert stays.
-        string layout = string.Join("|", System.Linq.Enumerable.Select(alerts, a => $"{a.Kind}:{a.Col}:{a.Row}:{a.Good}"));
-        if (layout == _alertLayout && alerts.Count <= 7 && _alertsBox.GetChildCount() == alerts.Count)
-        {
-            _alertSig = sig;
-            for (int k = 0; k < alerts.Count; k++)
-            {
-                if (_alertsBox.GetChild(k).GetChildOrNull<Node>(0)?.GetChildOrNull<Label>(1) is { } label)
-                {
-                    label.Text = alerts[k].Text;
-                }
-            }
-
-            return;
-        }
-
-        _alertLayout = layout;
-        _alertSig = sig;
-        UiKit.Clear(_alertsBox);
-        int shown = 0;
-        foreach (PlayAlertView a in alerts)
-        {
-            if (++shown > 7)
-            {
-                _alertsBox.AddChild(UiKit.Label($"and {alerts.Count - 7} more: see Settlements (1)", 13, UiKit.Muted));
-                break;
-            }
-
-            int col = a.Col;
-            int row = a.Row;
-            Color color = a.Kind <= 2 ? UiKit.Bad : UiKit.Warn;
-
-            // A17 (tests 2026-11-20): the whole text, wrapped, instead of a line cut at the edge of the screen.
-            var b = new PanelContainer { TooltipText = "Click to go there.", MouseFilter = Control.MouseFilterEnum.Stop, MouseDefaultCursorShape = Control.CursorShape.PointingHand };
-            StyleBoxFlat normal = UiKit.Flat(new Color(0.14f, 0.11f, 0.1f, 0.92f), color, 4, 2);
-            StyleBoxFlat hover = UiKit.Flat(new Color(0.22f, 0.17f, 0.14f, 0.95f), color, 4, 2);
-            b.AddThemeStyleboxOverride("panel", normal);
-            b.MouseEntered += () => b.AddThemeStyleboxOverride("panel", hover);
-            b.MouseExited += () => b.AddThemeStyleboxOverride("panel", normal);
-            var inner = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-            inner.AddThemeConstantOverride("separation", 6);
-            // 2026-11-23: a picture per kind of alert; for a good that is missing or full, the good's own picture.
-            Texture2D? alertPic = (a.Kind is 3 or 5) && a.Good >= 0 && _session?.PlayContent is { } pc && a.Good < pc.Goods.Count
-                ? UiKit.Picture?.Invoke("goods", "good_" + pc.Goods[a.Good].Key)
-                : null;
-            alertPic ??= UiKit.Picture?.Invoke("ui", "alert_" + a.Kind);
-            inner.AddChild(new Glyph(color, "!", alertPic is null ? 26 : 36, round: true, icon: alertPic) { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
-            Label text = UiKit.Label(a.Text, 13, UiKit.Text, wrap: true);
-            text.MouseFilter = Control.MouseFilterEnum.Ignore;
-            text.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            text.CustomMinimumSize = new Vector2(UiKit.W(380) - 60, 0);
-            text.VerticalAlignment = VerticalAlignment.Center;
-            inner.AddChild(text);
-            b.AddChild(inner);
-            int kind = a.Kind;
-            b.GuiInput += e =>
-            {
-                if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
-                {
-                    if (kind == 10)
-                    {
-                        OpenWindow("Research", toggle: false); // E2: nothing is researched: the tree opens
-                    }
-                    else
-                    {
-                        Focus(col, row);
-                    }
-                }
-            };
-            _alertsBox.AddChild(b);
-        }
-    }
 
     // A15: everything under the top bar starts where the bar ends (the goods may take two rows).
     private void UpdateUnderTop()

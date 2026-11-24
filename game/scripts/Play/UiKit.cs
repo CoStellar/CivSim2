@@ -88,6 +88,21 @@ public static class UiKit
     /// <summary>Needs a look.</summary>
     public static readonly Color Warn = new(1f, 0.82f, 0.35f);
 
+    /// <summary>Costs on the dark panels (Patryk, 2026-11-24: prices in their own colour, easy to find).</summary>
+    public static readonly Color Cost = new(1f, 0.55f, 0.5f);
+
+    /// <summary>Costs on the parchment of the tooltips.</summary>
+    public static readonly Color CostOnPaper = new(0.72f, 0.1f, 0.06f);
+
+    /// <summary>Times (building, training) on the parchment of the tooltips (Patryk, 2026-11-24: prices red, times blue).</summary>
+    public static readonly Color TimeOnPaper = new(0.1f, 0.3f, 0.66f);
+
+    // The facts of a tooltip that are times: their values are drawn in the time colour.
+    private static readonly HashSet<string> TimeKeys = ["Build time", "Time", "Training time"];
+
+    /// <summary>A price inside a tooltip's text: drawn in <see cref="CostOnPaper"/> by <see cref="RichTip"/>.</summary>
+    public static string CostMark(string text) => "⟦" + text + "⟧";
+
     private static readonly Dictionary<string, Color> GoodColors = new()
     {
         ["food"] = new Color("d9a441"),
@@ -186,7 +201,19 @@ public static class UiKit
                 label.PushColor(new Color(0.42f, 0.27f, 0.12f));
                 label.AddText(row[1..bar] + ":  ");
                 label.Pop();
-                AddRich(label, row[(bar + 1)..]);
+                string key = row[1..bar];
+                bool cost = CostKeys.Contains(key);
+                bool time = TimeKeys.Contains(key);
+                if (time)
+                {
+                    label.PushColor(TimeOnPaper);
+                }
+
+                AddRich(label, cost ? CostMark(row[(bar + 1)..]) : row[(bar + 1)..]);
+                if (time)
+                {
+                    label.Pop();
+                }
             }
             else
             {
@@ -200,19 +227,38 @@ public static class UiKit
         int fontSize = Ui.PixelTheme.FontSize;
         Font font = Font;
         float lines = 0;
-        foreach (string para in text.Replace("\u27EA", "WW").Replace("\u27EB", " ").Split('\n'))
+        float widest = 0;
+        foreach (string para in text.Replace("\u27EA", "WW").Replace("\u27EB", " ").Replace("\u27E6", "").Replace("\u27E7", "").Split('\n'))
         {
             float w = font.GetStringSize(para, HorizontalAlignment.Left, -1, para.StartsWith("# ", StringComparison.Ordinal) ? fontSize + 4 : fontSize).X;
             lines += Math.Max(1, MathF.Ceiling(w * 1.05f / width));
+            widest = Math.Max(widest, w);
         }
 
+        // A short tooltip (most buttons) is only as wide as its text (2026-11-24: every button has rich tooltips now).
+        width = Math.Min(width, (widest * 1.05f) + 16);
         label.CustomMinimumSize = new Vector2(width, (lines * (font.GetHeight(fontSize) + 4)) + 6);
         return label;
     }
 
-    // Text with goods and biomes marked by GoodMark drawn as their pictures.
+    // The facts of a tooltip that are prices: their values are drawn in the cost colour.
+    private static readonly HashSet<string> CostKeys = ["Cost", "Costs", "Price", "Upgrade cost", "Each worker uses", "Training cost", "Upkeep"];
+
+    // Text with goods and biomes marked by GoodMark drawn as their pictures, prices marked by CostMark in the cost colour.
     private static void AddRich(RichTextLabel label, string text)
     {
+        int c0 = text.IndexOf('⟦', StringComparison.Ordinal);
+        int c1 = c0 < 0 ? -1 : text.IndexOf('⟧', c0);
+        if (c0 >= 0 && c1 > c0)
+        {
+            AddRich(label, text[..c0]);
+            label.PushColor(CostOnPaper);
+            AddRich(label, text[(c0 + 1)..c1]);
+            label.Pop();
+            AddRich(label, text[(c1 + 1)..]);
+            return;
+        }
+
         int at = 0;
         while (at < text.Length)
         {
@@ -386,7 +432,7 @@ public static class UiKit
     /// <summary>A button without keyboard focus (so the map keeps the keys).</summary>
     public static Button Button(string text, Action act, string tooltip = "", bool enabled = true)
     {
-        var b = new Button { Text = text, FocusMode = Control.FocusModeEnum.None, TooltipText = tooltip, Disabled = !enabled };
+        var b = new RichTipButton { Text = text, FocusMode = Control.FocusModeEnum.None, TooltipText = tooltip, Disabled = !enabled };
         b.Pressed += act;
         return b;
     }
