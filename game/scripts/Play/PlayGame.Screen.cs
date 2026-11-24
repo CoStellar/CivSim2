@@ -119,22 +119,27 @@ public partial class PlayGame
 
         // A15 (tests 2026-11-20): the goods stop before the era in the middle and wrap onto more rows; the bar grows with them
         // and what sits under it moves down (UpdateUnderTop).
-        _resBox = new HFlowContainer { SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin, CustomMinimumSize = new Vector2(Math.Max(160, (screen.X / 2) - UiKit.W(240) - 16), 0) };
+        // 2026-11-24: three columns that cannot overlap at any interface size: the goods (they wrap), the era, the right group.
+        _resBox = new HFlowContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(160, 0) };
         _resBox.AddThemeConstantOverride("h_separation", 12);
         _resBox.AddThemeConstantOverride("v_separation", 2);
         topRow.AddChild(_resBox);
-        topRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore });
+        _topRow = topRow;
 
         // 2026-11-24 (Patryk): two rows at the right: time, speed and the game's buttons; under them the windows (keys 1-6),
         // which left the action bar at the bottom.
-        var rightRows = new VBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
+        // Both rows wrap button by button and share the width with the goods, so a large interface takes more rows, not
+        // more width (2026-11-24: at 150% the goods were squeezed into five rows).
+        var rightRows = new VBoxContainer { SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         rightRows.AddThemeConstantOverride("separation", 2);
         topRow.AddChild(rightRows);
-        var right = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
-        right.AddThemeConstantOverride("separation", 4);
+        var right = new HFlowContainer { Alignment = FlowContainer.AlignmentMode.End };
+        right.AddThemeConstantOverride("h_separation", 4);
+        right.AddThemeConstantOverride("v_separation", 2);
         rightRows.AddChild(right);
-        var windows = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
-        windows.AddThemeConstantOverride("separation", 4);
+        var windows = new HFlowContainer { Alignment = FlowContainer.AlignmentMode.End };
+        windows.AddThemeConstantOverride("h_separation", 4);
+        windows.AddThemeConstantOverride("v_separation", 2);
         rightRows.AddChild(windows);
         for (int i = 0; i < WindowNames.Length; i++)
         {
@@ -172,9 +177,10 @@ public partial class PlayGame
         right.AddChild(UiKit.Button("Menu", () => MenuRequested?.Invoke(), "Back to the start menu"));
 
         // Era and years in the middle of the top bar, over the bar.
-        var centre = _centreBox = new VBoxContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, OffsetLeft = -UiKit.W(240), OffsetRight = UiKit.W(240), OffsetTop = 0, MouseFilter = Control.MouseFilterEnum.Ignore };
+        var centre = _centreBox = new VBoxContainer { CustomMinimumSize = new Vector2(UiKit.W(320), 0), SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
         centre.AddThemeConstantOverride("separation", 0);
-        root.AddChild(centre);
+        _topRow.AddChild(centre);
+        _topRow.MoveChild(centre, 1); // between the goods and the right group
         _eraLabel = UiKit.Label("", 24, UiKit.Heading);
         _eraLabel.HorizontalAlignment = HorizontalAlignment.Center;
         centre.AddChild(_eraLabel);
@@ -531,7 +537,7 @@ public partial class PlayGame
         {
             _eraBarBox.SetMeta("sig", sig);
             UiKit.Clear(_eraBarBox);
-            _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, UiKit.W(460), PixelTheme.FontSize + 6, next));
+            _eraBarBox.AddChild(UiKit.Bar(progress, UiKit.Heading, UiKit.W(320), PixelTheme.FontSize + 6, next));
         }
 
         _researchChip.Text = v.Researching >= 0 ? $"Researching {c.Techs[v.Researching].Name} {v.ResearchPermille / 10}%" : "Choose research (2)";
@@ -567,6 +573,7 @@ public partial class PlayGame
 
     private string _resLayout = "";
     private VBoxContainer _centreBox = null!;
+    private HBoxContainer _topRow = null!;
     private StyleBoxFlat? _chipPulse;
 
     private void UpdateAdvisor(PlayViewMessage v)
