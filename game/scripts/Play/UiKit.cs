@@ -98,7 +98,7 @@ public static class UiKit
     public static readonly Color TimeOnPaper = new(0.1f, 0.3f, 0.66f);
 
     // The facts of a tooltip that are times: their values are drawn in the time colour.
-    private static readonly HashSet<string> TimeKeys = ["Build time", "Time", "Training time"];
+    private static readonly HashSet<string> TimeKeys = ["Build time", "Time", "Training time", "Research time"];
 
     /// <summary>A price inside a tooltip's text: drawn in <see cref="CostOnPaper"/> by <see cref="RichTip"/>.</summary>
     public static string CostMark(string text) => "⟦" + text + "⟧";
@@ -273,7 +273,16 @@ public static class UiKit
             label.AddText(text[at..open]);
             string key = text[(open + 1)..close];
             int h = Ui.PixelTheme.FontSize + 6;
-            if (key.StartsWith("b:", StringComparison.Ordinal))
+            if (key.StartsWith("p:", StringComparison.Ordinal))
+            {
+                // Any picture by "layer/name" (2026-11-24: buildings and units in a technology's tooltip).
+                if (PictureOf(key[2..]) is { } pic)
+                {
+                    label.AddImage(pic, h, h, null, InlineAlignment.Center);
+                    label.AddText(" ");
+                }
+            }
+            else if (key.StartsWith("b:", StringComparison.Ordinal))
             {
                 // A piece of the biome's own tile (Patryk, 2026-11-23: easier to tell which biome it is).
                 if (Picture?.Invoke("biome", $"biome_{key[2..]}_01") is { } tile)

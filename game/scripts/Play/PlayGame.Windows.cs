@@ -179,9 +179,35 @@ public partial class PlayGame
         // The tooltip (Patryk, 2026-11-23): the name, what it gives, then the facts one a line.
         var tip = new StringBuilder("# " + info.Name + (info.Upgrade ? " (upgrade of its era)" : ""));
         tip.Append($"\n{info.Gives}");
-        if (info.Unlocks.Length > 0)
+
+        // 2026-11-24 (Patryk): what it unlocks with pictures and names, one kind a line.
+        string Named(IEnumerable<(string Pic, string Name)> things) => string.Join(", ", things.Select(t => UiKit.GoodMark("p:" + t.Pic) + t.Name.Replace(' ', ' ')));
+        var newBuildings = c.Buildings.Where(x => x.Id != 0 && x.Tech == info.Id).Select(x => ("buildings/building_" + x.Key, x.Name)).ToList();
+        var newUnits = c.Units.Where(x => x.Tech == info.Id && x.Tech > 0).Select(x => ("units/unit_" + x.Key, x.Name)).ToList();
+        var newWorks = (c.Roads ?? []).Where(x => x.Tech == info.Id).Select(x => ("works/work_icon_" + (x.Level == 1 ? "track" : "road"), x.Name))
+            .Concat((c.Works ?? []).Where(x => x.Tech == info.Id).Select(x => ("works/work_icon_" + x.Key, x.Name))).ToList();
+        if (newBuildings.Count + newUnits.Count + newWorks.Count > 0)
         {
-            tip.Append($"\n{info.Unlocks}");
+            tip.Append('\n');
+        }
+        else if (info.Unlocks.Length > 0)
+        {
+            tip.Append($"\n{info.Unlocks}"); // nothing to picture (an upgrade, a rule): the words
+        }
+
+        if (newBuildings.Count > 0)
+        {
+            tip.Append($"\n@Buildings|{Named(newBuildings)}");
+        }
+
+        if (newUnits.Count > 0)
+        {
+            tip.Append($"\n@Units|{Named(newUnits)}");
+        }
+
+        if (newWorks.Count > 0)
+        {
+            tip.Append($"\n@Roads and works|{Named(newWorks)}");
         }
 
         tip.Append('\n');
