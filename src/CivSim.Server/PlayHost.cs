@@ -199,6 +199,15 @@ public sealed class PlayHost : IDisposable
             Receive(client);
         }
 
+        // A player who leaves hands the civilization back to the AI (abuse tests 2026-11-24: it stood still for ever).
+        foreach (PlayClient gone in _clients)
+        {
+            if (!gone.Connection.IsOpen && gone.Civ >= 0 && gone.Civ < _game.Civs.Count && !_game.Civs[gone.Civ].Dead)
+            {
+                _game.Civs[gone.Civ].IsAi = true;
+            }
+        }
+
         _clients.RemoveAll(c => !c.Connection.IsOpen);
     }
 
@@ -298,7 +307,20 @@ public sealed class PlayHost : IDisposable
         {
             switch (message)
             {
-                case HelloMessage:
+                case HelloMessage hello:
+                    // Abuse tests 2026-11-24: a second Hello took the next civilization (and left the first with nobody, AI off),
+                    // and a client of another protocol version was let in.
+                    if (client.Civ >= 0)
+                    {
+                        break;
+                    }
+
+                    if (hello.ProtocolVersion != ProtocolInfo.Version)
+                    {
+                        client.Connection.Send(new ConnectionRejectedMessage($"This game speaks protocol {ProtocolInfo.Version}; the client speaks {hello.ProtocolVersion}."));
+                        break;
+                    }
+
                     // Each player leads the next free people; the AI hands it over (multiplayer from the start, ADR 0028).
                     client.Civ = NextFreeCiv();
                     if (client.Civ < 0)
@@ -363,6 +385,7 @@ public sealed class PlayHost : IDisposable
 
     private PlayClient? _pausedBy;
     private long _pausedAt;
+    private readonly Dictionary<int, int> _pausesUsed = [];
 
     private int NextFreeCiv()
     {
@@ -395,12 +418,14 @@ public sealed class PlayHost : IDisposable
                 return null;
             }
 
-            if (client.PausesUsed >= PausesPerPlayer)
+            // Counted per civilization, so leaving and joining again gives no new pauses (abuse tests 2026-11-24).
+            int used = _pausesUsed.GetValueOrDefault(client.Civ);
+            if (used >= PausesPerPlayer)
             {
                 return $"You have used your {PausesPerPlayer} pauses.";
             }
 
-            client.PausesUsed++;
+            _pausesUsed[client.Civ] = used + 1;
             _pausedBy = client;
             _pausedAt = Stopwatch.GetTimestamp();
             _speed = speed;
@@ -1653,7 +1678,5 @@ public sealed class PlayHost : IDisposable
         public bool ViewSoon { get; set; }
 
         public bool SawPicking { get; set; }
-
-        public int PausesUsed { get; set; }
     }
 }
