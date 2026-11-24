@@ -174,9 +174,18 @@ public partial class StartMenu : CanvasLayer
 
     private HBoxContainer _footer = null!;
 
+    /// <summary>A message shown once at the top of the menu (why a game could not start).</summary>
+    public static string? Notice { get; set; }
+
     private void Fill()
     {
         _manual = null;
+        if (Notice is { Length: > 0 } notice)
+        {
+            Notice = null;
+            _content.AddChild(new Label { Text = notice, Modulate = new Color(1f, 0.5f, 0.45f), AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        }
+
         switch (_section)
         {
             case "load":
@@ -271,13 +280,30 @@ public partial class StartMenu : CanvasLayer
             _content.AddChild(row);
             var load = new Button { Text = "Load", CustomMinimumSize = new Vector2(100, 36) };
             string file = path;
-            load.Pressed += () => PlayRequested?.Invoke(new PlayOptions(0) { LoadPath = file });
+            var problem = new Label { Modulate = new Color(1f, 0.5f, 0.45f), Visible = false, AutowrapMode = TextServer.AutowrapMode.WordSmart };
+            load.Pressed += () =>
+            {
+                // A damaged or edited save is refused here with its reason, instead of a game that stops while loading.
+                try
+                {
+                    PlaySaves.Read(file);
+                }
+                catch (Exception e) when (e is System.IO.InvalidDataException or System.IO.IOException or UnauthorizedAccessException)
+                {
+                    problem.Text = "This save cannot be loaded: " + e.Message;
+                    problem.Visible = true;
+                    return;
+                }
+
+                PlayRequested?.Invoke(new PlayOptions(0) { LoadPath = file });
+            };
             row.AddChild(load);
             row.AddChild(new Label
             {
                 Text = string.Create(CultureInfo.InvariantCulture, $"{name}  -  minute {minute}, {era}  -  {at.ToLocalTime():yyyy-MM-dd HH:mm}"),
                 SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             });
+            _content.AddChild(problem);
         }
 
         var open = new Button { Text = "Open saves folder", TooltipText = PlaySaves.Folder, SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
