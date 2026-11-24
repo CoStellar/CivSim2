@@ -107,15 +107,16 @@ public static class SimReport
         int minutes = Arg(args, "--minutes", 40);
         int peoples = Arg(args, "--peoples", 4);
         (int width, int height) = Size(args);
+        bool fairOres = !args.Contains("--realistic-ores");
         string? csv = args.SkipWhile(a => a != "--csv").Skip(1).FirstOrDefault();
         string? aiLog = args.SkipWhile(a => a != "--ai-log").Skip(1).FirstOrDefault();
         SimContent content = SimContent.Load();
         var rows = new Row[seeds];
         var parallel = new ParallelOptions { MaxDegreeOfParallelism = args.Contains("--serial") ? 1 : Environment.ProcessorCount };
-        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, peoples, width, height, aiLog is not null));
+        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, peoples, width, height, aiLog is not null, fairOres));
 
         CultureInfo inv = CultureInfo.InvariantCulture;
-        output.WriteLine(string.Create(inv, $"New game AI: {seeds} seeds, {peoples} peoples, {minutes} minutes each (map {width}x{height})."));
+        output.WriteLine(string.Create(inv, $"New game AI: {seeds} seeds, {peoples} peoples, {minutes} minutes each (map {width}x{height}, {(fairOres ? "fair" : "realistic")} ores)."));
         output.WriteLine("seed  people  settl  units  soldiers  dead  era   neolithic  hungry%  wars  buildings  techs");
         foreach (Row r in rows)
         {
@@ -254,9 +255,9 @@ public static class SimReport
         return (98, 60);
     }
 
-    private static Row Play(SimContent content, ulong seed, int minutes, int peoples, int width, int height, bool log)
+    private static Row Play(SimContent content, ulong seed, int minutes, int peoples, int width, int height, bool log, bool fairOres)
     {
-        SimGame g = SimGame.Create(content, new SimSettings(seed, width, height, peoples));
+        SimGame g = SimGame.Create(content, new SimSettings(seed, width, height, peoples) { FairOres = fairOres });
         g.AiLogOn = log;
         int truceBroken = 0;
         int[][] eraAt = [.. Enumerable.Range(0, content.Eras.Count).Select(e => Enumerable.Repeat(e == 0 ? 0 : -1, g.Civs.Count).ToArray())];

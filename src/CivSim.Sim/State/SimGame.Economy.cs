@@ -386,14 +386,19 @@ public sealed partial class SimGame
                 }
 
                 s.Stock[g] = stock;
-                if (stock < SimContent.One)
+                long bit = 1L << g;
+
+                // P1 (tests 2026-11-24): a store at the edge keeps its state until it is clearly past it, so its makers and users
+                // are not woken and put to sleep (and the whole people recomputed) every second.
+                if (stock < SimContent.One || ((s.EmptyMask & bit) != 0 && stock < Content.StoreStillEmptyBelow))
                 {
-                    empty |= 1L << g;
+                    empty |= bit;
                 }
 
-                if (s.Capacity[g] > 0 && stock * 100 >= s.Capacity[g] * 98)
+                if (s.Capacity[g] > 0 && (stock * 100 >= s.Capacity[g] * Content.StoreFullPercent
+                    || ((s.FullMask & bit) != 0 && stock * 100 >= s.Capacity[g] * Content.StoreStillFullPercent)))
                 {
-                    full |= 1L << g;
+                    full |= bit;
                 }
             }
 

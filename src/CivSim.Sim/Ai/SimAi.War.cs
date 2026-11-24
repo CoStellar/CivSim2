@@ -37,7 +37,7 @@ public static partial class SimAi
         {
             want = want * (100 + g.Content.AiWar.FearArmyPercent) / 100; // P2 (2026-11-23): a neighbour with a bad name: more guards
         }
-        if (soldiers >= want || NetFood(g, civ) < 2 * SimContent.One || Small(g, civ))
+        if (soldiers >= want || NetFood(g, civ) < g.Content.AiAmount.WarNetFood || Small(g, civ))
         {
             return;
         }

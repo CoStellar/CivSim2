@@ -53,7 +53,7 @@ public static partial class SimAi
         long food = NetFood(g, civ);
         bool lean = ShortOfFood(g, civ, eating);
         int sites = 1 + (civ.People / Math.Max(1, g.Content.AiFoodSitesPerPeople));
-        if ((food < 3 * SimContent.One || civ.Hungry || lean) && Building(g, civ, FoodBuildings, sites) < sites && (civ.Hungry || Count(g, civ, FoodBuildings) <= civ.People / 5))
+        if ((food < g.Content.AiAmount.LowFood || civ.Hungry || lean) && Building(g, civ, FoodBuildings, sites) < sites && (civ.Hungry || Count(g, civ, FoodBuildings) <= civ.People / 5))
         {
             // Hungry: what feeds fastest and needs no tools comes first.
             foreach (string k in civ.Hungry ? ["gatherers_hut", "hunters_lodge", "fishing_hut", "farm", "pasture"] : FoodBuildings)
@@ -318,7 +318,7 @@ public static partial class SimAi
             // ai.inputMakerStoreMinutes of the shortfall (was: under 20, so a big store spread over the settlements stopped
             // new makers while iron was made at a sixth of its use).
             long shortfall = b.Consumes[i] <= 0 ? 0 : Demand(g, civ, i) - civ.MadeRate[i];
-            if (shortfall <= 0 || civ.Stock[i] >= Math.Max(20 * SimContent.One, shortfall * g.Content.AiInputMakerStoreMinutes))
+            if (shortfall <= 0 || civ.Stock[i] >= Math.Max(g.Content.AiAmount.LowGood, shortfall * g.Content.AiInputMakerStoreMinutes))
             {
                 continue;
             }
@@ -437,11 +437,11 @@ public static partial class SimAi
                 foreach (BuildingType b in g.Content.Buildings)
                 {
                     // N23 (2026-11-19): a teacher that lacks its inputs (a toolmaker with no stone) asks for their maker first.
-                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && b.Consumes.Length > 0 && !NoInputsMissing(civ, b) && SimGame.Knows(civ, b))
+                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && b.Consumes.Length > 0 && !NoInputsMissing(g, civ, b) && SimGame.Knows(civ, b))
                     {
                         for (int i = 0; i < b.Consumes.Length; i++)
                         {
-                            if (b.Consumes[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < 20 * SimContent.One)
+                            if (b.Consumes[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < g.Content.AiAmount.LowGood)
                             {
                                 foreach (string k in Makers(g, g.Content.Goods[i].Key))
                                 {
@@ -455,7 +455,7 @@ public static partial class SimAi
                         }
                     }
 
-                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && (b.Consumes.Length == 0 || NoInputsMissing(civ, b)))
+                    if (b.Id > 0 && b.Tech == req && b.Workers > 0 && (b.Consumes.Length == 0 || NoInputsMissing(g, civ, b)))
                     {
                         if (Buildable(g, civ, b) && !(missingOnly && Has(g, civ, b.Key)))
                         {
@@ -802,11 +802,11 @@ public static partial class SimAi
         return true;
     }
 
-    private static bool NoInputsMissing(Civ civ, BuildingType b)
+    private static bool NoInputsMissing(SimGame g, Civ civ, BuildingType b)
     {
         for (int i = 0; i < b.Consumes.Length; i++)
         {
-            if (b.Consumes[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < 20 * SimContent.One)
+            if (b.Consumes[i] > 0 && civ.Rate[i] <= 0 && civ.Stock[i] < g.Content.AiAmount.LowGood)
             {
                 return false;
             }

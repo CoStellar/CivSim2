@@ -476,6 +476,11 @@ public sealed partial class SimGame
     /// </summary>
     internal void StartMetals(Civ civ, int center)
     {
+        if (!Settings.FairOres)
+        {
+            return; // realistic ores (2026-11-24): only what the world made
+        }
+
         foreach (StartDeposit want in Content.StartDeposits)
         {
             var ring = new HexCoord[HexGlobe.RangeSize(want.Max)];

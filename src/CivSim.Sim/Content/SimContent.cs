@@ -873,6 +873,9 @@ public sealed class SimContent
     /// </summary>
     public int AiInputMakerStoreMinutes { get; init; } = 10;
 
+    /// <summary>Amounts the AI decides by, in hundredths (A3, tests 2026-11-24: they were written in its code; ai.amounts).</summary>
+    public AiAmounts AiAmount { get; init; } = new();
+
     /// <summary>Prospectors the AI keeps while workshops lack an ore no known free deposit gives (known-issues 13); else one.</summary>
     public int AiStarvedProspectors { get; init; } = 2;
 
@@ -1055,6 +1058,15 @@ public sealed class SimContent
 
     /// <summary>Room every finished building adds when its type gives none of its own, hundredths.</summary>
     public long BuildingStorage { get; init; }
+
+    /// <summary>A good counts as full from this percent of its room (P1, tests 2026-11-24).</summary>
+    public int StoreFullPercent { get; init; } = 98;
+
+    /// <summary>A full good stays full until it falls below this percent of its room.</summary>
+    public int StoreStillFullPercent { get; init; } = 90;
+
+    /// <summary>An empty good (below one unit) stays empty until it reaches this many hundredths.</summary>
+    public long StoreStillEmptyBelow { get; init; } = 3 * One;
 
     /// <summary>Unit kind of porters.</summary>
     public int Porters { get; init; }
@@ -1967,6 +1979,7 @@ public sealed class SimContent
             AiInputRouteTripMinutes = root.TryProp("ai", out JsonElement aiEl6) && aiEl6.TryProp("inputRouteTripMinutes", out JsonElement irt) ? irt.GetInt32() : 3,
             AiInputRouteTargetMinutes = root.TryProp("ai", out JsonElement aiEl7) && aiEl7.TryProp("inputRouteTargetMinutes", out JsonElement irg) ? irg.GetInt32() : 6,
             AiInputRouteKeepMinutes = root.TryProp("ai", out JsonElement aiEl8) && aiEl8.TryProp("inputRouteKeepMinutes", out JsonElement irk) ? irk.GetInt32() : 2,
+            AiAmount = AiAmounts.Read(root.Prop("ai").Prop("amounts"), Hundredths),
             AiInputMakerStoreMinutes = root.TryProp("ai", out JsonElement aiEl10) && aiEl10.TryProp("inputMakerStoreMinutes", out JsonElement ims) ? ims.GetInt32() : 10,
             AiStarvedProspectors = root.TryProp("ai", out JsonElement aiEl11) && aiEl11.TryProp("starvedProspectors", out JsonElement asp) ? asp.GetInt32() : 2,
             AiInputRoutesPerSettlement = root.TryProp("ai", out JsonElement aiEl9) && aiEl9.TryProp("inputRoutesPerSettlement", out JsonElement irs) ? irs.GetInt32() : 4,
@@ -2013,6 +2026,9 @@ public sealed class SimContent
             AdvisorUpkeep = Hundredths(advisors.Prop("upkeepFoodPerMinute")),
             AdvisorFields = fields,
             BuildingStorage = Hundredths(root.Prop("buildingStorage")),
+            StoreFullPercent = root.Prop("stores").Prop("fullPercent").GetInt32(),
+            StoreStillFullPercent = root.Prop("stores").Prop("stillFullPercent").GetInt32(),
+            StoreStillEmptyBelow = Hundredths(root.Prop("stores").Prop("stillEmptyBelow")),
             Porters = units.FindIndex(x => x.Key == "porters"),
             Caravans = units.FindIndex(x => x.Key == "caravan"),
             TradeTech = techKeys.IndexOf(root.Prop("diplomacy").Prop("tradeTech").GetString()!),
@@ -2234,4 +2250,48 @@ public sealed record AiWarRules
 
     /// <summary>Only the most warlike (aggression at least this) attack without declaring war.</summary>
     public int SurpriseAggression { get; init; } = 75;
+}
+
+/// <summary>Amounts the AI decides by (ai.amounts in game.json, whole units there, hundredths here); see the comment in the data.</summary>
+public sealed class AiAmounts
+{
+    public long LowFood { get; init; } = 3 * SimContent.One;
+
+    public long LowGood { get; init; } = 20 * SimContent.One;
+
+    public long LowTools { get; init; } = 10 * SimContent.One;
+
+    public long FoodSourceKeep { get; init; } = 60 * SimContent.One;
+
+    public long FoodSendAtLeast { get; init; } = 40 * SimContent.One;
+
+    public long ShareLow { get; init; } = 10 * SimContent.One;
+
+    public long ShareKeep { get; init; } = 20 * SimContent.One;
+
+    public long ShareMargin { get; init; } = 5 * SimContent.One;
+
+    public long ShareTrip { get; init; } = 30 * SimContent.One;
+
+    public long RouteSourceLow { get; init; } = 10 * SimContent.One;
+
+    public long UnitSupplyHomeKeep { get; init; } = 40 * SimContent.One;
+
+    public long WarNetFood { get; init; } = 2 * SimContent.One;
+
+    internal static AiAmounts Read(System.Text.Json.JsonElement e, Func<System.Text.Json.JsonElement, long> hundredths) => new()
+    {
+        LowFood = hundredths(e.Prop("lowFood")),
+        LowGood = hundredths(e.Prop("lowGood")),
+        LowTools = hundredths(e.Prop("lowTools")),
+        FoodSourceKeep = hundredths(e.Prop("foodSourceKeep")),
+        FoodSendAtLeast = hundredths(e.Prop("foodSendAtLeast")),
+        ShareLow = hundredths(e.Prop("shareLow")),
+        ShareKeep = hundredths(e.Prop("shareKeep")),
+        ShareMargin = hundredths(e.Prop("shareMargin")),
+        ShareTrip = hundredths(e.Prop("shareTrip")),
+        RouteSourceLow = hundredths(e.Prop("routeSourceLow")),
+        UnitSupplyHomeKeep = hundredths(e.Prop("unitSupplyHomeKeep")),
+        WarNetFood = hundredths(e.Prop("warNetFood")),
+    };
 }

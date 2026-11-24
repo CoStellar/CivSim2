@@ -19,6 +19,9 @@ d['goods'] = [
  {"key":"charcoal","name":"Charcoal","worth":2},{"key":"bricks","name":"Bricks","worth":3},{"key":"wool","name":"Wool","worth":1.5},
  {"key":"cloth","name":"Cloth","worth":4},{"key":"planks","name":"Planks","worth":2.5},{"key":"mortar","name":"Mortar","worth":3}]
 d['buildingStorage'] = 20
+# Stores (tests 2026-11-24, P1): a good counts as full from fullPercent of its room until it falls below stillFullPercent, and as
+# empty below 1 until it reaches stillEmptyBelow, so a store at the edge does not wake and put its makers to sleep every second.
+d['stores'] = {"comment":"A good is full from fullPercent of the room until it falls below stillFullPercent; empty below 1 until it reaches stillEmptyBelow (whole units).","fullPercent":98,"stillFullPercent":90,"stillEmptyBelow":3}
 EXTRA = " Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools)."
 d['comment'] = (d['comment'].split(" Storage: goods lie")[0] + EXTRA).replace("idle people forage idleForagePerMinute each", "people told to gather pick up food, wood and stone around their settlement (forage)")
 d['diplomacy']['tradeTech'] = "barter"
@@ -292,7 +295,9 @@ for b_ in d["buildings"]:
     if b_["key"]=="castle": b_["guard"]=40
 d["ruins"]={"comment":"A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.","emptySeconds":60,"rebuildPercent":50}
 # Every start has copper and tin near it (Patryk, 2026-11-19, M4): placed on free land when the map has none within max hexes.
-d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":5,"max":12,"depth":1,"size":"small"},{"deposit":"iron_ore","min":15,"max":20,"depth":1}]  # iron: 7A, 2026-11-20; tin small: 2026-11-22
+# iron: 7A, 2026-11-20; tin small: 2026-11-22. Fair ores (Patryk, 2026-11-24, tests G1): tin within 8 and iron within 12 hexes
+# (were 5-12 and 15-20: the map decided who reached the Middle Ages). Only in the fair mode; the realistic mode adds none.
+d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":4,"max":8,"depth":1,"size":"small"},{"deposit":"iron_ore","min":9,"max":12,"depth":1}]
 # Lodes (Patryk, 2026-11-22): deposit sizes, regions of rare ores, ore signs from Prospecting.
 d["lodes"]={"comment":"sizes: every deposit is small, medium or large (a mine or a bonus on it gives percent of the usual), drawn by weight; inside a region of its kind by regionWeight. regional: these deposits gather in regions: `regions` centres per 10000 land hexes, each `regionHexes` around; outside them only outsideKeepPercent of the deposits stay, and as many are added inside. signs: Prospecting shows, for each ore of the people's era (eras), up to perOre circles of signRadius hexes on land the people has seen within reachHexes of its settlements; the ore lies in the circle, its centre is moved up to offsetHexes away. Signs are worked out every recountSeconds.",
   "sizes":[{"key":"small","name":"small","percent":50,"weight":20,"regionWeight":10},{"key":"medium","name":"medium","percent":100,"weight":50,"regionWeight":45},{"key":"large","name":"large","percent":150,"weight":30,"regionWeight":45}],
@@ -445,6 +450,9 @@ if "inputRouteTripMinutes:" not in d["ai"]["comment"]:
     d["ai"]["comment"]+=" inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have."
 # 2026-11-23: another maker of a short input until the store lasts 10 minutes of the shortfall (was: until 20 in store).
 d["ai"]["inputMakerStoreMinutes"]=10
+# A3 (tests 2026-11-24): amounts the AI code used to hold (whole units).
+d["ai"]["amounts"]={"comment":"Whole units the AI decides by. lowFood: below it the AI builds food first. lowGood: a good it uses below this (and not made) is short: it builds a maker or asks for a trade. lowTools: builds a toolmaker below it. foodSourceKeep: a settlement sending food keeps at least this. foodSendAtLeast: a caravan of food carries at least this. shareLow: a workshop's input below this calls a caravan from the richest settlement, which keeps shareKeep plus shareMargin; a caravan carries shareTrip. routeSourceLow: an input route whose source falls below this (and makes none) ends; a route trip carries at least this. unitSupplyHomeKeep: a home settlement supplies its unit only while keeping this much food beyond twice the load. warNetFood: no new soldiers while food made a minute exceeds eating by less than this.",
+ "lowFood":3,"lowGood":20,"lowTools":10,"foodSourceKeep":60,"foodSendAtLeast":40,"shareLow":10,"shareKeep":20,"shareMargin":5,"shareTrip":30,"routeSourceLow":10,"unitSupplyHomeKeep":40,"warNetFood":2}
 if "inputMakerStoreMinutes:" not in d["ai"]["comment"]:
     d["ai"]["comment"]+=" inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall."
 # 2026-11-23 (known-issues 13): workshops idle for an ore no known deposit gives: more prospectors, looking farther.
