@@ -32,6 +32,33 @@ public partial class PlayGame
         }
     }
 
+    /// <summary>Screenshots: presses "Send one caravan" in the open window.</summary>
+    public void ScriptCaravanSend()
+    {
+        if (FindButton(_windowBox, "Send one caravan") is { } b)
+        {
+            b.EmitSignal(BaseButton.SignalName.Pressed);
+        }
+    }
+
+    private static Button? FindButton(Node n, string text)
+    {
+        if (n is Button b && b.Text == text)
+        {
+            return b;
+        }
+
+        foreach (Node child in n.GetChildren())
+        {
+            if (FindButton(child, text) is { } found)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
     // Opens the window for a settlement of ours; asking (true) or sending (false) first.
     private void OpenCaravans(int settlement, bool ask, int good = -1)
     {
@@ -143,9 +170,17 @@ public partial class PlayGame
         items.Add(new LineItem($"{amount} {goodName}: {from.Name} → {to.Name}", UiKit.Heading, 15));
         items.Add(new ButtonsItem(
         [
-            new ActItem("One caravan", () => _session!.Play(PlayCommandKind.SendCaravan, f, gd, flag: false, b: t, c: amount),
+            new ActItem("Send one caravan", () =>
+                {
+                    _session!.Play(PlayCommandKind.SendCaravan, f, gd, flag: false, b: t, c: amount);
+                    Toast($"Caravan sent: {amount} {goodName}, {from.Name} → {to.Name}.", good: true); // a refusal replaces it in red
+                },
                 $"# One caravan\nIt takes {amount} {goodName} from {from.Name} to {to.Name} along the shortest way and comes back.\nIt walks on the map and can be raided.", !from.Besieged && !to.Besieged, UiKit.Good),
-            new ActItem("Standing route", () => _session!.Play(PlayCommandKind.Route, f, gd, _routeKeep, flag: false, b: t, c: amount, d: _routeUntil),
+            new ActItem("Start a standing route", () =>
+                {
+                    _session!.Play(PlayCommandKind.Route, f, gd, _routeKeep, flag: false, b: t, c: amount, d: _routeUntil);
+                    Toast($"Route set: {amount} {goodName} a trip, {from.Name} → {to.Name}. It is in the list below.", good: true);
+                },
                 $"# Standing route\nA caravan keeps carrying {amount} {goodName} a trip while {from.Name} keeps {_routeKeep}" + (_routeUntil > 0 ? $" and {to.Name} has fewer than {_routeUntil}." : ".") + "\nThe limits are set below.", !from.Besieged && !to.Besieged),
             new ActItem("Route along a drawn way", () => { ArmDraw(DrawMode.Route, (f, t, gd)); OpenWindow(""); },
                 $"Draw over the hexes the way the caravans take from {from.Name} to {to.Name}."),

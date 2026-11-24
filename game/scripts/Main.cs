@@ -287,7 +287,7 @@ public partial class Main : Node2D
             }
             else if (_playWindow == "Caravans")
             {
-                demo = [(_playSeconds - 1.5, g => g.ScriptCaravans())];
+                demo = [(_playSeconds - 2.5, g => g.ScriptCaravans()), (_playSeconds - 1.2, g => g.ScriptCaravanSend())];
             }
             else if (_playWindow == "Help")
             {
