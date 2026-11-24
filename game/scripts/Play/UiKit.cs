@@ -311,10 +311,10 @@ public static class UiKit
     private static readonly Dictionary<Texture2D, Texture2D> TrimmedCache = [];
 
     /// <summary>A portrait ("portraits/name") in a people's colour (-1: ours), uncut, or null.</summary>
-    public static Texture2D? PortraitOf(string? pic, int civ = -1)
+    public static Texture2D? PortraitOf(string? pic, int civ = -1, bool grey = false)
     {
         int slash = pic?.IndexOf('/') ?? -1;
-        return slash <= 0 ? null : CivPicture?.Invoke(pic![..slash], pic[(slash + 1)..], civ, false);
+        return slash <= 0 ? null : CivPicture?.Invoke(pic![..slash], pic[(slash + 1)..], civ, grey);
     }
 
     /// <summary>Puts a small picture ("layer/name", ours in colour) at the left of a button's text; nothing when missing.</summary>

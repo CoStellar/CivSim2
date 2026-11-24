@@ -366,9 +366,11 @@ internal static class UiRender
             {
                 var row = new HBoxContainer();
                 row.AddThemeConstantOverride("separation", 8);
-                if (h.Portrait && UiKit.PortraitOf(h.Pic, h.PicCiv) is { } portrait)
+                if (h.Portrait && UiKit.PortraitOf(h.Pic, h.PicCiv, h.PicGrey) is { } portrait)
                 {
-                    row.AddChild(new TextureRect { Texture = portrait, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest, SizeFlagsVertical = Control.SizeFlags.ShrinkBegin });
+                    // Small pictures (emblems, 40x40) at twice their size, pixels kept square; portraits as they are.
+                    float k = portrait.GetWidth() <= 48 ? 2 : 1;
+                    row.AddChild(new TextureRect { Texture = portrait, ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, CustomMinimumSize = portrait.GetSize() * k, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest, SizeFlagsVertical = Control.SizeFlags.ShrinkBegin });
                 }
                 else
                 {

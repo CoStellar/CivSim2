@@ -689,7 +689,7 @@ public partial class PlayGame
 
     private void PeoplesItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
-        items.Add(new HeaderItem("Our people", c.Eras[v.Era], new Color("c8a050"), "Us", UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), v.Civ), v.Civ));
+        items.Add(new HeaderItem("Our people", c.Eras[v.Era], new Color("c8a050"), "Us", UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), v.Civ), v.Civ, Portrait: true));
         if (v.Peoples.Count == 0)
         {
             items.Add(new LineItem("We have met no other civilization yet. Send scouts to find them.", UiKit.Muted, 15));
@@ -700,7 +700,7 @@ public partial class PlayGame
             int other = p.Civ;
             string status = p.Dead ? "gone" : p.AtWar ? "AT WAR" : p.Alliance ? "allies" : p.Trade ? "trade partners" : "at peace";
             // 2026-11-24 (Patryk): each people's emblem, in the look of our era (board, stone, shield, banner, heraldry).
-            items.Add(new HeaderItem(p.Name, status + (p.Reputation < 0 ? $" - known for treachery ({p.Reputation})" : ""), p.AtWar ? new Color("b84040") : new Color("6a7a5a"), UiKit.Short(p.Name), UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), p.Civ), p.Civ, p.Dead));
+            items.Add(new HeaderItem(p.Name, status + (p.Reputation < 0 ? $" - known for treachery ({p.Reputation})" : ""), p.AtWar ? new Color("b84040") : new Color("6a7a5a"), UiKit.Short(p.Name), UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), p.Civ), p.Civ, p.Dead, Portrait: true));
             if (p.Dead)
             {
                 continue;
