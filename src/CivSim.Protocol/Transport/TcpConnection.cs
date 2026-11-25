@@ -66,6 +66,7 @@ public sealed class TcpConnection : IConnection, IDisposable
     private readonly Thread _reader;
     private readonly Thread _writer;
     private int _closed;
+    private int _draining;
     private long _bytesSent;
     private long _bytesReceived;
     private long _rawBytesSent;
@@ -124,7 +125,7 @@ public sealed class TcpConnection : IConnection, IDisposable
     public System.Net.IPAddress? RemoteIp { get; }
 
     /// <inheritdoc />
-    public bool IsOpen => Volatile.Read(ref _closed) == 0;
+    public bool IsOpen => Volatile.Read(ref _closed) == 0 && Volatile.Read(ref _draining) == 0;
 
     /// <summary>Why the connection closed (null while open, or when this side closed it).</summary>
     public string? CloseReason => Volatile.Read(ref _closeReason);
@@ -182,7 +183,27 @@ public sealed class TcpConnection : IConnection, IDisposable
     }
 
     /// <inheritdoc />
-    public void Close() => Shut(null);
+    /// <remarks>Messages already sent still go out (a refusal with its reason), for at most <see cref="DrainTimeout"/>.</remarks>
+    public void Close()
+    {
+        if (Interlocked.Exchange(ref _draining, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _outboxSignal.Release();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        _ = System.Threading.Tasks.Task.Delay(DrainTimeout).ContinueWith(_ => Shut(null), System.Threading.Tasks.TaskScheduler.Default);
+    }
+
+    /// <summary>Longest time <see cref="Close"/> waits for the messages already sent.</summary>
+    public static readonly TimeSpan DrainTimeout = TimeSpan.FromSeconds(2);
 
     /// <inheritdoc />
     public void Dispose()
@@ -247,7 +268,7 @@ public sealed class TcpConnection : IConnection, IDisposable
 
             _socket.ReceiveTimeout = 0;
             byte[] header = new byte[4];
-            while (IsOpen)
+            while (Volatile.Read(ref _closed) == 0)
             {
                 if (!ReadExactly(header))
                 {
@@ -345,8 +366,15 @@ public sealed class TcpConnection : IConnection, IDisposable
             Write(hello);
             byte[] header = new byte[4];
             byte[] packBuffer = [];
-            while (IsOpen)
+            while (Volatile.Read(ref _closed) == 0)
             {
+                if (Volatile.Read(ref _draining) != 0 && _outbox.IsEmpty)
+                {
+                    _stream.Flush();
+                    Shut(null); // Close: everything sent before it is out
+                    return;
+                }
+
                 _outboxSignal.Wait();
                 while (_outbox.TryDequeue(out byte[]? frame))
                 {

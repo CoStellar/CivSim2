@@ -38,13 +38,20 @@ public interface IProtocolMessage
 {
 }
 
-/// <summary>Client → server: first message after connecting.</summary>
+/// <summary>
+/// Client → server: first message after connecting. <see cref="GameVersion"/> must be the server's (multiplayer, MP2);
+/// <see cref="Password"/> is the game's password, if it has one; <see cref="ReturnKey"/> is the key from an earlier
+/// <see cref="WelcomeMessage"/> of this game, to lead the same people again after a lost connection.
+/// </summary>
 [MessagePackObject]
 public sealed record HelloMessage(
     [property: Key(0)] int ProtocolVersion,
     [property: Key(1)] string PlayerName,
     [property: Key(2)] ClientRole Role = ClientRole.Player,
-    [property: Key(3)] int CivId = -1) : IProtocolMessage
+    [property: Key(3)] int CivId = -1,
+    [property: Key(4)] string GameVersion = ProtocolInfo.GameVersion,
+    [property: Key(5)] string Password = "",
+    [property: Key(6)] string ReturnKey = "") : IProtocolMessage
 {
     /// <summary>A player who names no civilization gets the first free one.</summary>
     public const int AnyCiv = -1;
@@ -62,10 +69,15 @@ public enum ClientRole
 
 /// <summary>
 /// Server → client: connection accepted; tells the client who it is and which civilization it leads
-/// (<see cref="NoCiv"/> for an observer).
+/// (<see cref="NoCiv"/> for an observer). <see cref="ReturnKey"/> lets the player come back to the same people after a lost
+/// connection (multiplayer, MP2); the client keeps it for this game only.
 /// </summary>
 [MessagePackObject]
-public sealed record WelcomeMessage([property: Key(0)] int ProtocolVersion, [property: Key(1)] int PlayerId, [property: Key(2)] int CivId) : IProtocolMessage
+public sealed record WelcomeMessage(
+    [property: Key(0)] int ProtocolVersion,
+    [property: Key(1)] int PlayerId,
+    [property: Key(2)] int CivId,
+    [property: Key(3)] string ReturnKey = "") : IProtocolMessage
 {
     /// <summary>Civilization id sent to observers.</summary>
     public const int NoCiv = -1;

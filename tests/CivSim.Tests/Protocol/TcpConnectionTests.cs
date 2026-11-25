@@ -118,6 +118,21 @@ public sealed class TcpConnectionTests
     }
 
     [Fact]
+    public void ClosingStillDeliversWhatWasSentBefore()
+    {
+        (TcpConnection client, TcpConnection server) = Pair();
+        using (client)
+        using (server)
+        {
+            server.Send(new ConnectionRejectedMessage("Wrong password."));
+            server.Close(); // the refusal with its reason must reach the player
+            Assert.False(server.IsOpen);
+            Assert.Equal("Wrong password.", Assert.IsType<ConnectionRejectedMessage>(Next(client)).Reason);
+            WaitUntil(() => !client.IsOpen);
+        }
+    }
+
+    [Fact]
     public void SendingAfterTheOtherSideLeftDoesNothing()
     {
         (TcpConnection client, TcpConnection server) = Pair();

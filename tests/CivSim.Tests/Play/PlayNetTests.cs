@@ -164,7 +164,7 @@ public sealed class PlayNetTests
         {
             while (clients[i].TryReceive(out IProtocolMessage? m))
             {
-                digests[i].AppendData(ProtocolSerializer.Serialize(m!));
+                digests[i].AppendData(ProtocolSerializer.Serialize(m is WelcomeMessage w ? w with { ReturnKey = "" } : m!)); // return keys are random
             }
         }
     }

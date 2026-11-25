@@ -62,7 +62,7 @@ public sealed class PlayHost : IDisposable
     private readonly Thread _thread;
     private readonly SimGame _game;
     private readonly List<int> _dirty = [];
-    private readonly List<string> _news = [];
+    private readonly List<(int Civ, string Text)> _news = []; // Civ < 0: news for everyone
     private volatile bool _stopping;
     private volatile string? _error;
     private SimulationSpeed _speed = SimulationSpeed.Paused;
@@ -131,7 +131,12 @@ public sealed class PlayHost : IDisposable
         }
 
         game.RestartPickClock();
-        return new PlayHost(game, options) { _replay = save, _speed = options.Dedicated ? SimulationSpeed.X1 : SimulationSpeed.Paused };
+        return new PlayHost(game, options)
+        {
+            _replay = save,
+            _speed = options.Dedicated ? SimulationSpeed.X1 : SimulationSpeed.Paused,
+            _startPlayers = [.. game.Civs.Where(c => !c.IsAi).Select(c => c.Id)],
+        };
     }
 
     /// <summary>The game itself, for tests in this solution only.</summary>
@@ -164,6 +169,32 @@ public sealed class PlayHost : IDisposable
     /// <summary>Rounds of views not sent to a client because its connection was congested (any thread).</summary>
     public long SkippedViews => Interlocked.Read(ref _skippedViews);
 
+    /// <summary>
+    /// Password of the game (multiplayer, MP2): a player must give it in Hello. Empty = none. Set it before players join; it is not
+    /// kept in saves.
+    /// </summary>
+    public string Password { get; set; } = "";
+
+    /// <summary>Messages of clients that failed on the server (the message was dropped, the game went on; any thread).</summary>
+    public long ClientFaults => Interlocked.Read(ref _clientFaults);
+
+    /// <summary>Orders and requests a player may send in a second, on average (multiplayer plan, chapter 9).</summary>
+    public const int MessagesPerSecond = 30;
+
+    /// <summary>Orders and requests a player may send at once (clicking fast, a drawn path).</summary>
+    public const int MessageBurst = 90;
+
+    /// <summary>Messages refused for coming too fast after which the server disconnects the client.</summary>
+    public const int FloodLimit = 600;
+
+    /// <summary>Messages that failed on the server after which it disconnects the client.</summary>
+    public const int FaultLimit = 3;
+
+    private long _clientFaults;
+    private long _steps;
+    private int[] _startPlayers = [];
+    private int _format = 2;
+    private readonly Dictionary<string, int> _returnKeys = new(StringComparer.Ordinal);
     private long _simTime;
     private long _viewTime;
     private long _skippedViews;
@@ -232,33 +263,66 @@ public sealed class PlayHost : IDisposable
             Receive(client);
         }
 
-        // A player who leaves hands the civilization back to the AI (abuse tests 2026-11-24: it stood still for ever).
+        // A player who leaves hands the civilization back to the AI (abuse tests 2026-11-24: it stood still for ever); the save
+        // records it, so a loaded game is the same game (MP2).
         foreach (PlayClient gone in _clients)
         {
             if (!gone.Connection.IsOpen && gone.Civ >= 0 && gone.Civ < _game.Civs.Count && !_game.Civs[gone.Civ].Dead)
             {
-                _game.Civs[gone.Civ].IsAi = true;
+                SetLeader(gone.Civ, player: false);
             }
         }
 
         _clients.RemoveAll(c => !c.Connection.IsOpen);
-        Volatile.Write(ref _players, _clients.Count(c => c.Civ >= 0));
+        int players = _clients.Count(c => c.Civ >= 0);
+        Volatile.Write(ref _players, players);
+        if (players > 1 && _speed > SimulationSpeed.X2)
+        {
+            _speed = SimulationSpeed.X2; // with other players: x1 or x2 (multiplayer plan, chapter 11)
+        }
     }
 
     private void Advance()
     {
         long started = Stopwatch.GetTimestamp();
-        _game.Tick();
+        Step();
         Interlocked.Add(ref _simTime, Stopwatch.GetTimestamp() - started);
         SlowForBattle();
         Autosave();
         foreach ((int civ, string text) in _game.News)
         {
-            if (civ < 0 || civ == 0)
-            {
-                _news.Add(text);
-            }
+            _news.Add((civ, text)); // each player gets the news of the whole world and of the own people (MP2)
         }
+    }
+
+    // One step of the game; steps count also while peoples choose their start, when ticks stand still (saves, format 2).
+    private void Step()
+    {
+        _game.Tick();
+        _steps++;
+    }
+
+    // Who leads a people from now on; the save keeps it with the step, so a loaded game is the same game (MP2).
+    private void SetLeader(int civ, bool player)
+    {
+        if (_game.Civs[civ].IsAi != player)
+        {
+            return;
+        }
+
+        Lead(civ, player);
+        if (_format >= 2)
+        {
+            _log.Add(SavedCommand.LeaderChange(_game.Ticks, _steps, civ, player));
+        }
+    }
+
+    private void Lead(int civ, bool player)
+    {
+        _game.Civs[civ].IsAi = !player;
+
+        // Alone, a player chooses the start without a time limit (E13); with other players everyone has the same limit (MP2).
+        _game.PickWaitsForPlayers = !_options.Dedicated && _game.Civs.Count(c => !c.IsAi) <= 1;
     }
 
     /// <summary>Opens an in-memory connection for a local client.</summary>
@@ -346,78 +410,157 @@ public sealed class PlayHost : IDisposable
 
     private void Receive(PlayClient client)
     {
-        while (client.Connection.TryReceive(out IProtocolMessage? message))
+        while (client.Connection.IsOpen && client.Connection.TryReceive(out IProtocolMessage? message))
         {
-            switch (message)
+            if (message is not HelloMessage && !client.Allow(Clock()))
             {
-                case HelloMessage hello:
-                    // Abuse tests 2026-11-24: a second Hello took the next civilization (and left the first with nobody, AI off),
-                    // and a client of another protocol version was let in.
-                    if (client.Civ >= 0)
-                    {
-                        break;
-                    }
+                // Too many orders at once (multiplayer plan, chapter 9): refused; a client that keeps it up is disconnected.
+                if (client.Flooded == 1 || client.Flooded % 100 == 0)
+                {
+                    client.Connection.Send(new CommandRejectedMessage(0, $"Too many orders: at most {MessagesPerSecond} a second."));
+                }
 
-                    if (hello.ProtocolVersion != ProtocolInfo.Version)
-                    {
-                        client.Connection.Send(new ConnectionRejectedMessage($"This game speaks protocol {ProtocolInfo.Version}; the client speaks {hello.ProtocolVersion}."));
-                        break;
-                    }
+                if (client.Flooded >= FloodLimit)
+                {
+                    Drop(client, "Too many orders: disconnected.");
+                }
 
-                    // Each player leads the next free people; the AI hands it over (multiplayer from the start, ADR 0028).
-                    client.Civ = NextFreeCiv();
-                    if (client.Civ < 0)
-                    {
-                        client.Connection.Send(new ConnectionRejectedMessage("Every civilization already has a player."));
-                        break;
-                    }
+                continue;
+            }
 
-                    _game.Civs[client.Civ].IsAi = false;
-                    client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, client.Civ, client.Civ));
-                    SendContent(client);
-                    break;
-                case SetSpeedMessage speed:
-                    string? refused = SetSpeed(client, speed.Speed);
-                    if (refused is not null)
-                    {
-                        client.Connection.Send(new CommandRejectedMessage(0, refused));
-                    }
-
-                    break;
-                case PlayCommandMessage command when client.Civ >= 0:
-                    // E6 (2026-11-19 tests): debug keys of a test scenario only for the host (the first player who joined).
-                    string? why = command.Kind == PlayCommandKind.Debug && _clients.Find(c => c.Civ >= 0) != client
-                        ? "Only the host may use debug keys."
-                        : command.Kind == PlayCommandKind.Gather
-                            ? "Gathering is always on: people without work gather around their settlement."
-                            : _game.Apply(ToCommand(client.Civ, command));
-                    if (why is not null)
-                    {
-                        client.Connection.Send(new CommandRejectedMessage(command.Sequence, why));
-                    }
-                    else
-                    {
-                        client.ViewSoon = true;
-                        _log.Add(SavedCommand.Of(_game.Ticks, client.Civ, command)); // the save plays it again at this tick
-                    }
-
-                    break;
-                case SetTutorialMessage tutorial when client.Civ >= 0:
-                    _options = _options with { Tutorial = tutorial.On }; // kept in the next saves
-                    break;
-                case SaveGameRequestMessage save when client.Civ >= 0:
-                    client.Connection.Send(Save(save.Name));
-                    break;
-                case PlaySummaryRequestMessage when client.Civ >= 0:
-                    client.Connection.Send(Summary(_game.Civs[client.Civ]));
-                    break;
-                case PlacesRequestMessage places when client.Civ >= 0:
-                    client.Connection.Send(Places(client.Civ, places.Type));
-                    break;
-                default:
-                    break;
+            try
+            {
+                Handle(client, message!);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or IndexOutOfRangeException or NullReferenceException
+                or KeyNotFoundException or FormatException or OverflowException)
+            {
+                // One player's bad message never stops the game for everyone (multiplayer plan, chapter 9).
+                Interlocked.Increment(ref _clientFaults);
+                client.Faults++;
+                client.Connection.Send(new CommandRejectedMessage(message is PlayCommandMessage c ? c.Sequence : 0, "The server could not carry out this order."));
+                if (client.Faults >= FaultLimit)
+                {
+                    Drop(client, "Too many orders the server could not carry out: disconnected.");
+                }
             }
         }
+    }
+
+    private static void Drop(PlayClient client, string reason)
+    {
+        client.Connection.Send(new ConnectionRejectedMessage(reason));
+        client.Connection.Close();
+    }
+
+    /// <summary>Called before each client message is handled (tests: a message that fails on the server).</summary>
+    internal Action<IProtocolMessage>? BeforeHandle { get; set; }
+
+    private void Handle(PlayClient client, IProtocolMessage message)
+    {
+        BeforeHandle?.Invoke(message);
+        switch (message)
+        {
+            case HelloMessage hello:
+                Hello(client, hello);
+                break;
+            case SetSpeedMessage speed when client.Civ >= 0:
+                string? refused = SetSpeed(client, speed.Speed);
+                if (refused is not null)
+                {
+                    client.Connection.Send(new CommandRejectedMessage(0, refused));
+                }
+
+                break;
+            case PlayCommandMessage command when client.Civ >= 0:
+                // E6 (2026-11-19 tests): debug keys of a test scenario only when one player plays (MP2: never with others).
+                string? why = command.Kind == PlayCommandKind.Debug && (_options.Dedicated || _clients.Count(c => c.Civ >= 0) > 1)
+                    ? "Debug keys work only in a game with one player."
+                    : command.Kind == PlayCommandKind.Gather
+                        ? "Gathering is always on: people without work gather around their settlement."
+                        : _game.Apply(ToCommand(client.Civ, command));
+                if (why is not null)
+                {
+                    client.Connection.Send(new CommandRejectedMessage(command.Sequence, why));
+                }
+                else
+                {
+                    client.ViewSoon = true;
+                    _log.Add(SavedCommand.Of(_game.Ticks, _steps, client.Civ, command)); // the save plays it again at this step
+                }
+
+                break;
+            case SetTutorialMessage tutorial when client.Civ >= 0:
+                _options = _options with { Tutorial = tutorial.On }; // kept in the next saves
+                break;
+            case SaveGameRequestMessage save when client.Civ >= 0:
+                client.Connection.Send(Save(save.Name));
+                break;
+            case PlaySummaryRequestMessage when client.Civ >= 0:
+                client.Connection.Send(Summary(_game.Civs[client.Civ]));
+                break;
+            case PlacesRequestMessage places when client.Civ >= 0:
+                client.Connection.Send(Places(client.Civ, places.Type));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void Hello(PlayClient client, HelloMessage hello)
+    {
+        // Abuse tests 2026-11-24: a second Hello took the next civilization (and left the first with nobody, AI off),
+        // and a client of another protocol version was let in.
+        if (client.Civ >= 0)
+        {
+            return;
+        }
+
+        string? refused = hello.ProtocolVersion != ProtocolInfo.Version
+            ? $"This game speaks protocol {ProtocolInfo.Version}; the client speaks {hello.ProtocolVersion}."
+            : hello.GameVersion != ProtocolInfo.GameVersion
+                ? $"This game is version {ProtocolInfo.GameVersion}; yours is {(hello.GameVersion is { Length: > 0 } v ? v : "older")}. Both need the same version."
+                : !SamePassword(hello.Password ?? "", Password)
+                    ? (hello.Password is { Length: > 0 } ? "Wrong password." : "This game has a password.")
+                    : null;
+        if (refused is not null)
+        {
+            Drop(client, refused);
+            return;
+        }
+
+        // Back after a lost connection: the same people again (MP2). Otherwise the next free people that no absent player
+        // keeps; the AI hands it over (multiplayer from the start, ADR 0028).
+        int civ = hello.ReturnKey is { Length: > 0 } key && _returnKeys.TryGetValue(key, out int kept) && !_game.Civs[kept].Dead
+            && !_clients.Exists(c => c.Civ == kept)
+            ? kept
+            : NextFreeCiv();
+        if (civ < 0)
+        {
+            Drop(client, "Every civilization already has a player.");
+            return;
+        }
+
+        client.Civ = civ;
+        string returnKey = _returnKeys.FirstOrDefault(k => k.Value == civ).Key
+            ?? System.Security.Cryptography.RandomNumberGenerator.GetHexString(32, lowercase: true); // outside the game: no determinism needed
+        _returnKeys[returnKey] = civ;
+        SetLeader(civ, player: true);
+        client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, civ, civ, returnKey));
+        SendContent(client);
+    }
+
+    // Compares hashes, so the time taken says nothing about the password (multiplayer plan, chapter 9).
+    private static bool SamePassword(string given, string password)
+    {
+        if (password.Length == 0)
+        {
+            return true;
+        }
+
+        byte[] a = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(given));
+        byte[] b = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(password));
+        return System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(a, b);
     }
 
     /// <summary>Pauses each player may start in a game with several players (decision of 2026-11-17).</summary>
@@ -434,7 +577,7 @@ public sealed class PlayHost : IDisposable
     {
         for (int c = 0; c < _game.Civs.Count; c++)
         {
-            if (!_game.Civs[c].Dead && !_clients.Exists(x => x.Civ == c))
+            if (!_game.Civs[c].Dead && !_clients.Exists(x => x.Civ == c) && !_returnKeys.ContainsValue(c))
             {
                 return c;
             }
@@ -452,6 +595,11 @@ public sealed class PlayHost : IDisposable
         {
             _speed = speed;
             return null;
+        }
+
+        if (speed > SimulationSpeed.X2)
+        {
+            return "With other players the game runs at x1 or x2."; // multiplayer plan, chapter 11 (voting comes in MP4)
         }
 
         if (speed == SimulationSpeed.Paused)
@@ -523,8 +671,10 @@ public sealed class PlayHost : IDisposable
                 Name = name,
                 SavedAt = DateTime.UtcNow,
                 Options = _options,
-                Players = [.. _game.Civs.Where(c => !c.IsAi).Select(c => c.Id)],
+                Format = _format,
+                Players = _format >= 2 ? _startPlayers : [.. _game.Civs.Where(c => !c.IsAi).Select(c => c.Id)],
                 Tick = _game.Ticks,
+                Steps = _steps,
                 Hash = _game.StateHash(),
                 Era = _game.Content.Eras[first.Era].Name,
                 Commands = [.. _log],
@@ -551,7 +701,7 @@ public sealed class PlayHost : IDisposable
         Save(PlaySaves.AutoName);
     }
 
-    // Plays a save's commands again at their ticks, up to the tick it was saved at, then checks it is the same game.
+    // Plays a save's commands again at their steps (format 2) or ticks (format 1), then checks it is the same game.
     private void Replay(SavedGame save)
     {
         foreach (Civ c in _game.Civs)
@@ -559,24 +709,40 @@ public sealed class PlayHost : IDisposable
             c.IsAi = !save.Players.Contains(c.Id);
         }
 
+        _game.PickWaitsForPlayers = !_options.Dedicated && _game.Civs.Count(c => !c.IsAi) <= 1;
         _game.RestartPickClock();
+        _startPlayers = [.. save.Players];
 
         foreach (SavedCommand c in save.Commands)
         {
-            // A13 (tests 2026-11-20): ticks stand still while peoples choose their start, so every command of that phase has tick 0.
-            // The phase is played again until it is this people's turn (a pick) or until everyone has chosen (anything else).
-            bool pick = c.Kind == PlayCommandKind.PickStart;
-            while (_game.Picking && (!pick || _game.PickOrder[_game.PickIndex] != c.Civ))
+            if (save.Format >= 2)
             {
-                _game.Tick();
+                while (_steps < c.Step)
+                {
+                    Step();
+                }
+            }
+            else
+            {
+                // A13 (tests 2026-11-20): ticks stand still while peoples choose their start, so every command of that phase has tick 0.
+                // The phase is played again until it is this people's turn (a pick) or until everyone has chosen (anything else).
+                bool pick = c.Kind == PlayCommandKind.PickStart;
+                while (_game.Picking && (!pick || _game.PickOrder[_game.PickIndex] != c.Civ))
+                {
+                    Step();
+                }
+
+                while (_game.Ticks < c.Tick)
+                {
+                    Step();
+                }
             }
 
-            while (_game.Ticks < c.Tick)
+            if (c.Leader != SavedCommand.Command)
             {
-                _game.Tick();
+                Lead(c.Civ, c.Leader == SavedCommand.PlayerLeads);
             }
-
-            if (c.ToMessage().Kind != PlayCommandKind.Gather) // removed 2026-11-24: older saves may still hold it
+            else if (c.ToMessage().Kind != PlayCommandKind.Gather) // removed 2026-11-24: older saves may still hold it
             {
                 _game.Apply(ToCommand(c.Civ, c.ToMessage()));
             }
@@ -584,17 +750,31 @@ public sealed class PlayHost : IDisposable
             _log.Add(c);
         }
 
-        while (_game.Ticks < save.Tick)
+        while (save.Format >= 2 ? _steps < save.Steps : _game.Ticks < save.Tick)
         {
-            _game.Tick();
+            Step();
+        }
+
+        _format = save.Format; // an older save stays in its format: its ticks cannot be turned into steps
+
+        // On a server without a window the saved players are not here yet: the AI leads their peoples until they join again (MP2).
+        // In a window the player joins at once (and loading into a lobby comes with MP5).
+        foreach (Civ c in _game.Civs)
+        {
+            if (_options.Dedicated && !c.IsAi && !c.Dead)
+            {
+                SetLeader(c.Id, player: false);
+            }
         }
 
         _game.News.Clear();
         _lastAutosave = _game.Ticks;
-        _news.Add(_game.StateHash() == save.Hash
+        _news.Add((-1, _game.StateHash() == save.Hash
             ? $"Loaded: {save.Name}."
-            : $"Loaded: {save.Name}, but it was saved by another version of the game: the game goes on from a different state.");
+            : $"Loaded: {save.Name}, but it was saved by another version of the game: the game goes on from a different state."));
     }
+
+    private IEnumerable<string> NewsOf(int civ) => _news.Where(n => n.Civ < 0 || n.Civ == civ).Select(n => n.Text);
 
     private void SlowForBattle()
     {
@@ -609,7 +789,7 @@ public sealed class PlayHost : IDisposable
         if (fresh && _speed > SimulationSpeed.X1 && _clients.FindAll(c => c.Civ >= 0).Count <= 1)
         {
             _speed = SimulationSpeed.X1;
-            _news.Add("Battle! Time runs at ×1.");
+            _news.Add((-1, "Battle! Time runs at ×1."));
         }
     }
 
@@ -892,7 +1072,7 @@ public sealed class PlayHost : IDisposable
     // Objects every round, as changes; the rest of the view four times a second (or at once after a command).
     private void SendView(PlayClient client)
     {
-        client.News.AddRange(_news);
+        client.News.AddRange(NewsOf(client.Civ));
         PlayViewMessage v = View(client.Civ);
         var buildings = new List<PlayBuildingView>();
         var settlements = new List<PlaySettlementView>();
@@ -1286,7 +1466,7 @@ public sealed class PlayHost : IDisposable
         }
 
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
-            civ.People, civ.Hungry, settlements, buildings, [.. _news], units, _game.EraOf(civ), civ.Researching, ResearchPermille(civ), TechStates(civ),
+            civ.People, civ.Hungry, settlements, buildings, [.. NewsOf(civId)], units, _game.EraOf(civ), civ.Researching, ResearchPermille(civ), TechStates(civ),
             Person(civ.Thinker, false), Person(civ.ThinkerOffer, false), Person(civ.Advisor, true), Person(civ.AdvisorOffer, true), _game.Advice(civ),
             Peoples(civ), civ.Dead, _game.Picking, _game.Picking && _game.PickOrder[_game.PickIndex] == civId,
             _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.ShownBlockRadius,
@@ -1743,5 +1923,33 @@ public sealed class PlayHost : IDisposable
 
         /// <summary>Changed map parts of rounds skipped while the connection was congested.</summary>
         public HashSet<int> MissedChunks { get; } = [];
+
+        /// <summary>Messages of this client that failed on the server.</summary>
+        public int Faults { get; set; }
+
+        /// <summary>Messages refused for coming too fast.</summary>
+        public int Flooded { get; private set; }
+
+        private double _tokens = MessageBurst;
+        private long _refilled = long.MinValue;
+
+        /// <summary>True when one more message fits the limit (a bucket of <see cref="MessageBurst"/>, refilled at <see cref="MessagesPerSecond"/>).</summary>
+        public bool Allow(long now)
+        {
+            if (_refilled != long.MinValue)
+            {
+                _tokens = Math.Min(MessageBurst, _tokens + ((now - _refilled) * (double)MessagesPerSecond / Stopwatch.Frequency));
+            }
+
+            _refilled = now;
+            if (_tokens < 1)
+            {
+                Flooded++;
+                return false;
+            }
+
+            _tokens--;
+            return true;
+        }
     }
 }
