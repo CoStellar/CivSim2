@@ -680,7 +680,7 @@ public partial class PlayGame : Node2D
             _lostTold = true;
             string why = _session.Rejected ?? _session.CloseReason ?? "the connection was lost";
             Ui.StartMenu.Notice = "The game on the server ended for us: " + why
-                + (_returnKeyTold ? " Join again with the same nickname to lead your people again." : "");
+                + (_returnKeyTold ? " Join again with the same nickname to lead your civilization again." : "");
             Callable.From(() => MenuRequested?.Invoke()).CallDeferred();
         }
     }

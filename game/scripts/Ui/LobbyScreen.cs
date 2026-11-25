@@ -284,7 +284,7 @@ public partial class LobbyScreen : CanvasLayer
         _start.Visible = host;
         _start.Disabled = !state.CanStart;
         _start.TooltipText = state.CanStart ? "" : "Waiting for every player to be ready";
-        const string alone = "Others join with your address and port. You may also start alone: the AI leads the other peoples and free places can be taken later.";
+        const string alone = "Others join with your address and port. You may also start alone: the AI leads the other civilizations and free places can be taken later.";
         if (host && state.Seats.Count == 1)
         {
             _status.Text = alone;

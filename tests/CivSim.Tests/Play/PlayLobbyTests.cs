@@ -25,7 +25,7 @@ public sealed class PlayLobbyTests
         Assert.StartsWith("ala ", seen.Seats[2].Name, StringComparison.Ordinal); // R4-4: a nickname already here gets a suffix
         Assert.True(seen.Seats[0].Host);
         Assert.Equal(2, seen.You);
-        Assert.Contains(seen.Settings, l => l.StartsWith("Peoples: 4, places for players: 3", StringComparison.Ordinal));
+        Assert.Contains(seen.Settings, l => l.StartsWith("Civilizations: 4, places for players: 3", StringComparison.Ordinal));
 
         ola.Send(new LobbyChatMessage("hello [b]all[/b]\n"));
         lobby.Pump();
@@ -52,7 +52,7 @@ public sealed class PlayLobbyTests
         }
 
         game.RunTicks(1);
-        Assert.Equal(0, Drain(ala).OfType<WelcomeMessage>().Single().CivId); // place n leads people n
+        Assert.Equal(0, Drain(ala).OfType<WelcomeMessage>().Single().CivId); // place n leads civilization n
         Assert.Equal(1, Drain(ola).OfType<WelcomeMessage>().Single().CivId);
         Assert.Equal(2, Drain(ala2).OfType<WelcomeMessage>().Single().CivId);
         Assert.Equal(3, game.Players);

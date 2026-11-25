@@ -75,7 +75,7 @@ public static class NetRun
 
         using PlayHost? owned = direct;
         using var listener = new PlayListener(c => (lobby is not null ? (Action<IConnection>)lobby.Accept : x => direct!.Accept(x))(c), port);
-        output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, seed {options.Seed}, {options.Civilizations} peoples ({options.HumanSeats} for players), map {options.LegacyWidth}x{options.LegacyHeight}{(lobby is null ? "" : ", lobby open")}"));
+        output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, seed {options.Seed}, {options.Civilizations} civilizations ({options.HumanSeats} for players), map {options.LegacyWidth}x{options.LegacyHeight}{(lobby is null ? "" : ", lobby open")}"));
         output.WriteLine("Players join with the game or with: dotnet run --project src/CivSim.Headless -c Release -- --join <address>:" + listener.Port.ToString(Inv));
         using var stop = new ManualResetEventSlim();
         Console.CancelKeyPress += (_, e) =>
@@ -173,7 +173,7 @@ public static class NetRun
                     {
                         case WelcomeMessage w:
                             welcomed = true;
-                            output.WriteLine(string.Create(Inv, $"Joined {host}:{port} as {name}: people {w.CivId}."));
+                            output.WriteLine(string.Create(Inv, $"Joined {host}:{port} as {name}: civilization {w.CivId}."));
                             break;
                         case ConnectionRejectedMessage r:
                             output.WriteLine("The server turned us away: " + r.Reason);
@@ -271,7 +271,7 @@ public static class NetRun
             host.Game.Civs[b.Civ].IsAi = true; // the AI plays for the bot: its view grows like a player's
         }
 
-        output.WriteLine(string.Create(Inv, $"Net bench: seed {options.Seed}, map {options.LegacyWidth}x{options.LegacyHeight}, {options.Civilizations} peoples, {clients} players over TCP, {minutes} minutes of the game"));
+        output.WriteLine(string.Create(Inv, $"Net bench: seed {options.Seed}, map {options.LegacyWidth}x{options.LegacyHeight}, {options.Civilizations} civilizations, {clients} players over TCP, {minutes} minutes of the game"));
         output.WriteLine("minute | KB/s per player (avg / max) | unpacked KB/s | server ms per second of the game (game + views) | worst tick ms | skipped | MB");
         var rows = new List<string> { "minute,kb_per_s_avg,kb_per_s_max,raw_kb_per_s_avg,server_ms_per_game_s,sim_ms_per_game_s,view_ms_per_game_s,worst_tick_ms,skipped_views,working_set_mb,first_minute_kb_avg" };
         long[] lastSent = new long[clients];

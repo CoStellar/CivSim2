@@ -189,7 +189,7 @@ public static class PlaySaves
             if (c.Step < last || c.Step > save.Steps || c.Tick < 0 || c.Tick > save.Tick || c.Civ < 0 || c.Civ >= o.Civilizations
                 || c.Leader is < SavedCommand.Command or > SavedCommand.AiLeads)
             {
-                throw new InvalidDataException("The save holds an entry out of order or for a people the game does not have.");
+                throw new InvalidDataException("The save holds an entry out of order or for a civilization the game does not have.");
             }
 
             last = c.Step;

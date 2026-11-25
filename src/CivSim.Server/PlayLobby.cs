@@ -349,10 +349,10 @@ public sealed class PlayLobby : IDisposable
         ArgumentNullException.ThrowIfNull(config);
         CultureInfo inv = CultureInfo.InvariantCulture;
         string world = o.WorldType switch { 1 => "pangaea", 2 => "archipelago", _ => "continents" };
-        string goal = o.Goal switch { 0 => "the last people standing wins", 2 => "the best score after the time wins", _ => "the first people in the Middle Ages wins" };
+        string goal = o.Goal switch { 0 => "the last civilization standing wins", 2 => "the best score after the time wins", _ => "the first civilization in the Middle Ages wins" };
         var lines = new List<string>
         {
-            string.Create(inv, $"Peoples: {o.Civilizations}, places for players: {o.HumanSeats} (the AI leads the others)"),
+            string.Create(inv, $"Civilizations: {o.Civilizations}, places for players: {o.HumanSeats} (the AI leads the others)"),
             string.Create(inv, $"Map: {o.LegacyWidth} x {o.LegacyHeight}, {world}, sea {o.WaterPercent}%, seed {o.Seed}"),
             "Goal: " + goal,
             o.StartSpeed == 2 ? "Speed: x2 (harder: less time for every decision)" : "Speed: x1",
