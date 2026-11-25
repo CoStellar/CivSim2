@@ -29,3 +29,4 @@ Każda ważna decyzja techniczna to osobny, numerowany plik: kontekst, decyzja, 
 - [0025 Czas w grze na żywo: takt, pulsy cywilizacji i licznik lat](0025-takt-pulsy-licznik-lat.md)
 - [0029 Wydzielenie gry legacy z repozytorium nowej gry](0029-wydzielenie-legacy.md) (krok 1 zrobiony; kroki 2–4 po demo)
 - [0030 Pokój z negocjacji: dobra, osada, długość pokoju; propozycja zmęczenia wojną](0030-pokoj-z-negocjacji.md)
+- [0031 Multiplayer przez sieć: serwer autorytatywny, TCP, pośrednik na VPS](0031-multiplayer.md)

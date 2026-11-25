@@ -200,6 +200,7 @@ public sealed class AiTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void AiPeoplesGrowBuildResearchAndSpreadOnTheirOwn()
     {
@@ -227,6 +228,7 @@ public sealed class AiTests
         Assert.True(settlements > 4, $"settlements {settlements}");
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void AiGamesAreDeterministic()
     {
@@ -249,6 +251,7 @@ public sealed class StartAndEventTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void PeoplesChooseTheirStartInTurnsAwayFromEachOther()
     {

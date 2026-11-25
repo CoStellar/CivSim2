@@ -85,6 +85,7 @@ public sealed class AiFoodTests
         Assert.Equal(1400 * SimContent.One, home.Stock[Content.Food]);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void TheRichSettlementKeepsTwoMinutesOfItsOwnEating()
     {

@@ -74,6 +74,7 @@ public class WorldGeneratorTests
         Assert.InRange(report.WaterPercent, water - WorldValidator.WaterTolerance, water + WorldValidator.WaterTolerance);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void HundredSeedsOnTheTestMapAreValid()
     {
@@ -205,6 +206,7 @@ public class WorldGeneratorTests
         return n;
     }
 
+    [Trait("Category", "Slow")]
     [Theory]
     [InlineData(90, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce, WorldInland.Dry)]
     [InlineData(110, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich, WorldInland.Humid)]

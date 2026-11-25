@@ -12,6 +12,7 @@ namespace CivSim.Tests.Play;
 /// <summary>Saving and loading the game (sprint to the demo, 2026-11-20).</summary>
 public sealed class PlaySaveTests
 {
+    [Trait("Category", "Slow")]
     [Fact]
     public void ASaveLoadsAsTheSameGame()
     {

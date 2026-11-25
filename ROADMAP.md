@@ -48,4 +48,17 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 - AI na statkach.
 - Przenoszenie mieszkańców za opłatą (złoże pod osadą) i przenosiny osad.
 - Grafika pixel art Patryka w miejsce grafik zastępczych. Plan, lista wszystkich grafik i inspiracje: `docs/grafika-plan.md` (decyzje G1–G6 czekają na Patryka); grafiki zastępcze nowej gry mogą wejść już w trakcie testów demo.
-- Multiplayer przez sieć: plan i pytania w `docs/multiplayer/plan.md` (2026-11-25, czeka na decyzje Patryka).
+- Multiplayer przez sieć: patrz niżej.
+
+## Multiplayer (osobny wątek, równolegle z poprawkami gry; ADR 0031, `docs/multiplayer/plan.md`)
+
+| # | Zadanie | Stan |
+| --- | --- | --- |
+| CI1 | Podział testów (szybkie lokalnie, pełne w CI), CI na `development`, wersja gry `v26.11.1` | w PR |
+| W1 | Zaawansowane ustawienia świata w „New game” (zwijana sekcja) | do zrobienia |
+| MP1 | Połączenie TCP, serwer bez okna, pomiary w serwerze | do zrobienia |
+| MP2 | Serwer dla kilku ludzi (przejęcie przez AI, błędy klienta, dołączenia w zapisie, prędkość, wersje) | do zrobienia |
+| MP3 | Konfiguracja serwera i lobby, menu Multiplayer | do zrobienia |
+| MP4 | Gra z ludźmi: czat, głosowania, obserwatorzy, wyrzucanie | do zrobienia |
+| MP5 | Zapis i wczytanie partii wieloosobowej | do zrobienia |
+| MP6 | Pośrednik, Docker, gałąź `server` z CI, instrukcja VPS | do zrobienia |

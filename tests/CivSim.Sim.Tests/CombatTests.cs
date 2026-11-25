@@ -253,6 +253,7 @@ public sealed class CombatTests
         Assert.Equal(0, g.LeavingDamage(riders, away, out _));
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void WalkingAwayFromAFightHurts()
     {

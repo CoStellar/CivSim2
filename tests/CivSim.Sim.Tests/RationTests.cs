@@ -152,6 +152,7 @@ public sealed class RationTests
         Assert.Equal(1000, home.WorkersFedPermille);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void HungryUnitsFightAndWalkWeaker()
     {

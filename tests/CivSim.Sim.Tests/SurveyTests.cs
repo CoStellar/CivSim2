@@ -64,6 +64,7 @@ public sealed class SurveyTests
         Assert.DoesNotContain(civ.Signs, x => x.Center == sign.Center && x.Deposit == copper && Hexes(g, x.Center, ore) <= Content.Lodes.OffsetHexes);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void EveryDepositHasASizeAndAMineOnASmallOneGivesHalf()
     {
@@ -76,6 +77,7 @@ public sealed class SurveyTests
         Assert.Equal("small", g.DepositSizeName(Enumerable.Range(0, g.Geo.CellCount).First(i => g.Map.Deposit[i] != 0 && g.DepositSizePercent(i) == 50)));
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void BeyondOurLandOresAreFoundOnlyByStandingProspectorsOfTheirEra()
     {
@@ -98,6 +100,7 @@ public sealed class SurveyTests
         Assert.Contains(g.FoundAround(p), f => f.Cell == cell);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void WalkingSurveyorsSeeNothingStandingOnesTheSoilAround()
     {

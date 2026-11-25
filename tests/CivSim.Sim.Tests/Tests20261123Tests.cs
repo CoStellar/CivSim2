@@ -74,6 +74,7 @@ public sealed class Tests20261123Tests
         Assert.False(g.InTruce(0, 1));
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void TheAiKeepsThePeaceItMade()
     {

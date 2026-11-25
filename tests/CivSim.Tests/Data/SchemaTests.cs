@@ -60,6 +60,7 @@ public sealed class SchemaTests
         Assert.Empty(errors);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void LoadingFolderDataReportsTheTypoAndTheViewerCheckSeesIt()
     {
