@@ -165,9 +165,14 @@ public sealed class PlayMultiplayerTests
                 }
 
                 host.RunTicks(600, viewEvery: 0);
+                // Ola joins the running game as a candidate (MP4b), asks for a civilization and Ala takes her in.
                 IConnection b = host.Connect();
                 b.Send(new HelloMessage(ProtocolInfo.Version, "Ola"));
-                host.RunTicks(450, viewEvery: 0);
+                host.RunTicks(1, viewEvery: 0);
+                b.Send(new PlayJoinMessage(Drain(b).OfType<PlayPlayersMessage>().Last().Takeable![0].Civ));
+                host.RunTicks(1, viewEvery: 0);
+                a.Send(new PlayVoteMessage(Drain(a).OfType<PlayPlayersMessage>().Last().Vote!.Id, true));
+                host.RunTicks(448, viewEvery: 0);
                 a.Close();
                 host.RunTicks(300, viewEvery: 0);
                 b.Send(new SaveGameRequestMessage(name));

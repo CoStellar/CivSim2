@@ -612,15 +612,15 @@ public sealed partial class PlayHost : IDisposable
             return;
         }
 
-        if (!back && client.Place < 0 && othersPlay && !_game.Picking && _game.Ticks > 0)
+        if (!back && _options.HumanSeats > 0 && _clients.Count(c => c.Civ >= 0) >= _options.HumanSeats)
         {
-            Wait(client, hello, PlayPlayerInfo.Candidate);
+            Drop(client, "Every place for players is taken."); // an observer still gets in (above)
             return;
         }
 
-        if (!back && _options.HumanSeats > 0 && _clients.Count(c => c.Civ >= 0) >= _options.HumanSeats)
+        if (!back && client.Place < 0 && othersPlay && !_game.Picking && _game.Ticks > 0)
         {
-            Drop(client, "Every place for players is taken.");
+            Wait(client, hello, PlayPlayerInfo.Candidate);
             return;
         }
 
