@@ -10,6 +10,7 @@ public sealed class ScenarioTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void FromOurCityThereIsAWayToEveryOtherPeople()
     {
@@ -30,6 +31,7 @@ public sealed class ScenarioTests
         }
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void ScenarioUnitsStartWithFullPacks()
     {
@@ -43,6 +45,7 @@ public sealed class ScenarioTests
         }
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void EveryScenarioSetsUpAsWrittenAndRuns()
     {
@@ -92,6 +95,7 @@ public sealed class ScenarioTests
         }
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void DebugActionsWorkOnlyInScenarios()
     {

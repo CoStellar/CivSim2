@@ -338,7 +338,11 @@ Pomiar 2026-11-25 (chmura, 4 rdzenie, Release, po zbudowaniu):
 | `CivSim.Legacy.Tests` | 417 | 30 s | 20 (67 s) | `LeadersStayOutOfTheChronicle…` 17 s |
 | Razem | 835 | ok. 70 s + 28 s budowania | 33 | |
 
-Propozycja (osobny mały PR „CI1”, razem z włączeniem CI):
+**Zrobione w CI1 (2026-11-25):** 37 testów ≥ 0,5 s oznaczonych `Slow` (24 w `CivSim.Sim.Tests`, 13 w `CivSim.Tests`). Szybki zestaw lokalnie:
+`CivSim.Sim.Tests` 162 testy w 12 s, `CivSim.Tests` 216 testów w 7 s (razem ok. 19 s zamiast ok. 40 s dla nowej gry i 70 s dla całości).
+CI: `.github/workflows/tests.yml` (Linux i Windows: szybkie, wolne, legacy). Stary `ci.yml` (wyłączony, z benchmarkiem gry legacy) usunięty.
+
+Pierwotna propozycja:
 
 - Testy dłuższe niż 1 s dostają znacznik `[Trait("Category", "Slow")]` (33 testy). **Lokalnie** (przed każdym commitem) idą tylko szybkie
   testy nowej gry: `dotnet test --filter "Category!=Slow"` w `CivSim.Sim.Tests` i `CivSim.Tests` (szacunkowo ok. 15 s zamiast 70 s).

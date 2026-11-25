@@ -9,5 +9,7 @@
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Game version year.month.release (ADR 0031); keep equal to ProtocolInfo.GameVersion. -->
+    <Version>26.11.1</Version>
   </PropertyGroup>
 </Project>

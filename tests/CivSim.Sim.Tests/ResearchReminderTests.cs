@@ -9,6 +9,7 @@ public sealed class ResearchReminderTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void TheReminderWaitsAfterTheLastResearch()
     {
@@ -45,6 +46,7 @@ public sealed class CarrierPeopleTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void CarriersASettlementDidNotHaveGoBackToNobody()
     {

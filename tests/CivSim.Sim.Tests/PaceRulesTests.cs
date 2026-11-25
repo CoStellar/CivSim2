@@ -11,6 +11,7 @@ public sealed class PaceRulesTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void EveryStartHasIronWithinTwentyHexesOnItsLand()
     {
@@ -28,6 +29,7 @@ public sealed class PaceRulesTests
         }
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void EveryPeopleStartsNearAnother()
     {

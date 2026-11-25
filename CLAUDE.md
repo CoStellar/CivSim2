@@ -51,7 +51,10 @@ losowaniem, haszem i nazwami) i w plikach `data/*.json` poza `data/sim/`.
 - **Zmiana zasad gry wymaga zgody Patryka.** Najpierw propozycja (najlepiej kwestionariusz z wariantami i rekomendacją), potem kod.
 - **Po każdym wdrożeniu:** szczegółowe wyjaśnienie z liczbami (przed/po z `--sim-report`).
 - **Przed otwarciem PR:** sprawdź otwarte PR-y względem siebie (konflikty, zależności, kolejność merge'a).
-- **Testy uruchamiaj wtedy, gdy są potrzebne** (przed commitem zmian w kodzie, nie po każdej drobnej edycji).
+- **Testy uruchamiaj wtedy, gdy są potrzebne** (przed commitem zmian w kodzie, nie po każdej drobnej edycji). Lokalnie tylko szybkie
+  (`--filter "Category!=Slow"`); pełny zestaw, wolne testy i legacy liczy CI (GitHub Actions, Linux i Windows) przy każdym PR do `development`.
+  Nowy test, który trwa ponad 0,5 s, oznacz `[Trait("Category", "Slow")]`. Wynik CI sprawdź przed oddaniem PR.
+- **Wersja gry:** `ProtocolInfo.GameVersion` i `<Version>` w `Directory.Build.props` (rok.miesiąc.wydanie, np. `26.11.1`, ADR 0031); tag wydania `v26.11.1`.
 - **Jeden skrypt zamiast wielu wywołań narzędzi.** Pracę z wieloma krokami (testy, pomiary, biegi harnessu, wykresy) zapisz jako jeden
   skrypt (bash/Python/C#), uruchom go raz i czytaj tylko podsumowanie, a nie wyniki każdego kroku. Najpierw sprawdź, co już jest:
   `--sim-report`/`--sim-scenario` w `CivSim.Headless`, `data/sim/tools/`, `tools/audio/`, `tools/export/`. Skrypt, który przyda się
@@ -92,9 +95,9 @@ docs/sim/                  opis nowej gry
 export PATH=$HOME/.dotnet:$PATH                                 # w sesji w chmurze bez .NET: apt-get install -y dotnet-sdk-10.0
 python3 data/sim/tools/build_game_json.py                      # po zmianie skryptu danych
 dotnet build -c Release -v q                                     # ostrzeżenia są błędami
-dotnet test tests/CivSim.Sim.Tests -c Release -v q
-dotnet test tests/CivSim.Tests -c Release -v q
-dotnet test tests/CivSim.Legacy.Tests -c Release -v q              # gra legacy; przed PR i tak całość: dotnet test -c Release
+dotnet test tests/CivSim.Sim.Tests -c Release -v q --filter "Category!=Slow"   # szybkie testy lokalnie (ok. 12 s)
+dotnet test tests/CivSim.Tests -c Release -v q --filter "Category!=Slow"       # szybkie testy lokalnie (ok. 7 s)
+dotnet test -c Release                                           # całość (wolne i legacy): robi to CI przy każdym PR (.github/workflows/tests.yml)
 dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12 --minutes 75 [--size 98x60]   # pomiar AI i tempa er (domyślnie mapa „Normal” 98×60)
 dotnet run --project src/CivSim.Headless -c Release -- --sim-scenario <nazwa> [--minutes N] [--ai-all]
 cd game && dotnet build                                         # klient

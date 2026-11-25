@@ -28,6 +28,7 @@ public class SmokeTests
         Assert.Equal(2, Program.Main(["--what"]));
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void HeadlessIsDeterministicAndWritesTheReport()
     {
@@ -52,6 +53,7 @@ public class SmokeTests
         }
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void ThePaceReportHasARowPerPeopleWithItsMinutes()
     {
@@ -73,6 +75,7 @@ public class SmokeTests
         }
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void ABatchRunsEveryGameAsItsOwnSeedWould()
     {

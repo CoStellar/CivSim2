@@ -84,6 +84,7 @@ public sealed class UnitTests
         Assert.True(civ.Known.Count(k => k) > known);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void HiddenScoutsWalkSlower()
     {

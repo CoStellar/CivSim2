@@ -54,7 +54,7 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 
 | # | Zadanie | Stan |
 | --- | --- | --- |
-| CI1 | Podział testów (szybkie lokalnie, pełne w CI), CI na `development`, wersja gry `v26.11.1` | do zrobienia |
+| CI1 | Podział testów (szybkie lokalnie, pełne w CI), CI na `development`, wersja gry `v26.11.1` | w PR |
 | W1 | Zaawansowane ustawienia świata w „New game” (zwijana sekcja) | do zrobienia |
 | MP1 | Połączenie TCP, serwer bez okna, pomiary w serwerze | do zrobienia |
 | MP2 | Serwer dla kilku ludzi (przejęcie przez AI, błędy klienta, dołączenia w zapisie, prędkość, wersje) | do zrobienia |

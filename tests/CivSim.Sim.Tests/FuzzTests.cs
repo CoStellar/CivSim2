@@ -69,6 +69,7 @@ public sealed class FuzzTests
         return null;
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void RandomCommandsAreRefusedNotThrown()
     {
@@ -134,6 +135,7 @@ public sealed class FuzzTests
         Assert.Null(Broken(g));
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void AiGamesKeepTheInvariants()
     {

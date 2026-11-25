@@ -13,6 +13,7 @@ public class SettlementGridTests
 {
     private static readonly GameContent Content = TestContent.Load();
 
+    [Trait("Category", "Slow")]
     [Theory]
     [InlineData(3UL, 66, 40)]
     [InlineData(4UL, 70, 42)] // a width and height that are not multiples of the bucket

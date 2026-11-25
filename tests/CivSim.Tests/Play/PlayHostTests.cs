@@ -12,6 +12,7 @@ namespace CivSim.Tests.Play;
 public sealed class PlayHostTests
 {
     // Abuse tests 2026-11-24: a second Hello took another civilization and left the first with nobody; an old client was let in.
+    [Trait("Category", "Slow")]
     [Fact]
     public void ASecondHelloChangesNothingAndAnOldClientIsRefused()
     {
@@ -36,6 +37,7 @@ public sealed class PlayHostTests
         Assert.True(host.Game.Civs[1].IsAi);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void ALeavingPlayersCivilizationGoesBackToTheAi()
     {
@@ -51,6 +53,7 @@ public sealed class PlayHostTests
         Assert.True(host.Game.Civs[1].IsAi);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void APlayerGetsTheMapItsViewAndCanBuild()
     {
@@ -121,6 +124,7 @@ public sealed class PlayHostTests
 
 public sealed class PlayPauseTests
 {
+    [Trait("Category", "Slow")]
     [Fact]
     public void WithTwoPlayersAPauseIsProtectedAndCounted()
     {

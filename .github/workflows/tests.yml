@@ -1,0 +1,45 @@
+# Tests on every pull request and push to development (ADR 0031, docs/multiplayer/plan.md chapter 17).
+# Locally only the fast tests run (--filter "Category!=Slow"); here everything runs, slow and legacy tests included,
+# on Linux and Windows (the simulation must give the same result on every system).
+name: Tests
+
+on:
+  push:
+    branches: [development]
+  pull_request:
+    branches: [development]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash # stops at the first failing command on Windows too
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore CivSim2.sln
+      - name: Build
+        run: dotnet build CivSim2.sln --configuration Release --no-restore
+      - name: Fast tests (what runs locally)
+        run: |
+          dotnet test tests/CivSim.Sim.Tests --configuration Release --no-build --filter "Category!=Slow"
+          dotnet test tests/CivSim.Tests --configuration Release --no-build --filter "Category!=Slow"
+      - name: Slow tests
+        run: |
+          dotnet test tests/CivSim.Sim.Tests --configuration Release --no-build --filter "Category=Slow"
+          dotnet test tests/CivSim.Tests --configuration Release --no-build --filter "Category=Slow"
+      - name: Legacy tests
+        run: dotnet test tests/CivSim.Legacy.Tests --configuration Release --no-build

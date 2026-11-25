@@ -67,6 +67,7 @@ public sealed class PlayDeterminismTests
     }
 
     // A14/B1: building views (of the player and of every AI people) changes nothing in the game.
+    [Trait("Category", "Slow")]
     [Fact]
     public void ViewsDoNotChangeTheGame()
     {

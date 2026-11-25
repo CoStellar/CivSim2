@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using CivSim.Protocol;
 using CivSim.Protocol.Hosting;
 using CivSim.Server;
 using Godot;
@@ -107,6 +108,7 @@ public partial class StartMenu : CanvasLayer
         var quit = new Button { Text = "Quit", CustomMinimumSize = new Vector2(240, 44) };
         quit.Pressed += () => QuitRequested?.Invoke();
         nav.AddChild(quit);
+        nav.AddChild(new Label { Text = $"v{ProtocolInfo.GameVersion} - {ProtocolInfo.GameStage}", Modulate = new Color(0.6f, 0.6f, 0.6f) });
 
         // Right: what the chosen section asks for.
         var panel = new PanelContainer { CustomMinimumSize = new Vector2(700, 0), SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };

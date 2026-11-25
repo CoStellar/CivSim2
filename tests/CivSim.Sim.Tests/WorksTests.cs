@@ -211,6 +211,7 @@ public sealed class WorksTests
         Assert.True(g.Crossable(civ.Id, from, dir), "the bridge lets everyone cross");
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void TransportsCarryArmiesAndTakeThemDownWhenSunk()
     {

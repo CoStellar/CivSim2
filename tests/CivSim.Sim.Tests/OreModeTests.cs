@@ -25,6 +25,7 @@ public sealed class OreModeTests
         return best;
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void FairOresPutTinAndIronNearEveryStart()
     {
@@ -41,6 +42,7 @@ public sealed class OreModeTests
         }
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void RealisticOresAddNothingToTheWorld()
     {
