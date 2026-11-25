@@ -42,6 +42,12 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>Advanced world settings (PR W1, 2026-11-25); null = a normal world.</summary>
     public PlayWorld? World { get; init; }
+
+    /// <summary>
+    /// A server without a window (multiplayer, MP1): every people is led by the AI until a player joins, the start is chosen
+    /// with the time limit, and the game runs at normal speed from the start.
+    /// </summary>
+    public bool Dedicated { get; init; }
 }
 
 /// <summary>
@@ -118,10 +124,14 @@ public sealed class PlayHost : IDisposable
             }.WithWorld(options.World, content));
         }
 
-        game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
-        game.PickWaitsForPlayers = true; // E13 (2026-11-20): alone, the player chooses the start without a time limit
+        if (!options.Dedicated)
+        {
+            game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
+            game.PickWaitsForPlayers = true; // E13 (2026-11-20): alone, the player chooses the start without a time limit
+        }
+
         game.RestartPickClock();
-        return new PlayHost(game, options) { _replay = save };
+        return new PlayHost(game, options) { _replay = save, _speed = options.Dedicated ? SimulationSpeed.X1 : SimulationSpeed.Paused };
     }
 
     /// <summary>The game itself, for tests in this solution only.</summary>
@@ -138,6 +148,26 @@ public sealed class PlayHost : IDisposable
             _ = View(c);
         }
     }
+
+    /// <summary>Clock of the full views (Stopwatch ticks); the network measurement drives it with the game's ticks.</summary>
+    internal Func<long> Clock { get; set; } = Stopwatch.GetTimestamp;
+
+    /// <summary>Time spent on the game's ticks, in Stopwatch ticks (for the server's measurements; any thread).</summary>
+    public long SimTime => Interlocked.Read(ref _simTime);
+
+    /// <summary>Time spent on the players' views, in Stopwatch ticks (any thread).</summary>
+    public long ViewTime => Interlocked.Read(ref _viewTime);
+
+    /// <summary>Connected clients that lead a people (any thread).</summary>
+    public int Players => Volatile.Read(ref _players);
+
+    /// <summary>Rounds of views not sent to a client because its connection was congested (any thread).</summary>
+    public long SkippedViews => Interlocked.Read(ref _skippedViews);
+
+    private long _simTime;
+    private long _viewTime;
+    private long _skippedViews;
+    private int _players;
 
     /// <summary>Hash of the whole game state (all peoples).</summary>
     public ulong StateHash => _game.StateHash();
@@ -212,11 +242,14 @@ public sealed class PlayHost : IDisposable
         }
 
         _clients.RemoveAll(c => !c.Connection.IsOpen);
+        Volatile.Write(ref _players, _clients.Count(c => c.Civ >= 0));
     }
 
     private void Advance()
     {
+        long started = Stopwatch.GetTimestamp();
         _game.Tick();
+        Interlocked.Add(ref _simTime, Stopwatch.GetTimestamp() - started);
         SlowForBattle();
         Autosave();
         foreach ((int civ, string text) in _game.News)
@@ -234,6 +267,13 @@ public sealed class PlayHost : IDisposable
         (InMemoryConnection client, InMemoryConnection server) = InMemoryConnection.CreatePair();
         _pending.Enqueue(server);
         return client;
+    }
+
+    /// <summary>Takes the server end of a connection from elsewhere (a player over the network); any thread.</summary>
+    public void Accept(IConnection connection)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        _pending.Enqueue(connection);
     }
 
     /// <summary>Stops the game thread.</summary>
@@ -778,6 +818,13 @@ public sealed class PlayHost : IDisposable
 
     private void SendViews()
     {
+        long started = Stopwatch.GetTimestamp();
+        SendViewsNow();
+        Interlocked.Add(ref _viewTime, Stopwatch.GetTimestamp() - started);
+    }
+
+    private void SendViewsNow()
+    {
         bool mapChanged = !_game.Map.Dirty.IsEmpty;
         _dirty.Clear();
         if (mapChanged)
@@ -790,6 +837,15 @@ public sealed class PlayHost : IDisposable
         {
             if (client.Civ < 0)
             {
+                continue;
+            }
+
+            if (client.Connection.Congested)
+            {
+                // A player over a slow network: no new views until the sent ones are out. The views are differences from what
+                // the client has, so the next round brings everything it missed (multiplayer plan, MP1).
+                Interlocked.Increment(ref _skippedViews);
+                client.MissedChunks.UnionWith(_dirty); // changed map parts of this round come with the next view
                 continue;
             }
 
@@ -820,6 +876,9 @@ public sealed class PlayHost : IDisposable
                     _changed.Add(chunk);
                 }
 
+                _changed.UnionWith(client.MissedChunks);
+                client.MissedChunks.Clear();
+
                 civ.NewlyKnown.Clear();
                 SendChanges(client, civ);
             }
@@ -846,7 +905,7 @@ public sealed class PlayHost : IDisposable
             client.Connection.Send(new PlayObjectsMessage(buildings, goneB, settlements, goneS, units, goneU));
         }
 
-        long now = Stopwatch.GetTimestamp();
+        long now = Clock();
         if (!client.ViewSoon && _game.Ticks > 0 && Stopwatch.GetElapsedTime(client.LastFullView, now) < FullViewEvery && client.LastFullView != long.MinValue)
         {
             return;
@@ -1681,5 +1740,8 @@ public sealed class PlayHost : IDisposable
         public bool ViewSoon { get; set; }
 
         public bool SawPicking { get; set; }
+
+        /// <summary>Changed map parts of rounds skipped while the connection was congested.</summary>
+        public HashSet<int> MissedChunks { get; } = [];
     }
 }
