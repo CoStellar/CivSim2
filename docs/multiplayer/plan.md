@@ -79,6 +79,24 @@ Wnioski: widok dla kolejnego gracza prawie nie kosztuje procesora; pamięć roś
 Jedna partia zmieści się na najmniejszym VPS (1 rdzeń, 1–2 GB). Pośrednik przy 8 graczach przenosi ok. 40 KB/s w każdą stronę,
 czyli ok. 150 MB w każdą stronę na godzinę partii. Do sprawdzenia w MP1: późna gra (90+ minut) z 8 ludami i najgorszy takt.
 
+**Pomiar MP1 (2026-11-25, prawdziwe TCP z Brotli, `--net-bench`):** 8 ludów, 8 graczy-botów przez sieć na tym samym komputerze, 60 minut gry,
+seedy 1–3 na mapie 98×60 i seed 1 na 140×84. AI gra za boty, więc ich widok rośnie jak u gracza. Wykres: `docs/multiplayer/mp1_pomiar_sieci.png`.
+
+| Minuta gry | Ruch na gracza (średnio / najwięcej) | Procesor serwera przy ×1 (gra + widoki dla 8) | Najgorszy takt |
+| --- | --- | --- | --- |
+| 1 (cała mapa na start) | 270–335 KB jednorazowo | 4% | 98–131 ms |
+| 15 | 3,8–4,8 / 8 KB/s | 0,8% | 2–3 ms |
+| 30 | 5,3–8 / 10 KB/s | 1,3–2,2% | 5–8 ms |
+| 45 | 6,3–7,6 / 10 KB/s | 2,7–3,3% | 7–18 ms |
+| 60 | 7,3–8 / 9 KB/s | 5,9–6,6% | 10–47 ms |
+
+- Godzina partii to ok. 18–24 MB do każdego gracza; pośrednik przy 8 graczach: ok. 65 KB/s, ok. 170 MB na godzinę w każdą stronę.
+- Brotli zmniejsza ruch 2–9 razy (na starcie 9 razy: 2,5 MB → 273 KB).
+- Pamięć całego procesu (serwer i 8 botów): 225–265 MB.
+- Procesor rośnie z czasem gry, prawie w całości przez widoki (60 min: 6 ms gry i 55–60 ms widoków na sekundę gry). To nadal mało,
+  ale krzywa rośnie coraz szybciej; do obejrzenia przed partiami 90+ minut (znany problem 20, rozdz. 10).
+- Ani razu serwer nie pominął widoku z powodu zapchanego połączenia.
+
 ## 3. Architektura (bez zmian po rundzie 1)
 
 - **Serwer autorytatywny:** tylko serwer liczy grę, sprawdza każdy rozkaz i wysyła każdemu graczowi widok przez jego mgłę wojny
@@ -282,7 +300,7 @@ Do zrobienia:
 
 | # | Gdzie | Co jest dziś | Co trzeba |
 | --- | --- | --- | --- |
-| 1 | `PlayHost.Receive` / `Pump` | Rozłączony gracz znika, ale jego lud zostaje „ludzki” i nikt go nie prowadzi (znany problem 19). | AI przejmuje lud; powrót oddaje go graczowi. |
+| 1 | `PlayHost.Receive` / `Pump` | Rozłączony gracz znika, a jego lud od razu prowadzi AI (sprawdzone testem w MP1), ale zapis o tym nie wie i gracz nie wraca na swój lud (znany problem 19). | Wyjście i przejęcie jako komenda w zapisie; powrót oddaje lud graczowi. |
 | 2 | `PlayHost.Run` | Wyjątek przy rozkazie jednego gracza zatrzymuje grę dla wszystkich. | Odrzucić wiadomość, ew. rozłączyć klienta. |
 | 3 | `PlayHost.Advance` | Kronika tylko dla ludu 0. | Każdy gracz dostaje swoją. |
 | 4 | `PlaySaves`, `Replay` | Zapis zna tylko ludy ludzi w chwili zapisu (znany problem 11). | Dołączenie, wyjście, przejęcie przez AI jako komenda z taktem. |
@@ -307,6 +325,33 @@ Do zrobienia:
 | **MP4. Gra z ludźmi** | Lista graczy z pingiem, czat (wszyscy, sojusznicy), głosowanie o prędkość i o przyjęcie nowego gracza, obserwatorzy, pauzy widoczne dla wszystkich, odpowiedzi na propozycje innego gracza, widz po upadku (cała mapa). | Scenariusz z dwoma botami; zrzuty. |
 | **MP5. Zapis i wczytanie** | Zapis u gospodarza/administratora, wczytanie do lobby, powrót na swoje miejsca. | Zapis po 10 min z 2 graczami, wczytanie, ten sam hasz. |
 | **MP6. Pośrednik, Docker, gałąź `server`** | `CivSim.Relay`, kody pokoi, TLS, obrazy Docker, workflow gałęzi `server` z CI i GHCR, instrukcja VPS po polsku. | Partia Patryka ze znajomym przez pośrednika na VPS; pomiar pingu i ruchu. |
+
+**Zrobione w MP1 (2026-11-25):**
+
+- `TcpConnection` (`src/CivSim.Protocol/Transport/`) za tym samym `IConnection` co gra solo. Na początku każda strona wysyła `CIVS` i wersję
+  protokołu: inny program albo inna wersja gry dostaje odmowę z powodem, zanim serwer odczyta jakąkolwiek wiadomość. Potem ramki:
+  4 bajty długości (najwyższy bit = Brotli) i ta sama ramka co w pamięci. Ramki od 512 B pakowane Brotli (jakość 4) na wątku wysyłania,
+  więc nie spowalniają gry.
+- Limity: klient może wysłać serwerowi ramkę do 256 KB (rozkazy mają po kilkaset bajtów), serwer klientowi do 64 MB. Spakowana ramka
+  podaje swój rozmiar po rozpakowaniu i jest odrzucana, zanim zostanie rozpakowana („bomba zip”). Więcej niż 4096 nieprzeczytanych
+  wiadomości = rozłączenie. 10 s na przywitanie. Zła ramka zamyka tylko to połączenie, nigdy wątku gry. Wysłanie do rozłączonego gracza
+  niczego nie psuje.
+- `PlayListener` (`src/CivSim.Server/`): nasłuch na porcie (domyślnie 7777), najwyżej 16 połączeń naraz i 8 z jednego adresu.
+- Serwer nie wysyła nowych widoków graczowi, który nie nadąża z odbiorem (ponad 32 ramki albo 8 MB w kolejce); kolejny widok
+  dosyła wszystko, co ominął, także zmienione kawałki mapy.
+- `PlayOptions.Dedicated`: serwer bez gracza przy komputerze. Wszystkie ludy prowadzi AI, dopóki ktoś nie dołączy. Start wybiera się
+  z limitem czasu, a gra od razu idzie z prędkością ×1.
+- `CivSim.Headless`:
+  - `--serve` uruchamia serwer bez okna i co 30 s wypisuje graczy, ruch, procesor i pamięć;
+  - `--join adres:port` to bot testowy, który dołącza i liczy, co przyszło;
+  - `--net-bench` mierzy ruch i czas serwera (tabela wyżej).
+- Testy:
+  - dwóch graczy przez TCP gra dokładnie tę samą partię co dwóch w pamięci: ten sam hasz i co do bajtu te same wiadomości;
+  - serwer bez okna oddaje lud graczowi i odbiera go po wyjściu;
+  - zapchany gracz;
+  - złe ramki: za duże, „bomba zip”, inny program, inna wersja, śmieci;
+  - wysyłanie po rozłączeniu.
+- Gra (okno Godota) jeszcze nie umie dołączyć do cudzego serwera. To menu „Multiplayer” w MP3.
 
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 

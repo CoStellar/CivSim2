@@ -16,6 +16,21 @@ public static class Program
             return SimReport.Execute(args, Console.Out); // the AI of the new game over many seeds
         }
 
+        if (args.Length > 0 && args[0] == "--serve")
+        {
+            return NetRun.Serve(args, Console.Out); // a multiplayer server without a window (MP1)
+        }
+
+        if (args.Length > 0 && args[0] == "--join")
+        {
+            return NetRun.Join(args, Console.Out); // a test client over the network
+        }
+
+        if (args.Length > 0 && args[0] == "--net-bench")
+        {
+            return NetRun.Bench(args, Console.Out); // traffic and server time with bots over TCP
+        }
+
         if (args.Length > 0 && args[0] == "--sim-scenario")
         {
             return SimScenarioRun.Execute(args, Console.Out); // a test scenario without Godot
