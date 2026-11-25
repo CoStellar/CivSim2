@@ -3681,7 +3681,8 @@
     "carryMinutes": 4,
     "landHands": 10,
     "landPercent": 100,
-    "noWaySeconds": 60
+    "noWaySeconds": 60,
+    "routesPerSettlement": 8
   },
   "armyLimit": {
     "comment": "Army units (not people) a people may have: perLevel for each settlement by its level (camp, village, town, city), plus perBuilding for each finished building of those kinds, plus perTech for each of those technologies known. Training stops at the limit; a big army stays possible, but costs food at every ration.",
@@ -3929,5 +3930,11 @@
     "fullPercent": 98,
     "stillFullPercent": 90,
     "stillEmptyBelow": 3
+  },
+  "drawnPaths": {
+    "comment": "A path given to a unit, a patrol, a road or a work: at most maxHexes hexes in all, at most maxJumps points that do not touch the one before (the way between them is searched, at most jumpSearchNodes hexes each).",
+    "maxHexes": 1000,
+    "maxJumps": 32,
+    "jumpSearchNodes": 12000
   }
 }

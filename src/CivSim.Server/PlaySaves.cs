@@ -80,8 +80,61 @@ public static class PlaySaves
     }
 
     /// <summary>Reads a save.</summary>
-    public static SavedGame Read(string path) =>
-        JsonSerializer.Deserialize<SavedGame>(File.ReadAllText(path), Json) ?? throw new InvalidDataException($"{path} is not a save.");
+    public static SavedGame Read(string path)
+    {
+        SavedGame save;
+        try
+        {
+            save = JsonSerializer.Deserialize<SavedGame>(File.ReadAllText(path), Json) ?? throw new InvalidDataException("It is not a save.");
+        }
+        catch (JsonException e)
+        {
+            throw new InvalidDataException("The file is damaged: " + e.Message.Split('.')[0] + ".", e);
+        }
+
+        Check(save);
+        return save;
+    }
+
+    /// <summary>The longest game a save may hold: replaying more would keep the game loading for minutes (abuse tests 2026-11-24).</summary>
+    public const long MaxTicks = 24L * 60 * 60 * 10;
+
+    /// <summary>
+    /// Refuses a save that cannot be the record of a real game (abuse tests 2026-11-24: an edited file crashed the game, froze it
+    /// replaying two billion ticks, read a file outside the scenarios folder or replayed commands for the AI).
+    /// </summary>
+    public static void Check(SavedGame save)
+    {
+        ArgumentNullException.ThrowIfNull(save);
+        PlayOptions o = save.Options ?? throw new InvalidDataException("The save has no game options.");
+        if (o.Civilizations is < 2 or > 8)
+        {
+            throw new InvalidDataException($"The save has {o.Civilizations} civilizations; a game has 2 to 8.");
+        }
+
+        if (o.LegacyWidth is < 20 or > 400 || o.LegacyHeight is < 12 or > 250)
+        {
+            throw new InvalidDataException($"The save's map {o.LegacyWidth}x{o.LegacyHeight} is not one the game makes.");
+        }
+
+        if (o.Scenario is { Length: > 0 } sc && (sc.IndexOfAny(['/', '\\', ':']) >= 0 || sc.Contains("..", StringComparison.Ordinal)))
+        {
+            throw new InvalidDataException("The save names a scenario outside the scenarios folder.");
+        }
+
+        if (save.Tick is < 0 or > MaxTicks)
+        {
+            throw new InvalidDataException("The save's time is not one a game reaches.");
+        }
+
+        foreach (SavedCommand c in save.Commands ?? [])
+        {
+            if (c.Tick < 0 || c.Tick > save.Tick || Array.IndexOf(save.Players ?? [], c.Civ) < 0)
+            {
+                throw new InvalidDataException("The save holds a command that no player of it could have given.");
+            }
+        }
+    }
 
     /// <summary>Saves in the folder, newest first: path, name, when, game minute, era.</summary>
     public static IReadOnlyList<(string Path, string Name, DateTime SavedAt, long Minute, string Era)> List()
@@ -112,6 +165,7 @@ public static class PlaySaves
     private static string Clean(string name)
     {
         string cleaned = new([.. (name ?? "").Trim().Select(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or ' ' ? ch : '_')]);
+        cleaned = cleaned.Length > 80 ? cleaned[..80].TrimEnd() : cleaned; // abuse tests 2026-11-24: a 400-letter name could not be written
         return cleaned.Length == 0 ? "save " + DateTime.UtcNow.ToString("yyyy-MM-dd HH-mm", CultureInfo.InvariantCulture) : cleaned;
     }
 }

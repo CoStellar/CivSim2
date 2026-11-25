@@ -461,7 +461,18 @@ public partial class PlayGame : Node2D
         AddChild(_camera);
         _camera.MakeCurrent();
         Zoom = 1.6f; // as the player sees it, whatever the interface size
-        _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario, Tutorial = _scenario is null }, _dataDirectory);
+        try
+        {
+            _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario, Tutorial = _scenario is null }, _dataDirectory);
+        }
+        catch (Exception e) when (e is System.IO.IOException or System.IO.InvalidDataException or UnauthorizedAccessException or System.Text.Json.JsonException or ArgumentException)
+        {
+            // Abuse tests 2026-11-24: a broken save or a missing scenario left an empty screen; back to the menu with why.
+            Ui.StartMenu.Notice = "The game could not start: " + e.Message;
+            Callable.From(() => MenuRequested?.Invoke()).CallDeferred();
+            return;
+        }
+
         _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
         AddChild(new Audio.GameAudio(_session, () => _camera));
         _session.CommandRefused += reason => Toast(reason);

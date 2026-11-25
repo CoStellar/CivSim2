@@ -308,6 +308,8 @@ d["lodes"]={"comment":"sizes: every deposit is small, medium or large (a mine or
 d["eraGateways"]={"comment":"Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
   "neolithic":"copper_working","bronze_age":"bronze_working","iron_age":"iron_working"}
 # Roads are part of the map, drawn hex by hex (decision of 2026-11-18): tracks from the start, paved roads with Roads.
+# Drawn paths and waypoints (abuse tests 2026-11-24: 5000 far waypoints froze the server for a second).
+d["drawnPaths"]={"comment":"A path given to a unit, a patrol, a road or a work: at most maxHexes hexes in all, at most maxJumps points that do not touch the one before (the way between them is searched, at most jumpSearchNodes hexes each).","maxHexes":1000,"maxJumps":32,"jumpSearchNodes":12000}
 d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of the hex's cost (capped at 150 so roads cross rough land). reach: hexes from our nearest settlement. supply: goods carriers bring to a new camp joined to our roads.",
   "levels":[{"key":"track","name":"Track","tech":"carrying","price":{"wood":2},"seconds":2,"walkPercent":60},
             {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
@@ -379,6 +381,8 @@ d["upgradeCaravans"]={"comment":"A settlement short of the goods for its upgrade
   "extraPercent":10,"aiRetrySeconds":60}
 # A2/A3 (tests 2026-11-20): a caravan to a unit with no way to it is refused; the AI does not send another for noWaySeconds.
 d["supply"]["noWaySeconds"]=60
+# Abuse tests 2026-11-24: 5000 standing routes sent 2000 caravans a minute from settlements of one person.
+d["supply"]["routesPerSettlement"]=8
 if "noWaySeconds:" not in d["supply"]["comment"]:
     d["supply"]["comment"]+=" noWaySeconds: a caravan to a unit there is no way to is refused, and the AI sends none to that unit for this long."
 # Decisions of Patryk after the tests of 2026-11-20 (claude/decyzje-testy-2026-11-20.md).

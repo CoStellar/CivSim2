@@ -215,9 +215,10 @@ public sealed partial class SimGame
         UnitType t = Content.Units[kind];
         long each = t.CargoPerPerson + (Bonus(civ, EffectKind.Cargo, t.Key, t.Groups) * SimContent.One); // baskets: Carrying
         int people = (int)Math.Clamp((total + each - 1) / Math.Max(1, each), 1, Math.Max(1, home.People - 1));
-        home.People = Math.Max(1, home.People - people);
+        int taken = Math.Min(people, Math.Max(0, home.People - 1));
+        home.People -= taken;
         home.Idle = Math.Min(home.Idle, home.People); // B6: never more idle than people until the next count
-        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Cell = fromCell, State = UnitState.Idle, Cargo = cargo, Home = home.Id, ReturnCell = fromCell, Horses = horses };
+        var u = new Unit { Id = Units.Count, Civ = civ.Id, Kind = kind, People = people, Lent = people - taken, Cell = fromCell, State = UnitState.Idle, Cargo = cargo, Home = home.Id, ReturnCell = fromCell, Horses = horses };
         Units.Add(u);
         civ.Units.Add(u.Id);
         civ.Dirty = true;
@@ -323,7 +324,7 @@ public sealed partial class SimGame
                 break;
             case CarrierJob.Returning:
                 Settlement home = u.Home >= 0 && Settlements[u.Home].Civ == u.Civ ? Settlements[u.Home] : NearestOwn(civ, u.Cell) ?? Settlements[u.Home];
-                home.People += u.People;
+                home.People += Math.Max(0, u.People - u.Lent);
                 if (u.Cargo is not null)
                 {
                     Unload(home, u.Cargo);
@@ -556,6 +557,11 @@ public sealed partial class SimGame
             return $"{s.Name} has no {GoodText(good)} to send.";
         }
 
+        if (s.People < 2)
+        {
+            return $"Nobody in {s.Name} can carry it."; // abuse tests 2026-11-24: one person sent caravan after caravan
+        }
+
         var load = new long[Content.Goods.Count];
         load[good] = send;
         Unit c = NewCarrier(civ, Content.Caravans, s, NearestStore(s, Settlements[to].Center), load, 100);
@@ -595,6 +601,18 @@ public sealed partial class SimGame
         if (keep < 0 || until < 0)
         {
             return "What stays at the source and what the target should have cannot be less than nothing."; // E2 (tests 2026-11-23)
+        }
+
+        int most = civ.Settlements.Count * Content.RoutesPerSettlement;
+        int have = 0;
+        foreach (TradeRoute r in Routes)
+        {
+            have += r.Civ == civ.Id && !r.Ended ? 1 : 0;
+        }
+
+        if (have >= most)
+        {
+            return $"We keep at most {Content.RoutesPerSettlement} routes per settlement ({most}); end one first.";
         }
 
         var route = new TradeRoute { Civ = civ.Id, From = from, To = to, Good = good, Amount = amount, KeepAtSource = Math.Max(0, keep), UntilTargetHas = Math.Max(0, until) };
