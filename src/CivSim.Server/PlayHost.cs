@@ -48,6 +48,12 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
     /// with the time limit, and the game runs at normal speed from the start.
     /// </summary>
     public bool Dedicated { get; init; }
+
+    /// <summary>Places for players in a multiplayer game (0 = any free people); the AI leads the rest (MP3).</summary>
+    public int HumanSeats { get; init; }
+
+    /// <summary>Speed when the game begins: 1 = x1, 2 = x2; 0 = paused (alone) or x1 (server without a window) (MP3).</summary>
+    public int StartSpeed { get; init; }
 }
 
 /// <summary>
@@ -57,7 +63,7 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 public sealed class PlayHost : IDisposable
 {
     private static readonly TimeSpan ViewInterval = TimeSpan.FromMilliseconds(100);
-    private readonly ConcurrentQueue<IConnection> _pending = new();
+    private readonly ConcurrentQueue<(IConnection Connection, int Civ)> _pending = new();
     private readonly List<PlayClient> _clients = [];
     private readonly Thread _thread;
     private readonly SimGame _game;
@@ -134,7 +140,7 @@ public sealed class PlayHost : IDisposable
         return new PlayHost(game, options)
         {
             _replay = save,
-            _speed = options.Dedicated ? SimulationSpeed.X1 : SimulationSpeed.Paused,
+            _speed = options.StartSpeed is 1 or 2 ? (SimulationSpeed)options.StartSpeed : options.Dedicated ? SimulationSpeed.X1 : SimulationSpeed.Paused,
             _startPlayers = [.. game.Civs.Where(c => !c.IsAi).Select(c => c.Id)],
         };
     }
@@ -174,6 +180,19 @@ public sealed class PlayHost : IDisposable
     /// kept in saves.
     /// </summary>
     public string Password { get; set; } = "";
+
+    /// <summary>
+    /// Holds the game still until <paramref name="players"/> players have joined, for at most <paramref name="wait"/>: when a lobby
+    /// starts the game, its players join a moment later and the AI should not choose their start meanwhile (MP3). Any thread.
+    /// </summary>
+    public void ExpectPlayers(int players, TimeSpan wait)
+    {
+        Interlocked.Exchange(ref _expectUntil, Stopwatch.GetTimestamp() + (long)(wait.TotalSeconds * Stopwatch.Frequency));
+        Volatile.Write(ref _expect, players);
+    }
+
+    private int _expect;
+    private long _expectUntil;
 
     /// <summary>Messages of clients that failed on the server (the message was dropped, the game went on; any thread).</summary>
     public long ClientFaults => Interlocked.Read(ref _clientFaults);
@@ -253,9 +272,9 @@ public sealed class PlayHost : IDisposable
 
     private void Pump()
     {
-        while (_pending.TryDequeue(out IConnection? c))
+        while (_pending.TryDequeue(out (IConnection Connection, int Civ) c))
         {
-            _clients.Add(new PlayClient(c, _game.Geo.CellCount));
+            _clients.Add(new PlayClient(c.Connection, _game.Geo.CellCount) { Place = c.Civ });
         }
 
         foreach (PlayClient client in _clients)
@@ -320,6 +339,10 @@ public sealed class PlayHost : IDisposable
     private void Lead(int civ, bool player)
     {
         _game.Civs[civ].IsAi = !player;
+        if (_game.Picking && _game.PickOrder[_game.PickIndex] == civ)
+        {
+            _game.RestartPickClock(); // a player who takes over the people choosing now gets the player's time (MP3)
+        }
 
         // Alone, a player chooses the start without a time limit (E13); with other players everyone has the same limit (MP2).
         _game.PickWaitsForPlayers = !_options.Dedicated && _game.Civs.Count(c => !c.IsAi) <= 1;
@@ -329,15 +352,18 @@ public sealed class PlayHost : IDisposable
     public IConnection Connect()
     {
         (InMemoryConnection client, InMemoryConnection server) = InMemoryConnection.CreatePair();
-        _pending.Enqueue(server);
+        _pending.Enqueue((server, -1));
         return client;
     }
 
-    /// <summary>Takes the server end of a connection from elsewhere (a player over the network); any thread.</summary>
-    public void Accept(IConnection connection)
+    /// <summary>
+    /// Takes the server end of a connection from elsewhere (a player over the network); any thread. <paramref name="civ"/>: the people
+    /// this player leads after Hello (a lobby's place), or −1 for the next free one.
+    /// </summary>
+    public void Accept(IConnection connection, int civ = -1)
     {
         ArgumentNullException.ThrowIfNull(connection);
-        _pending.Enqueue(connection);
+        _pending.Enqueue((connection, civ));
     }
 
     /// <summary>Stops the game thread.</summary>
@@ -360,6 +386,13 @@ public sealed class PlayHost : IDisposable
             while (!_stopping)
             {
                 Pump();
+                if (_players < Volatile.Read(ref _expect) && Stopwatch.GetTimestamp() < Interlocked.Read(ref _expectUntil))
+                {
+                    lastTick = Stopwatch.GetTimestamp(); // the lobby's players are still on their way
+                    Thread.Sleep(2);
+                    continue;
+                }
+
                 int ticksPerSecond = (int)_speed * SimContent.TicksPerSecond;
                 if (_speed == SimulationSpeed.Max)
                 {
@@ -531,10 +564,19 @@ public sealed class PlayHost : IDisposable
 
         // Back after a lost connection: the same people again (MP2). Otherwise the next free people that no absent player
         // keeps; the AI hands it over (multiplayer from the start, ADR 0028).
+        bool back = hello.ReturnKey is { Length: > 0 } k && _returnKeys.ContainsKey(k);
+        if (!back && _options.HumanSeats > 0 && _clients.Count(c => c.Civ >= 0) >= _options.HumanSeats)
+        {
+            Drop(client, "Every place for players is taken.");
+            return;
+        }
+
         int civ = hello.ReturnKey is { Length: > 0 } key && _returnKeys.TryGetValue(key, out int kept) && !_game.Civs[kept].Dead
             && !_clients.Exists(c => c.Civ == kept)
             ? kept
-            : NextFreeCiv();
+            : client.Place >= 0 && client.Place < _game.Civs.Count && !_game.Civs[client.Place].Dead && !_clients.Exists(c => c.Civ == client.Place)
+                ? client.Place
+                : NextFreeCiv();
         if (civ < 0)
         {
             Drop(client, "Every civilization already has a player.");
@@ -551,7 +593,7 @@ public sealed class PlayHost : IDisposable
     }
 
     // Compares hashes, so the time taken says nothing about the password (multiplayer plan, chapter 9).
-    private static bool SamePassword(string given, string password)
+    internal static bool SamePassword(string given, string password)
     {
         if (password.Length == 0)
         {
@@ -1923,6 +1965,9 @@ public sealed class PlayHost : IDisposable
 
         /// <summary>Changed map parts of rounds skipped while the connection was congested.</summary>
         public HashSet<int> MissedChunks { get; } = [];
+
+        /// <summary>The people this client leads after Hello (its place in the lobby), or −1 for the next free one.</summary>
+        public int Place { get; init; } = -1;
 
         /// <summary>Messages of this client that failed on the server.</summary>
         public int Faults { get; set; }

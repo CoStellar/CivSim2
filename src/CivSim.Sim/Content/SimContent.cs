@@ -984,6 +984,9 @@ public sealed class SimContent
     /// <summary>Branches of the technology tree, in display order.</summary>
     public string[] TechCategories { get; init; } = [];
 
+    /// <summary>Added to a nickname already taken in a multiplayer game (Patryk, R4-4, 2026-11-25).</summary>
+    public string[] NicknameSuffixes { get; init; } = [];
+
     /// <summary>Id of food.</summary>
     public int Food { get; init; }
 
@@ -2026,6 +2029,9 @@ public sealed class SimContent
             EraEntryMade = [.. eras.Select(e => root.TryProp("eraEntryMade", out JsonElement em) && em.TryProp(e.Key, out JsonElement ek)
                 ? Amounts(ek) : new long[goods.Count])],
             TechCategories = Strings(root, "techCategories"),
+            NicknameSuffixes = root.TryProp("multiplayer", out JsonElement mpEl) && mpEl.TryProp("nicknameSuffixes", out JsonElement nsEl)
+                ? [.. nsEl.EnumerateArray().Select(x => x.GetString() ?? "")]
+                : [],
             Food = GoodOf("food"),
             Units = units,
             FoundMinDistance = root.Prop("foundSettlement").Prop("minDistance").GetInt32(),

@@ -218,6 +218,33 @@ public sealed class StartSettings
     /// <summary>New game: number of peoples (the player's included).</summary>
     public int Peoples { get; set; } = 4;
 
+    /// <summary>Nickname in multiplayer games (R3-12: kept for the next games).</summary>
+    public string Nickname { get; set; } = string.Empty;
+
+    /// <summary>Address of the last server joined.</summary>
+    public string JoinAddress { get; set; } = "127.0.0.1";
+
+    /// <summary>Port of the last server joined.</summary>
+    public int JoinPort { get; set; } = CivSim.Protocol.Transport.TcpConnection.DefaultPort;
+
+    /// <summary>Name of the game this player hosts.</summary>
+    public string HostGameName { get; set; } = "CivSim game";
+
+    /// <summary>Port this player hosts on.</summary>
+    public int HostPort { get; set; } = CivSim.Protocol.Transport.TcpConnection.DefaultPort;
+
+    /// <summary>Places for players in a hosted game (2–8, at most the civilizations).</summary>
+    public int HostSeats { get; set; } = 2;
+
+    /// <summary>Speed of a hosted game: 1 = x1, 2 = x2.</summary>
+    public int HostSpeed { get; set; } = 1;
+
+    /// <summary>Server ("address:port") of <see cref="LastReturnKey"/>.</summary>
+    public string LastServer { get; set; } = string.Empty;
+
+    /// <summary>The key to lead the same people again on <see cref="LastServer"/> after a lost connection (MP2).</summary>
+    public string LastReturnKey { get; set; } = string.Empty;
+
     /// <summary>Speed word to the protocol value.</summary>
     public static SimulationSpeed ParseSpeed(string? word) => word switch
     {

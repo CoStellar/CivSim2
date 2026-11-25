@@ -68,6 +68,12 @@ public partial class StartMenu : CanvasLayer
     /// <summary>Raised when the user presses Quit.</summary>
     public event Action? QuitRequested;
 
+    /// <summary>Raised to join a game on another computer: address, port, password (MP3).</summary>
+    public event Action<string, int, string>? JoinRequested;
+
+    /// <summary>Raised to host a multiplayer game: the game (from New game), the lobby's settings and the port (MP3).</summary>
+    public event Action<PlayOptions, LobbyConfig, int>? HostRequested;
+
     /// <summary>Raised to start a game: a new one, a test scenario or a save to load.</summary>
     public event Action<PlayOptions>? PlayRequested;
 
@@ -96,7 +102,7 @@ public partial class StartMenu : CanvasLayer
         nav.AddChild(new Label { Text = "Lead your civilization through the ages.", Modulate = new Color(0.75f, 0.75f, 0.75f) });
         nav.AddChild(new Control { CustomMinimumSize = new Vector2(0, 16) });
         Button? current = null;
-        foreach ((string key, string label) in new[] { ("new", "New game"), ("load", "Load game"), ("manual", "How to play"), ("tests", "Test scenarios"), ("settings", "Settings") })
+        foreach ((string key, string label) in new[] { ("new", "New game"), ("multi", "Multiplayer"), ("load", "Load game"), ("manual", "How to play"), ("tests", "Test scenarios"), ("settings", "Settings") })
         {
             var b = new Button { Text = label, CustomMinimumSize = new Vector2(240, 44), ToggleMode = true, ButtonPressed = key == _section, TooltipText = key == "manual" ? "The manual: the goal, the eras, war and peace, every key (F1)" : "" };
             b.Pressed += () => Show(key);
@@ -202,6 +208,9 @@ public partial class StartMenu : CanvasLayer
             case "manual":
                 ManualSection();
                 break;
+            case "multi":
+                MultiplayerSection();
+                break;
             default:
                 NewGameSection();
                 break;
@@ -272,7 +281,120 @@ public partial class StartMenu : CanvasLayer
         play.GrabFocus();
     }
 
-    private PlayOptions NewGameOptions()
+    // Multiplayer (MP3): the nickname, joining a game by address and port, hosting one with the world and game of New game.
+    private void MultiplayerSection()
+    {
+        _content.AddChild(Heading("You"));
+        GridContainer you = Grid();
+        Text(you, "Nickname", _settings.Nickname, v => _settings.Nickname = v, "the name other players see (kept for next time)");
+
+        _content.AddChild(Heading("Join a game"));
+        GridContainer join = Grid();
+        Text(join, "Address", _settings.JoinAddress, v => _settings.JoinAddress = v.Trim(), "the host's address, e.g. 192.168.1.20");
+        LineEdit joinPort = Text(join, "Port", _settings.JoinPort.ToString(CultureInfo.InvariantCulture), v => _settings.JoinPort = PortOf(v, _settings.JoinPort), "7777 unless the host says otherwise");
+        _ = joinPort;
+        LineEdit joinPassword = Secret(join, "Password", "if the game has one");
+        var joinButton = new Button { Text = "Join", CustomMinimumSize = new Vector2(200, 44), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
+        joinButton.Pressed += () => JoinRequested?.Invoke(_settings.JoinAddress, _settings.JoinPort, joinPassword.Text);
+        _content.AddChild(joinButton);
+
+        _content.AddChild(Heading("Host a game"));
+        _content.AddChild(Muted("The world and the game are those of New game. Players join with your address and the port below; "
+            + "over the internet the port must be open on your router (a relay server comes later)."));
+        string mine = MyAddresses();
+        if (mine.Length > 0)
+        {
+            _content.AddChild(Muted("Your addresses: " + mine));
+        }
+
+        GridContainer host = Grid();
+        Text(host, "Game name", _settings.HostGameName, v => _settings.HostGameName = v, "what players see in the lobby");
+        LineEdit hostPassword = Secret(host, "Password", "empty: anyone may join");
+        Text(host, "Port", _settings.HostPort.ToString(CultureInfo.InvariantCulture), v => _settings.HostPort = PortOf(v, _settings.HostPort), "1024 to 65535");
+        host.AddChild(new Label { Text = "Places for players", CustomMinimumSize = new Vector2(120, 0) });
+        var seats = new SpinBox { MinValue = 2, MaxValue = 8, Value = Math.Clamp(_settings.HostSeats, 2, 8), Rounded = true, CustomMinimumSize = new Vector2(260, 0), TooltipText = "The AI leads the other civilizations; at most as many as the civilizations of New game" };
+        seats.ValueChanged += v => _settings.HostSeats = (int)v;
+        host.AddChild(seats);
+        var warning = Muted("x2 is harder: less time for every decision.");
+        Choice(host, "Speed", ["x1", "x2"], _settings.HostSpeed == 2 ? 1 : 0, i =>
+        {
+            _settings.HostSpeed = i + 1;
+            warning.Visible = i == 1;
+        });
+        warning.Visible = _settings.HostSpeed == 2;
+        _content.AddChild(warning);
+        var hostButton = new Button { Text = "Host", CustomMinimumSize = new Vector2(200, 44), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
+        hostButton.Pressed += () =>
+        {
+            PlayOptions options;
+            try
+            {
+                options = NewGameOptions();
+            }
+            catch (FormatException e)
+            {
+                Notice = "New game: " + e.Message;
+                Show("multi");
+                return;
+            }
+
+            options = options with
+            {
+                Tutorial = false,
+                HumanSeats = Math.Clamp(_settings.HostSeats, 1, options.Civilizations),
+                StartSpeed = _settings.HostSpeed == 2 ? 2 : 1,
+            };
+            HostRequested?.Invoke(options, new LobbyConfig { GameName = _settings.HostGameName.Trim() is { Length: > 0 } n ? n : "CivSim game", Password = hostPassword.Text }, _settings.HostPort);
+        };
+        _content.AddChild(hostButton);
+        joinButton.GrabFocus();
+    }
+
+    private static int PortOf(string text, int fallback) =>
+        int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int p) && p is >= 1024 and <= 65535 ? p : fallback;
+
+    private static LineEdit Secret(GridContainer g, string label, string hint)
+    {
+        g.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(120, 0) });
+        var edit = new LineEdit { Secret = true, PlaceholderText = hint, TooltipText = hint, CustomMinimumSize = new Vector2(260, 0) };
+        g.AddChild(edit);
+        return edit;
+    }
+
+    // The computer's own addresses in the local network (what friends type to join).
+    private static string MyAddresses()
+    {
+        try
+        {
+            var found = new List<string>();
+            foreach (System.Net.NetworkInformation.NetworkInterface ni in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (ni.OperationalStatus != System.Net.NetworkInformation.OperationalStatus.Up || ni.NetworkInterfaceType == System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+                {
+                    continue;
+                }
+
+                foreach (System.Net.NetworkInformation.UnicastIPAddressInformation a in ni.GetIPProperties().UnicastAddresses)
+                {
+                    if (a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        found.Add(a.Address.ToString());
+                    }
+                }
+            }
+
+            return string.Join(", ", found);
+        }
+        catch (System.Net.NetworkInformation.NetworkInformationException)
+        {
+            return "";
+        }
+    }
+
+    private PlayOptions NewGameOptions() => NewGameOptions(_settings);
+
+    /// <summary>The game New game starts with these settings (also the game a multiplayer host offers, MP3).</summary>
+    public static PlayOptions NewGameOptions(StartSettings _settings)
     {
         ulong seed = ulong.TryParse(_settings.Seed, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
         (string _, string _, int width, int height) = Sizes.FirstOrDefault(x => x.Key == _settings.MapSize, Sizes[1]);

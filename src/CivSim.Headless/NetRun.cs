@@ -30,11 +30,13 @@ public static class NetRun
 
     /// <summary>Usage of the three commands.</summary>
     public const string Usage = """
-        --serve [--port 7777] [--password P] [--seed N] [--civs 4] [--size 98x60] [--no-start-phase] [--stats-seconds 30] [--minutes N]
-            A server without a window. Every people is led by the AI until a player joins; the game runs at x1.
-            Stops after N minutes (default: never, Ctrl+C).
-        --join host[:port] [--name Bot] [--password P] [--seconds 60]
-            A test client: joins, reads the views and prints what came. Exit code 0 when the server let it in.
+        --serve [--port 7777] [--password P] [--name "Game"] [--seats N] [--speed 1|2] [--seed N] [--civs 4] [--size 98x60]
+                [--no-start-phase] [--no-lobby] [--stats-seconds 30] [--minutes N]
+            A server without a window. Players meet in the lobby; the first one in is the host and starts the game (--no-lobby:
+            the game starts at once). Every people is led by the AI until a player joins. Stops after N minutes (default: never, Ctrl+C).
+        --join host[:port] [--name Bot] [--password P] [--seconds 60] [--start N]
+            A test client: joins, says it is ready in a lobby (and, as the host, starts the game once N players are in with --start N), reads the
+            views and prints what came. Exit code 0 when the game let it in.
         --net-bench [--civs 8] [--clients 8] [--minutes 45] [--seed 1] [--size 98x60] [--csv file]
             A server and bots over TCP on this computer, as fast as it goes; the AI plays for the bots, so their views grow
             as a player's would. Prints traffic per player and server time per minute of the game.
@@ -55,10 +57,25 @@ public static class NetRun
         int port = Int(args, "--port", TcpConnection.DefaultPort);
         int statsSeconds = Math.Max(1, Int(args, "--stats-seconds", 30));
         int minutes = Int(args, "--minutes", 0);
-        using PlayHost host = PlayHost.Start(options! with { Dedicated = true });
-        host.Password = Text(args, "--password") ?? "";
-        using var listener = new PlayListener(host, port);
-        output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, seed {options!.Seed}, {options.Civilizations} peoples, map {options.LegacyWidth}x{options.LegacyHeight}"));
+        string password = Text(args, "--password") ?? "";
+        options = options! with
+        {
+            Dedicated = true,
+            HumanSeats = Math.Clamp(Int(args, "--seats", options.Civilizations), 1, options.Civilizations),
+            StartSpeed = Int(args, "--speed", 1) == 2 ? 2 : 1,
+        };
+
+        // With a lobby (MP3) the first player in is the host and starts the game; --no-lobby starts it at once.
+        using PlayLobby? lobby = args.Contains("--no-lobby") ? null : PlayLobby.Start(options, new LobbyConfig { GameName = Text(args, "--name") ?? "CivSim game", Password = password });
+        PlayHost? direct = lobby is null ? PlayHost.Start(options) : null;
+        if (direct is not null)
+        {
+            direct.Password = password;
+        }
+
+        using PlayHost? owned = direct;
+        using var listener = new PlayListener(c => (lobby is not null ? (Action<IConnection>)lobby.Accept : x => direct!.Accept(x))(c), port);
+        output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, seed {options.Seed}, {options.Civilizations} peoples ({options.HumanSeats} for players), map {options.LegacyWidth}x{options.LegacyHeight}{(lobby is null ? "" : ", lobby open")}"));
         output.WriteLine("Players join with the game or with: dotnet run --project src/CivSim.Headless -c Release -- --join <address>:" + listener.Port.ToString(Inv));
         using var stop = new ManualResetEventSlim();
         Console.CancelKeyPress += (_, e) =>
@@ -73,6 +90,13 @@ public static class NetRun
         double lastAt = 0;
         while (!stop.Wait(TimeSpan.FromSeconds(statsSeconds)))
         {
+            PlayHost? host = direct ?? lobby?.Game;
+            if (host is null)
+            {
+                output.WriteLine(string.Create(Inv, $"[{started.Elapsed:hh\\:mm\\:ss}] lobby: {lobby!.Players} of {options.HumanSeats} players"));
+                continue;
+            }
+
             if (host.Error is { } failed)
             {
                 output.WriteLine("The game stopped: " + failed);
@@ -135,6 +159,8 @@ public static class NetRun
             var watch = Stopwatch.StartNew();
             var kinds = new SortedDictionary<string, int>(StringComparer.Ordinal);
             bool welcomed = false;
+            bool ready = false;
+            bool startAsked = false;
             long tick = -1;
             double nextReport = 10;
             while ((connection.IsOpen || connection.Unread > 0) && watch.Elapsed.TotalSeconds < seconds)
@@ -152,6 +178,26 @@ public static class NetRun
                         case ConnectionRejectedMessage r:
                             output.WriteLine("The server turned us away: " + r.Reason);
                             return 1;
+                        case LobbyStateMessage lobby:
+                            if (!ready)
+                            {
+                                ready = true;
+                                output.WriteLine($"In the lobby of \"{lobby.GameName}\" as {lobby.Seats[lobby.You].Name}; {lobby.Seats.Count} of {lobby.HumanSeats} places taken.");
+                                connection.Send(new LobbyReadyMessage(true));
+                            }
+
+                            if (lobby.CanStart && Int(args, "--start", 0) is int with && with > 0 && lobby.Seats.Count >= with && !startAsked)
+                            {
+                                startAsked = true;
+                                output.WriteLine("Starting the game.");
+                                connection.Send(new LobbyStartMessage());
+                            }
+
+                            break;
+                        case GameStartingMessage:
+                            output.WriteLine("The game starts.");
+                            connection.Send(new HelloMessage(ProtocolInfo.Version, name, Password: Text(args, "--password") ?? ""));
+                            break;
                         case PlayViewMessage v:
                             tick = v.Tick;
                             break;

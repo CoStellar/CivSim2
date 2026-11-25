@@ -20,7 +20,7 @@ public sealed class PlayListener : IDisposable
     /// <summary>Connections open at once from one address (a few players behind one home router).</summary>
     public const int DefaultMaxPerAddress = 8;
 
-    private readonly PlayHost _host;
+    private readonly Action<IConnection> _accept;
     private readonly TcpListener _listener;
     private readonly Thread _thread;
     private readonly List<TcpConnection> _connections = [];
@@ -32,9 +32,22 @@ public sealed class PlayListener : IDisposable
     /// <summary>Starts listening. Port 0 takes any free port (tests); <see cref="Port"/> says which.</summary>
     public PlayListener(PlayHost host, int port = TcpConnection.DefaultPort, IPAddress? address = null,
         int maxConnections = DefaultMaxConnections, int maxPerAddress = DefaultMaxPerAddress)
+        : this(Into(host), port, address, maxConnections, maxPerAddress)
+    {
+    }
+
+    private static Action<IConnection> Into(PlayHost host)
     {
         ArgumentNullException.ThrowIfNull(host);
-        _host = host;
+        return c => host.Accept(c);
+    }
+
+    /// <summary>Starts listening and hands every connection to <paramref name="accept"/> (a lobby, then its game).</summary>
+    public PlayListener(Action<IConnection> accept, int port = TcpConnection.DefaultPort, IPAddress? address = null,
+        int maxConnections = DefaultMaxConnections, int maxPerAddress = DefaultMaxPerAddress)
+    {
+        ArgumentNullException.ThrowIfNull(accept);
+        _accept = accept;
         _maxConnections = maxConnections;
         _maxPerAddress = maxPerAddress;
         _listener = new TcpListener(address ?? IPAddress.Any, port);
@@ -121,7 +134,7 @@ public sealed class PlayListener : IDisposable
 
                 var connection = new TcpConnection(socket, TcpConnection.MaxClientFrame);
                 _connections.Add(connection);
-                _host.Accept(connection);
+                _accept(connection);
             }
         }
     }

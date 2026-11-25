@@ -530,3 +530,11 @@ d["peace"]["whiteTruceMinutes"]=3
 if "whiteTruceMinutes:" not in d["peace"]["comment"]:
     d["peace"]["comment"]+=" whiteTruceMinutes: after a white peace neither side may declare war on the other (or attack it) for this many minutes."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+
+# R4-4 (Patryk, 2026-11-25, multiplayer plan chapter 22): a nickname already in the game gets one of these, not yet taken.
+d=json.load(open(p))
+d["multiplayer"]={
+    "comment":"nicknameSuffixes: a player whose nickname is already taken in a game gets one of these at random, one no other player there has (e.g. \"Ania the Late\").",
+    "nicknameSuffixes":["the Second","the Other One","Doppelganger","the Late","the Lesser","the Echo","the Understudy","the Spare","the Sequel","the Remake","the Evil Twin","the Good Twin","the Copy","the Imposter","the Reflection","from Another Timeline","the Bootleg","Junior","the Rerun","Number Two","the Backup","the Shadow","Who Came Later","the Lookalike","the Knockoff","the Encore","the Mirror","the Unexpected","the Uninvited","the Also","Mk II","the Reprint","the Afterthought","the Other Other One","Who Was Here First (Allegedly)","the Clone","the Duplicate","the Recurring","the Reissue","Again","the Unoriginal","the Forgery","the Stand-In","the Body Double","the Alter Ego","the Remix","the Second Draft","the Twice-Told","the Returning","the Also-Ran"],
+}
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
