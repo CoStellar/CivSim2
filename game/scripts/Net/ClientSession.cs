@@ -24,13 +24,31 @@ public sealed class ClientSession
     private long _lastTurn;
     private long _sequence;
 
-    /// <summary>Connects and says hello in the given role; a player names the civilization it leads (or any free one).</summary>
-    public ClientSession(IConnection connection, ClientRole role, string name, int civ = HelloMessage.AnyCiv)
+    /// <summary>
+    /// Connects and says hello in the given role; a player names the civilization it leads (or any free one). Without
+    /// <paramref name="hello"/> the hello was said already (the lobby screen of a game on another computer, MP3).
+    /// </summary>
+    public ClientSession(IConnection connection, ClientRole role, string name, int civ = HelloMessage.AnyCiv, string password = "", string returnKey = "", bool hello = true)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         Role = role;
-        _connection.Send(new HelloMessage(ProtocolInfo.Version, name, role, civ));
+        if (hello)
+        {
+            _connection.Send(new HelloMessage(ProtocolInfo.Version, name, role, civ, Password: password, ReturnKey: returnKey));
+        }
     }
+
+    /// <summary>Why the server turned this client away, or null.</summary>
+    public string? Rejected { get; private set; }
+
+    /// <summary>Why the connection closed, when the other side said so or the network did (a game on another computer).</summary>
+    public string? CloseReason => _connection is TcpConnection t ? t.CloseReason : null;
+
+    /// <summary>False once the server closed the connection or it was lost (a game on another computer).</summary>
+    public bool IsOpen => _connection.IsOpen;
+
+    /// <summary>The key to lead the same people again after a lost connection (MP2); empty until Welcome.</summary>
+    public string ReturnKey { get; private set; } = "";
 
     /// <summary>Observer (sees everything) or player (leads one civilization through its fog).</summary>
     public ClientRole Role { get; }
@@ -242,6 +260,7 @@ public sealed class ClientSession
             case WelcomeMessage w:
                 PlayerId = w.PlayerId;
                 CivId = w.CivId;
+                ReturnKey = w.ReturnKey ?? "";
                 break;
             case ContentMessage c:
                 Content = c;
@@ -319,6 +338,7 @@ public sealed class ClientSession
                 break;
             case ConnectionRejectedMessage rejected:
                 LastError = rejected.Reason;
+                Rejected = rejected.Reason;
                 break;
             case CommandRejectedMessage rejected:
                 LastError = rejected.Reason;

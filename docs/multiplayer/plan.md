@@ -304,12 +304,12 @@ Do zrobienia:
 | 2 | `PlayHost.Run` | Wyjątek przy rozkazie jednego gracza zatrzymuje grę dla wszystkich. | **Zrobione w MP2:** wiadomość odrzucona, po 3 takich rozłączenie. |
 | 3 | `PlayHost.Advance` | Kronika tylko dla ludu 0. | **Zrobione w MP2:** każdy gracz dostaje swoją. |
 | 4 | `PlaySaves`, `Replay` | Zapis zna tylko ludy ludzi w chwili zapisu (znany problem 11). | **Zrobione w MP2** (zapis w formacie 2, liczony co krok gry). |
-| 5 | `PlayHost.Create` | Wybór startu czeka bez limitu. | **Zrobione w MP2:** z drugim graczem limit 30 s (do ustawienia w MP3). |
-| 6 | `Receive` (`HelloMessage`) | „Następny wolny lud”, bez imienia gracza, bez hasła. | **MP2:** hasło i klucz powrotu. Miejsca z lobby, imię i kolor w MP3. |
+| 5 | `PlayHost.Create` | Wybór startu czeka bez limitu. | **Zrobione w MP2:** z drugim graczem limit 30 s (ustawienie w menu jeszcze nie: stałe 30 s). |
+| 6 | `Receive` (`HelloMessage`) | „Następny wolny lud”, bez imienia gracza, bez hasła. | **Zrobione w MP2–MP3:** hasło, klucz powrotu, miejsca z lobby, pseudonim. Kolor: jeszcze nie. |
 | 7 | `SetSpeed` | Prędkość ustawia ostatni pytający, także Max. | **MP2:** z innymi graczami tylko ×1/×2. Głosowanie w MP4. |
 | 8 | `Receive` (debug) | Klawisze debug ma gospodarz. | **Zrobione w MP2.** |
 | 9 | `HelloMessage` | Tylko wersja protokołu. | **MP2:** także wersja gry. Skrót danych niepotrzebny: klient dostaje dane gry od serwera. |
-| 10 | Klient (`PlayGame.cs`) | Zawsze sam uruchamia serwer. | Tryb „dołącz”: samo połączenie. |
+| 10 | Klient (`PlayGame.cs`) | Zawsze sam uruchamia serwer. | **Zrobione w MP3:** tryb „dołącz”: samo połączenie. |
 | 11 | `Save` | Nazwa i era od ludu 0, zapisać może każdy. | Zapis robi gospodarz/administrator; w zapisie gracze. |
 | 12 | `SimGame.Create`, menu | Zaawansowane ustawienia świata nieprzekazywane. | PR W1 (rozdz. 7). |
 
@@ -373,6 +373,33 @@ Do zrobienia:
 - **Kronika:** każdy gracz dostaje wiadomości ze świata i o swoim ludzie, a nie o ludzie 0.
 - **Zamykanie połączenia:** odmowa (złe hasło, inna wersja) dochodzi do gracza, zanim połączenie się zamknie.
 - **Protokół 45:** w powitaniu wersja gry, hasło i klucz powrotu.
+
+**Zrobione w MP3 (2026-11-25):**
+
+- **Menu „Multiplayer”** w oknie gry:
+  - pseudonim (zapamiętany);
+  - „Join a game”: adres, port, hasło;
+  - „Host a game”: nazwa partii, hasło, port, miejsca dla graczy (2–8, najwyżej tyle, ile ludów w „New game”), prędkość ×1/×2
+    (przy ×2 ostrzeżenie „trudniej”), adresy tego komputera w sieci lokalnej.
+  - Świat i gra (mapa, ludy, cel, rudy, zaawansowane ustawienia świata) są te z „New game”.
+  - Wersji gry nikt nie wpisuje: okno wysyła ją samo.
+- **Lobby** (ten sam ekran u gospodarza i u gości):
+  - miejsca graczy i kto jest gotowy;
+  - ustawienia tylko do odczytu;
+  - czat (zwykły tekst, 1 linia na sekundę, naraz do 5);
+  - przycisk „Ready” u gości i „Start the game” u gospodarza (aktywny, gdy wszyscy gotowi);
+  - gospodarz może też zacząć sam: wolne miejsca prowadzi AI i można je zająć później.
+  - Powtórzony pseudonim dostaje dopisek z listy 50 w `game.json` (rozdz. 22). Na serwerze bez okna, gdy gospodarz wyjdzie, gospodarzem zostaje następny; gdy partię zakłada okno gry, jego wyjście ją kończy.
+- **Odmowy z powodem:** złe hasło, brak hasła, pełna partia, start przez kogoś innego niż gospodarz, nie wszyscy gotowi.
+  Okno wraca wtedy do menu i pokazuje powód.
+- **Gra przez sieć:** po starcie lobby oddaje połączenia grze; każdy gracz dostaje swój lud według miejsca w lobby, reszta ludów to AI.
+  Okno zapamiętuje klucz powrotu i adres serwera: po zerwaniu połączenia „Join” z tym samym adresem oddaje graczowi jego lud.
+  Gdy połączenie padnie, okno wraca do menu z powodem.
+- **Serwer bez okna:** `--serve` ma teraz lobby (`--name`, `--seats`, `--speed`, `--password`; `--no-lobby` jak w MP1). Bot `--join`
+  zgłasza gotowość, a z `--start N` jako gospodarz zaczyna, gdy jest N graczy.
+- **Protokół 46:** wiadomości lobby (stan, gotowość, czat, start, „gra się zaczyna”).
+- **Jeszcze nie w menu** (stałe wartości jak w rozdz. 6): pauzy na gracza (3), czas na wybór startu (30 s), autozapis (5 min), kolor
+  gracza. Dołączanie do trwającej gry: gracz z wolnym miejscem dostaje lud prowadzony przez AI od razu; obserwatorzy i głosowania w MP4.
 
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 

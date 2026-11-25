@@ -177,6 +177,11 @@ public partial class Main : Node2D
             skipMenu |= Array.IndexOf(StartSettings.ArgumentNames, args[i]) >= 0;
         }
 
+        if (MultiplayerArguments(args))
+        {
+            return;
+        }
+
         if (_playArgs)
         {
             StartPlay(_saved.Start.WithArguments(args).Seed);
@@ -406,6 +411,18 @@ public partial class Main : Node2D
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
         }
 
+        WirePlay();
+        AddChild(_play);
+    }
+
+    // What the menu and the settings need from a game screen, local or on a server.
+    private void WirePlay()
+    {
+        if (_play is null)
+        {
+            return;
+        }
+
         _play.ArtPackChosen += key =>
         {
             // The game's settings switch the pack in place (the map and the game keep the same library) and keep the choice.
@@ -421,7 +438,6 @@ public partial class Main : Node2D
             _camera.MakeCurrent();
             CallDeferred(MethodName.ShowMenu);
         };
-        AddChild(_play);
     }
 
     /// <inheritdoc />
@@ -487,6 +503,18 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
+        _menu.JoinRequested += (address, port, password) =>
+        {
+            _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
+            SaveSettings();
+            Join(address, port, password);
+        };
+        _menu.HostRequested += (options, config, port) =>
+        {
+            _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
+            SaveSettings();
+            Host(options, config, port);
+        };
         _menu.PlayRequested += options =>
         {
             // The menu's choices are kept for next time.
@@ -745,6 +773,7 @@ public partial class Main : Node2D
     public override void _Process(double delta)
     {
         long start = Stopwatch.GetTimestamp();
+        JoinProgress();
         if (_session is null || _map is null || _hud is null)
         {
             MenuScreenshot();

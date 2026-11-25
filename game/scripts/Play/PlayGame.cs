@@ -5,6 +5,7 @@ using System.Linq;
 using CivSim.Game.Map;
 using CivSim.Game.Net;
 using CivSim.Protocol.Messages;
+using CivSim.Protocol.Transport;
 using CivSim.Server;
 using Godot;
 
@@ -69,6 +70,16 @@ public partial class PlayGame : Node2D
     // Options from the start menu (map, peoples, world, a save to load); null = the defaults with the seed above.
     private readonly PlayOptions? _options;
 
+    // A game on a server (MP3): the connection, the player's name and password, whether the game still wants a hello, and
+    // what the game owns besides (the lobby and listener of a game this computer hosts). Null = a game of this computer.
+    private readonly IConnection? _remote;
+    private readonly string _remoteName = "";
+    private readonly string _remotePassword = "";
+    private readonly bool _remoteHello;
+    private readonly IDisposable? _owned;
+    private bool _returnKeyTold;
+    private bool _lostTold;
+
     /// <summary>Creates the screen; the game starts when the node enters the tree.</summary>
     public PlayGame(ulong seed, LayerStack layers, ArtLibrary art, string? dataDirectory, bool startPhase = true, int goal = 1, string? scenario = null, PlayOptions? options = null)
     {
@@ -81,6 +92,23 @@ public partial class PlayGame : Node2D
         _art = art;
         _dataDirectory = dataDirectory;
     }
+
+    /// <summary>
+    /// Creates the screen for a game on a server (MP3): another computer's, or the lobby this computer hosts, which the
+    /// screen then owns and closes with the game.
+    /// </summary>
+    public PlayGame(IConnection connection, string name, string password, bool hello, IDisposable? owned, LayerStack layers, ArtLibrary art, string? dataDirectory)
+        : this(0, layers, art, dataDirectory)
+    {
+        _remote = connection;
+        _remoteName = name;
+        _remotePassword = password;
+        _remoteHello = hello;
+        _owned = owned;
+    }
+
+    /// <summary>Raised once the server gave the key to lead the same people again after a lost connection (MP3).</summary>
+    public event Action<string>? ReturnKeyReceived;
 
     /// <summary>Raised when the player wants the start menu back.</summary>
     public event Action? MenuRequested;
@@ -463,7 +491,7 @@ public partial class PlayGame : Node2D
         Zoom = 1.6f; // as the player sees it, whatever the interface size
         try
         {
-            _host = PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario, Tutorial = _scenario is null }, _dataDirectory);
+            _host = _remote is not null ? null : PlayHost.Start(_options ?? new PlayOptions(_seed) { StartPhase = _startPhase && _scenario is null, Goal = _goal, Scenario = _scenario, Tutorial = _scenario is null }, _dataDirectory);
         }
         catch (Exception e) when (e is System.IO.IOException or System.IO.InvalidDataException or UnauthorizedAccessException or System.Text.Json.JsonException or ArgumentException)
         {
@@ -473,7 +501,9 @@ public partial class PlayGame : Node2D
             return;
         }
 
-        _session = new ClientSession(_host.Connect(), ClientRole.Player, "Player");
+        _session = _remote is not null
+            ? new ClientSession(_remote, ClientRole.Player, _remoteName, password: _remotePassword, hello: _remoteHello)
+            : new ClientSession(_host!.Connect(), ClientRole.Player, "Player");
         AddChild(new Audio.GameAudio(_session, () => _camera));
         _session.CommandRefused += reason => Toast(reason);
         _session.Saved += r => Toast(r.Text);
@@ -519,6 +549,7 @@ public partial class PlayGame : Node2D
         OverlayColors.Palette = null;
         _session?.Close();
         _host?.Dispose();
+        _owned?.Dispose();
     }
 
     /// <inheritdoc/>
@@ -549,7 +580,10 @@ public partial class PlayGame : Node2D
             _overlay.DepositNames = [.. _session.Content.Deposits.Select(d => d.Name)];
             _overlay.PickProblem = StartProblem;
             _bound = true;
-            _session.SetSpeed(SimulationSpeed.X1);
+            if (_remote is null)
+            {
+                _session.SetSpeed(SimulationSpeed.X1); // with other players the host chose the speed
+            }
         }
 
         if (!_centred && !_pickView && _session.PlayView is { Picking: true })
@@ -611,6 +645,11 @@ public partial class PlayGame : Node2D
         UpdateToast(delta);
         UpdateHexTip();
 
+        if (_remote is not null)
+        {
+            RemoteChecks();
+        }
+
         if (_host?.Error is { } error)
         {
             GD.PrintErr(error);
@@ -624,6 +663,25 @@ public partial class PlayGame : Node2D
             GetViewport().GetTexture().GetImage().SavePng(_screenshot);
             GD.Print($"screenshot: {_screenshot}");
             GetTree().Quit();
+        }
+    }
+
+    // A game on a server: keep the key to come back, and go back to the menu with the reason when the connection is lost.
+    private void RemoteChecks()
+    {
+        if (!_returnKeyTold && _session!.ReturnKey.Length > 0)
+        {
+            _returnKeyTold = true;
+            ReturnKeyReceived?.Invoke(_session.ReturnKey);
+        }
+
+        if (!_lostTold && !_session!.IsOpen)
+        {
+            _lostTold = true;
+            string why = _session.Rejected ?? _session.CloseReason ?? "the connection was lost";
+            Ui.StartMenu.Notice = "The game on the server ended for us: " + why
+                + (_returnKeyTold ? " Join again with the same nickname to lead your civilization again." : "");
+            Callable.From(() => MenuRequested?.Invoke()).CallDeferred();
         }
     }
 

@@ -63,6 +63,11 @@ public sealed record PlayWorld
 
     /// <summary>True when nothing differs from a normal game (the world is then generated exactly as without these settings).</summary>
     public bool IsDefault => this == new PlayWorld();
+
+    /// <summary>True when any number of the planet or its star is set (not only the preset and the choices).</summary>
+    public bool HasNumbers => AxialTiltTenths is not null || EccentricityPerMille is not null || LuminosityThousandths is not null
+        || DistanceThousandths is not null || YearThousandths is not null || LightThousandths is not null || Co2Microbar is not null
+        || PressureHundredths is not null || VolcanismPercent is not null || StarVariabilityPerMille is not null || StarCycleYears is not null;
 }
 
 /// <summary>What the advanced settings give the world generator.</summary>
