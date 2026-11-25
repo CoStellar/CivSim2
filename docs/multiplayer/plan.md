@@ -1,6 +1,6 @@
 # Multiplayer przez sieć: plan
 
-**Stan:** plan w trakcie uzgadniania z Patrykiem. Rundy pytań 1–3 zamknięte (2026-11-25), runda 4 otwarta (rozdz. 21).
+**Stan:** plan w trakcie uzgadniania z Patrykiem. **Planowanie zamknięte 2026-11-25** po 4 rundach pytań; decyzja architektoniczna: ADR 0031. Prace: CI1 → W1 → MP1 → … (rozdz. 13).
 Kodu jeszcze nie zmieniamy; Patryk chce co najmniej dwóch kolejnych rund pytań przed budową.
 Podstawa: kod `development` z 2026-11-25 (`645f2b0`), ADR 0008, 0010, 0028, `docs/projekt-gry.md` (rozdz. 2 i 9), `docs/known-issues.md`.
 Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly-na-przyszlosc.md`.
@@ -385,20 +385,27 @@ Propozycja (osobny mały PR „CI1”, razem z włączeniem CI):
 - Gdy wyjdą wszyscy ludzie, partia na VPS zapisuje się i kończy po 5 minutach.
 - **Lista zapisów** w grze („Partie na serwerze”): gracz z hasłem do zakładania gier widzi zapisy partii, w których grał (rozpoznaje go klucz
   z jego komputera); może taką partię wczytać i zostaje jej gospodarzem; reszta wraca na swoje ludy jak po rozłączeniu.
-- **Limity** (do potwierdzenia w R4-3): na partię ostatni autozapis + do 3 zapisów ręcznych; na cały serwer np. 200 MB; zapis nieużywany
+- **Limity** (R4-3): na partię ostatni autozapis + do 3 zapisów ręcznych; na cały serwer np. 200 MB; zapis nieużywany
   przez 30 dni jest usuwany; przy braku miejsca znika najstarszy nieużywany. Zapis to lista rozkazów, więc jest mały (do zmierzenia w MP5;
   szacuję poniżej 1 MB na godzinę partii).
 - Zapisy w katalogu podpiętym do kontenera (volume), więc przeżywają aktualizację obrazu.
 
-## 21. Runda 4: pytania do Patryka (z rekomendacją)
+## 21. Runda 4 (zamknięta)
 
 | # | Pytanie | Rekomendacja |
 | --- | --- | --- |
 | R4-1 | Ile trzeba grać, żeby mieć prawo głosu? | **Decyzja: 3 minuty.** |
 | R4-2 | Większość liczona z uprawnionych (brak głosu = „nie”)? | **Decyzja: tak.** Gracz, którego głosowanie dotyczy, też głosuje, jeśli gra ≥ 3 min. |
-| R4-3 | Limity zapisów na VPS (rozdz. 20)? | **Autozapis + 3 ręczne na partię, 200 MB na serwer, usuwanie po 30 dniach.** |
-| R4-4 | Dwóch graczy z tym samym pseudonimem w jednej partii? | **Drugi dostaje dopisek** („Ania (2)”); pseudonim nie musi być unikalny poza partią. |
-| R4-5 | Czy planowanie jest zamknięte? Jeśli tak: ADR 0031 i start prac w kolejności CI1 → W1 → MP1 → … | **Tak, po tej rundzie.** Prace w tym wątku, jeden PR naraz, każdy z opisem i liczbami. |
+| R4-3 | Limity zapisów na VPS (rozdz. 20)? | **Decyzja: autozapis + 3 ręczne na partię, 200 MB na serwer, usuwanie po 30 dniach.** |
+| R4-4 | Dwóch graczy z tym samym pseudonimem w jednej partii? | **Decyzja: drugi dostaje losowy, zabawny dopisek** z listy ok. 50 wariantów (rozdz. 22), np. „Ania the Second”. |
+| R4-5 | Czy planowanie jest zamknięte? | **Decyzja: tak.** ADR 0031; prace w tym wątku, jeden PR naraz: CI1 → W1 → MP1 → … |
+
+## 22. Dopiski do powtórzonych pseudonimów (R4-4)
+
+Gdy w partii jest już „Ania”, kolejna „Ania” dostaje losowy dopisek, którego jeszcze nikt w tej partii nie ma, np. „Ania the Late”.
+Lista trafi do `data/sim/game.json` (teksty w grze po angielsku); Patryk może ją zmieniać.
+
+the Second, the Other One, Doppelganger, the Late, the Lesser, the Echo, the Understudy, the Spare, the Sequel, the Remake, the Evil Twin, the Good Twin, the Copy, the Imposter, the Reflection, from Another Timeline, the Bootleg, Junior, the Rerun, Number Two, the Backup, the Shadow, Who Came Later, the Lookalike, the Knockoff, the Encore, the Mirror, the Unexpected, the Uninvited, the Also, Mk II, the Reprint, the Afterthought, the Other Other One, Who Was Here First (Allegedly), the Clone, the Duplicate, the Recurring, the Reissue, Again, the Unoriginal, the Forgery, the Stand-In, the Body Double, the Alter Ego, the Remix, the Second Draft, the Twice-Told, the Returning, the Also-Ran.
 
 ## Źródła (research 2026-11-25)
 
