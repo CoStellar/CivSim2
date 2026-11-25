@@ -33,6 +33,9 @@ public partial class LobbyScreen : CanvasLayer
     private Label _status = null!;
     private bool _done;
     private string _chatShown = "";
+
+    // Colour of the suffix added to a repeated nickname.
+    private static readonly Color SuffixColour = new(0.55f, 0.8f, 1f);
     private double _time;
     private bool _chatted;
     private bool _startSent;
@@ -248,10 +251,25 @@ public partial class LobbyScreen : CanvasLayer
 
         for (int i = 0; i < state.HumanSeats; i++)
         {
-            string text = i < state.Seats.Count
-                ? $"{i + 1}. {state.Seats[i].Name}{(state.Seats[i].Host ? " (host)" : "")}{(i == state.You ? " - you" : "")}: {(state.Seats[i].Ready ? "ready" : "not ready")}"
-                : $"{i + 1}. (free)";
-            _seats.AddChild(new Label { Text = text, Modulate = i < state.Seats.Count ? Colors.White : new Color(0.6f, 0.6f, 0.6f) });
+            if (i >= state.Seats.Count)
+            {
+                _seats.AddChild(new Label { Text = $"{i + 1}. (free)", Modulate = new Color(0.6f, 0.6f, 0.6f) });
+                continue;
+            }
+
+            // The suffix the server added to a repeated nickname is shown in another colour (Patryk, 2026-11-25).
+            LobbySeat seat = state.Seats[i];
+            int cut = seat.Name.Length - Math.Clamp(seat.SuffixLength, 0, seat.Name.Length);
+            var line = new HBoxContainer();
+            line.AddThemeConstantOverride("separation", 0);
+            line.AddChild(new Label { Text = $"{i + 1}. {seat.Name[..cut]}" });
+            if (cut < seat.Name.Length)
+            {
+                line.AddChild(new Label { Text = seat.Name[cut..], Modulate = SuffixColour, TooltipText = "Added by the game: another player has this nickname", MouseFilter = Control.MouseFilterEnum.Pass });
+            }
+
+            line.AddChild(new Label { Text = $"{(seat.Host ? " (host)" : "")}{(i == state.You ? " - you" : "")}: {(seat.Ready ? "ready" : "not ready")}" });
+            _seats.AddChild(line);
         }
 
         if (_settings.GetChildCount() == 0)

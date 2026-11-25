@@ -3,12 +3,16 @@ using MessagePack;
 
 namespace CivSim.Protocol.Messages;
 
-/// <summary>One place in the lobby of a multiplayer game (MP3).</summary>
+/// <summary>
+/// One place in the lobby of a multiplayer game (MP3). <see cref="SuffixLength"/>: how many characters at the end of
+/// <see cref="Name"/> the server added to a repeated nickname (with the space before them), so the lobby can show them apart.
+/// </summary>
 [MessagePackObject]
 public sealed record LobbySeat(
     [property: Key(0)] string Name,
     [property: Key(1)] bool Ready,
-    [property: Key(2)] bool Host);
+    [property: Key(2)] bool Host,
+    [property: Key(3)] int SuffixLength = 0);
 
 /// <summary>
 /// Server → client: the lobby as it is now (MP3). Sent after every change. <see cref="Settings"/> are lines to show, read-only

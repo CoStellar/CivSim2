@@ -258,7 +258,9 @@ public sealed class PlayLobby : IDisposable
             return;
         }
 
-        m.Name = UniqueName(Clean(hello.PlayerName, MaxNameLength) is { Length: > 0 } n ? n : "Player");
+        string asked = Clean(hello.PlayerName, MaxNameLength) is { Length: > 0 } n ? n : "Player";
+        m.Name = UniqueName(asked);
+        m.SuffixLength = m.Name.Length - asked.Length;
         Say($"{m.Name} joined.");
     }
 
@@ -294,7 +296,7 @@ public sealed class PlayLobby : IDisposable
     {
         Member? host = Host;
         List<Member> seated = [.. _members.Where(x => x.Name is not null)];
-        LobbySeat[] seats = [.. seated.Select(x => new LobbySeat(x.Name!, x == host || x.Ready, x == host))];
+        LobbySeat[] seats = [.. seated.Select(x => new LobbySeat(x.Name!, x == host || x.Ready, x == host, x.SuffixLength))];
         bool everyone = Everyone();
         for (int i = 0; i < seated.Count; i++)
         {
@@ -381,6 +383,9 @@ public sealed class PlayLobby : IDisposable
         public string? Name { get; set; }
 
         public bool Ready { get; set; }
+
+        // Characters the lobby added to a repeated nickname (with the space before them).
+        public int SuffixLength { get; set; }
 
         // One line a second, five at once.
         public bool MayChat(long now)
