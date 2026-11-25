@@ -51,6 +51,10 @@ losowaniem, haszem i nazwami) i w plikach `data/*.json` poza `data/sim/`.
 - **Po każdym wdrożeniu:** szczegółowe wyjaśnienie z liczbami (przed/po z `--sim-report`).
 - **Przed otwarciem PR:** sprawdź otwarte PR-y względem siebie (konflikty, zależności, kolejność merge'a).
 - **Testy uruchamiaj wtedy, gdy są potrzebne** (przed commitem zmian w kodzie, nie po każdej drobnej edycji).
+- **Jeden skrypt zamiast wielu wywołań narzędzi.** Pracę z wieloma krokami (testy, pomiary, biegi harnessu, wykresy) zapisz jako jeden
+  skrypt (bash/Python/C#), uruchom go raz i czytaj tylko podsumowanie, a nie wyniki każdego kroku. Najpierw sprawdź, co już jest:
+  `--sim-report`/`--sim-scenario` w `CivSim.Headless`, `data/sim/tools/`, `tools/audio/`, `tools/export/`. Skrypt, który przyda się
+  znowu, trzymaj w `tools/<temat>/` z nagłówkiem (co robi, czego wymaga, jak uruchomić); jednorazowe zostaw w katalogu tymczasowym.
 - **Wszystkie liczby w danych** (`data/sim/game.json`), nie w kodzie. Klucze czytaj przez `Prop`/`TryProp`/`Entries` (`Content/JsonRead.cs`),
   nie przez `GetProperty`: inaczej kontrola danych (menu, `GameDataTests`) zgłosi nowy klucz jako nieznany.
 - **Czego lud nie zna, tego nie widać** (złoża późniejszych er jako „???”, budynki i jednostki dopiero po technologii). Wyjątek: drzewo technologii.
