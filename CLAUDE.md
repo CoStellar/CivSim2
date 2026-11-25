@@ -31,6 +31,7 @@ Dokumenty gry (po polsku):
 | `docs/sim/scenariusze.md` | scenariusze testowe i tryb debug |
 | `docs/wydajnosc.md` | zasady wydajności (usypianie, terminy, stałe rytmy, sumy zamiast osób) |
 | `docs/known-issues.md` | znane problemy nowej gry |
+| `docs/multiplayer/plan.md` | plan gry przez sieć: decyzje Patryka, pośrednik, serwer na VPS, bezpieczeństwo, kroki MP1–MP6 |
 | `docs/decisions/` | decyzje architektoniczne (ADR) |
 
 Decyzje Patryka z rozmów są też w notatkach Projektu (`claude/decyzje-*.md`, `claude/runda-testow-*.md`).
