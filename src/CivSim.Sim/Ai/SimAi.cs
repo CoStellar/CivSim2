@@ -7,17 +7,17 @@ using CivSim.Sim.State;
 namespace CivSim.Sim.Ai;
 
 /// <summary>
-/// The AI player (ADR 0028): it plays a people with the same commands as a person and sees only what its people has seen.
+/// The AI player (ADR 0028): it plays a civilization with the same commands as a person and sees only what its civilization has seen.
 /// It thinks every ai.thinkEveryTicks ticks (<see cref="SimContent.AiThinkEveryTicks"/>), staggered by people, and does at most a few things each time, so it
 /// costs little (docs/wydajnosc.md). Its character (aggression, expansion) shows only in what it does.
 /// </summary>
 public static partial class SimAi
 {
-    /// <summary>No AI starts a war before this tick (8 minutes): every people gets time to settle.</summary>
+    /// <summary>No AI starts a war before this tick (8 minutes): every civilization gets time to settle.</summary>
 
     private static readonly string[] FoodBuildings = ["farm", "fishing_hut", "gatherers_hut", "hunters_lodge", "pasture", "manor"];
 
-    /// <summary>One thought: looks at the people's state and issues commands through <see cref="SimGame.Apply"/>.</summary>
+    /// <summary>One thought: looks at the civilization's state and issues commands through <see cref="SimGame.Apply"/>.</summary>
     public static void Think(SimGame g, Civ civ)
     {
         ArgumentNullException.ThrowIfNull(g);
@@ -304,7 +304,7 @@ public static partial class SimAi
         return n;
     }
 
-    // True when the people has a building of this kind (built or being built).
+    // True when the civilization has a building of this kind (built or being built).
     private static bool Has(SimGame g, Civ civ, string key)
     {
         foreach (int id in civ.Buildings)

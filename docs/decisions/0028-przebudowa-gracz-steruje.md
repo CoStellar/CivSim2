@@ -5,13 +5,13 @@
 
 ## Kontekst
 
-Pierwsza próba gry (testy gracza 2026-11-16) i rozmowa po niej pokazały, że gra sternika (pięć dźwigni, AI prowadzi lud gracza,
+Pierwsza próba gry (testy gracza 2026-11-16) i rozmowa po niej pokazały, że gra sternika (pięć dźwigni, AI prowadzi cywilizację gracza,
 symulacja wierna przyczynom i latom) nie jest grą, jakiej chce Patryk. Wojna, dźwignie i karty nie miały wspólnego obrazu tego,
 co gracz robi minuta po minucie. Symulacja liczy bardzo dużo rzeczy w tle, których gracz nie widzi.
 
 ## Decyzja
 
-1. **Gracz jest całą cywilizacją i decyduje o wszystkim** (osady, budowy, badania, wojsko, dyplomacja). Jego lud nie ma własnej AI:
+1. **Gracz jest całą cywilizacją i decyduje o wszystkim** (osady, budowy, badania, wojsko, dyplomacja). Jego cywilizacja nie ma własnej AI:
    sam wykonuje tylko codzienne prace (zbieranie, uprawa, przyrost). Rady daje tylko doradca, którego gracz zatrudni.
 2. **Przeciwnik AI to pełny gracz** z tymi samymi komendami co człowiek.
 3. **Nowa skala mapy:** cały świat w gęstszych heksach; jeden heks to miejsce na jeden obiekt, osada to zbiór heksów.

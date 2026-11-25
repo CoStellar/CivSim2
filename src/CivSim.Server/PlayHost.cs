@@ -16,7 +16,7 @@ namespace CivSim.Server;
 /// <summary>Options of a new game of the rebuilt simulation (ADR 0028).</summary>
 public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHeight = 60, int Civilizations = 4)
 {
-    /// <summary>Peoples choose where they start (the player too); false starts at once on the generator's places.</summary>
+    /// <summary>Civilizations choose where they start (the player too); false starts at once on the generator's places.</summary>
     public bool StartPhase { get; init; } = true;
 
     /// <summary>Test scenario to start from (file name in data/sim/scenarios without .json; null = a normal game).</summary>
@@ -44,7 +44,7 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
     public PlayWorld? World { get; init; }
 
     /// <summary>
-    /// A server without a window (multiplayer, MP1): every people is led by the AI until a player joins, the start is chosen
+    /// A server without a window (multiplayer, MP1): every civilization is led by the AI until a player joins, the start is chosen
     /// with the time limit, and the game runs at normal speed from the start.
     /// </summary>
     public bool Dedicated { get; init; }
@@ -151,7 +151,7 @@ public sealed class PlayHost : IDisposable
     /// <summary>Least time between two full views of a client (tests driving RunTicks set it to zero).</summary>
     internal TimeSpan FullViewEvery { get; set; } = TimeSpan.FromMilliseconds(250);
 
-    /// <summary>Builds the view of every people (what an observer would get), for determinism tests.</summary>
+    /// <summary>Builds the view of every civilization (what an observer would get), for determinism tests.</summary>
     internal void ViewEveryPeople()
     {
         for (int c = 0; c < _game.Civs.Count; c++)
@@ -169,7 +169,7 @@ public sealed class PlayHost : IDisposable
     /// <summary>Time spent on the players' views, in Stopwatch ticks (any thread).</summary>
     public long ViewTime => Interlocked.Read(ref _viewTime);
 
-    /// <summary>Connected clients that lead a people (any thread).</summary>
+    /// <summary>Connected clients that lead a civilization (any thread).</summary>
     public int Players => Volatile.Read(ref _players);
 
     /// <summary>Rounds of views not sent to a client because its connection was congested (any thread).</summary>
@@ -219,13 +219,13 @@ public sealed class PlayHost : IDisposable
     private long _skippedViews;
     private int _players;
 
-    /// <summary>Hash of the whole game state (all peoples).</summary>
+    /// <summary>Hash of the whole game state (all civilizations).</summary>
     public ulong StateHash => _game.StateHash();
 
     /// <summary>Ticks played.</summary>
     public long Ticks => _game.Ticks;
 
-    /// <summary>True while peoples choose their start.</summary>
+    /// <summary>True while civilizations choose their start.</summary>
     public bool Picking => _game.Picking;
 
     /// <summary>
@@ -314,14 +314,14 @@ public sealed class PlayHost : IDisposable
         }
     }
 
-    // One step of the game; steps count also while peoples choose their start, when ticks stand still (saves, format 2).
+    // One step of the game; steps count also while civilizations choose their start, when ticks stand still (saves, format 2).
     private void Step()
     {
         _game.Tick();
         _steps++;
     }
 
-    // Who leads a people from now on; the save keeps it with the step, so a loaded game is the same game (MP2).
+    // Who leads a civilization from now on; the save keeps it with the step, so a loaded game is the same game (MP2).
     private void SetLeader(int civ, bool player)
     {
         if (_game.Civs[civ].IsAi != player)
@@ -562,7 +562,7 @@ public sealed class PlayHost : IDisposable
             return;
         }
 
-        // Back after a lost connection: the same people again (MP2). Otherwise the next free people that no absent player
+        // Back after a lost connection: the same civilization again (MP2). Otherwise the next free civilization that no absent player
         // keeps; the AI hands it over (multiplayer from the start, ADR 0028).
         bool back = hello.ReturnKey is { Length: > 0 } k && _returnKeys.ContainsKey(k);
         if (!back && _options.HumanSeats > 0 && _clients.Count(c => c.Civ >= 0) >= _options.HumanSeats)
@@ -692,7 +692,7 @@ public sealed class PlayHost : IDisposable
 
     private long _calmSince;
 
-    // Single player: a battle of the player's people that starts after a calm slows time to ×1 (Patryk, 2026-11-19).
+    // Single player: a battle of the player's civilization that starts after a calm slows time to ×1 (Patryk, 2026-11-19).
     /// <summary>Game minutes between automatic saves.</summary>
     public const int AutosaveMinutes = 5;
 
@@ -766,8 +766,8 @@ public sealed class PlayHost : IDisposable
             }
             else
             {
-                // A13 (tests 2026-11-20): ticks stand still while peoples choose their start, so every command of that phase has tick 0.
-                // The phase is played again until it is this people's turn (a pick) or until everyone has chosen (anything else).
+                // A13 (tests 2026-11-20): ticks stand still while civilizations choose their start, so every command of that phase has tick 0.
+                // The phase is played again until it is this civilization's turn (a pick) or until everyone has chosen (anything else).
                 bool pick = c.Kind == PlayCommandKind.PickStart;
                 while (_game.Picking && (!pick || _game.PickOrder[_game.PickIndex] != c.Civ))
                 {
@@ -799,7 +799,7 @@ public sealed class PlayHost : IDisposable
 
         _format = save.Format; // an older save stays in its format: its ticks cannot be turned into steps
 
-        // On a server without a window the saved players are not here yet: the AI leads their peoples until they join again (MP2).
+        // On a server without a window the saved players are not here yet: the AI leads their civilizations until they join again (MP2).
         // In a window the player joins at once (and loading into a lobby comes with MP5).
         foreach (Civ c in _game.Civs)
         {
@@ -1350,7 +1350,7 @@ public sealed class PlayHost : IDisposable
         return list;
     }
 
-    // What the people knows of a hex's ground: rock looked at in its era (1), soil known (2).
+    // What the civilization knows of a hex's ground: rock looked at in its era (1), soil known (2).
     private byte SurveyFor(Civ civ, int i) => (byte)((_game.RockLookedAt(civ, i) ? MapChunkMessage.RockLooked : 0) | (_game.KnowsSoil(civ, i) ? MapChunkMessage.SoilKnown : 0)
         | (_game.KnowsDeposit(civ, i) ? MapChunkMessage.DepositKnown : 0) | (_game.DepositHidden(civ, i) ? MapChunkMessage.DepositHidden : 0));
 
@@ -1510,7 +1510,7 @@ public sealed class PlayHost : IDisposable
         return new PlayViewMessage(_game.Ticks, _speed, civId, (long[])civ.Stock.Clone(), (long[])civ.Capacity.Clone(), (long[])civ.Rate.Clone(),
             civ.People, civ.Hungry, settlements, buildings, [.. NewsOf(civId)], units, _game.EraOf(civ), civ.Researching, ResearchPermille(civ), TechStates(civ),
             Person(civ.Thinker, false), Person(civ.ThinkerOffer, false), Person(civ.Advisor, true), Person(civ.AdvisorOffer, true), _game.Advice(civ),
-            Peoples(civ), civ.Dead, _game.Picking, _game.Picking && _game.PickOrder[_game.PickIndex] == civId,
+            KnownCivs(civ), civ.Dead, _game.Picking, _game.Picking && _game.PickOrder[_game.PickIndex] == civId,
             _game.Picking ? _game.PickTicksLeft / SimContent.TicksPerSecond : 0, TakenStarts(), _game.ShownBlockRadius,
             _game.Picking ? _game.Civs[_game.PickOrder[_game.PickIndex]].Name : null,
             civ.Event >= 0 ? _game.Content.Events[civ.Event].Name : null, civ.Event >= 0 ? (int)((civ.EventEnd - _game.Ticks) / SimContent.TicksPerSecond) : 0,
@@ -1645,7 +1645,7 @@ public sealed class PlayHost : IDisposable
         return string.Join("\n", lines);
     }
 
-    // Units of every people that are not gone (the game's list keeps every unit ever made).
+    // Units of every civilization that are not gone (the game's list keeps every unit ever made).
     private IEnumerable<Unit> ActiveAndTraining()
     {
         foreach (Civ c in _game.Civs)
@@ -1738,7 +1738,7 @@ public sealed class PlayHost : IDisposable
 
     private PlaySummaryMessage Summary(Civ civ)
     {
-        var peoples = new List<PlayHistoryView>();
+        var civs = new List<PlayHistoryView>();
         foreach (Civ c in _game.Civs)
         {
             if (c.Id != civ.Id && !_game.Met(civ, c))
@@ -1752,7 +1752,7 @@ public sealed class PlayHost : IDisposable
                 rows.Add(new PlayHistoryRow(h.Minute, h.People, h.Settlements, h.Buildings, h.Techs, h.Soldiers, h.FoodPerMinute, h.Era, h.Event >= 0 ? _game.Content.Events[h.Event].Name : null));
             }
 
-            peoples.Add(new PlayHistoryView(c.Id, c.Name, rows));
+            civs.Add(new PlayHistoryView(c.Id, c.Name, rows));
         }
 
         (int mine, int best) = _game.StartQuality(civ);
@@ -1765,7 +1765,7 @@ public sealed class PlayHost : IDisposable
             }
         }
 
-        return new PlaySummaryMessage(peoples, mine, best, SiteScores.Criteria, criteria);
+        return new PlaySummaryMessage(civs, mine, best, SiteScores.Criteria, criteria);
     }
 
     private List<PlayRouteView> RoutesOf(int civ)
@@ -1814,12 +1814,12 @@ public sealed class PlayHost : IDisposable
         return [.. list];
     }
 
-    private List<PlayPeopleView> Peoples(Civ civ)
+    private List<PlayKnownCivView> KnownCivs(Civ civ)
     {
-        var list = new List<PlayPeopleView>();
+        var list = new List<PlayKnownCivView>();
         foreach (Civ other in _game.Civs)
         {
-            // Peoples we have seen, and peoples that have seen us and spoke to us (an offer) or fight us.
+            // Civilizations we have seen, and civilizations that have seen us and spoke to us (an offer) or fight us.
             bool known = _game.Met(civ, other) || _game.AtWar(civ.Id, other.Id)
                 || _game.TreatyOffers.Exists(o => o.From == other.Id && o.To == civ.Id) || _game.PeaceOffers.Exists(o => o.From == other.Id && o.To == civ.Id);
             if (other.Id == civ.Id || !known)
@@ -1829,7 +1829,7 @@ public sealed class PlayHost : IDisposable
 
             PeaceOffer? offer = _game.PeaceOffers.Find(o => o.From == other.Id && o.To == civ.Id);
             bool war = _game.AtWar(civ.Id, other.Id);
-            list.Add(new PlayPeopleView(
+            list.Add(new PlayKnownCivView(
                 other.Id, other.Name, war, _game.Score(civ.Id, other.Id), _game.Score(other.Id, civ.Id),
                 war ? _game.Favour(civ.Id, other.Id) : 0, other.Reputation, offer is null ? null : _game.TermsText(offer.Terms, other.Id, civ.Id), other.Dead,
                 _game.Has(civ.Id, other.Id, TreatyKind.Trade), _game.Has(civ.Id, other.Id, TreatyKind.Alliance),
@@ -1849,7 +1849,7 @@ public sealed class PlayHost : IDisposable
         return list;
     }
 
-    // 1B (ADR 0030): the peace window shows how much of each good we know the other people has (whole units).
+    // 1B (ADR 0030): the peace window shows how much of each good we know the other civilization has (whole units).
     private long[] TheirGoods(Civ civ, Civ other)
     {
         var goods = new long[_game.Content.Goods.Count];

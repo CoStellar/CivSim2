@@ -23,7 +23,7 @@ ekran: `game/scripts/Play/`. Testy: `tests/CivSim.Sim.Tests`, `tests/CivSim.Test
   - drwal może stanąć na kępie i daje tam 60% tego, co w lesie;
   - zbieranie z okolicy liczy drewno kęp tak samo;
   - kępy liczą się też do oceny miejsc startu.
-  - Wynik na 4 ziarnach: każdy lud ma w swojej ziemi co najmniej 6 heksów z drzewami (zwykle 10–30), a wartość drewna wynosi 24–72%. Wcześniej co czwarty lud nie miał żadnego drzewa (10%).
+  - Wynik na 4 ziarnach: każda cywilizacja ma w swojej ziemi co najmniej 6 heksów z drzewami (zwykle 10–30), a wartość drewna wynosi 24–72%. Wcześniej co czwarta cywilizacja nie miała żadnego drzewa (10%).
 - **Stany heksa** (rów, palisada, mur, akwedukt, most) leżą na heksie obok budynków i zostają pod nimi; usuwa je tylko gracz.
 
 ## Osada
@@ -67,10 +67,10 @@ Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
 
 ## Jak liczymy (docs/wydajnosc.md)
 
-- **Tempa zamiast sztuk:** lud ma tempo każdego dobra na minutę. Liczymy je od nowa tylko po zmianie: koniec budowy, zatrzymanie,
+- **Tempa zamiast sztuk:** cywilizacja ma tempo każdego dobra na minutę. Liczymy je od nowa tylko po zmianie: koniec budowy, zatrzymanie,
   pierwszeństwo, przyrost, brak składnika.
 - **Terminy:** koniec budowy to wpis w kolejce terminów, nic nie sprawdza co takt.
-- **Rytmy:** gospodarka co 10 taktów (1 s), ludność co 50 taktów (5 s), rozłożone po numerze ludu.
+- **Rytmy:** gospodarka co 10 taktów (1 s), ludność co 50 taktów (5 s), rozłożone po numerze cywilizacji.
 - **Usypianie:** budynek bez składnika śpi, dopóki składnik nie wróci; wtedy budzi się sam.
 
 ## Technologie, myśliciele, doradca (etap D)
@@ -81,7 +81,7 @@ Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
   - czasem zamiast punktów wyprodukowane dobra, np. Barter 30 ceramiki;
   - czasem technologia wymagana „najpierw”.
 - Potem płaci się cenę w dobrach i czeka.
-- Cena spada o 10% za każdy poznany lud, który ją zna (najwyżej 40%), i o 5% za każdą umowę handlową.
+- Cena spada o 10% za każdą poznaną cywilizację, która ją zna (najwyżej 40%), i o 5% za każdą umowę handlową.
 - **Szkoły, akademie, uniwersytety** skracają czas badania: każdy pracownik przyspiesza jedną wybraną gałąź (+15/20/25%), gałąź najwyżej +50%.
 - Myśliciel (jeden) ma rzadkość: zwykły, uzdolniony, wizjoner, rzadki, legendarny.
   - Rzadkość obniża cenę albo wymagane doświadczenie; wizjoner obniża doświadczenie, ale podnosi cenę.
@@ -91,7 +91,7 @@ Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
   - kandydat co 4 minuty, z jedną albo dwiema dziedzinami (gospodarka, wzrost, badania, ekspansja);
   - je 1 jedzenia na minutę;
   - daje jedną radę naraz, tylko w swoich dziedzinach.
-- Imiona ludów, osad i ludzi pochodzą z systemu języków.
+- Imiona cywilizacji, osad i ludzi pochodzą z systemu języków.
 
 ## Wojna (etap E)
 
@@ -111,31 +111,31 @@ Pełna lista budynków, z rozmiarem na heksie, jest w `docs/sim/technologie.md`.
   - palisada (stan heksa) rani wrogów, którzy na niej stoją: 2% ludzi na sekundę;
   - mur (stan heksa) zatrzymuje obcych, dopóki go nie rozbiją; wojsko, które nie ma drogi do osady, samo atakuje najbliższy mur;
   - poniżej 6 mieszkańców osada przechodzi do zwycięzcy z ziemią i budynkami;
-  - lud bez osad znika.
+  - cywilizacja bez osad znika.
 - Wojna to stan:
   - atak bez wypowiedzenia albo w czasie rozejmu psuje reputację;
   - pokój proponuje się z daniną liczoną z przebiegu wojny (zabici i zdobyte osady);
   - po pokoju jest rozejm tak długi jak pokój: 3, 6 albo 10 minut (`peace.minutes`); AI nie łamie trwającego pokoju;
-  - zła reputacja się odnawia: +4 na minutę aż do 0 (`war.reputationRegenPerMinute`), ale nie u ludu, który wypowiedział trwającą wojnę.
-- **Przegrana** (Patryk, 2026-11-23, P5): lud, który nie ma nikogo w osadach ani w jednostkach, przegrywa; jego puste osady stają się ruinami.
-  Jednostki liczą się do ludu: dopóki choć jedna żyje, lud trwa i może ją wcielić do stojącej osady (traci wtedy wszystko, co dawała jednostka).
+  - zła reputacja się odnawia: +4 na minutę aż do 0 (`war.reputationRegenPerMinute`), ale nie u cywilizacji, która wypowiedziała trwającą wojnę.
+- **Przegrana** (Patryk, 2026-11-23, P5): cywilizacja, która nie ma nikogo w osadach ani w jednostkach, przegrywa; jej puste osady stają się ruinami.
+  Jednostki liczą się do cywilizacji: dopóki choć jedna żyje, cywilizacja trwa i może ją wcielić do stojącej osady (traci wtedy wszystko, co dawała jednostka).
 
 ## Zbieractwo zawsze wyżywi bezczynnych (2026-11-23)
 
-Lud, który nic nie robi, zawsze przeżyje (Patryk, 2026-11-23): ludzie bez pracy zbierają co najmniej tyle jedzenia, ile zjadają,
-w każdej porze roku i w każdym biomie (`forage.subsistencePercent` = 100%). Nic ponad to: lud bez budynków nie rośnie i nie zbiera zapasów.
+Cywilizacja, która nic nie robi, zawsze przeżyje (Patryk, 2026-11-23): ludzie bez pracy zbierają co najmniej tyle jedzenia, ile zjadają,
+w każdej porze roku i w każdym biomie (`forage.subsistencePercent` = 100%). Nic ponad to: cywilizacja bez budynków nie rośnie i nie zbiera zapasów.
 
 ## Wzrok osady i alarm „obcy” (2026-11-23, P3)
 
 - Osada widzi 2 heksy poza swoją ziemią (`vision.settlementSightBeyond`, było 1).
-- Alarm **Strangers**: gdy przy naszej osadzie widać jednostkę ludu, którego jeszcze nie poznaliśmy, a jego lud już widział tę osadę.
+- Alarm **Strangers**: gdy przy naszej osadzie widać jednostkę cywilizacji, której jeszcze nie poznaliśmy, a ta cywilizacja już widziała tę osadę.
   Tekst mówi tylko, że obcy są i że nas widzieli, bez tego, kim są i skąd przyszli.
 
 ## Gracz AI (etap F)
 
 Pełny opis decyzji (N1–N33), liczby i pomiar z 12 ziaren: [`docs/sim/ai.md`](ai.md). Pomiar: `dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12`.
 
-Te same komendy co gracz, co 3 sekundy, widzi tylko to, co odkrył jego lud. Charakter (wojowniczość, ekspansja) jest losowany i widać go
+Te same komendy co gracz, co 3 sekundy, widzi tylko to, co odkryła jego cywilizacja. Charakter (wojowniczość, ekspansja) jest losowany i widać go
 tylko po działaniach.
 
 - **Buduje:**
@@ -149,7 +149,7 @@ tylko po działaniach.
   - rów od wody do suchej farmy;
   - pierścień muru i palisady wokół osady w czasie wojny;
   - akwedukt do miasteczka.
-- **Pomiar** (3 ziarna, 4 ludy, 40 minut, przed i po zmianach z 2026-11-18): ludzi o 29% więcej (967 zamiast 750), próbek z głodem o jedną trzecią mniej, wymarły 1 lud zamiast 2.
+- **Pomiar** (3 ziarna, 4 cywilizacje, 40 minut, przed i po zmianach z 2026-11-18): ludzi o 29% więcej (967 zamiast 750), próbek z głodem o jedną trzecią mniej, wymarła 1 cywilizacja zamiast 2.
 - **Czego AI jeszcze nie robi:** nie wsiada na statki i nie handluje drogą morską z własnej woli.
 - **Bada, zatrudnia, rozwija się:** bada, zatrudnia lepszych myślicieli, awansuje osady, wysyła zwiadowców i osadników.
 - **Walczy:**
@@ -174,40 +174,40 @@ tylko po działaniach.
   | bezpieczeństwo (długi sezon wegetacji) | 10 |
 
 - **Faza startu:**
-  - ludy wybierają po kolei, w losowej kolejności;
+  - cywilizacje wybierają po kolei, w losowej kolejności;
   - gracz ma 30 s i widzi całą mapę bez złóż i żyzności;
   - wokół zajętych miejsc jest strefa blokady: 10 heksów (do 2026-11-19 było 15, co zajmowało za dużo kontynentu);
   - wszystkie liczby fazy startu są w danych, w `startPhase`: `pickSeconds` 30, `blockRadius` 10, `blockFuzz` 3, `scoreRadius` 3, `roomRadius` 6;
   - koło pokazane graczowi nie zdradza miejsca (2026-11-19): jego środek leży losowo (z ziarna) do 3 heksów od prawdziwego startu, a promień jest o 3 większy (13), więc zawsze zakrywa całą blokadę; serwer sprawdza to samo koło, które widzi gracz, i nie ma kropki w środku;
-  - AI wybiera losowo spośród miejsc nie gorszych niż (100 − X)% najlepszego wolnego, gdzie X to losowe 0–30% dla każdego ludu;
+  - AI wybiera losowo spośród miejsc nie gorszych niż (100 − X)% najlepszego wolnego, gdzie X to losowe 0–30% dla każdej cywilizacji;
   - gdy gracz nie zdąży, za niego wybiera AI;
   - po wyborze kronika podaje trzy zdania historii plemienia.
 - **Zdarzenia ze wspólnej puli:**
   - susza, sroga zima, epidemia, pożar, powódź;
-  - każdy lud dostaje jedno co 8–10 minut, nigdy to samo co inny lud w tej chwili;
+  - każda cywilizacja dostaje jedno co 8–10 minut, nigdy to samo co inna cywilizacja w tej chwili;
   - zdarzenie trwa 20–90 s;
   - radę daje tylko doradca z pasującą dziedziną.
 - **Podsumowanie (okno Summary):**
   - ocena naszego startu wobec najlepszego wolnego miejsca w chwili wyboru, z kryteriami;
-  - historia minuta po minucie naszego ludu i ludów, które poznaliśmy: ludność, osady, budynki, technologie, żołnierze, jedzenie, zdarzenie.
+  - historia minuta po minucie naszej cywilizacji i cywilizacji, które poznaliśmy: ludność, osady, budynki, technologie, żołnierze, jedzenie, zdarzenie.
 
 ## Dyplomacja, handel, cele, pauza (etapy G i H)
 
-- **Umowa handlowa:** możliwa z ludem, który nas zna albo którego znamy, w czasie pokoju.
+- **Umowa handlowa:** możliwa z cywilizacją, która nas zna albo którą znamy, w czasie pokoju.
   - Pozwala na wymianę towar za towar.
   - Każdy partner obniża cenę badań o 5%.
-  - AI proponuje umowy co minutę, jeśli nie jest bardzo wojownicze; nie podpisuje ich z ludami o złej reputacji (poniżej −25).
+  - AI proponuje umowy co minutę, jeśli nie jest bardzo wojownicze; nie podpisuje ich z cywilizacjami o złej reputacji (poniżej −25).
 - **Sojusz:**
   - wymaga umowy handlowej;
   - sojusznik przystępuje do wojny wypowiedzianej swojemu partnerowi;
   - AI nie atakuje sojuszników, a partnerów handlowych tylko najbardziej wojownicze.
 - **Wymiana:** „daję X dobra A za Y dobra B”, według wartości dóbr z `game.json`: jedzenie 1, drewno 1, kamień 1,2, skóry 1,5, narzędzia 3, miedź 4, cyna 5, brąz i żelazo 8.
   - AI przyjmuje, gdy dostaje co najmniej 110% wartości tego, co daje, i zostaje jej co najmniej dwa razy tyle.
-  - Człowiek odpowiada na ofertę w oknie Peoples.
+  - Człowiek odpowiada na ofertę w oknie Civilizations.
 - **Wojna łamie umowy.** Wypowiedzenie wojny partnerowi handlowemu kosztuje połowę kary za atak z zaskoczenia.
 - **Cel partii** wybiera się w menu przy „Play new game”:
-  - pierwszy lud w średniowieczu;
-  - ostatni lud na mapie;
+  - pierwsza cywilizacja w średniowieczu;
+  - ostatnia cywilizacja na mapie;
   - najlepszy wynik po 2 godzinach.
 
   Wynik = ludzie + 10 × osady + 20 × technologie + żołnierze. Sprawdzany co minutę.
@@ -215,7 +215,7 @@ tylko po działaniach.
   - gracz sam pauzuje bez limitu;
   - przy kilku graczach każdy ma 3 pauzy;
   - pauzę innego gracza można przerwać dopiero po 30 s;
-  - każdy gracz dostaje kolejny wolny lud.
+  - każdy gracz dostaje kolejną wolną cywilizację.
 
 ## Towary na mapie, tragarze, karawany (decyzje z 2026-11-17, wieczór)
 
@@ -237,11 +237,11 @@ tylko po działaniach.
   - nic nie dzieje się samo: budowa stoi na tym, co doszło, a gracz klika „Bring the missing materials” (płaci jeszcze raz tylko za brakującą część);
   - AI wysyła brakujące materiały sama, gdy ma je w zapasie.
 - **Tragarze** niosą po 5 sztuk na osobę, a po Carrying (kosze) po 20.
-- **Towary między osadami** niosą tragarze, dopóki lud nie zna The wheel i Horseback riding i nie ma w osadzie 2 koni. Wtedy idzie karawana, a konie wracają z nią. Konie mieszkają tylko w stajniach, po 16 w każdej.
-- **Bez drogi lądowej** wymiana z innym ludem płynie statkami handlowymi między portami (Sailing).
+- **Towary między osadami** niosą tragarze, dopóki cywilizacja nie zna The wheel i Horseback riding i nie ma w osadzie 2 koni. Wtedy idzie karawana, a konie wracają z nią. Konie mieszkają tylko w stajniach, po 16 w każdej.
+- **Bez drogi lądowej** wymiana z inną cywilizacją płynie statkami handlowymi między portami (Sailing).
 - **Karawany (2 osoby, 25 sztuk na osobę):**
   - między własnymi osadami: raz albo stała trasa, przy czym kurs rusza, gdy jest co najmniej 10 sztuk;
-  - wymiana z innym ludem: dwie karawany, nasza i ich, a towar zmienia właściciela dopiero po dojściu;
+  - wymiana z inną cywilizacją: dwie karawany, nasza i ich, a towar zmienia właściciela dopiero po dojściu;
   - danina po wojnie też idzie karawaną;
   - jeśli nie ma drogi lądem ani morzem między portami, wymiany nie da się zawrzeć;
   - zabita karawana traci ładunek, jak tragarze.
@@ -249,9 +249,9 @@ tylko po działaniach.
   - znają się od co najmniej 3 minut;
   - osady są nie dalej niż 20 heksów od siebie (licząc od granic);
   - od ostatniej wojny minęło 10 minut;
-  - reputacja tamtego ludu jest wyższa niż −20;
+  - reputacja tamtej cywilizacji jest wyższa niż −20;
   - AI ma w tym interes: widzi u nich budynek technologii, której nie zna, albo dobra, którego jej brakuje; sojusz chce przy wspólnym wrogu;
-  - najwyżej jedna propozycja do danego ludu na 3 minuty, po odmowie 6 minut przerwy;
+  - najwyżej jedna propozycja do danej cywilizacji na 3 minuty, po odmowie 6 minut przerwy;
   - umowa handlowa wymaga Handlu wymiennego (Barter), a do Currency także osobnego punktu handlowego na każdą umowę.
 - **Drzewo:** szczegóły w `docs/sim/technologie.md` (od 2026-11-18: 65 technologii).
   - Ulepszenia działają jako efekty: siła jednostek według grup (walka wręcz, piechota, dystans, jazda), produkcja budynków według grup (narzędzia, farmy, warsztaty), odporność na zdarzenia, szybkość, szkolenie, badania, przyrost, szczęście w losowaniu myślicieli i doradców, oblężenia, obrona.
@@ -270,21 +270,21 @@ tylko po działaniach.
 
 | Jednostka | Technologia | Co znajduje |
 | --- | --- | --- |
-| Zwiadowcy | Scouting | teren, ludy, osady, wojsko (jak dotąd) |
+| Zwiadowcy | Scouting | teren, cywilizacje, osady, wojsko (jak dotąd) |
 | Poszukiwacze (prospectors) | Stone tools | kamień, glina, krzemień i rudy |
 | Mierniczy (surveyors) | Scouting | żyzność ziemi, dzikie zboże, bydło, owce (`survey.soil`) |
 
 - **Badają tylko stojąc** i od razu cały krąg 3 heksów wokół siebie (`survey.radius`). Idąca jednostka nie bada nic. Ich wzrok to też 3 heksy.
-- **Rudy rozpoznaje się od ery technologii, która je wykorzystuje**, nawet zanim lud ją zna (`survey.eras`): miedź od neolitu, cynę, złoto i srebro od epoki brązu, żelazo i marmur od epoki żelaza, saletrę od średniowiecza. Węgla, ropy itp. w tych erach nie znajdzie się wcale. Heks zbadany we wcześniejszej erze trzeba zbadać jeszcze raz, żeby znaleźć rudy nowej ery.
-- **Znalezisko zostaje na zawsze** i od razu trafia na mapę ludu. Kronika podaje, co znaleziono.
-- **Budynki na złożach** (kopalnie, glinianki, premie za złoże) liczą tylko złoża, które lud zna. Przy okazji naprawiony błąd: kopalnie miedzi, cyny i żelaza nie dawały się zbudować, bo te rudy leżą płytko pod ziemią, a gra uznawała tylko złoża na powierzchni.
+- **Rudy rozpoznaje się od ery technologii, która je wykorzystuje**, nawet zanim cywilizacja ją zna (`survey.eras`): miedź od neolitu, cynę, złoto i srebro od epoki brązu, żelazo i marmur od epoki żelaza, saletrę od średniowiecza. Węgla, ropy itp. w tych erach nie znajdzie się wcale. Heks zbadany we wcześniejszej erze trzeba zbadać jeszcze raz, żeby znaleźć rudy nowej ery.
+- **Znalezisko zostaje na zawsze** i od razu trafia na mapę cywilizacji. Kronika podaje, co znaleziono.
+- **Budynki na złożach** (kopalnie, glinianki, premie za złoże) liczą tylko złoża, które cywilizacja zna. Przy okazji naprawiony błąd: kopalnie miedzi, cyny i żelaza nie dawały się zbudować, bo te rudy leżą płytko pod ziemią, a gra uznawała tylko złoża na powierzchni.
 - **Panel jednostki:**
   - stojąca: „Standing: they look at … within 3 hexes”;
   - idąca: „Walking: … only when they stand”;
   - lista „Found around” z odległością; kliknięcie pokazuje miejsce na mapie.
 - **Panel heksa** poza naszą ziemią: „Soil not surveyed” albo żyzność, oraz „Rock not prospected in this era”.
 - **AI:** gdy ma dwie osady i po 10. minucie, trenuje po jednym poszukiwaczu i mierniczym. Wysyła je na niezbadaną ziemię w promieniu ok. 12 heksów od swoich osad. Cele losuje z własnego skrótu, nie ze strumienia losowego AI.
-- **Pomiar** (6 ziaren, 4 ludy, 40 minut): ludzi 1370 → ok. 960, wymarłych ludów 5 → 4.
+- **Pomiar** (6 ziaren, 4 cywilizacje, 40 minut): ludzi 1370 → ok. 960, wymarłych cywilizacji 5 → 4.
   - Taka sama zmiana bez nowych jednostek (zabranie 4 ludzi i 30 jedzenia stolicy w 10. minucie) daje 1079.
   - Gra AI jest więc bardzo czuła na drobne zmiany, a ten spadek jest w granicach tego rozrzutu.
   - Do strojenia AI potrzeba więcej ziaren (znany problem 23).
@@ -292,7 +292,7 @@ tylko po działaniach.
 
 ## Ulepszanie budynków na miejscu (decyzja Patryka z 2026-11-19)
 
-- Budynek przechodzi w swój lepszy rodzaj, gdy lud zna jego technologię (pole `upgradesTo` w danych):
+- Budynek przechodzi w swój lepszy rodzaj, gdy cywilizacja zna jego technologię (pole `upgradesTo` w danych):
 
 | Z | Na |
 | --- | --- |
@@ -341,19 +341,19 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
   - okno **6 Units** (także klawisz P i przycisk „Patrols N” na górze): wszystkie jednostki, najpierw patrole i głodni, z kolumną „Fed by”, przyciskiem „Stop patrol” przy każdej i „Stop all patrols”.
 - **Patrole** chodzą po swojej pętli w kółko, aż gracz je zatrzyma. Zatrzymana jednostka pamięta ostatnią pętlę: „Resume” wysyła ją na tę samą trasę, „Recall” odsyła do osady, która ją karmi. W oknie Units działa to dla jednej jednostki, dla zaznaczonych (kolumna Pick, „pick patrols”) i dla wszystkich.
 - **AI:** szkoli wojsko w osadzie, która ma najwięcej jedzenia na zbyciu i wyżywi nowy oddział.
-- **Pomiar** (3 ziarna, 4 ludy, 40 minut; przed → po): ludzi 728 → 953, osad 40 → 37, jednostek 41 → 43, wymarłych ludów 0 → 1. Próbek „lud głoduje” 615 → 1078, bo flaga głodu trwa teraz całą minutę po nieudanej racji (wcześniej tylko przy pustym magazynie). Jednostki głodne w 3–4% próbek.
+- **Pomiar** (3 ziarna, 4 cywilizacje, 40 minut; przed → po): ludzi 728 → 953, osad 40 → 37, jednostek 41 → 43, wymarłych cywilizacji 0 → 1. Próbek „cywilizacja głoduje” 615 → 1078, bo flaga głodu trwa teraz całą minutę po nieudanej racji (wcześniej tylko przy pustym magazynie). Jednostki głodne w 3–4% próbek.
 
 ## Ery jako poziomy, kategorie technologii, alarmy (decyzje z 2026-11-18)
 
-- **Ery to poziomy ludu.**
-  - Następna era otwiera się, gdy lud zna 5 technologii swojej obecnej ery. Ulepszenia też się liczą, technologie podstawowe nie.
+- **Ery to poziomy cywilizacji.**
+  - Następna era otwiera się, gdy cywilizacja zna 5 technologii swojej obecnej ery. Ulepszenia też się liczą, technologie podstawowe nie.
   - Liczba jest w `eraAdvanceTechs` w `data/sim/game.json`.
-  - Technologii z ery, do której lud jeszcze nie doszedł, nie da się zacząć.
+  - Technologii z ery, do której cywilizacja jeszcze nie doszła, nie da się zacząć.
   - W obrębie ery nadal trzeba iść po drzewie, bo technologia wymaga doświadczenia w poprzednich.
 - **Kategorie technologii:** podstawy, jedzenie, przemysł, budownictwo, handel, wojsko, zarządzanie, nauka. Okno Research grupuje według nich.
 - **Alarmy** (liczone na żądanie dla widoku, nie zapisywane):
   - atak na osadę;
-  - wróg blisko (wojsko ludu, z którym walczymy, do 3 heksów za ziemią osady);
+  - wróg blisko (wojsko cywilizacji, z którą walczymy, do 3 heksów za ziemią osady);
   - głód;
   - brak dobra, przez który budynek stoi;
   - brak domów (osada nie rośnie);
@@ -377,8 +377,8 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
 | E5 | Doświadczenie liczy się tylko wtedy, gdy budynek naprawdę pracuje (ma surowiec i miejsce na wyroby) | — |
 | G3 | Stała trasa ma dwa progi: ile zostaje w źródle i do ilu napełniać cel (0 = bez limitu). Ustawia się je w panelu osady nad przyciskami tras | `RouteCommand.KeepAtSource`, `UntilTargetHas` |
 | — | Rozejm po pokoju trwa `war.truceSeconds` = 180 s | `war.truceSeconds` |
-| M6 | Złoża z ery, do której lud jeszcze nie doszedł, widać jako „???” (na mapie i w opisie heksa). Po wejściu w tę erę lud wie, co to jest, bez ponownego badania skał | `survey.eras` |
-| G2 | Osada pusta przez 60 s (nie ostatnia ludu) zmienia się w ruinę: ziemia jest niczyja, budynki stoją zrujnowane. Osadnicy na środku ruiny albo obok przejmują ją dla swojego ludu, a budynki wracają jako budowy za 50% ceny | `ruins.emptySeconds`, `ruins.rebuildPercent` |
+| M6 | Złoża z ery, do której cywilizacja jeszcze nie doszła, widać jako „???” (na mapie i w opisie heksa). Po wejściu w tę erę cywilizacja wie, co to jest, bez ponownego badania skał | `survey.eras` |
+| G2 | Osada pusta przez 60 s (nie ostatnia cywilizacji) zmienia się w ruinę: ziemia jest niczyja, budynki stoją zrujnowane. Osadnicy na środku ruiny albo obok przejmują ją dla swojej cywilizacji, a budynki wracają jako budowy za 50% ceny | `ruins.emptySeconds`, `ruins.rebuildPercent` |
 | G6 | Gdy osadzie brakuje towarów na awans, karawany z innych osad przywożą brakujące towary (najpierw z najbliższych). Awans kończy się, gdy wszystko dojedzie. Napad na taką karawanę odwołuje awans. **Od testów z 2026-11-20 (A1):** karawany wiozą brakującą ilość plus 10% ceny tego dobra (co najmniej 1), bo osada zużywa towar w czasie drogi; nadwyżka zostaje w osadzie. Gdy mimo to czegoś zabraknie, komunikat mówi czego („29 of 30 clay”), a AI próbuje znowu dopiero po 60 s | `upgradeCaravans.extraPercent`, `upgradeCaravans.aiRetrySeconds` |
 | G5 | Ubrania zużywają się tylko zimą, a krawiec robi 2 ubrania na pracownika na minutę (było 1) | `clothing.wearOnlyInWinter`, `tailor.produces` |
 
@@ -392,7 +392,7 @@ Jak w RTS-ach: jednostka nie kosztuje nic, kiedy żyje. Nikt też nie je „po t
 | 9B | Limit domów na poziom osady: obóz 60, wioska 250, miasteczko 800, miasto bez limitu. Domy ponad limit nic nie dają, a budowa nowej chaty jest odrzucana: „… has all the homes a camp can have (60). Upgrade it to a village to grow on.” | `settlementLevels[].maxHousing` |
 | 10B | Domy rosną w górę: Construction +4, Engineering +4, Guilds +8 miejsc w każdym kamiennym domu (16 → 32), także w już stojących. Awans osady daje szerszą ziemię | efekty technologii |
 | 11B | Alert „Food in X runs out in 2:40: build a Gatherers' hut (Food) or put more people to food.”, gdy osada je więcej, niż robi, a jedzenia starczy na 3 minuty lub mniej | `alerts.foodLowMinutes` |
-| 12B | Do czasu statków AI wszystkie ludy startują na głównym kontynencie (największy ląd), najdalej 60 heksów lądem od innego ludu. Bez fazy wyboru generator zostawia swój start, jeśli pasuje; inaczej lud bierze najlepsze miejsce (ocena „widziana”) co najmniej 25 heksów od innych (gdy się nie da, 13). Przy wyborze startu: odmowa „Too far from the other peoples” albo „Start on the main continent”; liczone od środków pokazanych kółek, więc nikt nie wie więcej, niż widać. Scenariusze testowe zostają przy starcie generatora | `startPhase.neighbourMaxHexes`, `startPhase.neighbourMinHexes` |
+| 12B | Do czasu statków AI wszystkie cywilizacje startują na głównym kontynencie (największy ląd), najdalej 60 heksów lądem od innej cywilizacji. Bez fazy wyboru generator zostawia swój start, jeśli pasuje; inaczej cywilizacja bierze najlepsze miejsce (ocena „widziana”) co najmniej 25 heksów od innych (gdy się nie da, 13). Przy wyborze startu: odmowa „Too far from the other civilizations” albo „Start on the main continent”; liczone od środków pokazanych kółek, więc nikt nie wie więcej, niż widać. Scenariusze testowe zostają przy starcie generatora | `startPhase.neighbourMaxHexes`, `startPhase.neighbourMinHexes` |
 
 ## Materiały późnych er (decyzje 13–15 z 2026-11-20, wdrożone 2026-11-21)
 
@@ -422,7 +422,7 @@ Liczby są w `lodes` w `data/sim/game.json`.
 
 - **Wielkość złoża.** Każde złoże jest małe, średnie albo duże. Kopalnia na nim (albo premia z niego, np. owce dla owczarni) daje odpowiednio 50%, 100% albo 150%. Wylosowane są z wagami 20/50/30, a w regionie rzadkich złóż 10/45/45. Wielkość widać po odkryciu złoża, np. „Deposit: Copper (large: a mine gives 150%)”. Gwarantowana cyna przy starcie jest mała. AI stawia kopalnię najpierw na większym złożu.
 - **Regiony.** Cyna, złoto, srebro i konie skupiają się w regionach: 4 środki na 10 000 heksów lądu, każdy region ma 10 heksów promienia. Poza regionami zostaje 30% tych złóż, a tyle samo, ile ubyło, dochodzi w regionach. Ogólna liczba złóż się nie zmienia.
-- **Znaki rud (technologia Prospecting, neolit).** Dla każdej rudy ery ludu gra pokazuje do 3 kół o promieniu 3 heksów. W kole na pewno leży ruda, a środek koła jest przesunięty o 0–2 heksy od niej. Znaki pojawiają się tylko na ziemi, którą lud już widział, najwyżej 30 heksów od jego osad, i nie na jego ziemi (tam zna wszystko). Liczone są co 20 s. Znak znika, gdy ruda zostanie odkryta.
+- **Znaki rud (technologia Prospecting, neolit).** Dla każdej rudy ery cywilizacji gra pokazuje do 3 kół o promieniu 3 heksów. W kole na pewno leży ruda, a środek koła jest przesunięty o 0–2 heksy od niej. Znaki pojawiają się tylko na ziemi, którą cywilizacja już widziała, najwyżej 30 heksów od jego osad, i nie na jego ziemi (tam zna wszystko). Liczone są co 20 s. Znak znika, gdy ruda zostanie odkryta.
   - Ery: neolit miedź, epoka brązu cyna, złoto i srebro, epoka żelaza ruda żelaza, średniowiecze saletra. Wraz z wejściem w erę pojawiają się nowe znaki.
 - **Ścieżka szukania.** W panelu poszukiwaczy jest przycisk „Search the ore signs”. Poszukiwacze idą do najbliższego znaku, stają, przeszukują teren, potem idą do następnego, aż przejdą wszystkie. Nowy rozkaz ruchu przerywa szukanie. AI używa tego samego rozkazu.
 - **Wyczerpywanie się złóż: nie** (na razie).
@@ -441,15 +441,15 @@ Nowa gra ma wybór „Ores” w menu:
 | | przed (5–12 i 15–20) | Fair | Realistic |
 | --- | --- | --- | --- |
 | pierwsze średniowiecze (min) | 57,2 | 58,4 | 59,9 (10 z 12 gier) |
-| ludy w epoce żelaza po 75 min | 41 z 48 | 40 z 48 | 25 z 48 |
-| ludy w średniowieczu po 75 min | 30 z 48 | 34 z 48 | 16 z 48 |
+| cywilizacje w epoce żelaza po 75 min | 41 z 48 | 40 z 48 | 25 z 48 |
+| cywilizacje w średniowieczu po 75 min | 30 z 48 | 34 z 48 | 16 z 48 |
 | ludzie (średnio) | 9 637 | 9 511 | 8 633 |
 
 ## Decyzje po testach z 2026-11-24
 
 | Nr | Zasada | Kod |
 | --- | --- | --- |
-| 1 | Zbieranie z okolicy jest zawsze włączone: przycisk „Stop gathering” usunięty (mógł zagłodzić cały lud). Serwer odrzuca starą komendę `Gather` („Gathering is always on…”), a stare zapisy ją pomijają | `PlayHost`, `Settlement.Gathering` (tylko dla testów) |
+| 1 | Zbieranie z okolicy jest zawsze włączone: przycisk „Stop gathering” usunięty (mógł zagłodzić całą cywilizację). Serwer odrzuca starą komendę `Gather` („Gathering is always on…”), a stare zapisy ją pomijają | `PlayHost`, `Settlement.Gathering` (tylko dla testów) |
 | 3 | Magazyn nigdy nie trzyma więcej, niż mieści: gdy miejsce maleje (pożar, rozbiórka, przebudowa), nadmiar przepada w następnym kroku gospodarki | `SimGame.EconomyStep` |
 | 5 | Pracują i zbierają tylko ludzie z domem. Ludzie ponad domy (po pożarze, po rozwiązaniu oddziału) tylko jedzą; panel osady pisze „N without a home: they do not work”, alarm mówi, jak dać im domy. Alarm „brak domów” przy limicie poziomu mówi, czego brakuje do awansu (technologia, ludzie albo dobra) | `SimGame.Recompute`, `SimGame.HomesFix` |
 | 6 | Rozbiórka budowy w toku: materiały przepadają; dymek przycisku „Tear down” o tym mówi | klient |

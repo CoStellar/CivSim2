@@ -14,7 +14,7 @@ namespace CivSim.Sim.Ai;
 /// </summary>
 public static partial class SimAi
 {
-    // Minutes of eating a people wants in store when winter comes (winter lasts two).
+    // Minutes of eating a civilization wants in store when winter comes (winter lasts two).
     private const int WinterStoreMinutes = 3;
 
     /// <summary>True when winter is near or here and the food in store would not last it out.</summary>

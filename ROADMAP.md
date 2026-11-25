@@ -1,6 +1,6 @@
 # CivSim 2 — sprint do demo
 
-**Cel: grywalne demo do średniowiecza.** Partia ok. 60 minut przeciw kilku ludom AI, od wyboru miejsca startu do celu partii.
+**Cel: grywalne demo do średniowiecza.** Partia ok. 60 minut przeciw kilku cywilizacjom AI, od wyboru miejsca startu do celu partii.
 Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMAP.md`.
 
 ## Gotowe (stan 2026-11-23, `development`)
@@ -24,9 +24,9 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | 1 | Poprawki po rundzie testów 2 (`claude/runda-testow-2.md`) i po raporcie z 2026-11-20 | zrobione: PR #116–#126 (decyzje w `claude/decyzje-testy-2026-11-20.md`) |
 | 2 | Zapis i wczytanie partii | zrobione (przycisk Save / F5, autozapis co 5 min, sekcja Load game w menu) |
 | 3 | Skoki czasu taktu (najgorszy takt 212 ms w scenariuszu 10) | zrobione (#114); dziś najgorszy takt w scenariuszach 60–170 ms, średnio 0,1–0,3 ms |
-| 4 | Najwyżej 2–3 wojny naraz u jednego ludu (projekt gry, rozdział 8) | zrobione (#114, `war.maxWars` = 3) |
+| 4 | Najwyżej 2–3 wojny naraz u jednej cywilizacji (projekt gry, rozdział 8) | zrobione (#114, `war.maxWars` = 3) |
 | 5 | Późne ery: węgiel drzewny, cegła, deski, wełna i sukno, zaprawa; koszty nowej ery; przebudowa budynku w lepszy i zastąpienie na heksie | zrobione: #127 (materiały i koszty), #128 (zastąpienie budynku) |
-| 6 | Tempo pierwszych 15 minut (brak drewna na starcie, pierwszy narzędziarz w 13. minucie) | zrobione: #129 (100 drewna na start: narzędziarz w 10. minucie u wszystkich ludów); ocena Patryka w testach demo |
+| 6 | Tempo pierwszych 15 minut (brak drewna na starcie, pierwszy narzędziarz w 13. minucie) | zrobione: #129 (100 drewna na start: narzędziarz w 10. minucie u wszystkich cywilizacji); ocena Patryka w testach demo |
 | 7 | AI walki: szyk, flanki, odwrót rannych | zrobione: #130 |
 | 8 | Pokój z negocjacji: zasoby, osada, okres pokoju, podpowiedź łupów z przebiegu wojny | zrobione: PR `feat/peace-negotiation` (ADR 0030: warunki z dóbr, osady i długości pokoju, zmęczenie wojną) |
 | 9 | Drobne rzeczy w kliencie: głód oddziału w polu w panelu, przegląd tekstów | zrobione: #131 |
@@ -35,7 +35,7 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | 12 | Dowóz wsadu do warsztatów stałymi trasami (known-issues #13) | zrobione: PR `fix/ai-input-routes` (warsztaty bez wsadu 36% → 28%); zostaje za mała produkcja żelaza i węgla |
 | 13 | Wspólna droga dla oddziałów jednej wyprawy (known-issues #15) | zrobione: PR `fix/march-shared-path` (takty ponad 25 ms 7,9 → 3,0 na grę) |
 | 14 | Scenariusz 03 testuje samą walkę (`noPeace`, decyzja Patryka 2026-11-23) | zrobione |
-| 16 | Zmiany po testach z 2026-11-23: krótszy neolit, badania bez doświadczenia, przeżycie biernego ludu, AI z oceną zysku i zwiadem, odnawialna reputacja, alarm „obcy”, przegrana przy zerze ludzi, dziennik decyzji AI | zrobione: PR z `claude/project-thread-wrj4qa`; zostaje cel średniowiecza w 45. minucie (known-issues 17) |
+| 16 | Zmiany po testach z 2026-11-23: krótszy neolit, badania bez doświadczenia, przeżycie biernej cywilizacji, AI z oceną zysku i zwiadem, odnawialna reputacja, alarm „obcy”, przegrana przy zerze ludzi, dziennik decyzji AI | zrobione: PR z `claude/project-thread-wrj4qa`; zostaje cel średniowiecza w 45. minucie (known-issues 17) |
 | 17 | Sterowanie z klawiatury (kursor klawiatury, Q/E/R/J, Home, Page Up/Down) i instrukcja gry w menu i pod F1 (`docs/sterowanie-i-instrukcja.md`) | zrobione: PR `claude/project-thread-ea3s8b` |
 | 18 | Dźwięk: muzyka według terenu i ery (3 utwory po 5 min na teren i erę, grane z nut), ciche otoczenie, efekty rozkazów i zdarzeń, suwaki głośności (`docs/audio.md`) | zrobione: PR `claude/project-thread-ex38kq`; ocena na słuch: Patryk (known-issues 18) |
 | 15 | Runda testów demo na komputerze Patryka | Patryk, po 8 i 11–13 |
@@ -58,7 +58,7 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | W1 | Zaawansowane ustawienia świata w „New game” (zwijana sekcja) | zrobione: #183 |
 | MP1 | Połączenie TCP, serwer bez okna, pomiary w serwerze | zrobione: #184 |
 | MP2 | Serwer dla kilku ludzi (przejęcie przez AI, błędy klienta, dołączenia w zapisie, prędkość, wersje) | zrobione: #185 |
-| MP3 | Konfiguracja serwera i lobby, menu Multiplayer | w PR |
+| MP3 | Konfiguracja serwera i lobby, menu Multiplayer | zrobione: #186 |
 | MP4 | Gra z ludźmi: czat, głosowania, obserwatorzy, wyrzucanie | do zrobienia |
 | MP5 | Zapis i wczytanie partii wieloosobowej | do zrobienia |
 | MP6 | Pośrednik, Docker, gałąź `server` z CI, instrukcja VPS | do zrobienia |

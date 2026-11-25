@@ -228,7 +228,7 @@ wypełniające kafel i nasycone akcenty (czerwone dachy, flagi).
 
 ## 11. Kolory cywilizacji na budynkach (prośba Patryka z 2026-11-23)
 
-Kolor ludu (magenty podmieniane przez grę) jest teraz na każdym budynku, zawsze w tych samych miejscach i bez faktury:
+Kolor cywilizacji (magenty podmieniane przez grę) jest teraz na każdym budynku, zawsze w tych samych miejscach i bez faktury:
 - **okap dachu**, czyli dwa dolne rzędy dachu (widać go z daleka);
 - **malowane drzwi**;
 - **proporczyk** na szczycie dachu budynku na 1 miejscu, **chorągiew** na hali budynku na 2 miejscach;
@@ -270,10 +270,10 @@ Podgląd w grze: scenariusz `13_deposits`.
 
 ## 14. Obrazki w panelu bocznym: szkolenie i nagłówki (2026-11-23)
 
-- **Przyciski szkolenia** (sekcja TRAIN) pokazują figurki jednostki w kolorze naszego ludu zamiast liter („Se”, „Sc”…).
+- **Przyciski szkolenia** (sekcja TRAIN) pokazują figurki jednostki w kolorze naszej cywilizacji zamiast liter („Se”, „Sc”…).
   Obrazek jest przycięty do samych figurek, więc wypełnia przycisk; jednostka, której nie można szkolić, jest przyciemniona.
 - **Nagłówki panelu** mają obrazek tego, co zaznaczone: osada (jej centrum), budynek, oddział i heks (teren). Obce osady,
-  budynki i oddziały są w kolorze ich ludu, zapamiętane (poza wzrokiem) na szaro.
+  budynki i oddziały są w kolorze ich cywilizacji, zapamiętane (poza wzrokiem) na szaro.
 
 Podgląd w grze: okno zrzutu `--play-window PanelEnd` (panel przewinięty do przycisków szkolenia).
 
@@ -322,10 +322,10 @@ z rozdziału 8 (paleta, obrys, światło z lewej góry, faktura; w paczce płask
 | doradca, alert „Strangers” | `ui/advisor`, `ui/alert_11` | 32×32 | pasek alertów |
 | portrety doradców | `portraits/advisor_<dziedzina>_01..12` | 64×92 | okno „Thinkers and advisors” (także oferty) |
 | portrety myślicieli | `portraits/thinker_<rzadkość>_01..12` | 64×92 | jak wyżej |
-| herby ludów | `emblems/emblem_<era>_<motyw>` (8 × 5) | 40×40 | okno „Civilizations” |
+| herby cywilizacji | `emblems/emblem_<era>_<motyw>` (8 × 5) | 40×40 | okno „Civilizations” |
 
 **Portrety (prośba Patryka):** każdy portret ma własny, losowany wygląd: kolor skóry (7), włosy i fryzura, oczy, broda lub wąsy,
-wiek (zmarszczki, siwe włosy), nakrycie głowy, kobieta albo mężczyzna. Ubranie jest w kolorze ludu (trzy magenty jako światło,
+wiek (zmarszczki, siwe włosy), nakrycie głowy, kobieta albo mężczyzna. Ubranie jest w kolorze cywilizacji (trzy magenty jako światło,
 odcień i cień, więc w grze ubranie ma cieniowanie). Doradca trzyma rzecz swojej dziedziny: gospodarka sakiewkę albo wagę,
 wzrost snop albo kosz owoców, badania zwój, księgę albo pióro, ekspansja mapę albo kompas. Myśliciel jest ubrany według
 rzadkości: zwykły w prostej szacie z tabliczką, coraz rzadsi z obszyciem, białym kołnierzem, płaszczem, złotą zapinką,
@@ -333,23 +333,23 @@ rzadkości: zwykły w prostej szacie z tabliczką, coraz rzadsi z obszyciem, bia
 dziedziny (doradca) albo rzadkości (myśliciel). Którego z 12 wariantów dostaje osoba, wynika z jej imienia (stały hasz), więc
 ta sama osoba zawsze wygląda tak samo. Zasady gry dla doradców i myślicieli się nie zmieniły.
 
-**Herb ludu zmienia się z erą:** epoka kamienia: stojący kamień ze znakiem; neolit: deska z desek na sznurku z namalowanym
+**Herb cywilizacji zmienia się z erą:** epoka kamienia: stojący kamień ze znakiem; neolit: deska z desek na sznurku z namalowanym
 znakiem (zamiana na prośbę Patryka, 2026-11-24); epoka brązu: drewniana tarcza z brązowym okuciem; epoka żelaza: chorągiew z sukna na drążku; średniowiecze: tarcza
-herbowa ze złotym brzegiem i głową w kolorze ludu. Motywy (8): jeleń, słońce, drzewo, fala, góra, ptak, dłoń, spirala; lud
-dostaje motyw według swojego numeru przesuniętego o ziarno świata. Wszystkie herby w oknie pokazują erę naszego ludu (er innych ludów nie widzimy).
+herbowa ze złotym brzegiem i głową w kolorze cywilizacji. Motywy (8): jeleń, słońce, drzewo, fala, góra, ptak, dłoń, spirala; cywilizacja
+dostaje motyw według swojego numeru przesuniętego o ziarno świata. Wszystkie herby w oknie pokazują erę naszej cywilizacji (er innych cywilizacji nie widzimy).
 Nasz herb jest stale widoczny w lewym górnym rogu (80×80, czyli 2×). Kliknięcie albo klawisz 0 otwiera okno „Our civilization”:
-ludność, osady, budynki, technologie, wojsko, myśliciel, doradca i stosunki z innymi ludami. Kolor i motyw herbu wynikają z ziarna
+ludność, osady, budynki, technologie, wojsko, myśliciel, doradca i stosunki z innymi cywilizacjami. Kolor i motyw herbu wynikają z ziarna
 świata, więc w każdej grze są inne.
 
 ## 18. Paczka płaska „Flat” (Patryk, 2026-11-24)
 
-Druga paczka grafik: `art/packs/flat/`. Te same kształty, kolory ludu i rozmiary 2×, ale bez faktury starego CivSim: trawa
+Druga paczka grafik: `art/packs/flat/`. Te same kształty, kolory cywilizacji i rozmiary 2×, ale bez faktury starego CivSim: trawa
 i ziemia w kolorach mapy, ściany bez cegieł i kamieni, dachy bez dachówek, ramki interfejsu bez wzoru. Paczkę wybiera się
 w menu startowym albo w trakcie gry (przycisk „?”, sekcja ART PACK); przełączenie działa od razu.
 
 ## 19. Interfejs według ery (Patryk, 2026-11-24)
 
-Ramki okien, przyciski, zakładki, dymki i górny pasek zmieniają wygląd, gdy lud wchodzi w nową erę (pliki
+Ramki okien, przyciski, zakładki, dymki i górny pasek zmieniają wygląd, gdy cywilizacja wchodzi w nową erę (pliki
 `ui/<element>_<era>.png`, brakujący element bierze wygląd podstawowy):
 - epoka kamienia: kamień i skóra (wygląd podstawowy);
 - neolit: wiklina i glina;

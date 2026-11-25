@@ -24,13 +24,13 @@ public enum DebugAction
     NextEra = 4,
 }
 
-/// <summary>A debug action for a people (scenarios only).</summary>
+/// <summary>A debug action for a civilization (scenarios only).</summary>
 public sealed record DebugCommand(int Civ, DebugAction Action) : SimCommand(Civ);
 
 /// <summary>
 /// Test scenarios (Patryk, 2026-11-19): a game set up at a chosen moment of development, so later technologies, war and
 /// the rest can be tested without playing up to them. The game is created as usual (without the start phase), then every
-/// people is set up as the scenario says.
+/// civilization is set up as the scenario says.
 /// </summary>
 public sealed partial class SimGame
 {
@@ -45,7 +45,7 @@ public sealed partial class SimGame
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(scenario);
-        SimGame g = Create(content, new SimSettings(scenario.Seed, scenario.Width, scenario.Height, Math.Max(scenario.Peoples, scenario.Civs.Count)) { StartPhase = false, NearStarts = false });
+        SimGame g = Create(content, new SimSettings(scenario.Seed, scenario.Width, scenario.Height, Math.Max(scenario.CivCount, scenario.Civs.Count)) { StartPhase = false, NearStarts = false });
         g.DebugOn = scenario.Debug;
         for (int i = 0; i < g.Civs.Count; i++)
         {

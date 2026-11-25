@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace CivSim.Sim.Content;
 
 /// <summary>
-/// A test scenario (Patryk, 2026-11-19): a game that starts at a chosen moment of development, with every people set up as
+/// A test scenario (Patryk, 2026-11-19): a game that starts at a chosen moment of development, with every civilization set up as
 /// written, to test later technologies, war and the rest without playing up to them. Read from
 /// <c>data/sim/scenarios/*.json</c>; every field is optional and falls back to a normal start.
 /// </summary>
@@ -31,10 +31,10 @@ public sealed record SimScenario
     /// <summary>Legacy map height.</summary>
     public int Height { get; init; } = 60;
 
-    /// <summary>Number of peoples.</summary>
-    public int Peoples { get; init; } = 4;
+    /// <summary>Number of civilizations.</summary>
+    public int CivCount { get; init; } = 4;
 
-    /// <summary>Everyone knows the whole map and every people from the start.</summary>
+    /// <summary>Everyone knows the whole map and every civilization from the start.</summary>
     public bool RevealMap { get; init; }
 
     /// <summary>Every hex we know is looked at by prospectors and surveyors: its deposits show (later eras' ores as "???").</summary>
@@ -43,13 +43,13 @@ public sealed record SimScenario
     /// <summary>The debug keys work (goods, finish research, reveal the map, more people).</summary>
     public bool Debug { get; init; } = true;
 
-    /// <summary>How each people starts, by index (0 is the player).</summary>
+    /// <summary>How each civilization starts, by index (0 is the player).</summary>
     public IReadOnlyList<ScenarioPeople> Civs { get; init; } = [];
 
-    /// <summary>Pairs of peoples at war from the start.</summary>
+    /// <summary>Pairs of civilizations at war from the start.</summary>
     public IReadOnlyList<int[]> Wars { get; init; } = [];
 
-    /// <summary>Two peoples whose armies start on a field between them, facing each other (empty = at home).</summary>
+    /// <summary>Two civilizations whose armies start on a field between them, facing each other (empty = at home).</summary>
     public int[] Field { get; init; } = [];
 
     /// <summary>Hexes between the two armies of the field.</summary>
@@ -130,7 +130,7 @@ public sealed record SimScenario
             Seed = r.TryGetProperty("seed", out JsonElement s) ? s.GetUInt64() : 1,
             Width = Int(r, "width", 98),
             Height = Int(r, "height", 60),
-            Peoples = Int(r, "peoples", Math.Max(2, civs.Count)),
+            CivCount = Int(r, "civilizations", Math.Max(2, civs.Count)),
             RevealMap = r.TryGetProperty("revealMap", out JsonElement rm) && rm.GetBoolean(),
             Surveyed = r.TryGetProperty("surveyed", out JsonElement sv) && sv.GetBoolean(),
             Debug = !r.TryGetProperty("debug", out JsonElement db) || db.GetBoolean(),
@@ -163,7 +163,7 @@ public sealed record SimScenario
     }
 }
 
-/// <summary>How one people starts in a scenario. Empty fields keep the normal start.</summary>
+/// <summary>How one civilization starts in a scenario. Empty fields keep the normal start.</summary>
 public sealed record ScenarioPeople
 {
     /// <summary>A finished stone wall on every hex of its land this far from its centre (0 = none).</summary>
@@ -185,7 +185,7 @@ public sealed record ScenarioPeople
     /// <summary>Armour level of its starting soldiers (−1 = the best its stock holds).</summary>
     public int Armour { get; init; } = -1;
 
-    /// <summary>Era key: every technology of the eras before it is known, and the people is in it.</summary>
+    /// <summary>Era key: every technology of the eras before it is known, and the civilization is in it.</summary>
     public string Era { get; init; } = "";
 
     /// <summary>More technologies known (keys), with what they need.</summary>

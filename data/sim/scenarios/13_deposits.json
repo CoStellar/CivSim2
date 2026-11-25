@@ -2,7 +2,7 @@
   "name": "Deposits",
   "description": "We are in the Bronze Age with a town; the whole map is known and looked at by prospectors and surveyors, so every deposit shows: those of our eras with their pictures, the ores of later eras as \"???\". To look at the pictures of deposits.",
   "seed": 56,
-  "peoples": 2,
+  "civilizations": 2,
   "revealMap": true,
   "surveyed": true,
   "civs": [

@@ -51,7 +51,7 @@ Nowa era zmienia muzykę od razu, po fanfarze.
   gra tylko dźwięk odmowy); okna (także panel pomocy H).
 - **Efekty zdarzeń:** budowa gotowa, nowa osada, odkrycie, wojna, pokój, nowy alert (osobny róg „pod atakiem”, róg przy wrogu blisko,
   dzwonek przy pozostałych, każdy rodzaj alertu najwyżej raz na 60 s: `alertKindSeconds`). Każdy dźwięk ma przerwę, przed którą się nie
-  powtórzy (np. róg najwyżej co 20 s). Wojna gra też wtedy, gdy poznajemy lud, który już z nami walczy. Przy prędkości Max milkną
+  powtórzy (np. róg najwyżej co 20 s). Wojna gra też wtedy, gdy poznajemy cywilizację, która już z nami walczy. Przy prędkości Max milkną
   częste dźwięki „budowa gotowa”, „odkrycie” i dzwonek (`quietAtMaxSpeed`). Muzyka nowej ery wchodzi 3,5 s po fanfarze (`eraMusicDelaySeconds`).
   Muzyka „wybrzeża” gra, gdy woda zajmuje co najmniej 30% ekranu (`coastWater`).
 - **Kliknięcie** przy każdym przycisku gry.

@@ -19,7 +19,7 @@ public sealed record AttackWallCommand(int Civ, int Unit, int Cell) : SimCommand
 /// roads. They stay under whatever is built on the hex and go only when the player removes them (or an enemy breaks a wall).
 /// Ditches and aqueducts carry water from a hex next to water, a few hexes at most: a farm on a watered hex makes more, a
 /// settlement an aqueduct reaches grows faster. Palisades wound enemies at war standing on them; walls stop foreign walkers
-/// until broken. Roads bridge the rivers they cross once the people knows Masonry. The water is worked out again only when a
+/// until broken. Roads bridge the rivers they cross once the civilization knows Masonry. The water is worked out again only when a
 /// ditch or an aqueduct is built or removed (docs/wydajnosc.md: work on change).
 /// </summary>
 public sealed partial class SimGame
@@ -215,12 +215,12 @@ public sealed partial class SimGame
 
     private ushort PalisadeBit => (ushort)(_palisadeBit >= 0 ? _palisadeBit : (_palisadeBit = Content.Work("palisade")?.Bit ?? 0));
 
-    /// <summary>True when foreign walkers may not enter the hex: a wall of another people stands there.</summary>
+    /// <summary>True when foreign walkers may not enter the hex: a wall of another civilization stands there.</summary>
     public bool WalledAgainst(int civ, int cell) => civ >= 0 && WallBit != 0 && (WorksAt[cell] & WallBit) != 0 && WorksCiv[cell] >= 0 && WorksCiv[cell] != civ;
 
     /// <summary>
     /// A6 (tests 2026-11-20): walls and palisades on a settlement's land belong to whoever holds it now. A taken settlement's works
-    /// go to the taker; works nobody holds (on ruins) go to the people that settles there again.
+    /// go to the taker; works nobody holds (on ruins) go to the civilization that settles there again.
     /// </summary>
     private void AdoptWorks(Settlement s, int from)
     {
@@ -234,7 +234,7 @@ public sealed partial class SimGame
         }
     }
 
-    /// <summary>Walls and palisades of a settlement that is no more (ruins) or of a people that is no more belong to nobody and stop nobody.</summary>
+    /// <summary>Walls and palisades of a settlement that is no more (ruins) or of a civilization that is no more belong to nobody and stop nobody.</summary>
     private void DisownWorks(IEnumerable<int> cells, int civ)
     {
         foreach (int cell in cells)
@@ -331,7 +331,7 @@ public sealed partial class SimGame
         return best;
     }
 
-    // A bridge on the edge between two neighbouring road hexes across a river, once the people knows how (paid by the nearest
+    // A bridge on the edge between two neighbouring road hexes across a river, once the civilization knows how (paid by the nearest
     // settlement; without the goods the road is built and the river waits for its bridge).
     private void BridgeRoad(Civ civ, int cell)
     {
@@ -376,7 +376,7 @@ public sealed partial class SimGame
             return;
         }
 
-        // A copy: a unit the palisade kills leaves its people's list.
+        // A copy: a unit the palisade kills leaves its civilization's list.
         _onPalisades.Clear();
         foreach (Unit u in ActiveUnits())
         {

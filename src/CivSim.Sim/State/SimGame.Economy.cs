@@ -7,7 +7,7 @@ namespace CivSim.Sim.State;
 public sealed partial class SimGame
 {
     /// <summary>
-    /// Recomputes, for every settlement of a people, its storage, housing, jobs and the net rate of every good. Goods lie in
+    /// Recomputes, for every settlement of a civilization, its storage, housing, jobs and the net rate of every good. Goods lie in
     /// the settlement where they were made (decision of 2026-11-17): every finished building adds a little room, a storehouse
     /// a lot. Runs only when something changed: a building finished or stopped, people came or went, a store ran empty or
     /// full, or filled again (docs/wydajnosc.md: rates, not items).
@@ -192,7 +192,7 @@ public sealed partial class SimGame
                     long got = s.Idle * Content.ForagePerMinute[g] * rich[g] / 100 * EventProduction(civ, g) / 100 * work / 1000;
                     if (g == Content.Food)
                     {
-                        // Patryk, 2026-11-23: gathering always feeds the gatherers (never more): a people left alone lives on.
+                        // Patryk, 2026-11-23: gathering always feeds the gatherers (never more): a civilization left alone lives on.
                         got = Math.Max(got, (long)s.Idle * Content.FoodPerPersonPerMinute * eat / 100 * Content.ForageSubsistencePercent / 100);
                     }
 
@@ -307,7 +307,7 @@ public sealed partial class SimGame
         return -1;
     }
 
-    /// <summary>Refreshes the people's totals (sum of its settlements) shown on the resource bar and used by the AI.</summary>
+    /// <summary>Refreshes the civilization's totals (sum of its settlements) shown on the resource bar and used by the AI.</summary>
     public void SyncTotals(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -336,7 +336,7 @@ public sealed partial class SimGame
     }
 
     // Adds each settlement's rates for the ticks since the last step. A store never goes below zero or above its room; when a
-    // store runs empty, fills up or recovers, the people is recomputed (that is how sleeping buildings wake).
+    // store runs empty, fills up or recovers, the civilization is recomputed (that is how sleeping buildings wake).
     private void EconomyStep(Civ civ)
     {
         if (civ.Dirty)

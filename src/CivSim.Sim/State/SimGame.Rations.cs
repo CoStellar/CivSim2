@@ -16,11 +16,11 @@ public sealed partial class SimGame
 {
     private readonly List<Unit> _toFeed = [];
 
-    /// <summary>Soldiers who starved in the field, all peoples (for reports).</summary>
+    /// <summary>Soldiers who starved in the field, all civilizations (for reports).</summary>
     public int FieldDeaths { get; private set; }
     private readonly List<int> _rationOrder = [];
 
-    /// <summary>Ticks until a people's next ration.</summary>
+    /// <summary>Ticks until a civilization's next ration.</summary>
     public int TicksToRation(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -72,7 +72,7 @@ public sealed partial class SimGame
         _ => Content.Rations.StarvingPercent,
     };
 
-    /// <summary>True when an army unit is on its people's land or within supply.rangeHexes of it (fed from home).</summary>
+    /// <summary>True when an army unit is on its civilization's land or within supply.rangeHexes of it (fed from home).</summary>
     public bool InSupply(Unit u)
     {
         ArgumentNullException.ThrowIfNull(u);
@@ -95,7 +95,7 @@ public sealed partial class SimGame
         return false;
     }
 
-    /// <summary>Most food an army unit carries: its people's food for supply.carryMinutes.</summary>
+    /// <summary>Most food an army unit carries: its civilization's food for supply.carryMinutes.</summary>
     public long ProvisionsMax(Unit u)
     {
         ArgumentNullException.ThrowIfNull(u);

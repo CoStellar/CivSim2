@@ -201,7 +201,7 @@ public static partial class SimAi
                 soldiers += u.People;
             }
 
-            // P1: the gain is the settlement's people (taken or sacked); it must be worth the soldiers we risk. Small peoples
+            // P1: the gain is the settlement's people (taken or sacked); it must be worth the soldiers we risk. Small civilizations
             // (known people below aiWar.smallTargetPercent of ours) are spared unless their name is bad.
             int theirPeople = KnownPeople(g, civ, other);
             bool small = ((long)theirPeople * 100 < (long)civ.People * wr.SmallTargetPercent || theirPeople < wr.SmallTargetPeople)
@@ -234,7 +234,7 @@ public static partial class SimAi
         }
     }
 
-    // P1: the people of another people as we know it (settlements seen now, or as last seen).
+    // P1: the population of another civilization as we know it (settlements seen now, or as last seen).
     private static int KnownPeople(SimGame g, Civ civ, Civ other)
     {
         int n = 0;
@@ -254,7 +254,7 @@ public static partial class SimAi
         return n;
     }
 
-    // P1: sends an idle scout to look at a hex (trains one when the people has none).
+    // P1: sends an idle scout to look at a hex (trains one when the civilization has none).
     private static void LookAt(SimGame g, Civ civ, int cell)
     {
         UnitType scouts = g.Content.Unit("scouts");
@@ -286,7 +286,7 @@ public static partial class SimAi
         }
     }
 
-    // P2 (Patryk, 2026-11-23): a people we met has a bad name (below war.badReputation): we arm, not attack.
+    // P2 (Patryk, 2026-11-23): a civilization we met has a bad name (below war.badReputation): we arm, not attack.
     internal static bool FearsBadName(SimGame g, Civ civ)
     {
         foreach (Civ other in g.Civs)
@@ -520,7 +520,7 @@ public static partial class SimAi
 
     private static List<int> WayScratch => _wayScratch ??= [];
 
-    // A9 (tests 2026-11-20): only settlements the people sees now or remembers having seen, not every hex it once uncovered.
+    // A9 (tests 2026-11-20): only settlements the civilization sees now or remembers having seen, not every hex it once uncovered.
     private static Settlement? NearestKnownSettlement(SimGame g, Civ civ, Civ other)
     {
         Settlement? best = null;

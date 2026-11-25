@@ -67,7 +67,7 @@ public partial class PlayGame : Node2D
 
     private readonly string? _scenario;
 
-    // Options from the start menu (map, peoples, world, a save to load); null = the defaults with the seed above.
+    // Options from the start menu (map, civilizations, world, a save to load); null = the defaults with the seed above.
     private readonly PlayOptions? _options;
 
     // A game on a server (MP3): the connection, the player's name and password, whether the game still wants a hello, and

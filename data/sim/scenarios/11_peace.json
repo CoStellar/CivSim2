@@ -1,8 +1,8 @@
 {
   "name": "Peace test: terms and weariness",
-  "description": "We and people 1 are at war from the start, both in the Bronze Age; they have two villages around their town. Test the peace window (Peoples): suggested terms, goods, a settlement our army besieges, the length of peace, and war weariness.",
+  "description": "We and people 1 are at war from the start, both in the Bronze Age; they have two villages around their town. Test the peace window (Civilizations): suggested terms, goods, a settlement our army besieges, the length of peace, and war weariness.",
   "seed": 56,
-  "peoples": 3,
+  "civilizations": 3,
   "revealMap": true,
   "wars": [[0, 1]],
   "civs": [

@@ -5,14 +5,14 @@ Projektu (`claude/projekt-gry.md`); przy zmianach aktualizujemy obie. **Najpierw
 
 ## 1. Wizja
 
-- **Gracz jest całą cywilizacją**, jak umysł roju z Warhammera 40k. W pełni steruje ludem i prowadzi go przez wieki, widząc jego rozwój.
-- **Lud gracza nie ma własnej AI.**
+- **Gracz jest całą cywilizacją**, jak umysł roju z Warhammera 40k. W pełni steruje cywilizacją i prowadzi ją przez wieki, widząc jej rozwój.
+- **Cywilizacja gracza nie ma własnej AI.**
   - Sam wykonuje tylko codzienne prace. Gdy gracz zrobi pole uprawne, ludzie sami je uprawiają, a gracz wybiera, co rośnie.
   - Gracz ma pełną kontrolę i sprawczość.
   - Bez doradcy nikt mu nawet nie podpowiada.
 - **Cywilizacja 6 w czasie rzeczywistym:** szybka (jak na grę tego typu) wędrówka przez historię: walka, rozbudowa, rozwój. Bez kultury
   i religii.
-- **Po 15 minutach** gracz ma ciągłą ochotę rozwijać lud, widzieć kolejne możliwości i dochodzić do nich sam.
+- **Po 15 minutach** gracz ma ciągłą ochotę rozwijać cywilizację, widzieć kolejne możliwości i dochodzić do nich sam.
 - **Po partii** gracz czuje się jak po grze planszowej: może przejrzeć przebieg i zrozumieć, która decyzja była zła.
 
 ## 2. Partia
@@ -28,7 +28,7 @@ Projektu (`claude/projekt-gry.md`); przy zmianach aktualizujemy obie. **Najpierw
   Każde miejsce ma ocenę według kryteriów: ludność, rolnictwo, wojsko, narzędzia, rozrost, przyszłość, ryzyko. Liczymy ją raz, po
   wygenerowaniu mapy; gracz widzi ją po partii.
 - **Cel partii** ustala się przy jej tworzeniu, np. ostatnia żywa cywilizacja albo pierwsza z daną technologią.
-- **Przegrana:** wymarcie ludu albo najgorszy wynik na koniec. Wynik liczy się z ludności, ziemi, technologii i siły wojska.
+- **Przegrana:** wymarcie cywilizacji albo najgorszy wynik na koniec. Wynik liczy się z ludności, ziemi, technologii i siły wojska.
 - **Czas płynie ciągle.** Pauza:
   - każdy gracz ma 3 pauzy na partię;
   - po 30 s pauzy każdy inny gracz może ją przerwać;
@@ -74,7 +74,7 @@ Projektu (`claude/projekt-gry.md`); przy zmianach aktualizujemy obie. **Najpierw
 - **Ludność** rośnie z dostatku, podbojów, jedzenia i liczby oraz wielkości domów. Ich brak ją ogranicza.
   Osada przestaje rosnąć, gdy jedzenia jej ubywa, a zostało go na mniej niż dwie racje (decyzja Patryka z 2026-11-22, wariant C);
   panel osady mówi wtedy dlaczego, a kronika to odnotowuje.
-- **Osady zakłada i awansuje gracz,** gdy ma zasoby. Lud nie ruszy się sam.
+- **Osady zakłada i awansuje gracz,** gdy ma zasoby. Cywilizacja nie ruszy się sama.
 - **Przenosiny osady:**
   - obóz traci część zasobów;
   - wioska i wyżej budują się od nowa, a stara zostaje opuszczona;
@@ -139,17 +139,17 @@ Projektu (`claude/projekt-gry.md`); przy zmianach aktualizujemy obie. **Najpierw
     - gra proponuje łupy w proporcji do prowadzenia (zdobyte pola, pokonane jednostki);
     - AI ocenia ofertę po charakterze i przebiegu wojny;
   - **wyniszczeniem jednej ze stron.**
-- **Atak bez wypowiedzenia:** wiedzą ofiara i ludy znające obie strony; przez jakiś czas trudniej o umowy.
+- **Atak bez wypowiedzenia:** wiedzą ofiara i cywilizacje znające obie strony; przez jakiś czas trudniej o umowy.
 - **Obrona:** mobilizacja na wybrane heksy, fortyfikacje (także w trakcie wojny, ale wtedy mogą zostać zaatakowane).
 
-## 9. Inne ludy i dyplomacja
+## 9. Inne cywilizacje i dyplomacja
 
-- **Liczba ludów** ustawiana przy tworzeniu partii.
+- **Liczba cywilizacji** ustawiana przy tworzeniu partii.
 - **Poznawanie:**
   - przez obserwację, zwiadowców i ataki;
   - zwiadowca jawny jest szybszy, ukryty wolniejszy;
   - obcy zwiadowca widzi tylko obserwowaną osadę, z czasem więcej;
-  - ukrytych zwiadowców nie da się przypisać do ludu.
+  - ukrytych zwiadowców nie da się przypisać do cywilizacji.
 - **Relacje:** handel, umowy, sojusze. Wasalstwo później: tylko AI–AI albo gracz nad AI.
 - **Charakter AI** gracz poznaje z jej działań, nigdy wprost.
 - **Multiplayer od razu.**

@@ -11,7 +11,7 @@ Danina była możliwa dopiero po 2 minutach wojny i po co najmniej 5 zabitych. G
 Osad nie dało się oddać w pokoju.
 
 AI szukała pokoju tylko wtedy, gdy przeciwnik prowadził w wyniku wojny o ponad 20 punktów (albo losowo, 3% na myślenie).
-Wojna nic nie kosztowała z samego trwania: lud mógł walczyć bez końca, póki miał ludzi.
+Wojna nic nie kosztowała z samego trwania: cywilizacja mogła walczyć bez końca, póki miała ludzi.
 
 ## Decyzja (kwestionariusz z 2026-11-21, odpowiedzi Patryka z 2026-11-23)
 
@@ -52,7 +52,7 @@ silniejszy. Wynik wojny (zabici, zajęte osady) mówi tylko, kto wygrywa. Nie m�
 
 ### Propozycja mechaniki
 
-**Zmęczenie wojną** (0–100) dla każdego ludu w każdej wojnie, widoczne w oknie dyplomacji. Rośnie z:
+**Zmęczenie wojną** (0–100) dla każdej cywilizacji w każdej wojnie, widoczne w oknie dyplomacji. Rośnie z:
 - czasem wojny (np. +1 na minutę),
 - stratami (ludzie zabici przez wroga, w procentach ludności),
 - głodem (racje niewydane z powodu braku jedzenia),

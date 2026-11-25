@@ -17,7 +17,7 @@ Co zostaje, a co jest legacy: `docs/legacy/README.md`. Etapy A–G są zrobione 
 | **B. Osada i gospodarka** | wybór miejsca z oceną, osada z heksów, budynki z miejscami pracy, magazyn, domy, przyrost, pasek zasobów i akcji, wstrzymanie i pierwszeństwo budynku | 15 min budowania jednej osady |
 | **C. Ekspansja** | osadnicy, awans i przenosiny osad, zwiadowcy jawni i ukryci, mgła wojny, kronika, oś czasu | kilka osad, odkrywanie mapy |
 | **D. Rozwój** | drzewo do średniowiecza (doświadczenie, koszt w zasobach, czas), myśliciele, doradca, ery | rozwój przez ery |
-| **E. Wojna** | jednostki według ery, rezerwiści, rozkazy oddziałów, walka na żywo, fortyfikacje, wojna jako stan, negocjacje, reputacja | wojna z drugim ludem |
+| **E. Wojna** | jednostki według ery, rezerwiści, rozkazy oddziałów, walka na żywo, fortyfikacje, wojna jako stan, negocjacje, reputacja | wojna z drugą cywilizacją |
 | **F. Gracz AI** | AI z tymi samymi komendami co gracz | partia przeciw kilku AI |
 | **G. Świat i cel** | kontakt, handel, umowy, sojusze, zdarzenia z puli, cele partii, wynik, podsumowanie | pełna partia z celem |
 | **H. Multiplayer** | kilku graczy, pauzy, dyplomacja między ludźmi | partia ze znajomym |

@@ -2,7 +2,7 @@
   "name": "Prospecting",
   "description": "Neolithic, the map known, Prospecting learnt: yellow circles are ore signs (copper lies inside). Prospectors can search them one by one (Search the ore signs), or go anywhere and stand to find ores; surveyors find good soil. Deposits are small, medium or large.",
   "seed": 44,
-  "peoples": 3,
+  "civilizations": 3,
   "revealMap": true,
   "civs": [
     { "era": "neolithic", "techs": ["prospecting"], "level": "village", "people": 40, "stock": { "food": 300, "wood": 200, "stone": 100, "tools": 30 },

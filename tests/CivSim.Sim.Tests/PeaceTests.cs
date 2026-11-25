@@ -21,7 +21,7 @@ public sealed class PeaceTests
         }
     }
 
-    // Two peoples at war for longer than tributeAfterSeconds, the first ahead by killing some of the second's soldiers.
+    // Two civilizations at war for longer than tributeAfterSeconds, the first ahead by killing some of the second's soldiers.
     private static SimGame AheadInAWar(int killed = 30)
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();

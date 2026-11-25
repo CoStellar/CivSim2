@@ -31,7 +31,7 @@ public sealed record EndRouteCommand(int Civ, int Route) : SimCommand(Civ);
 /// </summary>
 public sealed partial class SimGame
 {
-    /// <summary>Standing caravan routes of every people.</summary>
+    /// <summary>Standing caravan routes of every civilization.</summary>
     public List<TradeRoute> Routes { get; } = [];
 
     /// <summary>The storehouse of a settlement nearest to a hex, or the settlement centre when it has none.</summary>
@@ -179,7 +179,7 @@ public sealed partial class SimGame
     }
 
     // A carrier unit leaves a settlement with goods from its store; its people stop working until they are back.
-    // Goods between settlements go in caravans once the people has the wheel, horseback riding and the horses a caravan takes;
+    // Goods between settlements go in caravans once the civilization has the wheel, horseback riding and the horses a caravan takes;
     // before that porters carry them (decision of 2026-11-18). The horses come back with the caravan.
     private Unit NewCarrier(Civ civ, int kind, Settlement home, int fromCell, long[] goods, int percent)
     {
@@ -431,7 +431,7 @@ public sealed partial class SimGame
         return parts.Count == 0 ? "nothing" : string.Join(", ", parts);
     }
 
-    /// <summary>The settlement of a people nearest to a hex (null when it has none).</summary>
+    /// <summary>The settlement of a civilization nearest to a hex (null when it has none).</summary>
     public Settlement? NearestOwn(Civ civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -643,7 +643,7 @@ public sealed partial class SimGame
         return null;
     }
 
-    // Once a second per people: idle routes send a caravan. (Lost materials are not sent again by themselves.)
+    // Once a second per civilization: idle routes send a caravan. (Lost materials are not sent again by themselves.)
     private void LogisticsStep(Civ civ)
     {
         for (int r = 0; r < Routes.Count; r++)
@@ -670,7 +670,7 @@ public sealed partial class SimGame
         }
     }
 
-    // A trade between two peoples: each side's caravan carries its part to the nearest settlement of the other.
+    // A trade between two civilizations: each side's caravan carries its part to the nearest settlement of the other.
     private void TradeCaravans(Civ a, Civ b, int giveGood, long giveAmount, int wantGood, long wantAmount)
     {
         (Settlement sa, Settlement sb) = ClosestPair(a, b);
@@ -709,7 +709,7 @@ public sealed partial class SimGame
         SyncTotals(b);
     }
 
-    // Gathers a good into one settlement from the people's others (for a trade the people agreed to as a whole).
+    // Gathers a good into one settlement from the civilization's others (for a trade the people agreed to as a whole).
     private void TakeFromCiv(Civ civ, Settlement into, int good, long amount)
     {
         long need = amount - into.Stock[good];

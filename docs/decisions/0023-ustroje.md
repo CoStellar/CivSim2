@@ -16,9 +16,9 @@ doradców), impulsywność AI, sposób sukcesji, zdolność administracyjną i s
   (od epoki brązu, czyli od etapu 6).
 - **Stan:** `CivilizationState.Government` (indeks w danych) i zmiana w toku (`PendingGovernment`, `PendingGovernmentMonth`).
   Zapis w formacie 26, hash, protokół w wersji 10 (tytuł i ustrój dla obserwatora).
-- **Start:** każdy lud dostaje ustrój, do którego ciągnie jego charakter: suma cecha × skłonność (`leaning`) z danych, remis wygrywa
+- **Start:** każda cywilizacja dostaje ustrój, do którego ciągnie jej charakter: suma cecha × skłonność (`leaning`) z danych, remis wygrywa
   pierwszy w pliku. Bez losowania, więc nic nie przesuwa strumieni.
-- **Tytuł:** `Governments.Title` składa wzór z danych z rdzeniem nazwy ludu. Rdzeń (`CivilizationState.Name`) się nie zmienia, więc
+- **Tytuł:** `Governments.Title` składa wzór z danych z rdzeniem nazwy cywilizacji. Rdzeń (`CivilizationState.Name`) się nie zmienia, więc
   kronika dalej mówi „Karrut”; tytuł pokazują podgląd i raporty.
 - **Opóźnienie wdrożenia w latach** (`enactYears`), nie w turach: tura epoki kamienia trwa 50 lat, więc „4 tury” z GDD to 200 lat.
   Działa na dwie decyzje państwowe, które dziś istnieją:
@@ -36,8 +36,8 @@ doradców), impulsywność AI, sposób sukcesji, zdolność administracyjną i s
 ## Uzupełnienie: przywódcy (PR 2 etapu 4f)
 
 - `data/leaders.json`: cechy przywódcy z przesunięciami cech charakteru, liczba cech, śmiertelność z wiekiem; sukcesja w polach ustroju.
-- Charakter, którego używa AI, to cechy ludu plus przesunięcia przywódcy (`LeaderShift` zapisane w stanie, żeby czytać charakter bez
-  zawartości gry). Cechy ludu zostają osobno, więc zmiana władcy jest skokowa, a powolna zmiana z doświadczeniem (później) nie miesza się
+- Charakter, którego używa AI, to cechy cywilizacji plus przesunięcia przywódcy (`LeaderShift` zapisane w stanie, żeby czytać charakter bez
+  zawartości gry). Cechy cywilizacji zostają osobno, więc zmiana władcy jest skokowa, a powolna zmiana z doświadczeniem (później) nie miesza się
   z cechami przywódcy.
 - Śmierć i następca liczone rok po roku w kroku cywilizacji, z generatora pochodnego (strumień `Leaders`, cywilizacja, miesiąc).
 - Kryzys sukcesji to na razie tylko miesiąc końca (`CrisisUntilMonth`); stabilność (PR 3) go odejmie.
@@ -73,7 +73,7 @@ doradców), impulsywność AI, sposób sukcesji, zdolność administracyjną i s
   nadal obniża sympatię i zaufanie i gaśnie w swoim tempie, tylko przestaje być powodem do wojny o odwet. Tak sympatia (pamięć) i prawo
   do odwetu (rachunek) są osobno, a zapis rośnie o jedną liczbę na relację (format 30).
 - Wybór ustroju przez AI to zwykła komenda gracza (`ChangeGovernmentCommand`) z histerezą 30%, bo zmiana kosztuje 2 lata bezkrólewia;
-  bez histerezy lud na granicy dwóch ustrojów zmieniałby go w każdym przeglądzie.
+  bez histerezy cywilizacja na granicy dwóch ustrojów zmieniałaby go w każdym przeglądzie.
 - Nowe progi AI są w `data/ai.json` (nie w `stability.json`), bo to oceny AI, nie zasady państwa; test martwych wartości dostał
   sytuację „państwo w niepokojach”, w której każda z nich zmienia decyzję.
 

@@ -14,7 +14,7 @@ public enum TreatyKind
     Alliance = 1,
 }
 
-/// <summary>Offer a treaty to another people.</summary>
+/// <summary>Offer a treaty to another civilization.</summary>
 public sealed record ProposeTreatyCommand(int Civ, int Other, TreatyKind Kind) : SimCommand(Civ);
 
 /// <summary>Answer a treaty offer.</summary>
@@ -46,7 +46,7 @@ public sealed partial class SimGame
     /// <summary>Barter offers waiting for a person's answer.</summary>
     public List<BarterOffer> BarterOffers { get; } = [];
 
-    /// <summary>True when the two peoples have the treaty.</summary>
+    /// <summary>True when the two civilizations have the treaty.</summary>
     public bool Has(int a, int b, TreatyKind kind)
     {
         bool[] t = Treaties(kind);
@@ -54,7 +54,7 @@ public sealed partial class SimGame
     }
 
     /// <summary>
-    /// Trade agreements a people can keep: one per finished trading post, without limit once it knows Currency (barter is
+    /// Trade agreements a civilization can keep: one per finished trading post, without limit once it knows Currency (barter is
     /// limited at first, decision of 2026-11-18).
     /// </summary>
     public int TradeRoom(Civ civ)
@@ -81,7 +81,7 @@ public sealed partial class SimGame
         return posts;
     }
 
-    /// <summary>Number of trade partners of a people.</summary>
+    /// <summary>Number of trade partners of a civilization.</summary>
     public int Partners(int civ)
     {
         int n = 0;
@@ -98,7 +98,7 @@ public sealed partial class SimGame
     private long[]? _peaceSince;
 
     /// <summary>
-    /// The conditions for a treaty between two peoples (decision of 2026-11-17): known for a while, settlements close,
+    /// The conditions for a treaty between two civilizations (decision of 2026-11-17): known for a while, settlements close,
     /// no fighting lately, and a good name.
     /// </summary>
     public bool TreatyConditions(Civ civ, Civ other)
@@ -267,7 +267,7 @@ public sealed partial class SimGame
         return null;
     }
 
-    /// <summary>True when caravans can walk between the two peoples' nearest settlements.</summary>
+    /// <summary>True when caravans can walk between the two civilizations' nearest settlements.</summary>
     public bool Reachable(Civ a, Civ b)
     {
         ArgumentNullException.ThrowIfNull(a);

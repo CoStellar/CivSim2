@@ -64,7 +64,7 @@ public sealed partial class SimGame
 
     /// <summary>
     /// Why settlers cannot found a camp on <paramref name="cell"/> (null = they can). With <paramref name="civ"/>, only settlements
-    /// that people sees or remembers count for the distance (5B, Patryk 2026-11-20: the refusal gave hidden cities away).
+    /// that civilization sees or remembers count for the distance (5B, Patryk 2026-11-20: the refusal gave hidden cities away).
     /// </summary>
     public string? CannotFound(int cell, Civ? civ = null)
     {
@@ -353,7 +353,7 @@ public sealed partial class SimGame
     }
 
     /// <summary>
-    /// True when <paramref name="civ"/> sees another people's unit now: within the sight of one of its units or near one of its
+    /// True when <paramref name="civ"/> sees another civilization's unit now: within the sight of one of its units or near one of its
     /// settlements. Hidden units are seen only from the next hex.
     /// </summary>
     public bool Sees(Civ civ, Unit other)

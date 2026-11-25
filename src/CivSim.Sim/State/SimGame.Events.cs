@@ -10,7 +10,7 @@ public sealed record SimEvent(int Id, string Key, string Name, int Ticks, bool[]
 
 public sealed partial class SimGame
 {
-    /// <summary>Draws the next event for a people when its time has come, ends the one that ran out.</summary>
+    /// <summary>Draws the next event for a civilization when its time has come, ends the one that ran out.</summary>
     private void EventStep(Civ civ)
     {
         IReadOnlyList<SimEvent> pool = Content.Events;
@@ -36,7 +36,7 @@ public sealed partial class SimGame
             return;
         }
 
-        // One no other people has right now.
+        // One no other civilization has right now.
         var free = new List<int>();
         foreach (SimEvent e in pool)
         {
@@ -86,7 +86,7 @@ public sealed partial class SimGame
         }
     }
 
-    /// <summary>Production percent of a good under the people's current event.</summary>
+    /// <summary>Production percent of a good under the civilization's current event.</summary>
     public int EventProduction(Civ civ, int good)
     {
         ArgumentNullException.ThrowIfNull(civ);

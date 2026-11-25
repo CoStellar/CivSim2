@@ -23,6 +23,8 @@ public sealed class PlayLobbyTests
         LobbyStateMessage seen = Last(ala2);
         Assert.Equal(["Ala", "Ola"], seen.Seats.Take(2).Select(s => s.Name));
         Assert.StartsWith("ala ", seen.Seats[2].Name, StringComparison.Ordinal); // R4-4: a nickname already here gets a suffix
+        Assert.Equal(seen.Seats[2].Name.Length - 3, seen.Seats[2].SuffixLength); // the lobby shows the suffix in another colour
+        Assert.Equal(0, seen.Seats[0].SuffixLength);
         Assert.True(seen.Seats[0].Host);
         Assert.Equal(2, seen.You);
         Assert.Contains(seen.Settings, l => l.StartsWith("Civilizations: 4, places for players: 3", StringComparison.Ordinal));

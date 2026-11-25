@@ -40,7 +40,7 @@ public sealed partial class SimGame
     /// <summary>The decisions written down, oldest first.</summary>
     public List<AiLogEntry> AiLogEntries { get; } = [];
 
-    // When a people last wrote each text: the same decision again within a minute is not written twice.
+    // When a civilization last wrote each text: the same decision again within a minute is not written twice.
     private readonly Dictionary<(int Civ, string Text), long> _aiLogLast = [];
 
     /// <summary>Writes an AI decision down (only while <see cref="AiLogOn"/>).</summary>

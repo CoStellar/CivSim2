@@ -12,7 +12,7 @@ public static partial class SimAi
     // Hexes a scout's way search may look at: a target ~14 hexes off needs far fewer; one beyond a river or a sea fails fast.
     private const int ScoutSearchLimit = 1500;
 
-    // 17B (Patryk, 2026-11-20): a people this small needs every person at home.
+    // 17B (Patryk, 2026-11-20): a civilization this small needs every person at home.
     private static bool Small(SimGame g, Civ civ) => civ.People < g.Content.AiSmallPeople;
 
     private static void Scouts(SimGame g, Civ civ)
@@ -59,12 +59,12 @@ public static partial class SimAi
         }
     }
 
-    // Prospectors and surveyors (2026-11-19): one at a time once the people has three settlements (prospectors from the
+    // Prospectors and surveyors (2026-11-19): one at a time once the civilization has three settlements (prospectors from the
     // Neolithic, when ores can be found; surveyors before); it walks to ground around
     // our settlements that it has not looked at yet, stands there (surveys), then goes on. Same rules as for the player.
     private static void Surveys(SimGame g, Civ civ)
     {
-        // Not before the people has spread a little: early on every person is needed at home.
+        // Not before the civilization has spread a little: early on every person is needed at home.
         // Tests 2026-11-23: an ore the way to the next era needs sends prospectors from the first settlement on.
         bool needOre = civ.Era >= 1 && Array.IndexOf(WantedDeposits(g, civ), true) >= 0;
         if (g.Ticks < 15 * SimContent.TicksPerMinute || (civ.Settlements.Count < 3 && !needOre) || civ.Hungry)

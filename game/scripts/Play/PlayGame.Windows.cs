@@ -7,7 +7,7 @@ using Godot;
 
 namespace CivSim.Game.Play;
 
-/// <summary>The windows in the middle of the screen: settlements, research tree, peoples, thinkers and the summary.</summary>
+/// <summary>The windows in the middle of the screen: settlements, research tree, civilizations, thinkers and the summary.</summary>
 public partial class PlayGame
 {
     private static readonly string[] Categories = ["basics", "food", "industry", "building", "trade", "military", "governance", "science"];
@@ -145,7 +145,7 @@ public partial class PlayGame
         }));
     }
 
-    // Scrolled once to the people's era when the tree opens.
+    // Scrolled once to the civilization's era when the tree opens.
     private int _researchScrolled = -1;
 
     // The branches and their colours (the stripe on each card).
@@ -539,7 +539,7 @@ public partial class PlayGame
         _uiTimer = 0.1;
     }
 
-    // A peace offer being put together for each people we fight (ADR 0030): goods and amounts, maybe a settlement, a length.
+    // A peace offer being put together for each civilization we fight (ADR 0030): goods and amounts, maybe a settlement, a length.
     private sealed class PeaceDraft
     {
         public bool WeGive;
@@ -550,7 +550,7 @@ public partial class PlayGame
 
     private readonly Dictionary<int, PeaceDraft> _peaceDrafts = [];
 
-    private void PeaceItems(PlayViewMessage v, PlayContentMessage c, PlayPeopleView p, List<UiItem> items)
+    private void PeaceItems(PlayViewMessage v, PlayContentMessage c, PlayKnownCivView p, List<UiItem> items)
     {
         int other = p.Civ;
         if (!_peaceDrafts.TryGetValue(other, out PeaceDraft? d))
@@ -716,16 +716,16 @@ public partial class PlayGame
     private void PeoplesItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
         items.Add(new HeaderItem("Our civilization", c.Eras[v.Era], new Color("c8a050"), "Us", UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), v.Civ), v.Civ, Portrait: true));
-        if (v.Peoples.Count == 0)
+        if (v.KnownCivs.Count == 0)
         {
             items.Add(new LineItem("We have met no other civilization yet. Send scouts to find them.", UiKit.Muted, 15));
         }
 
-        foreach (PlayPeopleView p in v.Peoples)
+        foreach (PlayKnownCivView p in v.KnownCivs)
         {
             int other = p.Civ;
             string status = p.Dead ? "gone" : p.AtWar ? "AT WAR" : p.Alliance ? "allies" : p.Trade ? "trade partners" : "at peace";
-            // 2026-11-24 (Patryk): each people's emblem, in the look of our era (board, stone, shield, banner, heraldry).
+            // 2026-11-24 (Patryk): each civilization's emblem, in the look of our era (board, stone, shield, banner, heraldry).
             items.Add(new HeaderItem(p.Name, status + (p.Reputation < 0 ? $" - known for treachery ({p.Reputation})" : ""), p.AtWar ? new Color("b84040") : new Color("6a7a5a"), UiKit.Short(p.Name), UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), p.Civ), p.Civ, p.Dead, Portrait: true));
             if (p.Dead)
             {
@@ -868,7 +868,7 @@ public partial class PlayGame
         }
 
         items.Add(new TableItem(4, crit));
-        foreach (PlayHistoryView p in sum.Peoples)
+        foreach (PlayHistoryView p in sum.Civs)
         {
             items.Add(new SectionItem(p.Name));
             var cells = new List<CellItem> { new("Minute", UiKit.Heading), new("People", UiKit.Heading), new("Settlements", UiKit.Heading), new("Buildings", UiKit.Heading), new("Technologies", UiKit.Heading), new("Soldiers", UiKit.Heading), new("Food a minute", UiKit.Heading), new("Event", UiKit.Heading) };
@@ -889,7 +889,7 @@ public partial class PlayGame
     private void OurCivilizationItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
         string eraKey = UiKit.KeyOf(c.Eras[v.Era]);
-        PlayHistoryView? ours = _session?.Summary?.Peoples.FirstOrDefault(p => p.Civ == v.Civ);
+        PlayHistoryView? ours = _session?.Summary?.Civs.FirstOrDefault(p => p.Civ == v.Civ);
         string name = ours?.Name ?? "Our civilization";
         string next = v.Era + 1 < c.Eras.Count ? $"{v.EraKnown} of {v.EraNeed} technologies to the {c.Eras[v.Era + 1]}" : "the last era";
         items.Add(new HeaderItem(name, $"{c.Eras[v.Era]} - {next}", new Color("c8a050"), "Us", UiKit.EmblemName(eraKey, v.Civ), v.Civ, v.Lost, Portrait: true));
@@ -921,7 +921,7 @@ public partial class PlayGame
         items.Add(new LineItem(v.Advisor is { } a ? $"Advisor: {a.Name} ({a.Rarity.ToLowerInvariant()}, {a.Fields.ToLowerInvariant()})" : "No advisor.", UiKit.Text, 14));
 
         items.Add(new SectionItem("Other civilizations"));
-        var met = v.Peoples.Where(p => !p.Dead).ToList();
+        var met = v.KnownCivs.Where(p => !p.Dead).ToList();
         if (met.Count == 0)
         {
             items.Add(new LineItem("We have met no other civilization yet.", UiKit.Muted, 14));

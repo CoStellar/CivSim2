@@ -30,7 +30,7 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
     /// <summary>Water percent.</summary>
     public int WaterPercent { get; init; } = 60;
 
-    /// <summary>Peoples choose their start in turns (the start phase); otherwise the generator's starts are used.</summary>
+    /// <summary>Civilizations choose their start in turns (the start phase); otherwise the generator's starts are used.</summary>
     public bool StartPhase { get; init; }
 
     /// <summary>What wins the game.</summary>
@@ -42,16 +42,16 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
     /// <summary>Minutes of play for <see cref="GameGoal.BestScore"/>.</summary>
     public int GoalMinutes { get; init; } = 120;
 
-    /// <summary>The AI leads every people (the host hands people to players afterwards); false in rule tests.</summary>
+    /// <summary>The AI leads every civilization (the host hands people to players afterwards); false in rule tests.</summary>
     public bool Ai { get; init; } = true;
 
     /// <summary>
-    /// Ores mode (Patryk, 2026-11-24): fair (true) puts copper, tin and iron near every start (startDeposits), so peoples have
+    /// Ores mode (Patryk, 2026-11-24): fair (true) puts copper, tin and iron near every start (startDeposits), so civilizations have
     /// about the same chance at the metal ages; realistic (false) leaves the ores where the world put them.
     /// </summary>
     public bool FairOres { get; init; } = true;
 
-    /// <summary>12B: peoples start near each other on the main continent (startPhase.neighbourMaxHexes); test scenarios keep the generator's starts.</summary>
+    /// <summary>12B: civilizations start near each other on the main continent (startPhase.neighbourMaxHexes); test scenarios keep the generator's starts.</summary>
     public bool NearStarts { get; init; } = true;
 
     /// <summary>Advanced world settings (PR W1, 2026-11-25): the planet; null = the generator's default (Earth).</summary>
@@ -402,7 +402,7 @@ public sealed partial class SimGame
     /// <summary>The winner, once the goal is met (−1 = the game goes on).</summary>
     public int Winner { get; private set; } = -1;
 
-    /// <summary>Score of a people: people, settlements, technologies and soldiers (the summary and the time goal).</summary>
+    /// <summary>Score of a civilization: people, settlements, technologies and soldiers (the summary and the time goal).</summary>
     public int ScoreOf(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -484,7 +484,7 @@ public sealed partial class SimGame
         }
     }
 
-    // Once a minute: one line of history per people (constant memory per minute, read by the summary).
+    // Once a minute: one line of history per civilization (constant memory per minute, read by the summary).
     private void Sample()
     {
         foreach (Civ c in Civs)

@@ -17,7 +17,7 @@ a cały dotychczasowy fundament projektu (filar 2, AI, która sama sensownie dec
 ## Decyzja
 
 1. **Symulacja jest panem, gracz sternikiem.** Świat rozwija się sam, według tych samych zasad dla wszystkich; gracz wybiera kierunek
-   i patrzy, jak jego wybory odbijają się w historii ludu.
+   i patrzy, jak jego wybory odbijają się w historii cywilizacji.
 2. **Pięć dźwigni gracza, na wszystkie ery:** gdzie żyjemy; dokąd zmierzamy; co robimy na ziemi; z kim i jak; odpowiedzi na karty.
    Era dodaje opcje do dźwigni, nigdy nowy rodzaj. Sterowanie oddziałami jest narzędziem dźwigni 1 i 4, nie filarem.
 3. **Gracz, który nie klika, ma dalej ciekawą partię.** Każdą dźwignię można wziąć i oddać AI w dowolnej chwili (pięć kafelków

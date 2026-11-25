@@ -33,7 +33,7 @@ public sealed partial class SimGame
     /// <summary>War weariness (0-100) of <paramref name="a"/> in its war with <paramref name="b"/> (ADR 0030, point 7).</summary>
     public int Weariness(int a, int b) => Weary()[(a * Civs.Count) + b] / 100;
 
-    /// <summary>The highest war weariness of a people over the peoples it fights or fought lately (0-100).</summary>
+    /// <summary>The highest war weariness of a civilization over the civilizations it fights or fought lately (0-100).</summary>
     public int Weariness(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -49,7 +49,7 @@ public sealed partial class SimGame
     /// <summary>True when <paramref name="a"/> declared the war it fights with <paramref name="b"/> (7.3A).</summary>
     public bool Aggressor(int a, int b) => Aggressors()[(a * Civs.Count) + b];
 
-    /// <summary>7.2A: percent less work in the people's workshops from its war weariness.</summary>
+    /// <summary>7.2A: percent less work in the civilization's workshops from its war weariness.</summary>
     public int WarWorkLoss(Civ civ)
     {
         WearinessRules r = Content.Weariness;
@@ -249,7 +249,7 @@ public sealed partial class SimGame
         return false;
     }
 
-    /// <summary>True when the people sees the settlement or remembers it where it stands.</summary>
+    /// <summary>True when the civilization sees the settlement or remembers it where it stands.</summary>
     public bool KnowsSettlement(Civ civ, Settlement s)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -257,7 +257,7 @@ public sealed partial class SimGame
         return Visible(civ, s.Center) || (civ.SeenSettlements.TryGetValue(s.Center, out SettlementMemory? seen) && seen.Settlement == s.Id);
     }
 
-    // 2B: how far the settlement lies from the land of a people (hexes; int.MaxValue when it has none).
+    // 2B: how far the settlement lies from the land of a civilization (hexes; int.MaxValue when it has none).
     private int DistanceToLand(Settlement s, Civ civ)
     {
         int best = int.MaxValue;
@@ -564,10 +564,10 @@ public sealed partial class SimGame
         civ.WarWorkLoss = WarWorkLoss(civ);
     }
 
-    // Tests: the people's totals after its settlements' stores were changed.
+    // Tests: the civilization's totals after its settlements' stores were changed.
     internal void SyncForTest(Civ civ) => SyncTotals(civ);
 
-    // Lifts the white-peace truce between two peoples (tests that declare war again at once).
+    // Lifts the white-peace truce between two civilizations (tests that declare war again at once).
     internal void EndWhiteTruceForTest(int a, int b)
     {
         NoWar()[(a * Civs.Count) + b] = 0;

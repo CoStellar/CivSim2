@@ -8,7 +8,7 @@ public sealed class DiplomacyTests
 {
     private static readonly SimContent Content = SimContent.Load();
 
-    // Three peoples that have all met; people 1 is led by the AI so that it answers.
+    // Three civilizations that have all met; people 1 is led by the AI so that it answers.
     private static SimGame Met()
     {
         SimGame g = SimGame.Create(Content, new SimSettings(1, 66, 40, 3) { Ai = false }).Basics();

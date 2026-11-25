@@ -4,16 +4,16 @@ using CivSim.Core.Map;
 
 namespace CivSim.Sim.State;
 
-/// <summary>What a people remembers of a settlement it no longer sees.</summary>
+/// <summary>What a civilization remembers of a settlement it no longer sees.</summary>
 /// <summary>A settlement as last seen; People, Guard and DefensePercent are what the AI judges its defence by (A9, tests 2026-11-20).</summary>
 /// <remarks>SeenAt: the tick it was last seen (tests 2026-11-23, P1: the AI attacks only what it has looked at lately).</remarks>
 public sealed record SettlementMemory(int Settlement, int Civ, string Name, int Level, int Center, int People = 0, int Guard = 0, int DefensePercent = 100, long SeenAt = 0);
 
-/// <summary>What a people remembers of a building it no longer sees.</summary>
+/// <summary>What a civilization remembers of a building it no longer sees.</summary>
 public sealed record BuildingMemory(int Building, int Type, int Civ, BuildingState State, int Cell, int Slots = 15);
 
 /// <summary>
-/// The fog of war (decisions of 2026-11-18): every hex is unknown, remembered or seen now. Each people counts its observers
+/// The fog of war (decisions of 2026-11-18): every hex is unknown, remembered or seen now. Each civilization counts its observers
 /// per hex: its units (by their sight) and settlements (their land and a few hexes beyond). A hex is seen while its count is
 /// above zero. When the last observer leaves, the people remembers what was there (buildings, settlements, owner) and sees it
 /// grey until it looks again, like Age of Empires. Moving one unit changes only the hexes of its old and new sight.
@@ -27,7 +27,7 @@ public sealed partial class SimGame
         return Picking ? civ.Known[cell] : civ.Vision[cell] > 0;
     }
 
-    /// <summary>Owner of a hex as the people knows it: live where seen, remembered elsewhere.</summary>
+    /// <summary>Owner of a hex as the civilization knows it: live where seen, remembered elsewhere.</summary>
     public short OwnerSeen(Civ civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -41,14 +41,14 @@ public sealed partial class SimGame
         Watch(u);
     }
 
-    /// <summary>Works of a hex as the people knows them (now where it looks, else as last seen).</summary>
+    /// <summary>Works of a hex as the civilization knows them (now where it looks, else as last seen).</summary>
     public ushort WorksSeen(Civ civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(civ);
         return Visible(civ, cell) ? WorksView(cell) : civ.SeenWorks[cell];
     }
 
-    /// <summary>Road level of a hex as the people knows it: live where seen, remembered elsewhere.</summary>
+    /// <summary>Road level of a hex as the civilization knows it: live where seen, remembered elsewhere.</summary>
     public byte RoadSeen(Civ civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -211,14 +211,14 @@ public sealed partial class SimGame
         civ.SeenSettlements.Remove(cell);
     }
 
-    /// <summary>Remembered buildings of a people, in the order of their hexes.</summary>
+    /// <summary>Remembered buildings of a civilization, in the order of their hexes.</summary>
     public IEnumerable<BuildingMemory> RememberedBuildings(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
         return civ.SeenBuildings.Values;
     }
 
-    /// <summary>Remembered settlements of a people.</summary>
+    /// <summary>Remembered settlements of a civilization.</summary>
     public IEnumerable<SettlementMemory> RememberedSettlements(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);

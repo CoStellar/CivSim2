@@ -6,7 +6,7 @@ namespace CivSim.Sim.State;
 public sealed partial class SimGame
 {
     /// <summary>
-    /// Sum of the effects of the technologies a people knows that aim at <paramref name="key"/> (a building, unit or event
+    /// Sum of the effects of the technologies a civilization knows that aim at <paramref name="key"/> (a building, unit or event
     /// key), at one of its <paramref name="groups"/>, or at everything ("*"). Read when something is recomputed, never per tick.
     /// </summary>
     public int Bonus(Civ civ, EffectKind kind, string key, string[]? groups = null)
@@ -32,8 +32,8 @@ public sealed partial class SimGame
         return sum;
     }
 
-    /// <summary>A share of an event's harm after the people's resistances, percent (100 = full harm).</summary>
-    /// <summary>True when the people knows <paramref name="tech"/> and every technology in <paramref name="also"/>.</summary>
+    /// <summary>A share of an event's harm after the civilization's resistances, percent (100 = full harm).</summary>
+    /// <summary>True when the civilization knows <paramref name="tech"/> and every technology in <paramref name="also"/>.</summary>
     public static bool Knows(Civ civ, int tech, int[] also)
     {
         ArgumentNullException.ThrowIfNull(civ);

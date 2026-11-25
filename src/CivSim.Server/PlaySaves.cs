@@ -10,7 +10,7 @@ namespace CivSim.Server;
 
 /// <summary>
 /// One command a player gave, with the tick it was applied at (a save is the game's options and these). <see cref="Step"/> counts
-/// every step of the game, also while peoples choose their start (when ticks stand still), so a save plays each entry again at
+/// every step of the game, also while civilizations choose their start (when ticks stand still), so a save plays each entry again at
 /// exactly the same moment (format 2, multiplayer MP2; −1 in older saves). <see cref="Leader"/> other than <see cref="Command"/>
 /// means no command: a player took the people over (<see cref="PlayerLeads"/>) or left it to the AI (<see cref="AiLeads"/>).
 /// </summary>
@@ -26,7 +26,7 @@ public sealed record SavedCommand(long Tick, int Civ, PlayCommandKind Kind, int 
     /// <summary>The player left (or was disconnected); the AI leads the people from here on.</summary>
     public const int AiLeads = 2;
 
-    /// <summary>Records who leads a people from this step on.</summary>
+    /// <summary>Records who leads a civilization from this step on.</summary>
     public static SavedCommand LeaderChange(long tick, long step, int civ, bool player) =>
         new(tick, civ, default, 0, 0, 0, false, 0, 0, null, 0, step, player ? PlayerLeads : AiLeads);
 
@@ -45,8 +45,8 @@ public sealed record SavedCommand(long Tick, int Civ, PlayCommandKind Kind, int 
 public sealed record SavedGame
 {
     /// <summary>
-    /// Format of the file. 1: <see cref="Players"/> are the peoples led by players when the game was saved, and commands are played again
-    /// by their ticks. 2 (multiplayer, MP2): <see cref="Players"/> are the peoples led by players at the start, joining and leaving are
+    /// Format of the file. 1: <see cref="Players"/> are the civilizations led by players when the game was saved, and commands are played again
+    /// by their ticks. 2 (multiplayer, MP2): <see cref="Players"/> are the civilizations led by players at the start, joining and leaving are
     /// entries of <see cref="Commands"/>, and everything is played again by <see cref="SavedCommand.Step"/>.
     /// </summary>
     public int Format { get; init; } = 1;
@@ -63,7 +63,7 @@ public sealed record SavedGame
     /// <summary>The options of the game.</summary>
     public required PlayOptions Options { get; init; }
 
-    /// <summary>Peoples led by players (see <see cref="Format"/>).</summary>
+    /// <summary>Civilizations led by players (see <see cref="Format"/>).</summary>
     public int[] Players { get; init; } = [0];
 
     /// <summary>Tick of the save.</summary>
@@ -176,7 +176,7 @@ public static class PlaySaves
             return;
         }
 
-        // Format 2: entries in the order of their steps, each command from a people a player led at that moment.
+        // Format 2: entries in the order of their steps, each command from a civilization a player led at that moment.
         if (save.Steps < save.Tick || save.Steps > 2 * MaxTicks)
         {
             throw new InvalidDataException("The save's time is not one a game reaches.");

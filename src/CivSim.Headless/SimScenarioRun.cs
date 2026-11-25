@@ -10,7 +10,7 @@ namespace CivSim.Headless;
 
 /// <summary>
 /// A test scenario without Godot (2026-11-19 tests): <c>--sim-scenario key [--minutes 10] [--ai-all]</c> plays it and prints,
-/// every minute, each people's army and land, and at the end the time a tick took. <c>--ai-all</c> lets the AI lead every
+/// every minute, each civilization's army and land, and at the end the time a tick took. <c>--ai-all</c> lets the AI lead every
 /// people, the player's too.
 /// </summary>
 public static class SimScenarioRun

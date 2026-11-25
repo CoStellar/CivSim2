@@ -6,7 +6,7 @@ namespace CivSim.Sim.Tests;
 /// <summary>Shared set-up for the tests.</summary>
 internal static class TestKit
 {
-    /// <summary>Every people knows the basics of the Stone Age and Flint weapons (warriors), as after its first minutes.</summary>
+    /// <summary>Every civilization knows the basics of the Stone Age and Flint weapons (warriors), as after its first minutes.</summary>
     public static SimGame Basics(this SimGame g)
     {
         foreach (Civ c in g.Civs)

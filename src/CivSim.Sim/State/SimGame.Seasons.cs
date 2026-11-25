@@ -61,7 +61,7 @@ public sealed partial class SimGame
         return (int)(work / Content.WorkStepPermille * Content.WorkStepPermille);
     }
 
-    // Tells the peoples about the seasons and makes them work the rates out again when the season changes.
+    // Tells the civilizations about the seasons and makes them work the rates out again when the season changes.
     private void SeasonStep()
     {
         if (Content.SeasonCycleTicks <= 0)

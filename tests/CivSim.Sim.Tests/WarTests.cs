@@ -304,7 +304,7 @@ public sealed class StartAndEventTests
                 if (c.Event >= 0)
                 {
                     any = true;
-                    Assert.True(now.Add(c.Event), "two peoples share an event");
+                    Assert.True(now.Add(c.Event), "two civilizations share an event");
                 }
             }
         }

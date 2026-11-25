@@ -220,7 +220,7 @@ public sealed partial class SimGame
         return $"{e.Name}: {string.Join(", ", parts)}, for {e.Ticks / SimContent.TicksPerSecond} s.";
     }
 
-    /// <summary>E17: a good the people knows: it has some, makes some, or a building it knows makes it.</summary>
+    /// <summary>E17: a good the civilization knows: it has some, makes some, or a building it knows makes it.</summary>
     public bool KnowsGood(Civ civ, int good)
     {
         if (civ.Stock[good] > 0 || civ.Made[good] > 0)
@@ -295,7 +295,7 @@ public sealed partial class SimGame
             new($"Research {scoutsTech} (Research, key 2).", Known("scouting"), ""),
             new("Train scouts in the settlement's panel and send them out (right click on the map).", Trained("scouts"), ""),
 
-            // C1 (tests 2026-11-23): other peoples may come to fight after the first minutes; a few warriors or a palisade help.
+            // C1 (tests 2026-11-23): other civilizations may come to fight after the first minutes; a few warriors or a palisade help.
             new($"Prepare a defence before minute {Content.AiPeacefulStartMinutes}: research Flint weapons and train warriors, or research Palisade and draw one.",
                 Known("flint_weapons") && Trained("warriors") || Known("palisade") && HasPalisade(civ), ""),
         ];

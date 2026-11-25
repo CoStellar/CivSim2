@@ -29,7 +29,7 @@ public sealed class CombatTests
         return g;
     }
 
-    // A field far from both peoples, made flat open grassland at one height with no trees, rivers or roads.
+    // A field far from both civilizations, made flat open grassland at one height with no trees, rivers or roads.
     private static int Field(SimGame g)
     {
         int grass = Content.World.Biome("grassland").Id;

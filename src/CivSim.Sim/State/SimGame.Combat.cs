@@ -410,7 +410,7 @@ public sealed partial class SimGame
     }
 
     /// <summary>
-    /// Puts the armies of two peoples on a field near the first settlement of <paramref name="a"/>, in formation facing each other
+    /// Puts the armies of two civilizations on a field near the first settlement of <paramref name="a"/>, in formation facing each other
     /// <paramref name="gap"/> hexes apart (test scenarios): the first direction from the settlement with land and no river all the way. Scouts
     /// of the first people stand two hexes ahead of its line.
     /// </summary>
@@ -663,7 +663,7 @@ public sealed partial class SimGame
         int height = Math.Clamp((Map.Elevation[a.Cell] - Map.Elevation[d.Cell]) / r.ElevationStep * r.ElevationPercent, -r.ElevationMaxPercent, r.ElevationMaxPercent);
         int pct = relief + height;
 
-        // Cover of the target's hex: its people's palisade or wall, else trees; lost when struck from two sides.
+        // Cover of the target's hex: its civilization's palisade or wall, else trees; lost when struck from two sides.
         if (!Surrounded(d))
         {
             (int Ranged, int Melee) cover = (0, 0);

@@ -34,7 +34,7 @@ public sealed class SupplyTests
         return (g, u, home);
     }
 
-    // Open land far from every people's land.
+    // Open land far from every civilization's land.
     private static int Wild(SimGame g) => Enumerable.Range(0, g.Geo.CellCount).First(c => !Content.World.Biomes[g.Map.Biome[c]].IsWater
         && g.Settlements.All(s => g.Geo.Distance(g.Geo.FromIndex(c), g.Geo.FromIndex(s.Center)) > 12));
 

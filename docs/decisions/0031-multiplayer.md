@@ -16,8 +16,8 @@ najtaniej, z możliwością hostowania na VPS. Pomiar 2026-11-25: 3–5 KB/s na 
 3. **Gdzie liczy się gra:** u gospodarza (gra + serwer w jednym oknie), a docelowo także na VPS (serwer bez okna w Dockerze, najwyżej 2 partie naraz).
 4. **Pośrednik (relay)** na VPS Patryka w Dockerze przekazuje cały ruch (ukrywa adresy IP, działa przy każdym NAT). Gry zakłada się hasłem
    z pliku z datami ważności; ten sam obraz jest publiczny, każdy może postawić własnego pośrednika. W grze: IP i port serwera albo pośrednika.
-5. **Zasady partii:** 2–8 ludzi, do 8 ludów; wolne miejsca prowadzi AI; ×1/×2, zmiana głosowaniem; 3 pauzy na gracza; rozłączony lud przejmuje AI;
-   nowi gracze obserwują albo przejmują lud AI po głosowaniu; wyrzucenie przez gospodarza albo głosowanie; prawo głosu po 3 minutach gry;
+5. **Zasady partii:** 2–8 ludzi, do 8 cywilizacji; wolne miejsca prowadzi AI; ×1/×2, zmiana głosowaniem; 3 pauzy na gracza; cywilizację rozłączonego gracza przejmuje AI;
+   nowi gracze obserwują albo przejmują cywilizację AI po głosowaniu; wyrzucenie przez gospodarza albo głosowanie; prawo głosu po 3 minutach gry;
    upadły gracz widzi całą mapę; czat do wszystkich i do sojuszników; pseudonim bez kont.
 6. **Wersje gry** `vRR.M.N` (np. `v26.11.1`); serwer i klient sprawdzają wersję gry i skrót danych.
 7. **Gałąź `server`** z samym kodem serwera i pośrednika, aktualizowana automatycznie z każdą wersją, z CI i obrazami w GHCR.
@@ -33,5 +33,5 @@ najtaniej, z możliwością hostowania na VPS. Pomiar 2026-11-25: 3–5 KB/s na 
 ## Konsekwencje
 
 - Prace w kolejności CI1 (testy i CI), W1 (zaawansowane ustawienia świata), MP1–MP6 (`docs/multiplayer/plan.md`, rozdz. 13).
-- Do naprawy w serwerze: lud rozłączonego gracza (znany problem 19), wyjątek jednego klienta zatrzymujący grę, dołączenia w zapisie (problem 11).
+- Do naprawy w serwerze: cywilizacja rozłączonego gracza (znany problem 19), wyjątek jednego klienta zatrzymujący grę, dołączenia w zapisie (problem 11).
 - Wszystko, co klient czyta z sieci, jest traktowane jako niezaufane (limity ramek, brak kodu i plików z sieci).

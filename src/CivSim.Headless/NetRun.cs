@@ -33,7 +33,7 @@ public static class NetRun
         --serve [--port 7777] [--password P] [--name "Game"] [--seats N] [--speed 1|2] [--seed N] [--civs 4] [--size 98x60]
                 [--no-start-phase] [--no-lobby] [--stats-seconds 30] [--minutes N]
             A server without a window. Players meet in the lobby; the first one in is the host and starts the game (--no-lobby:
-            the game starts at once). Every people is led by the AI until a player joins. Stops after N minutes (default: never, Ctrl+C).
+            the game starts at once). Every civilization is led by the AI until a player joins. Stops after N minutes (default: never, Ctrl+C).
         --join host[:port] [--name Bot] [--password P] [--seconds 60] [--start N]
             A test client: joins, says it is ready in a lobby (and, as the host, starts the game once N players are in with --start N), reads the
             views and prints what came. Exit code 0 when the game let it in.

@@ -8,14 +8,14 @@ Fields (all optional):
 | Field | Meaning |
 | --- | --- |
 | `name`, `description` | shown in the menu |
-| `seed`, `width`, `height`, `peoples` | the world (width and height of the legacy map; the game map is denser) |
+| `seed`, `width`, `height`, `civilizations` | the world (width and height of the legacy map; the game map is denser) |
 | `revealMap` | everyone knows the whole map (and so has met everyone) |
 | `surveyed` | every hex everyone knows is looked at by prospectors and surveyors: deposits show, ores of later eras as "???" |
 | `debug` | the debug keys work (default true): F5 +200 of every good, F6 finish the research, F7 reveal the map, F8 +10 people, F9 next era |
-| `wars` | pairs of peoples at war from the start, e.g. `[[0, 1]]` |
+| `wars` | pairs of civilizations at war from the start, e.g. `[[0, 1]]` |
 | `noPeace` | nobody can propose peace (battles to the end; the battle scenarios use it) |
-| `field`, `fieldGap` | two peoples whose armies start on a field near the first settlement of the first, in formation facing each other `fieldGap` hexes apart (default 4); scouts of the first stand two hexes ahead of its line |
-| `civs` | one entry per people, in order; people 0 is the player |
+| `field`, `fieldGap` | two civilizations whose armies start on a field near the first settlement of the first, in formation facing each other `fieldGap` hexes apart (default 4); scouts of the first stand two hexes ahead of its line |
+| `civs` | one entry per civilization, in order; people 0 is the player |
 
 Per people:
 

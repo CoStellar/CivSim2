@@ -5,7 +5,7 @@ using CivSim.Sim.Content;
 
 namespace CivSim.Sim.State;
 
-/// <summary>Declare war openly on another people.</summary>
+/// <summary>Declare war openly on another civilization.</summary>
 public sealed record DeclareWarCommand(int Civ, int Other) : SimCommand(Civ);
 
 /// <summary>Send an army unit to attack what stands on a hex (an enemy unit or settlement).</summary>
@@ -33,7 +33,7 @@ public sealed partial class SimGame
     /// <summary>Peace offers waiting for an answer.</summary>
     public List<PeaceOffer> PeaceOffers { get; } = [];
 
-    /// <summary>True when the two peoples are at war.</summary>
+    /// <summary>True when the two civilizations are at war.</summary>
     public bool AtWar(int a, int b) => a != b && War()[(a * Civs.Count) + b] != 0;
 
     /// <summary>War score of <paramref name="a"/> against <paramref name="b"/>: enemies killed plus settlements taken.</summary>
@@ -74,11 +74,11 @@ public sealed partial class SimGame
     // 6C (Patryk, 2026-11-20): reputation has a floor, so it keeps meaning something.
     private void AddReputation(Civ civ, int delta) => civ.Reputation = Math.Max(Content.War.ReputationFloor, civ.Reputation + delta);
 
-    /// <summary>True while a peace made between the two peoples still runs (breaking it costs more reputation).</summary>
+    /// <summary>True while a peace made between the two civilizations still runs (breaking it costs more reputation).</summary>
     public bool InTruce(int a, int b) => a != b && Truces()[(a * Civs.Count) + b] > Ticks;
 
     // P2 (Patryk, 2026-11-23): reputation is renewable. Once a minute a bad name heals by war.reputationRegenPerMinute (up to 0)
-    // for every people that is not the aggressor of a war going on now.
+    // for every civilization that is not the aggressor of a war going on now.
     private void ReputationStep()
     {
         int regen = Content.War.ReputationRegenPerMinute;
@@ -107,7 +107,7 @@ public sealed partial class SimGame
         }
     }
 
-    /// <summary>Wars a people is in now.</summary>
+    /// <summary>Wars a civilization is in now.</summary>
     public int WarsOf(int civ)
     {
         int n = 0;
@@ -290,7 +290,7 @@ public sealed partial class SimGame
         return null;
     }
 
-    /// <summary>Ends the war between two peoples with a white peace of the given length (tests and scenarios).</summary>
+    /// <summary>Ends the war between two civilizations with a white peace of the given length (tests and scenarios).</summary>
     public void MakePeace(Civ a, Civ b, int length = 0)
     {
         ArgumentNullException.ThrowIfNull(a);
@@ -396,7 +396,7 @@ public sealed partial class SimGame
         return pct;
     }
 
-    // News about two peoples reaches them and everyone who has met one of them.
+    // News about two civilizations reaches them and everyone who has met one of them.
     private void NewsAbout(int a, int b, string text)
     {
         foreach (Civ c in Civs)
@@ -451,7 +451,7 @@ public sealed partial class SimGame
         u.InjuredShare %= 100;
     }
 
-    // A unit was wiped out by another people (carriers lose their load).
+    // A unit was wiped out by another civilization (carriers lose their load).
     internal void Destroyed(Unit unit, int byCiv)
     {
         bool carrier = unit.Cargo is not null && Content.Units[unit.Kind].System;
@@ -594,7 +594,7 @@ public sealed partial class SimGame
         }
     }
 
-    // A people with no settlement left is no more (P5, 2026-11-23: or with nobody left; then there is no winner).
+    // A civilization with no settlement left is no more (P5, 2026-11-23: or with nobody left; then there is no winner).
     private void Perish(Civ loser, Civ? winner)
     {
         loser.Dead = true;

@@ -80,7 +80,7 @@ public sealed class ResearchTests
         Civ civ = g.Civs[0];
         for (int i = 0; i < civ.Stock.Length; i++)
         {
-            g.Settlements[civ.Settlements[0]].Stock[i] = 900 * SimContent.One; // E17: thinkers ask only for goods the people knows
+            g.Settlements[civ.Settlements[0]].Stock[i] = 900 * SimContent.One; // E17: thinkers ask only for goods the civilization knows
         }
 
         for (int t = 0; t < 30 * SimContent.TicksPerMinute && civ.ThinkerOffer is null; t++)

@@ -4,7 +4,7 @@ Czytasz ten plik na początku każdej sesji. Jest źródłem zasad pracy w tym r
 
 **Teraz: sprint do grywalnego demo (do średniowiecza).** Lista prac i stan: `ROADMAP.md`.
 
-- **Do czego dążymy teraz:** partia ok. 60 minut przeciw kilku ludom AI, od wyboru startu do celu partii. Ostatnie prace przed demo
+- **Do czego dążymy teraz:** partia ok. 60 minut przeciw kilku cywilizacjom AI, od wyboru startu do celu partii. Ostatnie prace przed demo
   (ROADMAP „Do demo”): pokój z negocjacji i zmęczenie wojną (ADR 0030), AI bez bezczynnych warsztatów, płynne takty przy wyprawach,
   potem runda testów Patryka.
 - **Potem (po demo):** wydzielenie legacy (ADR 0029, kroki 2–4), zarządca i prowincje, AI na statkach, pixel art Patryka,
@@ -16,7 +16,7 @@ Na starcie sesji przeczytaj `ROADMAP.md`, `docs/known-issues.md` i ostatnie comm
 
 CivSim 2 to strategia na żywo, „Cywilizacja 6 w czasie rzeczywistym”, na heksagonalnej mapie-planecie (wschód–zachód zawija się,
 przez bieguny przechodzi się na drugą stronę). **Gracz jest całą cywilizacją:** buduje na heksach, bada technologie, prowadzi wojsko
-i dyplomację. Jego lud nie ma własnej AI; sam wykonuje tylko codzienne prace. Przeciwnik AI to pełny gracz z tymi samymi komendami.
+i dyplomację. Jego cywilizacja nie ma własnej AI; sama wykonuje tylko codzienne prace. Przeciwnik AI to pełny gracz z tymi samymi komendami.
 **Najpierw gra, potem realizm.**
 
 Dokumenty gry (po polsku):
@@ -61,7 +61,7 @@ losowaniem, haszem i nazwami) i w plikach `data/*.json` poza `data/sim/`.
   znowu, trzymaj w `tools/<temat>/` z nagłówkiem (co robi, czego wymaga, jak uruchomić); jednorazowe zostaw w katalogu tymczasowym.
 - **Wszystkie liczby w danych** (`data/sim/game.json`), nie w kodzie. Klucze czytaj przez `Prop`/`TryProp`/`Entries` (`Content/JsonRead.cs`),
   nie przez `GetProperty`: inaczej kontrola danych (menu, `GameDataTests`) zgłosi nowy klucz jako nieznany.
-- **Czego lud nie zna, tego nie widać** (złoża późniejszych er jako „???”, budynki i jednostki dopiero po technologii). Wyjątek: drzewo technologii.
+- **Czego cywilizacja nie zna, tego nie widać** (złoża późniejszych er jako „???”, budynki i jednostki dopiero po technologii). Wyjątek: drzewo technologii.
 - **Gałęzie:** `feat/<opis>` albo `fix/<opis>` od `development`. PR do `development`, opis po polsku: co, dlaczego, liczby, wyniki testów.
   **Merge robi Patryk.** Nigdy nie pushuj do `main`.
 - **Nie commituj** nieśledzonych `tools/CivSim.Playtest` ani `docs/playtest` (to drugie jest śledzone, ale go nie zmieniaj).
@@ -124,7 +124,7 @@ Protokół: po zmianie wiadomości podbij `ProtocolInfo.Version` i oczekiwany na
 6. **Klient–serwer od początku.** Klient (`game/`) zna tylko `CivSim.Protocol`; serwer jest autorytatywny i filtruje widok mgłą wojny.
    Transport w pamięci za tym samym interfejsem co przyszły sieciowy. Multiplayer przez sieć to przyszła aktualizacja.
 7. **Mapa:** heksy flat-top, współrzędne osiowe, kula; odległości i sąsiedztwa tylko przez `HexGlobe`.
-8. **AI bez premii i ukrytej wiedzy:** widzi tylko to, co odkrył jej lud.
+8. **AI bez premii i ukrytej wiedzy:** widzi tylko to, co odkryła jej cywilizacja.
 
 ## Czego nie robić
 

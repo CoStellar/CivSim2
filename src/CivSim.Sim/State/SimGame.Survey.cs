@@ -6,7 +6,7 @@ using CivSim.Sim.Content;
 namespace CivSim.Sim.State;
 
 /// <summary>
-/// What a people knows of the land (Patryk, 2026-11-19). On its own land it knows everything (its people live there).
+/// What a civilization knows of the land (Patryk, 2026-11-19). On its own land it knows everything (its people live there).
 /// Beyond it, seeing a hex shows only what lies on the surface (game, fish, wild horses). The rest is found by units that
 /// survey, standing still: prospectors look at the rock within <c>survey.radius</c> hexes (stone, clay, flint, ores),
 /// surveyors at the soil (fertility, wild grain, cattle, sheep). An ore is recognised from the era of the technology that
@@ -14,7 +14,7 @@ namespace CivSim.Sim.State;
 /// </summary>
 public sealed partial class SimGame
 {
-    /// <summary>True when the people knows what deposit lies on the hex (if any).</summary>
+    /// <summary>True when the civilization knows what deposit lies on the hex (if any).</summary>
     public bool KnowsDeposit(Civ civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -36,7 +36,7 @@ public sealed partial class SimGame
     }
 
     /// <summary>
-    /// True when the people knows a deposit lies in the hex but not yet what it is (M6: an ore of a later era, shown as "???";
+    /// True when the civilization knows a deposit lies in the hex but not yet what it is (M6: an ore of a later era, shown as "???";
     /// it becomes known when the people reaches that era).
     /// </summary>
     public bool DepositHidden(Civ civ, int cell)
@@ -52,14 +52,14 @@ public sealed partial class SimGame
         return (OwnerAt[cell] == civ.Id || civ.RockSeen[cell] > 0) && civ.Era < era && era != int.MaxValue;
     }
 
-    /// <summary>True when the people knows how fertile the hex is.</summary>
+    /// <summary>True when the civilization knows how fertile the hex is.</summary>
     public bool KnowsSoil(Civ civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(civ);
         return civ.Known[cell] && (OwnerAt[cell] == civ.Id || civ.SoilSeen[cell]);
     }
 
-    /// <summary>True when prospectors have looked at the hex in the people's present era (or it is our land).</summary>
+    /// <summary>True when prospectors have looked at the hex in the civilization's present era (or it is our land).</summary>
     public bool RockLookedAt(Civ civ, int cell)
     {
         ArgumentNullException.ThrowIfNull(civ);
