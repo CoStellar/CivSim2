@@ -122,6 +122,11 @@ public static class PlaySaves
             throw new InvalidDataException("The save names a scenario outside the scenarios folder.");
         }
 
+        if (o.World is { } world && PlayWorlds.Check(world, null, out _) is { } bad)
+        {
+            throw new InvalidDataException("The save's world settings cannot make a planet: " + bad);
+        }
+
         if (save.Tick is < 0 or > MaxTicks)
         {
             throw new InvalidDataException("The save's time is not one a game reaches.");

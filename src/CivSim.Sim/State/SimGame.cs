@@ -53,6 +53,21 @@ public sealed record SimSettings(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>12B: peoples start near each other on the main continent (startPhase.neighbourMaxHexes); test scenarios keep the generator's starts.</summary>
     public bool NearStarts { get; init; } = true;
+
+    /// <summary>Advanced world settings (PR W1, 2026-11-25): the planet; null = the generator's default (Earth).</summary>
+    public PlanetParameters? Planet { get; init; }
+
+    /// <summary>Advanced world settings: rain.</summary>
+    public WorldMoisture Moisture { get; init; }
+
+    /// <summary>Advanced world settings: how fast humidity falls away from the sea.</summary>
+    public WorldInland Inland { get; init; }
+
+    /// <summary>Advanced world settings: hills and mountains.</summary>
+    public WorldRelief Relief { get; init; }
+
+    /// <summary>Advanced world settings: how many natural deposits.</summary>
+    public WorldResources Resources { get; init; }
 }
 
 /// <summary>
@@ -160,7 +175,18 @@ public sealed partial class SimGame
         (int w, int h) = SizeFor(settings.LegacyWidth, settings.LegacyHeight, content.Density);
         var map = new WorldMap(new HexGlobe(w, h));
         var streams = new RandomStreams(settings.Seed);
-        var options = new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.Civilizations);
+        var options = new WorldGenOptions(settings.WorldType, settings.WaterPercent, settings.Civilizations)
+        {
+            Moisture = settings.Moisture,
+            Inland = settings.Inland,
+            Relief = settings.Relief,
+            Resources = settings.Resources,
+        };
+        if (settings.Planet is { } planet)
+        {
+            options = options with { Planet = planet };
+        }
+
         WorldGenReport report = WorldGenerator.Generate(content.World, map, streams[RandomStreamId.World], settings.Seed, options);
         var game = new SimGame(content, settings, map, streams[RandomStreamId.Events]);
         game.ShapeLodes();

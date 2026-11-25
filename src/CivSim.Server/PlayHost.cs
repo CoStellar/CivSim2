@@ -39,6 +39,9 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 
     /// <summary>Ores (2026-11-24): true fair (copper, tin and iron near every start), false realistic (where the world put them).</summary>
     public bool FairOres { get; init; } = true;
+
+    /// <summary>Advanced world settings (PR W1, 2026-11-25); null = a normal world.</summary>
+    public PlayWorld? World { get; init; }
 }
 
 /// <summary>
@@ -112,7 +115,7 @@ public sealed class PlayHost : IDisposable
                 WorldType = (CivSim.Core.WorldGen.WorldType)Math.Clamp(options.WorldType, 0, 2),
                 WaterPercent = Math.Clamp(options.WaterPercent, 30, 80),
                 FairOres = options.FairOres,
-            });
+            }.WithWorld(options.World, content));
         }
 
         game.Civs[0].IsAi = false; // the player leads the first people; the AI plays the others
