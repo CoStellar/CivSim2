@@ -30,10 +30,10 @@ public static class NetRun
 
     /// <summary>Usage of the three commands.</summary>
     public const string Usage = """
-        --serve [--port 7777] [--seed N] [--civs 4] [--size 98x60] [--no-start-phase] [--stats-seconds 30] [--minutes N]
+        --serve [--port 7777] [--password P] [--seed N] [--civs 4] [--size 98x60] [--no-start-phase] [--stats-seconds 30] [--minutes N]
             A server without a window. Every people is led by the AI until a player joins; the game runs at x1.
             Stops after N minutes (default: never, Ctrl+C).
-        --join host[:port] [--name Bot] [--seconds 60]
+        --join host[:port] [--name Bot] [--password P] [--seconds 60]
             A test client: joins, reads the views and prints what came. Exit code 0 when the server let it in.
         --net-bench [--civs 8] [--clients 8] [--minutes 45] [--seed 1] [--size 98x60] [--csv file]
             A server and bots over TCP on this computer, as fast as it goes; the AI plays for the bots, so their views grow
@@ -56,6 +56,7 @@ public static class NetRun
         int statsSeconds = Math.Max(1, Int(args, "--stats-seconds", 30));
         int minutes = Int(args, "--minutes", 0);
         using PlayHost host = PlayHost.Start(options! with { Dedicated = true });
+        host.Password = Text(args, "--password") ?? "";
         using var listener = new PlayListener(host, port);
         output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, seed {options!.Seed}, {options.Civilizations} peoples, map {options.LegacyWidth}x{options.LegacyHeight}"));
         output.WriteLine("Players join with the game or with: dotnet run --project src/CivSim.Headless -c Release -- --join <address>:" + listener.Port.ToString(Inv));
@@ -130,13 +131,13 @@ public static class NetRun
 
         using (connection)
         {
-            connection.Send(new HelloMessage(ProtocolInfo.Version, name));
+            connection.Send(new HelloMessage(ProtocolInfo.Version, name, Password: Text(args, "--password") ?? ""));
             var watch = Stopwatch.StartNew();
             var kinds = new SortedDictionary<string, int>(StringComparer.Ordinal);
             bool welcomed = false;
             long tick = -1;
             double nextReport = 10;
-            while (connection.IsOpen && watch.Elapsed.TotalSeconds < seconds)
+            while ((connection.IsOpen || connection.Unread > 0) && watch.Elapsed.TotalSeconds < seconds)
             {
                 while (connection.TryReceive(out IProtocolMessage? m) && m is not null)
                 {

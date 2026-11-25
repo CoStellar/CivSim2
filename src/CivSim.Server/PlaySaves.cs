@@ -8,14 +8,33 @@ using CivSim.Protocol.Messages;
 
 namespace CivSim.Server;
 
-/// <summary>One command a player gave, with the tick it was applied at (a save is the game's options and these).</summary>
-public sealed record SavedCommand(long Tick, int Civ, PlayCommandKind Kind, int A, int Col, int Row, bool Flag, int B, int C, int[]? Cells, int D)
+/// <summary>
+/// One command a player gave, with the tick it was applied at (a save is the game's options and these). <see cref="Step"/> counts
+/// every step of the game, also while peoples choose their start (when ticks stand still), so a save plays each entry again at
+/// exactly the same moment (format 2, multiplayer MP2; −1 in older saves). <see cref="Leader"/> other than <see cref="Command"/>
+/// means no command: a player took the people over (<see cref="PlayerLeads"/>) or left it to the AI (<see cref="AiLeads"/>).
+/// </summary>
+public sealed record SavedCommand(long Tick, int Civ, PlayCommandKind Kind, int A, int Col, int Row, bool Flag, int B, int C, int[]? Cells, int D,
+    long Step = -1, int Leader = SavedCommand.Command)
 {
+    /// <summary>A player's command.</summary>
+    public const int Command = 0;
+
+    /// <summary>A player joined and leads the people from here on.</summary>
+    public const int PlayerLeads = 1;
+
+    /// <summary>The player left (or was disconnected); the AI leads the people from here on.</summary>
+    public const int AiLeads = 2;
+
+    /// <summary>Records who leads a people from this step on.</summary>
+    public static SavedCommand LeaderChange(long tick, long step, int civ, bool player) =>
+        new(tick, civ, default, 0, 0, 0, false, 0, 0, null, 0, step, player ? PlayerLeads : AiLeads);
+
     /// <summary>The command as it came from the client.</summary>
     public PlayCommandMessage ToMessage() => new(0, Kind, A, Col, Row, Flag, B, C, Cells, D);
 
     /// <summary>Records a command given at a tick.</summary>
-    public static SavedCommand Of(long tick, int civ, PlayCommandMessage m) => new(tick, civ, m.Kind, m.A, m.Col, m.Row, m.Flag, m.B, m.C, m.Cells, m.D);
+    public static SavedCommand Of(long tick, long step, int civ, PlayCommandMessage m) => new(tick, civ, m.Kind, m.A, m.Col, m.Row, m.Flag, m.B, m.C, m.Cells, m.D, step);
 }
 
 /// <summary>
@@ -25,8 +44,15 @@ public sealed record SavedCommand(long Tick, int Civ, PlayCommandKind Kind, int 
 /// </summary>
 public sealed record SavedGame
 {
-    /// <summary>Format of the file.</summary>
+    /// <summary>
+    /// Format of the file. 1: <see cref="Players"/> are the peoples led by players when the game was saved, and commands are played again
+    /// by their ticks. 2 (multiplayer, MP2): <see cref="Players"/> are the peoples led by players at the start, joining and leaving are
+    /// entries of <see cref="Commands"/>, and everything is played again by <see cref="SavedCommand.Step"/>.
+    /// </summary>
     public int Format { get; init; } = 1;
+
+    /// <summary>Steps of the game at the save (format 2).</summary>
+    public long Steps { get; init; }
 
     /// <summary>Name the player gave it.</summary>
     public string Name { get; init; } = "";
@@ -37,7 +63,7 @@ public sealed record SavedGame
     /// <summary>The options of the game.</summary>
     public required PlayOptions Options { get; init; }
 
-    /// <summary>Peoples led by players.</summary>
+    /// <summary>Peoples led by players (see <see cref="Format"/>).</summary>
     public int[] Players { get; init; } = [0];
 
     /// <summary>Tick of the save.</summary>
@@ -132,9 +158,50 @@ public static class PlaySaves
             throw new InvalidDataException("The save's time is not one a game reaches.");
         }
 
+        if (save.Format is < 1 or > 2)
+        {
+            throw new InvalidDataException($"The save has format {save.Format}; this game reads formats 1 and 2.");
+        }
+
+        if (save.Format == 1)
+        {
+            foreach (SavedCommand c in save.Commands ?? [])
+            {
+                if (c.Tick < 0 || c.Tick > save.Tick || Array.IndexOf(save.Players ?? [], c.Civ) < 0)
+                {
+                    throw new InvalidDataException("The save holds a command that no player of it could have given.");
+                }
+            }
+
+            return;
+        }
+
+        // Format 2: entries in the order of their steps, each command from a people a player led at that moment.
+        if (save.Steps < save.Tick || save.Steps > 2 * MaxTicks)
+        {
+            throw new InvalidDataException("The save's time is not one a game reaches.");
+        }
+
+        var leading = new HashSet<int>(save.Players ?? []);
+        long last = 0;
         foreach (SavedCommand c in save.Commands ?? [])
         {
-            if (c.Tick < 0 || c.Tick > save.Tick || Array.IndexOf(save.Players ?? [], c.Civ) < 0)
+            if (c.Step < last || c.Step > save.Steps || c.Tick < 0 || c.Tick > save.Tick || c.Civ < 0 || c.Civ >= o.Civilizations
+                || c.Leader is < SavedCommand.Command or > SavedCommand.AiLeads)
+            {
+                throw new InvalidDataException("The save holds an entry out of order or for a people the game does not have.");
+            }
+
+            last = c.Step;
+            if (c.Leader == SavedCommand.PlayerLeads)
+            {
+                leading.Add(c.Civ);
+            }
+            else if (c.Leader == SavedCommand.AiLeads)
+            {
+                leading.Remove(c.Civ);
+            }
+            else if (!leading.Contains(c.Civ))
             {
                 throw new InvalidDataException("The save holds a command that no player of it could have given.");
             }

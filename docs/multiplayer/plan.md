@@ -300,15 +300,15 @@ Do zrobienia:
 
 | # | Gdzie | Co jest dziś | Co trzeba |
 | --- | --- | --- | --- |
-| 1 | `PlayHost.Receive` / `Pump` | Rozłączony gracz znika, a jego lud od razu prowadzi AI (sprawdzone testem w MP1), ale zapis o tym nie wie i gracz nie wraca na swój lud (znany problem 19). | Wyjście i przejęcie jako komenda w zapisie; powrót oddaje lud graczowi. |
-| 2 | `PlayHost.Run` | Wyjątek przy rozkazie jednego gracza zatrzymuje grę dla wszystkich. | Odrzucić wiadomość, ew. rozłączyć klienta. |
-| 3 | `PlayHost.Advance` | Kronika tylko dla ludu 0. | Każdy gracz dostaje swoją. |
-| 4 | `PlaySaves`, `Replay` | Zapis zna tylko ludy ludzi w chwili zapisu (znany problem 11). | Dołączenie, wyjście, przejęcie przez AI jako komenda z taktem. |
-| 5 | `PlayHost.Create` | Wybór startu czeka bez limitu. | W multiplayerze limit z ustawień (30 s). |
-| 6 | `Receive` (`HelloMessage`) | „Następny wolny lud”, bez imienia gracza, bez hasła. | Miejsca z lobby, imię, kolor, hasło, klucz powrotu. |
-| 7 | `SetSpeed` | Prędkość ustawia ostatni pytający, także Max. | ×1/×2, głosowanie (rozdz. 11). |
-| 8 | `Receive` (debug) | Klawisze debug ma gospodarz. | Wyłączone w multiplayerze. |
-| 9 | `HelloMessage` | Tylko wersja protokołu. | Też wersja gry i skrót danych. |
+| 1 | `PlayHost.Receive` / `Pump` | Rozłączony gracz znika, a jego lud od razu prowadzi AI (sprawdzone testem w MP1), ale zapis o tym nie wie i gracz nie wraca na swój lud (znany problem 19). | **Zrobione w MP2:** wyjście i przejęcie w zapisie; klucz powrotu oddaje lud graczowi. |
+| 2 | `PlayHost.Run` | Wyjątek przy rozkazie jednego gracza zatrzymuje grę dla wszystkich. | **Zrobione w MP2:** wiadomość odrzucona, po 3 takich rozłączenie. |
+| 3 | `PlayHost.Advance` | Kronika tylko dla ludu 0. | **Zrobione w MP2:** każdy gracz dostaje swoją. |
+| 4 | `PlaySaves`, `Replay` | Zapis zna tylko ludy ludzi w chwili zapisu (znany problem 11). | **Zrobione w MP2** (zapis w formacie 2, liczony co krok gry). |
+| 5 | `PlayHost.Create` | Wybór startu czeka bez limitu. | **Zrobione w MP2:** z drugim graczem limit 30 s (do ustawienia w MP3). |
+| 6 | `Receive` (`HelloMessage`) | „Następny wolny lud”, bez imienia gracza, bez hasła. | **MP2:** hasło i klucz powrotu. Miejsca z lobby, imię i kolor w MP3. |
+| 7 | `SetSpeed` | Prędkość ustawia ostatni pytający, także Max. | **MP2:** z innymi graczami tylko ×1/×2. Głosowanie w MP4. |
+| 8 | `Receive` (debug) | Klawisze debug ma gospodarz. | **Zrobione w MP2.** |
+| 9 | `HelloMessage` | Tylko wersja protokołu. | **MP2:** także wersja gry. Skrót danych niepotrzebny: klient dostaje dane gry od serwera. |
 | 10 | Klient (`PlayGame.cs`) | Zawsze sam uruchamia serwer. | Tryb „dołącz”: samo połączenie. |
 | 11 | `Save` | Nazwa i era od ludu 0, zapisać może każdy. | Zapis robi gospodarz/administrator; w zapisie gracze. |
 | 12 | `SimGame.Create`, menu | Zaawansowane ustawienia świata nieprzekazywane. | PR W1 (rozdz. 7). |
@@ -352,6 +352,27 @@ Do zrobienia:
   - złe ramki: za duże, „bomba zip”, inny program, inna wersja, śmieci;
   - wysyłanie po rozłączeniu.
 - Gra (okno Godota) jeszcze nie umie dołączyć do cudzego serwera. To menu „Multiplayer” w MP3.
+
+**Zrobione w MP2 (2026-11-25):**
+
+- **Powitanie:** gracz podaje wersję gry (inna wersja dostaje odmowę z obu numerami), hasło partii (`--serve --password`, porównanie
+  skrótów, więc czas odpowiedzi nic nie zdradza) i klucz powrotu. Hasło nie trafia do zapisu.
+- **Klucz powrotu:** serwer daje go w powitaniu. Gracz, któremu zerwało połączenie, wraca z nim na swój lud; w tym czasie lud prowadzi AI,
+  a nikt inny go nie dostanie. Okno gry zapamięta klucz w MP3 (menu „Dołącz”).
+- **Błąd jednego gracza:** wiadomość, której serwer nie umie wykonać, zostaje odrzucona („The server could not carry out this order”),
+  gra idzie dalej; po 3 takich rozłączenie.
+- **Limit rozkazów:** 30 na sekundę, naraz do 90. Nadmiar jest odrzucany z komunikatem, a po 600 odrzuconych serwer rozłącza gracza.
+- **Zapis w formacie 2:** zapisuje ludy prowadzone przez ludzi na starcie, każde dołączenie, wyjście i przejęcie przez AI oraz każdy
+  rozkaz z numerem kroku gry (kroki liczą się także w czasie wyboru startu, gdy czas gry stoi). Wczytanie odtwarza wszystko dokładnie
+  (test: dołączenie w czasie wyboru startu, drugi gracz po minucie, wyjście, zapis, wczytanie, ten sam stan). Stare zapisy (format 1)
+  wczytują się jak dotąd. Na serwerze bez okna po wczytaniu ludy graczy prowadzi AI, dopóki gracze nie wrócą.
+- **Z innymi graczami:**
+  - wybór startu ma limit 30 s także dla ludzi;
+  - prędkość tylko ×1 i ×2 (wyższa spada do ×2, gdy dołącza drugi gracz);
+  - klawisze debug wyłączone.
+- **Kronika:** każdy gracz dostaje wiadomości ze świata i o swoim ludzie, a nie o ludzie 0.
+- **Zamykanie połączenia:** odmowa (złe hasło, inna wersja) dochodzi do gracza, zanim połączenie się zamknie.
+- **Protokół 45:** w powitaniu wersja gry, hasło i klucz powrotu.
 
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 
