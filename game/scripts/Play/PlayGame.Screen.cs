@@ -220,7 +220,8 @@ public partial class PlayGame
         centre.AddChild(eraRow);
         _eraBarBox = new VBoxContainer();
         centre.AddChild(_eraBarBox);
-        _researchChip = UiKit.Button("Choose research", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (2).");
+        _researchChip = UiKit.Button("", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (2).");
+        _researchChip.Visible = false;
         _researchChip.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
         _researchChip.CustomMinimumSize = new Vector2(UiKit.W(260), 0);
         centre.AddChild(_researchChip);
@@ -607,6 +608,7 @@ public partial class PlayGame
         {
             _eraLabel.Text = v.MyPick ? (v.PickNoLimit ? "Your turn: choose the start" : $"Your turn: {v.PickSecondsLeft} s") : $"{v.WhoPicks} are choosing…";
             SetResources("pick", () => _resBox.AddChild(UiKit.Label("Choosing the start", 14, UiKit.Muted)));
+            _researchChip.Visible = false; // nothing to research before the start (it showed an empty "Choose research")
             return;
         }
 
