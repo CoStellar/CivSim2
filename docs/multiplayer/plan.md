@@ -177,7 +177,14 @@ dziś tylko ląd i morze. Stare pola przeżyły jedynie jako parametry wiersza p
 | Preset planety (Ziemia, Mars, Uran…) | tak | presety są w `data/planets.json` (plik legacy): trzeba je przenieść do `data/sim/` |
 | Nachylenie osi, mimośród, jasność gwiazdy, odległość, rok, światło, CO₂, ciśnienie, wulkanizm, zmienność gwiazdy | tak (klimat przy generacji) | nowa gra ma własne pory roku; te liczby zmienią mapę (biomy, temperatura), ale nie długość zimy w grze |
 
-**Plan (osobny mały PR „W1”, niezależny od multiplayera):** w „New game” zwijana sekcja **„Advanced world settings”** (domyślnie
+**Zrobione w W1 (2026-11-25):** w „New game” przełącznik „Advanced world settings” (zapamiętywany), pod nim planeta (preset),
+deszcz, wilgotność w głębi lądu, rzeźba, złoża; przycisk „Planet and star numbers (show)” odsłania 11 liczb planety i gwiazdy
+(puste = jak preset). „Check the planet” pokazuje, czy z liczb da się zrobić planetę i co gra poprawiła; zły zestaw nie uruchamia gry.
+Ustawienia trafiają do generatora (`PlayWorld` w `CivSim.Server`, `SimSettings` w `CivSim.Sim`) i do zapisu gry. Wyłączony przełącznik
+albo same domyślne wartości = świat dokładnie taki jak dotąd. Morze zostaje z głównego ustawienia „Sea” (nie z presetu planety).
+Presety planet są jeszcze w `data/planets.json` (wczytywane przez wspólny loader); przeniosą się do `data/sim/` przy wydzielaniu legacy (ADR 0029, krok 3).
+
+Pierwotny plan: w „New game” zwijana sekcja **„Advanced world settings”** (domyślnie
 zamknięta) z polami jak w starym menu, w dwóch poziomach: najpierw wilgotność, głąb lądu, rzeźba, złoża, preset planety;
 niżej „Planet and star” z liczbami fizyki. `PlayOptions` i zapis gry dostają te pola; ta sama sekcja trafia do „Załóż grę”
 i do `server.json`. Podgląd mapy (jak w starym menu) do decyzji w rundzie 2.

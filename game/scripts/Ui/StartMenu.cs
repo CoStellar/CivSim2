@@ -226,6 +226,7 @@ public partial class StartMenu : CanvasLayer
         Choice(world, "Map size", [.. Sizes.Select(s => s.Label)], Math.Max(0, Array.FindIndex(Sizes, s => s.Key == _settings.MapSize)), i => _settings.MapSize = Sizes[i].Key);
         Choice(world, "Land", [.. WorldTypes.Select(w => w.Label)], Math.Max(0, Array.FindIndex(WorldTypes, w => w.Key == _settings.WorldType)), i => _settings.WorldType = WorldTypes[i].Key);
         Choice(world, "Sea", [.. Waters.Select(w => w.Label)], Math.Max(0, Array.FindIndex(Waters, w => w.Key == _settings.Water)), i => _settings.Water = Waters[i].Key);
+        AdvancedWorldSection();
 
         _content.AddChild(Heading("Game"));
         GridContainer game = Grid();
@@ -245,7 +246,28 @@ public partial class StartMenu : CanvasLayer
         game.AddChild(tutorial);
 
         var play = new Button { Text = "Play", CustomMinimumSize = new Vector2(220, 48), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
-        play.Pressed += () => PlayRequested?.Invoke(NewGameOptions());
+        play.Pressed += () =>
+        {
+            // Advanced world settings are checked before the game starts: a bad number is shown here, not a game that stops.
+            PlayOptions options;
+            try
+            {
+                options = NewGameOptions();
+            }
+            catch (FormatException e)
+            {
+                ShowWorldNote(e.Message, problem: true);
+                return;
+            }
+
+            if (options.World is { } w && PlayWorlds.Check(w, _dataDirectory, out _) is { } why)
+            {
+                ShowWorldNote(why, problem: true);
+                return;
+            }
+
+            PlayRequested?.Invoke(options);
+        };
         _footer.AddChild(play);
         play.GrabFocus();
     }
@@ -262,7 +284,124 @@ public partial class StartMenu : CanvasLayer
             FairOres = _settings.FairOres,
             WorldType = Math.Max(0, Array.FindIndex(WorldTypes, w => w.Key == _settings.WorldType)),
             WaterPercent = Waters.FirstOrDefault(w => w.Key == _settings.Water, Waters[1]).Percent,
+            World = _settings.ToPlayWorld(),
         };
+    }
+
+    private static readonly (string Key, string Label)[] Moistures = [("preset", "As the planet"), ("dry", "Dry"), ("normal", "Normal"), ("wet", "Wet")];
+    private static readonly (string Key, string Label)[] Inlands = [("normal", "Normal"), ("dry", "Dry: deserts inside continents"), ("humid", "Humid: green far inland")];
+    private static readonly (string Key, string Label)[] Reliefs = [("preset", "As the planet"), ("flat", "Flat"), ("normal", "Normal"), ("mountainous", "Mountainous")];
+    private static readonly (string Key, string Label)[] Deposits = [("scarce", "Scarce"), ("normal", "Normal"), ("rich", "Rich")];
+
+    private Label? _worldNote;
+
+    // Advanced world settings (Patryk, 2026-11-25, PR W1): hidden behind a switch; the second level holds the numbers of the planet
+    // and its star. Off, the world is a normal one whatever the fields hold.
+    private void AdvancedWorldSection()
+    {
+        var toggle = new CheckButton
+        {
+            Text = "Advanced world settings",
+            ButtonPressed = _settings.AdvancedWorld,
+            TooltipText = "The planet, its rain, relief and deposits, and the numbers of the planet and its star",
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+        };
+        _content.AddChild(toggle);
+        var box = new VBoxContainer { Visible = _settings.AdvancedWorld };
+        box.AddThemeConstantOverride("separation", 8);
+        _content.AddChild(box);
+        toggle.Toggled += on =>
+        {
+            _settings.AdvancedWorld = on;
+            box.Visible = on;
+        };
+
+        IReadOnlyList<(string Key, string Name)> planets;
+        try
+        {
+            planets = PlayWorlds.Presets(_dataDirectory);
+        }
+        catch (Exception e) when (e is System.IO.IOException or InvalidOperationException or ArgumentException)
+        {
+            box.AddChild(Muted("The planet presets could not be read: " + e.Message));
+            return;
+        }
+
+        GridContainer g = Grid(box);
+        Choice(g, "Planet", [.. planets.Select(p => p.Name)], Math.Max(0, planets.ToList().FindIndex(p => p.Key == _settings.Planet)), i => _settings.Planet = planets[i].Key);
+        Choice(g, "Rain", [.. Moistures.Select(m => m.Label)], Math.Max(0, Array.FindIndex(Moistures, m => m.Key == _settings.Moisture)), i => _settings.Moisture = Moistures[i].Key);
+        Choice(g, "Inland humidity", [.. Inlands.Select(m => m.Label)], Math.Max(0, Array.FindIndex(Inlands, m => m.Key == _settings.Inland)), i => _settings.Inland = Inlands[i].Key);
+        Choice(g, "Relief", [.. Reliefs.Select(m => m.Label)], Math.Max(0, Array.FindIndex(Reliefs, m => m.Key == _settings.Relief)), i => _settings.Relief = Reliefs[i].Key);
+        Choice(g, "Deposits", [.. Deposits.Select(m => m.Label)], Math.Max(0, Array.FindIndex(Deposits, m => m.Key == _settings.Resources)), i => _settings.Resources = Deposits[i].Key);
+
+        var expert = new Button { Text = "Planet and star numbers (show)", ToggleMode = true, SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
+        box.AddChild(expert);
+        var numbers = new VBoxContainer { Visible = false };
+        box.AddChild(numbers);
+        expert.Toggled += on =>
+        {
+            numbers.Visible = on;
+            expert.Text = on ? "Planet and star numbers (hide)" : "Planet and star numbers (show)";
+        };
+        numbers.AddChild(Muted("Empty = as the planet. Use a dot for decimals. Two of brightness, distance, year and light are enough: the rest follows."));
+        GridContainer n = Grid(numbers);
+        Text(n, "Axial tilt (degrees)", _settings.Tilt, v => _settings.Tilt = v, "as the planet (Earth 23.4)");
+        Text(n, "Eccentricity", _settings.Eccentricity, v => _settings.Eccentricity = v, "as the planet (Earth 0.017)");
+        Text(n, "Star brightness (Suns)", _settings.Luminosity, v => _settings.Luminosity = v, "as the planet (Sun 1)");
+        Text(n, "Distance (AU)", _settings.Distance, v => _settings.Distance = v, "as the planet (Earth 1)");
+        Text(n, "Year (Earth years)", _settings.Year, v => _settings.Year = v, "as the planet (Earth 1)");
+        Text(n, "Light (Earth = 1)", _settings.Light, v => _settings.Light = v, "0.356 to 1.107");
+        Text(n, "CO2 (bar)", _settings.Co2, v => _settings.Co2 = v, "carbon cycle (Earth 0.00028)");
+        Text(n, "Pressure (bar)", _settings.Pressure, v => _settings.Pressure = v, "as the planet (Earth 1)");
+        Text(n, "Volcanism (% of Earth)", _settings.Volcanism, v => _settings.Volcanism = v, "as the planet (Earth 100)");
+        Text(n, "Star swing (per mille)", _settings.StarVariability, v => _settings.StarVariability = v, "0 to 100");
+        Text(n, "Star cycle (years)", _settings.StarCycle, v => _settings.StarCycle = v, "none");
+
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 12);
+        box.AddChild(row);
+        var check = new Button { Text = "Check the planet" };
+        check.Pressed += () =>
+        {
+            try
+            {
+                if (_settings.ToPlayWorld() is not { } w)
+                {
+                    return;
+                }
+
+                string? why = PlayWorlds.Check(w, _dataDirectory, out IReadOnlyList<string> adjusted);
+                ShowWorldNote(why ?? (adjusted.Count == 0 ? "The planet is fine." : "The planet is fine. " + string.Join(" ", adjusted)), problem: why is not null);
+            }
+            catch (FormatException e)
+            {
+                ShowWorldNote(e.Message, problem: true);
+            }
+        };
+        row.AddChild(check);
+        var reset = new Button { Text = "Back to Earth" };
+        reset.Pressed += () =>
+        {
+            _settings.ResetWorld();
+            Show(_section);
+        };
+        row.AddChild(reset);
+        _worldNote = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(560, 0), Visible = false };
+        box.AddChild(_worldNote);
+    }
+
+    private void ShowWorldNote(string text, bool problem)
+    {
+        if (_worldNote is null)
+        {
+            Notice = text;
+            Show(_section);
+            return;
+        }
+
+        _worldNote.Text = text;
+        _worldNote.Modulate = problem ? new Color(1f, 0.5f, 0.45f) : new Color(0.6f, 0.9f, 0.6f);
+        _worldNote.Visible = true;
     }
 
     // Load game: the saves, newest first (the game saves itself every few minutes as "autosave").
@@ -465,12 +604,12 @@ public partial class StartMenu : CanvasLayer
         Modulate = new Color(0.72f, 0.72f, 0.72f),
     };
 
-    private GridContainer Grid()
+    private GridContainer Grid(Container? parent = null)
     {
         var grid = new GridContainer { Columns = 2 };
         grid.AddThemeConstantOverride("h_separation", 16);
         grid.AddThemeConstantOverride("v_separation", 8);
-        _content.AddChild(grid);
+        (parent ?? _content).AddChild(grid);
         return grid;
     }
 

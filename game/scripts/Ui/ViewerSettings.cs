@@ -79,6 +79,44 @@ public sealed class StartSettings
     /// <summary>Period of the star's cycle in years.</summary>
     public string StarCycle { get; set; } = string.Empty;
 
+    /// <summary>The advanced world settings of a new game are in use (PR W1); off = a normal world whatever the fields hold.</summary>
+    public bool AdvancedWorld { get; set; }
+
+    /// <summary>
+    /// The advanced world settings for a new game, or null when they are off. Throws <see cref="FormatException"/> with a readable
+    /// message when a number cannot be read.
+    /// </summary>
+    public CivSim.Server.PlayWorld? ToPlayWorld() => !AdvancedWorld ? null : new CivSim.Server.PlayWorld
+    {
+        Planet = string.IsNullOrEmpty(Planet) ? "earth" : Planet,
+        Moisture = Moisture == "preset" ? null : Moisture,
+        Inland = Inland,
+        Relief = Relief == "preset" ? null : Relief,
+        Resources = Resources,
+        AxialTiltTenths = (int?)Scaled(Tilt, 10, "Axial tilt"),
+        EccentricityPerMille = (int?)Scaled(Eccentricity, 1000, "Eccentricity"),
+        LuminosityThousandths = Scaled(Luminosity, 1000, "Star brightness"),
+        DistanceThousandths = Scaled(Distance, 1000, "Distance"),
+        YearThousandths = Scaled(Year, 1000, "Year"),
+        LightThousandths = Scaled(Light, 1000, "Light"),
+        Co2Microbar = (int?)Scaled(Co2, 1_000_000, "CO2"),
+        PressureHundredths = (int?)Scaled(Pressure, 100, "Pressure"),
+        VolcanismPercent = Int(Volcanism, "Volcanism"),
+        StarVariabilityPerMille = Int(StarVariability, "Star variability"),
+        StarCycleYears = Int(StarCycle, "Star cycle"),
+    };
+
+    /// <summary>Puts every advanced world setting back to "as the preset" (Earth).</summary>
+    public void ResetWorld()
+    {
+        Planet = "earth";
+        Moisture = "preset";
+        Inland = "normal";
+        Relief = "preset";
+        Resources = "normal";
+        Tilt = Eccentricity = Luminosity = Distance = Year = Light = Co2 = Pressure = Volcanism = StarVariability = StarCycle = string.Empty;
+    }
+
     /// <summary>Civilization to lead (stage 6 PR P2): 0 = watch every civilization as an observer, N = lead civilization number N (id N − 1).</summary>
     public int Lead { get; set; }
 
