@@ -2,7 +2,7 @@
   "name": "Bronze Age, three settlements",
   "description": "We are a Bronze Age town with two villages around; the others are behind (Neolithic). Test bronze, horses, caravans, writing and ships.",
   "seed": 5,
-  "peoples": 4,
+  "civilizations": 4,
   "revealMap": true,
   "civs": [
     { "era": "bronze_age", "techs": ["masonry", "code_of_laws"], "level": "town", "people": 70, "settlements": 2, "settlementPeople": 20,

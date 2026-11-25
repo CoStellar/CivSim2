@@ -3,7 +3,7 @@
 65 technologii: 6 podstawowych, 47 zwykłych i 12 ulepszeń ery (oznaczone „U”). Nazwy są takie jak w grze.
 
 **Zasady badań (decyzje z 2026-11-18):**
-- **Era** otwiera się, gdy lud zna 5 technologii swojej ery. Technologie podstawowe (gałąź „podstawy”) się nie liczą, ulepszenia tak.
+- **Era** otwiera się, gdy cywilizacja zna 5 technologii swojej ery. Technologie podstawowe (gałąź „podstawy”) się nie liczą, ulepszenia tak.
 - **Doświadczenie**: 1 punkt to 1 pracownik przez 1 minutę w budynkach danej technologii (Foraging: także ludzie zbierający z okolicy).
 - **Wyprodukowane dobra**: niektóre technologie chcą zamiast tego wytworzonych dóbr, np. Barter 30 ceramiki.
 - **Najpierw**: niektóre wymagają innej technologii bez doświadczenia w niej.
@@ -152,7 +152,7 @@ Liczy się do progu: 11 technologii zwykłych i ulepszenia; podstawowe nie.
 ### Barter — handel
 
 - **Wymaga:** Pottery 15 pkt; wyprodukować 30 pottery. **Cena:** 20 pottery, 60 food. **Czas:** 50 s.
-- **Opis w grze:** Trading posts; trade with other peoples (one agreement per trading post).
+- **Opis w grze:** Trading posts; trade with other civilizations (one agreement per trading post).
 - Budynek: **Trading post** (koszt 40 wood, 10 pottery, 30 s): 2 miejsc pracy, każdy pracownik na minutę: nic; magazyn +150 każdego dobra; 2 miejsca na heksie
 
 ### Palisade — wojsko
@@ -486,7 +486,7 @@ Liczy się do progu: 9 technologii zwykłych i ulepszenia; podstawowe nie.
 
 **Tragarze i karawany:**
 - Tragarze niosą po 5, a z Carrying po 20.
-- Towary między osadami niosą tragarze, dopóki lud nie ma The wheel, Horseback riding i koni w stajni. Karawana zabiera 2 konie, które z nią wracają.
+- Towary między osadami niosą tragarze, dopóki cywilizacja nie ma The wheel, Horseback riding i koni w stajni. Karawana zabiera 2 konie, które z nią wracają.
 
 **Rzeki:**
 - Do epoki brązu nie da się ich przejść.
@@ -562,7 +562,7 @@ Liczy się do progu: 9 technologii zwykłych i ulepszenia; podstawowe nie.
 ## Jak wygląda drzewo w grze (2026-11-19)
 
 Okno Research (klawisz 2) zajmuje cały ekran. Drzewo jest rysowane metodą Sugiyamy, czyli standardową metodą rysowania grafów warstwowych:
-1. **Kolumny (warstwy).** Technologia stoi kolumnę na prawo od najpóźniejszej technologii, której potrzebuje, i nigdy na lewo od pierwszej kolumny swojej ery. Ery to pasy kolumn; era ludu jest lekko podświetlona.
+1. **Kolumny (warstwy).** Technologia stoi kolumnę na prawo od najpóźniejszej technologii, której potrzebuje, i nigdy na lewo od pierwszej kolumny swojej ery. Ery to pasy kolumn; era cywilizacji jest lekko podświetlona.
 2. **Punkty pośrednie.** Linia, która przeskakuje kolumny, dostaje w każdej mijanej kolumnie własne miejsce (cienki „przystanek”). Dzięki temu biegnie w przerwie obok kart, nigdy pod nimi.
 3. **Mniej skrzyżowań.** Kolejność w każdej kolumnie układa się według średniej pozycji sąsiadów (metoda barycentrum), 12 przejść w prawo i w lewo. Na starcie technologie są ułożone według gałęzi, więc gałąź trzyma się razem.
 4. **Wysokości.** Karty i przystanki przesuwają się ku średniej wysokości sąsiadów, z zachowaniem kolejności i odstępów. Tłok rozkłada się w górę i w dół, a linie są możliwie proste.
@@ -573,7 +573,7 @@ Do tego:
 - **najechanie myszą** na technologię podświetla ją, wszystko, czego potrzebuje (aż do początku), i linie między nimi, a reszta blednie;
 - pasek z lewej strony karty to gałąź (legenda nad drzewem), ramka to stan.
 
-**Widać wszystkie ery** (Patryk, 2026-11-19), bo gra polega na planowaniu. W innych miejscach (panel heksa, panel osady) widać tylko to, co jest z ery, do której lud doszedł.
+**Widać wszystkie ery** (Patryk, 2026-11-19), bo gra polega na planowaniu. W innych miejscach (panel heksa, panel osady) widać tylko to, co jest z ery, do której cywilizacja doszła.
 
 ## Tempo badań (2026-11-19)
 

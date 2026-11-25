@@ -401,7 +401,7 @@ public sealed record SiegeRules(
     public int AiTakeWithinHexes { get; init; } = 20;
 }
 
-/// <summary>How many army units a people may have (Patryk, 2026-11-20, question 11): see the armyLimit section of the data.</summary>
+/// <summary>How many army units a civilization may have (Patryk, 2026-11-20, question 11): see the armyLimit section of the data.</summary>
 public sealed record ArmyLimitRules(int[] PerLevel, (int Building, int Add)[] PerBuilding, (int Tech, int Add)[] PerTech);
 
 /// <summary>One of the bonuses a kind of unit may take at a level of experience (veterans).</summary>
@@ -429,7 +429,7 @@ public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int High
     /// <summary>Reputation every declaration of war costs (E1, 2026-11-19).</summary>
     public int DeclareReputation { get; init; } = -10;
 
-    /// <summary>People a people must have lost to the war before its AI agrees to pay tribute.</summary>
+    /// <summary>People a civilization must have lost to the war before its AI agrees to pay tribute.</summary>
     public int TributeNeedsKills { get; init; } = 5;
 
     /// <summary>1C (Patryk, 2026-11-20): peace with tribute only this long after the war began (ticks).</summary>
@@ -441,13 +441,13 @@ public sealed record WarRules(int CombatEveryTicks, int LowLuckPercent, int High
     /// <summary>6C: below this reputation the AI declares new wars half as often.</summary>
     public int BadReputation { get; init; } = -100;
 
-    /// <summary>P2 (tests 2026-11-23): a bad name heals by this much a minute while the people starts no war (up to 0).</summary>
+    /// <summary>P2 (tests 2026-11-23): a bad name heals by this much a minute while the civilization starts no war (up to 0).</summary>
     public int ReputationRegenPerMinute { get; init; }
 
     /// <summary>Most food, percent of the payer's, a tribute takes (E3).</summary>
     public int TributeFoodMaxPercent { get; init; } = 10;
 
-    /// <summary>Most wars a people may be in at once (design, chapter 8: 2-3).</summary>
+    /// <summary>Most wars a civilization may be in at once (design, chapter 8: 2-3).</summary>
     public int MaxWars { get; init; } = 3;
 }
 
@@ -550,7 +550,7 @@ public sealed record MarchRules(int ShareTicks = 50, int ShareHexes = 3, int Joi
 /// <summary>Choosing the start (startPhase in the data): ticks to pick, the block radius and its fuzz, the scoring radii.</summary>
 public sealed record StartPhaseRules(int PickTicks, int BlockRadius, int BlockFuzz, int ScoreRadius, int RoomRadius)
 {
-    /// <summary>12B (Patryk, 2026-11-20): every people starts at most this many hexes by land from another (0 = anywhere), on the main continent.</summary>
+    /// <summary>12B (Patryk, 2026-11-20): every civilization starts at most this many hexes by land from another (0 = anywhere), on the main continent.</summary>
     public int NeighbourMaxHexes { get; init; }
 
     /// <summary>12B: placed starts (and the AI's choices) keep at least this distance from other starts when the land allows.</summary>
@@ -736,7 +736,7 @@ public sealed class SimContent
 
     /// <summary>
     /// Patryk, 2026-11-23: idle people told to gather find at least this share (percent) of the food they eat, in any land and
-    /// season, so a people left alone survives but gathers nothing to grow on (<c>forage.subsistencePercent</c>).
+    /// season, so a civilization left alone survives but gathers nothing to grow on (<c>forage.subsistencePercent</c>).
     /// </summary>
     public int ForageSubsistencePercent { get; init; }
 
@@ -776,7 +776,7 @@ public sealed class SimContent
     /// <summary>Winter lasts this many ticks, at the end of each cycle.</summary>
     public int WinterTicks { get; init; }
 
-    /// <summary>Peoples are told this many ticks before winter.</summary>
+    /// <summary>Civilizations are told this many ticks before winter.</summary>
     public int WinterWarnTicks { get; init; }
 
     /// <summary>Every worker's output in winter, percent.</summary>
@@ -839,7 +839,7 @@ public sealed class SimContent
     /// <summary>Extra price, percent, for resuming a paused construction.</summary>
     public int ResumeCostPercent { get; init; }
 
-    /// <summary>Standing caravan routes a people may keep per settlement it has (supply.routesPerSettlement, abuse tests 2026-11-24).</summary>
+    /// <summary>Standing caravan routes a civilization may keep per settlement it has (supply.routesPerSettlement, abuse tests 2026-11-24).</summary>
     public int RoutesPerSettlement { get; init; } = 8;
 
     /// <summary>A drawn path has at most this many hexes in all (drawnPaths.maxHexes, abuse tests 2026-11-24).</summary>
@@ -883,7 +883,7 @@ public sealed class SimContent
     public int AiInputRouteKeepMinutes { get; init; } = 2;
 
     /// <summary>
-    /// 2026-11-23: the AI builds another maker of an input its workshops use more of than its people makes, until the store
+    /// 2026-11-23: the AI builds another maker of an input its workshops use more of than its civilization makes, until the store
     /// lasts this many minutes of the shortfall (ai.inputMakerStoreMinutes).
     /// </summary>
     public int AiInputMakerStoreMinutes { get; init; } = 10;
@@ -933,13 +933,13 @@ public sealed class SimContent
     /// <summary>Rations of the units, paid by their home settlement.</summary>
     public RationRules Rations { get; init; } = new(600, 75, 50, 20);
 
-    /// <summary>Technologies of its era a people must know to enter the next era (eras are levels, not one gate technology).</summary>
+    /// <summary>Technologies of its era a civilization must know to enter the next era (eras are levels, not one gate technology).</summary>
     public int EraAdvanceTechs { get; init; } = 5;
 
     /// <summary>Deposits every start has near it (startDeposits; M4, 2026-11-19).</summary>
     public StartDeposit[] StartDeposits { get; init; } = [];
 
-    /// <summary>How many army units a people may have (armyLimit).</summary>
+    /// <summary>How many army units a civilization may have (armyLimit).</summary>
     public ArmyLimitRules ArmyLimit { get; init; } = new([1, 2, 4, 6], [], []);
 
     /// <summary>Experience of each kind of unit (veterans).</summary>
@@ -1005,7 +1005,7 @@ public sealed class SimContent
     /// <summary>Technologies.</summary>
     public required IReadOnlyList<SimTech> Techs { get; init; }
 
-    /// <summary>Discount per known people that knows a technology, percent.</summary>
+    /// <summary>Discount per known civilization that knows a technology, percent.</summary>
     public int NeighbourDiscountPercent { get; init; }
 
     /// <summary>Most discount from neighbours, percent.</summary>
@@ -1044,7 +1044,7 @@ public sealed class SimContent
     /// <summary>Least worth (percent of what it gives) the AI wants from a barter.</summary>
     public int AcceptWorthPercent { get; init; }
 
-    /// <summary>How long peoples must have known each other before a treaty, ticks.</summary>
+    /// <summary>How long civilizations must have known each other before a treaty, ticks.</summary>
     public int TreatyKnownTicks { get; init; }
 
     /// <summary>Farthest distance between settlements for a treaty, hexes.</summary>
@@ -1065,7 +1065,7 @@ public sealed class SimContent
     /// <summary>The shared pool of events.</summary>
     public required IReadOnlyList<State.SimEvent> Events { get; init; }
 
-    /// <summary>Ticks between two events of a people (at least).</summary>
+    /// <summary>Ticks between two events of a civilization (at least).</summary>
     public int EventEveryTicks { get; init; }
 
     /// <summary>Random extra ticks between events.</summary>
@@ -1092,7 +1092,7 @@ public sealed class SimContent
     /// <summary>Unit kind of caravans.</summary>
     public int Caravans { get; init; }
 
-    /// <summary>Technology needed to trade with other peoples (caravans abroad, trade agreements).</summary>
+    /// <summary>Technology needed to trade with other civilizations (caravans abroad, trade agreements).</summary>
     public int TradeTech { get; init; }
 
     /// <summary>Technology needed to build roads (−1 = none).</summary>
@@ -1138,7 +1138,7 @@ public sealed class SimContent
     /// <summary>Per deposit id: 0 seen on the surface, 1 found by prospectors (rock), 2 by surveyors (soil).</summary>
     public int[] DepositSurvey { get; init; } = [];
 
-    /// <summary>Per deposit id: the era from which a people recognises it (rock); int.MaxValue = not in these eras.</summary>
+    /// <summary>Per deposit id: the era from which a civilization recognises it (rock); int.MaxValue = not in these eras.</summary>
     public int[] DepositEra { get; init; } = [];
 
     /// <summary>Biomes that are forest (all trees).</summary>
@@ -2246,7 +2246,7 @@ public sealed record AiBattleRules
 
 /// <summary>
 /// When the AI starts a war (tests 2026-11-23, P1): it looks at the target first, judges the gain against the cost and spares
-/// small peoples; a people with a bad name makes it careful, not warlike (P2).
+/// small civilizations; a civilization with a bad name makes it careful, not warlike (P2).
 /// </summary>
 public sealed record AiWarRules
 {
@@ -2259,13 +2259,13 @@ public sealed record AiWarRules
     /// <summary>The target settlement's people must be at least this share (percent) of the soldiers we would send: the gain.</summary>
     public int GainPercent { get; init; } = 60;
 
-    /// <summary>A people whose known people is below this share (percent) of ours is not attacked first (small peoples).</summary>
+    /// <summary>A people whose known people is below this share (percent) of ours is not attacked first (small civilizations).</summary>
     public int SmallTargetPercent { get; init; } = 40;
 
-    /// <summary>A people with fewer known people than this is never attacked first (unless its name is bad).</summary>
+    /// <summary>A civilization with fewer known people than this is never attacked first (unless its name is bad).</summary>
     public int SmallTargetPeople { get; init; } = 40;
 
-    /// <summary>The AI keeps this much more army (percent) while a people it met has a bad name (badReputation).</summary>
+    /// <summary>The AI keeps this much more army (percent) while a civilization it met has a bad name (badReputation).</summary>
     public int FearArmyPercent { get; init; } = 50;
 
     /// <summary>The AI at war offers peace now and then: this chance (percent) a thought.</summary>

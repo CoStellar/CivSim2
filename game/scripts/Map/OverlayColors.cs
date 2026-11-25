@@ -27,7 +27,7 @@ public static class OverlayColors
     /// <summary>Stable distinct colour of a civilization.</summary>
     public static Color CivColor(int civ) => Palette?.Invoke(civ) ?? Color.FromHsv((civ * 0.618034f) % 1f, 0.75f, 0.95f);
 
-    /// <summary>The peoples' colours of the game being played (the land under them takes the same colour as their borders).</summary>
+    /// <summary>The civilizations' colours of the game being played (the land under them takes the same colour as their borders).</summary>
     public static Func<int, Color>? Palette { get; set; }
 
     /// <summary>

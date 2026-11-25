@@ -327,7 +327,7 @@ public sealed class Civ
     /// <summary>Total people (in settlements; units are counted apart).</summary>
     public int People { get; set; }
 
-    /// <summary>Hexes this people has seen (fog of war).</summary>
+    /// <summary>Hexes this civilization has seen (fog of war).</summary>
     public bool[] Known { get; set; } = [];
 
     /// <summary>Per hex: 1 + the era in which prospectors last looked at it (0 = never).</summary>
@@ -346,10 +346,10 @@ public sealed class Civ
     /// <summary>Observers per hex: units and settlements that see it now (the fog of war; seen while above zero).</summary>
     public short[] Vision { get; set; } = [];
 
-    /// <summary>Owner of each hex when this people last saw it.</summary>
+    /// <summary>Owner of each hex when this civilization last saw it.</summary>
     public short[] SeenOwner { get; set; } = [];
 
-    /// <summary>Road level of each hex when this people last saw it.</summary>
+    /// <summary>Road level of each hex when this civilization last saw it.</summary>
     public byte[] SeenRoad { get; set; } = [];
 
     /// <summary>Works of each hex as last seen (ditches, palisades, walls, aqueducts, bridges).</summary>
@@ -421,7 +421,7 @@ public sealed class Civ
     /// <summary>Places named so far.</summary>
     public int PlacesNamed { get; set; }
 
-    /// <summary>How other peoples see this one: falls with surprise attacks and broken truces.</summary>
+    /// <summary>How other civilizations see this one: falls with surprise attacks and broken truces.</summary>
     public int Reputation { get; set; }
 
     /// <summary>Led by the AI (false for a person).</summary>
@@ -451,10 +451,10 @@ public sealed class Civ
     /// <summary>Character of an AI: how eager to spread, 0–100.</summary>
     public int Expansion { get; set; }
 
-    /// <summary>How far below the best free place the AI may start for this people, percent (random per people).</summary>
+    /// <summary>How far below the best free place the AI may start for this civilization, percent (random per civilization).</summary>
     public int StartError { get; set; }
 
-    /// <summary>Score of the best free start when this people chose (for the summary).</summary>
+    /// <summary>Score of the best free start when this civilization chose (for the summary).</summary>
     public int BestStartAtPick { get; set; }
 
     /// <summary>Current event of the shared pool (−1 = none).</summary>
@@ -466,7 +466,7 @@ public sealed class Civ
     /// <summary>Tick of the next event (0 = not drawn yet).</summary>
     public long NextEvent { get; set; }
 
-    /// <summary>A sample of the people's state every minute, for the summary after the game.</summary>
+    /// <summary>A sample of the civilization's state every minute, for the summary after the game.</summary>
     public List<HistorySample> History { get; } = [];
 }
 
@@ -659,7 +659,7 @@ public enum Stance : byte
     Passive = 2,
 }
 
-/// <summary>One minute of a people's history: what the summary's timeline shows.</summary>
+/// <summary>One minute of a civilization's history: what the summary's timeline shows.</summary>
 public sealed record HistorySample(int Minute, int People, int Settlements, int Buildings, int Techs, int Soldiers, long FoodPerMinute, int Era, int Event);
 
 /// <summary>What a carrier unit is doing.</summary>
@@ -681,7 +681,7 @@ public enum CarrierJob : byte
     ToUnit = 4,
 }
 
-/// <summary>A standing caravan route between two settlements of one people.</summary>
+/// <summary>A standing caravan route between two settlements of one civilization.</summary>
 public sealed class TradeRoute
 {
     /// <summary>Owner.</summary>

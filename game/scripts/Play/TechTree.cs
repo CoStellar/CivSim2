@@ -103,7 +103,7 @@ public partial class TechTree : Control
         Light(Hovered);
     }
 
-    /// <summary>Left edge of an era's band, to scroll the window to the people's era.</summary>
+    /// <summary>Left edge of an era's band, to scroll the window to the civilization's era.</summary>
     public float EraX(int era) => _bands.FirstOrDefault(b => b.Era == era).X0;
 
     private float X(int layer) => Margin + (layer * (_cardWidth + ColumnGap));

@@ -877,7 +877,7 @@ public partial class PlayGame
 
     private static string PeopleName(PlayViewMessage v, int civ)
     {
-        foreach (PlayPeopleView p in v.Peoples)
+        foreach (PlayKnownCivView p in v.KnownCivs)
         {
             if (p.Civ == civ)
             {

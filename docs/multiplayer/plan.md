@@ -3,7 +3,7 @@
 **Stan:** plan w trakcie uzgadniania z Patrykiem. **Planowanie zamknięte 2026-11-25** po 4 rundach pytań; decyzja architektoniczna: ADR 0031. Prace: CI1 → W1 → MP1 → … (rozdz. 13).
 Kodu jeszcze nie zmieniamy; Patryk chce co najmniej dwóch kolejnych rund pytań przed budową.
 Podstawa: kod `development` z 2026-11-25 (`645f2b0`), ADR 0008, 0010, 0028, `docs/projekt-gry.md` (rozdz. 2 i 9), `docs/known-issues.md`.
-Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly-na-przyszlosc.md`.
+Pomysły na później (m.in. kooperacja jedną cywilizacją): `docs/multiplayer/pomysly-na-przyszlosc.md`.
 
 ![Pośrednik i serwer na VPS](2_posrednik.png)
 
@@ -11,12 +11,12 @@ Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly
 
 | # | Pytanie | Decyzja |
 | --- | --- | --- |
-| P1 | Ilu ludzi? | **2–8 ludzi.** Liczbę ludów (ludzie + AI) ustala się przy zakładaniu serwera. Najpierw dobry plan konfiguracji serwera (rozdz. 6). |
+| P1 | Ilu ludzi? | **2–8 ludzi.** Liczbę cywilizacji (ludzie + AI) ustala się przy zakładaniu serwera. Najpierw dobry plan konfiguracji serwera (rozdz. 6). |
 | P2 | Jak się łączyć? | **Bez VPN i bez Steam/EOS.** Wpisanie IP i portu serwera albo IP i portu **pośrednika** (relay). Pośrednik na VPS Patryka w Dockerze (rozdz. 4); konfiguracja pośrednika na sam koniec. **Gałąź serwerowa** z samym kodem serwera, aktualizowana z każdą wersją gry, z CI (rozdz. 8). |
-| P3 | Rywalizacja czy kooperacja? | **Każdy swój lud.** Kooperacja jednym ludem kiedyś jako dodatkowy tryb (zapisane w `pomysly-na-przyszlosc.md`). |
+| P3 | Rywalizacja czy kooperacja? | **Każdy swoją cywilizację.** Kooperacja jedną cywilizacją kiedyś jako dodatkowy tryb (zapisane w `pomysly-na-przyszlosc.md`). |
 | P4 | Prędkość? | **×1 albo ×2.** Gospodarz widzi informację, że ×2 jest trudniejsze. Zmiana prędkości w trakcie wymaga **głosowania i zgody większości**. Pauzy: 3 na gracza, po 30 s inni mogą przerwać. |
-| P5 | Rozłączony gracz? | Jego lud od razu przejmuje AI; po powrocie gracz go odzyskuje. |
-| P6 | Gracz, którego lud upadł? | **Widzi całą mapę.** Gra to „1 na wszystkich”; sojusze pomagają, ale odpadnięcie to sprawa gracza. |
+| P5 | Rozłączony gracz? | Jego cywilizację od razu przejmuje AI; po powrocie gracz ją odzyskuje. |
+| P6 | Gracz, którego cywilizacja upadła? | **Widzi całą mapę.** Gra to „1 na wszystkich”; sojusze pomagają, ale odpadnięcie to sprawa gracza. |
 | P7 | Kiedy? | **Osobny wątek, równolegle** z poprawianiem gry. Najpierw stabilna pętla rozgrywki (ok. 45 min do średniowiecza), potem nowe treści (zarządca itd.). |
 | — | Docelowo | **Hostowanie gry ma być możliwe na VPS** (serwer bez okna, rozdz. 5). |
 
@@ -28,14 +28,14 @@ Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly
 | R2-2 | Domena VPS? | VPS ma własną domenę, ale związaną z inną usługą (dalej: R3-2). |
 | R2-3 | Kto zakłada gry na pośredniku? | **Tylko ktoś, kto zna hasło**; hasło zmienia się co jakiś czas, Patryk daje je zainteresowanym. Kto go nie ma: gra u siebie albo stawia **własnego pośrednika**; tę możliwość trzeba przygotować (dalej: R3-3, R3-4). |
 | R2-4 | Kto zarządza partią? | **Gospodarz gry** (ten, kto ją założył). Żadnych haseł administratora do VPS w konfiguracji. |
-| R2-5 | Nowy gracz w trwającej partii? | **Może tylko obserwować.** Może wybrać lud prowadzony przez AI i poprosić o przejęcie; gracze **głosują**, czy pozwalają. |
+| R2-5 | Nowy gracz w trwającej partii? | **Może tylko obserwować.** Może wybrać cywilizację prowadzoną przez AI i poprosić o przejęcie; gracze **głosują**, czy pozwalają. |
 | R2-6 | Wolne miejsca przy starcie? | **Prowadzi je AI.** Później gracze mogą dołączyć i zająć miejsca dla graczy prowadzone przez AI, do ustalonego limitu ludzi. |
 | R2-7 | Zaawansowane ustawienia świata? | **Wszystkie, w dwóch poziomach**, podgląd mapy później (PR W1). |
 | R2-8 | Wersja gry? | **Tag wersji z datą** (np. `v0.1_25.11.26`); schemat do wyboru w R3-1 (rozdz. 16). |
 | R2-9 | CI na `development`? | **Tak**, ale testy mają być krótkie: rozdzielić na lokalne i CI (rozdz. 17). |
 | R2-10 | Czat? | **Do wszystkich i do sojuszników.** |
 | R2-11 | Głosowanie o prędkość? | **Ponad połowa grających, 20 s, brak głosu = „nie”.** |
-| R2-12 | Ludy razem? | **Do 8 teraz**, 12 po pomiarze późnej gry. |
+| R2-12 | Cywilizacje razem? | **Do 8 teraz**, 12 po pomiarze późnej gry. |
 
 ## 1b. Decyzje Patryka (runda 3, 2026-11-25)
 
@@ -47,9 +47,9 @@ Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly
 | R3-4 | Pośrednik dla innych | **Publiczny obraz Docker + instrukcja**; w grze pola „adres i hasło pośrednika”, domyślnie pośrednik Patryka. |
 | R3-5 | VPS prowadzi partie? | **Na start tylko przekazuje ruch**; partie na VPS w drugim kroku, najwyżej 2 naraz. |
 | R3-6 | Gospodarz wychodzi z partii na VPS | **Gospodarzem zostaje gracz, który najdłużej jest w partii.** Zapisaną partię trzeba móc odzyskać: gospodarz widzi listę partii zapisanych na VPS; rozsądny limit miejsca (rozdz. 20). |
-| R3-7 | Obserwator | **Widzi całą mapę i nie może już przejąć ludu**; kto chce grać, czeka na głosowanie bez podglądu mapy. |
+| R3-7 | Obserwator | **Widzi całą mapę i nie może już przejąć cywilizacji**; kto chce grać, czeka na głosowanie bez podglądu mapy. |
 | R3-8 | Głosowanie o nowego gracza | Głosują tylko gracze, **którzy grają już przez chwilę**; nowo dołączeni przez jakiś czas nie mają prawa głosu. |
-| R3-9 | Wyrzucanie | **Gospodarz albo głosowanie z przewagą ponad 50%** (remis = gracz zostaje). Powrót wyrzuconego: głosowanie reszty graczy (on nie głosuje); po zgodzie odzyskuje swój lud. Lud wyrzuconego jest **zablokowany** dla innych dołączających (mogą przejąć tylko inne ludy AI). |
+| R3-9 | Wyrzucanie | **Gospodarz albo głosowanie z przewagą ponad 50%** (remis = gracz zostaje). Powrót wyrzuconego: głosowanie reszty graczy (on nie głosuje); po zgodzie odzyskuje swoją cywilizację. Cywilizacja wyrzuconego jest **zablokowana** dla innych dołączających (mogą przejąć tylko inne cywilizacje AI). |
 | R3-10 | Testy | **Szybkie lokalnie, pełne w CI** (PR CI1). |
 | R3-11 | Paczka gry z CI | **Dopiero gdy skończymy większość multiplayera.** |
 | R3-12 | Tożsamość | **Pseudonim** wpisywany przez gracza i **zapamiętany na przyszłe partie** (w ustawieniach gry na jego komputerze). |
@@ -70,16 +70,16 @@ Osobny program w chmurze: serwer gry (`PlayHost`) i 1–8 klientów w pamięci, 
 
 | Partia | Klienci | Procesor | Pamięć |
 | --- | --- | --- | --- |
-| Nowa gra, 8 ludów | 1 | 3,4 s na 40 s (ok. 9% jednego rdzenia) | 109 MB |
-| Nowa gra, 8 ludów | 8 | 3,5 s na 40 s (ok. 9%) | 214 MB |
+| Nowa gra, 8 cywilizacji | 1 | 3,4 s na 40 s (ok. 9% jednego rdzenia) | 109 MB |
+| Nowa gra, 8 cywilizacji | 8 | 3,5 s na 40 s (ok. 9%) | 214 MB |
 | `04_middle_ages` | 1 | 3,5 s na 40 s | 125 MB |
 | `04_middle_ages` | 4 | 3,5 s na 40 s | 201 MB |
 
 Wnioski: widok dla kolejnego gracza prawie nie kosztuje procesora; pamięć rośnie o ok. 15–25 MB na gracza (bufory widoku).
 Jedna partia zmieści się na najmniejszym VPS (1 rdzeń, 1–2 GB). Pośrednik przy 8 graczach przenosi ok. 40 KB/s w każdą stronę,
-czyli ok. 150 MB w każdą stronę na godzinę partii. Do sprawdzenia w MP1: późna gra (90+ minut) z 8 ludami i najgorszy takt.
+czyli ok. 150 MB w każdą stronę na godzinę partii. Do sprawdzenia w MP1: późna gra (90+ minut) z 8 cywilizacjami i najgorszy takt.
 
-**Pomiar MP1 (2026-11-25, prawdziwe TCP z Brotli, `--net-bench`):** 8 ludów, 8 graczy-botów przez sieć na tym samym komputerze, 60 minut gry,
+**Pomiar MP1 (2026-11-25, prawdziwe TCP z Brotli, `--net-bench`):** 8 cywilizacji, 8 graczy-botów przez sieć na tym samym komputerze, 60 minut gry,
 seedy 1–3 na mapie 98×60 i seed 1 na 140×84. AI gra za boty, więc ich widok rośnie jak u gracza. Wykres: `docs/multiplayer/mp1_pomiar_sieci.png`.
 
 | Minuta gry | Ruch na gracza (średnio / najwięcej) | Procesor serwera przy ×1 (gra + widoki dla 8) | Najgorszy takt |
@@ -166,9 +166,9 @@ Te same ustawienia w menu „Załóż grę” (wariant A) i w `server.json` (war
 | | Pośrednik: adres, port, hasło | puste (bez pośrednika) | — | P / G |
 | | Autozapis | co 5 min | 0 (wył.) – 30 min | G |
 | Gracze | Miejsca dla ludzi | 2 | 2–8 | G |
-| | Ludy razem (ludzie + AI) | 4 | liczba ludzi – 8 (więcej po pomiarach) | G |
+| | Cywilizacje razem (ludzie + AI) | 4 | liczba ludzi – 8 (więcej po pomiarach) | G |
 | | Puste miejsca przy starcie | prowadzi AI (R2-6) | — | — |
-| | Dołączanie w trakcie | obserwator; przejęcie ludu AI z miejsca dla gracza po głosowaniu (R2-5, R2-6) | wł. / wył. | G |
+| | Dołączanie w trakcie | obserwator; przejęcie cywilizacji AI z miejsca dla gracza po głosowaniu (R2-5, R2-6) | wł. / wył. | G |
 | Gra | Cel partii | pierwszy w średniowieczu | jak w grze solo | G |
 | | Prędkość startowa | ×1 | ×1, ×2 (×2 z ostrzeżeniem „trudniej”) | G; w grze tylko głosowanie |
 | | Pauzy na gracza | 3 | 0–10 | G |
@@ -182,7 +182,7 @@ W lobby gracze widzą wszystkie ustawienia (tylko do odczytu), a przy zmianie us
 ## 7. Zaawansowane ustawienia świata
 
 **Gdzie są dziś:** w nowym menu (od `88a9be4`, „Save and load the game; a new start menu”) zostały tylko: seed, rozmiar mapy, ląd
-(kontynenty / jeden ląd / wyspy), morze, liczba ludów, cel, rudy, wybór startu, samouczek. Zaawansowane ustawienia ze starego menu
+(kontynenty / jeden ląd / wyspy), morze, liczba cywilizacji, cel, rudy, wybór startu, samouczek. Zaawansowane ustawienia ze starego menu
 **zniknęły z menu**, ale **generator świata nadal je obsługuje** (`WorldGenOptions` w `CivSim.Core/WorldGen`): nowa gra przekazuje mu
 dziś tylko ląd i morze. Stare pola przeżyły jedynie jako parametry wiersza poleceń starego podglądu (`ViewerSettings`, legacy).
 
@@ -252,7 +252,7 @@ i do `server.json`. Podgląd mapy (jak w starym menu) do decyzji w rundzie 2.
 
 ### Jak chronimy serwer i pośrednika
 
-- **Serwer sprawdza każdy rozkaz** (już jest: `SimGame.Apply`) i wysyła tylko to, co lud widzi (mgła na serwerze).
+- **Serwer sprawdza każdy rozkaz** (już jest: `SimGame.Apply`) i wysyła tylko to, co cywilizacja widzi (mgła na serwerze).
 - **Błąd jednego klienta nie zatrzymuje gry.** Dziś wyjątek przy obsłudze rozkazu kończy wątek gry dla wszystkich (`PlayHost.Run`
   łapie wyjątek i staje). W multiplayerze: wyjątek przy wiadomości klienta = odrzucenie tej wiadomości (i ew. rozłączenie klienta), gra idzie dalej.
 - Limity: rozkazów na sekundę na gracza (np. 30), wiadomości czatu, połączeń z jednego IP, czasu na przywitanie (np. 5 s), rozmiaru ramki.
@@ -292,7 +292,7 @@ Do zrobienia:
 - Przy zakładaniu: ×1 albo ×2; przy ×2 napis „Gra na ×2 jest trudniejsza: mniej czasu na decyzje”.
 - W grze: każdy gracz może zaproponować zmianę prędkości; okienko głosowania
   u wszystkich ludzi, którzy jeszcze grają, 20 s; zmiana, gdy **ponad połowa** głosujących zagłosuje „tak”; nie głosujący = „nie”.
-  Ten sam gracz może zaproponować zmianę raz na 2 minuty. Widzowie (upadłe ludy) nie głosują.
+  Ten sam gracz może zaproponować zmianę raz na 2 minuty. Widzowie (upadłe cywilizacje) nie głosują.
 - Pauzy: 3 na gracza; po 30 s każdy inny gracz może pauzę przerwać (już w kodzie, `PlayHost.SetSpeed`). Spowolnienie przy bitwie
   działa tylko w grze solo (już tak jest).
 
@@ -300,17 +300,17 @@ Do zrobienia:
 
 | # | Gdzie | Co jest dziś | Co trzeba |
 | --- | --- | --- | --- |
-| 1 | `PlayHost.Receive` / `Pump` | Rozłączony gracz znika, a jego lud od razu prowadzi AI (sprawdzone testem w MP1), ale zapis o tym nie wie i gracz nie wraca na swój lud (znany problem 19). | **Zrobione w MP2:** wyjście i przejęcie w zapisie; klucz powrotu oddaje lud graczowi. |
+| 1 | `PlayHost.Receive` / `Pump` | Rozłączony gracz znika, a jego cywilizację od razu prowadzi AI (sprawdzone testem w MP1), ale zapis o tym nie wie i gracz nie wraca na swoją cywilizację (znany problem 19). | **Zrobione w MP2:** wyjście i przejęcie w zapisie; klucz powrotu oddaje cywilizację graczowi. |
 | 2 | `PlayHost.Run` | Wyjątek przy rozkazie jednego gracza zatrzymuje grę dla wszystkich. | **Zrobione w MP2:** wiadomość odrzucona, po 3 takich rozłączenie. |
-| 3 | `PlayHost.Advance` | Kronika tylko dla ludu 0. | **Zrobione w MP2:** każdy gracz dostaje swoją. |
-| 4 | `PlaySaves`, `Replay` | Zapis zna tylko ludy ludzi w chwili zapisu (znany problem 11). | **Zrobione w MP2** (zapis w formacie 2, liczony co krok gry). |
+| 3 | `PlayHost.Advance` | Kronika tylko dla cywilizacji 0. | **Zrobione w MP2:** każdy gracz dostaje swoją. |
+| 4 | `PlaySaves`, `Replay` | Zapis zna tylko cywilizacje ludzi w chwili zapisu (znany problem 11). | **Zrobione w MP2** (zapis w formacie 2, liczony co krok gry). |
 | 5 | `PlayHost.Create` | Wybór startu czeka bez limitu. | **Zrobione w MP2:** z drugim graczem limit 30 s (ustawienie w menu jeszcze nie: stałe 30 s). |
-| 6 | `Receive` (`HelloMessage`) | „Następny wolny lud”, bez imienia gracza, bez hasła. | **Zrobione w MP2–MP3:** hasło, klucz powrotu, miejsca z lobby, pseudonim. Kolor: jeszcze nie. |
+| 6 | `Receive` (`HelloMessage`) | „Następna wolna cywilizacja”, bez imienia gracza, bez hasła. | **Zrobione w MP2–MP3:** hasło, klucz powrotu, miejsca z lobby, pseudonim. Kolor: jeszcze nie. |
 | 7 | `SetSpeed` | Prędkość ustawia ostatni pytający, także Max. | **MP2:** z innymi graczami tylko ×1/×2. Głosowanie w MP4. |
 | 8 | `Receive` (debug) | Klawisze debug ma gospodarz. | **Zrobione w MP2.** |
 | 9 | `HelloMessage` | Tylko wersja protokołu. | **MP2:** także wersja gry. Skrót danych niepotrzebny: klient dostaje dane gry od serwera. |
 | 10 | Klient (`PlayGame.cs`) | Zawsze sam uruchamia serwer. | **Zrobione w MP3:** tryb „dołącz”: samo połączenie. |
-| 11 | `Save` | Nazwa i era od ludu 0, zapisać może każdy. | Zapis robi gospodarz/administrator; w zapisie gracze. |
+| 11 | `Save` | Nazwa i era od cywilizacji 0, zapisać może każdy. | Zapis robi gospodarz/administrator; w zapisie gracze. |
 | 12 | `SimGame.Create`, menu | Zaawansowane ustawienia świata nieprzekazywane. | PR W1 (rozdz. 7). |
 
 ## 13. Plan prac (PR-y)
@@ -319,7 +319,7 @@ Do zrobienia:
 | --- | --- | --- |
 | **CI1. Podział testów i CI** (przed MP1) | Znacznik `Slow`, szybki zestaw lokalnie, pełny w CI na `development`, wersja gry `v26.11.1` w grze (rozdz. 16–17). | CI zielone na PR; szybki zestaw < 20 s. |
 | **W1. Zaawansowane ustawienia świata** (niezależny) | Zwijana sekcja „Advanced world settings” w „New game”, pola w `PlayOptions` i zapisie, presety planet w `data/sim/`. | Zrzuty menu; te same mapy dla tych samych ustawień (test). |
-| **MP1. Połączenie i serwer bez okna** | `TcpConnection`, nasłuch, limity ramek, Brotli, pomiary w serwerze; punkt startu serwera bez okna; bot `--join`. | Test: dwóch klientów przez sieć lokalną, ten sam hasz co w pamięci; pomiar późnej gry z 8 ludami. |
+| **MP1. Połączenie i serwer bez okna** | `TcpConnection`, nasłuch, limity ramek, Brotli, pomiary w serwerze; punkt startu serwera bez okna; bot `--join`. | Test: dwóch klientów przez sieć lokalną, ten sam hasz co w pamięci; pomiar późnej gry z 8 cywilizacjami. |
 | **MP2. Serwer dla kilku ludzi** | Punkty 1–9 z rozdz. 12, limity rozkazów, hasło. | Testy: rozłącz/wróć, wyjątek klienta nie zatrzymuje gry, wczytanie partii z dołączeniem daje ten sam hasz. |
 | **MP3. Konfiguracja i lobby** | Ustawienia z rozdz. 6, lobby (miejsca, gotowość, czat, ustawienia tylko do odczytu), menu „Multiplayer: Załóż / Dołącz (IP i port)”. | Zrzuty z dwóch okien; **pierwsza partia przez LAN albo otwarty port.** |
 | **MP4. Gra z ludźmi** | Lista graczy z pingiem, czat (wszyscy, sojusznicy), głosowanie o prędkość i o przyjęcie nowego gracza, obserwatorzy, pauzy widoczne dla wszystkich, odpowiedzi na propozycje innego gracza, widz po upadku (cała mapa). | Scenariusz z dwoma botami; zrzuty. |
@@ -339,7 +339,7 @@ Do zrobienia:
 - `PlayListener` (`src/CivSim.Server/`): nasłuch na porcie (domyślnie 7777), najwyżej 16 połączeń naraz i 8 z jednego adresu.
 - Serwer nie wysyła nowych widoków graczowi, który nie nadąża z odbiorem (ponad 32 ramki albo 8 MB w kolejce); kolejny widok
   dosyła wszystko, co ominął, także zmienione kawałki mapy.
-- `PlayOptions.Dedicated`: serwer bez gracza przy komputerze. Wszystkie ludy prowadzi AI, dopóki ktoś nie dołączy. Start wybiera się
+- `PlayOptions.Dedicated`: serwer bez gracza przy komputerze. Wszystkie cywilizacje prowadzi AI, dopóki ktoś nie dołączy. Start wybiera się
   z limitem czasu, a gra od razu idzie z prędkością ×1.
 - `CivSim.Headless`:
   - `--serve` uruchamia serwer bez okna i co 30 s wypisuje graczy, ruch, procesor i pamięć;
@@ -347,7 +347,7 @@ Do zrobienia:
   - `--net-bench` mierzy ruch i czas serwera (tabela wyżej).
 - Testy:
   - dwóch graczy przez TCP gra dokładnie tę samą partię co dwóch w pamięci: ten sam hasz i co do bajtu te same wiadomości;
-  - serwer bez okna oddaje lud graczowi i odbiera go po wyjściu;
+  - serwer bez okna oddaje cywilizację graczowi i odbiera ją po wyjściu;
   - zapchany gracz;
   - złe ramki: za duże, „bomba zip”, inny program, inna wersja, śmieci;
   - wysyłanie po rozłączeniu.
@@ -357,20 +357,20 @@ Do zrobienia:
 
 - **Powitanie:** gracz podaje wersję gry (inna wersja dostaje odmowę z obu numerami), hasło partii (`--serve --password`, porównanie
   skrótów, więc czas odpowiedzi nic nie zdradza) i klucz powrotu. Hasło nie trafia do zapisu.
-- **Klucz powrotu:** serwer daje go w powitaniu. Gracz, któremu zerwało połączenie, wraca z nim na swój lud; w tym czasie lud prowadzi AI,
+- **Klucz powrotu:** serwer daje go w powitaniu. Gracz, któremu zerwało połączenie, wraca z nim na swoją cywilizację; w tym czasie cywilizację prowadzi AI,
   a nikt inny go nie dostanie. Okno gry zapamięta klucz w MP3 (menu „Dołącz”).
 - **Błąd jednego gracza:** wiadomość, której serwer nie umie wykonać, zostaje odrzucona („The server could not carry out this order”),
   gra idzie dalej; po 3 takich rozłączenie.
 - **Limit rozkazów:** 30 na sekundę, naraz do 90. Nadmiar jest odrzucany z komunikatem, a po 600 odrzuconych serwer rozłącza gracza.
-- **Zapis w formacie 2:** zapisuje ludy prowadzone przez ludzi na starcie, każde dołączenie, wyjście i przejęcie przez AI oraz każdy
+- **Zapis w formacie 2:** zapisuje cywilizacje prowadzone przez ludzi na starcie, każde dołączenie, wyjście i przejęcie przez AI oraz każdy
   rozkaz z numerem kroku gry (kroki liczą się także w czasie wyboru startu, gdy czas gry stoi). Wczytanie odtwarza wszystko dokładnie
   (test: dołączenie w czasie wyboru startu, drugi gracz po minucie, wyjście, zapis, wczytanie, ten sam stan). Stare zapisy (format 1)
-  wczytują się jak dotąd. Na serwerze bez okna po wczytaniu ludy graczy prowadzi AI, dopóki gracze nie wrócą.
+  wczytują się jak dotąd. Na serwerze bez okna po wczytaniu cywilizacje graczy prowadzi AI, dopóki gracze nie wrócą.
 - **Z innymi graczami:**
   - wybór startu ma limit 30 s także dla ludzi;
   - prędkość tylko ×1 i ×2 (wyższa spada do ×2, gdy dołącza drugi gracz);
   - klawisze debug wyłączone.
-- **Kronika:** każdy gracz dostaje wiadomości ze świata i o swoim ludzie, a nie o ludzie 0.
+- **Kronika:** każdy gracz dostaje wiadomości ze świata i o swojej cywilizacji, a nie o cywilizacji 0.
 - **Zamykanie połączenia:** odmowa (złe hasło, inna wersja) dochodzi do gracza, zanim połączenie się zamknie.
 - **Protokół 45:** w powitaniu wersja gry, hasło i klucz powrotu.
 
@@ -379,9 +379,9 @@ Do zrobienia:
 - **Menu „Multiplayer”** w oknie gry:
   - pseudonim (zapamiętany);
   - „Join a game”: adres, port, hasło;
-  - „Host a game”: nazwa partii, hasło, port, miejsca dla graczy (2–8, najwyżej tyle, ile ludów w „New game”), prędkość ×1/×2
+  - „Host a game”: nazwa partii, hasło, port, miejsca dla graczy (2–8, najwyżej tyle, ile cywilizacji w „New game”), prędkość ×1/×2
     (przy ×2 ostrzeżenie „trudniej”), adresy tego komputera w sieci lokalnej.
-  - Świat i gra (mapa, ludy, cel, rudy, zaawansowane ustawienia świata) są te z „New game”.
+  - Świat i gra (mapa, cywilizacje, cel, rudy, zaawansowane ustawienia świata) są te z „New game”.
   - Wersji gry nikt nie wpisuje: okno wysyła ją samo.
 - **Lobby** (ten sam ekran u gospodarza i u gości):
   - miejsca graczy i kto jest gotowy;
@@ -392,14 +392,14 @@ Do zrobienia:
   - Powtórzony pseudonim dostaje dopisek z listy 50 w `game.json` (rozdz. 22). Na serwerze bez okna, gdy gospodarz wyjdzie, gospodarzem zostaje następny; gdy partię zakłada okno gry, jego wyjście ją kończy.
 - **Odmowy z powodem:** złe hasło, brak hasła, pełna partia, start przez kogoś innego niż gospodarz, nie wszyscy gotowi.
   Okno wraca wtedy do menu i pokazuje powód.
-- **Gra przez sieć:** po starcie lobby oddaje połączenia grze; każdy gracz dostaje swój lud według miejsca w lobby, reszta ludów to AI.
-  Okno zapamiętuje klucz powrotu i adres serwera: po zerwaniu połączenia „Join” z tym samym adresem oddaje graczowi jego lud.
+- **Gra przez sieć:** po starcie lobby oddaje połączenia grze; każdy gracz dostaje swoją cywilizację według miejsca w lobby, reszta cywilizacji to AI.
+  Okno zapamiętuje klucz powrotu i adres serwera: po zerwaniu połączenia „Join” z tym samym adresem oddaje graczowi jego cywilizację.
   Gdy połączenie padnie, okno wraca do menu z powodem.
 - **Serwer bez okna:** `--serve` ma teraz lobby (`--name`, `--seats`, `--speed`, `--password`; `--no-lobby` jak w MP1). Bot `--join`
   zgłasza gotowość, a z `--start N` jako gospodarz zaczyna, gdy jest N graczy.
 - **Protokół 46:** wiadomości lobby (stan, gotowość, czat, start, „gra się zaczyna”).
 - **Jeszcze nie w menu** (stałe wartości jak w rozdz. 6): pauzy na gracza (3), czas na wybór startu (30 s), autozapis (5 min), kolor
-  gracza. Dołączanie do trwającej gry: gracz z wolnym miejscem dostaje lud prowadzony przez AI od razu; obserwatorzy i głosowania w MP4.
+  gracza. Dołączanie do trwającej gry: gracz z wolnym miejscem dostaje cywilizację prowadzoną przez AI od razu; obserwatorzy i głosowania w MP4.
 
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 
@@ -407,7 +407,7 @@ Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośredn
 
 | Ryzyko | Co robimy |
 | --- | --- |
-| Późna gra z 8 ludami może być cięższa niż zmierzone 9% rdzenia. | Pomiar w MP1 przed obietnicą „najmniejszy VPS wystarczy”. |
+| Późna gra z 8 cywilizacjami może być cięższa niż zmierzone 9% rdzenia. | Pomiar w MP1 przed obietnicą „najmniejszy VPS wystarczy”. |
 | Gospodarz w wariancie A wychodzi = koniec partii. | Autozapis; wariant B na VPS. |
 | Pośrednik jest jednym punktem awarii i kosztem transferu VPS. | Limity transferu; połączenie wprost jako zapas; sprawdzić limit transferu u dostawcy VPS. |
 | Długie wczytywanie dużej partii (zapis = lista rozkazów). | Pomiar w MP5; w razie potrzeby migawka stanu co N minut. |
@@ -461,26 +461,26 @@ Pierwotna propozycja:
 | R3-4 | Jak przygotować pośrednika dla innych? | **Ten sam obraz Docker publicznie w GHCR + instrukcja po polsku i angielsku** (`docker compose up -d`, port, hasło). W grze pole „Pośrednik: adres i port” + „Hasło”, z Twoim pośrednikiem wpisanym domyślnie. |
 | R3-5 | Czy VPS ma też **prowadzić** partie (gracz z hasłem klika „Załóż grę na serwerze”), czy tylko przekazywać ruch, a serwer gry zawsze jest u gospodarza? | **Na start tylko przekazywanie** (VPS prawie nic nie liczy). Partie na VPS w drugim kroku, z limitem np. 2 naraz (ok. 10% rdzenia i 250 MB na partię). |
 | R3-6 | Partia na VPS: gospodarz wychodzi. Co dalej? | **Gospodarzem zostaje gracz, który najdłużej jest w partii**; gdy wyjdą wszyscy ludzie, partia się zapisuje i kończy po 5 min. |
-| R3-7 | Obserwator, który chce przejąć lud: co widzi, zanim go przyjmą? Gdyby widział całą mapę, po przejęciu znałby wszystkie sekrety. | **Obserwator widzi całą mapę, ale wtedy nie może już przejąć ludu.** Kto chce dołączyć, wybiera „Chcę grać”: widzi tylko listę ludów do przejęcia (bez mapy), czeka na głosowanie. Upadli gracze zawsze widzą całą mapę (P6). |
-| R3-8 | Głosowanie o przyjęcie nowego gracza: kto i jak? | **Ludzie grający, ponad połowa, 30 s**; gospodarz bez weta. Przejęty lud zostaje z tym, co miał (AI go prowadziła). |
-| R3-9 | Wyrzucanie gracza: tylko gospodarz czy głosowanie? | **Gospodarz**; wyrzucony lud przejmuje AI, a gracz nie wróci do tej partii. |
+| R3-7 | Obserwator, który chce przejąć cywilizację: co widzi, zanim go przyjmą? Gdyby widział całą mapę, po przejęciu znałby wszystkie sekrety. | **Obserwator widzi całą mapę, ale wtedy nie może już przejąć cywilizacji.** Kto chce dołączyć, wybiera „Chcę grać”: widzi tylko listę cywilizacji do przejęcia (bez mapy), czeka na głosowanie. Upadli gracze zawsze widzą całą mapę (P6). |
+| R3-8 | Głosowanie o przyjęcie nowego gracza: kto i jak? | **Ludzie grający, ponad połowa, 30 s**; gospodarz bez weta. Przejęta cywilizacja zostaje z tym, co miała (AI ją prowadziła). |
+| R3-9 | Wyrzucanie gracza: tylko gospodarz czy głosowanie? | **Gospodarz**; cywilizację wyrzuconego przejmuje AI, a gracz nie wróci do tej partii. |
 | R3-10 | Podział testów (rozdz. 17): lokalnie szybkie, pełne w CI? | **Tak**, osobny mały PR „CI1” jeszcze przed MP1. |
 | R3-11 | Czy CI ma przy tagu wersji budować też paczkę gry dla Windows (Godot bez okna, eksport) i wrzucać ją do GitHub Releases? | **Tak, później** (po MP3): gracze pobierają grę z jednego miejsca, z sumą kontrolną; dziś paczki robi Twój komputer. |
-| R3-12 | Tożsamość gracza: tylko pseudonim (bez kont), a klucz powrotu na swój lud zapisany na komputerze gracza? | **Tak.** Konta dopiero, gdyby gra trafiła do obcych ludzi (np. Steam). |
+| R3-12 | Tożsamość gracza: tylko pseudonim (bez kont), a klucz powrotu na swoją cywilizację zapisany na komputerze gracza? | **Tak.** Konta dopiero, gdyby gra trafiła do obcych ludzi (np. Steam). |
 
 ## 19. Dołączanie, obserwatorzy, głosowania, wyrzucanie (zasady po rundach 2–3)
 
-- **Dołączenie w trakcie partii:** nowy gracz wchodzi jako **kandydat** (bez mapy, widzi tylko listę ludów do przejęcia) albo jako **obserwator**
-  (cała mapa, bez możliwości przejęcia ludu w tej partii).
-- **Kandydat** wybiera lud prowadzony przez AI z puli miejsc dla graczy (limit ludzi z konfiguracji); rusza głosowanie.
-  Nie można wybrać ludu wyrzuconego gracza.
-- **Kto głosuje:** gracze prowadzący lud, którzy grają w tej partii co najmniej **3 minuty** (R4-1), także ten, którego głosowanie dotyczy
+- **Dołączenie w trakcie partii:** nowy gracz wchodzi jako **kandydat** (bez mapy, widzi tylko listę cywilizacji do przejęcia) albo jako **obserwator**
+  (cała mapa, bez możliwości przejęcia cywilizacji w tej partii).
+- **Kandydat** wybiera cywilizację prowadzoną przez AI z puli miejsc dla graczy (limit ludzi z konfiguracji); rusza głosowanie.
+  Nie można wybrać cywilizacji wyrzuconego gracza.
+- **Kto głosuje:** gracze prowadzący cywilizację, którzy grają w tej partii co najmniej **3 minuty** (R4-1), także ten, którego głosowanie dotyczy
   (np. wyrzucany), jeśli gra wystarczająco długo (R4-2). Obserwatorzy, kandydaci i upadli gracze nie głosują.
 - **Wynik:** „tak” musi dać ponad połowa uprawnionych; remis i brak głosu = „nie” (R4-2, decyzja Patryka). Głosowanie trwa 30 s (o gracza) albo 20 s (o prędkość).
-- **Wyrzucenie:** decyzja gospodarza albo głosowanie (ponad 50% uprawnionych, wyrzucany też głosuje, jeśli gra ≥ 3 min; remis = zostaje). Lud wyrzuconego
-  prowadzi AI i jest zablokowany dla innych.
-- **Powrót wyrzuconego:** jako kandydat na swój dawny lud; głosują pozostali uprawnieni; po zgodzie odzyskuje lud.
-- **Powrót po rozłączeniu** (nie wyrzucony): bez głosowania, na swój lud (klucz powrotu na komputerze gracza).
+- **Wyrzucenie:** decyzja gospodarza albo głosowanie (ponad 50% uprawnionych, wyrzucany też głosuje, jeśli gra ≥ 3 min; remis = zostaje). Cywilizację wyrzuconego
+  prowadzi AI i jest ona zablokowana dla innych.
+- **Powrót wyrzuconego:** jako kandydat na swoją dawną cywilizację; głosują pozostali uprawnieni; po zgodzie odzyskuje cywilizację.
+- **Powrót po rozłączeniu** (nie wyrzucony): bez głosowania, na swoją cywilizację (klucz powrotu na komputerze gracza).
 - **Gospodarz wychodzi:** u gospodarza (wariant A) partia się zapisuje i kończy; na VPS (wariant B) gospodarzem zostaje gracz najdłużej w partii.
 - Każde dołączenie, wyjście, przejęcie przez AI, przyjęcie i wyrzucenie to komenda z taktem w zapisie (determinizm, znany problem 11).
 
@@ -488,7 +488,7 @@ Pierwotna propozycja:
 
 - Gdy wyjdą wszyscy ludzie, partia na VPS zapisuje się i kończy po 5 minutach.
 - **Lista zapisów** w grze („Partie na serwerze”): gracz z hasłem do zakładania gier widzi zapisy partii, w których grał (rozpoznaje go klucz
-  z jego komputera); może taką partię wczytać i zostaje jej gospodarzem; reszta wraca na swoje ludy jak po rozłączeniu.
+  z jego komputera); może taką partię wczytać i zostaje jej gospodarzem; reszta wraca na swoje cywilizacje jak po rozłączeniu.
 - **Limity** (R4-3): na partię ostatni autozapis + do 3 zapisów ręcznych; na cały serwer np. 200 MB; zapis nieużywany
   przez 30 dni jest usuwany; przy braku miejsca znika najstarszy nieużywany. Zapis to lista rozkazów, więc jest mały (do zmierzenia w MP5;
   szacuję poniżej 1 MB na godzinę partii).

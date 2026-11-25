@@ -51,10 +51,10 @@ public sealed partial class SimGame
     /// <summary>Site scores (computed once at creation).</summary>
     public SiteScores? Sites { get; private set; }
 
-    /// <summary>True while peoples are still choosing where to start.</summary>
+    /// <summary>True while civilizations are still choosing where to start.</summary>
     public bool Picking { get; private set; }
 
-    /// <summary>Order in which peoples choose (civ ids).</summary>
+    /// <summary>Order in which civilizations choose (civ ids).</summary>
     public List<int> PickOrder { get; } = [];
 
     /// <summary>Index in <see cref="PickOrder"/> of the people choosing now.</summary>
@@ -66,7 +66,7 @@ public sealed partial class SimGame
     /// <summary>Ticks a person gets to choose (startPhase.pickSeconds).</summary>
     public int PickTicks => Content.StartPhase.PickTicks;
 
-    /// <summary>Start hex chosen by each people (−1 = not yet).</summary>
+    /// <summary>Start hex chosen by each civilization (−1 = not yet).</summary>
     public int[] StartCell { get; private set; } = [];
 
     /// <summary>Hexes around a chosen start where no other people may start (Patryk, 2026-11-19: 15 took too much of a continent).</summary>
@@ -233,7 +233,7 @@ public sealed partial class SimGame
         return -1;
     }
 
-    /// <summary>Why a people cannot start on <paramref name="cell"/> now (null = it can).</summary>
+    /// <summary>Why a civilization cannot start on <paramref name="cell"/> now (null = it can).</summary>
     public string? CannotStart(int cell) => CannotStart(cell, near: true);
 
     // near: also the 12B rule (main continent, near the others); the AI drops it only when no place at all fits it.
@@ -292,7 +292,7 @@ public sealed partial class SimGame
 
     /// <summary>
     /// Gives the people choosing now its full time again (a player gets <see cref="PickTicks"/>, the AI one second). Called when the
-    /// server has handed peoples to players before any tick: the phase began while every people was still the AI's, so a player who
+    /// server has handed civilizations to players before any tick: the phase began while every civilization was still the AI's, so a player who
     /// chose first had one second instead of thirty (found while fixing A13, 2026-11-20).
     /// </summary>
     public void RestartPickClock()
@@ -323,7 +323,7 @@ public sealed partial class SimGame
         PlaceStart(civ, AiStart(civ));
     }
 
-    /// <summary>The hex the AI would choose for a people: from the best free places, with this people's error.</summary>
+    /// <summary>The hex the AI would choose for a civilization: from the best free places, with this civilization's error.</summary>
     public int AiStart(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -437,7 +437,7 @@ public sealed partial class SimGame
         }
     }
 
-    /// <summary>E14: what the people knows after the start, and how to see more.</summary>
+    /// <summary>E14: what the civilization knows after the start, and how to see more.</summary>
     public string StartNote()
     {
         int scouts = Content.Units.ToList().FindIndex(u => u.Key == "scouts");
@@ -458,7 +458,7 @@ public sealed partial class SimGame
         return $"The {civ.Name} remember the long walk to the {biome}. {past} They raised their first fires {relief}, {water}.";
     }
 
-    /// <summary>Score of a people's start compared with the best place free when it chose (for the summary).</summary>
+    /// <summary>Score of a civilization's start compared with the best place free when it chose (for the summary).</summary>
     public (int Mine, int Best) StartQuality(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);

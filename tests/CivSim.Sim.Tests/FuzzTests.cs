@@ -38,7 +38,7 @@ public sealed class FuzzTests
 
             if (u.State != UnitState.Gone && g.Civs[u.Civ].Dead)
             {
-                return $"unit {u.Id} of a people that is no more";
+                return $"unit {u.Id} of a civilization that is no more";
             }
         }
 

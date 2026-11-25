@@ -25,7 +25,7 @@ d['stores'] = {"comment":"A good is full from fullPercent of the room until it f
 EXTRA = " Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools)."
 d['comment'] = (d['comment'].split(" Storage: goods lie")[0] + EXTRA).replace("idle people forage idleForagePerMinute each", "people told to gather pick up food, wood and stone around their settlement (forage)")
 d['diplomacy']['tradeTech'] = "barter"
-d['diplomacy']['comment'] = "Peoples consider a treaty only when they have known each other for knownMinutes, their settlements are at most borderHexes apart, they have not fought for peaceMinutes and the other's reputation is above minReputation; then a trade agreement when they lack a good the other makes or the other knows more technologies, an alliance when they share an enemy. At most one offer to the same people every offerCooldownMinutes, refusalCooldownMinutes after a refusal. Trade agreements need the barter technology. Barter goods travel in caravans; the AI takes a barter worth acceptWorthPercent of what it gives (100 with currency) and keeps twice what it gives."
+d['diplomacy']['comment'] = "Civilizations consider a treaty only when they have known each other for knownMinutes, their settlements are at most borderHexes apart, they have not fought for peaceMinutes and the other's reputation is above minReputation; then a trade agreement when they lack a good the other makes or the other knows more technologies, an alliance when they share an enemy. At most one offer to the same people every offerCooldownMinutes, refusalCooldownMinutes after a refusal. Trade agreements need the barter technology. Barter goods travel in caravans; the AI takes a barter worth acceptWorthPercent of what it gives (100 with currency) and keeps twice what it gives."
 d['diplomacy'].update({"knownMinutes":3,"borderHexes":20,"peaceMinutes":10,"minReputation":-20,"offerCooldownMinutes":3,"refusalCooldownMinutes":6})
 d.pop('reviewSeconds', None); d['diplomacy'].pop('reviewSeconds', None)
 d['settlementLevels'] = [
@@ -277,18 +277,18 @@ d["foundWith"]=["gatherers_hut"]
 # Ruins (Patryk, 2026-11-19, G2): a settlement empty for emptySeconds becomes a ruin, nobody's; settlers standing on or next to its
 # centre take it again, and its buildings come back as sites that need rebuildPercent of their price.
 # Army limit and veterans (Patryk, 2026-11-20, questions 9 and 11).
-d["armyLimit"]={"comment":"Army units (not people) a people may have: perLevel for each settlement by its level (camp, village, town, city), plus perBuilding for each finished building of those kinds, plus perTech for each of those technologies known. Training stops at the limit; a big army stays possible, but costs food at every ration.",
+d["armyLimit"]={"comment":"Army units (not people) a civilization may have: perLevel for each settlement by its level (camp, village, town, city), plus perBuilding for each finished building of those kinds, plus perTech for each of those technologies known. Training stops at the limit; a big army stays possible, but costs food at every ration.",
   "perLevel":[2,3,5,8],"perBuilding":{"barracks":2,"castle":2},"perTech":{"code_of_laws":2,"civil_service":3,"feudalism":3}}
-d["veterans"]={"comment":"Experience belongs to a kind of unit, not to a unit: every enemy its units kill adds one to that kind's experience. At each of the levels (kills in all) the people picks one of the options for that kind, for all its units of that kind, now and later: strengthPercent more damage, takenPercent of the damage taken (negative = less), speedPercent faster walking. Options stack.",
+d["veterans"]={"comment":"Experience belongs to a kind of unit, not to a unit: every enemy its units kill adds one to that kind's experience. At each of the levels (kills in all) the civilization picks one of the options for that kind, for all its units of that kind, now and later: strengthPercent more damage, takenPercent of the damage taken (negative = less), speedPercent faster walking. Options stack.",
   "levels":[20,60,140,300],
   "options":[{"key":"hardened","name":"Hardened","text":"+10% damage","strengthPercent":10},
              {"key":"shield_wall","name":"Shield wall","text":"10% less damage taken","takenPercent":-10},
              {"key":"forced_march","name":"Forced march","text":"+10% walking speed","speedPercent":10}]}
 # Supplies of the army (Patryk, 2026-11-20, question 1: D).
-d["supply"]={"comment":"An army unit on its people's land or within rangeHexes of it is fed at the ration by its home settlement and fills its provisions: food for carryMinutes minutes of its people. Farther away it eats its provisions; before them the land gives what landHands foragers would gather on its hex (forage.perMinute food at the hex's richness, times landPercent): a small unit lives off the land longer than a big one. With no provisions left it goes hungry, then starves. A caravan can carry food to a unit in the field (it follows the unit, and can be raided on the way).",
+d["supply"]={"comment":"An army unit on its civilization's land or within rangeHexes of it is fed at the ration by its home settlement and fills its provisions: food for carryMinutes minutes of its people. Farther away it eats its provisions; before them the land gives what landHands foragers would gather on its hex (forage.perMinute food at the hex's richness, times landPercent): a small unit lives off the land longer than a big one. With no provisions left it goes hungry, then starves. A caravan can carry food to a unit in the field (it follows the unit, and can be raided on the way).",
   "rangeHexes":3,"carryMinutes":4,"landHands":10,"landPercent":100}
 # Sieges and garrisons (Patryk, 2026-11-20, questions 3, 5, 7, 8).
-d["siege"]={"comment":"An enemy army unit at war within blockadeRange of a settlement's centre blockades it: it works at blockadeWorkPercent, trains no units, starts no buildings and sends or takes no caravans; the blockade lifts liftSeconds after the last such unit leaves. Defenders: the settlement's own army units standing on its land (they take damage divided by its defence), its guard and its residents. Guard: a standing garrison from its works and buildings, guardPerPalisadeHexPercent / guardPerWallHexPercent hundredths of a man per palisade or wall hex of its land, plus each building's guard (a castle); it grows back guardRegrowPerMinute a minute when not blockaded and costs nothing. Guard strikes with guardStrength, residents with war.defenderStrength, times the settlement's defence. Attackers' blows fall on the guard first, then on the fighting residents (war.defenderPercent of the residents when the blockade began); residents never fall below residentsFloorPercent of that number by fighting; the rest are defenceless. With no guard, no defending units and no fighting residents left the settlement falls: its taker chooses within choiceSeconds (else it is taken): take it, sack it (sackPercent of each good goes to the taker's nearest settlement; nobody may besiege it again for sackImmuneSeconds) or raze it (a ruin; its residents flee to their people's nearest settlement).",
+d["siege"]={"comment":"An enemy army unit at war within blockadeRange of a settlement's centre blockades it: it works at blockadeWorkPercent, trains no units, starts no buildings and sends or takes no caravans; the blockade lifts liftSeconds after the last such unit leaves. Defenders: the settlement's own army units standing on its land (they take damage divided by its defence), its guard and its residents. Guard: a standing garrison from its works and buildings, guardPerPalisadeHexPercent / guardPerWallHexPercent hundredths of a man per palisade or wall hex of its land, plus each building's guard (a castle); it grows back guardRegrowPerMinute a minute when not blockaded and costs nothing. Guard strikes with guardStrength, residents with war.defenderStrength, times the settlement's defence. Attackers' blows fall on the guard first, then on the fighting residents (war.defenderPercent of the residents when the blockade began); residents never fall below residentsFloorPercent of that number by fighting; the rest are defenceless. With no guard, no defending units and no fighting residents left the settlement falls: its taker chooses within choiceSeconds (else it is taken): take it, sack it (sackPercent of each good goes to the taker's nearest settlement; nobody may besiege it again for sackImmuneSeconds) or raze it (a ruin; its residents flee to their civilization's nearest settlement).",
   "blockadeRange":2,"blockadeWorkPercent":50,"liftSeconds":30,"guardPerPalisadeHexPercent":50,"guardPerWallHexPercent":100,"guardStrength":8,"guardRegrowPerMinute":3,
   "residentsFloorPercent":40,"sackPercent":50,"sackImmuneSeconds":180,"choiceSeconds":20}
 for b_ in d["buildings"]:
@@ -299,12 +299,12 @@ d["ruins"]={"comment":"A settlement empty for emptySeconds (not the last of its 
 # (were 5-12 and 15-20: the map decided who reached the Middle Ages). Only in the fair mode; the realistic mode adds none.
 d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":4,"max":8,"depth":1,"size":"small"},{"deposit":"iron_ore","min":9,"max":12,"depth":1}]
 # Lodes (Patryk, 2026-11-22): deposit sizes, regions of rare ores, ore signs from Prospecting.
-d["lodes"]={"comment":"sizes: every deposit is small, medium or large (a mine or a bonus on it gives percent of the usual), drawn by weight; inside a region of its kind by regionWeight. regional: these deposits gather in regions: `regions` centres per 10000 land hexes, each `regionHexes` around; outside them only outsideKeepPercent of the deposits stay, and as many are added inside. signs: Prospecting shows, for each ore of the people's era (eras), up to perOre circles of signRadius hexes on land the people has seen within reachHexes of its settlements; the ore lies in the circle, its centre is moved up to offsetHexes away. Signs are worked out every recountSeconds.",
+d["lodes"]={"comment":"sizes: every deposit is small, medium or large (a mine or a bonus on it gives percent of the usual), drawn by weight; inside a region of its kind by regionWeight. regional: these deposits gather in regions: `regions` centres per 10000 land hexes, each `regionHexes` around; outside them only outsideKeepPercent of the deposits stay, and as many are added inside. signs: Prospecting shows, for each ore of the civilization's era (eras), up to perOre circles of signRadius hexes on land the civilization has seen within reachHexes of its settlements; the ore lies in the circle, its centre is moved up to offsetHexes away. Signs are worked out every recountSeconds.",
   "sizes":[{"key":"small","name":"small","percent":50,"weight":20,"regionWeight":10},{"key":"medium","name":"medium","percent":100,"weight":50,"regionWeight":45},{"key":"large","name":"large","percent":150,"weight":30,"regionWeight":45}],
   "regional":{"deposits":["tin","gold","silver","horses"],"regions":4,"regionHexes":10,"outsideKeepPercent":30},
   "signs":{"tech":"prospecting","signRadius":3,"offsetHexes":2,"perOre":3,"reachHexes":30,"recountSeconds":20,
     "eras":{"neolithic":["copper"],"bronze_age":["tin","gold","silver"],"iron_age":["iron_ore"],"middle_ages":["saltpeter"]}}}
-# Gateways (Patryk, 2026-11-19, M1): to leave an era a people must also know its gateway technology (metal opens the next era).
+# Gateways (Patryk, 2026-11-19, M1): to leave an era a civilization must also know its gateway technology (metal opens the next era).
 d["eraGateways"]={"comment":"Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
   "neolithic":"copper_working","bronze_age":"bronze_working","iron_age":"iron_working"}
 # Roads are part of the map, drawn hex by hex (decision of 2026-11-18): tracks from the start, paved roads with Roads.
@@ -315,7 +315,7 @@ d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of th
             {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
   "reach":25,"supply":{"food":40,"wood":60,"stone":30,"clay":20}}
 d.pop("tripFoodPer10Hexes", None)
-d["survey"]={"comment":"What is known of the land (Patryk, 2026-11-19). On our own land everything is known. Beyond it, seeing a hex shows only the surface deposits; the rest is found by units that survey (units[].survey): standing still, they look at every hex within radius. rock: prospectors find stone, clay, flint and ores, each ore only from the era in eras (a people recognises an ore once it is in the era of the technology that works it, even before it knows the technology); ores not listed are never found in these eras. soil: surveyors find fertility and the deposits in soil.",
+d["survey"]={"comment":"What is known of the land (Patryk, 2026-11-19). On our own land everything is known. Beyond it, seeing a hex shows only the surface deposits; the rest is found by units that survey (units[].survey): standing still, they look at every hex within radius. rock: prospectors find stone, clay, flint and ores, each ore only from the era in eras (a civilization recognises an ore once it is in the era of the technology that works it, even before it knows the technology); ores not listed are never found in these eras. soil: surveyors find fertility and the deposits in soil.",
   "radius":3,"surface":["game","fish","horses"],"soil":["wild_grain","cattle","sheep"],
   "eras":{"flint":"stone_age","stone":"stone_age","clay":"stone_age","salt":"neolithic","copper":"neolithic","tin":"bronze_age","gold":"bronze_age","silver":"bronze_age","iron_ore":"iron_age","marble":"iron_age","saltpeter":"middle_ages"}}
 d['comment'] = d['comment'].replace("Food: every person eats foodPerPersonPerMinute;", "Food: every person eats foodPerPersonPerMinute, paid once a minute at the ration (see rations);").replace(" without food it loses starvePercentPerMinute.", " it does not grow while it has no food (deaths from hunger come at the rations; starvePercentPerMinute is not used).")
@@ -340,7 +340,7 @@ d["works"]={"comment":"Works drawn on hexes; price and seconds per hex. ditch: f
     {"key":"aqueduct","name":"Aqueduct","tech":"engineering","price":{"stone":10,"tools":1},"seconds":6,"fromWater":12,"growthBonus":2,"resistEpidemicPercent":30}],
   "bridgeTech":"masonry","bridgePrice":{"stone":20,"wood":10}}
 # Winter, clothing and gathering (decision of 2026-11-18).
-d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). Work is rounded down to steps of workStepPermille. In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Peoples are told warnSeconds before.",
+d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). Work is rounded down to steps of workStepPermille. In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Civilizations are told warnSeconds before.",
   "workStepPermille":25,"cycleMinutes":8,"winterMinutes":2,"warnSeconds":30,"winterWorkPercent":50}
 d["clothing"]={"comment":"Every set of clothing a worker has adds bonusPercent. Outside winter only the first set counts (at most 100+bonus); in winter more sets count, up to winterMaxPercent. Worked out per settlement: sets = clothing in store / people. Sets wear out: wearPerPersonPerMinute.",
   "good":"clothing","bonusPercent":15,"winterMaxPercent":110,"wearPerPersonPerMinute":0.03,"wearOnlyInWinter":True}
@@ -356,9 +356,9 @@ d["war"]["injuredPercent"]=30
 d["war"].update({"declareReputation":-10,"tributeNeedsKills":5,"tributeFoodMaxPercent":10,"maxWars":3})
 d["war"].pop("truceSeconds", None)  # ADR 0030 (3B): the length of peace is chosen in the offer (peace.minutes)
 if "maxWars" not in d["war"]["comment"]:
-    d["war"]["comment"]+=" maxWars: most wars a people may be in at once (design chapter 8); nobody may declare war on a people already in that many."
+    d["war"]["comment"]+=" maxWars: most wars a civilization may be in at once (design chapter 8); nobody may declare war on a civilization already in that many."
 if "declareReputation" not in d["war"]["comment"]:
-    d["war"]["comment"]+=" declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a people must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes."
+    d["war"]["comment"]+=" declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a civilization must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes."
 d["war"].pop("soldierFoodPerMinute", None)
 d["war"]["comment"]=d["war"]["comment"].replace(" Soldiers eat soldierFoodPerMinute each.", " Soldiers are fed by rations (see rations).")
 d["rivers"]={"comment":"Until freeFromEra, rivers can be crossed only next to one's own building that gives a crossing (raft landings).","freeFromEra":"bronze_age"}
@@ -413,18 +413,18 @@ for t_ in d["technologies"]:
         t_["gives"]=(t_.get("gives","")+f" Stone houses: +{up} homes (they grow a storey).").strip()
 # 11B: an early food alert.
 d["alerts"]={"comment":"foodLowMinutes: a settlement that eats more than it makes is warned when its food lasts this long or less. noResearchSeconds: the reminder that nothing is being researched comes only this long after the last research ended (or the game began), and only when something can be researched.","foodLowMinutes":3,"noResearchSeconds":60}
-# 12B: until the AI uses ships, peoples start on the main continent, at most 60 hexes by land from another people.
+# 12B: until the AI uses ships, civilizations start on the main continent, at most 60 hexes by land from another civilization.
 d["startPhase"]["neighbourMaxHexes"]=60
 d["startPhase"]["neighbourMinHexes"]=25
 if "neighbourMaxHexes:" not in d["startPhase"]["comment"]:
-    d["startPhase"]["comment"]+=" neighbourMaxHexes: every people starts on the main continent (the largest land) and, after the first, at most this many hexes by land from a people already placed (while choosing: from the shown circles); 0 = anywhere. neighbourMinHexes: placed starts and the AI's choices keep this far from other starts when the land allows (room to grow)."
-# 16B, 17B: the AI builds homes only with food for 3 minutes, and a people under 30 trains no units (but settlers) and
+    d["startPhase"]["comment"]+=" neighbourMaxHexes: every civilization starts on the main continent (the largest land) and, after the first, at most this many hexes by land from a civilization already placed (while choosing: from the shown circles); 0 = anywhere. neighbourMinHexes: placed starts and the AI's choices keep this far from other starts when the land allows (room to grow)."
+# 16B, 17B: the AI builds homes only with food for 3 minutes, and a civilization under 30 trains no units (but settlers) and
 # builds no workplace while jobs are free.
 d["ai"]={"comment":"homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free.","homesFoodMinutes":3,"smallPeople":30}
 # Patryk, 2026-11-21: a longer calm start for the AI (it was 8 minutes in code), and stables give twice the horses and keep 32.
 d["ai"]["peacefulStartMinutes"]=15
 d["ai"]["comment"]+=" peacefulStartMinutes: the AI declares no war in the first this many minutes of a game."
-# 2026-11-22 (long runs: big peoples starved after 90 minutes): food made must cover the winter, and big peoples build
+# 2026-11-22 (long runs: big civilizations starved after 90 minutes): food made must cover the winter, and big civilizations build
 # several food makers at once.
 d["ai"]["foodMarginPercent"]=30
 d["ai"]["foodSitesPerPeople"]=400
@@ -438,7 +438,7 @@ d["aiBattle"]={"comment":"retreatInjuredPercent: a unit at war with this share o
 d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","middle_ages":{"bricks":20}}
 # ADR 0030 (Patryk, 2026-11-23): peace from negotiation (1B 2B 3B 4A 5A 6A) and war weariness (7.1A 7.2A 7.3A 7.4B 7.5B).
 d["war"]["comment"]=d["war"]["comment"].replace(" truceSeconds: truce after peace.","")
-d["peace"]={"comment":"Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the people's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's.",
+d["peace"]={"comment":"Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the civilization's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's.",
   "minutes":[3,6,10],"breakPercent":[100,100,200],"settlementHexes":12,"settlementWorthPerPerson":10,"settlementBuildingPercent":50,
   "scorePerPercent":5,"wearinessPerPercent":4,"maxPercent":40,"aggressorExtraPercent":25,"aiGiveMarginPercent":20,
   "aiLosingLengthPercent":[-10,0,10],"aiWinningLengthPercent":[10,0,-10]}
@@ -458,7 +458,7 @@ d["ai"]["inputMakerStoreMinutes"]=10
 d["ai"]["amounts"]={"comment":"Whole units the AI decides by. lowFood: below it the AI builds food first. lowGood: a good it uses below this (and not made) is short: it builds a maker or asks for a trade. lowTools: builds a toolmaker below it. foodSourceKeep: a settlement sending food keeps at least this. foodSendAtLeast: a caravan of food carries at least this. shareLow: a workshop's input below this calls a caravan from the richest settlement, which keeps shareKeep plus shareMargin; a caravan carries shareTrip. routeSourceLow: an input route whose source falls below this (and makes none) ends; a route trip carries at least this. unitSupplyHomeKeep: a home settlement supplies its unit only while keeping this much food beyond twice the load. warNetFood: no new soldiers while food made a minute exceeds eating by less than this.",
  "lowFood":3,"lowGood":20,"lowTools":10,"foodSourceKeep":60,"foodSendAtLeast":40,"shareLow":10,"shareKeep":20,"shareMargin":5,"shareTrip":30,"routeSourceLow":10,"unitSupplyHomeKeep":40,"warNetFood":2}
 if "inputMakerStoreMinutes:" not in d["ai"]["comment"]:
-    d["ai"]["comment"]+=" inputMakerStoreMinutes: when its workshops use more of an input than the people makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall."
+    d["ai"]["comment"]+=" inputMakerStoreMinutes: when its workshops use more of an input than the civilization makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall."
 # 2026-11-23 (known-issues 13): workshops idle for an ore no known deposit gives: more prospectors, looking farther.
 d["ai"]["starvedProspectors"]=2
 if "starvedProspectors:" not in d["ai"]["comment"]:
@@ -490,18 +490,18 @@ d=json.load(open(p)); d["start"]["stock"]={"food":120,"wood":100,"stone":20}; js
 # Tests 2026-11-23 (Patryk): the AI looks before it attacks and weighs the gain (P1), reputation heals in peace (P2), settlements
 # see farther (P3).
 d=json.load(open(p))
-d["aiWar"]={"comment":"When the AI starts a war (Patryk, 2026-11-23). It never breaks a peace that still runs. A target settlement not seen for intelMinutes gets a scout first. It attacks when its power is powerTimes the defence it knows, the settlement holds at least gainPercent of the soldiers it sends in people (the gain), and the target people is not small: a people whose known people is below smallTargetPercent of ours, or below smallTargetPeople, is spared unless its reputation is below war.badReputation. Only an AI with aggression of at least surpriseAggression attacks without declaring war. While a people it met has a bad name, the AI keeps fearArmyPercent more soldiers and seeks defensive alliances against it. At war it offers peace when the enemy's score is losingScoreMargin above its own, when weary, or with randomPeacePercent chance a thought.",
+d["aiWar"]={"comment":"When the AI starts a war (Patryk, 2026-11-23). It never breaks a peace that still runs. A target settlement not seen for intelMinutes gets a scout first. It attacks when its power is powerTimes the defence it knows, the settlement holds at least gainPercent of the soldiers it sends in people (the gain), and the target civilization is not small: a people whose known people is below smallTargetPercent of ours, or below smallTargetPeople, is spared unless its reputation is below war.badReputation. Only an AI with aggression of at least surpriseAggression attacks without declaring war. While a civilization it met has a bad name, the AI keeps fearArmyPercent more soldiers and seeks defensive alliances against it. At war it offers peace when the enemy's score is losingScoreMargin above its own, when weary, or with randomPeacePercent chance a thought.",
  "intelMinutes":3,"powerTimes":2,"gainPercent":60,"smallTargetPercent":40,"smallTargetPeople":40,"fearArmyPercent":50,"randomPeacePercent":3,"losingScoreMargin":20,"surpriseAggression":75}
 d["war"]["reputationRegenPerMinute"]=4
 if "reputationRegenPerMinute" not in d["war"]["comment"]:
-    d["war"]["comment"]+=" reputationRegenPerMinute: a bad name heals by this much a minute (up to 0) while the people is not the aggressor of a war going on."
-d["vision"]={"comment":"settlementSightBeyond: hexes a settlement sees beyond its own land. Units of a people we have not met that our settlements see, and whose people has seen the settlement, raise the alert 'Strangers' (not who nor where).","settlementSightBeyond":2}
+    d["war"]["comment"]+=" reputationRegenPerMinute: a bad name heals by this much a minute (up to 0) while the civilization is not the aggressor of a war going on."
+d["vision"]={"comment":"settlementSightBeyond: hexes a settlement sees beyond its own land. Units of a civilization we have not met that our settlements see, and whose civilization has seen the settlement, raise the alert 'Strangers' (not who nor where).","settlementSightBeyond":2}
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
-# Patryk, 2026-11-23: a people left alone survives on gathering, but does not grow on it.
+# Patryk, 2026-11-23: a civilization left alone survives on gathering, but does not grow on it.
 d=json.load(open(p))
 d["forage"]["subsistencePercent"]=100
 if "subsistencePercent" not in d["forage"]["comment"]:
-    d["forage"]["comment"]+=" subsistencePercent: idle gatherers always find at least this share of the food they eat (any land, any season), so a people left alone survives but gathers no surplus."
+    d["forage"]["comment"]+=" subsistencePercent: idle gatherers always find at least this share of the food they eat (any land, any season), so a civilization left alone survives but gathers no surplus."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 # A6 (tests 2026-11-23): numbers of the AI out of the code.
 d=json.load(open(p))
@@ -519,7 +519,7 @@ if "thinkEveryTicks:" not in d["ai"]["comment"]:
     d["ai"]["comment"]+=" thinkEveryTicks: ticks between two thoughts of one AI people."
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
 
-# Tests 2026-11-23 (P4): peoples grow 10% a minute (was 8): the neolithic took 20 minutes with too few hands.
+# Tests 2026-11-23 (P4): civilizations grow 10% a minute (was 8): the neolithic took 20 minutes with too few hands.
 d=json.load(open(p))
 d["growth"]["growthPercentPerMinute"]=10
 json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')

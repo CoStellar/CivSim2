@@ -240,9 +240,9 @@ public partial class StartMenu : CanvasLayer
         _content.AddChild(Heading("Game"));
         GridContainer game = Grid();
         game.AddChild(new Label { Text = "Civilizations", CustomMinimumSize = new Vector2(120, 0) });
-        var peoples = new SpinBox { MinValue = 2, MaxValue = 8, Value = Math.Clamp(_settings.Peoples, 2, 8), Rounded = true, CustomMinimumSize = new Vector2(260, 0), TooltipText = "Your civilization and the AI civilizations" };
-        peoples.ValueChanged += v => _settings.Peoples = (int)v;
-        game.AddChild(peoples);
+        var civs = new SpinBox { MinValue = 2, MaxValue = 8, Value = Math.Clamp(_settings.CivCount, 2, 8), Rounded = true, CustomMinimumSize = new Vector2(260, 0), TooltipText = "Your civilization and the AI civilizations" };
+        civs.ValueChanged += v => _settings.CivCount = (int)v;
+        game.AddChild(civs);
         Choice(game, "Goal", [.. Goals.Select(g => g.Label)], Math.Max(0, Array.FindIndex(Goals, g => g.Id == _settings.Goal)), i => _settings.Goal = Goals[i].Id);
         Choice(game, "Ores", ["Fair: every civilization has metals near", "Realistic: where the world put them"], _settings.FairOres ? 0 : 1, i => _settings.FairOres = i == 0);
         var choose = new CheckBox { Text = "Choose where we start", ButtonPressed = _settings.ChooseStart, TooltipText = "Civilizations pick their start in turns on the map; otherwise the world gives each one a place" };
@@ -398,7 +398,7 @@ public partial class StartMenu : CanvasLayer
     {
         ulong seed = ulong.TryParse(_settings.Seed, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
         (string _, string _, int width, int height) = Sizes.FirstOrDefault(x => x.Key == _settings.MapSize, Sizes[1]);
-        return new PlayOptions(seed, width, height, Math.Clamp(_settings.Peoples, 2, 8))
+        return new PlayOptions(seed, width, height, Math.Clamp(_settings.CivCount, 2, 8))
         {
             StartPhase = _settings.ChooseStart,
             Tutorial = _settings.Tutorial,

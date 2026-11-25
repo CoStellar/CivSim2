@@ -12,7 +12,7 @@ namespace CivSim.Headless;
 
 /// <summary>
 /// The AI of the new game over many seeds (2026-11-19): a small change moves the result of one game by 20–30%, so tuning
-/// needs a mean over many. <c>--sim-report [--seeds 12] [--minutes 40] [--peoples 4] [--size 98x60] [--csv file] [--ai-log file.csv]</c>. The default map is the client's default ("Normal", 98×60; decision 8B of 2026-11-20).
+/// needs a mean over many. <c>--sim-report [--seeds 12] [--minutes 40] [--civs 4] [--size 98x60] [--csv file] [--ai-log file.csv]</c>. The default map is the client's default ("Normal", 98×60; decision 8B of 2026-11-20).
 /// </summary>
 public static class SimReport
 {
@@ -21,16 +21,16 @@ public static class SimReport
         /// <summary>Minute the first people entered each era (index = era; −1 = not reached).</summary>
         public int[] FirstEra { get; init; } = [];
 
-        /// <summary>Minute each people entered each era (era × people; −1 = never): how long eras last for everyone.</summary>
+        /// <summary>Minute each civilization entered each era (era × civilization; −1 = never): how long eras last for everyone.</summary>
         public int[][] EraAt { get; init; } = [];
 
         /// <summary>Wars begun while a peace between the two still ran (tests 2026-11-23, B1).</summary>
         public int TruceBroken { get; init; }
 
-        /// <summary>Mean reputation of the living peoples at the end, and how many are at the floor.</summary>
+        /// <summary>Mean reputation of the living civilizations at the end, and how many are at the floor.</summary>
         public double Reputation { get; init; }
 
-        /// <summary>Peoples at the reputation floor at the end.</summary>
+        /// <summary>Civilizations at the reputation floor at the end.</summary>
         public int AtFloor { get; init; }
 
         /// <summary>The AI decision log of the game (with --ai-log).</summary>
@@ -42,22 +42,22 @@ public static class SimReport
         /// <summary>Working buildings that use goods and stand without them at the end, percent.</summary>
         public int StarvedPercent { get; init; }
 
-        /// <summary>Free jobs in working buildings at the end, all peoples.</summary>
+        /// <summary>Free jobs in working buildings at the end, all civilizations.</summary>
         public int FreeJobs { get; init; }
 
-        /// <summary>Food a minute after rations at the end, mean of the peoples.</summary>
+        /// <summary>Food a minute after rations at the end, mean of the civilizations.</summary>
         public double FoodPerMinute { get; init; }
 
-        /// <summary>Peoples whose food falls at the end.</summary>
+        /// <summary>Civilizations whose food falls at the end.</summary>
         public int FoodFalling { get; init; }
 
         /// <summary>Settlements taken, sacked and razed.</summary>
         public int Taken { get; init; }
 
-        /// <summary>Highest veteran level of a kind, mean over the peoples.</summary>
+        /// <summary>Highest veteran level of a kind, mean over the civilizations.</summary>
         public double VeteranLevel { get; init; }
 
-        /// <summary>Peoples at their army limit at the end.</summary>
+        /// <summary>Civilizations at their army limit at the end.</summary>
         public int AtArmyLimit { get; init; }
 
         /// <summary>Soldiers starved in the field.</summary>
@@ -72,7 +72,7 @@ public static class SimReport
         /// <summary>Settlements that are towns or more at the end.</summary>
         public int Towns { get; init; }
 
-        /// <summary>Clothing in store at the end, all peoples.</summary>
+        /// <summary>Clothing in store at the end, all civilizations.</summary>
         public long Clothing { get; init; }
 
         /// <summary>The longest tick, milliseconds (wall clock; run with --serial for clean numbers).</summary>
@@ -90,13 +90,13 @@ public static class SimReport
         /// <summary>Settlements that changed hands in peaces.</summary>
         public int ByPeace { get; init; }
 
-        /// <summary>Highest war weariness at the end, mean of the peoples.</summary>
+        /// <summary>Highest war weariness at the end, mean of the civilizations.</summary>
         public double Weariness { get; init; }
 
         /// <summary>Wars going on at the end.</summary>
         public int WarsNow { get; init; }
 
-        /// <summary>Starved workshops by the input they lack: [good × 2] = lacking at home, and of those the people has none anywhere.</summary>
+        /// <summary>Starved workshops by the input they lack: [good × 2] = lacking at home, and of those the civilization has none anywhere.</summary>
         public int[] ShortBy { get; init; } = [];
     }
 
@@ -105,7 +105,7 @@ public static class SimReport
     {
         int seeds = Arg(args, "--seeds", 12);
         int minutes = Arg(args, "--minutes", 40);
-        int peoples = Arg(args, "--peoples", 4);
+        int civs = Arg(args, "--civs", 4);
         (int width, int height) = Size(args);
         bool fairOres = !args.Contains("--realistic-ores");
         string? csv = args.SkipWhile(a => a != "--csv").Skip(1).FirstOrDefault();
@@ -113,10 +113,10 @@ public static class SimReport
         SimContent content = SimContent.Load();
         var rows = new Row[seeds];
         var parallel = new ParallelOptions { MaxDegreeOfParallelism = args.Contains("--serial") ? 1 : Environment.ProcessorCount };
-        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, peoples, width, height, aiLog is not null, fairOres));
+        Parallel.For(0, seeds, parallel, k => rows[k] = Play(content, (ulong)(k + 1), minutes, civs, width, height, aiLog is not null, fairOres));
 
         CultureInfo inv = CultureInfo.InvariantCulture;
-        output.WriteLine(string.Create(inv, $"New game AI: {seeds} seeds, {peoples} peoples, {minutes} minutes each (map {width}x{height}, {(fairOres ? "fair" : "realistic")} ores)."));
+        output.WriteLine(string.Create(inv, $"New game AI: {seeds} seeds, {civs} civilizations, {minutes} minutes each (map {width}x{height}, {(fairOres ? "fair" : "realistic")} ores)."));
         output.WriteLine("seed  people  settl  units  soldiers  dead  era   neolithic  hungry%  wars  buildings  techs");
         foreach (Row r in rows)
         {
@@ -137,16 +137,16 @@ public static class SimReport
         Line("settlements", r => r.Settlements);
         Line("units", r => r.Units);
         Line("soldiers (people)", r => r.Soldiers);
-        Line("peoples died out", r => r.Dead);
-        Line("era (mean of peoples)", r => r.Era);
+        Line("civilizations died out", r => r.Dead);
+        Line("era (mean of civilizations)", r => r.Era);
         Line("hungry % of samples", r => r.HungryPercent);
         Line("wars declared", r => r.Wars);
         Line("buildings", r => r.Buildings);
         Line("empty working bldgs %", r => r.EmptyPercent);
         Line("bldgs short of inputs %", r => r.StarvedPercent);
         Line("free jobs", r => r.FreeJobs);
-        Line("food/min per people", r => r.FoodPerMinute);
-        Line("peoples losing food", r => r.FoodFalling);
+        Line("food/min per civ", r => r.FoodPerMinute);
+        Line("civilizations losing food", r => r.FoodFalling);
         Line("towns (level 2+)", r => r.Towns);
         Line("settlements taken", r => r.Taken);
         Line("settlements sacked", r => r.Sacked);
@@ -158,14 +158,14 @@ public static class SimReport
         Line("war weariness at end", r => r.Weariness);
         Line("soldiers starved in field", r => r.FieldDeaths);
         Line("top veteran level", r => r.VeteranLevel);
-        Line("peoples at army limit", r => r.AtArmyLimit);
+        Line("civilizations at army limit", r => r.AtArmyLimit);
         Line("clothing in store", r => r.Clothing);
         Line("worst tick (ms)", r => r.WorstTickMs);
         Line("ticks over 25 ms", r => r.SlowTicks);
         Line("technologies known", r => r.Techs);
         Line("wars breaking a peace", r => r.TruceBroken);
         Line("reputation at end", r => r.Reputation);
-        Line("peoples at rep. floor", r => r.AtFloor);
+        Line("civilizations at rep. floor", r => r.AtFloor);
         var neo = rows.Where(r => r.Neolithic >= 0).Select(r => (double)r.Neolithic).ToList();
         if (neo.Count > 0)
         {
@@ -196,7 +196,7 @@ public static class SimReport
                 : string.Create(inv, $"{"first " + content.Eras[era].Name + " (min)",-22} mean {at.Average(),8:F1}   median {at[at.Count / 2],8:F1}   in {at.Count} of {seeds} games"));
         }
 
-        // Tests 2026-11-23 (P4): when every people (not only the first) enters each era, and how long each era lasts for it.
+        // Tests 2026-11-23 (P4): when every civilization (not only the first) enters each era, and how long each era lasts for it.
         for (int e = 1; e < content.Eras.Count; e++)
         {
             int era = e;
@@ -205,8 +205,8 @@ public static class SimReport
                 .Where(x => x >= 0).OrderBy(x => x).ToList();
             int all = rows.Sum(r => r.EraAt.Length > era ? r.EraAt[era].Length : 0);
             output.WriteLine(at.Count == 0
-                ? $"peoples in {content.Eras[era].Name,-14} none in {minutes} min"
-                : string.Create(inv, $"{"peoples in " + content.Eras[era].Name + " (min)",-28} median {at[at.Count / 2],6:F1}   {content.Eras[era - 1].Name} lasted median {(spans.Count == 0 ? 0 : spans[spans.Count / 2]),5:F1} min   {at.Count} of {all} peoples"));
+                ? $"civilizations in {content.Eras[era].Name,-14} none in {minutes} min"
+                : string.Create(inv, $"{"civilizations in " + content.Eras[era].Name + " (min)",-28} median {at[at.Count / 2],6:F1}   {content.Eras[era - 1].Name} lasted median {(spans.Count == 0 ? 0 : spans[spans.Count / 2]),5:F1} min   {at.Count} of {all} civilizations"));
         }
 
         if (aiLog is not null)
@@ -255,9 +255,9 @@ public static class SimReport
         return (98, 60);
     }
 
-    private static Row Play(SimContent content, ulong seed, int minutes, int peoples, int width, int height, bool log, bool fairOres)
+    private static Row Play(SimContent content, ulong seed, int minutes, int civilizations, int width, int height, bool log, bool fairOres)
     {
-        SimGame g = SimGame.Create(content, new SimSettings(seed, width, height, peoples) { FairOres = fairOres });
+        SimGame g = SimGame.Create(content, new SimSettings(seed, width, height, civilizations) { FairOres = fairOres });
         g.AiLogOn = log;
         int truceBroken = 0;
         int[][] eraAt = [.. Enumerable.Range(0, content.Eras.Count).Select(e => Enumerable.Repeat(e == 0 ? 0 : -1, g.Civs.Count).ToArray())];

@@ -108,7 +108,7 @@ public sealed record PlayTechInfo(
     [property: Key(10)] int[]? From = null,
     [property: Key(11)] string Gateway = "");
 
-/// <summary>Where a people stands with one technology: known, or what it would cost now and why it cannot start.</summary>
+/// <summary>Where a civilization stands with one technology: known, or what it would cost now and why it cannot start.</summary>
 [MessagePackObject]
 public sealed record PlayTechState([property: Key(0)] int Id, [property: Key(1)] bool Known, [property: Key(2)] long[] Price, [property: Key(3)] string? Blocked, [property: Key(4)] int Seconds = 0);
 
@@ -124,7 +124,7 @@ public sealed record PlayPersonView(
 
 /// <summary>
 /// Server → client, once: the rules a player needs to see (goods, buildings, levels). <see cref="LookSeed"/> picks the
-/// colours and emblems of the peoples in this game (the world's seed), so they differ from game to game.
+/// colours and emblems of the civilizations in this game (the world's seed), so they differ from game to game.
 /// </summary>
 [MessagePackObject]
 public sealed record PlayContentMessage(
@@ -222,12 +222,12 @@ public sealed record PlaySettlementView(
 public sealed record PlayRouteView([property: Key(0)] int Index, [property: Key(1)] int From, [property: Key(2)] int To, [property: Key(3)] int Good, [property: Key(4)] int Amount, [property: Key(5)] bool OnTheRoad, [property: Key(6)] int[]? Path = null);
 
 /// <summary>
-/// Another people as the player knows it. At war (ADR 0030): <c>Favour</c> is how much the course of the war favours us, percent
+/// Another civilization as the player knows it. At war (ADR 0030): <c>Favour</c> is how much the course of the war favours us, percent
 /// of the loser's wealth (above 0 we may demand); weariness 0-100 of both sides; their goods we know (whole units, by good index);
 /// settlements of theirs we may demand; the suggested terms as [we give 0/1, length index, settlement or -1, good, amount, ...].
 /// </summary>
 [MessagePackObject]
-public sealed record PlayPeopleView(
+public sealed record PlayKnownCivView(
     [property: Key(0)] int Civ,
     [property: Key(1)] string Name,
     [property: Key(2)] bool AtWar,
@@ -311,7 +311,7 @@ public sealed record PlayViewMessage(
     [property: Key(18)] PlayPersonView? Advisor,
     [property: Key(19)] PlayPersonView? AdvisorOffer,
     [property: Key(20)] string? Advice,
-    [property: Key(21)] IReadOnlyList<PlayPeopleView> Peoples,
+    [property: Key(21)] IReadOnlyList<PlayKnownCivView> KnownCivs,
     [property: Key(22)] bool Lost,
     [property: Key(23)] bool Picking = false,
     [property: Key(24)] bool MyPick = false,
@@ -576,7 +576,7 @@ public sealed record PlacesMessage([property: Key(0)] int Type, [property: Key(1
 [MessagePackObject]
 public sealed record PlaySummaryRequestMessage([property: Key(0)] int Unused = 0) : IProtocolMessage;
 
-/// <summary>One minute of a people's history.</summary>
+/// <summary>One minute of a civilization's history.</summary>
 [MessagePackObject]
 public sealed record PlayHistoryRow(
     [property: Key(0)] int Minute,
@@ -589,14 +589,14 @@ public sealed record PlayHistoryRow(
     [property: Key(7)] int Era,
     [property: Key(8)] string? Event);
 
-/// <summary>A people's history as the summary shows it.</summary>
+/// <summary>A civilization's history as the summary shows it.</summary>
 [MessagePackObject]
 public sealed record PlayHistoryView([property: Key(0)] int Civ, [property: Key(1)] string Name, [property: Key(2)] IReadOnlyList<PlayHistoryRow> Rows);
 
-/// <summary>Server → client: the summary: our history and that of the peoples we met, and how good our start was.</summary>
+/// <summary>Server → client: the summary: our history and that of the civilizations we met, and how good our start was.</summary>
 [MessagePackObject]
 public sealed record PlaySummaryMessage(
-    [property: Key(0)] IReadOnlyList<PlayHistoryView> Peoples,
+    [property: Key(0)] IReadOnlyList<PlayHistoryView> Civs,
     [property: Key(1)] int StartScore,
     [property: Key(2)] int BestStartScore,
     [property: Key(3)] IReadOnlyList<string> Criteria,

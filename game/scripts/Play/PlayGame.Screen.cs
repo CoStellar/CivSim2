@@ -13,7 +13,7 @@ namespace CivSim.Game.Play;
 /// The screen layout (Patryk's decision, docs/projekt-gry.md section 11): resources at the top left, era and years in the
 /// top middle, the real time of the game and the speed at the top right, the advisor under it, alerts on the right, the
 /// chronicle at the bottom right (opens wider), the side panel on the left and the action bar at the bottom. Windows
-/// (research, settlements, peoples…) open in the middle and close with Esc.
+/// (research, settlements, civilizations…) open in the middle and close with Esc.
 /// </summary>
 public partial class PlayGame
 {
@@ -460,7 +460,7 @@ public partial class PlayGame
         ApplyTheme();
     }
 
-    // Builds the interface theme for the people's era from the current pictures and lays the screen out again.
+    // Builds the interface theme for the civilization's era from the current pictures and lays the screen out again.
     private void ApplyTheme()
     {
         if (PixelTheme.Build(_art, _themeEra) is { } theme)
@@ -620,7 +620,7 @@ public partial class PlayGame
         string eraKey = UiKit.KeyOf(c.Eras[v.Era]);
         if (eraKey != _themeEra)
         {
-            // 2026-11-24 (Patryk): the interface takes the frames of the people's era; built again after this update.
+            // 2026-11-24 (Patryk): the interface takes the frames of the civilization's era; built again after this update.
             _themeEra = eraKey;
             Callable.From(ApplyTheme).CallDeferred();
         }

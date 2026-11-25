@@ -5,8 +5,8 @@ using CivSim.Core.Map;
 namespace CivSim.Sim.State;
 
 /// <summary>
-/// 12B (Patryk, 2026-11-20): until the AI uses ships, every people starts on the main continent (the largest land), at most
-/// <c>startPhase.neighbourMaxHexes</c> hexes by land from a people that started before it. Distances are steps over land hexes
+/// 12B (Patryk, 2026-11-20): until the AI uses ships, every civilization starts on the main continent (the largest land), at most
+/// <c>startPhase.neighbourMaxHexes</c> hexes by land from a civilization that started before it. Distances are steps over land hexes
 /// (rivers do not count: they are crossed later), from the centres of the shown circles while choosing, so nobody learns more
 /// than the circles show.
 /// </summary>
@@ -143,7 +143,7 @@ public sealed partial class SimGame
         }
     }
 
-    /// <summary>Why the hex is too far from the other peoples or off the main continent (null = near enough, or the rule is off).</summary>
+    /// <summary>Why the hex is too far from the other civilizations or off the main continent (null = near enough, or the rule is off).</summary>
     public string? TooFar(int cell)
     {
         int most = Content.StartPhase.NeighbourMaxHexes;
@@ -166,7 +166,7 @@ public sealed partial class SimGame
     }
 
     /// <summary>
-    /// The starts of a game without the start phase: the first people keeps the generator's start (or the best place of the main
+    /// The starts of a game without the start phase: the first civilization keeps the generator's start (or the best place of the main
     /// continent when it is elsewhere); each next one keeps its generator's start when that fits the rule, else takes the best place by the seen score that is at least startPhase.neighbourMinHexes
     /// (else the shown circle) away from every other start and within the limit by land of one of them. When no place fits, the limit grows by half again.
     /// </summary>

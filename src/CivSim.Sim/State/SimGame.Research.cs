@@ -62,7 +62,7 @@ public sealed partial class SimGame
         return (int)(100 + delta);
     }
 
-    /// <summary>Price of a technology for a people now (hundredths per good).</summary>
+    /// <summary>Price of a technology for a civilization now (hundredths per good).</summary>
     public long[] ResearchPrice(Civ civ, int tech)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -90,7 +90,7 @@ public sealed partial class SimGame
         return price;
     }
 
-    /// <summary>Why a people cannot start researching <paramref name="tech"/> (null = it can, price aside).</summary>
+    /// <summary>Why a civilization cannot start researching <paramref name="tech"/> (null = it can, price aside).</summary>
     public string? CannotResearch(Civ civ, int tech)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -178,7 +178,7 @@ public sealed partial class SimGame
         return where.Length == 0 ? "" : $"; it comes from {where}";
     }
 
-    /// <summary>Number of peoples this one has met (seen a settlement of) that know <paramref name="tech"/>.</summary>
+    /// <summary>Number of civilizations this one has met (seen a settlement of) that know <paramref name="tech"/>.</summary>
     public int NeighboursKnowing(Civ civ, int tech)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -210,14 +210,14 @@ public sealed partial class SimGame
         return false;
     }
 
-    /// <summary>The era of a people: a level reached by knowing enough technologies of the era before.</summary>
+    /// <summary>The era of a civilization: a level reached by knowing enough technologies of the era before.</summary>
     public int EraOf(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
         return civ.Era;
     }
 
-    /// <summary>How many technologies of an era a people knows.</summary>
+    /// <summary>How many technologies of an era a civilization knows.</summary>
     public int KnownIn(Civ civ, int era)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -233,7 +233,7 @@ public sealed partial class SimGame
         return n;
     }
 
-    // Raises the era while the people knows enough technologies of its current one.
+    // Raises the era while the civilization knows enough technologies of its current one.
     /// <summary>7A (2026-11-20): the goods still to make before entering <paramref name="era"/>, as "bronze 2 of 5" (null = none).</summary>
     public string? EntryMissing(Civ civ, int era)
     {

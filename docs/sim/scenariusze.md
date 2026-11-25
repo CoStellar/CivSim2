@@ -1,19 +1,19 @@
 # Scenariusze testowe i tryb debug (2026-11-19)
 
-Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud jest ustawiony tak, jak opisuje plik. Służy do testowania dalszych technologii, wojny i reszty bez grania do nich od zera.
+Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każda cywilizacja jest ustawiona tak, jak opisuje plik. Służy do testowania dalszych technologii, wojny i reszty bez grania do nich od zera.
 
 - **Pliki:** `data/sim/scenarios/*.json`. Opis pól jest w `data/sim/scenarios/README.md`, a wszystkie pola są opcjonalne.
 - **Start:**
   - w menu startowym sekcja „Test scenarios” (przycisk Play przy każdym scenariuszu);
   - z wiersza poleceń `--play --play-scenario <nazwa pliku bez .json>`.
-- **Co da się ustawić dla każdego ludu:**
+- **Co da się ustawić dla każdej cywilizacji:**
   - erę (zna wszystko z er wcześniejszych, razem z doświadczeniem i wyprodukowanymi dobrami, których wymagają dalsze technologie) i dodatkowe technologie;
   - poziom i liczbę ludzi pierwszej osady oraz jej zapasy;
   - gotowe budynki (stają na pierwszych heksach, gdzie mogą stać);
   - gotowe jednostki;
   - dodatkowe osady wokół i liczbę ich mieszkańców;
-  - charakter AI (agresja, ekspansja) i to, czy lud prowadzi AI.
-- **Dla całej gry:** ziarno i wielkość świata, liczba ludów, odkryta mapa, wojny od startu.
+  - charakter AI (agresja, ekspansja) i to, czy cywilizację prowadzi AI.
+- **Dla całej gry:** ziarno i wielkość świata, liczba cywilizacji, odkryta mapa, wojny od startu.
 - **Klawisze debug** (tylko w scenariuszach; w rogu ekranu widać „TEST”):
 
 | Klawisz | Co robi |
@@ -28,9 +28,9 @@ Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud j
 - **Scenariusze na start:**
   1. `01_neolithic_start`: wszyscy wchodzą w neolit z wioską 40 osób;
   2. `02_bronze_age_empire`: my w epoce brązu, z miasteczkiem i dwiema wioskami, reszta w neolicie;
-  3. `03_war_bronze`: wojna od startu z ludem 1, obie strony w epoce brązu z wojskiem gotowym do walki; bez pokoju (`noPeace`, decyzja Patryka 2026-11-23: scenariusz testuje samą walkę);
+  3. `03_war_bronze`: wojna od startu z cywilizacją 1, obie strony w epoce brązu z wojskiem gotowym do walki; bez pokoju (`noPeace`, decyzja Patryka 2026-11-23: scenariusz testuje samą walkę);
   4. `04_middle_ages`: my w średniowieczu, z miastem i trzema miasteczkami, reszta w epoce żelaza.
-  5. `11_peace` (2026-11-23, ADR 0030): wojna od startu z ludem 1, który ma miasteczko i dwie wioski; test okna pokoju (Peoples):
+  5. `11_peace` (2026-11-23, ADR 0030): wojna od startu z cywilizacją 1, która ma miasteczko i dwie wioski; test okna pokoju (Civilizations):
      podpowiedź warunków, dobra, osada oblegana przez nasze wojsko, długość pokoju i zmęczenie wojną.
   6. `12_roads` (2026-11-23, grafiki): nasze miasto w średniowieczu z gotowymi drogami w sześciu kierunkach (na zmianę droga
      i ścieżka, z mostami na rzekach), rowem (pierścień 2), murem (pierścień 3) i akweduktem (pierścień 4). Do oglądania grafik
@@ -47,4 +47,4 @@ Scenariusz to gra, która zaczyna się w wybranym momencie rozwoju. Każdy lud j
 - **Jak to działa:** gra jest deterministyczna, więc zapis to ustawienia partii i każda komenda graczy z taktem, w którym weszła.
   Wczytanie zaczyna tę samą grę i odgrywa komendy jeszcze raz, potem sprawdza hasz stanu. Gdy hasz się nie zgadza (zapis ze starszej
   wersji zasad albo danych), gra idzie dalej, ale kronika mówi, że stan jest inny. Kod: `src/CivSim.Server/PlaySaves.cs`, `PlayHost.Replay`.
-- **Czas wczytania:** tyle, ile symulacja liczy grę bez okna (godzina gry z 4 ludami: kilkanaście sekund).
+- **Czas wczytania:** tyle, ile symulacja liczy grę bez okna (godzina gry z 4 cywilizacjami: kilkanaście sekund).

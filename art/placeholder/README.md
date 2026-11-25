@@ -33,7 +33,7 @@ Proste grafiki, które gra rysuje, dopóki nie ma pixel artu Patryka. Robi je sk
 | `ui/` | `advisor` (doradca w pasku alertów), `alert_11` (alert „Strangers”) | 32×32 | 2 |
 | `ui/` | `<element>_<era>` (motyw interfejsu ery: ramki, przyciski, zakładki; epoka kamienia bez przyrostka) | 24×24, 24×16, 12×12 | 36 |
 | `portraits/` | `advisor_<dziedzina>_01..12`, `thinker_<rzadkość>_01..12` (portrety z losowym wyglądem) | 64×92 | 48 + 60 |
-| `emblems/` | `emblem_<era>_<motyw>` (herb ludu: 8 motywów × 5 er) | 40×40 | 40 |
+| `emblems/` | `emblem_<era>_<motyw>` (herb cywilizacji: 8 motywów × 5 er) | 40×40 | 40 |
 
 Paczka płaska `art/packs/flat/` powstaje tym samym skryptem: `python3 art/placeholder/generate.py --flat` (bez faktury starego CivSim,
 płaskie kolory jak w pierwszej wersji grafik zastępczych; w paczce zostają tylko pliki, które różnią się od zastępczych).

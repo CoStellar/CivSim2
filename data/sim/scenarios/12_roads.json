@@ -2,7 +2,7 @@
   "name": "Roads and works",
   "description": "Our city in the Middle Ages with finished roads in all six directions (paved and tracks in turn, bridged over rivers), a ditch, an aqueduct and a stone wall around it. To look at the pictures of roads and works.",
   "seed": 56,
-  "peoples": 2,
+  "civilizations": 2,
   "revealMap": true,
   "civs": [
     { "era": "middle_ages", "level": "city", "people": 90,

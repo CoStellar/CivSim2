@@ -6,13 +6,13 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 
 ## Zasady ogólne
 
-- **Rytm:** AI myśli co 30 taktów, czyli co 3 sekundy gry (`ai.thinkEveryTicks`). Każdy lud ma przesunięty takt (`Ticks + civ.Id × 7`), więc nie myślą wszyscy naraz.
+- **Rytm:** AI myśli co 30 taktów, czyli co 3 sekundy gry (`ai.thinkEveryTicks`). Każda cywilizacja ma przesunięty takt (`Ticks + civ.Id × 7`), więc nie myślą wszyscy naraz.
 - **Te same komendy co gracz.** AI niczego nie zmienia samo: wydaje komendy, a gra sprawdza je tak samo jak komendy gracza (`SimGame.Apply`). Odrzucona komenda przepada.
 - **Wie tylko to, co gracz:**
-  - widzi wyłącznie heksy, które jego lud odkrył (`civ.Known`);
+  - widzi wyłącznie heksy, które jego cywilizacja odkryła (`civ.Known`);
   - złoża i glebę zna na swojej ziemi, a poza nią tylko to, co znaleźli jego poszukiwacze i mierniczy (`KnowsDeposit`, `KnowsSoil`);
   - start wybiera z tego, co widać podczas wyboru (rozdział niżej).
-- **Charakter:** każdy lud losuje wojowniczość 0–100 (`Aggression`), ekspansję 0–100 (`Expansion`) i błąd wyboru startu 0–30% (`StartError`). Charakter widać tylko po działaniach.
+- **Charakter:** każda cywilizacja losuje wojowniczość 0–100 (`Aggression`), ekspansję 0–100 (`Expansion`) i błąd wyboru startu 0–30% (`StartError`). Charakter widać tylko po działaniach.
 - **Kolejność w jednym myśleniu** (`Ai/SimAi.cs:25`):
   1. odpowiedzi na pokój (N20);
   2. dyplomacja (N19);
@@ -33,7 +33,7 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 | Id | Decyzja | Kiedy | Co robi | Liczby | Kod |
 | --- | --- | --- | --- | --- | --- |
 | N1 | Wybór startu | w fazie startu, w swojej kolejce | losuje miejsce spośród wolnych heksów z oceną „widać przy wyborze” (`Sites.Seen`) nie gorszą niż (100 − błąd)% najlepszej | błąd 0–30% | `State/SimGame.Start.cs:301` |
-| N2 | Chude czasy | zima za mniej niż minutę albo trwa, a zapas jedzenia < 3 minut jedzenia ludu (najwyżej 80% magazynu) | buduje łowców, rybaków, pastwisko, farmę albo zbieraczy; nie trenuje wtedy osadników ani wojska | 3 minuty, 80% | `Ai/SimAi.Care.cs:21`, `:35` |
+| N2 | Chude czasy | zima za mniej niż minutę albo trwa, a zapas jedzenia < 3 minut jedzenia cywilizacji (najwyżej 80% magazynu) | buduje łowców, rybaków, pastwisko, farmę albo zbieraczy; nie trenuje wtedy osadników ani wojska | 3 minuty, 80% | `Ai/SimAi.Care.cs:21`, `:35` |
 | N3 | Głodny obóz | osada głoduje albo ma ujemne jedzenie i mniej niż 2 racje w zapasie, a nie buduje już jedzenia | buduje jedzenie na własnej ziemi tej osady, najbliżej centrum | 2 racje | `Ai/SimAi.Care.cs:54` |
 | N4 | Gospodarka | mniej budów naraz niż 1 + liczba osad | po kolei: jedzenie, gdy netto < 3 na minutę, głód albo poza zimą produkcja jedzenia < zjadanie + 30% (`ai.foodMarginPercent`), do 1 + ludzi/400 budów jedzenia naraz (`ai.foodSitesPerPeople`); domy, gdy ludzi ≥ domy − 4, poza zimą i bez braku jedzenia; magazyn, gdy coś jest pełne; budynek uczący brakującego doświadczenia (z pierwszeństwem); praca dla bezrobotnych (≥ 3) według brakującego dobra do badania albo najmniejszego zapasu | netto 3/min, zapas 30%, 400 ludzi na budowę, domy −4, 3 bezrobotnych | `Ai/SimAi.cs:167` |
 | N5 | Wybór heksa pod budynek | przy każdej budowie | heks w osadzie, która ma materiały: bliżej centrum, więcej bezrobotnych, +20 za znane złoże z premią, +15 za premiową rzeźbę | +20, +15 | `Ai/SimAi.cs:100` |
@@ -41,10 +41,10 @@ AI nowej gry jest w `src/CivSim.Sim/Ai/`: `SimAi.cs` (rytm myślenia i wspólne 
 | N7 | Prace na heksach | jedna naraz | w czasie wojny pierścień muru (promień 1) i palisady (promień 2); rów od wody do suchej farmy; akwedukt do miasteczka | promienie 1 i 2 | `Ai/SimAi.Care.cs:197` |
 | N8 | Badanie | nic nie badamy | technologia, na którą nas stać: wcześniejsze ery przed późniejszymi (−10 za erę), podstawy +30, technologie broni ± (wojowniczość − 50) / 5 | −10, +30 | `Ai/SimAi.cs:433` |
 | N9 | Myśliciel | jest oferta rzadszego myśliciela, a koszt zostawia połowę zapasów | zatrudnia | 50% | `Ai/SimAi.cs:472` |
-| N10 | Awans osady | ludzi ≥ domy − 2, cena zostawia 20% zapasów, lud nie głoduje i ma zapas jedzenia na zimę (jak N4) | awansuje osadę | −2, 20% | `Ai/SimAi.cs:480` |
+| N10 | Awans osady | ludzi ≥ domy − 2, cena zostawia 20% zapasów, cywilizacja nie głoduje i ma zapas jedzenia na zimę (jak N4) | awansuje osadę | −2, 20% | `Ai/SimAi.cs:480` |
 | N11 | Przebudowa (nowa 2026-11-19) | nic innego nie zbudował; lepszy rodzaj znany, miejsce i teren pasują | przebudowuje budynek w lepszy, najpierw domy w pełnych osadach (domy tylko bez braku jedzenia, jak N4), gdy reszta ceny zostawia 20% zapasów | domy −4, 20% | `Ai/SimAi.cs:497` |
 | N12 | Zwiadowcy | jeden, przez pierwsze 20 minut, gdy stać przy zostawieniu połowy | trenuje; stojący idzie na losowy nieznany heks w promieniu ok. 14 × 10 | 20 min, 50% | `Ai/SimAi.cs:547` |
-| N13 | Poszukiwacze i mierniczy (nowa 2026-11-19; 2026-11-23: więcej poszukiwaczy przy braku rudy) | po 15. minucie, ≥ 3 osady, bez głodu, bez osadników w drodze i bez innego szkolenia | jeden naraz: mierniczy w epoce kamienia, poszukiwacz od neolitu; po zbadaniu miejsca idzie na niezbadaną wolną ziemię do ok. 12 heksów od losowej osady (cel ze skrótu, nie z losowania AI). **Od 2026-11-23 (known-issues 13):** gdy warsztaty zużywają więcej rudy (żelazo, miedź…), niż lud wytwarza, a żadne znane złoże tej rudy nie jest wolne pod kopalnię, AI trzyma do `ai.starvedProspectors` (2) poszukiwaczy i wysyła ich dalej (do 22 heksów) | 15 min, 3 osady, 2 poszukiwaczy | `Ai/SimAi.Expansion.cs` (`Surveys`), `StarvedDeposits` w `SimAi.Economy.cs` |
+| N13 | Poszukiwacze i mierniczy (nowa 2026-11-19; 2026-11-23: więcej poszukiwaczy przy braku rudy) | po 15. minucie, ≥ 3 osady, bez głodu, bez osadników w drodze i bez innego szkolenia | jeden naraz: mierniczy w epoce kamienia, poszukiwacz od neolitu; po zbadaniu miejsca idzie na niezbadaną wolną ziemię do ok. 12 heksów od losowej osady (cel ze skrótu, nie z losowania AI). **Od 2026-11-23 (known-issues 13):** gdy warsztaty zużywają więcej rudy (żelazo, miedź…), niż cywilizacja wytwarza, a żadne znane złoże tej rudy nie jest wolne pod kopalnię, AI trzyma do `ai.starvedProspectors` (2) poszukiwaczy i wysyła ich dalej (do 22 heksów) | 15 min, 3 osady, 2 poszukiwaczy | `Ai/SimAi.Expansion.cs` (`Surveys`), `StarvedDeposits` w `SimAi.Economy.cs` |
 | N14 | Osadnicy | żadnych w drodze, osad < 2 + ekspansja/25 + era, jedzenie netto > 0, osada ≥ 20 ludzi, cena zostawia 30% | trenuje; osadnicy zakładają obóz, gdzie stoją, jeśli wolno, inaczej idą do najlepszego miejsca (N15) | 20 ludzi, 30% | `Ai/SimAi.cs:643` |
 | N15 | Miejsce nowej osady | osadnicy szukają | znany wolny heks 6–12 od osadników: jedzenie biomu × 10, +15 przy wodzie, − odległość, + znana gleba w promieniu 2 (żyzność / 40 na heks) + 6 za każde znane złoże skalne, + 4 za złoże z jedzeniem (zmiana 2026-11-19) | ×10, +15, /40, +6, +4 | `Ai/SimAi.cs:684`, `:714` |
 | N16 | Wojsko | żołnierzy < ludzie × (5 + wojowniczość/5)%, jedzenie netto ≥ 2, cena zostawia 20% | najsilniejszy znany rodzaj; trenuje go osada, która ma ≥ ludzi oddziału + 15 i najwięcej jedzenia na zbyciu, co najmniej tyle, ile oddział je (racje) | 5–25% ludzi | `Ai/SimAi.cs:751` |
@@ -80,22 +80,22 @@ Wszystkie liczby w `aiWar` i `ai` w `data/sim/game.json`.
 - **Zwiad:** cel widziała w ciągu ostatnich 3 minut (`aiWar.intelMinutes`), na żywo albo w pamięci osady. Jeśli nie, wysyła tam
   bezczynnego zwiadowcę albo go szkoli i wraca do decyzji, gdy wie więcej.
 - **Siła:** jej wojsko jest ponad 2 razy silniejsze od obrony celu (`aiWar.powerTimes`).
-- **Zysk:** lud celu (znana liczba ludzi) to co najmniej 60% liczby jej żołnierzy (`aiWar.gainPercent`): nie wysyła armii po małe łupy.
-- **Ochrona małych:** nie atakuje ludu mniejszego niż 40% jej ludu albo mniejszego niż 40 ludzi (`aiWar.smallTargetPercent`, `aiWar.smallTargetPeople`),
-  chyba że ten lud ma złą reputację.
+- **Zysk:** cywilizacja celu (znana liczba ludzi) to co najmniej 60% liczby jej żołnierzy (`aiWar.gainPercent`): nie wysyła armii po małe łupy.
+- **Ochrona małych:** nie atakuje cywilizacji mniejszej niż 40% jej cywilizacji albo mniejszej niż 40 ludzi (`aiWar.smallTargetPercent`, `aiWar.smallTargetPeople`),
+  chyba że ta cywilizacja ma złą reputację.
 - **Charakter:** na końcu jak dotąd losowanie według wojowniczości; atak z zaskoczenia tylko przy wojowniczości 75+ (`aiWar.surpriseAggression`).
-- **Pokój dotrzymany (B1):** AI nie wypowiada wojny ludowi, z którym ma trwający pokój (rozejm).
+- **Pokój dotrzymany (B1):** AI nie wypowiada wojny cywilizacji, z którą ma trwający pokój (rozejm).
 - **Pokój:** proponuje go, gdy przegrywa o 20 punktów wyniku (`aiWar.losingScoreMargin`), a poza tym losowo 3% na myślenie (`aiWar.randomPeacePercent`).
 
-**Reputacja (P2): wrogo, ale obronnie.** Gdy poznany lud ma złą reputację, AI chce o 50% więcej wojska (`aiWar.fearArmyPercent`)
+**Reputacja (P2): wrogo, ale obronnie.** Gdy poznana cywilizacja ma złą reputację, AI chce o 50% więcej wojska (`aiWar.fearArmyPercent`)
 i chętniej zawiera sojusze obronne. Sama zła reputacja nie jest powodem do ataku, zdejmuje tylko ochronę małych. Reputacja wraca do 0 o 4 na minutę.
 
 **Dziennik decyzji AI.** `SimGame.AiLogOn` włącza zapis powodów decyzji: wojna (atak, oszczędzenie celu, zwiad), pokój, dyplomacja, badania i ekspansja.
-Wyłączony domyślnie, więc nie obciąża gry; w grze nie wchodzi do hasza stanu. Zapis do pliku: `--sim-report ... --ai-log plik.csv` (takt, lud, rodzaj, tekst).
+Wyłączony domyślnie, więc nie obciąża gry; w grze nie wchodzi do hasza stanu. Zapis do pliku: `--sim-report ... --ai-log plik.csv` (takt, cywilizacja, rodzaj, tekst).
 
 **Inne (A6, skok taktu):** progi opieki (szkoła 40, łaźnia 50, akademia 70, uniwersytet 90 mieszkańców, `ai.careSettlementPeople`),
 rezerwa jedzenia po opłaceniu badania (3 minuty jedzenia, `ai.researchKeepFoodMinutes`) i życie pamięci dróg (2 minuty, `ai.wayToMinutes`) są w danych.
-Pamięć dróg wygasa w różnych chwilach dla różnych celów, a lud szuka najwyżej jednej nowej drogi na takt: skok najdłuższego taktu znika.
+Pamięć dróg wygasa w różnych chwilach dla różnych celów, a cywilizacja szuka najwyżej jednej nowej drogi na takt: skok najdłuższego taktu znika.
 
 **Gospodarka bez doświadczenia:** AI płaci badania towarami i czasem, więc pilnuje, by pierwsza technologia na drodze miała wytwórcę swojej ceny,
 nie stawia nowych wytwórców dobra, którego ma ponad połowę pojemności, a głodny obóz najpierw daje pierwszeństwo budynkom z jedzeniem.
@@ -109,7 +109,7 @@ Po 120 minutach 60% warsztatów, które zużywają towary, stało bez wsadu (12 
 3. **Przebudowa** (N11) w rodzaj, którego wsadu nie starcza, czeka.
 4. **Wytwórca surowca** (późne ery, `InputMaker`): gdy produkcja dobra jest mniejsza niż zapotrzebowanie, a zapas < 20 (było: zero produkcji i zapas < 5).
 
-Pomiar `--sim-report --seeds 12 --minutes 120` (mapa 98×60, 4 ludy), przed → po: warsztaty bez wsadu 60,2% → 41,4%, ludzie 12 196 → 13 145, głód 3,8% → 3,4%, technologie 56,3 → 56,3, epoka brązu 33,2 → 34,2 min, żelaza 60,9 → 60,0 min (11 z 12 gier; było 12), średniowiecze 70,8 → 69,1 min (11 z 12). Gra 5 nie doszła do żelaza: nikt na jej mapie nie znalazł cyny (wcześniej przebieg był szczęśliwszy). Większe karawany z wsadem (5 minut zużycia) sprawdzone i odrzucone: nie pomagały.
+Pomiar `--sim-report --seeds 12 --minutes 120` (mapa 98×60, 4 cywilizacje), przed → po: warsztaty bez wsadu 60,2% → 41,4%, ludzie 12 196 → 13 145, głód 3,8% → 3,4%, technologie 56,3 → 56,3, epoka brązu 33,2 → 34,2 min, żelaza 60,9 → 60,0 min (11 z 12 gier; było 12), średniowiecze 70,8 → 69,1 min (11 z 12). Gra 5 nie doszła do żelaza: nikt na jej mapie nie znalazł cyny (wcześniej przebieg był szczęśliwszy). Większe karawany z wsadem (5 minut zużycia) sprawdzone i odrzucone: nie pomagały.
 
 ## Stałe trasy z wsadem dla warsztatów (2026-11-23, znany problem 13)
 
@@ -122,12 +122,12 @@ Teraz (N39, `SimAi.Supply.cs`, `InputRoutes`):
    dopóki cel ma mniej niż 6 minut zużycia. Źródło zatrzymuje 2 minuty własnego zużycia (`inputRouteKeepMinutes`).
    Warsztat bez wsadu nic nie zużywa, więc AI patrzy na zapas względem pełnego zużycia, a nie na bilans.
 3. **Zamknięcie trasy:** gdy źródło nie ma już nic do oddania i samo tego nie robi, AI kończy trasę. Lepsze źródło może wtedy przejąć dowóz.
-4. **Limit:** najwyżej 4 trasy na każdą osadę ludu (`inputRoutesPerSettlement`). Przy 2 część ludów stała na limicie.
+4. **Limit:** najwyżej 4 trasy na każdą osadę cywilizacji (`inputRoutesPerSettlement`). Przy 2 część cywilizacji stała na limicie.
    Pojedyncza karawana zostaje tam, gdzie nie ma trasy.
 
 Pomiar `--sim-report --seeds 12 --minutes 120` przed → po: warsztaty bez wsadu 36,1% → 28,0% (mediana 41% → 30%), głód 4,1% → 2,2%,
 ludzie 11 704 → 11 625, epoka żelaza 56,7 → 57,7 min, średniowiecze 66,1 → 68,1 min (w granicach rozrzutu).
-Raport pokazuje teraz, czego brakuje stojącym warsztatom: po zmianie głównie żelaza (328) i węgla drzewnego (277), a lud prawie zawsze
+Raport pokazuje teraz, czego brakuje stojącym warsztatom: po zmianie głównie żelaza (328) i węgla drzewnego (277), a cywilizacja prawie zawsze
 ma je gdzie indziej. **Zostaje:** produkcja żelaza i węgla bywa kilka razy mniejsza niż zużycie (np. żelazo: wydobycie 16 na minutę,
 zużycie 90). Tego trasy nie naprawią: AI stawia więcej kuźni, niż starcza wsadu (znany problem 13).
 
@@ -139,15 +139,15 @@ choć węgla robiło się 32 na minutę przy zużyciu 110. Teraz AI stawia kolej
 28,0% → 20,9%, braki węgla drzewnego 277 → 6, głód 2,2% → 1,8%, ludzie 11 625 → 13 172, średniowiecze 68,1 → 65,5 min.
 Zostaje żelazo (345 stojących warsztatów): kopalnia żelaza potrzebuje znanego złoża.
 
-## Jedzenie dużych ludów (2026-11-22)
+## Jedzenie dużych cywilizacji (2026-11-22)
 
-Długie biegi (6 seedów, 120 minut) pokazały, że największe ludy (4000+ osób) od ok. 90. minuty przerastają swoje jedzenie: latem jedzenia jest tyle, ile się zjada, zimą zapas znika i ludzie umierają (do 3000 głodnych w jednym ludzie). Przyczyna: stałe progi AI, które nie rosną z ludem (+3 jedzenia na minutę, jedna budowa jedzenia naraz, karawana 40 jedzenia), a domy i awanse liczyły tylko zapas w magazynie.
+Długie biegi (6 seedów, 120 minut) pokazały, że największe cywilizacje (4000+ osób) od ok. 90. minuty przerastają swoje jedzenie: latem jedzenia jest tyle, ile się zjada, zimą zapas znika i ludzie umierają (do 3000 głodnych w jednej cywilizacji). Przyczyna: stałe progi AI, które nie rosną z cywilizacją (+3 jedzenia na minutę, jedna budowa jedzenia naraz, karawana 40 jedzenia), a domy i awanse liczyły tylko zapas w magazynie.
 
 1. **Zapas na zimę:** poza zimą AI chce produkcji jedzenia o 30% większej niż zjadanie (`ai.foodMarginPercent`); bez tego buduje jedzenie i nie stawia domów, nie awansuje osad i nie przebudowuje domów.
 2. **Kilka budów jedzenia naraz:** jedna więcej na każde 400 ludzi (`ai.foodSitesPerPeople`).
 3. **Karawana z jedzeniem na miarę osady:** 2 minuty jej jedzenia zamiast stałych 40; rusza też, gdy osada traci jedzenie i ma mniej niż rację.
 
-Pomiar `--sim-report` (mapa 98×60, 4 ludy), przed → po: 40 min, 12 seedów: głód 11,8% → 4,8% próbek, ludzie 468 → 543, neolit 6,2 → 5,8 min, brąz 32,2 → 32,5 min; 120 min, 6 seedów: głód 11,0% → 4,2%, wymarłe ludy 0,2 → 0, średniowiecze 74,0 → 71,3 min. Zostaje: gdy na ziemi ludu brak miejsca na nowe budynki, ludzie i tak dorastają do domów (seed 1, jeden lud); AI tego nie zatrzyma bez zmiany zasady wzrostu.
+Pomiar `--sim-report` (mapa 98×60, 4 cywilizacje), przed → po: 40 min, 12 seedów: głód 11,8% → 4,8% próbek, ludzie 468 → 543, neolit 6,2 → 5,8 min, brąz 32,2 → 32,5 min; 120 min, 6 seedów: głód 11,0% → 4,2%, wymarłe cywilizacje 0,2 → 0, średniowiecze 74,0 → 71,3 min. Zostaje: gdy na ziemi cywilizacji brak miejsca na nowe budynki, ludzie i tak dorastają do domów (seed 1, jedna cywilizacja); AI tego nie zatrzyma bez zmiany zasady wzrostu.
 
 ## Pokój z negocjacji i zmęczenie wojną (2026-11-23, ADR 0030)
 
@@ -156,13 +156,13 @@ pcha ją do pokoju od 60 punktów i do oddania dóbr od 80. Pomiar `--sim-report
 na grę, pokoje 48,6 na grę, osady przekazane w pokoju 2,4 na grę, zajęte zbrojnie 3,3 → 4,1, głód 2,3% → 3,1% próbek, ludzie 12 066 → 13 271,
 warsztaty bez wsadu 37,2% → 34,4%. Rozrzut 12 gier jest duży, więc różnice poniżej ok. 20% to szum.
 
-**Uwaga:** ok. 45 wojen i pokojów na grę 4 ludów w 120 minut to dużo: wojny są krótkie. Przyczyny: losowa propozycja pokoju (3% na myślenie)
-i częste wypowiadanie wojen przez wojownicze ludy. Do oceny w testach demo (`docs/known-issues.md`, punkt 16).
+**Uwaga:** ok. 45 wojen i pokojów na grę 4 cywilizacji w 120 minut to dużo: wojny są krótkie. Przyczyny: losowa propozycja pokoju (3% na myślenie)
+i częste wypowiadanie wojen przez wojownicze cywilizacje. Do oceny w testach demo (`docs/known-issues.md`, punkt 16).
 
 ## Decyzje po testach z 2026-11-20 (16B, 17B i AI do 7A)
 
 1. **Domy przy zapasie jedzenia (16B):** AI stawia nowe domy tylko wtedy, gdy ma jedzenie na 3 minuty jedzenia wszystkich (`ai.homesFoodMinutes`).
-2. **Mały lud (17B):** poniżej 30 osób (`ai.smallPeople`) AI nie szkoli oddziałów (zwiadowców, poszukiwaczy, wojska; osadników tak) i nie stawia nowego budynku z pracownikami, dopóki ma wolne miejsca pracy. Zwiadowcy wychodzą, gdy lud dorośnie do 30 osób, najpóźniej do 30. minuty (było: do 20.).
+2. **Mała cywilizacja (17B):** poniżej 30 osób (`ai.smallPeople`) AI nie szkoli oddziałów (zwiadowców, poszukiwaczy, wojska; osadników tak) i nie stawia nowego budynku z pracownikami, dopóki ma wolne miejsca pracy. Zwiadowcy wychodzą, gdy cywilizacja dorośnie do 30 osób, najpóźniej do 30. minuty (było: do 20.).
 3. **Droga do epoki żelaza (7A):**
    - gdy brama ery jest znana, AI najpierw buduje to, co robi dobra potrzebne do wejścia w następną erę (brąz), a gdy wytwórca stoi bez surowca, buduje jego dostawcę (kopalnię cyny);
    - złoża potrzebne do tego (cyna, miedź) i złoża kopalń dających brakujące doświadczenie (ruda żelaza) przyciągają osadników: osada stawia się do 2 heksów od znanego złoża, do 25 heksów od nas, i może to być jedna osada ponad zwykły limit AI;
@@ -174,23 +174,23 @@ Pomiar (`--sim-report --seeds 12 --minutes 120`, mapa 98×60; development → ws
 | --- | --- | --- |
 | Ludzie (średnio) | 16 848 | 11 154 |
 | Głód (% próbek) | 31,8 | 10,8 |
-| Era (średnia ludów) | 3,2 | 3,5 |
+| Era (średnia cywilizacji) | 3,2 | 3,5 |
 | Technologie | 43,9 | 52,1 |
 | Średniowiecze: ile gier | 10 z 12 | 12 z 12 |
 | Pierwszy brąz / żelazo / średniowiecze [min] | 32,6 / 44,4 / 68,3 | 37,0 / 59,1 / 73,0 |
 | Wojny na grę | 16,8 | 39,3 |
 | Zajęte / złupione osady | 0,6 / 9,4 | 4,1 / 9,1 |
-| Wymarłe ludy na grę | 0,0 | 0,2 |
+| Wymarłe cywilizacje na grę | 0,0 | 0,2 |
 
 ## Zmiany z testów 2026-11-20
 
-1. **Awans karawanami (A1):** po nieudanym awansie AI czeka 60 s (`upgradeCaravans.aiRetrySeconds`) i nie próbuje, gdy towary już jadą. Pomiar (mapa 98×60, 4 ludy, 100 min): nieudane awanse 673 → 12 (seed 1) i 751 → 7 (seed 2).
+1. **Awans karawanami (A1):** po nieudanym awansie AI czeka 60 s (`upgradeCaravans.aiRetrySeconds`) i nie próbuje, gdy towary już jadą. Pomiar (mapa 98×60, 4 cywilizacje, 100 min): nieudane awanse 673 → 12 (seed 1) i 751 → 7 (seed 2).
 2. **Zaopatrzenie (A2):** bez drogi do oddziału AI nie wysyła karawany ani nie cofa oddziału przez 60 s.
-3. **Cel wojny (A3, A9):** AI szuka celu tylko u ludów, z którymi walczy albo może zacząć wojnę; zna tylko osady, które widzi albo pamięta (`SeenSettlements`), a obronę zapamiętanej ocenia z tego, co widziała (ludzie, straż, obrona). Pamięć „czy jest droga” trzyma się celu i pierwszej osady AI, nie heksu armii.
+3. **Cel wojny (A3, A9):** AI szuka celu tylko u cywilizacji, z którymi walczy albo może zacząć wojnę; zna tylko osady, które widzi albo pamięta (`SeenSettlements`), a obronę zapamiętanej ocenia z tego, co widziała (ludzie, straż, obrona). Pamięć „czy jest droga” trzyma się celu i pierwszej osady AI, nie heksu armii.
 
-Czas taktu (sama symulacja, wszystkie ludy AI, przed → po):
+Czas taktu (sama symulacja, wszystkie cywilizacje AI, przed → po):
 
-| Mapa | Ludy | Minuty | Średnio [ms] | 99% taktów poniżej [ms] | 99,9% poniżej [ms] | Najdłuższy [ms] |
+| Mapa | Cywilizacje | Minuty | Średnio [ms] | 99% taktów poniżej [ms] | 99,9% poniżej [ms] | Najdłuższy [ms] |
 | --- | --- | --- | --- | --- | --- | --- |
 | 98×60 | 8 | 120 | 0,55 → 0,37 | 8,3 → 2,9 | 23 → 6 | 77 → 69 |
 | 194×120 | 16 | 90 | 1,11 → 0,53 | 16,8 → 3,7 | 77 → 11 | 158 → 91 |
@@ -200,25 +200,25 @@ Czas taktu (sama symulacja, wszystkie ludy AI, przed → po):
 1. **Racje:** jedzenie netto (N4, N14, N16) i chude czasy (N3) liczą racje mieszkańców i jednostek. Tempo jedzenia w osadzie pokazuje je na minutę. Wojsko trenuje osada, która je wyżywi (N16).
 2. **Bez ukrytej wiedzy** (znany problem 23):
    - start wybierany z oceny bez złóż i gleby, jak widzi je gracz w fazie wyboru (N1);
-   - miejsce nowej osady liczone tylko z tego, co lud zna (N15);
+   - miejsce nowej osady liczone tylko z tego, co cywilizacja zna (N15);
    - premia za złoże pod budynkiem tylko dla znanych złóż (N5).
-3. **Poszukiwacze i mierniczy** (N13): późno i po jednym, bo każdy ich koszt w pierwszych minutach mocno spowalnia lud.
+3. **Poszukiwacze i mierniczy** (N13): późno i po jednym, bo każdy ich koszt w pierwszych minutach mocno spowalnia cywilizację.
 4. **Przebudowa budynków** (N11): w 40-minutowych grach jeszcze się nie zdarza, bo AI rzadko dochodzi do technologii lepszych rodzajów.
 
 ## Pomiar: 12 ziaren
 
-`dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12` (4 ludy, 40 minut, mapa 66 × 40, ok. 25 s). Pierwsze ziarno ma wartość 1, każde następne o 1 więcej.
+`dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12` (4 cywilizacje, 40 minut, mapa 66 × 40, ok. 25 s). Pierwsze ziarno ma wartość 1, każde następne o 1 więcej.
 
 ![AI nowej gry, 12 ziaren](img/nowa_gra_12_ziaren.png)
 
 | Miara | Średnia | Mediana | Rozrzut |
 | --- | --- | --- | --- |
-| Ludzie (4 ludy razem) | 203 | 217 | ± 80 (39%) |
+| Ludzie (4 cywilizacje razem) | 203 | 217 | ± 80 (39%) |
 | Osady | 10,0 | 11 | ± 2,5 |
 | Jednostki | 12,2 | 12 | ± 2,9 |
 | Żołnierze (ludzie) | 33 | 36 | ± 15 |
-| Wymarłe ludy | 0,4 | 0 | ± 0,6 |
-| Era (średnia ludów) | 0,9 | 1 | ± 0,1 |
+| Wymarłe cywilizacje | 0,4 | 0 | ± 0,6 |
+| Era (średnia cywilizacji) | 0,9 | 1 | ± 0,1 |
 | Próbki z głodem | 44% | 44% | ± 6 |
 | Wypowiedziane wojny | 6,9 | 3 | ± 8 |
 | Budynki | 294 | 294 | ± 61 |
@@ -243,7 +243,7 @@ Pomiar sondą „na co czeka badanie” (6 ziaren, próbka co 10 s): AI w neolic
 Do tego AI stawiała dziesiątki pustych tartaków: budynek szedł tam, gdzie leżało drewno, a nie tam, gdzie byli wolni ludzie.
 Naprawy: N21–N24 oraz tempo badań w danych (`research.pace`: procent ceny, doświadczenia i czasu dla każdej ery).
 
-| 12 ziaren, 4 ludy | Przed | Po |
+| 12 ziaren, 4 cywilizacje | Przed | Po |
 | --- | --- | --- |
 | Pierwszy neolit | 14,2 min | 6,8 min |
 | Pierwsza epoka brązu | 54,8 min (w 5 z 12 gier w 80 min) | 17,4 min (we wszystkich) |
@@ -272,35 +272,35 @@ W ziarnie 3 farma mogła stanąć od 16. minuty, a AI postawiła ją dopiero w 2
 
 1. **Głód jest wysoki:** 44% próbek ma głodną osadę. Flaga głodu trwa całą minutę po nieudanej racji, więc liczba jest wyższa niż przed racjami, ale nowe obozy naprawdę głodują (znany problem 20). Do poprawy: osadnicy z większym zapasem albo budowa zbieraczy w nowym obozie od razu.
 2. **Wojny są losowe:** od 0 do 21 wypowiedzeń na grę. Decyzja N17 patrzy tylko na siłę i charakter, nie na korzyść. Czeka na nowy system walki (kwestionariusz `claude/walka-burza-mozgow.md`).
-3. **Badanie jest proste:** N8 to „najwcześniejsza era, podstawy najpierw”. Nie patrzy na teren ani na to, czego lud potrzebuje. W 40 minutach AI kończy w neolicie (era 0,9 średnio).
+3. **Badanie jest proste:** N8 to „najwcześniejsza era, podstawy najpierw”. Nie patrzy na teren ani na to, czego cywilizacja potrzebuje. W 40 minutach AI kończy w neolicie (era 0,9 średnio).
 4. **Brak statków** (znany problem 19) i brak zarządcy i prowincji (21).
 5. **Liczby są w kodzie**, nie w danych: progi z kolumny „Liczby”. Przeniesienie ich do `data/sim/ai.json` jest w planie razem ze strojeniem po nowym systemie walki.
 4. **Średniowiecze poza zasięgiem AI:** droga do epoki żelaza i dalej idzie przez miedź. Doświadczenie w obróbce miedzi daje tylko kopalnia miedzi, a ta wymaga znanego złoża na własnej ziemi. Bez miedzi nie ma brązu, a bez brązu ani epoki żelaza, ani średniowiecza. Podobnie matematyka: doświadczenie daje tylko plac budowniczych, a prawo i budownictwo nie mają żadnego budynku-nauczyciela. Do decyzji Patryka: drugi nauczyciel dla tych technologii albo osadnicy AI, którzy celują w złoża miedzi.
-5. **Dużo ludzi:** po 80 minutach 4 ludy mają średnio ok. 8900 ludzi. To dobrze dla tempa, ale trzeba sprawdzić czas taktu na dużej mapie.
+5. **Dużo ludzi:** po 80 minutach 4 cywilizacje mają średnio ok. 8900 ludzi. To dobrze dla tempa, ale trzeba sprawdzić czas taktu na dużej mapie.
 
 ## Tempo pierwszych 15 minut (roadmapa 6, 2026-11-21)
 
-Zapas na starcie: 120 jedzenia, **100 drewna** (było 60), **20 kamienia** (bez zmian). Pomiar: 12 gier × 4 ludy, pierwsze 15 minut, `development` → po zmianie:
+Zapas na starcie: 120 jedzenia, **100 drewna** (było 60), **20 kamienia** (bez zmian). Pomiar: 12 gier × 4 cywilizacje, pierwsze 15 minut, `development` → po zmianie:
 
 | | przed | po |
 | --- | --- | --- |
 | pierwsze chaty | 7,4 min | 1,9 min |
 | pierwszy kamieniołom | 9,4 min (47/48) | 7,8 min (48/48) |
-| pierwszy narzędziarz | 11,8 min (35/48 ludów do 15. min) | 10,4 min (48/48) |
-| pierwsza farma do 15. min | 9/48 ludów | 14/48 |
+| pierwszy narzędziarz | 11,8 min (35/48 cywilizacji do 15. min) | 10,4 min (48/48) |
+| pierwsza farma do 15. min | 9/48 cywilizacji | 14/48 |
 | drewno w 5. min (mediana) | 8 | 14 |
 | drewno w 10. min (mediana) | 18 | 20 |
 | neolit | 7,6 min | 5,9 min |
 
 ## Pomiar 2026-11-23: poszukiwacze przy braku rudy (known-issues 13)
 
-`--sim-report --seeds 12`, 4 ludy. Bez `--serial`, więc czasy taktów są zawyżone przez równoległe gry i nie służą do porównań.
+`--sim-report --seeds 12`, 4 cywilizacje. Bez `--serial`, więc czasy taktów są zawyżone przez równoległe gry i nie służą do porównań.
 
 | | 60 min przed | 60 min po | 120 min przed | 120 min po |
 | --- | --- | --- | --- | --- |
 | budynki bez wsadu | 5,2% | 4,5% | 20,9% | 18,8% |
 | warsztaty bez miedzi, której nie ma w całym ludzie | 0 | 0 | 103 | 6 |
-| warsztaty bez żelaza (w tym: nigdzie w ludzie) | 5 (4) | 3 (0) | 345 (32) | 315 (20) |
+| warsztaty bez żelaza (w tym: nigdzie w cywilizacji) | 5 (4) | 3 (0) | 345 (32) | 315 (20) |
 | głód (% próbek) | 3,5 | 3,6 | 1,8 | 2,6 |
 | ludzie (średnio) | 1305 | 1257 | 13172 | 11592 |
 | pierwsze średniowiecze (min) | 56,8 (4 z 12 gier) | 57,0 (2 z 12) | 65,5 | 66,8 |
@@ -310,7 +310,7 @@ Brak miedzi prawie znika, a żelaza ubywa mniej. Liczba ludzi i głód różnią
 ## Zmiany po testach 2026-11-24
 
 - **A1:** próby budowy liczą wolne miejsca pracy i budowy w toku raz na takt (`SimAi.BuildScan`), a nie przy każdej próbie.
-- **A2:** szukając miejsca na zwiad i złoża pod kopalnię, AI patrzy na właściciela heksu takiego, jakiego jej lud widział
+- **A2:** szukając miejsca na zwiad i złoża pod kopalnię, AI patrzy na właściciela heksu takiego, jakiego jej cywilizacja widziała
   (`SimGame.OwnerSeen`), a nie na prawdziwego.
 - **A3:** 12 ilości, które były wpisane w kod AI (zapasy przy dowozie, braki towarów, narzędzia, jedzenie przed szkoleniem
   wojska), jest teraz w `game.json` (`ai.amounts`), z tymi samymi wartościami.

@@ -337,7 +337,7 @@ public sealed record MapChunkMessage(
     /// <summary>Survey bit: the deposit sent for the hex is known (a hex without one sends 0 either way).</summary>
     public const byte DepositKnown = 4;
 
-    /// <summary>Survey bit: a deposit lies here, but of an era the people has not reached ("???", M6 2026-11-19).</summary>
+    /// <summary>Survey bit: a deposit lies here, but of an era the civilization has not reached ("???", M6 2026-11-19).</summary>
     public const byte DepositHidden = 8;
 
     /// <summary>Visibility: never seen.</summary>

@@ -8,13 +8,13 @@ namespace CivSim.Sim.State;
 public sealed record ChooseVeteranCommand(int Civ, int Kind, int Option) : SimCommand(Civ);
 
 /// <summary>
-/// Army limit and veterans (Patryk, 2026-11-20, questions 9 and 11; data: armyLimit, veterans). A people may have as many army
+/// Army limit and veterans (Patryk, 2026-11-20, questions 9 and 11; data: armyLimit, veterans). A civilization may have as many army
 /// units as its settlements, barracks, castles and ways of government allow. Experience belongs to a kind of unit: the enemies
-/// its units kill raise the kind's level, and at each level the people picks one bonus for all units of that kind.
+/// its units kill raise the kind's level, and at each level the civilization picks one bonus for all units of that kind.
 /// </summary>
 public sealed partial class SimGame
 {
-    /// <summary>Army units a people may have.</summary>
+    /// <summary>Army units a civilization may have.</summary>
     public int ArmyLimit(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);

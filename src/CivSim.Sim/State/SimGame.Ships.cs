@@ -13,7 +13,7 @@ public sealed record LandCommand(int Civ, int Ship, int Cell) : SimCommand(Civ);
 /// <summary>
 /// Ships (decision of 2026-11-18): transport ships and warships carry armies, trade ships carry goods. A land unit next to a
 /// transport goes aboard: it leaves the map (no sight, no fighting) and moves with the ship until it lands on a hex next to it.
-/// A ship that sinks takes those aboard with it. Barter between peoples with no way on land goes by trade ships between their
+/// A ship that sinks takes those aboard with it. Barter between civilizations with no way on land goes by trade ships between their
 /// harbours.
 /// </summary>
 public sealed partial class SimGame
@@ -124,7 +124,7 @@ public sealed partial class SimGame
         }
     }
 
-    // The settlement of a people with a working harbour nearest to a hex (null = none).
+    // The settlement of a civilization with a working harbour nearest to a hex (null = none).
     private Settlement? HarbourNear(Civ civ, int cell)
     {
         Settlement? best = null;

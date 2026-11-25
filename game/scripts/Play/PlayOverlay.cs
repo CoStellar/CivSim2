@@ -11,7 +11,7 @@ namespace CivSim.Game.Play;
 /// Draws the new game's objects over the map in layers (decisions of 2026-11-18), from the bottom:
 /// <list type="number">
 /// <item>ground: places to build, the land of the selected settlement, buildings and settlement centres;</item>
-/// <item>routes: paths of units, patrol loops and caravan routes, in a lighter shade of the people's colour, the kind told
+/// <item>routes: paths of units, patrol loops and caravan routes, in a lighter shade of the civilization's colour, the kind told
 /// by the line (solid with arrows: a march; X at the end: an attack; dashed loop: a patrol; thick: a trade route; thin:
 /// carriers), over buildings but under units and names;</item>
 /// <item>lift: what stands on the selected hex, raised with its tile (the map draws the tile), and the pulsing rings of the
@@ -90,7 +90,7 @@ public partial class PlayOverlay : Node2D
     /// <summary>Forgets the coloured pictures (after the art pack changed).</summary>
     public void ClearSprites() => _sprites.Clear();
 
-    // A picture with the people's colour in place of the reserved magentas (light, middle, dark: as civ_sprite.gdshader),
+    // A picture with the civilization's colour in place of the reserved magentas (light, middle, dark: as civ_sprite.gdshader),
     // or grey all over for what we only remember; made once per picture, colour and greyness.
     internal Texture2D? Sprite(string layer, string name, int civ, bool grey = false)
     {
@@ -210,7 +210,7 @@ public partial class PlayOverlay : Node2D
     public static int MotifShift { get; private set; }
 
     /// <summary>
-    /// Picks the peoples' colours and emblems for a game from its seed: every game turns both lists by its own steps, so each
+    /// Picks the civilizations' colours and emblems for a game from its seed: every game turns both lists by its own steps, so each
     /// people still has its own colour and drawing, but ours is not always the first. Returns whether they changed.
     /// </summary>
     public static bool ChooseLooks(ulong seed)

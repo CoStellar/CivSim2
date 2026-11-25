@@ -13,7 +13,7 @@ public sealed class Tests20261123Tests
 
     private static SimGame NewGame() => SimGame.Create(Content, new SimSettings(1, 66, 40, 2) { Ai = false }).Basics();
 
-    // Both peoples have seen each other's capital: they have met.
+    // Both civilizations have seen each other's capital: they have met.
     private static SimGame Met()
     {
         SimGame g = NewGame();
@@ -96,7 +96,7 @@ public sealed class Tests20261123Tests
     [Fact]
     public void APeopleWithNobodyLeftHasLost()
     {
-        // P5: nobody in the settlements and no unit: the people is no more (its empty settlement falls to ruin).
+        // P5: nobody in the settlements and no unit: the civilization is no more (its empty settlement falls to ruin).
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
         Settlement home = g.Settlements[civ.Settlements[0]];
@@ -110,7 +110,7 @@ public sealed class Tests20261123Tests
     [Fact]
     public void AUnitKeepsThePeopleAliveAndCanStartAgain()
     {
-        // P5: units count as people: with its village empty the people lives on, and the unit can join the village.
+        // P5: units count as people: with its village empty the civilization lives on, and the unit can join the village.
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
         Settlement home = g.Settlements[civ.Settlements[0]];
@@ -132,7 +132,7 @@ public sealed class Tests20261123Tests
     [Fact]
     public void IdleGatherersAlwaysFindTheirFood()
     {
-        // Patryk, 2026-11-23: a people left alone survives on gathering, in any season, but finds nothing more.
+        // Patryk, 2026-11-23: a civilization left alone survives on gathering, in any season, but finds nothing more.
         SimGame g = NewGame();
         Civ civ = g.Civs[0];
         Settlement s = g.Settlements[civ.Settlements[0]];
@@ -158,7 +158,7 @@ public sealed class Tests20261123Tests
     [Fact]
     public void StrangersThatSawUsRaiseAnAlertThatSaysNoMore()
     {
-        // P3: units of a people we have not met near our settlement, whose people has seen it: "strangers", not who nor where.
+        // P3: units of a civilization we have not met near our settlement, whose civilization has seen it: "strangers", not who nor where.
         SimGame g = NewGame();
         Civ us = g.Civs[0];
         Civ them = g.Civs[1];

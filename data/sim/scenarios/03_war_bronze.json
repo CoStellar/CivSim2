@@ -3,7 +3,7 @@
   "description": "We and people 1 are at war from the start, both in the Bronze Age with armies ready; the map is known. Test battles, walls and sieges; nobody can propose peace.",
   "noPeace": true,
   "seed": 56,
-  "peoples": 3,
+  "civilizations": 3,
   "revealMap": true,
   "wars": [[0, 1]],
   "civs": [

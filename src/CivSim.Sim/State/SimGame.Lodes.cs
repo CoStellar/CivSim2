@@ -6,7 +6,7 @@ using CivSim.Sim.Content;
 
 namespace CivSim.Sim.State;
 
-/// <summary>An ore sign (2026-11-22): a circle on seen land where an ore of the people's era lies.</summary>
+/// <summary>An ore sign (2026-11-22): a circle on seen land where an ore of the civilization's era lies.</summary>
 public readonly record struct OreSign(int Deposit, int Center);
 
 /// <summary>A prospector's order to search the ore signs one by one (nearest first).</summary>
@@ -16,7 +16,7 @@ public sealed record SearchSignsCommand(int Civ, int Unit) : SimCommand(Civ);
 /// Lodes (Patryk, 2026-11-22). Every deposit is small, medium or large: a mine on it, or a bonus from it, gives that share
 /// of the usual (<c>lodes.sizes</c>, kept in the map's deposit richness as percent). Rare ores and horses gather in regions
 /// of the world (<c>lodes.regional</c>): outside them only some stay, as many are added inside, and inside they are more often
-/// large. Prospecting shows ore signs: for each ore of the people's era, circles on land it has seen near its settlements,
+/// large. Prospecting shows ore signs: for each ore of the civilization's era, circles on land it has seen near its settlements,
 /// with the ore somewhere inside; prospectors can be sent to search them one by one.
 /// </summary>
 public sealed partial class SimGame
@@ -43,7 +43,7 @@ public sealed partial class SimGame
         return "";
     }
 
-    /// <summary>Ore signs of a people now (empty without the technology).</summary>
+    /// <summary>Ore signs of a civilization now (empty without the technology).</summary>
     public IReadOnlyList<OreSign> SignsOf(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -181,8 +181,8 @@ public sealed partial class SimGame
         return x ^ (x >> 31);
     }
 
-    // Ore signs, worked out again every recountSeconds for peoples with Prospecting: the nearest unfound ores of the era on
-    // land the people has seen, within reach of its settlements and not on its own land (that it knows already).
+    // Ore signs, worked out again every recountSeconds for civilizations with Prospecting: the nearest unfound ores of the era on
+    // land the civilization has seen, within reach of its settlements and not on its own land (that it knows already).
     private void UpdateSigns()
     {
         LodeRules r = Content.Lodes;
@@ -230,7 +230,7 @@ public sealed partial class SimGame
         }
     }
 
-    // The centre of a sign: up to offsetHexes from the ore, the same for a people and an ore all game (from a hash).
+    // The centre of a sign: up to offsetHexes from the ore, the same for a civilization and an ore all game (from a hash).
     private int SignCentre(Civ civ, int ore)
     {
         LodeRules r = Content.Lodes;

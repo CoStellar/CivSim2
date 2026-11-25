@@ -41,7 +41,7 @@ public enum AlertKind
     /// <summary>E2 (2026-11-20): nothing is being researched though something could be (the client opens the research window).</summary>
     NoResearch = 10,
 
-    /// <summary>P3 (Patryk, 2026-11-23): units of a people we have not met were seen by our settlement, and they have seen it.</summary>
+    /// <summary>P3 (Patryk, 2026-11-23): units of a civilization we have not met were seen by our settlement, and they have seen it.</summary>
     Strangers = 11,
 }
 
@@ -50,7 +50,7 @@ public sealed record Alert(AlertKind Kind, int Settlement, int Cell, int Good, s
 
 public sealed partial class SimGame
 {
-    /// <summary>What needs a people's reaction right now, most urgent first. Worked out on request (for the view), not stored.</summary>
+    /// <summary>What needs a civilization's reaction right now, most urgent first. Worked out on request (for the view), not stored.</summary>
     public List<Alert> Alerts(Civ civ)
     {
         ArgumentNullException.ThrowIfNull(civ);
@@ -191,7 +191,7 @@ public sealed partial class SimGame
         return false;
     }
 
-    // P3 (Patryk, 2026-11-23): a unit of a people we have not met, seen by us near the settlement, whose people has seen the
+    // P3 (Patryk, 2026-11-23): a unit of a civilization we have not met, seen by us near the settlement, whose civilization has seen the
     // settlement (its scouts looked at it).
     private bool StrangersNear(Civ civ, Settlement s)
     {

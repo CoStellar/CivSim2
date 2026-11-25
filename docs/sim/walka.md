@@ -183,7 +183,7 @@ Straż i walczący mieszkańcy oddają ciosy razy obrona osady w procentach.
 | --- | --- |
 | Zajmij | Osada przechodzi do zdobywcy z ludźmi i budynkami (straż starego właściciela znika) |
 | Złup | 50% każdego towaru trafia do najbliższej osady zdobywcy. Osada zostaje u właściciela i przez 180 s nikt jej nie oblega (`sackPercent`, `sackImmuneSeconds`) |
-| Zburz | Osada staje się ruiną (G2). Mieszkańcy uciekają do najbliższej osady swojego ludu; gdy to była ostatnia, lud ginie |
+| Zburz | Osada staje się ruiną (G2). Mieszkańcy uciekają do najbliższej osady swojej cywilizacji; gdy to była ostatnia, cywilizacja ginie |
 
 AI wybiera: zajmij, gdy osada leży do 20 heksów od jego najbliższej osady; złup, gdy dalej; zburz tylko ostatnią osadę wroga
 i tylko przy agresji 75 lub więcej.
@@ -192,7 +192,7 @@ i tylko przy agresji 75 lub więcej.
 (nie w trakcie walki). Ludzie i ranni dołączają do mieszkańców, ładunek trafia do magazynu (do jego pojemności), a jednostka traci wszystko, co dawała:
 doświadczenie, uzbrojenie i rodzaj. Narzędzia i dobra wydane na szkolenie wojska nie wracają; jednostki cywilne oddają swój sprzęt jak dotąd.
 
-**Najwyżej 3 wojny naraz** (`war.maxWars`, projekt gry rozdz. 8): lud w 3 wojnach nie wypowie kolejnej i nikt nie wypowie wojny jemu.
+**Najwyżej 3 wojny naraz** (`war.maxWars`, projekt gry rozdz. 8): cywilizacja w 3 wojnach nie wypowie kolejnej i nikt nie wypowie wojny jej.
 Atak bez wypowiedzenia podlega tej samej zasadzie.
 
 **Cel poza zasięgiem:** oddział, który 3 razy nie znajdzie drogi do osady (np. za morzem) i nie ma po drodze muru do rozbicia,
@@ -204,7 +204,7 @@ Kod: `SimGame.Rations.cs` (`InSupply`, `ProvisionsMax`, `LandFood`), `SupplyUnit
 
 | Gdzie stoi oddział wojska | Skąd je |
 | --- | --- |
-| Na ziemi swojego ludu albo do 3 heksów od niej (`rangeHexes`) | Z racji osady jak dotąd, a do tego osada napełnia mu juki do pełna |
+| Na ziemi swojej cywilizacji albo do 3 heksów od niej (`rangeHexes`) | Z racji osady jak dotąd, a do tego osada napełnia mu juki do pełna |
 | Dalej (w polu) | Najpierw ziemia: tyle, ile zebrałoby 10 zbieraczy na tym heksie (`landHands` 10, `forage.perMinute` jedzenia przy bogactwie heksa, razy `landPercent` 100%). Potem juki. Bez jedzenia głoduje (75%, potem 50% siły i straty), osada go nie karmi |
 
 - **Juki:** jedzenie na `carryMinutes` = 4 minuty dla wszystkich ludzi oddziału (np. 30 wojowników: 120 jedzenia). Nowy oddział wychodzi z pełnymi jukami z osady (o ile ma jedzenie). Przy dzieleniu oddziału juki dzielą się po równo na ludzi.
@@ -213,8 +213,8 @@ Kod: `SimGame.Rations.cs` (`InSupply`, `ProvisionsMax`, `LandFood`), `SupplyUnit
 - **AI:** oddział w polu z jedzeniem na mniej niż 1,5 minuty dostaje karawanę z domu, jeśli dom ma ponad 2 razy tyle jedzenia i 40 zapasu. Głodny oddział bez dostawy wraca do domu.
 - **Bez drogi (testy 2026-11-20, A2):** karawana do oddziału, do którego nie ma drogi, jest odrzucana od razu („No way to our …”). Karawana, która w drodze straci drogę za oddziałem, wraca do domu (bez kolejnych szukań po całej mapie). AI nie wysyła wtedy do tego oddziału nic przez `supply.noWaySeconds` = 60 s. Odrzucane są też dostawy do oddziału z pełnymi jukami i drugi transport, gdy jeden już jedzie.
 - **Atak bez drogi (A7):** rozkaz ataku na cel, do którego nie prowadzi żadna droga (rzeka bez brodu, morze), jest odrzucany: „No way there”. Mury się nie liczą, bo można je rozbić.
-- **Mgła (A8):** atakować można tylko osadę, którą lud widzi teraz albo pamięta. Na niewidzianą osadę odpowiedź jest taka sama jak na pusty heks.
-- **Mury po zdobyciu (A6):** mury i palisady zdobytej osady przechodzą na zdobywcę. Mury ruin i ludu, który wyginął, są niczyje i nikogo nie zatrzymują; osadnicy, którzy zajmą ruiny, przejmują je.
+- **Mgła (A8):** atakować można tylko osadę, którą cywilizacja widzi teraz albo pamięta. Na niewidzianą osadę odpowiedź jest taka sama jak na pusty heks.
+- **Mury po zdobyciu (A6):** mury i palisady zdobytej osady przechodzą na zdobywcę. Mury ruin i cywilizacji, która wyginęła, są niczyje i nikogo nie zatrzymują; osadnicy, którzy zajmą ruiny, przejmują je.
 
 ## Limit oddziałów i doświadczenie rodzajów (decyzje Patryka z 2026-11-20, pytania 9 i 11)
 
@@ -232,7 +232,7 @@ Przy limicie szkolenie i dzielenie oddziałów są odrzucane. Dużą armię da s
 a jedzenie i tak kosztuje przy każdej racji.
 
 **Doświadczenie należy do rodzaju jednostki, nie do oddziału.** Każdy wróg zabity przez oddział danego rodzaju (w polu i przy oblężeniu)
-dodaje 1 punkt temu rodzajowi. Progi poziomów: 20, 60, 140 i 300 zabitych (`levels`). Na każdym poziomie lud wybiera jedną z 3 premii
+dodaje 1 punkt temu rodzajowi. Progi poziomów: 20, 60, 140 i 300 zabitych (`levels`). Na każdym poziomie cywilizacja wybiera jedną z 3 premii
 dla wszystkich oddziałów tego rodzaju, obecnych i przyszłych. Premie się sumują.
 
 | Premia | Działanie |
@@ -254,7 +254,7 @@ Gracz wybiera w opisie oddziału (przyciski pojawiają się po nowym poziomie). 
 | 2B | Łupy (50% każdego dobra) jadą karawaną z łupionej osady do naszej najbliższej; napad na karawanę je zabiera. Tę samą osadę można złupić znowu dopiero po 600 s. AI zajmuje osadę do 12 heksów od swojej, dalej łupi | `siege.sackImmuneSeconds`, `siege.aiTakeWithinHexes` |
 | 3B | Zrównana osada: w ruinach zostaje 25% magazynu, reszta przepada | `ruins.razedKeepPercent` |
 | 4B | Mennica: 1 miedź → 4 monety (było 10) | budynek `mint` |
-| 5B | Osadnicy liczą odległość tylko od osad, które ich lud widzi albo pamięta | — |
+| 5B | Osadnicy liczą odległość tylko od osad, które ich cywilizacja widzi albo pamięta | — |
 | 6C | Reputacja nie spada poniżej −200. AI z reputacją poniżej −100 wypowiada nowe wojny o połowę rzadziej | `war.reputationFloor`, `war.badReputation` |
 | 13B | Szturm zaczyna się 30 s po początku blokady; wcześniej oblegający tylko blokują (nikt nie ginie). Skąd 30 s: alert przychodzi od razu, a gra zwalnia do ×1; ok. 10 s na zauważenie i rozkaz; najbliższa własna osada stoi zwykle 6 heksów dalej (pomiar: 3 gry AI po 70 min, mediana 6), a piechota idzie 0,6–0,9 s na heks, czyli 4–6 s; z odległości 15 heksów 9–14 s. Razem ok. 20–25 s, z zapasem 30 s | `siege.assaultAfterSeconds` |
 | 14C | Progi weteranów 50/150/350/700 zabitych. Zabity liczy się dla rodzaju, który go zabił, i dla każdego innego rodzaju naszego wojska walczącego do 2 heksów od niego (raz na rodzaj) | `veterans.levels`, `veterans.shareNearHexes` |
@@ -264,11 +264,11 @@ Gracz wybiera w opisie oddziału (przyciski pojawiają się po nowym poziomie). 
 **Warunki pokoju** (komenda `ProposePeaceCommand` z `PeaceTerms`):
 - **Dobra i ilości** (1B), jak przy wymianie: np. 80 brązu + 40 koni. Okno pokoju pokazuje, ile przeciwnik ma każdego dobra, które znamy.
   Jedzenia można zażądać najwyżej `war.tributeFoodMaxPercent` (10%) jego zapasu. Dobra jadą karawaną z jego osady najbliższej nam.
-- **Osada** (2B): nie pierwsza osada ludu; nasze wojsko ją oblega albo leży najwyżej 12 heksów od naszej ziemi (`peace.settlementHexes`).
+- **Osada** (2B): nie pierwsza osada cywilizacji; nasze wojsko ją oblega albo leży najwyżej 12 heksów od naszej ziemi (`peace.settlementHexes`).
   Przechodzi od razu z mieszkańcami i budynkami, jak przy zajęciu (bez punktów wyniku wojny). Żądać można tylko osady, którą widzimy albo pamiętamy.
 - **Długość pokoju** (3B): 3, 6 albo 10 minut (`peace.minutes`). Złamanie pokoju kosztuje reputację ataku z zaskoczenia (−30), przy 10 minutach dwa razy tyle (`peace.breakPercent`).
 - **Kto żąda** (6A): tylko strona, której sprzyja przebieg wojny. Druga może proponować biały pokój albo sama coś dać. Żądać można po 120 s wojny (1C).
-- **Oferta należy do swojej wojny** (testy 2026-11-24, B1): pokój albo nowa wojna między dwoma ludami kasuje wszystkie ich oferty,
+- **Oferta należy do swojej wojny** (testy 2026-11-24, B1): pokój albo nowa wojna między dwoma cywilizacjami kasuje wszystkie ich oferty,
   a ofertę można przyjąć tylko w czasie wojny. Wcześniej stara oferta AI przeżywała pokój i kończyła następną wojnę po 3 sekundach.
 - **Rozejm po białym pokoju** (Patryk, 2026-11-24, P5): przez 3 minuty po białym pokoju żadna ze stron nie może wypowiedzieć wojny
   (`peace.whiteTruceMinutes`; dotyczy gracza i AI). Biały pokój nie ma długości, więc bez rozejmu wojna mogła wrócić od razu.
@@ -285,7 +285,7 @@ Ilości zaokrągla w dół, więc podpowiedź nie przekracza tego, co przegrany 
 | Co | Punkty |
 | --- | --- |
 | minuta wojny | +1 |
-| 1% ludu zabity przez wroga | +2 |
+| 1% ludności cywilizacji zabity przez wroga | +2 |
 | minuta, gdy któraś nasza osada głoduje | +2 |
 | minuta za każdą naszą oblężoną osadę | +2 |
 | złupiona osada | +10 |
@@ -293,16 +293,16 @@ Ilości zaokrągla w dół, więc podpowiedź nie przekracza tego, co przegrany 
 | napadnięta karawana | +3 |
 | minuta pokoju | −5 |
 
-Od 50 punktów (najwyższe zmęczenie ze wszystkich wojen ludu) warsztaty, czyli budynki zużywające dobra, pracują wolniej: do −20% przy 100 (7.2A).
-Budynki jedzenia i surowców pracują normalnie, żeby zmęczenie nie głodziło ludu. Raty daniny (7.4) i odwet (7.5) zostają na po demo.
+Od 50 punktów (najwyższe zmęczenie ze wszystkich wojen cywilizacji) warsztaty, czyli budynki zużywające dobra, pracują wolniej: do −20% przy 100 (7.2A).
+Budynki jedzenia i surowców pracują normalnie, żeby zmęczenie nie głodziło cywilizacji. Raty daniny (7.4) i odwet (7.5) zostają na po demo.
 
-Pomiar przed → po (`--sim-report --seeds 12 --minutes 120`, mapa 98×60, 4 ludy): wypowiedziane wojny 58,4 → 43,2 na grę,
+Pomiar przed → po (`--sim-report --seeds 12 --minutes 120`, mapa 98×60, 4 cywilizacje): wypowiedziane wojny 58,4 → 43,2 na grę,
 pokoje 48,6 na grę (średnio 506 jedzenia wartości w jednym pokoju), osady przekazane w pokoju 2,4 na grę, zajęte zbrojnie 3,3 → 4,1,
 złupione 6,1 → 6,0, zmęczenie na końcu gry średnio 30, ludzie 12 066 → 13 271. Liczby z 12 gier mają duży rozrzut (od ±16% do ±136%).
 
 ## Wspólna droga wyprawy (2026-11-23, znany problem 15)
 
-Żołnierze wysłani na ten sam cel dzielą jedno szukanie drogi: kto stoi najwyżej 3 heksy od miejsca, z którego ktoś z jego ludu szukał
+Żołnierze wysłani na ten sam cel dzielą jedno szukanie drogi: kto stoi najwyżej 3 heksy od miejsca, z którego ktoś z jego cywilizacji szukał
 drogi do tego celu w ostatnich 5 sekundach, idzie najpierw tam (krótkie szukanie, do 300 heksów), a potem tą samą drogą (`march.shareHexes`,
 `shareSeconds`, `joinSearch`). Dotyczy sprawdzenia drogi przy rozkazie ataku i marszu za celem. Wyprawa szuka więc długiej drogi raz,
 nie raz na oddział. Oddziały idą jedną drogą (kolumną), a w zasięgu celu rozchodzą się do walki jak dotąd.

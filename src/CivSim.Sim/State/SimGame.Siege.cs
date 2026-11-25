@@ -12,7 +12,7 @@ public enum TakeChoice
     /// <summary>We carry off part of its goods; it stays theirs and nobody besieges it for a while.</summary>
     Sack = 1,
 
-    /// <summary>It becomes a ruin; its residents flee to their people's nearest settlement.</summary>
+    /// <summary>It becomes a ruin; its residents flee to their civilization's nearest settlement.</summary>
     Raze = 2,
 }
 

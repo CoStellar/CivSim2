@@ -9,7 +9,7 @@ using Xunit;
 
 namespace CivSim.Sim.Tests;
 
-/// <summary>AI food of big peoples (2026-11-22): a winter margin, several food sites, caravans sized to the settlement.</summary>
+/// <summary>AI food of big civilizations (2026-11-22): a winter margin, several food sites, caravans sized to the settlement.</summary>
 public sealed class AiFoodTests
 {
     private static readonly SimContent Content = SimContent.Load();

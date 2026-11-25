@@ -121,7 +121,7 @@ public sealed partial class SimGame
     }
 
     /// <summary>
-    /// A14 (tests 2026-11-20): a player's people is recomputed inside the simulation right after its command and at the end of each
+    /// A14 (tests 2026-11-20): a player's civilization is recomputed inside the simulation right after its command and at the end of each
     /// tick, so the server's view only reads (before, the view recomputed it at wall-clock moments and changed the state hash).
     /// The AI recomputes at its own thought, as before.
     /// </summary>
@@ -203,7 +203,7 @@ public sealed partial class SimGame
     public bool TerrainAllows(int cell, BuildingType type, Civ? civ = null)
     {
         ArgumentNullException.ThrowIfNull(type);
-        // A deposit counts once the people knows it (on its own land: from the era that recognises it).
+        // A deposit counts once the civilization knows it (on its own land: from the era that recognises it).
         if (type.OrDeposit != 0 && Map.Deposit[cell] == type.OrDeposit && (civ is null ? Map.DepositDepth[cell] == 0 : KnowsDeposit(civ, cell)))
         {
             return true;
@@ -339,7 +339,7 @@ public sealed partial class SimGame
         }
     }
 
-    /// <summary>True when all the people's settlements together hold the price (research, hiring, tribute).</summary>
+    /// <summary>True when all the civilization's settlements together hold the price (research, hiring, tribute).</summary>
     public bool CivCanAfford(Civ civ, long[] price)
     {
         ArgumentNullException.ThrowIfNull(civ);

@@ -47,9 +47,9 @@ public static partial class SimAi
 
         long eating = Eating(g, civ);
 
-        // 2026-11-22 (long runs: big peoples starved after 90 minutes): the summer surplus has to cover the winter, so outside
+        // 2026-11-22 (long runs: big civilizations starved after 90 minutes): the summer surplus has to cover the winter, so outside
         // winter food made must exceed eating by ai.foodMarginPercent; a fixed +3 a minute meant nothing to thousands of
-        // people. Big peoples may build several food makers at once (one more per ai.foodSitesPerPeople people).
+        // people. Big civilizations may build several food makers at once (one more per ai.foodSitesPerPeople people).
         long food = NetFood(g, civ);
         bool lean = ShortOfFood(g, civ, eating);
         int sites = 1 + (civ.People / Math.Max(1, g.Content.AiFoodSitesPerPeople));
@@ -77,7 +77,7 @@ public static partial class SimAi
 
         // 16B (Patryk, 2026-11-20): new homes only with food on hand for homesFoodMinutes of eating; without it more people
         // only starve the next winter. 2026-11-22: and only while the food made covers the winter too (not in winter, not
-        // short of the margin above): the store alone let big peoples outgrow their fields.
+        // short of the margin above): the store alone let big civilizations outgrow their fields.
         bool fed = civ.Stock[g.Content.Food] >= eating * g.Content.AiHomesFoodMinutes && !g.IsWinter && !lean;
         if (crowded && fed && (TryBuild(g, civ, "stone_house") || TryBuild(g, civ, "hut")))
         {
@@ -170,7 +170,7 @@ public static partial class SimAi
         foreach (string k in new[] { "school", "academy", "farm", "pasture", "woodcutter", "quarry", "mason", "clay_pit", "toolmaker", "copper_mine", "tin_mine", "bronze_smith", "iron_mine", "blacksmith", "potter", "tailor", "herbalist", "gatherers_hut", "hunters_lodge" })
         {
             // 2026-11-22 (long runs: 66% of the workshops stood without inputs at 120 minutes, mostly blacksmiths without
-            // charcoal): a workshop goes up only when what its people makes covers what it would use.
+            // charcoal): a workshop goes up only when what its civilization makes covers what it would use.
             if (!InputsCovered(g, civ, g.Content.Building(k)) || Plenty(civ, g.Content.Building(k)))
             {
                 continue;
@@ -786,7 +786,7 @@ public static partial class SimAi
         return sum;
     }
 
-    // 2026-11-22: what our people makes of every input covers what all its workshops use plus this one, or ten minutes of
+    // 2026-11-22: what our civilization makes of every input covers what all its workshops use plus this one, or ten minutes of
     // this one's use lie in store.
     private static bool InputsCovered(SimGame g, Civ civ, BuildingType b)
     {
@@ -895,7 +895,7 @@ public static partial class SimAi
                 continue;
             }
 
-            // Warlike peoples like the technologies of arms, builders the others; earlier eras first, the cheap basics before all.
+            // Warlike civilizations like the technologies of arms, builders the others; earlier eras first, the cheap basics before all.
             int score = (-t.Era * 10) + (t.Basic ? 30 : 0) + (way[t.Id] ? 25 : 0); // the gateway and its way open the next era (M1, N25)
             foreach (UnitType u in g.Content.Units)
             {
@@ -1015,6 +1015,6 @@ public static partial class SimAi
         return false;
     }
 
-    // Food a people makes a minute after everyone's rations (residents and units; the rate shows the rations per minute).
+    // Food a civilization makes a minute after everyone's rations (residents and units; the rate shows the rations per minute).
     private static long NetFood(SimGame g, Civ civ) => civ.Rate[g.Content.Food];
 }

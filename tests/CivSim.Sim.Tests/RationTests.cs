@@ -45,7 +45,7 @@ public sealed class RationTests
         return (g, civ, s, g.Units.Last(u => u.Civ == civ.Id));
     }
 
-    // Runs to just after the next ration of this people.
+    // Runs to just after the next ration of this civilization.
     private static void ToNextRation(SimGame g, Civ civ)
     {
         int n = g.TicksToRation(civ);

@@ -20,7 +20,7 @@ public sealed class StartSettings
     public string Seed { get; set; } = "1";
 
     /// <summary>test, small, standard, large or huge.</summary>
-    public string MapSize { get; set; } = "small"; // 98×60, 5 peoples: the default until the bronze age (ADR 0026 rule 2)
+    public string MapSize { get; set; } = "small"; // 98×60, 5 civilizations: the default until the bronze age (ADR 0026 rule 2)
 
     /// <summary>Number of civilizations; 0 = default of the map size.</summary>
     public int Civilizations { get; set; }
@@ -206,7 +206,7 @@ public sealed class StartSettings
     /// <summary>New game: what wins (0 last standing, 1 first to the Middle Ages, 2 best score after 2 hours).</summary>
     public int Goal { get; set; } = 1;
 
-    /// <summary>New game: peoples choose where they start.</summary>
+    /// <summary>New game: civilizations choose where they start.</summary>
     public bool ChooseStart { get; set; } = true;
 
     /// <summary>New game: ores near every start (fair) or where the world put them (realistic), 2026-11-24.</summary>
@@ -215,8 +215,8 @@ public sealed class StartSettings
     /// <summary>New game: the tutorial's task list on screen (E6, 2026-11-20).</summary>
     public bool Tutorial { get; set; } = true;
 
-    /// <summary>New game: number of peoples (the player's included).</summary>
-    public int Peoples { get; set; } = 4;
+    /// <summary>New game: number of civilizations (the player's included).</summary>
+    public int CivCount { get; set; } = 4;
 
     /// <summary>Nickname in multiplayer games (R3-12: kept for the next games).</summary>
     public string Nickname { get; set; } = string.Empty;

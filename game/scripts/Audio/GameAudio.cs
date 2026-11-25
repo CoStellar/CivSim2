@@ -152,7 +152,7 @@ public partial class GameAudio : Node
             _buildingState[b.Id] = b.State;
         }
 
-        foreach (PlayPeopleView p in v.Peoples)
+        foreach (PlayKnownCivView p in v.KnownCivs)
         {
             if (!first && _atWar.TryGetValue(p.Civ, out bool war) && war != p.AtWar && !p.Dead)
             {
@@ -160,7 +160,7 @@ public partial class GameAudio : Node
             }
             else if (!first && !_atWar.ContainsKey(p.Civ) && p.AtWar && !p.Dead)
             {
-                AudioManager.Play("war_declared"); // D1: a people we had not met attacks us: it is war all the same
+                AudioManager.Play("war_declared"); // D1: a civilization we had not met attacks us: it is war all the same
             }
 
             _atWar[p.Civ] = p.AtWar;

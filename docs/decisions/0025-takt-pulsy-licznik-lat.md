@@ -31,7 +31,7 @@ Trzy warstwy czasu:
    pulsie (przyrost, produkcja, nauka), ustala **era tej cywilizacji** w danych, więc każda cywilizacja rozwija się we własnym
    tempie, a z erą zmienia się charakter gry. Tempa w danych definiujemy na puls (albo na „rok etykiety” przeliczany przez puls;
    do ustalenia przy wdrożeniu), nie na prawdziwy rok historii.
-3. **Licznik lat:** tylko liczba dla gracza, „historia ludu”. Idzie za najbardziej rozwiniętą cywilizacją i płynnie zwalnia, gdy
+3. **Licznik lat:** tylko liczba dla gracza, „historia cywilizacji”. Idzie za najbardziej rozwiniętą cywilizacją i płynnie zwalnia, gdy
    ktoś wchodzi w nową erę (późne ery: mniej lat na tyle samo wydarzeń). Nic w symulacji nie liczy się od lat; kronika i wykresy
    tylko podpisują nimi zdarzenia.
 

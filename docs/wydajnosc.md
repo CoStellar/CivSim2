@@ -45,13 +45,13 @@ musi spełniać poniższe zasady; PR, który ich nie spełnia, opisuje dlaczego.
 
 ## Zmiany po testach 2026-11-24 (P1, A1)
 
-- **Magazyn na progu nie budzi ludu co sekundę.** Towar jest „pełny” od 98% miejsca i zostaje pełny, dopóki nie spadnie poniżej
+- **Magazyn na progu nie budzi cywilizacji co sekundę.** Towar jest „pełny” od 98% miejsca i zostaje pełny, dopóki nie spadnie poniżej
   90%. Jest „pusty” poniżej 1 i zostaje pusty, dopóki nie dojdzie do 3 sztuk (`stores` w `game.json`). Wcześniej zapas wahał się
-  przy progu, a każde przełączenie liczyło gospodarkę całego ludu od nowa (5 753 przeliczeń na 9 600 kroków w minutach 100–120).
-- **AI liczy wolne miejsca pracy raz na takt.** Każda z ok. 64 000 prób budowy na 20 minut przeglądała wszystkie budynki ludu
+  przy progu, a każde przełączenie liczyło gospodarkę całej cywilizacji od nowa (5 753 przeliczeń na 9 600 kroków w minutach 100–120).
+- **AI liczy wolne miejsca pracy raz na takt.** Każda z ok. 64 000 prób budowy na 20 minut przeglądała wszystkie budynki cywilizacji
   (ponad 1000). Teraz wynik jest zapamiętany w obrębie taktu (`Civ.AiBuildScan`) i liczony od nowa, gdy przybędzie budynek.
 
-Pomiar: bot „Builder”, ziarno 1, 8 ludów, mapa 98×60, 120 minut, ten sam komputer:
+Pomiar: bot „Builder”, ziarno 1, 8 cywilizacji, mapa 98×60, 120 minut, ten sam komputer:
 
 | Minuty | Takt przed (ms) | Takt po (ms) | Ludzie AI przed | Ludzie AI po |
 | --- | --- | --- | --- | --- |

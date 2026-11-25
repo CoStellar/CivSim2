@@ -26,7 +26,7 @@ u cywilizacji komputerowych, filar 1).
 - zleca **zadania na obszarze**: wydobycie surowca, pola, łowiska, a potem budowy w danym miejscu (mur, zbrojownia);
   ludzie z osady sami tam chodzą, gracz nie klika pojedynczych pracowników;
 - zakłada miasta i awansuje je, buduje fortyfikacje, uzbraja się;
-- wybiera kierunek rozwoju ludu (np. góry i kopanie, morze i łodzie), który z czasem owocuje (GDD 6.4);
+- wybiera kierunek rozwoju cywilizacji (np. góry i kopanie, morze i łodzie), który z czasem owocuje (GDD 6.4);
 - odpowiada na **karty decyzji**: ważna sprawa z rekomendacją doradcy i przyczyną; licznik ok. 20 s, potem decyduje AI.
   Nie ma sztywnego celu liczby decyzji na minutę.
 
@@ -53,7 +53,7 @@ i to, na czym gracz się skupia. W pierwszych erach nie ma postaci z imieniem (p
 obszaru na innej planecie. W pierwszej wersji dla graczy (do epoki brązu) celem jest odkrycie wszystkich technologii brązu.
 Tempo AI (poziomy trudności): dobre ok. 15 min, średnie 20–25 min, słabe 30–40 min do tego celu.
 
-**Widzowie.** Gracz, którego lud upadł, zostaje widzem i widzi wszystkie cywilizacje graczy (podgląd jak dziś w trybie obserwatora).
+**Widzowie.** Gracz, którego cywilizacja upadła, zostaje widzem i widzi wszystkie cywilizacje graczy (podgląd jak dziś w trybie obserwatora).
 
 **Tryby i rozmiar.** Najpierw gra solo: ta sama gra z większą liczbą graczy AI. Gra w sieci później, na tej samej architekturze
 (ADR 0008, 0010). Pauza w singlu zawsze, prędkości ×1/×2/×4. Na start mapa standard i 6–8 cywilizacji.

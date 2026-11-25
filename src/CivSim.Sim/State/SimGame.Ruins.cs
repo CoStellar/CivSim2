@@ -6,11 +6,11 @@ namespace CivSim.Sim.State;
 /// <summary>
 /// Ruins (Patryk, 2026-11-19, G2): a settlement nobody lives in for ruins.emptySeconds falls to ruin. Its land is nobody's and its
 /// buildings stand ruined; settlers who stand on or next to its centre take it again for their people, and its buildings come
-/// back as sites needing ruins.rebuildPercent of their price. The last settlement of a people never falls to ruin.
+/// back as sites needing ruins.rebuildPercent of their price. The last settlement of a civilization never falls to ruin.
 /// </summary>
 public sealed partial class SimGame
 {
-    // Once a second per people.
+    // Once a second per civilization.
     private void RuinStep(Civ civ)
     {
         if (DieOut(civ))
@@ -38,8 +38,8 @@ public sealed partial class SimGame
         }
     }
 
-    // P5 (Patryk, 2026-11-23): a people with nobody left, in its settlements or in its units, has lost: its empty settlements
-    // fall to ruin and the people is no more. While a unit lives, the people goes on (it can join a settlement and start again).
+    // P5 (Patryk, 2026-11-23): a civilization with nobody left, in its settlements or in its units, has lost: its empty settlements
+    // fall to ruin and the civilization is no more. While a unit lives, the people goes on (it can join a settlement and start again).
     private bool DieOut(Civ civ)
     {
         if (civ.Dead || civ.Settlements.Count == 0)
@@ -99,7 +99,7 @@ public sealed partial class SimGame
             }
         }
 
-        // Units that called it home go to the people's first settlement.
+        // Units that called it home go to the civilization's first settlement.
         foreach (int id in civ.Units)
         {
             if (Units[id].Home == s.Id && civ.Settlements.Count > 0)

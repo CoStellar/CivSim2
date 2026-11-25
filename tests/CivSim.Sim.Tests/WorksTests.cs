@@ -72,7 +72,7 @@ public sealed class WorksTests
         return null;
     }
 
-    // The first seed whose first people has water by its land, with a line of its land from the water.
+    // The first seed whose first civilization has water by its land, with a line of its land from the water.
     private static (SimGame Game, List<int> Line) WithWater(int length)
     {
         for (ulong seed = 1; seed < 20; seed++)

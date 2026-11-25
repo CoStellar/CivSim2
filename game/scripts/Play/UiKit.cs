@@ -155,10 +155,10 @@ public static class UiKit
         ["science"] = new Color("8a5ab8"),
     };
 
-    /// <summary>Pictures for the interface (layer, name), in our people's colour; null: letters (set by the play screen).</summary>
+    /// <summary>Pictures for the interface (layer, name), in our civilization's colour; null: letters (set by the play screen).</summary>
     public static Func<string, string, Texture2D?>? Picture { get; set; }
 
-    /// <summary>Pictures in a people's colour (layer, name, people or -1 for ours, grey); set by the play screen.</summary>
+    /// <summary>Pictures in a civilization's colour (layer, name, civilization or -1 for ours, grey); set by the play screen.</summary>
     public static Func<string, string, int, bool, Texture2D?>? CivPicture { get; set; }
 
     /// <summary>The mark of a good in a rich tooltip: drawn as its picture by <see cref="RichTip"/>.</summary>
@@ -301,7 +301,7 @@ public static class UiKit
         }
     }
 
-    /// <summary>The picture "layer/name" in a people's colour (-1: ours), or null for letters.</summary>
+    /// <summary>The picture "layer/name" in a civilization's colour (-1: ours), or null for letters.</summary>
     public static Texture2D? PictureOf(string? pic, int civ = -1, bool grey = false)
     {
         int slash = pic?.IndexOf('/') ?? -1;
@@ -310,7 +310,7 @@ public static class UiKit
 
     private static readonly Dictionary<Texture2D, Texture2D> TrimmedCache = [];
 
-    /// <summary>A portrait ("portraits/name") in a people's colour (-1: ours), uncut, or null.</summary>
+    /// <summary>A portrait ("portraits/name") in a civilization's colour (-1: ours), uncut, or null.</summary>
     public static Texture2D? PortraitOf(string? pic, int civ = -1, bool grey = false)
     {
         int slash = pic?.IndexOf('/') ?? -1;
@@ -363,10 +363,10 @@ public static class UiKit
         return $"portraits/{kind}_{group}_{(h % PortraitVariants) + 1:00}";
     }
 
-    /// <summary>Motifs of the peoples' emblems (art/placeholder/icon_art.py, MOTIFS), one per people by its number.</summary>
+    /// <summary>Motifs of the civilizations' emblems (art/placeholder/icon_art.py, MOTIFS), one per civilization by its number.</summary>
     public static readonly string[] EmblemMotifs = ["deer", "sun", "tree", "wave", "mountain", "bird", "hand", "spiral"];
 
-    /// <summary>A people's emblem in the look of an era: a board, a stone, a shield, a banner, a heraldic shield.</summary>
+    /// <summary>A civilization's emblem in the look of an era: a board, a stone, a shield, a banner, a heraldic shield.</summary>
     public static string EmblemName(string eraKey, int civ) => $"emblems/emblem_{eraKey}_{EmblemMotifs[(((civ + PlayOverlay.MotifShift) % EmblemMotifs.Length) + EmblemMotifs.Length) % EmblemMotifs.Length]}";
 
     /// <summary>Forgets the cut pictures (after the art pack changed).</summary>
