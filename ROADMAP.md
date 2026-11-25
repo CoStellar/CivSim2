@@ -58,7 +58,7 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | W1 | Zaawansowane ustawienia świata w „New game” (zwijana sekcja) | zrobione: #183 |
 | MP1 | Połączenie TCP, serwer bez okna, pomiary w serwerze | zrobione: #184 |
 | MP2 | Serwer dla kilku ludzi (przejęcie przez AI, błędy klienta, dołączenia w zapisie, prędkość, wersje) | zrobione: #185 |
-| MP3 | Konfiguracja serwera i lobby, menu Multiplayer | w PR |
+| MP3 | Konfiguracja serwera i lobby, menu Multiplayer | zrobione: #186 |
 | MP4 | Gra z ludźmi: czat, głosowania, obserwatorzy, wyrzucanie | do zrobienia |
 | MP5 | Zapis i wczytanie partii wieloosobowej | do zrobienia |
 | MP6 | Pośrednik, Docker, gałąź `server` z CI, instrukcja VPS | do zrobienia |
