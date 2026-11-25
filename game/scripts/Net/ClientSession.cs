@@ -104,6 +104,26 @@ public sealed class ClientSession
     /// <summary>Sends a speed change (observers only).</summary>
     public void SetSpeed(SimulationSpeed speed) => _connection.Send(new SetSpeedMessage(speed));
 
+    /// <summary>The players of a game with others, the vote and the pause (MP4); null in a game alone.</summary>
+    public PlayPlayersMessage? Players { get; private set; }
+
+    /// <summary>Lines of chat received (the newest <see cref="ChatKept"/>).</summary>
+    public IReadOnlyList<PlayChatLineMessage> ChatLines => _chatLines;
+
+    /// <summary>Lines of chat kept.</summary>
+    public const int ChatKept = 100;
+
+    private readonly List<PlayChatLineMessage> _chatLines = [];
+
+    /// <summary>Raised when a line of chat arrives.</summary>
+    public event Action<PlayChatLineMessage>? ChatReceived;
+
+    /// <summary>Says something to everyone, or only to our allies.</summary>
+    public void Chat(string text, bool allies) => _connection.Send(new PlayChatMessage(allies, text));
+
+    /// <summary>Yes or no in the vote going on.</summary>
+    public void Vote(int id, bool yes) => _connection.Send(new PlayVoteMessage(id, yes));
+
     /// <summary>Asks the server for the fog of <paramref name="civ"/> (observers only); NoCiv stops it.</summary>
     public void Watch(int civ)
     {
@@ -343,6 +363,21 @@ public sealed class ClientSession
             case CommandRejectedMessage rejected:
                 LastError = rejected.Reason;
                 CommandRefused?.Invoke(rejected.Reason);
+                break;
+            case PlayPingMessage ping:
+                _connection.Send(ping); // echoed at once: the server measures the time there and back
+                break;
+            case PlayPlayersMessage players:
+                Players = players.Players.Count > 1 ? players : null;
+                break;
+            case PlayChatLineMessage line:
+                _chatLines.Add(line);
+                if (_chatLines.Count > ChatKept)
+                {
+                    _chatLines.RemoveAt(0);
+                }
+
+                ChatReceived?.Invoke(line);
                 break;
             case SaveGameResultMessage saved:
                 Saved?.Invoke(saved);

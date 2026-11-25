@@ -194,6 +194,12 @@ public static class NetRun
                             }
 
                             break;
+                        case PlayPingMessage ping:
+                            connection.Send(ping); // the server measures the ping (MP4)
+                            break;
+                        case PlayChatLineMessage line:
+                            output.WriteLine(line.From.Length == 0 ? line.Text : $"{line.From}: {line.Text}");
+                            break;
                         case GameStartingMessage:
                             output.WriteLine("The game starts.");
                             connection.Send(new HelloMessage(ProtocolInfo.Version, name, Password: Text(args, "--password") ?? ""));

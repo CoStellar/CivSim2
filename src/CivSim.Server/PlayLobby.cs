@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using CivSim.Protocol;
 using CivSim.Protocol.Messages;
@@ -213,7 +212,7 @@ public sealed class PlayLobby : IDisposable
                 _dirty = true;
                 break;
             case LobbyChatMessage chat when m.Name is not null:
-                string text = Clean(chat.Text, LobbyChatMessage.MaxLength);
+                string text = Nicknames.Clean(chat.Text, LobbyChatMessage.MaxLength);
                 if (text.Length > 0 && m.MayChat(Stopwatch.GetTimestamp()))
                 {
                     Say($"{m.Name}: {text}");
@@ -258,25 +257,8 @@ public sealed class PlayLobby : IDisposable
             return;
         }
 
-        string asked = Clean(hello.PlayerName, MaxNameLength) is { Length: > 0 } n ? n : "Player";
-        m.Name = UniqueName(asked);
-        m.SuffixLength = m.Name.Length - asked.Length;
+        (m.Name, m.SuffixLength) = Nicknames.Unique(hello.PlayerName, _members.Where(x => x.Name is not null).Select(x => x.Name!), _suffixes);
         Say($"{m.Name} joined.");
-    }
-
-    // R4-4: a nickname already here gets a suffix nobody here has ("Ania the Late").
-    private string UniqueName(string name)
-    {
-        var taken = new HashSet<string>(_members.Where(x => x.Name is not null).Select(x => x.Name!), StringComparer.OrdinalIgnoreCase);
-        if (!taken.Contains(name))
-        {
-            return name;
-        }
-
-        string[] free = [.. _suffixes.Where(s => !taken.Contains(name + " " + s))];
-        return free.Length > 0
-            ? name + " " + free[RandomNumberGenerator.GetInt32(free.Length)] // outside the game: no determinism needed
-            : name + " " + (taken.Count + 1).ToString(CultureInfo.InvariantCulture);
     }
 
     private bool Everyone() => _members.Where(x => x.Name is not null && x != Host).All(x => x.Ready);
@@ -315,7 +297,7 @@ public sealed class PlayLobby : IDisposable
             for (int i = 0; i < seated.Count; i++)
             {
                 seated[i].Connection.Send(new GameStartingMessage());
-                game.Accept(seated[i].Connection, civ: i); // place n leads people n
+                game.Accept(seated[i].Connection, civ: i, name: seated[i].Name, suffixLength: seated[i].SuffixLength, host: seated[i] == Host); // place n leads civilization n
             }
 
             while (_pending.TryDequeue(out IConnection? late))
@@ -326,22 +308,6 @@ public sealed class PlayLobby : IDisposable
             _members.Clear();
             _game = game;
         }
-    }
-
-    // Plain text only: no control characters (multiplayer plan, chapter 9); the window shows it as text, never as markup.
-    private static string Clean(string? text, int max)
-    {
-        var sb = new StringBuilder();
-        foreach (char ch in text ?? "")
-        {
-            if (!char.IsControl(ch))
-            {
-                sb.Append(ch);
-            }
-        }
-
-        string s = sb.ToString().Trim();
-        return s.Length > max ? s[..max].TrimEnd() : s;
     }
 
     /// <summary>The settings as lines for the lobby (read-only for the players).</summary>
