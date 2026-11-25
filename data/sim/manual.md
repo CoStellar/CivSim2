@@ -60,6 +60,7 @@ Everything in the game can be done with the mouse. The keys below do the same fa
 | Q / E | The previous or next of our settlements.
 | R / Shift + R | The next or previous of our units.
 | J | The next alert: goes to the place it is about.
+| Y | In a game with other players: write in the chat (Enter sends; "Allies" sends only to our allies).
 | Esc | Cancel what is going on, close the window, unselect. With nothing open, Esc twice: the menu (save first with F5).
 
 ## Building

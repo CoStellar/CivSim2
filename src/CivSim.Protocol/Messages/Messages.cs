@@ -39,6 +39,11 @@ namespace CivSim.Protocol.Messages;
 [Union(30, typeof(LobbyChatMessage))]
 [Union(31, typeof(LobbyStartMessage))]
 [Union(32, typeof(GameStartingMessage))]
+[Union(33, typeof(PlayPingMessage))]
+[Union(34, typeof(PlayPlayersMessage))]
+[Union(35, typeof(PlayChatMessage))]
+[Union(36, typeof(PlayChatLineMessage))]
+[Union(37, typeof(PlayVoteMessage))]
 public interface IProtocolMessage
 {
 }

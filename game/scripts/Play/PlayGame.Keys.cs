@@ -203,6 +203,8 @@ public partial class PlayGame
             case Key.J when !k.Echo:
                 NextAlert();
                 return true;
+            case Key.Y when !k.Echo:
+                return FocusChat();
             case Key.Home when !k.Echo:
                 BackToSelection();
                 return true;

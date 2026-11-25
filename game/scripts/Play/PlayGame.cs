@@ -317,6 +317,9 @@ public partial class PlayGame : Node2D
     /// <summary>Script step: sets the speed.</summary>
     public void ScriptSpeed(SimulationSpeed speed) => _session?.SetSpeed(speed);
 
+    /// <summary>Writes a chat line to all players (automated checks of two windows).</summary>
+    public void ScriptChat(string text) => _session?.Chat(text, false);
+
     /// <summary>Script step: a real left click (press and release) at a point of the screen, through Godot's input.</summary>
     public void ScriptMouseClick(Vector2 at)
     {
@@ -1215,7 +1218,7 @@ public partial class PlayGame : Node2D
     private void MoveCamera(float delta)
     {
         // The manual takes WASD and the arrows; the keyboard cursor takes the arrows (WASD still move the map).
-        if (_manualPanel.Visible)
+        if (_manualPanel.Visible || ChatTyping)
         {
             return;
         }

@@ -234,6 +234,8 @@ public partial class PlayGame
         rightCol.AddThemeConstantOverride("separation", 8);
         root.AddChild(rightCol);
         _rightCol = rightCol;
+        _mpRoot = rightCol; // multiplayer: the players' list goes first in this column (PlayGame.Multiplayer.cs)
+        _mpScreen = root;
         _advisorPanel = new PanelContainer();
         rightCol.AddChild(_advisorPanel);
         var adv = new HBoxContainer();
@@ -539,6 +541,7 @@ public partial class PlayGame
 
         UpdateTop(v, c);
         UpdateUnderTop();
+        UpdateMultiplayer();
         PlaceBanner();
         UpdateTutorial(v);
         UpdateAdvisor(v);

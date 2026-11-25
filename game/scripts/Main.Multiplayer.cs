@@ -28,6 +28,8 @@ public partial class Main
     private int _mpStart;
     private string? _mpLobbyShot;
     private double _mpLobbySeconds = 3;
+    private string? _mpSay;
+    private int _mpPropose = -1; // a speed to ask for in the game (0 pauses)
 
     // Reads the multiplayer arguments; true when one of them starts the run (no menu).
     private bool MultiplayerArguments(string[] args)
@@ -57,6 +59,12 @@ public partial class Main
                     break;
                 case "--mp-lobby-screenshot":
                     _mpLobbyShot = next;
+                    break;
+                case "--mp-say":
+                    _mpSay = next;
+                    break;
+                case "--mp-propose":
+                    _mpPropose = int.Parse(next, CultureInfo.InvariantCulture);
                     break;
                 case "--mp-lobby-seconds":
                     _mpLobbySeconds = double.Parse(next, CultureInfo.InvariantCulture);
@@ -211,7 +219,20 @@ public partial class Main
         _play = new Play.PlayGame(connection, name, password, hello, owned, _layers, _art, _dataDirectory);
         if (_playScreenshot is not null)
         {
-            _play.ScreenshotAfter(_playScreenshot, _playSeconds);
+            // In the game: a chat line and a speed proposal shortly before the screenshot (MP4 checks of two windows).
+            var steps = new System.Collections.Generic.List<(double, Action<Play.PlayGame>)>();
+            if (_mpSay is { } say)
+            {
+                steps.Add((_playSeconds - 10, g => g.ScriptChat(say)));
+            }
+
+            if (_mpPropose >= 0)
+            {
+                var speed = (CivSim.Protocol.Messages.SimulationSpeed)_mpPropose;
+                steps.Add((_playSeconds - (_mpPropose == 0 ? 3 : 6), g => g.ScriptSpeed(speed)));
+            }
+
+            _play.ScreenshotAfter(_playScreenshot, _playSeconds, steps);
         }
 
         _play.ReturnKeyReceived += key =>

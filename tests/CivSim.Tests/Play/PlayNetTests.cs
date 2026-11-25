@@ -164,6 +164,11 @@ public sealed class PlayNetTests
         {
             while (clients[i].TryReceive(out IProtocolMessage? m))
             {
+                if (m is PlayPingMessage or PlayPlayersMessage)
+                {
+                    continue; // these follow the clock (pings, the list of players once a second), not the game
+                }
+
                 digests[i].AppendData(ProtocolSerializer.Serialize(m is WelcomeMessage w ? w with { ReturnKey = "" } : m!)); // return keys are random
             }
         }

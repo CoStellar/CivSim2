@@ -987,6 +987,9 @@ public sealed class SimContent
     /// <summary>Added to a nickname already taken in a multiplayer game (Patryk, R4-4, 2026-11-25).</summary>
     public string[] NicknameSuffixes { get; init; } = [];
 
+    /// <summary>Rules of a game with other players: votes, ping, chat (MP4, multiplayer section).</summary>
+    public MultiplayerRules Multiplayer { get; init; } = new();
+
     /// <summary>Id of food.</summary>
     public int Food { get; init; }
 
@@ -2032,6 +2035,16 @@ public sealed class SimContent
             NicknameSuffixes = root.TryProp("multiplayer", out JsonElement mpEl) && mpEl.TryProp("nicknameSuffixes", out JsonElement nsEl)
                 ? [.. nsEl.EnumerateArray().Select(x => x.GetString() ?? "")]
                 : [],
+            Multiplayer = root.TryProp("multiplayer", out JsonElement mpRules)
+                ? new MultiplayerRules
+                {
+                    SpeedVoteSeconds = mpRules.Prop("speedVoteSeconds").GetInt32(),
+                    ProposeCooldownSeconds = mpRules.Prop("proposeCooldownSeconds").GetInt32(),
+                    PingEverySeconds = mpRules.Prop("pingEverySeconds").GetInt32(),
+                    ChatPerSecond = mpRules.Prop("chatPerSecond").GetInt32(),
+                    ChatBurst = mpRules.Prop("chatBurst").GetInt32(),
+                }
+                : new MultiplayerRules(),
             Food = GoodOf("food"),
             Units = units,
             FoundMinDistance = root.Prop("foundSettlement").Prop("minDistance").GetInt32(),
@@ -2320,4 +2333,23 @@ public sealed class AiAmounts
         UnitSupplyHomeKeep = hundredths(e.Prop("unitSupplyHomeKeep")),
         WarNetFood = hundredths(e.Prop("warNetFood")),
     };
+}
+
+/// <summary>Rules of a game with other players (MP4, the multiplayer section of the data).</summary>
+public sealed record MultiplayerRules
+{
+    /// <summary>How long a vote on the speed runs.</summary>
+    public int SpeedVoteSeconds { get; init; } = 20;
+
+    /// <summary>A player may propose a change this often.</summary>
+    public int ProposeCooldownSeconds { get; init; } = 120;
+
+    /// <summary>How often the server measures each player's ping.</summary>
+    public int PingEverySeconds { get; init; } = 2;
+
+    /// <summary>Lines of chat a player may send a second.</summary>
+    public int ChatPerSecond { get; init; } = 1;
+
+    /// <summary>Lines of chat a player may send at once.</summary>
+    public int ChatBurst { get; init; } = 5;
 }

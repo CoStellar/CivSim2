@@ -306,7 +306,7 @@ Do zrobienia:
 | 4 | `PlaySaves`, `Replay` | Zapis zna tylko cywilizacje ludzi w chwili zapisu (znany problem 11). | **Zrobione w MP2** (zapis w formacie 2, liczony co krok gry). |
 | 5 | `PlayHost.Create` | Wybór startu czeka bez limitu. | **Zrobione w MP2:** z drugim graczem limit 30 s (ustawienie w menu jeszcze nie: stałe 30 s). |
 | 6 | `Receive` (`HelloMessage`) | „Następna wolna cywilizacja”, bez imienia gracza, bez hasła. | **Zrobione w MP2–MP3:** hasło, klucz powrotu, miejsca z lobby, pseudonim. Kolor: jeszcze nie. |
-| 7 | `SetSpeed` | Prędkość ustawia ostatni pytający, także Max. | **MP2:** z innymi graczami tylko ×1/×2. Głosowanie w MP4. |
+| 7 | `SetSpeed` | Prędkość ustawia ostatni pytający, także Max. | **MP2:** z innymi graczami tylko ×1/×2. **Zrobione w MP4a:** głosowanie nad prędkością. |
 | 8 | `Receive` (debug) | Klawisze debug ma gospodarz. | **Zrobione w MP2.** |
 | 9 | `HelloMessage` | Tylko wersja protokołu. | **MP2:** także wersja gry. Skrót danych niepotrzebny: klient dostaje dane gry od serwera. |
 | 10 | Klient (`PlayGame.cs`) | Zawsze sam uruchamia serwer. | **Zrobione w MP3:** tryb „dołącz”: samo połączenie. |
@@ -400,6 +400,23 @@ Do zrobienia:
 - **Protokół 46:** wiadomości lobby (stan, gotowość, czat, start, „gra się zaczyna”).
 - **Jeszcze nie w menu** (stałe wartości jak w rozdz. 6): pauzy na gracza (3), czas na wybór startu (30 s), autozapis (5 min), kolor
   gracza. Dołączanie do trwającej gry: gracz z wolnym miejscem dostaje cywilizację prowadzoną przez AI od razu; obserwatorzy i głosowania w MP4.
+
+**Zrobione w MP4a (2026-11-25):**
+
+- **Lista graczy** w prawym górnym rogu gry (widać ją, gdy grają co najmniej dwie osoby): kolor cywilizacji, pseudonim (dopisek gry
+  innym kolorem, jak w lobby), gospodarz, ping w ms (serwer pyta co 2 s), ile pauz zostało.
+- **Czat w grze** (klawisz Y, Enter wysyła): do wszystkich albo tylko do sojuszników (przełącznik „Allies”; sojusznik to cywilizacja
+  z sojuszem obronnym, która ma gracza). Zwykły tekst, do 200 znaków, 1 linia na sekundę, naraz do 5. Gra pisze w czacie, kto
+  dołączył, kto wyszedł (jego cywilizację prowadzi AI), kto zatrzymał grę i jak skończyło się głosowanie.
+- **Głosowanie nad prędkością:** zmiana prędkości przy innych graczach to propozycja. Proponujący głosuje „tak” od razu, inni mają
+  Tak/Nie w liście graczy; 20 s, przechodzi, gdy „tak” powie ponad połowa (remis i brak głosu to „nie”). Jedna propozycja na
+  gracza co 2 minuty.
+- **Pauzy widoczne dla wszystkich:** „Paused by X”, 3 pauzy na gracza, inny gracz może wznowić po 30 s. Koniec pauzy wraca do
+  prędkości sprzed pauzy (bez głosowania).
+- Liczby w `game.json` (`multiplayer`: `speedVoteSeconds`, `proposeCooldownSeconds`, `pingEverySeconds`, `chatPerSecond`, `chatBurst`).
+- **Protokół 48:** ping, lista graczy z głosowaniem, czat w grze, głos.
+- Bot `--join` odpowiada na ping i wypisuje czat. Okno gry: `--mp-say "tekst"` i `--mp-propose N` (0 = pauza) do zrzutów z dwóch okien.
+- **W MP4b:** obserwatorzy i widz po upadku, głosowanie nad przyjęciem nowego gracza, wyrzucenie (gospodarz albo głosowanie).
 
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 

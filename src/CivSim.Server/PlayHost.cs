@@ -60,10 +60,10 @@ public sealed record PlayOptions(ulong Seed, int LegacyWidth = 98, int LegacyHei
 /// Runs a game of the new simulation on its own thread and talks to clients through the protocol only (the client never sees
 /// <c>CivSim.Sim</c>). Ten ticks a second at ×1. The player leads civilization 0.
 /// </summary>
-public sealed class PlayHost : IDisposable
+public sealed partial class PlayHost : IDisposable
 {
     private static readonly TimeSpan ViewInterval = TimeSpan.FromMilliseconds(100);
-    private readonly ConcurrentQueue<(IConnection Connection, int Civ)> _pending = new();
+    private readonly ConcurrentQueue<Pending> _pending = new();
     private readonly List<PlayClient> _clients = [];
     private readonly Thread _thread;
     private readonly SimGame _game;
@@ -272,9 +272,9 @@ public sealed class PlayHost : IDisposable
 
     private void Pump()
     {
-        while (_pending.TryDequeue(out (IConnection Connection, int Civ) c))
+        while (_pending.TryDequeue(out Pending c))
         {
-            _clients.Add(new PlayClient(c.Connection, _game.Geo.CellCount) { Place = c.Civ });
+            _clients.Add(new PlayClient(c.Connection, _game.Geo.CellCount) { Place = c.Civ, Name = c.Name, SuffixLength = c.SuffixLength, Host = c.Host });
         }
 
         foreach (PlayClient client in _clients)
@@ -289,6 +289,12 @@ public sealed class PlayHost : IDisposable
             if (!gone.Connection.IsOpen && gone.Civ >= 0 && gone.Civ < _game.Civs.Count && !_game.Civs[gone.Civ].Dead)
             {
                 SetLeader(gone.Civ, player: false);
+                if (_clients.Exists(c => c != gone && c.Civ >= 0 && c.Connection.IsOpen))
+                {
+                    Announce($"{gone.Name} left; the AI leads {_game.Civs[gone.Civ].Name} until a player takes it.");
+                }
+
+                _playersDirty = true;
             }
         }
 
@@ -299,6 +305,8 @@ public sealed class PlayHost : IDisposable
         {
             _speed = SimulationSpeed.X2; // with other players: x1 or x2 (multiplayer plan, chapter 11)
         }
+
+        Social();
     }
 
     private void Advance()
@@ -352,7 +360,7 @@ public sealed class PlayHost : IDisposable
     public IConnection Connect()
     {
         (InMemoryConnection client, InMemoryConnection server) = InMemoryConnection.CreatePair();
-        _pending.Enqueue((server, -1));
+        _pending.Enqueue(new Pending(server, -1, null, 0, false));
         return client;
     }
 
@@ -360,11 +368,14 @@ public sealed class PlayHost : IDisposable
     /// Takes the server end of a connection from elsewhere (a player over the network); any thread. <paramref name="civ"/>: the people
     /// this player leads after Hello (a lobby's place), or −1 for the next free one.
     /// </summary>
-    public void Accept(IConnection connection, int civ = -1)
+    public void Accept(IConnection connection, int civ = -1, string? name = null, int suffixLength = 0, bool host = false)
     {
         ArgumentNullException.ThrowIfNull(connection);
-        _pending.Enqueue((connection, civ));
+        _pending.Enqueue(new Pending(connection, civ, name, suffixLength, host));
     }
+
+    // A connection on its way into the game: the place, the nickname and whether it is the host (from the lobby, MP3–MP4).
+    private readonly record struct Pending(IConnection Connection, int Civ, string? Name, int SuffixLength, bool Host);
 
     /// <summary>Stops the game thread.</summary>
     public void Dispose()
@@ -535,6 +546,15 @@ public sealed class PlayHost : IDisposable
             case PlacesRequestMessage places when client.Civ >= 0:
                 client.Connection.Send(Places(client.Civ, places.Type));
                 break;
+            case PlayPingMessage ping when client.Civ >= 0:
+                Pong(client, ping);
+                break;
+            case PlayChatMessage chat when client.Civ >= 0:
+                Chat(client, chat);
+                break;
+            case PlayVoteMessage vote when client.Civ >= 0:
+                Cast(client, vote);
+                break;
             default:
                 break;
         }
@@ -584,6 +604,18 @@ public sealed class PlayHost : IDisposable
         }
 
         client.Civ = civ;
+        if (client.Name is null)
+        {
+            (client.Name, client.SuffixLength) = Nicknames.Unique(hello.PlayerName,
+                _clients.Where(c => c != client && c.Name is not null && c.Civ >= 0).Select(c => c.Name!), _game.Content.NicknameSuffixes);
+        }
+
+        if (_clients.Exists(c => c != client && c.Civ >= 0 && c.Connection.IsOpen))
+        {
+            Announce($"{client.Name} joined and leads {_game.Civs[civ].Name}.");
+        }
+
+        _playersDirty = true;
         string returnKey = _returnKeys.FirstOrDefault(k => k.Value == civ).Key
             ?? System.Security.Cryptography.RandomNumberGenerator.GetHexString(32, lowercase: true); // outside the game: no determinism needed
         _returnKeys[returnKey] = civ;
@@ -641,7 +673,7 @@ public sealed class PlayHost : IDisposable
 
         if (speed > SimulationSpeed.X2)
         {
-            return "With other players the game runs at x1 or x2."; // multiplayer plan, chapter 11 (voting comes in MP4)
+            return "With other players the game runs at x1 or x2."; // multiplayer plan, chapter 11
         }
 
         if (speed == SimulationSpeed.Paused)
@@ -661,18 +693,29 @@ public sealed class PlayHost : IDisposable
             _pausesUsed[client.Civ] = used + 1;
             _pausedBy = client;
             _pausedAt = Stopwatch.GetTimestamp();
+            _speedBeforePause = _speed;
             _speed = speed;
+            _playersDirty = true;
+            Announce($"{client.Name} paused the game ({PausesPerPlayer - used - 1} pauses left).");
             return null;
         }
 
-        if (_speed == SimulationSpeed.Paused && _pausedBy is not null && _pausedBy != client && Stopwatch.GetElapsedTime(_pausedAt) < PauseProtection)
+        if (_speed == SimulationSpeed.Paused)
         {
-            return $"The pause is protected for {(int)(PauseProtection - Stopwatch.GetElapsedTime(_pausedAt)).TotalSeconds} s more.";
+            if (_pausedBy is not null && _pausedBy != client && Stopwatch.GetElapsedTime(_pausedAt) < PauseProtection)
+            {
+                return $"The pause is protected for {(int)(PauseProtection - Stopwatch.GetElapsedTime(_pausedAt)).TotalSeconds} s more.";
+            }
+
+            // The game goes on at the speed it had (MP4: another speed only by a vote).
+            _pausedBy = null;
+            _speed = _speedBeforePause is SimulationSpeed.X1 or SimulationSpeed.X2 ? _speedBeforePause : SimulationSpeed.X1;
+            _playersDirty = true;
+            Announce($"{client.Name} ended the pause.");
+            return null;
         }
 
-        _pausedBy = null;
-        _speed = speed;
-        return null;
+        return ProposeSpeed(client, speed);
     }
 
     private static PlayCombatInfo CombatInfo(CombatRules r)
@@ -1919,6 +1962,35 @@ public sealed class PlayHost : IDisposable
     private sealed class PlayClient(IConnection connection, int cells)
     {
         public IConnection Connection { get; } = connection;
+
+        /// <summary>The nickname (from the lobby, or made unique at Hello); null until then.</summary>
+        public string? Name { get; set; }
+
+        /// <summary>Characters the game added to a repeated nickname.</summary>
+        public int SuffixLength { get; set; }
+
+        /// <summary>The player who opened the lobby.</summary>
+        public bool Host { get; init; }
+
+        /// <summary>Time a message takes there and back, measured with <see cref="PlayPingMessage"/>.</summary>
+        public int PingMs { get; set; }
+
+        private double _chatTokens = -1;
+        private long _chatRefilled;
+
+        /// <summary>True when one more line of chat fits the limit (<paramref name="perSecond"/>, at once <paramref name="burst"/>).</summary>
+        public bool MayChat(long now, int perSecond, int burst)
+        {
+            _chatTokens = _chatTokens < 0 ? burst : Math.Min(burst, _chatTokens + ((now - _chatRefilled) * (double)perSecond / Stopwatch.Frequency));
+            _chatRefilled = now;
+            if (_chatTokens < 1)
+            {
+                return false;
+            }
+
+            _chatTokens--;
+            return true;
+        }
 
         public int Civ { get; set; } = -1;
 

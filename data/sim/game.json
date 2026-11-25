@@ -3938,7 +3938,12 @@
     "jumpSearchNodes": 12000
   },
   "multiplayer": {
-    "comment": "nicknameSuffixes: a player whose nickname is already taken in a game gets one of these at random, one no other player there has (e.g. \"Ania the Late\").",
+    "comment": "MP4 (multiplayer plan, chapters 11 and 19): speedVoteSeconds: how long a vote on the speed runs; a change passes when more than half of the players still playing say yes (no vote = no). proposeCooldownSeconds: a player may propose a change this often. pingEverySeconds: how often the server measures each player's ping. chatPerSecond, chatBurst: lines of chat a player may send a second, and at once. nicknameSuffixes: a player whose nickname is already taken in a game gets one of these at random, one no other player there has (e.g. \"Ania the Late\").",
+    "speedVoteSeconds": 20,
+    "proposeCooldownSeconds": 120,
+    "pingEverySeconds": 2,
+    "chatPerSecond": 1,
+    "chatBurst": 5,
     "nicknameSuffixes": [
       "the Second",
       "the Other One",
