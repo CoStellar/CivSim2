@@ -1,6 +1,6 @@
 # Multiplayer przez sieć: plan
 
-**Stan:** plan w trakcie uzgadniania z Patrykiem. Runda pytań 1 zamknięta (2026-11-25), runda 2 otwarta (rozdz. 15).
+**Stan:** plan w trakcie uzgadniania z Patrykiem. Rundy pytań 1 i 2 zamknięte (2026-11-25), runda 3 otwarta (rozdz. 18).
 Kodu jeszcze nie zmieniamy; Patryk chce co najmniej dwóch kolejnych rund pytań przed budową.
 Podstawa: kod `development` z 2026-11-25 (`645f2b0`), ADR 0008, 0010, 0028, `docs/projekt-gry.md` (rozdz. 2 i 9), `docs/known-issues.md`.
 Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly-na-przyszlosc.md`.
@@ -19,6 +19,23 @@ Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly
 | P6 | Gracz, którego lud upadł? | **Widzi całą mapę.** Gra to „1 na wszystkich”; sojusze pomagają, ale odpadnięcie to sprawa gracza. |
 | P7 | Kiedy? | **Osobny wątek, równolegle** z poprawianiem gry. Najpierw stabilna pętla rozgrywki (ok. 45 min do średniowiecza), potem nowe treści (zarządca itd.). |
 | — | Docelowo | **Hostowanie gry ma być możliwe na VPS** (serwer bez okna, rozdz. 5). |
+
+## 1a. Decyzje Patryka (runda 2, 2026-11-25)
+
+| # | Pytanie | Decyzja |
+| --- | --- | --- |
+| R2-1 | Pośrednik: cały ruch czy tylko zapoznanie? | **Cały ruch** (rekomendacja). |
+| R2-2 | Domena VPS? | VPS ma własną domenę, ale związaną z inną usługą (dalej: R3-2). |
+| R2-3 | Kto zakłada gry na pośredniku? | **Tylko ktoś, kto zna hasło**; hasło zmienia się co jakiś czas, Patryk daje je zainteresowanym. Kto go nie ma: gra u siebie albo stawia **własnego pośrednika**; tę możliwość trzeba przygotować (dalej: R3-3, R3-4). |
+| R2-4 | Kto zarządza partią? | **Gospodarz gry** (ten, kto ją założył). Żadnych haseł administratora do VPS w konfiguracji. |
+| R2-5 | Nowy gracz w trwającej partii? | **Może tylko obserwować.** Może wybrać lud prowadzony przez AI i poprosić o przejęcie; gracze **głosują**, czy pozwalają. |
+| R2-6 | Wolne miejsca przy starcie? | **Prowadzi je AI.** Później gracze mogą dołączyć i zająć miejsca dla graczy prowadzone przez AI, do ustalonego limitu ludzi. |
+| R2-7 | Zaawansowane ustawienia świata? | **Wszystkie, w dwóch poziomach**, podgląd mapy później (PR W1). |
+| R2-8 | Wersja gry? | **Tag wersji z datą** (np. `v0.1_25.11.26`); schemat do wyboru w R3-1 (rozdz. 16). |
+| R2-9 | CI na `development`? | **Tak**, ale testy mają być krótkie: rozdzielić na lokalne i CI (rozdz. 17). |
+| R2-10 | Czat? | **Do wszystkich i do sojuszników.** |
+| R2-11 | Głosowanie o prędkość? | **Ponad połowa grających, 20 s, brak głosu = „nie”.** |
+| R2-12 | Ludy razem? | **Do 8 teraz**, 12 po pomiarze późnej gry. |
 
 ## 2. Pomiary (2026-11-25, kod `development`)
 
@@ -86,7 +103,7 @@ Bezpośrednie połączenie po „zapoznaniu” można dodać później jako oszc
 
 - Osobny mały program .NET (`CivSim.Relay`), obraz Docker z gałęzi serwerowej, jeden port TCP (np. 7700).
 - Plik konfiguracji albo zmienne środowiskowe: port, najwięcej pokoi, najwięcej połączeń z jednego IP, limit KB/s na pokój,
-  czas bezczynności do zamknięcia, opcjonalne hasło do zakładania pokoi (żeby obcy nie robili sobie pokoi na Twoim VPS).
+  czas bezczynności do zamknięcia, **hasło do zakładania gier** (R2-3), zmieniane co jakiś czas (R3-3). Dołączanie do istniejącej gry: kod pokoju (+ hasło partii, jeśli gospodarz je ustawił).
 - Docker: osobna sieć od drugiej aplikacji, użytkownik bez uprawnień roota, system plików tylko do odczytu, limit pamięci (np. 128 MB) i procesora.
 - Szyfrowanie TLS (rozdz. 9), jeśli VPS ma domenę.
 - Instrukcja krok po kroku po polsku w `docs/multiplayer/vps.md` (powstanie w MP6).
@@ -96,7 +113,7 @@ Bezpośrednie połączenie po „zapoznaniu” można dodać później jako oszc
 - Program bez okna: `CivSim.Server` + nowy punkt startu (np. `CivSim.DedicatedServer` albo `CivSim.Headless --serve`), bez Godota.
 - Obraz Docker z gałęzi serwerowej; uruchomienie np. `docker compose up -d`.
 - Konfiguracja w `server.json` (rozdz. 6) albo w zmiennych środowiskowych; zapisy w katalogu podpiętym z zewnątrz (volume).
-- **Administrator:** hasło administratora w konfiguracji; gracz, który je poda w lobby, zarządza partią (start, wyrzucenie gracza, zapis, koniec).
+- **Gospodarz** (R2-4): partią zarządza ten, kto ją założył (start, wyrzucenie gracza, zapis, koniec); żadnych haseł administratora w konfiguracji VPS. Kto zostaje gospodarzem, gdy gospodarz wyjdzie z partii na VPS: pytanie R3-6.
 - Konsola serwera: lista graczy, zapis, wyrzucenie, zatrzymanie; dziennik do pliku (bez adresów IP, rozdz. 9).
 - Może sam połączyć się z pośrednikiem (kod pokoju), albo przyjmować graczy wprost na swój port.
 - Jeden proces = jedna partia; kilka partii = kilka kontenerów.
@@ -110,14 +127,13 @@ Te same ustawienia w menu „Załóż grę” (wariant A) i w `server.json` (war
 | --- | --- | --- | --- | --- |
 | Serwer | Nazwa partii | „CivSim game” | tekst do 32 znaków | G |
 | | Hasło do partii | brak | tekst | G |
-| | Hasło administratora (VPS) | brak | tekst | P |
 | | Port | 7777 | 1024–65535 | P / G przed startem |
 | | Pośrednik: adres, port, hasło | puste (bez pośrednika) | — | P / G |
 | | Autozapis | co 5 min | 0 (wył.) – 30 min | G |
 | Gracze | Miejsca dla ludzi | 2 | 2–8 | G |
 | | Ludy razem (ludzie + AI) | 4 | liczba ludzi – 8 (więcej po pomiarach) | G |
-| | Puste miejsca przy starcie | prowadzi AI | AI / lud nie powstaje | G (pytanie R2-6) |
-| | Dołączanie w trakcie | tylko powrót na swój lud | — | pytanie R2-5 |
+| | Puste miejsca przy starcie | prowadzi AI (R2-6) | — | — |
+| | Dołączanie w trakcie | obserwator; przejęcie ludu AI z miejsca dla gracza po głosowaniu (R2-5, R2-6) | wł. / wył. | G |
 | Gra | Cel partii | pierwszy w średniowieczu | jak w grze solo | G |
 | | Prędkość startowa | ×1 | ×1, ×2 (×2 z ostrzeżeniem „trudniej”) | G; w grze tylko głosowanie |
 | | Pauzy na gracza | 3 | 0–10 | G |
@@ -156,14 +172,14 @@ i do `server.json`. Podgląd mapy (jak w starym menu) do decyzji w rundzie 2.
 - **Zawartość:** `src/CivSim.Core`, `src/CivSim.Sim`, `src/CivSim.Protocol`, `src/CivSim.Server`, nowy punkt startu serwera,
   `src/CivSim.Relay`, `data/sim/`, testy serwera, `Dockerfile`, `docker-compose.yml`, `server.example.json`, krótki `README.md`.
   Bez `game/`, `art/`, `audio/`, legacy i dokumentów gry.
-- **Aktualizacja:** gdy Patryk wydaje wersję gry (np. tag `v0.3` na `main` albo `development`), workflow kopiuje te pliki na gałąź `server`
-  jednym commitem „Server for v0.3” i taguje go `server-v0.3`. Ręcznie nikt tam nie pisze.
+- **Aktualizacja:** gdy Patryk wydaje wersję gry (tag wersji, np. `v26.11.1`, rozdz. 16), workflow kopiuje te pliki na gałąź `server`
+  jednym commitem „Server for v26.11.1” i taguje go `server-v26.11.1`. Ręcznie nikt tam nie pisze.
 - **CI na gałęzi `server`:** build, testy serwera, test „dwóch klientów przez sieć”, budowa obrazów Docker serwera i pośrednika,
-  publikacja w GitHub Container Registry (`ghcr.io/costellar/civsim2-server:v0.3`). VPS pobiera gotowy obraz zamiast budować.
+  publikacja w GitHub Container Registry (`ghcr.io/costellar/civsim2-server:26.11.1`). VPS pobiera gotowy obraz zamiast budować.
 - **Koszt:** repo jest **publiczne**, a dla publicznych repozytoriów GitHub Actions na zwykłych maszynach i publiczne obrazy w GHCR są
-  darmowe. Ograniczenie minut z 2026-11-04 dotyczy repozytoriów prywatnych (do potwierdzenia przez Patryka: R2-9).
+  darmowe. Ograniczenie minut z 2026-11-04 dotyczy repozytoriów prywatnych; Patryk zgodził się na CI (R2-9).
 - **Zgodność wersji:** serwer i klient sprawdzają przy połączeniu wersję protokołu, wersję gry i skrót danych `data/sim`; gracz z inną
-  wersją dostaje czytelny komunikat („Serwer ma wersję v0.3, Ty v0.2”).
+  wersją dostaje czytelny komunikat („Serwer ma wersję v26.11.2, Ty v26.11.1”).
 - **Dokumentacja:** opis gałęzi w `docs/multiplayer/serwer.md` i zasada w `CLAUDE.md` („nie commituj ręcznie na `server`”) w PR, który ją tworzy.
 
 ## 9. Bezpieczeństwo (research)
@@ -259,11 +275,12 @@ Do zrobienia:
 
 | PR | Co | Jak sprawdzić |
 | --- | --- | --- |
+| **CI1. Podział testów i CI** (przed MP1) | Znacznik `Slow`, szybki zestaw lokalnie, pełny w CI na `development`, wersja gry `v26.11.1` w grze (rozdz. 16–17). | CI zielone na PR; szybki zestaw < 20 s. |
 | **W1. Zaawansowane ustawienia świata** (niezależny) | Zwijana sekcja „Advanced world settings” w „New game”, pola w `PlayOptions` i zapisie, presety planet w `data/sim/`. | Zrzuty menu; te same mapy dla tych samych ustawień (test). |
 | **MP1. Połączenie i serwer bez okna** | `TcpConnection`, nasłuch, limity ramek, Brotli, pomiary w serwerze; punkt startu serwera bez okna; bot `--join`. | Test: dwóch klientów przez sieć lokalną, ten sam hasz co w pamięci; pomiar późnej gry z 8 ludami. |
 | **MP2. Serwer dla kilku ludzi** | Punkty 1–9 z rozdz. 12, limity rozkazów, hasło. | Testy: rozłącz/wróć, wyjątek klienta nie zatrzymuje gry, wczytanie partii z dołączeniem daje ten sam hasz. |
 | **MP3. Konfiguracja i lobby** | Ustawienia z rozdz. 6, lobby (miejsca, gotowość, czat, ustawienia tylko do odczytu), menu „Multiplayer: Załóż / Dołącz (IP i port)”. | Zrzuty z dwóch okien; **pierwsza partia przez LAN albo otwarty port.** |
-| **MP4. Gra z ludźmi** | Lista graczy z pingiem, czat, głosowanie o prędkość, pauzy widoczne dla wszystkich, odpowiedzi na propozycje innego gracza, widz po upadku (cała mapa). | Scenariusz z dwoma botami; zrzuty. |
+| **MP4. Gra z ludźmi** | Lista graczy z pingiem, czat (wszyscy, sojusznicy), głosowanie o prędkość i o przyjęcie nowego gracza, obserwatorzy, pauzy widoczne dla wszystkich, odpowiedzi na propozycje innego gracza, widz po upadku (cała mapa). | Scenariusz z dwoma botami; zrzuty. |
 | **MP5. Zapis i wczytanie** | Zapis u gospodarza/administratora, wczytanie do lobby, powrót na swoje miejsca. | Zapis po 10 min z 2 graczami, wczytanie, ten sam hasz. |
 | **MP6. Pośrednik, Docker, gałąź `server`** | `CivSim.Relay`, kody pokoi, TLS, obrazy Docker, workflow gałęzi `server` z CI i GHCR, instrukcja VPS po polsku. | Partia Patryka ze znajomym przez pośrednika na VPS; pomiar pingu i ruchu. |
 
@@ -280,22 +297,55 @@ Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośredn
 | Różne wersje gry u graczy. | Wersja gry + skrót danych przy dołączeniu; gałąź `server` z tagami wersji. |
 | Druga aplikacja na VPS. | Osobna sieć Docker, limity pamięci i procesora, bez roota. |
 
-## 15. Runda 2: pytania do Patryka (z rekomendacją)
+## 16. Wersje gry
+
+Patryk chce daty w wersji (R2-8). Dwie sensowne drogi:
+
+| Schemat | Przykład (dziś) | Plusy | Minusy |
+| --- | --- | --- | --- |
+| **A. Rok.miesiąc.numer** (kalendarzowy, jak nowy schemat Minecrafta „26.1”) | `v26.11.1` (pierwsze wydanie w listopadzie 2026), potem `v26.11.2`, `v26.12.1` | data widać od razu; liczby rosną same; pasuje do .NET, Dockera i GitHuba bez wyjątków | nie mówi, czy gra jest jeszcze „wczesna” (to mówi napis „Demo” w grze) |
+| B. Numer + data | `v0.1.0` z datą w nazwie wydania („v0.1.0, 25.11.2026”) | klasyczny „0.x” = gra przed premierą | data tylko w opisie; trzeba decydować, kiedy 0.2, kiedy 1.0 |
+| (propozycja Patryka) | `v0.1_25.11.26` | jedno i drugie | podkreślenie i kropki w dacie nie są poprawną wersją dla .NET i części narzędzi; data dzień.miesiąc.rok nie sortuje się |
+
+**Rekomendacja: A** (`v26.11.1`). W grze w menu: „CivSim 2 · v26.11.1 · Demo”. Ta sama wersja trafia do pliku gry, do tagu Git,
+do gałęzi `server` i do obrazu Docker (`ghcr.io/costellar/civsim2-server:26.11.1`). Serwer i klient muszą mieć tę samą wersję (rozdz. 8).
+
+## 17. Testy: krótkie lokalnie, pełne w CI
+
+Pomiar 2026-11-25 (chmura, 4 rdzenie, Release, po zbudowaniu):
+
+| Zestaw | Testów | Czas | Testy ≥ 1 s | Najdłuższe |
+| --- | --- | --- | --- | --- |
+| `CivSim.Sim.Tests` | 186 | 27 s | 8 (34 s łącznie) | `TheAiKeepsThePeaceItMade` 10,9 s, scenariusze 4,9–6,5 s |
+| `CivSim.Tests` | 232 | 13 s | 5 (16 s) | `ViewsDoNotChangeTheGame` 8,2 s |
+| `CivSim.Legacy.Tests` | 417 | 30 s | 20 (67 s) | `LeadersStayOutOfTheChronicle…` 17 s |
+| Razem | 835 | ok. 70 s + 28 s budowania | 33 | |
+
+Propozycja (osobny mały PR „CI1”, razem z włączeniem CI):
+
+- Testy dłuższe niż 1 s dostają znacznik `[Trait("Category", "Slow")]` (33 testy). **Lokalnie** (przed każdym commitem) idą tylko szybkie
+  testy nowej gry: `dotnet test --filter "Category!=Slow"` w `CivSim.Sim.Tests` i `CivSim.Tests` (szacunkowo ok. 15 s zamiast 70 s).
+- **CI na `development`** przy każdym PR: wszystkie testy, także wolne i legacy (ok. 2 min na GitHubie, za darmo w publicznym repo).
+- **CI na gałęzi `server`:** testy serwera i protokołu + test „dwóch klientów przez sieć” + budowa obrazów Docker.
+- Test, który pilnuje czasu: zestaw szybki dłuższy niż 30 s = ostrzeżenie w CI, żeby testy nie puchły po cichu.
+- `CLAUDE.md`: zasada „lokalnie szybkie, pełne w CI; nowy test > 1 s oznacz jako Slow”.
+
+## 18. Runda 3: pytania do Patryka (z rekomendacją)
 
 | # | Pytanie | Rekomendacja |
 | --- | --- | --- |
-| R2-1 | Pośrednik przekazuje cały ruch czy tylko „zapoznaje” graczy? | **Cały ruch** (działa zawsze, ukrywa IP; ok. 150 MB w każdą stronę na godzinę partii z 8 graczami). Połączenie wprost później jako oszczędność. |
-| R2-2 | Czy VPS ma domenę (do darmowego certyfikatu TLS)? Jaki ma limit transferu i ile wolnej pamięci? | Z domeną: TLS z Let's Encrypt. Bez domeny: certyfikat własny przypięty w grze. |
-| R2-3 | Kto może zakładać pokoje na pośredniku? | **Każdy, kto zna hasło pośrednika** (wpisane w grze raz); bez hasła obcy mogliby korzystać z Twojego VPS. |
-| R2-4 | Kto zarządza partią na serwerze VPS? | **Hasło administratora w `server.json`**; administrator w lobby startuje partię, wyrzuca graczy, zapisuje. |
-| R2-5 | Czy nowy gracz może dołączyć do trwającej partii (przejąć lud AI)? | **Nie**, tylko powrót na swój lud. Nowi gracze tylko w lobby (uczciwiej i prościej). |
-| R2-6 | Wolne miejsca dla ludzi przy starcie: prowadzi je AI czy te ludy nie powstają? | **Prowadzi AI** (liczba ludów jest ustalona w konfiguracji). |
-| R2-7 | Zaawansowane ustawienia świata: wszystkie ze starego menu (z fizyką gwiazdy), czy tylko wilgotność, głąb lądu, rzeźba, złoża i preset planety? Z podglądem mapy? | **Wszystkie, w dwóch poziomach** (rozdz. 7); podgląd mapy później. Robię to jako osobny PR W1, także dla gry solo. |
-| R2-8 | Co jest „wersją gry” dla gałęzi `server`? | **Tag `vX.Y`**, który zakładasz przy wydaniu paczki gry; workflow sam aktualizuje `server` i obrazy Docker. |
-| R2-9 | Repo jest publiczne, więc GitHub Actions jest za darmo. Czy włączamy też CI na `development` (testy przy każdym PR)? | **Tak**, krótkie testy (kilka sekund) przy każdym PR; długie pomiary dalej lokalnie. |
-| R2-10 | Czat: do wszystkich, do jednego ludu, do sojuszników? | **Do wszystkich i do jednego ludu** (sojusznicy później). |
-| R2-11 | Głosowanie o prędkość: ponad połowa grających, 20 s, nie głosujący = „nie”? | **Tak** (rozdz. 11). |
-| R2-12 | Ludy razem przy 8 ludziach: do 8 (jak dziś) czy więcej (np. 12 na dużej mapie)? | **Do 8 teraz**, 12 po pomiarze późnej gry w MP1. |
+| R3-1 | Schemat wersji (rozdz. 16)? | **Rok.miesiąc.numer: `v26.11.1`.** |
+| R3-2 | Czy możesz dodać subdomenę (np. `civsim.twojadomena.pl`) wskazującą na VPS? Nie rusza drugiej usługi, a daje darmowy certyfikat TLS. | **Tak, subdomena.** Bez niej: certyfikat własny wbudowany w grę (działa, ale przy zmianie trzeba nowej wersji gry). |
+| R3-3 | Jak zmieniać hasło do zakładania gier? | **Plik na VPS z kilkoma hasłami, każde z datą ważności**; pośrednik czyta go co minutę (bez restartu). Stare hasło może działać jeszcze np. 7 dni, żeby nikt nie został odcięty w połowie tygodnia. Gracz wpisuje hasło raz, gra je pamięta. |
+| R3-4 | Jak przygotować pośrednika dla innych? | **Ten sam obraz Docker publicznie w GHCR + instrukcja po polsku i angielsku** (`docker compose up -d`, port, hasło). W grze pole „Pośrednik: adres i port” + „Hasło”, z Twoim pośrednikiem wpisanym domyślnie. |
+| R3-5 | Czy VPS ma też **prowadzić** partie (gracz z hasłem klika „Załóż grę na serwerze”), czy tylko przekazywać ruch, a serwer gry zawsze jest u gospodarza? | **Na start tylko przekazywanie** (VPS prawie nic nie liczy). Partie na VPS w drugim kroku, z limitem np. 2 naraz (ok. 10% rdzenia i 250 MB na partię). |
+| R3-6 | Partia na VPS: gospodarz wychodzi. Co dalej? | **Gospodarzem zostaje gracz, który najdłużej jest w partii**; gdy wyjdą wszyscy ludzie, partia się zapisuje i kończy po 5 min. |
+| R3-7 | Obserwator, który chce przejąć lud: co widzi, zanim go przyjmą? Gdyby widział całą mapę, po przejęciu znałby wszystkie sekrety. | **Obserwator widzi całą mapę, ale wtedy nie może już przejąć ludu.** Kto chce dołączyć, wybiera „Chcę grać”: widzi tylko listę ludów do przejęcia (bez mapy), czeka na głosowanie. Upadli gracze zawsze widzą całą mapę (P6). |
+| R3-8 | Głosowanie o przyjęcie nowego gracza: kto i jak? | **Ludzie grający, ponad połowa, 30 s**; gospodarz bez weta. Przejęty lud zostaje z tym, co miał (AI go prowadziła). |
+| R3-9 | Wyrzucanie gracza: tylko gospodarz czy głosowanie? | **Gospodarz**; wyrzucony lud przejmuje AI, a gracz nie wróci do tej partii. |
+| R3-10 | Podział testów (rozdz. 17): lokalnie szybkie, pełne w CI? | **Tak**, osobny mały PR „CI1” jeszcze przed MP1. |
+| R3-11 | Czy CI ma przy tagu wersji budować też paczkę gry dla Windows (Godot bez okna, eksport) i wrzucać ją do GitHub Releases? | **Tak, później** (po MP3): gracze pobierają grę z jednego miejsca, z sumą kontrolną; dziś paczki robi Twój komputer. |
+| R3-12 | Tożsamość gracza: tylko pseudonim (bez kont), a klucz powrotu na swój lud zapisany na komputerze gracza? | **Tak.** Konta dopiero, gdyby gra trafiła do obcych ludzi (np. Steam). |
 
 ## Źródła (research 2026-11-25)
 
