@@ -122,6 +122,7 @@ Winter comes every 8 minutes and lasts 2: everybody works at half speed and gath
 # Settlements and people
 - **Levels:** Camp, Village, Town, City. Each level gives more land around the centre, homes and storage. Upgrade a settlement in its panel when it has the people, the technology and the goods (Village: Agriculture and 40 people; Town: Code of laws, Masonry and 150 people; City: Civil service, Construction and 400 people).
 - **Goods missing for an upgrade** come by caravan from our other settlements by themselves.
+- **Moving goods between settlements:** in a settlement's panel, "Send goods..." or "Ask for goods...". The window asks step by step: which of our settlements, which good (with how much it has), how much, then one caravan or a standing route (it keeps carrying while the source keeps enough). A "needs" alert in the panel has "Ask for ..." with the good already chosen.
 - **New settlements:** research Migration, train Settlers and send them at least 5 hexes from any other settlement, on land nobody owns. They found a camp with the goods they carry.
 - **Moving goods:** the settlement's panel offers "Bring 20 of a good" (one trip) and "Supply route" (a standing route) from the nearest settlement that has enough. Carriers walk the map, so roads make them faster.
 - **Roads:** a track and later a road (Roads & works tab) make walking faster; with Masonry they bridge rivers.

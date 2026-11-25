@@ -10,7 +10,6 @@ namespace CivSim.Game.Play;
 /// <summary>The side panel on the left: what is selected, its numbers and what can be done with it.</summary>
 public partial class PlayGame
 {
-    private bool _showCaravans;
 
     private void Inspect(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
@@ -241,12 +240,13 @@ public partial class PlayGame
                 items.Add(new ActItem($"Upgrade to {next.Name.ToLowerInvariant()}", () => _session!.Play(PlayCommandKind.Upgrade, sid), tip, can));
             }
 
-            items.Add(new ActItem(_showCaravans ? "Hide caravans and routes" : "Caravans and routes...", () => _showCaravans = !_showCaravans,
-                "Send goods to another of our settlements, once or on a standing route."));
-            if (_showCaravans)
-            {
-                CaravanItems(v, c, s, stock, items);
-            }
+            // 2026-11-24 (Patryk): a window to choose the settlement, the good and how much, both ways.
+            int here = s.Id;
+            items.Add(new ButtonsItem(
+            [
+                new ActItem("Send goods...", () => OpenCaravans(here, ask: false), "Choose another of our settlements, a good and how much: one caravan or a standing route."),
+                new ActItem("Ask for goods...", () => OpenCaravans(here, ask: true), "Choose which of our settlements sends which good here, and how much."),
+            ]));
         }
     }
 
@@ -270,6 +270,10 @@ public partial class PlayGame
             {
                 items.Add(new LineItem($"No settlement of ours has {name} to spare.", UiKit.Muted, 13));
             }
+
+            int askHere = s.Id;
+            int askGood = g;
+            items.Add(new ActItem($"Ask for {name}...", () => OpenCaravans(askHere, ask: true, askGood), $"Choose which of our settlements sends {name} here, and how much."));
 
             foreach (PlaySettlementView o in from)
             {
@@ -304,46 +308,6 @@ public partial class PlayGame
         row.AddChild(Spin(_routeUntil, "Trips stop while the target has this much (0 = always).", x => _routeUntil = x));
         return row;
     });
-
-    private void CaravanItems(PlayViewMessage v, PlayContentMessage c, PlaySettlementView s, long[] stock, List<UiItem> items)
-    {
-        items.Add(RouteLimitsItem());
-        var others = v.Settlements.Where(o => o.Civ == v.Civ && o.Id != s.Id).OrderBy(o => Dist(o, s)).Take(2).ToList();
-        var goods = Enumerable.Range(0, stock.Length).Where(g => stock[g] >= 2000).OrderByDescending(g => stock[g]).Take(2).ToList();
-        if (others.Count == 0)
-        {
-            items.Add(new LineItem("We have no other settlement to send goods to.", UiKit.Muted, 13));
-        }
-        else if (goods.Count == 0)
-        {
-            items.Add(new LineItem("Nothing here to send yet (20 or more of a good).", UiKit.Muted, 13));
-        }
-
-        foreach (PlaySettlementView o in others)
-        {
-            foreach (int g in goods)
-            {
-                int from = s.Id;
-                int to = o.Id;
-                int good = g;
-                string name = c.Goods[g].Name.ToLowerInvariant();
-                items.Add(new ActItem($"Send 20 {name} to {o.Name}", () => _session!.Play(PlayCommandKind.SendCaravan, from, good, flag: false, b: to, c: 20)));
-                items.Add(new ActItem($"Route: {name} to {o.Name}, every trip", () => _session!.Play(PlayCommandKind.Route, from, good, _routeKeep, flag: false, b: to, c: 20, d: _routeUntil),
-                    $"The caravans take the shortest way; {s.Name} keeps {_routeKeep}" + (_routeUntil > 0 ? $", they go while {o.Name} has fewer than {_routeUntil}." : ".")));
-                items.Add(new ActItem($"Draw the way: {name} to {o.Name}", () => ArmDraw(DrawMode.Route, (from, to, good)), "Draw over the hexes the way the caravans take, there and back."));
-            }
-        }
-
-        foreach (PlayRouteView r in v.Routes ?? [])
-        {
-            if (r.From == s.Id)
-            {
-                int index = r.Index;
-                string to = v.Settlements.FirstOrDefault(x => x.Id == r.To)?.Name ?? "?";
-                items.Add(new ActItem($"End route: {r.Amount} {c.Goods[r.Good].Name.ToLowerInvariant()} to {to}" + (r.OnTheRoad ? " (on the road)" : ""), () => _session!.Play(PlayCommandKind.EndRoute, index), Accent: UiKit.Warn));
-            }
-        }
-    }
 
     // The whole hex at a glance (Patryk, 2026-11-19): its land, its four places as a picture, its protection and works, then
     // every building with its state and its buttons side by side.

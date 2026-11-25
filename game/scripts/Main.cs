@@ -285,6 +285,10 @@ public partial class Main : Node2D
                     demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen("Thinkers"))];
                 }
             }
+            else if (_playWindow == "Caravans")
+            {
+                demo = [(_playSeconds - 2.5, g => g.ScriptCaravans()), (_playSeconds - 1.2, g => g.ScriptCaravanSend())];
+            }
             else if (_playWindow == "Help")
             {
                 demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.H))];

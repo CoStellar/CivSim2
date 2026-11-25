@@ -58,6 +58,7 @@ public partial class PlayGame
             "Units" => "Our units and patrols",
             "Tutorial" => "Tutorial",
             "Civilization" => "Our civilization",
+            "Caravans" => "Caravans: goods between our settlements",
             _ => "Summary",
         };
         var items = new List<UiItem>();
@@ -83,6 +84,9 @@ public partial class PlayGame
                 break;
             case "Civilization":
                 OurCivilizationItems(v, c, items);
+                break;
+            case "Caravans":
+                CaravanWindowItems(v, c, items);
                 break;
             default:
                 SummaryItems(v, items);
