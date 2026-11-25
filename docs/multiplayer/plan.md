@@ -370,10 +370,10 @@ Propozycja (osobny mały PR „CI1”, razem z włączeniem CI):
   (cała mapa, bez możliwości przejęcia ludu w tej partii).
 - **Kandydat** wybiera lud prowadzony przez AI z puli miejsc dla graczy (limit ludzi z konfiguracji); rusza głosowanie.
   Nie można wybrać ludu wyrzuconego gracza.
-- **Kto głosuje:** gracze prowadzący lud, którzy grają w tej partii co najmniej N minut (R4-1). Obserwatorzy, kandydaci, upadli gracze
-  i sam zainteresowany nie głosują.
-- **Wynik:** „tak” musi dać ponad połowa uprawnionych; remis i brak głosu = „nie” (R4-2). Głosowanie trwa 30 s (o gracza) albo 20 s (o prędkość).
-- **Wyrzucenie:** decyzja gospodarza albo głosowanie (ponad 50% uprawnionych, bez głosu wyrzucanego; remis = zostaje). Lud wyrzuconego
+- **Kto głosuje:** gracze prowadzący lud, którzy grają w tej partii co najmniej **3 minuty** (R4-1), także ten, którego głosowanie dotyczy
+  (np. wyrzucany), jeśli gra wystarczająco długo (R4-2). Obserwatorzy, kandydaci i upadli gracze nie głosują.
+- **Wynik:** „tak” musi dać ponad połowa uprawnionych; remis i brak głosu = „nie” (R4-2, decyzja Patryka). Głosowanie trwa 30 s (o gracza) albo 20 s (o prędkość).
+- **Wyrzucenie:** decyzja gospodarza albo głosowanie (ponad 50% uprawnionych, wyrzucany też głosuje, jeśli gra ≥ 3 min; remis = zostaje). Lud wyrzuconego
   prowadzi AI i jest zablokowany dla innych.
 - **Powrót wyrzuconego:** jako kandydat na swój dawny lud; głosują pozostali uprawnieni; po zgodzie odzyskuje lud.
 - **Powrót po rozłączeniu** (nie wyrzucony): bez głosowania, na swój lud (klucz powrotu na komputerze gracza).
@@ -394,8 +394,8 @@ Propozycja (osobny mały PR „CI1”, razem z włączeniem CI):
 
 | # | Pytanie | Rekomendacja |
 | --- | --- | --- |
-| R4-1 | Ile trzeba grać, żeby mieć prawo głosu? | **5 minut** w tej partii. |
-| R4-2 | Większość liczona z uprawnionych (brak głosu = „nie”) czy z tych, którzy zagłosowali? | **Z uprawnionych**, tak samo jak przy prędkości (R2-11). Przy 2 graczach oznacza to zgodę obu. |
+| R4-1 | Ile trzeba grać, żeby mieć prawo głosu? | **Decyzja: 3 minuty.** |
+| R4-2 | Większość liczona z uprawnionych (brak głosu = „nie”)? | **Decyzja: tak.** Gracz, którego głosowanie dotyczy, też głosuje, jeśli gra ≥ 3 min. |
 | R4-3 | Limity zapisów na VPS (rozdz. 20)? | **Autozapis + 3 ręczne na partię, 200 MB na serwer, usuwanie po 30 dniach.** |
 | R4-4 | Dwóch graczy z tym samym pseudonimem w jednej partii? | **Drugi dostaje dopisek** („Ania (2)”); pseudonim nie musi być unikalny poza partią. |
 | R4-5 | Czy planowanie jest zamknięte? Jeśli tak: ADR 0031 i start prac w kolejności CI1 → W1 → MP1 → … | **Tak, po tej rundzie.** Prace w tym wątku, jeden PR naraz, każdy z opisem i liczbami. |
