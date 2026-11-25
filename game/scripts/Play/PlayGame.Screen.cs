@@ -220,7 +220,8 @@ public partial class PlayGame
         centre.AddChild(eraRow);
         _eraBarBox = new VBoxContainer();
         centre.AddChild(_eraBarBox);
-        _researchChip = UiKit.Button("Choose research", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (2).");
+        _researchChip = UiKit.Button("", () => OpenWindow("Research"), "What we are researching. Click to open the research tree (2).");
+        _researchChip.Visible = false;
         _researchChip.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
         _researchChip.CustomMinimumSize = new Vector2(UiKit.W(260), 0);
         centre.AddChild(_researchChip);
@@ -443,6 +444,10 @@ public partial class PlayGame
         helpButtons.AddChild(UiKit.Button("The whole manual (F1)", () => ToggleManual(0), "How to play: the goal, the first minutes, the eras, war and peace, every key"));
         helpButtons.AddChild(UiKit.Button("Close", () => ShowHelp(false), "Close (Esc or H)"));
         BuildKeysUi(root, topH);
+
+        // Messages and hints over the windows (2026-11-24: "Caravan sent" was hidden under the caravans window).
+        _banner.MoveToFront();
+        _toastPanel.MoveToFront();
     }
 
     // Another art pack: the shared library switches (Main saves the choice), then the coloured pictures, the map and the
@@ -607,6 +612,7 @@ public partial class PlayGame
         {
             _eraLabel.Text = v.MyPick ? (v.PickNoLimit ? "Your turn: choose the start" : $"Your turn: {v.PickSecondsLeft} s") : $"{v.WhoPicks} are choosing…";
             SetResources("pick", () => _resBox.AddChild(UiKit.Label("Choosing the start", 14, UiKit.Muted)));
+            _researchChip.Visible = false; // nothing to research before the start (it showed an empty "Choose research")
             return;
         }
 
@@ -913,9 +919,15 @@ public partial class PlayGame
         _session.SaveGame(""); // the server names it after the game's seed (or scenario) and minute
     }
 
-    private void Toast(string text)
+    private void Toast(string text) => Toast(text, good: false);
+
+    // A message under the top bar: red for what went wrong (the default), green for what was done (2026-11-24).
+    private void Toast(string text, bool good)
     {
         GD.Print($"toast: {text}");
+        _toastPanel.AddThemeStyleboxOverride("panel", good
+            ? UiKit.Flat(new Color(0.12f, 0.26f, 0.1f, 0.95f), UiKit.Good, 6, 2)
+            : UiKit.Flat(new Color(0.3f, 0.1f, 0.08f, 0.95f), UiKit.Bad, 6, 2));
         _toast.Text = text;
         _toastPanel.Visible = true;
         _toastTime = 4;

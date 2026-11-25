@@ -7,7 +7,7 @@ Kod: `src/CivSim.Sim/State/SimGame.Combat.cs` (rdzeń), `SimGame.War.cs` (wojna,
 
 ## Krok walki
 
-Co `stepTicks` = 5 taktów (0,5 s przy ×1) każdy oddział wojska uderza:
+Co `stepTicks` = 10 taktów (1 s przy ×1; do 2026-11-24 było 5, Patryk: walka za szybka) każdy oddział wojska uderza:
 
 - **wręcz** (zasięg 1): każdego wroga na sąsiednim heksie (albo na tym samym); przy każdym walczy co najwyżej
   `frontPerContact` = 12 jego ludzi (gdy styka się z trzema wrogami, a ma 15 ludzi, przy każdym walczy 5);
@@ -18,7 +18,7 @@ Najpierw liczone są wszystkie uderzenia kroku, potem straty schodzą naraz, wi�
 
 ```mermaid
 flowchart LR
-  A[krok co 0,5 s] --> B[kto kogo dotyka]
+  A[krok co 1 s] --> B[kto kogo dotyka]
   B --> C[obrażenia każdego uderzenia]
   C --> D[suma na oddział]
   D --> E[straty: ludzie, ranni, wynik wojny]
@@ -127,7 +127,7 @@ Oblężenia liczą się w tym samym kroku: dawna sekundowa siła oblężenia jes
 | V / B / N | podziel na pół / uzbrój w osadzie / koniec straży |
 
 W panelu osady nad kafelkami szkolenia jest suwak wielkości (lewy koniec: zwykła wielkość rodzaju) i pole „tylko broń”.
-W panelu oddziału jest sekcja „Battle”: broń i zbroja z mnożnikami, straty w ostatnim pół sekundy, przyciski postaw,
+W panelu oddziału jest sekcja „Battle”: broń i zbroja z mnożnikami, straty w ostatniej rundzie, przyciski postaw,
 dzielenia, uzbrojenia i straży.
 
 ## Co widać w bitwie (paczka 2)
@@ -318,3 +318,22 @@ to zaostrzone pale.
 ## Czego jeszcze nie ma (kolejne paczki)
 
 AI walki (formacje, flanki, odskoki jazdy).
+
+## Wolniejsza walka i widoczne strzałki (2026-11-24)
+
+Tester Patryka: walka za szybka, strzałki słabo widać.
+
+- Runda walki co 10 taktów zamiast 5 (`combat.stepTicks`). Obrażenia liczą się za rundę, więc walka idzie o połowę wolniej. Marsz
+  się nie zmienia; oblężenie liczy obrażenia za czas, więc też się nie zmienia.
+- Klient trzyma każde uderzenie na ekranie przez 1,5 s i powoli je wygasza (widok niesie tylko ostatnią rundę, więc strzałka
+  mrugała). Łucznicy wypuszczają pociski lecące wzdłuż linii. Strzałki mają tę samą grubość na ekranie przy każdym przybliżeniu.
+
+Czas od pierwszego ciosu do śmierci połowy żołnierzy (scenariusze bitew, AI po obu stronach):
+
+| Scenariusz | Żołnierzy | Przed (5 taktów) | Po (10 taktów) |
+| --- | --- | --- | --- |
+| 06 otwarte pole | 132 | 36 s | 58 s |
+| 07 uzbrojenie | 140 | 19 s | 34 s |
+| 08 konnica | 165 | 15 s | 29 s |
+| 09 przeciw AI | 210 | 61 s | 76 s |
+

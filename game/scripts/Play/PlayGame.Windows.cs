@@ -58,6 +58,7 @@ public partial class PlayGame
             "Units" => "Our units and patrols",
             "Tutorial" => "Tutorial",
             "Civilization" => "Our civilization",
+            "Caravans" => "Caravans: goods between our settlements",
             _ => "Summary",
         };
         var items = new List<UiItem>();
@@ -83,6 +84,9 @@ public partial class PlayGame
                 break;
             case "Civilization":
                 OurCivilizationItems(v, c, items);
+                break;
+            case "Caravans":
+                CaravanWindowItems(v, c, items);
                 break;
             default:
                 SummaryItems(v, items);
@@ -711,7 +715,7 @@ public partial class PlayGame
 
     private void PeoplesItems(PlayViewMessage v, PlayContentMessage c, List<UiItem> items)
     {
-        items.Add(new HeaderItem("Our people", c.Eras[v.Era], new Color("c8a050"), "Us", UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), v.Civ), v.Civ, Portrait: true));
+        items.Add(new HeaderItem("Our civilization", c.Eras[v.Era], new Color("c8a050"), "Us", UiKit.EmblemName(UiKit.KeyOf(c.Eras[v.Era]), v.Civ), v.Civ, Portrait: true));
         if (v.Peoples.Count == 0)
         {
             items.Add(new LineItem("We have met no other civilization yet. Send scouts to find them.", UiKit.Muted, 15));
@@ -886,7 +890,7 @@ public partial class PlayGame
     {
         string eraKey = UiKit.KeyOf(c.Eras[v.Era]);
         PlayHistoryView? ours = _session?.Summary?.Peoples.FirstOrDefault(p => p.Civ == v.Civ);
-        string name = ours?.Name ?? "Our people";
+        string name = ours?.Name ?? "Our civilization";
         string next = v.Era + 1 < c.Eras.Count ? $"{v.EraKnown} of {v.EraNeed} technologies to the {c.Eras[v.Era + 1]}" : "the last era";
         items.Add(new HeaderItem(name, $"{c.Eras[v.Era]} - {next}", new Color("c8a050"), "Us", UiKit.EmblemName(eraKey, v.Civ), v.Civ, v.Lost, Portrait: true));
         if (v.Goal is { Length: > 0 } goal)

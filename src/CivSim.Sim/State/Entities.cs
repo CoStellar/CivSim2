@@ -501,6 +501,12 @@ public sealed class Unit
     /// <summary>People in the group.</summary>
     public int People { get; set; }
 
+    /// <summary>
+    /// Carriers its settlement did not have to give (it keeps at least one person): they go back to nobody (abuse tests
+    /// 2026-11-24: every caravan from a settlement of one person made a new person when it came home).
+    /// </summary>
+    public int Lent { get; set; }
+
     /// <summary>Hex it stands on (or the settlement centre while training).</summary>
     public int Cell { get; set; }
 

@@ -285,6 +285,10 @@ public partial class Main : Node2D
                     demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen("Thinkers"))];
                 }
             }
+            else if (_playWindow == "Caravans")
+            {
+                demo = [(_playSeconds - 2.5, g => g.ScriptCaravans()), (_playSeconds - 1.2, g => g.ScriptCaravanSend())];
+            }
             else if (_playWindow == "Help")
             {
                 demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.H))];
@@ -357,6 +361,10 @@ public partial class Main : Node2D
             {
                 // A test scenario with armies on a field: combat mode, all soldiers picked, sent in formation at the enemy.
                 demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1)), (_playSeconds - 0.6, g => g.ScriptBattle(3))];
+            }
+            else if (_playWindow is "BattleNear")
+            {
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1)), (_playSeconds - 0.8, g => g.ScriptZoom(1.8f))];
             }
             else if (_playWindow == "Victory")
             {

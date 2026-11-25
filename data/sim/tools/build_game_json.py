@@ -114,7 +114,7 @@ for x in B:
 d["upgradeCreditPercent"]=50
 # Combat (Patryk, 2026-11-19, claude/walka-propozycja.md): every number here.
 d["combat"]={"comment":"Battle in steps of stepTicks. A unit fights every enemy unit next to it (ranged: within range, only while standing). Per step it kills engaged people x strength x weapon / armour of the target x terrain x flank x charge x bonus against the target's kind x fed x luck / killDivisor. Engaged people: at most frontPerContact for each enemy it touches. weapon and armour: multipliers for levels 0-4 (armourVsRangedBonus: armour counts this much more against arrows). Flank: damage taken by how many enemy units touch the target (index = count, last for more). Terrain: per level of relief higher than the target (flat 0, hills 1, mountains 2) reliefPercent, at most reliefMaxPercent; per elevationStep of height above it elevationPercent, at most elevationMaxPercent. Cover of the target's hex (forest or grove, palisade or wall) against ranged and melee, lost when enemies touch it from opposite sides. Attacking across a river without a bridge: riverPercent. Roads and swamps: openPercent more taken. Leaving enemies: each enemy next to it strikes once, disengagePercent of a step (cavalry cavalryDisengagePercent), unless another unit of ours stays next to that enemy. Charge: cavalry that walked chargeHexes or more before contact strikes chargePercent once (not against units that stop charges). One army unit to a hex: a unit that stops on another steps aside. Zone of control: a unit stops when it comes next to an enemy, and from there goes on only one hex at a time. Weapons only (shock): no armour, shockTrainPercent of the time. Single player: a battle after calmSeconds of calm slows time to x1. A unit falling to warnPercents of its full size is told in the chronicle. A unit with no way to its target searches again after chaseRetrySeconds and gives it up after chaseGiveUp failures.",
-  "stepTicks":5,"killDivisor":400,"frontPerContact":12,
+  "stepTicks":10,"killDivisor":400,"frontPerContact":12,
   "weapon":[60,100,140,180,220],"armour":[100,130,170,210,260],"armourVsRangedBonus":20,
   "flank":[100,100,125,150,180],
   "reliefPercent":8,"reliefMaxPercent":16,"elevationStep":20,"elevationPercent":3,"elevationMaxPercent":9,
@@ -308,6 +308,8 @@ d["lodes"]={"comment":"sizes: every deposit is small, medium or large (a mine or
 d["eraGateways"]={"comment":"Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
   "neolithic":"copper_working","bronze_age":"bronze_working","iron_age":"iron_working"}
 # Roads are part of the map, drawn hex by hex (decision of 2026-11-18): tracks from the start, paved roads with Roads.
+# Drawn paths and waypoints (abuse tests 2026-11-24: 5000 far waypoints froze the server for a second).
+d["drawnPaths"]={"comment":"A path given to a unit, a patrol, a road or a work: at most maxHexes hexes in all, at most maxJumps points that do not touch the one before (the way between them is searched, at most jumpSearchNodes hexes each).","maxHexes":1000,"maxJumps":32,"jumpSearchNodes":12000}
 d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of the hex's cost (capped at 150 so roads cross rough land). reach: hexes from our nearest settlement. supply: goods carriers bring to a new camp joined to our roads.",
   "levels":[{"key":"track","name":"Track","tech":"carrying","price":{"wood":2},"seconds":2,"walkPercent":60},
             {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
@@ -379,6 +381,8 @@ d["upgradeCaravans"]={"comment":"A settlement short of the goods for its upgrade
   "extraPercent":10,"aiRetrySeconds":60}
 # A2/A3 (tests 2026-11-20): a caravan to a unit with no way to it is refused; the AI does not send another for noWaySeconds.
 d["supply"]["noWaySeconds"]=60
+# Abuse tests 2026-11-24: 5000 standing routes sent 2000 caravans a minute from settlements of one person.
+d["supply"]["routesPerSettlement"]=8
 if "noWaySeconds:" not in d["supply"]["comment"]:
     d["supply"]["comment"]+=" noWaySeconds: a caravan to a unit there is no way to is refused, and the AI sends none to that unit for this long."
 # Decisions of Patryk after the tests of 2026-11-20 (claude/decyzje-testy-2026-11-20.md).

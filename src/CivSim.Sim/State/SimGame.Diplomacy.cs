@@ -170,6 +170,11 @@ public sealed partial class SimGame
 
     private string? ProposeTreaty(Civ civ, int other, TreatyKind kind)
     {
+        if (!Enum.IsDefined(kind))
+        {
+            return "No such treaty."; // abuse tests 2026-11-24: kind 7 was kept as an alliance without a trade agreement first
+        }
+
         if ((uint)other >= (uint)Civs.Count || other == civ.Id || Civs[other].Dead || (!Met(civ, Civs[other]) && !Met(Civs[other], civ)))
         {
             return "We have not met this civilization.";
@@ -216,6 +221,11 @@ public sealed partial class SimGame
 
     private string? AnswerTreaty(Civ civ, int from, TreatyKind kind, bool accept)
     {
+        if (!Enum.IsDefined(kind))
+        {
+            return "No such treaty.";
+        }
+
         TreatyOffer? offer = TreatyOffers.Find(o => o.From == from && o.To == civ.Id && o.Kind == kind);
         if (offer is null)
         {
@@ -242,6 +252,11 @@ public sealed partial class SimGame
 
     private string? CancelTreaty(Civ civ, int other, TreatyKind kind)
     {
+        if (!Enum.IsDefined(kind))
+        {
+            return "No such treaty.";
+        }
+
         if ((uint)other >= (uint)Civs.Count || !Has(civ.Id, other, kind))
         {
             return "We have no such treaty.";

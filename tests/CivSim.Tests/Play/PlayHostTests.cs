@@ -11,6 +11,46 @@ namespace CivSim.Tests.Play;
 
 public sealed class PlayHostTests
 {
+    // Abuse tests 2026-11-24: a second Hello took another civilization and left the first with nobody; an old client was let in.
+    [Fact]
+    public void ASecondHelloChangesNothingAndAnOldClientIsRefused()
+    {
+        using PlayHost host = PlayHost.Create(new PlayOptions(3, 66, 40, 3) { StartPhase = false });
+        IConnection c = host.Connect();
+        c.Send(new HelloMessage(ProtocolInfo.Version, "Test"));
+        host.RunTicks(0);
+        c.Send(new HelloMessage(ProtocolInfo.Version, "Again"));
+        host.RunTicks(0);
+        int welcomes = 0;
+        while (c.TryReceive(out IProtocolMessage? m))
+        {
+            welcomes += m is WelcomeMessage ? 1 : 0;
+        }
+
+        Assert.Equal(1, welcomes);
+        Assert.True(host.Game.Civs[1].IsAi);
+        IConnection old = host.Connect();
+        old.Send(new HelloMessage(ProtocolInfo.Version - 1, "Old"));
+        host.RunTicks(0);
+        Assert.True(old.TryReceive(out IProtocolMessage? first) && first is ConnectionRejectedMessage);
+        Assert.True(host.Game.Civs[1].IsAi);
+    }
+
+    [Fact]
+    public void ALeavingPlayersCivilizationGoesBackToTheAi()
+    {
+        using PlayHost host = PlayHost.Create(new PlayOptions(3, 66, 40, 3) { StartPhase = false });
+        IConnection a = host.Connect();
+        a.Send(new HelloMessage(ProtocolInfo.Version, "A"));
+        IConnection b = host.Connect();
+        b.Send(new HelloMessage(ProtocolInfo.Version, "B"));
+        host.RunTicks(0);
+        Assert.False(host.Game.Civs[1].IsAi);
+        b.Close();
+        host.RunTicks(0);
+        Assert.True(host.Game.Civs[1].IsAi);
+    }
+
     [Fact]
     public void APlayerGetsTheMapItsViewAndCanBuild()
     {

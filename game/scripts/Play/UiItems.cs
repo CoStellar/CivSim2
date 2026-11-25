@@ -159,7 +159,7 @@ internal sealed record StatsItem(IReadOnlyList<StatCell> Cells) : UiItem
 }
 
 /// <summary>A picture tile with a caption below: units to train and the like.</summary>
-internal sealed record TileCell(string Name, string Short, Color Color, string Tooltip, Action Do, bool Enabled, string Caption, string? Pic = null);
+internal sealed record TileCell(string Name, string Short, Color Color, string Tooltip, Action Do, bool Enabled, string Caption, string? Pic = null, bool Selected = false);
 
 /// <summary>A row of picture tiles that wraps.</summary>
 internal sealed record TilesItem(IReadOnlyList<TileCell> Tiles) : UiItem
@@ -171,14 +171,14 @@ internal sealed record TilesItem(IReadOnlyList<TileCell> Tiles) : UiItem
             var sb = new StringBuilder("T");
             foreach (TileCell t in Tiles)
             {
-                sb.Append(t.Name).Append(t.Enabled).Append(t.Caption).Append(t.Tooltip).Append(';');
+                sb.Append(t.Name).Append(t.Enabled).Append(t.Caption).Append(t.Selected).Append(t.Tooltip).Append(';');
             }
 
             return sb.ToString();
         }
     }
 
-    public override string Look => "T" + string.Concat(Tiles.Select(t => $"{t.Name}{t.Enabled}{t.Caption}{t.Pic};"));
+    public override string Look => "T" + string.Concat(Tiles.Select(t => $"{t.Name}{t.Enabled}{t.Caption}{t.Pic}{t.Selected};"));
 
     public override bool Retip(Control node)
     {
@@ -491,6 +491,12 @@ internal static class UiRender
                         Modulate = tile.Enabled ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f),
                     };
                     inner.AddChild(glyph);
+                    if (tile.Selected)
+                    {
+                        button.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
+                        button.AddThemeStyleboxOverride("hover", UiKit.Flat(new Color(0.36f, 0.29f, 0.1f, 0.95f), UiKit.Heading, 4, 3));
+                    }
+
                     Label cap = UiKit.Label(tile.Caption, 11, tile.Enabled ? UiKit.Text : UiKit.Muted);
                     cap.HorizontalAlignment = HorizontalAlignment.Center;
                     cap.ClipText = true; // a long name ("Prospectors") stays inside its tile; the tooltip has it whole
