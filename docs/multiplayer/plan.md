@@ -1,6 +1,6 @@
 # Multiplayer przez sieć: plan
 
-**Stan:** plan w trakcie uzgadniania z Patrykiem. Rundy pytań 1 i 2 zamknięte (2026-11-25), runda 3 otwarta (rozdz. 18).
+**Stan:** plan w trakcie uzgadniania z Patrykiem. Rundy pytań 1–3 zamknięte (2026-11-25), runda 4 otwarta (rozdz. 21).
 Kodu jeszcze nie zmieniamy; Patryk chce co najmniej dwóch kolejnych rund pytań przed budową.
 Podstawa: kod `development` z 2026-11-25 (`645f2b0`), ADR 0008, 0010, 0028, `docs/projekt-gry.md` (rozdz. 2 i 9), `docs/known-issues.md`.
 Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly-na-przyszlosc.md`.
@@ -36,6 +36,23 @@ Pomysły na później (m.in. kooperacja jednym ludem): `docs/multiplayer/pomysly
 | R2-10 | Czat? | **Do wszystkich i do sojuszników.** |
 | R2-11 | Głosowanie o prędkość? | **Ponad połowa grających, 20 s, brak głosu = „nie”.** |
 | R2-12 | Ludy razem? | **Do 8 teraz**, 12 po pomiarze późnej gry. |
+
+## 1b. Decyzje Patryka (runda 3, 2026-11-25)
+
+| # | Pytanie | Decyzja |
+| --- | --- | --- |
+| R3-1 | Wersje | **`v26.11.1`** (rok.miesiąc.numer). |
+| R3-2 | Subdomena dla TLS | **Spróbujemy** dodać subdomenę wskazującą na VPS. |
+| R3-3 | Hasło do zakładania gier | **Plik z kilkoma hasłami z datą ważności**, czytany bez restartu; stare hasło działa jeszcze ok. 7 dni. |
+| R3-4 | Pośrednik dla innych | **Publiczny obraz Docker + instrukcja**; w grze pola „adres i hasło pośrednika”, domyślnie pośrednik Patryka. |
+| R3-5 | VPS prowadzi partie? | **Na start tylko przekazuje ruch**; partie na VPS w drugim kroku, najwyżej 2 naraz. |
+| R3-6 | Gospodarz wychodzi z partii na VPS | **Gospodarzem zostaje gracz, który najdłużej jest w partii.** Zapisaną partię trzeba móc odzyskać: gospodarz widzi listę partii zapisanych na VPS; rozsądny limit miejsca (rozdz. 20). |
+| R3-7 | Obserwator | **Widzi całą mapę i nie może już przejąć ludu**; kto chce grać, czeka na głosowanie bez podglądu mapy. |
+| R3-8 | Głosowanie o nowego gracza | Głosują tylko gracze, **którzy grają już przez chwilę**; nowo dołączeni przez jakiś czas nie mają prawa głosu. |
+| R3-9 | Wyrzucanie | **Gospodarz albo głosowanie z przewagą ponad 50%** (remis = gracz zostaje). Powrót wyrzuconego: głosowanie reszty graczy (on nie głosuje); po zgodzie odzyskuje swój lud. Lud wyrzuconego jest **zablokowany** dla innych dołączających (mogą przejąć tylko inne ludy AI). |
+| R3-10 | Testy | **Szybkie lokalnie, pełne w CI** (PR CI1). |
+| R3-11 | Paczka gry z CI | **Dopiero gdy skończymy większość multiplayera.** |
+| R3-12 | Tożsamość | **Pseudonim** wpisywany przez gracza i **zapamiętany na przyszłe partie** (w ustawieniach gry na jego komputerze). |
 
 ## 2. Pomiary (2026-11-25, kod `development`)
 
@@ -330,7 +347,7 @@ Propozycja (osobny mały PR „CI1”, razem z włączeniem CI):
 - Test, który pilnuje czasu: zestaw szybki dłuższy niż 30 s = ostrzeżenie w CI, żeby testy nie puchły po cichu.
 - `CLAUDE.md`: zasada „lokalnie szybkie, pełne w CI; nowy test > 1 s oznacz jako Slow”.
 
-## 18. Runda 3: pytania do Patryka (z rekomendacją)
+## 18. Runda 3: pytania (zamknięta, odpowiedzi w rozdz. 1b)
 
 | # | Pytanie | Rekomendacja |
 | --- | --- | --- |
@@ -346,6 +363,42 @@ Propozycja (osobny mały PR „CI1”, razem z włączeniem CI):
 | R3-10 | Podział testów (rozdz. 17): lokalnie szybkie, pełne w CI? | **Tak**, osobny mały PR „CI1” jeszcze przed MP1. |
 | R3-11 | Czy CI ma przy tagu wersji budować też paczkę gry dla Windows (Godot bez okna, eksport) i wrzucać ją do GitHub Releases? | **Tak, później** (po MP3): gracze pobierają grę z jednego miejsca, z sumą kontrolną; dziś paczki robi Twój komputer. |
 | R3-12 | Tożsamość gracza: tylko pseudonim (bez kont), a klucz powrotu na swój lud zapisany na komputerze gracza? | **Tak.** Konta dopiero, gdyby gra trafiła do obcych ludzi (np. Steam). |
+
+## 19. Dołączanie, obserwatorzy, głosowania, wyrzucanie (zasady po rundach 2–3)
+
+- **Dołączenie w trakcie partii:** nowy gracz wchodzi jako **kandydat** (bez mapy, widzi tylko listę ludów do przejęcia) albo jako **obserwator**
+  (cała mapa, bez możliwości przejęcia ludu w tej partii).
+- **Kandydat** wybiera lud prowadzony przez AI z puli miejsc dla graczy (limit ludzi z konfiguracji); rusza głosowanie.
+  Nie można wybrać ludu wyrzuconego gracza.
+- **Kto głosuje:** gracze prowadzący lud, którzy grają w tej partii co najmniej N minut (R4-1). Obserwatorzy, kandydaci, upadli gracze
+  i sam zainteresowany nie głosują.
+- **Wynik:** „tak” musi dać ponad połowa uprawnionych; remis i brak głosu = „nie” (R4-2). Głosowanie trwa 30 s (o gracza) albo 20 s (o prędkość).
+- **Wyrzucenie:** decyzja gospodarza albo głosowanie (ponad 50% uprawnionych, bez głosu wyrzucanego; remis = zostaje). Lud wyrzuconego
+  prowadzi AI i jest zablokowany dla innych.
+- **Powrót wyrzuconego:** jako kandydat na swój dawny lud; głosują pozostali uprawnieni; po zgodzie odzyskuje lud.
+- **Powrót po rozłączeniu** (nie wyrzucony): bez głosowania, na swój lud (klucz powrotu na komputerze gracza).
+- **Gospodarz wychodzi:** u gospodarza (wariant A) partia się zapisuje i kończy; na VPS (wariant B) gospodarzem zostaje gracz najdłużej w partii.
+- Każde dołączenie, wyjście, przejęcie przez AI, przyjęcie i wyrzucenie to komenda z taktem w zapisie (determinizm, znany problem 11).
+
+## 20. Zapisy partii na VPS (gdy VPS zacznie prowadzić partie)
+
+- Gdy wyjdą wszyscy ludzie, partia na VPS zapisuje się i kończy po 5 minutach.
+- **Lista zapisów** w grze („Partie na serwerze”): gracz z hasłem do zakładania gier widzi zapisy partii, w których grał (rozpoznaje go klucz
+  z jego komputera); może taką partię wczytać i zostaje jej gospodarzem; reszta wraca na swoje ludy jak po rozłączeniu.
+- **Limity** (do potwierdzenia w R4-3): na partię ostatni autozapis + do 3 zapisów ręcznych; na cały serwer np. 200 MB; zapis nieużywany
+  przez 30 dni jest usuwany; przy braku miejsca znika najstarszy nieużywany. Zapis to lista rozkazów, więc jest mały (do zmierzenia w MP5;
+  szacuję poniżej 1 MB na godzinę partii).
+- Zapisy w katalogu podpiętym do kontenera (volume), więc przeżywają aktualizację obrazu.
+
+## 21. Runda 4: pytania do Patryka (z rekomendacją)
+
+| # | Pytanie | Rekomendacja |
+| --- | --- | --- |
+| R4-1 | Ile trzeba grać, żeby mieć prawo głosu? | **5 minut** w tej partii. |
+| R4-2 | Większość liczona z uprawnionych (brak głosu = „nie”) czy z tych, którzy zagłosowali? | **Z uprawnionych**, tak samo jak przy prędkości (R2-11). Przy 2 graczach oznacza to zgodę obu. |
+| R4-3 | Limity zapisów na VPS (rozdz. 20)? | **Autozapis + 3 ręczne na partię, 200 MB na serwer, usuwanie po 30 dniach.** |
+| R4-4 | Dwóch graczy z tym samym pseudonimem w jednej partii? | **Drugi dostaje dopisek** („Ania (2)”); pseudonim nie musi być unikalny poza partią. |
+| R4-5 | Czy planowanie jest zamknięte? Jeśli tak: ADR 0031 i start prac w kolejności CI1 → W1 → MP1 → … | **Tak, po tej rundzie.** Prace w tym wątku, jeden PR naraz, każdy z opisem i liczbami. |
 
 ## Źródła (research 2026-11-25)
 
