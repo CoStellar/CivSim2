@@ -180,6 +180,13 @@ We meet other civilizations by seeing them: scouts, borders, their units. The Ci
 
 Scouts can go hidden: slower, but nobody can tell whose they are. When units of a civilization we have not met come near one of our settlements and have seen it, the alert **Strangers** tells us, but not who they are or where they come from.
 
+# Playing with others
+The players' list (top right) shows everyone in the game, their ping and the pauses they have left. Each player has 3 pauses; another player may end a pause after 30 s. A change of speed is put to a vote: more than half of the players must say yes.
+
+Who joins a game that already runs waits without the map and asks to lead one of the civilizations the AI leads; the players vote (30 s). "Only watch" shows the whole map instead, for good in that game. A player whose civilization is gone watches the whole map too.
+
+The host removes a player with the "x" next to the name (click twice); another player starts a vote with it. The AI leads the removed player's civilization and nobody else may take it; the removed player may join again and ask for it back.
+
 # Tips
 - Watch the red numbers on the goods bar: something is used faster than it is made.
 - `J` goes through the alerts one by one.

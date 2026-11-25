@@ -320,6 +320,18 @@ public partial class PlayGame : Node2D
     /// <summary>Writes a chat line to all players (automated checks of two windows).</summary>
     public void ScriptChat(string text) => _session?.Chat(text, false);
 
+    /// <summary>Proposes to remove a player (automated checks of two windows).</summary>
+    public void ScriptKick(string name) => _session?.Kick(name);
+
+    /// <summary>A candidate asks for the n-th civilization it may take (automated checks).</summary>
+    public void ScriptAsk(int nth)
+    {
+        if (_session?.Players?.Takeable is { } list && list.Count > 0)
+        {
+            _session.AskToLead(list[Math.Min(nth, list.Count - 1)].Civ);
+        }
+    }
+
     /// <summary>Script step: a real left click (press and release) at a point of the screen, through Godot's input.</summary>
     public void ScriptMouseClick(Vector2 at)
     {
@@ -594,6 +606,15 @@ public partial class PlayGame : Node2D
             _camera.Position = _map.Period / 2;
             Zoom = 0.3f;
             _pickView = true;
+        }
+
+        if (!_centred && _session.PlayView is { Picking: false, Spectator: true, Civ: < 0 } watched && watched.Settlements.Count > 0)
+        {
+            // An observer: the first settlement it sees (of any civilization).
+            PlaySettlementView first = watched.Settlements[0];
+            _camera.Position = HexLayout.Center(first.Col, first.Row);
+            Zoom = 0.5f;
+            _centred = true;
         }
 
         if (!_centred && _session.PlayView is { Picking: false } v)

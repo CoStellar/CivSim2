@@ -25,7 +25,11 @@ public partial class Main
     private string? _mpName;
     private string? _mpChat;
     private bool _mpReady;
+    private bool _mpWatch;
+    private string? _mpKick;
+    private int _mpAsk = -1;
     private int _mpStart;
+    private int _mpSeats;
     private string? _mpLobbyShot;
     private double _mpLobbySeconds = 3;
     private string? _mpSay;
@@ -54,6 +58,18 @@ public partial class Main
                 case "--mp-ready":
                     _mpReady = true;
                     break;
+                case "--mp-watch":
+                    _mpWatch = true;
+                    break;
+                case "--mp-kick":
+                    _mpKick = next;
+                    break;
+                case "--mp-ask":
+                    _mpAsk = int.Parse(next, CultureInfo.InvariantCulture);
+                    break;
+                case "--mp-seats":
+                    _mpSeats = int.Parse(next, CultureInfo.InvariantCulture);
+                    break;
                 case "--mp-start":
                     _mpStart = int.Parse(next, CultureInfo.InvariantCulture);
                     break;
@@ -81,7 +97,7 @@ public partial class Main
         {
             StartSettings s = _saved.Start;
             int port = int.Parse(_mpHost, CultureInfo.InvariantCulture);
-            PlayOptions options = NewGameFromSettings(s) with { HumanSeats = Math.Max(2, _mpStart), StartSpeed = 1, Tutorial = false };
+            PlayOptions options = NewGameFromSettings(s) with { HumanSeats = Math.Max(Math.Max(2, _mpStart), _mpSeats), StartSpeed = 1, Tutorial = false };
             Host(options, new LobbyConfig { GameName = s.HostGameName.Length > 0 ? s.HostGameName : "CivSim game" }, port);
             return true;
         }
@@ -184,6 +200,7 @@ public partial class Main
             AutoStartWith = _mpStart,
             AutoChat = _mpChat,
             Screenshot = _mpLobbyShot,
+            Watch = _mpWatch,
             ScreenshotAfter = _mpLobbySeconds,
         };
         _lobbyScreen = screen;
@@ -230,6 +247,17 @@ public partial class Main
             {
                 var speed = (CivSim.Protocol.Messages.SimulationSpeed)_mpPropose;
                 steps.Add((_playSeconds - (_mpPropose == 0 ? 3 : 6), g => g.ScriptSpeed(speed)));
+            }
+
+            if (_mpKick is { } kick)
+            {
+                steps.Add((_playSeconds - 15, g => g.ScriptKick(kick)));
+            }
+
+            if (_mpAsk >= 0)
+            {
+                int ask = _mpAsk;
+                steps.Add((_playSeconds - 6, g => g.ScriptAsk(ask)));
             }
 
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, steps);

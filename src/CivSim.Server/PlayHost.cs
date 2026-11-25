@@ -546,14 +546,23 @@ public sealed partial class PlayHost : IDisposable
             case PlacesRequestMessage places when client.Civ >= 0:
                 client.Connection.Send(Places(client.Civ, places.Type));
                 break;
-            case PlayPingMessage ping when client.Civ >= 0:
+            case PlayPingMessage ping when client.Role >= 0:
                 Pong(client, ping);
                 break;
-            case PlayChatMessage chat when client.Civ >= 0:
+            case PlayChatMessage chat when client.Role >= 0:
                 Chat(client, chat);
                 break;
             case PlayVoteMessage vote when client.Civ >= 0:
                 Cast(client, vote);
+                break;
+            case PlayJoinMessage join when client.Role == PlayPlayerInfo.Candidate:
+                Reject(client, AskToLead(client, join.Civ));
+                break;
+            case PlayWatchMessage when client.Role == PlayPlayerInfo.Candidate:
+                Watch(client);
+                break;
+            case PlayKickMessage kick when client.Civ >= 0:
+                Reject(client, Kick(client, kick.Name));
                 break;
             default:
                 break;
@@ -564,7 +573,7 @@ public sealed partial class PlayHost : IDisposable
     {
         // Abuse tests 2026-11-24: a second Hello took the next civilization (and left the first with nobody, AI off),
         // and a client of another protocol version was let in.
-        if (client.Civ >= 0)
+        if (client.Role >= 0)
         {
             return;
         }
@@ -582,9 +591,33 @@ public sealed partial class PlayHost : IDisposable
             return;
         }
 
+        // A removed player comes back only as a candidate for its old civilization, by a vote (R3-9).
+        if (hello.ReturnKey is { Length: > 0 } removedKey && _removed.TryGetValue(removedKey, out int removedCiv))
+        {
+            client.Removed = removedKey;
+            Wait(client, hello, PlayPlayerInfo.Candidate);
+            Reject(client, AskToLead(client, removedCiv));
+            return;
+        }
+
         // Back after a lost connection: the same civilization again (MP2). Otherwise the next free civilization that no absent player
         // keeps; the AI hands it over (multiplayer from the start, ADR 0028).
         bool back = hello.ReturnKey is { Length: > 0 } k && _returnKeys.ContainsKey(k);
+
+        // In a running game with other players a newcomer watches the whole map or waits as a candidate for a vote (chapter 19).
+        bool othersPlay = _clients.Exists(c => c != client && c.Civ >= 0 && c.Connection.IsOpen);
+        if (!back && hello.Role == ClientRole.Observer)
+        {
+            Wait(client, hello, PlayPlayerInfo.Observer);
+            return;
+        }
+
+        if (!back && client.Place < 0 && othersPlay && !_game.Picking && _game.Ticks > 0)
+        {
+            Wait(client, hello, PlayPlayerInfo.Candidate);
+            return;
+        }
+
         if (!back && _options.HumanSeats > 0 && _clients.Count(c => c.Civ >= 0) >= _options.HumanSeats)
         {
             Drop(client, "Every place for players is taken.");
@@ -603,14 +636,27 @@ public sealed partial class PlayHost : IDisposable
             return;
         }
 
-        client.Civ = civ;
+        Name(client, hello);
+        Seat(client, civ);
+    }
+
+    // The nickname, made unique among those in the game (players, candidates and observers).
+    private void Name(PlayClient client, HelloMessage hello)
+    {
         if (client.Name is null)
         {
             (client.Name, client.SuffixLength) = Nicknames.Unique(hello.PlayerName,
-                _clients.Where(c => c != client && c.Name is not null && c.Civ >= 0).Select(c => c.Name!), _game.Content.NicknameSuffixes);
+                _clients.Where(c => c != client && c.Name is not null && c.Role >= 0).Select(c => c.Name!), _game.Content.NicknameSuffixes);
         }
+    }
 
-        if (_clients.Exists(c => c != client && c.Civ >= 0 && c.Connection.IsOpen))
+    // The client leads the civilization from now on: the AI hands it over, the client gets its return key and the content.
+    private void Seat(PlayClient client, int civ)
+    {
+        client.Civ = civ;
+        client.Role = PlayPlayerInfo.Player;
+        client.Since = Clock();
+        if (_clients.Exists(c => c != client && c.Role >= 0 && c.Connection.IsOpen))
         {
             Announce($"{client.Name} joined and leads {_game.Civs[civ].Name}.");
         }
@@ -621,7 +667,15 @@ public sealed partial class PlayHost : IDisposable
         _returnKeys[returnKey] = civ;
         SetLeader(civ, player: true);
         client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, civ, civ, returnKey));
-        SendContent(client);
+        if (client.SentContent)
+        {
+            client.SentChunks = false; // a candidate taken in: its map comes now
+        }
+        else
+        {
+            SendContent(client);
+            client.SentContent = true;
+        }
     }
 
     // Compares hashes, so the time taken says nothing about the password (multiplayer plan, chapter 9).
@@ -651,7 +705,7 @@ public sealed partial class PlayHost : IDisposable
     {
         for (int c = 0; c < _game.Civs.Count; c++)
         {
-            if (!_game.Civs[c].Dead && !_clients.Exists(x => x.Civ == c) && !_returnKeys.ContainsValue(c))
+            if (!_game.Civs[c].Dead && !_clients.Exists(x => x.Civ == c) && !_returnKeys.ContainsValue(c) && !_locked.Contains(c))
             {
                 return c;
             }
@@ -669,6 +723,11 @@ public sealed partial class PlayHost : IDisposable
         {
             _speed = speed;
             return null;
+        }
+
+        if (_game.Civs[client.Civ].Dead)
+        {
+            return "Our civilization is gone: the players still in the game choose the speed.";
         }
 
         if (speed > SimulationSpeed.X2)
@@ -1100,9 +1159,19 @@ public sealed partial class PlayHost : IDisposable
 
         foreach (PlayClient client in _clients)
         {
-            if (client.Civ < 0)
+            // Observers and players whose civilization fell see the whole map (P6, R3-7); candidates see none (chapter 19).
+            bool watching = client.Role == PlayPlayerInfo.Observer || (client.Civ >= 0 && _game.Civs[client.Civ].Dead);
+            if (client.Civ < 0 && !watching)
             {
                 continue;
+            }
+
+            if (watching != client.Watching)
+            {
+                client.Watching = watching;
+                client.SentChunks = false; // the whole map from now on
+                client.ViewSoon = true;
+                _playersDirty = true; // a fallen player shows as such
             }
 
             if (client.Connection.Congested)
@@ -1114,14 +1183,14 @@ public sealed partial class PlayHost : IDisposable
                 continue;
             }
 
-            Civ civ = _game.Civs[client.Civ];
+            Civ civ = watching ? Watcher() : _game.Civs[client.Civ];
             if (!client.SentChunks || client.SawPicking != _game.Picking)
             {
                 // The whole map again: at the start, and when the start phase ends (deposits and soil appear, the fog comes).
                 System.Array.Clear(client.SentTerrain);
                 for (int chunk = 0; chunk < _game.Map.Chunks.Count; chunk++)
                 {
-                    SendChunk(client, chunk, always: client.SentChunks);
+                    SendChunk(client, civ, chunk, always: client.SentChunks);
                 }
 
                 client.SentChunks = true;
@@ -1148,17 +1217,17 @@ public sealed partial class PlayHost : IDisposable
                 SendChanges(client, civ);
             }
 
-            SendView(client);
+            SendView(client, civ);
         }
 
         _news.Clear();
     }
 
     // Objects every round, as changes; the rest of the view four times a second (or at once after a command).
-    private void SendView(PlayClient client)
+    private void SendView(PlayClient client, Civ civ)
     {
         client.News.AddRange(NewsOf(client.Civ));
-        PlayViewMessage v = View(client.Civ);
+        PlayViewMessage v = client.Watching ? View(-1, civ) with { Lost = client.Civ >= 0, Spectator = true } : View(client.Civ, civ);
         var buildings = new List<PlayBuildingView>();
         var settlements = new List<PlaySettlementView>();
         var units = new List<PlayUnitView>();
@@ -1332,7 +1401,7 @@ public sealed partial class PlayHost : IDisposable
 
             if (terrain)
             {
-                SendChunk(client, chunk);
+                SendChunk(client, civ, chunk);
                 continue;
             }
 
@@ -1397,9 +1466,8 @@ public sealed partial class PlayHost : IDisposable
     private byte SurveyFor(Civ civ, int i) => (byte)((_game.RockLookedAt(civ, i) ? MapChunkMessage.RockLooked : 0) | (_game.KnowsSoil(civ, i) ? MapChunkMessage.SoilKnown : 0)
         | (_game.KnowsDeposit(civ, i) ? MapChunkMessage.DepositKnown : 0) | (_game.DepositHidden(civ, i) ? MapChunkMessage.DepositHidden : 0));
 
-    private void SendChunk(PlayClient client, int chunk, bool always = false)
+    private void SendChunk(PlayClient client, Civ civ, int chunk, bool always = false)
     {
-        Civ civ = _game.Civs[client.Civ];
         MapChunkMessage? m = MapViewBuilder.Build(_game.Map, 0, chunk, _game.Ticks, civ.Known, hideResources: _game.Picking, always: always,
             visibilityOf: i => VisibilityFor(civ, i), ownerSeen: i => OwnerFor(civ, i), roadSeen: i => RoadFor(civ, i), worksSeen: i => WorksFor(civ, i), treesOf: i => civ.Known[i] ? _game.Trees[i] : (byte)0,
             depositKnown: i => _game.KnowsDeposit(civ, i), surveyOf: i => SurveyFor(civ, i));
@@ -1424,10 +1492,11 @@ public sealed partial class PlayHost : IDisposable
         }
     }
 
-    private PlayViewMessage View(int civId)
-    {
-        Civ civ = _game.Civs[civId];
+    private PlayViewMessage View(int civId) => View(civId, _game.Civs[civId]);
 
+    // The view of a civilization; civId −1 with the watcher: the whole map, nothing of it ours.
+    private PlayViewMessage View(int civId, Civ civ)
+    {
         // A14/B1 (tests 2026-11-20): the view only reads. The simulation keeps a player's people recomputed itself
         // (SimGame.SettlePlayer); an AI people seen by an observer shows its numbers from its last thought.
         bool[] known = civ.Known;
@@ -1461,7 +1530,7 @@ public sealed partial class PlayHost : IDisposable
                 HealPerMinute: own ? s.HealPerMinute : 0, RationUnits: rUnits, RationPeople: rPeople, RationFood: rFood,
                 RationShort: own ? s.RationShort : 0, RationDead: own ? s.RationDead : 0,
                 HungryPeople: own ? s.HungryPeople : 0, HungryWorkers: own ? s.HungryWorkers : 0,
-                Guard: s.Guard, GuardMax: own ? _game.GuardMax(s) : 0, FallenToUs: s.FallenTo == civId, Fighters: s.Besieged ? s.Fighters : 0,
+                Guard: s.Guard, GuardMax: own ? _game.GuardMax(s) : 0, FallenToUs: civId >= 0 && s.FallenTo == civId, Fighters: s.Besieged ? s.Fighters : 0,
                 FoodBalance: own ? _game.FoodBalance(civ, s) : null));
         }
 
@@ -1561,7 +1630,7 @@ public sealed partial class PlayHost : IDisposable
             AlertsOf(civ), _game.KnownIn(civ, civ.Era), civ.Era + 1 < _game.Content.Eras.Count ? _game.Content.EraAdvanceTechs : 0,
             Winter: _game.IsWinter, SeasonSeconds: _game.TicksToSeasonChange == long.MaxValue ? 0 : (int)(_game.TicksToSeasonChange / SimContent.TicksPerSecond),
             RationSeconds: (_game.TicksToRation(civ) + SimContent.TicksPerSecond - 1) / SimContent.TicksPerSecond, Debug: _game.DebugOn,
-            ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone(), Won: _game.Winner == civId,
+            ArmyUnits: _game.ArmyUnits(civ), ArmyLimit: _game.ArmyLimit(civ), KindKills: (int[])civ.KindKills.Clone(), KindLevel: (int[])civ.KindLevel.Clone(), KindPending: (int[])civ.KindPending.Clone(), KindPicks: (int[])civ.KindPicks.Clone(), Won: civId >= 0 && _game.Winner == civId,
             EventInfo: civ.Event >= 0 ? _game.EventInfo(_game.Content.Events[civ.Event]) : null,
             Tutorial: civ.Settlements.Count > 0 ? [.. _game.Tutorial(civ).Select(t => new PlayTutorialStep(t.Text, t.Done, t.Highlight))] : null,
             TutorialOn: _options.Tutorial, PickNoLimit: _game.PickWaitsForPlayers,
@@ -1860,6 +1929,17 @@ public sealed partial class PlayHost : IDisposable
     private List<PlayKnownCivView> KnownCivs(Civ civ)
     {
         var list = new List<PlayKnownCivView>();
+        if (civ.Id < 0)
+        {
+            // The watcher (observers, fallen players): every civilization, without our relations to it.
+            foreach (Civ other in _game.Civs)
+            {
+                list.Add(new PlayKnownCivView(other.Id, other.Name, false, 0, 0, 0, other.Reputation, null, other.Dead, false, false, false, false, null, 0, 0, null, null, null, 0, false, false, 0));
+            }
+
+            return list;
+        }
+
         foreach (Civ other in _game.Civs)
         {
             // Civilizations we have seen, and civilizations that have seen us and spoke to us (an offer) or fight us.
@@ -1994,6 +2074,18 @@ public sealed partial class PlayHost : IDisposable
 
         public int Civ { get; set; } = -1;
 
+        /// <summary>What this client is in the game (<see cref="PlayPlayerInfo"/> roles); −1 before Hello.</summary>
+        public int Role { get; set; } = -1;
+
+        /// <summary>When it began to lead its civilization (a vote on players needs a while in the game, R4-1).</summary>
+        public long Since { get; set; }
+
+        /// <summary>Its views show the whole map (an observer, or a player whose civilization fell).</summary>
+        public bool Watching { get; set; }
+
+        /// <summary>A removed player who came back: the return key it was removed with (it may ask only for its old civilization).</summary>
+        public string? Removed { get; set; }
+
         public int Cells { get; } = cells;
 
         // What this client has been told, hex by hex: the server sends only changes against it.
@@ -2030,6 +2122,9 @@ public sealed partial class PlayHost : IDisposable
         }
 
         public bool SentChunks { get; set; }
+
+        /// <summary>The content went out (a candidate gets it at Hello, before it leads a civilization).</summary>
+        public bool SentContent { get; set; }
 
         public bool ViewSoon { get; set; }
 

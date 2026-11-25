@@ -69,7 +69,7 @@ public partial class StartMenu : CanvasLayer
     public event Action? QuitRequested;
 
     /// <summary>Raised to join a game on another computer: address, port, password (MP3).</summary>
-    public event Action<string, int, string>? JoinRequested;
+    public event Action<string, int, string, bool>? JoinRequested;
 
     /// <summary>Raised to host a multiplayer game: the game (from New game), the lobby's settings and the port (MP3).</summary>
     public event Action<PlayOptions, LobbyConfig, int>? HostRequested;
@@ -294,8 +294,14 @@ public partial class StartMenu : CanvasLayer
         LineEdit joinPort = Text(join, "Port", _settings.JoinPort.ToString(CultureInfo.InvariantCulture), v => _settings.JoinPort = PortOf(v, _settings.JoinPort), "7777 unless the host says otherwise");
         _ = joinPort;
         LineEdit joinPassword = Secret(join, "Password", "if the game has one");
+        var watchOnly = new CheckBox
+        {
+            Text = "Only watch",
+            TooltipText = "In a game that already runs: see the whole map, chat, but never lead a civilization in it.\nWithout it you wait for the players to let you lead a civilization the AI leads now.",
+        };
+        _content.AddChild(watchOnly);
         var joinButton = new Button { Text = "Join", CustomMinimumSize = new Vector2(200, 44), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin };
-        joinButton.Pressed += () => JoinRequested?.Invoke(_settings.JoinAddress, _settings.JoinPort, joinPassword.Text);
+        joinButton.Pressed += () => JoinRequested?.Invoke(_settings.JoinAddress, _settings.JoinPort, joinPassword.Text, watchOnly.ButtonPressed);
         _content.AddChild(joinButton);
 
         _content.AddChild(Heading("Host a game"));

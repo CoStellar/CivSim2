@@ -347,7 +347,8 @@ public sealed record PlayViewMessage(
     [property: Key(54)] bool PickNoLimit = false,
     [property: Key(55)] int PickMaxHexes = 0,
     [property: Key(56)] int[]? Signs = null,
-    [property: Key(57)] int SignRadius = 0) : IProtocolMessage;
+    [property: Key(57)] int SignRadius = 0,
+    [property: Key(58)] bool Spectator = false) : IProtocolMessage;
 
 /// <summary>One step of the tutorial (E6, 2026-11-20): what to do, whether it is done, the building key to highlight ("" = none).</summary>
 [MessagePackObject]

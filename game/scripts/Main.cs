@@ -503,10 +503,11 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
-        _menu.JoinRequested += (address, port, password) =>
+        _menu.JoinRequested += (address, port, password, watch) =>
         {
             _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
             SaveSettings();
+            _mpWatch = watch;
             Join(address, port, password);
         };
         _menu.HostRequested += (options, config, port) =>
