@@ -133,6 +133,30 @@ public sealed class ClientSession
     /// <summary>Removes a player (the host at once; another player starts a vote).</summary>
     public void Kick(string name) => _connection.Send(new PlayKickMessage(name));
 
+    /// <summary>Observers and fallen players: every civilization at a glance (observer full view); null for a player.</summary>
+    public IReadOnlyList<PlayOverviewRow>? Overview { get; private set; }
+
+    /// <summary>The intentions log received (the newest <see cref="IntentsKept"/>).</summary>
+    public IReadOnlyList<PlayIntentLine> Intents => _intents;
+
+    /// <summary>Lines of the intentions log kept.</summary>
+    public const int IntentsKept = 400;
+
+    private readonly List<PlayIntentLine> _intents = [];
+
+    /// <summary>Lines of the intentions log ever received (to notice new ones).</summary>
+    public long IntentsReceived { get; private set; }
+
+    /// <summary>The civilization whose eyes a spectator watches through (−1: the whole map).</summary>
+    public int Eye { get; private set; } = -1;
+
+    /// <summary>A spectator watches through the eyes of a civilization, read only (−1: the whole map).</summary>
+    public void WatchThrough(int civ)
+    {
+        Eye = civ;
+        _connection.Send(new PlayEyeMessage(civ));
+    }
+
     /// <summary>Asks the server for the fog of <paramref name="civ"/> (observers only); NoCiv stops it.</summary>
     public void Watch(int civ)
     {
@@ -378,6 +402,16 @@ public sealed class ClientSession
                 break;
             case PlayPlayersMessage players:
                 Players = players.Players.Count > 1 ? players : null;
+                break;
+            case PlayOverviewMessage overview:
+                Overview = overview.Civs;
+                _intents.AddRange(overview.Intents);
+                IntentsReceived += overview.Intents.Count;
+                if (_intents.Count > IntentsKept)
+                {
+                    _intents.RemoveRange(0, _intents.Count - IntentsKept);
+                }
+
                 break;
             case PlayChatLineMessage line:
                 _chatLines.Add(line);

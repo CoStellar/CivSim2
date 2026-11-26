@@ -314,6 +314,7 @@ public sealed partial class PlayHost : IDisposable
         }
 
         Social();
+        Spectators();
     }
 
     private void Advance()
@@ -538,6 +539,7 @@ public sealed partial class PlayHost : IDisposable
                 {
                     client.ViewSoon = true;
                     _log.Add(SavedCommand.Of(_game.Ticks, _steps, client.Civ, command)); // the save plays it again at this step
+                    TallyOrder(client.Civ, command); // a summary for observers (3a)
                 }
 
                 break;
@@ -573,6 +575,9 @@ public sealed partial class PlayHost : IDisposable
                 break;
             case PlayKickMessage kick when client.Civ >= 0:
                 Reject(client, Kick(client, kick.Name));
+                break;
+            case PlayEyeMessage eye when Spectating(client):
+                Eye(client, eye.Civ);
                 break;
             default:
                 break;
@@ -1201,7 +1206,19 @@ public sealed partial class PlayHost : IDisposable
                 client.Watching = watching;
                 client.SentChunks = false; // the whole map from now on
                 client.ViewSoon = true;
+                client.Eye = -1;
                 _playersDirty = true; // a fallen player shows as such
+            }
+
+            int eye = watching && client.Eye >= 0 && client.Eye < _game.Civs.Count ? client.Eye : -1;
+            bool blank = false;
+            if (eye != client.SentEye)
+            {
+                // Another pair of eyes: the whole map again, hexes this civilization does not know blank (observer full view).
+                client.SentEye = eye;
+                client.SentChunks = false;
+                client.ViewSoon = true;
+                blank = true;
             }
 
             if (client.Connection.Congested)
@@ -1213,19 +1230,34 @@ public sealed partial class PlayHost : IDisposable
                 continue;
             }
 
-            Civ civ = watching ? Watcher() : _game.Civs[client.Civ];
+            Civ civ = eye >= 0 ? _game.Civs[eye] : watching ? Watcher() : _game.Civs[client.Civ];
             if (!client.SentChunks || client.SawPicking != _game.Picking)
             {
                 // The whole map again: at the start, and when the start phase ends (deposits and soil appear, the fog comes).
                 System.Array.Clear(client.SentTerrain);
                 for (int chunk = 0; chunk < _game.Map.Chunks.Count; chunk++)
                 {
-                    SendChunk(client, civ, chunk, always: client.SentChunks);
+                    SendChunk(client, civ, chunk, always: client.SentChunks || blank);
                 }
 
                 client.SentChunks = true;
                 client.SawPicking = _game.Picking;
-                civ.NewlyKnown.Clear();
+                if (eye < 0)
+                {
+                    civ.NewlyKnown.Clear();
+                }
+            }
+            else if (eye >= 0)
+            {
+                // Through another civilization's eyes: its newly known hexes belong to its own player, so every chunk is compared.
+                _changed.Clear();
+                for (int chunk = 0; chunk < _game.Map.Chunks.Count; chunk++)
+                {
+                    _changed.Add(chunk);
+                }
+
+                client.MissedChunks.Clear();
+                SendChanges(client, civ);
             }
             else
             {
@@ -1257,7 +1289,7 @@ public sealed partial class PlayHost : IDisposable
     private void SendView(PlayClient client, Civ civ)
     {
         client.News.AddRange(NewsOf(client.Civ));
-        PlayViewMessage v = client.Watching ? View(-1, civ) with { Lost = client.Civ >= 0, Spectator = true } : View(client.Civ, civ);
+        PlayViewMessage v = client.Watching ? View(client.SentEye, civ) with { Lost = client.Civ >= 0, Spectator = true } : View(client.Civ, civ);
         var buildings = new List<PlayBuildingView>();
         var settlements = new List<PlaySettlementView>();
         var units = new List<PlayUnitView>();
@@ -1636,10 +1668,11 @@ public sealed partial class PlayHost : IDisposable
             HexCoord h = _game.Geo.FromIndex(u.Cell);
             HexCoord to = u.State == UnitState.Moving && u.Path.Count > 0 ? _game.Geo.FromIndex(u.Path[^1]) : h;
             bool mine = u.Civ == civId;
+            bool route = mine || civId < 0; // the whole map shows where everyone goes (observer full view, intentions on the map)
             units.Add(new PlayUnitView(u.Id, u.Kind, u.Civ, h.Col, h.Row, u.People, (int)u.State, u.Hidden, to.Col, to.Row, u.Fighting,
                 u.Cargo is null ? null : _game.CargoText(u.Cargo),
-                mine && u.State == UnitState.Moving ? KnownPairs(u.Path, u.PathIndex, civ.Known) : null,
-                mine && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
+                route && u.State == UnitState.Moving ? KnownPairs(u.Path, u.PathIndex, civ.Known) : null,
+                route && u.Patrol.Count > 0 ? Pairs(u.Patrol, 0) : null,
                 u.TargetUnit >= 0 || u.TargetSettlement >= 0,
                 _game.Content.Units[u.Kind].System, mine ? u.Injured : 0, mine && _game.Content.Units[u.Kind].CarriesArmies ? _game.Aboard(u) : 0,
                 mine ? u.Hunger : 0, mine ? u.Home : -1, mine && u.Patrol.Count == 0 && u.LastPatrol.Count > 0 ? Pairs(u.LastPatrol, 0) : null,
@@ -1916,7 +1949,7 @@ public sealed partial class PlayHost : IDisposable
         for (int i = 0; i < _game.Routes.Count; i++)
         {
             TradeRoute r = _game.Routes[i];
-            if (r.Civ == civ && !r.Ended)
+            if ((r.Civ == civ || civ < 0) && !r.Ended) // the whole map: every civilization's routes (observer full view)
             {
                 list.Add(new PlayRouteView(i, r.From, r.To, r.Good, (int)(r.Amount / SimContent.One), r.Caravan >= 0, r.Path.Count > 0 ? Pairs(r.Path, 0) : null));
             }
@@ -2112,6 +2145,15 @@ public sealed partial class PlayHost : IDisposable
 
         /// <summary>Its views show the whole map (an observer, or a player whose civilization fell).</summary>
         public bool Watching { get; set; }
+
+        /// <summary>A spectator watching through the eyes of this civilization, read only (−1: the whole map; observer full view).</summary>
+        public int Eye { get; set; } = -1;
+
+        /// <summary>The civilization whose eyes the views of a spectator were built with (to notice a change).</summary>
+        public int SentEye { get; set; } = -1;
+
+        /// <summary>Lines of the intentions log this spectator has (their number in <c>_intentCount</c>).</summary>
+        public long IntentsSent { get; set; }
 
         /// <summary>A removed player who came back: the return key it was removed with (it may ask only for its old civilization).</summary>
         public string? Removed { get; set; }

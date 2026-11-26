@@ -2045,6 +2045,9 @@ public sealed class SimContent
                     ChatBurst = mpRules.Prop("chatBurst").GetInt32(),
                     PlayerVoteSeconds = mpRules.Prop("playerVoteSeconds").GetInt32(),
                     VoteAfterSeconds = mpRules.Prop("voteAfterSeconds").GetInt32(),
+                    OverviewSeconds = mpRules.Prop("overviewSeconds").GetInt32(),
+                    IntentSeconds = mpRules.Prop("intentSeconds").GetInt32(),
+                    IntentLines = mpRules.Prop("intentLines").GetInt32(),
                 }
                 : new MultiplayerRules(),
             Food = GoodOf("food"),
@@ -2351,6 +2354,15 @@ public sealed record MultiplayerRules
 
     /// <summary>A player votes on players after leading a civilization this long (R4-1).</summary>
     public int VoteAfterSeconds { get; init; } = 180;
+
+    /// <summary>How often observers get the table of civilizations and new lines of the intentions log (observer full view).</summary>
+    public int OverviewSeconds { get; init; } = 2;
+
+    /// <summary>A player's orders are summed up this often into one line of the intentions log.</summary>
+    public int IntentSeconds { get; init; } = 10;
+
+    /// <summary>Lines of the intentions log the server keeps.</summary>
+    public int IntentLines { get; init; } = 300;
 
     /// <summary>How often the server measures each player's ping.</summary>
     public int PingEverySeconds { get; init; } = 2;

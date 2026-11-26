@@ -76,6 +76,9 @@ public partial class PlayOverlay : Node2D
     /// carriers on their way), 2 those and the standing ones (patrols, caravan routes).</summary>
     public int RouteDisplay { get; set; }
 
+    /// <summary>Observers: the routes and targets of every civilization's units and caravans (observer full view).</summary>
+    public bool EveryRoute { get; set; }
+
     /// <summary>The map as the player knows it (for roads).</summary>
     public CivSim.Game.Net.ClientWorld? World { get; set; }
 
@@ -713,14 +716,14 @@ public partial class PlayOverlay : Node2D
         PlaySettlementView? sel = SelectedSettlement();
         foreach (PlayUnitView u in _view.Units)
         {
-            if (u.Civ != _view.Civ)
+            if (u.Civ != _view.Civ && !EveryRoute)
             {
                 continue;
             }
 
             bool picked = u.Id == SelectedUnit || SelectedUnits.Contains(u.Id);
             bool fromSel = sel is not null && u.Carrier && Near(u, sel);
-            if (!picked && !fromSel && RouteDisplay == 0)
+            if (!picked && !fromSel && RouteDisplay == 0 && !EveryRoute)
             {
                 continue;
             }
@@ -747,7 +750,7 @@ public partial class PlayOverlay : Node2D
                 continue;
             }
 
-            bool shown = RouteDisplay >= 2 || (sel is not null && (sel.Id == r.From || sel.Id == r.To));
+            bool shown = RouteDisplay >= 2 || EveryRoute || (sel is not null && (sel.Id == r.From || sel.Id == r.To));
             if (!shown)
             {
                 continue;

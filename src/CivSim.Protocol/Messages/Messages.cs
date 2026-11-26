@@ -47,6 +47,8 @@ namespace CivSim.Protocol.Messages;
 [Union(38, typeof(PlayJoinMessage))]
 [Union(39, typeof(PlayWatchMessage))]
 [Union(40, typeof(PlayKickMessage))]
+[Union(41, typeof(PlayOverviewMessage))]
+[Union(42, typeof(PlayEyeMessage))]
 public interface IProtocolMessage
 {
 }

@@ -117,8 +117,86 @@ public sealed record PlayChatLineMessage(
     [property: Key(1)] int SuffixLength,
     [property: Key(2)] int FromCiv,
     [property: Key(3)] bool Allies,
-    [property: Key(4)] string Text) : IProtocolMessage;
+    [property: Key(4)] string Text,
+    [property: Key(5)] bool Spectators = false) : IProtocolMessage;
 
 /// <summary>Client → server: yes or no in the vote <see cref="Id"/>.</summary>
 [MessagePackObject]
 public sealed record PlayVoteMessage([property: Key(0)] int Id, [property: Key(1)] bool Yes) : IProtocolMessage;
+
+/// <summary>
+/// Server → observers and fallen players: every civilization at a glance and the new lines of the intentions log (observer full view,
+/// Patryk 2026-11-26). Players never get it: it shows what everyone intends.
+/// </summary>
+[MessagePackObject]
+public sealed record PlayOverviewMessage(
+    [property: Key(0)] IReadOnlyList<PlayOverviewRow> Civs,
+    [property: Key(1)] IReadOnlyList<PlayIntentLine> Intents) : IProtocolMessage;
+
+/// <summary>
+/// One civilization in the observers' table. <see cref="Player"/> is the nickname of its player (null: the AI leads it). Research:
+/// the technology (−1: none) and how far it is, percent. Army: units and the people in them. Stock: whole units by good index.
+/// Wars, alliances and trade: the other civilizations. The capital is its biggest settlement (−1, −1: none).
+/// </summary>
+[MessagePackObject]
+public sealed record PlayOverviewRow(
+    [property: Key(0)] int Civ,
+    [property: Key(1)] string Name,
+    [property: Key(2)] string? Player,
+    [property: Key(3)] bool Dead,
+    [property: Key(4)] int People,
+    [property: Key(5)] int Settlements,
+    [property: Key(6)] int Era,
+    [property: Key(7)] int Researching,
+    [property: Key(8)] int ResearchPercent,
+    [property: Key(9)] int ArmyUnits,
+    [property: Key(10)] int Soldiers,
+    [property: Key(11)] long[] Stock,
+    [property: Key(12)] int Score,
+    [property: Key(13)] int[] Wars,
+    [property: Key(14)] int[] Alliances,
+    [property: Key(15)] int[] Trade,
+    [property: Key(16)] int CapitalCol,
+    [property: Key(17)] int CapitalRow);
+
+/// <summary>
+/// A line of the intentions log: an AI decision, or a summary of a player's orders (3a: effects, not every command). Kind:
+/// <see cref="War"/> … <see cref="Trade"/>.
+/// </summary>
+[MessagePackObject]
+public sealed record PlayIntentLine(
+    [property: Key(0)] long Tick,
+    [property: Key(1)] int Civ,
+    [property: Key(2)] bool Player,
+    [property: Key(3)] int Kind,
+    [property: Key(4)] string Text)
+{
+    /// <summary>War: starting, sparing or scouting a target, attacks.</summary>
+    public const int War = 0;
+
+    /// <summary>Peace offers and answers.</summary>
+    public const int Peace = 1;
+
+    /// <summary>Treaties.</summary>
+    public const int Diplomacy = 2;
+
+    /// <summary>Research.</summary>
+    public const int Research = 3;
+
+    /// <summary>Settlers and new settlements.</summary>
+    public const int Expansion = 4;
+
+    /// <summary>Buildings.</summary>
+    public const int Building = 5;
+
+    /// <summary>Training and moving the army.</summary>
+    public const int Army = 6;
+
+    /// <summary>Caravans, routes, barter.</summary>
+    public const int Trade = 7;
+}
+
+/// <summary>Client → server, from an observer or a fallen player: watch through the eyes of civilization <see cref="Civ"/>, read only
+/// (−1: the whole map again).</summary>
+[MessagePackObject]
+public sealed record PlayEyeMessage([property: Key(0)] int Civ) : IProtocolMessage;

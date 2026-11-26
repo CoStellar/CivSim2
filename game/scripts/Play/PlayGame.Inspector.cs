@@ -37,6 +37,13 @@ public partial class PlayGame
             _unit = -1;
         }
 
+        if (_selected is null && v.Spectator)
+        {
+            items.Add(new HeaderItem("Nothing selected", "Click any settlement or unit", new Color("6a5a48"), "?"));
+            items.Add(new LineItem("Civilizations (top) lists everyone; Intentions (bottom left) shows what they plan. Watch picks whose eyes to see through.", UiKit.Muted, 14));
+            return;
+        }
+
         if (_selected is not { } sel)
         {
             items.Add(new HeaderItem("Nothing selected", "Click your settlement to start", new Color("6a5a48"), "?"));

@@ -187,6 +187,8 @@ Who joins a game that already runs waits without the map and asks to lead one of
 
 The host removes a player with the "x" next to the name (click twice); another player starts a vote with it. The AI leads the removed player's civilization and nobody else may take it; the removed player may join again and ask for it back.
 
+Who watches (an observer, or a player whose civilization fell) gets the Watch bar at the top: Civilizations lists every civilization (click a name to see its capital), Routes shows where every unit goes and what it attacks, Intentions (bottom left) lists what the AI decides and what the players order, and Watch lets you see through one civilization's eyes. Watchers read everyone in the chat but write only to other watchers.
+
 In a game with others the host saves it. To go on later, the host picks the save under "Game" in Host a game: everyone who joins gets their civilization back (the game knows them by their nickname or by the computer they played on).
 
 # Tips
