@@ -291,9 +291,12 @@ public sealed partial class PlayHost : IDisposable
 
         // A player who leaves hands the civilization back to the AI (abuse tests 2026-11-24: it stood still for ever); the save
         // records it, so a loaded game is the same game (MP2).
-        foreach (PlayClient gone in _clients)
+        // One look at who is gone: a connection that closes during this loop was removed below without handing its civilization to
+        // the AI (CI on Windows, 2026-11-26), so it stays until the next round.
+        List<PlayClient> left = _clients.FindAll(c => !c.Connection.IsOpen);
+        foreach (PlayClient gone in left)
         {
-            if (!gone.Connection.IsOpen && gone.Civ >= 0 && gone.Civ < _game.Civs.Count && !_game.Civs[gone.Civ].Dead)
+            if (gone.Civ >= 0 && gone.Civ < _game.Civs.Count && !_game.Civs[gone.Civ].Dead)
             {
                 SetLeader(gone.Civ, player: false);
                 if (_clients.Exists(c => c != gone && c.Civ >= 0 && c.Connection.IsOpen))
@@ -305,7 +308,7 @@ public sealed partial class PlayHost : IDisposable
             }
         }
 
-        _clients.RemoveAll(c => !c.Connection.IsOpen);
+        _clients.RemoveAll(left.Contains);
         int players = _clients.Count(c => c.Civ >= 0);
         Volatile.Write(ref _players, players);
         if (players > 1 && _speed > SimulationSpeed.X2)
