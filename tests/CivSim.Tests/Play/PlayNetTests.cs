@@ -17,6 +17,7 @@ namespace CivSim.Tests.Play;
 /// <summary>The game over the network (multiplayer plan, MP1).</summary>
 public sealed class PlayNetTests
 {
+    private static readonly List<string> Log = []; // what each player got, for the message on a difference
     // Two players over TCP play exactly the game two players in memory play, and get exactly the same messages.
     [Trait("Category", "Slow")]
     [Fact]
@@ -25,6 +26,22 @@ public sealed class PlayNetTests
         (ulong hash, string[] seen) memory = Play(network: false);
         (ulong hash, string[] seen) network = Play(network: true);
         Assert.Equal(memory.hash, network.hash);
+        // On a difference, say where the two streams part (the network run once missed the last view, 2026-11-26).
+        var where = new List<string>();
+        for (int who = 0; who < 2 && !memory.seen.SequenceEqual(network.seen); who++)
+        {
+            List<string> a = Log.Where(l => l.StartsWith("M" + who, StringComparison.Ordinal)).Select(l => l[3..]).ToList();
+            List<string> b = Log.Where(l => l.StartsWith("N" + who, StringComparison.Ordinal)).Select(l => l[3..]).ToList();
+            int k = 0;
+            while (k < a.Count && k < b.Count && a[k] == b[k])
+            {
+                k++;
+            }
+
+            where.Add($"player {who} at message {k} of {a.Count}/{b.Count}: memory [{string.Join(" | ", a.Skip(Math.Max(0, k - 1)).Take(4))}] network [{string.Join(" | ", b.Skip(Math.Max(0, k - 1)).Take(4))}]");
+        }
+
+        Assert.True(where.Count == 0, string.Join("\n", where));
         Assert.Equal(memory.seen, network.seen);
     }
 
@@ -121,11 +138,9 @@ public sealed class PlayNetTests
         }
 
         Assert.False(g.Picking);
-        // A few views at a time: more than TcpConnection.CongestedFrames waiting views make the server skip views for that player,
-        // and a busy machine (CI on Windows, 2026-11-26) sends slower than 100 ticks run, so the messages differed.
-        for (int round = 0; round < 200; round++)
+        for (int round = 0; round < 6; round++)
         {
-            host.RunTicks(3, viewEvery: 3);
+            host.RunTicks(100, viewEvery: 3);
             Drain(listener, clients, digests);
         }
 
@@ -158,7 +173,9 @@ public sealed class PlayNetTests
         if (listener is not null)
         {
             IReadOnlyList<TcpConnection> server = listener.Connections;
-            TcpConnectionTests.WaitUntil(() => server.All(s => s.Backlog == 0)
+            // Every frame written, not only taken from the queue: the last view was still being written while the queue was empty, so
+            // the test read one view less over the network (Windows CI since MP4a, 2026-11-26).
+            TcpConnectionTests.WaitUntil(() => server.All(s => s.FramesSent == s.FramesQueued)
                 && clients.Select((c, i) => ((TcpConnection)c).FramesReceived == server[i].FramesSent).All(x => x));
         }
 
@@ -172,6 +189,7 @@ public sealed class PlayNetTests
                 }
 
                 digests[i].AppendData(ProtocolSerializer.Serialize(m is WelcomeMessage w ? w with { ReturnKey = "" } : m!)); // return keys are random
+                Log.Add($"{(listener is null ? "M" : "N")}{i} {m!.GetType().Name} {(m is PlayViewMessage v ? v.Tick.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + v.Speed : m is PlayChatMessage c ? c.Text : m is CommandRejectedMessage r ? r.Reason : "")}");
             }
         }
     }

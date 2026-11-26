@@ -71,6 +71,7 @@ public sealed class TcpConnection : IConnection, IDisposable
     private long _bytesReceived;
     private long _rawBytesSent;
     private long _framesSent;
+    private long _framesQueued;
     private long _framesReceived;
     private long _queuedBytes;
     private string? _closeReason;
@@ -151,6 +152,10 @@ public sealed class TcpConnection : IConnection, IDisposable
     /// <summary>Frames written to the network.</summary>
     public long FramesSent => Interlocked.Read(ref _framesSent);
 
+    /// <summary>Frames given to <see cref="Send"/>; all are out when <see cref="FramesSent"/> reaches it (a frame taken from the
+    /// queue is not in <see cref="Backlog"/> any more while it is still being written).</summary>
+    public long FramesQueued => Interlocked.Read(ref _framesQueued);
+
     /// <summary>Frames read from the network and waiting in <see cref="TryReceive"/> (or taken).</summary>
     public long FramesReceived => Interlocked.Read(ref _framesReceived);
 
@@ -165,6 +170,7 @@ public sealed class TcpConnection : IConnection, IDisposable
 
         byte[] frame = ProtocolSerializer.Serialize(message);
         Interlocked.Add(ref _queuedBytes, frame.Length);
+        Interlocked.Increment(ref _framesQueued);
         _outbox.Enqueue(frame);
         _outboxSignal.Release();
     }
