@@ -181,6 +181,8 @@ We meet other civilizations by seeing them: scouts, borders, their units. The Ci
 Scouts can go hidden: slower, but nobody can tell whose they are. When units of a civilization we have not met come near one of our settlements and have seen it, the alert **Strangers** tells us, but not who they are or where they come from.
 
 # Playing with others
+Players join by the host's address and port (over the internet the host opens the port on the router), or through a relay: the host picks "Through a relay" in Host a game and gives friends the room code from the lobby (for example K7M-4QD); they pick "Through a relay" in Join a game and type the relay's address and the code. Through a relay nobody opens a port and nobody sees the host's address. The code is also in the players' list during the game.
+
 The players' list (top right) shows everyone in the game, their ping and the pauses they have left. Each player has 3 pauses; another player may end a pause after 30 s. A change of speed is put to a vote: more than half of the players must say yes.
 
 Who joins a game that already runs waits without the map and asks to lead one of the civilizations the AI leads; the players vote (30 s). "Only watch" shows the whole map instead, for good in that game. A player whose civilization is gone watches the whole map too.

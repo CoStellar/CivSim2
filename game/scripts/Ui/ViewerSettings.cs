@@ -227,6 +227,21 @@ public sealed class StartSettings
     /// <summary>Port of the last server joined.</summary>
     public int JoinPort { get; set; } = CivSim.Protocol.Transport.TcpConnection.DefaultPort;
 
+    /// <summary>Join through a relay with a room code (MP6) instead of by address and port.</summary>
+    public bool JoinThroughRelay { get; set; }
+
+    /// <summary>Room code of the last game joined through a relay.</summary>
+    public string JoinCode { get; set; } = string.Empty;
+
+    /// <summary>Relay to join and host through ("name" or "name:port"; MP6). Empty until the player types one.</summary>
+    public string RelayAddress { get; set; } = string.Empty;
+
+    /// <summary>Password to open games on the relay (from its owner; R2-3).</summary>
+    public string RelayPassword { get; set; } = string.Empty;
+
+    /// <summary>Host through the relay: players join with its address and a room code, nobody opens a port (MP6).</summary>
+    public bool HostThroughRelay { get; set; }
+
     /// <summary>Name of the game this player hosts.</summary>
     public string HostGameName { get; set; } = "CivSim game";
 

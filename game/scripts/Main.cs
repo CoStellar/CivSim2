@@ -508,7 +508,15 @@ public partial class Main : Node2D
             _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
             SaveSettings();
             _mpWatch = watch;
-            Join(address, port, password);
+            if (_saved.Start.JoinThroughRelay)
+            {
+                (string relay, int relayPort) = RelayTarget(_saved.Start.RelayAddress);
+                Join(relay, relayPort, password, _saved.Start.JoinCode);
+            }
+            else
+            {
+                Join(address, port, password);
+            }
         };
         _menu.HostRequested += (options, config, port) =>
         {

@@ -21,6 +21,15 @@ public sealed partial class PlayHost
     private long _lastPing;
     private long _lastPlayers;
     private bool _playersDirty;
+    private string _inviteSent = "";
+    private volatile string _invite = "";
+
+    /// <summary>How friends join through a relay (e.g. "Relay relay.example.com, code K7M-4QD"; MP6), shown in the players list.</summary>
+    public string Invite
+    {
+        get => _invite;
+        set => _invite = value ?? "";
+    }
     private int _shownPlayers;
     private Vote? _vote;
     private int _nextVote = 1;
@@ -62,6 +71,12 @@ public sealed partial class PlayHost
         // The list goes to everyone while two or more are in the game, and once more when it drops below (so the panel can close).
         // A candidate gets it also alone: it holds the civilizations to ask for.
         bool show = present.Count > 1 || _shownPlayers > 1 || present.Exists(c => c.Role == PlayPlayerInfo.Candidate);
+        if (Invite != _inviteSent)
+        {
+            _inviteSent = Invite;
+            _playersDirty = true;
+        }
+
         if (show && (_playersDirty || now - _lastPlayers >= Stopwatch.Frequency))
         {
             _lastPlayers = now;
@@ -87,7 +102,7 @@ public sealed partial class PlayHost
                 : null;
             List<PlayTakeableCiv>? mine = c.Role != PlayPlayerInfo.Candidate ? null
                 : c.Removed is { } key && _removed.TryGetValue(key, out int old) ? [Takeable(old)] : takeable;
-            c.Connection.Send(new PlayPlayersMessage(players, vote, pausedBy, protectedFor, i, mine));
+            c.Connection.Send(new PlayPlayersMessage(players, vote, pausedBy, protectedFor, i, mine, _inviteSent));
         }
     }
 

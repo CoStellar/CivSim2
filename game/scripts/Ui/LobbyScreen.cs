@@ -305,12 +305,15 @@ public partial class LobbyScreen : CanvasLayer
         _start.Visible = host;
         _start.Disabled = !state.CanStart;
         _start.TooltipText = state.CanStart ? "" : "Waiting for every player to be ready";
-        const string alone = "Others join with your address and port. You may also start alone: the AI leads the other civilizations and free places can be taken later.";
+        // Through a relay (MP6) the first line of the settings says how friends join: the relay and the room code.
+        bool relay = state.Settings.Count > 0 && state.Settings[0].StartsWith("Relay ", StringComparison.Ordinal);
+        string alone = (relay ? "Others join through the relay with the room code above." : "Others join with your address and port.")
+            + " You may also start alone: the AI leads the other civilizations and free places can be taken later.";
         if (host && state.Seats.Count == 1)
         {
             _status.Text = alone;
         }
-        else if (_status.Text == alone)
+        else if (_status.Text.EndsWith("free places can be taken later.", StringComparison.Ordinal))
         {
             _status.Text = "";
         }

@@ -26,6 +26,7 @@ public partial class PlayGame
     private Button? _voteYes;
     private Button? _voteNo;
     private Label? _pauseText;
+    private Label? _inviteText;
     private PanelContainer? _chatPanel;
     private VBoxContainer? _chatList;
     private ScrollContainer? _chatScroll;
@@ -94,6 +95,9 @@ public partial class PlayGame
         box.AddChild(_roleText);
         _pauseText = UiKit.Label("", 13, UiKit.Warn, wrap: true);
         box.AddChild(_pauseText);
+        _inviteText = UiKit.Label("", 13, UiKit.Muted, wrap: true);
+        _inviteText.TooltipText = "How friends join this game: in Multiplayer, Join a game, Through a relay";
+        box.AddChild(_inviteText);
 
         // The vote: in the same panel, under the players, with Yes and No.
         _votePanel = new PanelContainer { Visible = false };
@@ -154,7 +158,7 @@ public partial class PlayGame
             sig.Append(CultureInfo.InvariantCulture, $"{p.Name}|{p.Civ}|{p.PingMs / 10}|{p.PausesLeft}|{p.Host}|{p.Role};");
         }
 
-        sig.Append(m.You).Append(m.PausedBy).Append(m.PauseProtectedSeconds).Append(_kickArmed);
+        sig.Append(m.You).Append(m.PausedBy).Append(m.PauseProtectedSeconds).Append(_kickArmed).Append(m.Invite);
         if (sig.ToString() == _playersShown)
         {
             return;
@@ -213,6 +217,8 @@ public partial class PlayGame
                 ? string.Create(CultureInfo.InvariantCulture, $"Paused by {m.PausedBy}; others may end the pause in {m.PauseProtectedSeconds} s.")
                 : $"Paused by {m.PausedBy}; anyone may end the pause.";
         _pauseText.Visible = _pauseText.Text.Length > 0;
+        _inviteText!.Text = m.Invite.Length == 0 ? "" : "Friends join: " + m.Invite;
+        _inviteText.Visible = m.Invite.Length > 0;
         _roleText!.Text = me.Role switch
         {
             PlayPlayerInfo.Observer => "You watch the whole map.",

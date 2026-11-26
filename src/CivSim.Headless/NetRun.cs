@@ -31,13 +31,16 @@ public static class NetRun
     /// <summary>Usage of the three commands.</summary>
     public const string Usage = """
         --serve [--port 7777] [--password P] [--name "Game"] [--seats N] [--speed 1|2] [--seed N] [--civs 4] [--size 98x60] [--load <save>]
-                [--no-start-phase] [--no-lobby] [--stats-seconds 30] [--minutes N]
+                [--no-start-phase] [--no-lobby] [--stats-seconds 30] [--minutes N] [--relay host[:7700] [--relay-password P]]
             A server without a window. Players meet in the lobby; the first one in is the host and starts the game (--no-lobby:
             the game starts at once). Every civilization is led by the AI until a player joins. Stops after N minutes (default: never, Ctrl+C).
             --load <name or file>: a saved game; its players come back to their places in the lobby (by their return key or nickname).
-        --join host[:port] [--name Bot] [--password P] [--seconds 60] [--start N]
+            --relay: also opens a room on a relay (docs/multiplayer/vps.md) and prints its code; players join with the relay's address and the
+            code, and nobody opens a port. The password to open games may also come from CIVSIM_RELAY_PASSWORD.
+        --join host[:port] [--code K7M-4QD] [--name Bot] [--password P] [--seconds 60] [--start N]
             A test client: joins, says it is ready in a lobby (and, as the host, starts the game once N players are in with --start N), reads the
-            views and prints what came. Exit code 0 when the game let it in.
+            views and prints what came, with its ping. --code: host is a relay (port 7700 by default) and this is the room code. Exit code 0
+            when the game let it in.
         --net-bench [--civs 8] [--clients 8] [--minutes 45] [--seed 1] [--size 98x60] [--csv file]
             A server and bots over TCP on this computer, as fast as it goes; the AI plays for the bots, so their views grow
             as a player's would. Prints traffic per player and server time per minute of the game.
@@ -94,9 +97,47 @@ public static class NetRun
         }
 
         using PlayHost? owned = direct;
-        using var listener = new PlayListener(c => (lobby is not null ? (Action<IConnection>)lobby.Accept : x => direct!.Accept(x))(c), port);
+        Action<IConnection> accept = c => (lobby is not null ? (Action<IConnection>)lobby.Accept : x => direct!.Accept(x))(c);
+        using var listener = new PlayListener(accept, port);
+
+        // Through a relay (MP6): nobody opens a port; players type the relay's address and the room code.
+        RelayHost? relay = null;
+        if (Text(args, "--relay") is { Length: > 0 } relayAddress)
+        {
+            if (!TryAddress(relayAddress, out string relayHost, out int relayPort, RelayWire.DefaultPort))
+            {
+                output.WriteLine("--relay needs an address: host or host:port.");
+                return 2;
+            }
+
+            try
+            {
+                relay = new RelayHost(accept, relayHost, relayPort, Text(args, "--relay-password") ?? Environment.GetEnvironmentVariable("CIVSIM_RELAY_PASSWORD") ?? "", TimeSpan.FromSeconds(10));
+            }
+            catch (RelayException ex)
+            {
+                output.WriteLine(ex.Message);
+                return 1;
+            }
+
+            string invite = $"Relay {relay.Address}, code {relay.Code}";
+            if (lobby is not null)
+            {
+                lobby.Relay = invite;
+            }
+            else
+            {
+                direct!.Invite = invite;
+            }
+        }
+
+        using RelayHost? ownedRelay = relay;
         output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, {(options.LoadPath is { Length: > 0 } loaded ? $"saved game {Path.GetFileNameWithoutExtension(loaded)}" : $"seed {options.Seed}, {options.Civilizations} civilizations ({options.HumanSeats} for players), map {options.LegacyWidth}x{options.LegacyHeight}")}{(lobby is null ? "" : ", lobby open")}"));
         output.WriteLine("Players join with the game or with: dotnet run --project src/CivSim.Headless -c Release -- --join <address>:" + listener.Port.ToString(Inv));
+        if (relay is not null)
+        {
+            output.WriteLine($"Through the relay: address {relay.Address}, room code {relay.Code} (--join {relay.Address} --code {relay.Code}).");
+        }
         using var stop = new ManualResetEventSlim();
         Console.CancelKeyPress += (_, e) =>
         {
@@ -113,7 +154,7 @@ public static class NetRun
             PlayHost? host = direct ?? lobby?.Game;
             if (host is null)
             {
-                output.WriteLine(string.Create(Inv, $"[{started.Elapsed:hh\\:mm\\:ss}] lobby: {lobby!.Players} of {options.HumanSeats} players"));
+                output.WriteLine(string.Create(Inv, $"[{started.Elapsed:hh\\:mm\\:ss}] lobby: {lobby!.Players} of {options.HumanSeats} players{(relay is null ? "" : $"; relay {relay.Address}, code {relay.Code}")}"));
                 continue;
             }
 
@@ -125,12 +166,18 @@ public static class NetRun
 
             double now = started.Elapsed.TotalSeconds;
             double span = now - lastAt;
-            IReadOnlyList<TcpConnection> connections = listener.Connections;
-            string traffic = string.Join(", ", connections.Select(c =>
+            if (relay?.Problem is { } problem)
+            {
+                output.WriteLine(problem);
+            }
+
+            IReadOnlyList<TcpConnection> connections = [.. listener.Connections, .. relay?.Connections ?? []];
+            // No addresses in the log (an IP address is personal data in the EU; multiplayer plan, chapter 9).
+            string traffic = string.Join(", ", connections.Select((c, i) =>
             {
                 long before = last.TryGetValue(c, out long b) ? b : 0;
                 last[c] = c.BytesSent;
-                return string.Create(Inv, $"{c.RemoteAddress} {(c.BytesSent - before) / span / 1024:F1} KB/s");
+                return string.Create(Inv, $"#{i + 1}{(c.RemoteIp is null ? " (relay)" : "")} {(c.BytesSent - before) / span / 1024:F1} KB/s");
             }));
             double sim = (host.SimTime - lastSim) * 100.0 / Stopwatch.Frequency / span;
             double view = (host.ViewTime - lastView) * 100.0 / Stopwatch.Frequency / span;
@@ -154,7 +201,8 @@ public static class NetRun
         ArgumentNullException.ThrowIfNull(args);
         ArgumentNullException.ThrowIfNull(output);
         string target = Text(args, "--join") ?? "";
-        if (!TryAddress(target, out string host, out int port))
+        string? code = Text(args, "--code");
+        if (!TryAddress(target, out string host, out int port, code is null ? TcpConnection.DefaultPort : RelayWire.DefaultPort))
         {
             output.WriteLine("--join needs an address: host or host:port.");
             return 2;
@@ -165,11 +213,16 @@ public static class NetRun
         TcpConnection connection;
         try
         {
-            connection = TcpConnection.Connect(host, port, TimeSpan.FromSeconds(10));
+            connection = code is null ? TcpConnection.Connect(host, port, TimeSpan.FromSeconds(10)) : TcpConnection.JoinRelay(host, port, code, TimeSpan.FromSeconds(10));
         }
         catch (SocketException ex)
         {
             output.WriteLine($"Could not connect to {host}:{port}: {ex.Message}");
+            return 1;
+        }
+        catch (RelayException ex)
+        {
+            output.WriteLine(ex.Message);
             return 1;
         }
 
@@ -182,6 +235,7 @@ public static class NetRun
             bool ready = false;
             bool startAsked = false;
             long tick = -1;
+            int myPing = -1;
             double nextReport = 10;
             while ((connection.IsOpen || connection.Unread > 0) && watch.Elapsed.TotalSeconds < seconds)
             {
@@ -227,6 +281,9 @@ public static class NetRun
                         case PlayViewMessage v:
                             tick = v.Tick;
                             break;
+                        case PlayPlayersMessage players when players.You >= 0 && players.You < players.Players.Count:
+                            myPing = players.Players[players.You].PingMs;
+                            break;
                         default:
                             break;
                     }
@@ -235,7 +292,7 @@ public static class NetRun
                 if (watch.Elapsed.TotalSeconds >= nextReport)
                 {
                     nextReport += 10;
-                    output.WriteLine(string.Create(Inv, $"[{watch.Elapsed.TotalSeconds:F0} s] game {(tick < 0 ? "-" : Minutes(tick))}, received {connection.BytesReceived / 1024.0:F0} KB ({connection.BytesReceived / 1024.0 / watch.Elapsed.TotalSeconds:F1} KB/s)"));
+                    output.WriteLine(string.Create(Inv, $"[{watch.Elapsed.TotalSeconds:F0} s] game {(tick < 0 ? "-" : Minutes(tick))}{(myPing < 0 ? "" : $", ping {myPing} ms")}, received {connection.BytesReceived / 1024.0:F0} KB ({connection.BytesReceived / 1024.0 / watch.Elapsed.TotalSeconds:F1} KB/s)"));
                 }
 
                 Thread.Sleep(20);
@@ -408,10 +465,10 @@ public static class NetRun
         return true;
     }
 
-    private static bool TryAddress(string text, out string host, out int port)
+    private static bool TryAddress(string text, out string host, out int port, int fallback = TcpConnection.DefaultPort)
     {
         host = text;
-        port = TcpConnection.DefaultPort;
+        port = fallback;
         int colon = text.LastIndexOf(':');
         if (colon > 0 && !text.EndsWith(']') && text.IndexOf(':') == colon)
         {

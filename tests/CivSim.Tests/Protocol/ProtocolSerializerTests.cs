@@ -128,7 +128,7 @@ public class ProtocolSerializerTests
         // Version 27: rations of the settlements and their units. Version 28: building upgrades and patrols to resume. Version 29: branches of the technology tree. Version 30: test scenarios. Version 31: surveys of the ground.
         // Version 45: Hello has seven fields (game version, password, return key; multiplayer MP2).
         byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A", GameVersion: "V"));
-        Assert.Equal("32000000" + "920097" + "01A14100FF" + "A156" + "A0" + "A0", Convert.ToHexString(frame));
+        Assert.Equal("33000000" + "920097" + "01A14100FF" + "A156" + "A0" + "A0", Convert.ToHexString(frame));
     }
 
     [Fact]

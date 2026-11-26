@@ -53,6 +53,8 @@ public sealed class PlayLobby : IDisposable
     private PlayHost? _game;
     private volatile bool _stopping;
     private bool _dirty;
+    private volatile string? _relay;
+    private int _relayChanged;
 
     private PlayLobby(PlayOptions options, LobbyConfig config, string? dataDirectory, bool threaded)
     {
@@ -127,6 +129,24 @@ public sealed class PlayLobby : IDisposable
 
     /// <summary>Players in the lobby (any thread; for the server's log).</summary>
     public int Players => Volatile.Read(ref _players);
+
+    /// <summary>
+    /// How friends join through a relay (MP6), e.g. "Relay relay.example.com, code K7M-4QD": the first line of the settings in the
+    /// lobby and, after the start, in the players list of the game. Null without a relay. May be set from any thread.
+    /// </summary>
+    public string? Relay
+    {
+        get => _relay;
+        set
+        {
+            _relay = value;
+            Interlocked.Exchange(ref _relayChanged, 1);
+            if (Game is { } game)
+            {
+                game.Invite = value ?? "";
+            }
+        }
+    }
 
     private int _players;
 
@@ -209,6 +229,7 @@ public sealed class PlayLobby : IDisposable
         _members.RemoveAll(m => !m.Connection.IsOpen);
         _dirty |= _members.Count != before;
         Volatile.Write(ref _players, _members.Count(m => m.Name is not null));
+        _dirty |= Interlocked.Exchange(ref _relayChanged, 0) == 1;
         if (_dirty)
         {
             _dirty = false;
@@ -321,7 +342,7 @@ public sealed class PlayLobby : IDisposable
         bool everyone = Everyone();
         for (int i = 0; i < seated.Count; i++)
         {
-            seated[i].Connection.Send(new LobbyStateMessage(_config.GameName, seats, _options.HumanSeats, _settings, [.. _chat], i, seated[i] == host && everyone));
+            seated[i].Connection.Send(new LobbyStateMessage(_config.GameName, seats, _options.HumanSeats, _relay is { } relay ? [relay, .. _settings] : _settings, [.. _chat], i, seated[i] == host && everyone));
         }
     }
 
@@ -330,6 +351,7 @@ public sealed class PlayLobby : IDisposable
         List<Member> seated = [.. _members.Where(x => x.Name is not null && x.Connection.IsOpen)];
         PlayHost game = _threaded ? PlayHost.Start(_options, _dataDirectory) : PlayHost.Create(_options, _dataDirectory);
         game.Password = _config.Password;
+        game.Invite = _relay ?? "";
         game.ExpectPlayers(seated.Count, TimeSpan.FromSeconds(10));
         lock (_gate)
         {

@@ -289,10 +289,26 @@ public partial class StartMenu : CanvasLayer
         Text(you, "Nickname", _settings.Nickname, v => _settings.Nickname = v, "the name other players see (kept for next time)");
 
         _content.AddChild(Heading("Join a game"));
+        GridContainer joinHow = Grid();
+        GridContainer? byAddress = null, byRelay = null;
+        Choice(joinHow, "Connect", ["By the host's address", "Through a relay, with a room code"], _settings.JoinThroughRelay ? 1 : 0, i =>
+        {
+            _settings.JoinThroughRelay = i == 1;
+            if (byAddress is not null && byRelay is not null)
+            {
+                byAddress.Visible = i == 0;
+                byRelay.Visible = i == 1;
+            }
+        });
+        byAddress = Grid();
+        Text(byAddress, "Address", _settings.JoinAddress, v => _settings.JoinAddress = v.Trim(), "the host's address, e.g. 192.168.1.20");
+        Text(byAddress, "Port", _settings.JoinPort.ToString(CultureInfo.InvariantCulture), v => _settings.JoinPort = PortOf(v, _settings.JoinPort), "7777 unless the host says otherwise");
+        byRelay = Grid();
+        Text(byRelay, "Relay", _settings.RelayAddress, v => _settings.RelayAddress = v.Trim(), "the relay's address, e.g. relay.example.com");
+        Text(byRelay, "Room code", _settings.JoinCode, v => _settings.JoinCode = v.Trim(), "from the host, e.g. K7M-4QD");
+        byAddress.Visible = !_settings.JoinThroughRelay;
+        byRelay.Visible = _settings.JoinThroughRelay;
         GridContainer join = Grid();
-        Text(join, "Address", _settings.JoinAddress, v => _settings.JoinAddress = v.Trim(), "the host's address, e.g. 192.168.1.20");
-        LineEdit joinPort = Text(join, "Port", _settings.JoinPort.ToString(CultureInfo.InvariantCulture), v => _settings.JoinPort = PortOf(v, _settings.JoinPort), "7777 unless the host says otherwise");
-        _ = joinPort;
         LineEdit joinPassword = Secret(join, "Password", "if the game has one");
         var watchOnly = new CheckBox
         {
@@ -305,8 +321,8 @@ public partial class StartMenu : CanvasLayer
         _content.AddChild(joinButton);
 
         _content.AddChild(Heading("Host a game"));
-        _content.AddChild(Muted("The world and the game are those of New game, or a saved game: its players get their places back. Players join with your address and the port below; "
-            + "over the internet the port must be open on your router (a relay server comes later)."));
+        _content.AddChild(Muted("The world and the game are those of New game, or a saved game: its players get their places back. Players join with your address and the port below "
+            + "(over the internet the port must be open on your router), or through a relay with a room code: then nobody opens a port and nobody sees your address."));
         string mine = MyAddresses();
         if (mine.Length > 0)
         {
@@ -323,6 +339,22 @@ public partial class StartMenu : CanvasLayer
         Text(host, "Game name", _settings.HostGameName, v => _settings.HostGameName = v, "what players see in the lobby");
         LineEdit hostPassword = Secret(host, "Password", "empty: anyone may join");
         Text(host, "Port", _settings.HostPort.ToString(CultureInfo.InvariantCulture), v => _settings.HostPort = PortOf(v, _settings.HostPort), "1024 to 65535");
+        GridContainer? hostRelay = null;
+        Choice(host, "Players join", ["By my address and port", "Through a relay, with a room code"], _settings.HostThroughRelay ? 1 : 0, i =>
+        {
+            _settings.HostThroughRelay = i == 1;
+            if (hostRelay is not null)
+            {
+                hostRelay.Visible = i == 1;
+            }
+        });
+        hostRelay = Grid();
+        Text(hostRelay, "Relay", _settings.RelayAddress, v => _settings.RelayAddress = v.Trim(), "the relay's address, e.g. relay.example.com");
+        LineEdit relayPassword = Secret(hostRelay, "Relay password", "from the relay's owner; empty if it needs none");
+        relayPassword.Text = _settings.RelayPassword;
+        relayPassword.TextChanged += t => _settings.RelayPassword = t;
+        hostRelay.Visible = _settings.HostThroughRelay;
+        host = Grid();
         host.AddChild(new Label { Text = "Places for players", CustomMinimumSize = new Vector2(120, 0) });
         var seats = new SpinBox { MinValue = 2, MaxValue = 8, Value = Math.Clamp(_settings.HostSeats, 2, 8), Rounded = true, CustomMinimumSize = new Vector2(260, 0), TooltipText = "The AI leads the other civilizations; at most as many as the civilizations of New game" };
         seats.ValueChanged += v => _settings.HostSeats = (int)v;
