@@ -33,6 +33,8 @@ services:
     command: ["--name", "CivSim game", "--seats", "4", "--civs", "6", "--relay", "relay:7700"]
     environment:
       CIVSIM_RELAY_PASSWORD: ${CIVSIM_RELAY_PASSWORD:-}
+      # What players type to reach the relay (the VPS's domain or IP address); the game itself reaches it as "relay".
+      CIVSIM_RELAY_PUBLIC: ${CIVSIM_PUBLIC_ADDRESS:-}
     volumes:
       - ./saves:/data
     read_only: true

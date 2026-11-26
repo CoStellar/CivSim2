@@ -79,13 +79,14 @@ Z subdomeną gracze wpisują **nazwę** (`civsim.twojadomena.pl`), a gra sama ł
 
 ```sh
 echo "CIVSIM_RELAY_PASSWORD=zimowa-wydra" > .env
+echo "CIVSIM_PUBLIC_ADDRESS=civsim.twojadomena.pl" >> .env   # co gracze wpisują jako adres pośrednika (subdomena albo IP VPS)
 mkdir saves && sudo chown 1654 saves     # użytkownik bez uprawnień roota w obrazie
 docker compose --profile game up -d
 docker compose logs game | grep code     # kod pokoju dla graczy
 ```
 
 Ustawienia partii są w `docker-compose.yml` w wierszu `command:` (`--name`, `--seats`, `--civs`, `--size 98x60`, `--speed 1|2`, `--password`,
-`--load <zapis>`). Pierwszy gracz w lobby jest gospodarzem i startuje grę. Zapisy są w `~/civsim/saves`. Jeden kontener = jedna partia.
+`--load <zapis>`). Gra łączy się z pośrednikiem przez nazwę kontenera `relay` (w sieci Dockera, bez szyfrowania, bo nie wychodzi poza VPS), a graczom pokazuje adres z `CIVSIM_PUBLIC_ADDRESS`. Pierwszy gracz w lobby jest gospodarzem i startuje grę. Zapisy są w `~/civsim/saves`. Jeden kontener = jedna partia.
 
 ## Aktualizacja
 

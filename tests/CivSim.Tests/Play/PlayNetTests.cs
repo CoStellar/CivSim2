@@ -118,6 +118,7 @@ public sealed class PlayNetTests
             c.Send(new HelloMessage(ProtocolInfo.Version, "Player " + i));
             Deliver(listener, i + 1, ++sent);
             host.RunTicks(0);
+            Drain(listener, clients, digests); // the map just sent is out before the next round (else the next view may be skipped as congested)
         }
 
         SimGame g = host.Game;
@@ -138,12 +139,16 @@ public sealed class PlayNetTests
         }
 
         Assert.False(g.Picking);
-        for (int round = 0; round < 6; round++)
+        // One view round at a time, read before the next: over the network a server that runs ahead of its writing thread finds the
+        // connection congested (over 32 frames waiting) and skips views that the in-memory run sends; how many depends on the
+        // machine's speed (2 of 5 runs failed on a busy machine, 2026-11-26).
+        for (int round = 0; round < 200; round++)
         {
-            host.RunTicks(100, viewEvery: 3);
+            host.RunTicks(3, viewEvery: 3);
             Drain(listener, clients, digests);
         }
 
+        Assert.Equal(0, host.SkippedViews); // a skipped view would make the two runs differ
         string[] seen = [.. digests.Select(d => Convert.ToHexString(d.GetHashAndReset()))];
         foreach (IConnection c in clients)
         {

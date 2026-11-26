@@ -31,12 +31,13 @@ public static class NetRun
     /// <summary>Usage of the three commands.</summary>
     public const string Usage = """
         --serve [--port 7777] [--password P] [--name "Game"] [--seats N] [--speed 1|2] [--seed N] [--civs 4] [--size 98x60] [--load <save>]
-                [--no-start-phase] [--no-lobby] [--stats-seconds 30] [--minutes N] [--relay host[:7700] [--relay-password P]]
+                [--no-start-phase] [--no-lobby] [--stats-seconds 30] [--minutes N] [--relay host[:7700] [--relay-password P] [--relay-public name]]
             A server without a window. Players meet in the lobby; the first one in is the host and starts the game (--no-lobby:
             the game starts at once). Every civilization is led by the AI until a player joins. Stops after N minutes (default: never, Ctrl+C).
             --load <name or file>: a saved game; its players come back to their places in the lobby (by their return key or nickname).
             --relay: also opens a room on a relay (docs/multiplayer/vps.md) and prints its code; players join with the relay's address and the
-            code, and nobody opens a port. The password to open games may also come from CIVSIM_RELAY_PASSWORD.
+            code, and nobody opens a port. The password to open games may also come from CIVSIM_RELAY_PASSWORD. --relay-public (or
+            CIVSIM_RELAY_PUBLIC): the relay's address shown to players when it differs from --relay (a container name in docker-compose).
         --join host[:port] [--code K7M-4QD] [--name Bot] [--password P] [--seconds 60] [--start N]
             A test client: joins, says it is ready in a lobby (and, as the host, starts the game once N players are in with --start N), reads the
             views and prints what came, with its ping. --code: host is a relay (port 7700 by default) and this is the room code. Exit code 0
@@ -112,7 +113,10 @@ public static class NetRun
 
             try
             {
-                relay = new RelayHost(accept, relayHost, relayPort, Text(args, "--relay-password") ?? Environment.GetEnvironmentVariable("CIVSIM_RELAY_PASSWORD") ?? "", TimeSpan.FromSeconds(10));
+                relay = new RelayHost(accept, relayHost, relayPort, Text(args, "--relay-password") ?? Environment.GetEnvironmentVariable("CIVSIM_RELAY_PASSWORD") ?? "", TimeSpan.FromSeconds(10))
+                {
+                    PublicAddress = Text(args, "--relay-public") ?? Environment.GetEnvironmentVariable("CIVSIM_RELAY_PUBLIC"),
+                };
             }
             catch (RelayException ex)
             {

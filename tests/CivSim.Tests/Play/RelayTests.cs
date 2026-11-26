@@ -216,6 +216,8 @@ public class RelayTests
         Assert.True(RelayWire.UsesTls("relay.example.com"));
         Assert.False(RelayWire.UsesTls("203.0.113.5"));
         Assert.False(RelayWire.UsesTls("localhost"));
+        Assert.False(RelayWire.UsesTls("relay")); // the relay's container in docker-compose
+        Assert.True(RelayWire.UsesTls("civsim.example.com."));
     }
 
     private static RelayServer Relay(RelayConfig config)
