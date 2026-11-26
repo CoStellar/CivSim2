@@ -101,6 +101,19 @@ public sealed class PlayLobbyTests
         ola.Send(new HelloMessage(ProtocolInfo.Version, "Ola"));
         ola.Send(new LobbyReadyMessage(true));
         WaitFor(lobby, () => lobby.Players == 2);
+
+        // The host starts only once the lobby took Ola's Ready (on a busy machine it may come after her Hello was counted).
+        Protocol.TcpConnectionTests.WaitUntil(() =>
+        {
+            lobby.Pump();
+            bool canStart = false;
+            while (ala.TryReceive(out IProtocolMessage? m))
+            {
+                canStart |= m is LobbyStateMessage { CanStart: true };
+            }
+
+            return canStart;
+        });
         ala.Send(new LobbyStartMessage());
         WaitFor(lobby, () => lobby.Game is not null);
         PlayHost game = lobby.Game!;

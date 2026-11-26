@@ -121,9 +121,11 @@ public sealed class PlayNetTests
         }
 
         Assert.False(g.Picking);
-        for (int round = 0; round < 6; round++)
+        // A few views at a time: more than TcpConnection.CongestedFrames waiting views make the server skip views for that player,
+        // and a busy machine (CI on Windows, 2026-11-26) sends slower than 100 ticks run, so the messages differed.
+        for (int round = 0; round < 200; round++)
         {
-            host.RunTicks(100, viewEvery: 3);
+            host.RunTicks(3, viewEvery: 3);
             Drain(listener, clients, digests);
         }
 
