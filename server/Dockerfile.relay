@@ -1,0 +1,19 @@
+# CivSim relay: passes bytes between game servers and players, nobody opens a port (docs/multiplayer/vps.md). Build from the
+# repository root (or the root of the `server` branch):
+#   docker build -f server/Dockerfile.relay -t civsim2-relay .
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY global.json Directory.Build.props ./
+COPY src/CivSim.Protocol/ src/CivSim.Protocol/
+COPY src/CivSim.Relay/ src/CivSim.Relay/
+RUN true \
+ && dotnet publish src/CivSim.Relay -c Release -r linux-x64 --self-contained false -p:PublishReadyToRun=true -o /app \
+ && rm -rf /app/*.pdb
+
+FROM mcr.microsoft.com/dotnet/runtime:10.0-noble-chiseled
+WORKDIR /app
+COPY --from=build /app .
+ENV DOTNET_GCHeapHardLimitPercent=0x50
+EXPOSE 7700
+USER $APP_UID
+ENTRYPOINT ["dotnet", "CivSim.Relay.dll"]

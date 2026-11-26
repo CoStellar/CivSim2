@@ -65,7 +65,8 @@ public sealed record PlayVoteInfo(
 /// <summary>
 /// Server → client: the players of a game with others, the vote going on (or null) and the pause (MP4). Sent about once a
 /// second and after every change. <see cref="PausedBy"/> is empty when the game runs; <see cref="PauseProtectedSeconds"/> is how
-/// long others still cannot end the pause.
+/// long others still cannot end the pause. <see cref="Invite"/> says how friends join through a relay (address and room code; MP6),
+/// empty without one.
 /// </summary>
 [MessagePackObject]
 public sealed record PlayPlayersMessage(
@@ -74,7 +75,8 @@ public sealed record PlayPlayersMessage(
     [property: Key(2)] string PausedBy,
     [property: Key(3)] int PauseProtectedSeconds,
     [property: Key(4)] int You,
-    [property: Key(5)] IReadOnlyList<PlayTakeableCiv>? Takeable = null) : IProtocolMessage;
+    [property: Key(5)] IReadOnlyList<PlayTakeableCiv>? Takeable = null,
+    [property: Key(6)] string Invite = "") : IProtocolMessage;
 
 /// <summary>A civilization led by the AI that a candidate may ask for (plan, chapter 19): what a candidate sees instead of the map.</summary>
 [MessagePackObject]

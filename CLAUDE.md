@@ -32,6 +32,8 @@ Dokumenty gry (po polsku):
 | `docs/wydajnosc.md` | zasady wydajności (usypianie, terminy, stałe rytmy, sumy zamiast osób) |
 | `docs/known-issues.md` | znane problemy nowej gry |
 | `docs/multiplayer/plan.md` | plan gry przez sieć: decyzje Patryka, pośrednik, serwer na VPS, bezpieczeństwo, kroki MP1–MP6 |
+| `docs/multiplayer/vps.md` | instrukcja krok po kroku: pośrednik i serwer gry na VPS (Docker, hasła, domena i TLS) |
+| `docs/multiplayer/serwer.md` | gałąź `server`, obrazy Docker w GHCR, wydanie wersji |
 | `docs/decisions/` | decyzje architektoniczne (ADR) |
 
 Decyzje Patryka z rozmów są też w notatkach Projektu (`claude/decyzje-*.md`, `claude/runda-testow-*.md`).
@@ -65,6 +67,8 @@ losowaniem, haszem i nazwami) i w plikach `data/*.json` poza `data/sim/`.
 - **Gałęzie:** `feat/<opis>` albo `fix/<opis>` od `development`. PR do `development`, opis po polsku: co, dlaczego, liczby, wyniki testów.
   **Merge robi Patryk.** Nigdy nie pushuj do `main`.
 - **Nie commituj** nieśledzonych `tools/CivSim.Playtest` ani `docs/playtest` (to drugie jest śledzone, ale go nie zmieniaj).
+- **Gałąź `server` tylko z workflow** (`.github/workflows/server.yml` przy tagu wersji): nikt nie commituje na nią ręcznie. Co na nią trafia,
+  ustala `server/assemble.sh`; nowy projekt potrzebny serwerowi dopisz tam i w `server/Dockerfile.*` (`docs/multiplayer/serwer.md`).
 
 ## Języki
 
@@ -78,7 +82,9 @@ src/CivSim.Sim/            symulacja nowej gry (State/SimGame*.cs, Ai/SimAi*.cs,
 src/CivSim.Core/           fundament: Map (HexGlobe), WorldGen, Numerics, Random, Hashing, Naming (reszta to legacy)
 src/CivSim.Protocol/       wiadomości klient–serwer (MessagePack, wersja w ProtocolInfo.cs)
 src/CivSim.Server/         PlayHost.cs: serwer gry, widok gracza filtrowany mgłą, komendy
-src/CivSim.Headless/       --sim-report, --sim-scenario i inne pomiary bez okna
+src/CivSim.Headless/       --sim-report, --sim-scenario i inne pomiary bez okna; --serve (serwer bez okna, też w Dockerze)
+src/CivSim.Relay/          pośrednik: pokoje z kodami, przekazuje bajty między serwerem gry a graczami (MP6)
+server/                    Dockerfile serwera i pośrednika, docker-compose, assemble.sh (zawartość gałęzi `server`)
 game/                      klient Godot 4.7.2 .NET (scripts/Play/PlayGame*.cs, PlayOverlay*.cs, UiKit, UiItems)
 data/sim/game.json         wszystkie dane gry (budowany skryptem, patrz niżej)
 data/sim/tools/build_game_json.py   skrypt danych: edytuje game.json w miejscu; zmiany danych rób tutaj
@@ -102,6 +108,7 @@ dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12 -
 dotnet run --project src/CivSim.Headless -c Release -- --sim-scenario <nazwa> [--minutes N] [--ai-all]
 dotnet run --project src/CivSim.Headless -c Release -- --serve [--port 7777] [--civs 4] [--seats 2] [--name X] [--password X] [--speed 2] [--no-lobby] [--load <zapis>]   # serwer bez okna z lobby (multiplayer)
 dotnet run --project src/CivSim.Headless -c Release -- --join 127.0.0.1:7777 [--seconds 60] [--start N]  # bot testowy: dołącza, jest gotowy (z --start zaczyna przy N graczach)
+dotnet run --project src/CivSim.Relay -c Release -- [--port 7700] [--passwords-file p.txt]   # pośrednik; serwer: --serve --relay host[:7700] --relay-password X; bot: --join host --code K7M-4QD
 dotnet run --project src/CivSim.Headless -c Release -- --net-bench --minutes 45 [--civs 8 --clients 8]   # ruch i czas serwera przez TCP
 cd game && dotnet build                                         # klient
 ```

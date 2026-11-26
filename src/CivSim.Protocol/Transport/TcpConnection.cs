@@ -58,7 +58,7 @@ public sealed class TcpConnection : IConnection, IDisposable
     private static ReadOnlySpan<byte> Magic => "CIVS"u8;
 
     private readonly Socket _socket;
-    private readonly NetworkStream _stream;
+    private readonly Stream _stream;
     private readonly int _maxIncoming;
     private readonly ConcurrentQueue<IProtocolMessage> _inbox = new();
     private readonly ConcurrentQueue<byte[]> _outbox = new();
@@ -78,15 +78,24 @@ public sealed class TcpConnection : IConnection, IDisposable
 
     /// <summary>Wraps a connected socket. <paramref name="maxIncomingFrame"/> is the biggest frame the other side may send.</summary>
     public TcpConnection(Socket socket, int maxIncomingFrame)
+        : this(socket, null, maxIncomingFrame, null)
+    {
+    }
+
+    /// <summary>
+    /// Wraps a connected socket whose bytes go through <paramref name="stream"/> (TLS, a relay, MP6). <paramref name="remote"/> names the
+    /// other side for the log instead of its address (through a relay the address is the relay's); the IP address is then unknown.
+    /// </summary>
+    public TcpConnection(Socket socket, Stream? stream, int maxIncomingFrame, string? remote)
     {
         ArgumentNullException.ThrowIfNull(socket);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxIncomingFrame, 64);
         _socket = socket;
         _socket.NoDelay = true;
-        _stream = new NetworkStream(socket, ownsSocket: false);
+        _stream = stream ?? new NetworkStream(socket, ownsSocket: false);
         _maxIncoming = maxIncomingFrame;
-        RemoteAddress = socket.RemoteEndPoint?.ToString() ?? "?";
-        RemoteIp = (socket.RemoteEndPoint as System.Net.IPEndPoint)?.Address;
+        RemoteAddress = remote ?? socket.RemoteEndPoint?.ToString() ?? "?";
+        RemoteIp = remote is null ? (socket.RemoteEndPoint as System.Net.IPEndPoint)?.Address : null;
         _reader = new Thread(ReadLoop) { IsBackground = true, Name = "CivSim net read" };
         _writer = new Thread(WriteLoop) { IsBackground = true, Name = "CivSim net write" };
         _writer.Start();
@@ -117,6 +126,30 @@ public sealed class TcpConnection : IConnection, IDisposable
         }
 
         return new TcpConnection(socket, MaxServerFrame);
+    }
+
+    /// <summary>
+    /// A player joins the room <paramref name="code"/> on the relay; returns the connection to the game once the game took the player.
+    /// Throws <see cref="RelayException"/> with the relay's reason otherwise (no such room, the game did not answer...).
+    /// </summary>
+    public static TcpConnection JoinRelay(string host, int port, string code, TimeSpan timeout)
+    {
+        string plain = RelayWire.NormalizeCode(code) ?? throw new RelayException($"\"{code}\" is not a room code: it has {RelayWire.CodeLength} letters and digits, e.g. K7M-4QD.");
+        (Socket socket, Stream stream) = RelayWire.Connect(host, port, timeout, RelayWire.Join, plain);
+        try
+        {
+            socket.ReceiveTimeout = (int)(RelayWire.GreetingTimeout + timeout).TotalMilliseconds; // the relay waits for the game to take the player
+            RelayWire.ReadAnswer(stream);
+            socket.ReceiveTimeout = 0;
+            socket.SendTimeout = 0;
+            return new TcpConnection(socket, stream, MaxServerFrame, "relay " + RelayWire.ShowCode(plain));
+        }
+        catch
+        {
+            stream.Dispose();
+            socket.Dispose();
+            throw;
+        }
     }
 
     /// <summary>Address of the other side, for the server's log.</summary>
@@ -238,6 +271,14 @@ public sealed class TcpConnection : IConnection, IDisposable
         }
 
         _socket.Close();
+        try
+        {
+            _stream.Dispose();
+        }
+        catch (Exception e) when (e is IOException or ObjectDisposedException or NotSupportedException)
+        {
+        }
+
         try
         {
             _outboxSignal.Release();

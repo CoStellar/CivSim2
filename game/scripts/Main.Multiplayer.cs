@@ -17,7 +17,7 @@ public partial class Main
 {
     private LobbyScreen? _lobbyScreen;
     private Task<TcpConnection>? _connecting;
-    private (string Address, int Port, string Password)? _joining;
+    private (string Address, int Port, string Password, string? Code)? _joining;
 
     // Command-line steps for automated checks of two windows (e.g. --mp-host 7777 --mp-start 2 / --mp-join 127.0.0.1:7777 --mp-ready).
     private string? _mpHost;
@@ -36,7 +36,8 @@ public partial class Main
     private int _mpPropose = -1; // a speed to ask for in the game (0 pauses)
     private string? _mpLoad;
     private int _mpEye = -2; // a spectator watches through these eyes shortly before the screenshot (−1: the whole map)
-    private bool _mpTable; // a spectator opens the table of civilizations shortly before the screenshot // a saved game for --mp-host (MP5): a name in the saves folder or a file
+    private bool _mpTable; // a spectator opens the table of civilizations shortly before the screenshot
+    private string? _mpRelay; // --mp-host through this relay (MP6)
 
     // Reads the multiplayer arguments; true when one of them starts the run (no menu).
     private bool MultiplayerArguments(string[] args)
@@ -57,6 +58,9 @@ public partial class Main
                     break;
                 case "--mp-table":
                     _mpTable = true;
+                    break;
+                case "--mp-relay":
+                    _mpRelay = next;
                     break;
                 case "--mp-join":
                     _mpJoin = next;
@@ -108,6 +112,12 @@ public partial class Main
         if (_mpHost is not null)
         {
             StartSettings s = _saved.Start;
+            if (_mpRelay is not null)
+            {
+                s.HostThroughRelay = true;
+                s.RelayAddress = _mpRelay;
+            }
+
             int port = int.Parse(_mpHost, CultureInfo.InvariantCulture);
             PlayOptions options = _mpLoad is not null
                 ? new PlayOptions(0) { LoadPath = System.IO.File.Exists(_mpLoad) ? _mpLoad : PlaySaves.PathOf(_mpLoad), HumanSeats = Math.Max(Math.Max(2, _mpStart), _mpSeats), StartSpeed = 1 }
@@ -131,20 +141,35 @@ public partial class Main
 
     private string Nickname() => _saved.Start.Nickname.Trim() is { Length: > 0 } n ? n : "Player";
 
-    // Join: connect in the background (the window keeps drawing), then the lobby screen.
-    private void Join(string address, int port, string password)
+    // Join: connect in the background (the window keeps drawing), then the lobby screen. With a room code the address is a relay's (MP6).
+    private void Join(string address, int port, string password, string? code = null)
     {
         if (string.IsNullOrWhiteSpace(address))
         {
-            StartMenu.Notice = "Type the host's address.";
+            StartMenu.Notice = code is null ? "Type the host's address." : "Type the relay's address.";
             ShowMenu();
             return;
         }
 
         _menu?.QueueFree();
         _menu = null;
-        _joining = (address.Trim(), port, password);
-        _connecting = Task.Run(() => TcpConnection.Connect(address.Trim(), port, TimeSpan.FromSeconds(8)));
+        _joining = (address.Trim(), port, password, code);
+        _connecting = code is null
+            ? Task.Run(() => TcpConnection.Connect(address.Trim(), port, TimeSpan.FromSeconds(8)))
+            : Task.Run(() => TcpConnection.JoinRelay(address.Trim(), port, code, TimeSpan.FromSeconds(8)));
+    }
+
+    // "relay.example.com" or "relay.example.com:7701" → address and port (7700 by default).
+    private static (string Host, int Port) RelayTarget(string text)
+    {
+        string t = text.Trim();
+        int colon = t.LastIndexOf(':');
+        if (colon > 0 && t.IndexOf(':') == colon && int.TryParse(t[(colon + 1)..], NumberStyles.None, CultureInfo.InvariantCulture, out int port) && port is >= 1 and <= 65535)
+        {
+            return (t[..colon], port);
+        }
+
+        return (t, RelayWire.DefaultPort);
     }
 
     // Called every frame: a connection that came through opens the lobby screen.
@@ -160,12 +185,12 @@ public partial class Main
         if (task.IsFaulted || task.IsCanceled)
         {
             string why = task.Exception?.InnerException is SocketException se ? se.Message : task.Exception?.InnerException?.Message ?? "no answer";
-            StartMenu.Notice = $"Could not connect to {j.Address}:{j.Port}: {why}";
+            StartMenu.Notice = task.Exception?.InnerException is RelayException ? why : $"Could not connect to {j.Address}:{j.Port}: {why}";
             ShowMenu();
             return;
         }
 
-        string where = j.Address + ":" + j.Port.ToString(CultureInfo.InvariantCulture);
+        string where = j.Address + ":" + j.Port.ToString(CultureInfo.InvariantCulture) + (j.Code is { } code ? ", code " + RelayWire.ShowCode(RelayWire.NormalizeCode(code) ?? code) : "");
         string returnKey = _saved.Start.LastServer == where ? _saved.Start.LastReturnKey : "";
         ShowLobby(task.Result, j.Password, returnKey, where, owned: null);
     }
@@ -198,10 +223,37 @@ public partial class Main
             return;
         }
 
+        // Through a relay (MP6): a room with a code; nobody opens a port. The code is the first line of the lobby's settings.
+        RelayHost? relay = null;
+        if (_saved.Start.HostThroughRelay)
+        {
+            (string relayHost, int relayPort) = RelayTarget(_saved.Start.RelayAddress);
+            try
+            {
+                if (relayHost.Length == 0)
+                {
+                    throw new RelayException("Type the relay's address, or let players join by your address.");
+                }
+
+                relay = new RelayHost(lobby.Accept, relayHost, relayPort, _saved.Start.RelayPassword, TimeSpan.FromSeconds(8));
+            }
+            catch (RelayException e)
+            {
+                listener.Dispose();
+                lobby.Dispose();
+                StartMenu.Notice = e.Message;
+                ShowMenu();
+                return;
+            }
+
+            lobby.Relay = $"Relay {relay.Address}, code {relay.Code}";
+        }
+
         _menu?.QueueFree();
         _menu = null;
-        var owned = new Owned(listener, lobby);
-        ShowLobby(lobby.Connect(), config.Password, "", "this computer, port " + listener.Port.ToString(CultureInfo.InvariantCulture), owned);
+        var owned = new Owned(listener, lobby, relay);
+        string where = relay is null ? "this computer, port " + listener.Port.ToString(CultureInfo.InvariantCulture) : $"relay {relay.Address}, code {relay.Code}";
+        ShowLobby(lobby.Connect(), config.Password, "", where, owned);
     }
 
     private void ShowLobby(IConnection connection, string password, string returnKey, string where, IDisposable? owned)
@@ -299,11 +351,12 @@ public partial class Main
         AddChild(_play);
     }
 
-    // The listener and the lobby (with its game) of a game this computer hosts, closed together with the game screen.
-    private sealed class Owned(PlayListener listener, PlayLobby lobby) : IDisposable
+    // The listener, the relay room and the lobby (with its game) of a game this computer hosts, closed together with the game screen.
+    private sealed class Owned(PlayListener listener, PlayLobby lobby, RelayHost? relay) : IDisposable
     {
         public void Dispose()
         {
+            relay?.Dispose();
             listener.Dispose();
             lobby.Dispose();
         }

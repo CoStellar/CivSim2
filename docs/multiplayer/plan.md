@@ -141,7 +141,7 @@ Bezpośrednie połączenie po „zapoznaniu” można dodać później jako oszc
   czas bezczynności do zamknięcia, **hasło do zakładania gier** (R2-3), zmieniane co jakiś czas (R3-3). Dołączanie do istniejącej gry: kod pokoju (+ hasło partii, jeśli gospodarz je ustawił).
 - Docker: osobna sieć od drugiej aplikacji, użytkownik bez uprawnień roota, system plików tylko do odczytu, limit pamięci (np. 128 MB) i procesora.
 - Szyfrowanie TLS (rozdz. 9), jeśli VPS ma domenę.
-- Instrukcja krok po kroku po polsku w `docs/multiplayer/vps.md` (powstanie w MP6).
+- Instrukcja krok po kroku po polsku w `docs/multiplayer/vps.md` (zrobione w MP6).
 
 ## 5. Serwer na VPS (docelowo)
 
@@ -247,7 +247,7 @@ i do `server.json`. Podgląd mapy (jak w starym menu) do decyzji w rundzie 2.
 | Żadnych zasobów Godota z sieci (`bytes_to_var` z obiektami, `.tres`, `.tscn`) | zasoby Godota mogą zawierać skrypty | zasada w CLAUDE.md |
 | Czat i nazwy jako zwykły tekst (bez BBCode i linków) | nikt nie wstawi linku ani obrazu do okna gry | MP4 |
 | Klient sprawdza identyfikatory z widoku (zły numer nie wyłącza gry) | złośliwy serwer nie zawiesi klienta | MP1–MP4 (testy z losowymi danymi) |
-| Gracze łączą się tylko „na zewnątrz” do pośrednika albo serwera | żadnych otwartych portów u graczy; adres IP gospodarza ukryty przez pośrednika | MP6 |
+| Gracze łączą się tylko „na zewnątrz” do pośrednika albo serwera | żadnych otwartych portów u graczy; adres IP gospodarza ukryty przez pośrednika | zrobione w MP6 |
 | Gra pobierana tylko z GitHub Releases, z sumą kontrolną | nikt nie podsunie podrobionej wersji | przy wydaniu |
 
 ### Jak chronimy serwer i pośrednika
@@ -478,6 +478,33 @@ jako streszczenie skutków, nie każdy rozkaz: „sami musimy widzieć, co się 
 - **Czat widzów:** linia widza idzie tylko do widzów (znacznik „[spectators]”); widzowie czytają też graczy.
 - Tylko widzowie dostają tabelę i dziennik; gracze nigdy (test). Protokół 50 (`PlayOverviewMessage`, `PlayEyeMessage`, kanał widzów w czacie).
 - Okno gry: `--mp-eye N` i `--mp-table` do zrzutów.
+
+**Zrobione w MP6 (2026-11-26; partia przez pośrednika na VPS jeszcze przed nami):**
+
+- **Pośrednik** `src/CivSim.Relay` (osobny program, nie dekoduje gry). Serwer gry łączy się do niego, zakłada pokój i dostaje kod
+  (6 znaków bez łatwych do pomylenia, np. `K7M-4QD`); gracz łączy się z adresem pośrednika i kodem; pośrednik prosi serwer o nowe
+  połączenie dla gracza i od tej chwili tylko kopiuje bajty. Kod zapisany w `RelayWire` (CivSim.Protocol): powitanie `CVRL`,
+  rodzaje Open/Join/Accept, linia kontrolna z pingiem co 15 s.
+- **Hasła do zakładania gier** (R2-3, R3-3): plik `password RRRR-MM-DD` w wierszu, czytany co minutę bez restartu, 7 dni łaski po
+  ostatnim dniu; bez pliku każdy może zakładać gry (własny pośrednik dla znajomych, R3-4). 5 złych haseł albo 20 złych kodów z jednego
+  adresu w 10 minut = przerwa.
+- **Ten sam kod po zerwaniu:** pośrednik trzyma kod zamkniętego pokoju 10 minut dla jego sekretu; serwer gry sam zakłada pokój
+  ponownie co 5 s, więc kod znajomych zostaje ważny.
+- **TLS:** adres z nazwą (np. `civsim.twojadomena.pl`) = TLS ze sprawdzanym certyfikatem; adres IP albo `localhost` = bez TLS.
+  Pośrednik rozpoznaje TLS po pierwszym bajcie, więc oba działają na jednym porcie; odnowiony certyfikat Let's Encrypt bierze bez restartu.
+- **Limity pośrednika:** 32 gry, 16 graczy na grę, 400 połączeń, 24 z jednego adresu, 2 MB/s na grę, 5 minut ciszy zamyka połączenie.
+  Dziennik bez adresów IP (serwer gry też przestał je wypisywać).
+- **Gra:** „Host a game” → „Players join: Through a relay” (adres i hasło pośrednika, zapamiętywane); „Join a game” → „Through a relay,
+  with a room code”. Kod jest pierwszym wierszem ustawień w lobby i w liście graczy w grze („Friends join: Relay …, code …”; protokół 51).
+  Serwer bez okna: `--serve --relay host[:7700] --relay-password X` (albo `CIVSIM_RELAY_PASSWORD`); bot `--join host --code KOD` pokazuje ping.
+- **Docker:** `server/Dockerfile.server` i `server/Dockerfile.relay` (ReadyToRun, obraz `runtime:10.0-noble-chiseled` bez powłoki,
+  użytkownik bez roota, limit pamięci GC 80%), `server/docker-compose.yml` (osobna sieć, system plików tylko do odczytu, 128 MB / 768 MB).
+  Pomiar w kontenerach: pośrednik 11 MB pamięci, serwer 70 MB w lobby; dwa boty przez pośrednika: ping 4–21 ms lokalnie, ok. 4 KB/s na gracza.
+- **Gałąź `server`:** `.github/workflows/server.yml` przy tagu wersji składa drzewo (`server/assemble.sh`), buduje i testuje je samo
+  (280 testów), commituje „Server for vX” z tagiem `server-vX` i publikuje obrazy w GHCR. Opis: `docs/multiplayer/serwer.md`;
+  instrukcja VPS: `docs/multiplayer/vps.md` (po angielsku `server/README.md`).
+- **Testy:** 7 nowych (`RelayTests`): dwóch graczy w lobby przez pośrednika, złe hasło, nieznany kod i zgadywanie, hasła z datą i łaską,
+  ten sam kod po zerwaniu, TLS z certyfikatem, ustawienia z pliku, środowiska i wiersza poleceń.
 
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 

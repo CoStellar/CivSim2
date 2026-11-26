@@ -1,0 +1,103 @@
+# The `server` branch and the Docker images of the game server and the relay (docs/multiplayer/serwer.md, plan chapter 8, MP6).
+# When Patryk releases a game version (a tag like v26.11.1), this workflow:
+#   1. copies only what the server and the relay need (server/assemble.sh) and builds and tests it on its own (all tests of
+#      CivSim.Tests: protocol, server, relay, two clients over the network);
+#   2. commits it on the `server` branch, as one commit "Server for v26.11.1", tagged server-v26.11.1;
+#   3. builds both images from that branch and publishes them on GitHub (ghcr.io/costellar/civsim2-server and civsim2-relay,
+#      tagged with the version and "latest").
+# Nobody commits on the `server` branch by hand. It can also be run by hand for an existing tag (Actions → Server → Run workflow).
+name: Server
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing game version tag, e.g. v26.11.1'
+        required: true
+
+concurrency:
+  group: server
+  cancel-in-progress: false
+
+permissions:
+  contents: write # the server branch and its tag
+  packages: write # images on ghcr.io
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Version
+        id: version
+        run: |
+          version="${TAG#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Tag $TAG is not a version like v26.11.1"; exit 1; }
+          grep -q "GameVersion = \"$version\"" src/CivSim.Protocol/ProtocolInfo.cs || { echo "ProtocolInfo.GameVersion is not $version"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Copy what the server needs
+        run: server/assemble.sh "$RUNNER_TEMP/server"
+
+      - name: Build and test the server on its own (as the branch will hold it)
+        working-directory: ${{ runner.temp }}/server
+        run: |
+          dotnet build CivSim.Server.slnx --configuration Release
+          dotnet test tests/CivSim.Tests --configuration Release --no-build
+          find . -type d \( -name bin -o -name obj \) -prune -exec rm -rf {} +
+
+      - name: Commit it on the server branch
+        run: |
+          set -euo pipefail
+          tree="$RUNNER_TEMP/server"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin server >/dev/null; then
+            git fetch origin server
+            git worktree add "$RUNNER_TEMP/branch" origin/server
+            git -C "$RUNNER_TEMP/branch" checkout -B server
+          else
+            git worktree add --detach "$RUNNER_TEMP/branch"
+            git -C "$RUNNER_TEMP/branch" checkout --orphan server
+          fi
+          cd "$RUNNER_TEMP/branch"
+          git rm -rq --ignore-unmatch . || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -r "$tree"/. .
+          git add -A
+          git commit -q -m "Server for $TAG" --allow-empty
+          git tag -f "server-$TAG"
+          git push origin server
+          git push -f origin "server-$TAG"
+
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Images (built from the server branch)
+        working-directory: ${{ runner.temp }}/branch
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          for kind in server relay; do
+            image="ghcr.io/$owner/civsim2-$kind"
+            docker buildx build --push -f "Dockerfile.$kind" \
+              --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+              --label "org.opencontainers.image.version=${{ steps.version.outputs.version }}" \
+              -t "$image:${{ steps.version.outputs.version }}" -t "$image:latest" .
+          done

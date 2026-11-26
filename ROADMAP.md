@@ -60,6 +60,6 @@ Projekt gry: `docs/projekt-gry.md`. Stara roadmapa (legacy): `docs/legacy/ROADMA
 | MP2 | Serwer dla kilku ludzi (przejęcie przez AI, błędy klienta, dołączenia w zapisie, prędkość, wersje) | zrobione: #185 |
 | MP3 | Konfiguracja serwera i lobby, menu Multiplayer | zrobione: #186 |
 | MP4 | Gra z ludźmi: czat, głosowania, obserwatorzy, wyrzucanie | zrobione: #188, #189 |
-| MP5 | Zapis i wczytanie partii wieloosobowej | w PR |
-| MP5+ | Pełny widok obserwatora: tabela cywilizacji, zamiary na mapie i w dzienniku, oczami jednej cywilizacji, czat widzów | w PR (po MP5) |
-| MP6 | Pośrednik, Docker, gałąź `server` z CI, instrukcja VPS | do zrobienia |
+| MP5 | Zapis i wczytanie partii wieloosobowej | zrobione: #190 |
+| MP5+ | Pełny widok obserwatora: tabela cywilizacji, zamiary na mapie i w dzienniku, oczami jednej cywilizacji, czat widzów | zrobione: #191 |
+| MP6 | Pośrednik, Docker, gałąź `server` z CI, instrukcja VPS | w PR; potem partia Patryka przez pośrednika na VPS |
