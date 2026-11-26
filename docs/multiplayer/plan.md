@@ -440,6 +440,25 @@ Do zrobienia:
 - **Jeszcze nie:** zablokowanie cywilizacji wyrzuconego i lista wyrzuconych nie są w zapisie partii (po wczytaniu znikają);
   obserwator, który rozłączy się i dołączy znowu, może zostać kandydatem (serwer nie rozpoznaje go bez konta).
 
+**Zrobione w MP5 (2026-11-26):**
+
+- **Zapis w partii z innymi graczami robi gospodarz** (inny gracz dostaje odpowiedź „zapisuje gospodarz”). Autozapis jak dotąd.
+- **Zapis pamięta miejsca graczy:** kto prowadzi którą cywilizację (nick, nazwa cywilizacji, klucz powrotu, kto był gospodarzem),
+  także gracza, który akurat stracił połączenie. Pamięta też cywilizacje wyrzuconych (zablokowane) i ich klucze powrotu, więc po
+  wczytaniu dalej nikt inny ich nie przejmie (to była luka z MP4b).
+- **Wczytanie do lobby:** w „Host a game” nowe pole „Game”: „New game” albo jeden z zapisów. Lobby pokazuje „Saved game: nazwa,
+  minuta, era” i „Places from the save: Ala leads X, Ola leads Y”. Serwer bez okna: `--serve --load <nazwa albo plik>`.
+- **Powrót na swoje miejsca:** gracz wraca na swoją cywilizację po kluczu powrotu (okno pamięta go dla adresu serwera), a gdy go nie ma,
+  po nicku; gospodarz lobby bez dopasowania dostaje miejsce dawnego gospodarza. Czat: „Ola takes their place again: Yowuy.”
+  Kto nie grał w zapisanej partii, po starcie czeka jako kandydat (głosowanie z MP4b). Miejsce gracza, który nie wrócił, czeka
+  na niego jak po zerwaniu połączenia; cywilizację prowadzi AI.
+- **Liczba miejsc dla graczy** po wczytaniu: tyle, ile ustawi gospodarz, ale nie mniej niż graczy w zapisie. Prędkość też od gospodarza.
+- **Test** (wolny): dwie osoby w lobby, 10 minut gry, Ola próbuje zapisać (odmowa), Ala zapisuje; nowe lobby z zapisem, Ola
+  wchodzi pierwsza (po nicku), Ala z kluczem powrotu i innym nickiem; po starcie hasz stanu jest ten sam, a obie prowadzą swoje cywilizacje.
+- **Pomiar wczytania** (zapis = lista rozkazów, wczytanie odtwarza grę): 8 cywilizacji, mapa 98×60, 45 minut: 2,6 s;
+  mapa 128×80, 60 minut: 5,2 s. Zapis ma poniżej 1 KB. Migawka stanu nie jest potrzebna.
+- Okno gry: `--mp-load <nazwa albo plik>` przy `--mp-host` do zrzutów.
+
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 
 ## 14. Ryzyka
@@ -449,7 +468,7 @@ Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośredn
 | Późna gra z 8 cywilizacjami może być cięższa niż zmierzone 9% rdzenia. | Pomiar w MP1 przed obietnicą „najmniejszy VPS wystarczy”. |
 | Gospodarz w wariancie A wychodzi = koniec partii. | Autozapis; wariant B na VPS. |
 | Pośrednik jest jednym punktem awarii i kosztem transferu VPS. | Limity transferu; połączenie wprost jako zapas; sprawdzić limit transferu u dostawcy VPS. |
-| Długie wczytywanie dużej partii (zapis = lista rozkazów). | Pomiar w MP5; w razie potrzeby migawka stanu co N minut. |
+| Długie wczytywanie dużej partii (zapis = lista rozkazów). | Zmierzone w MP5: 60 minut na mapie 128×80 z 8 cywilizacjami wczytuje się ok. 5 s; migawka niepotrzebna. |
 | Różne wersje gry u graczy. | Wersja gry + skrót danych przy dołączeniu; gałąź `server` z tagami wersji. |
 | Druga aplikacja na VPS. | Osobna sieć Docker, limity pamięci i procesora, bez roota. |
 

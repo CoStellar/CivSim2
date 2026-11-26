@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CivSim.Protocol;
 using CivSim.Protocol.Messages;
@@ -114,6 +115,84 @@ public sealed class PlayLobbyTests
             game.RunTicks(1);
             return game.Players == 2;
         });
+    }
+
+    // MP5: two players save after 10 minutes; the saved game loads into a new lobby, both come back on their places (one by its
+    // return key, one by its nickname) and the game is the same game.
+    [Trait("Category", "Slow")]
+    [Fact]
+    public void AGameOfTwoPlayersSavedAfterTenMinutesLoadsIntoTheLobbyWithEveryoneOnTheirPlace()
+    {
+        string name = "test lobby load " + Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string path = PlaySaves.PathOf(name);
+        try
+        {
+            ulong saved;
+            string alaKey;
+            string civAla, civOla;
+            using (PlayLobby lobby = Lobby(seats: 3))
+            {
+                IConnection ala = Join(lobby, "Ala");
+                IConnection ola = Join(lobby, "Ola");
+                ola.Send(new LobbyReadyMessage(true));
+                lobby.Pump();
+                ala.Send(new LobbyStartMessage());
+                lobby.Pump();
+                PlayHost game = lobby.Game!;
+                game.AutosaveOn = false;
+                ala.Send(new HelloMessage(ProtocolInfo.Version, "Ala"));
+                ola.Send(new HelloMessage(ProtocolInfo.Version, "Ola"));
+                game.RunTicks(6000, viewEvery: 0); // 10 minutes of the game
+                alaKey = Drain(ala).OfType<WelcomeMessage>().Single().ReturnKey!;
+                Drain(ola);
+                ola.Send(new SaveGameRequestMessage(name));
+                game.RunTicks(0);
+                Assert.False(Drain(ola).OfType<SaveGameResultMessage>().Single().Saved); // in a game with others the host saves
+                ala.Send(new SaveGameRequestMessage(name));
+                game.RunTicks(0);
+                Assert.True(Drain(ala).OfType<SaveGameResultMessage>().Single().Saved);
+                saved = game.StateHash;
+                (civAla, civOla) = (game.Game.Civs[0].Name, game.Game.Civs[1].Name);
+            }
+
+            SavedGame save = PlaySaves.Read(path);
+            Assert.Equal([0, 1], save.Seats.Select(s => s.Civ));
+            Assert.True(save.Seats[0].Host);
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            using PlayLobby again = PlayLobby.Create(new PlayOptions(0) { LoadPath = path }, new LobbyConfig { GameName = "Again" });
+            IConnection ola2 = Join(again, "Ola"); // in first, so the host of this lobby, yet back on her own place by her nickname
+            IConnection ala2 = again.Connect();
+            ala2.Send(new HelloMessage(ProtocolInfo.Version, "Alicja", ReturnKey: alaKey));
+            again.Pump();
+            LobbyStateMessage state = Last(ala2);
+            Assert.StartsWith($"Saved game: {name}, minute 10", state.Settings[0], StringComparison.Ordinal);
+            Assert.Contains(state.Settings, l => l.Contains($"Ala leads {civAla}", StringComparison.Ordinal));
+            Assert.Contains($"Ola takes their place again: {civOla}.", state.Chat);
+            Assert.Contains($"Alicja takes their place again: {civAla}.", state.Chat);
+
+            // Ola joined first, so Ola is the host of this lobby now and starts the game.
+            ala2.Send(new LobbyReadyMessage(true));
+            again.Pump();
+            ola2.Send(new LobbyStartMessage());
+            again.Pump();
+            PlayHost loaded = again.Game!;
+            loaded.AutosaveOn = false;
+            loaded.RunTicks(0);
+            Assert.Equal(saved, loaded.StateHash);
+            ala2.Send(new HelloMessage(ProtocolInfo.Version, "Alicja", ReturnKey: alaKey));
+            ola2.Send(new HelloMessage(ProtocolInfo.Version, "Ola"));
+            loaded.RunTicks(1);
+            Assert.Equal(0, Drain(ala2).OfType<WelcomeMessage>().Single().CivId);
+            Assert.Equal(1, Drain(ola2).OfType<WelcomeMessage>().Single().CivId);
+            Assert.False(loaded.Game.Civs[0].IsAi);
+            Assert.False(loaded.Game.Civs[1].IsAi);
+            Console.WriteLine($"MP5 load of a 10-minute game: {watch.ElapsedMilliseconds} ms");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     private static PlayLobby Lobby(int seats) =>

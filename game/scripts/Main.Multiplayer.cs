@@ -34,6 +34,7 @@ public partial class Main
     private double _mpLobbySeconds = 3;
     private string? _mpSay;
     private int _mpPropose = -1; // a speed to ask for in the game (0 pauses)
+    private string? _mpLoad; // a saved game for --mp-host (MP5): a name in the saves folder or a file
 
     // Reads the multiplayer arguments; true when one of them starts the run (no menu).
     private bool MultiplayerArguments(string[] args)
@@ -45,6 +46,9 @@ public partial class Main
             {
                 case "--mp-host":
                     _mpHost = next;
+                    break;
+                case "--mp-load":
+                    _mpLoad = next;
                     break;
                 case "--mp-join":
                     _mpJoin = next;
@@ -97,7 +101,9 @@ public partial class Main
         {
             StartSettings s = _saved.Start;
             int port = int.Parse(_mpHost, CultureInfo.InvariantCulture);
-            PlayOptions options = NewGameFromSettings(s) with { HumanSeats = Math.Max(Math.Max(2, _mpStart), _mpSeats), StartSpeed = 1, Tutorial = false };
+            PlayOptions options = _mpLoad is not null
+                ? new PlayOptions(0) { LoadPath = System.IO.File.Exists(_mpLoad) ? _mpLoad : PlaySaves.PathOf(_mpLoad), HumanSeats = Math.Max(Math.Max(2, _mpStart), _mpSeats), StartSpeed = 1 }
+                : NewGameFromSettings(s) with { HumanSeats = Math.Max(Math.Max(2, _mpStart), _mpSeats), StartSpeed = 1, Tutorial = false };
             Host(options, new LobbyConfig { GameName = s.HostGameName.Length > 0 ? s.HostGameName : "CivSim game" }, port);
             return true;
         }

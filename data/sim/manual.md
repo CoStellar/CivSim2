@@ -187,6 +187,8 @@ Who joins a game that already runs waits without the map and asks to lead one of
 
 The host removes a player with the "x" next to the name (click twice); another player starts a vote with it. The AI leads the removed player's civilization and nobody else may take it; the removed player may join again and ask for it back.
 
+In a game with others the host saves it. To go on later, the host picks the save under "Game" in Host a game: everyone who joins gets their civilization back (the game knows them by their nickname or by the computer they played on).
+
 # Tips
 - Watch the red numbers on the goods bar: something is used faster than it is made.
 - `J` goes through the alerts one by one.

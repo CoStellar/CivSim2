@@ -305,7 +305,7 @@ public partial class StartMenu : CanvasLayer
         _content.AddChild(joinButton);
 
         _content.AddChild(Heading("Host a game"));
-        _content.AddChild(Muted("The world and the game are those of New game. Players join with your address and the port below; "
+        _content.AddChild(Muted("The world and the game are those of New game, or a saved game: its players get their places back. Players join with your address and the port below; "
             + "over the internet the port must be open on your router (a relay server comes later)."));
         string mine = MyAddresses();
         if (mine.Length > 0)
@@ -314,6 +314,12 @@ public partial class StartMenu : CanvasLayer
         }
 
         GridContainer host = Grid();
+
+        // A new world from New game, or a saved game whose players come back to their places in the lobby (MP5).
+        IReadOnlyList<(string Path, string Name, DateTime SavedAt, long Minute, string Era)> hostSaves = PlaySaves.List();
+        string? hostLoad = null;
+        Choice(host, "Game", ["New game (its settings)", .. hostSaves.Select(v => $"{v.Name}: minute {v.Minute}, {v.Era}")], 0,
+            i => hostLoad = i == 0 ? null : hostSaves[i - 1].Path);
         Text(host, "Game name", _settings.HostGameName, v => _settings.HostGameName = v, "what players see in the lobby");
         LineEdit hostPassword = Secret(host, "Password", "empty: anyone may join");
         Text(host, "Port", _settings.HostPort.ToString(CultureInfo.InvariantCulture), v => _settings.HostPort = PortOf(v, _settings.HostPort), "1024 to 65535");
@@ -333,6 +339,18 @@ public partial class StartMenu : CanvasLayer
         hostButton.Pressed += () =>
         {
             PlayOptions options;
+            if (hostLoad is not null)
+            {
+                options = new PlayOptions(0)
+                {
+                    LoadPath = hostLoad,
+                    HumanSeats = Math.Clamp(_settings.HostSeats, 1, 8),
+                    StartSpeed = _settings.HostSpeed == 2 ? 2 : 1,
+                };
+                HostRequested?.Invoke(options, new LobbyConfig { GameName = _settings.HostGameName.Trim() is { Length: > 0 } g ? g : "CivSim game", Password = hostPassword.Text }, _settings.HostPort);
+                return;
+            }
+
             try
             {
                 options = NewGameOptions();

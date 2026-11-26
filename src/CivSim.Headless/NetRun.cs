@@ -30,10 +30,11 @@ public static class NetRun
 
     /// <summary>Usage of the three commands.</summary>
     public const string Usage = """
-        --serve [--port 7777] [--password P] [--name "Game"] [--seats N] [--speed 1|2] [--seed N] [--civs 4] [--size 98x60]
+        --serve [--port 7777] [--password P] [--name "Game"] [--seats N] [--speed 1|2] [--seed N] [--civs 4] [--size 98x60] [--load <save>]
                 [--no-start-phase] [--no-lobby] [--stats-seconds 30] [--minutes N]
             A server without a window. Players meet in the lobby; the first one in is the host and starts the game (--no-lobby:
             the game starts at once). Every civilization is led by the AI until a player joins. Stops after N minutes (default: never, Ctrl+C).
+            --load <name or file>: a saved game; its players come back to their places in the lobby (by their return key or nickname).
         --join host[:port] [--name Bot] [--password P] [--seconds 60] [--start N]
             A test client: joins, says it is ready in a lobby (and, as the host, starts the game once N players are in with --start N), reads the
             views and prints what came. Exit code 0 when the game let it in.
@@ -65,6 +66,25 @@ public static class NetRun
             StartSpeed = Int(args, "--speed", 1) == 2 ? 2 : 1,
         };
 
+        // A saved game (MP5): its world and places; the players come back to their places in the lobby.
+        if (Text(args, "--load") is { Length: > 0 } load)
+        {
+            string path = File.Exists(load) ? load : PlaySaves.PathOf(load);
+            if (!File.Exists(path))
+            {
+                output.WriteLine($"No saved game {load} ({path}).");
+                return 2;
+            }
+
+            options = new PlayOptions(0)
+            {
+                LoadPath = path,
+                Dedicated = true,
+                HumanSeats = args.Contains("--seats") ? Int(args, "--seats", 0) : 0,
+                StartSpeed = args.Contains("--speed") ? (Int(args, "--speed", 1) == 2 ? 2 : 1) : 0,
+            };
+        }
+
         // With a lobby (MP3) the first player in is the host and starts the game; --no-lobby starts it at once.
         using PlayLobby? lobby = args.Contains("--no-lobby") ? null : PlayLobby.Start(options, new LobbyConfig { GameName = Text(args, "--name") ?? "CivSim game", Password = password });
         PlayHost? direct = lobby is null ? PlayHost.Start(options) : null;
@@ -75,7 +95,7 @@ public static class NetRun
 
         using PlayHost? owned = direct;
         using var listener = new PlayListener(c => (lobby is not null ? (Action<IConnection>)lobby.Accept : x => direct!.Accept(x))(c), port);
-        output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, seed {options.Seed}, {options.Civilizations} civilizations ({options.HumanSeats} for players), map {options.LegacyWidth}x{options.LegacyHeight}{(lobby is null ? "" : ", lobby open")}"));
+        output.WriteLine(string.Create(Inv, $"CivSim {ProtocolInfo.GameVersion} server (protocol {ProtocolInfo.Version}): port {listener.Port}, {(options.LoadPath is { Length: > 0 } loaded ? $"saved game {Path.GetFileNameWithoutExtension(loaded)}" : $"seed {options.Seed}, {options.Civilizations} civilizations ({options.HumanSeats} for players), map {options.LegacyWidth}x{options.LegacyHeight}")}{(lobby is null ? "" : ", lobby open")}"));
         output.WriteLine("Players join with the game or with: dotnet run --project src/CivSim.Headless -c Release -- --join <address>:" + listener.Port.ToString(Inv));
         using var stop = new ManualResetEventSlim();
         Console.CancelKeyPress += (_, e) =>

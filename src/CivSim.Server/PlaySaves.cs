@@ -77,7 +77,22 @@ public sealed record SavedGame
 
     /// <summary>The players' commands in the order they were applied.</summary>
     public List<SavedCommand> Commands { get; init; } = [];
+
+    /// <summary>
+    /// Places of the players at the save (multiplayer, MP5): who led which civilization, with the return key, so a loaded game puts
+    /// everyone back on their place; also players away at the save, whose civilizations wait for them.
+    /// </summary>
+    public List<SavedSeat> Seats { get; init; } = [];
+
+    /// <summary>Civilizations of removed players: the AI leads them and nobody else may take them (MP4b).</summary>
+    public int[] Locked { get; init; } = [];
+
+    /// <summary>Return keys of removed players and their civilizations (they come back only by a vote).</summary>
+    public Dictionary<string, int> Removed { get; init; } = [];
 }
+
+/// <summary>A player's place in a saved game: the civilization, the nickname, the return key and whether it was the host.</summary>
+public sealed record SavedSeat(int Civ, string CivName, string Name, string ReturnKey, bool Host);
 
 /// <summary>Where saves live and how they are written, read and listed.</summary>
 public static class PlaySaves

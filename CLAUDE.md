@@ -100,7 +100,7 @@ dotnet test tests/CivSim.Tests -c Release -v q --filter "Category!=Slow"       #
 dotnet test -c Release                                           # całość (wolne i legacy): robi to CI przy każdym PR (.github/workflows/tests.yml)
 dotnet run --project src/CivSim.Headless -c Release -- --sim-report --seeds 12 --minutes 75 [--size 98x60]   # pomiar AI i tempa er (domyślnie mapa „Normal” 98×60)
 dotnet run --project src/CivSim.Headless -c Release -- --sim-scenario <nazwa> [--minutes N] [--ai-all]
-dotnet run --project src/CivSim.Headless -c Release -- --serve [--port 7777] [--civs 4] [--seats 2] [--name X] [--password X] [--speed 2] [--no-lobby]   # serwer bez okna z lobby (multiplayer)
+dotnet run --project src/CivSim.Headless -c Release -- --serve [--port 7777] [--civs 4] [--seats 2] [--name X] [--password X] [--speed 2] [--no-lobby] [--load <zapis>]   # serwer bez okna z lobby (multiplayer)
 dotnet run --project src/CivSim.Headless -c Release -- --join 127.0.0.1:7777 [--seconds 60] [--start N]  # bot testowy: dołącza, jest gotowy (z --start zaczyna przy N graczach)
 dotnet run --project src/CivSim.Headless -c Release -- --net-bench --minutes 45 [--civs 8 --clients 8]   # ruch i czas serwera przez TCP
 cd game && dotnet build                                         # klient
