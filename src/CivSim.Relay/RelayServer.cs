@@ -44,6 +44,7 @@ public sealed class RelayServer : IDisposable
     private readonly Task _sweeping;
     private X509Certificate2? _certificate;
     private DateTime _certificateWritten;
+    private DateTime _tlsRefusedLogged = DateTime.MinValue;
     private int _connections;
     private long _bytes;
     private long _opened;
@@ -213,7 +214,14 @@ public sealed class RelayServer : IDisposable
                     X509Certificate2? certificate = Certificate();
                     if (certificate is null)
                     {
-                        return; // a player typed the relay's name, but this relay has no certificate
+                        // Someone typed the relay's domain name (TLS), but this relay has no certificate: say so in the log, at most once a minute.
+                        if (_now() - _tlsRefusedLogged > TimeSpan.FromMinutes(1))
+                        {
+                            _tlsRefusedLogged = _now();
+                            Log("A TLS connection was refused: this relay has no certificate. Players and game servers should type its IP address, or set certificateFile and keyFile.");
+                        }
+
+                        return;
                     }
 
                     var tls = new SslStream(stream, leaveInnerStreamOpen: false);

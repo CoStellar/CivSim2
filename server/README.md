@@ -45,7 +45,8 @@ docker compose logs game | grep code
 
 The server's settings are its command line (`command:` in `docker-compose.yml`): `--name`, `--seats` (places for players), `--civs`,
 `--size 98x60`, `--seed`, `--speed 1|2`, `--password` (to join), `--load <save>`, `--relay host[:port]` and `--relay-password`
-(or `CIVSIM_RELAY_PASSWORD`). The first player in is the host and starts the game from the lobby. Saved games are in `./saves`.
+(or `CIVSIM_RELAY_PASSWORD`). Next to the relay the game reaches it as `relay` (a name without a dot: no TLS inside the Docker network);
+set `CIVSIM_PUBLIC_ADDRESS` in `.env` to the address players type (your domain or IP), shown with the room code. The first player in is the host and starts the game from the lobby. Saved games are in `./saves`.
 
 ## Build from source
 
