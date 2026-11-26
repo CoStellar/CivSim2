@@ -61,8 +61,14 @@ public sealed class RelayHost : IDisposable
     /// <summary>The room code players type (e.g. <c>K7M-4QD</c>).</summary>
     public string Code => RelayWire.ShowCode(_code ?? "");
 
-    /// <summary>The relay's address as players type it.</summary>
-    public string Address => _port == RelayWire.DefaultPort ? _host : $"{_host}:{_port}";
+    /// <summary>
+    /// The relay's address as players type it: <see cref="PublicAddress"/> when set (a game server in Docker reaches the relay by its
+    /// container name, players by the VPS's address), otherwise the address this server connected to.
+    /// </summary>
+    public string Address => PublicAddress is { Length: > 0 } shown ? shown : _port == RelayWire.DefaultPort ? _host : $"{_host}:{_port}";
+
+    /// <summary>The relay's address for players when it differs from the one this server uses (e.g. "civsim.example.com").</summary>
+    public string? PublicAddress { get; set; }
 
     /// <summary>Why the room is closed now (null while it is open), e.g. "Lost the relay; trying again".</summary>
     public string? Problem => _problem;

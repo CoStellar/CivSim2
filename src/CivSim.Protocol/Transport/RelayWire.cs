@@ -26,8 +26,8 @@ namespace CivSim.Protocol.Transport;
 /// <item><see cref="Accept"/> (the game server, a new connection for each player): code, secret and ticket. Answer: status; then the
 /// bytes of the game.</item>
 /// </list>
-/// <para>An address with a name (<c>relay.example.com</c>) is reached over TLS with a checked certificate (Let's Encrypt on the
-/// relay); an IP address or <c>localhost</c> without TLS (multiplayer plan, chapter 9). The relay tells the two apart by the first byte.</para>
+/// <para>A domain name (<c>relay.example.com</c>) is reached over TLS with a checked certificate (Let's Encrypt on the
+/// relay); an IP address, <c>localhost</c> or a name without a dot (a container next door, <c>relay</c>) without TLS (multiplayer plan, chapter 9). The relay tells the two apart by the first byte.</para>
 /// </remarks>
 public static class RelayWire
 {
@@ -106,9 +106,12 @@ public static class RelayWire
     /// <summary>A plain room code as people read it: <c>K7MQ4D</c> → <c>K7M-Q4D</c>.</summary>
     public static string ShowCode(string code) => code.Length == CodeLength ? code[..3] + "-" + code[3..] : code;
 
-    /// <summary>True when connections to <paramref name="host"/> use TLS: a name, not an IP address or <c>localhost</c>.</summary>
+    /// <summary>
+    /// True when connections to <paramref name="host"/> use TLS: a domain name (with a dot, e.g. <c>civsim.example.com</c>). Not for an
+    /// IP address, <c>localhost</c> or a name without a dot (another container in the same Docker network, e.g. <c>relay</c>).
+    /// </summary>
     public static bool UsesTls(string host) =>
-        !IPAddress.TryParse(host.Trim('[', ']'), out _) && !string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase);
+        !IPAddress.TryParse(host.Trim('[', ']'), out _) && host.Trim().TrimEnd('.').Contains('.', StringComparison.Ordinal);
 
     /// <summary>
     /// Connects to a relay (TLS for an address with a name) and sends a greeting. Throws <see cref="RelayException"/> when the relay
