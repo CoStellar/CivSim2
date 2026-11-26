@@ -34,7 +34,9 @@ public partial class Main
     private double _mpLobbySeconds = 3;
     private string? _mpSay;
     private int _mpPropose = -1; // a speed to ask for in the game (0 pauses)
-    private string? _mpLoad; // a saved game for --mp-host (MP5): a name in the saves folder or a file
+    private string? _mpLoad;
+    private int _mpEye = -2; // a spectator watches through these eyes shortly before the screenshot (−1: the whole map)
+    private bool _mpTable; // a spectator opens the table of civilizations shortly before the screenshot // a saved game for --mp-host (MP5): a name in the saves folder or a file
 
     // Reads the multiplayer arguments; true when one of them starts the run (no menu).
     private bool MultiplayerArguments(string[] args)
@@ -49,6 +51,12 @@ public partial class Main
                     break;
                 case "--mp-load":
                     _mpLoad = next;
+                    break;
+                case "--mp-eye":
+                    _mpEye = int.Parse(next, CultureInfo.InvariantCulture);
+                    break;
+                case "--mp-table":
+                    _mpTable = true;
                     break;
                 case "--mp-join":
                     _mpJoin = next;
@@ -264,6 +272,17 @@ public partial class Main
             {
                 int ask = _mpAsk;
                 steps.Add((_playSeconds - 6, g => g.ScriptAsk(ask)));
+            }
+
+            if (_mpEye >= -1)
+            {
+                int eye = _mpEye;
+                steps.Add((_playSeconds - 8, g => g.ScriptEye(eye)));
+            }
+
+            if (_mpTable)
+            {
+                steps.Add((_playSeconds - 2, g => g.ScriptTable()));
             }
 
             _play.ScreenshotAfter(_playScreenshot, _playSeconds, steps);

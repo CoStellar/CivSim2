@@ -114,16 +114,20 @@ public sealed partial class PlayHost
             return;
         }
 
-        List<PlayClient> to = chat.Allies && from.Civ >= 0
-            ? Playing().FindAll(c => c == from || (c.Civ != from.Civ && _game.Has(from.Civ, c.Civ, TreatyKind.Alliance)))
-            : Present();
-        if (chat.Allies && to.Count == 1)
+        // Observers and fallen players read everyone but write only to each other: nobody tells a player what the others plan (1a).
+        bool spectator = Spectating(from);
+        List<PlayClient> to = spectator
+            ? _clients.FindAll(Spectating)
+            : chat.Allies && from.Civ >= 0
+                ? Playing().FindAll(c => c == from || (c.Civ != from.Civ && _game.Has(from.Civ, c.Civ, TreatyKind.Alliance)))
+                : Present();
+        if (chat.Allies && !spectator && to.Count == 1)
         {
             from.Connection.Send(new CommandRejectedMessage(0, "No ally of ours has a player to write to."));
             return;
         }
 
-        var line = new PlayChatLineMessage(from.Name ?? "Player", from.SuffixLength, from.Civ, chat.Allies, text);
+        var line = new PlayChatLineMessage(from.Name ?? "Player", from.SuffixLength, from.Civ, chat.Allies && !spectator, text, spectator);
         foreach (PlayClient c in to)
         {
             c.Connection.Send(line);

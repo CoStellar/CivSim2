@@ -459,6 +459,26 @@ Do zrobienia:
   mapa 128×80, 60 minut: 5,2 s. Zapis ma poniżej 1 KB. Migawka stanu nie jest potrzebna.
 - Okno gry: `--mp-load <nazwa albo plik>` przy `--mp-host` do zrzutów.
 
+**Pełny widok obserwatora (Patryk, 2026-11-26; po MP5):**
+
+Decyzje: 1a (obserwatorzy i upadli czytają cały czat, piszą tylko do widzów), 2 (wszystkie cztery części), 3a (zamiary graczy
+jako streszczenie skutków, nie każdy rozkaz: „sami musimy widzieć, co się dzieje”), 4a (najpierw MP5).
+
+- **Pasek „Watch”** u góry: wybór „oczu” (cała mapa albo jedna cywilizacja), przycisk „Civilizations”, przełączniki „Routes” i „Intentions”.
+- **A. Tabela cywilizacji:** gracz albo AI, ludzie, osady, era, badanie z postępem, wojsko (oddziały i żołnierze), jedzenie, drewno
+  i kamień (reszta zapasów w podpowiedzi), wynik, wojny, sojusze i handel. Kolejność według wyniku. Klik w nazwę pokazuje stolicę
+  (największą osadę). Serwer wysyła ją widzom co 2 s (`overviewSeconds`).
+- **B. Zamiary na mapie:** na całej mapie widać trasy i cele wszystkich oddziałów (krzyżyk na końcu = atak), patrole, karawany i drogi handlowe.
+- **C. Dziennik zamiarów** (lewy dół): decyzje AI z jej dziennika (badania, nowe osady, wojna: zwiad, atak, oszczędzenie małej
+  cywilizacji, pokój, układy) i streszczenia rozkazów graczy co 10 s (`intentSeconds`), np. „builds Farm ×2; trains Hunters;
+  moves troops toward Varkrok of Qabuut”. Wojna, pokój i układy gracza od razu. Filtr jednej cywilizacji. Serwer trzyma 300
+  ostatnich linii (`intentLines`) dla tych, którzy dołączą później. Dziennik AI włącza się tylko wtedy, gdy ktoś patrzy (nie zmienia gry).
+- **D. Oczami jednej cywilizacji:** widz widzi mapę z jej mgłą, jej osady z zapasami i jej oddziały z trasami, tak jak jej gracz;
+  niczego nie może zmienić.
+- **Czat widzów:** linia widza idzie tylko do widzów (znacznik „[spectators]”); widzowie czytają też graczy.
+- Tylko widzowie dostają tabelę i dziennik; gracze nigdy (test). Protokół 50 (`PlayOverviewMessage`, `PlayEyeMessage`, kanał widzów w czacie).
+- Okno gry: `--mp-eye N` i `--mp-table` do zrzutów.
+
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 
 ## 14. Ryzyka

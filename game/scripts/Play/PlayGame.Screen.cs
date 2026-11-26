@@ -237,6 +237,8 @@ public partial class PlayGame
         _mpRoot = rightCol; // multiplayer: the players' list goes first in this column (PlayGame.Multiplayer.cs)
         _mpScreen = root;
         ForgetMultiplayerUi(); // a rebuilt interface (a new era's look) builds those panels again
+        _watchRoot = root;
+        ForgetWatchUi();
         _advisorPanel = new PanelContainer();
         rightCol.AddChild(_advisorPanel);
         var adv = new HBoxContainer();
@@ -580,6 +582,8 @@ public partial class PlayGame
             _tutorialPanel.Visible = false;
             _eraBarBox.Visible = false;
         }
+
+        UpdateWatch(v, c);
     }
 
     // The chronicle (and the tutorial list over it) sits at the bottom right, above the action bar only when the bar reaches

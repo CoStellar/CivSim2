@@ -342,7 +342,7 @@ public partial class PlayGame
         }
 
         return Parts(true, NameParts(l.From, l.SuffixLength, PlayOverlay.CivColor(l.FromCiv).Lightened(0.3f))
-            .Prepend((l.Allies ? "[allies] " : "", UiKit.Warn))
+            .Prepend((l.Allies ? "[allies] " : l.Spectators ? "[spectators] " : "", UiKit.Warn))
             .Append((": " + l.Text, UiKit.Text)));
     }
 
