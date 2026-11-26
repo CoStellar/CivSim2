@@ -23,10 +23,14 @@ public sealed class GameServer
     /// <summary>Start cells within this radius are known to a player until fog of war arrives (Stage 3).</summary>
     public const int StartKnowledgeRadius = 4;
 
+    private readonly MilestoneTracker? _milestones;
     private readonly List<Client> _clients = [];
     private readonly GameContent? _content;
-    private readonly List<ChronicleEntry> _chronicle = [];
-    private readonly List<ChronicleEntry> _history = [];
+    private readonly Core.Ai.AiCouncil? _council;
+    private readonly HelmsmanLog? _helmsman;
+    // Chronicle lines with whom each is about: a player gets only what its people may know (playtest P-01).
+    private readonly List<(ChronicleEntry Entry, ChronicleAbout About)> _chronicle = [];
+    private readonly List<(ChronicleEntry Entry, ChronicleAbout About)> _history = [];
     private readonly bool[][] _pendingChunks;
     private readonly ObserverViewBuilder? _observerView;
     private long _lastTurnTicks;
@@ -38,6 +42,9 @@ public sealed class GameServer
     {
     }
 
+    /// <summary>Ticks in a real second at speed x1 (data/time.json; 10 without content).</summary>
+    public int TicksPerSecond => _content?.Time.TicksPerSecond ?? 10;
+
     /// <summary>Creates a server for an existing (e.g. loaded) game.</summary>
     public GameServer(GameState state, GameContent? content = null)
     {
@@ -46,8 +53,11 @@ public sealed class GameServer
         _content = content;
         if (content is not null)
         {
-            CoreSystems.Register(Runner, content);
+            _council = CoreSystems.Register(Runner, content);
+            _helmsman = new HelmsmanLog(content);
             _observerView = new ObserverViewBuilder(content);
+            _milestones = new MilestoneTracker(content);
+            _milestones.Prime(state); // a loaded game does not announce again what it has already reached
         }
         _pendingChunks = new bool[state.Worlds.Count][];
         for (int w = 0; w < state.Worlds.Count; w++)
@@ -121,6 +131,22 @@ public sealed class GameServer
     /// <summary>Number of connected observers.</summary>
     public int ConnectedObservers => _clients.FindAll(c => c.IsObserver).Count;
 
+    /// <summary>Connected players who lead a civilization (stage 6 PR P: the live clock runs for them too).</summary>
+    public int ConnectedLeaders => _clients.FindAll(c => c.Civ is not null).Count;
+
+    /// <summary>The recording of this game for replays (T11), or null when it is not recorded.</summary>
+    public Replays.ReplayRecorder? Replay { get; private set; }
+
+    /// <summary>
+    /// Starts recording the game for replays (T11) from its state now: <paramref name="newGame"/> when it was just generated
+    /// from its settings (the replay generates it again), false for a loaded game (the replay starts from a save).
+    /// </summary>
+    public Replays.ReplayRecorder StartRecording(bool newGame, int checkpointTicks = Replays.ReplayRecorder.DefaultCheckpointTicks)
+    {
+        Replay = new Replays.ReplayRecorder(State, newGame, checkpointTicks);
+        return Replay;
+    }
+
     /// <summary>The turn runner (systems and AI register here).</summary>
     public TurnRunner Runner { get; }
 
@@ -177,9 +203,24 @@ public sealed class GameServer
     {
         TurnReport report = Runner.RunTurn();
         _lastTurnTicks = report.TotalTicks;
-        foreach (string line in Runner.LastChronicle)
+        if (_council is not null && _council.Log.Entries.Count > 0 && _clients.Exists(c => c.Civ is not null))
         {
-            AddChronicle(line);
+            _helmsman!.Add(State, _council.Log); // what the AI did on the levers the players did not take (ADR 0027)
+        }
+        Replay?.AfterTick(State);
+        IReadOnlyList<string> chronicle = Runner.LastChronicle;
+        IReadOnlyList<ChronicleAbout> subjects = Runner.LastChronicleSubjects;
+        for (int k = 0; k < chronicle.Count; k++)
+        {
+            AddChronicle(chronicle[k], k < subjects.Count ? subjects[k] : new ChronicleAbout(-1));
+        }
+
+        if (_milestones is not null && State.Turn % TicksPerSecond == 0)
+        {
+            foreach (MilestoneReached m in _milestones.Check(State))
+            {
+                AddChronicle(m.Text, new ChronicleAbout(m.Civ.Value)); // the rise of each people, with the minute of the game (stage 6 PR P2b)
+            }
         }
 
         GameSnapshot? snapshot = Runner.Snapshots.Latest;
@@ -224,7 +265,8 @@ public sealed class GameServer
                 HandleSubmit(client, submit);
                 break;
             case SetSpeedMessage speed:
-                if (client.IsObserver)
+                // Observers set the speed; so does a player who plays alone (stage 6 PR P: pause and speeds in the solo game, ADR 0024).
+                if (client.IsObserver || (client.Civ is not null && _clients.FindAll(c => c.Civ is not null).Count == 1))
                 {
                     if (speed.Speed != Speed)
                     {
@@ -234,7 +276,7 @@ public sealed class GameServer
                 }
                 else
                 {
-                    client.Connection.Send(new ConnectionRejectedMessage("Only observers can change the speed."));
+                    client.Connection.Send(new ConnectionRejectedMessage("Only observers and a player who plays alone can change the speed."));
                 }
 
                 break;
@@ -295,18 +337,26 @@ public sealed class GameServer
         }
 
         CivilizationState? civ = null;
-        foreach (CivilizationState c in State.Civilizations)
+        if (hello.CivId != HelloMessage.AnyCiv)
         {
-            if (c.IsAlive && c.Controller == PlayerId.Ai)
+            // The player asked for one civilization (stage 6 PR P: "lead civilization N" in the start menu).
+            civ = State.FindCivilization(new CivId(hello.CivId)) is { IsAlive: true } chosen && chosen.Controller == PlayerId.Ai ? chosen : null;
+        }
+        else
+        {
+            foreach (CivilizationState c in State.Civilizations)
             {
-                civ = c;
-                break;
+                if (c.IsAlive && c.Controller == PlayerId.Ai)
+                {
+                    civ = c;
+                    break;
+                }
             }
         }
 
         if (civ is null)
         {
-            client.Connection.Send(new ConnectionRejectedMessage("No free civilization."));
+            client.Connection.Send(new ConnectionRejectedMessage(hello.CivId == HelloMessage.AnyCiv ? "No free civilization." : $"Civilization {hello.CivId} is not free."));
             client.Connection.Close();
             return;
         }
@@ -314,6 +364,7 @@ public sealed class GameServer
         client.Player = new PlayerId(_nextPlayerId++);
         client.Civ = civ.Id;
         civ.Controller = client.Player.Value;
+        Replay?.Control(State.Turn, civ.Id, client.Player.Value);
         client.ReadyForTurn = -1;
         client.Connection.Send(new WelcomeMessage(ProtocolInfo.Version, client.Player.Value.Value, civ.Id.Value));
         client.Known = KnownCells(civ);
@@ -322,6 +373,45 @@ public sealed class GameServer
         client.JustJoined = true;
         client.ChronicleSeen = _chronicle.Count;
         SendAllChunks(client);
+    }
+
+    // Lever 2 of a player (stage 6 PR P1): the research now and what may be researched next, cheapest first.
+    private ResearchView? ResearchOf(CivilizationState civ)
+    {
+        if (_content is null)
+        {
+            return null;
+        }
+
+        var options = new List<TechnologyOption>();
+        foreach (TechnologyDefinition t in _content.Technologies)
+        {
+            if (Core.Research.Technologies.Available(_content, civ, t.Id) && Core.Research.Technologies.CanResearch(_content, State, civ, t.Id))
+            {
+                options.Add(new TechnologyOption(t.Key, t.Name, t.Era, t.Cost.Hundredths / 100));
+            }
+        }
+
+        options.Sort((a, b) => a.Cost != b.Cost ? a.Cost.CompareTo(b.Cost) : string.CompareOrdinal(a.Key, b.Key));
+        bool researching = civ.Researching >= 0 && civ.Researching < _content.Technologies.Count;
+        TechnologyDefinition? now = researching ? _content.Technologies[civ.Researching] : null;
+        int permille = now is null || now.Cost.Hundredths <= 0 ? 0 : (int)Math.Min(1000, civ.ResearchProgress * 1000 / now.Cost.Hundredths);
+        return new ResearchView(now?.Key ?? string.Empty, permille, options);
+    }
+
+    // Lever 4 of a player: proposals waiting for its answer.
+    private List<ProposalView> ProposalsTo(CivId civ)
+    {
+        var list = new List<ProposalView>();
+        foreach (Core.Diplomacy.TreatyProposal p in State.Treaties.Proposals)
+        {
+            if (p.To == civ && p.Status == Core.Diplomacy.ProposalStatus.Pending)
+            {
+                list.Add(new ProposalView(p.From.Value, (int)p.Kind, p.Month));
+            }
+        }
+
+        return list;
     }
 
     // What the player's civilization knows (map memory, stage 3g); without content, the cells around its start.
@@ -382,7 +472,9 @@ public sealed class GameServer
             strata.Add(s.Name);
         }
 
-        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels, strata));
+        client.Connection.Send(new ContentMessage(biomes, deposits, Enum.GetNames<TerrainFeature>(), Enum.GetNames<Relief>(), goods, levels, strata,
+            [.. System.Linq.Enumerable.Select(_content.Tasks.Kinds, t => new TaskInfo(t.Id, t.Key, t.Name, t.Good))],
+            [.. System.Linq.Enumerable.Select(_content.SettlementLooks, l => l.Key)]));
     }
 
     private void SendAllChunks(Client client)
@@ -411,10 +503,16 @@ public sealed class GameServer
         }
     }
 
-    /// <summary>Adds a line to the chronicle; it is sent with the next views.</summary>
-    public void AddChronicle(string text)
+    /// <summary>Adds a line about the whole game (every client may read it) to the chronicle; it is sent with the next views.</summary>
+    public void AddChronicle(string text) => AddChronicle(text, new ChronicleAbout(-1));
+
+    /// <summary>
+    /// Adds a line to the chronicle about whom <paramref name="about"/> says; it is sent with the next views, to a player
+    /// only when its people may know it (<see cref="ChronicleAbout.TextFor"/>; observers read everything).
+    /// </summary>
+    public void AddChronicle(string text, ChronicleAbout about)
     {
-        var entry = new ChronicleEntry(State.Turn, text);
+        var entry = (new ChronicleEntry(State.Turn, text), about);
         _chronicle.Add(entry);
         _history.Add(entry);
         if (_history.Count > ChronicleHistory)
@@ -423,11 +521,37 @@ public sealed class GameServer
         }
     }
 
+    // What each settlement looks like (stage 6 PR P2b): from its level and what its owner knows; and, where the view shows
+    // the people (own settlements, observers), how many warriors may set out now (playtest P-03).
+    private GameViewMessage WithLooks(GameViewMessage view)
+    {
+        if (_content is not { } content || view.Settlements is not { Count: > 0 } list)
+        {
+            return view;
+        }
+
+        var looked = new List<SettlementView>(list.Count);
+        foreach (SettlementView s in list)
+        {
+            CivilizationState? owner = State.FindCivilization(new CivId(s.Owner));
+            int look = content.SettlementLooks.Count > 0 ? content.SettlementLook(s.Level, t => owner is not null && owner.Knows(t)) : s.Look;
+            int warriors = s.Population is not null && State.FindSettlement(new SettlementId(s.Id)) is { } st
+                ? Core.Episodes.Campaigns.Ready(content, State, st)
+                : -1;
+            looked.Add(s with { Look = look, Warriors = warriors });
+        }
+
+        return view with { Settlements = looked };
+    }
+
     // A joining client gets the whole kept history; later views carry only the new lines.
     private GameViewMessage BuildView(Client client, GameSnapshot snapshot, bool joining = false)
     {
+        CivilizationState? seer = client.IsObserver || client.Civ is not CivId id ? null : State.FindCivilization(id);
         GameViewMessage view = ViewBuilder.Build(
-            snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width);
+            snapshot, client.Civ ?? new CivId(WelcomeMessage.NoCiv), client.IsObserver ? null : client.Known ?? [], State.Worlds[0].Width,
+            seer is null ? null : cell => Core.Perception.MapMemory.SeesNow(State, seer, cell));
+        view = WithLooks(view);
         long micros = (long)Stopwatch.GetElapsedTime(0, _lastTurnTicks).TotalMicroseconds;
         if (client.IsObserver && _observerView is not null)
         {
@@ -435,8 +559,20 @@ public sealed class GameServer
         }
 
         // A joining client gets the kept history; later views carry the lines collected for this client since its last view.
-        ChronicleEntry[] lines = joining ? _history.ToArray() : client.Unsent.ToArray();
-        return view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
+        ChronicleEntry[] lines = joining ? [.. Readable(client, _history, 0)] : client.Unsent.ToArray();
+        view = view with { TurnMicroseconds = micros, Speed = Speed, Chronicle = lines };
+        if (seer is not null)
+        {
+            view = view with
+            {
+                PlayerLevers = (int)seer.PlayerLevers,
+                AiDecisions = _helmsman?.For(seer.Id) ?? [],
+                Research = ResearchOf(seer),
+                Proposals = ProposalsTo(seer.Id),
+            };
+        }
+
+        return view;
     }
 
     private void HandleSubmit(Client client, SubmitCommandMessage submit)
@@ -468,6 +604,7 @@ public sealed class GameServer
             return;
         }
 
+        Replay?.Command(State.Turn, player, civ, submit.Command!);
         CommandEnvelope envelope = Runner.Commands.Enqueue(player, civ, command);
         client.RememberSequence(envelope.Sequence, submit.ClientSequence);
     }
@@ -489,9 +626,10 @@ public sealed class GameServer
             return;
         }
 
+        Replay?.Rename(State.Turn, target, submit.Command!);
         command!.Apply(State, target);
         string after = submit.Command is RenameSettlementDto r3 ? State.FindSettlement(new SettlementId(r3.SettlementId))!.Name : State.FindCivilization(target)!.Name;
-        AddChronicle($"{before} was renamed {after}.");
+        AddChronicle($"{before} was renamed {after}.", new ChronicleAbout(target.Value));
         Runner.Snapshots.Publish(GameSnapshot.From(State));
         SendViews();
     }
@@ -532,7 +670,7 @@ public sealed class GameServer
                 continue;
             }
 
-            client.Collect(_pendingChunks, _chronicle, client.JustJoined ? Math.Min(client.ChronicleSeen, _chronicle.Count) : 0);
+            client.Collect(_pendingChunks, Readable(client, _chronicle, client.JustJoined ? Math.Min(client.ChronicleSeen, _chronicle.Count) : 0));
             client.JustJoined = false;
         }
 
@@ -615,12 +753,32 @@ public sealed class GameServer
         }
     }
 
+    // The lines from index `from` that the client may read: all for an observer; for a player those about its people and
+    // the peoples it met, on cells it knows or about the whole game (CLAUDE.md rule 10, playtest P-01).
+    private IEnumerable<ChronicleEntry> Readable(Client client, List<(ChronicleEntry Entry, ChronicleAbout About)> lines, int from)
+    {
+        CivilizationState? civ = client.IsObserver || client.Civ is not CivId id ? null : State.FindCivilization(id);
+        for (int k = from; k < lines.Count; k++)
+        {
+            (ChronicleEntry entry, ChronicleAbout about) = lines[k];
+            if (civ is null || _content is null)
+            {
+                yield return entry;
+            }
+            else if (about.TextFor(entry.Text, State, _content, civ) is { } text)
+            {
+                yield return ReferenceEquals(text, entry.Text) ? entry : entry with { Text = text };
+            }
+        }
+    }
+
     private void Disconnect(Client client)
     {
         // The AI takes over a disconnected civilization (GDD 2.1).
         if (client.Civ is { } civ && State.FindCivilization(civ) is { } state)
         {
             state.Controller = PlayerId.Ai;
+            Replay?.Control(State.Turn, civ, PlayerId.Ai);
         }
     }
 
@@ -637,8 +795,8 @@ public sealed class GameServer
         // It fell behind and missed a view.
         public bool Deferred { get; set; }
 
-        // Takes the changed chunks and the new chronicle lines (from index `from`).
-        public void Collect(bool[][] changed, List<ChronicleEntry> lines, int from)
+        // Takes the changed chunks and the new chronicle lines this client may read.
+        public void Collect(bool[][] changed, IEnumerable<ChronicleEntry> lines)
         {
             for (int w = 0; w < changed.Length && w < Chunks.Length; w++)
             {
@@ -648,10 +806,7 @@ public sealed class GameServer
                 }
             }
 
-            for (int k = from; k < lines.Count; k++)
-            {
-                Unsent.Add(lines[k]);
-            }
+            Unsent.AddRange(lines);
 
             if (Unsent.Count > ChronicleHistory)
             {

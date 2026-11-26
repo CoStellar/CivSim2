@@ -40,7 +40,8 @@ public static class Governments
 
     /// <summary>
     /// Gives every civilization of a new game the government its character leans to (GDD 7.2): among those open from the
-    /// first era, the highest sum of trait × leaning; ties go to the first in the data.
+    /// first era, the highest sum of trait × leaning; ties go to the first in the data. While governments are frozen until
+    /// the bronze age every people has the first in the data, the council of elders (ADR 0026: one government until bronze).
     /// </summary>
     public static void ChooseAtStart(GameContent content, GameState state)
     {
@@ -48,7 +49,7 @@ public static class Governments
         ArgumentNullException.ThrowIfNull(state);
         foreach (CivilizationState civ in state.Civilizations)
         {
-            civ.Government = Leaning(content, civ, civ.Era);
+            civ.Government = content.GovernmentsEnabled ? Leaning(content, civ, civ.Era) : 0;
         }
     }
 
@@ -99,6 +100,11 @@ public static class Governments
             return "Only a living civilization has a government.";
         }
 
+        if (!content.GovernmentsEnabled)
+        {
+            return "Other governments come with a later age."; // one government until the bronze age (ADR 0026)
+        }
+
         if (government < 0 || government >= content.Governments.Count)
         {
             return "Unknown government.";
@@ -114,7 +120,7 @@ public static class Governments
             return "A change of government is already under way.";
         }
 
-        if (Stability.InAnarchy(c, state.Month))
+        if (Stability.InAnarchy(c, state.ActionMonth))
         {
             return "Our state is in anarchy.";
         }
@@ -139,7 +145,7 @@ public static class Governments
         }
 
         c.PendingGovernment = government;
-        c.PendingGovernmentMonth = state.Month + months;
+        c.PendingGovernmentMonth = state.ActionMonth + months; // months of action (decision of 2026-11-09)
         return $"{Title(content, c)} began to change its government to {name.ToLowerInvariant()}.";
     }
 
@@ -151,7 +157,7 @@ public static class Governments
         int count = 0;
         foreach (CivilizationState c in state.Civilizations)
         {
-            if (c.PendingGovernment != CivilizationState.NoGovernment && state.Month >= c.PendingGovernmentMonth)
+            if (c.PendingGovernment != CivilizationState.NoGovernment && state.ActionMonth >= c.PendingGovernmentMonth)
             {
                 int government = c.PendingGovernment;
                 c.PendingGovernment = CivilizationState.NoGovernment;
@@ -189,8 +195,8 @@ public static class Governments
         int years = content.Stability.AnarchyYears;
         if (years > 0)
         {
-            c.AnarchyUntilMonth = Math.Max(c.AnarchyUntilMonth, state.Month + (years * 12L));
-            return string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{before} became the {Title(content, c)}; {years} years of anarchy follow.");
+            c.AnarchyUntilMonth = Math.Max(c.AnarchyUntilMonth, state.ActionMonth + (years * 12L));
+            return string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{before} became the {Title(content, c)}; {content.Time.PlayTime(content.Time.ActionTicks(years * 12L))} of anarchy follow.");
         }
 
         return $"{before} became the {Title(content, c)}.";

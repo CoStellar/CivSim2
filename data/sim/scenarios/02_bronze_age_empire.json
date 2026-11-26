@@ -1,0 +1,16 @@
+{
+  "name": "Bronze Age, three settlements",
+  "description": "We are a Bronze Age town with two villages around; the others are behind (Neolithic). Test bronze, horses, caravans, writing and ships.",
+  "seed": 5,
+  "civilizations": 4,
+  "revealMap": true,
+  "civs": [
+    { "era": "bronze_age", "techs": ["masonry", "code_of_laws"], "level": "town", "people": 70, "settlements": 2, "settlementPeople": 20,
+      "stock": { "food": 400, "wood": 400, "stone": 300, "clay": 150, "tools": 60, "hides": 60, "clothing": 80, "pottery": 60, "textiles": 40, "copper": 40, "tin": 20, "bronze": 20 },
+      "buildings": { "farm": 2, "woodcutter": 2, "stone_house": 3, "storehouse": 2, "quarry": 1, "potter": 1, "weaver": 1, "mason": 1, "copper_mine": 1 },
+      "units": { "scouts": 1, "spearmen": 2 } },
+    { "era": "neolithic", "level": "village", "people": 45, "stock": { "food": 250, "wood": 250, "stone": 150 }, "buildings": { "farm": 1, "woodcutter": 2, "hut": 4 }, "units": { "warriors": 2 } },
+    { "era": "neolithic", "level": "village", "people": 45, "stock": { "food": 250, "wood": 250, "stone": 150 }, "buildings": { "farm": 1, "woodcutter": 2, "hut": 4 }, "units": { "warriors": 2 } },
+    { "era": "neolithic", "level": "village", "people": 45, "stock": { "food": 250, "wood": 250, "stone": 150 }, "buildings": { "farm": 1, "woodcutter": 2, "hut": 4 }, "units": { "warriors": 2 } }
+  ]
+}

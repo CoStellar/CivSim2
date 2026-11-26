@@ -37,7 +37,7 @@ public sealed class ClimateSystem(GameContent content) : ITurnSystem
         WorldState world = state.Worlds[0];
         ClimateState climate = world.Climate;
         long year = state.Month / 12;
-        if (year < climate.Year + content.ClimateCycles.UpdateYears)
+        if (!content.ClimateCycles.Enabled || year < climate.Year + content.ClimateCycles.UpdateYears)
         {
             return;
         }

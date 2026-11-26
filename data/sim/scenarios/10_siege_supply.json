@@ -1,0 +1,19 @@
+{
+  "name": "Siege and supply",
+  "description": "Bronze Age, at war. Our army stands at home; the enemy town is far away and does not attack. Walk there: away from our land the units eat their packs (see Provisions in the unit panel), send food caravans, blockade the town (it works at half and gets no caravans), beat its guard and fighting residents, then take, sack or raze it.",
+  "seed": 16,
+  "civilizations": 2,
+  "revealMap": true,
+  "wars": [[0, 1]],
+  "noPeace": true,
+  "civs": [
+    { "era": "bronze_age", "techs": ["bronze_weapons", "barracks", "archery", "horseback_riding", "the_wheel", "code_of_laws"], "level": "town", "people": 150, "unitPeople": 20,
+      "stock": { "food": 900, "wood": 400, "stone": 300, "bronze_weapons": 120, "bronze_armour": 80, "horses": 40 },
+      "buildings": { "farm": 3, "woodcutter": 1, "stone_house": 3, "storehouse": 1, "armourer": 1, "barracks": 1 },
+      "units": { "spearmen": 2, "warriors": 2, "archers": 2, "horsemen": 1 } },
+    { "era": "bronze_age", "techs": ["bronze_weapons", "archery"], "level": "town", "people": 120, "aggression": 0, "unitPeople": 10,
+      "stock": { "food": 400, "wood": 300, "stone": 200, "bronze_weapons": 20 },
+      "buildings": { "farm": 2, "woodcutter": 1, "stone_house": 3, "storehouse": 1 },
+      "units": { "spearmen": 1, "archers": 1 } }
+  ]
+}

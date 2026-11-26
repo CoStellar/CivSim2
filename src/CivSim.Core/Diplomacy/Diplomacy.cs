@@ -37,7 +37,7 @@ public static class Treaties
                 return "That proposal is already waiting for an answer.";
             }
 
-            if (state.Month < p.Month + (content.Treaties.RetryYearsFor(kind) * 12L))
+            if (state.ActionMonth < p.Month + (content.Treaties.RetryYearsFor(kind) * 12L))
             {
                 return "They declined that proposal not long ago.";
             }
@@ -69,6 +69,11 @@ public static class Treaties
         if (kind == TreatyKind.War)
         {
             return "War is declared, not signed.";
+        }
+
+        if (!content.Treaties.Kinds[(int)kind].Enabled)
+        {
+            return "Such treaties come with a later age."; // frozen until the bronze age (ADR 0026)
         }
 
         TreatyBook book = state.Treaties;
@@ -114,7 +119,7 @@ public static class Treaties
             return "We are changing our government."; // GDD 7.2: no state decisions while a new government comes in
         }
 
-        if (Governance.Stability.InAnarchy(a, state.Month))
+        if (Governance.Stability.InAnarchy(a, state.ActionMonth))
         {
             return "Our state is in anarchy."; // GDD 7.2: no state decisions during anarchy
         }
@@ -171,7 +176,7 @@ public static class Treaties
         ArgumentNullException.ThrowIfNull(state);
         foreach (SettlementState s in state.Settlements)
         {
-            if (s.IsActive && s.Owner == other && s.ClaimCiv == civ.Value && s.HasClaim(state.Month))
+            if (s.IsActive && s.Owner == other && s.ClaimCiv == civ.Value && s.HasClaim(state.ActionMonth))
             {
                 return s.Id.Value;
             }
@@ -214,13 +219,13 @@ public static class Treaties
         TreatyBook book = state.Treaties;
         string a = Name(state, from);
         string b = Name(state, to);
-        var treaty = new Treaty(from, to, kind, from, state.Month);
+        var treaty = new Treaty(from, to, kind, from, state.Month) { SinceTick = state.Turn };
         int years = content.Treaties.Kinds[(int)kind].Years;
-        treaty.UntilMonth = years > 0 ? state.Month + (years * 12L) : 0;
+        treaty.UntilMonth = years > 0 ? state.ActionMonth + (years * 12L) : 0; // months of action (decision of 2026-11-09)
         if (kind == TreatyKind.Peace)
         {
             Treaty? war = book.Find(from, to, TreatyKind.War);
-            long warYears = war is null ? 0 : (state.Month - war.SinceMonth) / 12;
+            string lasted = content.Time.PlayTime(war is null ? 0 : state.Turn - war.SinceTick); // P-09: time of the game
             if (war is not null)
             {
                 treaty.Goal = war.Goal;
@@ -234,7 +239,7 @@ public static class Treaties
                 treaty.WearinessB = war.WearinessB;
                 treaty.Campaigns = war.Campaigns;
                 treaty.CampaignMonths = war.CampaignMonths;
-                treaty.LastCampaignMonth = war.LastCampaignMonth;
+                treaty.LastCampaignTick = war.LastCampaignTick;
             }
 
             // The peace settles the old wrongs on both sides (stage 4f PR 5).
@@ -242,7 +247,7 @@ public static class Treaties
             {
                 if (state.FindCivilization(x)?.Relation(y) is { } settled)
                 {
-                    settled.SettledMonth = state.Month;
+                    settled.SettledMonth = state.ActionMonth;
                 }
             }
 
@@ -250,7 +255,7 @@ public static class Treaties
             treaty.Terms = kept.Length > 0 ? terms : PeaceTerms.White;
             book.Remove(from, to, TreatyKind.War);
             book.Add(treaty);
-            return string.Create(CultureInfo.InvariantCulture, $"{a} and {b} made peace after {warYears} years of war.{kept}");
+            return string.Create(CultureInfo.InvariantCulture, $"{a} and {b} made peace after {lasted} of war.{kept}");
         }
 
         book.Add(treaty);
@@ -280,7 +285,7 @@ public static class Treaties
         ArgumentNullException.ThrowIfNull(state);
         TreatyBook book = state.Treaties;
         bool broke = EndTreaties(content, book, civ, target);
-        Treaty declared = book.Add(new Treaty(civ, target, TreatyKind.War, civ, state.Month));
+        Treaty declared = book.Add(new Treaty(civ, target, TreatyKind.War, civ, state.Month) { SinceTick = state.Turn });
         declared.Goal = goal;
         declared.GoalSettlement = goal == WarGoal.Land ? goalSettlement : -1;
         declared.PeopleA = Wars.PeopleOf(state, declared.A);
@@ -354,12 +359,12 @@ public static class Treaties
                 Kind = kind,
                 Sympathy = def.Sympathy * percent / 100,
                 Trust = def.Trust * percent / 100,
-                EndMonth = state.Month,
+                EndMonth = state.ActionMonth,
                 FadeMonths = Math.Max(1, def.Years * 12),
             },
             content.Relations.MaxMemories,
-            state.Month);
-        r.Recount(state.Month);
+            state.ActionMonth);
+        r.Recount(state.ActionMonth);
     }
 
     // GDD 9.3: the victim and everyone who knows both remember a war for land or loot (data/war.json goals).
@@ -440,7 +445,7 @@ public static class Treaties
             if (rng.NextInt(1000) < chance)
             {
                 EndTreaties(content, book, ally, aggressor);
-                Treaty joined = book.Add(new Treaty(ally, aggressor, TreatyKind.War, ally, state.Month));
+                Treaty joined = book.Add(new Treaty(ally, aggressor, TreatyKind.War, ally, state.Month) { SinceTick = state.Turn });
                 joined.Goal = WarGoal.Revenge;
                 joined.PeopleA = Wars.PeopleOf(state, joined.A);
                 joined.PeopleB = Wars.PeopleOf(state, joined.B);

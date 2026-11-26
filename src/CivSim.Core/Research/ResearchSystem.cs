@@ -69,7 +69,7 @@ public sealed class ResearchSystem(GameContent content) : ITurnSystem
             civ.Researching = CivilizationState.NoResearch;
             foreach (string line in Technologies.Learn(_content, state, civ, learned))
             {
-                context.Chronicle(line);
+                context.Chronicle(line, civ.Id.Value);
             }
         }
     }
@@ -136,7 +136,7 @@ public sealed class ScholarAdvisor(GameContent content) : Ai.Advisor(content, Ai
         {
             CivilizationState civ = state.Civilizations[c];
             // The scholar chooses again when nothing can be researched now (stage 4F: the people may be missing).
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || Technologies.CanResearch(_content, state, civ, civ.Researching))
+            if (!civ.IsAlive || !Ai.Levers.AiLeads(civ, Ai.Lever.WhereWeHead) || Technologies.CanResearch(_content, state, civ, civ.Researching))
             {
                 continue;
             }

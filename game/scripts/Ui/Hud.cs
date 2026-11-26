@@ -20,8 +20,8 @@ public partial class Hud : CanvasLayer
 {
     private static readonly (SimulationSpeed Speed, string Label, string Tip)[] Speeds =
     [
-        (SimulationSpeed.Paused, "❚❚", "Pause (Space, 1)"), (SimulationSpeed.X1, "▶", "One turn every 2 s (2)"),
-        (SimulationSpeed.X2, "▶▶", "One turn every second (3)"), (SimulationSpeed.X5, "▶▶▶", "Five turns every 2 s (4)"),
+        (SimulationSpeed.Paused, "❚❚", "Pause (Space, 1)"), (SimulationSpeed.X1, "▶", "Live speed x1 (2)"),
+        (SimulationSpeed.X2, "▶▶", "Live speed x2 (3)"), (SimulationSpeed.X4, "▶▶▶", "Live speed x4 (4)"),
         (SimulationSpeed.Max, "»", "As fast as possible (5)"),
     ];
 
@@ -582,7 +582,7 @@ public partial class Hud : CanvasLayer
         {
             if (world == 0 && a.Col == col && a.Row == row)
             {
-                string phase = a.Phase switch { 1 => "going home", 2 => "gathering", _ => "marching" };
+                string phase = a.Phase switch { 1 => "going home", 2 => "gathering", 3 => "fighting", _ => "marching" };
                 sb.Append(inv, $"Army of {FindCiv(session, a.Owner)} against {FindCiv(session, a.Enemy)}: {a.Warriors} warriors {phase}, arms {a.ArmsPercent}%, morale {a.Morale}%, food for {a.FoodMonths} months\n");
             }
 

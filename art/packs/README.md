@@ -4,6 +4,14 @@ Każdy może podmienić grafiki gry bez zmian w kodzie: wystarczy folder z plika
 rozmiarach co grafiki zastępcze w `art/placeholder/`. Pełna lista nazw i rozmiarów: `art/placeholder/manifest.json`
 (spis w `art/placeholder/README.md`).
 
+## Paczki dołączone do gry
+- **Default** (bez paczki): grafiki zastępcze z fakturą starego CivSim (i pixel art Patryka z `art/export/`, gdy jest).
+- **Flat** (`art/packs/flat/`, od 2026-11-24): te same grafiki bez faktury, w płaskich kolorach jak pierwsza wersja grafik
+  zastępczych. Robi ją skrypt: `python3 art/placeholder/generate.py --flat`.
+
+Paczkę wybiera się w menu startowym (sekcja **Art**) albo w trakcie gry pod przyciskiem **„?”** (sekcja **ART PACK**): mapa,
+budynki, jednostki i interfejs przełączają się od razu, a wybór zostaje zapamiętany.
+
 ## Gdzie wrzucić paczkę
 - `art/packs/<nazwa-paczki>/` obok gry (paczki dołączone do gry), albo
 - folder użytkownika `user://art_packs/<nazwa-paczki>/`; w menu startowym przycisk **„Open packs folder”** otwiera go
@@ -14,8 +22,9 @@ rozmiarach co grafiki zastępcze w `art/placeholder/`. Pełna lista nazw i rozmi
 ```
 moja-paczka/
   pack.json              opcjonalnie: {"name": "Moja paczka", "author": "Patryk", "description": "Cieplejsze biomy"}
-  biome/biome_grassland_01.png      48×42
-  objects/settlement_camp_active.png 48×42
+  biome/biome_grassland_01.png      96×84 (od 2026-11-23: grafiki nowej gry w 2×)
+  buildings/building_farm.png       96×84
+  units/unit_spearmen.png           64×64
   ui/frame_panel.png                24×24 (ramka 9-slice)
   ...
 ```
@@ -33,7 +42,7 @@ problemów pojawia się:
 Przykładowy raport:
 ```
 Art check of Test pack: 3 of 140 pictures used, 5 problems.
-- biome/biome_desert_01.png: is 50×40 px, must be 48×42 px; the default picture is used
+- biome/biome_desert_01.png: is 48×42 px, must be 96×84 px; the default picture is used
 - biome/biome_volcano_01.png: unknown name; ignored (see art/placeholder/manifest.json for the names the game uses)
 - objects/deposit_fish.png: cannot be read as a PNG; the default picture is used
 - settlement_camp_active.png: wrong folder; ignored (it belongs in objects/settlement_camp_active.png)

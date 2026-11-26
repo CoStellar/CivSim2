@@ -26,6 +26,14 @@ public sealed record HeadlessResult(
     long ManagedMemoryBytes,
     long WorkingSetBytes)
 {
+    /// <summary>
+    /// Turns (ticks) longer than 25 ms, the budget of a tick at x4 (10 ticks a second at x1): late at x4 (stage 6, T1).
+    /// </summary>
+    public int TurnsOver25Ms { get; init; }
+
+    /// <summary>Turns (ticks) longer than 30 ms, the tick budget of stage 6 (T12).</summary>
+    public int TurnsOver30Ms { get; init; }
+
     /// <summary>Summary of the generated world.</summary>
     public WorldGenReport? World { get; init; }
 
@@ -52,6 +60,9 @@ public sealed record HeadlessResult(
 
     /// <summary>Average stability over civilization-years, the percent of civilization-years in unrest and the capitals lost (stage 4f PR 3).</summary>
     public (int Average, int UnrestPercent, int CapitalsLost) Stability { get; init; }
+
+    /// <summary>Rows of the pace report (<see cref="MilestoneCsv"/>), empty without <c>--milestones</c>.</summary>
+    public IReadOnlyList<string> MilestoneRows { get; init; } = [];
 
     /// <summary>Secessions (new civilizations) and coups during the run (stage 4f PR 4).</summary>
     public (int Secessions, int Coups) Revolts { get; init; }
@@ -105,6 +116,13 @@ public static class HeadlessRun
 
         var runner = new TurnRunner(state);
         Core.Ai.AiCouncil council = CoreSystems.Register(runner, content);
+        TaskBench? bench = options.WorkGroups > 0 ? new TaskBench(content, options.WorkGroups) : null;
+        if (bench is not null)
+        {
+            runner.AddCommandSource(bench); // benchmark only: work groups through the normal command (stage 6 PR 4a)
+        }
+
+        Server.Replays.ReplayRecorder? recorder = options.RecordPath is null ? null : new Server.Replays.ReplayRecorder(state, newGame: true);
         var turnMs = new double[Math.Max(1, options.Turns)];
         long totalAllocated = 0;
 
@@ -123,6 +141,7 @@ public static class HeadlessRun
         using StreamWriter? campaignFile = options.CampaignsPath is null ? null : CreateReport(options.CampaignsPath);
         CampaignCsv? campaignCsv = campaignFile is null ? null : new CampaignCsv(campaignFile);
         campaignCsv?.Start();
+        MilestoneCsv? pace = options.MilestonesPath is null ? null : new MilestoneCsv(content, runner.State, options.Seed);
         var tally = new TreatyTally();
         var stabilityTally = new StabilityTally(runner.State.Month);
         var gameTally = new GameTally(runner.State.Month, content.Eras.Count, content.SettlementLevel("village").Id);
@@ -143,6 +162,8 @@ public static class HeadlessRun
             long allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
             TurnReport report = runner.RunTurn();
             long allocated = GC.GetAllocatedBytesForCurrentThread() - allocatedBefore;
+            recorder?.AfterTick(runner.State);
+            pace?.AfterTick(runner.State);
             totalAllocated += allocated;
             turnMs[i] = Stopwatch.GetElapsedTime(0, report.TotalTicks).TotalMilliseconds;
 
@@ -247,6 +268,42 @@ public static class HeadlessRun
         int n = turnMs.Length;
         warCsv?.Ongoing(runner.State);
         campaignCsv?.Ongoing();
+        if (bench is not null)
+        {
+            int working = 0;
+            int groups = 0;
+            for (int k = 0; k < runner.State.Units.Count; k++)
+            {
+                Core.Units.Unit u = runner.State.Units[k];
+                if (u.Role == Core.Units.UnitRole.Workers)
+                {
+                    groups++;
+                    working += u.Cell == u.Target ? 1 : 0;
+                }
+            }
+
+            log.WriteLine(string.Create(CultureInfo.InvariantCulture, $"work groups:        {bench.Started} started, {groups} out at the end, {working} at work, {runner.State.Units.Count} units in all"));
+        }
+
+        IReadOnlyList<string> paceRows = pace?.Rows(runner.State) ?? [];
+        if (pace is not null && !string.IsNullOrEmpty(options.MilestonesPath))
+        {
+            using StreamWriter paceFile = CreateReport(options.MilestonesPath!);
+            paceFile.WriteLine(MilestoneCsv.Header);
+            foreach (string row in paceRows)
+            {
+                paceFile.WriteLine(row);
+            }
+
+            log.WriteLine($"milestones csv:     {options.MilestonesPath}");
+        }
+
+        if (recorder is not null)
+        {
+            recorder.Write(options.RecordPath!);
+            log.WriteLine(string.Create(CultureInfo.InvariantCulture, $"replay:             {options.RecordPath} ({recorder.Checkpoints.Count} checkpoints, {recorder.Events.Count} events)"));
+        }
+
         return new HeadlessResult(
             runner.State.Turn,
             GameStateHash.Compute(runner.State),
@@ -257,6 +314,9 @@ public static class HeadlessRun
             managed,
             Environment.WorkingSet)
         {
+            MilestoneRows = paceRows,
+            TurnsOver25Ms = turnMs.Count(ms => ms > 25),
+            TurnsOver30Ms = turnMs.Count(ms => ms > 30),
             World = world,
             PngFiles = pngs,
             WorldProblems = problems,
@@ -301,7 +361,7 @@ public static class HeadlessRun
                 _sum += c.Stability * months;
                 _months += months;
                 _unrest += c.Stability < content.Stability.UnrestBelow ? months : 0;
-                _lost += c.CapitalLostUntilMonth == state.Month + (content.Stability.CapitalLostYears * 12L) ? 1 : 0;
+                _lost += c.CapitalLostUntilMonth == state.ActionMonth + (content.Stability.CapitalLostYears * 12L) ? 1 : 0;
             }
         }
 
@@ -341,6 +401,13 @@ public static class HeadlessRun
         foreach (SettlementState s in state.Settlements)
         {
             people += s.TotalPopulation();
+        }
+
+        // Work groups out on their tasks are their settlements' people too (stage 6 PR 4b-2: farmers in the fields).
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            CivSim.Core.Units.Unit u = state.Units[k];
+            people += !u.Gone && u.Role == CivSim.Core.Units.UnitRole.Workers ? u.TotalPeople() : 0;
         }
 
         return people;

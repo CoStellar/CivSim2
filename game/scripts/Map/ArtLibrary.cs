@@ -18,11 +18,11 @@ public sealed class ArtLibrary
     /// <summary>Variants of each biome tile (GDD 12.2).</summary>
     public const int BiomeVariants = 3;
 
-    /// <summary>Hex tile size in pixels.</summary>
-    public const int TileWidth = 48;
+    /// <summary>Hex tile size in pixels (G1, 2026-11-23: pictures at twice the 48x42 of the map's hex).</summary>
+    public const int TileWidth = 96;
 
     /// <summary>Hex tile height in pixels.</summary>
-    public const int TileHeight = 42;
+    public const int TileHeight = 84;
 
     /// <summary>River edges in drawing order (N, NE, SE, S, SW, NW) as used in the file names.</summary>
     public static readonly string[] RiverEdges = ["n", "ne", "se", "s", "sw", "nw"];
@@ -30,8 +30,9 @@ public sealed class ArtLibrary
     private readonly string _placeholder;
     private readonly Dictionary<string, Texture2D?> _textures = [];
     private readonly Dictionary<string, (int Width, int Height)> _expected = new(StringComparer.Ordinal);
-    private readonly ArtCheck _export;
-    private readonly ArtCheck _pack;
+    private readonly string _artDirectory;
+    private ArtCheck _export;
+    private ArtCheck _pack;
 
     /// <summary>
     /// Looks for pictures in <paramref name="artDirectory"/> (the repository's art/ folder) and, when given, in
@@ -39,11 +40,30 @@ public sealed class ArtLibrary
     /// </summary>
     public ArtLibrary(string artDirectory, ArtPack? pack = null)
     {
+        _artDirectory = artDirectory;
         _placeholder = Path.Combine(artDirectory, "placeholder");
         ReadManifest(Path.Combine(_placeholder, "manifest.json"));
+        _export = new ArtCheck();
+        _pack = new ArtCheck();
+        UsePack(pack);
+    }
+
+    /// <summary>Raised after <see cref="UsePack"/> switched the pictures, so whoever keeps textures builds them again.</summary>
+    public event Action? Changed;
+
+    /// <summary>The art pack in use, or null for the default pictures.</summary>
+    public ArtPack? Pack { get; private set; }
+
+    /// <summary>
+    /// Switches to another art pack (null: the default pictures) while the game runs (Patryk, 2026-11-24): the pack and
+    /// art/export are checked again, cached textures are dropped and <see cref="Changed"/> is raised.
+    /// </summary>
+    public void UsePack(ArtPack? pack)
+    {
         Pack = pack;
-        _export = ArtCheck.Run("art/export", Path.Combine(artDirectory, "export"), _expected);
+        _export = ArtCheck.Run("art/export", Path.Combine(_artDirectory, "export"), _expected);
         _pack = pack is null ? new ArtCheck() : ArtCheck.Run(pack.Name, pack.Directory, _expected);
+        _textures.Clear();
         if (pack is not null)
         {
             WriteReport(pack);
@@ -53,10 +73,9 @@ public sealed class ArtLibrary
         {
             GD.PrintErr($"art: {issue.Source}/{issue.File}: {issue.Problem}");
         }
-    }
 
-    /// <summary>The art pack in use, or null for the default pictures.</summary>
-    public ArtPack? Pack { get; }
+        Changed?.Invoke();
+    }
 
     /// <summary>Problems of the pack and of art/export found at start, in file order.</summary>
     public IReadOnlyList<ArtIssue> Issues => [.. _pack.Issues, .. _export.Issues];
@@ -249,9 +268,9 @@ public sealed class ArtLibrary
         {
             for (int x = 0; x < TileWidth; x++)
             {
-                // Flat-top hex: the slanted sides run from the middle of the left and right edges to 12 px in.
+                // Flat-top hex: the slanted sides run from the middle of the left and right edges a quarter of the width in.
                 float dy = MathF.Abs(y + 0.5f - (TileHeight / 2f)) / (TileHeight / 2f);
-                float inset = 12 * dy;
+                float inset = TileWidth / 4f * dy;
                 if (x + 0.5f >= inset && x + 0.5f <= TileWidth - inset)
                 {
                     image.SetPixel(x, y, color);

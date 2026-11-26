@@ -6,17 +6,62 @@ namespace CivSim.Game.Ui;
 /// <summary>
 /// The pixel interface theme (stage 5; GDD 12.4): opaque 9-slice frames from <c>ui/</c> pictures in the CivSim
 /// palette, drawn twice as large without smoothing, and the Pixelify Sans font without anti-aliasing. The frames are
-/// placeholders in the stone age look (leather and stone); Patryk's frames replace them by name in stage 13, and
-/// later eras get their own themes (a module). Returns null when the pictures are missing, so the viewer falls back
-/// to Godot's default look.
+/// placeholders in the stone age look (leather and stone); Patryk's frames replace them by name in stage 13. Each later
+/// era has its own frames (Patryk, 2026-11-24): <c>ui/frame_panel_bronze_age.png</c> and so on, and a frame missing for
+/// an era falls back to the plain name. Returns null when the pictures are missing, so the viewer falls back to Godot's
+/// default look.
 /// </summary>
 public static class PixelTheme
 {
     /// <summary>How much the interface pictures are enlarged (whole numbers only, GDD 12).</summary>
     public const int Scale = 2;
 
-    /// <summary>Body text size; a multiple of the font's pixel grid.</summary>
-    public const int FontSize = 16;
+    /// <summary>Body text size; a multiple of the font's pixel grid. CIVSIM_FONT_SIZE overrides it (to try fonts).</summary>
+    public static int FontSize { get; private set; } = 16;
+
+    /// <summary>Size of titles (a whole multiple of the title font's grid). CIVSIM_TITLE_SIZE overrides it.</summary>
+    public static int TitleSize { get; private set; } = 24;
+
+    /// <summary>Font of titles; null = the body font. CIVSIM_TITLE_FONT (a .ttf or .otf path) sets it.</summary>
+    public static Font? TitleFont { get; private set; }
+
+    /// <summary>How much wider than Pixelify Sans 16 the chosen font runs; panels grow by it.</summary>
+    public static float Wide { get; private set; } = 1f;
+
+    /// <summary>The fonts the player can choose (Patryk's pick, 2026-11-18): plain pixel fonts, each drawn at a whole
+    /// multiple of its pixel grid, with a title size of the same family.</summary>
+    public static readonly FontChoice[] Fonts =
+    [
+        new("jersey", "Jersey", "Jersey15-Regular.ttf", 27, "Jersey25-Regular.ttf", 41, 1.15f),
+        new("galmuri", "Galmuri", "Galmuri9.ttf", 20, "Galmuri11-Bold.ttf", 24, 1.15f),
+        new("departure", "Departure Mono", "DepartureMono-Regular.otf", 22, "DepartureMono-Regular.otf", 33, 1.45f),
+        new("pressstart", "Press Start", "PressStart2P-Regular.ttf", 16, "PressStart2P-Regular.ttf", 24, 1.45f),
+    ];
+
+    /// <summary>Key of the font in use.</summary>
+    public static string FontKey { get; private set; } = "jersey";
+
+    /// <summary>Switches the interface to one of <see cref="Fonts"/>; the screens rebuild their nodes after this.</summary>
+    public static void UseFont(string key)
+    {
+        FontChoice choice = System.Array.Find(Fonts, f => f.Key == key) ?? Fonts[0];
+        FontFile? body = LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Body}"));
+        if (body is null)
+        {
+            return;
+        }
+
+        FontKey = choice.Key;
+        FontSize = choice.BodySize;
+        TitleSize = choice.TitleSize;
+        TitleFont = LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Title}"));
+        Wide = choice.Wide;
+        if (Current is not null)
+        {
+            Current.DefaultFont = body;
+            Current.DefaultFontSize = FontSize;
+        }
+    }
 
     /// <summary>Light text colour (palette).</summary>
     public static readonly Color Text = new(0.984f, 0.976f, 0.984f);
@@ -33,9 +78,24 @@ public static class PixelTheme
     /// </summary>
     public static Theme? Current { get; set; }
 
-    /// <summary>Builds the theme from the pictures in <paramref name="art"/>.</summary>
-    public static Theme? Build(ArtLibrary art)
+    /// <summary>The pieces of the interface that change with the era (each <c>ui/&lt;piece&gt;_&lt;era&gt;.png</c>).</summary>
+    public static readonly string[] EraPieces =
+    [
+        "frame_panel", "frame_bar", "frame_header", "button_normal", "button_hover", "button_pressed", "button_disabled",
+        "tab_selected", "tab_unselected", "tooltip", "field",
+    ];
+
+    /// <summary>The era whose frames the current theme uses (an era key such as "bronze_age"), or null for the plain ones.</summary>
+    public static string? Era { get; private set; }
+
+    /// <summary>
+    /// Builds the theme from the pictures in <paramref name="art"/>, with the frames of <paramref name="era"/> (an era key)
+    /// where the pack has them.
+    /// </summary>
+    public static Theme? Build(ArtLibrary art, string? era = null)
     {
+        _era = era;
+        Era = era;
         StyleBox? panel = Frame(art, "frame_panel", 6, 10);
         StyleBox? normal = Frame(art, "button_normal", 3, 6);
         if (panel is null || normal is null)
@@ -174,10 +234,44 @@ public static class PixelTheme
         return theme;
     }
 
-    // Pixelify Sans from res://fonts, read as a plain file so it needs no import; drawn without smoothing.
+    // The chosen font from res://fonts, read as a plain file so it needs no import; drawn without smoothing.
     private static FontFile? LoadFont()
     {
-        string path = ProjectSettings.GlobalizePath("res://fonts/PixelifySans.ttf");
+        // CIVSIM_FONT and friends let us try other fonts without a rebuild (font choice with Patryk, 2026-11-18).
+        if (int.TryParse(System.Environment.GetEnvironmentVariable("CIVSIM_FONT_SIZE"), out int size) && size > 0)
+        {
+            FontSize = size;
+        }
+
+        if (int.TryParse(System.Environment.GetEnvironmentVariable("CIVSIM_TITLE_SIZE"), out int title) && title > 0)
+        {
+            TitleSize = title;
+        }
+
+        if (System.Environment.GetEnvironmentVariable("CIVSIM_TITLE_FONT") is { Length: > 0 } titlePath)
+        {
+            TitleFont = LoadFile(titlePath);
+        }
+
+        if (System.Environment.GetEnvironmentVariable("CIVSIM_FONT") is { Length: > 0 } custom)
+        {
+            return LoadFile(custom);
+        }
+
+        // The player's choice (saved with the viewer settings), Jersey by default.
+        string key = ViewerSettings.Load().Font ?? "jersey";
+        FontChoice choice = System.Array.Find(Fonts, f => f.Key == key) ?? Fonts[0];
+        FontKey = choice.Key;
+        FontSize = choice.BodySize;
+        TitleSize = choice.TitleSize;
+        TitleFont = LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Title}"));
+        Wide = choice.Wide;
+        return LoadFile(ProjectSettings.GlobalizePath($"res://fonts/{choice.Body}"))
+            ?? LoadFile(ProjectSettings.GlobalizePath("res://fonts/PixelifySans.ttf"));
+    }
+
+    private static FontFile? LoadFile(string path)
+    {
         if (!System.IO.File.Exists(path))
         {
             return null;
@@ -202,15 +296,25 @@ public static class PixelTheme
             return null;
         }
 
-        var box = new StyleBoxTexture { Texture = texture };
+        // 2026-11-23: the frames carry a stone, leather or wood pattern; the centre and edges repeat it instead of stretching.
+        var box = new StyleBoxTexture
+        {
+            Texture = texture,
+            AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.TileFit,
+            AxisStretchVertical = StyleBoxTexture.AxisStretchMode.TileFit,
+        };
         box.SetTextureMarginAll(margin * Scale);
         box.SetContentMarginAll(System.Math.Max(margin, content / 2) * Scale);
         return box;
     }
 
+    // The era being built: frames are looked up as <name>_<era> first.
+    private static string? _era;
+
     private static ImageTexture? Icon(ArtLibrary art, string name)
     {
-        Image? image = art.LoadImage("ui", name);
+        Image? image = (_era is { Length: > 0 } && System.Array.IndexOf(EraPieces, name) >= 0 ? art.LoadImage("ui", name + "_" + _era) : null)
+            ?? art.LoadImage("ui", name);
         if (image is null)
         {
             return null;
@@ -220,3 +324,6 @@ public static class PixelTheme
         return ImageTexture.CreateFromImage(image);
     }
 }
+
+/// <summary>A font the player can pick: body font and size, title font and size (whole multiples of their pixel grids).</summary>
+public sealed record FontChoice(string Key, string Name, string Body, int BodySize, string Title, int TitleSize, float Wide);

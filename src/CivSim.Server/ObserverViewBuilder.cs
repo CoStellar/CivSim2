@@ -6,6 +6,7 @@ using CivSim.Core.Economy;
 using CivSim.Core.Map;
 using CivSim.Core.Perception;
 using CivSim.Core.State;
+using CivSim.Core.Units;
 using CivSim.Protocol.Messages;
 
 namespace CivSim.Server;
@@ -225,7 +226,7 @@ public sealed class ObserverViewBuilder(GameContent content)
     // "mood 62, government +10, administration -8, crisis -15": what the stability is made of now.
     private string StabilityParts(GameState state, CivilizationState c)
     {
-        Core.Governance.StabilityParts p = Core.Governance.Stability.Parts(_content, state, c, c.AdminUsed, state.Month);
+        Core.Governance.StabilityParts p = Core.Governance.Stability.Parts(_content, state, c, c.AdminUsed, state.ActionMonth);
         var inv = System.Globalization.CultureInfo.InvariantCulture;
         var sb = new System.Text.StringBuilder();
         sb.Append(inv, $"mood {p.Mood}");
@@ -396,6 +397,22 @@ public sealed class ObserverViewBuilder(GameContent content)
                     HexCoord c = world.Geometry.FromIndex(cell);
                     list.Add(new FieldView(world.Id.Value, c.Col, c.Row, s.Owner.Value, Math.Min(100, _worked[cell] * 100 / perCell)));
                 }
+            }
+
+            // Fields given as tasks (stage 6 PR 4b-2): the cell of every field group at work.
+            for (int k = 0; k < state.Units.Count; k++)
+            {
+                Unit u = state.Units[k];
+                if (u.Gone || u.Role != UnitRole.Workers || u.Order != UnitOrder.Work || u.World != world.Id || u.Cell != u.Target
+                    || u.Task < 0 || u.Task >= _content.Tasks.Kinds.Count || _content.Tasks.Kinds[u.Task].Source != TaskSource.Farmland
+                    || _worked[u.Cell] > 0)
+                {
+                    continue;
+                }
+
+                _worked[u.Cell] = Math.Min(perCell, u.TotalPeople());
+                HexCoord c = world.Geometry.FromIndex(u.Cell);
+                list.Add(new FieldView(world.Id.Value, c.Col, c.Row, u.Owner.Value, Math.Min(100, _worked[u.Cell] * 100 / perCell)));
             }
         }
 

@@ -61,4 +61,8 @@ public sealed record EventDefinition(
     int FertilityGain,
     int FertilityRadius,
     int SpreadPercent,
-    string Chronicle);
+    string Chronicle)
+{
+    /// <summary>False while the event is frozen until a later era (ADR 0026 rule 5: wildfire and flood until the bronze age); it never strikes.</summary>
+    public bool Enabled { get; init; } = true;
+}

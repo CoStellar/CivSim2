@@ -130,7 +130,28 @@ public sealed class GatheringSystem : ITurnSystem
         _years = years ?? throw new ArgumentNullException(nameof(years));
         _area = new HexCoord[HexGlobe.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
         _gathered = new Amount[content.Goods.Count];
+        // Stage 6 PR 4a: without zoneGathersMaterials the goods of biome tasks (wood) and the deposits of deposit tasks (flint, stone)
+        // come only from area tasks (tasks.json); food is always gathered from the zone.
+        _taskGood = new bool[content.Goods.Count];
+        _taskDeposit = new bool[content.Deposits.Count + 1];
+        if (!content.Tasks.ZoneGathersMaterials)
+        {
+            foreach (Units.TaskKindDefinition k in content.Tasks.Kinds)
+            {
+                if (k.Source == Units.TaskSource.Biome && k.Good >= 0 && k.Good < _taskGood.Length)
+                {
+                    _taskGood[k.Good] = true;
+                }
+                else if (k.Source == Units.TaskSource.Deposit && k.Deposit > 0 && k.Deposit < _taskDeposit.Length)
+                {
+                    _taskDeposit[k.Deposit] = true;
+                }
+            }
+        }
     }
+
+    private readonly bool[] _taskGood;
+    private readonly bool[] _taskDeposit;
 
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.Economy;
@@ -199,7 +220,7 @@ public sealed class GatheringSystem : ITurnSystem
         WorldMap map = world.Map;
         int claim = s.Id.Value + 1;
         int count = world.Geometry.Range(s.Cell, Math.Min(_rules.InfluenceMaxRange, world.Geometry.MaxUniqueRadius), _area);
-        bool shore = _current.FromWater;
+        bool shore = _current.FromWater && _content.Tasks.ZoneFishes; // since stage 6 PR 4b-2 fish come from fishing grounds
         if (shore && _addedStamp.Length != world.Geometry.CellCount)
         {
             _addedStamp = new long[world.Geometry.CellCount];
@@ -219,6 +240,10 @@ public sealed class GatheringSystem : ITurnSystem
                 }
 
                 _addedStamp[i] = _addedRun;
+            }
+            else if (!_content.Tasks.ZoneFishes && _content.Biomes[map.Biome[i]].IsWater)
+            {
+                continue; // water of the zone too: fish only from fishing grounds
             }
 
             int percent = CellPercent(state, world, s, i);
@@ -398,12 +423,15 @@ public sealed class GatheringSystem : ITurnSystem
                 Add(_rules.HidesGood, meat.Multiply(_rules.HidesPerMeat, Rounding.Floor), scale, worked);
                 for (int k = 0; k < biome.Gather.Count; k++)
                 {
-                    Add(biome.Gather[k].GoodId, biome.Gather[k].Amount, scale, worked);
+                    if (!_taskGood[biome.Gather[k].GoodId])
+                    {
+                        Add(biome.Gather[k].GoodId, biome.Gather[k].Amount, scale, worked);
+                    }
                 }
             }
 
             int deposit = map.Deposit[i];
-            if (deposit != 0 && map.DepositDepth[i] == 0)
+            if (deposit != 0 && map.DepositDepth[i] == 0 && !_taskDeposit[deposit])
             {
                 DepositDefinition def = _content.Deposit(deposit);
                 long taken = 0;

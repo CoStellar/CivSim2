@@ -73,6 +73,12 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     public string? ReportPath { get; init; }
 
     /// <summary>
+    /// When set, the host records the game (T11: seed, settings, every command, state hashes every minute) and writes the
+    /// replay here when it stops. A long run writes one to its folder (replay.civreplay) even without this.
+    /// </summary>
+    public string? ReplayPath { get; init; }
+
+    /// <summary>
     /// Long run: when set, the host writes statistics, turn times, events and a log into this folder while the game runs
     /// (stats.csv, turns.csv, events.csv, log.txt, summary.txt). Null = no long run.
     /// </summary>
@@ -91,12 +97,13 @@ public sealed record LocalGameOptions(ulong Seed, int Width, int Height, int Civ
     public long LongRunStillYears { get; init; } = 10_000;
 
     /// <summary>Map size words in the order of the start menu.</summary>
-    public static IReadOnlyList<string> SizeNames { get; } = ["test", "standard", "large", "huge"];
+    public static IReadOnlyList<string> SizeNames { get; } = ["test", "small", "standard", "large", "huge"];
 
     /// <summary>Map size presets from GDD 3.</summary>
     public static LocalGameOptions ForSize(string size, ulong seed) => size switch
     {
         "test" => new LocalGameOptions(seed, 66, 40, 4),
+        "small" => new LocalGameOptions(seed, 98, 60, 5), // the default until the bronze age (ADR 0026 rule 2)
         "large" => new LocalGameOptions(seed, 386, 240, 20),
         "huge" => new LocalGameOptions(seed, 514, 320, 32),
         _ => new LocalGameOptions(seed, 258, 160, 12),

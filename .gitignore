@@ -12,7 +12,7 @@ BenchmarkDotNet.Artifacts/
 # Godot
 game/.godot/
 game/.import/
-game/export_presets.cfg
+build/
 game/mono_crash.*
 *.translation
 
@@ -30,3 +30,4 @@ reports/
 .DS_Store
 Thumbs.db
 /long_runs/
+art_check.txt

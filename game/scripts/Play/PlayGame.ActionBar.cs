@@ -1,0 +1,447 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using CivSim.Protocol.Messages;
+using Godot;
+
+namespace CivSim.Game.Play;
+
+/// <summary>
+/// The action bar at the bottom (like World of Warcraft): tabs for kinds of buildings and a row of slots. Click a slot or
+/// press its key on the bottom row (Z, X, C…; WASD stays for the camera), then click a green hex on the map.
+/// </summary>
+public partial class PlayGame
+{
+    private static readonly string[] Tabs = ["Food", "Production", "Homes & stores", "Military", "Society", "Roads & works"];
+    private const int RoadTab = 5;
+    private static readonly Key[] SlotKeys = [Key.Z, Key.X, Key.C, Key.V, Key.B, Key.N, Key.M, Key.Comma, Key.Period, Key.Slash];
+    private static readonly string[] SlotNames = ["Z", "X", "C", "V", "B", "N", "M", ",", ".", "/"];
+
+    private HBoxContainer _tabsBox = null!;
+    private HBoxContainer _slotsBox = null!;
+    private int _tab;
+    private string _barSig = "";
+    private readonly List<int> _slotTypes = [];
+
+    private void BuildActionBar(Control root)
+    {
+        // 2026-11-24 (Patryk): the buildings of the chosen kind on top, the kinds (with their pictures) at the very bottom; the
+        // windows moved to the top bar, so the bar takes less of the screen.
+        var bar = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 1, AnchorBottom = 1, OffsetTop = -4, OffsetBottom = -4, GrowHorizontal = Control.GrowDirection.Both, GrowVertical = Control.GrowDirection.Begin };
+        root.AddChild(bar);
+        _actionBar = bar;
+        var col = new VBoxContainer();
+        col.AddThemeConstantOverride("separation", 4);
+        bar.AddChild(col);
+        _slotsBox = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        _slotsBox.AddThemeConstantOverride("separation", 4);
+        col.AddChild(_slotsBox);
+        _tabsBox = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        _tabsBox.AddThemeConstantOverride("separation", 4);
+        col.AddChild(_tabsBox);
+    }
+
+    private PanelContainer _actionBar = null!;
+
+    // The picture of a kind of buildings: one of its own buildings (no extra art needed until Patryk draws them).
+    private static readonly string[] TabPictures = ["building_gatherers_hut", "building_toolmaker", "building_hut", "building_barracks", "building_school", ""];
+
+    private static int TabOf(PlayBuildingInfo b)
+    {
+        string g = b.Groups is { Length: > 0 } groups ? groups[0] : "";
+        return g switch
+        {
+            "food" or "farm" => 0,
+            "tools" or "mine" or "craft" => 1,
+            "house" or "store" or "road" => 2,
+            "fort" or "army" => 3,
+            _ => 4,
+        };
+    }
+
+    private void UpdateActionBar(PlayViewMessage v, PlayContentMessage c)
+    {
+        if (BiomeKeys.Count == 0 && _session?.Content is { } world)
+        {
+            foreach (BiomeInfo bi in world.Biomes)
+            {
+                BiomeKeys[bi.Name] = bi.Key;
+            }
+        }
+
+        var known = new List<PlayBuildingInfo>();
+        var counts = new int[Tabs.Length];
+        foreach (PlayBuildingInfo b in c.Buildings)
+        {
+            if (b.Id != 0 && v.Techs[b.Tech].Known)
+            {
+                known.Add(b);
+                counts[TabOf(b)]++;
+            }
+        }
+
+        // Roads are drawn, not placed: their slots carry minus their level.
+        foreach (PlayRoadInfo r in c.Roads ?? [])
+        {
+            counts[RoadTab] += v.Techs[r.Tech].Known ? 1 : 0;
+        }
+
+        foreach (PlayWorkInfo wk in c.Works ?? [])
+        {
+            counts[RoadTab] += v.Techs[wk.Tech].Known ? 1 : 0;
+        }
+
+        if (counts[_tab] == 0)
+        {
+            _tab = Array.FindIndex(counts, n => n > 0) is var first && first >= 0 ? first : 0;
+        }
+
+        var affordable = new List<bool>();
+        _slotTypes.Clear();
+        if (_tab == RoadTab)
+        {
+            foreach (PlayRoadInfo r in c.Roads ?? [])
+            {
+                if (v.Techs[r.Tech].Known)
+                {
+                    _slotTypes.Add(-r.Level);
+                    affordable.Add(CanPay(v.Stock, r.Price));
+                }
+            }
+
+            // Works on hexes: drawn like roads; their slots carry minus (100 + id).
+            foreach (PlayWorkInfo wk in c.Works ?? [])
+            {
+                if (v.Techs[wk.Tech].Known)
+                {
+                    _slotTypes.Add(-(WorkSlotBase + wk.Id));
+                    affordable.Add(CanPay(v.Stock, wk.Price));
+                }
+            }
+        }
+
+        foreach (PlayBuildingInfo b in known)
+        {
+            if (TabOf(b) == _tab && _tab != RoadTab)
+            {
+                _slotTypes.Add(b.Id);
+                affordable.Add(CanPay(v.Stock, b.Price));
+            }
+        }
+
+        // E6 (2026-11-20): in the tutorial the building of the next step lights up (and its tab).
+        string glow = v.TutorialOn && v.Tutorial?.FirstOrDefault(x => !x.Done) is { } next ? next.Highlight : "";
+        int glowTab = glow.Length > 0 && c.Buildings.FirstOrDefault(x => x.Key == glow) is { } gb ? TabOf(gb) : -1;
+        string sig = $"{_tab}|{string.Join(",", counts)}|{string.Join(",", _slotTypes)}|{_placing}|{v.Picking}|{_drawMode}{_drawRoad}|{glow}";
+        if (sig == _barSig)
+        {
+            // 2026-11-24: only what we can pay for changed: the slots are greyed or lit in place (a rebuild closed the
+            // tooltip under the mouse whenever a good crossed a price).
+            for (int i = 0; i < affordable.Count && i < _slotsBox.GetChildCount(); i++)
+            {
+                if (_slotsBox.GetChild(i) is Control slot && slot.GetChildOrNull<Control>(0) is { } inner)
+                {
+                    bool can = affordable[i];
+                    if (inner.GetChildOrNull<Control>(0) is { } glyph)
+                    {
+                        glyph.Modulate = can ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f);
+                    }
+
+                    inner.GetChildOrNull<Label>(1)?.AddThemeColorOverride("font_color", can ? UiKit.Text : UiKit.Muted);
+                    if (_slotTypes[i] > 0)
+                    {
+                        slot.TooltipText = Describe(c, c.Buildings[_slotTypes[i]]) + (can ? "" : "\n@Now|we do not have the goods for it");
+                    }
+                }
+            }
+
+            return;
+        }
+
+        _barSig = sig;
+        UiKit.Clear(_tabsBox);
+        for (int i = 0; i < Tabs.Length; i++)
+        {
+            if (counts[i] == 0)
+            {
+                continue;
+            }
+
+            int tab = i;
+            Texture2D? tabPic = i == RoadTab ? UiKit.Picture?.Invoke("works", "work_icon_road") : UiKit.Picture?.Invoke("buildings", TabPictures[i]);
+            var b = new Button { Text = Tabs[i], Icon = tabPic, ExpandIcon = false, ToggleMode = true, ButtonPressed = i == _tab, FocusMode = Control.FocusModeEnum.None, TooltipText = $"{Tabs[i]}: {counts[i]} kinds (Tab: next kind)" };
+            b.AddThemeConstantOverride("icon_max_width", 28);
+            if (i == glowTab && i != _tab)
+            {
+                b.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
+            }
+
+            b.Pressed += () =>
+            {
+                _tab = tab;
+                _barSig = "";
+                UpdateUi();
+            };
+            _tabsBox.AddChild(b);
+        }
+
+        UiKit.Clear(_slotsBox);
+        for (int i = 0; i < _slotTypes.Count; i++)
+        {
+            if (_slotTypes[i] < 0)
+            {
+                _slotsBox.AddChild(RoadSlot(c, -_slotTypes[i], i, affordable[i]));
+                continue;
+            }
+
+            PlayBuildingInfo t = c.Buildings[_slotTypes[i]];
+            int id = t.Id;
+            bool can = affordable[i];
+            var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(96), 56 + Ui.PixelTheme.FontSize), TooltipText = Describe(c, t) + (can ? "" : "\n@Now|we do not have the goods for it"), ToggleMode = true, ButtonPressed = _placing == id };
+            if (t.Key == glow)
+            {
+                slot.AddThemeStyleboxOverride("normal", UiKit.Flat(new Color(0.3f, 0.24f, 0.08f, 0.95f), UiKit.Heading, 4, 3));
+            }
+
+            var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+            inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            inner.AddThemeConstantOverride("separation", 1);
+            Color color = UiKit.GroupColor(t.Groups);
+            Texture2D? pic = UiKit.Picture?.Invoke("buildings", "building_" + t.Key);
+            inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(t.Name), pic is null ? 40 : 52, icon: pic)
+            {
+                MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+                Modulate = can ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f),
+            });
+            Label name = UiKit.Label(t.Name, 11, can ? UiKit.Text : UiKit.Muted);
+            name.HorizontalAlignment = HorizontalAlignment.Center;
+            name.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+            name.CustomMinimumSize = new Vector2(UiKit.W(90), 0);
+            name.MouseFilter = Control.MouseFilterEnum.Ignore;
+            inner.AddChild(name);
+            slot.AddChild(inner);
+            if (i < SlotKeys.Length)
+            {
+                Label key = UiKit.Label(SlotNames[i], 11, UiKit.Heading);
+                key.Position = new Vector2(5, 2);
+                key.MouseFilter = Control.MouseFilterEnum.Ignore;
+                slot.AddChild(key);
+            }
+
+            slot.Pressed += () =>
+            {
+                if (_replacing >= 0)
+                {
+                    // 15B: the picked kind goes up on the places of the building chosen in the inspector.
+                    _session!.Play(PlayCommandKind.ReplaceBuilding, _replacing, b: id);
+                    _replacing = -1;
+                    _barSig = "";
+                    UpdateUi();
+                    return;
+                }
+
+                if (_placing == id)
+                {
+                    StopPlacing();
+                }
+                else
+                {
+                    StartPlacing(id);
+                }
+
+                _barSig = "";
+                UpdateUi();
+            };
+            _slotsBox.AddChild(slot);
+        }
+    }
+
+    // Keys Z…/ pick the slots of the open tab; Tab moves to the next tab, Shift + Tab to the one before. True when the key was used.
+    private bool ActionKey(Key key)
+    {
+        if (key == Key.Tab)
+        {
+            _tab = (_tab + (Input.IsKeyPressed(Key.Shift) ? Tabs.Length - 1 : 1)) % Tabs.Length;
+            _barSig = "";
+            UpdateUi();
+            return true;
+        }
+
+        int slot = Array.IndexOf(SlotKeys, key);
+        if (slot < 0 || slot >= _slotTypes.Count)
+        {
+            return false;
+        }
+
+        if (_slotTypes[slot] < 0)
+        {
+            ArmRoad(-_slotTypes[slot]);
+        }
+        else
+        {
+            StartPlacing(_slotTypes[slot]);
+        }
+
+        _barSig = "";
+        UpdateUi();
+        return true;
+    }
+
+    private const int WorkSlotBase = 100;
+
+    private Button RoadSlot(PlayContentMessage c, int level, int index, bool can)
+    {
+        string tip;
+        string label;
+        Color color;
+        string picture;
+        if (level >= WorkSlotBase)
+        {
+            PlayWorkInfo wk = c.Works![level - WorkSlotBase];
+            label = wk.Name;
+            picture = wk.Key;
+            tip = $"# {wk.Name}\n{wk.Text}\n\n@Cost|{Amounts(c, wk.Price, icons: true)} a hex, paid by our nearest settlement\n@Build time|{wk.Seconds} s a hex\n@How|draw it hex by hex on our land; remove it from the hex panel";
+            color = wk.Key switch { "ditch" => new Color(0.35f, 0.62f, 0.95f), "aqueduct" => new Color(0.55f, 0.75f, 0.95f), "wall" => new Color(0.72f, 0.72f, 0.7f), _ => new Color(0.55f, 0.38f, 0.2f) };
+        }
+        else
+        {
+            PlayRoadInfo road = c.Roads![level - 1];
+            label = road.Name;
+            picture = level == 1 ? "track" : "road";
+            tip = $"# {road.Name}\n"
+                + (level == 1 ? "Walking on it is faster; caravans and armies take it by themselves." : "Much faster than a track, also over hills; a major trade route.")
+                + $"\n\n@Cost|{Amounts(c, road.Price, icons: true)} a hex, paid by our nearest settlement\n@Build time|{road.Seconds} s a hex"
+                + "\n@How|draw it hex by hex, also into empty land: settlers who found a camp at its end get goods along it\n@Bridges|with Masonry it bridges the rivers it crosses";
+            color = level == 1 ? new Color(0.66f, 0.52f, 0.34f) : new Color(0.78f, 0.74f, 0.64f);
+        }
+
+        PlayRoadInfo r = new(level, label, [], 0, 0);
+        var slot = new RichTipButton { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(UiKit.W(96), 56 + Ui.PixelTheme.FontSize), TooltipText = tip, ToggleMode = true, ButtonPressed = _drawMode == DrawMode.Road && _drawRoad == level };
+        var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+        inner.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        Texture2D? pic = UiKit.Picture?.Invoke("works", "work_icon_" + picture); // 2026-11-23: the way's picture, not letters
+        inner.AddChild(new Glyph(can ? color : color.Darkened(0.55f), UiKit.Short(r.Name), 44, icon: pic)
+        {
+            MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+            Modulate = can ? Colors.White : new Color(0.55f, 0.55f, 0.55f, 0.99f),
+        });
+        Label name = UiKit.Label(r.Name, 11, can ? UiKit.Text : UiKit.Muted);
+        name.HorizontalAlignment = HorizontalAlignment.Center;
+        name.MouseFilter = Control.MouseFilterEnum.Ignore;
+        inner.AddChild(name);
+        slot.AddChild(inner);
+        if (index < SlotKeys.Length)
+        {
+            Label key = UiKit.Label(SlotNames[index], 11, UiKit.Heading);
+            key.Position = new Vector2(5, 2);
+            key.MouseFilter = Control.MouseFilterEnum.Ignore;
+            slot.AddChild(key);
+        }
+
+        slot.Pressed += () =>
+        {
+            ArmRoad(level);
+            _barSig = "";
+            UpdateUi();
+        };
+        return slot;
+    }
+
+    private void ArmRoad(int level)
+    {
+        StopPlacing();
+        _drawRoad = level;
+        ArmDraw(DrawMode.Road);
+    }
+
+    private static long[] Times(long[] a, int n) => [.. a.Select(x => x * n)];
+
+    // The goods' names, lower case, joined with "and".
+    private static string GoodNames(PlayContentMessage content, long[] a)
+    {
+        var names = new List<string>();
+        for (int g = 0; g < a.Length; g++)
+        {
+            if (a[g] > 0)
+            {
+                names.Add(content.Goods[g].Name.ToLowerInvariant());
+            }
+        }
+
+        return string.Join(" and ", names);
+    }
+
+    // Biome keys by name (any case), filled when the world's content arrives.
+    private static readonly Dictionary<string, string> BiomeKeys = new(StringComparer.OrdinalIgnoreCase);
+
+    // "tundra or swamp or ..." (Patryk, 2026-11-23): the choices split by "/", each biome led by a piece of its tile.
+    private static string NeedsText(PlayContentMessage content, string needs)
+    {
+        string[] parts = needs.Split(" or ");
+        for (int i = 0; i < parts.Length; i++)
+        {
+            string part = parts[i].Trim();
+            if (BiomeKeys.TryGetValue(part, out string? key))
+            {
+                parts[i] = UiKit.GoodMark("b:" + key) + part.Replace(' ', '\u00A0');
+            }
+        }
+
+        return string.Join(" / ", parts);
+    }
+
+    // The building's tooltip (Patryk, 2026-11-23): its name, what it does, then the facts one a line.
+    private static string Describe(PlayContentMessage content, PlayBuildingInfo b)
+    {
+        var lines = new List<string> { "# " + b.Name };
+        if (b.Workers > 0 && Any(b.Produces))
+        {
+            lines.Add($"Its {b.Workers} workers make {GoodNames(content, b.Produces)}" + (Any(b.Consumes) ? $" from {GoodNames(content, b.Consumes)}." : "."));
+        }
+        else if (b.Housing > 0)
+        {
+            lines.Add("Homes for our people.");
+        }
+        else if (b.Storage > 0)
+        {
+            lines.Add("A store: more room for every good.");
+        }
+
+        lines.Add("");
+        lines.Add($"@Cost|{Amounts(content, b.Price, icons: true)}");
+        lines.Add($"@Build time|{b.BuildSeconds} s (once the materials are there)");
+        if (b.Carriers > 0)
+        {
+            lines.Add($"@Carriers|{b.Carriers} people (they come back)"); // E9
+        }
+
+        if (b.Workers > 0)
+        {
+            lines.Add($"@Jobs|{b.Workers}");
+            lines.Add($"@Each worker makes|{Amounts(content, b.Produces, icons: true)} a minute");
+            if (Any(b.Consumes))
+            {
+                lines.Add($"@Each worker uses|{Amounts(content, b.Consumes, icons: true)} a minute");
+            }
+
+            lines.Add($"@All workers|{Amounts(content, Times(b.Produces, b.Workers), icons: true)} a minute");
+        }
+
+        if (b.Housing > 0)
+        {
+            lines.Add($"@Homes|{b.Housing} people");
+        }
+
+        if (b.Storage > 0)
+        {
+            lines.Add($"@Storage|+{b.Storage / 100} of every good");
+        }
+
+        if (!string.IsNullOrEmpty(b.Needs))
+        {
+            lines.Add($"@Needs|{NeedsText(content, b.Needs)}");
+        }
+
+        return string.Join("\n", lines);
+    }
+}

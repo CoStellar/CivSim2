@@ -26,6 +26,7 @@ public static class ContentLoader
     {
         directory ??= DefaultDirectory;
         var errors = new List<string>();
+        SchemaValidator.ValidateDirectory(directory, errors);
         List<GoodDefinition> goods = LoadGoods(Path.Combine(directory, "goods.json"), errors);
         List<BiomeDefinition> biomes = LoadBiomes(Path.Combine(directory, "biomes.json"), goods, errors);
         List<DepositDefinition> deposits = LoadDeposits(Path.Combine(directory, "resources.json"), biomes, goods, errors);
@@ -54,6 +55,9 @@ public static class ContentLoader
         List<GovernmentDefinition> governments = LoadGovernments(Path.Combine(directory, "governments.json"), eras, strata, errors);
         StabilityRules stability = LoadStability(Path.Combine(directory, "stability.json"), effects, errors);
         LeaderRules leaders = LoadLeaders(Path.Combine(directory, "leaders.json"), errors);
+        Core.Simulation.TimeRules time = LoadTime(Path.Combine(directory, "time.json"), errors);
+        Core.Units.UnitRules units = LoadUnits(Path.Combine(directory, "units.json"), biomes, technologies, skills, errors);
+        Core.Units.TaskRules tasks = LoadTasks(Path.Combine(directory, "tasks.json"), goods, biomes, deposits, technologies, skills, errors);
         for (int l = 0; l < levels.Count; l++)
         {
             if (levels[l].RequiresKey.Length > 0)
@@ -67,6 +71,9 @@ public static class ContentLoader
                 levels[l] = levels[l] with { RequiresTechnology = tech };
             }
         }
+        List<SettlementLookDefinition> looks = LoadSettlementLooks(Path.Combine(directory, "settlements.json"), levels, technologies, errors);
+        bool governmentsOn = TopFlag(Path.Combine(directory, "governments.json"), "enabled", errors);
+        bool influenceOn = TopFlag(Path.Combine(directory, "strata.json"), "politicalInfluence", errors);
         (List<PlanetPreset> planets, Core.WorldGen.SeasonRules seasons, Core.WorldGen.ClimateCycleRules cycles) = LoadPlanets(Path.Combine(directory, "planets.json"), errors);
         if (errors.Count > 0)
         {
@@ -78,6 +85,7 @@ public static class ContentLoader
             Goods = goods,
             Recipes = recipes,
             SettlementLevels = levels,
+            SettlementLooks = looks,
             Eras = eras,
             Effects = effects,
             NewTribeLevel = tribeLevel,
@@ -99,7 +107,12 @@ public static class ContentLoader
             Treaties = treaties,
             War = war,
             Governments = governments,
+            GovernmentsEnabled = governmentsOn,
+            StrataInfluenceEnabled = influenceOn,
             Leaders = leaders,
+            Time = time,
+            Units = units,
+            Tasks = tasks,
             Stability = stability,
             Events = events,
             Technologies = technologies,
@@ -502,6 +515,7 @@ public static class ContentLoader
             AdultDeathsPerMille = growth.Amount("adultDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             VillageDeathsPerMille = growth.Amount("villageDeathsPerMille", Amount.Zero, Amount.FromUnits(1000)),
             VillageBirthsPerMille = growth.Amount("villageBirthsPerMille", Amount.Zero, Amount.FromUnits(1000)),
+            LevelLimitScatters = growth.OptionalBool("levelLimitScatters"),
             StarvationDeathPercent = growth.Int("starvationDeathPercent", 0, 100),
             CampStarvationDeathPercent = growth.Int("campStarvationDeathPercent", 0, 100),
             LowHealthDeathsPerMillePerPoint = growth.Amount("lowHealthDeathsPerMillePerPoint", Amount.Zero, Amount.FromUnits(100)),
@@ -630,6 +644,74 @@ public static class ContentLoader
         }
 
         return result;
+    }
+
+    // A switch at the top of a data file (ADR 0026 rule 5: systems frozen until the bronze age); missing = on.
+    private static bool TopFlag(string path, string name, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !doc.RootElement.TryGetProperty(name, out JsonElement e))
+        {
+            return true;
+        }
+
+        if (e.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            errors.Add($"{Path.GetFileName(path)}: {name} must be true or false.");
+            return true;
+        }
+
+        return e.GetBoolean();
+    }
+
+    // settlements.json looks (stage 6 PR P2b): optional; levels by key, technologies resolved later.
+    private static List<SettlementLookDefinition> LoadSettlementLooks(string path, List<SettlementLevelDefinition> levels, List<TechnologyDefinition> technologies, List<string> errors)
+    {
+        var looks = new List<SettlementLookDefinition>();
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null || !doc.RootElement.TryGetProperty("looks", out JsonElement array))
+        {
+            return looks;
+        }
+
+        string file = Path.GetFileName(path);
+        if (array.ValueKind != JsonValueKind.Array)
+        {
+            errors.Add($"{file}: looks must be an array.");
+            return looks;
+        }
+
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        int i = 0;
+        foreach (JsonElement e in array.EnumerateArray())
+        {
+            var r = new Reader(e, $"{file}: looks[{i}]", errors);
+            string key = r.Key("key", keys);
+            string name = r.String("name");
+            string levelKey = r.String("level");
+            int level = levels.FindIndex(l => l.Key == levelKey);
+            if (level < 0)
+            {
+                errors.Add($"{file}: looks[{i}].level: unknown level '{levelKey}'.");
+            }
+
+            string tech = e.TryGetProperty("technology", out JsonElement t) && t.ValueKind == JsonValueKind.String ? t.GetString()! : string.Empty;
+            int techId = tech.Length == 0 ? -1 : technologies.FindIndex(x => x.Key == tech);
+            if (tech.Length > 0 && techId < 0)
+            {
+                errors.Add($"{file}: looks[{i}].technology: unknown technology '{tech}'.");
+            }
+
+            if (looks.Count > 0 && level < looks[^1].MinLevel)
+            {
+                errors.Add($"{file}: looks[{i}] must not need a lower level than the look before it.");
+            }
+
+            looks.Add(new SettlementLookDefinition(i, key, name, System.Math.Max(0, level)) { TechnologyKey = tech, Technology = techId });
+            i++;
+        }
+
+        return looks;
     }
 
     private static (List<SettlementLevelDefinition> Levels, int TribeLevel, List<GoodQuantity> TribeStock, AssetRules Assets) LoadSettlements(
@@ -858,6 +940,7 @@ public static class ContentLoader
             StartAge = r.Range("startAge", 0, 120),
             CouncilCandidates = r.Int("councilCandidates", 1, 20),
             DeathByAge = death,
+            ChronicleEnabled = !doc.RootElement.TryGetProperty("chronicleEnabled", out JsonElement chronicle) || chronicle.ValueKind != JsonValueKind.False,
         };
     }
 
@@ -899,6 +982,304 @@ public static class ContentLoader
     }
 
     // Stability and administration of data/stability.json (stage 4f PR 3, GDD 7.3).
+    // Units (stage 6 PR 3a): speeds, terrain costs, scouting and settlers.
+    private static Core.Units.UnitRules LoadUnits(string path, List<BiomeDefinition> biomes, List<TechnologyDefinition> technologies, List<SkillDefinition> skills, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Units.UnitRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        // Kinds (stage 6 PR 3b): data, listed from the simplest; each has a role, and the first kind of every role needs nothing.
+        var kinds = new List<Core.Units.UnitKindDefinition>();
+        var keys = new HashSet<string>();
+        if (TryArray(doc.RootElement, "kinds", path, errors, out JsonElement array))
+        {
+            foreach (JsonElement e in array.EnumerateArray())
+            {
+                string at = $"{file}: kinds[{kinds.Count}]";
+                var x = new Reader(e, at, errors);
+                int tech = -1;
+                if (e.TryGetProperty("requires", out JsonElement rq) && rq.ValueKind == JsonValueKind.String)
+                {
+                    tech = technologies.FindIndex(t => t.Key == rq.GetString());
+                    if (tech < 0)
+                    {
+                        errors.Add($"{at}.requires: unknown technology '{rq.GetString()}'.");
+                    }
+                }
+
+                int skill = -1;
+                if (e.TryGetProperty("skill", out JsonElement sk) && sk.ValueKind == JsonValueKind.String)
+                {
+                    skill = skills.FindIndex(x => x.Key == sk.GetString());
+                    if (skill < 0)
+                    {
+                        errors.Add($"{at}.skill: unknown skill '{sk.GetString()}'.");
+                    }
+                }
+
+                var biomePercent = new int[biomes.Count];
+                int hills = -1;
+                int mountains = -1;
+                int river = -1;
+                if (e.TryGetProperty("terrain", out JsonElement kt) && kt.ValueKind == JsonValueKind.Object)
+                {
+                    var tr = new Reader(kt, $"{at}.terrain", errors);
+                    hills = tr.OptionalInt("hillsExtraPercent", 0, 10000) ?? -1;
+                    mountains = tr.OptionalInt("mountainsExtraPercent", 0, 10000) ?? -1;
+                    river = tr.OptionalInt("riverPercent", 0, 10000) ?? -1;
+                    if (kt.TryGetProperty("biomes", out JsonElement kb) && kb.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (JsonProperty b in kb.EnumerateObject())
+                        {
+                            int index = biomes.FindIndex(x => x.Key == b.Name);
+                            if (index < 0 || b.Value.ValueKind != JsonValueKind.Number || !b.Value.TryGetInt32(out int pct) || pct < 10 || pct > 10000)
+                            {
+                                errors.Add($"{at}.terrain.biomes.{b.Name}: needs a known biome and a percent of 10 to 10000.");
+                            }
+                            else
+                            {
+                                biomePercent[index] = pct;
+                            }
+                        }
+                    }
+                }
+
+                kinds.Add(new Core.Units.UnitKindDefinition
+                {
+                    Id = kinds.Count,
+                    Key = x.Key("key", keys),
+                    Name = x.String("name"),
+                    Role = x.Enum<Core.Units.UnitRole>("role"),
+                    RequiresTechnology = tech,
+                    TicksPerCell = x.Int("ticksPerCell", 1, 10000),
+                    SightCells = x.Int("sightCells", 0, 20),
+                    RangeCells = x.OptionalInt("rangeCells", 1, 50) ?? 1,
+                    People = x.OptionalInt("people", 0, 1000) ?? 0,
+                    Skill = skill,
+                    HillsExtraPercent = hills,
+                    MountainsExtraPercent = mountains,
+                    RiverPercent = river,
+                    BiomePercent = biomePercent,
+                });
+            }
+        }
+
+        if (kinds.Count > 255)
+        {
+            errors.Add($"{file}: kinds: at most 255.");
+        }
+
+        foreach (Core.Units.UnitRole role in Enum.GetValues<Core.Units.UnitRole>())
+        {
+            Core.Units.UnitKindDefinition? first = kinds.Find(k => k.Role == role);
+            if (first is null)
+            {
+                errors.Add($"{file}: kinds: no kind with the role '{ToSnake(role.ToString())}'.");
+                kinds.Add(new Core.Units.UnitKindDefinition { Id = kinds.Count, Key = ToSnake(role.ToString()), Role = role });
+            }
+            else if (first.RequiresTechnology >= 0)
+            {
+                errors.Add($"{file}: kinds: the first kind with the role '{ToSnake(role.ToString())}' must need no technology.");
+            }
+        }
+
+        JsonElement terrain = doc.RootElement.TryGetProperty("terrain", out JsonElement te) ? te : default;
+        var t = new Reader(terrain, $"{file}: terrain", errors);
+        var scouts = new Reader(doc.RootElement.TryGetProperty("scouts", out JsonElement se) ? se : default, $"{file}: scouts", errors);
+        var settlers = new Reader(doc.RootElement.TryGetProperty("settlers", out JsonElement st) ? st : default, $"{file}: settlers", errors);
+        return new Core.Units.UnitRules
+        {
+            Kinds = kinds,
+            JourneyTicksPerCell = r.Int("journeyTicksPerCell", 1, 10000),
+            HillsExtraPercent = t.Int("hillsExtraPercent", 0, 10000),
+            MountainsExtraPercent = t.Int("mountainsExtraPercent", 0, 10000),
+            IcePercent = t.Int("icePercent", 100, 10000),
+            RiverPercent = t.Int("riverPercent", 0, 10000),
+            RouteNodeLimit = r.Int("routeNodeLimit", 100, 10_000_000),
+            ScoutEveryYears = scouts.Int("everyYears", 0, 1000),
+            ScoutTripCells = scouts.Int("tripCells", 1, 200),
+            SettlerFoodMonths = settlers.Int("foodMonths", 0, 120),
+            HungerDeathPercent = settlers.Int("hungerDeathPercent", 0, 100),
+            ForagePercent = settlers.Int("foragePercent", 0, 100),
+            FoundSearchCells = settlers.Int("foundSearchCells", 0, 20),
+        };
+    }
+
+    // Area tasks of data/tasks.json (stage 6 PR 4a, GDD 4.4): kinds of work a settlement sends a work group to do near it.
+    private static Core.Units.TaskRules LoadTasks(string path, List<GoodDefinition> goods, List<BiomeDefinition> biomes, List<DepositDefinition> deposits,
+        List<TechnologyDefinition> technologies, List<SkillDefinition> skills, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Units.TaskRules();
+        }
+
+        string file = Path.GetFileName(path);
+        var r = new Reader(doc.RootElement, file, errors);
+        var kinds = new List<Core.Units.TaskKindDefinition>();
+        var keys = new HashSet<string>();
+        if (TryArray(doc.RootElement, "kinds", path, errors, out JsonElement array))
+        {
+            foreach (JsonElement e in array.EnumerateArray())
+            {
+                string at = $"{file}: kinds[{kinds.Count}]";
+                var x = new Reader(e, at, errors);
+                string key = x.Key("key", keys);
+                string sourceName = x.String("source");
+                Core.Units.TaskSource source = sourceName switch
+                {
+                    "deposit" => Core.Units.TaskSource.Deposit,
+                    "farmland" => Core.Units.TaskSource.Farmland,
+                    "shore" => Core.Units.TaskSource.Shore,
+                    _ => Core.Units.TaskSource.Biome,
+                };
+                if (sourceName is not ("biome" or "deposit" or "farmland" or "shore"))
+                {
+                    errors.Add($"{at}.source: must be 'biome', 'deposit', 'farmland' or 'shore'.");
+                }
+
+                string goodKey = x.String("good");
+                int good = goods.FindIndex(g => g.Key == goodKey);
+                if (good < 0)
+                {
+                    errors.Add($"{at}.good: unknown good '{goodKey}'.");
+                }
+
+                int deposit = 0;
+                if (source == Core.Units.TaskSource.Deposit)
+                {
+                    string depositKey = x.String("deposit");
+                    DepositDefinition? d = deposits.Find(d => d.Key == depositKey);
+                    if (d is null)
+                    {
+                        errors.Add($"{at}.deposit: unknown deposit '{depositKey}'.");
+                    }
+                    else
+                    {
+                        deposit = d.Id;
+                        if (d.Renewable)
+                        {
+                            errors.Add($"{at}.deposit: '{depositKey}' is renewable; deposit tasks use up what they take.");
+                        }
+                    }
+                }
+                else if (source == Core.Units.TaskSource.Biome && good >= 0 && !biomes.Exists(b => b.Gather.Any(g => g.GoodId == good)))
+                {
+                    errors.Add($"{at}.good: no biome gathers '{goodKey}' (biomes.json gather), so the task fits no cell.");
+                }
+
+                int tech = -1;
+                if (e.TryGetProperty("requires", out JsonElement rq) && rq.ValueKind == JsonValueKind.String)
+                {
+                    tech = technologies.FindIndex(t => t.Key == rq.GetString());
+                    if (tech < 0)
+                    {
+                        errors.Add($"{at}.requires: unknown technology '{rq.GetString()}'.");
+                    }
+                }
+
+                int skill = -1;
+                if (e.TryGetProperty("skill", out JsonElement sk) && sk.ValueKind == JsonValueKind.String)
+                {
+                    skill = skills.FindIndex(s => s.Key == sk.GetString());
+                    if (skill < 0)
+                    {
+                        errors.Add($"{at}.skill: unknown skill '{sk.GetString()}'.");
+                    }
+                }
+
+                var waters = new Amount[biomes.Count];
+                if (source == Core.Units.TaskSource.Shore)
+                {
+                    if (e.TryGetProperty("waters", out JsonElement wt) && wt.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (JsonProperty w in wt.EnumerateObject())
+                        {
+                            int b = biomes.FindIndex(x => x.Key == w.Name);
+                            if (b < 0 || !biomes[b].IsWater)
+                            {
+                                errors.Add($"{at}.waters: '{w.Name}' is not a water biome.");
+                                continue;
+                            }
+
+                            waters[b] = new Reader(wt, $"{at}.waters", errors).Amount(w.Name, Amount.FromHundredths(1), Amount.FromHundredths(100_000));
+                        }
+                    }
+                    else
+                    {
+                        errors.Add($"{at}.waters: a shore task needs the water biomes it fishes, with their values.");
+                    }
+                }
+
+                if (source is Core.Units.TaskSource.Farmland or Core.Units.TaskSource.Shore && good >= 0 && !goods[good].IsFood)
+                {
+                    errors.Add($"{at}.good: fields and fishing grounds make food; '{goodKey}' is not food.");
+                }
+
+                kinds.Add(new Core.Units.TaskKindDefinition
+                {
+                    Id = kinds.Count,
+                    Key = key,
+                    Name = x.String("name"),
+                    Source = source,
+                    Good = Math.Max(0, good),
+                    Deposit = deposit,
+                    PerPersonPerYear = source == Core.Units.TaskSource.Farmland
+                        ? Amount.Zero // a field grows grain by the farming rule of population.json
+                        : x.Amount("perPersonPerYear", Amount.FromHundredths(1), Amount.FromHundredths(100_000)),
+                    RequiresTechnology = tech,
+                    Skill = skill,
+                    SettledOnly = e.TryGetProperty("settledOnly", out JsonElement so) && so.ValueKind == JsonValueKind.True,
+                    Waters = waters,
+                    MakesFood = good >= 0 && goods[good].IsFood,
+                });
+            }
+        }
+
+        int perGroup = r.Int("defaultPeoplePerGroup", 1, 1000);
+        int maxPerGroup = r.Int("maxPeoplePerGroup", 1, 1000);
+        if (perGroup > maxPerGroup)
+        {
+            errors.Add($"{file}: defaultPeoplePerGroup: at most maxPeoplePerGroup ({maxPerGroup}).");
+        }
+
+        return new Core.Units.TaskRules
+        {
+            Kinds = kinds,
+            ZoneGathersMaterials = r.Bool("zoneGathersMaterials"),
+            ZoneFarms = r.Bool("zoneFarms"),
+            ZoneFishes = r.Bool("zoneFishes"),
+            RangeBeyondZoneCells = r.Int("rangeBeyondZoneCells", 0, 6),
+            PeoplePerTask = r.Int("peoplePerTask", 1, 10000),
+            DefaultPeoplePerGroup = perGroup,
+            MaxPeoplePerGroup = maxPerGroup,
+        };
+    }
+
+    // Time of the live game (ADR 0025, stage 6): ticks, pulses and months of action.
+    private static Core.Simulation.TimeRules LoadTime(string path, List<string> errors)
+    {
+        using JsonDocument? doc = Open(path, errors);
+        if (doc is null)
+        {
+            return new Core.Simulation.TimeRules();
+        }
+
+        var r = new Reader(doc.RootElement, Path.GetFileName(path), errors);
+        return new Core.Simulation.TimeRules
+        {
+            TicksPerSecond = r.Int("ticksPerSecond", 1, 1000),
+            TicksPerPulse = r.Int("ticksPerPulse", 1, 10000),
+            TicksPerActionMonth = r.Int("ticksPerActionMonth", 1, 1000),
+        };
+    }
+
     private static StabilityRules LoadStability(string path, List<EffectDefinition> effects, List<string> errors)
     {
         using JsonDocument? doc = Open(path, errors);
@@ -922,6 +1303,7 @@ public static class ContentLoader
 
         return new StabilityRules
         {
+            RevoltsEnabled = !doc.RootElement.TryGetProperty("revoltsEnabled", out JsonElement revolts) || revolts.ValueKind != JsonValueKind.False,
             UnrestBelow = r.Int("unrestBelow", 0, 100),
             UnrestOutputPercentPerPoint = r.Int("unrestOutputPercentPerPoint", 0, 100),
             UnrestEffect = unrest,
@@ -1053,6 +1435,7 @@ public static class ContentLoader
             cycles = new Core.WorldGen.ClimateCycleRules
             {
                 UpdateYears = r.Int("updateYears", 10, 100_000),
+                Enabled = !cy.TryGetProperty("enabled", out JsonElement climateOn) || climateOn.ValueKind != JsonValueKind.False,
                 TiltAmplitudeTenths = (int)(r.Amount("tiltAmplitude", Amount.Zero, Amount.FromUnits(20)).Hundredths / 10),
                 TiltPeriodYears = r.Int("tiltPeriodYears", 1_000, 10_000_000),
                 LongEccentricityThousandths = r.Int("longEccentricityPerMille", 0, 100),
@@ -1478,7 +1861,8 @@ public static class ContentLoader
             int fertility = r.OptionalInt("fertilityGain", 0, 100) ?? 0;
             int fertilityRadius = r.OptionalInt("fertilityRadius", 0, 10) ?? 0;
             int spread = r.OptionalInt("spreadPercent", 0, 100) ?? 0;
-            result.Add(new EventDefinition(i, key, name, chance, conditions, softened, laid, fertility, fertilityRadius, spread, chronicle));
+            bool enabled = !e.TryGetProperty("enabled", out JsonElement on) || on.ValueKind != JsonValueKind.False;
+            result.Add(new EventDefinition(i, key, name, chance, conditions, softened, laid, fertility, fertilityRadius, spread, chronicle) { Enabled = enabled });
             i++;
         }
 
@@ -1515,9 +1899,6 @@ public static class ContentLoader
             SightCells = r.Int("sightCells", 0, 50),
             OralMemoryYears = r.Int("oralMemoryYears", 1, 1_000_000),
             JourneyCells = r.Int("journeyCells", 1, 200),
-            ScoutCells = r.Int("scoutCells", 0, 200),
-            ScoutsPerCentury = r.Int("scoutsPerCentury", 0, 1200),
-            MarchCellsPerCentury = r.Int("marchCellsPerCentury", 1, 100_000),
         };
     }
 
@@ -1533,9 +1914,11 @@ public static class ContentLoader
         return new AiRules
         {
             PickAmongTop = r.Int("pickAmongTop", 1, 3),
+            PlayerOrderHoldYears = r.Int("playerOrderHoldYears", 0, 1000),
             ReviewEverySteps = r.Int("reviewEverySteps", 1, 100),
             DirectionBonusPercent = r.Int("directionBonusPercent", 0, 100),
             RecipeSwitchBetterByPercent = r.Int("recipeSwitchBetterByPercent", 0, 500),
+            RecipeKeepYears = r.Int("recipeKeepYears", 0, 100),
             CrowdingLowPercent = r.Int("crowdingLowPercent", 0, 99),
             CrowdingHighPercent = r.Int("crowdingHighPercent", 1, 100),
             ExpansionWeightMin = r.Int("expansionWeightMin", 100, 1000),
@@ -1544,6 +1927,12 @@ public static class ContentLoader
             FedBadlyPercent = r.Int("fedBadlyPercent", 0, 99),
             HungerWeightMax = r.Int("hungerWeightMax", 1000, 3000),
             SplitMinPercentOfLevel = r.Int("splitMinPercentOfLevel", 1, 100),
+            SettlersBelowAdminPercent = r.OptionalInt("settlersBelowAdminPercent", 0, 1000) ?? 0,
+            TaskFedPercent = r.Int("taskFedPercent", 0, 100),
+            TaskReserveYears = r.Int("taskReserveYears", 1, 100),
+            TaskRecallAboveYears = r.Int("taskRecallAboveYears", 1, 1000),
+            TaskMinPeople = r.Int("taskMinPeople", 1, 100),
+            FieldMoveBelowPercent = r.Int("fieldMoveBelowPercent", 1, 100),
             SearchEverySteps = r.Int("searchEverySteps", 1, 20),
             StarvingFedPercent = r.Int("starvingFedPercent", 0, 100),
             GoalOfFood = r.Enum<Core.Ai.Goal>("goalOfFood"),
@@ -1849,6 +2238,7 @@ public static class ContentLoader
                 defs[(int)kind] = new Core.Diplomacy.TreatyKindDefinition
                 {
                     Kind = kind,
+                    Enabled = !e.TryGetProperty("enabled", out JsonElement treatyOn) || treatyOn.ValueKind != JsonValueKind.False,
                     RequiresTechnology = tech,
                     Years = x.OptionalInt("years", 0, 100_000) ?? 0,
                     BindsAgainstWar = binds,
@@ -1977,6 +2367,7 @@ public static class ContentLoader
         return new Core.Episodes.BattleRules
         {
             Rounds = b.Int("rounds", 1, 100),
+            RoundTicks = b.Int("roundTicks", 0, 1000),
             CasualtyPercent = b.Int("casualtyPercent", 0, 100),
             RollPercent = b.Range("rollPercent", 0, 1000),
             MoralePerLossPercent = b.Int("moralePerLossPercent", 0, 100),
@@ -2115,7 +2506,6 @@ public static class ContentLoader
             ConvoyBelowMonths = supply.Int("convoyBelowMonths", 0, 120),
             CarrierCells = supply.Int("carrierCells", 0, 1000),
             CarriersPercent = supply.Int("carriersPercent", 0, 100),
-            ConvoyCellsPerMonth = supply.Int("convoyCellsPerMonth", 1, 100),
             HungerMoralePerMonth = supply.Int("hungerMoralePerMonth", 0, 100),
             FedMoralePerMonth = supply.Int("fedMoralePerMonth", 0, 100),
             RetreatMorale = supply.Int("retreatMorale", 0, 100),
@@ -2124,7 +2514,7 @@ public static class ContentLoader
             ScorePerSettlement = r.Int("scorePerSettlement", 0, 100),
             WearinessPerCampaignMonth = r.SignedHundredths("wearinessPerCampaignMonth", 0, 10_000) ?? defaults.WearinessPerCampaignMonth,
             CampaignStepMonths = r.Int("campaignStepMonths", 1, 120),
-            MarchCellsPerMonth = r.Int("marchCellsPerMonth", 1, 100),
+            RestMonths = r.Int("restMonths", 0, 1200),
             QuietPeaceYears = r.Int("quietPeaceYears", 1, 1000),
             ArmySightCells = r.Int("armySightCells", 0, 100),
             SendPercent = r.Int("sendPercent", 1, 100),
@@ -2152,6 +2542,7 @@ public static class ContentLoader
         {
             LinkCells = r.Int("linkCells", 1, 100),
             LossPercentPerCell = r.Int("lossPercentPerCell", 0, 90),
+            SharedStore = r.OptionalBool("sharedStore"),
             FoodReserveYears = r.Amount("foodReserveYears", Amount.Zero, Amount.FromUnits(20)),
             PriceRangePercent = r.Range("priceRangePercent", 1, 10_000),
         };
@@ -2401,6 +2792,8 @@ public static class ContentLoader
 
         /// <summary>An optional whole number; null when the property is missing.</summary>
         public int? OptionalInt(string name, int min, int max) => element.TryGetProperty(name, out _) ? Int(name, min, max) : null;
+
+        public bool OptionalBool(string name) => element.TryGetProperty(name, out _) && Bool(name);
 
         public int Int(string name, int min, int max)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CivSim.Core.Map;
 using CivSim.Core.Numerics;
 
@@ -57,7 +58,30 @@ public sealed class SettlementState
     public WorldId World { get; }
 
     /// <summary>Centre cell.</summary>
-    public HexCoord Cell { get; set; }
+    public HexCoord Cell
+    {
+        get => _cell;
+        set
+        {
+            if (value != _cell)
+            {
+                _cell = value;
+                System.Threading.Interlocked.Increment(ref _layoutVersion);
+            }
+        }
+    }
+
+    private HexCoord _cell;
+    private static long _layoutVersion;
+
+    /// <summary>
+    /// Grows whenever any settlement (of any game in the process) moves to another cell: the spatial grid
+    /// (<see cref="Map.SettlementGrid"/>) rebuilds itself then. It only invalidates a cache, so it changes no result.
+    /// </summary>
+    public static long LayoutVersion => System.Threading.Interlocked.Read(ref _layoutVersion);
+
+    /// <summary>Marks that settlements were founded or removed (<see cref="LayoutVersion"/>).</summary>
+    internal static void LayoutChanged() => System.Threading.Interlocked.Increment(ref _layoutVersion);
 
     /// <summary>Display name.</summary>
     public string Name { get; set; }
@@ -79,6 +103,39 @@ public sealed class SettlementState
 
     /// <summary>Read-only view of the people per stratum.</summary>
     public ReadOnlySpan<int> PopulationView => _population;
+
+    /// <summary>On a journey (stage 6 PR 3a): the next cell it will camp on, or -1 when not chosen yet.</summary>
+    public int JourneyNext { get; set; } = -1;
+
+    /// <summary>On a journey: ticks the way to <see cref="JourneyNext"/> costs.</summary>
+    public int JourneyStepTicks { get; set; }
+
+    /// <summary>On a journey: ticks already spent on the way to <see cref="JourneyNext"/>.</summary>
+    public int JourneyProgress { get; set; }
+
+    /// <summary>
+    /// On a journey (stage 6 PR 3b, known issue 10): the cells of the way to <see cref="JourneyPathGoal"/>, found once for
+    /// the goal (A*) and walked camp after camp; searched again only for a new goal or when the way closes.
+    /// </summary>
+    public List<int> JourneyPath { get; } = [];
+
+    /// <summary>On a journey: index in <see cref="JourneyPath"/> of the first cell after the one the camp stands on.</summary>
+    public int JourneyPathAt { get; set; }
+
+    /// <summary>On a journey: the goal <see cref="JourneyPath"/> leads to, or -1 when there is no way remembered.</summary>
+    public int JourneyPathGoal { get; set; } = -1;
+
+    /// <summary>True while a party of its scouts is out (stage 6 PR 3a).</summary>
+    public bool ScoutOut { get; set; }
+
+    /// <summary>Month of action its last scouts came back in, or -1 before any went out (stage 6 PR 3a).</summary>
+    public long ScoutBackMonth { get; set; } = -1;
+
+    /// <summary>
+    /// Month of action until which its warriors rest after a campaign and cannot be sent again (stage 6 PR 3b, war.json
+    /// restMonths), or -1.
+    /// </summary>
+    public long RestUntilMonth { get; set; } = -1;
 
     /// <summary>People who know each skill (stage 4F), index = skill id; they are counted in their stratum too.</summary>
     public Span<int> Skilled => _skilled;
@@ -131,6 +188,12 @@ public sealed class SettlementState
     /// <summary>Recipe the settlement's artisans work (index into <c>GameContent.Recipes</c>), or <see cref="NoRecipe"/> (stage 3e).</summary>
     public int RecipeId { get; set; } = NoRecipe;
 
+    /// <summary>
+    /// Month of action when the artisans took up <see cref="RecipeId"/>: they keep it at least <c>Ai.RecipeKeepYears</c>
+    /// (playtest, 2026-11-16: with grain from fields they swapped bread and clothing every few months).
+    /// </summary>
+    public long RecipeSinceMonth { get; set; }
+
     /// <summary>Value of <see cref="RecipeId"/> when nothing is made.</summary>
     public const int NoRecipe = -1;
 
@@ -148,6 +211,9 @@ public sealed class SettlementState
 
     /// <summary>Game month of the last move (or of founding); the tribe AI waits a while between moves.</summary>
     public long MovedMonth { get; set; }
+
+    /// <summary>Tick of the last order a player gave this settlement, or -1 (stage 6 PR P1): the AI leaves it alone for a while (Ai.PlayerOrders).</summary>
+    public long PlayerOrderTick { get; set; } = -1;
 
     /// <summary>Health 0–100 (GDD 5.2, CORE simplified: one value). Set by the population system.</summary>
     public int Health { get; set; } = 100;

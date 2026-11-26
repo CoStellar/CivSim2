@@ -1,6 +1,9 @@
+**The new game's data is `data/sim/` (`game.json`, built by `data/sim/tools/build_game_json.py`, and test scenarios).** The start menu, Reload data and the tests check `game.json`: it must load, and every key must be one the game reads (`comment` keys and the top-level `version` aside), so a typo in a key name is reported instead of falling back to the default (`SimContent.Check`). The other files here belong to the legacy game (`docs/legacy/README.md`).
+
 # Game content (data)
 
-Only CORE features are covered here (see `docs/GDD.md`, section 16). All game content lives here as JSON, validated on load. Adding a technology, resource or event
+Only CORE features are covered here (see `docs/GDD.md`, section 16). All game content lives here as JSON, validated on load.
+Every file has a JSON Schema in `schema/` (stage 6, T14): an unknown or misspelled key is a load error. A new key must be added to the file's schema; a new file gets a first schema from `python3 docs/systems/tools/infer_schema.py data data/schema new.json` (see `docs/systems/data-schema.md`). Adding a technology, resource or event
 must not require code changes. All names and texts are in English.
 
 Planned files (created stage by stage, see `ROADMAP.md`):
@@ -10,11 +13,12 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `biomes.json` | biomes, movement cost, base yields, materials gathered (wood), colours for the debug viewer | 1, 3e |
 | `resources.json` | natural deposits placed by the world generator | 1 |
 | `goods.json` | goods in settlement warehouses, category, spoilage per year (only food spoils in CORE), base value for internal prices | 3a, 3e |
-| `perception.json` | sight, scouts, oral memory, journeys | 3g |
+| `perception.json` | sight, oral memory, journeys (scouts are units since stage 6 PR 3a: `units.json`) | 3g, 6 |
 | `ai.json` | how AI advisors pick among their best actions | 4a |
 | `relations.json` | first contact, rumors, remembered events, sympathy and trust | 4c |
 | `diplomacy.json` | treaties and war, the diplomat's curves and thresholds, trade between civilizations | 4d |
 | `stability.json` | stability: unrest threshold and output loss, penalties (crisis, anarchy, lost capital), administration cost per settlement and road cost, loyalty; revolts, secession and coups | 4f |
+| `time.json` | time of the live game (ADR 0025): ticks per second at x1, ticks between pulses of civilizations and of the world, ticks of one month of action (campaign steps, war timers) | 6 |
 | `leaders.json` | leaders: traits that shift the character, number of traits, start age, death chance by age, council candidates | 4f |
 | `governments.json` | forms of government: title, era, enactment delay, pace and caution of the AI, goal weights, start leaning | 4f |
 | `trade.json` | trade network links, transport loss per cell, food reserve, price range | 3e |
@@ -28,7 +32,8 @@ Planned files (created stage by stage, see `ROADMAP.md`):
 | `events.json` | random events: conditions, chances, softening technologies, effects, fertility, spreading, chronicle text | 3h |
 | `effects.json` | effect types: target, changed stat, stacking rule | 3a |
 | `governments.json` | governments: decision speed, stability decay | 4 |
-| `units.json` | units by era, strength, upkeep, tile capacity | 4 |
+| `units.json` | units walking in ticks (stage 6 PR 3a): kinds with ticks per flat cell and sight, a migrating camp's ticks per cell, terrain on top of the biome's `movementCost` (hills, mountains, sea ice, rivers), the route search limit, scouts (rest, trip length), settlers (spare food, hunger, search for a free place); warriors and carriers in PR 3b | 6 |
+| `tasks.json` | area tasks (stage 6 PR 4a, GDD 4.4): kinds (woodcutting from the biome's wood, flint mine and quarry from surface deposits that run out), reach beyond the zone, one task per N people, group size, the switch for gathering materials from the whole zone (on until the AI gives tasks, PR 4b); work groups are units of the role `workers` in `units.json` | 6 |
 | `leader_traits.json` | leader traits and AI weight modifiers | 4 |
 | `ui_theme.json` | the single UI theme (9-slice assets, accents) | 5 |
 

@@ -52,7 +52,14 @@ public class WorldGeneratorTests
     // ADR 0022: the months the world computes and the episodes are in the hash (the map is unchanged).
     // Stage 4f: the government of every civilization and the readiness of wars are in the hash (the map is unchanged).
     // Stage 4f PR 2: every civilization's leader is in the hash (the map is unchanged).
-    private const ulong GoldenWorldHash = 4316276120475864014UL;
+    // ADR 0025: the tick of every civilization's last pulse is in the hash, and the world's first pulse covers the step
+    // of the most advanced civilization (the map is unchanged).
+    // Stage 6 PR 2: the months of action are in the hash (the map is unchanged).
+    // Stage 6 PR 3a: units, the scouts and journeys of settlements are in the hash (the map is unchanged).
+    // Stage 6 PR 3b: the warriors' rest of every settlement is in the hash (the map is unchanged).
+    // Stage 6 battles over time: the remembered way of a camp's journey is in the hash (the map is unchanged).
+    // 2026-11-17: every people starts with the council of elders while governments are frozen (ADR 0026; the map is unchanged).
+    private const ulong GoldenWorldHash = 434108583162809903UL;
 
     [Theory]
     [InlineData(WorldType.Continents, 60)]
@@ -67,6 +74,7 @@ public class WorldGeneratorTests
         Assert.InRange(report.WaterPercent, water - WorldValidator.WaterTolerance, water + WorldValidator.WaterTolerance);
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void HundredSeedsOnTheTestMapAreValid()
     {
@@ -198,6 +206,7 @@ public class WorldGeneratorTests
         return n;
     }
 
+    [Trait("Category", "Slow")]
     [Theory]
     [InlineData(90, WorldMoisture.Dry, WorldRelief.Flat, WorldResources.Scarce, WorldInland.Dry)]
     [InlineData(110, WorldMoisture.Wet, WorldRelief.Mountainous, WorldResources.Rich, WorldInland.Humid)]

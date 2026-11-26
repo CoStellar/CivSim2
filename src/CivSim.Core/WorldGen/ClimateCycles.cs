@@ -13,6 +13,12 @@ public sealed record ClimateCycleRules
     /// <summary>How often the climate is solved again, in years of game time.</summary>
     public int UpdateYears { get; init; } = 500;
 
+    /// <summary>
+    /// False while the dynamic climate (ice ages, CO2, the star's cycle, the sea level) is frozen until a later era (ADR 0026 rule 5);
+    /// the climate of the start stays and the seasons go on.
+    /// </summary>
+    public bool Enabled { get; init; } = true;
+
     /// <summary>Swing of the axial tilt either side of the planet's tilt, tenths of a degree (Earth: 22.1–24.5°).</summary>
     public int TiltAmplitudeTenths { get; init; } = 12;
 

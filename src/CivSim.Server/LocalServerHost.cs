@@ -26,6 +26,9 @@ public sealed class LocalServerHost : IDisposable
     /// <summary>At maximum speed the map is sent to clients at most this often.</summary>
     public static readonly TimeSpan MaxSpeedViewInterval = TimeSpan.FromMilliseconds(250);
 
+    /// <summary>At the live speeds the map is sent to clients at most this often (ADR 0025: ticks come faster than views are useful).</summary>
+    public static readonly TimeSpan LiveViewInterval = TimeSpan.FromMilliseconds(100);
+
     private readonly ConcurrentQueue<IConnection> _pending = new();
     private readonly ConcurrentQueue<string> _clientLog = new();
     private readonly Thread _thread;
@@ -35,6 +38,7 @@ public sealed class LocalServerHost : IDisposable
     private long _turn;
     private long _turnLimit;
     private string? _reportPath;
+    private string? _replayPath;
     private StreamWriter? _report;
     private LongRunRecorder? _longRun;
     private volatile bool _longRunFinished;
@@ -85,7 +89,14 @@ public sealed class LocalServerHost : IDisposable
         {
             _turnLimit = Math.Max(0, options.TurnLimit),
             _reportPath = string.IsNullOrWhiteSpace(options.ReportPath) ? null : options.ReportPath,
+            _replayPath = !string.IsNullOrWhiteSpace(options.ReplayPath) ? options.ReplayPath
+                : !string.IsNullOrWhiteSpace(options.LongRunFolder) ? System.IO.Path.Combine(options.LongRunFolder, "replay.civreplay") : null,
         };
+        if (host._replayPath is not null)
+        {
+            host._server.StartRecording(newGame: true);
+        }
+
         if (!string.IsNullOrWhiteSpace(options.LongRunFolder))
         {
             host._longRun = new LongRunRecorder(
@@ -103,6 +114,25 @@ public sealed class LocalServerHost : IDisposable
 
         host._thread.Start();
         return host;
+    }
+
+    /// <summary>
+    /// Loads the data files of <paramref name="dataDirectory"/> (null = next to the program) and returns every problem found,
+    /// empty when the data is valid (stage 6, T14: the viewer shows these instead of stopping, and reloads data with F5).
+    /// 2026-11-22: the new game's data/sim/game.json too, unknown keys included (<see cref="CivSim.Sim.Content.SimContent.Check"/>).
+    /// </summary>
+    public static IReadOnlyList<string> CheckData(string? dataDirectory = null)
+    {
+        try
+        {
+            ContentLoader.Load(dataDirectory);
+        }
+        catch (ContentException ex)
+        {
+            return ex.Errors;
+        }
+
+        return CivSim.Sim.Content.SimContent.Check(dataDirectory);
     }
 
     /// <summary>The planet presets the start menu offers (stage 5), read from the data files.</summary>
@@ -203,17 +233,42 @@ public sealed class LocalServerHost : IDisposable
         {
             _thread.Join(TimeSpan.FromSeconds(5));
         }
+
+        // The replay (T11) is written once the simulation thread has stopped, so the recording is complete.
+        if (_replayPath is not null && !_thread.IsAlive && _server.Replay is { } replay)
+        {
+            try
+            {
+                replay.Write(_replayPath);
+            }
+            catch (System.IO.IOException ex)
+            {
+                _error ??= $"The replay could not be written: {ex.Message}";
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _error ??= $"The replay could not be written: {ex.Message}";
+            }
+        }
     }
 
-    /// <summary>Time between turns at a speed, or null when paused.</summary>
-    public static TimeSpan? TurnInterval(SimulationSpeed speed) => speed switch
+    /// <summary>
+    /// Time between ticks at a speed (ADR 0025: <paramref name="ticksPerSecond"/> ticks a second at x1, two and four
+    /// times as many at x2 and x4), or null when paused.
+    /// </summary>
+    public static TimeSpan? TurnInterval(SimulationSpeed speed, int ticksPerSecond)
     {
-        SimulationSpeed.X1 => TimeSpan.FromSeconds(2),
-        SimulationSpeed.X2 => TimeSpan.FromSeconds(1),
-        SimulationSpeed.X5 => TimeSpan.FromMilliseconds(400),
-        SimulationSpeed.Max => TimeSpan.Zero,
-        _ => null,
-    };
+        int multiplier = speed switch
+        {
+            SimulationSpeed.X1 => 1,
+            SimulationSpeed.X2 => 2,
+            SimulationSpeed.X4 => 4,
+            _ => 0,
+        };
+        return speed == SimulationSpeed.Max ? TimeSpan.Zero
+            : multiplier == 0 ? null
+            : TimeSpan.FromTicks(TimeSpan.TicksPerSecond / (Math.Max(1, ticksPerSecond) * (long)multiplier));
+    }
 
     private static T Parse<T>(string text)
         where T : struct, Enum
@@ -238,13 +293,14 @@ public sealed class LocalServerHost : IDisposable
                 }
 
                 bool ran = _server.Pump();
-                TimeSpan? interval = TurnInterval(_server.Speed);
-                if (!ran && interval is { } wait && _server.ConnectedObservers > 0 && Stopwatch.GetElapsedTime(lastTurn) >= wait)
+                TimeSpan? interval = TurnInterval(_server.Speed, _server.TicksPerSecond);
+                if (!ran && interval is { } wait && (_server.ConnectedObservers > 0 || _server.ConnectedLeaders > 0) && Stopwatch.GetElapsedTime(lastTurn) >= wait)
                 {
-                    lastTurn = Stopwatch.GetTimestamp();
-                    bool max = _server.Speed == SimulationSpeed.Max;
-                    Core.Simulation.TurnReport report = _server.AdvanceTurn(sendViews: !max);
-                    unsent = max;
+                    // Keep the pace even when a tick runs late (at most one tick behind; Max runs as fast as it can).
+                    long now = Stopwatch.GetTimestamp();
+                    lastTurn = wait == TimeSpan.Zero || Stopwatch.GetElapsedTime(lastTurn) >= wait * 2 ? now : lastTurn + (long)(wait.TotalSeconds * Stopwatch.Frequency);
+                    Core.Simulation.TurnReport report = _server.AdvanceTurn(sendViews: false);
+                    unsent = true;
                     ran = true;
                     Report();
                     _longRun?.TurnDone(_server.State, report, _server.Runner.LastChronicle);
@@ -258,7 +314,8 @@ public sealed class LocalServerHost : IDisposable
 
                 LongRunTick();
 
-                if (unsent && (_server.Speed != SimulationSpeed.Max || Stopwatch.GetElapsedTime(lastSend) >= MaxSpeedViewInterval))
+                TimeSpan viewInterval = _server.Speed == SimulationSpeed.Max ? MaxSpeedViewInterval : LiveViewInterval;
+                if (unsent && (_server.Speed == SimulationSpeed.Paused || Stopwatch.GetElapsedTime(lastSend) >= viewInterval))
                 {
                     _server.SendViews();
                     lastSend = Stopwatch.GetTimestamp();

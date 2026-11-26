@@ -9,15 +9,26 @@
     -->
     <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     <TargetFramework>net10.0</TargetFramework>
+    <!--
+      Exporting the game (dotnet publish) sees Core, Data and Sim twice: as run-time content above and through Server.
+      They are the same files, so publish keeps one copy instead of failing (NETSDK1152).
+    -->
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Plays the music's notes on the game's instruments (audio/instruments.sf2); MIT licence, pure C#. -->
+    <PackageReference Include="MeltySynth" Version="2.4.1" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\CivSim.Protocol\CivSim.Protocol.csproj" />
     <ProjectReference Include="..\src\CivSim.Server\CivSim.Server.csproj" />
     <!-- Needed at run time by the local server, but not visible to client code. -->
     <ProjectReference Include="..\src\CivSim.Core\CivSim.Core.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="..\src\CivSim.Data\CivSim.Data.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\src\CivSim.Sim\CivSim.Sim.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\data\**\*.json" Link="data\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\data\sim\manual.md" Link="data\sim\manual.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

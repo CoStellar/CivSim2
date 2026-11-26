@@ -16,11 +16,16 @@ import json
 import os
 import random
 import re
+import sys
 
 from PIL import Image
 
+import game_art
+import icon_art
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "art", "placeholder")
+FLAT_OUT = os.path.join(ROOT, "art", "packs", "flat")
 W, H = 48, 42
 
 MANIFEST = []  # every picture the viewer can load, with its size (art/placeholder/manifest.json)
@@ -93,16 +98,18 @@ class Canvas:
         self.im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
 
     def px(self, x, y, c):
+        x, y = int(x), int(y)
         if 0 <= x < self.w and 0 <= y < self.h:
             self.im.putpixel((x, y), tuple(c) + (255,))
 
     def rect(self, x0, y0, x1, y1, c):
+        x0, y0, x1, y1 = (int(round(v)) for v in (x0, y0, x1, y1))
         for y in range(y0, y1 + 1):
             for x in range(x0, x1 + 1):
                 self.px(x, y, c)
 
     def line(self, x0, y0, x1, y1, c, width=1):
-        n = max(abs(x1 - x0), abs(y1 - y0), 1)
+        n = int(round(max(abs(x1 - x0), abs(y1 - y0), 1)))
         for i in range(n + 1):
             x = round(x0 + (x1 - x0) * i / n)
             y = round(y0 + (y1 - y0) * i / n)
@@ -315,30 +322,10 @@ def river(edge, width_name):
     c.save("terrain", f"terrain_river_{edge}_{width_name}")
 
 
-# ---------------------------------------------------------------- objects: deposits (24×24)
-
-def deposit(key, color):
-    c = Canvas(24, 24)
-    fill = nearest(color)
-    c.disc(11.5, 11.5, 8.5, shade(fill, -1))
-    c.disc(11.5, 11.5, 7.0, fill)
-    c.disc(9, 9, 2.5, shade(fill, 1))
-    # A tiny mark by kind of good: food animals a dot pair, stone and ores a square, plants a stalk.
-    mark = shade(fill, -2)
-    if key in ("game", "cattle", "sheep", "horses", "fish"):
-        c.rect(10, 13, 11, 14, mark)
-        c.rect(14, 13, 15, 14, mark)
-    elif key in ("wild_grain",):
-        c.line(12, 16, 12, 9, mark)
-        c.px(11, 10, mark)
-        c.px(13, 11, mark)
-    else:
-        c.rect(11, 12, 14, 15, mark)
-    c.outline(nearest((29, 23, 16)))
-    c.save("objects", f"deposit_{key}")
+# Deposits are drawn by game_art.generate_deposits (2x, 2026-11-23).
 
 
-# ---------------------------------------------------------------- objects: settlements (48×42, 3 levels × 3 states)
+# ---------------------------------------------------------------- objects: settlements (48×42, 5 looks × 3 states; stage 6 PR P2b)
 
 def tent(c, x, y, s, cloth, flag):
     for i in range(s):
@@ -372,7 +359,7 @@ def settlement(level, state):
     if ruins:
         stone = nearest((120, 121, 121))
         rnd = random.Random(f"ruins-{level}")
-        n = {"camp": 5, "village": 9, "town": 14}[level]
+        n = {"camp": 4, "hearth": 5, "village": 9, "walled": 11, "town": 14}[level]
         for _ in range(n):
             x, y = rnd.randrange(12, 36), rnd.randrange(14, 32)
             c.rect(x, y, x + rnd.randrange(1, 3), y + 1, stone)
@@ -380,14 +367,32 @@ def settlement(level, state):
         c.outline(nearest((47, 46, 45)))
         c.save("objects", f"settlement_{level}_{state}")
         return
-    if level == "camp":
+    if level in ("camp", "hearth"):
         cloth = nearest((170, 101, 39)) if not abandoned else nearest((147, 138, 130))
         tent(c, 18, 30, 12, cloth, not abandoned)
         tent(c, 32, 34, 10, cloth, False)
-        fire = nearest((236, 39, 30)) if not abandoned else nearest((79, 75, 69))
-        c.rect(24, 33, 26, 35, fire)
-        c.px(25, 32, nearest((234, 210, 32)) if not abandoned else fire)
-    elif level == "village":
+        if level == "hearth":  # the camp has learned fire: a hearth between the tents
+            stones = nearest((120, 121, 121))
+            c.rect(21, 37, 29, 38, stones)
+            fire = nearest((236, 39, 30)) if not abandoned else nearest((79, 75, 69))
+            c.rect(22, 33, 28, 36, fire)
+            c.rect(24, 30, 26, 32, nearest((234, 210, 32)) if not abandoned else fire)
+            c.px(25, 29, nearest((234, 210, 32)) if not abandoned else fire)
+            if not abandoned:  # smoke
+                smoke = nearest((147, 138, 130))
+                for x, y in ((26, 26), (27, 24), (26, 22), (27, 20)):
+                    c.px(x, y, smoke)
+    elif level in ("village", "walled"):
+        if level == "walled":  # stonemasonry: a low stone wall round the houses
+            stone = nearest((147, 138, 130)) if not abandoned else nearest((101, 99, 98))
+            for y in range(14, 39):
+                for x in range(9, 40):
+                    if inside(x, y, 3) and not inside(x, y, 5):
+                        c.px(x, y, stone if not abandoned or (x * 3 + y) % 7 else (0, 0, 0))
+        else:  # fields beside the houses
+            crop = nearest((234, 210, 32)) if not abandoned else nearest((147, 138, 130))
+            for x in range(30, 39, 2):
+                c.line(x, 18, x, 22, crop)
         for x, y in ((15, 29), (27, 27), (33, 34), (20, 36)):
             house(c, x, y, roof, wall, abandoned and x == 27)
     else:
@@ -428,6 +433,9 @@ def person(c, x, y, tunic, carry=None):
     if carry == "bundle":
         c.rect(x + 3, y - 10, x + 6, y - 6, nearest((170, 101, 39)))
         c.px(x + 3, y - 10, nearest((229, 168, 98)))
+    elif carry == "axe":  # a work group (area tasks, stage 6 PR 4a): a short haft with a stone head
+        c.line(x + 4, y - 11, x + 4, y - 3, nearest((122, 45, 2)))
+        c.rect(x + 5, y - 12, x + 6, y - 10, nearest((169, 162, 160)))
     elif carry == "spear":
         c.line(x + 4, y - 14, x + 4, y, nearest((122, 45, 2)))
         c.rect(x + 3, y - 16, x + 5, y - 15, nearest((169, 162, 160)))
@@ -439,6 +447,9 @@ def unit(name):
         person(c, 9, 29, CIV, "bundle")
         person(c, 20, 30, CIV, "bundle")
         person(c, 15, 25, CIV)
+    elif name == "workers":
+        person(c, 9, 30, CIV, "axe")
+        person(c, 19, 29, CIV, "axe")
     else:
         person(c, 14, 29, CIV, "spear")
     c.outline(nearest((29, 23, 16)))
@@ -654,30 +665,34 @@ ICONS = ["biomes", "elevation", "hillshade", "temperature", "humidity", "fertili
 
 
 def main():
+    global OUT
+    flat = "--flat" in sys.argv
+    if flat:
+        # The flat pack (Patryk, 2026-11-24): the same pictures without the old CivSim texture, like the first placeholders.
+        game_art.FLAT = True
+        OUT = FLAT_OUT
     with open(os.path.join(ROOT, "data", "biomes.json"), encoding="utf-8") as f:
         biomes = json.load(f)["biomes"]
     with open(os.path.join(ROOT, "data", "resources.json"), encoding="utf-8") as f:
         deposits = json.load(f)["deposits"]
     with open(os.path.join(ROOT, "data", "effects.json"), encoding="utf-8") as f:
         effects = json.load(f)["effects"]
-    for b in biomes:
-        for v in (1, 2, 3):
-            biome_tile(b["key"], hexrgb(b["color"]), v)
-    for kind in ("hills", "mountains"):
-        for v in (1, 2):
-            relief(kind, v)
-    for key in ("oasis", "reef", "ice_field"):
-        feature(key)
-    for edge in EDGES:
-        for width in ("stream", "river"):
-            river(edge, width)
-    for d in deposits:
-        deposit(d["key"], hexrgb(d["color"]))
-    for level in ("camp", "village", "town"):
+    # Hex tiles, buildings, settlement centres, units and goods of the new game at 2x (game_art.py, decisions G1-G6).
+    game_art.G.update(nearest=nearest, shade=shade, Canvas=Canvas, palette=PAL, out=OUT)
+    game_art.generate(ROOT)
+    template = Image.new("RGBA", (game_art.HW, game_art.HH), (0, 0, 0, 0))
+    for y in range(game_art.HH):
+        for x in range(game_art.HW):
+            if game_art.MASK[y][x]:
+                template.putpixel((x, y), (255, 255, 255, 255))
+    template.save(os.path.join(ROOT, "art", "templates", f"hex_template_{game_art.HW}x{game_art.HH}.png"))
+    game_art.generate_alerts()  # 2026-11-23: a picture for every kind of alert
+    game_art.generate_deposits(deposits)  # 2026-11-23: deposits at 2x in the style of the map, and the "???" sign
+    for level in ("camp", "hearth", "village", "walled", "town"):
         for state in ("active", "abandoned", "ruins"):
             settlement(level, state)
     field()
-    for name in ("migrants", "scout"):
+    for name in ("migrants", "scout", "workers"):
         unit(name)
     for e in effects:
         if e["target"] in ("cell", "settlement"):
@@ -685,6 +700,17 @@ def main():
     for name in ICONS:
         icon(name)
     theme()
+    game_art.generate_ui()  # 2026-11-23: textured frames of the interface (stone, leather, wood) over the plain ones
+    game_art.generate_era_ui()  # 2026-11-24: frames of each era after the stone age (ui/<piece>_<era>.png)
+    with open(os.path.join(ROOT, "data", "sim", "game.json"), encoding="utf-8") as f:
+        icon_art.generate(json.load(f))  # 2026-11-24: technologies, branches, eras, events, portraits, emblems...
+    if flat:
+        finish_flat()
+        return
+    unique = {}
+    for entry in MANIFEST:
+        unique[entry["file"]] = entry
+    MANIFEST[:] = list(unique.values())
     manifest = {
         "version": 1,
         "comment": "Every picture the viewer loads, with its size in pixels. An art pack (art/packs/<name>/ or "
@@ -696,6 +722,30 @@ def main():
         json.dump(manifest, f, indent=1)
         f.write("\n")
     print("placeholders written to", os.path.relpath(OUT, ROOT), f"({len(MANIFEST)} files)")
+
+
+def finish_flat():
+    """Keeps in the flat pack only the pictures that differ from the placeholders (a pack may hold any subset) and writes
+    its pack.json."""
+    kept = 0
+    for entry in MANIFEST:
+        mine = os.path.join(FLAT_OUT, entry["file"])
+        base = os.path.join(ROOT, "art", "placeholder", entry["file"])
+        if not os.path.exists(mine):
+            continue
+        a, b = Image.open(mine).convert("RGBA"), Image.open(base).convert("RGBA") if os.path.exists(base) else None
+        if b is not None and a.size == b.size and a.tobytes() == b.tobytes():
+            os.remove(mine)
+        else:
+            kept += 1
+    for d, dirs, files in os.walk(FLAT_OUT, topdown=False):
+        if not dirs and not files:
+            os.rmdir(d)
+    with open(os.path.join(FLAT_OUT, "pack.json"), "w", encoding="utf-8") as f:
+        json.dump({"name": "Flat", "author": "CivSim 2",
+                   "description": "Plain colours without texture, like the first placeholders"}, f, indent=1)
+        f.write("\n")
+    print("flat pack written to", os.path.relpath(FLAT_OUT, ROOT), f"({kept} files)")
 
 
 if __name__ == "__main__":

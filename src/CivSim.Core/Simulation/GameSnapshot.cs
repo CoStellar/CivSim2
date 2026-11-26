@@ -13,11 +13,17 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
     /// <summary>Game time in months since the start.</summary>
     public long Month { get; init; }
 
+    /// <summary>Months of action (ADR 0025): the clock of claims, truces and other political timers.</summary>
+    public long ActionMonth { get; init; }
+
     /// <summary>True when seasons are played turn by turn on the first world.</summary>
     public bool LiveSeasons { get; init; }
 
     /// <summary>All settlements in id order.</summary>
     public ImmutableArray<SettlementSnapshot> Settlements { get; init; } = [];
+
+    /// <summary>All units walking, oldest first (stage 6 PR 3a).</summary>
+    public ImmutableArray<UnitSnapshot> Units { get; init; } = [];
 
     /// <summary>Copies the public parts of <paramref name="state"/>.</summary>
     public static GameSnapshot From(GameState state)
@@ -63,9 +69,30 @@ public sealed record GameSnapshot(long Turn, ImmutableArray<WorldSnapshot> World
             });
         }
 
+        var units = ImmutableArray.CreateBuilder<UnitSnapshot>(state.Units.Count);
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            Units.Unit u = state.Units[k];
+            Map.HexGlobe geo = state.Worlds[u.World.Value].Geometry;
+            Map.HexCoord at = geo.FromIndex(u.Cell);
+            Map.HexCoord next = u.Next >= 0 ? geo.FromIndex(u.Next) : at;
+            units.Add(new UnitSnapshot(
+                u.Id, u.Kind, u.Role, u.Owner, u.World, at.Col, at.Row, next.Col, next.Row,
+                u.Next >= 0 && u.StepCost > 0 ? (int)System.Math.Min(1000, u.Progress * 1000L / u.StepCost) : 0,
+                u.TotalPeople(), u.Order, u.Cell)
+            {
+                Task = u.Task,
+                FoodMonths = u.Role == CivSim.Core.Units.UnitRole.Settlers ? u.FoodMonths : -1,
+                TargetCol = u.Role == CivSim.Core.Units.UnitRole.Workers && u.Target >= 0 ? geo.FromIndex(u.Target).Col : -1,
+                TargetRow = u.Role == CivSim.Core.Units.UnitRole.Workers && u.Target >= 0 ? geo.FromIndex(u.Target).Row : -1,
+            });
+        }
+
         return new GameSnapshot(state.Turn, worlds.MoveToImmutable(), civs.MoveToImmutable())
         {
+            Units = units.MoveToImmutable(),
             Month = state.Month,
+            ActionMonth = state.ActionMonth,
             LiveSeasons = state.Worlds[0].Map.LiveSeasons,
             Settlements = settlements.MoveToImmutable(),
         };
@@ -123,4 +150,25 @@ public sealed record SettlementSnapshot(SettlementId Id, CivId Owner, WorldId Wo
 
     /// <summary>Last month of the claim.</summary>
     public long ClaimUntilMonth { get; init; }
+}
+
+/// <summary>
+/// Immutable copy of a unit (stage 6 PR 3a): where it stands, the cell it walks to next and how far it got there
+/// (<paramref name="ProgressPermille"/>, 0–1000), so a client can draw it between the two cells.
+/// </summary>
+public sealed record UnitSnapshot(
+    long Id, int Kind, Units.UnitRole Role, CivId Owner, WorldId World, int Col, int Row, int NextCol, int NextRow, int ProgressPermille,
+    int People, Units.UnitOrder Order, int Cell)
+{
+    /// <summary>A work group's task (index in tasks.json kinds), or -1 (stage 6 PR 4a).</summary>
+    public int Task { get; init; } = -1;
+
+    /// <summary>Column and row of the cell a work group works on (its task's cell), or -1.</summary>
+    public int TargetCol { get; init; } = -1;
+
+    /// <summary>Row of the task's cell, or -1.</summary>
+    public int TargetRow { get; init; } = -1;
+
+    /// <summary>Months of action the settlers' food lasts, or -1 for other units (stage 6 PR P2b).</summary>
+    public int FoodMonths { get; init; } = -1;
 }

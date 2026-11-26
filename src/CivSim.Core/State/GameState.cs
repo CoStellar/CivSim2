@@ -69,6 +69,19 @@ public sealed class GameState
     /// </summary>
     public int WorldMonths { get; internal set; }
 
+    /// <summary>
+    /// Months of action since the start (ADR 0025): <see cref="Turn"/> divided by data/time.json ticksPerActionMonth. War,
+    /// diplomacy and politics count their timers in these (decision of 2026-11-09: one year of action = 6 s at x1), not in
+    /// the year counter <see cref="Month"/>. Set by <see cref="Simulation.WorldClock.Begin"/>.
+    /// </summary>
+    public long ActionMonth { get; internal set; }
+
+    /// <summary>Sets the months of action, as saved (loading).</summary>
+    public void SetActionMonthForLoad(long actionMonth) => ActionMonth = actionMonth;
+
+    /// <summary>Units walking over the map (stage 6 PR 3a): settlers and scouts.</summary>
+    public Units.UnitBook Units { get; } = new();
+
     /// <summary>Running episodes: war campaigns and, later, other events with a course (ADR 0022).</summary>
     public Episodes.EpisodeBook Episodes { get; } = new();
 
@@ -95,11 +108,26 @@ public sealed class GameState
     {
         var settlement = new SettlementState(new SettlementId(NextSettlementId++), owner, world, cell, name, level, Turn, goodCount, strataCount, skillCount);
         _settlements.Add(settlement);
+        SettlementState.LayoutChanged();
         return settlement;
     }
 
     /// <summary>Removes every settlement that matches <paramref name="gone"/>, keeping the id order. Returns how many went.</summary>
-    public int RemoveSettlements(Predicate<SettlementState> gone) => _settlements.RemoveAll(gone);
+    public int RemoveSettlements(Predicate<SettlementState> gone)
+    {
+        int removed = _settlements.RemoveAll(gone);
+        if (removed > 0)
+        {
+            SettlementState.LayoutChanged();
+        }
+
+        return removed;
+    }
+
+    /// <summary>The spatial grid of the settlements (stage 6 PR 3a, T2): a cache, not saved.</summary>
+    public Map.SettlementGrid Grid => _grid ??= new Map.SettlementGrid(this);
+
+    private Map.SettlementGrid? _grid;
 
     /// <summary>Finds a settlement by id, or null.</summary>
     public SettlementState? FindSettlement(SettlementId id)
@@ -138,6 +166,7 @@ public sealed class GameState
         }
 
         _settlements.Add(settlement);
+        SettlementState.LayoutChanged();
         NextSettlementId = nextSettlementId;
     }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using CivSim.Game.Map;
 using CivSim.Game.Net;
 using CivSim.Game.Ui;
@@ -33,14 +34,24 @@ public partial class Main : Node2D
     private readonly LayerStack _layers = new();
     private LocalServerHost? _host;
     private ClientSession? _session;
+    private Play.PlayGame? _play;
+    private bool _playArgs;
+    private string? _playScenario;
+    private string? _playScreenshot;
+    private double _playSeconds = 6;
+    private bool _playDemo;
+    private bool _playLong;
+    private string _playWindow = "Summary";
     private MapView? _map;
     private Camera2D _camera = null!;
     private Hud? _hud;
+    private HelmHud? _helm;
     private StartMenu? _menu;
     private ArtLibrary _art = null!;
     private string _dataDirectory = string.Empty;
     private bool _dragging;
     private bool _bound;
+    private bool _playerCamera;
     private int _benchmarkFrames;
     private int _frames;
     private double _frameMsSum;
@@ -54,7 +65,11 @@ public partial class Main : Node2D
     private float _startZoom = 0.5f;
     private MapLayer? _startOverlay;
     private string? _menuScreenshot;
+    private string? _menuSection;
     private StartSettings? _menuSettings;
+    private StartSettings? _lastSettings;
+    private AcceptDialog? _dataDialog;
+    private Action? _retry;
     private long _screenshotTurn;
     private readonly List<MapLayer> _extraLayers = [];
     private int _watch = WelcomeMessage.NoCiv;
@@ -68,6 +83,7 @@ public partial class Main : Node2D
     public override void _Ready()
     {
         GetNodeOrNull<Label>("StatusLabel")?.QueueFree();
+        ViewerSettings.ApplyUiScale(GetWindow(), _saved.UiScale);
         RenderingServer.SetDefaultClearColor(new Color(0.04f, 0.04f, 0.05f));
         _dataDirectory = FindDataDirectory();
         string[] early = GameArguments();
@@ -118,6 +134,9 @@ public partial class Main : Node2D
                 case "--menu-screenshot":
                     _menuScreenshot = next;
                     break;
+                case "--menu-section":
+                    _menuSection = next;
+                    break;
                 case "--zoom":
                     _startZoom = float.Parse(next, CultureInfo.InvariantCulture);
                     break;
@@ -131,9 +150,42 @@ public partial class Main : Node2D
                 case "--no-menu":
                     skipMenu = true;
                     break;
+                case "--play":
+                    _playArgs = true;
+                    break;
+                case "--play-screenshot":
+                    _playScreenshot = next;
+                    break;
+                case "--play-window":
+                    _playWindow = next;
+                    break;
+                case "--play-long":
+                    _playLong = true;
+                    break;
+                case "--play-scenario":
+                    _playScenario = next;
+                    _playArgs = true;
+                    break;
+                case "--play-demo":
+                    _playDemo = true;
+                    break;
+                case "--play-seconds":
+                    _playSeconds = double.Parse(next, CultureInfo.InvariantCulture);
+                    break;
             }
 
             skipMenu |= Array.IndexOf(StartSettings.ArgumentNames, args[i]) >= 0;
+        }
+
+        if (MultiplayerArguments(args))
+        {
+            return;
+        }
+
+        if (_playArgs)
+        {
+            StartPlay(_saved.Start.WithArguments(args).Seed);
+            return;
         }
 
         if (skipMenu)
@@ -147,10 +199,251 @@ public partial class Main : Node2D
         }
     }
 
+    // The new game (ADR 0028): replaces the legacy viewer while it runs.
+    private void StartPlay(string seedText, int goal = 1, string? scenario = null, CivSim.Server.PlayOptions? options = null)
+    {
+        // 2026-11-22: game.json may have changed while the menu was open (typos, unknown keys): check it before a game.
+        if (!DataReady(() => StartPlay(seedText, goal, scenario, options)))
+        {
+            return;
+        }
+
+        StopGame();
+        _menu?.QueueFree();
+        _menu = null;
+        ulong seed = ulong.TryParse(seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong s) ? s : 1;
+        _play = new Play.PlayGame(seed, _layers, _art, _dataDirectory, startPhase: !_playDemo, goal: goal, scenario: scenario ?? _playScenario, options: options);
+        if (_playScreenshot is not null)
+        {
+            // --play-demo builds a few things on the way, to check the screen without clicking.
+            (double, Action<Play.PlayGame>)[] demo = _playDemo
+                ? [(1.5, g => g.ScriptBuildNearCentre("gatherers_hut", 0)), (1.7, g => g.ScriptBuildNearCentre("gatherers_hut", 0)),
+                   (1.9, g => g.ScriptBuildNearCentre("woodcutter", 0)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X4)),
+                   (8, g => g.ScriptResearch("dwellings")), (12, g => g.ScriptResearch("scouting")),
+                   (12.5, g => g.ScriptBuildNearCentre("hut", 2)), (12.7, g => g.ScriptBuildNearCentre("hut", 2)), (12.9, g => g.ScriptBuildNearCentre("hut", 2)),
+                   (16, g => g.ScriptTrain("scouts")), (18, g => g.ScriptMoveFirst(-8, -6, false)),
+                   (19, g => g.ScriptSpeed(SimulationSpeed.X4)), (40, g => g.ScriptResearchAny()), (41, g => g.ScriptOpen("Research"))]
+                : [];
+            if (_playDemo && _playWindow == "Far")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad()), (_playSeconds - 1, g => g.ScriptZoom(0.3f))];
+            }
+            else if (_playDemo && _playWindow == "Mid")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad()), (_playSeconds - 1, g => g.ScriptZoom(0.6f))];
+            }
+            else if (_playDemo && _playWindow == "Road")
+            {
+                demo = [.. demo, (3, g => g.ScriptRoad())];
+            }
+            else if (_playWindow.StartsWith("Pack:", StringComparison.Ordinal))
+            {
+                // Switching the art pack while playing (2026-11-24), e.g. --play-window Pack:flat; then a close look at the map.
+                string pack = _playWindow[5..];
+                demo = [(_playSeconds - 3, g => g.ScriptArtPack(pack)), (_playSeconds - 2, g => g.ScriptZoom(2.2f))];
+            }
+            else if (_playWindow == "Place")
+            {
+                // Placing a building (2026-11-23): the free places of every hex it may go on show as slots.
+                demo = [(_playSeconds - 2, g => g.ScriptPlace("potter")), (_playSeconds - 1.5, g => g.ScriptZoom(2.2f))];
+            }
+            else if (_playWindow == "TechTipArchery")
+            {
+                demo = [.. demo, (_playSeconds - 3, g => g.ScriptOpen("Research")), (_playSeconds - 1.5, g => g.ScriptHoverCard("archery"))];
+            }
+            else if (_playWindow == "TechTip")
+            {
+                // A technology's tooltip with the goods' pictures (2026-11-23), over a tree that is not built anew.
+                demo = [.. demo, (_playSeconds - 3, g => g.ScriptOpen("Research")), (_playSeconds - 2, g => g.ScriptHoverCard("agriculture"))];
+            }
+            else if (_playWindow is "Deposit" or "DepositFar")
+            {
+                // 2026-11-24: how a known deposit shows on its hex, near and from the middle distance.
+                float zoom = _playWindow == "Deposit" ? 2.2f : 0.9f;
+                demo = [(_playSeconds - 2, g => g.ScriptFocusDeposit()), (_playSeconds - 1, g => g.ScriptZoom(zoom))];
+            }
+            else if (_playWindow == "Plans")
+            {
+                // 2026-11-24: road points in straight lines and a unit's planned way, before they are sent.
+                demo = [(_playSeconds - 1.5, g => g.ScriptPlans()), (_playSeconds - 1, g => g.ScriptZoom(1.4f))];
+            }
+            else if (_playWindow == "GoodTip")
+            {
+                demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverGood())];
+            }
+            else if (_playWindow is "ZoomIn" or "ZoomOut")
+            {
+                float z = _playWindow == "ZoomIn" ? 5f : 0.08f;
+                demo = [(_playSeconds - 1, g => g.ScriptZoom(z))];
+            }
+            else if (_playWindow is "Advisor" or "AdvisorTip" or "AdvisorWindow")
+            {
+                // Hire the advisor who offers service (tried every few seconds), then look at the strip at the top right.
+                demo = [(0.5, g => g.ScriptSpeed(SimulationSpeed.X4)), .. Enumerable.Range(1, (int)_playSeconds / 2).Select(k => ((double)k * 2, (Action<Play.PlayGame>)(g => g.ScriptHireAdvisor())))];
+                if (_playWindow == "AdvisorTip")
+                {
+                    demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverAdvisor())];
+                }
+                else if (_playWindow == "AdvisorWindow")
+                {
+                    // 2026-11-24: the window of thinkers and advisors with their portraits.
+                    demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen("Thinkers"))];
+                }
+            }
+            else if (_playWindow == "Caravans")
+            {
+                demo = [(_playSeconds - 2.5, g => g.ScriptCaravans()), (_playSeconds - 1.2, g => g.ScriptCaravanSend())];
+            }
+            else if (_playWindow == "Help")
+            {
+                demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.H))];
+            }
+            else if (_playWindow == "AlertTip")
+            {
+                demo = [.. demo, (_playSeconds - 1.2, g => g.ScriptHoverAlert())];
+            }
+            else if (_playWindow == "SlotTip")
+            {
+                demo = [.. demo, (_playSeconds - 2, g => g.ScriptHoverSlot())];
+            }
+            else if (_playWindow == "PanelEnd")
+            {
+                // The end of the side panel (training buttons and the like), 2026-11-23.
+                demo = [.. demo, (_playSeconds - 0.8, g => g.ScriptPanelEnd())];
+            }
+            else if (_playWindow == "Ways")
+            {
+                // The roads and works tab of the bar with its pictures, over the map from near (2026-11-23).
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(3.5f)), (_playSeconds - 0.8, g => g.ScriptTab("Roads & works"))];
+            }
+            else if (_playWindow is "Close" or "Closest")
+            {
+                // The pictures from near (decisions G1-G6, 2026-11-23): the map zoomed in on our first settlement.
+                float zoom = _playWindow == "Close" ? 3.5f : 5f;
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(zoom))];
+            }
+            else if (_playWindow == "Manual")
+            {
+                // The manual over the game (F1), turned to its second chapter with the Right key (2026-11-23).
+                demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.F1)), (_playSeconds - 1, g => g.ScriptKey(Key.Right))];
+            }
+            else if (_playWindow == "Controls")
+            {
+                demo = [(_playSeconds - 1.5, g => g.ScriptKey(Key.F1)), (_playSeconds - 1.2, g => g.ScriptKey(Key.Right)), (_playSeconds - 1, g => g.ScriptKey(Key.Right))];
+            }
+            else if (_playWindow == "Cursor")
+            {
+                // The keyboard cursor (Enter) moved down the side panel with the arrows (2026-11-23).
+                demo = [(_playSeconds - 2, g => g.ScriptKey(Key.Enter)), (_playSeconds - 1.6, g => g.ScriptKey(Key.Down)), (_playSeconds - 1.3, g => g.ScriptKey(Key.Down))];
+            }
+            else if (_playWindow == "CursorResearch")
+            {
+                // The keyboard cursor in the research tree: 2 opens it, Enter the cursor, the arrows walk the cards.
+                demo = [(_playSeconds - 2.5, g => g.ScriptKey(Key.Key2)), (_playSeconds - 2, g => g.ScriptKey(Key.Enter)), (_playSeconds - 1.6, g => g.ScriptKey(Key.Down)), (_playSeconds - 1.3, g => g.ScriptKey(Key.Right))];
+            }
+            else if (_playWindow == "KeysSettlement")
+            {
+                // Q, E: our settlements; R: our units (2026-11-23).
+                demo = [(_playSeconds - 2, g => g.ScriptKey(Key.R)), (_playSeconds - 1, g => g.ScriptKey(Key.E))];
+            }
+            else if (_playWindow == "Pick")
+            {
+                demo = [(5.0, g => g.ScriptMouseClick(new Vector2(800, 450)))];
+            }
+            else if (_playWindow == "PickHover")
+            {
+                demo = [(_playSeconds - 1, g => g.GetViewport().WarpMouse(new Vector2(800, 450)))];
+            }
+            else if (_playDemo && _playWindow == "ResearchHover")
+            {
+                demo = [.. demo, (_playSeconds - 2, g => g.ScriptOpen("Research")), (_playSeconds - 1, g => g.ScriptHoverTech("pottery"))];
+            }
+            else if (_playWindow == "Prospect")
+            {
+                demo = [(1.0, g => g.ScriptSpeed(SimulationSpeed.X4)), (1.5, g => g.ScriptSendKind("prospectors", 9, -3)), (_playSeconds - 1.5, g => g.ScriptZoom(0.9f))];
+            }
+            else if (_playWindow == "Battle")
+            {
+                // A test scenario with armies on a field: combat mode, all soldiers picked, sent in formation at the enemy.
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1)), (_playSeconds - 0.6, g => g.ScriptBattle(3))];
+            }
+            else if (_playWindow is "BattleNear")
+            {
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(1)), (2.0, g => g.ScriptSpeed(SimulationSpeed.X1)), (_playSeconds - 0.8, g => g.ScriptZoom(1.8f))];
+            }
+            else if (_playWindow == "Victory")
+            {
+                // The end of the game screen: a test scenario's debug key moves our people on by eras up to the goal.
+                demo = [(1.0, g => g.ScriptDebug(4)), (1.6, g => g.ScriptDebug(4)), (2.2, g => g.ScriptDebug(4)), (2.5, g => g.ScriptSpeed(SimulationSpeed.X4))];
+            }
+            else if (_playWindow == "BattleBox")
+            {
+                demo = [(1.0, g => g.ScriptBattle(0)), (1.5, g => g.ScriptBattle(2))];
+            }
+            else if (_playDemo && _playWindow == "Hex")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptSelectBusiestHex())];
+            }
+            else if (_playDemo && _playWindow == "Units")
+            {
+                demo = [.. demo, (24, g => g.ScriptPatrolFirst()), (_playSeconds - 1, g => g.ScriptOpen("Units"))];
+            }
+            else if (_playDemo && _playWindow == "Slots")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptZoom(2.6f))];
+            }
+            else if (_playDemo && _playWindow == "Place")
+            {
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptPlace("storehouse"))];
+            }
+            else if (_playWindow is { Length: > 0 } && _playWindow != "Summary")
+            {
+                // A23 (tests 2026-11-20): with a scenario too, not only with --play-demo.
+                demo = [.. demo, (_playSeconds - 1, g => g.ScriptOpen(_playWindow))];
+            }
+
+            if (_playLong)
+            {
+                demo = [(1, g => g.ScriptSpeed(SimulationSpeed.Max)), (_playSeconds - 3, g => g.ScriptSpeed(SimulationSpeed.Paused)),
+                        (_playSeconds - 2.5, g => g.ScriptOpen(_playWindow)), (_playSeconds - 2, g => g.ScriptZoom(0.35f))];
+            }
+
+            _play.ScreenshotAfter(_playScreenshot, _playSeconds, demo);
+        }
+
+        WirePlay();
+        AddChild(_play);
+    }
+
+    // What the menu and the settings need from a game screen, local or on a server.
+    private void WirePlay()
+    {
+        if (_play is null)
+        {
+            return;
+        }
+
+        _play.ArtPackChosen += key =>
+        {
+            // The game's settings switch the pack in place (the map and the game keep the same library) and keep the choice.
+            _art.UsePack(ArtPack.Find(ArtLibrary.FindArtDirectory(), key));
+            _saved.Start.ArtPack = key;
+            SaveSettings();
+        };
+        _play.MenuRequested += () =>
+        {
+            _play?.QueueFree();
+            _play = null;
+            ApplyMenuTheme();
+            _camera.MakeCurrent();
+            CallDeferred(MethodName.ShowMenu);
+        };
+    }
+
     /// <inheritdoc />
     public override void _ExitTree()
     {
-        _saved.Save();
+        SaveSettings();
         StopGame();
     }
 
@@ -171,12 +464,35 @@ public partial class Main : Node2D
         PixelTheme.Current = theme;
     }
 
+    // The menu has the plain frames, not those of the era the game had reached.
+    private void ApplyMenuTheme()
+    {
+        if (PixelTheme.Build(_art) is { } theme)
+        {
+            GetWindow().Theme = theme;
+            PixelTheme.Current = theme;
+        }
+    }
+
+    // The font and the interface size are set from inside a game (its own load and save): keep them, then save the rest.
+    private void SaveSettings()
+    {
+        ViewerSettings now = ViewerSettings.Load();
+        _saved.Font = now.Font;
+        _saved.UiScale = now.UiScale;
+        _saved.Save();
+    }
+
     private void ShowMenu()
     {
         StopGame();
+        if (!DataReady(ShowMenu))
+        {
+            return;
+        }
+
         _menu = new StartMenu(LocalServerHost.Describe(_dataDirectory), _menuSettings ?? _saved.Start.Copy(), _dataDirectory, _art, ArtPack.Discover(ArtLibrary.FindArtDirectory()));
         _menuSettings = null;
-        _menu.StartRequested += settings => StartGame(settings, save: true);
         _menu.ArtPackChosen += key =>
         {
             // Keep what the user typed, reload the pictures and the theme, and show the menu again with them.
@@ -187,6 +503,39 @@ public partial class Main : Node2D
             CallDeferred(MethodName.ShowMenu);
         };
         _menu.QuitRequested += () => GetTree().Quit();
+        _menu.JoinRequested += (address, port, password, watch) =>
+        {
+            _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
+            SaveSettings();
+            _mpWatch = watch;
+            if (_saved.Start.JoinThroughRelay)
+            {
+                (string relay, int relayPort) = RelayTarget(_saved.Start.RelayAddress);
+                Join(relay, relayPort, password, _saved.Start.JoinCode);
+            }
+            else
+            {
+                Join(address, port, password);
+            }
+        };
+        _menu.HostRequested += (options, config, port) =>
+        {
+            _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
+            SaveSettings();
+            Host(options, config, port);
+        };
+        _menu.PlayRequested += options =>
+        {
+            // The menu's choices are kept for next time.
+            _saved.Start = _menu?.Settings.Copy() ?? _saved.Start;
+            SaveSettings();
+            StartPlay(options.Seed.ToString(CultureInfo.InvariantCulture), options.Goal, options.Scenario, options);
+        };
+        if (_menuSection is not null)
+        {
+            _menu.Section = _menuSection; // for screenshots of a section (e.g. "manual")
+        }
+
         AddChild(_menu);
         if (_menuScreenshot is not null)
         {
@@ -215,13 +564,22 @@ public partial class Main : Node2D
         if (save)
         {
             _saved.Start = settings.Copy();
-            _saved.Save();
+            SaveSettings();
+        }
+
+        if (!DataReady(() => StartGame(settings, save)))
+        {
+            return;
         }
 
         _menu?.QueueFree();
         _menu = null;
+        _lastSettings = settings.Copy();
         _host = LocalServerHost.Start(options, _dataDirectory);
-        _session = new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
+        // Stage 6 PR P2: "lead civilization N" connects as its player (fog, levers, orders); 0 watches everything.
+        _session = settings.Lead > 0
+            ? new ClientSession(_host.Connect(), ClientRole.Player, "Player", settings.Lead - 1)
+            : new ClientSession(_host.Connect(), ClientRole.Observer, "Viewer");
         SimulationSpeed speed = StartSettings.ParseSpeed(settings.Speed);
         if (_host.LongRunFolder is { } folder)
         {
@@ -275,6 +633,11 @@ public partial class Main : Node2D
         _hud.FollowChosen += Follow;
         _hud.GoToFollowed += () => GoToFollowed(jump: true);
         _session.ChronicleAdded += lines => _hud?.AddChronicle(lines);
+        if (_session.IsPlayer)
+        {
+            _helm = new HelmHud(_session);
+            AddChild(_helm);
+        }
         _bound = false;
         GD.Print($"CivSim 2 viewer: protocol v{ProtocolInfo.Version}, seed {options.Seed}, map {options.Width}x{options.Height}");
     }
@@ -318,7 +681,8 @@ public partial class Main : Node2D
     // Moves the camera to the followed civilization's most populous settlement: at once, or gently while tracking.
     private void GoToFollowed(bool jump)
     {
-        if (_session?.View?.Settlements is not { } settlements || _map is null || _session.WatchedCiv < 0)
+        int followed = _session is { IsPlayer: true } ? _session.CivId : _session?.WatchedCiv ?? -1;
+        if (_session?.View?.Settlements is not { } settlements || _map is null || followed < 0)
         {
             return;
         }
@@ -327,7 +691,7 @@ public partial class Main : Node2D
         int bestPeople = -1;
         foreach (SettlementView s in settlements)
         {
-            if (s.Owner != _session.WatchedCiv || s.Status != 0 || s.World != 0)
+            if (s.Owner != followed || s.Status != 0 || s.World != 0)
             {
                 continue;
             }
@@ -355,6 +719,50 @@ public partial class Main : Node2D
         _camera.Position = jump ? target : _camera.Position.Lerp(target, 0.08f);
     }
 
+    // F5 (stage 6, T14): read data/ again and start the same game (same settings and seed) with it, without closing
+    // the viewer. Bad data keeps the current game running and shows what is wrong.
+    private void ReloadData()
+    {
+        if (_lastSettings is not { } settings || !DataReady(ReloadData))
+        {
+            return;
+        }
+
+        GD.Print("viewer: data reloaded, same game started again");
+        StopGame();
+        StartGame(settings, save: false);
+    }
+
+    // True when the data files load; otherwise shows every problem with a button to try again after fixing the files.
+    private bool DataReady(Action retry)
+    {
+        IReadOnlyList<string> errors = LocalServerHost.CheckData(_dataDirectory);
+        _dataDialog?.QueueFree();
+        _dataDialog = null;
+        if (errors.Count == 0)
+        {
+            return true;
+        }
+
+        const int Shown = 30;
+        string text = string.Join("\n", errors.Take(Shown)) + (errors.Count > Shown ? $"\n... and {errors.Count - Shown} more" : string.Empty);
+        GD.PrintErr("viewer: game data is invalid:\n" + string.Join("\n", errors));
+        _dataDialog = new AcceptDialog
+        {
+            Title = $"Game data has {errors.Count} problem{(errors.Count == 1 ? string.Empty : "s")} ({_dataDirectory})",
+            DialogText = text + "\n\nFix the files and press Reload data.",
+            OkButtonText = "Reload data",
+            Exclusive = true,
+        };
+        _dataDialog.Confirmed += () => CallDeferred(MethodName.RunRetry);
+        _retry = retry;
+        AddChild(_dataDialog);
+        _dataDialog.PopupCentered();
+        return false;
+    }
+
+    private void RunRetry() => _retry?.Invoke();
+
     private void StopGame()
     {
         _session?.Close();
@@ -365,6 +773,8 @@ public partial class Main : Node2D
         _map = null;
         _hud?.QueueFree();
         _hud = null;
+        _helm?.QueueFree();
+        _helm = null;
         _bound = false;
     }
 
@@ -372,6 +782,7 @@ public partial class Main : Node2D
     public override void _Process(double delta)
     {
         long start = Stopwatch.GetTimestamp();
+        JoinProgress();
         if (_session is null || _map is null || _hud is null)
         {
             MenuScreenshot();
@@ -391,6 +802,16 @@ public partial class Main : Node2D
             {
                 Follow(_watch);
             }
+            else if (_session.IsPlayer)
+            {
+                _playerCamera = true; // centre on our people once our first settlement is in view
+            }
+        }
+
+        if (_playerCamera && _session.CivId >= 0 && _session.View?.Settlements is { Count: > 0 })
+        {
+            _playerCamera = false;
+            GoToFollowed(jump: true);
         }
 
         if (_hud.Tracking)
@@ -407,6 +828,7 @@ public partial class Main : Node2D
         {
             _statusTimer = 0.2;
             _hud.UpdateStatus(_session, _map, Engine.GetFramesPerSecond());
+            _helm?.Refresh();
                     }
 
         if (_host?.Error is { } error)
@@ -490,9 +912,23 @@ public partial class Main : Node2D
                 break;
             case InputEventMouseButton mb when mb.ButtonIndex is MouseButton.Right or MouseButton.Middle:
                 _dragging = mb.Pressed;
+                if (mb.Pressed && mb.ButtonIndex == MouseButton.Right && _helm is { Targeting: true })
+                {
+                    _helm.CancelTarget();
+                }
+
                 break;
             case InputEventMouseButton mb when mb.ButtonIndex == MouseButton.Left && mb.Pressed && _map is not null:
-                _map.SelectAt(GetGlobalMousePosition());
+                (int Col, int Row)? cell = _map.SelectAt(GetGlobalMousePosition());
+                if (cell is { } c && _helm is not null)
+                {
+                    // A player: the click is the target of a waiting order, or selects what of ours stands there.
+                    if (!_helm.TargetClicked(0, c.Col, c.Row))
+                    {
+                        _helm.Select(0, c.Col, c.Row);
+                    }
+                }
+
                 _hud?.ShowCellTab();
                 _statusTimer = 0;
                 break;
@@ -527,7 +963,7 @@ public partial class Main : Node2D
                 _session.SetSpeed(SimulationSpeed.X2);
                 break;
             case Key.Key4:
-                _session.SetSpeed(SimulationSpeed.X5);
+                _session.SetSpeed(SimulationSpeed.X4);
                 break;
             case Key.Key5:
                 _session.SetSpeed(SimulationSpeed.Max);
@@ -552,6 +988,12 @@ public partial class Main : Node2D
                 break;
             case Key.C:
                 _hud?.TogglePanel('C');
+                break;
+            case Key.F5:
+                ReloadData();
+                break;
+            case Key.Escape when _helm is { Targeting: true }:
+                _helm.CancelTarget();
                 break;
             case Key.Escape when _menu is null:
                 ShowMenu();

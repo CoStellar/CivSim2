@@ -17,6 +17,62 @@ public static class GameStateHash
         ArgumentNullException.ThrowIfNull(state);
         var h = new StateHasher();
 
+        Clock(ref h, state);
+        Units(ref h, state);
+        EpisodesPart(ref h, state);
+        RandomPart(ref h, state);
+        Worlds(ref h, state);
+        Civilizations(ref h, state);
+        Settlements(ref h, state);
+        Effects(ref h, state);
+        Treaties(ref h, state);
+        return h.Value;
+    }
+
+    /// <summary>Names of the parts of the state <see cref="Sections"/> hashes one by one, in order (T11).</summary>
+    public static readonly string[] SectionNames = ["clock", "units", "episodes", "random", "worlds", "civilizations", "settlements", "effects", "treaties"];
+
+    /// <summary>
+    /// The hash of every part of the state on its own (T11), in the order of <see cref="SectionNames"/>: when two runs drift
+    /// apart, the parts whose hashes differ say which systems to look at. <see cref="Compute"/> hashes the same parts in one
+    /// stream.
+    /// </summary>
+    public static ulong[] Sections(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var result = new ulong[SectionNames.Length];
+        var h = new StateHasher();
+        Clock(ref h, state);
+        result[0] = h.Value;
+        h = new StateHasher();
+        Units(ref h, state);
+        result[1] = h.Value;
+        h = new StateHasher();
+        EpisodesPart(ref h, state);
+        result[2] = h.Value;
+        h = new StateHasher();
+        RandomPart(ref h, state);
+        result[3] = h.Value;
+        h = new StateHasher();
+        Worlds(ref h, state);
+        result[4] = h.Value;
+        h = new StateHasher();
+        Civilizations(ref h, state);
+        result[5] = h.Value;
+        h = new StateHasher();
+        Settlements(ref h, state);
+        result[6] = h.Value;
+        h = new StateHasher();
+        Effects(ref h, state);
+        result[7] = h.Value;
+        h = new StateHasher();
+        Treaties(ref h, state);
+        result[8] = h.Value;
+        return result;
+    }
+
+    private static void Clock(ref StateHasher h, GameState state)
+    {
         h.Add(state.Settings.Seed);
         h.Add(state.Settings.MapWidth);
         h.Add(state.Settings.MapHeight);
@@ -39,7 +95,79 @@ public static class GameStateHash
         h.Add((int)state.Settings.Resources);
         h.Add(state.Turn);
         h.Add(state.StepMonths);
+        h.Add(state.ActionMonth);
         h.Add(state.WorldMonths);
+    }
+
+    private static void Units(ref StateHasher h, GameState state)
+    {
+        h.Add(state.Units.NextId);
+        h.Add(state.Units.Count);
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            Units.Unit u = state.Units[k];
+            h.Add(u.Id);
+            h.Add((int)u.Kind);
+            h.Add(u.Owner.Value);
+            h.Add(u.World.Value);
+            h.Add(u.Cell);
+            h.Add(u.Target);
+            h.Add((int)u.Order);
+            h.Add(u.Home);
+            if (u.Role == CivSim.Core.Units.UnitRole.Workers)
+            {
+                h.Add(u.Task); // only work groups have a task (stage 6 PR 4a): hashes of games without them stay the same
+            }
+
+            if (u.ByPlayer)
+            {
+                h.Add(1); // ordered by a player (stage 6 PR P1)
+            }
+
+            foreach (int p in u.People)
+            {
+                h.Add(p);
+            }
+
+            foreach (int p in u.Skilled)
+            {
+                h.Add(p);
+            }
+
+            foreach (int p in u.Trainees)
+            {
+                h.Add(p);
+            }
+
+            foreach (Numerics.Amount a in u.Cargo)
+            {
+                h.Add(a.Hundredths);
+            }
+
+            h.Add(u.Progress);
+            h.Add(u.Next);
+            h.Add(u.Direction);
+            h.Add(u.Trail.Count);
+            foreach (int c in u.Trail)
+            {
+                h.Add(c);
+            }
+
+            h.Add(u.Path.Count);
+            foreach (int c in u.Path)
+            {
+                h.Add(c);
+            }
+
+            h.Add(u.PathAt);
+            h.Add(u.PathGoal);
+            h.Add(u.Episode);
+            h.Add((int)u.Role);
+        }
+    }
+
+    private static void EpisodesPart(ref StateHasher h, GameState state)
+    {
         h.Add(state.Episodes.NextId);
         h.Add(state.Episodes.Count);
         foreach (Episodes.Episode e in state.Episodes.All)
@@ -49,7 +177,7 @@ public static class GameStateHash
             h.Add(e.Civ.Value);
             h.Add(e.Other.Value);
             h.Add(e.StartMonth);
-            h.Add(e.NextMonth);
+            h.Add(e.NextTick);
             h.Add(e.TickMonths);
             h.Add(e.Home);
             h.Add(e.Target);
@@ -66,10 +194,15 @@ public static class GameStateHash
             h.Add(e.Mustered);
             h.Add(e.ArmsPercent);
             h.Add(e.Morale);
-            h.Add(e.MusterUntilMonth);
+            h.Add(e.MusterUntilTick);
             h.Add(e.HungryMonths);
             h.Add(e.Forays);
             h.Add(e.Foraging ? 1 : 0);
+            if (e.ByPlayer)
+            {
+                h.Add(1); // directed by a player (stage 6 PR P1)
+            }
+
             h.Add(e.LastPrey);
             h.Add(e.Battles);
             h.Add(e.Wins);
@@ -78,6 +211,25 @@ public static class GameStateHash
             h.Add(e.ConvoyCell);
             h.Add(e.ConvoyCarriers);
             h.Add(e.Convoys);
+            h.Add(e.Army);
+            h.Add(e.Convoy);
+            h.Add(e.InRangeSince);
+            h.Add(e.Fleeing ? 1 : 0);
+            Episodes.BattleState fight = e.Fight;
+            h.Add(fight.Rounds);
+            h.Add(fight.MenA);
+            h.Add(fight.MenD);
+            h.Add(fight.StrengthA);
+            h.Add(fight.StrengthD);
+            h.Add(fight.MoraleA);
+            h.Add(fight.MoraleD);
+            h.Add(fight.LostA);
+            h.Add(fight.LostD);
+            h.Add(fight.Broken);
+            h.Add(fight.Over ? 1 : 0);
+            h.Add(e.RoundTick);
+            h.Add(e.FightLost);
+            h.Add(e.FightKilled);
             h.Add(e.Members.Length);
             for (int m = 0; m < e.Members.Length; m++)
             {
@@ -95,7 +247,10 @@ public static class GameStateHash
                 h.Add(a.Hundredths);
             }
         }
+    }
 
+    private static void RandomPart(ref StateHasher h, GameState state)
+    {
         Span<RandomState> rng = stackalloc RandomState[RandomStreams.Count];
         state.Random.CopyStates(rng);
         foreach (RandomState r in rng)
@@ -105,7 +260,10 @@ public static class GameStateHash
             h.Add(r.S2);
             h.Add(r.S3);
         }
+    }
 
+    private static void Worlds(ref StateHasher h, GameState state)
+    {
         h.Add(state.Worlds.Count);
         foreach (WorldState w in state.Worlds)
         {
@@ -129,7 +287,10 @@ public static class GameStateHash
             h.Add(w.Climate.SeaLevel);
             h.Add(w.Climate.StartLandIce);
         }
+    }
 
+    private static void Civilizations(ref StateHasher h, GameState state)
+    {
         h.Add(state.Civilizations.Count);
         foreach (CivilizationState c in state.Civilizations)
         {
@@ -137,6 +298,11 @@ public static class GameStateHash
             h.Add(c.Name);
             h.Add(c.LanguageSeed);
             h.Add(c.NamesIssued);
+            if (c.PlayerLevers != Ai.Lever.None)
+            {
+                h.Add((int)c.PlayerLevers); // the AI keeps off these (ADR 0027); games without players hash as before
+            }
+
             h.Add(c.IsAlive);
             h.Add(c.StartCell.Col);
             h.Add(c.StartCell.Row);
@@ -176,6 +342,7 @@ public static class GameStateHash
             h.Add(c.StepStartMonth);
             h.Add(c.StepMonths);
             h.Add(c.Steps);
+            h.Add(c.LastPulseTick);
             h.Add((int)c.Alarms);
             h.Add(c.Government);
             h.Add(c.PendingGovernment);
@@ -226,6 +393,11 @@ public static class GameStateHash
                 h.Add(r.RumorPeople);
                 h.Add(r.RumorFrom);
                 h.Add(r.SettledMonth);
+                if (r.PlayerOrderTick >= 0)
+                {
+                    h.Add(r.PlayerOrderTick); // a player's diplomatic decision holds (stage 6 PR P1)
+                }
+
                 h.Add(r.Memories.Count);
                 foreach (Diplomacy.RelationMemory m in r.Memories)
                 {
@@ -237,7 +409,10 @@ public static class GameStateHash
                 }
             }
         }
+    }
 
+    private static void Settlements(ref StateHasher h, GameState state)
+    {
         h.Add(state.Month);
         h.Add(state.NextSettlementId);
         h.Add(state.Settlements.Count);
@@ -259,8 +434,27 @@ public static class GameStateHash
             h.Add(s.FoodEaten);
             h.Add(s.HigherNeedsPerMille);
             h.Add(s.MovedMonth);
+            if (s.PlayerOrderTick >= 0)
+            {
+                h.Add(s.PlayerOrderTick); // a player's order holds the AI off it (stage 6 PR P1); games without players hash as before
+            }
+
             h.Add(s.RecipeId);
+            h.Add(s.RecipeSinceMonth);
             h.Add(s.JourneyTarget);
+            h.Add(s.JourneyNext);
+            h.Add(s.JourneyStepTicks);
+            h.Add(s.JourneyProgress);
+            h.Add(s.JourneyPathAt);
+            h.Add(s.JourneyPathGoal);
+            h.Add(s.JourneyPath.Count);
+            foreach (int cell in s.JourneyPath)
+            {
+                h.Add(cell);
+            }
+            h.Add(s.ScoutOut ? 1 : 0);
+            h.Add(s.ScoutBackMonth);
+            h.Add(s.RestUntilMonth);
             h.Add(s.RunsMade);
             h.Add((int)s.Status);
             h.Add(s.AbandonedMonth);
@@ -293,7 +487,10 @@ public static class GameStateHash
                 h.Add(a.Hundredths);
             }
         }
+    }
 
+    private static void Effects(ref StateHasher h, GameState state)
+    {
         h.Add(state.Effects.NextId);
         h.Add(state.Effects.Count);
         foreach (EffectInstance e in state.Effects.All)
@@ -306,7 +503,10 @@ public static class GameStateHash
             h.Add(e.Strength);
             h.Add(e.EndMonth);
         }
+    }
 
+    private static void Treaties(ref StateHasher h, GameState state)
+    {
         h.Add(state.Treaties.All.Count);
         foreach (Diplomacy.Treaty t in state.Treaties.All)
         {
@@ -333,8 +533,9 @@ public static class GameStateHash
             AddTerms(ref h, t.Terms);
             h.Add(t.Campaigns);
             h.Add(t.CampaignMonths);
-            h.Add(t.LastCampaignMonth);
-            h.Add(t.ReadyMonth);
+            h.Add(t.LastCampaignTick);
+            h.Add(t.ReadyTick);
+            h.Add(t.SinceTick);
         }
 
         h.Add(state.Treaties.Proposals.Count);
@@ -347,8 +548,6 @@ public static class GameStateHash
             h.Add((int)p.Status);
             AddTerms(ref h, p.Terms);
         }
-
-        return h.Value;
     }
 
     private static void AddTerms(ref StateHasher h, Diplomacy.PeaceTerms terms)

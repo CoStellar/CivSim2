@@ -1,0 +1,32 @@
+using CivSim.Core.Content;
+using CivSim.Core.Simulation;
+using CivSim.Data;
+
+namespace CivSim.Tests;
+
+/// <summary>
+/// Content for unit tests: the real data, but every civilization pulses in every tick and one month of action is one tick
+/// (ADR 0025), so a test that runs one turn sees one step of every civilization, as before the live clock; units walk a flat
+/// cell in a tick (stage 6 PR 3a), so they keep the pace they have against the pulse in a game. Tests of the
+/// live clock itself, of determinism and of whole games use <see cref="ContentLoader.Load(string?)"/>. Systems frozen until a later era
+/// (ADR 0026 rule 5) are switched on here, so their tests keep running them.
+/// </summary>
+internal static class TestContent
+{
+    /// <summary>Time rules with a pulse in every tick.</summary>
+    public static readonly TimeRules EveryTick = new() { TicksPerSecond = 10, TicksPerPulse = 1, TicksPerActionMonth = 1 };
+
+    /// <summary>The real content with <see cref="EveryTick"/>.</summary>
+    public static GameContent Load() => Fit(ContentLoader.Load());
+
+    /// <summary>Content whose villages farm their zone by themselves and whose gatherers fish, as before stage 6 PR 4b-2.</summary>
+    public static GameContent ZoneFarming(GameContent content) =>
+        content.WithTasks(content.Tasks with { ZoneFarms = true, ZoneFishes = true });
+
+    /// <summary><paramref name="content"/> with the time and the unit speed of the unit tests.</summary>
+    public static GameContent Fit(GameContent content)
+    {
+        GameContent fit = content.Thawed().WithTime(EveryTick);
+        return fit.WithUnits(fit.Units.WithSpeed(1));
+    }
+}

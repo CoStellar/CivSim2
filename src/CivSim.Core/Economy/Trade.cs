@@ -76,6 +76,16 @@ public static class TradeNetworks
         return networks;
     }
 
+    /// <summary>
+    /// Share of goods that arrives over <paramref name="cells"/> between settlements of one civilization, percent: all of it while the
+    /// network is a shared store (trade.json sharedStore, ADR 0026 rule 5), otherwise as <see cref="ArrivingPercent"/>.
+    /// </summary>
+    public static int InternalArrivingPercent(GameContent content, int cells)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return content.Trade.SharedStore ? 100 : ArrivingPercent(content, cells);
+    }
+
     /// <summary>Share of goods that arrives over <paramref name="cells"/> of distance, percent.</summary>
     public static int ArrivingPercent(GameContent content, int cells)
     {

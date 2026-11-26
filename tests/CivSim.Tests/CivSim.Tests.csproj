@@ -14,5 +14,6 @@
     <ProjectReference Include="..\..\src\CivSim.Protocol\CivSim.Protocol.csproj" />
     <ProjectReference Include="..\..\src\CivSim.Server\CivSim.Server.csproj" />
     <ProjectReference Include="..\..\src\CivSim.Headless\CivSim.Headless.csproj" />
+    <ProjectReference Include="..\..\src\CivSim.Relay\CivSim.Relay.csproj" />
   </ItemGroup>
 </Project>

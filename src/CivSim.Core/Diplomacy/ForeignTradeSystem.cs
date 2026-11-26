@@ -324,11 +324,11 @@ public sealed class ForeignTradeSystem(GameContent content) : ITurnSystem
 
         if (flowed)
         {
-            Contacts.Sustain(_content.Relations, r, RelationEvent.ActiveTrade, state.Month, months);
+            Contacts.Sustain(_content.Relations, r, RelationEvent.ActiveTrade, state.ActionMonth, months);
         }
         else
         {
-            Contacts.End(r, RelationEvent.ActiveTrade, state.Month);
+            Contacts.End(r, RelationEvent.ActiveTrade, state.ActionMonth);
         }
     }
 }

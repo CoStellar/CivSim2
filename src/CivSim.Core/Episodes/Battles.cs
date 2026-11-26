@@ -19,6 +19,12 @@ public sealed record BattleRules
     /// <summary>Most rounds of a battle; when nobody breaks by then, the defenders hold.</summary>
     public int Rounds { get; init; } = 6;
 
+    /// <summary>
+    /// Ticks between two rounds of a battle a campaign fights (stage 6, decision of 2026-11-09: a round a second at x1),
+    /// so the battle can be seen on the map. 0 fights all rounds at once.
+    /// </summary>
+    public int RoundTicks { get; init; } = 10;
+
     /// <summary>Men a side kills per round, percent of its armed strength in warriors (100 = one stone-spear warrior).</summary>
     public int CasualtyPercent { get; init; } = 10;
 
@@ -61,6 +67,49 @@ public sealed record BattleRules
 /// <param name="AttackerMorale">Morale of the attackers at the end.</param>
 /// <param name="Broken">0 nobody broke (the defenders held), 1 the attackers broke, 2 the defenders broke.</param>
 public readonly record struct BattleResult(bool AttackersWon, int Rounds, int AttackersLost, int DefendersLost, int AttackerMorale, int Broken);
+
+/// <summary>
+/// A battle under way (stage 6): the sides between two rounds. A battle of a campaign is fought one round every
+/// <see cref="BattleRules.RoundTicks"/> ticks, so it lasts some seconds of the live game and can be seen on the map.
+/// </summary>
+public struct BattleState
+{
+    /// <summary>Rounds fought so far.</summary>
+    public int Rounds { get; set; }
+
+    /// <summary>Attackers still fighting.</summary>
+    public int MenA { get; set; }
+
+    /// <summary>Defenders still fighting.</summary>
+    public int MenD { get; set; }
+
+    /// <summary>Armed strength of the attackers left, warrior-percent.</summary>
+    public long StrengthA { get; set; }
+
+    /// <summary>Armed strength of the defenders left, warrior-percent.</summary>
+    public long StrengthD { get; set; }
+
+    /// <summary>Morale of the attackers.</summary>
+    public int MoraleA { get; set; }
+
+    /// <summary>Morale of the defenders.</summary>
+    public int MoraleD { get; set; }
+
+    /// <summary>Attackers killed so far (in the rounds and while fleeing).</summary>
+    public int LostA { get; set; }
+
+    /// <summary>Defenders killed so far (in the rounds and while fleeing).</summary>
+    public int LostD { get; set; }
+
+    /// <summary>0 nobody broke, 1 the attackers broke, 2 the defenders broke.</summary>
+    public int Broken { get; set; }
+
+    /// <summary>True when the battle is over.</summary>
+    public bool Over { get; set; }
+
+    /// <summary>The battle as a result (meaningful once <see cref="Over"/>).</summary>
+    public readonly BattleResult Result => new(Broken == 2, Rounds, LostA, LostD, MoraleA, Broken);
+}
 
 /// <summary>The battle a commander expects, without drawing (stage 4e PR 5).</summary>
 /// <param name="ChancePercent">Share of the played-through battles the attackers win, percent.</param>
@@ -154,53 +203,99 @@ public static class Battles
     private static int Luck(BattleRules rules, int step) =>
         rules.RollPercent.Min + ((rules.RollPercent.Max - rules.RollPercent.Min) * step / (ExpectSteps - 1));
 
+    /// <summary>
+    /// Starts a battle fought round by round over time (stage 6, a round every <see cref="BattleRules.RoundTicks"/> ticks):
+    /// the sides as in <see cref="Fight"/>. Play it with <see cref="Round"/> until it is over.
+    /// </summary>
+    public static BattleState Begin(BattleRules rules, int attackers, long attack, int attackMorale, int defenders, long defence)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        return new BattleState
+        {
+            MenA = Math.Max(0, attackers),
+            MenD = Math.Max(0, defenders),
+            StrengthA = Math.Max(0, attack),
+            StrengthD = Math.Max(0, defence),
+            MoraleA = Math.Clamp(attackMorale, 0, 100),
+            MoraleD = Math.Clamp(rules.DefenderMorale, 0, 100),
+        };
+    }
+
+    /// <summary>
+    /// Fights the next round of <paramref name="b"/> (luck drawn from <paramref name="rng"/>). Returns the men each side
+    /// lost in this round, the flight losses included when a side broke. When <see cref="BattleState.Over"/> is true
+    /// afterwards, nothing more is fought.
+    /// </summary>
+    public static (int LostA, int LostD) Round(BattleRules rules, DeterministicRandom rng, ref BattleState b)
+    {
+        ArgumentNullException.ThrowIfNull(rng);
+        return Step(rules, rng, 0, 0, ref b);
+    }
+
     // The rounds of a battle: luck drawn from rng, or steady (luckA, luckD) with fractions rounded when rng is null.
     private static BattleResult Run(BattleRules rules, DeterministicRandom? rng, int luckA, int luckD, int attackers, long attack, int attackMorale, int defenders, long defence)
     {
-        ArgumentNullException.ThrowIfNull(rules);
-        int menA = Math.Max(0, attackers);
-        int menD = Math.Max(0, defenders);
-        long strA = Math.Max(0, attack);
-        long strD = Math.Max(0, defence);
-        int moraleA = Math.Clamp(attackMorale, 0, 100);
-        int moraleD = Math.Clamp(rules.DefenderMorale, 0, 100);
-        int lostA = 0;
-        int lostD = 0;
-        int broken = 0;
-        int round = 0;
-        while (round < rules.Rounds && menA > 0 && menD > 0)
+        BattleState b = Begin(rules, attackers, attack, attackMorale, defenders, defence);
+        while (!b.Over)
         {
-            round++;
-            int killD = Math.Min(menD, Kills(rules, rng, strA, luckA));
-            int killA = Math.Min(menA, Kills(rules, rng, strD, luckD));
-            moraleA = Math.Max(0, moraleA - (rules.MoralePerLossPercent * killA * 100 / menA));
-            moraleD = Math.Max(0, moraleD - (rules.MoralePerLossPercent * killD * 100 / menD));
-            strA = menA - killA > 0 ? strA * (menA - killA) / menA : 0;
-            strD = menD - killD > 0 ? strD * (menD - killD) / menD : 0;
-            menA -= killA;
-            menD -= killD;
-            lostA += killA;
-            lostD += killD;
-            bool breakA = menA == 0 || moraleA < rules.BreakMorale;
-            bool breakD = menD == 0 || moraleD < rules.BreakMorale;
-            if (breakA || breakD)
+            Step(rules, rng, luckA, luckD, ref b);
+        }
+
+        return b.Result;
+    }
+
+    // One round (or, when there is nobody left to fight or no round left, the end without fighting).
+    private static (int LostA, int LostD) Step(BattleRules rules, DeterministicRandom? rng, int luckA, int luckD, ref BattleState b)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        if (b.Over)
+        {
+            return (0, 0);
+        }
+
+        if (b.Rounds >= rules.Rounds || b.MenA <= 0 || b.MenD <= 0)
+        {
+            b.Over = true; // nobody broke: the defenders hold
+            return (0, 0);
+        }
+
+        b.Rounds++;
+        int killD = Math.Min(b.MenD, Kills(rules, rng, b.StrengthA, luckA));
+        int killA = Math.Min(b.MenA, Kills(rules, rng, b.StrengthD, luckD));
+        b.MoraleA = Math.Max(0, b.MoraleA - (rules.MoralePerLossPercent * killA * 100 / b.MenA));
+        b.MoraleD = Math.Max(0, b.MoraleD - (rules.MoralePerLossPercent * killD * 100 / b.MenD));
+        b.StrengthA = b.MenA - killA > 0 ? b.StrengthA * (b.MenA - killA) / b.MenA : 0;
+        b.StrengthD = b.MenD - killD > 0 ? b.StrengthD * (b.MenD - killD) / b.MenD : 0;
+        b.MenA -= killA;
+        b.MenD -= killD;
+        bool breakA = b.MenA == 0 || b.MoraleA < rules.BreakMorale;
+        bool breakD = b.MenD == 0 || b.MoraleD < rules.BreakMorale;
+        if (breakA || breakD)
+        {
+            // Both shaken: the side with less heart left flees (the attackers on a tie), losing more men on the run.
+            b.Broken = breakA && (!breakD || b.MoraleA <= b.MoraleD) ? 1 : 2;
+            b.Over = true;
+            if (b.Broken == 1)
             {
-                // Both shaken: the side with less heart left flees (the attackers on a tie).
-                broken = breakA && (!breakD || moraleA <= moraleD) ? 1 : 2;
-                break;
+                int rout = (int)IntMath.MulDiv(b.MenA, rules.RoutLossPercent, 100, Rounding.Ceiling);
+                b.MenA -= rout;
+                killA += rout;
+            }
+            else
+            {
+                int rout = (int)IntMath.MulDiv(b.MenD, rules.RoutLossPercent, 100, Rounding.Ceiling);
+                b.MenD -= rout;
+                killD += rout;
             }
         }
-
-        if (broken == 1)
+        else if (b.Rounds >= rules.Rounds)
         {
-            lostA += (int)IntMath.MulDiv(menA, rules.RoutLossPercent, 100, Rounding.Ceiling);
-        }
-        else if (broken == 2)
-        {
-            lostD += (int)IntMath.MulDiv(menD, rules.RoutLossPercent, 100, Rounding.Ceiling);
+            b.Over = true; // nobody broke within the rounds: the defenders hold
         }
 
-        return new BattleResult(broken == 2, round, lostA, lostD, moraleA, broken);
+        b.LostA += killA;
+        b.LostD += killD;
+        return (killA, killD);
     }
 
     // Men killed by a side of strength str in one round: str × casualty% × luck%, the fraction of a man by chance (or

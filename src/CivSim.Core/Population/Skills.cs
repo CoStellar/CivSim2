@@ -232,6 +232,31 @@ public static class Skills
         }
     }
 
+    /// <summary>
+    /// Moves <paramref name="percent"/> of the skilled people and trainees of <paramref name="from"/> into a unit's arrays
+    /// (stage 6 PR 3a: settlers carry their skills), with the same rounding as <see cref="Move"/>.
+    /// </summary>
+    public static void MoveOut(SettlementState from, Span<int> skilledOut, Span<int> traineesOut, int percent)
+    {
+        ArgumentNullException.ThrowIfNull(from);
+        Span<int> skilled = from.Skilled;
+        Span<int> trainees = from.Trainees;
+        for (int k = 0; k < skilled.Length && k < skilledOut.Length; k++)
+        {
+            int ks = percent >= 100 ? skilled[k] : (int)((long)skilled[k] * percent / 100);
+            if (ks == 0 && percent > 0 && skilled[k] >= 2)
+            {
+                ks = 1;
+            }
+
+            int kt = percent >= 100 ? trainees[k] : (int)((long)trainees[k] * percent / 100);
+            skilled[k] -= ks;
+            trainees[k] -= kt;
+            skilledOut[k] += ks;
+            traineesOut[k] += kt;
+        }
+    }
+
     /// <summary>Forgets every skill of <paramref name="s"/> (its people are gone).</summary>
     public static void Clear(SettlementState s)
     {

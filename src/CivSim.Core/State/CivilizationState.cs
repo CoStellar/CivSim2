@@ -25,6 +25,12 @@ public sealed class CivilizationState
     /// <summary>Who issues this civilization's commands (<see cref="PlayerId.Ai"/> for AI).</summary>
     public PlayerId Controller { get; set; }
 
+    /// <summary>
+    /// The levers its player holds (ADR 0027, stage 6 PR P): the AI decides every other lever, also for a civilization led by a player.
+    /// Always none for an AI civilization.
+    /// </summary>
+    public Ai.Lever PlayerLevers { get; set; }
+
     /// <summary>False once the civilization has been destroyed.</summary>
     public bool IsAlive { get; set; }
 
@@ -90,6 +96,9 @@ public sealed class CivilizationState
     /// (set by <see cref="Simulation.WorldClock.Begin"/>).
     /// </summary>
     public int StepMonths { get; set; }
+
+    /// <summary>Tick of its last pulse (ADR 0025), or -1 before the first.</summary>
+    public long LastPulseTick { get; set; } = -1;
 
     /// <summary>Own steps taken since the start (the counter of its own rhythm).</summary>
     public long Steps { get; set; }

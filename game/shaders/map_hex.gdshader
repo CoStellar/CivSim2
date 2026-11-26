@@ -33,8 +33,11 @@ void vertex() {
 }
 
 void fragment() {
-	float relief = floor(custom.x / 1000.0 + 0.001);
-	float biome = custom.x - relief * 1000.0;
+	float fog = floor(custom.x / 10000.0 + 0.001);
+	float remembered = fog > 0.5 ? (fog > 1.5 ? 0.5 : 1.0) : 0.0; // 1 = grey, 0.5 = the soft edge next to what we see
+	float code = custom.x - fog * 10000.0;
+	float relief = floor(code / 1000.0 + 0.001);
+	float biome = code - relief * 1000.0;
 	vec3 col = vec3(0.16, 0.16, 0.17);
 	if (has_art) {
 		vec3 base;
@@ -68,5 +71,11 @@ void fragment() {
 		}
 	}
 	col = mix(col, tint.rgb, tint.a);
+	if (remembered > 0.0) {
+		// What we saw before, not what is there now: faded to sepia, like ink on the old map around it.
+		float l = dot(col, vec3(0.3, 0.59, 0.11));
+		vec3 sepia = vec3(l) * vec3(1.08, 0.94, 0.74) * 0.9 + vec3(0.07, 0.05, 0.02);
+		col = mix(col, mix(sepia, col, 0.2), remembered);
+	}
 	COLOR = vec4(col, 1.0);
 }

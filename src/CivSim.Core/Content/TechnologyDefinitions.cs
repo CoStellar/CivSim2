@@ -121,15 +121,6 @@ public sealed record PerceptionRules
     /// <summary>Years a seen cell stays known without being seen again (oral memory).</summary>
     public int OralMemoryYears { get; init; } = 300;
 
-    /// <summary>Cells a scout walks on one trip.</summary>
-    public int ScoutCells { get; init; } = 15;
-
-    /// <summary>Scout trips of a lived-in settlement per century (rule 6: a rate per year, PR C; 2 = one per 50 years).</summary>
-    public int ScoutsPerCentury { get; init; } = 2;
-
-    /// <summary>Cells a camp on a journey walks per century (rule 6, PR C; 20 = the old 10 cells per 50-year step).</summary>
-    public int MarchCellsPerCentury { get; init; } = 20;
-
     /// <summary>Farthest a camp may set out for in one journey.</summary>
     public int JourneyCells { get; init; } = 40;
 }
@@ -142,6 +133,12 @@ public sealed record AiRules
     /// </summary>
     public int PickAmongTop { get; init; } = 1;
 
+    /// <summary>
+    /// How long a player's order on a settlement holds the AI off it, in years of action (stage 6 PR P1, Ai.PlayerOrders): the AI does
+    /// not move, split, join or raid from a settlement the player just gave an order to, nor from a camp the player's settlers founded.
+    /// </summary>
+    public int PlayerOrderHoldYears { get; init; } = 10;
+
     /// <summary>Own steps of a civilization between two of its strategy reviews (GDD 8.1: 10-20; ADR 0018); reviews are spread over the civilizations.</summary>
     public int ReviewEverySteps { get; init; } = 15;
 
@@ -150,6 +147,12 @@ public sealed record AiRules
 
     /// <summary>A new recipe must beat the one the artisans make by this much before they switch.</summary>
     public int RecipeSwitchBetterByPercent { get; init; } = 25;
+
+    /// <summary>
+    /// Years of action artisans keep a recipe they took up before they switch again (a workshop is not retooled every few
+    /// months while the price of an input swings: playtest, 2026-11-16).
+    /// </summary>
+    public int RecipeKeepYears { get; init; } = 2;
 
     /// <summary>Camps this full (people against the most their level holds, in all camps) give the lowest expansion weight.</summary>
     public int CrowdingLowPercent { get; init; } = 40;
@@ -180,6 +183,28 @@ public sealed record AiRules
 
     /// <summary>A camp never splits below this share of its level's people, however expansive its civilization.</summary>
     public int SplitMinPercentOfLevel { get; init; } = 50;
+
+    /// <summary>
+    /// The AI sends settlers (a crowded camp's group, a village's settlers) only while its administration uses less than this percent of
+    /// what its government manages (stage 6 PR T2, ADR 0026): a people fills what it can rule and then grows in place up to the
+    /// limit of its settlements' levels (population.json levelLimitScatters). A hungry village still sends mouths away. 0 = no limit.
+    /// </summary>
+    public int SettlersBelowAdminPercent { get; init; }
+
+    /// <summary>G9 (stage 6 PR 4b): a settlement sends a work group only while its people eat at least this percent of their need.</summary>
+    public int TaskFedPercent { get; init; } = 95;
+
+    /// <summary>G9: years of the artisans' use of a task's good the network wants in stock and on its way.</summary>
+    public int TaskReserveYears { get; init; } = 2;
+
+    /// <summary>G9: a group comes home when the network holds this many years of its good (or nobody uses it).</summary>
+    public int TaskRecallAboveYears { get; init; } = 4;
+
+    /// <summary>G9: the smallest work group the AI sends.</summary>
+    public int TaskMinPeople { get; init; } = 5;
+
+    /// <summary>A field group comes home when its grain per farmer is below this share of the best free farmland in reach, % (stage 6 PR 4b-2).</summary>
+    public int FieldMoveBelowPercent { get; init; } = 70;
 
     /// <summary>The goal food serves (hunger is a matter of safety): technologies and recipes that give food are weighed by it.</summary>
     public Ai.Goal GoalOfFood { get; init; } = Ai.Goal.Security;

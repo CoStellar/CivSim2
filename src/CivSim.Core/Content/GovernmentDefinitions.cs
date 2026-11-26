@@ -41,6 +41,12 @@ public sealed record LeaderRules
     /// <summary>Candidates a council weighs when it picks a leader.</summary>
     public int CouncilCandidates { get; init; } = 3;
 
+    /// <summary>
+    /// False while the deaths and successions of leaders stay out of the chronicle: no characters with a name until the
+    /// bronze age (ADR 0024, 0026; playtest P-01). Leaders still rule, age and shift the character.
+    /// </summary>
+    public bool ChronicleEnabled { get; init; } = true;
+
     /// <summary>Chance of dying in a year, per mille, by age: points (age, per mille), linear between them.</summary>
     public IReadOnlyList<(int Age, int PerMille)> DeathByAge { get; init; } = [(20, 10), (80, 250)];
 

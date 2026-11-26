@@ -23,6 +23,9 @@ public enum CampaignPhase : byte
 
     /// <summary>Warriors of several settlements gather at the settlement the campaign leaves from (stage 4e PR 3).</summary>
     Muster = 2,
+
+    /// <summary>Fighting a battle at its target, a round every few ticks (stage 6); nobody can call it back meanwhile.</summary>
+    Battle = 3,
 }
 
 /// <summary>
@@ -47,10 +50,10 @@ public sealed class Episode
     /// <summary>Game month it began.</summary>
     public long StartMonth { get; init; }
 
-    /// <summary>Game month of its next step.</summary>
-    public long NextMonth { get; set; }
+    /// <summary>Tick of its next step (ADR 0025: episodes run on ticks, the world never waits for them).</summary>
+    public long NextTick { get; set; }
 
-    /// <summary>Length of its steps, months.</summary>
+    /// <summary>Length of its steps, months of action (each lasts data/time.json ticksPerActionMonth ticks).</summary>
     public int TickMonths { get; init; } = 1;
 
     /// <summary>Campaign: settlement the warriors came from (and go back to).</summary>
@@ -92,8 +95,8 @@ public sealed class Episode
     /// <summary>Campaign: morale, 0..100; strength in a fight is multiplied by it.</summary>
     public int Morale { get; set; } = 100;
 
-    /// <summary>Campaign: game month the muster ends and the march begins.</summary>
-    public long MusterUntilMonth { get; set; }
+    /// <summary>Campaign: tick the muster ends and the march begins.</summary>
+    public long MusterUntilTick { get; set; }
 
     /// <summary>Campaign: food it carries, index = good.</summary>
     public Amount[] Food { get; set; } = [];
@@ -106,6 +109,9 @@ public sealed class Episode
 
     /// <summary>Campaign: true while it marches on a settlement for food (<see cref="Target"/>) instead of its goal.</summary>
     public bool Foraging { get; set; }
+
+    /// <summary>Campaign: a player directed it (stage 6 PR P1): the AI does not recall it or make peace with its enemy until it ends.</summary>
+    public bool ByPlayer { get; set; }
 
     /// <summary>Campaign: the settlement it last raided for food, or -1 (it does not raid the same one twice in a row).</summary>
     public int LastPrey { get; set; } = -1;
@@ -133,6 +139,30 @@ public sealed class Episode
 
     /// <summary>Campaign: loads of food carriers handed over.</summary>
     public int Convoys { get; set; }
+
+    /// <summary>Id of the unit the army walks as (stage 6 PR 3b), or -1.</summary>
+    public long Army { get; set; } = -1;
+
+    /// <summary>Id of the carriers' unit bringing food (stage 6 PR 3b), or -1.</summary>
+    public long Convoy { get; set; } = -1;
+
+    /// <summary>Tick since which the army stands within reach of its target (it attacks a month of action later), or -1.</summary>
+    public long InRangeSince { get; set; } = -1;
+
+    /// <summary>True when the army flees after a lost battle (stage 6 PR 3b): nobody can turn it.</summary>
+    public bool Fleeing { get; set; }
+
+    /// <summary>The battle it fights in <see cref="CampaignPhase.Battle"/> (stage 6: a round every few ticks).</summary>
+    public BattleState Fight { get; set; }
+
+    /// <summary>Tick of the next round of <see cref="Fight"/>.</summary>
+    public long RoundTick { get; set; }
+
+    /// <summary>Its warriors killed in the battle under way.</summary>
+    public int FightLost { get; set; }
+
+    /// <summary>Enemies it killed in the battle under way.</summary>
+    public int FightKilled { get; set; }
 
     /// <summary>True once it is over (removed at the end of the step).</summary>
     public bool Ended { get; set; }
@@ -164,15 +194,29 @@ public sealed class EpisodeBook
     /// <summary>Removes the episodes that ended; returns how many.</summary>
     public int RemoveEnded() => _episodes.RemoveAll(e => e.Ended);
 
-    /// <summary>The month of the nearest step of any episode, or <see cref="long.MaxValue"/> when none runs.</summary>
-    public long NextMonth()
+    /// <summary>The episode with <paramref name="id"/>, or null.</summary>
+    public Episode? Find(long id)
+    {
+        foreach (Episode e in _episodes)
+        {
+            if (e.Id == id)
+            {
+                return e;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>The tick of the nearest step of any episode, or <see cref="long.MaxValue"/> when none runs.</summary>
+    public long NextTick()
     {
         long next = long.MaxValue;
         foreach (Episode e in _episodes)
         {
             if (!e.Ended)
             {
-                next = Math.Min(next, e.NextMonth);
+                next = Math.Min(next, e.NextTick);
             }
         }
 

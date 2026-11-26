@@ -11,6 +11,31 @@ public static class Program
     /// <summary>Runs the headless simulation. Exit code 0 = success, 2 = bad arguments.</summary>
     public static int Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "--sim-report")
+        {
+            return SimReport.Execute(args, Console.Out); // the AI of the new game over many seeds
+        }
+
+        if (args.Length > 0 && args[0] == "--serve")
+        {
+            return NetRun.Serve(args, Console.Out); // a multiplayer server without a window (MP1)
+        }
+
+        if (args.Length > 0 && args[0] == "--join")
+        {
+            return NetRun.Join(args, Console.Out); // a test client over the network
+        }
+
+        if (args.Length > 0 && args[0] == "--net-bench")
+        {
+            return NetRun.Bench(args, Console.Out); // traffic and server time with bots over TCP
+        }
+
+        if (args.Length > 0 && args[0] == "--sim-scenario")
+        {
+            return SimScenarioRun.Execute(args, Console.Out); // a test scenario without Godot
+        }
+
         HeadlessOptions? options = HeadlessOptions.Parse(args, out string? error);
         if (options is null)
         {
@@ -28,6 +53,11 @@ public static class Program
             return BatchRun.Execute(options, Console.Out);
         }
 
+        if (options.ReplayPath is not null)
+        {
+            return ReplayRun.Execute(options.ReplayPath, Console.Out);
+        }
+
         Console.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
             $"{CoreInfo.Name} headless: seed {options.Seed}, {options.Turns} turns, map {options.MapSize}"));
@@ -40,6 +70,8 @@ public static class Program
         Console.WriteLine(string.Create(inv, $"turn time avg:      {r.AverageTurnMs:F4} ms"));
         Console.WriteLine(string.Create(inv, $"turn time p95:      {r.P95TurnMs:F4} ms"));
         Console.WriteLine(string.Create(inv, $"turn time max:      {r.MaxTurnMs:F4} ms"));
+        Console.WriteLine(string.Create(inv, $"turns over 25 ms:   {r.TurnsOver25Ms} ({(r.Turns == 0 ? 0 : r.TurnsOver25Ms * 100.0 / r.Turns):F2}%, late at x4)"));
+        Console.WriteLine(string.Create(inv, $"turns over 30 ms:   {r.TurnsOver30Ms} ({(r.Turns == 0 ? 0 : r.TurnsOver30Ms * 100.0 / r.Turns):F2}%)"));
         Console.WriteLine(string.Create(inv, $"allocated per turn: {r.AllocatedBytesPerTurn} bytes"));
         Console.WriteLine(string.Create(inv, $"managed memory:     {r.ManagedMemoryBytes / 1024.0 / 1024.0:F1} MB"));
         Console.WriteLine(string.Create(inv, $"working set:        {r.WorkingSetBytes / 1024.0 / 1024.0:F1} MB"));

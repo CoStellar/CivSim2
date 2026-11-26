@@ -4,7 +4,7 @@ namespace CivSim.Protocol.Transport;
 
 /// <summary>
 /// One end of a client–server connection. Single player uses <see cref="InMemoryConnection"/>; a network
-/// transport (future update) implements the same interface.
+/// game uses <see cref="TcpConnection"/> behind the same interface.
 /// </summary>
 public interface IConnection
 {
@@ -22,6 +22,12 @@ public interface IConnection
     /// falls behind, so a slow or hidden window never piles up updates in memory.
     /// </summary>
     int Backlog { get; }
+
+    /// <summary>
+    /// True while the other end falls so far behind that the server should send it no new views for now (a network connection
+    /// with a full send queue). Views are differences from what was sent, so skipping a round loses nothing.
+    /// </summary>
+    bool Congested => false;
 
     /// <summary>Closes both ends.</summary>
     void Close();

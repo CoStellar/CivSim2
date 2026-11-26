@@ -13,6 +13,9 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
     /// <summary>CSV file with population and food per civilization, or null for none.</summary>
     public string? StatsPath { get; init; }
 
+    /// <summary>CSV file with the minute of each milestone per civilization (stage 6 PR T, pace report), or null for none.</summary>
+    public string? MilestonesPath { get; init; }
+
     /// <summary>CSV file with every AI decision and its three main reasons ("Why?", GDD 8.7), or null for none.</summary>
     public string? DecisionsPath { get; init; }
 
@@ -27,6 +30,15 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
     /// <summary>CSV file with every war campaign of the run (stage 4e PR 3): army, arms, food, hunger, carriers; or null for none.</summary>
     public string? CampaignsPath { get; init; }
+
+    /// <summary>Benchmark (stage 6 PR 4a): start up to this many woodcutting work groups through commands (0 = none).</summary>
+    public int WorkGroups { get; init; }
+
+    /// <summary>Replay file to record the run into (T11: settings, events, state hashes every minute), or null for none.</summary>
+    public string? RecordPath { get; init; }
+
+    /// <summary>Replay file to play again and check against its hashes (T11), or null to run a new game.</summary>
+    public string? ReplayPath { get; init; }
 
     /// <summary>Games to run in a batch (stage 4g), seeds <see cref="Seed"/> onwards; 0 = one ordinary game.</summary>
     public int Batch { get; init; }
@@ -112,7 +124,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
 
     /// <summary>Usage text.</summary>
     public const string Usage =
-        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--quiet]\n" +
+        "Usage: CivSim.Headless [--seed N] [--turns N] [--map-size test|small|standard|large|huge] [--report out.csv] [--stats stats.csv] [--stats-every N] [--decisions why.csv] [--milestones pace.csv] [--relations relations.csv] [--treaties treaties.csv] [--wars wars.csv] [--campaigns campaigns.csv] [--work-groups N] [--record game.civreplay] [--replay game.civreplay] [--quiet]\n" +
         "       [--batch GAMES --batch-out games.csv [--jobs N]] (stage 4g: GAMES games on seeds from --seed on, one CSV row each)\n" +
         "       [--world-type continents|pangea|archipelago] [--water 30-80] [--png folder] [--png-scale 1-12]\n" +
         "       [--planet earth|mars|uranus] [--tilt DEGREES] [--eccentricity 0-0.3]\n" +
@@ -131,10 +143,14 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
         string? report = null;
         string? stats = null;
         string? decisions = null;
+        string? milestones = null;
         string? relations = null;
         string? treaties = null;
         string? wars = null;
         string? campaigns = null;
+        int workGroups = 0;
+        string? record = null;
+        string? replay = null;
         int statsEvery = 10;
         bool quiet = false;
         string? png = null;
@@ -184,7 +200,7 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                 case "--map-size":
                     if (!MapSizes.TryParse(Next(), out size))
                     {
-                        error = "--map-size must be test, standard, large or huge.";
+                        error = "--map-size must be test, small, standard, large or huge.";
                         return null;
                     }
 
@@ -203,6 +219,32 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     if (string.IsNullOrWhiteSpace(wars))
                     {
                         error = "--wars needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--record":
+                    record = Next();
+                    if (string.IsNullOrWhiteSpace(record))
+                    {
+                        error = "--record needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--replay":
+                    replay = Next();
+                    if (string.IsNullOrWhiteSpace(replay))
+                    {
+                        error = "--replay needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--work-groups":
+                    if (!int.TryParse(Next(), NumberStyles.Integer, CultureInfo.InvariantCulture, out workGroups) || workGroups < 0 || workGroups > 100_000)
+                    {
+                        error = "--work-groups needs a number of groups (0-100000).";
                         return null;
                     }
 
@@ -230,6 +272,15 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
                     if (string.IsNullOrWhiteSpace(relations))
                     {
                         error = "--relations needs a file path.";
+                        return null;
+                    }
+
+                    break;
+                case "--milestones":
+                    milestones = Next();
+                    if (string.IsNullOrWhiteSpace(milestones))
+                    {
+                        error = "--milestones needs a file path.";
                         return null;
                     }
 
@@ -492,10 +543,14 @@ public sealed record HeadlessOptions(ulong Seed, int Turns, MapSize MapSize, str
             PngScale = pngScale,
             StatsPath = stats,
             DecisionsPath = decisions,
+            MilestonesPath = milestones,
             RelationsPath = relations,
             TreatiesPath = treaties,
             WarsPath = wars,
             CampaignsPath = campaigns,
+            WorkGroups = workGroups,
+            RecordPath = record,
+            ReplayPath = replay,
             StatsEvery = statsEvery,
             WorldType = worldType,
             WaterPercent = water,
@@ -551,6 +606,9 @@ public enum MapSize
     /// <summary>258×160, 12 civilizations.</summary>
     Standard,
 
+    /// <summary>98×60, 5 civilizations: the default for games up to the bronze age (ADR 0026 rule 2; 130×80 until 2026-11-16, too few contacts).</summary>
+    Small,
+
     /// <summary>386×240, 20 civilizations.</summary>
     Large,
 
@@ -565,6 +623,7 @@ public static class MapSizes
     public static GameSettings Settings(MapSize size, ulong seed) => size switch
     {
         MapSize.Test => new GameSettings(seed, 66, 40, 4),
+        MapSize.Small => new GameSettings(seed, 98, 60, 5),
         MapSize.Standard => new GameSettings(seed, 258, 160, 12),
         MapSize.Large => new GameSettings(seed, 386, 240, 20),
         MapSize.Huge => new GameSettings(seed, 514, 320, 32),
@@ -578,6 +637,9 @@ public static class MapSizes
         {
             case "test":
                 size = MapSize.Test;
+                return true;
+            case "small":
+                size = MapSize.Small;
                 return true;
             case "standard":
                 size = MapSize.Standard;

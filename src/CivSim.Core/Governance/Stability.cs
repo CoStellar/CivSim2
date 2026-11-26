@@ -78,7 +78,7 @@ public static class Stability
             return null; // abandoned or merged by its own people: the leader simply moves
         }
 
-        civ.CapitalLostUntilMonth = Math.Max(civ.CapitalLostUntilMonth, state.Month + (content.Stability.CapitalLostYears * 12L));
+        civ.CapitalLostUntilMonth = Math.Max(civ.CapitalLostUntilMonth, state.ActionMonth + (content.Stability.CapitalLostYears * 12L));
         string name = state.FindSettlement(new SettlementId(next))!.Name;
         return $"{Governments.Title(content, civ)} lost its capital {old.Name}; {name} is the new capital.";
     }
@@ -107,7 +107,7 @@ public static class Stability
             ReadOnlySpan<int> people = s.PopulationView;
             for (int k = 0; k < people.Length; k++)
             {
-                long w = (long)people[k] * (g?.InfluenceOf(k) ?? 1);
+                long w = (long)people[k] * (content.StrataInfluenceEnabled ? g?.InfluenceOf(k) ?? 1 : 1); // equal weights while frozen (ADR 0026)
                 weight += w;
                 sum += w * s.Mood;
             }
@@ -122,7 +122,7 @@ public static class Stability
             overload = (int)Math.Min(rules.OverloadMaxPenalty, overPercent * rules.OverloadPenaltyPer100Percent / 100);
         }
 
-        int window = Math.Max(12, civ.StepMonths > 0 ? civ.StepMonths : WorldClock.RhythmMonths(content, state, civ)); // updated at most once a year
+        int window = content.Time.PulseActionMonths; // ADR 0025: crises and anarchy count in months of action; a pulse lasts this many
         return new StabilityParts(
             mood,
             g?.StabilityBonus ?? 0,
@@ -132,7 +132,7 @@ public static class Stability
             Share(rules.CapitalLostPenalty, civ.CapitalLostUntilMonth, month, window));
     }
 
-    // A penalty for the part of the step (window months from month) it lasts: a 5-year crisis in a 50-year step counts a tenth.
+    // A penalty for the part of the pulse (window months of action from month) it lasts.
     private static int Share(int penalty, long until, long month, int window) =>
         (int)((long)penalty * Math.Clamp(until - month, 0, window) / window);
 
@@ -174,7 +174,7 @@ public static class Stability
 
         civ.AdminUsed = (int)Math.Min(int.MaxValue, used);
         int before = civ.Stability;
-        civ.Stability = Parts(content, state, civ, civ.AdminUsed, state.Month).Total;
+        civ.Stability = Parts(content, state, civ, civ.AdminUsed, state.ActionMonth).Total;
         int reach = civ.Government >= 0 && civ.Government < content.Governments.Count ? content.Governments[civ.Government].Reach : 0;
         foreach (SettlementState s in state.Settlements)
         {
@@ -389,7 +389,7 @@ public sealed class StabilitySystem : ITurnSystem
 
             if (Stability.KeepCapital(_content, state, civ) is { } line)
             {
-                context.Chronicle(line);
+                context.Chronicle(line, civ.Id.Value, inner: true);
             }
 
             // Steps shorter than a year (a war month by month) recompute once a year, in its first month.
@@ -402,13 +402,18 @@ public sealed class StabilitySystem : ITurnSystem
             Stability.Update(_content, state, civ, _roads, _unrest);
             if (Stability.UnrestLine(_content, civ, before) is { } unrest)
             {
-                context.Chronicle(unrest);
+                context.Chronicle(unrest, civ.Id.Value, inner: true);
+            }
+
+            if (!_content.Stability.RevoltsEnabled)
+            {
+                continue; // no coups, secessions or drift of far settlements until the bronze age (ADR 0026 rule 5)
             }
 
             Revolts.Reseed(state, civ, state.Month, _random);
             if ((Revolts.Check(_content, state, civ, _random) ?? Revolts.Drift(_content, state, civ, _random)) is { } revolt)
             {
-                context.Chronicle(revolt);
+                context.Chronicle(revolt, civ.Id.Value);
             }
         }
     }

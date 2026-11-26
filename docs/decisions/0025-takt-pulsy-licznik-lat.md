@@ -1,7 +1,9 @@
 # ADR 0025: Czas w grze na żywo: takt, pulsy cywilizacji i licznik lat
 
-**Status:** przyjęta, 2026-11-09 (decyzja Patryka). Wdrożenie: etap 6 w `ROADMAP.md`. Po wdrożeniu zastępuje ADR 0013, 0018 i 0022
-oraz zasadę „tempa na rok” z ADR 0011. Do tego czasu obowiązuje obecny kod.
+**Status:** przyjęta, 2026-11-09 (decyzja Patryka). Wdrożona w etapie 6 PR 1 (`feat/live-clock`): takt, pulsy, licznik lat, epizody
+i liczniki wojny w taktach. Zastępuje ADR 0018 i 0022 (kroki w latach, krótki zegar epizodów) i turę decyzyjną ADR 0013. Tempa dalej
+są „na rok” (ADR 0011) i przeliczane przez miesiące pulsu. Etap 6 PR 2 (decyzja Patryka z 2026-11-09): czasy wojny, dyplomacji i polityki
+liczą się w latach akcji (`GameState.ActionMonth`; rok akcji = 60 taktów = 6 s przy ×1).
 
 ## Kontekst
 
@@ -29,7 +31,7 @@ Trzy warstwy czasu:
    pulsie (przyrost, produkcja, nauka), ustala **era tej cywilizacji** w danych, więc każda cywilizacja rozwija się we własnym
    tempie, a z erą zmienia się charakter gry. Tempa w danych definiujemy na puls (albo na „rok etykiety” przeliczany przez puls;
    do ustalenia przy wdrożeniu), nie na prawdziwy rok historii.
-3. **Licznik lat:** tylko liczba dla gracza, „historia ludu”. Idzie za najbardziej rozwiniętą cywilizacją i płynnie zwalnia, gdy
+3. **Licznik lat:** tylko liczba dla gracza, „historia cywilizacji”. Idzie za najbardziej rozwiniętą cywilizacją i płynnie zwalnia, gdy
    ktoś wchodzi w nową erę (późne ery: mniej lat na tyle samo wydarzeń). Nic w symulacji nie liczy się od lat; kronika i wykresy
    tylko podpisują nimi zdarzenia.
 

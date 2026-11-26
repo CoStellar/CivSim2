@@ -37,6 +37,10 @@ public sealed class GovernorAdvisor : Advisor
     private int[] _settlementAt = [];
     private readonly List<int> _emptySites = [];
     private readonly HashSet<int> _joined = [];
+
+    // Settlements that move or send people away in this step: nobody joins them in the same step (playtest P-11: "Split camp: Bea"
+    // and "Join camp: Dog -> Bea" in one tick).
+    private readonly HashSet<int> _leaving = [];
     private readonly long[] _foodPerPerson;
     private long[] _nearOwnAt = [];
     private long _civStamp;
@@ -62,6 +66,7 @@ public sealed class GovernorAdvisor : Advisor
         _reach = new HexCoord[HexGlobe.RangeSize(_rules.MaxMoveCells)];
         _farmArea = new HexCoord[HexGlobe.RangeSize(Math.Max(1, _rules.InfluenceMaxRange))];
         _influence = new Influence(content);
+        _tasks = new TaskPlanner(content);
         _otherWorld = new Land(Research.TechBenefits.Empty(content));
         _near = new HexCoord[HexGlobe.RangeSize(Math.Max(0, _rules.MinDistanceBetweenOwnCamps - 1))];
         // Nearness: 1.0 next door, falling by the distance penalty per cell (data/population.json), 0 from 100/penalty cells on.
@@ -156,7 +161,8 @@ public sealed class GovernorAdvisor : Advisor
             // its camps: the camps look for safer land at once (reactive decision, ADR 0018).
             bool steps = Simulation.WorldClock.Steps(civ);
             bool attacked = civ.IsAlive && (civ.Alarms & Simulation.Alarm.Attacked) != 0;
-            if (!civ.IsAlive || civ.Controller != PlayerId.Ai || !(steps || attacked))
+            // A civilization led by a player is weighed too: Issue keeps off the levers its player holds (ADR 0027).
+            if (!civ.IsAlive || !(steps || attacked))
             {
                 continue;
             }
@@ -191,8 +197,29 @@ public sealed class GovernorAdvisor : Advisor
             }
 
             _joined.Clear();
+            _leaving.Clear();
+            if (steps && Simulation.WorldClock.PlansNow(_content, state, civ))
+            {
+                PlanTasks(state, queue, civ);
+            }
+        }
+
+        _networks = null;
+    }
+
+    // G9 (stage 6 PR 4b): work groups for the materials the civilization's artisans would work.
+    private void PlanTasks(GameState state, CommandQueue queue, CivilizationState civ)
+    {
+        _networks ??= TradeNetworks.Build(_content, state);
+        _tasks.Plan(state, civ, _networks);
+        foreach ((ICommand command, AiAction action, int subject, int target, Evaluation why) in _tasks.Orders)
+        {
+            Issue(state, queue, civ.Id, command, action, subject, target, why);
         }
     }
+
+    private readonly TaskPlanner _tasks;
+    private List<List<int>>? _networks;
 
     private void Decide(GameState state, CommandQueue queue, CivilizationState civ, SettlementState s, bool reacting)
     {
@@ -208,7 +235,7 @@ public sealed class GovernorAdvisor : Advisor
         bool slowTurn = !reacting && Simulation.WorldClock.PlansNow(_content, state, civ);
 
         // A handful of people does not survive on its own: they join the nearest camp of their own.
-        if (slowTurn && people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into)
+        if (slowTurn && people < _rules.MergeBelowPeople && NearestOwnCamp(state, world, civ, s) is { } into && !_leaving.Contains(into.Id.Value))
         {
             Evaluation join = Evaluation.Of(people);
             join.Note(FactorId.People, people);
@@ -244,6 +271,7 @@ public sealed class GovernorAdvisor : Advisor
                 move.Note(FactorId.Fed, s.FedPerMille);
                 (ICommand command, AiAction action) = MoveTo(state, world, s, best, 100);
                 Issue(state, queue, civ.Id, command, action, s.Id.Value, world.Geometry.Index(best), move);
+                _leaving.Add(s.Id.Value);
                 Take(world, best);
                 return;
             }
@@ -306,7 +334,7 @@ public sealed class GovernorAdvisor : Advisor
         long drive = Math.Max(1, (long)GoalWeight(civ, Goal.Expansion) * CharacterMultiplier(civ, Goal.Expansion) / Factor.Neutral);
         long splitAbove = Math.Clamp(_rules.SplitAbovePercentOfLevel * Factor.Neutral / drive, _content.Ai.SplitMinPercentOfLevel, 100);
         bool crowded = people >= _rules.MinSplitPeople && people * 100L >= max * splitAbove;
-        if (crowded)
+        if (crowded && AdminRoom(civ))
         {
             // No fixed limit of camps: a group leaves only for land that can feed it.
             long need = GroupFoodNeed(s, _rules.SplitPercent) * _rules.SplitNeedsFoodPercent / 100;
@@ -316,6 +344,7 @@ public sealed class GovernorAdvisor : Advisor
                 split.Note(FactorId.Crowding, people * 100L / Math.Max(1, max));
                 (ICommand command, AiAction action) = MoveTo(state, world, s, site, _rules.SplitPercent);
                 Issue(state, queue, civ.Id, command, action, s.Id.Value, world.Geometry.Index(site), split);
+                _leaving.Add(s.Id.Value);
                 Take(world, site);
                 return;
             }
@@ -347,6 +376,14 @@ public sealed class GovernorAdvisor : Advisor
         }
     }
 
+    // Settlers leave only while the state can rule more (stage 6 PR T2): the administration used is below the share of the capacity.
+    private bool AdminRoom(CivilizationState civ)
+    {
+        int limit = _content.Ai.SettlersBelowAdminPercent;
+        int capacity = Governance.Stability.Capacity(_content, civ);
+        return limit <= 0 || capacity == int.MaxValue || (long)civ.AdminUsed * 100 < (long)capacity * limit;
+    }
+
     // A village (GDD 5.3, PR C) does not move, but it sends settlers out: when it is crowded (earlier for an expansive
     // civilization), or when the land it farms is worn out. They found a camp on the best known free land within one
     // move, and that camp chooses where to live and whether to settle by itself.
@@ -357,17 +394,8 @@ public sealed class GovernorAdvisor : Advisor
         bool hungry = s.FedPerMille < _content.Ai.VillageHungryFedPercent * 10;
         if (people < _rules.MinSplitPeople)
         {
-            // A small hungry village (too few for a group of settlers) gives up: its people go to the nearest own settlement
-            // that is better fed (AI fixes after stage 4g: in the 100 games most starving villages were this small).
-            if (hungry && NearestOwnCamp(state, world, civ, s) is { } into && into.FedPerMille >= _content.Ai.VillageHungryFedPercent * 10)
-            {
-                Evaluation join = Evaluation.Of(people);
-                join.Note(FactorId.People, people);
-                join.Note(FactorId.Fed, s.FedPerMille);
-                Issue(state, queue, civ.Id, new AbandonSettlementCommand(_content, s.Id, into.Id), AiAction.JoinCamp, s.Id.Value, into.Id.Value, join);
-                _joined.Add(into.Id.Value);
-            }
-
+            // Decision of 2026-11-09 (stage 6 PR 3a): a village stays where it was founded; a small one too few for a
+            // group of settlers holds on (it is left only when nobody is left in it), it does not move into another.
             return;
         }
 
@@ -388,9 +416,9 @@ public sealed class GovernorAdvisor : Advisor
         bool crowded = people * 100L >= max * settleAbove;
         int worn = WornPercent(world, s);
         bool wornOut = worn < _content.Ai.VillageWornBelowPercent;
-        if (!crowded && !wornOut && !hungry)
+        if ((!crowded && !wornOut && !hungry) || (!hungry && !AdminRoom(civ)))
         {
-            return;
+            return; // a full state sends no settlers (stage 6 PR T2); a hungry village still sends mouths away
         }
 
         // A group the size of a new camp leaves, however big the village is; a hungry village sends the share of mouths it
@@ -422,6 +450,7 @@ public sealed class GovernorAdvisor : Advisor
             go.Note(FactorId.Fed, s.FedPerMille);
             (ICommand command, AiAction action) = MoveTo(state, world, s, site, percent);
             Issue(state, queue, civ.Id, command, action == AiAction.SplitCamp ? AiAction.SendSettlers : action, s.Id.Value, world.Geometry.Index(site), go);
+            _leaving.Add(s.Id.Value);
             Take(world, site);
         }
     }
@@ -510,6 +539,7 @@ public sealed class GovernorAdvisor : Advisor
 
         HexCoord site = geo.FromIndex(Chooser.KeyAt(pick));
         Issue(state, queue, civ.Id, new SplitSettlementCommand(_content, s.Id, site, _content.Ai.ExploreGroupPercent), AiAction.Explore, s.Id.Value, Chooser.KeyAt(pick), Chooser.EvaluationAt(pick));
+        _leaving.Add(s.Id.Value);
         Take(world, site);
         return true;
     }
@@ -843,9 +873,10 @@ public sealed class GovernorAdvisor : Advisor
     {
         SettlementState? nearest = null;
         int best = _rules.MaxMoveCells + 1;
-        foreach (SettlementState other in state.Settlements)
+        foreach (int i in state.Grid.Within(world, from.Cell, _rules.MaxMoveCells))
         {
-            if (other.Owner == civ.Id && other.IsActive && other.Id != from.Id && other.World == from.World
+            SettlementState other = state.Settlements[i];
+            if (other.Owner == civ.Id && other.IsActive && other.Id != from.Id
                 && other.TotalPopulation() >= _rules.MergeBelowPeople)
             {
                 int d = world.Geometry.Distance(from.Cell, other.Cell);

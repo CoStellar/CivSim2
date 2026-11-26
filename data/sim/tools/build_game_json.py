@@ -1,0 +1,541 @@
+# Rebuilds the tree, units and buildings of data/sim/game.json (run from the repo root: python3 data/sim/tools/build_game_json.py).
+# It edits the file in place and keeps the sections it does not touch.
+import json
+p='data/sim/game.json'; d=json.load(open(p))
+
+d['goods'] = [
+ {"key":"food","name":"Food","worth":1},{"key":"wood","name":"Wood","worth":1},{"key":"stone","name":"Stone","worth":1.2},
+ {"key":"clay","name":"Clay","worth":1},{"key":"hides","name":"Hides","worth":1.5},{"key":"tools","name":"Tools","worth":3},
+ {"key":"clothing","name":"Clothing","worth":3},{"key":"pottery","name":"Pottery","worth":2.5},{"key":"textiles","name":"Textiles","worth":3},
+ {"key":"copper","name":"Copper","worth":4},{"key":"tin","name":"Tin","worth":5},{"key":"bronze","name":"Bronze","worth":8},
+ {"key":"iron","name":"Iron","worth":8},
+ # Weapons and armour of four levels (Patryk, 2026-11-19): a unit is armed with the best it gets; both lie at half room in an armoury.
+ {"key":"stone_weapons","name":"Stone weapons","worth":3,"storedIn":"armoury"},{"key":"bronze_weapons","name":"Bronze weapons","worth":9,"storedIn":"armoury"},
+ {"key":"iron_weapons","name":"Iron weapons","worth":12,"storedIn":"armoury"},{"key":"steel_weapons","name":"Steel weapons","worth":18,"storedIn":"armoury"},
+ {"key":"hide_armour","name":"Hide armour","worth":3,"storedIn":"armoury"},{"key":"bronze_armour","name":"Bronze armour","worth":9,"storedIn":"armoury"},
+ {"key":"iron_armour","name":"Iron armour","worth":12,"storedIn":"armoury"},{"key":"steel_armour","name":"Plate armour","worth":18,"storedIn":"armoury"},
+ {"key":"horses","name":"Horses","worth":12},{"key":"coins","name":"Coins","worth":1},
+ # Late-era materials (Patryk, 2026-11-20, question 13: all of them, in this order).
+ {"key":"charcoal","name":"Charcoal","worth":2},{"key":"bricks","name":"Bricks","worth":3},{"key":"wool","name":"Wool","worth":1.5},
+ {"key":"cloth","name":"Cloth","worth":4},{"key":"planks","name":"Planks","worth":2.5},{"key":"mortar","name":"Mortar","worth":3}]
+d['buildingStorage'] = 20
+# Stores (tests 2026-11-24, P1): a good counts as full from fullPercent of its room until it falls below stillFullPercent, and as
+# empty below 1 until it reaches stillEmptyBelow, so a store at the edge does not wake and put its makers to sleep every second.
+d['stores'] = {"comment":"A good is full from fullPercent of the room until it falls below stillFullPercent; empty below 1 until it reaches stillEmptyBelow (whole units).","fullPercent":98,"stillFullPercent":90,"stillEmptyBelow":3}
+EXTRA = " Storage: goods lie in the settlement where they were made; every finished building adds buildingStorage of room for each good unless it gives its own storage (storehouses). Construction materials are carried by porters from the nearest storehouse (or the settlement centre); the work goes as far as the delivered materials allow. groups: tags that technology effects can aim at (e.g. melee, tools)."
+d['comment'] = (d['comment'].split(" Storage: goods lie")[0] + EXTRA).replace("idle people forage idleForagePerMinute each", "people told to gather pick up food, wood and stone around their settlement (forage)")
+d['diplomacy']['tradeTech'] = "barter"
+d['diplomacy']['comment'] = "Civilizations consider a treaty only when they have known each other for knownMinutes, their settlements are at most borderHexes apart, they have not fought for peaceMinutes and the other's reputation is above minReputation; then a trade agreement when they lack a good the other makes or the other knows more technologies, an alliance when they share an enemy. At most one offer to the same people every offerCooldownMinutes, refusalCooldownMinutes after a refusal. Trade agreements need the barter technology. Barter goods travel in caravans; the AI takes a barter worth acceptWorthPercent of what it gives (100 with currency) and keeps twice what it gives."
+d['diplomacy'].update({"knownMinutes":3,"borderHexes":20,"peaceMinutes":10,"minReputation":-20,"offerCooldownMinutes":3,"refusalCooldownMinutes":6})
+d.pop('reviewSeconds', None); d['diplomacy'].pop('reviewSeconds', None)
+d['settlementLevels'] = [
+ {"key":"camp","name":"Camp","radius":3,"housing":25,"storage":150,"upgradePrice":{}},
+ {"key":"village","name":"Village","radius":4,"housing":40,"storage":200,"upgradePrice":{"wood":120,"stone":60,"clay":30},"tech":"agriculture","minPeople":40},
+ {"key":"town","name":"Town","radius":5,"housing":60,"storage":300,"upgradePrice":{"wood":250,"stone":200,"pottery":40,"clothing":30},"tech":"code_of_laws","alsoTechs":["masonry"],"minPeople":150},
+ {"key":"city","name":"City","radius":6,"housing":90,"storage":500,"upgradePrice":{"wood":400,"stone":400,"bricks":120,"cloth":40,"pottery":80,"tools":60},"tech":"civil_service","alsoTechs":["construction"],"minPeople":400}]
+# minPeople (Patryk, 2026-11-19, E2): people a settlement must have to reach the level (wide steps: village 40, town 150).
+
+FOREST=["deciduous_forest","taiga","jungle","swamp"]
+B=[]
+def b(key,name,tech,workers,price,secs,**kw):
+    x={"key":key,"name":name,"tech":tech,"workers":workers,"price":price,"buildSeconds":secs}; x.update(kw); B.append(x)
+# Stone age
+b("gatherers_hut","Gatherers' hut","foraging",3,{"wood":15},12,biomes=["grassland","steppe","savanna","deciduous_forest","jungle","taiga","swamp","tundra"],produces={"food":4,"wood":1},bonusDeposit="wild_grain",bonusPercent=100,winterPercent=50,groups=["food"])
+b("woodcutter","Woodcutter","foraging",3,{"wood":15},12,biomes=FOREST,orTrees=True,produces={"wood":4},groups=["tools"])
+b("hut","Huts","dwellings",0,{"wood":20},10,housing=8,groups=["house"])
+b("storehouse","Storehouse","stockpiling",0,{"wood":30},20,storage=300,groups=["store"])
+b("hearth","Hearth","fire",0,{"wood":15,"stone":10},10,housing=3,groups=["house"])
+b("quarry","Quarry","stone_tools",4,{"wood":25},20,produces={"stone":2},bonusRelief=["hills","mountains"],bonusReliefPercent=100,bonusDeposit="stone",bonusPercent=100,groups=["tools","quarry"])
+b("toolmaker","Toolmaker","stone_tools",2,{"wood":30,"stone":20},25,consumes={"stone":2,"wood":1},produces={"tools":1,"stone_weapons":0.5},bonusDeposit="flint",bonusPercent=50,groups=["craft"])
+b("hunters_lodge","Hunters' lodge","hunting",3,{"wood":20},15,biomes=["grassland","steppe","savanna","deciduous_forest","taiga","jungle","tundra"],produces={"food":3,"hides":1},bonusDeposit="game",bonusPercent=100,groups=["food","hunt"])
+b("clay_pit","Clay pit","shelters",3,{"wood":20},15,needsWater=True,orDeposit="clay",produces={"clay":3},bonusDeposit="clay",bonusPercent=100,groups=["tools"])
+b("herbalist","Herbalist","herbal_lore",2,{"wood":20,"clay":10},20,produces={},supportGroup="hunt",supportPercent=25,healsPerMinute=6,groups=["care"])
+b("tailor","Tailor","sewing",2,{"wood":20,"tools":5},20,consumes={"hides":1},produces={"clothing":2,"hide_armour":0.3},groups=["craft"])
+# Neolithic
+b("fishing_hut","Fishing hut","fishing",2,{"wood":20},15,needsWater=True,produces={"food":5},bonusDeposit="fish",bonusPercent=100,groups=["food"])
+b("raft_landing","Raft landing","rafts",2,{"wood":40},20,needsWater=True,crossing=True,produces={"food":2,"wood":1},groups=["food"])
+b("farm","Farm","agriculture",4,{"wood":30,"tools":5},20,biomes=["grassland","steppe","savanna","deciduous_forest"],minFertility=40,produces={"food":6},bonusDeposit="wild_grain",bonusPercent=50,winterPercent=50,groups=["food","farm"])
+b("potter","Potter","pottery",2,{"wood":20,"stone":10},20,consumes={"clay":2,"wood":1},produces={"pottery":1},groups=["craft"])
+b("granary","Granary","pottery",0,{"wood":30,"clay":30},25,storage=250,groups=["store"])
+b("pasture","Pasture","animal_husbandry",2,{"wood":30},20,biomes=["grassland","steppe","savanna","tundra"],produces={"food":4,"hides":2},bonusDeposit="cattle",bonusPercent=100,groups=["food"])
+b("stone_house","Stone houses","masonry",0,{"stone":40,"wood":10},25,housing=16,warm=True,groups=["house"])
+b("mason","Mason","masonry",3,{"wood":30,"tools":10},25,produces={},supportGroup="quarry",supportPercent=25,groups=["care"])
+b("weaver","Weaver","weaving",2,{"wood":30,"tools":5},25,consumes={"hides":1,"food":1},produces={"textiles":1},groups=["craft"])
+b("trading_post","Trading post","barter",2,{"wood":40,"pottery":10},30,storage=150,produces={},groups=["store","trade"])
+b("copper_mine","Copper mine","copper_working",4,{"wood":40,"tools":15},30,orDeposit="copper",produces={"copper":2},groups=["tools","mine"])
+# Bronze
+b("tin_mine","Tin mine","bronze_working",4,{"wood":40,"tools":15},30,orDeposit="tin",produces={"tin":2},groups=["tools","mine"])
+b("bronze_smith","Bronze smith","bronze_working",3,{"stone":40,"clay":30},30,consumes={"copper":2,"tin":1,"charcoal":1},produces={"bronze":1},groups=["craft"])
+b("charcoal_burner","Charcoal burner","bronze_working",2,{"wood":30,"clay":10},20,consumes={"wood":2},produces={"charcoal":3},groups=["craft"])
+b("armourer","Armourer","bronze_weapons",2,{"stone":40,"wood":30},30,consumes={"bronze":1,"wood":1},produces={"bronze_weapons":1,"bronze_armour":0.5},groups=["craft","armoury"])
+b("school","School","writing",3,{"stone":60,"clay":40},40,produces={},researchPercent=15,groups=["learn"])
+b("stable","Stable","horseback_riding",2,{"wood":60},30,consumes={"food":2},produces={"horses":1},bonusDeposit="horses",bonusPercent=100,goodLimit={"horses":32},groups=["food"])
+b("harbour","Harbour","sailing",3,{"wood":80,"stone":20},40,needsWater=True,produces={"food":4},groups=["food"])
+b("mint","Mint","currency",2,{"stone":60,"wood":20},35,consumes={"copper":1},produces={"coins":4},groups=["craft"])
+b("barracks","Barracks","barracks",2,{"wood":80,"stone":40},40,produces={},trainPercent=50,groups=["army","armoury"])
+# Iron
+b("iron_mine","Iron mine","iron_working",4,{"wood":50,"tools":20},35,orDeposit="iron_ore",produces={"iron":1},groups=["tools","mine"])
+b("blacksmith","Blacksmith","iron_working",2,{"stone":40,"wood":30},30,consumes={"iron":1,"charcoal":1},produces={"tools":2},groups=["craft"])
+b("weaponsmith","Weaponsmith","iron_weapons",2,{"stone":40,"wood":30},30,consumes={"iron":1,"charcoal":1},produces={"iron_weapons":1.5,"iron_armour":1},groups=["craft","armoury"])
+b("builders_yard","Builders' yard","mathematics",3,{"stone":60,"wood":40,"bricks":30},40,produces={},buildPercent=30,groups=["care"])
+b("great_storehouse","Great storehouse","construction",0,{"stone":100,"wood":60,"bricks":60},45,storage=1000,groups=["store"])
+b("province_office","Province office","civil_service",3,{"stone":80,"wood":40,"bricks":50},50,produces={},groups=["govern"])
+b("siege_workshop","Siege workshop","engineering",3,{"wood":100,"tools":30},45,produces={},trainPercent=70,groups=["army"])
+b("bathhouse","Bathhouse","medicine",2,{"stone":50,"bricks":30,"pottery":20},40,produces={},resistEpidemicPercent=30,growthBonus=2,groups=["care"])
+b("academy","Academy","philosophy",3,{"stone":80,"bricks":40,"cloth":10},50,produces={},researchPercent=20,groups=["learn"])
+b("shipyard","Shipyard","shipbuilding",4,{"wood":150,"tools":30},50,needsWater=True,produces={},trainPercent=60,groups=["army"])
+b("brickworks","Brickworks","brick_making",3,{"wood":40,"stone":30},30,consumes={"clay":2,"charcoal":1},produces={"bricks":2},groups=["craft"])
+b("sheepfold","Sheepfold","shepherding",2,{"wood":40},25,biomes=["grassland","steppe","tundra","savanna"],produces={"wool":2,"food":1},bonusDeposit="sheep",bonusPercent=100,groups=["food"])
+b("cloth_weaver","Cloth weaver","shepherding",2,{"wood":30,"tools":10},25,consumes={"wool":2},produces={"cloth":1,"clothing":2},groups=["craft"])
+# Middle ages
+b("manor","Manor","feudalism",4,{"stone":150,"planks":60,"mortar":30},60,produces={"food":8},housing=10,winterPercent=50,groups=["food","farm"])
+b("steelworks","Steelworks","steel",3,{"stone":100,"bricks":60,"iron":40},60,consumes={"iron":2,"charcoal":2},produces={"tools":4,"steel_weapons":1,"steel_armour":1},groups=["craft","armoury"])
+b("castle","Castle","castles",0,{"stone":300,"mortar":100,"planks":40,"iron":30},90,defensePercent=220,housing=10,groups=["fort","armoury"])
+b("mill","Mill","mills",2,{"planks":50,"stone":40,"tools":10},40,needsWater=True,produces={},supportGroup="farm",supportPercent=20,groups=["care"])
+b("guildhall","Guild hall","guilds",3,{"stone":80,"bricks":40,"planks":30,"cloth":20},50,produces={},supportGroup="craft",supportPercent=25,groups=["care"])
+b("university","University","university",4,{"stone":120,"bricks":60,"mortar":40,"cloth":30},60,produces={},researchPercent=25,groups=["learn"])
+b("sawmill","Sawmill","sawmills",3,{"wood":60,"stone":40,"tools":10},35,needsWater=True,consumes={"wood":3},produces={"planks":2},groups=["craft"])
+b("lime_kiln","Lime kiln","lime_mortar",2,{"stone":60,"bricks":20},30,consumes={"stone":2,"charcoal":1},produces={"mortar":2},groups=["craft"])
+for x in B:
+    x.setdefault("produces",{}) if x["workers"]>0 else None
+# Places on a hex (decision of 2026-11-18): 4 per hex. Fields, mines, quarries, harbours and castles take the whole hex (they use
+# the land itself); stores, stables and halls take two; houses and workshops one. Huts that gather from the land take two, so
+# that a deposit is not worked by four of them at once.
+WHOLE={"farm","pasture","quarry","copper_mine","tin_mine","iron_mine","fishing_hut","harbour","raft_landing","castle","manor","shipyard","great_storehouse"}
+TWO={"sheepfold","sawmill","brickworks","woodcutter","hunters_lodge","clay_pit","storehouse","granary","stable","barracks","trading_post","siege_workshop","bathhouse","academy","university","guildhall","steelworks","mill","province_office","builders_yard"}
+for x in B:
+    x["size"]=4 if x["key"] in WHOLE else 2 if x["key"] in TWO else 1
+# Upgrades in place (Patryk, 2026-11-19): a building becomes its better kind once that is known; half of its own price counts
+# toward the new one (upgradeCreditPercent), the rest porters bring as for any construction. A bigger kind needs the free places.
+UP={"hut":"stone_house","storehouse":"great_storehouse","gatherers_hut":"farm","hunters_lodge":"pasture","fishing_hut":"harbour",
+    "farm":"manor","toolmaker":"blacksmith","blacksmith":"steelworks","armourer":"weaponsmith","school":"academy","academy":"university","weaver":"cloth_weaver"}
+for x in B:
+    if x["key"] in UP: x["upgradesTo"]=UP[x["key"]]
+d["upgradeCreditPercent"]=50
+# Combat (Patryk, 2026-11-19, claude/walka-propozycja.md): every number here.
+d["combat"]={"comment":"Battle in steps of stepTicks. A unit fights every enemy unit next to it (ranged: within range, only while standing). Per step it kills engaged people x strength x weapon / armour of the target x terrain x flank x charge x bonus against the target's kind x fed x luck / killDivisor. Engaged people: at most frontPerContact for each enemy it touches. weapon and armour: multipliers for levels 0-4 (armourVsRangedBonus: armour counts this much more against arrows). Flank: damage taken by how many enemy units touch the target (index = count, last for more). Terrain: per level of relief higher than the target (flat 0, hills 1, mountains 2) reliefPercent, at most reliefMaxPercent; per elevationStep of height above it elevationPercent, at most elevationMaxPercent. Cover of the target's hex (forest or grove, palisade or wall) against ranged and melee, lost when enemies touch it from opposite sides. Attacking across a river without a bridge: riverPercent. Roads and swamps: openPercent more taken. Leaving enemies: each enemy next to it strikes once, disengagePercent of a step (cavalry cavalryDisengagePercent), unless another unit of ours stays next to that enemy. Charge: cavalry that walked chargeHexes or more before contact strikes chargePercent once (not against units that stop charges). One army unit to a hex: a unit that stops on another steps aside. Zone of control: a unit stops when it comes next to an enemy, and from there goes on only one hex at a time. Weapons only (shock): no armour, shockTrainPercent of the time. Single player: a battle after calmSeconds of calm slows time to x1. A unit falling to warnPercents of its full size is told in the chronicle. A unit with no way to its target searches again after chaseRetrySeconds and gives it up after chaseGiveUp failures.",
+  "stepTicks":10,"killDivisor":400,"frontPerContact":12,
+  "weapon":[60,100,140,180,220],"armour":[100,130,170,210,260],"armourVsRangedBonus":20,
+  "flank":[100,100,125,150,180],
+  "reliefPercent":8,"reliefMaxPercent":16,"elevationStep":20,"elevationPercent":3,"elevationMaxPercent":9,
+  "cover":{"trees":{"ranged":-30,"melee":-15},"palisade":{"ranged":-50,"melee":-30},"wall":{"ranged":-50,"melee":-30}},
+  "riverPercent":-25,"openPercent":15,"openBiomes":["swamp"],
+  "disengagePercent":50,"cavalryDisengagePercent":25,
+  "chargeHexes":2,"chargePercent":200,
+  "shockTrainPercent":40,"calmSeconds":30,"warnPercents":[50,25],"chaseRetrySeconds":5,"chaseGiveUp":3}
+# Choosing the start (Patryk, 2026-11-19: every number in the data).
+d["startPhase"]={"comment":"pickSeconds: time a player has to choose. blockRadius: hexes around a taken start where no other people may start. blockFuzz: the shown circle is centred up to this many hexes from the real start and is this much wider, so it hides the start. scoreRadius, roomRadius: hexes looked at when scoring a start (its own land, the room around).",
+  "pickSeconds":30,"blockRadius":10,"blockFuzz":3,"scoreRadius":3,"roomRadius":6}
+d['buildings']=B
+
+U=[]
+def u(key,name,tech,people,price,secs,perHex,sight,**kw):
+    x={"key":key,"name":name,"tech":tech,"people":people,"price":price,"trainSeconds":secs,"ticksPerHex":perHex,"sight":sight}; x.update(kw)
+    if tech is None: x.pop("tech")
+    U.append(x)
+u("settlers","Settlers","migration",8,{"food":40,"wood":30},10,6,3,founds=True)
+u("scouts","Scouts","scouting",2,{"food":15},5,3,5,hiddenTicksPerHex=6)
+# Prospectors and surveyors (Patryk, 2026-11-19): beyond our land only they find what lies in the ground and how good the soil is.
+u("prospectors","Prospectors","stone_tools",2,{"food":15,"wood":5},8,4,3,survey="rock")
+u("surveyors","Surveyors","scouting",2,{"food":15},6,4,3,survey="soil")
+# Porters carry 5 in their hands; Carrying gives baskets (+15 each). Caravans (pack animals) come with Animal husbandry.
+u("porters","Porters","foraging",1,{},0,5,2,system=True,cargoPerPerson=5,groups=["carriers"])
+# Caravans need the wheel and horses (decision of 2026-11-18): each takes horsesPerCaravan horses, which come back with it.
+u("caravan","Caravan","the_wheel",2,{},0,6,3,system=True,cargoPerPerson=25,alsoTechs=["horseback_riding"],horsesPerCaravan=2,groups=["carriers"])
+# Residents: the people of a settlement taking up arms against raiders. No technology, weak (decision of 2026-11-18).
+# Army units (Patryk, 2026-11-19): strength is drill and kind; weapons and armour (levels 0-4) come from the stores when they
+# train. people is the default size; the player picks minPeople-maxPeople, and the price follows the size.
+u("levy","Residents",None,10,{},3,7,2,army=True,levy=True,strength=5,groups=["melee"])
+u("hunters","Hunters","hunting",8,{"food":20,"wood":10},10,5,3,army=True,strength=6,range=2,becomes={"archery":"archers"},bonusBiomes=FOREST[:3],bonusPercent=20,groups=["ranged","infantry"])
+u("warriors","Warriors","flint_weapons",10,{"food":30,"wood":10},12,6,3,army=True,strength=9,bonusBiomes=FOREST[:3],bonusPercent=30,groups=["melee","infantry"])
+u("archers","Archers","archery",8,{"food":30,"wood":25},15,6,4,army=True,strength=9,range=3,bonusRelief=["hills","mountains"],bonusPercent=40,groups=["ranged","infantry"])
+u("spearmen","Spearmen","bronze_weapons",10,{"food":40},18,6,3,army=True,strength=11,bonusVs={"cavalry":50},stopsCharge=True,groups=["melee","infantry","spear"])
+u("horsemen","Horsemen","horseback_riding",6,{"food":40,"horses":6},20,3,5,army=True,strength=12,bonusRelief=["flat"],bonusPercent=20,bonusVs={"ranged":50},groups=["cavalry"])
+u("transport","Transport ship","sailing",8,{"wood":80,"food":30},25,4,4,army=True,naval=True,strength=4,carriesArmies=True,carries=20,needsBuilding="harbour",groups=["ship"])
+u("trade_ship","Trade ship","sailing",4,{},0,4,3,system=True,naval=True,cargoPerPerson=40,groups=["carriers","ship"])
+u("swordsmen","Swordsmen","iron_weapons",10,{"food":50},20,6,3,army=True,strength=13,groups=["melee","infantry"])
+u("catapult","Catapult","engineering",6,{"wood":100,"tools":20},30,9,3,army=True,strength=8,range=2,siege=300,needsBuilding="siege_workshop",groups=["siege"])
+u("warship","Warship","shipbuilding",12,{"wood":150,"iron":10},35,3,5,army=True,naval=True,strength=22,range=2,carriesArmies=True,carries=30,needsBuilding="shipyard",groups=["ship"])
+u("crossbowmen","Crossbowmen","crossbows",8,{"food":40,"wood":20},20,6,4,army=True,strength=12,range=2,pierce=1,groups=["ranged","infantry"])
+u("knights","Knights","chivalry",6,{"food":60,"horses":6},30,3,5,army=True,strength=16,bonusRelief=["flat"],bonusPercent=20,bonusVs={"ranged":50},groups=["cavalry"])
+# Sight (decision of 2026-11-18: units saw too much): scouts, riders and ships 3, carriers 1, the rest 2.
+for x in U:
+    if x.get("army") and not x.get("naval") and not x.get("levy") and "siege" not in x.get("groups",[]):
+        x["minPeople"]=5; x["maxPeople"]=30
+SIGHT={"scouts":3,"prospectors":3,"surveyors":3,"horsemen":3,"knights":3,"transport":3,"warship":3,"porters":1,"caravan":1,"trade_ship":2}
+for x in U:
+    x["sight"]=SIGHT.get(x["key"],2)
+d['units']=U
+
+T=[]
+def t(key,name,era,exp=None,price=None,secs=0,gives="",effects=None,upgrade=False,known=False,req=None,made=None):
+    x={"key":key,"name":name,"era":era,"gives":gives}
+    if req: x["requires"]=req
+    if made: x["made"]=made
+    if known: x["known"]=True
+    if exp: x["experience"]=exp
+    if price: x["price"]=price
+    if secs: x["seconds"]=secs
+    if effects: x["effects"]=[{"kind":k,"target":tg,"value":v} for (k,tg,v) in effects]
+    if upgrade: x["upgrade"]=True
+    T.append(x)
+S,N,BR,IR,M="stone_age","neolithic","bronze_age","iron_age","middle_ages"
+# Stone age (decision of 2026-11-18). Basics are cheap and quick and do not count toward the next era; the seven others do.
+t("foraging","Foraging",S,known=True,gives="Gatherers' huts and woodcutters; the people of a settlement can gather food, wood and stone around it.")
+t("dwellings","Dwellings",S,{"foraging":3},{"wood":10},10,"Huts.")
+t("stockpiling","Stockpiling",S,{"foraging":5},{"wood":15},12,"Storehouses.")
+t("carrying","Carrying",S,{"foraging":5},{"wood":10,"food":10},12,"Baskets: porters carry 20 instead of 5; tracks.",[("cargo","porters",15)])
+t("scouting","Scouting",S,{"foraging":3},{"food":10},8,"Scouts.")
+t("migration","Migration",S,{"foraging":10},{"food":20,"wood":10},15,"Settlers.")
+t("fire","Fire",S,{"foraging":10},{"wood":30},20,"Hearths; gatherers +10%.",[("production","gatherers_hut",10)])
+t("stone_tools","Stone tools",S,{"foraging":20},{"food":40,"wood":20},30,"Quarries, toolmakers.")
+t("hunting","Hunting",S,{"foraging":15},{"food":30,"wood":20},25,"Hunters' lodges; hunters with spears and slings.")
+t("shelters","Shelters",S,{"foraging":25},{"wood":40},30,"Huts give 2 more homes; clay pits.",[("housing","hut",2)])
+t("herbal_lore","Herbal lore",S,{"hunting":15},{"food":40},30,"Herbalists: hunters near them +25%, the wounded heal; growth a little faster; epidemics 15% milder.",[("growth","*",1),("resist","epidemic",15)])
+t("sewing","Sewing",S,{"hunting":20,"stone_tools":10},{"hides":15,"food":30},30,"Tailors: clothing makes workers faster, most of all in winter.")
+t("flint_weapons","Flint weapons",S,{"stone_tools":15},{"stone":20,"wood":10},20,"Warriors with wooden spears, clubs and slings.")
+# Neolithic. Experience is worker-minutes in a technology's buildings or goods made ("made"); "requires": technologies needed besides (decision of 2026-11-18).
+t("agriculture","Agriculture",N,{"foraging":40,"stone_tools":10},{"food":80,"wood":40,"stone":20},60,"Farms (the more fertile the land, the more they give); camps can become villages.")
+t("pottery","Pottery",N,{"agriculture":15,"shelters":10},{"clay":40,"wood":30},45,"Potters (pottery, used in many later things), granaries.")
+t("animal_husbandry","Animal husbandry",N,{"agriculture":20,"hunting":20},{"food":100,"wood":40},50,"Pastures (twice as good on cattle).")
+t("masonry","Masonry",N,{"stone_tools":40,"agriculture":15},{"stone":40,"tools":10},60,"Stone houses (more homes, warmer in winter); masons (quarries near them dig more); bridges where roads cross rivers.")
+t("weaving","Weaving",N,{"animal_husbandry":20},{"hides":30,"tools":10},50,"Weavers (textiles).",made={"clothing":20})
+t("irrigation","Irrigation",N,{"agriculture":40},{"stone":60,"tools":15},55,"Irrigation ditches drawn from water (at most 4 hexes): farms on watered hexes +25%; droughts 40% milder.",[("resist","drought",40)])
+t("barter","Barter",N,{"pottery":15},{"pottery":20,"food":60},50,"Trading posts; trade with other civilizations (one agreement per trading post).",made={"pottery":30})
+t("palisade","Palisade",N,{"stone_tools":30},{"wood":80},40,"Palisades drawn on hexes: they wound enemies attacking through them.")
+t("prospecting","Prospecting",N,{"masonry":10},{"food":40,"stone":20},40,"Ore signs: circles on seen land where an ore of our era lies; prospectors can search them one by one. New signs with each era: copper, then tin, gold and silver, iron ore, saltpeter.")
+t("copper_working","Copper working",N,{"masonry":20,"pottery":20},{"stone":30,"clay":20,"tools":15},70,"Copper mines.",made={"tools":30})
+t("fishing","Fishing",N,{"hunting":15},{"food":30,"wood":20},25,"Fishing huts by rivers and the sea.")
+t("rafts","Rafts",N,{"fishing":15},{"wood":50},30,"Raft landings: our people cross the river next to them.")
+t("polished_stone","Polished stone tools",N,{"masonry":20},{"stone":60,"tools":10},40,"Quarries, woodcutters, clay pits +15%.",[("production","tools",15)],True)
+t("hide_shields","Hide shields",N,{"animal_husbandry":20},{"hides":40},40,"Warriors and residents +15%.",[("strength","melee",15)],True)
+t("hafted_weapons","Hafted weapons",N,{"stone_tools":30},{"stone":30,"tools":5},30,"Warriors and residents +20%.",[("strength","melee",20)],True)
+# Bronze
+t("bronze_working","Bronze working",BR,{"copper_working":30},{"copper":20,"wood":80,"tools":20},80,"Tin mines, bronze smiths, charcoal burners (charcoal from wood: the fuel of smiths).",made={"copper":30})
+t("bronze_weapons","Bronze weapons",BR,{"bronze_working":15},{"bronze":20,"wood":40},50,"Armourers (arms), spearmen.",made={"bronze":20})
+t("the_wheel","The wheel",BR,{"agriculture":60,"masonry":20},{"wood":120,"tools":20},70,"With Horseback riding: caravans (they take horses). Porters and caravans 50% faster.",[("speed","carriers",50)])
+t("writing","Writing",BR,{"pottery":40},{"clay":80,"food":100},70,"Schools: every worker speeds one branch of research we choose (+15%).",made={"pottery":40})
+t("horseback_riding","Horseback riding",BR,{"animal_husbandry":40},{"food":150,"hides":40},70,"Stables (horses, at most 32 each), horsemen.")
+t("sailing","Sailing",BR,{"fishing":40,"rafts":20},{"wood":150,"textiles":20},70,"Harbours; transport ships (carry armies) and trade ships (carry goods).")
+t("currency","Currency",BR,{"copper_working":20},{"copper":30,"pottery":30},70,"Mints (coins from copper); pay and be paid in coins; research −5%.",[("research","*",5)],req=["barter"])
+t("code_of_laws","Code of laws",BR,{"writing":10},{"clay":60,"food":80},60,"A town office: with Masonry, villages can become towns.")
+t("archery","Archery",BR,{"hunting":40},{"wood":80,"hides":30},60,"Bows: hunters become archers (stronger, longer reach).")
+t("barracks","Barracks",BR,{"writing":10},{"wood":80,"stone":40},50,"Barracks: soldiers wait there between wars; training twice as fast.",req=["code_of_laws"])
+t("stone_walls","Stone walls",BR,{"masonry":40},{"stone":150},60,"Stone walls drawn on hexes: enemies cannot pass until they break them.",upgrade=True)
+t("bronze_age_arms","Bronze age arms",BR,{"bronze_weapons":20},{"bronze":40,"hides":20},60,"Better weapons and armour: melee +30%, infantry +20%.",[("strength","melee",30),("strength","infantry",20)],True)
+t("bronze_tools","Bronze tools",BR,{"bronze_working":25},{"bronze":30,"tools":20},55,"Quarries, woodcutters, mines +20%.",[("production","tools",20)],True)
+# Iron
+t("iron_working","Iron working",IR,{"bronze_working":50},{"bronze":40,"wood":120,"tools":40},90,"Iron mines, blacksmiths (tools from iron).",made={"bronze":40})
+t("iron_weapons","Iron weapons",IR,{"iron_working":20},{"iron":40,"wood":60},70,"Weaponsmiths (arms from iron), swordsmen.")
+t("mathematics","Mathematics",IR,{"writing":40},{"clay":100,"food":150},80,"Builders' yards: their workers make building in their settlement up to 30% faster.")
+t("construction","Construction",IR,{"masonry":60,"mathematics":10},{"stone":200,"wood":150,"tools":60},100,"Great storehouses; with Civil service, towns can become cities.")
+t("civil_service","Civil service",IR,{"writing":60},{"clay":120,"food":150},90,"Province offices; provinces; a larger reach of the administration; with Construction, towns can become cities.",req=["code_of_laws"])
+t("roads","Roads",IR,{"mathematics":10,"masonry":30},{"stone":150,"tools":30},70,"Paved roads: much faster than tracks, also over hills; major trade routes.",req=["the_wheel","construction"])
+t("engineering","Engineering",IR,{"mathematics":20,"masonry":40},{"wood":200,"tools":60,"iron":20},90,"Siege workshops (their workers build engines faster), catapults; aqueducts drawn from water to towns.",req=["construction"])
+t("medicine","Medicine",IR,{"herbal_lore":40,"writing":30},{"food":150,"pottery":40},80,"Bathhouses: in their settlement epidemics are milder and people grow faster.")
+t("philosophy","Philosophy",IR,{"writing":60,"mathematics":20},{"clay":150,"textiles":40},90,"Academies (every worker speeds one branch of research, +20%); rarer thinkers and advisors.",[("luck","*",40)])
+t("shipbuilding","Shipbuilding",IR,{"sailing":40,"iron_working":20},{"wood":250,"iron":30},90,"Shipyards, warships (fight at sea, carry armies); larger trade ships.")
+t("brick_making","Brick making",IR,{"pottery":60,"bronze_working":20},{"clay":120,"charcoal":30},70,"Brickworks (bricks from clay and charcoal): iron-age buildings and cities are built of bricks.",made={"charcoal":30})
+t("shepherding","Shepherding",IR,{"animal_husbandry":60,"weaving":20},{"food":150,"textiles":30},60,"Sheepfolds (wool) and cloth weavers (cloth and better clothing from wool); weavers can become cloth weavers.")
+t("iron_age_arms","Iron age arms",IR,{"iron_weapons":30},{"iron":60,"hides":30},70,"Better weapons and armour: melee +30%, infantry and cavalry +25%.",[("strength","melee",30),("strength","infantry",25),("strength","cavalry",25)],True)
+t("iron_tools","Iron tools",IR,{"iron_working":30},{"iron":40,"tools":30},65,"Quarries, woodcutters, mines +25%; farms +15%.",[("production","tools",25),("production","farm",15)],True)
+# Middle ages
+t("feudalism","Feudalism",M,{"civil_service":20,"horseback_riding":30},{"food":300,"iron":60,"stone":200},120,"Manors; a larger reach of the administration.",req=["construction"])
+t("chivalry","Chivalry",M,{"feudalism":20},{"food":200,"iron":60},90,"Knights (they take horses).",req=["horseback_riding"])
+t("steel","Steel",M,{"iron_working":60},{"iron":120,"wood":200,"tools":80},120,"Steelworks.",made={"tools":100})
+t("castles","Castles",M,{"masonry":60},{"stone":400,"iron":40},110,"Castles (+220% defence).",req=["stone_walls","construction"])
+t("heavy_plough","Heavy plough",M,{"agriculture":200,"iron_working":40},{"iron":60,"wood":150},90,"Farms also on poorer land; farms +15%.",[("production","farm",15),("fertility","farm",15)])
+t("crossbows","Crossbows",M,{"iron_working":40},{"iron":60,"wood":100},90,"Crossbowmen.",req=["archery"])
+t("guilds","Guilds",M,{"currency":60,"weaving":60},{"textiles":80,"pottery":60},100,"Guild halls: workshops in their settlement +25% while they work.")
+t("mills","Mills",M,{"agriculture":200},{"stone":200,"wood":150},90,"Mills by rivers: farms in their settlement +20% while they work.",req=["the_wheel"])
+t("university","University",M,{"philosophy":40,"writing":120},{"stone":300,"textiles":80},120,"Universities (every worker speeds one branch of research, +25%).")
+t("medieval_arms","Medieval arms",M,{"steel":30},{"iron":120,"textiles":30},100,"Steel weapons and plate armour: melee, infantry and cavalry +30%.",[("strength","melee",30),("strength","infantry",30),("strength","cavalry",30)],True)
+t("crop_rotation","Crop rotation",M,{"agriculture":120},{"food":200,"tools":40},70,"Farms +25%.",[("production","farm",25)],True,req=["irrigation"])
+t("longbow","Longbow",M,{"hunting":60},{"wood":150,"iron":20},80,"Archers and crossbowmen +30%.",[("strength","ranged",30)],True,req=["archery"])
+t("sawmills","Sawmills",M,{"mathematics":30,"iron_working":30},{"wood":200,"iron":30},80,"Sawmills by rivers (planks from wood): medieval buildings are built of planks.",req=["the_wheel"])
+t("lime_mortar","Lime mortar",M,{"masonry":100,"brick_making":20},{"stone":200,"bricks":40},80,"Lime kilns (mortar from stone and charcoal): castles, manors and universities need mortar.",made={"bricks":40})
+t("trebuchet","Trebuchet",M,{"engineering":40},{"wood":250,"iron":40},90,"Siege engines +100% against settlements.",[("siege","*",100)],True)
+for x in T:
+    if "experience" in x:
+        x["experience"]={k:v for k,v in x["experience"].items() if v>0}
+CAT={
+"foraging":"basics","dwellings":"basics","stockpiling":"basics","carrying":"basics","scouting":"basics","migration":"basics",
+"fire":"food","stone_tools":"industry","hunting":"food","shelters":"building","herbal_lore":"science","sewing":"industry","flint_weapons":"military",
+"agriculture":"food","pottery":"industry","animal_husbandry":"food","masonry":"building","weaving":"industry","irrigation":"food","barter":"trade","palisade":"military","copper_working":"industry","fishing":"food","rafts":"trade","polished_stone":"industry","hide_shields":"military","hafted_weapons":"military",
+"bronze_working":"industry","bronze_weapons":"military","the_wheel":"trade","writing":"science","horseback_riding":"military","sailing":"trade","currency":"trade","code_of_laws":"governance","archery":"military","barracks":"military","stone_walls":"military","bronze_age_arms":"military","bronze_tools":"industry",
+"iron_working":"industry","iron_weapons":"military","mathematics":"science","construction":"building","civil_service":"governance","roads":"trade","engineering":"building","medicine":"science","philosophy":"science","shipbuilding":"trade","iron_age_arms":"military","iron_tools":"industry",
+"brick_making":"building","shepherding":"industry","sawmills":"building","lime_mortar":"building",
+"prospecting":"industry",
+"feudalism":"governance","chivalry":"military","steel":"industry","castles":"military","heavy_plough":"food","crossbows":"military","guilds":"industry","mills":"food","university":"science","medieval_arms":"military","crop_rotation":"food","longbow":"military","trebuchet":"military"
+}
+for x in T:
+    x["category"]=CAT[x["key"]]
+d["techCategories"]=["basics","food","industry","building","trade","military","governance","science"]
+d["eraAdvanceTechs"]=5
+# A new camp starts with a gatherers' hut, paid from the settlers' provisions (Patryk, 2026-11-19, G1).
+d["foundWith"]=["gatherers_hut"]
+# Ruins (Patryk, 2026-11-19, G2): a settlement empty for emptySeconds becomes a ruin, nobody's; settlers standing on or next to its
+# centre take it again, and its buildings come back as sites that need rebuildPercent of their price.
+# Army limit and veterans (Patryk, 2026-11-20, questions 9 and 11).
+d["armyLimit"]={"comment":"Army units (not people) a civilization may have: perLevel for each settlement by its level (camp, village, town, city), plus perBuilding for each finished building of those kinds, plus perTech for each of those technologies known. Training stops at the limit; a big army stays possible, but costs food at every ration.",
+  "perLevel":[2,3,5,8],"perBuilding":{"barracks":2,"castle":2},"perTech":{"code_of_laws":2,"civil_service":3,"feudalism":3}}
+d["veterans"]={"comment":"Experience belongs to a kind of unit, not to a unit: every enemy its units kill adds one to that kind's experience. At each of the levels (kills in all) the civilization picks one of the options for that kind, for all its units of that kind, now and later: strengthPercent more damage, takenPercent of the damage taken (negative = less), speedPercent faster walking. Options stack.",
+  "levels":[20,60,140,300],
+  "options":[{"key":"hardened","name":"Hardened","text":"+10% damage","strengthPercent":10},
+             {"key":"shield_wall","name":"Shield wall","text":"10% less damage taken","takenPercent":-10},
+             {"key":"forced_march","name":"Forced march","text":"+10% walking speed","speedPercent":10}]}
+# Supplies of the army (Patryk, 2026-11-20, question 1: D).
+d["supply"]={"comment":"An army unit on its civilization's land or within rangeHexes of it is fed at the ration by its home settlement and fills its provisions: food for carryMinutes minutes of its people. Farther away it eats its provisions; before them the land gives what landHands foragers would gather on its hex (forage.perMinute food at the hex's richness, times landPercent): a small unit lives off the land longer than a big one. With no provisions left it goes hungry, then starves. A caravan can carry food to a unit in the field (it follows the unit, and can be raided on the way).",
+  "rangeHexes":3,"carryMinutes":4,"landHands":10,"landPercent":100}
+# Sieges and garrisons (Patryk, 2026-11-20, questions 3, 5, 7, 8).
+d["siege"]={"comment":"An enemy army unit at war within blockadeRange of a settlement's centre blockades it: it works at blockadeWorkPercent, trains no units, starts no buildings and sends or takes no caravans; the blockade lifts liftSeconds after the last such unit leaves. Defenders: the settlement's own army units standing on its land (they take damage divided by its defence), its guard and its residents. Guard: a standing garrison from its works and buildings, guardPerPalisadeHexPercent / guardPerWallHexPercent hundredths of a man per palisade or wall hex of its land, plus each building's guard (a castle); it grows back guardRegrowPerMinute a minute when not blockaded and costs nothing. Guard strikes with guardStrength, residents with war.defenderStrength, times the settlement's defence. Attackers' blows fall on the guard first, then on the fighting residents (war.defenderPercent of the residents when the blockade began); residents never fall below residentsFloorPercent of that number by fighting; the rest are defenceless. With no guard, no defending units and no fighting residents left the settlement falls: its taker chooses within choiceSeconds (else it is taken): take it, sack it (sackPercent of each good goes to the taker's nearest settlement; nobody may besiege it again for sackImmuneSeconds) or raze it (a ruin; its residents flee to their civilization's nearest settlement).",
+  "blockadeRange":2,"blockadeWorkPercent":50,"liftSeconds":30,"guardPerPalisadeHexPercent":50,"guardPerWallHexPercent":100,"guardStrength":8,"guardRegrowPerMinute":3,
+  "residentsFloorPercent":40,"sackPercent":50,"sackImmuneSeconds":180,"choiceSeconds":20}
+for b_ in d["buildings"]:
+    if b_["key"]=="castle": b_["guard"]=40
+d["ruins"]={"comment":"A settlement empty for emptySeconds (not the last of its people) becomes a ruin: its land is nobody's, its buildings stand ruined. Settlers on or next to its centre take it: the land is claimed again and every ruined building is a site that needs rebuildPercent of its price.","emptySeconds":60,"rebuildPercent":50}
+# Every start has copper and tin near it (Patryk, 2026-11-19, M4): placed on free land when the map has none within max hexes.
+# iron: 7A, 2026-11-20; tin small: 2026-11-22. Fair ores (Patryk, 2026-11-24, tests G1): tin within 8 and iron within 12 hexes
+# (were 5-12 and 15-20: the map decided who reached the Middle Ages). Only in the fair mode; the realistic mode adds none.
+d["startDeposits"]=[{"deposit":"copper","min":3,"max":7,"depth":1},{"deposit":"tin","min":4,"max":8,"depth":1,"size":"small"},{"deposit":"iron_ore","min":9,"max":12,"depth":1}]
+# Lodes (Patryk, 2026-11-22): deposit sizes, regions of rare ores, ore signs from Prospecting.
+d["lodes"]={"comment":"sizes: every deposit is small, medium or large (a mine or a bonus on it gives percent of the usual), drawn by weight; inside a region of its kind by regionWeight. regional: these deposits gather in regions: `regions` centres per 10000 land hexes, each `regionHexes` around; outside them only outsideKeepPercent of the deposits stay, and as many are added inside. signs: Prospecting shows, for each ore of the civilization's era (eras), up to perOre circles of signRadius hexes on land the civilization has seen within reachHexes of its settlements; the ore lies in the circle, its centre is moved up to offsetHexes away. Signs are worked out every recountSeconds.",
+  "sizes":[{"key":"small","name":"small","percent":50,"weight":20,"regionWeight":10},{"key":"medium","name":"medium","percent":100,"weight":50,"regionWeight":45},{"key":"large","name":"large","percent":150,"weight":30,"regionWeight":45}],
+  "regional":{"deposits":["tin","gold","silver","horses"],"regions":4,"regionHexes":10,"outsideKeepPercent":30},
+  "signs":{"tech":"prospecting","signRadius":3,"offsetHexes":2,"perOre":3,"reachHexes":30,"recountSeconds":20,
+    "eras":{"neolithic":["copper"],"bronze_age":["tin","gold","silver"],"iron_age":["iron_ore"],"middle_ages":["saltpeter"]}}}
+# Gateways (Patryk, 2026-11-19, M1): to leave an era a civilization must also know its gateway technology (metal opens the next era).
+d["eraGateways"]={"comment":"Era key: technology of that era that must be known (besides eraAdvanceTechs of it) to enter the next era.",
+  "neolithic":"copper_working","bronze_age":"bronze_working","iron_age":"iron_working"}
+# Roads are part of the map, drawn hex by hex (decision of 2026-11-18): tracks from the start, paved roads with Roads.
+# Drawn paths and waypoints (abuse tests 2026-11-24: 5000 far waypoints froze the server for a second).
+d["drawnPaths"]={"comment":"A path given to a unit, a patrol, a road or a work: at most maxHexes hexes in all, at most maxJumps points that do not touch the one before (the way between them is searched, at most jumpSearchNodes hexes each).","maxHexes":1000,"maxJumps":32,"jumpSearchNodes":12000}
+d["roads"]={"comment":"Levels of roads. walkPercent: walking cost on them, of the hex's cost (capped at 150 so roads cross rough land). reach: hexes from our nearest settlement. supply: goods carriers bring to a new camp joined to our roads.",
+  "levels":[{"key":"track","name":"Track","tech":"carrying","price":{"wood":2},"seconds":2,"walkPercent":60},
+            {"key":"road","name":"Road","tech":"roads","price":{"stone":3,"wood":1},"seconds":4,"walkPercent":35}],
+  "reach":25,"supply":{"food":40,"wood":60,"stone":30,"clay":20}}
+d.pop("tripFoodPer10Hexes", None)
+d["survey"]={"comment":"What is known of the land (Patryk, 2026-11-19). On our own land everything is known. Beyond it, seeing a hex shows only the surface deposits; the rest is found by units that survey (units[].survey): standing still, they look at every hex within radius. rock: prospectors find stone, clay, flint and ores, each ore only from the era in eras (a civilization recognises an ore once it is in the era of the technology that works it, even before it knows the technology); ores not listed are never found in these eras. soil: surveyors find fertility and the deposits in soil.",
+  "radius":3,"surface":["game","fish","horses"],"soil":["wild_grain","cattle","sheep"],
+  "eras":{"flint":"stone_age","stone":"stone_age","clay":"stone_age","salt":"neolithic","copper":"neolithic","tin":"bronze_age","gold":"bronze_age","silver":"bronze_age","iron_ore":"iron_age","marble":"iron_age","saltpeter":"middle_ages"}}
+d['comment'] = d['comment'].replace("Food: every person eats foodPerPersonPerMinute;", "Food: every person eats foodPerPersonPerMinute, paid once a minute at the ration (see rations);").replace(" without food it loses starvePercentPerMinute.", " it does not grow while it has no food (deaths from hunger come at the rations; starvePercentPerMinute is not used).")
+# Rations (Patryk, 2026-11-19): no running cost of units, as in RTS games. Every minute each settlement feeds all its people:
+# its residents and the units that come from it. Short of food, the idle go hungry first, then the workers, the units last;
+# a second missed ration in a row kills some of the hungry.
+d["rations"]={"comment":"Every everySeconds a settlement feeds everyone it has: its residents and its units (soldiers, scouts, carriers, settlers on the way), each eating food.foodPerPersonPerMinute for the time since the last ration. Short of food, its units are fed first (fighting ones first), then its workers, then the people without a job: those go hungry first. Hungry people work, gather, fight and walk at hungryPercent. Missed again at the next ration: starvingPercent, and starveLosePercent of the hungry (at least 1) die then and at every further missed ration. One full ration ends it.",
+  "everySeconds":60,"hungryPercent":75,"starvingPercent":50,"starveLosePercent":20}
+# Trees (Patryk, 2026-11-18 19:35: too little wood, too few trees): forests are full of trees; on open land groves grow in
+# clumps, groveChance percent of each biome's hexes. Woodcutters work groves too (at groveWoodPercent), gatherers pick up
+# their wood the same.
+d["trees"]={"comment":"Groves on open land, in clumps: groveChance percent of a biome's land hexes. A grove gives groveWoodPercent of a forest's wood to woodcutters and gatherers.",
+  "groveChance":{"grassland":50,"savanna":40,"steppe":25,"tundra":15,"swamp":50},"groveWoodPercent":60}
+# Works on hexes (decision of 2026-11-18): drawn hex by hex like roads, kept under whatever is built on the hex, removed only
+# by the player. Ditches and aqueducts run from water (fromWater: their longest reach). Palisades wound enemies standing on
+# them; walls stop enemies until broken (strength). Bridges come by themselves where a road crosses a river, after bridgeTech.
+d["works"]={"comment":"Works drawn on hexes; price and seconds per hex. ditch: farms on watered hexes +farmPercent. palisade: enemies at war standing on it lose woundPercentPerSecond of their people a second. wall: foreign units cannot enter until its strength (hundredths of damage) is broken. aqueduct: a settlement it reaches grows growthBonus% a minute faster and suffers resistEpidemicPercent less from epidemics.",
+  "kinds":[
+    {"key":"ditch","name":"Irrigation ditch","tech":"irrigation","price":{"wood":2,"stone":1},"seconds":3,"fromWater":4,"farmPercent":25},
+    {"key":"palisade","name":"Palisade","tech":"palisade","price":{"wood":6},"seconds":4,"woundPercentPerSecond":2},
+    {"key":"wall","name":"Stone wall","tech":"stone_walls","price":{"stone":12},"seconds":8,"strength":60},
+    {"key":"aqueduct","name":"Aqueduct","tech":"engineering","price":{"stone":10,"tools":1},"seconds":6,"fromWater":12,"growthBonus":2,"resistEpidemicPercent":30}],
+  "bridgeTech":"masonry","bridgePrice":{"stone":20,"wood":10}}
+# Winter, clothing and gathering (decision of 2026-11-18).
+d["seasons"]={"comment":"Winter comes every cycleMinutes and lasts winterMinutes (no years: playability first). Work is rounded down to steps of workStepPermille. In winter every worker works at winterWorkPercent; buildings with winterPercent lose that much more (gathering and fields). Civilizations are told warnSeconds before.",
+  "workStepPermille":25,"cycleMinutes":8,"winterMinutes":2,"warnSeconds":30,"winterWorkPercent":50}
+d["clothing"]={"comment":"Every set of clothing a worker has adds bonusPercent. Outside winter only the first set counts (at most 100+bonus); in winter more sets count, up to winterMaxPercent. Worked out per settlement: sets = clothing in store / people. Sets wear out: wearPerPersonPerMinute.",
+  "good":"clothing","bonusPercent":15,"winterMaxPercent":110,"wearPerPersonPerMinute":0.03,"wearOnlyInWinter":True}
+# wearOnlyInWinter (Patryk, 2026-11-19, G5): clothing wears out only in winter; the tailor also makes 2 per worker-minute.
+d["forage"]={"comment":"People of a settlement told to gather pick up food, wood and stone around it. Per gatherer per minute at richness 100: perMinute. A hex's richness: food and wood by biome, stone by relief; deposits and rivers add. A settlement's richness is the mean over the land hexes in its radius (worked out when it is founded or grows).",
+  "perMinute":{"food":0.5,"wood":0.25,"stone":0.1},
+  "biomes":{"grassland":[100,10],"steppe":[70,0],"savanna":[80,10],"deciduous_forest":[80,100],"jungle":[90,80],"taiga":[50,100],"swamp":[60,40],"tundra":[30,0],"desert":[10,0],"ice":[0,0]},
+  "relief":[5,50,100],"deposits":{"stone":{"stone":100},"flint":{"stone":50},"wild_grain":{"food":50},"game":{"food":30}},"riverFood":20}
+d["food"].pop("idleForagePerMinute",None)
+d["war"]["injuredPercent"]=30
+# E1, E3 (Patryk, 2026-11-19): declaring war costs reputation; the AI pays tribute only after it lost tributeNeedsKills people
+# to the war; food in a tribute is at most tributeFoodMaxPercent of the payer's food; truceSeconds after peace.
+d["war"].update({"declareReputation":-10,"tributeNeedsKills":5,"tributeFoodMaxPercent":10,"maxWars":3})
+d["war"].pop("truceSeconds", None)  # ADR 0030 (3B): the length of peace is chosen in the offer (peace.minutes)
+if "maxWars" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" maxWars: most wars a civilization may be in at once (design chapter 8); nobody may declare war on a civilization already in that many."
+if "declareReputation" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" declareReputation: reputation every declaration of war costs. tributeNeedsKills: people a civilization must have lost to the war before its AI agrees to pay tribute. tributeFoodMaxPercent: most food (percent of the payer's) a tribute takes."
+d["war"].pop("soldierFoodPerMinute", None)
+d["war"]["comment"]=d["war"]["comment"].replace(" Soldiers eat soldierFoodPerMinute each.", " Soldiers are fed by rations (see rations).")
+d["rivers"]={"comment":"Until freeFromEra, rivers can be crossed only next to one's own building that gives a crossing (raft landings).","freeFromEra":"bronze_age"}
+d['technologies']=T
+
+# remove old unit upgrades fields (now effects); keep terrain bonus
+d["research"]["maxSupportPercent"]=50
+# Pace of research by era (2026-11-19: about 60 minutes to the Middle Ages): percent of the price, of the experience and goods
+# made asked for, and of the time, for the technologies of each era (stone, neolithic, bronze, iron, middle ages).
+# Tests 2026-11-23 (Patryk: experience is a bad brake, eras about equal): experience and goods made are no longer asked (0);
+# the stone age takes its time from research, the neolithic is cheap, the iron age costs more.
+d["research"]["pace"]={"pricePercent":[100,20,18,45,25],"experiencePercent":[0,0,0,0,0],"secondsPercent":[120,50,35,60,35]}
+if "pace:" not in d["research"]["comment"]:
+    d["research"]["comment"]+=" pace: percent of the price, of the experience and goods made asked for, and of the time of the technologies of each era (index = era)."
+if "maxSupportPercent:" not in d["research"]["comment"]:
+    d["research"]["comment"]+=" maxSupportPercent: schools and academies speed a branch of research at most this much."
+# A1 (tests 2026-11-20): caravans for a settlement's upgrade carry a margin, because the settlement keeps using the goods
+# while they are on the way (775 of 777 AI upgrades failed on 29 of 30 clay). The rest stays in the settlement.
+d["upgradeCaravans"]={"comment":"A settlement short of the goods for its upgrade gets them by caravan from our other settlements: they carry what is missing plus extraPercent of the price of that good (at least 1), as far as the senders have it. When they arrive short, the AI asks again only after aiRetrySeconds.",
+  "extraPercent":10,"aiRetrySeconds":60}
+# A2/A3 (tests 2026-11-20): a caravan to a unit with no way to it is refused; the AI does not send another for noWaySeconds.
+d["supply"]["noWaySeconds"]=60
+# Abuse tests 2026-11-24: 5000 standing routes sent 2000 caravans a minute from settlements of one person.
+d["supply"]["routesPerSettlement"]=8
+if "noWaySeconds:" not in d["supply"]["comment"]:
+    d["supply"]["comment"]+=" noWaySeconds: a caravan to a unit there is no way to is refused, and the AI sends none to that unit for this long."
+# Decisions of Patryk after the tests of 2026-11-20 (claude/decyzje-testy-2026-11-20.md).
+d["war"].update({"tributeAfterSeconds":120,"reputationFloor":-200,"badReputation":-100})
+# 2B: loot goes home by caravan; the same settlement may be sacked again only after 10 minutes. AI takes within 12 hexes.
+# 13B: the assault starts 30 s after the blockade (time to react: see docs/sim/walka.md). 3B: 25% of a razed store stays.
+d["siege"].update({"sackImmuneSeconds":600,"assaultAfterSeconds":30,"aiTakeWithinHexes":12})
+if "assaultAfterSeconds:" not in d["siege"]["comment"]:
+    d["siege"]["comment"]=d["siege"]["comment"].replace("sackPercent of each good goes to the taker's nearest settlement","sackPercent of each good goes by caravan to the taker's nearest settlement, and can be raided on the way")
+    d["siege"]["comment"]+=" assaultAfterSeconds: the attackers strike the guard and residents only this long after the blockade began (time for the defender to react). aiTakeWithinHexes: the AI takes a fallen settlement this close to its own and sacks one farther away."
+d["ruins"]["razedKeepPercent"]=25
+if "razedKeepPercent:" not in d["ruins"]["comment"]:
+    d["ruins"]["comment"]+=" razedKeepPercent: of a razed settlement's store this percent stays in the ruins, the rest is lost."
+d["veterans"]["levels"]=[50,150,350,700]
+d["veterans"]["shareNearHexes"]=2
+if "shareNearHexes:" not in d["veterans"]["comment"]:
+    d["veterans"]["comment"]+=" shareNearHexes: an enemy killed counts for every kind of ours fighting within this many hexes of it, once per kind."
+if "tributeAfterSeconds:" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" The war score counts from the start of the current war; tributeAfterSeconds: peace with tribute only this long after the war began. reputationFloor: reputation never falls below it; badReputation: below it the AI declares new wars half as often."
+# 9B: homes per settlement level (camp 60, village 250, town 800, city no limit); 10B: building technologies raise the
+# homes of a stone house on the same hex (houses grow upward), the upgrade lets a settlement grow wider.
+for l_ in d["settlementLevels"]:
+    l_["maxHousing"]={"camp":60,"village":250,"town":800,"city":0}[l_["key"]]
+for t_ in d["technologies"]:
+    up={"construction":4,"engineering":4,"guilds":8}.get(t_["key"])
+    if up and not any(e.get("kind")=="housing" for e in t_.get("effects",[])):
+        t_.setdefault("effects",[]).append({"kind":"housing","target":"stone_house","value":up})
+        t_["gives"]=(t_.get("gives","")+f" Stone houses: +{up} homes (they grow a storey).").strip()
+# 11B: an early food alert.
+d["alerts"]={"comment":"foodLowMinutes: a settlement that eats more than it makes is warned when its food lasts this long or less. noResearchSeconds: the reminder that nothing is being researched comes only this long after the last research ended (or the game began), and only when something can be researched.","foodLowMinutes":3,"noResearchSeconds":60}
+# 12B: until the AI uses ships, civilizations start on the main continent, at most 60 hexes by land from another civilization.
+d["startPhase"]["neighbourMaxHexes"]=60
+d["startPhase"]["neighbourMinHexes"]=25
+if "neighbourMaxHexes:" not in d["startPhase"]["comment"]:
+    d["startPhase"]["comment"]+=" neighbourMaxHexes: every civilization starts on the main continent (the largest land) and, after the first, at most this many hexes by land from a civilization already placed (while choosing: from the shown circles); 0 = anywhere. neighbourMinHexes: placed starts and the AI's choices keep this far from other starts when the land allows (room to grow)."
+# 16B, 17B: the AI builds homes only with food for 3 minutes, and a civilization under 30 trains no units (but settlers) and
+# builds no workplace while jobs are free.
+d["ai"]={"comment":"homesFoodMinutes: the AI builds new homes only while its food lasts this many minutes of eating. smallPeople: below this many people the AI trains no units but settlers and builds no new workplace while jobs are free.","homesFoodMinutes":3,"smallPeople":30}
+# Patryk, 2026-11-21: a longer calm start for the AI (it was 8 minutes in code), and stables give twice the horses and keep 32.
+d["ai"]["peacefulStartMinutes"]=15
+d["ai"]["comment"]+=" peacefulStartMinutes: the AI declares no war in the first this many minutes of a game."
+# 2026-11-22 (long runs: big civilizations starved after 90 minutes): food made must cover the winter, and big civilizations build
+# several food makers at once.
+d["ai"]["foodMarginPercent"]=30
+d["ai"]["foodSitesPerPeople"]=400
+d["ai"]["comment"]+=" foodMarginPercent: outside winter the AI wants food made to exceed its eating by this percent (the summer surplus has to cover the winter); short of it, it builds food and no new homes. foodSitesPerPeople: one more food building may be under construction at a time per this many people."
+# AI battle (roadmap 7, 2026-11-21): retreat of the hurt, field battles before marching on, a muster in formation first.
+d["aiBattle"]={"comment":"retreatInjuredPercent: a unit at war with this share of its people wounded goes home to heal; retreatSizePercent: one with fewer people than this share of its size goes home and guards it. engageHexes: a seen enemy army this close to a soldier is fought first, by every soldier this close to it (a flank). An offensive starts from our settlement nearest the target: soldiers within musterFromHexes but farther than musterHexes gather there in formation, and the march starts once musterPercent of the power stands there.",
+  "retreatInjuredPercent":50,"retreatSizePercent":30,"engageHexes":5,"musterHexes":3,"musterFromHexes":30,"musterPercent":70}
+# 7A: entering an era can also need goods made (iron age: bronze), so nobody enters it without bronze and then stands still.
+# Tests 2026-11-23 (P4, equal eras): the iron age no longer asks for bronze made (7A); iron working's price needs bronze anyway,
+# and the wait for tin was the longest of the game (bronze age 28 minutes, iron age 7).
+d["eraEntryMade"]={"comment":"Era key: goods the people must have made (in all) to enter that era, besides its techs and gateway.","middle_ages":{"bricks":20}}
+# ADR 0030 (Patryk, 2026-11-23): peace from negotiation (1B 2B 3B 4A 5A 6A) and war weariness (7.1A 7.2A 7.3A 7.4B 7.5B).
+d["war"]["comment"]=d["war"]["comment"].replace(" truceSeconds: truce after peace.","")
+d["peace"]={"comment":"Peace offers name goods and amounts, maybe one settlement, and a length of peace (minutes: one of these). Only the side the war favours may demand; the other may offer a white peace or give something. A settlement may be demanded unless it is the civilization's first; our army must besiege it or it must lie within settlementHexes of our land. Worth: goods at their worth, a settlement at settlementWorthPerPerson food per person plus settlementBuildingPercent of the price of its finished buildings. What the course of the war asks of the loser: one percent of its wealth (goods and settlements but its first) per scorePerPercent points of war score lead plus one per wearinessPerPercent points of weariness lead, at most maxPercent; a loser who declared the war gives aggressorExtraPercent more. The AI takes terms within that, with up to aiGiveMarginPercent more give the more peaceful it is; the margin changes by aiLosingLengthPercent (when it loses) or aiWinningLengthPercent (when it wins) for each length. breakPercent: reputation for breaking a peace of each length, percent of a surprise attack's.",
+  "minutes":[3,6,10],"breakPercent":[100,100,200],"settlementHexes":12,"settlementWorthPerPerson":10,"settlementBuildingPercent":50,
+  "scorePerPercent":5,"wearinessPerPercent":4,"maxPercent":40,"aggressorExtraPercent":25,"aiGiveMarginPercent":20,
+  "aiLosingLengthPercent":[-10,0,10],"aiWinningLengthPercent":[10,0,-10]}
+d["weariness"]={"comment":"War weariness of a people in each of its wars, 0-100: perMinute a minute of war, perLostPercent for each percent of its people the enemy killed, hungerPerMinute a minute while a settlement of it is hungry, besiegedPerMinute a minute for each settlement the enemy besieges, sacked, taken (also razed) and caravanRaided at once; it falls by peaceFallPerMinute a minute in peace. From workFrom up, buildings that use goods work less, down to workMaxLossPercent less at 100 (the highest weariness of its wars counts). The AI looks for peace from aiPeaceAt, and a losing AI offers goods from aiPayAt.",
+  "perMinute":1,"perLostPercent":2,"hungerPerMinute":2,"besiegedPerMinute":2,"sacked":10,"taken":15,"caravanRaided":3,"peaceFallPerMinute":5,
+  "workFrom":50,"workMaxLossPercent":20,"aiPeaceAt":60,"aiPayAt":80}
+# Known issue 15 (2026-11-23): one search of the way for soldiers marching on the same goal.
+d["march"]={"comment":"Soldiers sent at the same goal share a way: a soldier within shareHexes of where the last search for that goal started, less than shareSeconds ago, walks there (a search of at most joinSearch hexes) and then the same way. One long search per expedition instead of one per soldier.",
+  "shareSeconds":5,"shareHexes":3,"joinSearch":300}
+# Known issue 13 (2026-11-23): the AI feeds workshops by standing routes from the settlement that makes their input.
+d["ai"].update({"inputRouteTripMinutes":3,"inputRouteTargetMinutes":6,"inputRouteKeepMinutes":2,"inputRoutesPerSettlement":4})
+if "inputRouteTripMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" inputRouteTripMinutes: a workshop whose settlement uses more of an input than it makes gets a standing route from our settlement with the most to spare of it, carrying this many minutes of the use a trip while the target holds less than inputRouteTargetMinutes of it; the source keeps inputRouteKeepMinutes of its own use. At most inputRoutesPerSettlement such routes per settlement we have."
+# 2026-11-23: another maker of a short input until the store lasts 10 minutes of the shortfall (was: until 20 in store).
+d["ai"]["inputMakerStoreMinutes"]=10
+# A3 (tests 2026-11-24): amounts the AI code used to hold (whole units).
+d["ai"]["amounts"]={"comment":"Whole units the AI decides by. lowFood: below it the AI builds food first. lowGood: a good it uses below this (and not made) is short: it builds a maker or asks for a trade. lowTools: builds a toolmaker below it. foodSourceKeep: a settlement sending food keeps at least this. foodSendAtLeast: a caravan of food carries at least this. shareLow: a workshop's input below this calls a caravan from the richest settlement, which keeps shareKeep plus shareMargin; a caravan carries shareTrip. routeSourceLow: an input route whose source falls below this (and makes none) ends; a route trip carries at least this. unitSupplyHomeKeep: a home settlement supplies its unit only while keeping this much food beyond twice the load. warNetFood: no new soldiers while food made a minute exceeds eating by less than this.",
+ "lowFood":3,"lowGood":20,"lowTools":10,"foodSourceKeep":60,"foodSendAtLeast":40,"shareLow":10,"shareKeep":20,"shareMargin":5,"shareTrip":30,"routeSourceLow":10,"unitSupplyHomeKeep":40,"warNetFood":2}
+if "inputMakerStoreMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" inputMakerStoreMinutes: when its workshops use more of an input than the civilization makes, the AI builds another maker of it (one at a time) until the store lasts this many minutes of the shortfall."
+# 2026-11-23 (known-issues 13): workshops idle for an ore no known deposit gives: more prospectors, looking farther.
+d["ai"]["starvedProspectors"]=2
+if "starvedProspectors:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" starvedProspectors: while our workshops use more of an ore (iron, copper...) than we make and no deposit of it we know is free for a mine, the AI keeps up to this many prospectors (else one) and sends them farther."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+
+# validation: experience refs must have a workers-building; buildings/units techs exist
+keys={x['key'] for x in T}
+work={}
+for x in B:
+    if x['workers']>0: work.setdefault(x['tech'],[]).append(x['key'])
+probs=[]
+for x in T:
+    for k in x.get('experience',{}):
+        if k not in keys: probs.append(('missing',x['key'],k))
+        elif k not in work and k!='foraging': probs.append(('noxp',x['key'],k))
+    for k in x.get('requires',[]):
+        if k not in keys: probs.append(('requires',x['key'],k))
+    for k in x.get('made',{}):
+        if k not in {g['key'] for g in d['goods']}: probs.append(('made',x['key'],k))
+for x in B+U:
+    if x.get('tech','foraging') not in keys: probs.append(('tech',x['key'],x.get('tech')))
+base=[x for x in T if not x.get('upgrade')]; up=[x for x in T if x.get('upgrade')]
+print(len(base),len(up),probs)
+from collections import Counter
+print(Counter(x['era'] for x in base))
+# Pace of the first minutes (roadmap 6, 2026-11-21): the start had too little wood (huts at 7 minutes, the first toolmaker at 12).
+d=json.load(open(p)); d["start"]["stock"]={"food":120,"wood":100,"stone":20}; json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+# Tests 2026-11-23 (Patryk): the AI looks before it attacks and weighs the gain (P1), reputation heals in peace (P2), settlements
+# see farther (P3).
+d=json.load(open(p))
+d["aiWar"]={"comment":"When the AI starts a war (Patryk, 2026-11-23). It never breaks a peace that still runs. A target settlement not seen for intelMinutes gets a scout first. It attacks when its power is powerTimes the defence it knows, the settlement holds at least gainPercent of the soldiers it sends in people (the gain), and the target civilization is not small: a people whose known people is below smallTargetPercent of ours, or below smallTargetPeople, is spared unless its reputation is below war.badReputation. Only an AI with aggression of at least surpriseAggression attacks without declaring war. While a civilization it met has a bad name, the AI keeps fearArmyPercent more soldiers and seeks defensive alliances against it. At war it offers peace when the enemy's score is losingScoreMargin above its own, when weary, or with randomPeacePercent chance a thought.",
+ "intelMinutes":3,"powerTimes":2,"gainPercent":60,"smallTargetPercent":40,"smallTargetPeople":40,"fearArmyPercent":50,"randomPeacePercent":3,"losingScoreMargin":20,"surpriseAggression":75}
+d["war"]["reputationRegenPerMinute"]=4
+if "reputationRegenPerMinute" not in d["war"]["comment"]:
+    d["war"]["comment"]+=" reputationRegenPerMinute: a bad name heals by this much a minute (up to 0) while the civilization is not the aggressor of a war going on."
+d["vision"]={"comment":"settlementSightBeyond: hexes a settlement sees beyond its own land. Units of a civilization we have not met that our settlements see, and whose civilization has seen the settlement, raise the alert 'Strangers' (not who nor where).","settlementSightBeyond":2}
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+# Patryk, 2026-11-23: a civilization left alone survives on gathering, but does not grow on it.
+d=json.load(open(p))
+d["forage"]["subsistencePercent"]=100
+if "subsistencePercent" not in d["forage"]["comment"]:
+    d["forage"]["comment"]+=" subsistencePercent: idle gatherers always find at least this share of the food they eat (any land, any season), so a civilization left alone survives but gathers no surplus."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+# A6 (tests 2026-11-23): numbers of the AI out of the code.
+d=json.load(open(p))
+d["ai"]["wayToMinutes"]=2
+d["ai"]["thinkEveryTicks"]=30
+d["ai"]["careSettlementPeople"]={"school":40,"bathhouse":50,"academy":70,"university":90}
+if "wayToMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" thinkEveryTicks: ticks between two thoughts of one AI people. wayToMinutes: the AI remembers this long (plus up to a minute, different for each target) whether its armies can reach a settlement; one thought searches one way at most. careSettlementPeople: people a settlement needs before the AI builds there a school, bathhouse, academy or university."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+d=json.load(open(p))
+d["ai"]["researchKeepFoodMinutes"]=3
+if "researchKeepFoodMinutes:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" researchKeepFoodMinutes: the AI starts a research only when this many minutes of its eating stay in store after paying."
+if "thinkEveryTicks:" not in d["ai"]["comment"]:
+    d["ai"]["comment"]+=" thinkEveryTicks: ticks between two thoughts of one AI people."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+
+# Tests 2026-11-23 (P4): civilizations grow 10% a minute (was 8): the neolithic took 20 minutes with too few hands.
+d=json.load(open(p))
+d["growth"]["growthPercentPerMinute"]=10
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+
+# P5 (Patryk, 2026-11-24, tests round): after a white peace neither side may start a new war on the other for a while.
+d=json.load(open(p))
+d["peace"]["whiteTruceMinutes"]=3
+if "whiteTruceMinutes:" not in d["peace"]["comment"]:
+    d["peace"]["comment"]+=" whiteTruceMinutes: after a white peace neither side may declare war on the other (or attack it) for this many minutes."
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')
+
+# R4-4 (Patryk, 2026-11-25, multiplayer plan chapter 22): a nickname already in the game gets one of these, not yet taken.
+d=json.load(open(p))
+d["multiplayer"]={
+    "comment":"MP4 (multiplayer plan, chapters 11 and 19): speedVoteSeconds: how long a vote on the speed runs; a change passes when more than half of the players still playing say yes (no vote = no). proposeCooldownSeconds: a player may propose a change this often. pingEverySeconds: how often the server measures each player's ping. chatPerSecond, chatBurst: lines of chat a player may send a second, and at once. playerVoteSeconds: how long a vote on a player runs (taking a civilization, removing a player). voteAfterSeconds: a player votes on players after leading a civilization this long (R4-1; when nobody has, every player votes). overviewSeconds: how often observers and fallen players get the table of civilizations and the new lines of the intentions log (observer full view, Patryk 2026-11-26). intentSeconds: the orders of a player are summed up this often into one line of the intentions log (3a: effects, not every command). intentLines: lines of the intentions log the server keeps for observers who join later. nicknameSuffixes: a player whose nickname is already taken in a game gets one of these at random, one no other player there has (e.g. \"Ania the Late\").",
+    "speedVoteSeconds":20,"proposeCooldownSeconds":120,"pingEverySeconds":2,"chatPerSecond":1,"chatBurst":5,"playerVoteSeconds":30,"voteAfterSeconds":180,"overviewSeconds":2,"intentSeconds":10,"intentLines":300,
+    "nicknameSuffixes":["the Second","the Other One","Doppelganger","the Late","the Lesser","the Echo","the Understudy","the Spare","the Sequel","the Remake","the Evil Twin","the Good Twin","the Copy","the Imposter","the Reflection","from Another Timeline","the Bootleg","Junior","the Rerun","Number Two","the Backup","the Shadow","Who Came Later","the Lookalike","the Knockoff","the Encore","the Mirror","the Unexpected","the Uninvited","the Also","Mk II","the Reprint","the Afterthought","the Other Other One","Who Was Here First (Allegedly)","the Clone","the Duplicate","the Recurring","the Reissue","Again","the Unoriginal","the Forgery","the Stand-In","the Body Double","the Alter Ego","the Remix","the Second Draft","the Twice-Told","the Returning","the Also-Ran"],
+}
+json.dump(d,open(p,'w'),indent=2,ensure_ascii=False); open(p,'a').write('\n')

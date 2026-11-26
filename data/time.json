@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "comment": "Time of the live game (ADR 0025, stage 6). One turn of the simulation loop is one tick; at speed x1 the server runs ticksPerSecond ticks a second (x2 and x4 run two and four times as many). A civilization develops in pulses (economy, people, research, planned AI decisions), every ticksPerPulse ticks, each civilization in a tick of its own; a pulse covers the turn length of the civilization's era (eras.json monthsPerTurn), exactly like an own step of ADR 0018 did. The world (climate, regrowth outside settlements, the sea) has its pulse every ticksPerPulse ticks too and moves the year counter by the turn length of the era of the most advanced living civilization; years are only a number for players. Action is counted in ticks: one month of action (one step of a war campaign; the unit of war timers such as readiness and the quiet peace of war.json) lasts ticksPerActionMonth ticks, so a war never stops the world. Working values, to be tuned in stage 6 PR 2.",
+  "ticksPerSecond": 10,
+  "ticksPerPulse": 30,
+  "ticksPerActionMonth": 5
+}

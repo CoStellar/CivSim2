@@ -22,16 +22,55 @@ namespace CivSim.Protocol.Messages;
 [Union(13, typeof(CivilizationDetailsMessage))]
 [Union(14, typeof(NameSuggestionsRequestMessage))]
 [Union(15, typeof(NameSuggestionsMessage))]
+[Union(16, typeof(PlayContentMessage))]
+[Union(17, typeof(PlayViewMessage))]
+[Union(18, typeof(PlayCommandMessage))]
+[Union(19, typeof(PlacesRequestMessage))]
+[Union(20, typeof(PlacesMessage))]
+[Union(21, typeof(PlaySummaryRequestMessage))]
+[Union(22, typeof(PlaySummaryMessage))]
+[Union(23, typeof(PlayCellsMessage))]
+[Union(24, typeof(PlayObjectsMessage))]
+[Union(25, typeof(SaveGameRequestMessage))]
+[Union(26, typeof(SaveGameResultMessage))]
+[Union(27, typeof(SetTutorialMessage))]
+[Union(28, typeof(LobbyStateMessage))]
+[Union(29, typeof(LobbyReadyMessage))]
+[Union(30, typeof(LobbyChatMessage))]
+[Union(31, typeof(LobbyStartMessage))]
+[Union(32, typeof(GameStartingMessage))]
+[Union(33, typeof(PlayPingMessage))]
+[Union(34, typeof(PlayPlayersMessage))]
+[Union(35, typeof(PlayChatMessage))]
+[Union(36, typeof(PlayChatLineMessage))]
+[Union(37, typeof(PlayVoteMessage))]
+[Union(38, typeof(PlayJoinMessage))]
+[Union(39, typeof(PlayWatchMessage))]
+[Union(40, typeof(PlayKickMessage))]
+[Union(41, typeof(PlayOverviewMessage))]
+[Union(42, typeof(PlayEyeMessage))]
 public interface IProtocolMessage
 {
 }
 
-/// <summary>Client → server: first message after connecting.</summary>
+/// <summary>
+/// Client → server: first message after connecting. <see cref="GameVersion"/> must be the server's (multiplayer, MP2);
+/// <see cref="Password"/> is the game's password, if it has one; <see cref="ReturnKey"/> is the key from an earlier
+/// <see cref="WelcomeMessage"/> of this game, to lead the same people again after a lost connection.
+/// </summary>
 [MessagePackObject]
 public sealed record HelloMessage(
     [property: Key(0)] int ProtocolVersion,
     [property: Key(1)] string PlayerName,
-    [property: Key(2)] ClientRole Role = ClientRole.Player) : IProtocolMessage;
+    [property: Key(2)] ClientRole Role = ClientRole.Player,
+    [property: Key(3)] int CivId = -1,
+    [property: Key(4)] string GameVersion = ProtocolInfo.GameVersion,
+    [property: Key(5)] string Password = "",
+    [property: Key(6)] string ReturnKey = "") : IProtocolMessage
+{
+    /// <summary>A player who names no civilization gets the first free one.</summary>
+    public const int AnyCiv = -1;
+}
 
 /// <summary>What a client wants to be.</summary>
 public enum ClientRole
@@ -45,10 +84,15 @@ public enum ClientRole
 
 /// <summary>
 /// Server → client: connection accepted; tells the client who it is and which civilization it leads
-/// (<see cref="NoCiv"/> for an observer).
+/// (<see cref="NoCiv"/> for an observer). <see cref="ReturnKey"/> lets the player come back to the same people after a lost
+/// connection (multiplayer, MP2); the client keeps it for this game only.
 /// </summary>
 [MessagePackObject]
-public sealed record WelcomeMessage([property: Key(0)] int ProtocolVersion, [property: Key(1)] int PlayerId, [property: Key(2)] int CivId) : IProtocolMessage
+public sealed record WelcomeMessage(
+    [property: Key(0)] int ProtocolVersion,
+    [property: Key(1)] int PlayerId,
+    [property: Key(2)] int CivId,
+    [property: Key(3)] string ReturnKey = "") : IProtocolMessage
 {
     /// <summary>Civilization id sent to observers.</summary>
     public const int NoCiv = -1;
@@ -84,13 +128,70 @@ public sealed record GameViewMessage(
     [property: Key(6)] IReadOnlyList<ChronicleEntry>? Chronicle = null,
     [property: Key(7)] IReadOnlyList<SettlementView>? Settlements = null,
     [property: Key(8)] long Month = 0,
-    [property: Key(9)] bool LiveSeasons = false) : IProtocolMessage;
+    [property: Key(9)] bool LiveSeasons = false,
+    [property: Key(10)] IReadOnlyList<UnitView>? Units = null,
+    [property: Key(11)] int PlayerLevers = 0,
+    [property: Key(12)] IReadOnlyList<AiDecisionView>? AiDecisions = null,
+    [property: Key(13)] ResearchView? Research = null,
+    [property: Key(14)] IReadOnlyList<ProposalView>? Proposals = null) : IProtocolMessage;
+
+/// <summary>
+/// What the player's civilization researches and what it may research next (stage 6 PR P1, lever 2): the technology now (key, or empty),
+/// how far it got (0–1000) and the technologies it may start now, cheapest first.
+/// </summary>
+[MessagePackObject]
+public sealed record ResearchView(
+    [property: Key(0)] string Researching,
+    [property: Key(1)] int ProgressPermille,
+    [property: Key(2)] IReadOnlyList<TechnologyOption> Options);
+
+/// <summary>A technology the player may research now: key (for SetResearchDto), name, era and base cost in research points.</summary>
+[MessagePackObject]
+public sealed record TechnologyOption([property: Key(0)] string Key, [property: Key(1)] string Name, [property: Key(2)] int Era, [property: Key(3)] long Cost);
+
+/// <summary>A pending proposal to the player's civilization (stage 6 PR P1, lever 4): from whom, which treaty (1 peace, 2 trade, 3 non-aggression, 4 alliance), since when.</summary>
+[MessagePackObject]
+public sealed record ProposalView([property: Key(0)] int From, [property: Key(1)] int Kind, [property: Key(2)] long Month);
+
+/// <summary>
+/// A decision the AI made for the player's civilization (ADR 0027, stage 6 PR P): when, on which lever (1–5; 0 = the simulation's,
+/// such as recipes) and what, with its first reasons. Players see the last ones in the panel "what the AI did for me".
+/// </summary>
+[MessagePackObject]
+public sealed record AiDecisionView([property: Key(0)] long Turn, [property: Key(1)] int Lever, [property: Key(2)] string Text);
+
+/// <summary>The five levers of the helmsman (ADR 0027): bit flags of <see cref="GameViewMessage.PlayerLevers"/> and <see cref="SetLeverDto"/>.</summary>
+public static class LeverFlags
+{
+    /// <summary>1. Where we live.</summary>
+    public const int WhereWeLive = 1;
+
+    /// <summary>2. Where we are heading.</summary>
+    public const int WhereWeHead = 2;
+
+    /// <summary>3. What we do on the land.</summary>
+    public const int OnTheLand = 4;
+
+    /// <summary>4. With whom and how.</summary>
+    public const int WithWhom = 8;
+
+    /// <summary>5. Answers to cards.</summary>
+    public const int Cards = 16;
+
+    /// <summary>The five flags in the order of the levers (1–5).</summary>
+    public static readonly int[] All = [WhereWeLive, WhereWeHead, OnTheLand, WithWhom, Cards];
+
+    /// <summary>Names shown on the tiles.</summary>
+    public static readonly string[] Names = ["Where we live", "Where we are heading", "What we do on the land", "With whom and how", "Answers to cards"];
+}
 
 /// <summary>
 /// A settlement the viewer may see. <see cref="Stock"/> (hundredths per good id), <see cref="Population"/> (people per
 /// stratum id), health, mood and food (hundredths, last turn) are filled only for the viewer's own settlements and
 /// for observers; foreign settlements show only where they are. Status (0 active, 1 abandoned, 2 ruins) and the claim
-/// (civilization id or -1, last month) are public.
+/// (civilization id or -1, last month) are public. <see cref="Warriors"/> is how many warriors may set out on a campaign
+/// now (a third stays home; 0 while they are out or resting), for the viewer's own settlements and observers; -1 otherwise
+/// (playtest P-03).
 /// </summary>
 [MessagePackObject]
 public sealed record SettlementView(
@@ -112,7 +213,9 @@ public sealed record SettlementView(
     [property: Key(15)] long AbandonedMonth = 0,
     [property: Key(16)] int ClaimCiv = -1,
     [property: Key(17)] long ClaimUntilMonth = 0,
-    [property: Key(18)] int Loyalty = 0);
+    [property: Key(18)] int Loyalty = 0,
+    [property: Key(19)] int Look = -1,
+    [property: Key(20)] int Warriors = -1);
 
 /// <summary>One line of the chronicle (GDD 11.1, phase 11).</summary>
 [MessagePackObject]
@@ -148,16 +251,16 @@ public enum SimulationSpeed
     /// <summary>No turns run.</summary>
     Paused = 0,
 
-    /// <summary>One turn every 2 seconds.</summary>
+    /// <summary>Live speed (ADR 0025): data/time.json ticksPerSecond ticks a second.</summary>
     X1 = 1,
 
-    /// <summary>One turn every second.</summary>
+    /// <summary>Twice the live speed.</summary>
     X2 = 2,
 
-    /// <summary>One turn every 0.4 seconds.</summary>
-    X5 = 5,
+    /// <summary>Four times the live speed.</summary>
+    X4 = 4,
 
-    /// <summary>As fast as possible; the map is refreshed every few turns.</summary>
+    /// <summary>As fast as possible; the map is refreshed every few ticks.</summary>
     Max = 100,
 }
 
@@ -177,7 +280,13 @@ public sealed record ContentMessage(
     [property: Key(3)] IReadOnlyList<string> Reliefs,
     [property: Key(4)] IReadOnlyList<GoodInfo>? Goods = null,
     [property: Key(5)] IReadOnlyList<string>? SettlementLevels = null,
-    [property: Key(6)] IReadOnlyList<string>? Strata = null) : IProtocolMessage;
+    [property: Key(6)] IReadOnlyList<string>? Strata = null,
+    [property: Key(7)] IReadOnlyList<TaskInfo>? Tasks = null,
+    [property: Key(8)] IReadOnlyList<string>? SettlementLooks = null) : IProtocolMessage;
+
+/// <summary>A kind of area task as the client sees it (stage 6 PR 4a): ids match <see cref="UnitView.Task"/>; the key goes into StartTaskDto.</summary>
+[MessagePackObject]
+public sealed record TaskInfo([property: Key(0)] int Id, [property: Key(1)] string Key, [property: Key(2)] string Name, [property: Key(3)] int Good);
 
 /// <summary>A good as the client sees it. Ids match the indexes of <see cref="SettlementView.Stock"/>.</summary>
 [MessagePackObject]
@@ -223,8 +332,24 @@ public sealed record MapChunkMessage(
     [property: Key(22)] byte[]? Seasonality = null,
     [property: Key(23)] byte[]? GrowingSeason = null,
     [property: Key(24)] sbyte[]? SeasonTemperature = null,
-    [property: Key(25)] byte[]? SeasonGrowth = null) : IProtocolMessage
+    [property: Key(25)] byte[]? SeasonGrowth = null,
+    [property: Key(26)] byte[]? Road = null,
+    [property: Key(27)] ushort[]? Works = null,
+    [property: Key(28)] byte[]? Trees = null,
+    [property: Key(29)] byte[]? Survey = null) : IProtocolMessage
 {
+    /// <summary>Survey bit: prospectors have looked at the rock in the viewer's present era (or it is its own land).</summary>
+    public const byte RockLooked = 1;
+
+    /// <summary>Survey bit: the soil is known (fertility is real, not 0 for unknown).</summary>
+    public const byte SoilKnown = 2;
+
+    /// <summary>Survey bit: the deposit sent for the hex is known (a hex without one sends 0 either way).</summary>
+    public const byte DepositKnown = 4;
+
+    /// <summary>Survey bit: a deposit lies here, but of an era the civilization has not reached ("???", M6 2026-11-19).</summary>
+    public const byte DepositHidden = 8;
+
     /// <summary>Visibility: never seen.</summary>
     public const byte Unknown = 0;
 
@@ -236,4 +361,43 @@ public sealed record MapChunkMessage(
 
     /// <summary>River edges per cell (N, NE, SE sides; the other three belong to neighbours).</summary>
     public const int RiverEdgesPerCell = 3;
+}
+
+/// <summary>
+/// A unit as a viewer sees it (stage 6 PR 3a–3b): kind (index in units.json), owner, the cell it stands on, the cell it walks
+/// to next and how far it got (0–1000), its people and what it does (0 idle, 1 move, 2 found, 3 scout, 4 return, 5 attack, 6 flee, 7 work).
+/// </summary>
+[MessagePackObject]
+public sealed record UnitView(
+    [property: Key(0)] long Id,
+    [property: Key(1)] int Kind,
+    [property: Key(2)] int Owner,
+    [property: Key(3)] int World,
+    [property: Key(4)] int Col,
+    [property: Key(5)] int Row,
+    [property: Key(6)] int NextCol,
+    [property: Key(7)] int NextRow,
+    [property: Key(8)] int ProgressPermille,
+    [property: Key(9)] int People,
+    [property: Key(10)] int Order)
+{
+    /// <summary>What its kind is for: 0 settlers, 1 scouts, 2 army, 3 carriers (stage 6 PR 3b), 4 work group (stage 6 PR 4a).</summary>
+    [Key(11)]
+    public int Role { get; init; }
+
+    /// <summary>A work group's task (index in the content's task kinds), or -1 (stage 6 PR 4a).</summary>
+    [Key(12)]
+    public int Task { get; set; } = -1;
+
+    /// <summary>Column of the cell a work group works on, or -1.</summary>
+    [Key(13)]
+    public int TargetCol { get; set; } = -1;
+
+    /// <summary>Row of the cell a work group works on, or -1.</summary>
+    [Key(14)]
+    public int TargetRow { get; set; } = -1;
+
+    /// <summary>Months of action the settlers' food lasts (one month of action = 5 ticks), or -1 (stage 6 PR P2b).</summary>
+    [Key(15)]
+    public int FoodMonths { get; set; } = -1;
 }

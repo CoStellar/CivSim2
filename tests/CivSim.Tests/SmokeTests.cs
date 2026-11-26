@@ -1,3 +1,4 @@
+using System.Linq;
 using System.IO;
 using CivSim.Headless;
 using CivSim.Protocol;
@@ -27,6 +28,7 @@ public class SmokeTests
         Assert.Equal(2, Program.Main(["--what"]));
     }
 
+    [Trait("Category", "Slow")]
     [Fact]
     public void HeadlessIsDeterministicAndWritesTheReport()
     {
@@ -51,6 +53,29 @@ public class SmokeTests
         }
     }
 
+    [Trait("Category", "Slow")]
+    [Fact]
+    public void ThePaceReportHasARowPerPeopleWithItsMinutes()
+    {
+        // Stage 6 PR T: --milestones writes the minute of each milestone per civilization; the first technology comes within 3 minutes.
+        string path = Path.Combine(Path.GetTempPath(), $"civsim2-pace-{System.Environment.ProcessId}.csv");
+        try
+        {
+            Assert.Equal(0, Program.Main(["--seed", "3", "--turns", "1800", "--map-size", "test", "--milestones", path, "--quiet"]));
+            string[] lines = File.ReadAllLines(path);
+            Assert.Equal(MilestoneCsv.Header, lines[0]);
+            Assert.True(lines.Length >= 5, "a row per civilization of the test map");
+            string[] first = lines[1].Split(',');
+            Assert.Equal("1", first[3]); // from the start
+            Assert.True(lines.Skip(1).Any(l => l.Split(',')[4].Length > 0), "someone learns a technology within 3 minutes");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Trait("Category", "Slow")]
     [Fact]
     public void ABatchRunsEveryGameAsItsOwnSeedWould()
     {

@@ -14,6 +14,9 @@ namespace CivSim.Core.Commands;
 public sealed record AbandonSettlementCommand(GameContent Content, SettlementId Settlement, SettlementId Into) : ICommand, IChronicledCommand
 {
     /// <inheritdoc />
+    public bool ChronicleInner => true;
+
+    /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Movement;
 
     /// <inheritdoc />
@@ -80,12 +83,12 @@ public sealed record OccupySettlementCommand(GameContent Content, SettlementId F
 
         if (Percent < 1 || Percent > 100)
         {
-            return CommandResult.Fail("Between 1 and 100 percent of the people can go.");
+            return CommandResult.Fail($"Between 1 and 100 percent of the people can go ({Percent}% asked).");
         }
 
         if (Percent < 100 && from!.TotalPopulation() < Content.Population.MinSplitPeople)
         {
-            return CommandResult.Fail($"A settlement needs {Content.Population.MinSplitPeople} people to send a group.");
+            return CommandResult.Fail($"{from!.Name} has {from.TotalPopulation()} people; a settlement needs {Content.Population.MinSplitPeople} to send a group.");
         }
 
         CommandResult reach = SettlementRules.CheckReach(Content, state, from!, Target, out SettlementState? target);
@@ -132,7 +135,7 @@ public sealed record OccupySettlementCommand(GameContent Content, SettlementId F
             target.ClaimCiv = SettlementState.NoClaim;
         }
 
-        if (target.HasClaim(state.Month))
+        if (target.HasClaim(state.ActionMonth))
         {
             return $"{state.FindCivilization(civ)!.Name} took over {target.Name}, claimed by {state.FindCivilization(new CivId(target.ClaimCiv))!.Name}.";
         }

@@ -84,6 +84,18 @@ public partial class MapObjects : Node2D
         bool changed = dataDue || moved || layers.Version != _lastLayers || session.FogVersion != _lastFog || period != _period || !ReferenceEquals(world, _world);
         if (!changed)
         {
+            // Walking units (stage 6 PR 3a) glide between the views: only their layer is drawn again, every frame.
+            if (_session is not null && _walkers.Count > 0)
+            {
+                foreach (LayerPainter p in _painters)
+                {
+                    if (p.Layer == MapLayer.Units && p.Visible)
+                    {
+                        p.QueueRedraw();
+                    }
+                }
+            }
+
             return;
         }
 
@@ -122,6 +134,25 @@ public partial class MapObjects : Node2D
     }
 
     private readonly Dictionary<int, Texture2D?> _settlementArt = [];
+
+    // The picture of a settlement's look (stage 6 PR P2b: camp, hearth, village, walled village, town), or null when the content
+    // has no looks or an art pack lacks the picture (then the level's picture is drawn).
+    private Texture2D? LookArt(int look, int status)
+    {
+        if (look < 0 || _session?.Content?.SettlementLooks is not { } looks || look >= looks.Count)
+        {
+            return null;
+        }
+
+        int key = -1 - ((look * 3) + status);
+        if (!_settlementArt.TryGetValue(key, out Texture2D? tex))
+        {
+            tex = _art.Get("objects", $"settlement_{looks[look]}_{StatusArt[status]}");
+            _settlementArt[key] = tex;
+        }
+
+        return tex;
+    }
 
     // New data redraws the objects at most this often (the server sends views a few times a second at top speed).
     private const double DataRedrawSeconds = 0.25;
@@ -253,6 +284,11 @@ public partial class MapObjects : Node2D
         }
     }
 
+    // A deposit picture's size at 2x and its place on the hex: 16x16 in the lower left, inside the hex's edges.
+    private const int DepositArt = 32;
+
+    private static Rect2 DepositRect(int col, int row) => new(HexLayout.Center(col, row) + new Vector2(-16, 1), new Vector2(15, 15));
+
     // Deposit icons only when zoomed in; far away the Deposits cell layer shows them as colours.
     private void PaintDeposits(LayerPainter p)
     {
@@ -269,6 +305,26 @@ public partial class MapObjects : Node2D
             {
                 int i = w.Index(col, row);
                 int d = w.Deposit[i];
+                if (d == 0 && w.Survey[i] != 255 && (w.Survey[i] & MapChunkMessage.DepositHidden) != 0 && w.Visibility[i] != MapChunkMessage.Unknown && !Fogged(col, row))
+                {
+                    // M6 (2026-11-19): a deposit of a later era: we know it is there, not what it is.
+                    if (_art.Get("objects", "deposit_unknown") is { } unknown)
+                    {
+                        if (!p.Lines)
+                        {
+                            p.DrawTextureRect(unknown, DepositRect(col, row), false);
+                        }
+                    }
+                    else if (p.Lines)
+                    {
+                        Vector2 q = HexLayout.Center(col, row) + new Vector2(-20, -2);
+                        p.DrawRect(new Rect2(q + new Vector2(2, 4), new Vector2(22, 16)), new Color(0.2f, 0.18f, 0.15f, 0.85f));
+                        p.DrawString(ThemeDB.FallbackFont, q + new Vector2(3, 17), "???", HorizontalAlignment.Left, 22, 11, new Color(1f, 0.9f, 0.6f));
+                    }
+
+                    continue;
+                }
+
                 if (d == 0 || d > content.Deposits.Count || w.Visibility[i] == MapChunkMessage.Unknown || Fogged(col, row))
                 {
                     continue;
@@ -276,12 +332,28 @@ public partial class MapObjects : Node2D
 
                 Texture2D? icon = _art.Get("objects", "deposit_" + content.Deposits[d - 1].Key);
                 Vector2 at = HexLayout.Center(col, row) + new Vector2(-20, -2);
-                Color tint = w.DepositDepth[i] == 0 ? Colors.White : new Color(0.55f, 0.55f, 0.55f);
-                if (icon is not null)
+                if (icon is not null && icon.GetWidth() == DepositArt)
+                {
+                    // 2026-11-23: the deposit's picture (32x32 at 2x) in the lower left of the hex, its size as dots.
+                    if (!p.Lines)
+                    {
+                        Rect2 r = DepositRect(col, row);
+                        p.DrawTextureRect(icon, r, false);
+                        int rich = w.DepositRichness[i];
+                        int dots = rich <= 0 ? 0 : rich < 100 ? 1 : rich == 100 ? 2 : 3;
+                        for (int k = 0; k < dots; k++)
+                        {
+                            Vector2 dot = new(r.End.X + 1.5f, r.End.Y - 2 - (k * 3.2f));
+                            p.DrawCircle(dot, 1.4f, new Color(0.11f, 0.09f, 0.06f));
+                            p.DrawCircle(dot, 1f, new Color(0.95f, 0.8f, 0.35f));
+                        }
+                    }
+                }
+                else if (icon is not null)
                 {
                     if (!p.Lines)
                     {
-                        p.DrawTexture(icon, at, tint);
+                        p.DrawTexture(icon, at, Colors.White); // only known deposits are sent (survey, 2026-11-19)
                     }
                 }
                 else if (p.Lines)
@@ -321,7 +393,7 @@ public partial class MapObjects : Node2D
             Color civ = OverlayColors.CivColor(s.Owner);
             bool capital = s.Status == 0 && _capitals.Contains(s.Id);
             Texture2D? tex = Textured
-                ? SettlementArt(Math.Clamp(s.Level, 0, LevelArt.Length - 1), Math.Clamp(s.Status, 0, 2))
+                ? LookArt(s.Look, Math.Clamp(s.Status, 0, 2)) ?? SettlementArt(Math.Clamp(s.Level, 0, LevelArt.Length - 1), Math.Clamp(s.Status, 0, 2))
                 : null;
             foreach (Vector2 at in Copies(HexLayout.Center(s.Col, s.Row), 48))
             {
@@ -515,8 +587,118 @@ public partial class MapObjects : Node2D
         return d;
     }
 
+    // Where each walking unit was drawn when the last view came and where that view puts it (stage 6 PR 3a): it glides from
+    // the one to the other in the time between two views, so it moves smoothly though the server sends a few views a second.
+    private readonly Dictionary<long, (Vector2 From, Vector2 To)> _walkers = [];
+    private readonly HashSet<long> _walkersSeen = [];
+    private GameViewMessage? _walkersView;
+    private long _walkersAt;
+
+    // Seconds between two views of the server (its view interval) the glide lasts.
+    private const double GlideSeconds = 0.1;
+
+    private float Glide()
+    {
+        double t = System.Diagnostics.Stopwatch.GetElapsedTime(_walkersAt).TotalSeconds / GlideSeconds;
+        return (float)Math.Clamp(t, 0, 1);
+    }
+
+    private void TrackWalkers(GameViewMessage view)
+    {
+        if (ReferenceEquals(view, _walkersView))
+        {
+            return;
+        }
+
+        float g = Glide();
+        _walkersSeen.Clear();
+        foreach (UnitView u in view.Units ?? [])
+        {
+            Vector2 at = HexLayout.Center(u.Col, u.Row);
+            Vector2 to = at + (Wrapped(HexLayout.Center(u.NextCol, u.NextRow) - at) * (u.ProgressPermille / 1000f));
+            Vector2 from = _walkers.TryGetValue(u.Id, out (Vector2 From, Vector2 To) old) ? old.From + (Wrapped(old.To - old.From) * g) : to;
+            _walkers[u.Id] = (from, from + Wrapped(to - from));
+            _walkersSeen.Add(u.Id);
+        }
+
+        if (_walkersSeen.Count != _walkers.Count)
+        {
+            var gone = new List<long>();
+            foreach (long id in _walkers.Keys)
+            {
+                if (!_walkersSeen.Contains(id))
+                {
+                    gone.Add(id);
+                }
+            }
+
+            foreach (long id in gone)
+            {
+                _walkers.Remove(id);
+            }
+        }
+
+        _walkersView = view;
+        _walkersAt = System.Diagnostics.Stopwatch.GetTimestamp();
+    }
+
+    // Units walking (stage 6 PR 3a–3b) by role: settlers and carriers as migrants, scouts as a scout, armies as one to
+    // three warriors by size (GDD 9.3), in the owner's colour; dots from afar.
+    private void PaintWalkers(LayerPainter p)
+    {
+        if (_session?.View is not { Units: { Count: > 0 } units } view)
+        {
+            _walkers.Clear();
+            return;
+        }
+
+        TrackWalkers(view);
+        float g = Glide();
+        Texture2D? settlers = Textured ? _art.Get("units", "unit_migrants_idle_01") : null;
+        Texture2D? scout = Textured ? _art.Get("units", "unit_scout_idle_01") : null;
+        Texture2D? workers = Textured ? _art.Get("units", "unit_workers_idle_01") : null;
+        foreach (UnitView u in units)
+        {
+            if (u.World != _world!.Id || Fogged(u.Col, u.Row) || !_walkers.TryGetValue(u.Id, out (Vector2 From, Vector2 To) w))
+            {
+                continue;
+            }
+
+            Vector2 pos = w.From + ((w.To - w.From) * g);
+            if (_period.X > 0)
+            {
+                pos.X = Mathf.PosMod(pos.X, _period.X);
+            }
+
+            Color civ = OverlayColors.CivColor(u.Owner);
+            Texture2D? tex = u.Role is 1 or 2 ? scout : u.Role == 4 ? workers ?? settlers : settlers;
+            int figures = u.Role == 2 ? (u.People >= 40 ? 3 : u.People >= 15 ? 2 : 1) : 1;
+            foreach (Vector2 at in Copies(pos, 48))
+            {
+                for (int f = 0; f < figures; f++)
+                {
+                    Vector2 spot = at + new Vector2((f - ((figures - 1) / 2f)) * 10, f == 1 ? -4 : 0);
+                    if (tex is not null)
+                    {
+                        if (!p.Lines)
+                        {
+                            p.DrawTexture(tex, spot + new Vector2(-16, -11), civ);
+                        }
+                    }
+                    else if (p.Lines)
+                    {
+                        float r = (u.Role == 1 ? 5 : u.Role == 2 ? 7 : u.Role == 4 ? 6 : 8) / Mathf.Max(0.35f, _zoom * 2);
+                        p.DrawCircle(spot, r + 1, Colors.Black);
+                        p.DrawCircle(spot, r, civ);
+                    }
+                }
+            }
+        }
+    }
+
     private void PaintUnits(LayerPainter p)
     {
+        PaintWalkers(p);
         if (_session?.Details is not { } details)
         {
             return;
@@ -548,74 +730,19 @@ public partial class MapObjects : Node2D
             }
         }
 
-        PaintArmies(p, details);
-    }
-
-    // War campaigns (stage 4e PR 3): one to three warriors by strength (GDD 9.3: drawn by strength), carriers with bundles.
-    private void PaintArmies(LayerPainter p, ObserverDetailsMessage details)
-    {
-        if (details.Armies is not { Count: > 0 } armies || _world!.Id != 0)
-        {
-            return;
-        }
-
-        Texture2D? warrior = Textured ? _art.Get("units", "unit_scout_idle_01") : null;
-        Texture2D? carrier = Textured ? _art.Get("units", "unit_migrants_idle_01") : null;
-        foreach (ArmyView a in armies)
-        {
-            Color civ = OverlayColors.CivColor(a.Owner);
-            int figures = a.Warriors >= 40 ? 3 : a.Warriors >= 15 ? 2 : 1;
-            if (!Fogged(a.Col, a.Row))
-            {
-                foreach (Vector2 at in Copies(HexLayout.Center(a.Col, a.Row), 48))
-                {
-                    for (int f = 0; f < figures; f++)
-                    {
-                        Vector2 spot = at + new Vector2((f - ((figures - 1) / 2f)) * 10, f == 1 ? -4 : 0);
-                        if (warrior is not null)
-                        {
-                            if (!p.Lines)
-                            {
-                                p.DrawTexture(warrior, spot + new Vector2(-16, -11), civ);
-                            }
-                        }
-                        else if (p.Lines)
-                        {
-                            p.DrawCircle(spot, 7 / Mathf.Max(0.35f, _zoom * 2), civ);
-                        }
-                    }
-                }
-            }
-
-            if (a.Carriers > 0 && !Fogged(a.ConvoyCol, a.ConvoyRow))
-            {
-                foreach (Vector2 at in Copies(HexLayout.Center(a.ConvoyCol, a.ConvoyRow), 48))
-                {
-                    if (carrier is not null)
-                    {
-                        if (!p.Lines)
-                        {
-                            p.DrawTexture(carrier, at + new Vector2(-16, -11), civ);
-                        }
-                    }
-                    else if (p.Lines)
-                    {
-                        p.DrawCircle(at, 5 / Mathf.Max(0.35f, _zoom * 2), civ);
-                    }
-                }
-            }
-        }
+        // Armies and carriers are units since stage 6 PR 3b (PaintWalkers); the campaign layer still carries their details.
     }
 
     // The way of each wandering camp to its target: a line in the owner's colour ending in an arrow head.
     private void PaintUnitPaths(LayerPainter p)
     {
+        float width = Mathf.Max(2, 2.5f / _zoom);
+        PaintTaskCells(p, width);
         if (_session?.Details is not { } details)
         {
             return;
         }
 
-        float width = Mathf.Max(2, 2.5f / _zoom);
         foreach (JourneyView j in details.Journeys)
         {
             if (j.World != _world!.Id || Fogged(j.Col, j.Row))
@@ -634,6 +761,39 @@ public partial class MapObjects : Node2D
                 {
                     Arrow(p, a.Col, a.Row, a.TargetCol, a.TargetRow, OverlayColors.CivColor(a.Owner), width * 1.5f);
                 }
+            }
+        }
+    }
+
+    // Area tasks (stage 6 PR 4a): the cell a work group works on, outlined in its owner's colour, and its way there while it walks.
+    private void PaintTaskCells(LayerPainter p, float width)
+    {
+        if (_session?.View is not { Units: { Count: > 0 } units })
+        {
+            return;
+        }
+
+        foreach (UnitView u in units)
+        {
+            if (u.Role != 4 || u.TargetCol < 0 || u.World != _world!.Id || Fogged(u.TargetCol, u.TargetRow))
+            {
+                continue;
+            }
+
+            Color civ = OverlayColors.CivColor(u.Owner);
+            if (u.Col != u.TargetCol || u.Row != u.TargetRow)
+            {
+                Arrow(p, u.Col, u.Row, u.TargetCol, u.TargetRow, civ, width);
+            }
+
+            foreach (Vector2 at in Copies(HexLayout.Center(u.TargetCol, u.TargetRow), 48))
+            {
+                Vector2[] corners =
+                [
+                    at + new Vector2(-24, 0), at + new Vector2(-12, -21), at + new Vector2(12, -21),
+                    at + new Vector2(24, 0), at + new Vector2(12, 21), at + new Vector2(-12, 21), at + new Vector2(-24, 0),
+                ];
+                p.DrawPolyline(corners, civ, width);
             }
         }
     }

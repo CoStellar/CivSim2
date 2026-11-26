@@ -55,60 +55,6 @@ public static class MapMemory
         }
     }
 
-    /// <summary>
-    /// Scouts (GDD 8.2): every lived-in settlement sends one scout (hunters, herders) in a random direction (population stream, in settlement
-    /// order); it walks up to <see cref="PerceptionRules.ScoutCells"/> cells straight on over land and sea ice, turning
-    /// aside at water, and its civilization sees the cells next to its way.
-    /// </summary>
-    public static void Scout(GameContent content, GameState state)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        ArgumentNullException.ThrowIfNull(state);
-        WorldState earth = state.Worlds[0];
-        HexGlobe geo = earth.Geometry;
-        DeterministicRandom rng = state.Random[RandomStreamId.Population];
-        int stamp = (int)(state.Month / 12) + 1;
-        Span<HexCoord> n6 = stackalloc HexCoord[6];
-        foreach (SettlementState s in state.Settlements)
-        {
-            if (!s.IsActive || s.World != earth.Id)
-            {
-                continue;
-            }
-
-            CivilizationState? civ = state.FindCivilization(s.Owner);
-            if (civ is null || civ.SeenYear.Length != geo.CellCount || !Simulation.WorldClock.Steps(civ))
-            {
-                continue;
-            }
-
-            // Trips over the civilization's own step (rule 6): the whole ones, and the fraction by chance.
-            long parts = (long)civ.StepMonths * content.Perception.ScoutsPerCentury;
-            int trips = (int)(parts / 1200) + (parts % 1200 != 0 && rng.Chance((int)(parts % 1200), 1200) ? 1 : 0);
-            for (int trip = 0; trip < trips; trip++)
-            {
-                var direction = (HexDirection)rng.NextInt(6);
-                HexCoord at = s.Cell;
-                for (int step = 0; step < content.Perception.ScoutCells; step++)
-                {
-                    HexCoord next = geo.Neighbor(at, direction);
-                    if (!Walkable(content, earth.Map, geo.Index(next)))
-                    {
-                        direction = (HexDirection)(((int)direction + 1 + rng.NextInt(5)) % 6);
-                        continue;
-                    }
-
-                    at = next;
-                    civ.SeenYear[geo.Index(at)] = stamp;
-                    geo.GetNeighbors(at, n6);
-                    foreach (HexCoord c in n6)
-                    {
-                        civ.SeenYear[geo.Index(c)] = stamp;
-                    }
-                }
-            }
-        }
-    }
 
     /// <summary>True when the civilization knows the Earth cell now (seen, and not yet forgotten).</summary>
     public static bool Knows(GameContent content, GameState state, CivilizationState civ, int cell)
@@ -247,7 +193,8 @@ public sealed class PerceptionSystem(GameContent content) : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         MapMemory.See(_content, context.State);
-        MapMemory.Scout(_content, context.State);
+
+        // Stage 6 PR 3a: scouting is done by visible scout units (Units.UnitSystem), no longer by invisible trips.
     }
 }
 
@@ -257,6 +204,9 @@ public sealed class PerceptionSystem(GameContent content) : ITurnSystem
 /// </summary>
 public sealed record JourneyCommand(GameContent Content, SettlementId Settlement, HexCoord Target) : ICommand, IChronicledCommand
 {
+    /// <inheritdoc />
+    public bool ChronicleInner => true;
+
     /// <inheritdoc />
     public CommandCategory Category => CommandCategory.Movement;
 
@@ -298,6 +248,11 @@ public sealed record JourneyCommand(GameContent Content, SettlementId Settlement
         SettlementState s = state.FindSettlement(Settlement)!;
         WorldState world = state.Worlds[s.World.Value];
         s.JourneyTarget = world.Geometry.Index(Target);
+        s.JourneyNext = -1;
+        s.JourneyProgress = 0;
+        s.JourneyPath.Clear();
+        s.JourneyPathAt = 0;
+        s.JourneyPathGoal = -1; // the way is found once, in the camp's first step (JourneySystem)
         return $"{state.FindCivilization(civ)!.Name} set out with {s.Name} for land {world.Geometry.Distance(s.Cell, Target)} cells "
             + $"{SettlementRules.Direction(world, s.Cell, Target)}.";
     }
@@ -312,7 +267,7 @@ public sealed record JourneyCommand(GameContent Content, SettlementId Settlement
 public sealed class JourneySystem(GameContent content) : ITurnSystem
 {
     private readonly GameContent _content = content ?? throw new ArgumentNullException(nameof(content));
-    private readonly PathFinder _paths = new();
+    private readonly Units.RouteFinder _routes = new();
 
     /// <inheritdoc />
     public TurnPhase Phase => TurnPhase.Movement;
@@ -322,59 +277,144 @@ public sealed class JourneySystem(GameContent content) : ITurnSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         GameState state = context.State;
+        int baseTicks = _content.Units.JourneyTicksPerCell;
         for (int n = 0; n < state.Settlements.Count; n++)
         {
             SettlementState s = state.Settlements[n];
-            if (s.JourneyTarget == SettlementState.NoJourney || Simulation.WorldClock.MonthsOf(state, s.Owner) == 0)
+            if (s.JourneyTarget == SettlementState.NoJourney)
             {
-                continue; // a camp walks one stretch per own step of its civilization (ADR 0018)
+                continue;
             }
 
             WorldState world = state.Worlds[s.World.Value];
             CivilizationState? civ = state.FindCivilization(s.Owner);
-            List<int>? path = civ is null || !s.IsActive
-                ? null
-                : _paths.Find(_content, state, civ, world, world.Geometry.Index(s.Cell), s.JourneyTarget);
-            if (path is null || path.Count == 0)
+            if (civ is null || !s.IsActive)
             {
-                s.JourneyTarget = SettlementState.NoJourney;
+                Stop(s);
                 continue;
             }
 
-            // Cells per century over the civilization's own step (rule 6, PR C), at least one, at most one move.
-            int months = Simulation.WorldClock.MonthsOf(state, s.Owner);
-            int march = (int)Math.Clamp((long)months * _content.Perception.MarchCellsPerCentury / 1200, 1, _content.Population.MaxMoveCells);
-            int step = Math.Min(path.Count, march);
-            int stop = -1;
-            for (int k = step - 1; k >= 0 && stop < 0; k--)
+            // Stage 6 PR 3a: the camp walks in ticks, cell by cell, over the cheapest known way (A*), and pitches at
+            // every free land cell on it (it crosses sea ice and lived cells without stopping). Since PR 3b the way is
+            // found once for the goal and remembered (known issue 10); it is searched again only when it closes.
+            if (s.JourneyNext < 0 && !NextCamp(state, civ, world, s, baseTicks))
             {
-                // Stop on land where nobody lives (not on the ice).
-                int cell = path[k];
-                if (!_content.Biomes[world.Map.Biome[cell]].IsWater && !Lived(state, world, cell, s))
-                {
-                    stop = cell;
-                }
+                Stop(s); // no way, or nowhere to camp on it
+                continue;
             }
 
-            if (stop < 0)
+            if (++s.JourneyProgress < s.JourneyStepTicks)
             {
-                continue; // nowhere to camp on this stretch yet: wait a turn
+                continue;
             }
 
-            SettlementAssets.Relocate(_content, state, s, world.Geometry.FromIndex(stop));
-            if (stop == s.JourneyTarget)
+            if (Lived(state, world, s.JourneyNext, s))
+            {
+                s.JourneyNext = -1; // someone camped there meanwhile: look again
+                continue;
+            }
+
+            SettlementAssets.Relocate(_content, state, s, world.Geometry.FromIndex(s.JourneyNext));
+            int at = s.JourneyPath.IndexOf(s.JourneyNext, s.JourneyPathAt);
+            s.JourneyPathAt = at < 0 ? s.JourneyPath.Count : at + 1;
+            bool done = s.JourneyNext == s.JourneyTarget;
+            s.JourneyNext = -1;
+            s.JourneyProgress = 0;
+            if (done)
             {
                 s.JourneyTarget = SettlementState.NoJourney;
-                context.Chronicle($"{civ!.Name} reached the end of its journey with {s.Name}.");
+                context.Chronicle($"{civ.Name} reached the end of its journey with {s.Name}.", civ.Id.Value, inner: true);
             }
         }
     }
 
+    // Chooses the next camp of a journey: the first free land cell on the remembered way (found once, A*), and the ticks
+    // the walk there costs. The way is searched again when there is none for this goal or a cell on it closed (melted
+    // ice, forgotten land). False when there is no way or no free land on it.
+    private bool NextCamp(GameState state, CivilizationState civ, WorldState world, SettlementState s, int baseTicks)
+    {
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            if (s.JourneyPathGoal != s.JourneyTarget || attempt > 0)
+            {
+                List<int>? path = _routes.Path(_content, state, civ, world, world.Geometry.Index(s.Cell), s.JourneyTarget, baseTicks);
+                s.JourneyPath.Clear();
+                s.JourneyPathAt = 0;
+                s.JourneyPathGoal = s.JourneyTarget;
+                if (path is null || path.Count == 0)
+                {
+                    s.JourneyPathGoal = -1;
+                    return false;
+                }
+
+                s.JourneyPath.AddRange(path);
+            }
+
+            int ticks = 0;
+            bool closed = false;
+            HexCoord here = s.Cell;
+            for (int k = s.JourneyPathAt; k < s.JourneyPath.Count; k++)
+            {
+                int cell = s.JourneyPath[k];
+                HexCoord next = world.Geometry.FromIndex(cell);
+                int step = StepTicks(world, here, next, cell, baseTicks);
+                if (step <= 0 || !MapMemory.Knows(_content, state, civ, cell))
+                {
+                    closed = true; // the way closed: search again from here
+                    break;
+                }
+
+                ticks += step;
+                here = next;
+                if (!_content.Biomes[world.Map.Biome[cell]].IsWater && !Lived(state, world, cell, s))
+                {
+                    s.JourneyNext = cell;
+                    s.JourneyStepTicks = Math.Max(1, ticks);
+                    s.JourneyProgress = 0;
+                    return true;
+                }
+            }
+
+            if (!closed)
+            {
+                return false; // nowhere to camp on the rest of the way
+            }
+        }
+
+        return false;
+    }
+
+    private int StepTicks(WorldState world, HexCoord from, HexCoord to, int toIndex, int baseTicks)
+    {
+        for (int d = 0; d < 6; d++)
+        {
+            if (world.Geometry.Neighbor(from, (HexDirection)d) == to)
+            {
+                return Units.RouteFinder.StepTicks(_content, world, from, (HexDirection)d, toIndex, baseTicks);
+            }
+        }
+
+        return baseTicks;
+    }
+
+    private static void Stop(SettlementState s)
+    {
+        s.JourneyTarget = SettlementState.NoJourney;
+        s.JourneyNext = -1;
+        s.JourneyProgress = 0;
+        s.JourneyPath.Clear();
+        s.JourneyPathAt = 0;
+        s.JourneyPathGoal = -1;
+    }
+
+    // True when another lived-in settlement stands on cell (the spatial grid of settlements, T2).
     private static bool Lived(GameState state, WorldState world, int cell, SettlementState self)
     {
-        foreach (SettlementState o in state.Settlements)
+        HexCoord at = world.Geometry.FromIndex(cell);
+        foreach (int i in state.Grid.Within(world, at, 0))
         {
-            if (o != self && o.IsActive && o.World == world.Id && world.Geometry.Index(o.Cell) == cell)
+            SettlementState o = state.Settlements[i];
+            if (o != self && o.IsActive && o.World == world.Id && o.Cell == at)
             {
                 return true;
             }

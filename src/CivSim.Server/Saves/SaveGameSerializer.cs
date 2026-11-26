@@ -16,7 +16,7 @@ namespace CivSim.Server.Saves;
 public static class SaveGameSerializer
 {
     /// <summary>Current save format version. Bump on every incompatible change and keep a loader for old versions.</summary>
-    public const int FormatVersion = 30;
+    public const int FormatVersion = 40; // 40: when the artisans took up their recipe (they keep it a while); 36: area tasks (PR 4a); 37: the levers a player holds (PR P1); 38: a player's orders hold (PR P1); 39: a player's diplomatic decisions hold
 
     private static readonly byte[] Magic = "CS2S"u8.ToArray();
 
@@ -62,7 +62,7 @@ public static class SaveGameSerializer
                 c.Government, c.PendingGovernment, c.PendingGovernmentMonth,
                 c.LeaderName, c.LeaderBornMonth, c.LeaderSinceMonth, c.LeaderTraits, c.LeaderShift, c.Leaders, c.CrisisUntilMonth,
                 c.Capital, c.Stability, c.AdminUsed, c.AnarchyUntilMonth, c.CapitalLostUntilMonth,
-                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations));
+                c.ParentCiv, c.FoundedMonth, c.RevoltCalmUntilMonth, c.LanguageMutations, c.LastPulseTick, (byte)c.PlayerLevers));
         }
 
         var settlements = new List<SettlementSaveData>(state.Settlements.Count);
@@ -79,7 +79,8 @@ public static class SaveGameSerializer
                 st.Id.Value, st.Owner.Value, st.World.Value, st.Cell.Col, st.Cell.Row, st.Name, st.Level, st.FoundedTurn, stock,
                 st.PopulationView.ToArray(), st.Health, st.Mood, st.FoodGathered, st.FoodNeeded, st.FoodEaten, st.HigherNeedsPerMille, st.MovedMonth,
                 (int)st.Status, st.AbandonedMonth, st.ClaimCiv, st.ClaimUntilMonth, st.RecipeId, st.RunsMade, st.JourneyTarget,
-                st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty));
+                st.SkilledView.ToArray(), st.TraineesView.ToArray(), st.Loyalty, st.JourneyNext, st.JourneyStepTicks, st.JourneyProgress,
+                st.ScoutOut, st.ScoutBackMonth, st.RestUntilMonth, [.. st.JourneyPath], st.JourneyPathAt, st.JourneyPathGoal, st.PlayerOrderTick, st.RecipeSinceMonth));
         }
 
         var effects = new List<EffectSaveData>(state.Effects.Count);
@@ -94,7 +95,7 @@ public static class SaveGameSerializer
             s.Planet.AxialTiltTenths, s.Planet.LuminosityThousandths, s.Planet.DistanceThousandths, s.Planet.EccentricityThousandths, s.PlanetName,
             s.Planet.Co2Microbar, s.Planet.BackgroundPressureHundredths, s.Planet.VolcanismPercent,
             s.Planet.StarVariabilityPerMille, s.Planet.StarCycleYears, SaveTreaties(state), SaveProposals(state), state.StepMonths,
-            state.WorldMonths, SaveEpisodes(state), state.Episodes.NextId);
+            state.WorldMonths, SaveEpisodes(state), state.Episodes.NextId, state.ActionMonth, SaveUnits(state), state.Units.NextId);
 
         Span<byte> header = stackalloc byte[8];
         Magic.CopyTo(header);
@@ -226,6 +227,8 @@ public static class SaveGameSerializer
                 FoundedMonth = c.FoundedMonth,
                 RevoltCalmUntilMonth = c.RevoltCalmUntilMonth,
                 LanguageMutations = c.LanguageMutations ?? [],
+                LastPulseTick = c.LastPulseTick,
+                PlayerLevers = (Core.Ai.Lever)c.PlayerLevers,
             };
             LoadRelations(civ, c.Relations);
             state.AddCivilizationForLoad(civ);
@@ -233,7 +236,9 @@ public static class SaveGameSerializer
 
         state.SetCountersForLoad(data.Month, data.NextSettlementId, data.StepMonths);
         state.SetWorldMonthsForLoad(data.WorldMonths);
+        state.SetActionMonthForLoad(data.ActionMonth);
         LoadEpisodes(state, data);
+        LoadUnits(state, data);
         foreach (SettlementSaveData st in data.Settlements ?? [])
         {
             var settlement = new SettlementState(
@@ -255,7 +260,18 @@ public static class SaveGameSerializer
                 RecipeId = st.RecipeId,
                 RunsMade = st.RunsMade,
                 JourneyTarget = st.JourneyTarget,
+                JourneyNext = st.JourneyNext,
+                JourneyStepTicks = st.JourneyStepTicks,
+                JourneyProgress = st.JourneyProgress,
+                ScoutOut = st.ScoutOut,
+                ScoutBackMonth = st.ScoutBackMonth,
+                RestUntilMonth = st.RestUntilMonth,
+                JourneyPathAt = st.JourneyPathAt,
+                JourneyPathGoal = st.JourneyPathGoal,
+                PlayerOrderTick = st.PlayerOrderTick,
+                RecipeSinceMonth = st.RecipeSinceMonth,
             };
+            settlement.JourneyPath.AddRange(st.JourneyPath ?? []);
             for (int g = 0; g < st.Stock.Length; g++)
             {
                 settlement.Stock[g] = Core.Numerics.Amount.FromHundredths(st.Stock[g]);
@@ -334,7 +350,7 @@ public static class SaveGameSerializer
         {
             list.Add(new TreatySaveData(t.A.Value, t.B.Value, (byte)t.Kind, t.Initiator.Value, t.SinceMonth, t.UntilMonth,
                 t.GatewayA, t.GatewayB, t.LastFlowMonth, t.LastWorth, t.TotalWorth, (byte)t.Goal, t.GoalSettlement, t.Score,
-                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms), t.Campaigns, t.CampaignMonths, t.LastCampaignMonth, t.ReadyMonth));
+                t.DeadA, t.DeadB, t.PeopleA, t.PeopleB, t.WearinessA, t.WearinessB, SaveTerms(t.Terms), t.Campaigns, t.CampaignMonths, t.LastCampaignTick, t.ReadyTick, t.SinceTick));
         }
 
         return list;
@@ -351,16 +367,64 @@ public static class SaveGameSerializer
         return list;
     }
 
+    private static List<UnitSaveData> SaveUnits(GameState state)
+    {
+        var list = new List<UnitSaveData>(state.Units.Count);
+        for (int k = 0; k < state.Units.Count; k++)
+        {
+            Core.Units.Unit u = state.Units[k];
+            if (u.Gone)
+            {
+                continue; // leaves the book at the end of the tick
+            }
+
+            list.Add(new UnitSaveData(u.Id, (byte)u.Kind, u.Owner.Value, u.World.Value, u.Cell, u.Target, (byte)u.Order, u.Home,
+                u.People.ToArray(), u.Skilled.ToArray(), u.Trainees.ToArray(), Hundredths(u.Cargo.ToArray()), u.Progress, u.Next, u.Direction,
+                [.. u.Trail], [.. u.Path], u.PathAt, u.PathGoal, (int)u.Role, u.Episode, u.Task, u.ByPlayer));
+        }
+
+        return list;
+    }
+
+    private static void LoadUnits(GameState state, SaveData data)
+    {
+        state.Units.SetNextIdForLoad(data.NextUnitId);
+        foreach (UnitSaveData d in data.Units ?? [])
+        {
+            int[] people = d.People ?? [];
+            int[] skilled = d.Skilled ?? [];
+            Core.Units.Unit u = state.Units.Restore(
+                d.Id, d.Kind, (Core.Units.UnitRole)(d.Role < 0 ? d.Kind : d.Role), new CivId(d.Owner), new WorldId(d.World), d.Cell, d.Home,
+                (Core.Units.UnitOrder)d.Order, people.Length, skilled.Length, d.Cargo?.Length ?? 0);
+            people.CopyTo(u.People);
+            skilled.CopyTo(u.Skilled);
+            (d.Trainees ?? []).AsSpan(0, Math.Min(d.Trainees?.Length ?? 0, u.Trainees.Length)).CopyTo(u.Trainees);
+            Amounts(d.Cargo).CopyTo(u.Cargo);
+            u.Target = d.Target;
+            u.Progress = d.Progress;
+            u.Next = d.Next;
+            u.Direction = d.Direction;
+            u.Trail.AddRange(d.Trail ?? []);
+            u.Path.AddRange(d.Path ?? []);
+            u.PathAt = d.PathAt;
+            u.PathGoal = d.PathGoal;
+            u.Episode = d.Episode;
+            u.Task = d.Task;
+            u.ByPlayer = d.ByPlayer;
+        }
+    }
+
     private static List<EpisodeSaveData> SaveEpisodes(GameState state)
     {
         var list = new List<EpisodeSaveData>(state.Episodes.Count);
         foreach (Core.Episodes.Episode e in state.Episodes.All)
         {
-            list.Add(new EpisodeSaveData(e.Id, (byte)e.Kind, e.Civ.Value, e.Other.Value, e.StartMonth, e.NextMonth, e.TickMonths,
+            list.Add(new EpisodeSaveData(e.Id, (byte)e.Kind, e.Civ.Value, e.Other.Value, e.StartMonth, e.NextTick, e.TickMonths,
                 e.Home, e.Target, e.Warriors, e.Cell, (byte)e.Phase, e.Dead, Hundredths(e.Loot),
-                e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilMonth,
+                e.GoalTarget, [.. e.Members], [.. e.MemberWarriors], e.Mustered, e.ArmsPercent, e.Morale, e.MusterUntilTick,
                 Hundredths(e.Food), e.HungryMonths, e.Forays, e.Foraging, e.ConvoyFrom, e.ConvoyCell, e.ConvoyCarriers,
-                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed));
+                Hundredths(e.ConvoyFood), e.Convoys, e.LastPrey, e.Battles, e.Wins, e.Killed, e.Army, e.Convoy, e.InRangeSince, e.Fleeing,
+                SaveFight(e.Fight), e.RoundTick, e.FightLost, e.FightKilled, e.ByPlayer));
         }
 
         return list;
@@ -377,7 +441,7 @@ public static class SaveGameSerializer
                     Civ = new CivId(e.Civ),
                     Other = new CivId(e.Other),
                     StartMonth = e.StartMonth,
-                    NextMonth = e.NextMonth,
+                    NextTick = e.NextTick,
                     TickMonths = e.TickMonths,
                     Home = e.Home,
                     Target = e.Target,
@@ -392,7 +456,7 @@ public static class SaveGameSerializer
                     Mustered = e.Mustered,
                     ArmsPercent = e.ArmsPercent,
                     Morale = e.Morale,
-                    MusterUntilMonth = e.MusterUntilMonth,
+                    MusterUntilTick = e.MusterUntilTick,
                     Food = Amounts(e.Food),
                     HungryMonths = e.HungryMonths,
                     Forays = e.Forays,
@@ -406,12 +470,42 @@ public static class SaveGameSerializer
                     Battles = e.Battles,
                     Wins = e.Wins,
                     Killed = e.Killed,
+                    Army = e.Army,
+                    Convoy = e.Convoy,
+                    InRangeSince = e.InRangeSince,
+                    Fleeing = e.Fleeing,
+                    Fight = LoadFight(e.Fight),
+                    RoundTick = e.RoundTick,
+                    FightLost = e.FightLost,
+                    FightKilled = e.FightKilled,
+                    ByPlayer = e.ByPlayer,
                 },
                 e.Id);
         }
 
         state.Episodes.SetNextIdForLoad(data.NextEpisodeId);
     }
+
+    // A battle under way (stage 6) as numbers: rounds, men, strengths, morale, losses, who broke, over.
+    private static long[] SaveFight(Core.Episodes.BattleState b) =>
+        [b.Rounds, b.MenA, b.MenD, b.StrengthA, b.StrengthD, b.MoraleA, b.MoraleD, b.LostA, b.LostD, b.Broken, b.Over ? 1 : 0];
+
+    private static Core.Episodes.BattleState LoadFight(long[]? v) => v is not { Length: >= 11 }
+        ? default
+        : new Core.Episodes.BattleState
+        {
+            Rounds = (int)v[0],
+            MenA = (int)v[1],
+            MenD = (int)v[2],
+            StrengthA = v[3],
+            StrengthD = v[4],
+            MoraleA = (int)v[5],
+            MoraleD = (int)v[6],
+            LostA = (int)v[7],
+            LostD = (int)v[8],
+            Broken = (int)v[9],
+            Over = v[10] != 0,
+        };
 
     private static long[] Hundredths(Core.Numerics.Amount[] amounts)
     {
@@ -466,8 +560,9 @@ public static class SaveGameSerializer
                 Terms = LoadTerms(t.Terms),
                 Campaigns = t.Campaigns,
                 CampaignMonths = t.CampaignMonths,
-                LastCampaignMonth = t.LastCampaignMonth,
-                ReadyMonth = t.ReadyMonth,
+                LastCampaignTick = t.LastCampaignTick,
+                ReadyTick = t.ReadyTick,
+                SinceTick = t.SinceTick,
             });
         }
 
@@ -490,7 +585,7 @@ public static class SaveGameSerializer
             }
 
             list.Add(new RelationSaveData(r.Other.Value, (byte)r.Level, (byte)r.Way, r.FirstMonth, r.MetMonth, r.LastContactMonth,
-                r.Opening, r.Sympathy, r.Trust, r.RumorCell, r.RumorPeople, r.RumorFrom, memories, r.SettledMonth));
+                r.Opening, r.Sympathy, r.Trust, r.RumorCell, r.RumorPeople, r.RumorFrom, memories, r.SettledMonth, r.PlayerOrderTick));
         }
 
         return list;
@@ -513,6 +608,7 @@ public static class SaveGameSerializer
             r.RumorPeople = d.RumorPeople;
             r.RumorFrom = d.RumorFrom;
             r.SettledMonth = d.SettledMonth;
+            r.PlayerOrderTick = d.PlayerOrderTick;
             foreach (RelationMemorySaveData m in d.Memories ?? [])
             {
                 r.Remember(new Core.Diplomacy.RelationMemory

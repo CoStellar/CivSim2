@@ -19,8 +19,8 @@ public sealed class StartSettings
     /// <summary>World seed (digits).</summary>
     public string Seed { get; set; } = "1";
 
-    /// <summary>test, standard, large or huge.</summary>
-    public string MapSize { get; set; } = "standard";
+    /// <summary>test, small, standard, large or huge.</summary>
+    public string MapSize { get; set; } = "small"; // 98×60, 5 civilizations: the default until the bronze age (ADR 0026 rule 2)
 
     /// <summary>Number of civilizations; 0 = default of the map size.</summary>
     public int Civilizations { get; set; }
@@ -79,7 +79,48 @@ public sealed class StartSettings
     /// <summary>Period of the star's cycle in years.</summary>
     public string StarCycle { get; set; } = string.Empty;
 
-    /// <summary>pause, x1, x2, x5 or max.</summary>
+    /// <summary>The advanced world settings of a new game are in use (PR W1); off = a normal world whatever the fields hold.</summary>
+    public bool AdvancedWorld { get; set; }
+
+    /// <summary>
+    /// The advanced world settings for a new game, or null when they are off. Throws <see cref="FormatException"/> with a readable
+    /// message when a number cannot be read.
+    /// </summary>
+    public CivSim.Server.PlayWorld? ToPlayWorld() => !AdvancedWorld ? null : new CivSim.Server.PlayWorld
+    {
+        Planet = string.IsNullOrEmpty(Planet) ? "earth" : Planet,
+        Moisture = Moisture == "preset" ? null : Moisture,
+        Inland = Inland,
+        Relief = Relief == "preset" ? null : Relief,
+        Resources = Resources,
+        AxialTiltTenths = (int?)Scaled(Tilt, 10, "Axial tilt"),
+        EccentricityPerMille = (int?)Scaled(Eccentricity, 1000, "Eccentricity"),
+        LuminosityThousandths = Scaled(Luminosity, 1000, "Star brightness"),
+        DistanceThousandths = Scaled(Distance, 1000, "Distance"),
+        YearThousandths = Scaled(Year, 1000, "Year"),
+        LightThousandths = Scaled(Light, 1000, "Light"),
+        Co2Microbar = (int?)Scaled(Co2, 1_000_000, "CO2"),
+        PressureHundredths = (int?)Scaled(Pressure, 100, "Pressure"),
+        VolcanismPercent = Int(Volcanism, "Volcanism"),
+        StarVariabilityPerMille = Int(StarVariability, "Star variability"),
+        StarCycleYears = Int(StarCycle, "Star cycle"),
+    };
+
+    /// <summary>Puts every advanced world setting back to "as the preset" (Earth).</summary>
+    public void ResetWorld()
+    {
+        Planet = "earth";
+        Moisture = "preset";
+        Inland = "normal";
+        Relief = "preset";
+        Resources = "normal";
+        Tilt = Eccentricity = Luminosity = Distance = Year = Light = Co2 = Pressure = Volcanism = StarVariability = StarCycle = string.Empty;
+    }
+
+    /// <summary>Civilization to lead (stage 6 PR P2): 0 = watch every civilization as an observer, N = lead civilization number N (id N − 1).</summary>
+    public int Lead { get; set; }
+
+    /// <summary>pause, x1, x2, x4 or max.</summary>
     public string Speed { get; set; } = "pause";
 
     /// <summary>Pause after this many turns (0 = never).</summary>
@@ -106,7 +147,7 @@ public sealed class StartSettings
         "--seed", "--map-size", "--civs", "--world-type", "--planet", "--water", "--moisture", "--inland", "--relief", "--resources",
         "--tilt", "--eccentricity", "--luminosity", "--distance", "--year", "--light", "--co2", "--pressure", "--volcanism",
         "--star-variability", "--star-cycle", "--speed", "--turn-limit", "--report",
-        "--long-run", "--long-run-folder", "--long-run-every",
+        "--long-run", "--long-run-folder", "--long-run-every", "--lead",
     ];
 
     /// <summary>
@@ -148,6 +189,7 @@ public sealed class StartSettings
                 case "--art-pack": s.ArtPack = v; break;
                 case "--long-run": s.LongRun = v; break;
                 case "--long-run-folder": s.LongRunFolder = v; break;
+                case "--lead": s.Lead = int.Parse(v, CultureInfo.InvariantCulture); break;
                 case "--long-run-every": s.LongRunEvery = int.Parse(v, CultureInfo.InvariantCulture); break;
             }
         }
@@ -161,12 +203,69 @@ public sealed class StartSettings
     /// <summary>Folder name of the art pack; empty = default pictures.</summary>
     public string ArtPack { get; set; } = string.Empty;
 
+    /// <summary>New game: what wins (0 last standing, 1 first to the Middle Ages, 2 best score after 2 hours).</summary>
+    public int Goal { get; set; } = 1;
+
+    /// <summary>New game: civilizations choose where they start.</summary>
+    public bool ChooseStart { get; set; } = true;
+
+    /// <summary>New game: ores near every start (fair) or where the world put them (realistic), 2026-11-24.</summary>
+    public bool FairOres { get; set; } = true;
+
+    /// <summary>New game: the tutorial's task list on screen (E6, 2026-11-20).</summary>
+    public bool Tutorial { get; set; } = true;
+
+    /// <summary>New game: number of civilizations (the player's included).</summary>
+    public int CivCount { get; set; } = 4;
+
+    /// <summary>Nickname in multiplayer games (R3-12: kept for the next games).</summary>
+    public string Nickname { get; set; } = string.Empty;
+
+    /// <summary>Address of the last server joined.</summary>
+    public string JoinAddress { get; set; } = "127.0.0.1";
+
+    /// <summary>Port of the last server joined.</summary>
+    public int JoinPort { get; set; } = CivSim.Protocol.Transport.TcpConnection.DefaultPort;
+
+    /// <summary>Join through a relay with a room code (MP6) instead of by address and port.</summary>
+    public bool JoinThroughRelay { get; set; }
+
+    /// <summary>Room code of the last game joined through a relay.</summary>
+    public string JoinCode { get; set; } = string.Empty;
+
+    /// <summary>Relay to join and host through ("name" or "name:port"; MP6). Empty until the player types one.</summary>
+    public string RelayAddress { get; set; } = string.Empty;
+
+    /// <summary>Password to open games on the relay (from its owner; R2-3).</summary>
+    public string RelayPassword { get; set; } = string.Empty;
+
+    /// <summary>Host through the relay: players join with its address and a room code, nobody opens a port (MP6).</summary>
+    public bool HostThroughRelay { get; set; }
+
+    /// <summary>Name of the game this player hosts.</summary>
+    public string HostGameName { get; set; } = "CivSim game";
+
+    /// <summary>Port this player hosts on.</summary>
+    public int HostPort { get; set; } = CivSim.Protocol.Transport.TcpConnection.DefaultPort;
+
+    /// <summary>Places for players in a hosted game (2–8, at most the civilizations).</summary>
+    public int HostSeats { get; set; } = 2;
+
+    /// <summary>Speed of a hosted game: 1 = x1, 2 = x2.</summary>
+    public int HostSpeed { get; set; } = 1;
+
+    /// <summary>Server ("address:port") of <see cref="LastReturnKey"/>.</summary>
+    public string LastServer { get; set; } = string.Empty;
+
+    /// <summary>The key to lead the same people again on <see cref="LastServer"/> after a lost connection (MP2).</summary>
+    public string LastReturnKey { get; set; } = string.Empty;
+
     /// <summary>Speed word to the protocol value.</summary>
     public static SimulationSpeed ParseSpeed(string? word) => word switch
     {
         "x1" => SimulationSpeed.X1,
         "x2" => SimulationSpeed.X2,
-        "x5" => SimulationSpeed.X5,
+        "x4" or "x5" => SimulationSpeed.X4, // "x5" is the old word, kept for saved settings
         "max" => SimulationSpeed.Max,
         _ => SimulationSpeed.Paused,
     };
@@ -283,6 +382,22 @@ public sealed class ViewerSettings
 
     /// <summary>Which HUD panels were open.</summary>
     public HudPanels Panels { get; set; } = new();
+
+    /// <summary>Key of the interface font the player chose (null = default).</summary>
+    public string? Font { get; set; }
+
+    /// <summary>Size of the interface in percent (Patryk, 2026-11-24: panels overlapped at 1440p); 100 = as designed.</summary>
+    public int UiScale { get; set; } = 100;
+
+    /// <summary>The sizes the player can choose, percent.</summary>
+    public static readonly int[] UiScales = [60, 70, 80, 90, 100, 110, 125, 150];
+
+    /// <summary>Applies an interface size to the window (everything drawn on screen, tooltips included).</summary>
+    public static void ApplyUiScale(Window window, int percent)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+        window.ContentScaleFactor = Math.Clamp(percent, 50, 200) / 100f;
+    }
 
     /// <summary>Reads the saved settings; defaults when there are none or the file is broken.</summary>
     public static ViewerSettings Load()

@@ -130,7 +130,7 @@ public static class Leaders
             crisis = g is not null && g.CrisisYears > 0 && random.NextInt(100) < g.CrisisPercent;
             if (crisis)
             {
-                civ.CrisisUntilMonth = Math.Max(civ.CrisisUntilMonth, when + (g!.CrisisYears * 12L));
+                civ.CrisisUntilMonth = Math.Max(civ.CrisisUntilMonth, state.ActionMonth + (g!.CrisisYears * 12L)); // months of action
             }
 
             successions++;
@@ -265,7 +265,14 @@ public sealed class LeaderSystem : ITurnSystem
     private Action<string>? _line;
 
     // Leaders change often in long steps: several in a turn are summed up in one line (stage 5b).
-    private void Line(string text) => _context!.Chronicle(text, "New leaders in {0} peoples", _civ);
+    // Until the bronze age leaders have no place in the chronicle (leaders.json chronicleEnabled; playtest P-01).
+    private void Line(string text)
+    {
+        if (_content.Leaders.ChronicleEnabled)
+        {
+            _context!.Chronicle(text, "New leaders in {0} peoples", _civ);
+        }
+    }
 
     /// <summary>Creates the system.</summary>
     public LeaderSystem(GameContent content)

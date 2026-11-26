@@ -137,6 +137,15 @@ public enum FactorId : byte
 
     /// <summary>The strategist's expansion weight, per mille (a war for land; AI fixes after stage 4g).</summary>
     Expansion = 43,
+
+    /// <summary>The network's stock of a task's good, in months of the artisans' use (-1: none used; stage 6 PR 4b).</summary>
+    Shortage = 44,
+
+    /// <summary>What a new work group would make in a year, hundredths (stage 6 PR 4b).</summary>
+    TaskYield = 45,
+
+    /// <summary>Grain of a field against the best free farmland in reach, % (G9 field move, stage 6 PR 4b-2; 0 = out of reach).</summary>
+    FieldPercent = 46,
 }
 
 /// <summary>

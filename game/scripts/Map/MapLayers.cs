@@ -192,6 +192,12 @@ public sealed class LayerStack
             {
                 mine.Enabled = s.Enabled;
                 mine.Opacity = Math.Clamp(s.Opacity, 0, 100);
+                // Patryk, 2026-11-24: the civilization's colour covered the land. Old defaults kept in a save become the new ones.
+                if ((s.Layer == MapLayer.Influence && s.Opacity is 45 or 20) || (s.Layer == MapLayer.Owner && s.Opacity == 60))
+                {
+                    mine.Opacity = DefaultOpacity(s.Layer);
+                }
+
                 ordered.Add(mine);
             }
         }
@@ -216,14 +222,14 @@ public sealed class LayerStack
 
     private static int Group(MapLayer layer) => layer == MapLayer.Biomes ? 0 : layer == MapLayer.Fog ? 2 : IsCellLayer(layer) ? 1 : 3;
 
-    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Hillshade or MapLayer.Fog or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields
+    private static bool DefaultOn(MapLayer layer) => layer is MapLayer.Biomes or MapLayer.Hillshade or MapLayer.Fog or MapLayer.Influence or MapLayer.Rivers or MapLayer.Fields or MapLayer.Deposits
         or MapLayer.Borders or MapLayer.Settlements or MapLayer.Units or MapLayer.Events;
 
     private static int DefaultOpacity(MapLayer layer) => layer switch
     {
-        MapLayer.Influence => 45,
+        MapLayer.Influence => 12, // Patryk: the people's tint lets the land and pictures under it read (45, then 20, now 12)
         MapLayer.Hillshade => 50,
-        MapLayer.Owner => 60,
+        MapLayer.Owner => 15, // 2026-11-24: a light tint (was 60, it covered the land)
         MapLayer.Fog => 100,
         MapLayer.Relations => 80,
         _ => 100,

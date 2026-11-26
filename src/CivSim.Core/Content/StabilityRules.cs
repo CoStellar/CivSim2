@@ -7,6 +7,12 @@ namespace CivSim.Core.Content;
 /// </summary>
 public sealed record StabilityRules
 {
+    /// <summary>
+    /// False while coups, secessions and the drift of far settlements are frozen until a later era (ADR 0026 rule 5: stability stays
+    /// one number, the mood); administration and unrest still count.
+    /// </summary>
+    public bool RevoltsEnabled { get; init; } = true;
+
     /// <summary>Below this stability unrest begins: strikes lower the output of every settlement.</summary>
     public int UnrestBelow { get; init; } = 30;
 

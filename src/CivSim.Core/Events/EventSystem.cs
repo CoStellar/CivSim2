@@ -97,6 +97,11 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
     // Yearly chance with the civilization head counts already taken this turn.
     private long Chance(WorldState world, SettlementState s, EventDefinition ev)
     {
+        if (!ev.Enabled)
+        {
+            return 0; // frozen until a later era (ADR 0026)
+        }
+
         long chance = ev.TimesPer10000Years * 100L; // per 10 000 years -> millionths per year
         foreach (EventCondition c in ev.Conditions)
         {
@@ -333,7 +338,8 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
                     .Replace("{settlement}", s.Name, StringComparison.Ordinal)
                     .Replace("{civilization}", owner?.Name ?? "no one", StringComparison.Ordinal),
                 GroupOf(ev),
-                owner?.Id.Value ?? -1);
+                owner?.Id.Value ?? -1,
+                ownOnly: true);
         }
     }
 
@@ -389,7 +395,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
 
                 Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
                 _struck.Add((m, e));
-                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {target.Name}.", GroupOf(ev), target.Owner.Value);
+                context.Chronicle($"The {ev.Name.ToLowerInvariant()} spread from {state.Settlements[source].Name} to {target.Name}.", GroupOf(ev), target.Owner.Value, ownOnly: true);
             }
 
             AlongTradeRoutes(context, networks, networkOf, source, e, months, rng);
@@ -434,7 +440,7 @@ public sealed class EventSystem(GameContent content, IReadOnlyList<EventDefiniti
             Strike(context, WorldOf(state, target.World), target, ev, months, chronicle: false);
             _struck.Add((other, e));
             string partner = state.FindCivilization(target.Owner)?.Name ?? "no one";
-            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).", GroupOf(ev), target.Owner.Value);
+            context.Chronicle($"Merchants carried the {ev.Name.ToLowerInvariant()} from {state.Settlements[source].Name} to {target.Name} ({partner}).", GroupOf(ev), target.Owner.Value, ownOnly: true);
         }
     }
 

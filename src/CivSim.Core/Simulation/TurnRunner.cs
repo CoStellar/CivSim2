@@ -40,6 +40,9 @@ public sealed class TurnRunner
     /// <summary>Chronicle lines written by systems in the last completed turn.</summary>
     public IReadOnlyList<string> LastChronicle => _context.ChronicleLines;
 
+    /// <summary>Whom each line of <see cref="LastChronicle"/> is about (same index; playtest P-01).</summary>
+    public IReadOnlyList<ChronicleAbout> LastChronicleSubjects => _context.ChronicleSubjects;
+
     /// <summary>Report of the last completed turn (reused object).</summary>
     public TurnReport LastReport { get; } = new();
 
@@ -62,7 +65,7 @@ public sealed class TurnRunner
     {
         long turnStart = Stopwatch.GetTimestamp();
         LastReport.Reset(State.Turn + 1);
-        _context.ChronicleList.Clear();
+        _context.ClearChronicle();
 
         for (int p = 0; p < TurnPhases.Count; p++)
         {
@@ -120,7 +123,12 @@ public sealed class TurnRunner
     {
         foreach (CommandEnvelope envelope in _context.CommandList)
         {
-            CommandResult result = envelope.Command.Validate(State, envelope.Civ);
+            // A player's order holds (stage 6 PR P1): an AI command against it, also one decided in this very tick, is refused.
+            bool ai = envelope.Player == PlayerId.Ai;
+            CommandResult result = ai && Ai.PlayerOrders.HeldAgainstAi(State, envelope.Civ, envelope.Command)
+                ? CommandResult.Fail("A player's order holds.")
+                : envelope.Command.Validate(State, envelope.Civ);
+            long unitsBefore = State.Units.NextId;
             if (result.Success)
             {
                 if (envelope.Command is IChronicledCommand chronicled)
@@ -129,17 +137,22 @@ public sealed class TurnRunner
                     {
                         if (chronicled.ChronicleGroup is { } group)
                         {
-                            _context.Chronicle(line, group, envelope.Civ.Value);
+                            _context.Chronicle(line, group, envelope.Civ.Value, ownOnly: chronicled.ChronicleInner);
                         }
                         else
                         {
-                            _context.Chronicle(line);
+                            _context.Chronicle(line, envelope.Civ.Value, inner: chronicled.ChronicleInner);
                         }
                     }
                 }
                 else
                 {
                     envelope.Command.Apply(State, envelope.Civ);
+                }
+
+                if (!ai)
+                {
+                    Ai.PlayerOrders.Mark(State, envelope.Civ, envelope.Command, unitsBefore);
                 }
 
                 LastReport.AppliedCommands++;

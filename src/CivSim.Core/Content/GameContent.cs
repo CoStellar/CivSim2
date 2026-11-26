@@ -59,7 +59,9 @@ public sealed class GameContent
     public IReadOnlyList<TechnologyDefinition> Technologies { get; init; } = [];
 
     /// <summary>Random events (data/events.json, stage 3h), index = id.</summary>
-    public IReadOnlyList<EventDefinition> Events { get; init; } = [];
+    public IReadOnlyList<EventDefinition> Events { get => _events; init => _events = value; }
+
+    private IReadOnlyList<EventDefinition> _events = [];
 
     /// <summary>Sight, map memory and journeys (data/perception.json, stage 3g).</summary>
     public PerceptionRules Perception { get; init; } = new();
@@ -74,10 +76,54 @@ public sealed class GameContent
     public Naming.NameRules Names { get; init; } = new();
 
     /// <summary>Diplomacy and trade between civilizations (data/diplomacy.json, stage 4d).</summary>
-    public Diplomacy.TreatyRules Treaties { get; init; } = new();
+    public Diplomacy.TreatyRules Treaties { get => _treaties; init => _treaties = value; }
+
+    private Diplomacy.TreatyRules _treaties = new();
 
     /// <summary>War: goals, score, weariness, terms of peace (data/war.json, stage 4e).</summary>
     public Diplomacy.WarRules War { get; init; } = new();
+
+    /// <summary>Units: speeds, terrain, scouting, settlers (data/units.json, stage 6 PR 3a).</summary>
+    public Units.UnitRules Units { get => _units; init => _units = value; }
+
+    private Units.UnitRules _units = new();
+
+    /// <summary>A copy of this content with other unit rules (tests walk a cell in a tick with it, as their pulse is a tick).</summary>
+    public GameContent WithUnits(Units.UnitRules units)
+    {
+        ArgumentNullException.ThrowIfNull(units);
+        var copy = (GameContent)MemberwiseClone();
+        copy._units = units;
+        return copy;
+    }
+
+    /// <summary>Area tasks: woodcutting, mines, quarries (data/tasks.json, stage 6 PR 4a).</summary>
+    public Units.TaskRules Tasks { get => _tasks; init => _tasks = value; }
+
+    private Units.TaskRules _tasks = new();
+
+    /// <summary>A copy of this content with other task rules (tests switch off gathering materials from the zone with it).</summary>
+    public GameContent WithTasks(Units.TaskRules tasks)
+    {
+        ArgumentNullException.ThrowIfNull(tasks);
+        var copy = (GameContent)MemberwiseClone();
+        copy._tasks = tasks;
+        return copy;
+    }
+
+    /// <summary>Time of the live game: ticks, pulses, months of action (data/time.json, ADR 0025).</summary>
+    public Simulation.TimeRules Time { get => _time; init => _time = value; }
+
+    private Simulation.TimeRules _time = new();
+
+    /// <summary>A copy of this content with other time rules (tests run every civilization's pulse in every tick with it).</summary>
+    public GameContent WithTime(Simulation.TimeRules time)
+    {
+        ArgumentNullException.ThrowIfNull(time);
+        var copy = (GameContent)MemberwiseClone();
+        copy._time = time;
+        return copy;
+    }
 
     /// <summary>Research and diffusion rules (stage 3f).</summary>
     public ResearchRules Research { get; init; } = new();
@@ -86,10 +132,15 @@ public sealed class GameContent
     public TechnologyDefinition Technology(string key) => Find(Technologies, t => t.Key, key, "technology");
 
     /// <summary>Trade network and internal prices (data/trade.json, stage 3e).</summary>
-    public TradeRules Trade { get; init; } = new();
+    public TradeRules Trade { get => _trade; init => _trade = value; }
+
+    private TradeRules _trade = new();
 
     /// <summary>Settlement levels from smallest to largest, index = id (<c>data/settlements.json</c>).</summary>
     public IReadOnlyList<SettlementLevelDefinition> SettlementLevels { get; init; } = [];
+
+    /// <summary>What settlements look like as their civilization advances (settlements.json looks, stage 6 PR P2b); may be empty.</summary>
+    public IReadOnlyList<SettlementLookDefinition> SettlementLooks { get; init; } = [];
 
     /// <summary>Eras in order, index = id (<c>data/eras.json</c>).</summary>
     public IReadOnlyList<EraDefinition> Eras { get; init; } = [];
@@ -112,11 +163,28 @@ public sealed class GameContent
     /// <summary>Forms of government, index = id (<c>data/governments.json</c>, stage 4f). Empty in hand-made test content.</summary>
     public IReadOnlyList<GovernmentDefinition> Governments { get; init; } = [];
 
+    /// <summary>
+    /// False while every people keeps the government it starts with until a later era (ADR 0026 rule 5, governments.json "enabled"):
+    /// nobody changes it; its administration still counts.
+    /// </summary>
+    public bool GovernmentsEnabled { get => _governmentsEnabled; init => _governmentsEnabled = value; }
+
+    private bool _governmentsEnabled = true;
+
+    /// <summary>False while every stratum weighs the same in stability (strata.json "politicalInfluence", ADR 0026 rule 5).</summary>
+    public bool StrataInfluenceEnabled { get => _strataInfluenceEnabled; init => _strataInfluenceEnabled = value; }
+
+    private bool _strataInfluenceEnabled = true;
+
     /// <summary>Leaders: traits, ages, death (<c>data/leaders.json</c>, stage 4f PR 2).</summary>
-    public LeaderRules Leaders { get; init; } = new();
+    public LeaderRules Leaders { get => _leaders; init => _leaders = value; }
+
+    private LeaderRules _leaders = new();
 
     /// <summary>Stability and administration (<c>data/stability.json</c>, stage 4f PR 3).</summary>
-    public StabilityRules Stability { get; init; } = new();
+    public StabilityRules Stability { get => _stability; init => _stability = value; }
+
+    private StabilityRules _stability = new();
 
     /// <summary>Growth, health and gathering rules (<c>data/population.json</c>).</summary>
     public PopulationRules Population { get; init; } = new();
@@ -125,7 +193,40 @@ public sealed class GameContent
     public WorldGen.SeasonRules Seasons { get; init; } = new();
 
     /// <summary>Milankovitch cycles and ice sheets (data/planets.json "climateCycles", stage 1c-B).</summary>
-    public WorldGen.ClimateCycleRules ClimateCycles { get; init; } = new();
+    public WorldGen.ClimateCycleRules ClimateCycles { get => _climateCycles; init => _climateCycles = value; }
+
+    private WorldGen.ClimateCycleRules _climateCycles = new();
+
+    /// <summary>
+    /// A copy of this content with every system frozen until a later era switched on (ADR 0026 rule 5: the dynamic climate, wildfire
+    /// and flood, governments, the political influence of strata, coups, secessions and drift, pacts and alliances, the shared store, leaders in the chronicle): the unit tests
+    /// of those systems run them as the later eras will.
+    /// </summary>
+    public GameContent Thawed()
+    {
+        var copy = (GameContent)MemberwiseClone();
+        copy._climateCycles = _climateCycles with { Enabled = true };
+        var events = new EventDefinition[_events.Count];
+        for (int i = 0; i < events.Length; i++)
+        {
+            events[i] = _events[i] with { Enabled = true };
+        }
+
+        copy._events = events;
+        copy._governmentsEnabled = true;
+        copy._strataInfluenceEnabled = true;
+        copy._stability = _stability with { RevoltsEnabled = true };
+        var kinds = new Diplomacy.TreatyKindDefinition[_treaties.Kinds.Count];
+        for (int i = 0; i < kinds.Length; i++)
+        {
+            kinds[i] = _treaties.Kinds[i] with { Enabled = true };
+        }
+
+        copy._treaties = _treaties with { Kinds = kinds };
+        copy._trade = _trade with { SharedStore = false };
+        copy._leaders = _leaders with { ChronicleEnabled = true };
+        return copy;
+    }
 
     /// <summary>Planet presets (stage 1b).</summary>
     public IReadOnlyList<PlanetPreset> Planets { get; init; } = [];
@@ -147,6 +248,25 @@ public sealed class GameContent
 
     /// <summary>Finds an effect type by key, e.g. "damage".</summary>
     public EffectDefinition Effect(string key) => Find(Effects, e => e.Key, key, "effect");
+
+    /// <summary>
+    /// The look (id in <see cref="SettlementLooks"/>) of a settlement of <paramref name="level"/> whose owner knows the technologies
+    /// <paramref name="knows"/> says, or -1 when no look fits (then the level's art is drawn).
+    /// </summary>
+    public int SettlementLook(int level, System.Func<int, bool> knows)
+    {
+        System.ArgumentNullException.ThrowIfNull(knows);
+        int look = -1;
+        foreach (SettlementLookDefinition l in SettlementLooks)
+        {
+            if (level >= l.MinLevel && (l.Technology < 0 || knows(l.Technology)))
+            {
+                look = l.Id;
+            }
+        }
+
+        return look;
+    }
 
     /// <summary>Finds a settlement level by key, e.g. "camp".</summary>
     public SettlementLevelDefinition SettlementLevel(string key) => Find(SettlementLevels, l => l.Key, key, "settlement level");

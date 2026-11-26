@@ -34,7 +34,7 @@ public sealed record ProposeTreatyCommand(GameContent Content, CivId Other, Trea
     public void Apply(GameState state, CivId civ)
     {
         ArgumentNullException.ThrowIfNull(state);
-        state.Treaties.Propose(new TreatyProposal(civ, Other, Kind, state.Month, ProposalStatus.Pending, Terms));
+        state.Treaties.Propose(new TreatyProposal(civ, Other, Kind, state.ActionMonth, ProposalStatus.Pending, Terms));
     }
 }
 
@@ -78,7 +78,7 @@ public sealed record AnswerProposalCommand(GameContent Content, CivId From, Trea
         int k = book.FindProposal(From, civ, Kind);
         if (!Accept)
         {
-            book.SetProposal(k, book.Proposals[k] with { Status = ProposalStatus.Declined, Month = state.Month });
+            book.SetProposal(k, book.Proposals[k] with { Status = ProposalStatus.Declined, Month = state.ActionMonth });
             return null;
         }
 
@@ -113,8 +113,8 @@ public sealed record DeclareWarCommand(GameContent Content, CivId Target, WarGoa
         int months = state.FindCivilization(civ) is { } c ? Governance.Governments.EnactMonths(Content, c) : 0;
         if (months > 0 && state.Treaties.Find(civ, Target, TreatyKind.War) is { } war)
         {
-            war.ReadyMonth = state.Month + months;
-            line += string.Create(System.Globalization.CultureInfo.InvariantCulture, $" Its warriors will be ready in {months / 12} year{(months == 12 ? string.Empty : "s")}.");
+            war.ReadyTick = state.Turn + Content.Time.ActionTicks(months); // ADR 0025: months of action, in ticks
+            line += $" Its warriors will be ready in {Content.Time.PlayTime(Content.Time.ActionTicks(months))}."; // P-09
         }
 
         return line;

@@ -21,7 +21,7 @@ public class ProtocolSerializerTests
         yield return [new CommandRejectedMessage(7, "Nope")];
         yield return [new EndTurnMessage(12)];
         yield return [new GameViewMessage(3, 1, [new WorldView(0, "Earth", 64, 40)], [new CivilizationView(1, "Rome", true)])];
-        yield return [new GameViewMessage(4, -1, [], [], 1234, SimulationSpeed.X5, [new ChronicleEntry(4, "Speed set to X5.")])];
+        yield return [new GameViewMessage(4, -1, [], [], 1234, SimulationSpeed.X4, [new ChronicleEntry(4, "Speed set to X4.")])];
         yield return [new HelloMessage(ProtocolInfo.Version, "Viewer", ClientRole.Observer)];
         yield return [new SetSpeedMessage(SimulationSpeed.Max)];
         yield return [new ContentMessage([new BiomeInfo(0, "deep_ocean", "Deep Ocean", true, 0x0a2647)], [new DepositInfo(1, "game", "Game", 0x8a562d)], ["None"], ["Flat"])];
@@ -117,8 +117,18 @@ public class ProtocolSerializerTests
         // Version 9 added war campaigns (armies and their carriers) to the observer layers (stage 4e PR 3).
         // Version 10 added the title and the government of each civilization for observers (stage 4f).
         // Version 11 added the leader of the followed civilization (stage 4f PR 2).
-        byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A"));
-        Assert.Equal("0D000000" + "920093" + "01A14100", Convert.ToHexString(frame));
+        // Version 14: live speeds x1/x2/x4 (ADR 0025; x4 replaced x5).
+        // Version 15: units in the view and the unit commands (stage 6 PR 3a).
+        // Version 16: the role of a unit in the view and the army commands (stage 6 PR 3b).
+        // Version 17: area tasks: StartTaskDto, the task of work groups in UnitView, task kinds in the content (stage 6 PR 4a).
+        // Version 18: levers of the helmsman (SetLeverDto, the player's levers and the AI's decisions in the view) and the civilization
+        // a player asks for in Hello (stage 6 PR P, ADR 0027). Hello has four fields now.
+        // Version 20: settlement looks and the settlers' food in the view (stage 6 PR P2b).
+        // Version 22: the new game (ADR 0028). Versions 23 to 26: alerts, fog with memory, the Stone Age rebuild.
+        // Version 27: rations of the settlements and their units. Version 28: building upgrades and patrols to resume. Version 29: branches of the technology tree. Version 30: test scenarios. Version 31: surveys of the ground.
+        // Version 45: Hello has seven fields (game version, password, return key; multiplayer MP2).
+        byte[] frame = ProtocolSerializer.Serialize(new HelloMessage(1, "A", GameVersion: "V"));
+        Assert.Equal("33000000" + "920097" + "01A14100FF" + "A156" + "A0" + "A0", Convert.ToHexString(frame));
     }
 
     [Fact]

@@ -45,6 +45,12 @@ public sealed record TradeRules
     /// <summary>Percent of the goods lost per cell of distance when passed on (at most 90% in all).</summary>
     public int LossPercentPerCell { get; init; } = 2;
 
+    /// <summary>
+    /// True while the network of a civilization's settlements is one shared store until a later era (ADR 0026 rule 5): goods pass
+    /// between them without loss; trade with other peoples still loses <see cref="LossPercentPerCell"/> per cell.
+    /// </summary>
+    public bool SharedStore { get; init; }
+
     /// <summary>Years of food needs a settlement keeps before it gives food away.</summary>
     public Amount FoodReserveYears { get; init; } = Amount.FromUnits(1);
 
@@ -66,6 +72,20 @@ public sealed record RecipeDefinition(
     int Years);
 
 /// <summary>A settlement level from <c>data/settlements.json</c> (GDD 5.3).</summary>
+/// <summary>
+/// What a settlement looks like on the map (stage 6 PR P2b, ADR 0026 rule 12): from <paramref name="MinLevel"/> on and, when
+/// <see cref="Technology"/> is set, once the owner knows it. Looks are ordered from the simplest; the last that fits is drawn.
+/// </summary>
+public sealed record SettlementLookDefinition(int Id, string Key, string Name, int MinLevel)
+{
+    /// <summary>Key of the technology the owner needs, or empty.</summary>
+    public string TechnologyKey { get; init; } = string.Empty;
+
+    /// <summary>Technology id resolved from <see cref="TechnologyKey"/>, or -1.</summary>
+    public int Technology { get; init; } = -1;
+}
+
+/// <summary>A level of settlement (GDD 5.3).</summary>
 public sealed record SettlementLevelDefinition(
     int Id,
     string Key,

@@ -41,7 +41,10 @@ public sealed record SaveData(
     [property: Key(32)] int StepMonths = 0,
     [property: Key(33)] int WorldMonths = 0,
     [property: Key(34)] IReadOnlyList<EpisodeSaveData>? Episodes = null,
-    [property: Key(35)] long NextEpisodeId = 0);
+    [property: Key(35)] long NextEpisodeId = 0,
+    [property: Key(36)] long ActionMonth = 0,
+    [property: Key(37)] List<UnitSaveData>? Units = null,
+    [property: Key(38)] long NextUnitId = 0);
 
 /// <summary>Saved treaty or war between two civilizations (stage 4d).</summary>
 [MessagePackObject]
@@ -69,8 +72,9 @@ public sealed record TreatySaveData(
     [property: Key(20)] PeaceTermsSaveData? Terms = null,
     [property: Key(21)] int Campaigns = 0,
     [property: Key(22)] int CampaignMonths = 0,
-    [property: Key(23)] long LastCampaignMonth = -1,
-    [property: Key(24)] long ReadyMonth = -1);
+    [property: Key(23)] long LastCampaignTick = -1,
+    [property: Key(24)] long ReadyTick = -1,
+    [property: Key(25)] long SinceTick = 0);
 
 /// <summary>Saved episode (ADR 0022): today a war campaign.</summary>
 [MessagePackObject]
@@ -80,7 +84,7 @@ public sealed record EpisodeSaveData(
     [property: Key(2)] int Civ,
     [property: Key(3)] int Other,
     [property: Key(4)] long StartMonth,
-    [property: Key(5)] long NextMonth,
+    [property: Key(5)] long NextTick,
     [property: Key(6)] int TickMonths,
     [property: Key(7)] int Home,
     [property: Key(8)] int Target,
@@ -95,7 +99,7 @@ public sealed record EpisodeSaveData(
     [property: Key(17)] int Mustered = 0,
     [property: Key(18)] int ArmsPercent = 100,
     [property: Key(19)] int Morale = 100,
-    [property: Key(20)] long MusterUntilMonth = 0,
+    [property: Key(20)] long MusterUntilTick = 0,
     [property: Key(21)] long[]? Food = null,
     [property: Key(22)] int HungryMonths = 0,
     [property: Key(23)] int Forays = 0,
@@ -108,7 +112,16 @@ public sealed record EpisodeSaveData(
     [property: Key(30)] int LastPrey = -1,
     [property: Key(31)] int Battles = 0,
     [property: Key(32)] int Wins = 0,
-    [property: Key(33)] int Killed = 0);
+    [property: Key(33)] int Killed = 0,
+    [property: Key(34)] long Army = -1,
+    [property: Key(35)] long Convoy = -1,
+    [property: Key(36)] long InRangeSince = -1,
+    [property: Key(37)] bool Fleeing = false,
+    [property: Key(38)] long[]? Fight = null,
+    [property: Key(39)] long RoundTick = 0,
+    [property: Key(40)] int FightLost = 0,
+    [property: Key(41)] int FightKilled = 0,
+    [property: Key(42)] bool ByPlayer = false);
 
 /// <summary>Saved terms of a peace (stage 4e).</summary>
 [MessagePackObject]
@@ -159,7 +172,7 @@ public sealed record ClimateSaveData(
 [MessagePackObject]
 public sealed record MapLayerSaveData([property: Key(0)] string Name, [property: Key(1)] byte[] Bytes);
 
-/// <summary>Saved civilization. Controllers are not saved: on load every civilization starts AI-controlled until players rejoin.</summary>
+/// <summary>Saved civilization. Controllers are not saved: on load every civilization starts AI-controlled until players rejoin; the levers its player held are (ADR 0027).</summary>
 [MessagePackObject]
 public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: Key(1)] string Name, [property: Key(2)] bool IsAlive,
     [property: Key(3)] int StartCol,
@@ -202,7 +215,9 @@ public sealed record CivilizationSaveData([property: Key(0)] int Id, [property: 
     [property: Key(40)] int ParentCiv = -1,
     [property: Key(41)] long FoundedMonth = 0,
     [property: Key(42)] long RevoltCalmUntilMonth = 0,
-    [property: Key(43)] ulong[]? LanguageMutations = null);
+    [property: Key(43)] ulong[]? LanguageMutations = null,
+    [property: Key(44)] long LastPulseTick = -1,
+    [property: Key(45)] byte PlayerLevers = 0);
 
 /// <summary>Saved relation of a civilization with another (stage 4c).</summary>
 [MessagePackObject]
@@ -220,7 +235,8 @@ public sealed record RelationSaveData(
     [property: Key(10)] int RumorPeople,
     [property: Key(11)] int RumorFrom,
     [property: Key(12)] List<RelationMemorySaveData> Memories,
-    [property: Key(13)] long SettledMonth = -1);
+    [property: Key(13)] long SettledMonth = -1,
+    [property: Key(14)] long PlayerOrderTick = -1);
 
 /// <summary>Saved remembered event of a relation (stage 4c).</summary>
 [MessagePackObject]
@@ -260,7 +276,45 @@ public sealed record SettlementSaveData(
     [property: Key(23)] int JourneyTarget = -1,
     [property: Key(24)] int[]? Skilled = null,
     [property: Key(25)] int[]? Trainees = null,
-    [property: Key(26)] int Loyalty = 50);
+    [property: Key(26)] int Loyalty = 50,
+    [property: Key(27)] int JourneyNext = -1,
+    [property: Key(28)] int JourneyStepTicks = 0,
+    [property: Key(29)] int JourneyProgress = 0,
+    [property: Key(30)] bool ScoutOut = false,
+    [property: Key(31)] long ScoutBackMonth = -1,
+    [property: Key(32)] long RestUntilMonth = -1,
+    [property: Key(33)] int[]? JourneyPath = null,
+    [property: Key(34)] int JourneyPathAt = 0,
+    [property: Key(35)] int JourneyPathGoal = -1,
+    [property: Key(36)] long PlayerOrderTick = -1,
+    [property: Key(37)] long RecipeSinceMonth = 0);
+
+/// <summary>Saved unit (stage 6 PR 3a).</summary>
+[MessagePackObject]
+public sealed record UnitSaveData(
+    [property: Key(0)] long Id,
+    [property: Key(1)] byte Kind,
+    [property: Key(2)] int Owner,
+    [property: Key(3)] int World,
+    [property: Key(4)] int Cell,
+    [property: Key(5)] int Target,
+    [property: Key(6)] byte Order,
+    [property: Key(7)] int Home,
+    [property: Key(8)] int[] People,
+    [property: Key(9)] int[] Skilled,
+    [property: Key(10)] int[] Trainees,
+    [property: Key(11)] long[] Cargo,
+    [property: Key(12)] int Progress,
+    [property: Key(13)] int Next,
+    [property: Key(14)] int Direction,
+    [property: Key(15)] int[] Trail,
+    [property: Key(16)] int[]? Path = null,
+    [property: Key(17)] int PathAt = 0,
+    [property: Key(18)] int PathGoal = -1,
+    [property: Key(19)] int Role = -1,
+    [property: Key(20)] long Episode = -1,
+    [property: Key(21)] int Task = -1,
+    [property: Key(22)] bool ByPlayer = false);
 
 /// <summary>Saved active effect.</summary>
 [MessagePackObject]

@@ -53,7 +53,7 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
             SettlementState first = state.Settlements[members[0]];
             CivilizationState? civ = state.FindCivilization(first.Owner);
             // A planned decision: only in the own steps that start an era-length period (ADR 0018).
-            if (civ is null || civ.Controller != PlayerId.Ai || !Simulation.WorldClock.PlansNow(_content, state, civ))
+            if (civ is null || !Simulation.WorldClock.PlansNow(_content, state, civ)) // recipes are the simulation's, also for players (ADR 0027)
             {
                 continue;
             }
@@ -85,6 +85,10 @@ public sealed class TreasurerAdvisor(GameContent content) : Advisor(content, Adv
                 // one is clearly better. Before stage 4b they stopped every time a turn used up the inputs.
                 long challenger = pick < 0 ? 0 : Chooser.EvaluationAt(pick).Value;
                 bool keep = incumbent > 0 && challenger * 100 <= incumbent * (100 + _content.Ai.RecipeSwitchBetterByPercent);
+
+                // A recipe taken up lately is kept a while, whatever the swing of an input's price (playtest, 2026-11-16:
+                // bread and clothing swapped every few months as fields filled and emptied the grain store).
+                keep |= s.RecipeId != SettlementState.NoRecipe && state.ActionMonth - s.RecipeSinceMonth < _content.Ai.RecipeKeepYears * 12L;
                 int chosen = s.RecipeId;
                 if (best != s.RecipeId && !keep)
                 {

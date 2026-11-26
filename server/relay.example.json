@@ -1,0 +1,16 @@
+{
+  // Settings of the relay; every one may also come from the environment (CIVSIM_RELAY_PORT...) or the command line (--port...).
+  "port": 7700,
+  "maxRooms": 32,
+  "maxPlayersPerRoom": 16,
+  "maxConnections": 400,
+  "maxPerAddress": 24,
+  "roomKBps": 2048,
+  "idleMinutes": 5,
+  "reserveMinutes": 10,
+  "passwordsFile": "/config/passwords.txt",
+  "graceDays": 7,
+  "certificateFile": "",
+  "keyFile": "",
+  "statsMinutes": 5
+}
