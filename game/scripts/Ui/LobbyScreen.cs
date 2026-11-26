@@ -41,6 +41,9 @@ public partial class LobbyScreen : CanvasLayer
     private bool _startSent;
     private LobbyStateMessage? _last;
 
+    /// <summary>Joining a game in progress only to watch the whole map (MP4b); a lobby seats us anyway.</summary>
+    public bool Watch { get; init; }
+
     /// <summary>Creates the screen for a connection to a lobby (or to a game in progress).</summary>
     public LobbyScreen(IConnection connection, string name, string password, string returnKey, string where)
     {
@@ -150,7 +153,7 @@ public partial class LobbyScreen : CanvasLayer
         };
         footer.AddChild(leave);
 
-        _connection.Send(new HelloMessage(ProtocolInfo.Version, _name, Password: _password, ReturnKey: _returnKey));
+        _connection.Send(new HelloMessage(ProtocolInfo.Version, _name, Watch ? ClientRole.Observer : ClientRole.Player, Password: _password, ReturnKey: _returnKey));
     }
 
     /// <inheritdoc />

@@ -2043,6 +2043,8 @@ public sealed class SimContent
                     PingEverySeconds = mpRules.Prop("pingEverySeconds").GetInt32(),
                     ChatPerSecond = mpRules.Prop("chatPerSecond").GetInt32(),
                     ChatBurst = mpRules.Prop("chatBurst").GetInt32(),
+                    PlayerVoteSeconds = mpRules.Prop("playerVoteSeconds").GetInt32(),
+                    VoteAfterSeconds = mpRules.Prop("voteAfterSeconds").GetInt32(),
                 }
                 : new MultiplayerRules(),
             Food = GoodOf("food"),
@@ -2343,6 +2345,12 @@ public sealed record MultiplayerRules
 
     /// <summary>A player may propose a change this often.</summary>
     public int ProposeCooldownSeconds { get; init; } = 120;
+
+    /// <summary>How long a vote on a player runs (taking a civilization, removing a player).</summary>
+    public int PlayerVoteSeconds { get; init; } = 30;
+
+    /// <summary>A player votes on players after leading a civilization this long (R4-1).</summary>
+    public int VoteAfterSeconds { get; init; } = 180;
 
     /// <summary>How often the server measures each player's ping.</summary>
     public int PingEverySeconds { get; init; } = 2;

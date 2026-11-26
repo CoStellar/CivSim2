@@ -236,6 +236,7 @@ public partial class PlayGame
         _rightCol = rightCol;
         _mpRoot = rightCol; // multiplayer: the players' list goes first in this column (PlayGame.Multiplayer.cs)
         _mpScreen = root;
+        ForgetMultiplayerUi(); // a rebuilt interface (a new era's look) builds those panels again
         _advisorPanel = new PanelContainer();
         rightCol.AddChild(_advisorPanel);
         var adv = new HBoxContainer();
@@ -534,6 +535,7 @@ public partial class PlayGame
 
     private void UpdateUi()
     {
+        UpdateMultiplayer(); // also before the first view: a candidate gets none
         if (_session?.PlayView is not { } v || _session.PlayContent is not { } c)
         {
             return;
@@ -541,7 +543,6 @@ public partial class PlayGame
 
         UpdateTop(v, c);
         UpdateUnderTop();
-        UpdateMultiplayer();
         PlaceBanner();
         UpdateTutorial(v);
         UpdateAdvisor(v);
@@ -571,6 +572,14 @@ public partial class PlayGame
         _inspector.Size = Vector2.Zero;
         UpdateWindow(v, c);
         PlaceChronicle();
+        if (v.Spectator)
+        {
+            // Watching the whole map (an observer, or our civilization fell): nothing to build, no store of ours.
+            _actionBar.Visible = false;
+            _resBox.Visible = false;
+            _tutorialPanel.Visible = false;
+            _eraBarBox.Visible = false;
+        }
     }
 
     // The chronicle (and the tutorial list over it) sits at the bottom right, above the action bar only when the bar reaches
@@ -643,10 +652,17 @@ public partial class PlayGame
         }
 
         _emblemButton.Visible = _emblemButton.TextureNormal is not null;
+        if (!_endShown && v.Lost && v.Winner is null && _session?.Players is not null)
+        {
+            // With other players the game goes on without us: we watch the whole map (P6); the others choose the speed.
+            _endShown = true;
+            Toast("Our civilization is gone. We watch the whole map now; the chat stays open.");
+        }
+
         if (!_endShown && (v.Lost || v.Winner is not null))
         {
             _endShown = true;
-            _endTitle.Text = v.Won ? "VICTORY" : v.Lost ? "OUR PEOPLE ARE GONE" : "THE GAME IS WON";
+            _endTitle.Text = v.Won ? "VICTORY" : v.Lost ? "OUR CIVILIZATION IS GONE" : "THE GAME IS WON";
             _endText.Text = (v.Won ? $"We have won after {Clock()} of play." : v.Lost ? $"No settlement of ours is left after {Clock()} of play." : $"{v.Winner} have won after {Clock()} of play.")
                 + (v.Goal is { Length: > 0 } goal ? $"\nGoal: {goal}" : "") + $"\nOur score: {v.Score}. The game is paused; it can go on behind this.";
             _endPanel.Visible = true;

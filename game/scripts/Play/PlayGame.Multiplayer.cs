@@ -32,6 +32,12 @@ public partial class PlayGame
     private LineEdit? _chatInput;
     private CheckButton? _chatAllies;
     private string _playersShown = "";
+    private string? _kickArmed; // a removal asks for a second click
+    private Label? _roleText;
+    private PanelContainer? _candidatePanel;
+    private VBoxContainer? _candidateList;
+    private Label? _candidateStatus;
+    private string _candidateShown = "";
     private int _chatShown;
 
     // Called from the regular refresh of the interface.
@@ -49,6 +55,7 @@ public partial class PlayGame
             {
                 _playersPanel.Visible = false;
                 _votePanel!.Visible = false;
+                _candidatePanel!.Visible = false;
                 _chatPanel!.Visible = _session.ChatLines.Count > 0; // the lines stay readable after the others left
             }
 
@@ -65,6 +72,11 @@ public partial class PlayGame
         ShowPlayers(m);
         ShowVote(m);
         ShowChat();
+        ShowCandidate(m);
+        if (_session.PlayView is null)
+        {
+            _advisorPanel.Visible = false; // a candidate has no civilization yet: no advisor
+        }
     }
 
     private void BuildMultiplayerUi(Control column, Control root)
@@ -78,6 +90,8 @@ public partial class PlayGame
         box.AddChild(UiKit.Label("PLAYERS", 13, UiKit.Heading));
         _playersList = new VBoxContainer();
         box.AddChild(_playersList);
+        _roleText = UiKit.Label("", 13, SuffixColour, wrap: true);
+        box.AddChild(_roleText);
         _pauseText = UiKit.Label("", 13, UiKit.Warn, wrap: true);
         box.AddChild(_pauseText);
 
@@ -96,6 +110,22 @@ public partial class PlayGame
         _voteNo = UiKit.Button("No", () => CastVote(false), "Keep it as it is");
         voteRow.AddChild(_voteYes);
         voteRow.AddChild(_voteNo);
+
+        // A candidate: the civilizations it may ask for, in the middle of the screen (it sees no map, chapter 19).
+        _candidatePanel = new PanelContainer { AnchorLeft = 0.5f, AnchorRight = 0.5f, AnchorTop = 0.5f, AnchorBottom = 0.5f, OffsetLeft = -UiKit.W(300), OffsetRight = UiKit.W(300), OffsetTop = -200, Visible = false };
+        root.AddChild(_candidatePanel);
+        var cand = new VBoxContainer();
+        cand.AddThemeConstantOverride("separation", 8);
+        _candidatePanel.AddChild(cand);
+        cand.AddChild(UiKit.Label("CHOOSE A CIVILIZATION TO LEAD", 13, UiKit.Heading));
+        cand.AddChild(UiKit.Label("The game is on. The AI leads these civilizations now; ask for one and the players vote (30 s, more than half must say yes). Until then you see no map.", 13, UiKit.Text, wrap: true));
+        _candidateList = new VBoxContainer();
+        cand.AddChild(_candidateList);
+        _candidateStatus = UiKit.Label("", 13, UiKit.Warn, wrap: true);
+        cand.AddChild(_candidateStatus);
+        Button watch = UiKit.Button("Only watch", () => _session?.WatchInstead(), "See the whole map and chat; you will not lead a civilization in this game");
+        watch.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
+        cand.AddChild(watch);
 
         // The chat: at the right above the chronicle.
         _chatPanel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -UiKit.W(440), OffsetRight = -8, OffsetTop = ChronicleBottom - 330, OffsetBottom = ChronicleBottom - 122 };
@@ -121,10 +151,10 @@ public partial class PlayGame
         var sig = new StringBuilder();
         foreach (PlayPlayerInfo p in m.Players)
         {
-            sig.Append(CultureInfo.InvariantCulture, $"{p.Name}|{p.Civ}|{p.PingMs / 10}|{p.PausesLeft}|{p.Host};");
+            sig.Append(CultureInfo.InvariantCulture, $"{p.Name}|{p.Civ}|{p.PingMs / 10}|{p.PausesLeft}|{p.Host}|{p.Role};");
         }
 
-        sig.Append(m.You).Append(m.PausedBy).Append(m.PauseProtectedSeconds);
+        sig.Append(m.You).Append(m.PausedBy).Append(m.PauseProtectedSeconds).Append(_kickArmed);
         if (sig.ToString() == _playersShown)
         {
             return;
@@ -136,6 +166,7 @@ public partial class PlayGame
             n.QueueFree();
         }
 
+        PlayPlayerInfo me = m.Players[Math.Clamp(m.You, 0, m.Players.Count - 1)];
         for (int i = 0; i < m.Players.Count; i++)
         {
             PlayPlayerInfo p = m.Players[i];
@@ -143,12 +174,37 @@ public partial class PlayGame
             row.AddThemeConstantOverride("separation", 6);
             row.AddChild(new ColorRect { Color = PlayOverlay.CivColor(p.Civ), CustomMinimumSize = new Vector2(10, 10), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
             RichTextLabel name = Parts(false, NameParts(p.Name, p.SuffixLength, i == m.You ? UiKit.Heading : UiKit.Text)
-                .Append(((p.Host ? " (host)" : ""), UiKit.Muted)));
+                .Append(((p.Host ? " (host)" : "") + RoleText(p.Role), UiKit.Muted)));
             name.TooltipText = p.Name + (p.SuffixLength > 0 ? "\nThe end of the nickname was added by the game: another player has the same one." : "");
             row.AddChild(name);
-            Label ping = UiKit.Label(string.Create(CultureInfo.InvariantCulture, $"{p.PingMs} ms, {p.PausesLeft} pauses"), 13, p.PingMs > 250 ? UiKit.Warn : UiKit.Muted);
+            string pauses = p.Role == PlayPlayerInfo.Player ? string.Create(CultureInfo.InvariantCulture, $", {p.PausesLeft} pauses") : "";
+            Label ping = UiKit.Label(string.Create(CultureInfo.InvariantCulture, $"{p.PingMs} ms{pauses}"), 13, p.PingMs > 250 ? UiKit.Warn : UiKit.Muted);
             ping.TooltipText = "Time a message takes there and back; pauses left";
             row.AddChild(ping);
+
+            // Removing: the host anyone but itself; a player proposes a vote on another player (R3-9).
+            bool mayKick = i != m.You && !p.Host && me.Role == PlayPlayerInfo.Player && (me.Host || p.Role == PlayPlayerInfo.Player);
+            if (mayKick)
+            {
+                string who = p.Name;
+                bool armed = _kickArmed == who;
+                Button kick = UiKit.Button(armed ? "Sure?" : "x", () =>
+                {
+                    if (_kickArmed == who)
+                    {
+                        _kickArmed = null;
+                        _session?.Kick(who);
+                    }
+                    else
+                    {
+                        _kickArmed = who;
+                    }
+
+                    _playersShown = "";
+                }, me.Host ? $"Remove {who} from the game (click twice). The AI leads their civilization; nobody else may take it." : $"Propose to remove {who} (click twice): the players vote, more than half must say yes.");
+                row.AddChild(kick);
+            }
+
             _playersList.AddChild(row);
         }
 
@@ -157,6 +213,69 @@ public partial class PlayGame
                 ? string.Create(CultureInfo.InvariantCulture, $"Paused by {m.PausedBy}; others may end the pause in {m.PauseProtectedSeconds} s.")
                 : $"Paused by {m.PausedBy}; anyone may end the pause.";
         _pauseText.Visible = _pauseText.Text.Length > 0;
+        _roleText!.Text = me.Role switch
+        {
+            PlayPlayerInfo.Observer => "You watch the whole map.",
+            PlayPlayerInfo.Fallen => "Our civilization is gone: you watch the whole map.",
+            PlayPlayerInfo.Candidate => "You wait to lead a civilization.",
+            _ => "",
+        };
+        _roleText.Visible = _roleText.Text.Length > 0;
+    }
+
+    private static string RoleText(int role) => role switch
+    {
+        PlayPlayerInfo.Candidate => " (waits)",
+        PlayPlayerInfo.Observer => " (watches)",
+        PlayPlayerInfo.Fallen => " (fallen)",
+        _ => "",
+    };
+
+    // A candidate: the civilizations to ask for, and what its request is doing.
+    private void ShowCandidate(PlayPlayersMessage m)
+    {
+        bool candidate = m.You >= 0 && m.You < m.Players.Count && m.Players[m.You].Role == PlayPlayerInfo.Candidate;
+        _candidatePanel!.Visible = candidate;
+        if (!candidate)
+        {
+            return;
+        }
+
+        string me = m.Players[m.You].Name;
+        bool asking = m.Vote is { Kind: PlayVoteInfo.Join } v && v.By == me;
+        string sig = string.Join(";", (m.Takeable ?? []).Select(t => $"{t.Civ}|{t.Name}|{t.Settlements}|{t.People}")) + asking + (m.Vote is null);
+        _candidateStatus!.Text = asking ? $"The players vote on you: yes {m.Vote!.Yes}, no {m.Vote.No} of {m.Vote.Eligible}. {m.Vote.SecondsLeft} s." : "";
+        if (sig == _candidateShown)
+        {
+            return;
+        }
+
+        _candidateShown = sig;
+        foreach (Node n in _candidateList!.GetChildren())
+        {
+            n.QueueFree();
+        }
+
+        if (m.Takeable is not { Count: > 0 } list)
+        {
+            _candidateList.AddChild(UiKit.Label("No civilization is free now: every place for players is taken, or the AI leads none.", 13, UiKit.Muted, wrap: true));
+            return;
+        }
+
+        foreach (PlayTakeableCiv t in list)
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 8);
+            row.AddChild(new ColorRect { Color = PlayOverlay.CivColor(t.Civ), CustomMinimumSize = new Vector2(12, 12), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+            Label name = UiKit.Label(string.Create(CultureInfo.InvariantCulture, $"{t.Name}: {t.Settlements} settlements, {t.People} people"), 13, UiKit.Text);
+            name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            row.AddChild(name);
+            int civ = t.Civ;
+            Button ask = UiKit.Button("Ask to lead", () => _session?.AskToLead(civ), "The players vote on it");
+            ask.Disabled = asking || m.Vote is not null;
+            row.AddChild(ask);
+            _candidateList.AddChild(row);
+        }
     }
 
     private void ShowVote(PlayPlayersMessage m)
@@ -168,9 +287,15 @@ public partial class PlayGame
         }
 
         _votePanel!.Visible = true;
-        string what = v.Kind == 0 ? string.Create(CultureInfo.InvariantCulture, $"speed x{v.Value}") : "a change";
+        string what = v.Kind switch
+        {
+            PlayVoteInfo.Speed => string.Create(CultureInfo.InvariantCulture, $"{v.By} proposes speed x{v.Value}."),
+            PlayVoteInfo.Join => $"{v.By} asks to lead {v.About}.",
+            PlayVoteInfo.Kick => $"{v.By} proposes to remove {v.About}.",
+            _ => $"{v.By} proposes a change.",
+        };
         _voteText!.Text = string.Create(CultureInfo.InvariantCulture,
-            $"{v.By} proposes {what}. Yes {v.Yes}, no {v.No} of {v.Eligible}; more than half must say yes. {v.SecondsLeft} s.");
+            $"{what} Yes {v.Yes}, no {v.No} of {v.Eligible}; more than half must say yes. {v.SecondsLeft} s.");
         _voteYes!.Visible = v.CanVote && !v.Voted;
         _voteNo!.Visible = v.CanVote && !v.Voted;
     }
@@ -274,8 +399,19 @@ public partial class PlayGame
         _chatInput.ReleaseFocus();
     }
 
+    private void ForgetMultiplayerUi()
+    {
+        _playersPanel = null;
+        _chatInput = null;
+        _chatPanel = null;
+        _candidatePanel = null;
+        _playersShown = "";
+        _candidateShown = "";
+        _chatShown = 0;
+    }
+
     // While we write in the chat, the letters do not move the map.
-    private bool ChatTyping => _chatInput?.HasFocus() == true;
+    private bool ChatTyping => _chatInput is not null && IsInstanceValid(_chatInput) && _chatInput.HasFocus();
 
     // Key Y: write in the chat (only in a game with others).
     private bool FocusChat()

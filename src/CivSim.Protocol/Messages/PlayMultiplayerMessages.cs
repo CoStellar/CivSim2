@@ -18,7 +18,21 @@ public sealed record PlayPlayerInfo(
     [property: Key(2)] int Civ,
     [property: Key(3)] int PingMs,
     [property: Key(4)] int PausesLeft,
-    [property: Key(5)] bool Host);
+    [property: Key(5)] bool Host,
+    [property: Key(6)] int Role = PlayPlayerInfo.Player)
+{
+    /// <summary>Leads a civilization.</summary>
+    public const int Player = 0;
+
+    /// <summary>Joined a running game and waits for the vote on a civilization; sees no map (plan, chapter 19).</summary>
+    public const int Candidate = 1;
+
+    /// <summary>Watches the whole map and cannot take a civilization in this game (R3-7).</summary>
+    public const int Observer = 2;
+
+    /// <summary>Its civilization fell: watches the whole map (P6).</summary>
+    public const int Fallen = 3;
+}
 
 /// <summary>
 /// A vote going on (MP4). <see cref="Kind"/> 0: the speed (<see cref="Value"/> is the speed asked for). The change passes when
@@ -35,7 +49,18 @@ public sealed record PlayVoteInfo(
     [property: Key(6)] int No,
     [property: Key(7)] int Eligible,
     [property: Key(8)] bool CanVote,
-    [property: Key(9)] bool Voted);
+    [property: Key(9)] bool Voted,
+    [property: Key(10)] string About = "")
+{
+    /// <summary>The speed of the game (Value: the speed).</summary>
+    public const int Speed = 0;
+
+    /// <summary>A candidate asks to lead a civilization (Value: the civilization, By: the candidate, About: the civilization's name).</summary>
+    public const int Join = 1;
+
+    /// <summary>A player is to be removed (Value: the civilization, About: the player).</summary>
+    public const int Kick = 2;
+}
 
 /// <summary>
 /// Server → client: the players of a game with others, the vote going on (or null) and the pause (MP4). Sent about once a
@@ -48,7 +73,31 @@ public sealed record PlayPlayersMessage(
     [property: Key(1)] PlayVoteInfo? Vote,
     [property: Key(2)] string PausedBy,
     [property: Key(3)] int PauseProtectedSeconds,
-    [property: Key(4)] int You) : IProtocolMessage;
+    [property: Key(4)] int You,
+    [property: Key(5)] IReadOnlyList<PlayTakeableCiv>? Takeable = null) : IProtocolMessage;
+
+/// <summary>A civilization led by the AI that a candidate may ask for (plan, chapter 19): what a candidate sees instead of the map.</summary>
+[MessagePackObject]
+public sealed record PlayTakeableCiv(
+    [property: Key(0)] int Civ,
+    [property: Key(1)] string Name,
+    [property: Key(2)] int Settlements,
+    [property: Key(3)] int People);
+
+/// <summary>Client → server: a candidate asks to lead this civilization; the players vote (30 s).</summary>
+[MessagePackObject]
+public sealed record PlayJoinMessage([property: Key(0)] int Civ) : IProtocolMessage;
+
+/// <summary>Client → server: a candidate becomes an observer of the whole map, for good in this game (R3-7).</summary>
+[MessagePackObject]
+public sealed record PlayWatchMessage([property: Key(0)] int Unused = 0) : IProtocolMessage;
+
+/// <summary>
+/// Client → server: remove a player. The host removes at once; another player starts a vote (30 s). The civilization goes to the AI
+/// and nobody else may take it; the player may come back as a candidate, by a vote (R3-9).
+/// </summary>
+[MessagePackObject]
+public sealed record PlayKickMessage([property: Key(0)] string Name) : IProtocolMessage;
 
 /// <summary>Client → server: a line of chat to everyone or only to our allies (plain text, cut to <see cref="MaxLength"/>).</summary>
 [MessagePackObject]

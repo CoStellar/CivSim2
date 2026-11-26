@@ -124,6 +124,15 @@ public sealed class ClientSession
     /// <summary>Yes or no in the vote going on.</summary>
     public void Vote(int id, bool yes) => _connection.Send(new PlayVoteMessage(id, yes));
 
+    /// <summary>A candidate asks to lead this civilization; the players vote.</summary>
+    public void AskToLead(int civ) => _connection.Send(new PlayJoinMessage(civ));
+
+    /// <summary>A candidate watches the whole map instead, and cannot lead a civilization in this game any more.</summary>
+    public void WatchInstead() => _connection.Send(new PlayWatchMessage());
+
+    /// <summary>Removes a player (the host at once; another player starts a vote).</summary>
+    public void Kick(string name) => _connection.Send(new PlayKickMessage(name));
+
     /// <summary>Asks the server for the fog of <paramref name="civ"/> (observers only); NoCiv stops it.</summary>
     public void Watch(int civ)
     {

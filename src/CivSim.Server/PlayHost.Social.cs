@@ -37,15 +37,18 @@ public sealed partial class PlayHost
     // Players taking part now, in the order they came.
     private List<PlayClient> Playing() => _clients.FindAll(c => c.Civ >= 0 && c.Connection.IsOpen);
 
+    // Everyone in the game: players, candidates and observers.
+    private List<PlayClient> Present() => _clients.FindAll(c => c.Role >= 0 && c.Connection.IsOpen);
+
     // Every round of Pump: pings, the end of a vote, the list of players.
     private void Social()
     {
         long now = Clock();
-        List<PlayClient> playing = Playing();
+        List<PlayClient> present = Present();
         if (now - _lastPing >= Seconds(Rules.PingEverySeconds))
         {
             _lastPing = now;
-            foreach (PlayClient c in playing)
+            foreach (PlayClient c in present)
             {
                 c.Connection.Send(new PlayPingMessage(now));
             }
@@ -56,21 +59,23 @@ public sealed partial class PlayHost
             Resolve(vote);
         }
 
-        // The list goes to everyone while two or more play, and once more when it drops below (so the panel can close).
-        bool show = playing.Count > 1 || _shownPlayers > 1;
+        // The list goes to everyone while two or more are in the game, and once more when it drops below (so the panel can close).
+        // A candidate gets it also alone: it holds the civilizations to ask for.
+        bool show = present.Count > 1 || _shownPlayers > 1 || present.Exists(c => c.Role == PlayPlayerInfo.Candidate);
         if (show && (_playersDirty || now - _lastPlayers >= Stopwatch.Frequency))
         {
             _lastPlayers = now;
             _playersDirty = false;
-            _shownPlayers = playing.Count;
-            SendPlayers(playing, now);
+            _shownPlayers = present.Count;
+            SendPlayers(present, now);
         }
     }
 
     private void SendPlayers(List<PlayClient> playing, long now)
     {
         PlayPlayerInfo[] players = [.. playing.Select(c => new PlayPlayerInfo(c.Name ?? "Player", c.SuffixLength, c.Civ, c.PingMs,
-            Math.Max(0, PausesPerPlayer - _pausesUsed.GetValueOrDefault(c.Civ)), c.Host))];
+            c.Civ >= 0 ? Math.Max(0, PausesPerPlayer - _pausesUsed.GetValueOrDefault(c.Civ)) : 0, c.Host, RoleOf(c)))];
+        List<PlayTakeableCiv>? takeable = playing.Exists(c => c.Role == PlayPlayerInfo.Candidate) ? Takeable() : null;
         string pausedBy = _speed == SimulationSpeed.Paused && _pausedBy is not null && playing.Count > 1 ? _pausedBy.Name ?? "Player" : "";
         int protectedFor = pausedBy.Length == 0 ? 0 : Math.Max(0, (int)Math.Ceiling((PauseProtection - Stopwatch.GetElapsedTime(_pausedAt)).TotalSeconds));
         for (int i = 0; i < playing.Count; i++)
@@ -78,16 +83,18 @@ public sealed partial class PlayHost
             PlayClient c = playing[i];
             PlayVoteInfo? vote = _vote is { } v
                 ? new PlayVoteInfo(v.Id, v.Kind, v.Value, v.By, (int)Math.Max(0, (v.Until - now + Stopwatch.Frequency - 1) / Stopwatch.Frequency),
-                    v.Votes.Count(x => x.Value), v.Votes.Count(x => !x.Value), v.Eligible.Count, v.Eligible.Contains(c.Civ), v.Votes.ContainsKey(c.Civ))
+                    v.Votes.Count(x => x.Value), v.Votes.Count(x => !x.Value), v.Eligible.Count, v.Eligible.Contains(c.Civ), v.Votes.ContainsKey(c.Civ), v.About)
                 : null;
-            c.Connection.Send(new PlayPlayersMessage(players, vote, pausedBy, protectedFor, i));
+            List<PlayTakeableCiv>? mine = c.Role != PlayPlayerInfo.Candidate ? null
+                : c.Removed is { } key && _removed.TryGetValue(key, out int old) ? [Takeable(old)] : takeable;
+            c.Connection.Send(new PlayPlayersMessage(players, vote, pausedBy, protectedFor, i, mine));
         }
     }
 
     // A line of the game itself (votes, pauses, players coming and going) to everyone playing.
     private void Announce(string text)
     {
-        foreach (PlayClient c in Playing())
+        foreach (PlayClient c in Present())
         {
             c.Connection.Send(new PlayChatLineMessage("", 0, -1, false, text));
         }
@@ -96,7 +103,7 @@ public sealed partial class PlayHost
     private void Chat(PlayClient from, PlayChatMessage chat)
     {
         string text = Nicknames.Clean(chat.Text, PlayChatMessage.MaxLength);
-        if (text.Length == 0 || from.Civ < 0)
+        if (text.Length == 0 || from.Role < 0)
         {
             return;
         }
@@ -107,9 +114,9 @@ public sealed partial class PlayHost
             return;
         }
 
-        List<PlayClient> to = chat.Allies
+        List<PlayClient> to = chat.Allies && from.Civ >= 0
             ? Playing().FindAll(c => c == from || (c.Civ != from.Civ && _game.Has(from.Civ, c.Civ, TreatyKind.Alliance)))
-            : Playing();
+            : Present();
         if (chat.Allies && to.Count == 1)
         {
             from.Connection.Send(new CommandRejectedMessage(0, "No ally of ours has a player to write to."));
@@ -154,6 +161,7 @@ public sealed partial class PlayHost
         _proposedAt[client.Civ] = now;
         var eligible = new HashSet<int>(Playing().Where(c => !_game.Civs[c.Civ].Dead).Select(c => c.Civ));
         _vote = new Vote(_nextVote++, VoteSpeed, (int)speed, client.Name ?? "Player", now + Seconds(Rules.SpeedVoteSeconds), eligible);
+        _vote.About = "";
         _vote.Votes[client.Civ] = true;
         _playersDirty = true;
         Announce($"{client.Name} proposes speed x{(int)speed}. Vote in the players' list, top right ({Rules.SpeedVoteSeconds} s).");
@@ -195,6 +203,10 @@ public sealed partial class PlayHost
                 ? $"Speed x{v.Value}: {yes} of {v.Eligible.Count} said yes."
                 : $"The speed stays: only {yes} of {v.Eligible.Count} said yes.");
         }
+        else
+        {
+            ResolvePlayer(v, passed, yes);
+        }
     }
 
     private sealed class Vote(int id, int kind, int value, string by, long until, HashSet<int> eligible)
@@ -212,5 +224,11 @@ public sealed partial class PlayHost
         public HashSet<int> Eligible { get; } = eligible;
 
         public Dictionary<int, bool> Votes { get; } = [];
+
+        /// <summary>The player the vote is about (a candidate, or a player to remove).</summary>
+        public string About { get; set; } = "";
+
+        /// <summary>The client the vote is about.</summary>
+        public PlayClient? Target { get; set; }
     }
 }

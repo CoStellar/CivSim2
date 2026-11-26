@@ -418,6 +418,28 @@ Do zrobienia:
 - Bot `--join` odpowiada na ping i wypisuje czat. Okno gry: `--mp-say "tekst"` i `--mp-propose N` (0 = pauza) do zrzutów z dwóch okien.
 - **W MP4b:** obserwatorzy i widz po upadku, głosowanie nad przyjęciem nowego gracza, wyrzucenie (gospodarz albo głosowanie).
 
+**Zrobione w MP4b (2026-11-25):**
+
+- **Dołączenie do trwającej partii** (po wyborze startu): nowy gracz jest **kandydatem**. Nie widzi mapy, tylko listę cywilizacji
+  prowadzonych przez AI, które może przejąć (bez upadłych, bez cywilizacji gracza, który stracił połączenie, bez cywilizacji
+  wyrzuconego, i tylko gdy jest wolne miejsce dla gracza). Wybiera jedną i rusza głosowanie (30 s, „tak” musi powiedzieć ponad połowa).
+  Jeśli w partii nie ma nikogo do głosowania, dostaje cywilizację od razu. W lobby i w czasie wyboru startu dołącza się jak dotąd.
+- **Obserwator:** pole „Only watch” przy „Join”, albo przycisk „Only watch” u kandydata. Widzi całą mapę i czat, nie przejmie
+  cywilizacji w tej partii.
+- **Upadły gracz** widzi całą mapę (bez okna końca gry i bez pauzy), nie głosuje i nie zmienia prędkości.
+- **Kto głosuje nad graczami:** gracze, którzy prowadzą cywilizację od co najmniej 3 minut (`voteAfterSeconds` 180).
+  **Gdy nikt nie gra jeszcze 3 minut, głosują wszyscy gracze** (inaczej przez pierwsze 3 minuty nikt nie mógłby nikogo przyjąć).
+- **Wyrzucenie:** przycisk „x” przy graczu (dwa kliknięcia). Gospodarz wyrzuca od razu (także kandydata i obserwatora). Inny gracz
+  zaczyna głosowanie (30 s; wyrzucany też głosuje). Gospodarza nie da się wyrzucić. Cywilizację wyrzuconego prowadzi AI i nikt
+  inny jej nie przejmie.
+- **Powrót wyrzuconego:** dołącza z tym samym kluczem powrotu (tak jak po zerwaniu połączenia) jako kandydat na swoją dawną
+  cywilizację; głosują pozostali; po zgodzie ją odzyskuje.
+- **Poprawka do MP4a:** po zmianie wyglądu ery okno gry odbudowuje interfejs, a stary czat zostawał w pamięci i psuł każdą klatkę
+  (gra przestawała się odświeżać). Teraz panele graczy i czatu budują się na nowo.
+- **Protokół 49.** Okno gry: `--mp-watch`, `--mp-ask N`, `--mp-kick X`, `--mp-seats N` do zrzutów z trzech okien.
+- **Jeszcze nie:** zablokowanie cywilizacji wyrzuconego i lista wyrzuconych nie są w zapisie partii (po wczytaniu znikają);
+  obserwator, który rozłączy się i dołączy znowu, może zostać kandydatem (serwer nie rozpoznaje go bez konta).
+
 Po rundach pytań: ADR 0031 („Multiplayer: serwer autorytatywny, TCP, pośrednik, serwer na VPS”) i wiersze w `ROADMAP.md`.
 
 ## 14. Ryzyka
