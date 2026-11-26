@@ -28,6 +28,23 @@ public sealed partial class PlayHost
 
     private Civ? _watcher;
 
+    // The nickname of the player of each civilization, kept also while the player is away (the save keeps the places, MP5).
+    private readonly Dictionary<int, string> _seatNames = [];
+
+    // Who leads which civilization now, and whose civilization waits for a player away (their return key still holds it).
+    private List<SavedSeat> SeatsNow()
+    {
+        var seats = new List<SavedSeat>();
+        foreach ((string key, int civ) in _returnKeys.OrderBy(k => k.Value))
+        {
+            PlayClient? now = _clients.Find(c => c.Civ == civ && c.Connection.IsOpen);
+            string name = now?.Name ?? _seatNames.GetValueOrDefault(civ) ?? "Player";
+            seats.Add(new SavedSeat(civ, _game.Civs[civ].Name, name, key, now?.Host == true));
+        }
+
+        return seats;
+    }
+
     /// <summary>The return key of the player of a civilization (tests).</summary>
     internal string ReturnKeyOf(int civ) => _returnKeys.FirstOrDefault(k => k.Value == civ).Key ?? "";
 

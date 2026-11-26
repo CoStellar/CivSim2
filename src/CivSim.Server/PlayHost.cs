@@ -108,7 +108,14 @@ public sealed partial class PlayHost : IDisposable
         {
             // A save: the same game again; its commands are played again on the game thread before anything else.
             save = PlaySaves.Read(load);
-            options = save.Options;
+
+            // A save loaded into a lobby (MP5) keeps the places and the speed the host chose now; the world is the saved one.
+            options = save.Options with
+            {
+                Dedicated = save.Options.Dedicated || options.Dedicated,
+                HumanSeats = options.HumanSeats > 0 ? options.HumanSeats : save.Options.HumanSeats,
+                StartSpeed = options.StartSpeed > 0 ? options.StartSpeed : save.Options.StartSpeed,
+            };
         }
 
         SimGame game;
@@ -537,6 +544,9 @@ public sealed partial class PlayHost : IDisposable
             case SetTutorialMessage tutorial when client.Civ >= 0:
                 _options = _options with { Tutorial = tutorial.On }; // kept in the next saves
                 break;
+            case SaveGameRequestMessage when client.Civ >= 0 && !client.Host && _clients.Count(c => c.Civ >= 0 && c.Connection.IsOpen) > 1:
+                client.Connection.Send(new SaveGameResultMessage(false, "In a game with other players the host saves it."));
+                break;
             case SaveGameRequestMessage save when client.Civ >= 0:
                 client.Connection.Send(Save(save.Name));
                 break;
@@ -654,6 +664,7 @@ public sealed partial class PlayHost : IDisposable
     private void Seat(PlayClient client, int civ)
     {
         client.Civ = civ;
+        _seatNames[civ] = client.Name ?? "Player";
         client.Role = PlayPlayerInfo.Player;
         client.Since = Clock();
         if (_clients.Exists(c => c != client && c.Role >= 0 && c.Connection.IsOpen))
@@ -822,6 +833,9 @@ public sealed partial class PlayHost : IDisposable
                 Hash = _game.StateHash(),
                 Era = _game.Content.Eras[first.Era].Name,
                 Commands = [.. _log],
+                Seats = SeatsNow(),
+                Locked = [.. _locked.Order()],
+                Removed = new Dictionary<string, int>(_removed, StringComparer.Ordinal),
             });
             return new SaveGameResultMessage(true, $"Saved: {System.IO.Path.GetFileNameWithoutExtension(path)}");
         }
@@ -900,6 +914,22 @@ public sealed partial class PlayHost : IDisposable
         }
 
         _format = save.Format; // an older save stays in its format: its ticks cannot be turned into steps
+
+        // The places of the players (MP5): their return keys work again; removed players stay removed (MP4b).
+        foreach (SavedSeat seat in save.Seats)
+        {
+            if (seat.Civ >= 0 && seat.Civ < _game.Civs.Count && seat.ReturnKey.Length > 0)
+            {
+                _returnKeys[seat.ReturnKey] = seat.Civ;
+                _seatNames[seat.Civ] = seat.Name;
+            }
+        }
+
+        _locked.UnionWith(save.Locked.Where(c => c >= 0 && c < _game.Civs.Count));
+        foreach ((string key, int civ) in save.Removed)
+        {
+            _removed[key] = civ;
+        }
 
         // On a server without a window the saved players are not here yet: the AI leads their civilizations until they join again (MP2).
         // In a window the player joins at once (and loading into a lobby comes with MP5).

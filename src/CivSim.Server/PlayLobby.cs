@@ -56,13 +56,40 @@ public sealed class PlayLobby : IDisposable
 
     private PlayLobby(PlayOptions options, LobbyConfig config, string? dataDirectory, bool threaded)
     {
+        if (options.LoadPath is { Length: > 0 } load)
+        {
+            // A saved game (MP5): its world and its players' places; the host chose the places for players and the speed now.
+            _save = PlaySaves.Read(load);
+            options = _save.Options with
+            {
+                LoadPath = load,
+                HumanSeats = options.HumanSeats > 0 ? Math.Max(options.HumanSeats, _save.Seats.Count) : Math.Max(_save.Options.HumanSeats, _save.Seats.Count),
+                StartSpeed = options.StartSpeed > 0 ? options.StartSpeed : _save.Options.StartSpeed,
+            };
+            _places = _save.Seats.Count > 0 || _save.Options.Dedicated
+                ? [.. _save.Seats]
+                : [new SavedSeat(_save.Players.Length > 0 ? _save.Players[0] : 0, "", "", "", true)]; // saved alone: the host leads it again
+        }
+
         _options = options with { Dedicated = true, HumanSeats = Math.Clamp(options.HumanSeats, 1, options.Civilizations) };
         _config = config;
         _dataDirectory = dataDirectory;
         _threaded = threaded;
         _suffixes = SimContent.Load(dataDirectory).NicknameSuffixes;
         _settings = Describe(_options, config);
+        if (_save is not null)
+        {
+            _settings = [$"Saved game: {_save.Name}, minute {_save.Tick / SimContent.TicksPerMinute}, {_save.Era}", .. _settings];
+            if (_save.Seats.Count > 0)
+            {
+                _settings = [.. _settings, "Places from the save: " + string.Join(", ", _save.Seats.Select(s => $"{s.Name} leads {s.CivName}"))];
+            }
+        }
     }
+
+    // A saved game loaded into the lobby, and the players' places in it (MP5).
+    private readonly SavedGame? _save;
+    private readonly List<SavedSeat> _places = [];
 
     /// <summary>Opens the lobby with its own thread.</summary>
     public static PlayLobby Start(PlayOptions options, LobbyConfig config, string? dataDirectory = null)
@@ -259,6 +286,18 @@ public sealed class PlayLobby : IDisposable
 
         (m.Name, m.SuffixLength) = Nicknames.Unique(hello.PlayerName, _members.Where(x => x.Name is not null).Select(x => x.Name!), _suffixes);
         Say($"{m.Name} joined.");
+        if (_save is not null)
+        {
+            // Back on the place of the save: by the return key, then by the nickname; the host of the lobby takes the host's place (MP5).
+            List<SavedSeat> free = [.. _places.Where(p => !_members.Exists(x => x != m && x.Place == p))];
+            SavedSeat? place = free.Find(p => p.ReturnKey.Length > 0 && p.ReturnKey == hello.ReturnKey)
+                ?? free.Find(p => p.Name.Length > 0 && string.Equals(p.Name, hello.PlayerName?.Trim(), StringComparison.OrdinalIgnoreCase))
+                ?? (m == Host ? free.Find(p => p.Host) : null);
+            m.Place = place;
+            Say(place is not null
+                ? $"{m.Name} takes their place again: {(place.CivName.Length > 0 ? place.CivName : "the civilization of the save")}."
+                : $"{m.Name} was not in the saved game: in it they ask the players for a civilization the AI leads.");
+        }
     }
 
     private bool Everyone() => _members.Where(x => x.Name is not null && x != Host).All(x => x.Ready);
@@ -297,7 +336,9 @@ public sealed class PlayLobby : IDisposable
             for (int i = 0; i < seated.Count; i++)
             {
                 seated[i].Connection.Send(new GameStartingMessage());
-                game.Accept(seated[i].Connection, civ: i, name: seated[i].Name, suffixLength: seated[i].SuffixLength, host: seated[i] == Host); // place n leads civilization n
+                // Place n leads civilization n; a saved game puts everyone back on their place (MP5), the others take a free one.
+                int civ = _save is null ? i : seated[i].Place?.Civ ?? -1;
+                game.Accept(seated[i].Connection, civ: civ, name: seated[i].Name, suffixLength: seated[i].SuffixLength, host: seated[i] == Host);
             }
 
             while (_pending.TryDequeue(out IConnection? late))
@@ -349,6 +390,9 @@ public sealed class PlayLobby : IDisposable
         public string? Name { get; set; }
 
         public bool Ready { get; set; }
+
+        // Its place in a saved game (MP5).
+        public SavedSeat? Place { get; set; }
 
         // Characters the lobby added to a repeated nickname (with the space before them).
         public int SuffixLength { get; set; }
