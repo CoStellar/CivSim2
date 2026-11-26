@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>CivSim.Relay</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <!-- The relay only passes bytes between game servers and players (multiplayer plan, chapter 4); it never reads the game. -->
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Only for the greeting (RelayWire); the game's messages are never decoded here. -->
+    <ProjectReference Include="..\CivSim.Protocol\CivSim.Protocol.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CivSim.Tests" />
+  </ItemGroup>
+</Project>

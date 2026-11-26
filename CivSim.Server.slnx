@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CivSim.Core/CivSim.Core.csproj" />
+    <Project Path="src/CivSim.Data/CivSim.Data.csproj" />
+    <Project Path="src/CivSim.Sim/CivSim.Sim.csproj" />
+    <Project Path="src/CivSim.Protocol/CivSim.Protocol.csproj" />
+    <Project Path="src/CivSim.Server/CivSim.Server.csproj" />
+    <Project Path="src/CivSim.Headless/CivSim.Headless.csproj" />
+    <Project Path="src/CivSim.Relay/CivSim.Relay.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CivSim.Tests/CivSim.Tests.csproj" />
+  </Folder>
+</Solution>

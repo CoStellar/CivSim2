@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "comment": "Peoples' languages (GDD 5.6, decisions of 2026-11-06). Each civilization rolls its own language from the world seed: a hardness between 0 (soft) and 1 (hard), a handful of consonants, vowels and endings drawn from the pools below (each element from the hard or the soft pool with the chance of the hardness), weights of syllable patterns (C consonant, V vowel, K coda) and how often consonants are doubled. Names of the people and of its settlements are made of that language's syllables; a people's name may end in one of its people endings, a settlement's name in one of its place endings. Letters a-z only, the game is in English. There is no list of forbidden words: whoever dislikes a name renames it and gets other names in the same language to choose from.",
+  "consonants": {
+    "hard": ["k", "t", "p", "g", "d", "b", "r", "z", "x", "kh", "dr", "tr", "kr", "gr", "br", "q"],
+    "soft": ["l", "m", "n", "s", "v", "w", "y", "f", "h", "sh", "th", "r", "ll", "ss", "ny", "nd"]
+  },
+  "vowels": {
+    "hard": ["a", "u", "o", "a", "e", "i", "u"],
+    "soft": ["a", "e", "i", "o", "u", "ae", "ia", "ei", "ea", "ou"]
+  },
+  "codas": {
+    "hard": ["k", "t", "r", "rk", "n", "g", "ss", "rd", "x", "z"],
+    "soft": ["n", "l", "s", "m", "r", "th", "sh", "nn"]
+  },
+  "peopleEndings": {
+    "hard": ["ut", "ak", "or", "ek", "uk", "an", "ar", "oth"],
+    "soft": ["i", "awi", "ae", "ia", "en", "ul", "eli", "ira"]
+  },
+  "placeEndings": {
+    "hard": ["ok", "an", "du", "rak", "um", "esh", "grad", "tor"],
+    "soft": ["ae", "en", "is", "wen", "ia", "ol", "mir", "elle"]
+  },
+  "patterns": {"CV": 45, "CVK": 30, "V": 5, "VK": 5, "CVV": 6, "CVCV": 9},
+  "language": {
+    "consonants": [7, 11],
+    "vowels": [3, 5],
+    "codas": [2, 5],
+    "peopleEndings": [1, 3],
+    "placeEndings": [2, 4],
+    "doubledPercent": [0, 15],
+    "peopleEndingPercent": 70,
+    "placeEndingPercent": 55
+  },
+  "peopleSyllables": [2, 3],
+  "placeSyllables": [1, 2],
+  "length": [3, 10],
+  "mutation": {"consonants": 2, "vowels": 1, "endings": 1}
+}

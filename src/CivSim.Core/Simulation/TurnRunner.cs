@@ -1,0 +1,166 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using CivSim.Core.Commands;
+using CivSim.Core.State;
+
+namespace CivSim.Core.Simulation;
+
+/// <summary>
+/// Advances a <see cref="GameState"/> one turn at a time through the 11 phases of GDD 11.1,
+/// measures each phase and publishes an immutable snapshot at the end.
+/// </summary>
+public sealed class TurnRunner
+{
+    private readonly List<ITurnSystem>[] _systems = new List<ITurnSystem>[TurnPhases.Count];
+    private readonly List<ICommandSource> _commandSources = [];
+    private readonly TurnContext _context;
+
+    /// <summary>Creates a runner for <paramref name="state"/>.</summary>
+    public TurnRunner(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        State = state;
+        _context = new TurnContext(state);
+        for (int i = 0; i < _systems.Length; i++)
+        {
+            _systems[i] = [];
+        }
+    }
+
+    /// <summary>The state this runner advances.</summary>
+    public GameState State { get; }
+
+    /// <summary>Commands for the next turn. Players' commands go here (through the server).</summary>
+    public CommandQueue Commands { get; } = new();
+
+    /// <summary>Latest finished snapshot for readers on other threads.</summary>
+    public SnapshotBuffer<GameSnapshot> Snapshots { get; } = new();
+
+    /// <summary>Chronicle lines written by systems in the last completed turn.</summary>
+    public IReadOnlyList<string> LastChronicle => _context.ChronicleLines;
+
+    /// <summary>Whom each line of <see cref="LastChronicle"/> is about (same index; playtest P-01).</summary>
+    public IReadOnlyList<ChronicleAbout> LastChronicleSubjects => _context.ChronicleSubjects;
+
+    /// <summary>Report of the last completed turn (reused object).</summary>
+    public TurnReport LastReport { get; } = new();
+
+    /// <summary>Registers a system. Systems in the same phase run in registration order.</summary>
+    public void AddSystem(ITurnSystem system)
+    {
+        ArgumentNullException.ThrowIfNull(system);
+        _systems[(int)system.Phase].Add(system);
+    }
+
+    /// <summary>Registers a command source (e.g. AI) that runs in the Decisions phase.</summary>
+    public void AddCommandSource(ICommandSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        _commandSources.Add(source);
+    }
+
+    /// <summary>Runs one full turn and returns its report.</summary>
+    public TurnReport RunTurn()
+    {
+        long turnStart = Stopwatch.GetTimestamp();
+        LastReport.Reset(State.Turn + 1);
+        _context.ClearChronicle();
+
+        for (int p = 0; p < TurnPhases.Count; p++)
+        {
+            var phase = (TurnPhase)p;
+            long phaseStart = Stopwatch.GetTimestamp();
+
+            switch (phase)
+            {
+                case TurnPhase.Decisions:
+                    RunSystems(phase);
+                    foreach (ICommandSource source in _commandSources)
+                    {
+                        source.IssueCommands(State, Commands);
+                    }
+
+                    break;
+                case TurnPhase.CommandResolution:
+                    Commands.DrainSorted(State, _context.CurrentTurn, _context.CommandList);
+                    ResolveCommands();
+                    RunSystems(phase);
+                    break;
+                case TurnPhase.Record:
+                    State.Turn++;
+                    RunSystems(phase);
+                    Snapshots.Publish(GameSnapshot.From(State));
+                    foreach (WorldState world in State.Worlds)
+                    {
+                        world.Map.Dirty.Clear();
+                    }
+
+                    break;
+                default:
+                    RunSystems(phase);
+                    break;
+            }
+
+            LastReport.SetPhaseTicks(phase, Stopwatch.GetTimestamp() - phaseStart);
+        }
+
+        _context.FinishGroups();
+        LastReport.TotalTicks = Stopwatch.GetTimestamp() - turnStart;
+        return LastReport;
+    }
+
+    private void RunSystems(TurnPhase phase)
+    {
+        List<ITurnSystem> systems = _systems[(int)phase];
+        for (int i = 0; i < systems.Count; i++)
+        {
+            systems[i].Execute(_context);
+        }
+    }
+
+    private void ResolveCommands()
+    {
+        foreach (CommandEnvelope envelope in _context.CommandList)
+        {
+            // A player's order holds (stage 6 PR P1): an AI command against it, also one decided in this very tick, is refused.
+            bool ai = envelope.Player == PlayerId.Ai;
+            CommandResult result = ai && Ai.PlayerOrders.HeldAgainstAi(State, envelope.Civ, envelope.Command)
+                ? CommandResult.Fail("A player's order holds.")
+                : envelope.Command.Validate(State, envelope.Civ);
+            long unitsBefore = State.Units.NextId;
+            if (result.Success)
+            {
+                if (envelope.Command is IChronicledCommand chronicled)
+                {
+                    if (chronicled.ApplyWithChronicle(State, envelope.Civ) is { } line)
+                    {
+                        if (chronicled.ChronicleGroup is { } group)
+                        {
+                            _context.Chronicle(line, group, envelope.Civ.Value, ownOnly: chronicled.ChronicleInner);
+                        }
+                        else
+                        {
+                            _context.Chronicle(line, envelope.Civ.Value, inner: chronicled.ChronicleInner);
+                        }
+                    }
+                }
+                else
+                {
+                    envelope.Command.Apply(State, envelope.Civ);
+                }
+
+                if (!ai)
+                {
+                    Ai.PlayerOrders.Mark(State, envelope.Civ, envelope.Command, unitsBefore);
+                }
+
+                LastReport.AppliedCommands++;
+            }
+            else
+            {
+                LastReport.AddRejected(envelope, result.Reason ?? "Rejected.");
+            }
+        }
+    }
+}

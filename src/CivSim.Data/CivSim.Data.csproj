@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- The simulation is always compiled with optimizations: the Godot editor runs the Debug build, and an unoptimized core made turns about 10 times slower. -->
+    <Optimize>true</Optimize>
+    <RootNamespace>CivSim.Data</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
+  </ItemGroup>
+  <!-- Ship the data folder next to every program that uses CivSim.Data. -->
+  <ItemGroup>
+    <Content Include="..\..\data\**\*.json" Link="data\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\data\sim\manual.md" Link="data\sim\manual.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

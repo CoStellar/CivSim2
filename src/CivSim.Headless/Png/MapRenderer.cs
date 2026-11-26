@@ -1,0 +1,441 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using CivSim.Core.Content;
+using CivSim.Core.Map;
+using CivSim.Core.State;
+using CivSim.Core.WorldGen;
+
+namespace CivSim.Headless.Png;
+
+/// <summary>Map previews the PNG export can draw.</summary>
+public enum MapView
+{
+    /// <summary>Biomes with relief shading, rivers and start positions.</summary>
+    Biomes,
+
+    /// <summary>Height above and below the sea.</summary>
+    Elevation,
+
+    /// <summary>Temperature, blue (cold) to red (hot).</summary>
+    Temperature,
+
+    /// <summary>Humidity, brown (dry) to green (wet).</summary>
+    Humidity,
+
+    /// <summary>Soil fertility.</summary>
+    Fertility,
+
+    /// <summary>Surface deposits as coloured dots over a grey map.</summary>
+    Resources,
+
+    /// <summary>Influence zones in each civilization's colour (stronger near the camps) and the camps themselves.</summary>
+    Influence,
+
+    /// <summary>Wild food left: green = untouched, brown = eaten (Stage 3c).</summary>
+    WildFood,
+
+    /// <summary>Difference between summer and winter, °C: blue = mild, purple = extreme (stage 1b).</summary>
+    Seasons,
+
+    /// <summary>Share of the year plants can grow: brown = never, green = all year (stage 1b).</summary>
+    Growing,
+
+    /// <summary>The biome map wrapped on a ball: four views (two sides, north pole, south pole), stage 1b.</summary>
+    Globe,
+
+    /// <summary>Temperature of the current season (live seasons; the annual mean otherwise).</summary>
+    SeasonNow,
+}
+
+/// <summary>
+/// Draws a world as flat-top hexes (developer preview, not game art). Each hex is 4k px wide, columns every 3k px,
+/// rows every 2·round(k·√3) px, odd columns shifted half a row down, like the game grid (GDD 3).
+/// </summary>
+public sealed class MapRenderer
+{
+    private const uint RiverColor = 0x4FC3F7;
+    private const uint StartColor = 0xFF00FF;
+
+    private readonly WorldState _world;
+    private readonly GameContent _content;
+    private readonly IReadOnlyList<HexCoord> _starts;
+    private readonly int _k;
+    private readonly int _halfW;
+    private readonly int _halfH;
+
+    /// <summary>Settlements drawn on the influence view (cell and whether anyone lives there).</summary>
+    public IReadOnlyList<(HexCoord Cell, bool Inhabited)> Settlements { get; init; } = [];
+
+    /// <summary>Creates a renderer. <paramref name="scale"/> (k) of 3 gives 12-px-wide hexes.</summary>
+    public MapRenderer(WorldState world, GameContent content, IReadOnlyList<HexCoord> starts, int scale = 3)
+    {
+        _world = world;
+        _content = content;
+        _starts = starts;
+        _k = Math.Clamp(scale, 1, 12);
+        _halfW = 2 * _k;
+        _halfH = (int)Math.Round(_k * 1.7320508);
+    }
+
+    /// <summary>Writes every view as <c>&lt;prefix&gt;_&lt;view&gt;.png</c> in <paramref name="folder"/>. Returns the paths.</summary>
+    public IReadOnlyList<string> SaveAll(string folder, string prefix) => Save(folder, prefix, Enum.GetValues<MapView>());
+
+    /// <summary>Writes the given views as <c>&lt;prefix&gt;_&lt;view&gt;.png</c> in <paramref name="folder"/>. Returns the paths.</summary>
+    public IReadOnlyList<string> Save(string folder, string prefix, IEnumerable<MapView> views)
+    {
+        ArgumentNullException.ThrowIfNull(views);
+        var paths = new List<string>();
+        foreach (MapView view in views)
+        {
+            string path = Path.Combine(folder, $"{prefix}_{view.ToString().ToLowerInvariant()}.png");
+            PngWriter.Save(Render(view), path);
+            paths.Add(path);
+        }
+
+        return paths;
+    }
+
+    /// <summary>Renders one view.</summary>
+    public RgbImage Render(MapView view)
+    {
+        if (view == MapView.Globe)
+        {
+            return RenderGlobe();
+        }
+
+        HexGlobe geo = _world.Geometry;
+        var image = new RgbImage((geo.Width * 3 * _k) + _k, (geo.Height * 2 * _halfH) + _halfH);
+        Array.Fill(image.Pixels, (byte)20);
+        for (int i = 0; i < geo.CellCount; i++)
+        {
+            FillHex(image, geo.FromIndex(i), CellColor(view, i));
+        }
+
+        if (view is MapView.Biomes or MapView.Elevation or MapView.Resources)
+        {
+            DrawRivers(image);
+        }
+
+        if (view == MapView.Resources)
+        {
+            for (int i = 0; i < geo.CellCount; i++)
+            {
+                int d = _world.Map.Deposit[i];
+                if (d != 0)
+                {
+                    (int cx, int cy) = Center(geo.FromIndex(i));
+                    uint color = _content.Deposit(d).Color;
+                    int r = Math.Max(1, _k - 1);
+                    FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, _world.Map.DepositDepth[i] == 0 ? color : Darken(color, 50));
+                }
+            }
+        }
+
+        if (view is MapView.Influence or MapView.SeasonNow)
+        {
+            foreach ((HexCoord cell, bool inhabited) in Settlements)
+            {
+                (int cx, int cy) = Center(cell);
+                int r = _k;
+                FillRect(image, cx - r - 1, cy - r - 1, (2 * r) + 3, (2 * r) + 3, 0x000000);
+                FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, inhabited ? 0xFFFFFFu : 0x777777u);
+            }
+        }
+
+        if (view == MapView.Biomes || view == MapView.Resources)
+        {
+            foreach (HexCoord s in _starts)
+            {
+                (int cx, int cy) = Center(s);
+                int r = _k + 1;
+                FillRect(image, cx - r - 1, cy - r - 1, (2 * r) + 3, (2 * r) + 3, 0x000000);
+                FillRect(image, cx - r, cy - r, (2 * r) + 1, (2 * r) + 1, StartColor);
+            }
+        }
+
+        return image;
+    }
+
+    private uint CellColor(MapView view, int i)
+    {
+        WorldMap m = _world.Map;
+        int biome = m.Biome[i];
+        bool water = _content.Biomes[biome].IsWater;
+        switch (view)
+        {
+            case MapView.Biomes:
+            {
+                uint c = _content.Biomes[biome].Color;
+                if (m.Feature[i] == (byte)TerrainFeature.IceField)
+                {
+                    c = 0xC8DCE6;
+                }
+                else if (m.Feature[i] == (byte)TerrainFeature.Reef)
+                {
+                    c = 0x2FA88A;
+                }
+                else if (m.Feature[i] == (byte)TerrainFeature.Oasis)
+                {
+                    c = 0x4FB04F;
+                }
+
+                return (Relief)m.Relief[i] switch
+                {
+                    Relief.Hills => Darken(c, 18),
+                    Relief.Mountains => Blend(c, 0x5A4E44, 60),
+                    _ => c,
+                };
+            }
+
+            case MapView.Elevation:
+            {
+                int e = m.Elevation[i];
+                return water
+                    ? Lerp(0x061A33, 0x2E7FC4, e, WorldGenerator.SeaLevel)
+                    : e < 170 ? Lerp(0x3B7A2A, 0xC9B458, e - 100, 70) : Lerp(0xC9B458, 0xF4F4F4, e - 170, 85);
+            }
+
+            case MapView.Temperature:
+            {
+                int t = m.Temperature[i];
+                uint c = t < 10 ? Lerp(0x2040C0, 0xE8E8E8, t + 30, 40) : Lerp(0xE8E8E8, 0xD02010, t - 10, 30);
+                return water ? Darken(c, 35) : c;
+            }
+
+            case MapView.Humidity:
+                return water ? 0x0A2647u : Lerp(0xC8A060, 0x1E6E32, m.Humidity[i], 100);
+            case MapView.Fertility:
+                return water ? 0x0A2647u : Lerp(0x5A4A3A, 0x40D040, m.Fertility[i], 100);
+            case MapView.Resources:
+                return water ? 0x16283Au : (Relief)m.Relief[i] == Relief.Mountains ? 0x5C5C5Cu : 0x3C3C3Cu;
+            case MapView.WildFood:
+                return water ? 0x0A2647u : _content.Biomes[biome].Food == 0 ? 0x4A4A4Au : Lerp(0x7A4A1E, 0x2E8B3A, m.WildFood[i], WorldMap.FullWildFood);
+            case MapView.Seasons:
+            {
+                int sw = m.Seasonality[i];
+                uint c = sw < 40 ? Lerp(0x2E6FB8, 0xE8E8E8, sw, 40) : Lerp(0xE8E8E8, 0x8A1E8C, Math.Min(80, sw - 40), 80);
+                return water ? Darken(c, 35) : c;
+            }
+
+            case MapView.SeasonNow:
+            {
+                int t = m.LiveSeasons ? m.SeasonTemperature[i] : m.Temperature[i];
+                uint c = t < 10 ? Lerp(0x2040C0, 0xE8E8E8, Math.Max(0, t + 30), 40) : Lerp(0xE8E8E8, 0xD02010, Math.Min(30, t - 10), 30);
+                return water ? Darken(c, 35) : c;
+            }
+
+            case MapView.Growing:
+                return water ? 0x0A2647u : Lerp(0x6A5236, 0x2FA83A, m.GrowingSeason[i], 100);
+            case MapView.Influence:
+            {
+                uint ground = water ? 0x0A2647u : Darken(_content.Biomes[biome].Color, 45);
+                short owner = m.Owner[i];
+                return owner < 0 ? ground : Lerp(ground, CivColor(owner), 80 + Math.Min(160, (int)m.Influence[i]), 255);
+            }
+            default:
+                return 0;
+        }
+    }
+
+    /// <summary>
+    /// The planet's year as a strip of frames: the temperature of each season, with the settlements as white dots
+    /// (live seasons). <paramref name="frames"/> are one per step of the year.
+    /// </summary>
+    public static RgbImage Strip(IReadOnlyList<RgbImage> frames)
+    {
+        ArgumentNullException.ThrowIfNull(frames);
+        int w = frames[0].Width;
+        int h = frames[0].Height;
+        int cols = Math.Min(4, frames.Count);
+        int rows = (frames.Count + cols - 1) / cols;
+        var strip = new RgbImage((w + 4) * cols, (h + 4) * rows);
+        for (int f = 0; f < frames.Count; f++)
+        {
+            int ox = (f % cols) * (w + 4);
+            int oy = (f / cols) * (h + 4);
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    int src = ((y * w) + x) * 3;
+                    strip.Set(ox + x, oy + y, ((uint)frames[f].Pixels[src] << 16) | ((uint)frames[f].Pixels[src + 1] << 8) | frames[f].Pixels[src + 2]);
+                }
+            }
+        }
+
+        return strip;
+    }
+
+    // Four orthographic views of the planet: from the equator at longitude 0° and 180°, and from above each pole.
+    // A preview only (doubles are fine here: nothing feeds back into the game).
+    private RgbImage RenderGlobe()
+    {
+        HexGlobe geo = _world.Geometry;
+        int r = Math.Max(60, geo.Height * _k * 3 / 4);
+        int size = (2 * r) + 8;
+        var image = new RgbImage(size * 4, size);
+        Array.Fill(image.Pixels, (byte)12);
+        (double Lat, double Lon)[] views = [(0, 0), (0, Math.PI), (Math.PI / 2, 0), (-Math.PI / 2, 0)];
+        for (int v = 0; v < views.Length; v++)
+        {
+            (double lat0, double lon0) = views[v];
+            for (int py = -r; py <= r; py++)
+            {
+                for (int px = -r; px <= r; px++)
+                {
+                    double x = px / (double)r;
+                    double y = -py / (double)r;
+                    double rho2 = (x * x) + (y * y);
+                    if (rho2 > 1)
+                    {
+                        continue;
+                    }
+
+                    // Inverse orthographic projection.
+                    double z = Math.Sqrt(1 - rho2);
+                    double sinLat = (y * Math.Cos(lat0)) + (z * Math.Sin(lat0));
+                    double lon = lon0 + Math.Atan2(x, (z * Math.Cos(lat0)) - (y * Math.Sin(lat0)));
+                    int row = Math.Clamp((int)((1 - sinLat) * geo.Height / 2), 0, geo.Height - 1);
+                    double turn = lon / (2 * Math.PI);
+                    int col = (int)Math.Floor((turn - Math.Floor(turn)) * geo.Width) % geo.Width;
+                    uint c = CellColor(MapView.Biomes, geo.Index(new HexCoord(col, row)));
+                    c = Darken(c, (int)((1 - z) * 45)); // light falls off towards the edge
+                    image.Set((v * size) + 4 + r + px, 4 + r + py, c);
+                }
+            }
+        }
+
+        return image;
+    }
+
+    // Same colours as the viewer: hues spaced by the golden ratio.
+    private static uint CivColor(int civ)
+    {
+        double h = (civ * 0.618034) % 1.0 * 6.0;
+        double s = 0.75;
+        double v = 0.95;
+        int sector = (int)h;
+        double f = h - sector;
+        double p = v * (1 - s);
+        double q = v * (1 - (s * f));
+        double t = v * (1 - (s * (1 - f)));
+        (double r, double g, double b) = sector switch
+        {
+            0 => (v, t, p),
+            1 => (q, v, p),
+            2 => (p, v, t),
+            3 => (p, q, v),
+            4 => (t, p, v),
+            _ => (v, p, q),
+        };
+        return ((uint)(r * 255) << 16) | ((uint)(g * 255) << 8) | (uint)(b * 255);
+    }
+
+    private (int X, int Y) Center(HexCoord c) => ((c.Col * 3 * _k) + _halfW, (c.Row * 2 * _halfH) + _halfH + ((c.Col & 1) * _halfH));
+
+    // Flat-top hexagon: corners at (±R, 0) and (±R/2, ±H). Inside when 2|dx|·H ≤ R·(2H − |dy|).
+    private void FillHex(RgbImage image, HexCoord c, uint color)
+    {
+        (int cx, int cy) = Center(c);
+        for (int dy = -_halfH; dy <= _halfH; dy++)
+        {
+            int ady = Math.Abs(dy);
+            for (int dx = -_halfW; dx <= _halfW; dx++)
+            {
+                if (2 * Math.Abs(dx) * _halfH <= _halfW * ((2 * _halfH) - ady))
+                {
+                    image.Set(cx + dx, cy + dy, color);
+                }
+            }
+        }
+    }
+
+    private void DrawRivers(RgbImage image)
+    {
+        HexGlobe geo = _world.Geometry;
+        int r = _halfW;
+        int h = _halfH;
+
+        // Corner offsets of a flat-top hex, clockwise from the east corner.
+        (int X, int Y)[] corner = [(r, 0), (r / 2, h), (-r / 2, h), (-r, 0), (-r / 2, -h), (r / 2, -h)];
+
+        // Canonical sides N, NE, SE and the corners they join.
+        (int A, int B)[] side = [(4, 5), (5, 0), (0, 1)];
+        for (int i = 0; i < geo.CellCount; i++)
+        {
+            HexCoord c = geo.FromIndex(i);
+            (int cx, int cy) = Center(c);
+            for (int s = 0; s < HexEdge.PerCell; s++)
+            {
+                int size = _world.Map.River[(i * HexEdge.PerCell) + s];
+                if (size == 0)
+                {
+                    continue;
+                }
+
+                (int ax, int ay) = corner[side[s].A];
+                (int bx, int by) = corner[side[s].B];
+                DrawLine(image, cx + ax, cy + ay, cx + bx, cy + by, size >= 3 ? 3 : size >= 2 ? 2 : 1, RiverColor);
+            }
+        }
+    }
+
+    private static void DrawLine(RgbImage image, int x0, int y0, int x1, int y1, int thickness, uint color)
+    {
+        int dx = Math.Abs(x1 - x0);
+        int dy = -Math.Abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+        while (true)
+        {
+            FillRect(image, x0 - (thickness / 2), y0 - (thickness / 2), thickness + 1, thickness + 1, color);
+            if (x0 == x1 && y0 == y1)
+            {
+                return;
+            }
+
+            int e2 = 2 * err;
+            if (e2 >= dy)
+            {
+                err += dy;
+                x0 += sx;
+            }
+
+            if (e2 <= dx)
+            {
+                err += dx;
+                y0 += sy;
+            }
+        }
+    }
+
+    private static void FillRect(RgbImage image, int x, int y, int w, int h, uint color)
+    {
+        for (int yy = y; yy < y + h; yy++)
+        {
+            for (int xx = x; xx < x + w; xx++)
+            {
+                image.Set(xx, yy, color);
+            }
+        }
+    }
+
+    private static uint Lerp(uint a, uint b, int t, int max)
+    {
+        t = Math.Clamp(t, 0, max);
+        uint Channel(int shift)
+        {
+            int ca = (int)((a >> shift) & 0xFF);
+            int cb = (int)((b >> shift) & 0xFF);
+            return (uint)(ca + ((cb - ca) * t / Math.Max(1, max))) << shift;
+        }
+
+        return Channel(16) | Channel(8) | Channel(0);
+    }
+
+    private static uint Blend(uint a, uint b, int percentB) => Lerp(a, b, percentB, 100);
+
+    private static uint Darken(uint c, int percent) => Lerp(c, 0x000000, percent, 100);
+}

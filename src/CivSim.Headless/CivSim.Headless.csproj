@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>CivSim.Headless</RootNamespace>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
+    <ProjectReference Include="..\CivSim.Data\CivSim.Data.csproj" />
+    <ProjectReference Include="..\CivSim.Server\CivSim.Server.csproj" />
+  </ItemGroup>
+</Project>

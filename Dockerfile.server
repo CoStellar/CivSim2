@@ -1,0 +1,29 @@
+# CivSim game server without a window (docs/multiplayer/vps.md). Build from the repository root (or the root of the `server` branch):
+#   docker build -f Dockerfile.server -t civsim2-server .
+# Saves go to /data (a volume); everything else is read-only.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY global.json Directory.Build.props ./
+COPY src/CivSim.Core/ src/CivSim.Core/
+COPY src/CivSim.Data/ src/CivSim.Data/
+COPY src/CivSim.Sim/ src/CivSim.Sim/
+COPY src/CivSim.Protocol/ src/CivSim.Protocol/
+COPY src/CivSim.Server/ src/CivSim.Server/
+COPY src/CivSim.Headless/ src/CivSim.Headless/
+COPY data/ data/
+RUN true \
+ && dotnet publish src/CivSim.Headless -c Release -r linux-x64 --self-contained false -p:PublishReadyToRun=true -o /app \
+ && rm -rf /app/*.pdb
+
+# A small image without a shell or a package manager; runs as a user without root rights.
+FROM mcr.microsoft.com/dotnet/runtime:10.0-noble-chiseled
+WORKDIR /app
+COPY --from=build /app .
+ENV XDG_CONFIG_HOME=/data \
+    DOTNET_GCHeapHardLimitPercent=0x50 \
+    DOTNET_TieredPGO=1
+VOLUME /data
+EXPOSE 7777
+USER $APP_UID
+ENTRYPOINT ["dotnet", "CivSim.Headless.dll", "--serve"]
+CMD ["--port", "7777"]

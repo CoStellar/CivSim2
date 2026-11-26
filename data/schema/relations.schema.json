@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "relations.json",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "rumorChancePercentPerCentury": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "rumorErrorPercent": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "openingSympathy": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "borderOpening": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "maxMemories": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "sympathy": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "trust": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "years": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "vengefulYears": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "sympathyPerYear": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "trustPerYear": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Roads and works",
+  "description": "Our city in the Middle Ages with finished roads in all six directions (paved and tracks in turn, bridged over rivers), a ditch, an aqueduct and a stone wall around it. To look at the pictures of roads and works.",
+  "seed": 56,
+  "civilizations": 2,
+  "revealMap": true,
+  "civs": [
+    { "era": "middle_ages", "level": "city", "people": 90,
+      "stock": { "food": 800, "wood": 600, "stone": 600, "tools": 150, "clothing": 150, "bricks": 120, "mortar": 60, "coins": 300 },
+      "buildings": { "farm": 2, "woodcutter": 1, "stone_house": 3, "great_storehouse": 1 },
+      "roadStar": 5, "workRings": { "ditch": 2, "aqueduct": 4 }, "wallRing": 3,
+      "units": { "swordsmen": 1, "scouts": 1 } },
+    { "era": "iron_age", "level": "town", "people": 60, "stock": { "food": 400, "wood": 400 } }
+  ]
+}

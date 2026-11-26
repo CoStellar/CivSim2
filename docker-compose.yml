@@ -1,0 +1,50 @@
+# CivSim on a VPS (docs/multiplayer/vps.md): the relay and, if you want, one game server.
+#   docker compose up -d             the relay only
+#   docker compose --profile game up -d   the relay and a game server that opens a room on it
+# Images come ready from GitHub (ghcr.io); set CIVSIM_VERSION in .env to pin a version (e.g. 26.11.1), "latest" otherwise.
+services:
+  relay:
+    image: ghcr.io/costellar/civsim2-relay:${CIVSIM_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      CIVSIM_RELAY_PASSWORDSFILE: /config/passwords.txt
+      # With a domain and a Let's Encrypt certificate (TLS); leave both out without one.
+      # CIVSIM_RELAY_CERTIFICATEFILE: /certs/live/civsim.example.com/fullchain.pem
+      # CIVSIM_RELAY_KEYFILE: /certs/live/civsim.example.com/privkey.pem
+    volumes:
+      - ./config:/config:ro
+      # - /etc/letsencrypt:/certs:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
+    networks: [civsim]
+
+  game:
+    profiles: [game]
+    image: ghcr.io/costellar/civsim2-server:${CIVSIM_VERSION:-latest}
+    restart: unless-stopped
+    depends_on: [relay]
+    # The game opens a room on the relay next to it; its code is in `docker compose logs game`.
+    command: ["--name", "CivSim game", "--seats", "4", "--civs", "6", "--relay", "relay:7700"]
+    environment:
+      CIVSIM_RELAY_PASSWORD: ${CIVSIM_RELAY_PASSWORD:-}
+      # What players type to reach the relay (the VPS's domain or IP address); the game itself reaches it as "relay".
+      CIVSIM_RELAY_PUBLIC: ${CIVSIM_PUBLIC_ADDRESS:-}
+    volumes:
+      - ./saves:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 768m
+    cpus: 1.5
+    pids_limit: 128
+    networks: [civsim]
+
+networks:
+  civsim: {}

@@ -1,0 +1,19 @@
+{
+  "name": "Battle 3: cavalry and archers",
+  "description": "Iron Age. Our horsemen and archers against their spearmen, swordsmen and archers on a field 7 hexes apart. Test the charge after a run (spearmen stop it), riders breaking away and coming back (they lose only a quarter strike on leaving), archers that shoot only standing, and higher ground. Our scouts stand ahead of our line. People 1 holds (no AI).",
+  "seed": 120,
+  "civilizations": 2,
+  "revealMap": true,
+  "wars": [[0, 1]],
+  "noPeace": true,
+  "field": [0, 1],
+  "fieldGap": 7,
+  "civs": [
+    { "era": "iron_age", "techs": ["iron_weapons", "archery", "horseback_riding"], "level": "town", "people": 120, "unitPeople": 15, "weapon": 3, "armour": 2,
+      "stock": { "food": 800, "wood": 500, "stone": 300, "horses": 60 },
+      "units": { "scouts": 1, "horsemen": 3, "archers": 2, "swordsmen": 1 } },
+    { "era": "iron_age", "techs": ["iron_weapons", "archery", "horseback_riding"], "level": "town", "people": 100, "ai": false, "unitPeople": 15, "weapon": 3, "armour": 2,
+      "stock": { "food": 500, "wood": 300 },
+      "units": { "spearmen": 2, "swordsmen": 1, "archers": 2 } }
+  ]
+}

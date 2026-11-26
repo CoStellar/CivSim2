@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- The simulation is always compiled with optimizations: the Godot editor runs the Debug build, and an unoptimized core made turns about 10 times slower. -->
+    <Optimize>true</Optimize>
+    <RootNamespace>CivSim.Server</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CivSim.Tests" />
+    <InternalsVisibleTo Include="CivSim.Legacy.Tests" />
+    <InternalsVisibleTo Include="CivSim.Headless" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CivSim.Core\CivSim.Core.csproj" />
+    <ProjectReference Include="..\CivSim.Data\CivSim.Data.csproj" />
+    <ProjectReference Include="..\CivSim.Protocol\CivSim.Protocol.csproj" />
+    <ProjectReference Include="..\CivSim.Sim\CivSim.Sim.csproj" />
+  </ItemGroup>
+</Project>
